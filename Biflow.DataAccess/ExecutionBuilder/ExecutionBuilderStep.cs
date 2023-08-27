@@ -11,6 +11,7 @@ public class ExecutionBuilderStep
     {
         _builder = builder;
         _step = step;
+        Tags = _step.Tags.Select(t => new ExecutionBuilderTag(t)).ToArray();
     }
 
     public Guid StepId => _step.StepId;
@@ -23,8 +24,12 @@ public class ExecutionBuilderStep
 
     public int ExecutionPhase => _step.ExecutionPhase;
 
-    public bool IncludeInExecution() => _builder.Add(_step);
+    public bool HasDependencies => _step.Dependencies.Any();
 
-    public void IncludeWithDependencies(bool onlyOnSuccess = true) =>
+    public IEnumerable<ITag> Tags { get; }
+
+    public bool AddToExecution() => _builder.Add(_step);
+
+    public void AddWithDependencies(bool onlyOnSuccess = true) =>
         _builder.AddWithDependencies(_step, onlyOnSuccess);
 }

@@ -1,13 +1,14 @@
 ﻿@inject IHxMessengerService Messenger
 @inject IHttpContextAccessor HttpContextAccessor
-@inject DbHelperService DbHelperService
+@inject IExecutionBuilderFactory BuilderFactory
+@inject IExecutorService Executor
 
 <HxModal @ref="Modal" Fullscreen="ModalFullscreen.Always" Scrollable="true" Title="Execute steps"
          BodyCssClass="pt-0"
-         OnClosed="() => { StepsToExecute.Clear(); ExecuteFilterText = string.Empty; ExecuteTagsFilterSet.Clear(); }">
+         OnClosed="() => { Builder = null; ExecuteFilterText = string.Empty; ExecuteTagsFilterSet.Clear(); }">
 
     <BodyTemplate>
-        @if (Steps is not null)
+        @if (Builder is not null)
         {
             <div class="row mt-3">
                 <span class="col fst-italic text-secondary small">Disabled steps, if selected, will be included in manual executions.</span>
@@ -45,7 +46,7 @@
                             <div class="col-auto">
                                 <FilterDropdown TItem="StepType"
                                                 FilterSet="StepTypeFilter"
-                                                Items="Steps?.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
+                                                Items="Builder.Steps.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
                                                 OnChange="StateHasChanged">
                                     <TitleTemplate>
                                         <CxIcon Icon="FeatherIcon.Tool" />
@@ -70,17 +71,17 @@
                         <HxButtonGroup>
                         @*Add all available AND enabled steps that have not yet been added to selected steps. Also filter based on current filter text.*@
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                  @onclick="() => StepsToExecute.AddRange(StepsAvailableToExecute.Where(step => step.IsEnabled))">
+                                  @onclick="() => Builder.AddAll(s => s.IsEnabled)">
                             <CxIcon Icon="FeatherIcon.ChevronRight" />
                             Select enabled
                         </HxButton>
                         @*Add all available steps that have not yet been added to selected steps. Also filter based on current filter text.*@
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                  @onclick="() => StepsToExecute.AddRange(StepsAvailableToExecute)">
+                                  @onclick="() => Builder.AddAll()">
                             <CxIcon Icon="FeatherIcon.ChevronsRight" />
                             Select all
                         </HxButton>
-                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => StepsToExecute.Clear()">
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => Builder.Clear()">
                             <CxIcon Icon="FeatherIcon.ChevronsLeft" />
                             Deselect all
                         </HxButton>
@@ -98,20 +99,20 @@
                                 @foreach (var step in StepsAvailableToExecute)
                                 {
                                     <tr style="cursor: pointer;" >
-                                        <td class="@(step.IsEnabled ? null : "text-secondary") align-middle" @onclick="() => SelectStep(step)">
+                                        <td class="@(step.IsEnabled ? null : "text-secondary") align-middle" @onclick="() => step.AddToExecution()">
                                             <StepTypeIconComponent StepType_="@step.StepType" />
                                             &nbsp;
                                             <HighlightableText Text="@step.StepName" PartToHighlight="@ExecuteFilterText" />
                                         </td>
-                                        <td class="text-end @(Job?.UseDependencyMode == true ? "text-body-tertiary" : null)" @onclick="() => SelectStep(step)">
+                                        <td class="text-end @(Builder.DependencyMode == true ? "text-body-tertiary" : null)" @onclick="() => step.AddToExecution()">
                                             @step.ExecutionPhase
                                             &nbsp;
                                             <CxIcon Icon="FeatherIcon.Layers" />
                                         </td>
-                                        @if (Job?.UseDependencyMode == true)
+                                        @if (Builder.DependencyMode == true)
                                         {
                                             <td class="text-end">
-                                                @if (step.Dependencies?.Count > 0)
+                                                @if (step.HasDependencies)
                                                 {
                                                     <HxDropdown>
                                                         <HxDropdownToggleElement title="Include dependencies">
@@ -119,8 +120,8 @@
                                                         </HxDropdownToggleElement>
                                                         <HxDropdownMenu>
                                                             <HxDropdownHeader>Include dependencies (only enabled steps)</HxDropdownHeader>
-                                                            <HxDropdownItem OnClick="() => SelectStepAndDependencies(step, false)">On-success dependencies</HxDropdownItem>
-                                                            <HxDropdownItem OnClick="() => SelectStepAndDependencies(step, true)">All dependencies</HxDropdownItem>
+                                                            <HxDropdownItem OnClick="() => step.AddWithDependencies(true)">On-success dependencies</HxDropdownItem>
+                                                            <HxDropdownItem OnClick="() => step.AddWithDependencies(false)">All dependencies</HxDropdownItem>
                                                         </HxDropdownMenu>
                                                     </HxDropdown>
                                                 }
@@ -138,26 +139,15 @@
                     <div style="overflow-y: scroll; height: calc(100vh - 322px);">
                         <table class="table table-hover table-sm">
                             <tbody>
-                                @{
-                                    if (Job?.UseDependencyMode == true)
-                                    {
-                                        var comparer = new TopologicalStepComparer(StepsToExecute);
-                                        StepsToExecute.Sort(comparer);
-                                    }
-                                    else
-                                    {
-                                        StepsToExecute.Sort();
-                                    }
-                                }
-                                @foreach (var step in StepsToExecute)
+                                @foreach (var step in Builder.StepExecutions)
                                 {
-                                    <tr style="cursor: pointer;" @onclick="() => StepsToExecute.Remove(step)">
-                                        <td class="@(step.IsEnabled ? null : "text-secondary")">
+                                    <tr style="cursor: pointer;" @onclick="() => step.RemoveFromExecution()">
+                                        <td>
                                             <StepTypeIconComponent StepType_="@step.StepType" />
                                             &nbsp;
                                             @step.StepName
                                         </td>
-                                        <td class="text-end @(Job?.UseDependencyMode == true ? "text-body-tertiary" : null)">
+                                        <td class="text-end @(Builder.DependencyMode == true ? "text-body-tertiary" : null)">
                                             @step.ExecutionPhase
                                             &nbsp;
                                             <CxIcon Icon="FeatherIcon.Layers" />
@@ -171,57 +161,68 @@
 
             </div>
         }
+        else
+        {
+            <div class="row mt-5 mb-4">
+                <div class="col text-center">
+                    <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Regular" />
+                </div>
+            </div>
+        }
     </BodyTemplate>
 
     <FooterTemplate>
         <div class="col mr-auto">
             <HxDropdownButtonGroup AutoClose="DropdownAutoClose.Outside">
-                <HxDropdownToggleButton Color="ThemeColor.Secondary">
+                <HxDropdownToggleButton Color="ThemeColor.Secondary" Enabled="Builder is not null">
                     <CxIcon Icon="FeatherIcon.Bell" />
                     Notifications
                 </HxDropdownToggleButton>
                 <HxDropdownContent>
-                    <div class="row p-3" style="min-width: 20rem;">
-                        <div class="col">
-                            <div class="form-check">
-                                <input type="checkbox" class="form-check-input" id="execute_notify"
-                                       checked=@Notify
-                                       @bind-value="Notify">
-                                <label class="form-check-label" for="execute_notify">Notify based on subscriptions</label>
-                            </div>
-                            <h6 class="mt-3">Notify me</h6>
-                            <div class="form-check">
-                                <input type="radio" class="form-check-input" id="radio_notify_me_none"
-                                       checked=@(NotifyMe is null)
-                                       @onchange="() => NotifyMe = null">
-                                <label class="form-check-label" for="radio_notify_me_none">None</label>
-                            </div>
-                            <div class="form-check">
-                                <input type="radio" class="form-check-input" id="radio_notify_me_completion"
-                                       checked=@(NotifyMe == SubscriptionType.OnCompletion)
-                                       @onchange="() => NotifyMe = SubscriptionType.OnCompletion">
-                                <label class="form-check-label" for="radio_notify_me_completion">On completion</label>
-                            </div>
-                            <div class="form-check">
-                                <input type="radio" class="form-check-input" id="radio_notify_me_failure"
-                                       checked=@(NotifyMe == SubscriptionType.OnFailure)
-                                       @onchange="() => NotifyMe = SubscriptionType.OnFailure">
-                                <label class="form-check-label" for="radio_notify_me_failure">On failure</label>
-                            </div>
-                            <div class="form-check">
-                                <input type="radio" class="form-check-input" id="radio_notify_me_success"
-                                       checked=@(NotifyMe == SubscriptionType.OnSuccess)
-                                       @onchange="() => NotifyMe = SubscriptionType.OnSuccess">
-                                <label class="form-check-label" for="radio_notify_me_success">On success</label>
-                            </div>
-                            <div class="form-check mt-3">
-                                <input type="checkbox" class="form-check-input" id="execute_notify_me_overtime"
-                                       checked=@NotifyMeOvertime
-                                       @bind-value="NotifyMeOvertime">
-                                <label class="form-check-label" for="execute_notify_me_overtime">On overtime</label>
+                    @if (Builder is not null)
+                    {
+                        <div class="row p-3" style="min-width: 20rem;">
+                            <div class="col">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="execute_notify"
+                                           checked=@Builder.Notify
+                                           @bind-value="Builder.Notify">
+                                    <label class="form-check-label" for="execute_notify">Notify based on subscriptions</label>
+                                </div>
+                                <h6 class="mt-3">Notify me</h6>
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" id="radio_notify_me_none"
+                                           checked=@(Builder.NotifyCaller is null)
+                                            @onchange="() => Builder.NotifyCaller = null">
+                                    <label class="form-check-label" for="radio_notify_me_none">None</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" id="radio_notify_me_completion"
+                                           checked=@(Builder.NotifyCaller == SubscriptionType.OnCompletion)
+                                           @onchange="() => Builder.NotifyCaller = SubscriptionType.OnCompletion">
+                                    <label class="form-check-label" for="radio_notify_me_completion">On completion</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" id="radio_notify_me_failure"
+                                           checked=@(Builder.NotifyCaller == SubscriptionType.OnFailure)
+                                           @onchange="() => Builder.NotifyCaller = SubscriptionType.OnFailure">
+                                    <label class="form-check-label" for="radio_notify_me_failure">On failure</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" id="radio_notify_me_success"
+                                           checked=@(Builder.NotifyCaller == SubscriptionType.OnSuccess)
+                                           @onchange="() => Builder.NotifyCaller = SubscriptionType.OnSuccess">
+                                    <label class="form-check-label" for="radio_notify_me_success">On success</label>
+                                </div>
+                                <div class="form-check mt-3">
+                                    <input type="checkbox" class="form-check-input" id="execute_notify_me_overtime"
+                                           checked=@Builder.NotifyCallerOvertime
+                                           @bind-value="Builder.NotifyCallerOvertime">
+                                    <label class="form-check-label" for="execute_notify_me_overtime">On overtime</label>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    }
                 </HxDropdownContent>
             </HxDropdownButtonGroup>
         </div>
@@ -236,128 +237,68 @@
 @code {
     [CascadingParameter] public Job? Job { get; set; }
 
-    [CascadingParameter] public List<Step>? Steps { get; set; }
-
     [Parameter] public EventCallback<Guid> OnExecutionStarted { get; set; }
 
-    private IEnumerable<Tag> Tags => Steps?
+    private ExecutionBuilder? Builder { get; set; }
+
+    private IEnumerable<ITag> Tags => Builder?.Steps
     .SelectMany(step => step.Tags)
     .DistinctBy(t => t.TagName)
-    .OrderBy(t => t.TagName) ?? Enumerable.Empty<Tag>();
+    .OrderBy(t => t.TagName) ?? Enumerable.Empty<ITag>();
 
     private HxModal? Modal { get; set; }
 
-    private List<Step> StepsToExecute { get; set; } = new();
-
     private string ExecuteFilterText { get; set; } = string.Empty;
-    private HashSet<Tag> ExecuteTagsFilterSet { get; set; } = new();
+    private HashSet<ITag> ExecuteTagsFilterSet { get; set; } = new();
     private HashSet<StepType> StepTypeFilter { get; } = new();
 
-    private IEnumerable<Step> StepsAvailableToExecute =>
-    Steps?.Where(step => !StepsToExecute.Any(e => e.StepId == step.StepId)) // Not yet added to list of steps to execute
+    private IEnumerable<ExecutionBuilderStep> StepsAvailableToExecute =>
+    Builder?.Steps
     .Where(step => step.StepName?.ContainsIgnoreCase(ExecuteFilterText) == true) // Step name filter
     .Where(step => !StepTypeFilter.Any() || StepTypeFilter.Contains(step.StepType)) // Filter based on step type
     .Where(step => ExecuteTagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Tag filter
-    ?? Enumerable.Empty<Step>();
-
-    private bool Notify { get; set; } = false;
-    private SubscriptionType? NotifyMe { get; set; } = null;
-    private bool NotifyMeOvertime { get; set; } = false;
+    ?? Enumerable.Empty<ExecutionBuilderStep>();
 
     private async Task Execute()
     {
-        if (StepsToExecute.Count == 0)
-        {
-            return;
-        }
-
-        string user = HttpContextAccessor.HttpContext?.User?.Identity?.Name ?? throw new ArgumentNullException(nameof(user), "User was null");
         try
         {
-            var stepIds = StepsToExecute.Select(step => step.StepId.ToString()).ToList();
-            var executionId = await DbHelperService.StartExecutionAsync(
-                job: Job ?? throw new ArgumentNullException(nameof(Job), "Job was null"),
-                username: user,
-                stepIds: stepIds,
-                notify: Notify,
-                notifyMe: NotifyMe,
-                notifyMeOvertime: NotifyMeOvertime);
-            await OnExecutionStarted.InvokeAsync(executionId);
+            ArgumentNullException.ThrowIfNull(Builder);
+            var execution = await Builder.SaveExecutionAsync();
+            if (execution is not null)
+            {
+                await OnExecutionStarted.InvokeAsync(execution.ExecutionId);
+                await Executor.StartExecutionAsync(execution.ExecutionId);
+            }
+            Builder = null;
+            await Modal.LetAsync(x => x.HideAsync());
+            StateHasChanged();
         }
         catch (Exception ex)
         {
             Messenger.AddError("Error starting execution", ex.Message);
         }
-
-        StepsToExecute.Clear();
-        await Modal.LetAsync(x => x.HideAsync());
-        Notify = false;
-        NotifyMe = null;
-        NotifyMeOvertime = false;
-        StateHasChanged();
-    }
-
-    private void SelectStep(Step step)
-    {
-        if (!StepsToExecute.Any(s => s.StepId == step.StepId))
-        {
-            StepsToExecute.Add(step);
-        }
-    }
-
-    private void SelectStepAndDependencies(Step step, bool includeAll)
-    {
-        RecurseDependencies(step, new(), includeAll);
-    }
-
-    private void RecurseDependencies(Step step, List<Step> processedSteps, bool includeAll)
-    {
-        // Add the step to the list of steps to execute if it is not there yet.
-        if (!StepsToExecute.Any(s => s.StepId == step.StepId))
-        {
-            StepsToExecute.Add(step);
-        }
-
-        // Get dependency ids.
-        List<Guid> dependencyStepIds = step.Dependencies
-            .Where(d => d.DependencyType == DependencyType.OnSucceeded || includeAll)
-            .Select(d => d.DependantOnStepId)
-            .ToList();
-
-        // If there are no dependencies, return true.
-        if (dependencyStepIds.Count == 0)
-        {
-            return;
-        }
-        // This step was already handled.
-        else if (processedSteps.Any(s => s.StepId == step.StepId))
-        {
-            return;
-        }
-
-        processedSteps.Add(step);
-
-        // Get dependency steps based on ids. Only include enabled steps.
-        List<Step> dependencySteps = Steps
-            ?.Where(s => s.IsEnabled && dependencyStepIds.Any(id => s.StepId == id))
-            .ToList()
-            ?? new();
-
-        // Loop through the dependencies and handle them recursively.
-        foreach (var depencyStep in dependencySteps)
-        {
-            RecurseDependencies(depencyStep, processedSteps, includeAll);
-        }
-
     }
 
     public async Task ShowAsync(IEnumerable<Step>? initiallySelectedSteps = null)
     {
-        if (initiallySelectedSteps is not null)
-        {
-            StepsToExecute.AddRange(initiallySelectedSteps);
-        }
+        Builder = null;
         await Modal.LetAsync(x => x.ShowAsync());
+        ArgumentNullException.ThrowIfNull(Job);
+        string user = HttpContextAccessor.HttpContext?.User?.Identity?.Name
+            ?? throw new ArgumentNullException(nameof(user), "User was null");
+        Builder = await BuilderFactory.CreateAsync(Job.JobId, user);
+        if (Builder is null)
+        {
+            Messenger.AddWarning("Job with the given id could not be found");
+            return;
+        }
+        foreach (var selected in initiallySelectedSteps ?? Enumerable.Empty<Step>())
+        {
+            var step = Builder.Steps.FirstOrDefault(s => s.StepId == selected.StepId);
+            step?.AddToExecution();
+        }
+        StateHasChanged();
     }
 
 }

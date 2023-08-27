@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Biflow.DataAccess.Models;
 
 [Table("Tag")]
-public class Tag
+public class Tag : ITag
 {
 
     public Tag(string tagName)

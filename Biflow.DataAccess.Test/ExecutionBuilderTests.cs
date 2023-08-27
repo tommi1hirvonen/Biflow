@@ -24,11 +24,12 @@ public class ExecutionBuilderTests
             .FirstAsync(j => j.JobName == "Test job");
 
         var builder = await _executionBuilderFactory.CreateAsync(job.JobId, "testuser");
+        ArgumentNullException.ThrowIfNull(builder);
         foreach (var step in builder.Steps)
         {
-            step.IncludeInExecution();
+            step.AddToExecution();
         }
-        await builder.SaveAsync();
+        await builder.SaveExecutionAsync();
     }
 
     [Fact]
@@ -40,10 +41,11 @@ public class ExecutionBuilderTests
             .FirstAsync(j => j.JobName == "Another job");
 
         var builder = await _executionBuilderFactory.CreateAsync(job.JobId, "testuser");
+        ArgumentNullException.ThrowIfNull(builder);
         foreach (var step in builder.Steps)
         {
-            step.IncludeInExecution();
+            step.AddToExecution();
         }
-        await builder.SaveAsync();
+        await builder.SaveExecutionAsync();
     }
 }

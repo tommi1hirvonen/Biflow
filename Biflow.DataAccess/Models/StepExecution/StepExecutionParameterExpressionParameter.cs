@@ -10,14 +10,14 @@ public class StepExecutionParameterExpressionParameter
 {
     public StepExecutionParameterExpressionParameter() { }
 
-    public StepExecutionParameterExpressionParameter(StepParameterExpressionParameter parameter, StepExecutionParameterBase execution)
+    public StepExecutionParameterExpressionParameter(StepParameterExpressionParameter parameter, StepExecution execution, StepExecutionParameterBase executionParameter)
     {
         ExecutionId = execution.ExecutionId;
         StepParameterId = parameter.StepParameterId;
         ParameterName = parameter.ParameterName;
-        StepParameter = execution;
+        StepParameter = executionParameter;
         InheritFromExecutionParameterId = parameter.InheritFromJobParameterId;
-        InheritFromExecutionParameter = execution.BaseStepExecution.Execution.ExecutionParameters.First(p => p.ParameterId == parameter.InheritFromJobParameterId);
+        InheritFromExecutionParameter = execution.Execution.ExecutionParameters.First(p => p.ParameterId == parameter.InheritFromJobParameterId);
     }
 
     public Guid ExecutionId { get; set; }

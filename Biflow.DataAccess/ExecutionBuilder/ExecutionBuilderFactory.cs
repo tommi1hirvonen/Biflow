@@ -12,16 +12,26 @@ internal class ExecutionBuilderFactory : IExecutionBuilderFactory
         _dbContextFactory = dbContextFactory;
     }
 
-    public async Task<ExecutionBuilder> CreateAsync(Guid jobId, string createdBy)
+    public async Task<ExecutionBuilder?> CreateAsync(Guid jobId, string createdBy, Guid[]? stepIdFilter = null)
     {
-        var (context, job, steps) = await GetContextAndDataAsync(jobId);
+        var data = await GetBuilderDataAsync(jobId, stepIdFilter);
+        if (data is null)
+        {
+            return null;
+        }
+        var (context, job, steps) = data;
         var execution = new Execution(job, createdBy);
         return new ExecutionBuilder(context, execution, steps);
     }
 
-    public async Task<ExecutionBuilder> CreateAsync(Guid jobId, Guid scheduleId)
+    public async Task<ExecutionBuilder?> CreateAsync(Guid jobId, Guid scheduleId)
     {
-        var (context, job, steps) = await GetContextAndDataAsync(jobId);
+        var data = await GetBuilderDataAsync(jobId, null);
+        if (data is null)
+        {
+            return null;
+        }
+        var (context, job, steps) = data;
         var schedule = await context.Schedules
             .AsNoTracking()
             .FirstAsync(s => s.ScheduleId == scheduleId);
@@ -29,25 +39,33 @@ internal class ExecutionBuilderFactory : IExecutionBuilderFactory
         return new ExecutionBuilder(context, execution, steps);
     }
 
-    private async Task<(BiflowContext, Job, Step[])> GetContextAndDataAsync(Guid jobId)
+    private async Task<BuilderData?> GetBuilderDataAsync(Guid jobId, Guid[]? stepIdFilter)
     {
         var context = await _dbContextFactory.CreateDbContextAsync();
         var job = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Include(j => j.JobParameters)
             .Include(j => j.JobConcurrencies)
-            .FirstAsync(j => j.JobId == jobId);
+            .FirstOrDefaultAsync(j => j.JobId == jobId);
+        if (job is null)
+        {
+            return null;
+        }
         var steps = await context.Steps
             .AsNoTrackingWithIdentityResolution()
             .Where(s => s.JobId == job.JobId)
+            .Where(s => stepIdFilter == null || stepIdFilter.Contains(s.StepId))
             .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.ExpressionParameters)}")
             .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.InheritFromJobParameter)}")
             .Include(s => (s as JobStep)!.TagFilters)
             .Include(s => s.Dependencies)
             .Include(s => s.Targets)
             .Include(s => s.Sources)
+            .Include(s => s.Tags)
             .Include(s => s.ExecutionConditionParameters)
             .ToArrayAsync();
-        return (context, job, steps);
+        return new(context, job, steps);
     }
+
+    private record BuilderData(BiflowContext Context, Job Job, Step[] Steps);
 }

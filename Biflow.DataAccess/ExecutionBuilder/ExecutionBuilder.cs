@@ -23,6 +23,8 @@ public partial class ExecutionBuilder : IDisposable
             .ToArray();
     }
 
+    public bool DependencyMode => _execution.DependencyMode;
+
     public bool Notify { get => _execution.Notify; set => _execution.Notify = value; }
 
     public SubscriptionType? NotifyCaller { get => _execution.NotifyCaller; set => _execution.NotifyCaller = value; }
@@ -33,10 +35,21 @@ public partial class ExecutionBuilder : IDisposable
         _builderSteps.Where(s => !_execution.StepExecutions.Any(e => s.StepId == e.StepId));
 
     public IEnumerable<ExecutionBuilderStepExecution> StepExecutions =>
-        _execution.StepExecutions.Select(e => new ExecutionBuilderStepExecution(e));
+        _execution.StepExecutions.Select(e => new ExecutionBuilderStepExecution(this, e));
 
-    public async Task SaveAsync()
+    public IEnumerable<DynamicParameter> Parameters => _execution.ExecutionParameters;
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <returns><see cref="Execution"/> that was saved to the database.
+    /// <see langword="null"/> if no <see cref="StepExecution"/> objects were included.</returns>
+    public async Task<Execution?> SaveExecutionAsync()
     {
+        if (!_execution.StepExecutions.Any())
+        {
+            return null;
+        }
         foreach (var step in _execution.StepExecutions)
         {
             var toDelete = step.ExecutionDependencies
@@ -49,6 +62,18 @@ public partial class ExecutionBuilder : IDisposable
         }
         _context.Executions.Add(_execution);
         await _context.SaveChangesAsync();
+        return _execution;
+    }
+
+    public void Clear() => _execution.StepExecutions.Clear();
+
+    public void AddAll(Func<ExecutionBuilderStep, bool>? predicate = null)
+    {
+        predicate ??= (_) => true;
+        foreach (var step in Steps.Where(s => predicate(s)))
+        {
+            step.AddToExecution();
+        }
     }
 
     internal bool Add(Step step)
@@ -67,6 +92,9 @@ public partial class ExecutionBuilder : IDisposable
         _execution.StepExecutions.Add(stepExecution);
         return true;
     }
+
+    internal bool Remove(StepExecution stepExecution) =>
+        _execution.StepExecutions.Remove(stepExecution);
 
     internal void AddWithDependencies(Step step, bool onlyOnSuccess) =>
         RecurseDependencies(step, new(), onlyOnSuccess);

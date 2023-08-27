@@ -4,10 +4,12 @@ namespace Biflow.DataAccess;
 
 public class ExecutionBuilderStepExecution
 {
+    private readonly ExecutionBuilder _builder;
     private readonly StepExecution _stepExecution;
 
-    internal ExecutionBuilderStepExecution(StepExecution stepExecution)
+    internal ExecutionBuilderStepExecution(ExecutionBuilder builder, StepExecution stepExecution)
     {
+        _builder = builder;
         _stepExecution = stepExecution;
         SupportsParameters = stepExecution is IHasStepExecutionParameters;
         Parameters = stepExecution switch
@@ -28,5 +30,7 @@ public class ExecutionBuilderStepExecution
     public bool SupportsParameters { get; }
 
     public IEnumerable<DynamicParameter> Parameters { get; }
+
+    public bool RemoveFromExecution() => _builder.Remove(_stepExecution);
 }
 

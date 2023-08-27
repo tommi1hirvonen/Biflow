@@ -7,67 +7,10 @@ namespace Biflow.Ui.Core;
 public class DbHelperService
 {
     private readonly ISqlConnectionFactory _sqlConnectionFactory;
-    private readonly IExecutorService _executor;
 
-    public DbHelperService(ISqlConnectionFactory sqlConnectionFactory, IExecutorService executor)
+    public DbHelperService(ISqlConnectionFactory sqlConnectionFactory)
     {
         _sqlConnectionFactory = sqlConnectionFactory;
-        _executor = executor;
-    }
-
-    public async Task<Guid> StartExecutionAsync(
-        Job job,
-        string username,
-        List<string>? stepIds = null,
-        bool notify = false,
-        SubscriptionType? notifyMe = null,
-        bool notifyMeOvertime = false)
-    {
-        Guid executionId;
-        using (var sqlConnection = _sqlConnectionFactory.Create())
-        {
-            CommandDefinition command;
-            var parameters = new DynamicParameters();
-            parameters.AddDynamicParams(new
-            {
-                JobId_ = job.JobId,
-                Username_ = username,
-                Notify_ = notify,
-                NotifyCaller_ = notifyMe,
-                NotifyCallerOvertime_ = notifyMeOvertime
-            });
-            if (stepIds is not null && stepIds.Count > 0)
-            {
-                parameters.Add("StepIds_", string.Join(',', stepIds));
-                command = new CommandDefinition("""
-                    EXEC [biflow].[ExecutionInitialize]
-                        @JobId = @JobId_,
-                        @Username = @Username_,
-                        @StepIds = @StepIds_,
-                        @Notify = @Notify_,
-                        @NotifyCaller = @NotifyCaller_,
-                        @NotifyCallerOvertime = @NotifyCallerOvertime_
-                    """,
-                    parameters);
-            }
-            else
-            {
-                command = new CommandDefinition("""
-                    EXEC [biflow].[ExecutionInitialize]
-                        @JobId = @JobId_,
-                        @Username = @Username_,
-                        @Notify = @Notify_,
-                        @NotifyCaller = @NotifyCaller_,
-                        @NotifyCallerOvertime = @NotifyCallerOvertime_
-                    """,
-                    parameters);
-            }
-            executionId = await sqlConnection.ExecuteScalarAsync<Guid>(command);
-        }
-
-        await _executor.StartExecutionAsync(executionId);
-
-        return executionId;
     }
 
     public async Task<Guid> JobCopyAsync(Guid jobId, string username)
