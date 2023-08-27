@@ -1,5 +1,6 @@
 ﻿using Biflow.DataAccess.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace Biflow.DataAccess;
 
@@ -12,9 +13,9 @@ internal class ExecutionBuilderFactory : IExecutionBuilderFactory
         _dbContextFactory = dbContextFactory;
     }
 
-    public async Task<ExecutionBuilder?> CreateAsync(Guid jobId, string createdBy, Guid[]? stepIdFilter = null)
+    public async Task<ExecutionBuilder?> CreateAsync(Guid jobId, string? createdBy, params Func<BiflowContext, Expression<Func<Step, bool>>>[] predicates)
     {
-        var data = await GetBuilderDataAsync(jobId, stepIdFilter);
+        var data = await GetBuilderDataAsync(jobId, predicates);
         if (data is null)
         {
             return null;
@@ -24,9 +25,9 @@ internal class ExecutionBuilderFactory : IExecutionBuilderFactory
         return new ExecutionBuilder(context, createExecution, steps);
     }
 
-    public async Task<ExecutionBuilder?> CreateAsync(Guid jobId, Guid scheduleId)
+    public async Task<ExecutionBuilder?> CreateAsync(Guid jobId, Guid scheduleId, params Func<BiflowContext, Expression<Func<Step, bool>>>[] predicates)
     {
-        var data = await GetBuilderDataAsync(jobId, null);
+        var data = await GetBuilderDataAsync(jobId, predicates);
         if (data is null)
         {
             return null;
@@ -34,12 +35,12 @@ internal class ExecutionBuilderFactory : IExecutionBuilderFactory
         var (context, job, steps) = data;
         var schedule = await context.Schedules
             .AsNoTracking()
-            .FirstAsync(s => s.ScheduleId == scheduleId);
+            .FirstOrDefaultAsync(s => s.ScheduleId == scheduleId);
         var createExecution = () => new Execution(job, schedule);
         return new ExecutionBuilder(context, createExecution, steps);
     }
 
-    private async Task<BuilderData?> GetBuilderDataAsync(Guid jobId, Guid[]? stepIdFilter)
+    private async Task<BuilderData?> GetBuilderDataAsync(Guid jobId, Func<BiflowContext, Expression<Func<Step, bool>>>[] predicates)
     {
         var context = await _dbContextFactory.CreateDbContextAsync();
         var job = await context.Jobs
@@ -51,10 +52,14 @@ internal class ExecutionBuilderFactory : IExecutionBuilderFactory
         {
             return null;
         }
-        var steps = await context.Steps
+        var stepsQuery = context.Steps
             .AsNoTrackingWithIdentityResolution()
-            .Where(s => s.JobId == job.JobId)
-            .Where(s => stepIdFilter == null || stepIdFilter.Contains(s.StepId))
+            .Where(s => s.JobId == job.JobId);
+        foreach (var predicate in predicates)
+        {
+            stepsQuery = stepsQuery.Where(predicate(context));
+        }
+        var steps = await stepsQuery
             .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.ExpressionParameters)}")
             .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.InheritFromJobParameter)}")
             .Include(s => (s as JobStep)!.TagFilters)

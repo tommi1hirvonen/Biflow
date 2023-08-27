@@ -1,6 +1,4 @@
-﻿using Biflow.Core;
-using Biflow.DataAccess;
-using Dapper;
+﻿using Biflow.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Quartz;
@@ -11,17 +9,17 @@ public abstract class ExecutionJobBase : IJob
 {
     private readonly ILogger _logger;
     private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
-    private readonly ISqlConnectionFactory _sqlConnectionFactory;
+    private readonly IExecutionBuilderFactory _executionBuilderFactory;
 
     protected abstract Task StartExecutorAsync(Guid executionId);
 
     protected abstract Task WaitForExecutionToFinish(Guid executionId);
 
-    public ExecutionJobBase(ILogger logger, IDbContextFactory<BiflowContext> dbContextFactory, ISqlConnectionFactory sqlConnectionFactory)
+    public ExecutionJobBase(ILogger logger, IDbContextFactory<BiflowContext> dbContextFactory, IExecutionBuilderFactory executionBuilderFactory)
     {
         _logger = logger;
         _dbContextFactory = dbContextFactory;
-        _sqlConnectionFactory = sqlConnectionFactory;
+        _executionBuilderFactory = executionBuilderFactory;
     }
 
     public async Task Execute(IJobExecutionContext context)
@@ -29,7 +27,6 @@ public abstract class ExecutionJobBase : IJob
         try
         {
             var jobId = Guid.Parse(context.JobDetail.Key.Name);
-            var scheduleId = Guid.Parse(context.Trigger.Key.Name);
             try
             {
                 using var dbContext = _dbContextFactory.CreateDbContext();
@@ -39,7 +36,9 @@ public abstract class ExecutionJobBase : IJob
                     .Select(job => job.IsEnabled)
                     .FirstAsync();
                 if (!isEnabled)
+                {
                     return;
+                }
             }
             catch (Exception ex)
             {
@@ -47,14 +46,24 @@ public abstract class ExecutionJobBase : IJob
                 return;
             }
 
+            var scheduleId = Guid.Parse(context.Trigger.Key.Name);
             Guid executionId;
             try
             {
-                using var sqlConnection = _sqlConnectionFactory.Create();
-                await sqlConnection.OpenAsync();
-                executionId = await sqlConnection.ExecuteScalarAsync<Guid>(
-                    "EXEC biflow.ExecutionInitialize @JobId = @JobId_, @ScheduleId = @ScheduleId_, @Notify = @Notify_",
-                    new { JobId_ = jobId, ScheduleId_ = scheduleId, Notify_ = true });
+
+                var builder = await _executionBuilderFactory.CreateAsync(jobId, scheduleId,
+                    context => step => step.IsEnabled,
+                    context => step =>
+                    // Schedule has no tag filters
+                    !context.Schedules.Any(sch => sch.ScheduleId == scheduleId && sch.Tags.Any()) ||
+                    // There's at least one match between the step's tags and the schedule's tags
+                    step.Tags.Any(t1 => context.Schedules.Any(sch => sch.ScheduleId == scheduleId && sch.Tags.Any(t2 => t1.TagId == t2.TagId))));
+                ArgumentNullException.ThrowIfNull(builder);
+                builder.AddAll();
+                builder.Notify = true;
+                var execution = await builder.SaveExecutionAsync();
+                ArgumentNullException.ThrowIfNull(execution);
+                executionId = execution.ExecutionId;
             }
             catch (Exception ex)
             {

@@ -1,7 +1,6 @@
-﻿using Biflow.Core;
+﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
-using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -10,7 +9,7 @@ namespace Biflow.Executor.Core.StepExecutor;
 internal class JobStepExecutor : StepExecutorBase
 {
     private readonly ILogger<JobStepExecutor> _logger;
-    private readonly ISqlConnectionFactory _sqlConnectionFactory;
+    private readonly IExecutionBuilderFactory _executionBuilderFactory;
     private readonly IExecutorLauncher _executorLauncher;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
 
@@ -20,12 +19,12 @@ internal class JobStepExecutor : StepExecutorBase
         ILogger<JobStepExecutor> logger,
         IExecutorLauncher executorLauncher,
         IDbContextFactory<ExecutorDbContext> dbContextFactory,
-        ISqlConnectionFactory sqlConnectionFactory,
+        IExecutionBuilderFactory executionBuilderFactory,
         JobStepExecution step)
         : base(logger, dbContextFactory, step)
     {
         _logger = logger;
-        _sqlConnectionFactory = sqlConnectionFactory;
+        _executionBuilderFactory = executionBuilderFactory;
         _executorLauncher = executorLauncher;
         _dbContextFactory = dbContextFactory;
         Step = step;
@@ -36,48 +35,48 @@ internal class JobStepExecutor : StepExecutorBase
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
-        string? stepIds = null;
-        if (Step.TagFilters.Any())
-        {
-            try
-            {
-                using var context = await _dbContextFactory.CreateDbContextAsync();
-                var steps = await context.Steps
-                    .Where(step => step.JobId == Step.JobToExecuteId)
-                    .Where(step => step.Tags.Any(tag => Step.TagFilters.Select(t => t.TagId).Contains(tag.TagId)))
-                    .Select(step => step.StepId)
-                    .ToListAsync();
-                if (steps.Any())
-                {
-                    stepIds = string.Join(",", steps);
-                }
-                else
-                {
-                    AddWarning("No steps to include in execution with current tag filters");
-                    return new Success();
-                }
-            }
-            catch (Exception ex)
-            {
-                return new Failure(ex, "Error getting list of steps based on tag filters");
-            }
-        }
-
         Guid jobExecutionId;
         try
         {
-            using var connection = _sqlConnectionFactory.Create();
-            await connection.OpenAsync(CancellationToken.None);
-            jobExecutionId = await connection.ExecuteScalarAsync<Guid>(
-                "EXEC biflow.ExecutionInitialize @JobId = @JobId_, @StepIds = @StepIds_, @Notify = @Notify_, @NotifyCaller = @NotifyCaller_, @NotifyCallerOvertime = @NotifyCallerOvertime_",
-                new
+            var tagIds = Step.TagFilters switch
+            {
+                { Count: > 0 } tags => tags.Select(t => t.TagId).ToArray(),
+                _ => null
+            };
+            var builder = await _executionBuilderFactory.CreateAsync(Step.JobToExecuteId, null,
+                context => step => step.IsEnabled,
+                context => step => tagIds == null || step.Tags.Any(t => tagIds.Contains(t.TagId)));
+            ArgumentNullException.ThrowIfNull(builder);
+            builder.AddAll();
+            builder.Notify = Step.Execution.Notify;
+            builder.NotifyCaller = Step.Execution.NotifyCaller;
+            builder.NotifyCallerOvertime = Step.Execution.NotifyCallerOvertime;
+
+            // Assign step parameter values to the initialized execution.
+            if (Step.StepExecutionParameters.Any())
+            {
+                var parameters = Step.StepExecutionParameters
+                    .Cast<JobStepExecutionParameter>()
+                    .Join(builder.Parameters,
+                    stepParam => stepParam.AssignToJobParameterId,
+                    jobParam => jobParam.ParameterId,
+                    (stepParam, jobParam) => (stepParam, jobParam));
+                foreach (var (stepParam, jobParam) in parameters)
                 {
-                    JobId_ = Step.JobToExecuteId,
-                    StepIds_ = stepIds,
-                    Notify_ = Step.Execution.Notify,
-                    NotifyCaller_ = Step.Execution.NotifyCaller,
-                    NotifyCallerOvertime_ = Step.Execution.NotifyCallerOvertime
-                });
+                    jobParam.ParameterValueType = stepParam.ParameterValueType;
+                    jobParam.ParameterValue = stepParam.ParameterValue;
+                    // Override UseExpression since the parameter is set with a value that may have been evaluated in this execution.
+                    jobParam.UseExpression = false;
+                }
+            }
+            
+            var execution = await builder.SaveExecutionAsync();
+            if (execution is null)
+            {
+                AddWarning("Child job execution contained no steps");
+                return new Success();
+            }
+            jobExecutionId = execution.ExecutionId;
         }
         catch (Exception ex)
         {
@@ -105,36 +104,6 @@ internal class JobStepExecutor : StepExecutorBase
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error logging child job execution id {executionId}", Step.ExecutionId, Step, jobExecutionId);
             AddWarning(ex, $"Error logging child job execution id {jobExecutionId}");
-        }
-
-        // Assign step parameter values to the initialized execution.
-        if (Step.StepExecutionParameters.Any())
-        {
-            try
-            {
-                using var context = _dbContextFactory.CreateDbContext();
-                var execution = await context.Executions
-                    .Include(e => e.ExecutionParameters)
-                    .FirstAsync(e => e.ExecutionId == jobExecutionId);
-                var parameters = Step.StepExecutionParameters
-                    .Cast<JobStepExecutionParameter>()
-                    .Join(execution.ExecutionParameters,
-                    stepParam => stepParam.AssignToJobParameterId,
-                    jobParam => jobParam.ParameterId,
-                    (stepParam, jobParam) => (stepParam, jobParam));
-                foreach (var (stepParam, jobParam) in parameters)
-                {
-                    jobParam.ParameterValueType = stepParam.ParameterValueType;
-                    jobParam.ParameterValue = stepParam.ParameterValue;
-                    // Override UseExpression since the parameter is set with a value that may have been evaluated in this execution.
-                    jobParam.UseExpression = false;
-                }
-                await context.SaveChangesAsync();
-            }
-            catch (Exception ex)
-            {
-                return new Failure(ex, $"Error assigning step parameter values to initialized execution's parameters for execution id {jobExecutionId}");
-            }
         }
             
         try

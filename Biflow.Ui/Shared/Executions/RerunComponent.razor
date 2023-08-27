@@ -1,4 +1,5 @@
-﻿@inject IDbContextFactory<BiflowContext> DbContextFactory
+﻿@using System.Linq.Expressions;
+@inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject IHxMessengerService Messenger
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IExecutionBuilderFactory BuilderFactory
@@ -300,7 +301,7 @@ else if (Builder is null)
             var stepIds = Execution.StepExecutions
                 .Select(e => e.StepId)
                 .ToArray();
-            Builder = await BuilderFactory.CreateAsync((Guid)Execution.JobId, user, stepIds);
+            Builder = await BuilderFactory.CreateAsync((Guid)Execution.JobId, user, context => step => stepIds.Contains(step.StepId));
         }
         catch (Exception ex)
         {

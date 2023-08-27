@@ -13,16 +13,16 @@ public class Execution
         ExecutionStatus = executionStatus;
     }
 
-    public Execution(Job job, string createdBy) : this(job)
+    public Execution(Job job, string? createdBy) : this(job)
     {
         CreatedBy = createdBy;
     }
 
-    public Execution(Job job, Schedule schedule) : this(job)
+    public Execution(Job job, Schedule? schedule) : this(job)
     {
-        ScheduleId = schedule.ScheduleId;
-        ScheduleName = schedule.ScheduleName;
-        CronExpression = schedule.CronExpression;
+        ScheduleId = schedule?.ScheduleId;
+        ScheduleName = schedule?.ScheduleName;
+        CronExpression = schedule?.CronExpression;
         Notify = true;
     }
 

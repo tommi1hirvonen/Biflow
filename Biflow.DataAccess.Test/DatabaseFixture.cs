@@ -215,9 +215,48 @@ public class DatabaseFixture : IAsyncLifetime
             Tags = new List<Tag>()
         };
 
-        job2.Steps = new List<Step> { step5, step6 };
+        var step7 = new SqlStep
+        {
+            IsEnabled = false,
+            JobId = job2.JobId,
+            StepName = "Test step 7",
+            ExecutionPhase = 30,
+            SqlStatement = "select 1",
+            Connection = connection,
+            Tags = new List<Tag> { tag1 }
+        };
 
-        context.AddRange(job1, job2);
+        var step8 = new SqlStep
+        {
+            IsEnabled = true,
+            JobId = job2.JobId,
+            StepName = "Test step 8",
+            ExecutionPhase = 30,
+            SqlStatement = "select 1",
+            Connection = connection,
+            Tags = new List<Tag> { tag1 }
+        };
+
+        job2.Steps = new List<Step> { step5, step6, step7, step8 };
+
+        var schedule1 = new Schedule(job1.JobId)
+        {
+            Job = job1,
+            IsEnabled = true,
+            ScheduleName = "Test schedule",
+            CronExpression = "",
+            Tags = new List<Tag>()
+        };
+        var schedule2 = new Schedule(job2.JobId)
+        {
+            Job = job2,
+            IsEnabled = true,
+            ScheduleName = "Another schedule",
+            CronExpression = "",
+            Tags = new List<Tag>() { tag1 }
+        };
+
+        context.AddRange(job1, job2, schedule1, schedule2);
         await context.SaveChangesAsync();
     }
 

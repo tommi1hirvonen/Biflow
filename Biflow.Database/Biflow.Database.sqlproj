@@ -80,7 +80,6 @@
     <Build Include="biflow\Stored Procedures\UserAdd.sql" />
     <Build Include="biflow\Stored Procedures\UserAuthenticate.sql" />
     <Build Include="biflow\Stored Procedures\UserUpdatePassword.sql" />
-    <Build Include="biflow\Stored Procedures\ExecutionInitialize.sql" />
     <Build Include="Security\biflow.sql" />
     <Build Include="biflow\Stored Procedures\JobCopy.sql" />
     <Build Include="biflow\Tables\Subscription.sql" />
