@@ -7,13 +7,15 @@ public partial class ExecutionBuilder : IDisposable
     private readonly BiflowContext _context;
     private readonly Step[] _steps;
     private readonly ExecutionBuilderStep[] _builderSteps;
-    private readonly Execution _execution;
+    private readonly Func<Execution> _createExecution;
+    private Execution _execution;
 
-    internal ExecutionBuilder(BiflowContext context, Execution execution, Step[] steps)
+    internal ExecutionBuilder(BiflowContext context, Func<Execution> createExecution, Step[] steps)
     {
         _context = context;
-        _execution = execution;
-        _steps = execution.DependencyMode switch
+        _createExecution = createExecution;
+        _execution = _createExecution();
+        _steps = _execution.DependencyMode switch
         {
             true => steps.OrderBy(s => s, new TopologicalStepComparer(steps)).ToArray(),
             false => steps.OrderBy(s => s.ExecutionPhase).ToArray()
@@ -65,6 +67,14 @@ public partial class ExecutionBuilder : IDisposable
         return _execution;
     }
 
+    /// <summary>
+    /// Resets the builder by creating a new <see cref="Execution"/> placeholder with no <see cref="StepExecution"/>s
+    /// </summary>
+    public void Reset() => _execution = _createExecution();
+
+    /// <summary>
+    /// Clears/removes all <see cref="StepExecution"/> objects from the <see cref="Execution"/> object
+    /// </summary>
     public void Clear() => _execution.StepExecutions.Clear();
 
     public void AddAll(Func<ExecutionBuilderStep, bool>? predicate = null)

@@ -329,6 +329,7 @@ else if (Builder is null)
                 LastStartedExecutionId = execution.ExecutionId;
                 await Executor.StartExecutionAsync(execution.ExecutionId);
             }
+            Builder.Reset();
             StateHasChanged();
         }
         catch (Exception ex)

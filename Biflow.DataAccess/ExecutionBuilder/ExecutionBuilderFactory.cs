@@ -20,8 +20,8 @@ internal class ExecutionBuilderFactory : IExecutionBuilderFactory
             return null;
         }
         var (context, job, steps) = data;
-        var execution = new Execution(job, createdBy);
-        return new ExecutionBuilder(context, execution, steps);
+        var createExecution = () => new Execution(job, createdBy);
+        return new ExecutionBuilder(context, createExecution, steps);
     }
 
     public async Task<ExecutionBuilder?> CreateAsync(Guid jobId, Guid scheduleId)
@@ -35,8 +35,8 @@ internal class ExecutionBuilderFactory : IExecutionBuilderFactory
         var schedule = await context.Schedules
             .AsNoTracking()
             .FirstAsync(s => s.ScheduleId == scheduleId);
-        var execution = new Execution(job, schedule);
-        return new ExecutionBuilder(context, execution, steps);
+        var createExecution = () => new Execution(job, schedule);
+        return new ExecutionBuilder(context, createExecution, steps);
     }
 
     private async Task<BuilderData?> GetBuilderDataAsync(Guid jobId, Guid[]? stepIdFilter)
