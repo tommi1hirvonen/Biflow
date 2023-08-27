@@ -1,5 +1,4 @@
-﻿using Biflow.Core;
-using Biflow.DataAccess;
+﻿using Biflow.DataAccess;
 using Biflow.Scheduler.Core;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,9 +16,9 @@ public class WebAppExecutionJob : ExecutionJobBase
         IConfiguration configuration,
         ILogger<WebAppExecutionJob> logger,
         IDbContextFactory<BiflowContext> dbContextFactory,
-        ISqlConnectionFactory sqlConnectionFactory,
+        IExecutionBuilderFactory executionBuilderFactory,
         IHttpClientFactory httpClientFactory)
-        : base(logger, dbContextFactory, sqlConnectionFactory)
+        : base(logger, dbContextFactory, executionBuilderFactory)
     {
         _configuration = configuration;
         _httpClient = httpClientFactory.CreateClient();

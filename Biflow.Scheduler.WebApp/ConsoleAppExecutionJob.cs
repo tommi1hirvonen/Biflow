@@ -1,5 +1,4 @@
-﻿using Biflow.Core;
-using Biflow.DataAccess;
+﻿using Biflow.DataAccess;
 using Biflow.Scheduler.Core;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
@@ -15,8 +14,8 @@ public class ConsoleAppExecutionJob : ExecutionJobBase
         ILogger<ConsoleAppExecutionJob> logger,
         IConfiguration configuration,
         IDbContextFactory<BiflowContext> dbContextFactory,
-        ISqlConnectionFactory sqlConnectionFactory)
-        : base(logger, dbContextFactory, sqlConnectionFactory)
+        IExecutionBuilderFactory executionBuilderFactory)
+        : base(logger, dbContextFactory, executionBuilderFactory)
     {
         _logger = logger;
         _configuration = configuration;
