@@ -30,7 +30,7 @@ public abstract class StepExecution
             .ToArray();
         ExecutionDependencies = step.Dependencies
             .Select(d => new ExecutionDependency(d, this))
-            .ToArray();
+            .ToList();
         Sources = step.Sources
             .Select(s =>
             {
