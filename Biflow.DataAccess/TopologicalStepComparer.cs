@@ -1,6 +1,6 @@
 ﻿using Biflow.DataAccess.Models;
 
-namespace Biflow.Ui.Core;
+namespace Biflow.DataAccess;
 
 /// <summary>
 /// Convenience class inheriting TopologicalComparer<Step, Guid>.

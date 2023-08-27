@@ -2,46 +2,111 @@
 
 namespace Biflow.DataAccess;
 
-public class ExecutionBuilder : IDisposable
+public partial class ExecutionBuilder : IDisposable
 {
     private readonly BiflowContext _context;
+    private readonly Step[] _steps;
+    private readonly ExecutionBuilderStep[] _builderSteps;
+    private readonly Execution _execution;
 
-    internal ExecutionBuilder(BiflowContext context, Execution execution, IEnumerable<Step> steps)
+    internal ExecutionBuilder(BiflowContext context, Execution execution, Step[] steps)
     {
         _context = context;
-        Execution = execution;
-        Steps = steps;
-    }
-
-    public Execution Execution { get; }
-
-    public IEnumerable<Step> Steps { get; }
-
-    public bool AddStep(Step step)
-    {
-        if (Execution.StepExecutions.Any(e => e.StepId == step.StepId))
+        _execution = execution;
+        _steps = execution.DependencyMode switch
         {
-            return false;
-        }
-        var stepExecution = step.ToStepExecution(Execution);
-        Execution.StepExecutions.Add(stepExecution);
-        return true;
+            true => steps.OrderBy(s => s, new TopologicalStepComparer(steps)).ToArray(),
+            false => steps.OrderBy(s => s.ExecutionPhase).ToArray()
+        };
+        _builderSteps = _steps
+            .Select(s => new ExecutionBuilderStep(this, s))
+            .ToArray();
     }
+
+    public bool Notify { get => _execution.Notify; set => _execution.Notify = value; }
+
+    public SubscriptionType? NotifyCaller { get => _execution.NotifyCaller; set => _execution.NotifyCaller = value; }
+
+    public bool NotifyCallerOvertime { get => _execution.NotifyCallerOvertime; set => _execution.NotifyCallerOvertime = value; }
+
+    public IEnumerable<ExecutionBuilderStep> Steps =>
+        _builderSteps.Where(s => !_execution.StepExecutions.Any(e => s.StepId == e.StepId));
+
+    public IEnumerable<ExecutionBuilderStepExecution> StepExecutions =>
+        _execution.StepExecutions.Select(e => new ExecutionBuilderStepExecution(e));
 
     public async Task SaveAsync()
     {
-        foreach (var step in Execution.StepExecutions)
+        foreach (var step in _execution.StepExecutions)
         {
             var toDelete = step.ExecutionDependencies
-                .Where(d => !Execution.StepExecutions.Any(e => d.DependantOnStepId == e.StepId))
+                .Where(d => !_execution.StepExecutions.Any(e => d.DependantOnStepId == e.StepId))
                 .ToArray();
             foreach (var dependency in toDelete)
             {
                 step.ExecutionDependencies.Remove(dependency);
             }
         }
-        _context.Executions.Add(Execution);
+        _context.Executions.Add(_execution);
         await _context.SaveChangesAsync();
+    }
+
+    internal bool Add(Step step)
+    {
+        // Step was already added.
+        if (_execution.StepExecutions.Any(e => e.StepId == step.StepId))
+        {
+            return false;
+        }
+        // Step is not one of the provided steps.
+        if (!_steps.Contains(step))
+        {
+            throw new ArgumentException($"Argument {nameof(step)} value was not in the list of provided steps");
+        }
+        var stepExecution = step.ToStepExecution(_execution);
+        _execution.StepExecutions.Add(stepExecution);
+        return true;
+    }
+
+    internal void AddWithDependencies(Step step, bool onlyOnSuccess) =>
+        RecurseDependencies(step, new(), onlyOnSuccess);
+
+    private void RecurseDependencies(Step step, List<Step> processedSteps, bool onlyOnSuccess)
+    {
+        // Add the step to the list of steps to execute if it is not there yet.
+        Add(step);
+
+        // Get dependency ids.
+        List<Guid> dependencyStepIds = step.Dependencies
+            .Where(d => d.DependencyType == DependencyType.OnSucceeded || !onlyOnSuccess)
+            .Select(d => d.DependantOnStepId)
+            .ToList();
+
+        // If there are no dependencies, return true.
+        if (dependencyStepIds.Count == 0)
+        {
+            return;
+        }
+        // This step was already handled.
+        else if (processedSteps.Any(s => s.StepId == step.StepId))
+        {
+            return;
+        }
+
+        processedSteps.Add(step);
+
+        // Get dependency steps based on ids. Only include enabled steps.
+        List<Step> dependencySteps = _steps
+            ?.Where(s => s.IsEnabled && dependencyStepIds.Any(id => s.StepId == id))
+            .ToList()
+            ?? new();
+
+        // Loop through the dependencies and handle them recursively.
+        foreach (var depencyStep in dependencySteps)
+        {
+            RecurseDependencies(depencyStep, processedSteps, onlyOnSuccess);
+        }
+
     }
 
     public void Dispose() => _context.Dispose();

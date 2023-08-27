@@ -1,4 +1,4 @@
-﻿namespace Biflow.Ui.Core;
+﻿namespace Biflow.DataAccess;
 
 /// <summary>
 /// Compares items topologically based on their dependencies

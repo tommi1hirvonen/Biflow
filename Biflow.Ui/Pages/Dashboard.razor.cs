@@ -67,18 +67,15 @@ public partial class Dashboard : ComponentBase
         var executions = await executionsQuery
             .Select(e => new { Execution = e, e.Job!.JobName })
             .OrderBy(e => e.Execution.CreatedDateTime).ToListAsync();
-        // Replace the historized job name with the current job name if it is available.
-        executions.ForEach(e => e.Execution.JobName = e.JobName is not null ? e.JobName : e.Execution.JobName);
         var executions_ = executions
-            .Select(e => e.Execution)
             .GroupBy(group => new
             {
-                group.JobName,
-                ((DateTimeOffset)group.CreatedDateTime.LocalDateTime).Date
+                JobName = group.JobName ?? group.Execution.JobName,
+                ((DateTimeOffset)group.Execution.CreatedDateTime.LocalDateTime).Date
             })
             .Select(select => new TimeSeriesItem
             {
-                DurationInMinutes = select.Average(total => (decimal)(total.ExecutionInSeconds ?? 0) / 60),
+                DurationInMinutes = select.Average(total => (decimal)(total.Execution.ExecutionInSeconds ?? 0) / 60),
                 JobName = select.Key.JobName,
                 Date = select.Key.Date,
                 NumberOfExecutions = select.Count()
@@ -110,14 +107,11 @@ public partial class Dashboard : ComponentBase
         var jobs = await jobsQuery
             .Select(e => new { Execution = e, e.Job!.JobName })
             .ToListAsync();
-        // Replace the historized job name with the current job name if it is available.
-        jobs.ForEach(j => j.Execution.JobName = j.JobName is not null ? j.JobName : j.Execution.JobName);
         Jobs = jobs
-            .Select(j => j.Execution)
-            .GroupBy(group => group.JobName)
+            .GroupBy(group => group.JobName ?? group.Execution.JobName)
             .Select(select => new ReportingJob
             {
-                SuccessPercent = select.Average(total => total.GetSuccessPercent()),
+                SuccessPercent = select.Average(total => total.Execution.GetSuccessPercent()),
                 JobName = select.Key
             })
             .OrderByDescending(order => order.SuccessPercent)
@@ -151,13 +145,17 @@ public partial class Dashboard : ComponentBase
         var topFailedStepsGrouping = await topFailedStepsQuery
             .Select(e => new { Execution = e, e.Execution.Job!.JobName })
             .ToListAsync();
-        // Replace the historized job name with the current job name if it is available.
-        topFailedStepsGrouping.ForEach(e => e.Execution.Execution.JobName = e.JobName is not null ? e.JobName : e.Execution.Execution.JobName);
         // Group step executions by step and job and calculate success percentages
         // based on the number of completed executions and the number of all executions.
         TopFailedSteps = topFailedStepsGrouping
-            .Select(g => g.Execution)
-            .GroupBy(group => new { group.StepId, group.StepName, group.StepType, group.Execution.JobId, group.Execution.JobName })
+            .GroupBy(group => new
+            {
+                group.Execution.StepId,
+                group.Execution.StepName,
+                group.Execution.StepType,
+                group.Execution.Execution.JobId,
+                JobName = group.JobName ?? group.Execution.Execution.JobName
+            })
             .Select(select => new TopStep
             {
                 StepName = select.Key.StepName,
@@ -168,7 +166,7 @@ public partial class Dashboard : ComponentBase
                 NoOfExecutions = select.Count(),
                 SuccessPercent = (decimal)select
                         .Count(e =>
-                            e.StepExecutionAttempts.Any(attempt =>
+                            e.Execution.StepExecutionAttempts.Any(attempt =>
                                 attempt.ExecutionStatus == StepExecutionStatus.Succeeded || attempt.ExecutionStatus == StepExecutionStatus.Warning))
                         / select.Count() * 100
             })

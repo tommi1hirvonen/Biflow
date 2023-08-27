@@ -8,7 +8,7 @@ public class Execution
 {
     public Execution(string jobName, DateTimeOffset createdDateTime, ExecutionStatus executionStatus)
     {
-        JobName = jobName;
+        _jobName = jobName;
         CreatedDateTime = createdDateTime;
         ExecutionStatus = executionStatus;
     }
@@ -30,7 +30,7 @@ public class Execution
     {
         ExecutionId = Guid.NewGuid();
         JobId = job.JobId;
-        JobName = job.JobName;
+        _jobName = job.JobName;
         CreatedDateTime = DateTimeOffset.Now;
         ExecutionStatus = ExecutionStatus.NotStarted;
         DependencyMode = job.UseDependencyMode;
@@ -53,11 +53,20 @@ public class Execution
     public Guid? JobId { get; private set; }
 
     [Display(Name = "Job")]
-    public string JobName { get; set; }
+    public string JobName
+    {
+        get => Job?.JobName ?? _jobName;
+        private set
+        {
+            _jobName = value;
+        }
+    }
+
+    private string _jobName;
 
     [Display(Name = "Created")]
     [DataType(DataType.DateTime)]
-    public DateTimeOffset CreatedDateTime { get; set; }
+    public DateTimeOffset CreatedDateTime { get; private set; }
 
     [Display(Name = "Started")]
     [DataType(DataType.DateTime)]
@@ -96,23 +105,23 @@ public class Execution
     public int? ExecutorProcessId { get; set; }
 
     [Display(Name = "Notify")]
-    public bool Notify { get; set; }
+    public bool Notify { get; internal set; }
 
     [Display(Name = "Notify caller")]
-    public SubscriptionType? NotifyCaller { get; set; }
+    public SubscriptionType? NotifyCaller { get; internal set; }
 
     [Display(Name = "Notify caller overtime")]
-    public bool NotifyCallerOvertime { get; set; }
+    public bool NotifyCallerOvertime { get; internal set; }
 
-    public ICollection<StepExecution> StepExecutions { get; set; } = null!;
+    public ICollection<StepExecution> StepExecutions { get; internal set; } = null!;
 
-    public ICollection<ExecutionParameter> ExecutionParameters { get; set; } = null!;
+    public ICollection<ExecutionParameter> ExecutionParameters { get; internal set; } = null!;
 
-    public ICollection<ExecutionConcurrency> ExecutionConcurrencies { get; set; } = null!;
+    public ICollection<ExecutionConcurrency> ExecutionConcurrencies { get; internal set; } = null!;
 
-    public Job? Job { get; set; }
+    public Job? Job { get; private set; }
 
-    public Schedule? Schedule { get; set; }
+    public Schedule? Schedule { get; private set; }
 
     [NotMapped]
     public double? ExecutionInSeconds => ((EndDateTime ?? DateTime.Now) - StartDateTime)?.TotalSeconds;

@@ -26,7 +26,7 @@ public class ExecutionBuilderTests
         var builder = await _executionBuilderFactory.CreateAsync(job.JobId, "testuser");
         foreach (var step in builder.Steps)
         {
-            builder.AddStep(step);
+            step.IncludeInExecution();
         }
         await builder.SaveAsync();
     }
@@ -42,7 +42,7 @@ public class ExecutionBuilderTests
         var builder = await _executionBuilderFactory.CreateAsync(job.JobId, "testuser");
         foreach (var step in builder.Steps)
         {
-            builder.AddStep(step);
+            step.IncludeInExecution();
         }
         await builder.SaveAsync();
     }
