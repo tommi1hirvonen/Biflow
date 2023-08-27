@@ -44,8 +44,6 @@ internal class JobExecutorFactory : IJobExecutorFactory
             .Include(e => e.StepExecutions)
             .ThenInclude(e => (e as PipelineStepExecution)!.PipelineClient)
             .ThenInclude(df => df.AppRegistration)
-            .Include(e => e.StepExecutions)
-            .ThenInclude(e => (e as JobStepExecution)!.TagFilters)
             .Include($"{nameof(Execution.StepExecutions)}.{nameof(IHasConnection.Connection)}")
             .FirstAsync(e => e.ExecutionId == executionId);
         return ActivatorUtilities.CreateInstance<JobExecutor>(_serviceProvider, execution);
