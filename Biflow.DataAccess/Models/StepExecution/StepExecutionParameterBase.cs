@@ -26,6 +26,7 @@ public abstract class StepExecutionParameterBase : DynamicParameter
         ParameterValueType = parameter.ParameterValueType;
         InheritFromExecutionParameterId = parameter.InheritFromJobParameterId;
         InheritFromExecutionParameter = execution.Execution.ExecutionParameters.FirstOrDefault(p => p.ParameterId == parameter.InheritFromJobParameterId);
+        UseExpression = parameter.UseExpression;
         Expression = parameter.Expression;
         ExpressionParameters = parameter.ExpressionParameters
             .Select(p => new StepExecutionParameterExpressionParameter(p, execution, this))
