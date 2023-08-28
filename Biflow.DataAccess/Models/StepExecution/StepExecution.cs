@@ -20,6 +20,7 @@ public abstract class StepExecution
         Execution = execution;
         StepId = step.StepId;
         StepName = step.StepName ?? "";
+        StepType = step.StepType;
         DuplicateExecutionBehaviour = step.DuplicateExecutionBehaviour;
         ExecutionPhase = step.ExecutionPhase;
         RetryAttempts = step.RetryAttempts;
