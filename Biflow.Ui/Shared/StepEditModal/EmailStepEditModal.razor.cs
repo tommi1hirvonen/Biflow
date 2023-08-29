@@ -30,7 +30,6 @@ public partial class EmailStepEditModal : StepEditModal<EmailStep>
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            IsEnabled = true,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
             StepParameters = new List<EmailStepParameter>(),

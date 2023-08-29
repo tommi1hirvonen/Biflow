@@ -57,7 +57,7 @@ public abstract class Step : IComparable
 
     [Required]
     [Display(Name = "Enabled")]
-    public bool IsEnabled { get; set; }
+    public bool IsEnabled { get; set; } = true;
 
     [Required]
     [Display(Name = "Retry attempts")]

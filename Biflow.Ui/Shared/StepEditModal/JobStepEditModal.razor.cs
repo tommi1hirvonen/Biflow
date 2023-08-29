@@ -40,7 +40,6 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            IsEnabled = true,
             JobToExecuteId = null,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),

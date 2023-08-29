@@ -25,7 +25,6 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            IsEnabled = true,
             PipelineClientId = PipelineClients?.FirstOrDefault()?.PipelineClientId,
             StepParameters = new List<PipelineStepParameter>(),
             Dependencies = new List<Dependency>(),

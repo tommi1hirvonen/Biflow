@@ -20,7 +20,6 @@ public partial class AgentJobStepEditModal : StepEditModal<AgentJobStep>
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            IsEnabled = true,
             ConnectionId = Connections?.FirstOrDefault()?.ConnectionId,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),

@@ -40,7 +40,6 @@ public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            IsEnabled = true,
             AppRegistrationId = AppRegistrations?.FirstOrDefault()?.AppRegistrationId,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),

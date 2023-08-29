@@ -15,7 +15,6 @@ public partial class ExeStepEditModal : StepEditModal<ExeStep>
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            IsEnabled = true,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
             Sources = new List<DataObject>(),

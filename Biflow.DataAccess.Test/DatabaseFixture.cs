@@ -81,7 +81,6 @@ public class DatabaseFixture : IAsyncLifetime
 
         var step1 = new SqlStep
         {
-            IsEnabled = true,
             JobId = job1.JobId,
             StepName = "Test step 1",
             ExecutionPhase = 10,
@@ -92,7 +91,6 @@ public class DatabaseFixture : IAsyncLifetime
 
         var step2 = new SqlStep
         {
-            IsEnabled = true,
             JobId = job1.JobId,
             StepName = "Test step 2",
             StepDescription = "Test step 2 description",
@@ -114,7 +112,6 @@ public class DatabaseFixture : IAsyncLifetime
 
         var step3 = new SqlStep
         {
-            IsEnabled = true,
             JobId = job1.JobId,
             StepName = "Test step 3",
             ExecutionPhase = 20,
@@ -133,7 +130,6 @@ public class DatabaseFixture : IAsyncLifetime
 
         var step4 = new SqlStep
         {
-            IsEnabled = true,
             JobId = job1.JobId,
             StepName = "Test step 4",
             ExecutionPhase = 30,
@@ -193,7 +189,6 @@ public class DatabaseFixture : IAsyncLifetime
 
         var step5 = new JobStep
         {
-            IsEnabled = true,
             JobId = job2.JobId,
             StepName = "Test step 5",
             ExecutionPhase = 0,
@@ -205,7 +200,6 @@ public class DatabaseFixture : IAsyncLifetime
 
         var step6 = new JobStep
         {
-            IsEnabled = true,
             JobId = job2.JobId,
             StepName = "Test step 6",
             ExecutionPhase = 0,
@@ -228,7 +222,6 @@ public class DatabaseFixture : IAsyncLifetime
 
         var step8 = new SqlStep
         {
-            IsEnabled = true,
             JobId = job2.JobId,
             StepName = "Test step 8",
             ExecutionPhase = 30,

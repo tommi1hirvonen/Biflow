@@ -21,7 +21,6 @@ public partial class TabularStepEditModal : StepEditModal<TabularStep>
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            IsEnabled = true,
             ConnectionId = AsConnections?.FirstOrDefault()?.ConnectionId,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),

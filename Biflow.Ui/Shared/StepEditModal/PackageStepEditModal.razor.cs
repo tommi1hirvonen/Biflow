@@ -23,7 +23,6 @@ public partial class PackageStepEditModal : StepEditModal<PackageStep>
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            IsEnabled = true,
             ConnectionId = Connections?.FirstOrDefault()?.ConnectionId,
             StepParameters = new List<PackageStepParameter>(),
             Dependencies = new List<Dependency>(),

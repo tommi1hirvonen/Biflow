@@ -49,7 +49,6 @@ public partial class FunctionStepEditModal : StepEditModal<FunctionStep>
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            IsEnabled = true,
             FunctionAppId = FunctionApps?.FirstOrDefault()?.FunctionAppId,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
