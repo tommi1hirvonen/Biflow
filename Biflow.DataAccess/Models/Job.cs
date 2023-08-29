@@ -53,7 +53,7 @@ public class Job
 
     [Required]
     [Display(Name = "Enabled")]
-    public bool IsEnabled { get; set; }
+    public bool IsEnabled { get; set; } = true;
 
     [Column("JobCategoryId")]
     public Guid? CategoryId { get; set; }

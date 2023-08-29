@@ -62,7 +62,6 @@ public class DatabaseFixture : IAsyncLifetime
             StopOnFirstError = true,
             MaxParallelSteps = 4,
             OvertimeNotificationLimitMinutes = 120,
-            IsEnabled = true,
             Category = new JobCategory { CategoryName = "Test category" }
         };
         var jobParameter = new JobParameter
@@ -183,7 +182,6 @@ public class DatabaseFixture : IAsyncLifetime
             StopOnFirstError = true,
             MaxParallelSteps = 5,
             OvertimeNotificationLimitMinutes = 0,
-            IsEnabled = true,
             Category = null
         };
 

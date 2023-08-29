@@ -52,7 +52,7 @@
 
     private BiflowContext? EditContext { get; set; }
 
-    private Job Job { get; set; } = new() { IsEnabled = true };
+    private Job Job { get; set; } = new();
 
     private IEnumerable<JobCategory>? Categories { get; set; }
 
@@ -68,7 +68,7 @@
             await EditContext.SaveChangesAsync();
             await Offcanvas.LetAsync(x => x.HideAsync());
             await OnJobSubmitted.InvokeAsync(Job);
-            Job = new() { IsEnabled = true };
+            Job = new();
             EditContext.Dispose();
             EditContext = null;
         }
@@ -101,7 +101,7 @@
             }
             else
             {
-                Job = new() { IsEnabled = true };
+                Job = new();
             }
             await Offcanvas.LetAsync(x => x.ShowAsync());
         }
