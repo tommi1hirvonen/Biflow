@@ -31,7 +31,7 @@ public class Schedule
 
     [Required]
     [Display(Name = "Enabled")]
-    public bool IsEnabled { get; set; }
+    public bool IsEnabled { get; set; } = true;
 
     [Required]
     [Display(Name = "Created")]

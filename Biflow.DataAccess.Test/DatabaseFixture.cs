@@ -233,7 +233,6 @@ public class DatabaseFixture : IAsyncLifetime
         var schedule1 = new Schedule(job1.JobId)
         {
             Job = job1,
-            IsEnabled = true,
             ScheduleName = "Test schedule",
             CronExpression = "",
             Tags = new List<Tag>()
@@ -241,7 +240,6 @@ public class DatabaseFixture : IAsyncLifetime
         var schedule2 = new Schedule(job2.JobId)
         {
             Job = job2,
-            IsEnabled = true,
             ScheduleName = "Another schedule",
             CronExpression = "",
             Tags = new List<Tag>() { tag1 }
