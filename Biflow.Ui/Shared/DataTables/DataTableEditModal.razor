@@ -453,7 +453,6 @@
         if (EditTable is null) return;
         (EditTable.TargetSchemaName, EditTable.TargetTableName) = table;
         Columns = await EditTable.GetColumnNamesAsync();
-        EditTable.Lookups.Clear();
     }
 
     public void Dispose() => EditContext?.Dispose();
