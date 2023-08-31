@@ -79,6 +79,22 @@ public class AppRegistration
         return datasets;
     }
 
+    public async Task<string> GetGroupNameAsync(string groupId, ITokenService tokenService, CancellationToken cancellationToken = default)
+    {
+        var client = await GetClientAsync(tokenService);
+        var filter = $"id eq '{groupId}'";
+        var groups = await client.Groups.GetGroupsAsync(filter, top: 1, cancellationToken: cancellationToken);
+        var group = groups.Value.First();
+        return group.Name;
+    }
+
+    public async Task<string> GetDatasetNameAsync(string groupId, string datasetId, ITokenService tokenService, CancellationToken cancellationToken = default)
+    {
+        var client = await GetClientAsync(tokenService);
+        var dataset = await client.Datasets.GetDatasetInGroupAsync(Guid.Parse(groupId), datasetId, cancellationToken);
+        return dataset.Name;
+    }
+
     public async Task TestConnection()
     {
         var credential = new ClientSecretCredential(TenantId, ClientId, ClientSecret);

@@ -1,9 +1,9 @@
 ﻿namespace Biflow.Ui.Shared.StepEdit;
 
-public record DatasetSelectedResponse(string GroupId, string DatasetId)
+public record DatasetSelectedResponse(string GroupId, string GroupName, string DatasetId, string DatasetName)
 {
-    public void Desconstruct(out string groupId, out string datasetId)
+    public void Desconstruct(out string groupId, out string groupName, out string datasetId, out string datasetName)
     {
-        (groupId, datasetId) = (GroupId, DatasetId);
+        (groupId, groupName, datasetId, datasetName) = (GroupId, GroupName, DatasetId, DatasetName);
     }
 }

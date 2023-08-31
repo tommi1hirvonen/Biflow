@@ -107,13 +107,16 @@
 
     private async Task SelectDatasetAsync()
     {
-        var groupId = SelectedGroup?.GroupId;
-        var datasetId = SelectedDataset?.DatasetId;
-        if (groupId is not null && datasetId is not null)
+        if (SelectedGroup is null || SelectedDataset is null)
         {
-            await OnDatasetSelected.InvokeAsync(new(groupId, datasetId));
-            await Offcanvas.LetAsync(x => x.HideAsync());
+            return;
         }
+        var selectedResponse = new DatasetSelectedResponse(
+            SelectedGroup.Value.GroupId, SelectedGroup.Value.GroupName,
+            SelectedDataset.Value.DatasetId, SelectedDataset.Value.DatasetName
+        );
+        await OnDatasetSelected.InvokeAsync(selectedResponse);
+        await Offcanvas.LetAsync(x => x.HideAsync());
     }
 
     private void OnClosed()

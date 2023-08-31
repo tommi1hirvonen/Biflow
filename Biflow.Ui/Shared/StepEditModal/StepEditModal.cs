@@ -63,6 +63,8 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     protected async Task EnsureAllTagsInitialized() => AllTags ??= await Context.Tags.ToListAsync();
 
+    protected virtual Task OnModalShownAsync(TStep step) => Task.CompletedTask;
+
     public async Task<IEnumerable<DataObject>> GetDataObjectsAsync()
     {
         DataObjects ??= await Context.DataObjects.ToListAsync();
@@ -210,6 +212,8 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
         }
         ResetTags();
         StateHasChanged();
+        if (Step is not null)
+            await OnModalShownAsync(Step);
     }
 
     public void Dispose() => Context?.Dispose();

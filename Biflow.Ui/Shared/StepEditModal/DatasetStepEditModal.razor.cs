@@ -11,30 +11,63 @@ public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
 {
     [Parameter] public IList<AppRegistration>? AppRegistrations { get; set; }
 
+    [Inject] private ITokenService TokenService { get; set; } = null!;
+
     private DatasetSelectOffcanvas? DatasetSelectOffcanvas { get; set; }
 
     internal override string FormId => "dataset_step_edit_form";
 
     private Task OpenDatasetSelectOffcanvas() => DatasetSelectOffcanvas.LetAsync(x => x.ShowAsync());
 
+    private string? DatasetGroupName { get; set; }
+
+    private string? DatasetName { get; set; }
+
     private void OnDatasetSelected(DatasetSelectedResponse dataset)
     {
         ArgumentNullException.ThrowIfNull(Step);
-        (Step.DatasetGroupId, Step.DatasetId) = dataset;
+        (Step.DatasetGroupId, DatasetGroupName, Step.DatasetId, DatasetName) = dataset;
     }
 
-    protected override Task<DatasetStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
-        context.DatasetSteps
-        .Include(step => step.Job)
-        .Include(step => step.Tags)
-        .Include(step => step.Dependencies)
-        .Include(step => step.Sources)
-        .Include(step => step.Targets)
-        .Include(step => step.ExecutionConditionParameters)
-        .FirstAsync(step => step.StepId == stepId);
+    protected override async Task OnModalShownAsync(DatasetStep step)
+    {
+        try
+        {
+            var appRegistration = AppRegistrations?.FirstOrDefault(a => a.AppRegistrationId == step.AppRegistrationId);
+            (DatasetGroupName, DatasetName) = (appRegistration, step) switch
+            {
+                (not null, { DatasetGroupId: not null, DatasetId: not null }) => (
+                    await appRegistration.GetGroupNameAsync(step.DatasetGroupId, TokenService),
+                    await appRegistration.GetDatasetNameAsync(step.DatasetGroupId, step.DatasetId, TokenService)
+                    ),
+                _ => ("", "")
+            };
+        }
+        catch
+        {
+            (DatasetGroupName, DatasetName) = ("", "");
+        }
+    }
 
-    protected override DatasetStep CreateNewStep(Job job) =>
-        new()
+    protected override async Task<DatasetStep> GetExistingStepAsync(BiflowContext context, Guid stepId)
+    {
+        (DatasetGroupName, DatasetName) = (null, null);
+        var step = await context.DatasetSteps
+            .Include(step => step.Job)
+            .Include(step => step.Tags)
+            .Include(step => step.Dependencies)
+            .Include(step => step.Sources)
+            .Include(step => step.Targets)
+            .Include(step => step.ExecutionConditionParameters)
+            .FirstAsync(step => step.StepId == stepId);
+        
+        return step;
+    }
+
+    protected override DatasetStep CreateNewStep(Job job)
+    {
+        (DatasetGroupName, DatasetName) = ("", "");
+        return new()
         {
             JobId = job.JobId,
             Job = job,
@@ -47,4 +80,5 @@ public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
             Targets = new List<DataObject>(),
             ExecutionConditionParameters = new List<ExecutionConditionParameter>()
         };
+    }
 }
