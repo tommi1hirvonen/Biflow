@@ -16,7 +16,7 @@
         </div>
         <div class="row mt-1">
             <div class="col">
-                <small class="text-muted">Actual no of executions: @Executions?.Count</small>
+                <small class="text-muted">Actual no of executions: @Executions?.Count()</small>
             </div>
         </div>
 
@@ -48,7 +48,7 @@
                         {
                             <tr><td colspan="4" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                         }
-                        else if (Executions.Count == 0)
+                        else if (!Executions.Any())
                         {
                             <tr><td colspan="4">No executions</td></tr>
                         }
@@ -89,7 +89,7 @@
 
     private LineChartDataset? LineChartDataset { get; set; }
 
-    private List<StepExecutionAttempt>? Executions { get; set; }
+    private IEnumerable<StepExecutionAttempt>? Executions { get; set; }
 
     private const int DefaultMaxExecutions = 50;
 
@@ -139,13 +139,13 @@
             .OrderByDescending(execution => execution.StepExecution.Execution.CreatedDateTime)
             .ThenByDescending(Execution => Execution.StartDateTime)
             .Take(MaxExecutions)
-            .ToListAsync();
+            .ToArrayAsync();
 
         var datapoints = Executions
             .Where(e => e.StartDateTime is not null)
             .GroupBy(group => ((DateTimeOffset)group.StartDateTime!).Date)
             .Select(select => new TimeSeriesDataPoint(DateOnly.FromDateTime(select.Key.Date), select.Average(total => (decimal)(total.ExecutionInSeconds ?? 0) / 60))) // Calculate avg. duration in minutes per day
-            .ToList();
+            .ToArray();
         var series = new LineChartSeries[]
         {
             new LineChartSeries("Avg. duration", datapoints)

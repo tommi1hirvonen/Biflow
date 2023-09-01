@@ -44,9 +44,9 @@ public partial class Executions : ComponentBase, IAsyncDisposable
     }
     private DateTime _toDateTime = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddMinutes(1);
 
-    private List<ExecutionProjection>? Executions_ { get; set; }
+    private IEnumerable<ExecutionProjection>? Executions_ { get; set; }
 
-    private List<StepExecutionProjection>? StepExecutions { get; set; }
+    private IEnumerable<StepExecutionProjection>? StepExecutions { get; set; }
 
     private HashSet<ExecutionStatus> JobStatusFilter { get; set; } = new();
     
@@ -162,7 +162,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
                     e.EndDateTime,
                     e.ExecutionStatus,
                     e.StepExecutions.Count()))
-                .ToListAsync();
+                .ToArrayAsync();
         }
         else
         {
@@ -211,8 +211,8 @@ public partial class Executions : ComponentBase, IAsyncDisposable
                     e.StepExecution.Execution.ScheduleId,
                     e.StepExecution.Execution.JobId,
                     e.StepExecution.Execution.Job!.JobName ?? e.StepExecution.Execution.JobName,
-                    e.StepExecution.Step.Tags.ToList()))
-                .ToListAsync();
+                    e.StepExecution.Step.Tags.ToArray()))
+                .ToArrayAsync();
         }
 
         Loading = false;

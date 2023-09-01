@@ -51,7 +51,7 @@ public partial class ExecutionDetails : ComponentBase
             e.StepExecution.Execution.ScheduleId,
             e.StepExecution.Execution.JobId,
             e.StepExecution.Execution.Job?.JobName ?? e.StepExecution.Execution.JobName,
-            e.StepExecution.Step?.Tags ?? new List<Tag>()));
+            e.StepExecution.Step?.Tags.ToArray() ?? Array.Empty<Tag>()));
 
     private Report ShowReport { get; set; } = Report.Table;
 
@@ -159,8 +159,8 @@ public partial class ExecutionDetails : ComponentBase
         ArgumentNullException.ThrowIfNull(Execution);
         GraphShouldRender = false;
 
-        List<DependencyGraphNode> nodes;
-        List<DependencyGraphEdge> edges;
+        DependencyGraphNode[] nodes;
+        DependencyGraphEdge[] edges;
         if (DependencyGraphStepFilter is null)
         {
             // Create a list of steps and dependencies and send them through JSInterop as JSON objects.
@@ -175,7 +175,7 @@ public partial class ExecutionDetails : ComponentBase
                         TooltipText: $"{step.StepType}, {status}, {step.GetDurationInSeconds().SecondsToReadableFormat()}",
                         EnableOnClick: true
                     );
-                }).ToList();
+                }).ToArray();
             edges = Execution.StepExecutions
                 .SelectMany(step => step.ExecutionDependencies)
                 .Where(dep => dep.DependantOnStepExecution is not null)
@@ -183,7 +183,7 @@ public partial class ExecutionDetails : ComponentBase
                     Id: dep.StepId.ToString(),
                     DependsOnId: dep.DependantOnStepId.ToString(),
                     CssClass: dep.DependencyType.ToString().ToLower()
-                )).ToList();
+                )).ToArray();
         }
         else
         {
@@ -200,7 +200,7 @@ public partial class ExecutionDetails : ComponentBase
                     CssClass: $"enabled {step.ExecutionStatus?.ToString().ToLower() ?? ""} internal",
                     TooltipText: $"{step.StepType}",
                     EnableOnClick: true
-                )).ToList();
+                )).ToArray();
                 edges = steps
                     .SelectMany(step => step.ExecutionDependencies)
                     .Where(d => steps.Any(s => d.DependantOnStepId == s.StepId) && steps.Any(s => d.StepId == s.StepId)) // only include dependencies whose step is included
@@ -208,7 +208,7 @@ public partial class ExecutionDetails : ComponentBase
                         Id: dep.StepId.ToString(),
                         DependsOnId: dep.DependantOnStepId.ToString(),
                         CssClass: dep.DependencyType.ToString().ToLower()
-                    )).ToList();                
+                    )).ToArray();                
             }
             else
             {
@@ -332,6 +332,6 @@ public partial class ExecutionDetails : ComponentBase
         });
     }
 
-    private string TextSelector(StepExecution step) => step.StepName ?? "";
+    private static string TextSelector(StepExecution step) => step.StepName ?? "";
 
 }

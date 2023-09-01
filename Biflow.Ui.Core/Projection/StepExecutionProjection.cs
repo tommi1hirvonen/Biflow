@@ -20,7 +20,7 @@ public record StepExecutionProjection(
     Guid? ScheduleId,
     Guid? JobId,
     string JobName,
-    IList<Tag> Tags)
+    Tag[] Tags)
 {
     public double? ExecutionInSeconds => ((EndDateTime ?? DateTime.Now) - StartDateTime)?.TotalSeconds;
 }

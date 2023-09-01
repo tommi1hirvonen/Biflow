@@ -50,7 +50,7 @@
 
 <div class="row mt-1">
     <div class="col">
-        <small class="text-muted">Actual no of executions: @Executions?.Count</small>
+        <small class="text-muted">Actual no of executions: @Executions?.Count()</small>
     </div>
 </div>
 
@@ -90,13 +90,13 @@
             </thead>
             <tbody>
                 @{
-                    var executions = FilteredExecutions.ToList();
+                    var executions = FilteredExecutions.ToArray();
                 }
                 @if (Executions is null)
                 {
                     <tr><td colspan="7" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                 }
-                else if (executions.Count == 0)
+                else if (!executions.Any())
                 {
                     <tr>
                         <td colspan="6">
@@ -156,7 +156,7 @@
 
     [Parameter] public string? JobName { get; set; }
 
-    public IList<ExecutionProjection>? Executions { get; set; }
+    private IEnumerable<ExecutionProjection>? Executions { get; set; }
 
     private const int DefaultMaxExecutions = 50;
 
@@ -211,7 +211,7 @@
                 e.EndDateTime,
                 e.ExecutionStatus,
                 e.StepExecutions.Count()))
-            .ToListAsync();
+            .ToArrayAsync();
         CalculateChartDataset();
         StateHasChanged();
     }
@@ -222,7 +222,7 @@
             .Where(e => e.StartDateTime is not null)
             .GroupBy(e => DateOnly.FromDateTime(e.CreatedDateTime.LocalDateTime))
             .Select(grouping => new TimeSeriesDataPoint(grouping.Key, grouping.Average(total => (decimal)(total.ExecutionInSeconds ?? 0) / 60)))
-            .ToList();
+            .ToArray();
         var series = new LineChartSeries[]
         {
             new("Avg. duration", dataPoints)
