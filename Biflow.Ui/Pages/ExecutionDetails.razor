@@ -187,9 +187,12 @@
             }
             else if (Execution.ParentExecution is StepExecutionAttemptReference parent)
             {
-                <text>
-                    Execution id: <a href="executions/@parent.ExecutionId">@parent.ExecutionId</a>, Step id: @parent.StepId, Retry index: @parent.RetryAttemptIndex (parent execution)
-                </text>
+                var json = JsonSerializer.Serialize(parent);
+                // Replace execution id in json with a link to the parent execution's details.
+                var jsonWithLink = json.Replace(parent.ExecutionId.ToString(), $"<a href=\"executions/{parent.ExecutionId}\">{parent.ExecutionId}</a>");
+                <small>
+                    @((MarkupString)jsonWithLink)
+                </small>
             }
             else
             {
