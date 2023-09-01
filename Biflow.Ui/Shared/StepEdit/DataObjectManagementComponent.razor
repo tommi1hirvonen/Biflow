@@ -35,10 +35,10 @@
     </div>
 </div>
 @{
-    var colspan = (ShowServer, ShowDatabase) switch
+    var colspan = (ShowServer, ShowDatabase, NewObject is not null) switch
     {
-        (true, true) => 6,
-        (false, true) or (true, false) => 5,
+        (true, true, _) or (_, _, true) => 6,
+        (false, true, _) or (true, false, _) => 5,
         _ => 4
     };
 }
@@ -160,14 +160,14 @@
                 </td>
                 <td colspan="2">
                     <HxButtonGroup Size="ButtonGroupSize.Small">
-                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-success" OnClick="SubmitNewObject">
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-success" OnClick="SubmitNewObject" title="Add">
                             <CxIcon Icon="FeatherIcon.Check" />
                         </HxButton>
-                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger" OnClick="() => NewObject = null">
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger" OnClick="() => NewObject = null" title="Discard">
                             <CxIcon Icon="FeatherIcon.X" />
                         </HxButton>
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
-                              OnClick="async () => await DbObjectExplorerOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId))">
+                              OnClick="async () => await DbObjectExplorerOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId))" title="Browse">
                             <CxIcon Icon="FeatherIcon.MoreHorizontal" />
                         </HxButton>
                     </HxButtonGroup>
@@ -199,8 +199,8 @@
                 @foreach (var database in databases)
                 {
                     <tr style="cursor: pointer;" @onclick="() => { NewObject.ServerName = database.ServerName; NewObject.DatabaseName = database.DatabaseName; }">
-                        <td colspan="2">@database.ServerName</td>
-                        <td colspan="4"><HighlightableText Text="@database.DatabaseName" PartToHighlight="@NewObject.DatabaseName" /></td>
+                        <td colspan="1">@database.ServerName</td>
+                        <td colspan="5"><HighlightableText Text="@database.DatabaseName" PartToHighlight="@NewObject.DatabaseName" /></td>
                     </tr>
                 }
             }
@@ -218,8 +218,8 @@
                 {
                     <tr style="cursor: pointer;" @onclick="() => { NewObject.ServerName = schema.ServerName; NewObject.DatabaseName = schema.DatabaseName; NewObject.SchemaName = schema.SchemaName; }">
                         <td colspan="1">@schema.ServerName</td>
-                        <td colspan="2">@schema.DatabaseName</td>
-                        <td colspan="3"><HighlightableText Text="@schema.SchemaName" PartToHighlight="@NewObject.SchemaName" /></td>
+                        <td colspan="1">@schema.DatabaseName</td>
+                        <td colspan="4"><HighlightableText Text="@schema.SchemaName" PartToHighlight="@NewObject.SchemaName" /></td>
                     </tr>
                 }
             }
@@ -235,10 +235,17 @@
                 @foreach (var obj in objects)
                 {
                     <tr style="cursor: pointer;" @onclick="() => NewObject = obj">
-                        <td>@obj.ServerName</td>
-                        <td>@obj.DatabaseName</td>
-                        <td>@obj.SchemaName</td>
-                        <td colspan="3"><HighlightableText Text="@obj.ObjectName" PartToHighlight="@NewObject.ObjectName" /></td>
+                        <td class="align-middle">@obj.ServerName</td>
+                        <td class="align-middle">@obj.DatabaseName</td>
+                        <td class="align-middle">@obj.SchemaName</td>
+                        <td class="align-middle" colspan="2"><HighlightableText Text="@obj.ObjectName" PartToHighlight="@NewObject.ObjectName" /></td>
+                        <td>
+                            <HxButtonGroup Size="ButtonGroupSize.Small">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => { NewObject = obj; SubmitNewObject(); }" title="Select & add">
+                                    <CxIcon Icon="FeatherIcon.Check" />
+                                </HxButton>
+                            </HxButtonGroup>
+                        </td>
                     </tr>
                 }
             }
