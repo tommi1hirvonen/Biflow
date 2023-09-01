@@ -22,5 +22,13 @@ public record StepExecutionProjection(
     string JobName,
     Tag[] Tags)
 {
+    public virtual bool Equals(StepExecutionProjection? other) =>
+        other is not null &&
+        ExecutionId == other.ExecutionId &&
+        StepId == other.StepId &&
+        RetryAttemptIndex == other.RetryAttemptIndex;
+
+    public override int GetHashCode() => base.GetHashCode();
+
     public double? ExecutionInSeconds => ((EndDateTime ?? DateTime.Now) - StartDateTime)?.TotalSeconds;
 }

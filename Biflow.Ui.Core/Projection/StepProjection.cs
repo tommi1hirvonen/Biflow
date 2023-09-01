@@ -12,9 +12,14 @@ public record StepProjection(
     StepType StepType,
     int ExecutionPhase,
     bool IsEnabled,
-    IList<Tag> Tags,
-    IList<Guid> Dependencies) : IComparable
+    Tag[] Tags,
+    Guid[] Dependencies) : IComparable
 {
+    public virtual bool Equals(StepProjection? other) =>
+        other is not null && StepId == other.StepId;
+
+    public override int GetHashCode() => base.GetHashCode();
+
     public int CompareTo(object? obj)
     {
         if (obj is null) return 1;
