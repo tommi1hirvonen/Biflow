@@ -111,8 +111,8 @@ public class BiflowContext : DbContext
 
         modelBuilder.Entity<JobStepExecution>()
             .Property(p => p.TagFilters).HasConversion(
-                from => JsonSerializer.Serialize(from, new JsonSerializerOptions { IncludeFields = true }),
-                to => JsonSerializer.Deserialize<List<JobStepExecution.TagFilter>>(string.IsNullOrEmpty(to) ? "[]" : to, new JsonSerializerOptions { IncludeFields = true }) ?? new());
+                from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
+                to => JsonSerializer.Deserialize<List<JobStepExecution.TagFilter>>(string.IsNullOrEmpty(to) ? "[]" : to, null as JsonSerializerOptions) ?? new());
 
         modelBuilder.Entity<StepExecutionAttempt>(e =>
         {
