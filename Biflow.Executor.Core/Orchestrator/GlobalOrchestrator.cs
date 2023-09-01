@@ -25,11 +25,11 @@ internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForProcessing
         _stepExecutorFactory = stepExecutorFactory;
     }
 
-    public async Task RegisterStepsAndObservers(List<IOrchestrationObserver> observers)
+    public async Task RegisterStepsAndObservers(IEnumerable<IOrchestrationObserver> observers)
     {
         try
         {
-            List<Task> tasks;
+            Task[] tasks;
             // Acquire lock for editing the step statuses and until all observers have subscribed.
             lock (_lock)
             {
@@ -37,13 +37,13 @@ internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForProcessing
                 {
                     _stepStatuses[stepExecution] = OrchestrationStatus.NotStarted;
                 }
-                var statuses = _stepStatuses.Select(s => new OrchestrationUpdate(s.Key, s.Value)).ToList();
+                var statuses = _stepStatuses.Select(s => new OrchestrationUpdate(s.Key, s.Value)).ToArray();
                 foreach (var observer in observers)
                 {
                     observer.RegisterInitialUpdates(statuses);
                     observer.Subscribe(this);
                 }
-                tasks = observers.Select(o => o.WaitForProcessingAsync(this)).ToList();
+                tasks = observers.Select(o => o.WaitForProcessingAsync(this)).ToArray();
             }
             await Task.WhenAll(tasks);
         }

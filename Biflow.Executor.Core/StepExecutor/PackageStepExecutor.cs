@@ -114,7 +114,7 @@ internal class PackageStepExecutor : StepExecutorBase
         {
             try
             {
-                List<string?> errors = await GetErrorMessagesAsync(Step.Connection.ConnectionString, packageOperationId);
+                var errors = await GetErrorMessagesAsync(Step.Connection.ConnectionString, packageOperationId);
                 return new Failure(string.Join("\n\n", errors));
             }
             catch (Exception ex)
@@ -231,7 +231,7 @@ internal class PackageStepExecutor : StepExecutorBase
         }, cancellationToken);
     }
 
-    private static async Task<List<string?>> GetErrorMessagesAsync(string connectionString, long packageOperationId)
+    private static async Task<string?[]> GetErrorMessagesAsync(string connectionString, long packageOperationId)
     {
         using var sqlConnection = new SqlConnection(connectionString);
         var messages = await sqlConnection.QueryAsync<string?>("""
@@ -240,7 +240,7 @@ internal class PackageStepExecutor : StepExecutorBase
             WHERE message_type = 120 AND operation_id = @OperationId
             """, // message_type = 120 => error message
             new { OperationId = packageOperationId });
-        return messages.ToList();
+        return messages.ToArray();
     }
 
     private async Task CancelAsync(string connectionString, long packageOperationId)

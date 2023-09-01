@@ -51,7 +51,7 @@ internal class ExecutionPhaseModeObserver : OrchestrationObserver
             .Where(p => p.Key.ExecutionPhase < StepExecution.ExecutionPhase)
             .Select(p => p.Value)
             .Distinct()
-            .ToList();
+            .ToArray();
         if (StepExecution.Execution.StopOnFirstError && previousStepStatuses.Any(status => status == OrchestrationStatus.Failed))
         {
             return new Fail(StepExecutionStatus.Skipped, "Step was skipped because one or more steps failed and StopOnFirstError was set to true.");

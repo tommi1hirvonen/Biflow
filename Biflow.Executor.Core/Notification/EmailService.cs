@@ -49,7 +49,7 @@ internal class EmailService : INotificationService
                     .AsNoTrackingWithIdentityResolution()
                     .Include(s => s.User)
                     .Where(s => s.User.Email != null && s.JobId == execution.JobId)
-                    .ToListAsync();
+                    .ToArrayAsync();
                 var subscribers = subscriptions
                     .Where(s => subscriptionTypeFilter.Any(f => f == s.SubscriptionType))
                     .Select(s => s.User.Email ?? "");
@@ -239,7 +239,7 @@ internal class EmailService : INotificationService
                     .AsNoTrackingWithIdentityResolution()
                     .Include(s => s.User)
                     .Where(s => s.User.Email != null && s.JobId == execution.JobId)
-                    .ToListAsync();
+                    .ToArrayAsync();
                 var subscribers = subscriptions
                     .Where(s => s.NotifyOnOvertime)
                     .Select(s => s.User.Email ?? "");

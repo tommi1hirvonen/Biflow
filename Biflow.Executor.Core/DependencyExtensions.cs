@@ -43,7 +43,7 @@ internal static class DependencyExtensions
         }
     }
 
-    public static List<List<T>> FindCycles<T>(this IEnumerable<T> nodes, Func<T, IEnumerable<T>> edges) where T : notnull
+    public static IEnumerable<IEnumerable<T>> FindCycles<T>(this IEnumerable<T> nodes, Func<T, IEnumerable<T>> edges) where T : notnull
     {
         var cycles = new List<List<T>>();
         var visited = new Dictionary<T, VisitState>();
@@ -54,7 +54,7 @@ internal static class DependencyExtensions
         return cycles;
     }
 
-    public static List<List<T>> FindCycles<T, TValueList>(this IDictionary<T, TValueList> listDictionary)
+    public static IEnumerable<IEnumerable<T>> FindCycles<T, TValueList>(this IDictionary<T, TValueList> listDictionary)
         where TValueList : class, IEnumerable<T>
         where T : notnull
     {

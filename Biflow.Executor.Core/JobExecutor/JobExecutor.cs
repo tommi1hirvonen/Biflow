@@ -205,13 +205,15 @@ internal class JobExecutor : IJobExecutor
     private async Task<string?> GetCircularJobExecutionsAsync(Job job)
     {
         var dependencies = await ReadJobDependenciesAsync();
-        List<List<Job>> cycles = dependencies.FindCycles();
-        var jobs = cycles.Select(c => c.Select(c_ => new { c_.JobId, c_.JobName }).ToList()).ToList();
+        IEnumerable<IEnumerable<Job>> cycles = dependencies.FindCycles();
+        var jobs = cycles
+            .Select(c => c.Select(c_ => new { c_.JobId, c_.JobName }).ToArray())
+            .ToArray();
         var encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All);
         var json = JsonSerializer.Serialize(jobs, new JsonSerializerOptions { WriteIndented = true, Encoder = encoder });
 
         // There are no circular dependencies or this job is not among the cycles.
-        return cycles.Count == 0 || !cycles.Any(jobs => jobs.Any(j => j.JobId == job.JobId))
+        return !cycles.Any() || !cycles.Any(jobs => jobs.Any(j => j.JobId == job.JobId))
             ? null : json;
     }
 
@@ -219,16 +221,18 @@ internal class JobExecutor : IJobExecutor
     {
         // Find circular step dependencies which are not allowed since they would block each other's executions.
         var dependencies = await ReadStepDependenciesAsync();
-        List<List<Step>> cycles = dependencies.FindCycles();
-        var steps = cycles.Select(c1 => c1.Select(c2 => new { c2.StepId, c2.StepName }).ToList()).ToList();
+        IEnumerable<IEnumerable<Step>> cycles = dependencies.FindCycles();
+        var steps = cycles
+            .Select(c1 => c1.Select(c2 => new { c2.StepId, c2.StepName }).ToArray())
+            .ToArray();
 
         var encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All);
         var json = JsonSerializer.Serialize(steps, new JsonSerializerOptions { WriteIndented = true, Encoder = encoder });
 
-        return cycles.Count == 0 ? null : json;
+        return !cycles.Any() ? null : json;
     }
 
-    private async Task<Dictionary<Job, List<Job>>> ReadJobDependenciesAsync()
+    private async Task<Dictionary<Job, Job[]>> ReadJobDependenciesAsync()
     {
         using var context = _dbContextFactory.CreateDbContext();
         var steps = await context.JobSteps
@@ -240,14 +244,14 @@ internal class JobExecutor : IJobExecutor
                 step.Job,
                 step.JobToExecute
             })
-            .ToListAsync();
+            .ToArrayAsync();
         var dependencies = steps
             .GroupBy(key => key.Job, element => element.JobToExecute)
-            .ToDictionary(grouping => grouping.Key, grouping => grouping.ToList());
+            .ToDictionary(grouping => grouping.Key, grouping => grouping.ToArray());
         return dependencies;
     }
 
-    private async Task<Dictionary<Step, List<Step>>> ReadStepDependenciesAsync()
+    private async Task<Dictionary<Step, Step[]>> ReadStepDependenciesAsync()
     {
         using var context = _dbContextFactory.CreateDbContext();
         var steps = await context.Steps
@@ -255,12 +259,12 @@ internal class JobExecutor : IJobExecutor
             .Where(step => step.JobId == _execution.JobId)
             .Include(step => step.Dependencies)
             .ThenInclude(d => d.DependantOnStep)
-            .ToListAsync();
+            .ToArrayAsync();
         var dependencies = steps
             .SelectMany(step => step.Dependencies)
             .Select(d => new { d.Step, d.DependantOnStep})
             .GroupBy(key => key.Step, element => element.DependantOnStep)
-            .ToDictionary(g => g.Key, g => g.ToList());
+            .ToDictionary(g => g.Key, g => g.ToArray());
         return dependencies;
     }
 
