@@ -10,7 +10,7 @@
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Database" />
                     </div>
-                    <select class="form-select form-select-sm" @bind="ConnectionId">
+                    <select class="form-select form-select-sm" @bind="ConnectionId" @bind:after="RunQueryAsync">
                         @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
@@ -82,6 +82,6 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" OnClick="async () => await Offcanvas.LetAsync(x => x.HideAsync())" CssClass="ms-3">Close</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" OnClick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
