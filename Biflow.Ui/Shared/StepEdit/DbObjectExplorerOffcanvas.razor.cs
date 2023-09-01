@@ -14,7 +14,7 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase, IDisposable
 
     [Parameter] public IEnumerable<SqlConnectionInfo> Connections { get; set; } = Enumerable.Empty<SqlConnectionInfo>();
 
-    [Parameter] public Action<(string, string, string, string)> OnDbObjectSelected { get; set; } = null!;
+    [Parameter] public Action<(string, string, string, string), bool>? OnDbObjectSelected { get; set; }
 
     private Guid? ConnectionId { get; set; }
 
@@ -27,8 +27,6 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase, IDisposable
         DatabaseObjects
         .Where(o => o.Schema.ContainsIgnoreCase(SchemaFilter))
         .Where(o => o.Object.ContainsIgnoreCase(ObjectFilter));
-
-    private (string, string, string, string, string)? SelectedObject { get; set; }
 
     private string SchemaFilter { get; set; } = string.Empty;
     private string ObjectFilter { get; set; } = string.Empty;
@@ -61,12 +59,13 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase, IDisposable
             Cts.Cancel();
     }
 
-    private async Task OnDbObjectSelectedAsync()
+    private async Task SelectDbObjectAsync((string Server, string Database, string Schema, string Name) dbObject, bool commit)
     {
-        if (SelectedObject is null) return;
         await Offcanvas.LetAsync(x => x.HideAsync());
-        var dbObject = (SelectedObject.Value.Item1, SelectedObject.Value.Item2, SelectedObject.Value.Item3, SelectedObject.Value.Item4);
-        OnDbObjectSelected(dbObject);
+        if (OnDbObjectSelected is not null)
+        {
+            OnDbObjectSelected(dbObject, commit);
+        }
     }
 
     public async Task ShowAsync(Guid? connectionId)

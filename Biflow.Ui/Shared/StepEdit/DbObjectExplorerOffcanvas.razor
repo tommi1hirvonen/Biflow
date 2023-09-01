@@ -53,16 +53,27 @@
                             <th>Schema</th>
                             <th>Object</th>
                             <th>Type</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var dbObject in FilteredDatabaseObjects)
                         {
-                            var className = SelectedObject?.Equals(dbObject) ?? false ? "fw-bold" : null;
-                            <tr class="@className" style="cursor: pointer;" @onclick="() => SelectedObject = dbObject">
-                                <td><HighlightableText Text="@dbObject.Schema" PartToHighlight="@SchemaFilter" /></td>
-                                <td><HighlightableText Text="@dbObject.Object" PartToHighlight="@ObjectFilter" /></td>
-                                <td>@dbObject.Type</td>
+                            var tuple = (dbObject.Server, dbObject.Database, dbObject.Schema, dbObject.Object);
+                            <tr>
+                                <td class="align-middle"><HighlightableText Text="@dbObject.Schema" PartToHighlight="@SchemaFilter" /></td>
+                                <td class="align-middle"><HighlightableText Text="@dbObject.Object" PartToHighlight="@ObjectFilter" /></td>
+                                <td class="align-middle">@dbObject.Type</td>
+                                <td>
+                                    <HxButtonGroup Size="ButtonGroupSize.Small">
+                                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => SelectDbObjectAsync(tuple, true)" title="Select & add">
+                                            <CxIcon Icon="FeatherIcon.Check" />
+                                        </HxButton>
+                                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => SelectDbObjectAsync(tuple, false)" title="Select & edit">
+                                            <CxIcon Icon="FeatherIcon.Edit2" />
+                                        </HxButton>
+                                    </HxButtonGroup>
+                                </td>
                             </tr>
                         }
                     </tbody>
@@ -71,7 +82,6 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Primary" Spinner="false" OnClick="OnDbObjectSelectedAsync" Enabled="SelectedObject is not null">Select</HxButton>
         <HxButton Color="ThemeColor.Secondary" Spinner="false" OnClick="async () => await Offcanvas.LetAsync(x => x.HideAsync())" CssClass="ms-3">Close</HxButton>
     </FooterTemplate>
 </HxOffcanvas>

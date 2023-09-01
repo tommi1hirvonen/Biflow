@@ -392,13 +392,17 @@
         }
     }
 
-    private void OnDbObjectSelected((string Server, string Database, string Schema, string Object) tuple)
+    private void OnDbObjectSelected((string Server, string Database, string Schema, string Object) tuple, bool commit)
     {
         if (NewObject is null) return;
         NewObject.ServerName = tuple.Server;
         NewObject.DatabaseName = tuple.Database;
         NewObject.SchemaName = tuple.Schema;
         NewObject.ObjectName = tuple.Object;
+        if (commit)
+        {
+            SubmitNewObject();
+        }
         StateHasChanged();
     }
 }
