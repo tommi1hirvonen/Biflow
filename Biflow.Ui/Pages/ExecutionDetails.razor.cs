@@ -79,7 +79,6 @@ public partial class ExecutionDetails : ComponentBase
     private SortMode SortMode { get; set; } = SortMode.StartedAsc;
 
     private StepExecutionDetailsOffcanvas? StepExecutionDetailsOffcanvas { get; set; }
-    private StepExecutionAttempt? SelectedStepExecutionAttempt { get; set; }
 
     private StepHistoryOffcanvas? StepHistoryOffcanvas { get; set; }
 
@@ -222,9 +221,12 @@ public partial class ExecutionDetails : ComponentBase
     private async Task ShowStepExecutionOffcanvas(StepExecution step)
     {
         var attempt = step?.StepExecutionAttempts.OrderByDescending(s => s.StartDateTime).First();
-        SelectedStepExecutionAttempt = attempt;
+        if (attempt is null)
+        {
+            return;
+        }
         StateHasChanged();
-        await StepExecutionDetailsOffcanvas.LetAsync(x => x.ShowAsync());
+        await StepExecutionDetailsOffcanvas.LetAsync(x => x.ShowAsync(attempt));
     }
 
     private async Task StopJobExecutionAsync()

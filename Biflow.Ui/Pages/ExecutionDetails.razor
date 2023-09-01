@@ -185,6 +185,12 @@
             {
                 <text>Removed schedule (name not available)</text>
             }
+            else if (Execution.ParentExecution is StepExecutionAttemptReference parent)
+            {
+                <text>
+                    Execution id: <a href="executions/@parent.ExecutionId">@parent.ExecutionId</a>, Step id: @parent.StepId, Retry index: @parent.RetryAttemptIndex (parent execution)
+                </text>
+            }
             else
             {
                 <text>@Execution.CreatedBy (user)</text>
@@ -550,6 +556,6 @@ else if (ShowReport == Report.History && Execution?.JobId is Guid jobId)
     </DropdownMenuTemplate>
 </DependencyGraph>
 
-<StepExecutionDetailsOffcanvas @ref="StepExecutionDetailsOffcanvas" StepExecutionAttempt="SelectedStepExecutionAttempt" />
+<StepExecutionDetailsOffcanvas @ref="StepExecutionDetailsOffcanvas" />
 
 <StepHistoryOffcanvas @ref="StepHistoryOffcanvas" />

@@ -35,6 +35,7 @@ internal class JobStepExecutor : StepExecutorBase
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
+        var executionAttempt = Step.StepExecutionAttempts.MaxBy(e => e.RetryAttemptIndex);
         Guid jobExecutionId;
         try
         {
@@ -43,7 +44,7 @@ internal class JobStepExecutor : StepExecutorBase
                 { Count: > 0 } tags => tags.Select(t => t.TagId).ToArray(),
                 _ => null
             };
-            var builder = await _executionBuilderFactory.CreateAsync(Step.JobToExecuteId, null,
+            var builder = await _executionBuilderFactory.CreateAsync(Step.JobToExecuteId, createdBy: null, parent: executionAttempt,
                 context => step => step.IsEnabled,
                 context => step => tagIds == null || step.Tags.Any(t => tagIds.Contains(t.TagId)));
             ArgumentNullException.ThrowIfNull(builder);
@@ -86,7 +87,6 @@ internal class JobStepExecutor : StepExecutorBase
 
         try
         {
-            var executionAttempt = Step.StepExecutionAttempts.MaxBy(e => e.RetryAttemptIndex);
             if (executionAttempt is JobStepExecutionAttempt job)
             {
                 using var context = _dbContextFactory.CreateDbContext();

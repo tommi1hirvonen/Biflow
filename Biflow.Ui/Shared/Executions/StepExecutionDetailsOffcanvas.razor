@@ -9,10 +9,13 @@
 </HxOffcanvas>
 
 @code {
-    [Parameter]
-    public StepExecutionAttempt? StepExecutionAttempt { get; set; }
+    private StepExecutionAttempt? StepExecutionAttempt { get; set; }
 
     private HxOffcanvas? Offcanvas { get; set; }
 
-    public async Task ShowAsync() => await Offcanvas.LetAsync(x => x.ShowAsync());
+    public async Task ShowAsync(StepExecutionAttempt attempt)
+    {
+        StepExecutionAttempt = attempt;
+        await Offcanvas.LetAsync(x => x.ShowAsync());
+    }
 }

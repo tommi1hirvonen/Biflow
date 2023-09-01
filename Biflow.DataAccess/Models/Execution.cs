@@ -13,9 +13,13 @@ public class Execution
         ExecutionStatus = executionStatus;
     }
 
-    public Execution(Job job, string? createdBy) : this(job)
+    public Execution(Job job, string? createdBy, StepExecutionAttempt? parent = null) : this(job)
     {
         CreatedBy = createdBy;
+        if (parent is not null)
+        {
+            ParentExecution = new(parent.ExecutionId, parent.StepId, parent.RetryAttemptIndex);
+        }
     }
 
     public Execution(Job job, Schedule? schedule) : this(job)
@@ -113,6 +117,8 @@ public class Execution
     [Display(Name = "Notify caller overtime")]
     public bool NotifyCallerOvertime { get; internal set; }
 
+    public StepExecutionAttemptReference? ParentExecution { get; private set; }
+
     public ICollection<StepExecution> StepExecutions { get; internal set; } = null!;
 
     public ICollection<ExecutionParameter> ExecutionParameters { get; internal set; } = null!;
@@ -126,3 +132,6 @@ public class Execution
     [NotMapped]
     public double? ExecutionInSeconds => ((EndDateTime ?? DateTime.Now) - StartDateTime)?.TotalSeconds;
 }
+
+
+public readonly record struct StepExecutionAttemptReference(Guid ExecutionId, Guid StepId, int RetryAttemptIndex);

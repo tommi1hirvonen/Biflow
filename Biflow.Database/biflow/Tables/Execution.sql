@@ -18,6 +18,7 @@
     [NotifyCallerOvertime]              BIT                 NOT NULL CONSTRAINT [DF_Execution_NotifyCallerOvertime] DEFAULT (0),
     [ScheduleName]                      NVARCHAR(250)       NULL,
     [CronExpression]                    VARCHAR(200)        NULL,
+    [ParentExecution]                   VARCHAR(200)        NULL,
     CONSTRAINT [PK_Execution] PRIMARY KEY CLUSTERED ([ExecutionId] ASC),
      -- Index used by Jobs page to show the last execution for each job
     INDEX [NCI_Execution_JobId_CreatedDateTime] NONCLUSTERED ([JobId], [CreatedDateTime] DESC),

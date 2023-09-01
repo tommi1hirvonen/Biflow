@@ -84,6 +84,9 @@ public class BiflowContext : DbContext
                     Users.Any(u => u.Username == _httpContextAccessor.HttpContext.User.Identity.Name && (u.AuthorizeAllJobs || u.Jobs.Any(j => j.JobId == exec.JobId))))
                 );
             }
+            e.Property(p => p.ParentExecution).HasConversion(
+                from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
+                to => JsonSerializer.Deserialize<StepExecutionAttemptReference?>(to, null as JsonSerializerOptions));
         });
 
         modelBuilder.Entity<StepExecution>(e =>
