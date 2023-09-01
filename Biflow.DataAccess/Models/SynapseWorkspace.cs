@@ -35,7 +35,7 @@ public class SynapseWorkspace : PipelineClient
         return (run.Value.Status, run.Value.Message);
     }
 
-    public override async Task<Dictionary<string, List<PipelineInfo>>> GetPipelinesAsync(ITokenService tokenService)
+    public override async Task<IDictionary<string, IEnumerable<PipelineInfo>>> GetPipelinesAsync(ITokenService tokenService)
     {
         var token = new SynapseTokenCredential(tokenService, AppRegistration);
         var pipelineClient = new Azure.Analytics.Synapse.Artifacts.PipelineClient(SynapseEndpoint, token);
@@ -55,7 +55,7 @@ public class SynapseWorkspace : PipelineClient
         return list
             .Select(p => (Folder: p.Folder?.Name ?? "/", Pipeline: p))
             .GroupBy(p => p.Folder)
-            .ToDictionary(p => p.Key, p => p.Select(p_ => infoFromResource(p_.Pipeline)).ToList());
+            .ToDictionary(p => p.Key, p => p.Select(p_ => infoFromResource(p_.Pipeline)).ToArray().AsEnumerable());
     }
 
     public override async Task<IEnumerable<(string Name, ParameterValueType Type, object? Default)>> GetPipelineParametersAsync(ITokenService tokenService, string pipelineName)
