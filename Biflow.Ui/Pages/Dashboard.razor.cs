@@ -4,7 +4,6 @@ using Biflow.Ui.Components;
 using Biflow.Ui.Core;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
 
 namespace Biflow.Ui.Pages;
 
@@ -12,13 +11,13 @@ public partial class Dashboard : ComponentBase
 {
     [Inject] private IDbContextFactory<BiflowContext> DbFactory { get; set; } = null!;
 
-    private Dictionary<string, List<TimeSeriesItem>> TimeSeriesItems { get; set; } = new Dictionary<string, List<TimeSeriesItem>>();
+    private Dictionary<string, TimeSeriesItem[]> TimeSeriesItems { get; set; } = new Dictionary<string, TimeSeriesItem[]>();
 
     private Dictionary<string, string> JobColors { get; set; } = new();
 
-    private List<ReportingJob>? Jobs { get; set; }
+    private ReportingJob[]? Jobs { get; set; }
 
-    private List<TopStep>? TopFailedSteps { get; set; }
+    private TopStep[]? TopFailedSteps { get; set; }
 
     private DateTime FromDate { get; set; } = DateTime.Now.Date.AddDays(-90);
 
@@ -66,7 +65,8 @@ public partial class Dashboard : ComponentBase
         // Group job executions by job names to day level and calculate each job's average duration as well as the number of executions.
         var executions = await executionsQuery
             .Select(e => new { Execution = e, e.Job!.JobName })
-            .OrderBy(e => e.Execution.CreatedDateTime).ToListAsync();
+            .OrderBy(e => e.Execution.CreatedDateTime)
+            .ToArrayAsync();
         var executions_ = executions
             .GroupBy(group => new
             {
@@ -83,7 +83,7 @@ public partial class Dashboard : ComponentBase
 
         TimeSeriesItems = executions_
             .GroupBy(e => e.JobName)
-            .ToDictionary(e => e.Key, e => e.ToList());
+            .ToDictionary(e => e.Key, e => e.ToArray());
 
 
         // Job success rates
@@ -106,7 +106,7 @@ public partial class Dashboard : ComponentBase
         // Group job executions by job name and calculate average success percentage.
         var jobs = await jobsQuery
             .Select(e => new { Execution = e, e.Job!.JobName })
-            .ToListAsync();
+            .ToArrayAsync();
         Jobs = jobs
             .GroupBy(group => group.JobName ?? group.Execution.JobName)
             .Select(select => new ReportingJob
@@ -115,10 +115,15 @@ public partial class Dashboard : ComponentBase
                 JobName = select.Key
             })
             .OrderByDescending(order => order.SuccessPercent)
-            .ToList();
+            .ToArray();
 
         // Get a temporary list of all job names to retrieve their colors.
-        var jobNames = Jobs.Select(job => job.JobName).Concat(TimeSeriesItems.Select(tsi => tsi.Key)).Distinct().OrderBy(name => name).ToList();
+        var jobNames = Jobs
+            .Select(job => job.JobName)
+            .Concat(TimeSeriesItems.Select(tsi => tsi.Key))
+            .Distinct()
+            .OrderBy(name => name)
+            .ToArray();
         var colors = ChartColors.AsArray();
         JobColors = jobNames
             .Select((name, index) => new { Item = name, Index = index })
@@ -144,7 +149,7 @@ public partial class Dashboard : ComponentBase
 
         var topFailedStepsGrouping = await topFailedStepsQuery
             .Select(e => new { Execution = e, e.Execution.Job!.JobName })
-            .ToListAsync();
+            .ToArrayAsync();
         // Group step executions by step and job and calculate success percentages
         // based on the number of completed executions and the number of all executions.
         TopFailedSteps = topFailedStepsGrouping
@@ -173,31 +178,31 @@ public partial class Dashboard : ComponentBase
             .OrderBy(order => order.SuccessPercent)
             .Where(e => e.SuccessPercent < 100)
             .Take(5)
-            .ToList();
+            .ToArray();
 
         // Create JSON dataset objects that are passed to the JS code in site.js via JSInterop.
 
         var durationSeries = TimeSeriesItems
             .Select((e, index) =>
             {
-                var datapoints = e.Value.Select(v => new TimeSeriesDataPoint(DateOnly.FromDateTime(v.Date), v.DurationInMinutes)).ToList();
+                var datapoints = e.Value.Select(v => new TimeSeriesDataPoint(DateOnly.FromDateTime(v.Date), v.DurationInMinutes)).ToArray();
                 return new LineChartSeries(Label: e.Key, DataPoints: datapoints, Color: JobColors[e.Key]);
             })
-            .ToList();
+            .ToArray();
         DurationDataset = new LineChartDataset(durationSeries, "min", 0);
 
         var noOfExecutionsSeries = TimeSeriesItems
             .Select((e, index) =>
             {
-                var datapoints = e.Value.Select(v => new TimeSeriesDataPoint(DateOnly.FromDateTime(v.Date), v.NumberOfExecutions)).ToList();
+                var datapoints = e.Value.Select(v => new TimeSeriesDataPoint(DateOnly.FromDateTime(v.Date), v.NumberOfExecutions)).ToArray();
                 return new LineChartSeries(Label: e.Key, DataPoints: datapoints, Color: JobColors[e.Key]);
             })
-            .ToList();
+            .ToArray();
         NoOfExecutionsDataset = new LineChartDataset(noOfExecutionsSeries, YMin: 0, YStepSize: 1);
 
         var successRateSeries = Jobs
             .Select(job => new BarChartDataPoint(job.JobName, decimal.Round(job.SuccessPercent, 2), JobColors[job.JobName]))
-            .ToList();
+            .ToArray();
         SuccessRateDataset = new BarChartDataset(successRateSeries, 0, 100, 10, "%", true);
 
         ReportLoaded = true;
