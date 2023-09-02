@@ -26,6 +26,9 @@ public class Job
         JobParameters = other.JobParameters
             .Select(p => new JobParameter(p, this))
             .ToList();
+        Steps = other.Steps
+            .Select(s => s.Copy(this))
+            .ToList();
     }
 
     [Key]

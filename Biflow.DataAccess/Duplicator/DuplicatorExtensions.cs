@@ -1,25 +1,25 @@
 ﻿using Biflow.DataAccess.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.DataAccess;
 
 internal static class DuplicatorExtensions
 {
-    internal static IQueryable<Step> IncludeNavigationPropertiesForDuplication(this IQueryable<Step> query) => query
-        .Include(step => step.Job)
-        .Include(step => step.Dependencies)
-        .Include(step => step.Sources)
-        .Include(step => step.Targets)
-        .Include(step => step.Tags)
-        .Include(step => step.ExecutionConditionParameters)
-        .ThenInclude(p => p.JobParameter)
-        .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.InheritFromJobParameter)}")
-        .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.ExpressionParameters)}")
-        .Include(step => step.ExecutionConditionParameters)
-        .Include(nameof(IHasConnection.Connection))
-        .Include(nameof(FunctionStep.FunctionApp))
-        .Include(nameof(DatasetStep.AppRegistration))
-        .Include(nameof(JobStep.JobToExecute))
-        .Include(nameof(PipelineStep.PipelineClient))
-        .Include(nameof(SqlStep.ResultCaptureJobParameter));
+    internal static string[] StepNavigationPaths => new[]
+    {
+        nameof(Step.Job),
+        nameof(Step.Dependencies),
+        nameof(Step.Sources),
+        nameof(Step.Targets),
+        nameof(Step.Tags),
+        $"{nameof(Step.ExecutionConditionParameters)}.{nameof(ExecutionConditionParameter.JobParameter)}",
+        $"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.InheritFromJobParameter)}",
+        $"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.ExpressionParameters)}",
+        $"{nameof(JobStep.StepParameters)}.{nameof(JobStepParameter.AssignToJobParameter)}",
+        nameof(IHasConnection.Connection),
+        nameof(FunctionStep.FunctionApp),
+        nameof(DatasetStep.AppRegistration),
+        nameof(JobStep.JobToExecute),
+        nameof(PipelineStep.PipelineClient),
+        nameof(SqlStep.ResultCaptureJobParameter)
+    };
 }

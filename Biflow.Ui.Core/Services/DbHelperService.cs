@@ -13,15 +13,6 @@ public class DbHelperService
         _sqlConnectionFactory = sqlConnectionFactory;
     }
 
-    public async Task<Guid> JobCopyAsync(Guid jobId, string username)
-    {
-        using var sqlConnection = _sqlConnectionFactory.Create();
-        var createdJobId = await sqlConnection.ExecuteScalarAsync<Guid>(
-            "EXEC [biflow].[JobCopy] @JobId = @JobId_, @Username = @Username_",
-            new { JobId_ = jobId, Username_ = username });
-        return createdJobId;
-    }
-
     /// <summary>
     /// Update the password for an existing user. Should only be used when the authentication mode is BuiltIn.
     /// </summary>

@@ -18,10 +18,8 @@ public partial class Jobs : ComponentBase
     
     [Inject] private ISchedulerService SchedulerService { get; set; } = null!;
     
-    [Inject] private DbHelperService DbHelperService { get; set; } = null!;
-    
-    [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; } = null!;
-    
+    [Inject] private JobDuplicatorFactory JobDuplicatorFactory { get; set; } = null!;
+        
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
     
     [Inject] private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
@@ -145,14 +143,10 @@ public partial class Jobs : ComponentBase
     {
         try
         {
-            string user = HttpContextAccessor.HttpContext?.User?.Identity?.Name
-                ?? throw new ArgumentNullException(nameof(user), "Error getting username from HttpContext");
-            using var context = DbFactory.CreateDbContext();
-            Guid createdJobId = await DbHelperService.JobCopyAsync(job.JobId, user);
-            var createdJob = await context.Jobs
-            .Include(j => j.Schedules)
-            .Include(j => j.Category)
-            .FirstAsync(j => j.JobId == createdJobId);
+            var duplicator = await JobDuplicatorFactory.CreateAsync(job.JobId);
+            duplicator.Job.JobName = $"{duplicator.Job.JobName} – Copy";
+            var createdJob = await duplicator.SaveJobAsync();
+            createdJob.Schedules = new List<Schedule>();
             Jobs_?.Add(createdJob);
             Jobs_ = Jobs_?.OrderBy(job_ => job_.JobName).ToList();
         }
