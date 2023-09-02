@@ -81,7 +81,6 @@
     <Build Include="biflow\Stored Procedures\UserAuthenticate.sql" />
     <Build Include="biflow\Stored Procedures\UserUpdatePassword.sql" />
     <Build Include="Security\biflow.sql" />
-    <Build Include="biflow\Stored Procedures\JobCopy.sql" />
     <Build Include="biflow\Tables\Subscription.sql" />
     <Build Include="biflow\Tables\PipelineClient.sql" />
     <Build Include="biflow\Tables\Connection.sql" />
