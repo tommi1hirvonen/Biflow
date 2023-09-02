@@ -15,7 +15,7 @@ public partial class StepsComponent : ComponentBase
 {
     [Inject] private IDbContextFactory<BiflowContext> DbFactory { get; set; } = null!;
         
-    [Inject] private DbHelperService DbHelperService { get; set; } = null!;
+    [Inject] private StepsDuplicatorFactory StepDuplicatorFactory { get; set; } = null!;
     
     [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; } = null!;
     
@@ -221,29 +221,21 @@ public partial class StepsComponent : ComponentBase
         }
     }
 
-    private async Task CopyStep(Step step, Job job)
+    private async Task CopyStep(Step step, Job? job = null)
     {
         try
         {
-            string user = HttpContextAccessor.HttpContext?.User?.Identity?.Name ?? throw new ArgumentNullException(nameof(user), "User was null");
-            var suffix = Job?.JobId == job.JobId ? " - Copy" : string.Empty;
-            Guid createdStepId = await DbHelperService.StepCopyAsync(step.StepId, job.JobId, user, suffix);
+            var duplicator = await StepDuplicatorFactory.CreateAsync(step.StepId, job?.JobId);
+            var copy = duplicator.Steps.First();
+            copy.StepName = $"{copy.StepName} – Copy";
+            var createdStep = await duplicator.SaveStepsAsync();
             // If the steps was copied to this job, reload steps.
-            if (Job?.JobId == job.JobId)
+            if (job is null)
             {
-                using var context = DbFactory.CreateDbContext();
-                var createdStep = await context.Steps
-                    .AsNoTrackingWithIdentityResolution()
-                    .Include(step => step.Dependencies)
-                    .Include(step => step.Sources)
-                    .Include(step => step.Targets)
-                    .Include(step => step.Tags)
-                    .Include(step => step.ExecutionConditionParameters)
-                    .Include(nameof(IHasStepParameters.StepParameters))
-                    .FirstAsync(step_ => step_.StepId == createdStepId);
-                Steps?.Add(createdStep);
+                Steps?.Add(copy);
                 SortSteps?.Invoke();
             }
+            Messenger.AddInformation("Step(s) copied successfully");
         }
         catch (Exception ex)
         {
@@ -251,32 +243,20 @@ public partial class StepsComponent : ComponentBase
         }
     }
 
-    private async Task CopySelectedSteps(Job job)
+    private async Task CopySelectedSteps(Job? job = null)
     {
         try
         {
-            string user = HttpContextAccessor.HttpContext?.User?.Identity?.Name ?? throw new ArgumentNullException(nameof(user), "User was null");
-            var suffix = Job?.JobId == job.JobId ? " - Copy" : string.Empty;
-            foreach (var step in SelectedSteps)
+            var stepIds = SelectedSteps.Select(s => s.StepId).ToArray();
+            var duplicator = await StepDuplicatorFactory.CreateAsync(stepIds, job?.JobId);
+            foreach (var step in duplicator.Steps)
             {
-                Guid createdStepId = await DbHelperService.StepCopyAsync(step.StepId, job.JobId, user, suffix);
-                // If the steps was copied to this job, reload steps.
-                if (Job?.JobId == job.JobId)
-                {
-                    using var context = DbFactory.CreateDbContext();
-                    var createdStep = await context.Steps
-                        .AsNoTrackingWithIdentityResolution()
-                        .Include(step => step.Dependencies)
-                        .Include(step => step.Sources)
-                        .Include(step => step.Targets)
-                        .Include(step => step.Tags)
-                        .Include(step => step.ExecutionConditionParameters)
-                        .Include(nameof(IHasStepParameters.StepParameters))
-                        .FirstAsync(step_ => step_.StepId == createdStepId);
-                    Steps?.Add(createdStep);
-                    SortSteps?.Invoke();
-                }
+                step.StepName = $"{step.StepName} – Copy";
             }
+            var steps = await duplicator.SaveStepsAsync();
+            Steps?.AddRange(steps);
+            SortSteps?.Invoke();
+            Messenger.AddInformation("Step(s) copied successfully");
         }
         catch (Exception ex)
         {

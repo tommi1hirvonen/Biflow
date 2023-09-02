@@ -3,19 +3,22 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.DataAccess;
 
-public class StepDuplicatorFactory
+public class StepsDuplicatorFactory
 {
     private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
 
-    internal StepDuplicatorFactory(IDbContextFactory<BiflowContext> dbContextFactory)
+    public StepsDuplicatorFactory(IDbContextFactory<BiflowContext> dbContextFactory)
     {
         _dbContextFactory = dbContextFactory;
     }
 
-    public async Task<StepDuplicator?> CreateAsync(Guid stepId, Guid? targetJobId = null)
+    public Task<StepsDuplicator> CreateAsync(Guid stepId, Guid? targetJobId = null) =>
+        CreateAsync(new[] { stepId }, targetJobId);
+
+    public async Task<StepsDuplicator> CreateAsync(Guid[] stepIds, Guid? targetJobId = null)
     {
         var context = await _dbContextFactory.CreateDbContextAsync();
-        var baseStep = await context.Steps
+        var steps = await context.Steps
             .Include(step => step.Job)
             .Include(step => step.Dependencies)
             .Include(step => step.Sources)
@@ -32,15 +35,12 @@ public class StepDuplicatorFactory
             .Include(nameof(JobStep.JobToExecute))
             .Include(nameof(PipelineStep.PipelineClient))
             .Include(nameof(SqlStep.ResultCaptureJobParameter))
-            .FirstOrDefaultAsync(s => s.StepId == stepId);
+            .Where(s => stepIds.Contains(s.StepId))
+            .ToArrayAsync();
         var targetJob = targetJobId is Guid id
             ? await context.Jobs.Include(j => j.JobParameters).FirstOrDefaultAsync(j => j.JobId == id)
             : null;
-        if (baseStep is null)
-        {
-            return null;
-        }
-        var step = baseStep.Copy(targetJob);
-        return new StepDuplicator(context, step);
+        var copies = steps.Select(s => s.Copy(targetJob)).ToList();
+        return new StepsDuplicator(context, copies);
     }
 }

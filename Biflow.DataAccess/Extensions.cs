@@ -12,7 +12,7 @@ public static class Extensions
 
     public static IServiceCollection AddDuplicatorServices(this IServiceCollection services)
     {
-        services.AddSingleton<StepDuplicatorFactory>();
+        services.AddSingleton<StepsDuplicatorFactory>();
         return services;
     }
 

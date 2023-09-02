@@ -219,7 +219,7 @@
                                                 </HxDropdownToggleButton>
                                                 <HxDropdownMenu Alignment="DropdownMenuAlignment.End">
                                                     <HxDropdownHeader>Copy to</HxDropdownHeader>
-                                                    <HxDropdownItem @onclick="() => CopySelectedSteps(Job)">here</HxDropdownItem>
+                                                    <HxDropdownItem @onclick="() => CopySelectedSteps()">here</HxDropdownItem>
                                                     <HxDropdownDivider></HxDropdownDivider>
                                                     @foreach (var job in Jobs.Where(job => job.JobId != Job.JobId))
                                                     {
@@ -369,7 +369,7 @@
                                             </HxDropdownToggleButton>
                                             <HxDropdownMenu CssClass="dropdown-menu-right">
                                                 <HxDropdownHeader>Copy to</HxDropdownHeader>
-                                                <HxDropdownItem @onclick="() => CopyStep(item, Job)">here</HxDropdownItem>
+                                                <HxDropdownItem @onclick="() => CopyStep(item)">here</HxDropdownItem>
                                                 <HxDropdownDivider></HxDropdownDivider>
                                                 @foreach (var job in Jobs.Where(job => job.JobId != Job.JobId))
                                                 {

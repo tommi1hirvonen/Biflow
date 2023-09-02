@@ -32,10 +32,13 @@ public abstract class Step : IComparable
         IsEnabled = other.IsEnabled;
         RetryAttempts = other.RetryAttempts;
         RetryIntervalMinutes = other.RetryIntervalMinutes;
-        ExecutionConditionExpression = other.ExecutionConditionExpression;
+        ExecutionConditionExpression = new() { Expression = other.ExecutionConditionExpression.Expression };
         Sources = other.Sources.ToList();
         Targets = other.Targets.ToList();
         Tags = other.Tags.ToList();
+        Dependencies = job is null // If step is being copied to the same job, duplicate dependencies.
+            ? other.Dependencies.Select(d => new Dependency(d, this)).ToList()
+            : new List<Dependency>();
         ExecutionConditionParameters = other.ExecutionConditionParameters
             .Select(p => new ExecutionConditionParameter(p, this, job))
             .ToList();

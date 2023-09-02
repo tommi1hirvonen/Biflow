@@ -19,7 +19,7 @@ public class JobParameter : DynamicParameter
         ParameterValue = other.ParameterValue;
         ParameterValueType = other.ParameterValueType;
         UseExpression = other.UseExpression;
-        Expression = other.Expression;
+        Expression = new() { Expression = other.Expression.Expression };
         job?.JobParameters.Add(this);
     }
 

@@ -20,12 +20,12 @@ public abstract class StepParameterBase : DynamicParameter
         ParameterValue = other.ParameterValue;
         ParameterValueType = other.ParameterValueType;
         UseExpression = other.UseExpression;
-        Expression = other.Expression;
+        Expression = new() { Expression = other.Expression.Expression };
         ParameterType = other.ParameterType;
         StepId = step.StepId;
 
         // The target job is set, the JobParameter is not null and the target job has a parameter with a matching name.
-        if (job is not null && other.InheritFromJobParameter is not null && job.JobParameters.FirstOrDefault(p => p.ParameterName == ParameterName) is JobParameter parameter)
+        if (job is not null && other.InheritFromJobParameter is not null && job.JobParameters.FirstOrDefault(p => p.ParameterName == other.InheritFromJobParameter.ParameterName) is JobParameter parameter)
         {
             InheritFromJobParameterId = parameter.ParameterId;
             InheritFromJobParameter = parameter;

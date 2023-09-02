@@ -22,15 +22,6 @@ public class DbHelperService
         return createdJobId;
     }
 
-    public async Task<Guid> StepCopyAsync(Guid stepId, Guid targetJobId, string username, string nameSuffix = "")
-    {
-        using var sqlConnection = _sqlConnectionFactory.Create();
-        var createdStepId = await sqlConnection.ExecuteScalarAsync<Guid>(
-            "EXEC [biflow].[StepCopy] @StepId = @StepId_, @TargetJobId = @TargetJobId_, @Username = @Username_, @NameSuffix = @NameSuffix_",
-            new { StepId_ = stepId, TargetJobId_ = targetJobId, Username_ = username, NameSuffix_ = nameSuffix });
-        return createdStepId;
-    }
-
     /// <summary>
     /// Update the password for an existing user. Should only be used when the authentication mode is BuiltIn.
     /// </summary>

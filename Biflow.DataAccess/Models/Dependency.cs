@@ -14,6 +14,15 @@ public class Dependency
         DependantOnStepId = dependantOnStepId;
     }
 
+    internal Dependency(Dependency other, Step step)
+    {
+        StepId = step.StepId;
+        Step = step;
+        DependantOnStepId = other.DependantOnStepId;
+        DependantOnStep = other.DependantOnStep;
+        DependencyType = other.DependencyType;
+    }
+
     public Guid StepId { get; }
 
     public Step Step { get; set; } = null!;
