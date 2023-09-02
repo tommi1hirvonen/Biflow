@@ -14,9 +14,8 @@ public partial class AgentJobStepEditModal : StepEditModal<AgentJobStep>
     internal override string FormId => "agent_job_step_edit_form";
 
     protected override AgentJobStep CreateNewStep(Job job) =>
-        new(string.Empty)
+        new(job.JobId, string.Empty)
         {
-            JobId = job.JobId,
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,

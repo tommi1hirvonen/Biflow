@@ -6,6 +6,11 @@ public class PipelineStepParameter : StepParameterBase
     {
     }
 
+    internal PipelineStepParameter(PipelineStepParameter other, PipelineStep step, Job? job) : base(other, step, job)
+    {
+        Step = step;
+    }
+
     public PipelineStep Step { get; set; } = null!;
 
     public override Step BaseStep => Step;

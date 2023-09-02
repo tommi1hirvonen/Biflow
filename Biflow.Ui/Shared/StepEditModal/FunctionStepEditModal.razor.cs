@@ -43,9 +43,8 @@ public partial class FunctionStepEditModal : StepEditModal<FunctionStep>
         .FirstAsync(step => step.StepId == stepId);
 
     protected override FunctionStep CreateNewStep(Job job) =>
-        new()
+        new(job.JobId)
         {
-            JobId = job.JobId,
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,

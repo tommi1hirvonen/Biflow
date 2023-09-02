@@ -5,7 +5,17 @@ namespace Biflow.DataAccess.Models;
 
 public class EmailStep : Step, IHasStepParameters<EmailStepParameter>
 {
-    public EmailStep() : base(StepType.Email) { }
+    public EmailStep(Guid jobId) : base(StepType.Email, jobId) { }
+
+    private EmailStep(EmailStep other, Job? targetJob) : base(other, targetJob)
+    {
+        Recipients = other.Recipients;
+        Subject = other.Subject;
+        Body = other.Body;
+        StepParameters = other.StepParameters
+            .Select(p => new EmailStepParameter(p, this, targetJob))
+            .ToList();
+    }
 
     /// <summary>
     /// Comma separated list of recipient email addresses
@@ -30,5 +40,7 @@ public class EmailStep : Step, IHasStepParameters<EmailStepParameter>
         .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
         .ToList();
 
-    public override StepExecution ToStepExecution(Execution execution) => new EmailStepExecution(this, execution);
+    internal override EmailStep Copy(Job? targetJob = null) => new(this, targetJob);
+
+    internal override StepExecution ToStepExecution(Execution execution) => new EmailStepExecution(this, execution);
 }

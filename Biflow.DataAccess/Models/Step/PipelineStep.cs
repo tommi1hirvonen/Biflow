@@ -5,7 +5,18 @@ namespace Biflow.DataAccess.Models;
 
 public class PipelineStep : Step, IHasTimeout, IHasStepParameters<PipelineStepParameter>
 {
-    public PipelineStep() : base(StepType.Pipeline) { }
+    public PipelineStep(Guid jobId) : base(StepType.Pipeline, jobId) { }
+
+    private PipelineStep(PipelineStep other, Job? targetJob) : base(other, targetJob) 
+    {
+        TimeoutMinutes = other.TimeoutMinutes;
+        PipelineClientId = other.PipelineClientId;
+        PipelineClient = other.PipelineClient;
+        PipelineName = other.PipelineName;
+        StepParameters = other.StepParameters
+            .Select(p => new PipelineStepParameter(p, this, targetJob))
+            .ToList();
+    }
 
     [Column("TimeoutMinutes")]
     [Required]
@@ -26,5 +37,7 @@ public class PipelineStep : Step, IHasTimeout, IHasStepParameters<PipelineStepPa
     [ValidateComplexType]
     public IList<PipelineStepParameter> StepParameters { get; set; } = null!;
 
-    public override StepExecution ToStepExecution(Execution execution) => new PipelineStepExecution(this, execution);
+    internal override PipelineStep Copy(Job? targetJob = null) => new(this, targetJob);
+
+    internal override StepExecution ToStepExecution(Execution execution) => new PipelineStepExecution(this, execution);
 }

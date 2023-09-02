@@ -15,9 +15,8 @@ public partial class TabularStepEditModal : StepEditModal<TabularStep>
     internal override string FormId => "tabular_step_edit_form";
 
     protected override TabularStep CreateNewStep(Job job) =>
-        new(string.Empty)
+        new(job.JobId, string.Empty)
         {
-            JobId = job.JobId,
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,

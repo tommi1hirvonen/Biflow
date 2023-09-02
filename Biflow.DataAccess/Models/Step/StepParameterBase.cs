@@ -13,6 +13,41 @@ public abstract class StepParameterBase : DynamicParameter
         ParameterType = parameterType;
     }
 
+    protected StepParameterBase(StepParameterBase other, Step step, Job? job)
+    {
+        ParameterId = Guid.NewGuid();
+        ParameterName = other.ParameterName;
+        ParameterValue = other.ParameterValue;
+        ParameterValueType = other.ParameterValueType;
+        UseExpression = other.UseExpression;
+        Expression = other.Expression;
+        ParameterType = other.ParameterType;
+        StepId = step.StepId;
+
+        // The target job is set, the JobParameter is not null and the target job has a parameter with a matching name.
+        if (job is not null && other.InheritFromJobParameter is not null && job.JobParameters.FirstOrDefault(p => p.ParameterName == ParameterName) is JobParameter parameter)
+        {
+            InheritFromJobParameterId = parameter.ParameterId;
+            InheritFromJobParameter = parameter;
+        }
+        // The target job has no parameter with a mathing name, so add one.
+        else if (job is not null && other.InheritFromJobParameter is not null)
+        {
+            var newParameter = new JobParameter(other.InheritFromJobParameter, job);
+            InheritFromJobParameter = newParameter;
+            InheritFromJobParameterId = newParameter.ParameterId;
+        }
+        else
+        {
+            InheritFromJobParameterId = other.InheritFromJobParameterId;
+            InheritFromJobParameter = other.InheritFromJobParameter;
+        }
+
+        ExpressionParameters = other.ExpressionParameters
+            .Select(p => new StepParameterExpressionParameter(p, this, job))
+            .ToList();
+    }
+
     [Display(Name = "Step id")]
     [Column("StepId")]
     public Guid StepId { get; set; }

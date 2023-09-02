@@ -9,6 +9,12 @@ public class PackageStepParameter : StepParameterBase
         ParameterLevel = parameterLevel;
     }
 
+    internal PackageStepParameter(PackageStepParameter other, PackageStep step, Job? job) : base(other, step, job)
+    {
+        ParameterLevel = other.ParameterLevel;
+        Step = step;
+    }
+
     [Required]
     public ParameterLevel ParameterLevel { get; set; }
 

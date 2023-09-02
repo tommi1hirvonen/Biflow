@@ -9,9 +9,8 @@ public partial class ExeStepEditModal : StepEditModal<ExeStep>
     internal override string FormId => "exe_step_edit_form";
 
     protected override ExeStep CreateNewStep(Job job) =>
-        new()
+        new(job.JobId)
         {
-            JobId = job.JobId,
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,

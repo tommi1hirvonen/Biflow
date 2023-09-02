@@ -5,7 +5,19 @@ namespace Biflow.DataAccess.Models;
 
 public class ExeStep : Step, IHasTimeout, IHasStepParameters<ExeStepParameter>
 {
-    public ExeStep() : base(StepType.Exe) { }
+    public ExeStep(Guid jobId) : base(StepType.Exe, jobId) { }
+
+    private ExeStep(ExeStep other, Job? targetJob) : base(other, targetJob)
+    {
+        TimeoutMinutes = other.TimeoutMinutes;
+        ExeFileName = other.ExeFileName;
+        ExeArguments = other.ExeArguments;
+        ExeWorkingDirectory = other.ExeWorkingDirectory;
+        ExeSuccessExitCode = other.ExeSuccessExitCode;
+        StepParameters = other.StepParameters
+            .Select(p => new ExeStepParameter(p, this, targetJob))
+            .ToList();
+    }
 
     [Column("TimeoutMinutes")]
     [Required]
@@ -41,5 +53,7 @@ public class ExeStep : Step, IHasTimeout, IHasStepParameters<ExeStepParameter>
     [ValidateComplexType]
     public IList<ExeStepParameter> StepParameters { get; set; } = null!;
 
-    public override StepExecution ToStepExecution(Execution execution) => new ExeStepExecution(this, execution);
+    internal override StepExecution ToStepExecution(Execution execution) => new ExeStepExecution(this, execution);
+
+    internal override ExeStep Copy(Job? targetJob = null) => new(this, targetJob);
 }

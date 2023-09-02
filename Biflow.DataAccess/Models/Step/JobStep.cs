@@ -4,7 +4,18 @@ namespace Biflow.DataAccess.Models;
 
 public class JobStep : Step, IHasStepParameters<JobStepParameter>
 {
-    public JobStep() : base(StepType.Job) { }
+    public JobStep(Guid jobId) : base(StepType.Job, jobId) { }
+
+    private JobStep(JobStep other, Job? targetJob) : base(other, targetJob)
+    {
+        JobToExecuteId = other.JobToExecuteId;
+        JobToExecute = other.JobToExecute;
+        JobExecuteSynchronized = other.JobExecuteSynchronized;
+        TagFilters = other.TagFilters;
+        StepParameters = other.StepParameters
+            .Select(p => new JobStepParameter(p, this, targetJob))
+            .ToList();
+    }
 
     [Display(Name = "Job to execute")]
     [Required]
@@ -21,5 +32,7 @@ public class JobStep : Step, IHasStepParameters<JobStepParameter>
 
     public IList<Tag> TagFilters { get; set; } = null!;
 
-    public override StepExecution ToStepExecution(Execution execution) => new JobStepExecution(this, execution);
+    internal override JobStep Copy(Job? targetJob = null) => new(this, targetJob);
+
+    internal override StepExecution ToStepExecution(Execution execution) => new JobStepExecution(this, execution);
 }

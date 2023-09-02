@@ -6,6 +6,11 @@ public class SqlStepParameter : StepParameterBase
     {
     }
 
+    internal SqlStepParameter(SqlStepParameter other, SqlStep step, Job? job) : base(other, step, job)
+    {
+        Step = step;
+    }
+
     public SqlStep Step { get; set; } = null!;
 
     public override Step BaseStep => Step; 

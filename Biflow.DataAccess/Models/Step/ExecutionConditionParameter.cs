@@ -8,6 +8,37 @@ namespace Biflow.DataAccess.Models;
 [PrimaryKey("ParameterId")]
 public class ExecutionConditionParameter : ParameterBase, IAsyncEvaluable
 {
+    public ExecutionConditionParameter() { }
+
+    internal ExecutionConditionParameter(ExecutionConditionParameter other, Step step, Job? job)
+    {
+        ParameterId = Guid.NewGuid();
+        StepId = step.StepId;
+        Step = step;
+        ParameterName = other.ParameterName;
+        ParameterValue = other.ParameterValue;
+        ParameterValueType = other.ParameterValueType;
+
+        // The target job is set, the JobParameter is not null and the target job has a parameter with a matching name.
+        if (job is not null && other.JobParameter is not null && job.JobParameters.FirstOrDefault(p => p.ParameterName == ParameterName) is JobParameter parameter)
+        {
+            JobParameterId = parameter.ParameterId;
+            JobParameter = parameter;
+        }
+        // The target job has no parameter with a mathing name, so add one.
+        else if (job is not null && other.JobParameter is not null)
+        {
+            var newParameter = new JobParameter(other.JobParameter, job);
+            JobParameter = newParameter;
+            JobParameterId = newParameter.ParameterId;
+        }
+        else
+        {
+            JobParameterId = other.JobParameterId;
+            JobParameter = other.JobParameter;
+        }
+    }
+
     [Display(Name = "Step id")]
     public Guid StepId { get; set; }
 

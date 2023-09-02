@@ -5,9 +5,17 @@ namespace Biflow.DataAccess.Models;
 
 public class AgentJobStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout
 {
-    public AgentJobStep(string agentJobName) : base(StepType.AgentJob)
+    public AgentJobStep(Guid jobId, string agentJobName) : base(StepType.AgentJob, jobId)
     {
         AgentJobName = agentJobName;
+    }
+
+    private AgentJobStep(AgentJobStep other, Job? targetJob) : base(other, targetJob)
+    {
+        TimeoutMinutes = other.TimeoutMinutes;
+        AgentJobName = other.AgentJobName;
+        ConnectionId = other.ConnectionId;
+        Connection = other.Connection;
     }
 
     [Column("TimeoutMinutes")]
@@ -28,5 +36,7 @@ public class AgentJobStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout
 
     public SqlConnectionInfo Connection { get; set; } = null!;
 
-    public override StepExecution ToStepExecution(Execution execution) => new AgentJobStepExecution(this, execution);
+    internal override AgentJobStep Copy(Job? targetJob = null) => new(this, targetJob);
+
+    internal override StepExecution ToStepExecution(Execution execution) => new AgentJobStepExecution(this, execution);
 }

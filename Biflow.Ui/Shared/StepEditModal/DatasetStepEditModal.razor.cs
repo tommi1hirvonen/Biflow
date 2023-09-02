@@ -67,9 +67,8 @@ public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
     protected override DatasetStep CreateNewStep(Job job)
     {
         (DatasetGroupName, DatasetName) = ("", "");
-        return new()
+        return new(job.JobId)
         {
-            JobId = job.JobId,
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,

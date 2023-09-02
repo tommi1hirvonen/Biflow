@@ -8,6 +8,34 @@ namespace Biflow.DataAccess.Models;
 [PrimaryKey("StepParameterId", "ParameterName")]
 public class StepParameterExpressionParameter : IAsyncEvaluable
 {
+    public StepParameterExpressionParameter() { }
+
+    internal StepParameterExpressionParameter(StepParameterExpressionParameter other, StepParameterBase stepParameter, Job? job)
+    {
+        StepParameterId = stepParameter.ParameterId;
+        StepParameter = stepParameter;
+        ParameterName = other.ParameterName;
+
+        // The target job is set and the target job has a parameter with a matching name.
+        if (job is not null && job.JobParameters.FirstOrDefault(p => p.ParameterName == ParameterName) is JobParameter parameter)
+        {
+            InheritFromJobParameterId = parameter.ParameterId;
+            InheritFromJobParameter = parameter;
+        }
+        // The target job has no parameter with a mathing name, so add one.
+        else if (job is not null)
+        {
+            var newParameter = new JobParameter(other.InheritFromJobParameter, job);
+            InheritFromJobParameter = newParameter;
+            InheritFromJobParameterId = newParameter.ParameterId;
+        }
+        else
+        {
+            InheritFromJobParameterId = other.InheritFromJobParameterId;
+            InheritFromJobParameter = other.InheritFromJobParameter;
+        }
+    }
+
     public Guid StepParameterId { get; set; }
 
     public StepParameterBase StepParameter { get; set; } = null!;

@@ -19,9 +19,8 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
     private PipelineSelectOffcanvas? PipelineSelectOffcanvas { get; set; }
 
     protected override PipelineStep CreateNewStep(Job job) =>
-        new()
+        new(job.JobId)
         {
-            JobId = job.JobId,
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,

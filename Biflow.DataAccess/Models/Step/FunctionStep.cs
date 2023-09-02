@@ -5,8 +5,22 @@ namespace Biflow.DataAccess.Models;
 
 public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepParameter>
 {
-    public FunctionStep() : base(StepType.Function) { }
+    public FunctionStep(Guid jobId) : base(StepType.Function, jobId) { }
 
+    private FunctionStep(FunctionStep other, Job? targetJob) : base(other, targetJob)
+    {
+        TimeoutMinutes = other.TimeoutMinutes;
+        FunctionAppId = other.FunctionAppId;
+        FunctionApp = other.FunctionApp;
+        FunctionUrl = other.FunctionUrl;
+        FunctionInput = other.FunctionInput;
+        FunctionIsDurable = other.FunctionIsDurable;
+        FunctionKey = other.FunctionKey;
+        StepParameters = other.StepParameters
+            .Select(p => new FunctionStepParameter(p, this, targetJob))
+            .ToList();
+    }
+        
     [Column("TimeoutMinutes")]
     [Required]
     [Display(Name = "Timeout (min)")]
@@ -41,5 +55,7 @@ public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepPa
     [ValidateComplexType]
     public IList<FunctionStepParameter> StepParameters { get; set; } = null!;
 
-    public override StepExecution ToStepExecution(Execution execution) => new FunctionStepExecution(this, execution);
+    internal override StepExecution ToStepExecution(Execution execution) => new FunctionStepExecution(this, execution);
+
+    internal override FunctionStep Copy(Job? targetJob = null) => new(this, targetJob);
 }

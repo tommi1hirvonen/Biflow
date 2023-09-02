@@ -6,6 +6,11 @@ public class FunctionStepParameter : StepParameterBase
     {
     }
 
+    internal FunctionStepParameter(FunctionStepParameter other, FunctionStep step, Job? job) : base(other, step, job)
+    {
+        Step = step;
+    }
+
     public FunctionStep Step { get; set; } = null!;
 
     public override Step BaseStep => Step;

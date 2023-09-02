@@ -34,9 +34,8 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
     }
 
     protected override JobStep CreateNewStep(Job job) =>
-        new()
+        new(job.JobId)
         {
-            JobId = job.JobId,
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,

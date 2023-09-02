@@ -5,10 +5,20 @@ namespace Biflow.DataAccess.Models;
 
 public class TabularStep : Step, IHasConnection<AnalysisServicesConnectionInfo>, IHasTimeout
 {
-    public TabularStep(string tabularModelName)
-        : base(StepType.Tabular)
+    public TabularStep(Guid jobId, string tabularModelName)
+        : base(StepType.Tabular, jobId)
     {
         TabularModelName = tabularModelName;
+    }
+
+    private TabularStep(TabularStep other, Job? targetJob) : base(other, targetJob)
+    {
+        TimeoutMinutes = other.TimeoutMinutes;
+        TabularModelName = other.TabularModelName;
+        TabularTableName = other.TabularTableName;
+        TabularPartitionName = other.TabularPartitionName;
+        ConnectionId = other.ConnectionId;
+        Connection = other.Connection;
     }
 
     [Column("TimeoutMinutes")]
@@ -37,5 +47,7 @@ public class TabularStep : Step, IHasConnection<AnalysisServicesConnectionInfo>,
 
     public AnalysisServicesConnectionInfo Connection { get; set; } = null!;
 
-    public override StepExecution ToStepExecution(Execution execution) => new TabularStepExecution(this, execution);
+    internal override TabularStep Copy(Job? targetJob = null) => new(this, targetJob);
+
+    internal override StepExecution ToStepExecution(Execution execution) => new TabularStepExecution(this, execution);
 }

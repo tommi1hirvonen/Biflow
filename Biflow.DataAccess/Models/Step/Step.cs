@@ -6,9 +6,39 @@ namespace Biflow.DataAccess.Models;
 [Table("Step")]
 public abstract class Step : IComparable
 {
-    public Step(StepType stepType)
+    public Step(StepType stepType, Guid jobId)
     {
         StepType = stepType;
+        JobId = jobId;
+    }
+
+    /// <summary>
+    /// Used to initialize properties based on another <see cref="Step"/> and optionally on another <see cref="Models.Job"/>
+    /// </summary>
+    /// <param name="other"><see cref="Step"/> used as a base to initialize the generated object's properties</param>
+    /// <param name="job">Optionally provide a <see cref="Models.Job"/> to swith the generated <see cref="Step"/>'s target job</param>
+    protected Step(Step other, Job? job)
+    {
+        StepId = Guid.NewGuid();
+        JobId = job?.JobId ?? other.JobId;
+        Job = job ?? other.Job;
+        StepName = other.StepName;
+        StepDescription = other.StepDescription;
+        ExecutionPhase = other.ExecutionPhase;
+        StepType = other.StepType;
+        DuplicateExecutionBehaviour = other.DuplicateExecutionBehaviour;
+        CreatedDateTime = DateTimeOffset.Now;
+        LastModifiedDateTime = DateTimeOffset.Now;
+        IsEnabled = other.IsEnabled;
+        RetryAttempts = other.RetryAttempts;
+        RetryIntervalMinutes = other.RetryIntervalMinutes;
+        ExecutionConditionExpression = other.ExecutionConditionExpression;
+        Sources = other.Sources.ToList();
+        Targets = other.Targets.ToList();
+        Tags = other.Tags.ToList();
+        ExecutionConditionParameters = other.ExecutionConditionParameters
+            .Select(p => new ExecutionConditionParameter(p, this, job))
+            .ToList();
     }
 
     [Key]
@@ -16,7 +46,7 @@ public abstract class Step : IComparable
     public Guid StepId { get; private set; }
 
     [Required]
-    public required Guid JobId { get; init; }
+    public Guid JobId { get; private set; }
 
     public Job Job { get; set; } = null!;
 
@@ -128,5 +158,7 @@ public abstract class Step : IComparable
         return result;
     }
 
-    public abstract StepExecution ToStepExecution(Execution execution);
+    internal abstract Step Copy(Job? targetJob = null);
+
+    internal abstract StepExecution ToStepExecution(Execution execution);
 }

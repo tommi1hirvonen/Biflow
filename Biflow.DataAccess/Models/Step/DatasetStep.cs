@@ -4,7 +4,15 @@ namespace Biflow.DataAccess.Models;
 
 public class DatasetStep : Step
 {
-    public DatasetStep() : base(StepType.Dataset) { }
+    public DatasetStep(Guid jobId) : base(StepType.Dataset, jobId) { }
+
+    private DatasetStep(DatasetStep other, Job? targetJob) : base(other, targetJob)
+    {
+        AppRegistrationId = other.AppRegistrationId;
+        AppRegistration = other.AppRegistration;
+        DatasetGroupId = other.DatasetGroupId;
+        DatasetId = other.DatasetId;
+    }
 
     [Required]
     public Guid? AppRegistrationId { get; set; }
@@ -23,5 +31,7 @@ public class DatasetStep : Step
 
     public AppRegistration? AppRegistration { get; set; }
 
-    public override StepExecution ToStepExecution(Execution execution) => new DatasetStepExecution(this, execution);
+    internal override DatasetStep Copy(Job? targetJob = null) => new(this, targetJob);
+
+    internal override StepExecution ToStepExecution(Execution execution) => new DatasetStepExecution(this, execution);
 }

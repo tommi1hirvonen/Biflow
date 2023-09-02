@@ -5,7 +5,22 @@ namespace Biflow.DataAccess.Models;
 
 public class PackageStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout, IHasStepParameters<PackageStepParameter>
 {
-    public PackageStep() : base(StepType.Package) { }
+    public PackageStep(Guid jobId) : base(StepType.Package, jobId) { }
+
+    private PackageStep(PackageStep other, Job? targetJob) : base(other, targetJob)
+    {
+        TimeoutMinutes = other.TimeoutMinutes;
+        ConnectionId = other.ConnectionId;
+        Connection = other.Connection;
+        PackageFolderName = other.PackageFolderName;
+        PackageProjectName = other.PackageProjectName;
+        PackageName = other.PackageName;
+        ExecuteIn32BitMode = other.ExecuteIn32BitMode;
+        ExecuteAsLogin = other.ExecuteAsLogin;
+        StepParameters = other.StepParameters
+            .Select(p => new PackageStepParameter(p, this, targetJob))
+            .ToList();
+    }
 
     [Column("TimeoutMinutes")]
     [Required]
@@ -50,5 +65,7 @@ public class PackageStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout,
     [ValidateComplexType]
     public IList<PackageStepParameter> StepParameters { get; set; } = null!;
 
-    public override StepExecution ToStepExecution(Execution execution) => new PackageStepExecution(this, execution);
+    internal override StepExecution ToStepExecution(Execution execution) => new PackageStepExecution(this, execution);
+
+    internal override PackageStep Copy(Job? targetJob = null) => new(this, targetJob);
 }

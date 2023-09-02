@@ -8,6 +8,21 @@ namespace Biflow.DataAccess.Models;
 [PrimaryKey("ParameterId")]
 public class JobParameter : DynamicParameter
 {
+    public JobParameter() { }
+
+    internal JobParameter(JobParameter other, Job? job)
+    {
+        ParameterId = Guid.NewGuid();
+        JobId = job?.JobId ?? other.JobId;
+        Job = job ?? other.Job;
+        ParameterName = other.ParameterName;
+        ParameterValue = other.ParameterValue;
+        ParameterValueType = other.ParameterValueType;
+        UseExpression = other.UseExpression;
+        Expression = other.Expression;
+        job?.JobParameters.Add(this);
+    }
+
     [Display(Name = "Job")]
     [Column("JobId")]
     public Guid JobId { get; set; }
@@ -19,6 +34,8 @@ public class JobParameter : DynamicParameter
     public ICollection<JobStepParameter> AssigningStepParameters { get; set; } = null!;
 
     public ICollection<StepParameterExpressionParameter> InheritingStepParameterExpressionParameters { get; set; } = null!;
+
+    public ICollection<SqlStep> CapturingSteps { get; set; } = null!;
 
     public override async Task<object?> EvaluateAsync()
     {

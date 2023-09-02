@@ -6,6 +6,11 @@ public class ExeStepParameter : StepParameterBase
     {
     }
 
+    internal ExeStepParameter(ExeStepParameter other, ExeStep step, Job? job) : base(other, step, job)
+    {
+        Step = step;
+    }
+
     public ExeStep Step { get; set; } = null!;
 
     public override Step BaseStep => Step;

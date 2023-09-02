@@ -17,9 +17,8 @@ public partial class PackageStepEditModal : StepEditModal<PackageStep>
     internal override string FormId => "package_step_edit_form";
 
     protected override PackageStep CreateNewStep(Job job) =>
-        new()
+        new(job.JobId)
         {
-            JobId = job.JobId,
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
