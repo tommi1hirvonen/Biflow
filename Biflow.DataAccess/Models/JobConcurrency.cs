@@ -8,6 +8,16 @@ namespace Biflow.DataAccess.Models;
 [PrimaryKey("JobId", "StepType")]
 public class JobConcurrency
 {
+    public JobConcurrency() { }
+
+    internal JobConcurrency(JobConcurrency other, Job job)
+    {
+        JobId = job.JobId;
+        Job = job;
+        MaxParallelSteps = other.MaxParallelSteps;
+        StepType = other.StepType;
+    }
+
     public Guid JobId { get; set; }
 
     public StepType StepType { get; set; }

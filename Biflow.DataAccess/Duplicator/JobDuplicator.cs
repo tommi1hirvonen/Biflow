@@ -1,0 +1,25 @@
+﻿using Biflow.DataAccess.Models;
+
+namespace Biflow.DataAccess;
+
+public class JobDuplicator : IDisposable
+{
+    private readonly BiflowContext _context;
+
+    internal JobDuplicator(BiflowContext context, Job job)
+    {
+        _context = context;
+        Job = job;
+    }
+
+    public Job Job { get; set; }
+
+    public async Task<Job> SaveJobAsync()
+    {
+        _context.Jobs.Add(Job);
+        await _context.SaveChangesAsync();
+        return Job;
+    }
+
+    public void Dispose() => _context.Dispose();
+}

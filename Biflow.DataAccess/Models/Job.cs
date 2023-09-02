@@ -6,6 +6,28 @@ namespace Biflow.DataAccess.Models;
 [Table("Job")]
 public class Job
 {
+    public Job() { }
+
+    private Job(Job other)
+    {
+        JobId = Guid.NewGuid();
+        JobName = other.JobName;
+        JobDescription = other.JobDescription;
+        UseDependencyMode = other.UseDependencyMode;
+        StopOnFirstError = other.StopOnFirstError;
+        MaxParallelSteps = other.MaxParallelSteps;
+        OvertimeNotificationLimitMinutes = other.OvertimeNotificationLimitMinutes;
+        IsEnabled = other.IsEnabled;
+        Category = other.Category;
+        CategoryId = other.CategoryId;
+        JobConcurrencies = other.JobConcurrencies
+            .Select(c => new JobConcurrency(c, this))
+            .ToList();
+        JobParameters = other.JobParameters
+            .Select(p => new JobParameter(p, this))
+            .ToList();
+    }
+
     [Key]
     public Guid JobId { get; private set; }
 
@@ -86,4 +108,6 @@ public class Job
 
     [Timestamp]
     public byte[]? Timestamp { get; private set; }
+
+    public Job Copy() => new(this);
 }
