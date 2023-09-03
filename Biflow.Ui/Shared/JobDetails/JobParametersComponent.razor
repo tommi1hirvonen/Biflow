@@ -56,28 +56,23 @@ else
                                     
                                 </th>
                                 <th>
-                                    Inherits
+                                    References
                                 </th>
-                                <th>
-                                    Captures
-                                </th>
-                                <th>
-                                    Assigns
-                                </th>
-                                <th></th>
                                 <th></th>
                             </tr>
                         </thead>
                         <tbody>
                             @if (!EditJob?.JobParameters?.Any() ?? true)
                             {
-                                <tr><td colspan="8">No parameters</td></tr>
+                                <tr><td colspan="5">No parameters</td></tr>
                             }
                             @foreach (var param in EditJob?.JobParameters ?? Enumerable.Empty<JobParameter>())
                             {
-                                var inheritingSteps = GetInheritingSteps(param).ToList();
-                                var capturingSteps = GetCapturingSteps(param).ToList();
-                                var assigningSteps = GetAssigningSteps(param).ToList();
+                                var referenceCount = GetInheritingSteps(param)
+                                    .Concat(GetCapturingSteps(param))
+                                    .Concat(GetAssigningSteps(param))
+                                    .Concat(GetExecutionConditionSteps(param))
+                                    .Count();
                                 <tr>
                                     <td>
                                         <InputText class="form-control form-control-sm"
@@ -91,19 +86,13 @@ else
                                             <ParameterTypeValueEditComponent Parameter="param" />
                                         </StaticEditTemplate>
                                     </DynamicParameterEditComponent>
-                                    <td class="@(inheritingSteps.Count == 0 ? "text-muted" : null)">
-                                        @inheritingSteps.Count step(s)
-                                    </td>
-                                    <td class="@(capturingSteps.Count == 0 ? "text-muted" : null)">
-                                        @capturingSteps.Count steps(s)
-                                    </td>
-                                    <td class="@(assigningSteps.Count == 0 ? "text-muted" : null)">
-                                        @assigningSteps.Count step(s)
-                                    </td>
                                     <td>
-                                        <a class="text-body" href="javascript:void()" @onclick="() => ShowReferencingStepsAsync(param)">
-                                            Show references
-                                        </a>
+                                        @if (referenceCount > 0)
+                                        {
+                                            <a class="text-body" href="javascript:void()" @onclick="() => ShowReferencingStepsAsync(param)">
+                                                @referenceCount step(s)
+                                            </a>
+                                        }
                                     </td>
                                     <td>
                                         <HxButtonGroup Size="ButtonGroupSize.Small">
