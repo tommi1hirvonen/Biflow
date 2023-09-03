@@ -405,7 +405,7 @@
                 </dt>
                 <dd class="col-sm-9">
                     @param.DisplayValue
-                    @if (param.ExpressionParameters.Any())
+                    @if (param.UseExpression && param.ExpressionParameters.Any())
                     {
                         var expressionParameters = param.ExpressionParameters.Select(p => $"<p><small>{p.ParameterName} = {p.InheritFromExecutionParameter.DisplayValue}</small></p>");
                         var content = string.Join("\n", expressionParameters);
