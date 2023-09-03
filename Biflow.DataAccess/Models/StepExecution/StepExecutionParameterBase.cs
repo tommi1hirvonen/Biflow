@@ -10,7 +10,7 @@ public abstract class StepExecutionParameterBase : DynamicParameter
     public StepExecutionParameterBase(string parameterName, object parameterValue, ParameterType parameterType, ParameterValueType parameterValueType)
     {
         ParameterName = parameterName;
-        _parameterValue = parameterValue;
+        ParameterValue = parameterValue;
         ParameterValueType = parameterValueType;
         ParameterType = parameterType;
     }
@@ -42,11 +42,9 @@ public abstract class StepExecutionParameterBase : DynamicParameter
     [Column(TypeName = "sql_variant")]
     public override object? ParameterValue
     {
-        get => InheritFromExecutionParameter is not null ? ExecutionParameterValue : _parameterValue;
-        set => _parameterValue = value;
+        get => InheritFromExecutionParameter is not null ? ExecutionParameterValue : base.ParameterValue;
+        set => base.ParameterValue = value;
     }
-
-    private object? _parameterValue;
 
     public override ParameterValueType ParameterValueType
     {
