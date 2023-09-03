@@ -6,7 +6,7 @@ namespace Biflow.DataAccess.Models;
 
 [Table("StepParameterExpressionParameter")]
 [PrimaryKey("StepParameterId", "ParameterName")]
-public class StepParameterExpressionParameter : IAsyncEvaluable
+public class StepParameterExpressionParameter : IAsyncEvaluable, IExpressionParameter<JobParameter>
 {
     public StepParameterExpressionParameter() { }
 

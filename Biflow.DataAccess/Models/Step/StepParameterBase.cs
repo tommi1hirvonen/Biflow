@@ -6,7 +6,7 @@ namespace Biflow.DataAccess.Models;
 
 [Table("StepParameter")]
 [PrimaryKey("ParameterId")]
-public abstract class StepParameterBase : DynamicParameter
+public abstract class StepParameterBase : DynamicParameter, IHasExpressionParameters<StepParameterExpressionParameter, JobParameter>
 {
     public StepParameterBase(ParameterType parameterType)
     {
@@ -88,6 +88,18 @@ public abstract class StepParameterBase : DynamicParameter
         return ParameterValue;
     }
 
+    public void AddExpressionParameter(JobParameter jobParameter)
+    {
+        var expressionParameter = new StepParameterExpressionParameter
+        {
+            StepParameter = this,
+            StepParameterId = ParameterId,
+            InheritFromJobParameter = jobParameter,
+            InheritFromJobParameterId = jobParameter.ParameterId
+        };
+        ExpressionParameters.Add(expressionParameter);
+    }
+
     public override string DisplayValue => InheritFromJobParameter switch
     {
         not null => $"{InheritFromJobParameter.DisplayValue?.ToString() ?? "null"} (inherited from job parameter {InheritFromJobParameter.DisplayName})",
@@ -96,4 +108,6 @@ public abstract class StepParameterBase : DynamicParameter
 
     public override string DisplayValueType => InheritFromJobParameter?.DisplayValueType ?? base.DisplayValueType;
 
+    [NotMapped]
+    public IList<JobParameter> JobParameters => BaseStep.Job.JobParameters;
 }

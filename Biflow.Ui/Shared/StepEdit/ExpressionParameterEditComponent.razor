@@ -1,4 +1,13 @@
-﻿<div class="row">
+﻿
+@typeparam TJobParameter where TJobParameter : ParameterBase
+@typeparam TExpressionParameter where TExpressionParameter : IExpressionParameter<TJobParameter>
+
+@if (StepParameter is null)
+{
+    return;
+}
+
+<div class="row">
     <div class="col">
         <table class="table table-sm">
             <thead>
@@ -9,9 +18,9 @@
                 </tr>
             </thead>
             <tbody>
-                @if (Parameter?.ExpressionParameters.Any() ?? false)
+                @if (StepParameter.ExpressionParameters.Any())
                 {
-                    @foreach (var param in Parameter.ExpressionParameters)
+                    @foreach (var param in StepParameter.ExpressionParameters)
                     {
                         <tr>
                             <td>
@@ -23,7 +32,7 @@
                                 <InputSelect class="form-select form-select-sm"
                                              @bind-Value="param.InheritFromJobParameterId"
                                              @bind-Value:after="() => OnInheritFromJobParameterChanged(param)">
-                                    @foreach (var jobParam in Parameter.BaseStep.Job.JobParameters.OrderBy(p => p.ParameterName))
+                                    @foreach (var jobParam in StepParameter.JobParameters.OrderBy(p => p.ParameterName))
                                     {
                                         <option value="@jobParam.ParameterId">
                                             @jobParam.DisplaySummary
@@ -36,7 +45,7 @@
                                     <HxButton Color="ThemeColor.None"
                                               CssClass="btn-auto"
                                               Size="ButtonSize.Small"
-                                              @onclick="() => RemoveParameter(Parameter, param)">
+                                              @onclick="() => RemoveParameter(StepParameter, param)">
                                         <CxIcon Icon="FeatherIcon.Delete" />
                                     </HxButton>
                                 </HxButtonGroup>
@@ -61,7 +70,7 @@
         <HxButton Color="ThemeColor.None"
                   CssClass="btn-auto"
                   Size="ButtonSize.Small"
-                  Enabled="Parameter?.BaseStep.Job.JobParameters.Any() ?? false"
+                  Enabled="StepParameter.JobParameters.Any()"
                   @onclick="AddParameter">
             <CxIcon Icon="FeatherIcon.Plus" />
             Add parameter
@@ -72,9 +81,11 @@
 @code {
     [CascadingParameter(Name = "StepParametersValidator")] FluentValidationValidator? ParametersValidator { get; set; }
 
-    [Parameter, EditorRequired] public StepParameterBase? Parameter { get; set; }
+    [Parameter, EditorRequired] public IHasExpressionParameters<TExpressionParameter, TJobParameter>? StepParameter { get; set; }
 
-    private async Task RemoveParameter(StepParameterBase parameter, StepParameterExpressionParameter expressionParameter)
+    private async Task RemoveParameter(
+        IHasExpressionParameters<TExpressionParameter, TJobParameter> parameter,
+        TExpressionParameter expressionParameter)
     {
         parameter.ExpressionParameters.Remove(expressionParameter);
         await ParametersValidator.LetAsync(x => x.ValidateAsync());
@@ -82,22 +93,15 @@
 
     private void AddParameter()
     {
-        ArgumentNullException.ThrowIfNull(Parameter);
-        var jobParameter = Parameter.BaseStep.Job.JobParameters.First();
-        var expressionParameter = new StepParameterExpressionParameter
-        {
-            StepParameter = Parameter,
-            StepParameterId = Parameter.ParameterId,
-            InheritFromJobParameter = jobParameter,
-            InheritFromJobParameterId = jobParameter.ParameterId
-        };
-        Parameter.ExpressionParameters.Add(expressionParameter);
+        ArgumentNullException.ThrowIfNull(StepParameter);
+        var jobParameter = StepParameter.JobParameters.First();
+        StepParameter.AddExpressionParameter(jobParameter);
     }
 
-    private void OnInheritFromJobParameterChanged(StepParameterExpressionParameter param)
+    private void OnInheritFromJobParameterChanged(TExpressionParameter param)
     {
-        ArgumentNullException.ThrowIfNull(Parameter);
-        param.InheritFromJobParameter = Parameter.BaseStep.Job.JobParameters
+        ArgumentNullException.ThrowIfNull(StepParameter);
+        param.InheritFromJobParameter = StepParameter.JobParameters
             .First(p => p.ParameterId == param.InheritFromJobParameterId);
     }
 }
