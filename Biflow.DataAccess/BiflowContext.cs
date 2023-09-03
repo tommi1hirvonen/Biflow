@@ -279,6 +279,7 @@ public class BiflowContext : DbContext
             });
             e.HasMany(p => p.InheritingStepParameterExpressionParameters).WithOne(p => p.InheritFromJobParameter);
             e.HasMany(p => p.CapturingSteps).WithOne(s => s.ResultCaptureJobParameter);
+            e.HasMany(p => p.ExecutionConditionParameters).WithOne(p => p.JobParameter);
         });
 
         modelBuilder.Entity<StepParameterBase>(e =>

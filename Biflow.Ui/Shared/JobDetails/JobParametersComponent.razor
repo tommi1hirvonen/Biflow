@@ -247,6 +247,42 @@ else
                 
             </tbody>
         </table>
+
+        <h6 class="mt-5">
+            Execution conditions
+            <HxPopover Content="Steps whose execution condition parameters are referencing this job parameter"
+                       Trigger="PopoverTrigger.Hover">
+                <CxIcon Icon="FeatherIcon.Info" />
+            </HxPopover>
+        </h6>
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>
+                        Step
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!ReferencingSteps.ExecutionConditionSteps.Any())
+                {
+                    <tr><td class="text-muted" colspan="2">No execution conditions</td></tr>
+                }
+                else
+                {
+                    foreach (var step in ReferencingSteps.ExecutionConditionSteps)
+                    {
+                        <tr>
+                            <td>
+                                <StepTypeIconComponent StepType_="step.StepType" />
+                                @step.StepName
+                            </td>
+                        </tr>
+                    }
+                }
+
+            </tbody>
+        </table>
     </BodyTemplate>
     <FooterTemplate>
         <HxButton Color="ThemeColor.Secondary" OnClick="() => ReferencingStepsOffcanvas.LetAsync(x => x.HideAsync())" Spinner="false">

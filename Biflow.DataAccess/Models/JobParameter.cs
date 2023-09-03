@@ -37,6 +37,8 @@ public class JobParameter : DynamicParameter
 
     public ICollection<SqlStep> CapturingSteps { get; set; } = null!;
 
+    public ICollection<ExecutionConditionParameter> ExecutionConditionParameters { get; set; } = null!;
+
     public override async Task<object?> EvaluateAsync()
     {
         if (UseExpression)
