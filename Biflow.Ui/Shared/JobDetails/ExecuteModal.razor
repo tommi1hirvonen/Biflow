@@ -366,11 +366,11 @@
 </HxModal>
 
 <ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" TParameter="StepExecutionParameterBase" OnExpressionChanged="StateHasChanged">
-    @* <div class="row mt-3">
+    <div class="row mt-3">
         <div class="col">
-            <ExpressionParameterEditComponent StepParameter="ExpressionEditParameter" />
+            <ExpressionParameterEditComponent StepParameter="context" />
         </div>
-    </div> *@
+    </div>
     <StepExpressionParameterNotice />
 </ExpressionEditOffcanvas>
 
