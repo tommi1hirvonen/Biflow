@@ -18,6 +18,7 @@ public class ExecutionParameter : DynamicParameter
         : this(parameter.ParameterName, parameter.ParameterValue, parameter.ParameterValueType)
     {
         ExecutionId = execution.ExecutionId;
+        Execution = execution;
         UseExpression = parameter.UseExpression;
         Expression = parameter.Expression;
         ParameterId = parameter.ParameterId;
