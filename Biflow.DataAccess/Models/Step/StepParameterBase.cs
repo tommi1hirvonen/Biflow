@@ -109,5 +109,5 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
     public override string DisplayValueType => InheritFromJobParameter?.DisplayValueType ?? base.DisplayValueType;
 
     [NotMapped]
-    public IList<JobParameter> JobParameters => BaseStep.Job.JobParameters;
+    public IEnumerable<JobParameter> JobParameters => BaseStep.Job.JobParameters;
 }

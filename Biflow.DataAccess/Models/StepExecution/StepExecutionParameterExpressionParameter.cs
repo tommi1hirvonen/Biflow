@@ -6,7 +6,7 @@ namespace Biflow.DataAccess.Models;
 
 [Table("ExecutionStepParameterExpressionParameter")]
 [PrimaryKey("ExecutionId", "StepParameterId", "ParameterName")]
-public class StepExecutionParameterExpressionParameter
+public class StepExecutionParameterExpressionParameter : IExpressionParameter<ExecutionParameter>
 {
     public StepExecutionParameterExpressionParameter() { }
 
@@ -34,4 +34,18 @@ public class StepExecutionParameterExpressionParameter
     public Guid InheritFromExecutionParameterId { get; set; }
 
     public ExecutionParameter InheritFromExecutionParameter { get; set; } = null!;
+
+    [NotMapped]
+    public ExecutionParameter InheritFromJobParameter
+    {
+        get => InheritFromExecutionParameter;
+        set => InheritFromExecutionParameter = value;
+    }
+
+    [NotMapped]
+    public Guid InheritFromJobParameterId
+    {
+        get => InheritFromExecutionParameterId;
+        set => InheritFromExecutionParameterId = value;
+    }
 }

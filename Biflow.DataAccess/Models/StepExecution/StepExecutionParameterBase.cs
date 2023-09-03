@@ -5,7 +5,7 @@ namespace Biflow.DataAccess.Models;
 
 [Table("ExecutionStepParameter")]
 [PrimaryKey("ExecutionId", "ParameterId")]
-public abstract class StepExecutionParameterBase : DynamicParameter
+public abstract class StepExecutionParameterBase : DynamicParameter, IHasExpressionParameters<StepExecutionParameterExpressionParameter, ExecutionParameter>
 {
     public StepExecutionParameterBase(string parameterName, object parameterValue, ParameterType parameterType, ParameterValueType parameterValueType)
     {
@@ -80,6 +80,9 @@ public abstract class StepExecutionParameterBase : DynamicParameter
     [NotMapped]
     private object? EvaluationResult { get; set; }
 
+    [NotMapped]
+    public IEnumerable<ExecutionParameter> JobParameters => BaseStepExecution.Execution.ExecutionParameters;
+
     public override async Task<object?> EvaluateAsync()
     {
         if (UseExpression && Evaluated)
@@ -101,5 +104,18 @@ public abstract class StepExecutionParameterBase : DynamicParameter
         }
 
         return ParameterValue;
+    }
+
+    public void AddExpressionParameter(ExecutionParameter jobParameter)
+    {
+        var expressionParameter = new StepExecutionParameterExpressionParameter
+        {
+            ExecutionId = ExecutionId,
+            StepParameter = this,
+            StepParameterId = ParameterId,
+            InheritFromExecutionParameter = jobParameter,
+            InheritFromExecutionParameterId = jobParameter.ParameterId
+        };
+        ExpressionParameters.Add(expressionParameter);
     }
 }

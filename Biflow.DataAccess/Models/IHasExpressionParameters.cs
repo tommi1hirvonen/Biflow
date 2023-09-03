@@ -6,7 +6,7 @@ public interface IHasExpressionParameters<TExpressionParameter, TJobParameter>
 {
     public IList<TExpressionParameter> ExpressionParameters { get; }
 
-    public IList<TJobParameter> JobParameters { get; }
+    public IEnumerable<TJobParameter> JobParameters { get; }
 
     public void AddExpressionParameter(TJobParameter jobParameter);
 }
