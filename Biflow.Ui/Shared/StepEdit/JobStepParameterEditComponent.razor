@@ -118,7 +118,7 @@ else if (Step is not null)
 <ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" TParameter="StepParameterBase" OnExpressionChanged="StateHasChanged">
     <div class="row mt-3">
         <div class="col">
-            <ExpressionParameterEditComponent Parameter="ExpressionEditParameter" />
+            <ExpressionParameterEditComponent Parameter="context" />
         </div>
     </div>
     <StepExpressionParameterNotice />
@@ -141,8 +141,6 @@ else if (Step is not null)
         ?? Enumerable.Empty<JobParameter>();
 
     private ExpressionEditOffcanvas<StepParameterBase>? ExpressionEditOffcanvas { get; set; }
-
-    private StepParameterBase? ExpressionEditParameter { get; set; }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -196,11 +194,7 @@ else if (Step is not null)
         parameter.ParameterName = targetParam.ParameterName;
     }
 
-    private async Task OnParameterEdit(StepParameterBase parameter)
-    {
-        ExpressionEditParameter = parameter;
-        await ExpressionEditOffcanvas.LetAsync(x => x.ShowAsync(ExpressionEditParameter));
-    }
+    private Task OnParameterEdit(StepParameterBase parameter) => ExpressionEditOffcanvas.LetAsync(x => x.ShowAsync(parameter));
 
     private IEnumerable<JobParameter> GetAvailableJobParameters(StepParameterBase param) => JobParameters
         .Where(p => p.ParameterValueType == param.ParameterValueType || p.UseExpression)

@@ -95,10 +95,10 @@
     </HxButton>
 }
 
-<ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" OnExpressionChanged="StateHasChanged" TParameter="StepParameterBase" OnClosed="() => ExpressionEditParameter = null">
+<ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" OnExpressionChanged="StateHasChanged" TParameter="StepParameterBase">
     <div class="row mt-3">
         <div class="col">
-            <ExpressionParameterEditComponent Parameter="ExpressionEditParameter" />
+            <ExpressionParameterEditComponent Parameter="context" />
         </div>
     </div>
     <StepExpressionParameterNotice />
@@ -115,8 +115,6 @@
 
     private ExpressionEditOffcanvas<StepParameterBase>? ExpressionEditOffcanvas { get; set; }
 
-    private StepParameterBase? ExpressionEditParameter { get; set; }
-
     private void SetJobParameter(bool inheritFromJob, StepParameterBase param)
     {
         if (inheritFromJob)
@@ -131,11 +129,7 @@
         }
     }
 
-    private async Task OnParameterEdit(StepParameterBase parameter)
-    {
-        ExpressionEditParameter = parameter;
-        await ExpressionEditOffcanvas.LetAsync(x => x.ShowAsync(ExpressionEditParameter));
-    }
+    private Task OnParameterEdit(StepParameterBase parameter) => ExpressionEditOffcanvas.LetAsync(x => x.ShowAsync(parameter));
 
     private void AddParameter()
     {
