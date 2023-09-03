@@ -1,5 +1,7 @@
 ﻿@inject IHxMessengerService Messenger
 
+@typeparam TParameter where TParameter : DynamicParameter
+
 @if (Parameter is not null)
 {
     <td class="align-middle">
@@ -35,15 +37,15 @@
 }
 
 @code {
-    [Parameter, EditorRequired] public DynamicParameter? Parameter { get; set; }
+    [Parameter, EditorRequired] public TParameter? Parameter { get; set; }
 
-    [Parameter] public EventCallback<DynamicParameter> OnParameterEdit { get; set; }
+    [Parameter] public EventCallback<TParameter> OnParameterEdit { get; set; }
 
     [Parameter] public RenderFragment? StaticEditTemplate { get; set; }
 
     private Guid Id { get; } = Guid.NewGuid();
 
-    private async Task TestEvaluate(DynamicParameter parameter)
+    private async Task TestEvaluate(TParameter parameter)
     {
         try
         {

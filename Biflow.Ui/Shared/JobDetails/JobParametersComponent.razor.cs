@@ -33,7 +33,7 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
 
     private FluentValidationValidator? JobValidator { get; set; }
 
-    private ExpressionEditOffcanvas? ExpressionEditOffcanvas { get; set; }
+    private ExpressionEditOffcanvas<JobParameter>? ExpressionEditOffcanvas { get; set; }
 
     private HxOffcanvas? ReferencingStepsOffcanvas { get; set; }
     

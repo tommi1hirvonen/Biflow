@@ -81,6 +81,7 @@ else
                                                    @bind-Value:after="() => JobValidator.LetAsync(x => x.ValidateAsync())" />
                                     </td>
                                     <DynamicParameterEditComponent Parameter="param"
+                                                                   TParameter="JobParameter"
                                                                    OnParameterEdit="p => ExpressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))">
                                         <StaticEditTemplate>
                                             <ParameterTypeValueEditComponent Parameter="param" />
@@ -111,7 +112,7 @@ else
     </div>
 }
 
-<ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" OnExpressionChanged="StateHasChanged">
+<ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" TParameter="JobParameter" OnExpressionChanged="StateHasChanged">
     <div class="row mt-3">
         <div class="col text-secondary small">
             Job parameter expressions have the following built-in variables automatically available. They can be used to access the internal ids during execution.

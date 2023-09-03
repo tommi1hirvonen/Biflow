@@ -1,4 +1,6 @@
-﻿@inject IHxMessengerService Messenger
+﻿@typeparam TParameter where TParameter : DynamicParameter
+
+@inject IHxMessengerService Messenger
 
 <HxOffcanvas @ref="Offcanvas" Backdrop="OffcanvasBackdrop.False" Title="@(Parameter?.DisplayName ?? "")" OnClosed="OnClosed">
     <BodyTemplate>
@@ -17,7 +19,8 @@
                               @bind:event="oninput"
                               @bind:after="() => OnExpressionChanged.InvokeAsync()"
                               style="font-family: monospace;"
-                              rows="3"></textarea>
+                              rows="3">
+                    </textarea>
                 </div>
             </div>
             <div class="row mt-3">
@@ -28,8 +31,11 @@
                     </HxButton>
                 </div>
             </div>
+            @if (ChildContent is not null)
+            {
+                @ChildContent(Parameter)
+            }
         }
-        @ChildContent
 
         <div class="row mt-4">
             <div class="col text-secondary">
@@ -55,7 +61,7 @@
 </HxOffcanvas>
 
 @code {
-    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment<TParameter>? ChildContent { get; set; }
 
     [Parameter] public EventCallback OnExpressionChanged { get; set; }
 
@@ -63,20 +69,20 @@
 
     private HxOffcanvas? Offcanvas { get; set; }
 
-    private DynamicParameter? Parameter { get; set; }
+    private TParameter? Parameter { get; set; }
 
     private string Title { get; set; } = "";
 
     private bool HelpOpen { get; set; } = false;
 
-    public async Task ShowAsync(DynamicParameter parameter)
+    public async Task ShowAsync(TParameter parameter)
     {
         Parameter = parameter;
         StateHasChanged(); // To update offcanvas title text
         await Offcanvas.LetAsync(x => x.ShowAsync());
     }
 
-    private async Task TestEvaluate(DynamicParameter parameter)
+    private async Task TestEvaluate(TParameter parameter)
     {
         try
         {

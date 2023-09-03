@@ -67,6 +67,7 @@
                     else
                     {
                         <DynamicParameterEditComponent Parameter="param"
+                                                       TParameter="StepParameterBase"
                                                        OnParameterEdit="OnParameterEdit">
                             <StaticEditTemplate>
                                 <ParameterTypeValueEditComponent Parameter="param" />
@@ -94,7 +95,7 @@
     </HxButton>
 }
 
-<ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" OnExpressionChanged="StateHasChanged" OnClosed="() => ExpressionEditParameter = null">
+<ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" OnExpressionChanged="StateHasChanged" TParameter="StepParameterBase" OnClosed="() => ExpressionEditParameter = null">
     <div class="row mt-3">
         <div class="col">
             <ExpressionParameterEditComponent Parameter="ExpressionEditParameter" />
@@ -112,7 +113,7 @@
 
     private IEnumerable<JobParameter> JobParameters => (Step as Step)?.Job.JobParameters ?? Enumerable.Empty<JobParameter>();
 
-    private ExpressionEditOffcanvas? ExpressionEditOffcanvas { get; set; }
+    private ExpressionEditOffcanvas<StepParameterBase>? ExpressionEditOffcanvas { get; set; }
 
     private StepParameterBase? ExpressionEditParameter { get; set; }
 
@@ -130,9 +131,9 @@
         }
     }
 
-    private async Task OnParameterEdit(DynamicParameter parameter)
+    private async Task OnParameterEdit(StepParameterBase parameter)
     {
-        ExpressionEditParameter = (StepParameterBase)parameter;
+        ExpressionEditParameter = parameter;
         await ExpressionEditOffcanvas.LetAsync(x => x.ShowAsync(ExpressionEditParameter));
     }
 
