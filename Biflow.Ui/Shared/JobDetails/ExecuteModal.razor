@@ -97,7 +97,7 @@
                                 </HxButton>
                                 @*Add all available steps that have not yet been added to selected steps. Also filter based on current filter text.*@
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                @onclick="() => Builder.AddAll()">
+                                @onclick="() => Builder.AddAll(step => StepsAvailableToExecute.Any(available => step.StepId == available.StepId))">
                                     <CxIcon Icon="FeatherIcon.ChevronsRight" />
                                     Select all
                                 </HxButton>
@@ -450,6 +450,7 @@
         Builder = null;
         ExecuteFilterText = string.Empty;
         ExecuteTagsFilterSet.Clear();
+        StepTypeFilter.Clear();
         ParameterEditStep = null;
         ActiveView = View.Steps;
     }
