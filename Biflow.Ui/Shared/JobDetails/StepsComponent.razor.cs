@@ -227,7 +227,10 @@ public partial class StepsComponent : ComponentBase
         {
             var duplicator = await StepDuplicatorFactory.CreateAsync(step.StepId, job?.JobId);
             var copy = duplicator.Steps.First();
-            copy.StepName = $"{copy.StepName} – Copy";
+            if (job is null)
+            {
+                copy.StepName = $"{copy.StepName} – Copy";
+            }
             var createdStep = await duplicator.SaveStepsAsync();
             // If the steps was copied to this job, reload steps.
             if (job is null)
@@ -249,13 +252,20 @@ public partial class StepsComponent : ComponentBase
         {
             var stepIds = SelectedSteps.Select(s => s.StepId).ToArray();
             var duplicator = await StepDuplicatorFactory.CreateAsync(stepIds, job?.JobId);
-            foreach (var step in duplicator.Steps)
+            if (job is null)
             {
-                step.StepName = $"{step.StepName} – Copy";
+                foreach (var step in duplicator.Steps)
+                {
+                    step.StepName = $"{step.StepName} – Copy";
+                }
             }
             var steps = await duplicator.SaveStepsAsync();
-            Steps?.AddRange(steps);
-            SortSteps?.Invoke();
+            // If the steps was copied to this job, reload steps.
+            if (job is null)
+            {
+                Steps?.AddRange(steps);
+                SortSteps?.Invoke();
+            }
             Messenger.AddInformation("Step(s) copied successfully");
         }
         catch (Exception ex)
