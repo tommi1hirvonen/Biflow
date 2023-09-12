@@ -91,7 +91,7 @@
                             <HxButtonGroup>
                                 @*Add all available AND enabled steps that have not yet been added to selected steps. Also filter based on current filter text.*@
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                @onclick="() => Builder.AddAll(s => s.IsEnabled)">
+                                @onclick="() => Builder.AddAll(s => s.IsEnabled && StepsAvailableToExecute.Any(available => s.StepId == available.StepId))">
                                     <CxIcon Icon="FeatherIcon.ChevronRight" />
                                     Select enabled
                                 </HxButton>

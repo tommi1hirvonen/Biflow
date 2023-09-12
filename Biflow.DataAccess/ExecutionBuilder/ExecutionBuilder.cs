@@ -36,8 +36,12 @@ public partial class ExecutionBuilder : IDisposable
     public IEnumerable<ExecutionBuilderStep> Steps =>
         _builderSteps.Where(s => !_execution.StepExecutions.Any(e => s.StepId == e.StepId));
 
-    public IEnumerable<ExecutionBuilderStepExecution> StepExecutions =>
-        _execution.StepExecutions.Select(e => new ExecutionBuilderStepExecution(this, e));
+    public IEnumerable<ExecutionBuilderStepExecution> StepExecutions => (_execution.DependencyMode switch
+    {
+        true => _execution.StepExecutions.OrderBy(e => e, new TopologicalStepExecutionComparer(_execution.StepExecutions)),
+        false => _execution.StepExecutions.OrderBy(e => e.ExecutionPhase)
+    })
+    .Select(e => new ExecutionBuilderStepExecution(this, e));
 
     public IEnumerable<DynamicParameter> Parameters => _execution.ExecutionParameters;
 
