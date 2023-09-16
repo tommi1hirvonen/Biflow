@@ -103,7 +103,7 @@ public class SqlServerHelperService
         return new SSISCatalog(folders);
     }
 
-    public async Task<IEnumerable<(ParameterLevel ParameterLevel, string ParameterName, ParameterValueType ParameterType, object? DefaultValue)>> GetPackageParameters(
+    public async Task<IEnumerable<PackageParameter>> GetPackageParameters(
         Guid connectionId, string folder, string project, string package, bool includeConnectionManagerParameters)
     {
         var catalogConnectionString = await GetSqlConnectionStringAsync(connectionId);
@@ -178,7 +178,7 @@ public class SqlServerHelperService
                     _ => ParameterValueType.String
                 };
             }
-            return (level, param.Name, datatype, param.Default);
+            return new PackageParameter(level, param.Name, datatype, param.Default);
         }).ToArray();
     }
 
