@@ -42,7 +42,7 @@ else
                 <EditForm id="job_parameter_form" Model="EditJob" OnValidSubmit="SubmitParameters">
                     <ObjectGraphDataAnnotationsValidator />
                     <ValidationSummary />
-                    <FluentValidationValidator @ref="JobValidator" ValidatorType="typeof(JobValidator)" />
+                    <FluentValidationValidator @ref="FluentJobValidator" Validator="JobValidator" />
                     <table id="parameters_table" class="table">
                         <thead>
                             <tr>
@@ -78,7 +78,7 @@ else
                                         <InputText class="form-control form-control-sm"
                                                    @bind-Value="param.ParameterName"
                                                    placeholder="Name"
-                                                   @bind-Value:after="() => JobValidator.LetAsync(x => x.ValidateAsync())" />
+                                                   @bind-Value:after="() => FluentJobValidator.LetAsync(x => x.ValidateAsync())" />
                                     </td>
                                     <DynamicParameterEditComponent Parameter="param"
                                                                    TParameter="JobParameter"

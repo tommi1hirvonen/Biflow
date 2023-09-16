@@ -3,7 +3,7 @@ using FluentValidation;
 
 namespace Biflow.Ui.Core;
 
-public class StepParametersValidator : AbstractValidator<IHasStepParameters>
+public class StepParametersValidator : AsyncAbstractValidator<IHasStepParameters>
 {
     public StepParametersValidator()
     {
@@ -14,5 +14,17 @@ public class StepParametersValidator : AbstractValidator<IHasStepParameters>
         RuleForEach(step => step.StepParameters)
             .Must(parameters => parameters.ExpressionParameters.DistinctBy(p => p.ParameterName).Count() == parameters.ExpressionParameters.Count)
             .WithMessage("Expression parameter names must be unique");
+        RuleForEach(step => step.StepParameters)
+            .CustomAsync(async (param, context, ct) =>
+            {
+                try
+                {
+                    await param.EvaluateAsync();
+                }
+                catch
+                {
+                    context.AddFailure($"Error evaluating parameter '{param.DisplayName}'");
+                }
+            });
     }
 }

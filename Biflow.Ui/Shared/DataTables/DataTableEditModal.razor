@@ -5,6 +5,7 @@
 @inject IHxMessengerService Messenger
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject IJSRuntime JS
+@inject DataTableValidator DataTableValidator
 
 @{
     var title = EditTable switch
@@ -24,7 +25,7 @@
                     <div class="col">
                         <ObjectGraphDataAnnotationsValidator />
                         <ValidationSummary />
-                        <FluentValidationValidator ValidatorType="typeof(DataTableValidator)" />
+                        <FluentValidationValidator Validator="DataTableValidator" />
                         <div class="row">
                             <div class="col">
                                 <div class="row">

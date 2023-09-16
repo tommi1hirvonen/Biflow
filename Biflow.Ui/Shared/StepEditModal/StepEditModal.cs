@@ -116,7 +116,7 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
         StepSlims = null;
     }
 
-    internal async Task SubmitStep()
+    internal async Task SubmitStepAsync()
     {
         Saving = true;
 

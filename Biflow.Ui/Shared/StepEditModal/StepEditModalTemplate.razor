@@ -2,6 +2,8 @@
 
 @inject SqlServerHelperService SqlServerHelper
 @inject IJSRuntime JS
+@inject StepValidator StepValidator
+@inject StepParametersValidator StepParametersValidator
 
 @*Set pt-0 for modal body (BodyCssClass). The DependenciesEditComponent has a sticky-top element that should be placed at the top without any padding*@
 <HxModal @ref="Modal.Modal"
@@ -16,7 +18,7 @@
         {
             <div class="row mt-3">
                 <div class="col mx-3">
-                    <EditForm id="@Modal.FormId" Model="Modal.Step" OnValidSubmit="Modal.SubmitStep">
+                    <EditForm @ref="EditForm" id="@Modal.FormId" Model="Modal.Step" OnValidSubmit="SubmitAsync">
                         <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
                         <div class="row">
                             <div class="col">
@@ -74,15 +76,15 @@
                                 <ObjectGraphDataAnnotationsValidator />
                                 <ValidationSummary />
                                 <ValidationStateChangeListener OnValidationStateChanged="OnValidationStateChanged" />
-                                <FluentValidationValidator @ref="StepValidator" ValidatorType="typeof(StepValidator)" />
+                                <FluentValidationValidator @ref="FluentStepValidator" Validator="StepValidator" />
                                 @if (Modal.Step is IHasStepParameters)
                                 {
-                                    <FluentValidationValidator @ref="StepParametersValidator" ValidatorType="typeof(StepParametersValidator)" />
+                                    <FluentValidationValidator @ref="FluentStepParametersValidator" Validator="StepParametersValidator" />
                                 }
                             </div>
                         </div>
 
-                        <CascadingValue Value="StepValidator" Name="StepValidator">
+                        <CascadingValue Value="FluentStepValidator" Name="StepValidator">
                             @if (Modal.CurrentView == StepEditModalView.Dependencies)
                             {
                                 @if (Modal.Steps is not null && Modal.StepSlims is not null && Modal.JobSlims is not null)
@@ -186,7 +188,7 @@
 
                                 </div>
 
-                                <CascadingValue Value="StepParametersValidator" Name="StepParametersValidator">
+                                <CascadingValue Value="FluentStepParametersValidator" Name="StepParametersValidator">
                                     <div class="row">
                                         <div class="col">
                                             @ChildContent
@@ -303,13 +305,15 @@
 
     [Parameter] public RenderFragment? ChildContent { get; set; }
 
-    private FluentValidationValidator? StepValidator { get; set; }
+    private FluentValidationValidator? FluentStepValidator { get; set; }
 
-    private FluentValidationValidator? StepParametersValidator { get; set; }
+    private FluentValidationValidator? FluentStepParametersValidator { get; set; }
 
     private SqlReferenceExplorerOffcanvas? SqlReferenceOffcanvas { get; set; }
 
     private SqlDefinitionExplorerOffcanvas? SqlDefinitionOffcanvas { get; set; }
+
+    private EditForm? EditForm { get; set; }
 
     private IEnumerable<string> ValidationErrors { get; set; } = Enumerable.Empty<string>();
 
@@ -344,6 +348,17 @@
     {
         ValidationErrors = Enumerable.Empty<string>();
         Modal.OnClosed();
+    }
+
+    private async Task SubmitAsync()
+    {
+        ArgumentNullException.ThrowIfNull(FluentStepValidator);
+        await StepValidator.WaitForValidateAsync();
+        if (EditForm!.EditContext!.GetValidationMessages().Any())
+        {
+            return;
+        }
+        await Modal.SubmitStepAsync();
     }
 
     private const string DuplicateBehaviourPopoverContent =

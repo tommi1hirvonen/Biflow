@@ -3,7 +3,7 @@ using FluentValidation;
 
 namespace Biflow.Ui.Core;
 
-public class JobValidator : AbstractValidator<Job>
+public class JobValidator : AsyncAbstractValidator<Job>
 {
     public JobValidator()
     {
@@ -13,5 +13,17 @@ public class JobValidator : AbstractValidator<Job>
         RuleFor(job => job.JobConcurrencies)
             .Must(jc => jc is null || jc.DistinctBy(c => c.StepType).Count() == jc.Count)
             .WithMessage("Job concurrency step types must be unique");
+        RuleForEach(job => job.JobParameters)
+            .CustomAsync(async (param, context, ct) =>
+            {
+                try
+                {
+                    await param.EvaluateAsync();
+                }
+                catch
+                {
+                    context.AddFailure($"Error evaluating parameter '{param.DisplayName}'");
+                }
+            });
     }
 }

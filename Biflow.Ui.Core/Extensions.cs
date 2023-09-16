@@ -162,10 +162,10 @@ public static partial class Extensions
     /// <returns>The IServiceCollection passed as parameter</returns>
     public static IServiceCollection AddValidationServices(this IServiceCollection services)
     {
-        services.AddScoped<StepParametersValidator>();
-        services.AddScoped<StepValidator>();
-        services.AddScoped<JobValidator>();
-        services.AddScoped<DataTableValidator>();
+        services.AddTransient<StepParametersValidator>();
+        services.AddTransient<StepValidator>();
+        services.AddTransient<JobValidator>();
+        services.AddTransient<DataTableValidator>();
         return services;
     }
 

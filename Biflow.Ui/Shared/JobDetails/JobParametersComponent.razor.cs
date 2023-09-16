@@ -21,6 +21,8 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
 
     [Inject] private IJSRuntime JS { get; set; } = null!;
 
+    [Inject] private JobValidator JobValidator { get; set; } = null!;
+
     [CascadingParameter] public Job? Job { get; set; }
 
     [CascadingParameter] public List<Step>? Steps { get; set; }
@@ -31,7 +33,7 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
 
     private bool Loading { get; set; } = false;
 
-    private FluentValidationValidator? JobValidator { get; set; }
+    private FluentValidationValidator? FluentJobValidator { get; set; }
 
     private ExpressionEditOffcanvas<JobParameter>? ExpressionEditOffcanvas { get; set; }
 

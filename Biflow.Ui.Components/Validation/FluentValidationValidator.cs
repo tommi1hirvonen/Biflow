@@ -11,30 +11,22 @@ public class FluentValidationValidator : ComponentBase
 
     [CascadingParameter] private EditContext? EditContext { get; set; }
 
-    [Parameter] public Type? ValidatorType { get; set; }
+    [Parameter, EditorRequired] public IValidator? Validator { get; set; }
 
-    private IValidator? _validator;
     private ValidationMessageStore? _validationMessageStore;
 
     public override async Task SetParametersAsync(ParameterView parameters)
     {
         // Keep a reference to the original values so we can check if they have changed
         var previousEditContext = EditContext;
-        var previousValidatorType = ValidatorType;
 
         await base.SetParametersAsync(parameters);
 
         if (EditContext is null)
             throw new NullReferenceException($"{nameof(FluentValidationValidator)} must be placed within an {nameof(EditForm)}");
 
-        if (ValidatorType is null)
-            throw new NullReferenceException($"{nameof(ValidatorType)} must be specified.");
-
-        if (!typeof(IValidator).IsAssignableFrom(ValidatorType))
-            throw new ArgumentException($"{ValidatorType.Name} must implement {typeof(IValidator).FullName}");
-
-        if (ValidatorType != previousValidatorType)
-            _validator = (IValidator?)ServiceProvider.GetService(ValidatorType);
+        if (Validator is null)
+            throw new NullReferenceException($"{nameof(Validator)} must be specified.");
 
         // If the EditForm.Model changes then we get a new EditContext
         // and need to hook it up
@@ -50,12 +42,12 @@ public class FluentValidationValidator : ComponentBase
     public async Task ValidateAsync()
     {
         ArgumentNullException.ThrowIfNull(EditContext);
-        ArgumentNullException.ThrowIfNull(_validator);
+        ArgumentNullException.ThrowIfNull(Validator);
         ArgumentNullException.ThrowIfNull(_validationMessageStore);
 
         _validationMessageStore.Clear();
         var validationContext = new ValidationContext<object>(EditContext.Model);
-        var result = await _validator.ValidateAsync(validationContext);
+        var result = await Validator.ValidateAsync(validationContext);
         AddValidationResult(EditContext.Model, result);
     }
 
@@ -63,13 +55,13 @@ public class FluentValidationValidator : ComponentBase
 
     private async void FieldChanged(object? sender, FieldChangedEventArgs args)
     {
-        ArgumentNullException.ThrowIfNull(_validator);
+        ArgumentNullException.ThrowIfNull(Validator);
         ArgumentNullException.ThrowIfNull(_validationMessageStore);
 
         var fieldIdentifier = args.FieldIdentifier;
         _validationMessageStore.Clear(fieldIdentifier);
         
-        if (!_validator.CanValidateInstancesOfType(fieldIdentifier.Model.GetType()))
+        if (!Validator.CanValidateInstancesOfType(fieldIdentifier.Model.GetType()))
         {
             return;
         }
@@ -82,7 +74,7 @@ public class FluentValidationValidator : ComponentBase
                 validatorSelector: new FluentValidation.Internal.MemberNameValidatorSelector(propertiesToValidate)
             );
 
-        var result = await _validator.ValidateAsync(fluentValidationContext);
+        var result = await Validator.ValidateAsync(fluentValidationContext);
 
         AddValidationResult(fieldIdentifier.Model, result);
     }

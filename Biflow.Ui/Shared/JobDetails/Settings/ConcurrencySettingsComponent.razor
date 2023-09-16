@@ -2,6 +2,7 @@
 
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject IHxMessengerService Messenger
+@inject JobValidator JobValidator
 
 @if (EditJob is not null)
 {
@@ -9,7 +10,7 @@
 
         <ObjectGraphDataAnnotationsValidator />
         <ValidationSummary />
-        <FluentValidationValidator ValidatorType="typeof(JobValidator)" />
+        <FluentValidationValidator Validator="JobValidator" />
 
         <div class="text-secondary">
             <p>Define the maximum number of steps allowed to run at the same time. The default value is defined in the executer application's configuration file.</p>

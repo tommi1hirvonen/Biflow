@@ -3,7 +3,7 @@ using FluentValidation;
 
 namespace Biflow.Ui.Core;
 
-public class StepValidator : AbstractValidator<Step>
+public class StepValidator : AsyncAbstractValidator<Step>
 {
     public StepValidator()
     {
@@ -16,6 +16,48 @@ public class StepValidator : AbstractValidator<Step>
         RuleFor(step => step.Targets)
             .Must(HaveNoDuplicates)
             .WithMessage("Target object names must be unique");
+        RuleFor(step => step.ExecutionConditionExpression)
+            .MustAsync(async (step, exp, ct) =>
+            {
+                try
+                {
+                    var result = await step.EvaluateExecutionConditionAsync();
+                    return result is bool;
+                }
+                catch
+                {
+                    return true;
+                }
+            })
+            .WithMessage("Incorrect execution condition expression return type")
+            .When(step => !string.IsNullOrWhiteSpace(step.ExecutionConditionExpression.Expression));
+        RuleFor(step => step.ExecutionConditionExpression)
+            .MustAsync(async (step, exp, ct) =>
+            {
+                try
+                {
+                    await step.EvaluateExecutionConditionAsync();
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            })
+            .WithMessage("Error validating execution condition expression")
+            .When(step => !string.IsNullOrWhiteSpace(step.ExecutionConditionExpression.Expression));
+        RuleForEach(step => step.ExecutionConditionParameters)
+            .CustomAsync(async (param, context, ct) =>
+            {
+                try
+                {
+                    await param.EvaluateAsync();
+                }
+                catch
+                {
+                    context.AddFailure($"Error evaluating execution condition parameter '{param.DisplayName}'");
+                }
+            });
         RuleFor(step => step).SetInheritanceValidator(v =>
         {
             v.Add(new TabularStepValidator());
