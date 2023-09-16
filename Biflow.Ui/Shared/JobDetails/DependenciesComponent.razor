@@ -381,7 +381,7 @@
 
     private async Task DeleteStep(Step step)
     {
-        var result = await Confirmer.ConfirmAsync($"Are you sure you want to delete step \"{step.StepName}\"?");
+        var result = await Confirmer.ConfirmAsync("", $"Are you sure you want to delete step \"{step.StepName}\"?");
         if (!result)
         {
             return;    

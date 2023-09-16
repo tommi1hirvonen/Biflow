@@ -205,7 +205,7 @@ public partial class DataTableEditorComponent : ComponentBase
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
-        var confirmed = await MessageBox.ConfirmAsync("Discard unsaved changes?");
+        var confirmed = await MessageBox.ConfirmAsync("", "Discard unsaved changes?");
         if (!confirmed)
         {
             context.PreventNavigation();

@@ -144,7 +144,7 @@ public partial class SynchronizeDependenciesComponent : ComponentBase
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
-        var confirmed = await Confirmer.ConfirmAsync("Discard unsaved changes?");
+        var confirmed = await Confirmer.ConfirmAsync("", "Discard unsaved changes?");
         if (!confirmed)
         {
             context.PreventNavigation();

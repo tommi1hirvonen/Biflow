@@ -7,7 +7,6 @@ using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.JSInterop;
 
 namespace Biflow.Ui.Shared.JobDetails;
 
@@ -18,8 +17,6 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
 
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
-
-    [Inject] private IJSRuntime JS { get; set; } = null!;
 
     [Inject] private JobValidator JobValidator { get; set; } = null!;
 
@@ -115,7 +112,7 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
             return;
         }
 
-        var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        var confirmed = await Confirmer.ConfirmAsync("", "Discard unsaved changes?");
         if (!confirmed)
         {
             context.PreventNavigation();
