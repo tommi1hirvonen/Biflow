@@ -377,7 +377,7 @@ public class SqlServerHelperService
         return rows;
     }
 
-    public async Task<IEnumerable<(string ServerName, string DatabaseName, string SchemaName, string ObjectName, bool IsUnreliable)>> GetSourceObjectsAsync(Guid connectionId, string? schema, string name)
+    public async Task<IEnumerable<DbObjectReference>> GetSourceObjectsAsync(Guid connectionId, string? schema, string name)
     {
         var connectionString = await GetSqlConnectionStringAsync(connectionId);
         ArgumentNullException.ThrowIfNull(connectionString);
@@ -436,10 +436,12 @@ public class SqlServerHelperService
             {
                 ObjectName = objectName
             });
-        return rows;
+        return rows
+            .Select(r => new DbObjectReference(r.Item1, r.Item2, r.Item3, r.Item4, r.Item5))
+            .ToArray();
     }
 
-    public async Task<IEnumerable<(string ServerName, string DatabaseName, string SchemaName, string ObjectName, bool IsUnreliable)>> GetTargetObjectsAsync(Guid connectionId, string? schema, string name)
+    public async Task<IEnumerable<DbObjectReference>> GetTargetObjectsAsync(Guid connectionId, string? schema, string name)
     {
         var connectionString = await GetSqlConnectionStringAsync(connectionId);
         ArgumentNullException.ThrowIfNull(connectionString);
@@ -498,10 +500,12 @@ public class SqlServerHelperService
             {
                 ObjectName = objectName
             });
-        return rows;
+        return rows
+            .Select(r => new DbObjectReference(r.Item1, r.Item2, r.Item3, r.Item4, r.Item5))
+            .ToArray();
     }
 
-    public async Task<IEnumerable<(string Server, string Database, string Schema, string Object, string Type)>> GetDatabaseObjectsAsync(
+    public async Task<IEnumerable<DbObject>> GetDatabaseObjectsAsync(
         Guid connectionId,
         string? searchTerm = null,
         int? top = null,
@@ -529,7 +533,9 @@ public class SqlServerHelperService
             order by b.name, a.name
             """, new { term }, cancellationToken: cancellationToken);
         var rows = await sqlConnection.QueryAsync<(string, string, string, string, string)>(command);
-        return rows;
+        return rows
+            .Select(r => new DbObject(r.Item1, r.Item2, r.Item3, r.Item4, r.Item5))
+            .ToArray();
     }
 
     public async Task<IEnumerable<(string Schema, string Table, bool HasPrimaryKey)>> GetDatabaseTablesAsync(Guid connectionId, CancellationToken cancellationToken = default)

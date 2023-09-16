@@ -277,7 +277,7 @@
 
     [Parameter] public string? SqlStatement { get; set; }
 
-    [Parameter] public Func<Guid, string?, string, Task<IEnumerable<(string ServerName, string DatabaseName, string SchemaName, string ObjectName, bool IsUnreliable)>>> LoadDataObjectDependencies { get; set; } = null!;
+    [Parameter] public Func<Guid, string?, string, Task<IEnumerable<DbObjectReference>>> LoadDataObjectDependencies { get; set; } = null!;
 
     [Parameter] public Func<Task<IEnumerable<DataObject>>> LoadAllDataObjects { get; set; } = null!;
 

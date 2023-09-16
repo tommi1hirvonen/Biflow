@@ -20,10 +20,10 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase, IDisposable
 
     private HxOffcanvas? Offcanvas { get; set; }
 
-    private IEnumerable<(string Server, string Database, string Schema, string Object, string Type)> DatabaseObjects { get; set; } =
-        Enumerable.Empty<(string, string, string, string, string)>();
+    private IEnumerable<DbObject> DatabaseObjects { get; set; } =
+        Enumerable.Empty<DbObject>();
 
-    private IEnumerable<(string Server, string Database, string Schema, string Object, string Type)> FilteredDatabaseObjects =>
+    private IEnumerable<DbObject> FilteredDatabaseObjects =>
         DatabaseObjects
         .Where(o => o.Schema.ContainsIgnoreCase(SchemaFilter))
         .Where(o => o.Object.ContainsIgnoreCase(ObjectFilter));
@@ -32,7 +32,7 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase, IDisposable
     private string ObjectFilter { get; set; } = string.Empty;
 
     private CancellationTokenSource Cts { get; set; } = new();
-    private Task<IEnumerable<(string Server, string Database, string Schema, string Object, string Type)>>? QueryTask { get; set; }
+    private Task<IEnumerable<DbObject>>? QueryTask { get; set; }
 
     private async Task RunQueryAsync()
     {

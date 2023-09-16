@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Biflow.DataAccess.Models;
 
 [Table("DataObject")]
-public class DataObject
+public class DataObject : IDataObject
 {
     [Key]
     public Guid ObjectId { get; private set; }
@@ -40,23 +40,12 @@ public class DataObject
 
     public IList<Step> Readers { get; set; } = null!;
 
-    public void Deconstruct(out string serverName, out string databaseName, out string schemaName, out string objectName)
-    {
-        (serverName, databaseName, schemaName, objectName) = (ServerName, DatabaseName, SchemaName, ObjectName);
-    }
-
-    public bool NamesEqual((string ServerName, string DatabaseName, string SchemaName, string ObjectName) other) =>
+    public bool NamesEqual(IDataObject other) =>
+        other is not null &&
         ServerName.EqualsIgnoreCase(other.ServerName)
         && DatabaseName.EqualsIgnoreCase(other.DatabaseName)
         && SchemaName.EqualsIgnoreCase(other.SchemaName)
         && ObjectName.EqualsIgnoreCase(other.ObjectName);
-
-    public bool NamesEqual(DataObject other) =>
-        NamesEqual((other.ServerName, other.DatabaseName, other.SchemaName, other.ObjectName));
-
-    public bool NamesEqual((string ServerName, string DatabaseName, string SchemaName, string ObjectName, object? _) other) =>
-        NamesEqual((other.ServerName, other.DatabaseName, other.SchemaName, other.ObjectName));
-
 }
 
 public class DataObjectMappingResult
@@ -66,4 +55,12 @@ public class DataObjectMappingResult
     public bool IsUnreliableMapping { get; set; } = false;
 
     public bool IsCandidateForRemoval { get; set; } = false;
+}
+
+public interface IDataObject
+{
+    public string ServerName { get; }
+    public string DatabaseName { get; }
+    public string SchemaName { get; }
+    public string ObjectName { get; }
 }

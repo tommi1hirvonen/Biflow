@@ -51,7 +51,7 @@ public class StepValidator : AbstractValidator<Step>
         {
             var current = ordered.ElementAt(i);
             var next = ordered.ElementAt(i + 1);
-            if (current.NamesEqual(next))
+            if (current.Equals(next))
             {
                 return false;
             }
