@@ -16,9 +16,7 @@ public partial class StepsComponent : ComponentBase
     [Inject] private IDbContextFactory<BiflowContext> DbFactory { get; set; } = null!;
         
     [Inject] private StepsDuplicatorFactory StepDuplicatorFactory { get; set; } = null!;
-    
-    [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; } = null!;
-    
+        
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
 
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
