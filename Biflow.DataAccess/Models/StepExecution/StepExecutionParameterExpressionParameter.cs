@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Biflow.DataAccess.Models;
 
 [Table("ExecutionStepParameterExpressionParameter")]
-[PrimaryKey("ExecutionId", "StepParameterId", "ParameterName")]
+[PrimaryKey("ExecutionId", "ParameterId")]
 public class StepExecutionParameterExpressionParameter : IExpressionParameter<ExecutionParameter>
 {
     public StepExecutionParameterExpressionParameter() { }
@@ -14,6 +14,7 @@ public class StepExecutionParameterExpressionParameter : IExpressionParameter<Ex
     {
         ExecutionId = execution.ExecutionId;
         StepParameterId = parameter.StepParameterId;
+        ParameterId = parameter.ParameterId;
         ParameterName = parameter.ParameterName;
         StepParameter = executionParameter;
         InheritFromExecutionParameterId = parameter.InheritFromJobParameterId;
@@ -25,6 +26,8 @@ public class StepExecutionParameterExpressionParameter : IExpressionParameter<Ex
     public Guid StepParameterId { get; set; }
 
     public StepExecutionParameterBase StepParameter { get; set; } = null!;
+
+    public Guid ParameterId { get; set; }
 
     [Required]
     [MinLength(1)]

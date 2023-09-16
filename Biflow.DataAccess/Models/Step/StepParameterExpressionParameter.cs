@@ -1,11 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
 [Table("StepParameterExpressionParameter")]
-[PrimaryKey("StepParameterId", "ParameterName")]
 public class StepParameterExpressionParameter : IAsyncEvaluable, IExpressionParameter<JobParameter>
 {
     public StepParameterExpressionParameter() { }
@@ -14,6 +12,7 @@ public class StepParameterExpressionParameter : IAsyncEvaluable, IExpressionPara
     {
         StepParameterId = stepParameter.ParameterId;
         StepParameter = stepParameter;
+        ParameterId = Guid.NewGuid();
         ParameterName = other.ParameterName;
 
         // The target job is set and the target job has a parameter with a matching name.
@@ -39,6 +38,9 @@ public class StepParameterExpressionParameter : IAsyncEvaluable, IExpressionPara
     public Guid StepParameterId { get; set; }
 
     public StepParameterBase StepParameter { get; set; } = null!;
+
+    [Key]
+    public Guid ParameterId { get; set; }
 
     [Required]
     [MinLength(1)]
