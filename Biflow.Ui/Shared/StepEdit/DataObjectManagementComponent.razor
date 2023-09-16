@@ -234,7 +234,7 @@
                     .Take(10) ?? Enumerable.Empty<DataObject>();
                 @foreach (var obj in objects)
                 {
-                    <tr style="cursor: pointer;" @onclick="() => NewObject = obj">
+                    <tr>
                         <td class="align-middle">@obj.ServerName</td>
                         <td class="align-middle">@obj.DatabaseName</td>
                         <td class="align-middle">@obj.SchemaName</td>
@@ -243,6 +243,9 @@
                             <HxButtonGroup Size="ButtonGroupSize.Small">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => { NewObject = obj; SubmitNewObject(); }" title="Select & add">
                                     <CxIcon Icon="FeatherIcon.Check" />
+                                </HxButton>
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => { NewObject = obj; }" title="Select & edit">
+                                    <CxIcon Icon="FeatherIcon.Edit2" />
                                 </HxButton>
                             </HxButtonGroup>
                         </td>
