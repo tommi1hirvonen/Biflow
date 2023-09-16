@@ -128,7 +128,7 @@
         if (ConnectionId is null || ConnectionId == Guid.Empty) return;
         try
         {
-            Procedures = await SqlServerHelperService.GetStoredProcedures((Guid)ConnectionId);
+            Procedures = await SqlServerHelperService.GetStoredProceduresAsync((Guid)ConnectionId);
             StateHasChanged();
         }
         catch (Exception ex)

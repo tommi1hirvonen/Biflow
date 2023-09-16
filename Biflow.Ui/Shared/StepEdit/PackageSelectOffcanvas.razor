@@ -222,7 +222,7 @@
         
         try
         {
-            Catalog = await SqlServerHelperService.GetCatalogPackages(connectionId);
+            Catalog = await SqlServerHelperService.GetCatalogPackagesAsync(connectionId);
             ConnectionId = connectionId;
             StateHasChanged();
         }

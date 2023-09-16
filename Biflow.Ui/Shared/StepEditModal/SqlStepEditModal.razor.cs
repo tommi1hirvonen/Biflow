@@ -73,7 +73,7 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
             }
             var schema = procedure.Value.Schema ?? "dbo";
             var name = procedure.Value.ProcedureName;
-            var parameters = await SqlServerHelper.GetStoredProcedureParameters((Guid)Step.ConnectionId, schema, name);
+            var parameters = await SqlServerHelper.GetStoredProcedureParametersAsync((Guid)Step.ConnectionId, schema, name);
             if (!parameters.Any())
             {
                 Messenger.AddInformation($"No parameters for [{schema}].[{name}]");

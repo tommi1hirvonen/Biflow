@@ -157,7 +157,7 @@
                 return;
             }
             LoadingParameters = true;
-            var parameters = await SqlServerHelper.GetPackageParameters((Guid)Step.ConnectionId, Step.PackageFolderName, Step.PackageProjectName, Step.PackageName, includeConnectionManagerParameters);
+            var parameters = await SqlServerHelper.GetPackageParametersAsync((Guid)Step.ConnectionId, Step.PackageFolderName, Step.PackageProjectName, Step.PackageName, includeConnectionManagerParameters);
             if (!parameters.Any())
             {
                 Messenger.AddInformation($"No parameters for package");

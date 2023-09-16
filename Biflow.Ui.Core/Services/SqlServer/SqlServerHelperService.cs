@@ -15,7 +15,7 @@ public class SqlServerHelperService
         _dbContextFactory = dbContextFactory;
     }
 
-    public async Task<SSISCatalog> GetCatalogPackages(Guid connectionId)
+    public async Task<SSISCatalog> GetCatalogPackagesAsync(Guid connectionId)
     {
         var catalogConnectionString = await GetSqlConnectionStringAsync(connectionId);
         ArgumentNullException.ThrowIfNull(catalogConnectionString);
@@ -103,7 +103,7 @@ public class SqlServerHelperService
         return new SSISCatalog(folders);
     }
 
-    public async Task<IEnumerable<PackageParameter>> GetPackageParameters(
+    public async Task<IEnumerable<PackageParameter>> GetPackageParametersAsync(
         Guid connectionId, string folder, string project, string package, bool includeConnectionManagerParameters)
     {
         var catalogConnectionString = await GetSqlConnectionStringAsync(connectionId);
@@ -182,7 +182,7 @@ public class SqlServerHelperService
         }).ToArray();
     }
 
-    public async Task<IEnumerable<StoredProcedure>> GetStoredProcedures(Guid connectionId)
+    public async Task<IEnumerable<StoredProcedure>> GetStoredProceduresAsync(Guid connectionId)
     {
         var connectionString = await GetSqlConnectionStringAsync(connectionId);
         ArgumentNullException.ThrowIfNull(connectionString);
@@ -223,7 +223,7 @@ public class SqlServerHelperService
         return procedures.Values.ToArray();
     }
 
-    public async Task<IEnumerable<(string ParameterName, ParameterValueType ParameterType)>> GetStoredProcedureParameters(Guid connectionId, string schema, string procedure)
+    public async Task<IEnumerable<(string ParameterName, ParameterValueType ParameterType)>> GetStoredProcedureParametersAsync(Guid connectionId, string schema, string procedure)
     {
         var connectionString = await GetSqlConnectionStringAsync(connectionId);
         ArgumentNullException.ThrowIfNull(connectionString);
