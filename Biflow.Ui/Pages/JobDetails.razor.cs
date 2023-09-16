@@ -15,6 +15,7 @@ public partial class JobDetails : ComponentBase
     [Inject] private ISchedulerService SchedulerService { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
+    [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
 
     [Parameter] public string DetailsPage { get; set; } = "steps";
 
@@ -129,9 +130,32 @@ public partial class JobDetails : ComponentBase
         try
         {
             ArgumentNullException.ThrowIfNull(Job);
-            using var context = DbFactory.CreateDbContext();
-            context.Jobs.Remove(Job);
-            await context.SaveChangesAsync();
+            using (var context1 = await DbFactory.CreateDbContextAsync())
+            {
+                var executingSteps = await context1.JobSteps
+                    .Where(s => s.JobToExecuteId == Job.JobId)
+                    .Include(s => s.Job)
+                    .OrderBy(s => s.Job.JobName)
+                    .ThenBy(s => s.StepName)
+                    .ToListAsync();
+                if (executingSteps.Any())
+                {
+                    var steps = string.Join("\n", executingSteps.Select(s => $"– {s.Job.JobName} – {s.StepName}"));
+                    var message = $"""
+                    This job has one or more referencing steps that execute this job:
+                    {steps}
+                    Removing the job will also remove these steps. Delete anyway?
+                    """;
+                    var confirmResult = await Confirmer.ConfirmAsync("", message);
+                    if (!confirmResult)
+                    {
+                        return;
+                    }
+                }
+            }
+            using var context2 = DbFactory.CreateDbContext();
+            context2.Jobs.Remove(Job);
+            await context2.SaveChangesAsync();
             await SchedulerService.DeleteJobAsync(Job);
             NavigationManager.NavigateTo("jobs");
         }

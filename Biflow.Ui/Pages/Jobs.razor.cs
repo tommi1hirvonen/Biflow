@@ -174,7 +174,7 @@ public partial class Jobs : ComponentBase
                     {steps}
                     Removing the job will also remove these steps. Delete anyway?
                     """;
-                var confirmResult = await Confirmer.ConfirmAsync(message);
+                var confirmResult = await Confirmer.ConfirmAsync("", message);
                 if (!confirmResult)
                 {
                     return;
