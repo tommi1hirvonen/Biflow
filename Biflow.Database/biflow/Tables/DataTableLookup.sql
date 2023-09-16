@@ -8,6 +8,7 @@
 	[LookupDescriptionColumn] NVARCHAR(128) NOT NULL,
 	[LookupDisplayType] VARCHAR(20) NOT NULL,
 	CONSTRAINT [PK_DataTableLookup] PRIMARY KEY CLUSTERED ([LookupId]),
+	CONSTRAINT [UQ_DataTableLookup] UNIQUE ([DataTableId], [ColumnName]),
 	CONSTRAINT [CK_DataTableLookup] CHECK (
 		[LookupDisplayType] = 'Value' OR
 		[LookupDisplayType] = 'Description' OR
