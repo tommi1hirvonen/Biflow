@@ -74,18 +74,18 @@
 
     private Guid ConnectionId { get; set; }
 
-    private IEnumerable<(string Schema, string Table, bool HasPrimaryKey)>? Tables { get; set; }
+    private IEnumerable<DbTable>? Tables { get; set; }
 
-    private (string Schema, string Table, bool HasPrimaryKey)? SelectedTable { get; set; }
+    private DbTable? SelectedTable { get; set; }
 
     private string SchemaFilter { get; set; } = string.Empty;
     private string TableFilter { get; set; } = string.Empty;
 
-    private IEnumerable<(string Schema, string Table, bool HasPrimaryKey)> FilteredTables =>
+    private IEnumerable<DbTable> FilteredTables =>
         Tables?
         .Where(o => o.Schema.ContainsIgnoreCase(SchemaFilter))
         .Where(o => o.Table.ContainsIgnoreCase(TableFilter))
-        ?? Enumerable.Empty<(string Schema, string Table, bool HasPrimaryKey)>();
+        ?? Enumerable.Empty<DbTable>();
 
     private async Task SelectTableAsync()
     {
@@ -93,7 +93,7 @@
         {
             return;
         }
-        await OnTableSelected.InvokeAsync(new (SelectedTable.Value.Schema, SelectedTable.Value.Table));
+        await OnTableSelected.InvokeAsync(new (SelectedTable.Schema, SelectedTable.Table));
         await Offcanvas.LetAsync(x => x.HideAsync());
     }
 

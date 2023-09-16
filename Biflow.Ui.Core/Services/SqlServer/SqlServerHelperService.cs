@@ -538,7 +538,7 @@ public class SqlServerHelperService
             .ToArray();
     }
 
-    public async Task<IEnumerable<(string Schema, string Table, bool HasPrimaryKey)>> GetDatabaseTablesAsync(Guid connectionId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<DbTable>> GetDatabaseTablesAsync(Guid connectionId, CancellationToken cancellationToken = default)
     {
         var connectionString = await GetSqlConnectionStringAsync(connectionId, cancellationToken);
         ArgumentNullException.ThrowIfNull(connectionString);
@@ -555,7 +555,9 @@ public class SqlServerHelperService
             """,
             cancellationToken: cancellationToken);
         var rows = await sqlConnection.QueryAsync<(string, string, bool)>(command);
-        return rows;
+        return rows
+            .Select(r => new DbTable(r.Item1, r.Item2, r.Item3))
+            .ToArray();
     }
 
     public async Task<IEnumerable<AsModel>> GetAnalysisServicesModelsAsync(Guid connectionId)
