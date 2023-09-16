@@ -165,6 +165,7 @@ public static partial class Extensions
         services.AddScoped<StepParametersValidator>();
         services.AddScoped<StepValidator>();
         services.AddScoped<JobValidator>();
+        services.AddScoped<DataTableValidator>();
         return services;
     }
 
