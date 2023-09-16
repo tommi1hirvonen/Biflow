@@ -8,20 +8,20 @@ public class EvaluationExpression
 {
     public string? Expression { get; set; }
 
-    internal async Task<object?> EvaluateAsync(IDictionary<string, object?>? parameters = null) =>
-        await EvaluateAsync<object?>(parameters);
+    internal Task<object?> EvaluateAsync(IDictionary<string, object?>? parameters = null) =>
+        EvaluateAsync<object?>(parameters);
 
-    internal async Task<bool> EvaluateBooleanAsync(IDictionary<string, object?>? parameters = null)
+    internal Task<bool> EvaluateBooleanAsync(IDictionary<string, object?>? parameters = null)
     {
         if (string.IsNullOrWhiteSpace(Expression))
         {
-            return true;
+            return Task.FromResult(true);
         }
 
-        return await EvaluateAsync<bool>(parameters);
+        return EvaluateAsync<bool>(parameters);
     }
 
-    private async Task<T> EvaluateAsync<T>(IDictionary<string, object?>? parameters = null)
+    private Task<T> EvaluateAsync<T>(IDictionary<string, object?>? parameters = null)
     {
         parameters ??= new Dictionary<string, object?>();
         var evaluator = new ExpressionEvaluator
@@ -31,7 +31,8 @@ public class EvaluationExpression
         };
         evaluator.Namespaces.Remove("System.IO");
         evaluator.Variables = parameters;
-        return await Task.Run(() => evaluator.Evaluate<T>(Expression));
+        var result = evaluator.Evaluate<T>(Expression);
+        return Task.Run(() => evaluator.Evaluate<T>(Expression));
     }
 
     public override string ToString() => Expression ?? "";
