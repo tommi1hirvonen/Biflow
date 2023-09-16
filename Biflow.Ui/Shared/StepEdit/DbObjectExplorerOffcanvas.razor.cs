@@ -39,7 +39,7 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase, IDisposable
         try
         {
             Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
-            QueryTask = SqlServerHelper.GetDatabaseObjectsAsync(connectionId, Cts.Token);
+            QueryTask = SqlServerHelper.GetDatabaseObjectsAsync(connectionId, null, null, Cts.Token);
             DatabaseObjects = await QueryTask;
         }
         catch (OperationCanceledException)

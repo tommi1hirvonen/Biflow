@@ -334,11 +334,10 @@ public class SqlServerHelperService
         if (!referencedSchemaFilter.Any()) referencedSchemaOperator = "like";
         if (!referencedNameFilter.Any()) referencedNameOperator = "like";
 
-        static string encodeForLike(string term) => term.Replace("[", "[[]").Replace("%", "[%]");
-        var encodedReferencingSchemaFilter = referencingSchemaOperator == "=" ? referencingSchemaFilter : $"%{encodeForLike(referencingSchemaFilter)}%";
-        var encodedReferencingNameFilter = referencingNameOperator == "=" ? referencingNameFilter : $"%{encodeForLike(referencingNameFilter)}%";
-        var encodedReferencedSchemaFilter = referencedSchemaOperator == "=" ? referencedSchemaFilter : $"%{encodeForLike(referencedSchemaFilter)}%";
-        var encodedReferencedNameFilter = referencedNameOperator == "=" ? referencedNameFilter :  $"%{encodeForLike(referencedNameFilter)}%";
+        var encodedReferencingSchemaFilter = referencingSchemaOperator == "=" ? referencingSchemaFilter : $"%{referencingSchemaFilter.EncodeForLike()}%";
+        var encodedReferencingNameFilter = referencingNameOperator == "=" ? referencingNameFilter : $"%{referencingNameFilter.EncodeForLike()}%";
+        var encodedReferencedSchemaFilter = referencedSchemaOperator == "=" ? referencedSchemaFilter : $"%{referencedSchemaFilter.EncodeForLike()}%";
+        var encodedReferencedNameFilter = referencedNameOperator == "=" ? referencedNameFilter :  $"%{referencedNameFilter.EncodeForLike()}%";
 
         var connectionString = await GetSqlConnectionStringAsync(connectionId);
         ArgumentNullException.ThrowIfNull(connectionString);
@@ -502,13 +501,19 @@ public class SqlServerHelperService
         return rows;
     }
 
-    public async Task<IEnumerable<(string Server, string Database, string Schema, string Object, string Type)>> GetDatabaseObjectsAsync(Guid connectionId, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<(string Server, string Database, string Schema, string Object, string Type)>> GetDatabaseObjectsAsync(
+        Guid connectionId,
+        string? searchTerm = null,
+        int? top = null,
+        CancellationToken cancellationToken = default)
     {
         var connectionString = await GetSqlConnectionStringAsync(connectionId, cancellationToken);
         ArgumentNullException.ThrowIfNull(connectionString);
         using var sqlConnection = new SqlConnection(connectionString);
-        var command = new CommandDefinition("""
-            select
+        var topTerm = top > 0 ? $"top {top}" : "";
+        var term = string.IsNullOrEmpty(searchTerm) ? null : $"%{searchTerm.EncodeForLike()}%";
+        var command = new CommandDefinition($"""
+            select {topTerm}
                 [server_name] = @@servername,
                 [database_name] = db_name(),
                 [schema_name] = b.name,
@@ -516,9 +521,13 @@ public class SqlServerHelperService
                 [object_type] = a.type_desc
             from sys.objects as a
                 join sys.schemas as b on a.schema_id = b.schema_id
-            where a.[type] in ('U', 'V')
+            where a.[type] in ('U', 'V') and (
+                @term is null or
+                b.name like @term or
+                a.name like @term
+            )
             order by b.name, a.name
-            """, cancellationToken: cancellationToken);
+            """, new { term }, cancellationToken: cancellationToken);
         var rows = await sqlConnection.QueryAsync<(string, string, string, string, string)>(command);
         return rows;
     }
@@ -601,4 +610,9 @@ public class SqlServerHelperService
         return connectionString;
     }
 
+}
+
+file static class Extensions
+{
+    public static string EncodeForLike(this string term) => term.Replace("[", "[[]").Replace("%", "[%]");
 }
