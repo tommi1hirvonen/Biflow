@@ -2,16 +2,12 @@
 using Biflow.DataAccess.Models;
 using Biflow.Ui.Core;
 using Biflow.Ui.Shared.StepEdit;
-using Havit.Blazor.Components.Web.Bootstrap;
-using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class PackageStepEditModal : StepEditModal<PackageStep>
 {
-    [Inject] private SqlServerHelperService SqlServerHelper { get; set; } = null!;
-
     private PackageSelectOffcanvas? PackageSelectOffcanvas { get; set; }
 
     internal override string FormId => "package_step_edit_form";
@@ -45,37 +41,6 @@ public partial class PackageStepEditModal : StepEditModal<PackageStep>
         .Include(step => step.Targets)
         .Include(step => step.ExecutionConditionParameters)
         .FirstAsync(step => step.StepId == stepId);
-
-    private async Task ImportParametersAsync(bool includeConnectionManagerParameters)
-    {
-        try
-        {
-            if (Step?.ConnectionId is null || Step.PackageFolderName is null || Step.PackageProjectName is null || Step.PackageName is null)
-            {
-                return;
-            }
-            var parameters = await SqlServerHelper.GetPackageParameters((Guid)Step.ConnectionId, Step.PackageFolderName, Step.PackageProjectName, Step.PackageName, includeConnectionManagerParameters);
-            if (!parameters.Any())
-            {
-                Messenger.AddInformation($"No parameters for package {Step.PackageFolderName}/{Step.PackageProjectName}/{Step.PackageName}.dtsx");
-                return;
-            }
-            Step.StepParameters.Clear();
-            foreach (var parameter in parameters)
-            {
-                Step.StepParameters.Add(new PackageStepParameter(parameter.ParameterLevel)
-                {
-                    ParameterName = parameter.ParameterName,
-                    ParameterValueType = parameter.ParameterType,
-                    ParameterValue = parameter.DefaultValue
-                });
-            }
-        }
-        catch (Exception ex)
-        {
-            Messenger.AddError("Error importing parameters", ex.Message);
-        }
-    }
 
     private Task OpenPackageSelectOffcanvas()
     {

@@ -1,4 +1,6 @@
-﻿
+﻿@inject SqlServerHelperService SqlServerHelper
+@inject IHxMessengerService Messenger
+
 @if (Step is not null)
 {
     <p />
@@ -83,10 +85,23 @@
             }
         </tbody>
     </table>
-    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="AddParameter">
-        <CxIcon Icon="FeatherIcon.Plus" />
-        Add parameter
-    </HxButton>
+    <HxButtonGroup Size="ButtonGroupSize.Small">
+        <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="AddParameter">
+            <CxIcon Icon="FeatherIcon.Plus" />
+            Add parameter
+        </HxButton>
+        <HxDropdownButtonGroup>
+            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" Spinner="LoadingParameters" Enabled="!LoadingParameters">
+                <CxIcon Icon="FeatherIcon.AtSign" />
+                Import parameters
+            </HxDropdownToggleButton>
+            <HxDropdownMenu>
+                <HxDropdownItem OnClick="() => ImportParametersAsync(false)">User defined</HxDropdownItem>
+                <HxDropdownItem OnClick="() => ImportParametersAsync(true)">Include connection manager parameters</HxDropdownItem>
+            </HxDropdownMenu>
+        </HxDropdownButtonGroup>
+    </HxButtonGroup>
+    
 }
 
 <ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" OnExpressionChanged="StateHasChanged" TParameter="StepParameterBase">
@@ -103,11 +118,15 @@
 
     [Parameter] public PackageStep? Step { get; set; }
 
+    [Parameter] public EventCallback OnImportParameters { get; set; }
+
     private IEnumerable<JobParameter> JobParameters => (Step as Step)?.Job.JobParameters ?? Enumerable.Empty<JobParameter>();
 
     private ExpressionEditOffcanvas<StepParameterBase>? ExpressionEditOffcanvas { get; set; }
 
     private Task OnParameterEdit(StepParameterBase parameter) => ExpressionEditOffcanvas.LetAsync(x => x.ShowAsync(parameter));
+
+    private bool LoadingParameters { get; set; } = false;
 
     private void AddParameter()
     {
@@ -126,6 +145,42 @@
         {
             param.InheritFromJobParameterId = null;
             param.InheritFromJobParameter = null;
+        }
+    }
+
+    private async Task ImportParametersAsync(bool includeConnectionManagerParameters)
+    {
+        try
+        {
+            if (Step?.ConnectionId is null || Step.PackageFolderName is null || Step.PackageProjectName is null || Step.PackageName is null)
+            {
+                return;
+            }
+            LoadingParameters = true;
+            var parameters = await SqlServerHelper.GetPackageParameters((Guid)Step.ConnectionId, Step.PackageFolderName, Step.PackageProjectName, Step.PackageName, includeConnectionManagerParameters);
+            if (!parameters.Any())
+            {
+                Messenger.AddInformation($"No parameters for package");
+                return;
+            }
+            Step.StepParameters.Clear();
+            foreach (var parameter in parameters)
+            {
+                Step.StepParameters.Add(new PackageStepParameter(parameter.ParameterLevel)
+                    {
+                        ParameterName = parameter.ParameterName,
+                        ParameterValueType = parameter.ParameterType,
+                        ParameterValue = parameter.DefaultValue
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error importing parameters", ex.Message);
+        }
+        finally
+        {
+            LoadingParameters = false;
         }
     }
 

@@ -33,10 +33,6 @@
                         <CxIcon Icon="FeatherIcon.MoreHorizontal" />
                         Stored procedures
                     </HxButton>
-                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="ImportParametersAsync">
-                        <CxIcon Icon="FeatherIcon.AtSign" />
-                        Import parameters
-                    </HxButton>
                 </HxButtonGroup>
             </div>
         </div>
@@ -81,6 +77,6 @@
                 <div class="form-text">No job parameters to store result value</div>
             }
         </div>
-        <StepParameterEditComponent Step="Step" NewParameterDelegate="() => new() { Step = Step }" />
+        <StepParameterEditComponent Step="Step" NewParameterDelegate="() => new() { Step = Step }" OnImportParameters="ImportParametersAsync" />
     }
 </StepEditModalTemplate>

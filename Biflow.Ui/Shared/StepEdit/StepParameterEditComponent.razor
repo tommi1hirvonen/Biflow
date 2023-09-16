@@ -89,10 +89,19 @@
             }
         </tbody>
     </table>
-    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="AddParameter">
-        <CxIcon Icon="FeatherIcon.Plus" />
-        Add parameter
-    </HxButton>
+    <HxButtonGroup Size="ButtonGroupSize.Small">
+        <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="AddParameter">
+            <CxIcon Icon="FeatherIcon.Plus" />
+            Add parameter
+        </HxButton>
+        @if (OnImportParameters is not null)
+        {
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="ImportParametersAsync" Spinner="LoadingParameters" Enabled="!LoadingParameters">
+                <CxIcon Icon="FeatherIcon.AtSign" />
+                Import parameters
+            </HxButton>
+        }
+    </HxButtonGroup>
 }
 
 <ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" OnExpressionChanged="StateHasChanged" TParameter="StepParameterBase">
@@ -111,9 +120,13 @@
 
     [Parameter, EditorRequired] public Func<TParameter>? NewParameterDelegate { get; set; }
 
+    [Parameter] public Func<Task>? OnImportParameters { get; set; }
+
     private IEnumerable<JobParameter> JobParameters => (Step as Step)?.Job.JobParameters ?? Enumerable.Empty<JobParameter>();
 
     private ExpressionEditOffcanvas<StepParameterBase>? ExpressionEditOffcanvas { get; set; }
+
+    private bool LoadingParameters { get; set; } = false;
 
     private void SetJobParameter(bool inheritFromJob, StepParameterBase param)
     {
@@ -136,6 +149,22 @@
         ArgumentNullException.ThrowIfNull(Step);
         ArgumentNullException.ThrowIfNull(NewParameterDelegate);
         Step.StepParameters.Add(NewParameterDelegate());
+    }
+
+    private async Task ImportParametersAsync()
+    {
+        try
+        {
+            LoadingParameters = true;
+            ArgumentNullException.ThrowIfNull(OnImportParameters);
+            await OnImportParameters();
+            StateHasChanged();
+
+        }
+        finally
+        {
+            LoadingParameters = false;
+        }
     }
 
 }

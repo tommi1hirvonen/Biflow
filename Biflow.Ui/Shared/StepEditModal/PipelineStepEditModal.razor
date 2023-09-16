@@ -44,14 +44,10 @@
                         <CxIcon Icon="FeatherIcon.MoreHorizontal" />
                         Browse pipelines
                     </HxButton>
-                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="ImportParametersAsync">
-                        <CxIcon Icon="FeatherIcon.AtSign" />
-                        Import parameters
-                    </HxButton>
                 </HxButtonGroup>
             </div>
         </div>
         <PipelineSelectOffcanvas @ref="PipelineSelectOffcanvas" OnPipelineSelected="OnPipelineSelected" />
-        <StepParameterEditComponent Step="Step" NewParameterDelegate="() => new() { Step = Step }" />
+        <StepParameterEditComponent Step="Step" NewParameterDelegate="() => new() { Step = Step }" OnImportParameters="ImportParametersAsync" />
     }
 </StepEditModalTemplate>
