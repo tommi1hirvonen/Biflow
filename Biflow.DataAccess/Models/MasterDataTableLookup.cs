@@ -6,6 +6,9 @@ namespace Biflow.DataAccess.Models;
 [Table("DataTableLookup")]
 public class MasterDataTableLookup
 {
+    [Key]
+    public Guid LookupId { get; set; }
+
     [Required]
     [Column("DataTableId")]
     public Guid TableId { get; set; }
