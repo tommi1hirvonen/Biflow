@@ -111,7 +111,7 @@ There are three recommended ways to configure Biflow from an architecture point 
 
 ### On-premise
 
-The on-premise option takes advantage of OS level features such as Windows Services (used for the scheduler service). If an on-premise installation is possible, this is the option that allows for most control of the setup. The executor application can be configured to run in one of two ways, a web application or a console application. The web application option provides more features, such as global orchestration (cross-job and cross-execution dependencies, duplicate step execution monitoring etc.).
+The on-premise option takes advantage of OS level features such as Windows Services (used for the scheduler/executor services). If an on-premise installation is possible, this is the option that allows for most control of the setup.
 
 ### Azure (monolithic)
 
@@ -119,7 +119,7 @@ The Azure (monolithic) architecture has all the necessary components and service
 
 ### Azure (distributed)
 
-The Azure (distributed) approach closely resembles the on-premise architecture. However, the executor console app is now replaced with an executor service running as an Azure Web App. From the two Azure architectures, this offers significantly more control over updates to different components of the application. All services deployed to Azure can still share the same Linux App Service for cost optimization. Note, that a lightweight Linux virtual machine might also be required for deployment and configuration tasks depending on your Azure networking setup.
+The Azure (distributed) approach closely resembles the on-premise architecture. From the two Azure architectures, this offers significantly more control over updates to different components of the application. All services deployed to Azure can still share the same Linux App Service for cost optimization. Note, that a lightweight Linux virtual machine might also be required for deployment and configuration tasks depending on your Azure networking setup.
 
 # Documentation
 
@@ -130,7 +130,6 @@ The Azure (distributed) approach closely resembles the on-premise architecture. 
 |Database|SQL Server database project containing definitions for all table structures and stored procedures|
 |DataAccess|Data access layer project responsible for ORM (Object-relational mapping). Contains all model definitions as well as the definitions for the Entity Framework Core database context.|
 |Executor.Core|Core library for the executor application|
-|Executor.ConsoleApp|Console front-end project for the executor application|
 |Executor.WebApp|Web App front-end project for the executor application|
 |Scheduler.Core|Core library for the scheduler service|
 |Scheduler.WebApp|Web App front-end project for the scheduler service|
@@ -238,9 +237,8 @@ There are three different installation alternatives: on-premise, Azure (monolith
 
 1. On machines where any of the application components (UI, executor, scheduler) are installed, also install the ASP.NET 7 Hosting Bundle. Follow the instructions on the <a href="https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-aspnetcore-7.0.0-windows-hosting-bundle-installer">.NET download page</a>.
 
-### Executor console application (option 1)
 
-Note that global orchestration is not available in the console application version of the executor service. Global orchestration refers to the executor service's capability to monitor step executions across different job executions. This allows the service to check for duplicate executions and dependencies across jobs and multiple executions. If this functionality is required, then it is recommended to use the web application version of the executor service.
+### Executor web application
 
 1. Extract the BiflowExecutor.zip file to the C: root on the application server (C:\Biflow\BiflowExecutor).
 2. Update the appsettings.json file with the correct settings for your environment.
@@ -252,20 +250,6 @@ Note that global orchestration is not available in the console application versi
 |PollingIntervalMs|Time interval in milliseconds between status polling operations (applies to some step types). Default value is `5000`.|
 |MaximumParallelSteps|Maximum number of parallel steps allowed during execution. Default value is `10`.|
 |Serilog:WriteTo:Args:Path|Path where application will write is log files. Default value is `C:\\Biflow\\BiflowExecutor\\log\\executor.log`.|
-
-3. Test the executor application by opening the command prompt and typing in
-    - `C:\Biflow\BiflowExecutor\BiflowExecutor.exe get-commit`
-    - This should run without errors and return the commit SHA for the current version of the application.
-4. Test the executor application's connection to the system database by running the following command
-    - `C:\Biflow\BiflowExecutor\BiflowExecutor.exe test-connection`
-
-### Executor web application (option 2)
-
-1. Extract the BiflowExecutor.zip file to the C: root on the application server (C:\Biflow\BiflowExecutor).
-2. Update the appsettings.json file with the correct settings for your environment. Same settings apply apply for the web app as for the console app, but there are some additional settings as well.
-
-|Setting|Description|
-|-|-|
 |Kestrel:Endpoints:Http:Url|The http url and port which the executor API should listen to, for example `http://localhost:4321`. If there are multiple installations/environments of the executor service on the same server, the executor applications should listen to different ports.|
 
 3. Open the Windows command terminal in **administrator mode**.
@@ -284,11 +268,8 @@ Note that global orchestration is not available in the console application versi
 |Setting|Description|
 |-|-|
 |ConnectionStrings:BiflowContext|Connection string used to connect to the Biflow database based on steps taken in the database section of this guide. **Note:** The connection string must have `MultipleActiveResultSets=true` enabled.|
-|Executor:Type|`[ ConsoleApp | WebApp ]`|
-||Whether the executor is installed as a console app or web app|
-|Executor:ConsoleApp:BiflowExecutorPath|Needed only when `Executor:Type` is set to `ConsoleApp`. Path to the executor executable. Default value is `C:\\Biflow\\BiflowExecutor\\BiflowExecutor.exe`|
-|Executor:WebApp:Url|Needed only when `Executor:Type` is set to `WebApp`. Url to the executor web app|
-|Authorization:Windows:AllowedUsers|Array of Windows users who are authorized to issue requests to the scheduler API, e.g. `[ "DOMAIN\\BiflowService", "DOMAIN\\AdminUser" ]`. If no authorization is required, remove the `Authorization` section.|
+|Executor:WebApp:Url|Url to the executor web app|
+|Authorization:Windows:AllowedUsers|Array of Windows users who are authorized to issue requests to the scheduler API, e.g. `[ "DOMAIN\\BiflowService", "DOMAIN\\AdminUser" ]`. If no authorization is required, remove the `Authorization` section. Only applies to on-premise Windows environments.|
 |Kestrel:Endpoints:Http:Url|The http url and port which the scheduler API should listen to, for example `http://localhost:5432`. If there are multiple installations/environments of the scheduler service on the same server, the scheduler applications should listen to different ports.|
 |Serilog:WriteTo:Args:path|Path where the application will write its log files. Default value is `C:\\Biflow\\BiflowScheduler\\log\\scheduler.log`|
 
@@ -297,7 +278,9 @@ Note that global orchestration is not available in the console application versi
 4. Open Windows Services, navigate to the service "Biflow Scheduler", right click and select Properties.
     - Add the login information for the service account used to run the service and scheduled executions. If Windows Authentication is used to connect to the database, then this account’s credentials are used to connect.
     - Start the service.
-    - Navigate to `C:\Biflow\BiflowScheduler\log` and open the log text file. There should be no error reports if the scheduler was able to connect to the database and load schedules into the service.
+5. Navigate to `C:\Biflow\BiflowScheduler\log` and open the log text file. There should be no error reports if the scheduler was able to connect to the database and load schedules into the service.
+6. Test the scheduler API by sending a GET request. This can be done with PowerShell using the following command. Replace the URL with the one used when configuring the app.
+    - `Invoke-WebRequest -URI http://localhost:5432/status`
 
 ### User interface web application
 
@@ -336,11 +319,10 @@ Note that global orchestration is not available in the console application versi
 |Ldap:Port|The port to use for the LDAP server connection |
 |Ldap:UseSsl|Boolean value: `true` to use SSL for the connection, `false` if not|
 |Ldap:UserStoreDistinguishedName|The DN (distinguished name) for the LDAP container which to query for users|
-|Executor:Type|`[ ConsoleApp | WebApp | SelfHosted ]`|
-||Whether the executor service is installed as a console application or web app or is running self-hosted inside the UI application|
+|Executor:Type|`[ WebApp | SelfHosted ]`|
+||Whether the executor service is installed as a web app or is running self-hosted inside the UI application|
 |Executor:WebApp:Url|Needed only when `Executor:Type` is set to `WebApp`. Url to the executor web app API|
-|Executor:ConsoleApp:BiflowExecutorPath|Needed only when `Executor:Type` is set to `ConsoleApp`. Path to the executor executable. Default value is `C:\\Biflow\\BiflowExecutor\\BiflowExecutor.exe`|
-|Executor:SelfHosted|This section needs to be defined only if `Executor:Type` is set to `SelfHosted`. Refer to the executor console application's settings section to set the values in this section.|
+|Executor:SelfHosted|This section needs to be defined only if `Executor:Type` is set to `SelfHosted`. Refer to the executor web application's settings section to set the values in this section.|
 |Scheduler:Type|`[ WebApp | SelfHosted ]`|
 ||Whether the scheduler service is installed as a web app or is running self-hosted inside the UI application. If `Executor:Type` is set to `SelfHosted` then this settings must also be set to `SelfHosted`|
 |Scheduler:WebApp:Url|Needed only when `Scheduler:Type` is set to `WebApp`. Url to the scheduler service web app API|
