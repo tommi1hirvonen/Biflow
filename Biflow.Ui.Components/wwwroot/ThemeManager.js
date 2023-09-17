@@ -1,8 +1,7 @@
-const storedTheme = localStorage.getItem('theme')
-
 export function getPreferredTheme() {
-    if (storedTheme) {
-        return storedTheme;
+    var theme = localStorage.getItem('theme');
+    if (theme) {
+        return theme;
     }
     return 'auto';
 }
@@ -22,11 +21,10 @@ export function setTheme(theme) {
 
 export function setPreferredThemeChangedListener(dotnetObjectReference) {
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', async () => {
-        // Mode is auto
-        if (storedTheme !== 'light' || storedTheme !== 'dark') {
-            var theme = getPreferredTheme();
+        var theme = getPreferredTheme();
+        if (theme === 'auto') {
             var effectiveTheme = setTheme(theme);
-            await dotnetObjectReference.InvokeMethodAsync("UpdateTheme", effectiveTheme);
+            await dotnetObjectReference.invokeMethodAsync("UpdateTheme", effectiveTheme);
         }
     })
 }
