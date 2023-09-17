@@ -6,7 +6,7 @@
 @inject IJSRuntime JS
 
 <style>
-    @($"#{EditorId} {{ height: {InitialHeight}px; resize: vertical; overflow: hidden; }}")
+    @($"#{EditorId} {{ height: {InitialHeight}; resize: vertical; overflow: hidden; }}")
 </style>
 
 <StandaloneCodeEditor @ref="Editor"
@@ -17,9 +17,9 @@
 
 @code {
     /// <summary>
-    /// Initial editor height in pixels. Default is 100.
+    /// Initial editor height in css. Default is "100px".
     /// </summary>
-    [Parameter] public int InitialHeight { get; set; } = 100;
+    [Parameter] public string InitialHeight { get; set; } = "100px";
 
     [Parameter, EditorRequired] public string? Language { get; set; }
 
@@ -28,6 +28,8 @@
     [Parameter] public Func<string?> InitialValueExpression { get; set; } = () => "";
 
     [Parameter] public bool MinimapEnabled { get; set; } = true;
+
+    [Parameter] public bool ReadOnly { get; set; } = false;
 
     private StandaloneCodeEditor? Editor { get; set; }
 
@@ -68,14 +70,15 @@
         AutomaticLayout = true,
         Language = Language,
         Value = InitialValueExpression(),
-        Minimap = new BlazorMonaco.Editor.EditorMinimapOptions { Enabled = MinimapEnabled },
+        ReadOnly = ReadOnly,
+        Minimap = new EditorMinimapOptions { Enabled = MinimapEnabled },
         Theme = ThemeService.CurrentTheme == Theme.Dark ? "custom-dark" : "vs",
         
     };
 
     private void OnThemeChanged(Theme theme, bool isAuto)
     {
-        var options = new BlazorMonaco.Editor.EditorUpdateOptions
+        var options = new EditorUpdateOptions
         {
             Theme = theme == Theme.Dark ? "vs-dark" : "vs"
         };
