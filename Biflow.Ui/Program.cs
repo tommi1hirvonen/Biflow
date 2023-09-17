@@ -1,3 +1,4 @@
+using Biflow.Ui.Components;
 using Biflow.Ui.Core;
 using Havit.Blazor.Components.Web;
 using Microsoft.Extensions.Hosting.WindowsServices;
@@ -21,6 +22,7 @@ if (builder.Configuration.GetSection("Serilog").Exists())
 builder.Services.AddUiCoreServices(builder.Configuration);
 builder.Services.AddUiCoreAuthentication(builder.Configuration);
 builder.Services.AddValidationServices();
+builder.Services.AddScoped<ThemeService>();
 
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor().AddMicrosoftIdentityConsentHandler();

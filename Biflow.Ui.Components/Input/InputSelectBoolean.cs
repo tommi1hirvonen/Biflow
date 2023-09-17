@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components.Forms;
 
-namespace Biflow.Ui.Core;
+namespace Biflow.Ui.Components;
 
 public class InputSelectBoolean : InputSelect<bool>
 {

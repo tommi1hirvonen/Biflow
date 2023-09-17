@@ -1,0 +1,64 @@
+﻿@implements IDisposable
+
+@inject ThemeService ThemeService
+
+<ThemeManager @ref="ThemeManager" />
+
+<HxDropdownButtonGroup CssClass="ms-auto">
+    <HxDropdownToggleButton Color="ThemeColor.None" CssClass="text-white" style="text-decoration: none;">
+        @if (ThemeService.IsAuto)
+        {
+            <span>
+                <CxIcon Icon="LucideIcon.Contrast" />
+            </span>
+        }
+        else if (ThemeService.CurrentTheme == Theme.Dark)
+        {
+            <span>
+                <CxIcon Icon="FeatherIcon.Moon" />
+            </span>
+        }
+        else
+        {
+            <span>
+                <CxIcon Icon="FeatherIcon.Sun" />
+            </span>
+        }
+    </HxDropdownToggleButton>
+    <HxDropdownMenu CssClass="shadow">
+        <li class="dropdown-header h6">
+            Theme
+        </li>
+        <li class="dropdown-item @(!ThemeService.IsAuto && ThemeService.CurrentTheme == Theme.Light ? "active" : null)"
+            role="button"
+        @onclick="() => ThemeManager!.ToggleThemeAsync(Theme.Light)">
+            <CxIcon Icon="FeatherIcon.Sun" />
+            Light
+        </li>
+        <li class="dropdown-item @(!ThemeService.IsAuto && ThemeService.CurrentTheme == Theme.Dark ? "active" : null)"
+            role="button"
+        @onclick="() => ThemeManager!.ToggleThemeAsync(Theme.Dark)">
+            <CxIcon Icon="FeatherIcon.Moon" />
+            Dark
+        </li>
+        <li class="dropdown-item @(ThemeService.IsAuto ? "active" : null)"
+            role="button"
+        @onclick="() => ThemeManager!.ToggleThemeAutoAsync()">
+            <CxIcon Icon="LucideIcon.Contrast" />
+            Auto
+        </li>
+    </HxDropdownMenu>
+</HxDropdownButtonGroup>
+
+@code {
+    private ThemeManager? ThemeManager { get; set; }
+
+    protected override void OnInitialized()
+    {
+        ThemeService.OnThemeChanged += OnThemeChanged;
+    }
+
+    private void OnThemeChanged(Theme theme, bool isAuto) => StateHasChanged();
+
+    public void Dispose() => ThemeService.OnThemeChanged -= OnThemeChanged;
+}
