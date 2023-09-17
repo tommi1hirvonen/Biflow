@@ -39,7 +39,7 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
         {
             try
             {
-                await Editor.SetValue(step.SqlStatement);
+                await Editor.SetValueAsync(step.SqlStatement);
             }
             catch { }
         }
@@ -109,11 +109,12 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
         }
     }
 
-    private void OnStoredProcedureSelected(string procedure)
+    private Task OnStoredProcedureSelected(string procedure)
     {
+        ArgumentNullException.ThrowIfNull(Editor);
         ArgumentNullException.ThrowIfNull(Step);
         Step.SqlStatement = $"EXEC {procedure}";
-        Editor?.SetValue(Step.SqlStatement);
+        return Editor.SetValueAsync(Step.SqlStatement);
     }
     
 }

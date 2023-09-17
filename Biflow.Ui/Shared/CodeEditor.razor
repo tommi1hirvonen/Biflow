@@ -35,18 +35,26 @@
 
     private readonly string EditorId = $"_{Guid.NewGuid().ToString()}"; // prefix with underscode as html id cannot start with a number
 
-    public Task SetValue(string? value)
+    public Task SetValueAsync(string? value)
     {
         ArgumentNullException.ThrowIfNull(Editor);
         return Editor.SetValue(value);
     }
 
-    public async Task<string?> GetValue()
+    public async Task<string?> GetValueAsync()
     {
         ArgumentNullException.ThrowIfNull(Editor);
         var model = await Editor.GetModel();
         var value = await model.GetValue(EndOfLinePreference.TextDefined, false);
         return value;
+    }
+
+    public async Task SetLanguageAsync(string language)
+    {
+        ArgumentNullException.ThrowIfNull(Editor);
+        var value = await GetValueAsync();
+        var model = await Global.CreateModel(JS, value, language);
+        await Editor.SetModel(model);
     }
 
     protected override void OnInitialized()
@@ -72,8 +80,7 @@
         Value = InitialValueExpression(),
         ReadOnly = ReadOnly,
         Minimap = new EditorMinimapOptions { Enabled = MinimapEnabled },
-        Theme = ThemeService.CurrentTheme == Theme.Dark ? "custom-dark" : "vs",
-        
+        Theme = ThemeService.CurrentTheme == Theme.Dark ? "custom-dark" : "vs"
     };
 
     private void OnThemeChanged(Theme theme, bool isAuto)
@@ -87,7 +94,7 @@
 
     private async Task OnDidChangeModelContent(ModelContentChangedEvent e)
     {
-        var value = await GetValue();
+        var value = await GetValueAsync();
         await OnValueChanged.InvokeAsync(value);
     }
 

@@ -141,7 +141,7 @@
     {
         ObjectName = objectName;
         ObjectDefinition = null;
-        await Editor.LetAsync(x => x.SetValue(""));
+        await Editor.LetAsync(x => x.SetValueAsync(""));
         ErrorMessage = null;
         if (string.IsNullOrEmpty(ObjectName)) return;
         try
@@ -152,7 +152,7 @@
             {
                 ErrorMessage = $"No object definition found for '{ObjectName}'";
             }
-            await Editor.LetAsync(x => x.SetValue(ObjectDefinition));
+            await Editor.LetAsync(x => x.SetValueAsync(ObjectDefinition));
         }
         catch (SqlException ex)
         {

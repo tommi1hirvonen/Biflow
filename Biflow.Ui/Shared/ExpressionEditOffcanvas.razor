@@ -75,7 +75,7 @@
     public async Task ShowAsync(TParameter parameter)
     {
         Parameter = parameter;
-        await Editor.LetAsync(x => x.SetValue(parameter.Expression.Expression));
+        await Editor.LetAsync(x => x.SetValueAsync(parameter.Expression.Expression));
         StateHasChanged(); // To update offcanvas title text
         await Offcanvas.LetAsync(x => x.ShowAsync());
     }

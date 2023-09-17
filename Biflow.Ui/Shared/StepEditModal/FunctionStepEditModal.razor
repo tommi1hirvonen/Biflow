@@ -64,8 +64,8 @@
             </div>
         </div>
         <FunctionSelectOffcanvas @ref="FunctionSelectOffcanvas" OnFunctionSelected="OnFunctionSelected" />
-        <div class="row mt-3 gap-3">
-            <div class="col-md-auto">
+        <div class="row">
+            <div class="col-auto">
                 <div class="form-check form-check-inline">
                     <input type="checkbox" class="form-check-input" id="function_is_durable"
                        checked=@Step.FunctionIsDurable
@@ -73,14 +73,34 @@
                     <label class="form-check-label" for="function_is_durable">Is durable</label>
                 </div>
             </div>
+        </div>
+        <div class="row mt-3">
             <div class="col">
                 <label class="form-label">Function input</label>
-                <div class="input-group input-group-sm">
-                    <div class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.ChevronRight" />
-                    </div>
-                    <InputTextArea class="form-control form-control-sm" @bind-Value="Step.FunctionInput" style="font-family: monospace;" rows="3"></InputTextArea>
+            </div>
+            <div class="col text-end">
+                <label class="form-label me-3">Input format</label>
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="radio_function_input_raw"
+                           checked=@(Language == InputLanguage.Text)
+                    @onchange="() => SetLanguageAsync(InputLanguage.Text)">
+                    <label class="form-check-label fw-normal" for="radio_function_input_raw">Text</label>
                 </div>
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="radio_function_input_json"
+                           checked=@(Language == InputLanguage.Json)
+                    @onchange="() => SetLanguageAsync(InputLanguage.Json)">
+                    <label class="form-check-label fw-normal" for="radio_function_input_json">JSON</label>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <CodeEditor @ref="Editor"
+                            Language=""
+                            MinimapEnabled="false"
+                            InitialValueExpression="() => Step.FunctionInput"
+                            OnValueChanged="value => Step.FunctionInput = value" />
             </div>
         </div>
         <StepParameterEditComponent Step="Step" NewParameterDelegate="() => new() { Step = Step }" />

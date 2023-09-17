@@ -15,6 +15,10 @@ public partial class FunctionStepEditModal : StepEditModal<FunctionStep>
 
     internal override string FormId => "function_step_edit_form";
 
+    private CodeEditor? Editor { get; set; }
+
+    private InputLanguage Language { get; set; } = InputLanguage.Text;
+
     private Task OpenFunctionSelectOffcanvas()
     {
         ArgumentNullException.ThrowIfNull(Step?.FunctionAppId);
@@ -25,6 +29,31 @@ public partial class FunctionStepEditModal : StepEditModal<FunctionStep>
     {
         ArgumentNullException.ThrowIfNull(Step);
         Step.FunctionUrl = functionUrl;
+    }
+
+    protected override async Task OnModalShownAsync(FunctionStep step)
+    {
+        Language = InputLanguage.Text;
+        if (Editor is not null)
+        {
+            try
+            {
+                await Editor.SetValueAsync(step.FunctionInput);
+            }
+            catch { }
+        }
+    }
+
+    private Task SetLanguageAsync(InputLanguage language)
+    {
+        Language = language;
+        ArgumentNullException.ThrowIfNull(Editor);
+        var lang = Language switch
+        {
+            InputLanguage.Json => "json",
+            _ => ""
+        };
+        return Editor.SetLanguageAsync(lang);
     }
 
     protected override Task<FunctionStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
@@ -56,4 +85,6 @@ public partial class FunctionStepEditModal : StepEditModal<FunctionStep>
             Targets = new List<DataObject>(),
             ExecutionConditionParameters = new List<ExecutionConditionParameter>()
         };
+
+    private enum InputLanguage { Text, Json }
 }
