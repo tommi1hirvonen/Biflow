@@ -56,20 +56,7 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddHttpClient();
 
-var executorType = builder.Configuration.GetSection("Executor").GetValue<string>("Type");
-if (executorType == "ConsoleApp")
-{
-    builder.Services.AddSchedulerServices<ConsoleAppExecutionJob>();
-}
-else if (executorType == "WebApp")
-{
-    builder.Services.AddSchedulerServices<WebAppExecutionJob>();
-}
-else
-{
-    throw new ArgumentException($"Unrecognized executor type {executorType}");
-}
-
+builder.Services.AddSchedulerServices<WebAppExecutionJob>();
 builder.Services.AddSingleton<StatusTracker>();
 
 var app = builder.Build();

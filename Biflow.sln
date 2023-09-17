@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Executor.ConsoleApp", "Biflow.Executor.ConsoleApp\Biflow.Executor.ConsoleApp.csproj", "{16FAFBFA-D820-45CD-ADC2-6CA5723D3A8D}"
-EndProject
 Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "Biflow.Database", "Biflow.Database\Biflow.Database.sqlproj", "{BBEEF2AB-D4A8-4601-B1FB-34F1FDF2B526}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Ui", "Biflow.Ui\Biflow.Ui.csproj", "{FAFD2F30-269B-4126-B4AF-D21A644B7F4F}"
@@ -12,8 +10,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Core", "Biflow.Core\Biflow.Core.csproj", "{13141E3A-9808-4021-94CC-BFEA654F40CF}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.DataAccess", "Biflow.DataAccess\Biflow.DataAccess.csproj", "{9A95C606-26A8-4818-83EA-AF8ABAAD0CD7}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Executor.ConsoleApp.Test", "Biflow.Executor.ConsoleApp.Test\Biflow.Executor.ConsoleApp.Test.csproj", "{CF7ABD9D-A36E-4DEE-96D4-E0D627AA0D69}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Scheduler.Core", "Biflow.Scheduler.Core\Biflow.Scheduler.Core.csproj", "{549C16EB-B840-4E05-B55C-0CCE596904D3}"
 EndProject
@@ -41,10 +37,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{16FAFBFA-D820-45CD-ADC2-6CA5723D3A8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{16FAFBFA-D820-45CD-ADC2-6CA5723D3A8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{16FAFBFA-D820-45CD-ADC2-6CA5723D3A8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{16FAFBFA-D820-45CD-ADC2-6CA5723D3A8D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BBEEF2AB-D4A8-4601-B1FB-34F1FDF2B526}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BBEEF2AB-D4A8-4601-B1FB-34F1FDF2B526}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BBEEF2AB-D4A8-4601-B1FB-34F1FDF2B526}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
@@ -63,10 +55,6 @@ Global
 		{9A95C606-26A8-4818-83EA-AF8ABAAD0CD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9A95C606-26A8-4818-83EA-AF8ABAAD0CD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9A95C606-26A8-4818-83EA-AF8ABAAD0CD7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CF7ABD9D-A36E-4DEE-96D4-E0D627AA0D69}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CF7ABD9D-A36E-4DEE-96D4-E0D627AA0D69}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CF7ABD9D-A36E-4DEE-96D4-E0D627AA0D69}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CF7ABD9D-A36E-4DEE-96D4-E0D627AA0D69}.Release|Any CPU.Build.0 = Release|Any CPU
 		{549C16EB-B840-4E05-B55C-0CCE596904D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{549C16EB-B840-4E05-B55C-0CCE596904D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{549C16EB-B840-4E05-B55C-0CCE596904D3}.Release|Any CPU.ActiveCfg = Release|Any CPU

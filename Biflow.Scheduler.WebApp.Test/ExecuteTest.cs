@@ -6,7 +6,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Quartz;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -36,10 +35,10 @@ public class ExecuteTest
             .AddDbContextFactory<BiflowContext>(options =>
                     options.UseSqlServer(connectionString, o =>
                         o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)))
-            .AddSingleton<ConsoleAppExecutionJob>()
+            .AddSingleton<WebAppExecutionJob>()
             .BuildServiceProvider();
 
-        var executionJob = services.GetService<ConsoleAppExecutionJob>();
+        var executionJob = services.GetService<WebAppExecutionJob>();
 
         var jobId = Guid.Parse("9e337948-1cd4-4096-06c6-08da43c469bd");
         var scheduleId = Guid.Parse("b4581c87-3d92-4841-2809-08daed9b68ee");

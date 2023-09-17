@@ -114,11 +114,7 @@ public static partial class Extensions
         services.AddSingleton<ITokenService, TokenService>();
 
         var executorType = configuration.GetSection("Executor").GetValue<string>("Type");
-        if (executorType == "ConsoleApp")
-        {
-            services.AddSingleton<IExecutorService, ConsoleAppExecutorService>();
-        }
-        else if (executorType == "WebApp")
+        if (executorType == "WebApp")
         {
             services.AddSingleton<IExecutorService, WebAppExecutorService>();
         }
