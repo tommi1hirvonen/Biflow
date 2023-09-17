@@ -5,12 +5,12 @@
             <div class="col-sm-2">
                 <label class="form-label">Connection</label>
             </div>
-            <div class="col-sm-5">
+            <div class="col-auto">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Database" />
                     </div>
-                    <select class="form-select form-select-sm" @bind="ConnectionId" @bind:after="RunQueryAsync">
+                    <select class="form-select form-select-sm" @bind="ConnectionId">
                         @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
@@ -18,31 +18,24 @@
                     </select>
                 </div>
             </div>
-            <div class="col-sm-5 mt-3 mt-sm-0">
-                <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="RunQueryAsync" Enabled="QueryTask?.IsCompleted ?? true">
-                    <CxIcon Icon="FeatherIcon.RefreshCw" />
-                    Get objects
-                </HxButton>
-                @if (!QueryTask?.IsCompleted ?? false)
-                {
-                    <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small" OnClick="CancelQuery">
-                        Cancel
-                    </HxButton>
-                }
-            </div>
         </div>
         <div class="row mt-3">
             <div class="col-sm-2">
-                <label class="form-label">Filter by</label>
+                <label class="form-label">Search</label>
             </div>
             <div class="col-sm-8">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.Filter" />
+                        <CxIcon Icon="FeatherIcon.Search" />
                     </div>
-                    <input type="search" class="form-control" @bind-value="SchemaFilter" @bind-value:event="oninput" placeholder="Schema" />
-                    <input type="search" class="form-control" @bind-value="ObjectFilter" @bind-value:event="oninput" placeholder="Object" />
+                    <DebounceTextInput @bind-Value="SearchTerm" @bind-Value:after="RunQueryAsync" class="form-control form-control-sm" type="search" placeholder="Search objects from the database" />
                 </div>
+            </div>
+            <div class="col-sm-2">
+                @if (Loading)
+                {
+                    <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                }
             </div>
         </div>
         <div class="row mt-2">
@@ -57,19 +50,16 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var dbObject in FilteredDatabaseObjects)
+                        @foreach (var dbObject in DatabaseObjects)
                         {
                             var tuple = (dbObject.Server, dbObject.Database, dbObject.Schema, dbObject.Object);
-                            <tr>
-                                <td class="align-middle"><HighlightableText Text="@dbObject.Schema" PartToHighlight="@SchemaFilter" /></td>
-                                <td class="align-middle"><HighlightableText Text="@dbObject.Object" PartToHighlight="@ObjectFilter" /></td>
+                            <tr style="cursor: pointer;" @onclick="() => SelectDbObjectAsync(tuple, true)">
+                                <td class="align-middle"><HighlightableText Text="@dbObject.Schema" PartToHighlight="@SearchTerm" /></td>
+                                <td class="align-middle"><HighlightableText Text="@dbObject.Object" PartToHighlight="@SearchTerm" /></td>
                                 <td class="align-middle">@dbObject.Type</td>
                                 <td>
                                     <HxButtonGroup Size="ButtonGroupSize.Small">
-                                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => SelectDbObjectAsync(tuple, true)" title="Select & add">
-                                            <CxIcon Icon="FeatherIcon.Check" />
-                                        </HxButton>
-                                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => SelectDbObjectAsync(tuple, false)" title="Select & edit">
+                                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => SelectDbObjectAsync(tuple, false)" title="Edit before adding">
                                             <CxIcon Icon="FeatherIcon.Edit2" />
                                         </HxButton>
                                     </HxButtonGroup>
@@ -82,6 +72,6 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" OnClick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" OnClick="CloseAsync">Close</HxButton>
     </FooterTemplate>
 </HxOffcanvas>

@@ -166,10 +166,6 @@
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger" OnClick="() => NewObject = null" title="Discard">
                             <CxIcon Icon="FeatherIcon.X" />
                         </HxButton>
-                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
-                              OnClick="async () => await DbObjectExplorerOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId))" title="Browse">
-                            <CxIcon Icon="FeatherIcon.MoreHorizontal" />
-                        </HxButton>
                     </HxButtonGroup>
                 </td>
             </tr>
@@ -234,17 +230,14 @@
                     .Take(10) ?? Enumerable.Empty<DataObject>();
                 @foreach (var obj in objects)
                 {
-                    <tr>
+                    <tr style="cursor: pointer;" @onclick="() => { NewObject = obj; SubmitNewObject(); }">
                         <td class="align-middle">@obj.ServerName</td>
                         <td class="align-middle">@obj.DatabaseName</td>
                         <td class="align-middle">@obj.SchemaName</td>
                         <td class="align-middle" colspan="2"><HighlightableText Text="@obj.ObjectName" PartToHighlight="@NewObject.ObjectName" /></td>
                         <td>
                             <HxButtonGroup Size="ButtonGroupSize.Small">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => { NewObject = obj; SubmitNewObject(); }" title="Select & add">
-                                    <CxIcon Icon="FeatherIcon.Check" />
-                                </HxButton>
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => { NewObject = obj; }" title="Select & edit">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => { NewObject = obj; }" title="Edit before adding">
                                     <CxIcon Icon="FeatherIcon.Edit2" />
                                 </HxButton>
                             </HxButtonGroup>
@@ -255,10 +248,21 @@
         }
     </tbody>
 </table>
-<HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" OnClick="AddNewObjectAsync">
-    <CxIcon Icon="FeatherIcon.Plus" />
-    @AddButtonText
-</HxButton>
+<HxDropdownButtonGroup Split>
+    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" OnClick="() => DbObjectExplorerOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId))">
+        <CxIcon Icon="FeatherIcon.Plus" />
+        @AddButtonText
+    </HxButton>
+    <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
+        <span class="visually-hidden">Toggle dropdown</span>
+    </HxDropdownToggleButton>
+    <HxDropdownMenu>
+        <HxDropdownItem OnClick="AddNewObjectAsync">
+            Add manually
+        </HxDropdownItem>
+    </HxDropdownMenu>
+</HxDropdownButtonGroup>
+
 
 <DbObjectExplorerOffcanvas @ref="DbObjectExplorerOffcanvas" Connections="Connections" OnDbObjectSelected="OnDbObjectSelected" />
 

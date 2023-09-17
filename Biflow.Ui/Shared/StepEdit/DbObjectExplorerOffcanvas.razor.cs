@@ -20,26 +20,27 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase, IDisposable
 
     private HxOffcanvas? Offcanvas { get; set; }
 
-    private IEnumerable<DbObject> DatabaseObjects { get; set; } =
-        Enumerable.Empty<DbObject>();
+    private IEnumerable<DbObject> DatabaseObjects { get; set; } = Enumerable.Empty<DbObject>();
 
-    private IEnumerable<DbObject> FilteredDatabaseObjects =>
-        DatabaseObjects
-        .Where(o => o.Schema.ContainsIgnoreCase(SchemaFilter))
-        .Where(o => o.Object.ContainsIgnoreCase(ObjectFilter));
-
-    private string SchemaFilter { get; set; } = string.Empty;
-    private string ObjectFilter { get; set; } = string.Empty;
+    private string SearchTerm { get; set; } = string.Empty;
 
     private CancellationTokenSource Cts { get; set; } = new();
+
     private Task<IEnumerable<DbObject>>? QueryTask { get; set; }
+
+    private bool Loading { get; set; } = false;
 
     private async Task RunQueryAsync()
     {
+        if (SearchTerm.Length < 2)
+        {
+            return;
+        }
         try
         {
+            Loading = true;
             Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
-            QueryTask = SqlServerHelper.GetDatabaseObjectsAsync(connectionId, null, null, Cts.Token);
+            QueryTask = SqlServerHelper.GetDatabaseObjectsAsync(connectionId, SearchTerm, 20, Cts.Token);
             DatabaseObjects = await QueryTask;
         }
         catch (OperationCanceledException)
@@ -51,12 +52,17 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase, IDisposable
         {
             Messenger.AddError("Error querying database objects", ex.Message);
         }
+        finally
+        {
+            Loading = false;
+        }
     }
 
-    private void CancelQuery()
+    private async Task CloseAsync()
     {
         if (!Cts.IsCancellationRequested)
             Cts.Cancel();
+        await Offcanvas.LetAsync(x => x.HideAsync());
     }
 
     private async Task SelectDbObjectAsync((string Server, string Database, string Schema, string Name) dbObject, bool commit)
