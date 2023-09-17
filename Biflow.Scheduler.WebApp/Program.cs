@@ -1,8 +1,8 @@
+using Biflow.Executor.Core;
 using Biflow.Scheduler.Core;
 using Biflow.Scheduler.WebApp;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using Serilog;
 
@@ -56,7 +56,17 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddHttpClient();
 
-builder.Services.AddSchedulerServices<WebAppExecutionJob>();
+var executorType = builder.Configuration.GetSection("Executor").GetValue<string>("Type");
+if (executorType == "WebApp")
+{
+    builder.Services.AddSchedulerServices<WebAppExecutionJob>();
+}
+else if (executorType == "SelfHosted")
+{
+    builder.Services.AddExecutorServices(builder.Configuration.GetSection("Executor").GetSection("SelfHosted"));
+    builder.Services.AddSchedulerServices<SelfHostedExecutionJob>();
+}
+
 builder.Services.AddSingleton<StatusTracker>();
 
 var app = builder.Build();
@@ -88,83 +98,11 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-app.MapPost("/schedules/add", async (SchedulerSchedule schedule, ISchedulesManager schedulesManager) =>
+if (executorType == "SelfHosted")
 {
-    await schedulesManager.AddScheduleAsync(schedule, CancellationToken.None);
-}).WithName("Add schedule");
+    app.MapExecutorEndpoints();
+}
 
-
-app.MapPost("/schedules/remove", async (SchedulerSchedule schedule, ISchedulesManager schedulesManager) =>
-{
-    await schedulesManager.RemoveScheduleAsync(schedule, CancellationToken.None);
-}).WithName("Remove schedule");
-
-
-app.MapPost("/jobs/remove", async (SchedulerJob job, ISchedulesManager schedulesManager) =>
-{
-    await schedulesManager.RemoveJobAsync(job, CancellationToken.None);
-}).WithName("Remove job");
-
-
-app.MapPost("schedules/pause", async (SchedulerSchedule schedule, ISchedulesManager schedulesManager) =>
-{
-    await schedulesManager.PauseScheduleAsync(schedule, CancellationToken.None);
-}).WithName("Pause schedule");
-
-
-app.MapPost("/schedules/resume", async (SchedulerSchedule schedule, ISchedulesManager schedulesManager) =>
-{
-    await schedulesManager.ResumeScheduleAsync(schedule, CancellationToken.None);
-}).WithName("Resume schedule");
-
-
-app.MapGet("/schedules/synchronize", async (ISchedulesManager schedulesManager, StatusTracker statusTracker) =>
-{
-    try
-    {
-        await schedulesManager.ReadAllSchedules(CancellationToken.None);
-        statusTracker.DatabaseReadError = false;
-    }
-    catch
-    {
-        statusTracker.DatabaseReadError = true;
-        throw;
-    }
-}).WithName("Synchronize");
-
-
-app.MapGet("/status", (StatusTracker statusTracker) =>
-{
-    return statusTracker.DatabaseReadError
-        ? throw new ApplicationException("Scheduler is running but has encountered a database read error.")
-        : Results.Ok();
-}).WithName("Status");
-
+app.MapSchedulerEnpoints();
 
 app.Run();
-
-
-class UserNamesHandler : AuthorizationHandler<UserNamesRequirement>
-{
-    protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, UserNamesRequirement requirement)
-    {
-        var userName = context.User.Identity?.Name;
-
-        if (userName is not null && requirement.UserNames.Contains(userName))
-        {
-            context.Succeed(requirement);
-        }
-
-        return Task.CompletedTask;
-    }
-}
-
-class UserNamesRequirement : IAuthorizationRequirement
-{
-    public string[] UserNames { get; }
-
-    public UserNamesRequirement(params string[] userNames)
-    {
-        UserNames = userNames;
-    }
-}
