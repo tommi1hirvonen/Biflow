@@ -40,15 +40,12 @@ public class WebAppExecutionJob : ExecutionJobBase
     {
         try
         {
-            bool running;
+            HttpResponseMessage response;
             do
             {
                 await Task.Delay(PollingIntervalMs);
-                var response = await _httpClient.GetAsync($"{Url}/execution/status/{executionId}");
-                response.EnsureSuccessStatusCode();
-                var content = await response.Content.ReadAsStringAsync();
-                running = content == "RUNNING";
-            } while (running);
+                response = await _httpClient.GetAsync($"{Url}/execution/status/{executionId}");
+            } while (response.IsSuccessStatusCode);
         }
         catch (Exception ex)
         {
