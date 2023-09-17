@@ -1,9 +1,7 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
-using Biflow.Ui.Components;
 using Biflow.Ui.Core;
 using Biflow.Ui.Shared.StepEdit;
-using BlazorMonaco.Editor;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
@@ -14,30 +12,11 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
 {
     [Inject] private SqlServerHelperService SqlServerHelper { get; set; } = null!;
 
-    [Inject] private ThemeService ThemeService { get; set; } = null!;
-
     internal override string FormId => "sql_step_edit_form";
-
-    private readonly string EditorId = "sql_statement_monaco_editor";
 
     private StoredProcedureSelectOffcanvas? StoredProcedureSelectModal { get; set; }
 
-    private StandaloneCodeEditor? Editor { get; set; }
-
-    private StandaloneEditorConstructionOptions GetEditorOptions(StandaloneCodeEditor editor) =>
-        new()
-        {
-            AutomaticLayout = true,
-            Language = "sql",
-            Value = Step?.SqlStatement ?? "",
-            Minimap = new EditorMinimapOptions { Enabled = false },
-            Theme = ThemeService.CurrentTheme == Theme.Dark ? "vs-dark" : "vs"
-        };
-
-    protected override void OnInitialized()
-    {
-        ThemeService.OnThemeChanged += OnThemeChanged;
-    }
+    private CodeEditor? Editor { get; set; }
 
     protected override Task<SqlStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
         context.SqlSteps
@@ -130,35 +109,11 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
         }
     }
 
-    private async Task OnDidChangeModelContent(ModelContentChangedEvent e)
-    {
-        ArgumentNullException.ThrowIfNull(Editor);
-        ArgumentNullException.ThrowIfNull(Step);
-        var model = await Editor.GetModel();
-        var value = await model.GetValue(EndOfLinePreference.TextDefined, false);
-        Step.SqlStatement = value;
-    }
-
     private void OnStoredProcedureSelected(string procedure)
     {
         ArgumentNullException.ThrowIfNull(Step);
         Step.SqlStatement = $"EXEC {procedure}";
         Editor?.SetValue(Step.SqlStatement);
-    }
-
-    private void OnThemeChanged(Theme theme, bool isAuto)
-    {
-        var options = new EditorUpdateOptions
-        {
-            Theme = theme == Theme.Dark ? "vs-dark" : "vs"
-        };
-        Editor?.UpdateOptions(options);
-    }
-
-    public override void Dispose()
-    {
-        ThemeService.OnThemeChanged -= OnThemeChanged;
-        base.Dispose();
     }
     
 }

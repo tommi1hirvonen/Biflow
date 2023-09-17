@@ -1,0 +1,95 @@
+﻿@using BlazorMonaco.Editor
+
+@implements IDisposable
+
+@inject ThemeService ThemeService
+@inject IJSRuntime JS
+
+<style>
+    @($"#{EditorId} {{ height: {InitialHeight}px; resize: vertical; overflow: hidden; }}")
+</style>
+
+<StandaloneCodeEditor @ref="Editor"
+                      Id="@EditorId"
+                      ConstructionOptions="GetEditorOptions"
+                      OnDidChangeModelContent="OnDidChangeModelContent"
+                      CssClass="border" />
+
+@code {
+    /// <summary>
+    /// Initial editor height in pixels. Default is 100.
+    /// </summary>
+    [Parameter] public int InitialHeight { get; set; } = 100;
+
+    [Parameter, EditorRequired] public string? Language { get; set; }
+
+    [Parameter] public EventCallback<string?> OnValueChanged { get; set; }
+
+    [Parameter] public Func<string?> InitialValueExpression { get; set; } = () => "";
+
+    [Parameter] public bool MinimapEnabled { get; set; } = true;
+
+    private StandaloneCodeEditor? Editor { get; set; }
+
+    private readonly string EditorId = $"_{Guid.NewGuid().ToString()}"; // prefix with underscode as html id cannot start with a number
+
+    public Task SetValue(string? value)
+    {
+        ArgumentNullException.ThrowIfNull(Editor);
+        return Editor.SetValue(value);
+    }
+
+    public async Task<string?> GetValue()
+    {
+        ArgumentNullException.ThrowIfNull(Editor);
+        var model = await Editor.GetModel();
+        var value = await model.GetValue(EndOfLinePreference.TextDefined, false);
+        return value;
+    }
+
+    protected override void OnInitialized()
+    {
+        ThemeService.OnThemeChanged += OnThemeChanged;
+        var darkTheme = new StandaloneThemeData
+        {
+            Base = "vs-dark",
+            Inherit = true,
+            Rules = new(),
+            Colors = new Dictionary<string, string>
+            {
+                { "editor.background", "#212529" }
+            }
+        };
+        Global.DefineTheme(JS, "custom-dark", darkTheme);
+    }
+
+    private StandaloneEditorConstructionOptions GetEditorOptions(StandaloneCodeEditor editor) => new()
+    {
+        AutomaticLayout = true,
+        Language = Language,
+        Value = InitialValueExpression(),
+        Minimap = new BlazorMonaco.Editor.EditorMinimapOptions { Enabled = MinimapEnabled },
+        Theme = ThemeService.CurrentTheme == Theme.Dark ? "custom-dark" : "vs",
+        
+    };
+
+    private void OnThemeChanged(Theme theme, bool isAuto)
+    {
+        var options = new BlazorMonaco.Editor.EditorUpdateOptions
+        {
+            Theme = theme == Theme.Dark ? "vs-dark" : "vs"
+        };
+        Editor?.UpdateOptions(options);
+    }
+
+    private async Task OnDidChangeModelContent(ModelContentChangedEvent e)
+    {
+        var value = await GetValue();
+        await OnValueChanged.InvokeAsync(value);
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnThemeChanged -= OnThemeChanged;
+    }
+}

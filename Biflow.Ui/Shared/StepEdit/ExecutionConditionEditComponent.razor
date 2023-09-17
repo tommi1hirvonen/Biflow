@@ -1,15 +1,4 @@
-﻿@implements IDisposable
-
-@inject IHxMessengerService Messenger
-@inject ThemeService ThemeService
-
-<style>
-    @($"#{EditorId}") {
-        height: 100px;
-        resize: vertical;
-        overflow: hidden;
-    }
-</style>
+﻿@inject IHxMessengerService Messenger
 
 @if (Step is not null)
 {
@@ -22,11 +11,11 @@
                     <CxIcon Icon="FeatherIcon.HelpCircle" />
                 </span>
             </label>
-            <BlazorMonaco.Editor.StandaloneCodeEditor @ref="Editor"
-                                                      Id="@EditorId"
-                                                      ConstructionOptions="GetEditorOptions"
-                                                      OnDidChangeModelContent="OnDidChangeModelContent"
-                                                      CssClass="border" />
+            <CodeEditor @ref="Editor"
+                        Language="csharp"
+                        MinimapEnabled="false"
+                        InitialValueExpression="() => Step?.ExecutionConditionExpression.Expression"
+                        OnValueChanged="OnValueChanged" />
             <div class="form-text">Blank = no execution condition. The return type of the expression should always be boolean (True/False).</div>
         </div>
     </div>
@@ -134,14 +123,7 @@
 
     private HxOffcanvas? HelpOffcanvas { get; set; }
 
-    private BlazorMonaco.Editor.StandaloneCodeEditor? Editor { get; set; }
-
-    private readonly string EditorId = $"_{Guid.NewGuid().ToString()}";
-
-    protected override void OnInitialized()
-    {
-        ThemeService.OnThemeChanged += OnThemeChanged;
-    }
+    private CodeEditor? Editor { get; set; }
 
     private void SetJobParameter(bool inheritFromJob, ExecutionConditionParameter param)
     {
@@ -189,37 +171,11 @@
         }
     }
 
-    private BlazorMonaco.Editor.StandaloneEditorConstructionOptions GetEditorOptions(BlazorMonaco.Editor.StandaloneCodeEditor editor) =>
-        new()
-        {
-            AutomaticLayout = true,
-            Language = "csharp",
-            Value = Step?.ExecutionConditionExpression.Expression ?? "",
-            Minimap = new BlazorMonaco.Editor.EditorMinimapOptions { Enabled = false },
-            Theme = ThemeService.CurrentTheme == Theme.Dark ? "vs-dark" : "vs"
-        };
-
-    private async Task OnDidChangeModelContent(BlazorMonaco.Editor.ModelContentChangedEvent e)
+    private async Task OnValueChanged(string? value)
     {
-        ArgumentNullException.ThrowIfNull(Editor);
         ArgumentNullException.ThrowIfNull(Step);
-        var model = await Editor.GetModel();
-        var value = await model.GetValue(BlazorMonaco.Editor.EndOfLinePreference.TextDefined, false);
         Step.ExecutionConditionExpression.Expression = value;
         await OnExecutionConditionChanged.InvokeAsync();
     }
 
-    private void OnThemeChanged(Theme theme, bool isAuto)
-    {
-        var options = new BlazorMonaco.Editor.EditorUpdateOptions
-        {
-            Theme = theme == Theme.Dark ? "vs-dark" : "vs"
-        };
-        Editor?.UpdateOptions(options);
-    }
-
-    public void Dispose()
-    {
-        ThemeService.OnThemeChanged -= OnThemeChanged;
-    }
 }

@@ -1,13 +1,5 @@
 ﻿@inherits StepEditModal<SqlStep>
 
-<style>
-    @($"#{EditorId}") {
-        height: 100px;
-        resize: vertical;
-        overflow: hidden;
-    }
-</style>
-
 <StepEditModalTemplate Modal="this" TStep="SqlStep">
     @if (Step is not null)
     {
@@ -47,11 +39,11 @@
         <div class="row mt-3">
             <div class="col">
                 <label class="form-label">SQL statement</label>
-                <BlazorMonaco.Editor.StandaloneCodeEditor @ref="Editor"
-                                                          Id="@EditorId"
-                                                          ConstructionOptions="GetEditorOptions"
-                                                          OnDidChangeModelContent="OnDidChangeModelContent"
-                                                          CssClass="border" />
+                <CodeEditor @ref="Editor"
+                            Language="sql"
+                            MinimapEnabled="false"
+                            InitialValueExpression="() => Step?.SqlStatement"
+                            OnValueChanged="value => Step.SqlStatement = value" />
             </div>
         </div>
 
