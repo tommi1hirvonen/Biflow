@@ -18,7 +18,7 @@ public class SelfHostedSchedulerService : ISchedulerService
     {
         ArgumentNullException.ThrowIfNull(schedule.CronExpression);
         ArgumentNullException.ThrowIfNull(schedule.JobId);
-        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, (Guid)schedule.JobId, schedule.CronExpression);
+        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, schedule.JobId, schedule.CronExpression);
         await _schedulesManager.AddScheduleAsync(schedulerSchedule, CancellationToken.None);
     }
 
@@ -26,7 +26,7 @@ public class SelfHostedSchedulerService : ISchedulerService
     {
         ArgumentNullException.ThrowIfNull(schedule.CronExpression);
         ArgumentNullException.ThrowIfNull(schedule.JobId);
-        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, (Guid)schedule.JobId, schedule.CronExpression);
+        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, schedule.JobId, schedule.CronExpression);
         await _schedulesManager.RemoveScheduleAsync(schedulerSchedule, CancellationToken.None);
     }
 
@@ -45,7 +45,7 @@ public class SelfHostedSchedulerService : ISchedulerService
             await _schedulesManager.ReadAllSchedules(CancellationToken.None);
             DatabaseReadError = false;
         }
-        catch (Exception)
+        catch
         {
             DatabaseReadError = true;
             throw;
@@ -55,7 +55,7 @@ public class SelfHostedSchedulerService : ISchedulerService
     public async Task ToggleScheduleEnabledAsync(Schedule schedule, bool enabled)
     {
         ArgumentNullException.ThrowIfNull(schedule.JobId);
-        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, (Guid)schedule.JobId, schedule.CronExpression ?? string.Empty);
+        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, schedule.JobId, schedule.CronExpression ?? string.Empty);
         if (enabled)
         {
             await _schedulesManager.ResumeScheduleAsync(schedulerSchedule, CancellationToken.None);
