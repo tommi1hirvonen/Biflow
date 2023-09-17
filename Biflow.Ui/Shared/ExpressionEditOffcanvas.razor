@@ -7,20 +7,15 @@
         @if (Parameter is not null)
         {
             <div class="row">
-                <label class="form-label">
-                    Dynamic expression
-                </label>
-                <div class="input-group input-group-sm">
-                    <div class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.Code" />
-                    </div>
-                    <textarea class="form-control form-control-sm"
-                              @bind="Parameter.Expression.Expression"
-                              @bind:event="oninput"
-                              @bind:after="() => OnExpressionChanged.InvokeAsync()"
-                              style="font-family: monospace;"
-                              rows="3">
-                    </textarea>
+                <div class="col">
+                    <label class="form-label">
+                        Dynamic expression
+                    </label>
+                    <CodeEditor @ref="Editor"
+                                InitialValueExpression="() => Parameter.Expression.Expression"
+                                MinimapEnabled="false"
+                                Language="csharp"
+                                OnValueChanged="async (value) => { Parameter.Expression.Expression = value; await OnExpressionChanged.InvokeAsync(); }" />
                 </div>
             </div>
             <div class="row mt-3">
@@ -71,6 +66,8 @@
 
     private TParameter? Parameter { get; set; }
 
+    private CodeEditor? Editor { get; set; }
+
     private string Title { get; set; } = "";
 
     private bool HelpOpen { get; set; } = false;
@@ -78,6 +75,7 @@
     public async Task ShowAsync(TParameter parameter)
     {
         Parameter = parameter;
+        await Editor.LetAsync(x => x.SetValue(parameter.Expression.Expression));
         StateHasChanged(); // To update offcanvas title text
         await Offcanvas.LetAsync(x => x.ShowAsync());
     }
