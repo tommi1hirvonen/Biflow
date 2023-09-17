@@ -38,16 +38,16 @@ public class StepTests : IClassFixture<StepFixture>
     [Fact]
     public void GreaterExecutionPhase_ComparesTo_Greater()
     {
-        var phase20 = new SqlStep { JobId = Guid.Empty, StepName = "Step 1", ExecutionPhase = 20 };
-        var phase10 = new SqlStep { JobId = Guid.Empty, StepName = "Step 2", ExecutionPhase = 10 };
+        var phase20 = new SqlStep(Guid.Empty) { StepName = "Step 1", ExecutionPhase = 20 };
+        var phase10 = new SqlStep (Guid.Empty) { StepName = "Step 2", ExecutionPhase = 10 };
         Assert.True(phase20.CompareTo(phase10) > 0);
     }
 
     [Fact]
     public void SameExecutionPhase_DefaultsTo_NameComparison()
     {
-        var stepName1 = new SqlStep { JobId = Guid.Empty, StepName = "Step 1", ExecutionPhase = 10 };
-        var stepName2 = new SqlStep { JobId = Guid.Empty, StepName = "Step 2", ExecutionPhase = 10 };
+        var stepName1 = new SqlStep (Guid.Empty) { StepName = "Step 1", ExecutionPhase = 10 };
+        var stepName2 = new SqlStep (Guid.Empty) { StepName = "Step 2", ExecutionPhase = 10 };
         Assert.True(stepName2.CompareTo(stepName1) > 0);
     }
 }

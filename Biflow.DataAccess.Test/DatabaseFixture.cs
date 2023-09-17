@@ -78,9 +78,8 @@ public class DatabaseFixture : IAsyncLifetime
         var tag1 = new Tag("Test tag") { Color = TagColor.DarkGray };
         var tag2 = new Tag("Another tag") { Color = TagColor.Red };
 
-        var step1 = new SqlStep
+        var step1 = new SqlStep(job1.JobId)
         {
-            JobId = job1.JobId,
             StepName = "Test step 1",
             ExecutionPhase = 10,
             SqlStatement = "select 1",
@@ -88,9 +87,8 @@ public class DatabaseFixture : IAsyncLifetime
             Tags = new List<Tag> { tag1, tag2 }
         };
 
-        var step2 = new SqlStep
+        var step2 = new SqlStep(job1.JobId)
         {
-            JobId = job1.JobId,
             StepName = "Test step 2",
             StepDescription = "Test step 2 description",
             ExecutionPhase = 20,
@@ -109,9 +107,8 @@ public class DatabaseFixture : IAsyncLifetime
         };
         step2.StepParameters = new List<SqlStepParameter> { step2Parameter };
 
-        var step3 = new SqlStep
+        var step3 = new SqlStep(job1.JobId)
         {
-            JobId = job1.JobId,
             StepName = "Test step 3",
             ExecutionPhase = 20,
             SqlStatement = "select @param",
@@ -127,9 +124,8 @@ public class DatabaseFixture : IAsyncLifetime
         };
         step3.StepParameters = new List<SqlStepParameter> { step3Parameter };
 
-        var step4 = new SqlStep
+        var step4 = new SqlStep(job1.JobId)
         {
-            JobId = job1.JobId,
             StepName = "Test step 4",
             ExecutionPhase = 30,
             SqlStatement = "select @param",
@@ -185,9 +181,8 @@ public class DatabaseFixture : IAsyncLifetime
             Category = null
         };
 
-        var step5 = new JobStep
+        var step5 = new JobStep(job2.JobId)
         {
-            JobId = job2.JobId,
             StepName = "Test step 5",
             ExecutionPhase = 0,
             JobExecuteSynchronized = true,
@@ -196,9 +191,8 @@ public class DatabaseFixture : IAsyncLifetime
             Tags = new List<Tag>()
         };
 
-        var step6 = new JobStep
+        var step6 = new JobStep(job2.JobId)
         {
-            JobId = job2.JobId,
             StepName = "Test step 6",
             ExecutionPhase = 0,
             JobExecuteSynchronized = true,
@@ -207,10 +201,9 @@ public class DatabaseFixture : IAsyncLifetime
             Tags = new List<Tag>()
         };
 
-        var step7 = new SqlStep
+        var step7 = new SqlStep(job2.JobId)
         {
             IsEnabled = false,
-            JobId = job2.JobId,
             StepName = "Test step 7",
             ExecutionPhase = 30,
             SqlStatement = "select 1",
@@ -218,9 +211,8 @@ public class DatabaseFixture : IAsyncLifetime
             Tags = new List<Tag> { tag1 }
         };
 
-        var step8 = new SqlStep
+        var step8 = new SqlStep(job2.JobId)
         {
-            JobId = job2.JobId,
             StepName = "Test step 8",
             ExecutionPhase = 30,
             SqlStatement = "select 1",
