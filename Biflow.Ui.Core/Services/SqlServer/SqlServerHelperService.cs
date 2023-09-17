@@ -507,7 +507,8 @@ public class SqlServerHelperService
 
     public async Task<IEnumerable<DbObject>> GetDatabaseObjectsAsync(
         Guid connectionId,
-        string? searchTerm = null,
+        string? schemaNameSearchTerm = null,
+        string? objectNameSearchTerm = null,
         int? top = null,
         CancellationToken cancellationToken = default)
     {
@@ -515,7 +516,8 @@ public class SqlServerHelperService
         ArgumentNullException.ThrowIfNull(connectionString);
         using var sqlConnection = new SqlConnection(connectionString);
         var topTerm = top > 0 ? $"top {top}" : "";
-        var term = string.IsNullOrEmpty(searchTerm) ? null : $"%{searchTerm.EncodeForLike()}%";
+        var schema = string.IsNullOrEmpty(schemaNameSearchTerm) ? null : $"%{schemaNameSearchTerm.EncodeForLike()}%";
+        var name = string.IsNullOrEmpty(objectNameSearchTerm) ? null : $"%{objectNameSearchTerm.EncodeForLike()}%";
         var command = new CommandDefinition($"""
             select {topTerm}
                 [server_name] = @@servername,
@@ -526,12 +528,12 @@ public class SqlServerHelperService
             from sys.objects as a
                 join sys.schemas as b on a.schema_id = b.schema_id
             where a.[type] in ('U', 'V') and (
-                @term is null or
-                b.name like @term or
-                a.name like @term
-            )
+                    @schema is null or b.name like @schema
+                ) and (
+                    @name is null or a.name like @name
+                )
             order by b.name, a.name
-            """, new { term }, cancellationToken: cancellationToken);
+            """, new { schema, name }, cancellationToken: cancellationToken);
         var rows = await sqlConnection.QueryAsync<(string, string, string, string, string)>(command);
         return rows
             .Select(r => new DbObject(r.Item1, r.Item2, r.Item3, r.Item4, r.Item5))
