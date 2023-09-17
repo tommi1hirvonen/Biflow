@@ -120,8 +120,7 @@ public static partial class Extensions
         }
         else if (executorType == "SelfHosted")
         {
-            services.AddExecutorServices<ExecutorLauncher>(configuration.GetSection("Executor").GetSection("SelfHosted"));
-            services.AddSingleton<ExecutionManager>();
+            services.AddExecutorServices(configuration.GetSection("Executor").GetSection("SelfHosted"));
             services.AddSingleton<IExecutorService, SelfHostedExecutorService>();
         }
         else

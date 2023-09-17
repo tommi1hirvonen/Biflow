@@ -8,10 +8,10 @@ namespace Biflow.Ui.Core;
 
 public class ExecutionJob : ExecutionJobBase
 {
-    private readonly ExecutionManager _executionManager;
+    private readonly IExecutionManager _executionManager;
 
 
-    public ExecutionJob(ExecutionManager executionManager,
+    public ExecutionJob(IExecutionManager executionManager,
         ILogger<ExecutionJob> logger, IDbContextFactory<BiflowContext> dbContextFactory, IExecutionBuilderFactory executionBuilderFactory)
         : base(logger, dbContextFactory, executionBuilderFactory)
     {

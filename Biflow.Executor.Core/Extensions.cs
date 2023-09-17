@@ -6,6 +6,7 @@ using Biflow.Executor.Core.JobExecutor;
 using Biflow.Executor.Core.Notification;
 using Biflow.Executor.Core.Orchestrator;
 using Biflow.Executor.Core.StepExecutor;
+using Biflow.Executor.Core.WebExtensions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,6 +14,9 @@ namespace Biflow.Executor.Core;
 
 public static class Extensions
 {
+    public static void AddExecutorServices(this IServiceCollection services, IConfiguration executorConfiguration) =>
+        AddExecutorServices<ExecutorLauncher>(services, executorConfiguration);
+
     public static void AddExecutorServices<TExecutorLauncher>(
         this IServiceCollection services,
         IConfiguration executorConfiguration)
@@ -37,6 +41,7 @@ public static class Extensions
         services.AddSingleton<IEmailTest, EmailTest>();
         services.AddSingleton<IConnectionTest, ConnectionTest.ConnectionTest>();
         services.AddSingleton<IJobExecutorFactory, JobExecutorFactory>();
+        services.AddSingleton<IExecutionManager, ExecutionManager>();
         services.AddTransient<IExecutorLauncher, TExecutorLauncher>();
     }
 

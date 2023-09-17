@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.WebExtensions;
 
-public class ExecutionManager
+internal class ExecutionManager : IExecutionManager
 {
     private readonly ILogger<ExecutionManager> _logger;
     private readonly IJobExecutorFactory _jobExecutorFactory;

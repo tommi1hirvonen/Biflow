@@ -2,9 +2,9 @@
 
 public class ExecutorLauncher : IExecutorLauncher
 {
-    private readonly ExecutionManager _executionManager;
+    private readonly IExecutionManager _executionManager;
 
-    public ExecutorLauncher(ExecutionManager executionManager)
+    public ExecutorLauncher(IExecutionManager executionManager)
     {
         _executionManager = executionManager;
     }

@@ -4,9 +4,9 @@ namespace Biflow.Ui.Core;
 
 public class SelfHostedExecutorService : IExecutorService
 {
-    private readonly ExecutionManager _executionManager;
+    private readonly IExecutionManager _executionManager;
 
-    public SelfHostedExecutorService(ExecutionManager executionManager)
+    public SelfHostedExecutorService(IExecutionManager executionManager)
     {
         _executionManager = executionManager;
     }

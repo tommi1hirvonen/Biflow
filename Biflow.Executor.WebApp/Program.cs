@@ -21,8 +21,7 @@ if (builder.Configuration.GetSection("Serilog").Exists())
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddExecutorServices<ExecutorLauncher>(builder.Configuration);
-builder.Services.AddSingleton<ExecutionManager>();
+builder.Services.AddExecutorServices(builder.Configuration);
 
 var app = builder.Build();
 
@@ -34,25 +33,25 @@ if (app.Environment.IsDevelopment())
 }
 
 
-app.MapGet("/execution/start/{executionId}", async (Guid executionId, ExecutionManager executionManager) =>
+app.MapGet("/execution/start/{executionId}", async (Guid executionId, IExecutionManager executionManager) =>
 {
     await executionManager.StartExecutionAsync(executionId);
 }).WithName("StartExecution");
 
 
-app.MapGet("/execution/stop/{executionId}", (Guid executionId, string username, ExecutionManager executionManager) =>
+app.MapGet("/execution/stop/{executionId}", (Guid executionId, string username, IExecutionManager executionManager) =>
 {
     executionManager.CancelExecution(executionId, username);
 }).WithName("StopExecution");
 
 
-app.MapGet("/execution/stop/{executionId}/{stepId}", (Guid executionId, Guid stepId, string username, ExecutionManager executionManager) =>
+app.MapGet("/execution/stop/{executionId}/{stepId}", (Guid executionId, Guid stepId, string username, IExecutionManager executionManager) =>
 {
     executionManager.CancelExecution(executionId, username, stepId);
 }).WithName("StopExecutionStep");
 
 
-app.MapGet("/execution/status/{executionId}", (Guid executionId, ExecutionManager executionManager) =>
+app.MapGet("/execution/status/{executionId}", (Guid executionId, IExecutionManager executionManager) =>
 {
     return executionManager.IsExecutionRunning(executionId)
         ? Results.Ok()
