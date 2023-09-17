@@ -26,9 +26,11 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase, IDisposable
 
     private CancellationTokenSource Cts { get; set; } = new();
 
-    private Task<IEnumerable<DbObject>>? QueryTask { get; set; }
+    private bool Loading => QueryTask is not null;
 
-    private bool Loading { get; set; } = false;
+    private SemaphoreSlim Semaphore { get; } = new(1, 1);
+
+    private Task<IEnumerable<DbObject>>? QueryTask { get; set; }
 
     private async Task RunQueryAsync()
     {
@@ -36,11 +38,19 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase, IDisposable
         {
             return;
         }
+
+        // If another query task is alerady running, cancel it, wait for its completion and continue with a new query.
+        if (QueryTask is not null && !Cts.IsCancellationRequested)
+        {
+            Cts.Cancel();
+        }
+
         try
         {
-            Loading = true;
+            await Semaphore.WaitAsync();
             Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
             QueryTask = SqlServerHelper.GetDatabaseObjectsAsync(connectionId, SearchTerm, 20, Cts.Token);
+            StateHasChanged();
             DatabaseObjects = await QueryTask;
         }
         catch (OperationCanceledException)
@@ -54,7 +64,8 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase, IDisposable
         }
         finally
         {
-            Loading = false;
+            QueryTask = null;
+            Semaphore.Release();
         }
     }
 
