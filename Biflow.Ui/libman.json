@@ -11,13 +11,6 @@
       "destination": "wwwroot/lib/Chart.js/"
     },
     {
-      "library": "highlight.js@11.5.1",
-      "destination": "wwwroot/lib/highlight.js/",
-      "files": [
-        "highlight.min.js"
-      ]
-    },
-    {
       "library": "chartjs-adapter-moment@1.0.0",
       "destination": "wwwroot/lib/chartjs-adapter-moment/"
     },
