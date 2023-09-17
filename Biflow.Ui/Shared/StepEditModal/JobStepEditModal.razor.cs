@@ -73,7 +73,7 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
         return step;
     }
 
-    protected override void OnSubmit(JobStep step)
+    protected override Task OnSubmitAsync(JobStep step)
     {
         // Synchronize tags
         foreach (var text in TagFilters.Where(str => !step.TagFilters.Any(t => t.TagName == str)))
@@ -86,6 +86,7 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
         {
             step.TagFilters.Remove(tag);
         }
+        return Task.CompletedTask;
     }
 
     private void SetJobToExecute()

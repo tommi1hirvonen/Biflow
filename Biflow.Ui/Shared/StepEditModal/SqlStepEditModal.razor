@@ -1,5 +1,13 @@
 ﻿@inherits StepEditModal<SqlStep>
 
+<style>
+    @($"#{EditorId}") {
+        height: 100px;
+        resize: vertical;
+        overflow: hidden;
+    }
+</style>
+
 <StepEditModalTemplate Modal="this" TStep="SqlStep">
     @if (Step is not null)
     {
@@ -36,13 +44,14 @@
                 </HxButtonGroup>
             </div>
         </div>
-        <div class="row mt-2">
-            <label class="form-label">SQL statement</label>
-            <div class="input-group input-group-sm">
-                <div class="input-group-text">
-                    <CxIcon Icon="FeatherIcon.Code" />
-                </div>
-                <InputTextArea class="form-control form-control-sm" @bind-Value="Step.SqlStatement" style="font-family: monospace;" rows="3"></InputTextArea>
+        <div class="row mt-3">
+            <div class="col">
+                <label class="form-label">SQL statement</label>
+                <BlazorMonaco.Editor.StandaloneCodeEditor @ref="Editor"
+                                                          Id="@EditorId"
+                                                          ConstructionOptions="GetEditorOptions"
+                                                          OnDidChangeModelContent="OnDidChangeModelContent"
+                                                          CssClass="border" />
             </div>
         </div>
 
