@@ -138,7 +138,7 @@ app.MapGet("/schedules/synchronize", async (ISchedulesManager schedulesManager, 
         await schedulesManager.ReadAllSchedules(CancellationToken.None);
         statusTracker.DatabaseReadError = false;
     }
-    catch (Exception)
+    catch
     {
         statusTracker.DatabaseReadError = true;
         throw;
@@ -148,7 +148,9 @@ app.MapGet("/schedules/synchronize", async (ISchedulesManager schedulesManager, 
 
 app.MapGet("/status", (StatusTracker statusTracker) =>
 {
-    return statusTracker.DatabaseReadError ? "FAILURE" : "SUCCESS";
+    return statusTracker.DatabaseReadError
+        ? throw new ApplicationException("Scheduler is running but has encountered a database read error.")
+        : Results.Ok();
 }).WithName("Status");
 
 

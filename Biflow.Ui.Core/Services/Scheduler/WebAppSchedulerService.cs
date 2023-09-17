@@ -71,9 +71,7 @@ public class WebAppSchedulerService : ISchedulerService
         {
             var endpoint = $"{Url}/status";
             var response = await _httpClient.GetAsync(endpoint);
-            response.EnsureSuccessStatusCode();
-            var content = await response.Content.ReadAsStringAsync();
-            if (content == "SUCCESS")
+            if (response.IsSuccessStatusCode)
             {
                 return (true, false);
             }
@@ -82,7 +80,7 @@ public class WebAppSchedulerService : ISchedulerService
                 return (true, true);
             }
         }
-        catch (Exception)
+        catch
         {
             return (false, true);
         }
