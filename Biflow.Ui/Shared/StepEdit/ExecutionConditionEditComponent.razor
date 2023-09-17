@@ -1,27 +1,34 @@
-﻿@inject IHxMessengerService Messenger
+﻿@implements IDisposable
+
+@inject IHxMessengerService Messenger
+@inject ThemeService ThemeService
+
+<style>
+    @($"#{EditorId}") {
+        height: 100px;
+        resize: vertical;
+        overflow: hidden;
+    }
+</style>
 
 @if (Step is not null)
 {
     <div class="row mt-1">
-        <label class="form-label">
-            Execution condition expression
-            &nbsp;
-            <span style="cursor: pointer;" @onclick="async () => await HelpOffcanvas.LetAsync(x => x.ShowAsync())">
-                <CxIcon Icon="FeatherIcon.HelpCircle" />
-            </span>
-        </label>
-        <div class="input-group input-group-sm">
-            <div class="input-group-text">
-                <CxIcon Icon="FeatherIcon.CheckSquare" />
-            </div>
-            <InputTextArea class="form-control form-control-sm"
-                           @bind-Value="Step.ExecutionConditionExpression.Expression"
-                           @bind-Value:after="() => OnExecutionConditionChanged.InvokeAsync()"
-                           style="font-family: monospace;"
-                           rows="3">
-            </InputTextArea>
+        <div class="col">
+            <label class="form-label">
+                Execution condition expression
+                &nbsp;
+                <span style="cursor: pointer;" @onclick="async () => await HelpOffcanvas.LetAsync(x => x.ShowAsync())">
+                    <CxIcon Icon="FeatherIcon.HelpCircle" />
+                </span>
+            </label>
+            <BlazorMonaco.Editor.StandaloneCodeEditor @ref="Editor"
+                                                      Id="@EditorId"
+                                                      ConstructionOptions="GetEditorOptions"
+                                                      OnDidChangeModelContent="OnDidChangeModelContent"
+                                                      CssClass="border" />
+            <div class="form-text">Blank = no execution condition. The return type of the expression should always be boolean (True/False).</div>
         </div>
-        <div class="form-text">Blank = no execution condition. The return type of the expression should always be boolean (True/False).</div>
     </div>
     <div class="row mt-3">
         <div class="col">
@@ -55,8 +62,7 @@
                     <td>
                         <InputText class="form-control form-control-sm"
                                    @bind-Value="param.ParameterName"
-                                   placeholder="Name"
-                                   @bind-Value:after="() => StepValidator.LetAsync(x => x.ValidateAsync())" />
+                                   placeholder="Name" />
                     </td>
                     <td class="align-middle">
                         <div class="form-check">
@@ -89,7 +95,7 @@
                             <HxButton Color="ThemeColor.None"
                                       Size="ButtonSize.Small"
                                       CssClass="btn-auto"
-                                      @onclick="async () => { Step.ExecutionConditionParameters.Remove(param); await StepValidator.LetAsync(x => x.ValidateAsync()); }">
+                                      @onclick="() => Step.ExecutionConditionParameters.Remove(param)">
                                 <CxIcon Icon="FeatherIcon.Delete" />
                             </HxButton>
                         </HxButtonGroup>
@@ -122,13 +128,20 @@
 </HxOffcanvas>
 
 @code {
-    [CascadingParameter(Name = "StepValidator")] FluentValidationValidator? StepValidator { get; set; }
-
     [Parameter] public Step? Step { get; set; }
 
     [Parameter] public EventCallback OnExecutionConditionChanged {get;set;}
 
     private HxOffcanvas? HelpOffcanvas { get; set; }
+
+    private BlazorMonaco.Editor.StandaloneCodeEditor? Editor { get; set; }
+
+    private readonly string EditorId = $"_{Guid.NewGuid().ToString()}";
+
+    protected override void OnInitialized()
+    {
+        ThemeService.OnThemeChanged += OnThemeChanged;
+    }
 
     private void SetJobParameter(bool inheritFromJob, ExecutionConditionParameter param)
     {
@@ -174,5 +187,39 @@
         {
             Messenger.AddError(ex.Message);
         }
+    }
+
+    private BlazorMonaco.Editor.StandaloneEditorConstructionOptions GetEditorOptions(BlazorMonaco.Editor.StandaloneCodeEditor editor) =>
+        new()
+        {
+            AutomaticLayout = true,
+            Language = "csharp",
+            Value = Step?.ExecutionConditionExpression.Expression ?? "",
+            Minimap = new BlazorMonaco.Editor.EditorMinimapOptions { Enabled = false },
+            Theme = ThemeService.CurrentTheme == Theme.Dark ? "vs-dark" : "vs"
+        };
+
+    private async Task OnDidChangeModelContent(BlazorMonaco.Editor.ModelContentChangedEvent e)
+    {
+        ArgumentNullException.ThrowIfNull(Editor);
+        ArgumentNullException.ThrowIfNull(Step);
+        var model = await Editor.GetModel();
+        var value = await model.GetValue(BlazorMonaco.Editor.EndOfLinePreference.TextDefined, false);
+        Step.ExecutionConditionExpression.Expression = value;
+        await OnExecutionConditionChanged.InvokeAsync();
+    }
+
+    private void OnThemeChanged(Theme theme, bool isAuto)
+    {
+        var options = new BlazorMonaco.Editor.EditorUpdateOptions
+        {
+            Theme = theme == Theme.Dark ? "vs-dark" : "vs"
+        };
+        Editor?.UpdateOptions(options);
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnThemeChanged -= OnThemeChanged;
     }
 }
