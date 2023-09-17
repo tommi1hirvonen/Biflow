@@ -14,36 +14,16 @@ internal class EmailTest : IEmailTest
 
     public async Task RunAsync(string toAddress)
     {
-        SmtpClient client;
-        try
+        var client = _options.Value.Client;
+        ArgumentException.ThrowIfNullOrEmpty(_options.Value.FromAddress);
+        var mailMessage = new MailMessage
         {
-            client = _options.Value.Client;
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error building email SMTP client. Check appsettings.json.\n{ex.Message}");
-            return;
-        }
-
-        MailMessage mailMessage;
-        try
-        {
-            ArgumentException.ThrowIfNullOrEmpty(_options.Value.FromAddress);
-            mailMessage = new MailMessage
-            {
-                From = new MailAddress(_options.Value.FromAddress),
-                Subject = "Biflow Test Mail",
-                IsBodyHtml = true,
-                Body = "This is a test email sent from Biflow."
-            };
-            mailMessage.To.Add(toAddress);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error building message object. Check appsettings.json.\n{ex.Message}");
-            return;
-        }
-
+            From = new MailAddress(_options.Value.FromAddress),
+            Subject = "Biflow Test Mail",
+            IsBodyHtml = true,
+            Body = "This is a test email sent from Biflow."
+        };
+        mailMessage.To.Add(toAddress);
         await client.SendMailAsync(mailMessage);
     }
 }

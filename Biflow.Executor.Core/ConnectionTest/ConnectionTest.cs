@@ -13,15 +13,8 @@ internal class ConnectionTest : IConnectionTest
 
     public async Task RunAsync()
     {
-        try
-        {
-            using var connection = _sqlConnectionFactory.Create();
-            await connection.OpenAsync();
-            Console.WriteLine("Connection test succeeded.");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Connection test failed.\n{ex.Message}");
-        }
+
+        using var connection = _sqlConnectionFactory.Create();
+        await connection.OpenAsync();
     }
 }
