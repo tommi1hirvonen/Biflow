@@ -96,6 +96,14 @@ $navbar-gradient: #8F75DA;
     }
 }
 
+// Highlighted text
+[data-bs-theme="dark"] {
+    mark {
+        color: #dee2e6;
+        background-color: #664d03;
+    }
+}
+
 // Buttons
 .btn-primary, .btn-success, .btn-danger {
     --bs-btn-color: var(--bs-white);

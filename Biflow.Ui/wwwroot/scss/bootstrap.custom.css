@@ -11980,6 +11980,11 @@ textarea.form-control-lg {
   color: #495057;
 }
 
+[data-bs-theme=dark] mark, [data-bs-theme=dark] .mark {
+  color: #dee2e6;
+  background-color: #664d03;
+}
+
 .btn-primary, .btn-success, .btn-danger {
   --bs-btn-color: var(--bs-white);
   --bs-btn-hover-color: var(--bs-white);
