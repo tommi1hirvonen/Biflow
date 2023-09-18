@@ -10,19 +10,20 @@
             // Get the scheduler service status and notify the user of a possible error.
             try
             {
-                (var running, var error) = await SchedulerService.GetStatusAsync();
-                if (!running)
+                var status = await SchedulerService.GetStatusAsync();
+                var message = status.Match(
+                    (Success success) => null as string,
+                    (AuthorizationError error1) => "Authorization failed when getting scheduler service status. Check the scheduler service auth configuration.",
+                    (SchedulerError error2) => "Scheduler service reported internal error. Check the scheduler service log for details.",
+                    (UndefinedError error3) => "Undefined error getting scheduler service status. Make sure the service is configured and running correctly.");
+                if (message is not null)
                 {
-                    await OnStatusMessageResolved.InvokeAsync("Scheduler service not detected. Make sure the service is installed and running correctly.");
-                }
-                else if (error)
-                {
-                    await OnStatusMessageResolved.InvokeAsync("Scheduler service failed reading schedules from the database");
+                    await OnStatusMessageResolved.InvokeAsync(message);
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                await OnStatusMessageResolved.InvokeAsync($"Error getting scheduler service status: {ex.Message}");
+                await OnStatusMessageResolved.InvokeAsync($"Error getting scheduler service status. Make sure the service is configured and running correctly.");
             }
         }
     }

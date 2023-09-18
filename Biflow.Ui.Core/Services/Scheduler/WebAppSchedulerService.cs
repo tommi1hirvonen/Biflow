@@ -1,6 +1,7 @@
 ﻿using Biflow.DataAccess.Models;
 using Biflow.Scheduler.Core;
 using Microsoft.Extensions.Configuration;
+using Microsoft.PowerBI.Api.Models;
 using System.Text;
 using System.Text.Json;
 
@@ -24,8 +25,11 @@ public class WebAppSchedulerService : ISchedulerService
 
     public async Task DeleteJobAsync(Job job)
     {
-        (var running, var _) = await GetStatusAsync();
-        if (!running) return;
+        var status = await GetStatusAsync();
+        if (!status.TryPickT0(out Success _, out var _))
+        {
+            return;
+        }
 
         var endpoint = $"{Url}/jobs/remove";
         var schedulerJob = new SchedulerJob(job.JobId);
@@ -37,8 +41,11 @@ public class WebAppSchedulerService : ISchedulerService
 
     public async Task AddScheduleAsync(Schedule schedule)
     {
-        (var running, var _) = await GetStatusAsync();
-        if (!running) return;
+        var status = await GetStatusAsync();
+        if (!status.TryPickT0(out Success _, out var _))
+        {
+            return;
+        }
 
         var endpoint = $"{Url}/schedules/add";
         ArgumentNullException.ThrowIfNull(schedule.CronExpression);
@@ -52,8 +59,11 @@ public class WebAppSchedulerService : ISchedulerService
 
     public async Task RemoveScheduleAsync(Schedule schedule)
     {
-        (var running, var _) = await GetStatusAsync();
-        if (!running) return;
+        var status = await GetStatusAsync();
+        if (!status.TryPickT0(out Success _, out var _))
+        {
+            return;
+        }
 
         var endpoint = $"{Url}/schedules/remove";
         ArgumentNullException.ThrowIfNull(schedule.CronExpression);
@@ -65,25 +75,23 @@ public class WebAppSchedulerService : ISchedulerService
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<(bool SchedulerDetected, bool SchedulerError)> GetStatusAsync()
+    public async Task<SchedulerStatusResponse> GetStatusAsync()
     {
-        try
+        var endpoint = $"{Url}/status";
+        var response = await _httpClient.GetAsync(endpoint);
+        if (response.IsSuccessStatusCode)
         {
-            var endpoint = $"{Url}/status";
-            var response = await _httpClient.GetAsync(endpoint);
-            if (response.IsSuccessStatusCode)
-            {
-                return (true, false);
-            }
-            else
-            {
-                return (true, true);
-            }
+            return new Success();
         }
-        catch
+        else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
         {
-            return (false, true);
+            return new AuthorizationError();
         }
+        else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
+        {
+            return new SchedulerError();
+        }
+        return new UndefinedError();
     }
 
     public async Task SynchronizeAsync()
@@ -95,8 +103,11 @@ public class WebAppSchedulerService : ISchedulerService
 
     public async Task ToggleScheduleEnabledAsync(Schedule schedule, bool enabled)
     {
-        (var running, var _) = await GetStatusAsync();
-        if (!running) return;
+        var status = await GetStatusAsync();
+        if (!status.TryPickT0(out Success _, out var _))
+        {
+            return;
+        }
 
         ArgumentNullException.ThrowIfNull(schedule.CronExpression);
         ArgumentNullException.ThrowIfNull(schedule.JobId);
