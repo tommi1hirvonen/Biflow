@@ -399,6 +399,9 @@ public class BiflowContext : DbContext
             e.Property(t => t.HiddenColumns).HasConversion(
                 from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
                 to => JsonSerializer.Deserialize<List<string>>(string.IsNullOrEmpty(to) ? "[]" : to, null as JsonSerializerOptions) ?? new());
+            e.Property(t => t.ColumnOrder).HasConversion(
+                from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
+                to => JsonSerializer.Deserialize<List<string>>(to, null as JsonSerializerOptions) ?? new());
 
             e.HasMany(t => t.Users)
             .WithMany(u => u.DataTables)

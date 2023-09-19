@@ -21,258 +21,317 @@
         {
             <EditForm id="table_edit_form" Model="EditTable" OnValidSubmit="SubmitEditTableAsync">
                 <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
-                <div class="row my-3">
-                    <div class="col">
-                        <ObjectGraphDataAnnotationsValidator />
-                        <ValidationSummary />
-                        <FluentValidationValidator Validator="DataTableValidator" />
-                        <div class="row">
-                            <div class="col">
-                                <div class="row">
-                                    <div class="col">
-                                        <label class="form-label">Data table name</label>
-                                        <InputText form="" class="form-control form-control-sm" autocomplete="off" @bind-Value="EditTable.DataTableName" />
+                <div class="row">
+                     <div class="col">
+                         <ul class="nav nav-tabs mb-3">
+                             <li class="nav-item">
+                                 <span class="nav-link @(CurrentView == TableEditView.Settings ? "active" : null)"
+                                 @onclick="() => CurrentView = TableEditView.Settings">
+                                     Settings
+                                 </span>
+                             </li>
+                             <li class="nav-item">
+                                 <span class="nav-link @(CurrentView == TableEditView.ColumnOrder ? "active" : null)"
+                                 @onclick="() => CurrentView = TableEditView.ColumnOrder">
+                                     Column Order
+                                 </span>
+                             </li>
+                             <li class="nav-item">
+                                 <span class="nav-link @(CurrentView == TableEditView.Lookups ? "active" : null)"
+                                 @onclick="() => CurrentView = TableEditView.Lookups">
+                                     Lookup Columns
+                                 </span>
+                             </li>
+                         </ul>
+                         <ObjectGraphDataAnnotationsValidator />
+                         <ValidationSummary />
+                         <FluentValidationValidator Validator="DataTableValidator" />
+                     </div>
+                </div>
+                 @if (CurrentView == TableEditView.Settings)
+                {
+                    <div class="row">
+                        <div class="col">
+                            <div class="row">
+                                <div class="col">
+                                    <div class="row">
+                                        <div class="col">
+                                            <label class="form-label">Data table name</label>
+                                            <InputText form="" class="form-control form-control-sm" autocomplete="off" @bind-Value="EditTable.DataTableName" />
+                                        </div>
+                                        <div class="col">
+                                            <label class="form-label">Category</label>
+                                            <InputSelect class="form-select form-select-sm" @bind-Value="EditTable.CategoryId">
+                                                <option value="">No category</option>
+                                                @foreach (var cat in Categories)
+                                                {
+                                                    <option value="@cat.CategoryId">@cat.CategoryName</option>
+                                                }
+                                            </InputSelect>
+                                        </div>
                                     </div>
-                                    <div class="col">
-                                        <label class="form-label">Category</label>
-                                        <InputSelect class="form-select form-select-sm" @bind-Value="EditTable.CategoryId">
-                                            <option value="">No category</option>
-                                            @foreach (var cat in Categories)
-                                            {
-                                                <option value="@cat.CategoryId">@cat.CategoryName</option>
-                                            }
-                                        </InputSelect>
+                                    <div class="row mt-3 align-items-end">
+                                        <div class="col">
+                                            <label class="form-label">Connection</label>
+                                            <select class="form-select form-select-sm" @onchange="ConnectionChanged">
+                                                @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
+                                                {
+                                                    <option value="@connection.ConnectionId"
+                                                            selected="@(connection.ConnectionId == EditTable.Connection.ConnectionId)">
+                                                        @connection.ConnectionName
+                                                    </option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="col-auto">
+                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
+                                                      OnClick="async () => await Offcanvas.LetAsync(x => x.ShowAsync(EditTable.Connection.ConnectionId))">
+                                                <CxIcon Icon="FeatherIcon.MoreHorizontal" />
+                                                Select table
+                                            </HxButton>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col">
+                                            <label class="form-label">Target schema and table</label>
+                                            <div class="input-group input-group-sm">
+                                                <InputText class="form-control form-control-sm" disabled placeholder="Schema" autocomplete="off" @bind-Value="EditTable.TargetSchemaName" />
+                                                <InputText class="form-control form-control-sm" disabled placeholder="Table" autocomplete="off" @bind-Value="EditTable.TargetTableName" />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="row mt-3 align-items-end">
-                                    <div class="col">
-                                        <label class="form-label">Connection</label>
-                                        <select class="form-select form-select-sm" @onchange="ConnectionChanged">
-                                            @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
-                                            {
-                                                <option value="@connection.ConnectionId"
-                                                        selected="@(connection.ConnectionId == EditTable.Connection.ConnectionId)">
-                                                    @connection.ConnectionName
-                                                </option>
-                                            }
-                                        </select>
-                                    </div>
-                                    <div class="col-auto">
-                                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                              OnClick="async () => await Offcanvas.LetAsync(x => x.ShowAsync(EditTable.Connection.ConnectionId))">
-                                            <CxIcon Icon="FeatherIcon.MoreHorizontal" />
-                                            Select table
-                                        </HxButton>
-                                    </div>
-                                </div>
-                                <div class="row mt-3">
-                                    <div class="col">
-                                        <label class="form-label">Target schema and table</label>
-                                        <div class="input-group input-group-sm">
-                                            <InputText class="form-control form-control-sm" disabled placeholder="Schema" autocomplete="off" @bind-Value="EditTable.TargetSchemaName" />
-                                            <InputText class="form-control form-control-sm" disabled placeholder="Table" autocomplete="off" @bind-Value="EditTable.TargetTableName" />
+                                <div class="col-md">
+                                    <div class="row">
+                                        <div class="col">
+                                            <label class="form-label">Description</label>
+                                            <InputTextArea class="form-control form-control-sm" rows="8" @bind-Value="EditTable.DataTableDescription" />
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md">
-                                <div class="row">
-                                    <div class="col">
-                                        <label class="form-label">Description</label>
-                                        <InputTextArea class="form-control form-control-sm" rows="8" @bind-Value="EditTable.DataTableDescription" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <div class="row">
+                                <div class="col">
+                                    <div class="form-check form-check-inline">
+                                        <input type="checkbox" class="form-check-input" id="allow_insert"
+                                               checked=@EditTable.AllowInsert
+                                        @bind-value="EditTable.AllowInsert">
+                                        <label class="form-check-label" for="allow_insert">Allow insert</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input type="checkbox" class="form-check-input" id="allow_delete"
+                                               checked=@EditTable.AllowDelete
+                                        @bind-value="EditTable.AllowDelete">
+                                        <label class="form-check-label" for="allow_delete">Allow delete</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input type="checkbox" class="form-check-input" id="allow_update"
+                                               checked=@EditTable.AllowUpdate
+                                        @bind-value="EditTable.AllowUpdate">
+                                        <label class="form-check-label" for="allow_update">Allow update</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col">
+                                    <div class="form-check form-check-inline">
+                                        <input type="checkbox" class="form-check-input" id="allow_import"
+                                               checked=@EditTable.AllowImport
+                                        @bind-value="EditTable.AllowImport">
+                                        <label class="form-check-label" for="allow_import">Allow import</label>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col">
-                        <div class="row">
-                            <div class="col">
-                                <div class="form-check form-check-inline">
-                                    <input type="checkbox" class="form-check-input" id="allow_insert"
-                                           checked=@EditTable.AllowInsert
-                                    @bind-value="EditTable.AllowInsert">
-                                    <label class="form-check-label" for="allow_insert">Allow insert</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input type="checkbox" class="form-check-input" id="allow_delete"
-                                           checked=@EditTable.AllowDelete
-                                    @bind-value="EditTable.AllowDelete">
-                                    <label class="form-check-label" for="allow_delete">Allow delete</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input type="checkbox" class="form-check-input" id="allow_update"
-                                           checked=@EditTable.AllowUpdate
-                                    @bind-value="EditTable.AllowUpdate">
-                                    <label class="form-check-label" for="allow_update">Allow update</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row mt-1">
-                            <div class="col">
-                                <div class="form-check form-check-inline">
-                                    <input type="checkbox" class="form-check-input" id="allow_import"
-                                           checked=@EditTable.AllowImport
-                                    @bind-value="EditTable.AllowImport">
-                                    <label class="form-check-label" for="allow_import">Allow import</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="row">
-                            <div class="col">
-                                <label class="form-label">
-                                    Locked columns
-                                    <HxPopover Trigger="PopoverTrigger.Hover" Content="Define a list of locked columns to prevent editing. If the table has a column with a matching name, the column's edit fields will be disabled.">
-                                        <CxIcon Icon="FeatherIcon.Info" />
-                                    </HxPopover>
-                                </label>
-                                <HxInputTags Delimiters="new()"
-                                             InputSize="InputSize.Small"
-                                             SuggestDelay="0"
-                                             SuggestMinimumLength="0"
-                                             TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
-                                             DataProvider="GetLockedColumnSuggestions"
-                                             @bind-Value="EditTable.LockedColumns" />
-                            </div>
-                        </div>
-                        <div class="row mt-1">
-                            <div class="col">
-                                <div class="form-check form-check-inline">
-                                    <input type="checkbox" class="form-check-input" id="locked_columns_exclude"
-                                           checked=@EditTable.LockedColumnsExcludeMode
-                                           @bind-value="EditTable.LockedColumnsExcludeMode">
-                                    <label class="form-check-label" for="locked_columns_exclude">
-                                        Exclude mode
-                                        <HxPopover Trigger="PopoverTrigger.Hover" Content="When enabled, columns not listed will be locked.">
+                        <div class="col">
+                            <div class="row">
+                                <div class="col">
+                                    <label class="form-label">
+                                        Locked columns
+                                        <HxPopover Trigger="PopoverTrigger.Hover" Content="Define a list of locked columns to prevent editing. If the table has a column with a matching name, the column's edit fields will be disabled.">
                                             <CxIcon Icon="FeatherIcon.Info" />
                                         </HxPopover>
                                     </label>
+                                    <HxInputTags Delimiters="new()"
+                                                 InputSize="InputSize.Small"
+                                                 SuggestDelay="0"
+                                                 SuggestMinimumLength="0"
+                                                 TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
+                                                 DataProvider="GetLockedColumnSuggestions"
+                                    @bind-Value="EditTable.LockedColumns" />
+                                </div>
+                            </div>
+                            <div class="row mt-1">
+                                <div class="col">
+                                    <div class="form-check form-check-inline">
+                                        <input type="checkbox" class="form-check-input" id="locked_columns_exclude"
+                                               checked=@EditTable.LockedColumnsExcludeMode
+                                        @bind-value="EditTable.LockedColumnsExcludeMode">
+                                        <label class="form-check-label" for="locked_columns_exclude">
+                                            Exclude mode
+                                            <HxPopover Trigger="PopoverTrigger.Hover" Content="When enabled, columns not listed will be locked.">
+                                                <CxIcon Icon="FeatherIcon.Info" />
+                                            </HxPopover>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col">
+                                    <label class="form-label">
+                                        Hidden columns
+                                        <HxPopover Trigger="PopoverTrigger.Hover" Content="Define a list of hidden columns. If a hidden column is part of the primary key and 'allow import' is enabled, the column will be included in Excel exports.">
+                                            <CxIcon Icon="FeatherIcon.Info" />
+                                        </HxPopover>
+                                    </label>
+                                    <HxInputTags Delimiters="new()"
+                                                 InputSize="InputSize.Small"
+                                                 SuggestDelay="0"
+                                                 SuggestMinimumLength="0"
+                                                 TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
+                                                 DataProvider="GetHiddenColumnSuggestions"
+                                    @bind-Value="EditTable.HiddenColumns" />
                                 </div>
                             </div>
                         </div>
-                        <div class="row mt-3">
-                            <div class="col">
-                                <label class="form-label">
-                                    Hidden columns
-                                    <HxPopover Trigger="PopoverTrigger.Hover" Content="Define a list of hidden columns. If a hidden column is part of the primary key and 'allow import' is enabled, the column will be included in Excel exports.">
-                                        <CxIcon Icon="FeatherIcon.Info" />
-                                    </HxPopover>
-                                </label>
-                                <HxInputTags Delimiters="new()"
-                                             InputSize="InputSize.Small"
-                                             SuggestDelay="0"
-                                             SuggestMinimumLength="0"
-                                             TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
-                                             DataProvider="GetHiddenColumnSuggestions"
-                                             @bind-Value="EditTable.HiddenColumns" />
-                            </div>
+                    </div>
+                }
+                else if (CurrentView == TableEditView.ColumnOrder)
+                {
+                    <div class="row">
+                        <div class="col-auto mx-4">
+                            <HxButtonGroup Orientation="ButtonGroupOrientation.Vertical">
+                                <HxButton Color="ThemeColor.None" CssClass="btn-auto" OnClick="PromoteSelectedColumn">
+                                    <CxIcon Icon="FeatherIcon.ChevronUp" />
+                                    Promote
+                                </HxButton>
+                                <HxButton Color="ThemeColor.None" CssClass="btn-auto" OnClick="DemoteSelectedColumn">
+                                    <CxIcon Icon="FeatherIcon.ChevronDown" />
+                                    Demote
+                                </HxButton>
+                            </HxButtonGroup>
+                        </div>
+                        <div class="col-auto">
+                            <ul class="list-group list-group-numbered">
+                                @foreach (var column in EditTable?.ColumnOrder ?? Enumerable.Empty<string>())
+                                {
+                                    <li class="list-group-item list-group-item-action @(column == ColumnOrderSelected ? "active" : null)"
+                                        style="cursor: pointer;"
+                                        @onclick="() => ColumnOrderSelected = ColumnOrderSelected != column ? column : string.Empty">
+                                        @column
+                                    </li>
+                                }
+                            </ul>
                         </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col">
-                        <button type="button" class="btn btn-sm btn-auto @(string.IsNullOrEmpty(EditTable.TargetSchemaName) || string.IsNullOrEmpty(EditTable.TargetTableName) ? "disabled" : null)"
-                                @onclick="() => EditTable.Lookups.Add(new())">
-                            <CxIcon Icon="FeatherIcon.Search" />
-                            Add lookup
-                        </button>
+                }
+                else if (CurrentView == TableEditView.Lookups)
+                {
+                    <div class="row">
+                        <div class="col">
+                            <button type="button" class="btn btn-sm btn-auto @(string.IsNullOrEmpty(EditTable.TargetSchemaName) || string.IsNullOrEmpty(EditTable.TargetTableName) ? "disabled" : null)"
+                            @onclick="() => EditTable.Lookups.Add(new())">
+                                <CxIcon Icon="FeatherIcon.Search" />
+                                Add lookup
+                            </button>
+                        </div>
                     </div>
-                </div>
-                <table class="table table-sm">
-                    <thead>
-                        <tr>
-                            <th>Column</th>
-                            <th>Lookup table</th>
-                            <th>Lookup value</th>
-                            <th>Lookup description</th>
-                            <th>Show</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (!EditTable.Lookups.Any())
-                        {
+                    <table class="table table-sm mb-5">
+                        <thead>
                             <tr>
-                                <td colspan="6">No lookups</td>
+                                <th>Column</th>
+                                <th>Lookup table</th>
+                                <th>Lookup value</th>
+                                <th>Lookup description</th>
+                                <th>Show</th>
+                                <th></th>
                             </tr>
-                        }
-                        else
-                        {
-                            foreach (var lookup in EditTable.Lookups)
+                        </thead>
+                        <tbody>
+                            @if (!EditTable.Lookups.Any())
                             {
                                 <tr>
-                                    <td>
-                                        <HxAutosuggest TItem="string"
-                                           TValue="string"
-                                           DataProvider="GetColumnSuggestions"
-                                           @bind-Value="lookup.ColumnName"
-                                           MinimumLength="0"
-                                           ValidationMessageMode="ValidationMessageMode.None"
-                                           InputSize="InputSize.Small" />
-                                    </td>
-                                    <td>
-                                        <HxAutosuggest CssClass="@(string.IsNullOrEmpty(lookup.ColumnName) ? "d-none" : null)"
-                                           TItem="MasterDataTable"
-                                           TValue="MasterDataTable"
-                                           DataProvider="GetLookupTableSuggestions"
-                                           ValueChanged="table => SetLookupTable(table, lookup)"
-                                           Value="lookup.LookupTable"
-                                           ValueExpression="() => lookup.LookupTable"
-                                           TextSelector="table => table.DataTableName"
-                                           MinimumLength="0"
-                                           ValidationMessageMode="ValidationMessageMode.None"
-                                           InputSize="InputSize.Small">
-                                           <ItemTemplate Context="item">
-                                                <sup>@item.Category?.CategoryName</sup><small>@item.DataTableName</small>
-                                           </ItemTemplate>
-                                       </HxAutosuggest>
-                                    </td>
-                                    <td>
-                                        <HxAutosuggest CssClass="@(string.IsNullOrEmpty(lookup.ColumnName) || lookup.LookupTableId == Guid.Empty ? "d-none" : null)"
-                                           TItem="string"
-                                           TValue="string"
-                                           DataProvider="request => GetLookupColumnSuggestions(request, lookup)"
-                                           @bind-Value="lookup.LookupValueColumn"
-                                           MinimumLength="0"
-                                           ValidationMessageMode="ValidationMessageMode.None"
-                                           InputSize="InputSize.Small" />
-                                    </td>
-                                    <td>
-                                        <HxAutosuggest CssClass="@(string.IsNullOrEmpty(lookup.ColumnName) || lookup.LookupTableId == Guid.Empty ? "d-none" : null)"
-                                            TItem="string"
-                                            TValue="string"
-                                            DataProvider="request => GetLookupColumnSuggestions(request, lookup)"
-                                            @bind-Value="lookup.LookupDescriptionColumn"
-                                            MinimumLength="0"
-                                            ValidationMessageMode="ValidationMessageMode.None"
-                                            InputSize="InputSize.Small" />
-                                    </td>
-                                    <td>
-                                        @if (!string.IsNullOrEmpty(lookup.ColumnName) && lookup.LookupTableId != Guid.Empty)
-                                        {
-                                            <select @bind="lookup.LookupDisplayType" class="form-select form-select-sm">
-                                                @foreach (var type in Enum.GetValues<LookupDisplayType>())
-                                                {
-                                                    <option>@type</option>
-                                                }
-                                            </select>
-                                        }
-                                    </td>
-                                    <td>
-                                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" title="Delete lookup"
-                                                OnClick="() => { EditTable.Lookups.Remove(lookup); StateHasChanged(); }">
-                                            <CxIcon Icon="FeatherIcon.Delete" />
-                                        </HxButton>
-                                    </td>
+                                    <td colspan="6">No lookups</td>
                                 </tr>
                             }
-                        }
-                    </tbody>
-                </table>
+                            else
+                            {
+                                foreach (var lookup in EditTable.Lookups)
+                                {
+                                    <tr>
+                                        <td>
+                                            <HxAutosuggest TItem="string"
+                                                           TValue="string"
+                                                           DataProvider="GetColumnSuggestions"
+                                            @bind-Value="lookup.ColumnName"
+                                                           MinimumLength="0"
+                                                           ValidationMessageMode="ValidationMessageMode.None"
+                                                           InputSize="InputSize.Small" />
+                                        </td>
+                                        <td>
+                                            <HxAutosuggest CssClass="@(string.IsNullOrEmpty(lookup.ColumnName) ? "d-none" : null)"
+                                                           TItem="MasterDataTable"
+                                                           TValue="MasterDataTable"
+                                                           DataProvider="GetLookupTableSuggestions"
+                                                           ValueChanged="table => SetLookupTable(table, lookup)"
+                                                           Value="lookup.LookupTable"
+                                                           ValueExpression="() => lookup.LookupTable"
+                                                           TextSelector="table => table.DataTableName"
+                                                           MinimumLength="0"
+                                                           ValidationMessageMode="ValidationMessageMode.None"
+                                                           InputSize="InputSize.Small">
+                                                <ItemTemplate Context="item">
+                                                    <sup>@item.Category?.CategoryName</sup><small>@item.DataTableName</small>
+                                                </ItemTemplate>
+                                            </HxAutosuggest>
+                                        </td>
+                                        <td>
+                                            <HxAutosuggest CssClass="@(string.IsNullOrEmpty(lookup.ColumnName) || lookup.LookupTableId == Guid.Empty ? "d-none" : null)"
+                                                           TItem="string"
+                                                           TValue="string"
+                                                           DataProvider="request => GetLookupColumnSuggestions(request, lookup)"
+                                            @bind-Value="lookup.LookupValueColumn"
+                                                           MinimumLength="0"
+                                                           ValidationMessageMode="ValidationMessageMode.None"
+                                                           InputSize="InputSize.Small" />
+                                        </td>
+                                        <td>
+                                            <HxAutosuggest CssClass="@(string.IsNullOrEmpty(lookup.ColumnName) || lookup.LookupTableId == Guid.Empty ? "d-none" : null)"
+                                                           TItem="string"
+                                                           TValue="string"
+                                                           DataProvider="request => GetLookupColumnSuggestions(request, lookup)"
+                                            @bind-Value="lookup.LookupDescriptionColumn"
+                                                           MinimumLength="0"
+                                                           ValidationMessageMode="ValidationMessageMode.None"
+                                                           InputSize="InputSize.Small" />
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(lookup.ColumnName) && lookup.LookupTableId != Guid.Empty)
+                                            {
+                                                <select @bind="lookup.LookupDisplayType" class="form-select form-select-sm">
+                                                    @foreach (var type in Enum.GetValues<LookupDisplayType>())
+                                                    {
+                                                        <option>@type</option>
+                                                    }
+                                                </select>
+                                            }
+                                        </td>
+                                        <td>
+                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" title="Delete lookup"
+                                                      OnClick="() => { EditTable.Lookups.Remove(lookup); StateHasChanged(); }">
+                                                <CxIcon Icon="FeatherIcon.Delete" />
+                                            </HxButton>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                }
             </EditForm>
 
             <DatabaseTableSelectOffcanvas @ref="Offcanvas" OnTableSelected="OnTableSelected" />
@@ -310,14 +369,22 @@
 
     private MasterDataTable? EditTable { get; set; }
 
+    private TableEditView CurrentView { get; set; } = TableEditView.Settings;
+
     private IEnumerable<MasterDataTable>? Tables { get; set; }
     private IEnumerable<SqlConnectionInfo>? Connections { get; set; }
     private IEnumerable<MasterDataTableCategory>? Categories { get; set; }
     private IEnumerable<string>? Columns { get; set; }
     private ConditionalWeakTable<MasterDataTableLookup, IEnumerable<string>> LookupColumns = new();
 
+    private string ColumnOrderSelected { get; set; } = "";
+
+    private enum TableEditView { Settings, ColumnOrder, Lookups }
+
     public async Task SetEditContextAsync(MasterDataTable? table = null)
     {
+        CurrentView = TableEditView.Settings;
+        ColumnOrderSelected = "";
         await Modal.LetAsync(x => x.ShowAsync());
         EditContext?.Dispose();
         EditContext = DbContextFactory.CreateDbContext();
@@ -351,6 +418,7 @@
                 .ThenInclude(l => l.LookupTable)
                 .FirstAsync(t => t.DataTableId == table.DataTableId);
             Columns = await EditTable.GetColumnNamesAsync();
+            EditTable.ColumnOrder.AddRange(Columns.Where(c => !EditTable.ColumnOrder.Contains(c)));
             foreach (var lookup in EditTable.Lookups)
             {
                 LookupColumns.AddOrUpdate(lookup, await lookup.LookupTable.GetColumnNamesAsync());
@@ -466,6 +534,11 @@
             {
                 EditContext.MasterDataTables.Add(EditTable);
             }
+            else
+            {
+                // Force update of ColumnOrder as EF may not consider it modified if items only change places.
+                EditContext.Entry(EditTable).Property(p => p.ColumnOrder).IsModified = true;
+            }
             await EditContext.SaveChangesAsync();
             await OnTableSubmitted.InvokeAsync(EditTable);
             await EndEditContext();
@@ -489,11 +562,34 @@
         }
     }
 
+    private void DemoteSelectedColumn()
+    {
+        ArgumentNullException.ThrowIfNull(EditTable);
+        var oldIndex = EditTable.ColumnOrder.IndexOf(ColumnOrderSelected);
+        if (oldIndex >= 0 && oldIndex < EditTable.ColumnOrder.Count - 1)
+        {
+            EditTable.ColumnOrder.RemoveAt(oldIndex);
+            EditTable.ColumnOrder.Insert(oldIndex + 1, ColumnOrderSelected);
+        }
+    }
+
+    private void PromoteSelectedColumn()
+    {
+        ArgumentNullException.ThrowIfNull(EditTable);
+        var oldIndex = EditTable.ColumnOrder.IndexOf(ColumnOrderSelected);
+        if (oldIndex >= 1)
+        {
+            EditTable.ColumnOrder.RemoveAt(oldIndex);
+            EditTable.ColumnOrder.Insert(oldIndex - 1, ColumnOrderSelected);
+        }
+    }
+
     private async Task OnTableSelected(DatabaseTableSelectedResult table)
     {
         if (EditTable is null) return;
         (EditTable.TargetSchemaName, EditTable.TargetTableName) = table;
         Columns = await EditTable.GetColumnNamesAsync();
+        EditTable.ColumnOrder.AddRange(Columns.Where(c => !EditTable.ColumnOrder.Contains(c)));
     }
 
     public void Dispose() => EditContext?.Dispose();

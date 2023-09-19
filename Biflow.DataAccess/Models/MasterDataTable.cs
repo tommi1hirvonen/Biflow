@@ -57,6 +57,8 @@ public class MasterDataTable
 
     public List<string> HiddenColumns { get; set; } = new();
 
+    public List<string> ColumnOrder { get; set; } = new();
+
     [Timestamp]
     public byte[]? Timestamp { get; set; }
 }
