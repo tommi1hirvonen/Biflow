@@ -76,6 +76,13 @@
     </div>
 </div>
 
+@{
+    var columns =
+        Upload?.Columns
+        ?? Builder?.Columns.Where(c => !c.IsHidden && !c.IsLocked || c.IsPrimaryKey)
+        ?? Enumerable.Empty<Column>();
+}
+
 <div class="row mt-4">
     <div class="col">
         <div class="card shadow-sm">
@@ -87,17 +94,39 @@
                 <table class="table table-sm">
                     <thead>
                         <tr>
-                            @foreach (var column in Upload?.Columns ?? Builder?.Columns ?? Enumerable.Empty<string>())
+                            @foreach (var column in columns)
                             {
-                                <th>@column</th>
+                                <th>
+                                    @column.Name
+                                    @if (column.IsPrimaryKey)
+                                    {
+                                        <span class="ms-2" title="Primary key column">
+                                            <CxIcon Icon="FeatherIcon.Key" />
+                                        </span>
+                                    }
+                                    @if (column.IsLocked && !column.IsPrimaryKey)
+                                    {
+                                        <span class="ms-2 text-warning" title="Locked column excluded from final import">
+                                            <CxIcon Icon="FeatherIcon.Lock" />
+                                        </span>
+                                    }
+                                    @if (column.IsHidden && !column.IsPrimaryKey)
+                                    {
+                                        <span class="ms-2 text-warning" title="Hidden column excluded from final import">
+                                            <CxIcon Icon="FeatherIcon.EyeOff" />
+                                        </span>
+                                    }
+                                </th>
                             }
                         </tr>
                     </thead>
                     <tbody>
                         @if (Upload is null)
                         {
+                            var count = columns.Count();
+                            var colspan = count > 0 ? count : 1;
                             <tr>
-                                <td colspan="@(Builder?.Columns.Count() ?? 1)" class="@(Loading ? "text-center" : null)">
+                                <td colspan="@colspan" class="@(Loading ? "text-center" : null)">
                                     @if (Loading)
                                     {
                                         <HxSpinner Color="ThemeColor.Secondary" />
@@ -115,7 +144,7 @@
                                 <tr>
                                     @foreach (var column in Upload.Columns)
                                     {
-                                        <td>@row[column]</td>
+                                        <td>@row[column.Name]</td>
                                     }
                                 </tr>
                             </Virtualize>

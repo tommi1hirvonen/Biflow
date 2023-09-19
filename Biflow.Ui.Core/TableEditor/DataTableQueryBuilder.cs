@@ -8,9 +8,9 @@ internal class DataTableQueryBuilder
 {
     private readonly MasterDataTable _table;
     private readonly FilterSet? _filters;
-    private readonly int _top;
+    private readonly int? _top;
 
-    public DataTableQueryBuilder(MasterDataTable table, int top, FilterSet? filters)
+    public DataTableQueryBuilder(MasterDataTable table, int? top, FilterSet? filters)
     {
         _table = table;
         _filters = filters;
@@ -23,9 +23,9 @@ internal class DataTableQueryBuilder
     {
         var cmdBuilder = new StringBuilder();
         var parameters = new DynamicParameters();
-
+        var topStatement = _top is not null ? $"TOP {_top}" : "";
         cmdBuilder.Append($"""
-            SELECT TOP {_top} [main].*
+            SELECT {topStatement} [main].*
             FROM {QuotedSchemaAndTable} AS [main]
 
             """);

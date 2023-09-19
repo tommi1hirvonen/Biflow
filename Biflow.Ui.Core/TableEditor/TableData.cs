@@ -8,10 +8,11 @@ namespace Biflow.Ui.Core;
 public class TableData
 {
     private readonly LinkedList<Row> _rows;
+    private readonly Column[] _columns;
 
     internal MasterDataTable MasterDataTable { get; }
 
-    public HashSet<Column> Columns { get; }
+    public IEnumerable<Column> Columns => _columns;
 
     public bool HasChanges { get; internal set; }
 
@@ -19,19 +20,19 @@ public class TableData
 
     internal TableData(
         MasterDataTable masterDataTable,
-        HashSet<Column> columns,
+        Column[] columns,
         IEnumerable<IDictionary<string, object?>> data,
         bool hasMoreRows)
     {
         MasterDataTable = masterDataTable;
-        Columns = columns;
+        _columns = columns;
         _rows = new LinkedList<Row>(data.Select(row => new Row(this, masterDataTable.AllowUpdate, row)));
         HasMoreRows = hasMoreRows;
     }
 
-    public bool IsEditable => Columns.Any(c => c.IsPrimaryKey);
+    public bool IsEditable => _columns.Any(c => c.IsPrimaryKey);
 
-    public FilterSet EmptyFilterSet => new(Columns);
+    public FilterSet EmptyFilterSet => new(_columns);
 
     public IEnumerable<Row> Rows => _rows.Where(r => !r.ToBeDeleted);
 
@@ -82,15 +83,24 @@ public class TableData
     {
         var workbook = new XLWorkbook(XLEventTracking.Disabled);
         var sheet = workbook.Worksheets.Add("Sheet1");
-        for (int i = 0; i < Columns.Count; i++)
+
+        var exportColumns = _columns
+            .Where(c => !c.IsHidden || c.IsPrimaryKey && MasterDataTable.AllowImport)
+            .ToArray();
+
+        var index = 1;
+        // Only include columns that are not hidden.
+        // If 'allow import' is enabled, include hidden columns if they are part of the primary key.
+        foreach (var col in exportColumns)
         {
-            sheet.Cell(1, i + 1).SetValue(Columns.ElementAt(i).Name);
+            sheet.Cell(1, index).SetValue(col.Name);
+            index++;
         }
         var rowIndex = 2;
         foreach (var row in _rows)
         {
             var colIndex = 1;
-            foreach (var column in Columns)
+            foreach (var column in exportColumns)
             {
                 sheet.Cell(rowIndex, colIndex).Value = row.Values[column.Name];
                 colIndex++;
@@ -98,11 +108,11 @@ public class TableData
             rowIndex++;
         }
         var firstCell = sheet.Cell(1, 1);
-        var lastCell = sheet.Cell(_rows.Count + 1, Columns.Count); // Add 1 to row count to account for header row
+        var lastCell = sheet.Cell(_rows.Count + 1, exportColumns.Length); // Add 1 to row count to account for header row
         var range = sheet.Range(firstCell, lastCell);
         range.CreateTable();
         // Adjust column widths based on only the first 100 rows for much better performance.
-        sheet.Columns(1, Columns.Count).AdjustToContents(1, 100);
+        sheet.Columns(1, exportColumns.Length).AdjustToContents(1, 100);
         var stream = new MemoryStream();
         workbook.SaveAs(stream);
         stream.Position = 0;

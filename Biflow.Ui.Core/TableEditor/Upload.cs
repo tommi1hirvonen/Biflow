@@ -7,15 +7,15 @@ namespace Biflow.Ui.Core;
 
 public class Upload
 {
-    private readonly List<Column> _columns;
+    private readonly Column[] _columns;
     private readonly MasterDataTable _table;
     private readonly string[] _pkColumns;
 
-    public IEnumerable<string> Columns => _columns.Select(c => c.Name);
+    public IEnumerable<Column> Columns => _columns;
 
     public ICollection<IDictionary<string, object?>> Data { get; }
 
-    internal Upload(MasterDataTable table, List<Column> columns, ICollection<IDictionary<string, object?>> data)
+    internal Upload(MasterDataTable table, Column[] columns, ICollection<IDictionary<string, object?>> data)
     {
         _table = table;
         _columns = columns;
@@ -32,7 +32,11 @@ public class Upload
         using var connection = new SqlConnection(_table.Connection.ConnectionString);
         await connection.OpenAsync();
 
-        var uploadedColumns = _columns.Where(c => !c.IsComputed).ToArray();
+        var uploadedColumns = _columns
+            .Where(c => !c.IsComputed)
+            .Where(c => !c.IsLocked || c.IsPrimaryKey)
+            .Where(c => !c.IsHidden || c.IsPrimaryKey)
+            .ToArray();
         var columnDefinitions = uploadedColumns.Select(c => $"{c.Name.QuoteName()} {c.DbCreateDatatype}");
         var command = $"""
             CREATE TABLE #temp (
@@ -50,7 +54,7 @@ public class Upload
             var mapping = new SqlBulkCopyColumnMapping(column.Name, column.Name);
             copy.ColumnMappings.Add(mapping);
         }
-        var reader = new DictionaryReader(_columns.Select(c => c.Name), Data);
+        var reader = new DictionaryReader(uploadedColumns.Select(c => c.Name), Data);
         await copy.WriteToServerAsync(reader);
 
         var (inserted, updated, deleted) = (0, 0, 0);
@@ -96,7 +100,7 @@ public class Upload
             throw new InvalidOperationException("Insert operation rejected because the table does not allow inserts. No changes were made.");
         }
         var quotedInsertColumns = _columns
-            .Where(c => !c.IsIdentity && !c.IsComputed && !c.IsLocked)
+            .Where(c => !c.IsIdentity && !c.IsComputed && !c.IsLocked && !c.IsHidden || c.IsPrimaryKey)
             .Select(c => c.Name.QuoteName())
             .ToArray();
         if (!quotedInsertColumns.Any())
@@ -119,7 +123,7 @@ public class Upload
     private async Task<int> ExecuteUpdateAsync(SqlConnection connection, IDbTransaction transaction)
     {
         var quotedUpdateColumns = _columns
-            .Where(c => !c.IsComputed && !c.IsPrimaryKey && !c.IsIdentity && !c.IsLocked)
+            .Where(c => !c.IsComputed && !c.IsPrimaryKey && !c.IsIdentity && !c.IsLocked && !c.IsHidden)
             .Select(c => c.Name.QuoteName())
             .ToArray();
         if (!quotedUpdateColumns.Any())

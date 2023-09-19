@@ -15,9 +15,9 @@ public class FilterSet
     public FilterIndexer<ValueFilter<bool, BooleanFilterOperator>> BooleanIndexer { get; }
     public FilterIndexer<ValueFilter<DateTime, NumberFilterOperator>> DateTimeIndexer { get; }
 
-    public HashSet<Column> Columns { get; }
+    public IEnumerable<Column> Columns { get; }
 
-    public FilterSet(HashSet<Column> columns)
+    public FilterSet(IEnumerable<Column> columns)
     {
         ByteIndexer = new(Filters);
         ShortIndexer = new(Filters);

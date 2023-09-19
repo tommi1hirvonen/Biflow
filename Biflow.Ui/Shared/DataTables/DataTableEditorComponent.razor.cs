@@ -183,7 +183,7 @@ public partial class DataTableEditorComponent : ComponentBase
         {
             ArgumentNullException.ThrowIfNull(Table);
             var filterSet = filtered ? FilterSet : null;
-            var dataset = await Table.LoadDataAsync(top: int.MaxValue, filters: filterSet);
+            var dataset = await Table.LoadDataAsync(filters: filterSet);
             using var stream = dataset.GetExcelExportStream();
 
             var regexSearch = new string(Path.GetInvalidFileNameChars());

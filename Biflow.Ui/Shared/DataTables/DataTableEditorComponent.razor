@@ -169,7 +169,7 @@
                     <table class="table table-sm">
                         <thead>
                             <tr>
-                                @foreach (var column in TableData.Columns.Where(c => IsColumnSelected(c.Name)))
+                                @foreach (var column in TableData.Columns.Where(c => IsColumnSelected(c.Name) && !c.IsHidden))
                                 {
                                     var orderBy = OrderBy.FirstOrDefault(o => o.Column == column.Name);
                                     <th @onclick="() => ToggleOrderBy(column.Name)" title="@column.DbDatatypeDescription">
@@ -210,7 +210,7 @@
                         <tbody>
                             <Virtualize Items="rows" Context="row" SpacerElement="tr" ItemSize="39.5f">
                                 <tr>
-                                    @foreach (var columnInfo in TableData.Columns.Where(c => IsColumnSelected(c.Name)))
+                                    @foreach (var columnInfo in TableData.Columns.Where(c => IsColumnSelected(c.Name) && !c.IsHidden))
                                     {
                                         var isLocked = !row.IsUpdateable || columnInfo.IsLocked;
                                         var column = columnInfo.Name;

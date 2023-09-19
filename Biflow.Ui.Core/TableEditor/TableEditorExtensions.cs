@@ -30,20 +30,22 @@ public static class TableEditorExtensions
             throw new InvalidOperationException("All lookup tables must use the same connection as the main table.");
         }
 
-        top ??= 1000;
-
         using var connection = new SqlConnection(table.Connection.ConnectionString);
         await connection.OpenAsync();
 
-        var columns = (await table.GetColumnsAsync(connection)).ToHashSet();
+        var columns = (await table.GetColumnsAsync(connection)).ToArray();
 
-        var (query, parameters) = new DataTableQueryBuilder(table, (int)top + 1, filters).Build();
+        var (query, parameters) = new DataTableQueryBuilder(
+            table: table,
+            top: top is not null ? top + 1 : null,
+            filters: filters)
+            .Build();
         var rows = await connection.QueryAsync(query, parameters);
         var initialValues = rows
-            .Take((int)top)
+            .TakeIfNotNull(top)
             .Cast<IDictionary<string, object?>>();
 
-        var hasMoreRows = rows.Count() > top; // Actual type of rows is List, so Count() is safe to do. O(1) operation
+        var hasMoreRows = top is not null && rows.Count() > top; // Actual type of rows is List, so Count() is safe to do. O(1) operation
         return new TableData(table, columns, initialValues, hasMoreRows);
     }
 
@@ -66,6 +68,7 @@ public static class TableEditorExtensions
             var isPk = primaryKeyColumns.Contains(c.Name);
             var isIdentity = identityColumn == c.Name;
             var isLocked = table.LockedColumnsExcludeMode ? !table.LockedColumns.Contains(c.Name) : table.LockedColumns.Contains(c.Name);
+            var isHidden = table.HiddenColumns.Contains(c.Name);
             var lookup = lookups?.GetValueOrDefault(c.Name);
             var datatype = DatatypeMapping.GetValueOrDefault(c.Datatype);
             return new Column(
@@ -74,6 +77,7 @@ public static class TableEditorExtensions
                 IsIdentity: isIdentity,
                 IsComputed: c.Computed,
                 IsLocked: isLocked,
+                IsHidden: isHidden,
                 DbDatatype: c.Datatype,
                 DbDatatypeDescription: c.DatatypeDesc,
                 DbCreateDatatype: c.CreateDatatype,
@@ -246,4 +250,9 @@ public static class TableEditorExtensions
         (_, '[' or ']') => string.Format("[{0}]", name.Replace("]", "]]")),
         _ => throw new ArgumentException("quoteCharacter must be one of: ', \", [, or ]"),
     };
+
+    public static IEnumerable<TResult> TakeIfNotNull<TResult>(this IEnumerable<TResult> source, int? count)
+    {
+        return count.HasValue ? source.Take(count.Value) : source;
+    }
 }

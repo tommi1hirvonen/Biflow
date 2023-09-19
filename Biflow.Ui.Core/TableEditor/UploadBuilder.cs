@@ -9,7 +9,7 @@ public class UploadBuilder
     private readonly Column[] _columns;
     private readonly MasterDataTable _table;
 
-    public IEnumerable<string> Columns => _columns.Select(c => c.Name);
+    public IEnumerable<Column> Columns => _columns;
 
     private UploadBuilder(MasterDataTable table, Column[] columns)
     {
@@ -47,7 +47,7 @@ public class UploadBuilder
         }
 
         // Limit uploaded columns to only those found in the Excel file.
-        var columns = _columns.Where(c => headers.Contains(c.Name)).ToList();
+        var columns = _columns.Where(c => headers.Contains(c.Name)).ToArray();
         var data = new List<IDictionary<string, object?>>();
         foreach (var row in rows)
         {

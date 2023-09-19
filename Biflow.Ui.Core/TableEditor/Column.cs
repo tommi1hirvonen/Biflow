@@ -6,6 +6,7 @@ public record Column(
     bool IsIdentity,
     bool IsComputed,
     bool IsLocked,
+    bool IsHidden,
     string DbDatatype,
     string DbDatatypeDescription,
     string DbCreateDatatype,

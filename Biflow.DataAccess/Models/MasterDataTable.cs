@@ -55,6 +55,8 @@ public class MasterDataTable
 
     public bool LockedColumnsExcludeMode { get; set; } = false;
 
+    public List<string> HiddenColumns { get; set; } = new();
+
     [Timestamp]
     public byte[]? Timestamp { get; set; }
 }

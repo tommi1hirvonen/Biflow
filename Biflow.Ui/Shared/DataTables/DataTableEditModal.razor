@@ -132,8 +132,11 @@
                                 </label>
                                 <HxInputTags Delimiters="new()"
                                              InputSize="InputSize.Small"
+                                             SuggestDelay="0"
+                                             SuggestMinimumLength="0"
                                              TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
-                                @bind-Value="EditTable.LockedColumns" />
+                                             DataProvider="GetColumnSuggestions"
+                                             @bind-Value="EditTable.LockedColumns" />
                             </div>
                         </div>
                         <div class="row mt-1">
@@ -141,7 +144,7 @@
                                 <div class="form-check form-check-inline">
                                     <input type="checkbox" class="form-check-input" id="locked_columns_exclude"
                                            checked=@EditTable.LockedColumnsExcludeMode
-                                    @bind-value="EditTable.LockedColumnsExcludeMode">
+                                           @bind-value="EditTable.LockedColumnsExcludeMode">
                                     <label class="form-check-label" for="locked_columns_exclude">
                                         Exclude mode
                                         <HxPopover Trigger="PopoverTrigger.Hover" Content="When enabled, columns not listed will be locked.">
@@ -151,7 +154,23 @@
                                 </div>
                             </div>
                         </div>
-                        
+                        <div class="row mt-3">
+                            <div class="col">
+                                <label class="form-label">
+                                    Hidden columns
+                                    <HxPopover Trigger="PopoverTrigger.Hover" Content="Define a list of hidden columns. If a hidden column is part of the primary key and 'allow import' is enabled, the column will be included in Excel exports.">
+                                        <CxIcon Icon="FeatherIcon.Info" />
+                                    </HxPopover>
+                                </label>
+                                <HxInputTags Delimiters="new()"
+                                             InputSize="InputSize.Small"
+                                             SuggestDelay="0"
+                                             SuggestMinimumLength="0"
+                                             TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
+                                             DataProvider="GetColumnSuggestions"
+                                             @bind-Value="EditTable.HiddenColumns" />
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="row">
@@ -388,6 +407,15 @@
         {
             Data = Columns?.Where(c => c.ContainsIgnoreCase(request.UserInput)) ?? Enumerable.Empty<string>()
         });
+    }
+
+    private async Task<InputTagsDataProviderResult> GetColumnSuggestions(InputTagsDataProviderRequest request)
+    {
+        await Task.Delay(100); // small delay to make the tag input dropdown behave more consistently
+        return new InputTagsDataProviderResult
+        {
+            Data = Columns?.Where(c => c.ContainsIgnoreCase(request.UserInput)) ?? Enumerable.Empty<string>()
+        };
     }
 
     private Task<AutosuggestDataProviderResult<MasterDataTable>> GetLookupTableSuggestions(AutosuggestDataProviderRequest request)

@@ -14,6 +14,7 @@
 	[AllowImport] BIT NOT NULL CONSTRAINT [DF_DataTable_AllowImport] DEFAULT (1),
 	[AllowUpdate] BIT NOT NULL CONSTRAINT [DF_DataTable_AllowUpdate] DEFAULT (1),
 	[LockedColumnsExcludeMode] BIT NOT NULL CONSTRAINT [DF_DataTable_LockedColumnsExcludeMode] DEFAULT (0),
+	[HiddenColumns] VARCHAR(8000) NOT NULL CONSTRAINT [DF_DataTable_HiddenColumns] DEFAULT ('[]'), -- Empty JSON array
     CONSTRAINT [PK_DataTable] PRIMARY KEY CLUSTERED ([DataTableId])
 )
 
