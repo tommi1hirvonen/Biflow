@@ -47,6 +47,10 @@ public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
         {
             (DatasetGroupName, DatasetName) = ("", "");
         }
+        finally
+        {
+            StateHasChanged();
+        }
     }
 
     protected override async Task<DatasetStep> GetExistingStepAsync(BiflowContext context, Guid stepId)
