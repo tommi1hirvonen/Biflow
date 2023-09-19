@@ -135,7 +135,7 @@
                                              SuggestDelay="0"
                                              SuggestMinimumLength="0"
                                              TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
-                                             DataProvider="GetColumnSuggestions"
+                                             DataProvider="GetLockedColumnSuggestions"
                                              @bind-Value="EditTable.LockedColumns" />
                             </div>
                         </div>
@@ -167,7 +167,7 @@
                                              SuggestDelay="0"
                                              SuggestMinimumLength="0"
                                              TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
-                                             DataProvider="GetColumnSuggestions"
+                                             DataProvider="GetHiddenColumnSuggestions"
                                              @bind-Value="EditTable.HiddenColumns" />
                             </div>
                         </div>
@@ -409,12 +409,23 @@
         });
     }
 
-    private async Task<InputTagsDataProviderResult> GetColumnSuggestions(InputTagsDataProviderRequest request)
+    private async Task<InputTagsDataProviderResult> GetLockedColumnSuggestions(InputTagsDataProviderRequest request)
     {
         await Task.Delay(100); // small delay to make the tag input dropdown behave more consistently
         return new InputTagsDataProviderResult
         {
-            Data = Columns?.Where(c => c.ContainsIgnoreCase(request.UserInput)) ?? Enumerable.Empty<string>()
+            Data = Columns?.Where(c => c.ContainsIgnoreCase(request.UserInput) && (!EditTable?.LockedColumns.Contains(c) ?? true))
+                ?? Enumerable.Empty<string>()
+        };
+    }
+
+    private async Task<InputTagsDataProviderResult> GetHiddenColumnSuggestions(InputTagsDataProviderRequest request)
+    {
+        await Task.Delay(100); // small delay to make the tag input dropdown behave more consistently
+        return new InputTagsDataProviderResult
+        {
+            Data = Columns?.Where(c => c.ContainsIgnoreCase(request.UserInput) && (!EditTable?.HiddenColumns.Contains(c) ?? true))
+                ?? Enumerable.Empty<string>()
         };
     }
 
