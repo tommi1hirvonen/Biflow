@@ -27,18 +27,21 @@
                              <li class="nav-item">
                                  <span class="nav-link @(CurrentView == TableEditView.Settings ? "active" : null)"
                                  @onclick="() => CurrentView = TableEditView.Settings">
+                                     <CxIcon Icon="FeatherIcon.Settings" />
                                      Settings
                                  </span>
                              </li>
                              <li class="nav-item">
                                  <span class="nav-link @(CurrentView == TableEditView.ColumnOrder ? "active" : null)"
                                  @onclick="() => CurrentView = TableEditView.ColumnOrder">
+                                     <CxIcon Icon="FeatherIcon.Columns" />
                                      Column Order
                                  </span>
                              </li>
                              <li class="nav-item">
                                  <span class="nav-link @(CurrentView == TableEditView.Lookups ? "active" : null)"
                                  @onclick="() => CurrentView = TableEditView.Lookups">
+                                     <CxIcon Icon="FeatherIcon.Search" />
                                      Lookup Columns
                                  </span>
                              </li>
@@ -147,6 +150,8 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                    <div class="row">
                         <div class="col">
                             <div class="row">
                                 <div class="col">
@@ -180,23 +185,21 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="row mt-3">
-                                <div class="col">
-                                    <label class="form-label">
-                                        Hidden columns
-                                        <HxPopover Trigger="PopoverTrigger.Hover" Content="Define a list of hidden columns. If a hidden column is part of the primary key and 'allow import' is enabled, the column will be included in Excel exports.">
-                                            <CxIcon Icon="FeatherIcon.Info" />
-                                        </HxPopover>
-                                    </label>
-                                    <HxInputTags Delimiters="new()"
-                                                 InputSize="InputSize.Small"
-                                                 SuggestDelay="0"
-                                                 SuggestMinimumLength="0"
-                                                 TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
-                                                 DataProvider="GetHiddenColumnSuggestions"
-                                    @bind-Value="EditTable.HiddenColumns" />
-                                </div>
-                            </div>
+                        </div>
+                        <div class="col">
+                            <label class="form-label">
+                                Hidden columns
+                                <HxPopover Trigger="PopoverTrigger.Hover" Content="Define a list of hidden columns. If a hidden column is part of the primary key and 'allow import' is enabled, the column will be included in Excel exports.">
+                                    <CxIcon Icon="FeatherIcon.Info" />
+                                </HxPopover>
+                            </label>
+                            <HxInputTags Delimiters="new()"
+                                         InputSize="InputSize.Small"
+                                         SuggestDelay="0"
+                                         SuggestMinimumLength="0"
+                                         TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
+                                         DataProvider="GetHiddenColumnSuggestions"
+                            @bind-Value="EditTable.HiddenColumns" />
                         </div>
                     </div>
                 }
@@ -235,7 +238,7 @@
                         <div class="col">
                             <button type="button" class="btn btn-sm btn-auto @(string.IsNullOrEmpty(EditTable.TargetSchemaName) || string.IsNullOrEmpty(EditTable.TargetTableName) ? "disabled" : null)"
                             @onclick="() => EditTable.Lookups.Add(new())">
-                                <CxIcon Icon="FeatherIcon.Search" />
+                                <CxIcon Icon="FeatherIcon.Plus" />
                                 Add lookup
                             </button>
                         </div>
