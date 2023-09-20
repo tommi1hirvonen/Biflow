@@ -207,18 +207,33 @@
                 {
                     <div class="row">
                         <div class="col-auto mx-4">
-                            <HxButtonGroup Orientation="ButtonGroupOrientation.Vertical">
-                                <HxButton Color="ThemeColor.None" CssClass="btn-auto" OnClick="PromoteSelectedColumn">
-                                    <CxIcon Icon="FeatherIcon.ChevronUp" />
-                                    Promote
-                                </HxButton>
-                                <HxButton Color="ThemeColor.None" CssClass="btn-auto" OnClick="DemoteSelectedColumn">
-                                    <CxIcon Icon="FeatherIcon.ChevronDown" />
-                                    Demote
-                                </HxButton>
-                            </HxButtonGroup>
+                            <div class="row">
+                                <div class="col">
+                                    <HxButton Color="ThemeColor.None" CssClass="btn-auto" OnClick="ImportColumnOrderColumnsAsync">
+                                        Import columns
+                                    </HxButton>
+                                </div>
+                            </div>
+                            <div class="row mt-5">
+                                <div class="col">
+                                    <HxButtonGroup Orientation="ButtonGroupOrientation.Vertical">
+                                        <HxButton Color="ThemeColor.None" CssClass="btn-auto" OnClick="PromoteSelectedColumn">
+                                            <CxIcon Icon="FeatherIcon.ChevronUp" />
+                                            Promote
+                                        </HxButton>
+                                        <HxButton Color="ThemeColor.None" CssClass="btn-auto" OnClick="DemoteSelectedColumn">
+                                            <CxIcon Icon="FeatherIcon.ChevronDown" />
+                                            Demote
+                                        </HxButton>
+                                    </HxButtonGroup>
+                                </div>
+                            </div> 
                         </div>
                         <div class="col-auto">
+                            @if (!EditTable?.ColumnOrder.Any() ?? false)
+                            {
+                                <span class="text-muted"><em>Import columns to define column ordering</em></span>
+                            }
                             <ul class="list-group list-group-numbered">
                                 @foreach (var column in EditTable?.ColumnOrder ?? Enumerable.Empty<string>())
                                 {
@@ -421,7 +436,7 @@
                 .ThenInclude(l => l.LookupTable)
                 .FirstAsync(t => t.DataTableId == table.DataTableId);
             Columns = await EditTable.GetColumnNamesAsync();
-            EditTable.ColumnOrder.AddRange(Columns.Where(c => !EditTable.ColumnOrder.Contains(c)));
+
             foreach (var lookup in EditTable.Lookups)
             {
                 LookupColumns.AddOrUpdate(lookup, await lookup.LookupTable.GetColumnNamesAsync());
@@ -565,6 +580,19 @@
         }
     }
 
+    private async Task ImportColumnOrderColumnsAsync()
+    {
+        ArgumentNullException.ThrowIfNull(EditTable);
+        Columns = await EditTable.GetColumnNamesAsync();
+        if (!Columns.Any())
+        {
+            Messenger.AddWarning($"No columns found for table [{EditTable.TargetSchemaName}].[{EditTable.TargetTableName}]");
+            return;
+        }
+        EditTable.ColumnOrder.Clear();
+        EditTable.ColumnOrder.AddRange(Columns);
+    }
+
     private void DemoteSelectedColumn()
     {
         ArgumentNullException.ThrowIfNull(EditTable);
@@ -592,7 +620,6 @@
         if (EditTable is null) return;
         (EditTable.TargetSchemaName, EditTable.TargetTableName) = table;
         Columns = await EditTable.GetColumnNamesAsync();
-        EditTable.ColumnOrder.AddRange(Columns.Where(c => !EditTable.ColumnOrder.Contains(c)));
     }
 
     public void Dispose() => EditContext?.Dispose();
