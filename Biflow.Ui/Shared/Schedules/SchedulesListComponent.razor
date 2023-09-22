@@ -2,7 +2,7 @@
 @inject IHxMessengerService Messenger
 @inject ISchedulerService SchedulerService
 
-<AuthorizeView Roles="Admin, Editor, Operator">
+<AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
     <div class="row mt-3">
         <div class="col">
             <HxButton Color="ThemeColor.Success"
@@ -73,11 +73,11 @@
                         </td>
                         <td class="align-middle">
                             <div class="form-check form-switch">
-                                <AuthorizeView Roles="Admin, Editor, Operator">
+                                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                                     <input type="checkbox" class="form-check-input" id="@item.ScheduleId" checked=@item.IsEnabled @onchange="args => ToggleEnabled(args, item)">
                                     <label class="form-check-label" for="@item.ScheduleId"></label>
                                 </AuthorizeView>
-                                <AuthorizeView Roles="Viewer">
+                                <AuthorizeView Roles="@(Roles.Viewer)">
                                     <input type="checkbox" class="form-check-input" disabled checked=@item.IsEnabled>
                                     <label class="form-check-label" for="@item.ScheduleId"></label>
                                 </AuthorizeView>
@@ -107,7 +107,7 @@
                             </div>
                         </td>
                         <td>
-                            <AuthorizeView Roles="Admin, Editor, Operator">
+                            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                                 <HxButtonGroup Size="ButtonGroupSize.Small">
                                     <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto"
                                       @onclick="async () => await EditModal.LetAsync(x => x.ShowAsync(item.ScheduleId))">
@@ -125,7 +125,7 @@
                             }
                         </td>
                         <td align="center">
-                            <AuthorizeView Roles="Admin, Editor, Operator">
+                            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                                 <HxDropdownButtonGroup>
                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
                                         <CxIcon Icon="FeatherIcon.Trash2" />
@@ -144,7 +144,7 @@
     </table>
 </div>
 
-<AuthorizeView Roles="Admin, Editor, Operator">
+<AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
     <ScheduleEditModal @ref="EditModal" Jobs="Jobs" OnSubmit="OnScheduleSubmitAsync" />
 </AuthorizeView>
 

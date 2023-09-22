@@ -8,7 +8,7 @@
 
 <h4>Subscriptions</h4>
 
-<AuthorizeView Roles="Admin">
+<AuthorizeView Roles="@(Roles.Admin)">
     <ul class="nav nav-tabs mt-3 mb-4" role="tablist">
         <li class="nav-item" role="presentation">
             <NavLink class="nav-link" href="subscriptions" Match="NavLinkMatch.All">
@@ -29,7 +29,7 @@
 }
 else if (Page == "all")
 {
-    <AuthorizeView Roles="Admin">
+    <AuthorizeView Roles="@(Roles.Admin)">
         <Authorized>
             <AllSubscriptionsComponent />
         </Authorized>

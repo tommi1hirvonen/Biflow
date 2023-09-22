@@ -86,7 +86,7 @@
                 Limit graph to this
             </span>
         </li>
-        <AuthorizeView Roles="Admin, Editor">
+         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
             <li>
                 <span class="dropdown-item" role="button" @onclick="() => OpenStepEditModalAsync(step)">
                     <CxIcon Icon="FeatherIcon.Edit2" />
@@ -127,7 +127,7 @@
 
 <StepHistoryOffcanvas @ref="StepHistoryOffcanvas" />
 
-<AuthorizeView Roles="Admin, Editor">
+<AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
     <SqlStepEditModal @ref="StepEditModals[StepType.Sql]"
         Connections="SqlConnections"
         OnStepSubmit="OnStepSubmit" />

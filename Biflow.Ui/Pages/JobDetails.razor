@@ -42,7 +42,7 @@
     }
 
     <div class="col-xl d-flex flex-row flex-xl-row-reverse justify-content-xl-start align-items-center">
-        <AuthorizeView Roles="Admin, Editor">
+        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
             <div class="ms-0 ms-xl-4 me-4 me-xl-0">
                 @*Dropdown to delete the current job*@
                 <HxDropdownButtonGroup CssClass="ms-3">
@@ -58,14 +58,14 @@
             </div>
         </AuthorizeView>
 
-        <AuthorizeView Roles="Admin, Editor">
+        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
             <div class="form-check form-switch">
                 <input type="checkbox" class="form-check-input" id="job_enabled_toggle" checked="@(Job?.IsEnabled ?? false ? "checked" : null)" @onchange="ToggleJobEnabled">
                 <label class="form-check-label" for="job_enabled_toggle">Enabled</label>
             </div>
         </AuthorizeView>
 
-        <AuthorizeView Roles="Operator, Viewer">
+        <AuthorizeView Roles="@($"{Roles.Operator}, {Roles.Viewer}")">
             <div class="form-check form-switch">
                 <input type="checkbox" class="form-check-input" disabled id="job_enabled_toggle" checked="@(Job?.IsEnabled ?? false ? "checked" : null)">
                 <label class="form-check-label" for="job_enabled_toggle">Enabled</label>
@@ -106,7 +106,7 @@
                     Steps
                 </NavLink>
             </li>
-            <AuthorizeView Roles="Admin, Editor, Operator">
+            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                 <li class="nav-item" role="presentation">
                     <NavLink class="nav-link" href="@($"jobs/{Job?.JobId}/parameters")">
                         <CxIcon Icon="FeatherIcon.AtSign" />
@@ -132,7 +132,7 @@
                     History
                 </NavLink>
             </li>
-            <AuthorizeView Roles="Admin, Editor">
+            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                 <li class="nav-item" role="presentation">
                     <NavLink class="nav-link" href="@($"jobs/{Job?.JobId}/settings")">
                         <CxIcon Icon="LucideIcon.Settings2" />
@@ -162,7 +162,7 @@
 
                     @if (DetailsPage == "parameters")
                     {
-                        <AuthorizeView Roles="Admin, Editor, Operator">
+                        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                             <JobParametersComponent />
                         </AuthorizeView>
                     }
@@ -185,7 +185,7 @@
                     }
                     else if (DetailsPage == "settings")
                     {
-                        <AuthorizeView Roles="Admin, Editor">
+                        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                             <JobSettingsComponent />
                         </AuthorizeView>
                     }

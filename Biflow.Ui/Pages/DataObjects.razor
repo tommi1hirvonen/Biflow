@@ -1,6 +1,6 @@
 ﻿@page "/dataobjects"
 
-@attribute [Authorize(Roles = "Admin, Editor")]
+@attribute [Authorize(Roles = $"{Roles.Admin}, {Roles.Editor}")]
 
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject IHxMessengerService Messenger

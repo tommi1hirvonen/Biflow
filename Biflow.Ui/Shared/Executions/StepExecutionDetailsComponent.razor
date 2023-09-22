@@ -354,7 +354,7 @@
         </dt>
         <dd class="col-sm-9">
             <code class="text-danger" style="white-space: pre-wrap;">@StepExecutionAttempt.ErrorMessage</code>
-            <AuthorizeView Roles="Admin">
+            <AuthorizeView Roles="@(Roles.Admin)">
                 @if (!string.IsNullOrWhiteSpace(StepExecutionAttempt.ErrorStackTrace))
                 {
                     if (!ShowErrorStackTrace)

@@ -5,7 +5,7 @@
     <div class="row justify-content-between gap-3">
         <div class="col-auto">
             <div class="btn-toolbar">
-                <AuthorizeView Roles="Admin, Editor">
+                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                     <HxDropdownButtonGroup CssClass="me-3">
                         <HxDropdownToggleButton Color="ThemeColor.Success" Enabled="Steps is not null && Job is not null && Jobs is not null">
                             Add step
@@ -23,7 +23,7 @@
                         </HxDropdownMenu>
                     </HxDropdownButtonGroup>
                 </AuthorizeView>
-                <AuthorizeView Roles="Admin, Editor, Operator">
+                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                     <HxButton Color="ThemeColor.Primary"
                               Enabled="Steps is not null && Job is not null && Jobs is not null"
                               @onclick="() => ExecuteModal.LetAsync(x => x.ShowAsync(SelectedSteps))">
@@ -191,7 +191,7 @@
                     var selectedText = SelectedSteps.Count switch { 1 => $"{SelectedSteps.Count} selected step", > 1 => $"{SelectedSteps.Count} selected steps", _ => "" };
                     <li class="list-group-item list-group-header">
                         <div class="row align-items-center" style="min-height: 31px;">
-                            <AuthorizeView Roles="Admin, Editor, Operator">
+                            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                                 <div class="col text-muted d-flex align-items-center">
                                     <TriStateCheckbox Checked="@(SelectedSteps.Count > 0 && Steps.Any() && count > 0)"
                                                       Indeterminate="@(SelectedSteps.Any() && SelectedSteps.Count != count)"
@@ -199,7 +199,7 @@
                                     <div class="fw-bold small">@selectedText</div>
                                 </div>
                             </AuthorizeView>
-                            <AuthorizeView Roles="Admin, Editor">
+                            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                                 <div class="col">
                                     @if (SelectedSteps.Any())
                                     {
@@ -282,7 +282,7 @@
                     <li @key="item.StepId" class="list-group-item list-group-item-action py-2 @(item.IsEnabled ? null : "step-item-disabled")">
                         <div class="row">
                             <div class="col-xl-5 col-md-6 col-10 pl-2 d-flex align-items-center">
-                                <AuthorizeView Roles="Admin, Editor, Operator">
+                                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                                     <div class="form-check me-2">
                                         <input type="checkbox" class="form-check-input" id="select_step_@item.StepId"
                                                checked=@SelectedSteps.Contains(item)
@@ -290,14 +290,14 @@
                                         <label class="form-check-label" for="select_step_@item.StepId"></label>
                                     </div>
                                 </AuthorizeView>
-                                <AuthorizeView Roles="Admin, Editor">
+                                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                                     <a class="text-body" href="javascript:void(0)" @onclick="() => ShowEditModal(item)">
                                         <StepTypeIconComponent StepType_="@item.StepType" />
                                         &nbsp;
                                         <HighlightableText Text="@item.StepName" PartToHighlight="@StepNameFilter" />
                                     </a>
                                 </AuthorizeView>
-                                <AuthorizeView Roles="Operator, Viewer">
+                                <AuthorizeView Roles="@($"{Roles.Operator}, {Roles.Viewer}")">
                                     <span>
                                         <StepTypeIconComponent StepType_="@item.StepType" />
                                         <HighlightableText Text="@item.StepName" PartToHighlight="@StepNameFilter" />
@@ -334,13 +334,13 @@
                                 </div>
                             </div>
                             <div class="col-xl-3 col-md-4 d-inline-flex align-items-center justify-content-end">
-                                <AuthorizeView Roles="Admin, Editor">
+                                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                                     <div class="form-check form-switch">
                                         <input type="checkbox" class="form-check-input" id="enabled_@item.StepId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
                                         <label class="form-check-label" for="enabled_@item.StepId" aria-label="enabled"></label>
                                     </div>
                                 </AuthorizeView>
-                                <AuthorizeView Roles="Operator, Viewer">
+                                <AuthorizeView Roles="@($"{Roles.Operator}, {Roles.Viewer}")">
                                     <div class="form-check form-switch">
                                         <input type="checkbox" class="form-check-input" disabled id="enabled_@item.StepId" checked="@(item.IsEnabled ? "checked" : null)">
                                         <label class="form-check-label" for="enabled_@item.StepId" aria-label="enabled"></label>
@@ -362,7 +362,7 @@
                                         <CxIcon Icon="LucideIcon.Network" />
                                     </HxButton>
 
-                                    <AuthorizeView Roles="Admin, Editor">
+                                    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                                         <HxDropdownButtonGroup>
                                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
                                                 <CxIcon Icon="FeatherIcon.Copy" />
@@ -488,7 +488,7 @@
     </div>
 }
 
-<AuthorizeView Roles="Admin, Editor">
+<AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
     <StepsBatchEditTagsModal
         @ref="BatchEditTagsModal"
         SelectedSteps="SelectedSteps"
@@ -575,6 +575,6 @@
 
 <StepHistoryOffcanvas @ref="StepHistoryOffcanvas" />
 
-<AuthorizeView Roles="Admin, Editor, Operator">
+<AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
     <ExecuteModal @ref="ExecuteModal" OnExecutionStarted="OnExecutionStarted" />
 </AuthorizeView>

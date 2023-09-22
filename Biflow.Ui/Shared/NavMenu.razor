@@ -32,7 +32,7 @@
                 Dashboard
             </NavLink>
         </li>
-        <AuthorizeView Roles="Admin,Editor">
+        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
             <li class="nav-item">
                 <NavLink class="nav-link" href="tags" @onclick="NavLinkClick">
                     <CxIcon Icon="FeatherIcon.Tag" />
@@ -64,7 +64,7 @@
                 Subscriptions
             </NavLink>
         </li>
-        <AuthorizeView Roles="Admin">
+        <AuthorizeView Roles="@(Roles.Admin)">
             <li class="nav-item">
                 <NavLink class="nav-link" href="settings" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
                     <CxIcon Icon="FeatherIcon.Settings" />

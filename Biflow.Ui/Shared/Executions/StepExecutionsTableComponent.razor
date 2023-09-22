@@ -93,7 +93,7 @@
                                         <CxIcon Icon="LucideIcon.History" />
                                         History
                                     </HxButton>
-                                    <AuthorizeView Roles="Admin, Editor, Operator">
+                                    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                                         @if (DetailStep.CanBeStopped)
                                         {
                                             <HxDropdownButtonGroup CssClass="ms-3">

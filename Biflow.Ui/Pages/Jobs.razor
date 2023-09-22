@@ -6,7 +6,7 @@
 <div class="row justify-content-between mt-3">
     <div class="col">
         <div class="btn-toolbar">
-            <AuthorizeView Roles="Admin, Editor">
+            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                 <HxButton Color="ThemeColor.Success"
                           CssClass="me-3"
                           OnClick="() => JobEditModal.LetAsync(x => x.ShowAsync())"
@@ -144,7 +144,7 @@
                             }
                         </td>
                         <td colspan="1" class="text-end">
-                            <AuthorizeView Roles="Admin, Editor">
+                            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                                 @if (category is not null)
                                 {
                                     <div class="col-auto">
@@ -207,20 +207,20 @@
                             </td>
                             <td class="text-end">
                                 <div class="d-inline-flex align-items-center">
-                                    <AuthorizeView Roles="Admin, Editor">
+                                    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                                         <div class="form-check form-switch">
                                             <input class="form-check-input" type="checkbox" id="enabled_@item.JobId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
                                             <label class="form-check-label" for="enabled_@item.JobId"></label>
                                         </div>
                                     </AuthorizeView>
-                                    <AuthorizeView Roles="Operator, Viewer">
+                                    <AuthorizeView Roles="@($"{Roles.Operator}, {Roles.Viewer}")">
                                         <div class="form-check form-switch">
                                             <input class="form-check-input" type="checkbox" id="enabled_@item.JobId" disabled checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
                                             <label class="form-check-label" for="enabled_@item.JobId"></label>
                                         </div>
                                     </AuthorizeView>
 
-                                    <AuthorizeView Roles="Admin, Editor">
+                                    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                                         <HxButtonGroup CssClass="ms-2" Size="ButtonGroupSize.Small">
 
                                             <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small"
@@ -259,7 +259,7 @@
     </table>
 </div>
 
-<AuthorizeView Roles="Admin, Editor">
+<AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
     <JobEditModal @ref="JobEditModal" OnJobSubmitted="OnJobSubmitted" />
 
     <JobCategoryEditModal @ref="CategoryEditModal" OnCategorySubmitted="OnCategorySubmitted" />

@@ -69,7 +69,7 @@
         History
     </HxButton>
 
-    <AuthorizeView Roles="Admin, Editor, Operator">
+    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(ShowReport == Report.Rerun ? "active ms-3" : "ms-3")"
                   @onclick="() => ShowReport = Report.Rerun" Enabled="!Loading">
             <CxIcon Icon="FeatherIcon.Repeat" />
@@ -79,7 +79,7 @@
 
 </HxButtonToolbar>
 
-<AuthorizeView Roles="Admin, Editor, Operator">
+<AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
     @if (Execution is not null && Execution.ExecutionStatus == ExecutionStatus.Running)
     {
         <HxButtonToolbar CssClass="mt-3">
@@ -516,7 +516,7 @@ else if (ShowReport == Report.Dependencies)
 }
 else if (ShowReport == Report.Rerun)
 {
-    <AuthorizeView Roles="Admin, Editor, Operator">
+    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
         <RerunComponent Execution="Execution" />
     </AuthorizeView>
 }
