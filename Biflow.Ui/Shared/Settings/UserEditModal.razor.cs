@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.JSInterop;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 
 namespace Biflow.Ui.Shared.Settings;
@@ -29,14 +30,11 @@ public partial class UserEditModal : ComponentBase, IDisposable
 
     private HxModal? Modal { get; set; }
 
-    private User? User { get; set; }
+    private FormModel? Model { get; set; }
 
     private bool IsNewUser => PreviousUserId == Guid.Empty;
     private Guid PreviousUserId { get; set; }
     private string CurrentUsername { get; set; } = "";
-
-    private string? Password { get; set; }
-    private string? ConfirmPassword { get; set; }
 
     private BiflowContext Context { get; set; } = null!;
 
@@ -52,26 +50,26 @@ public partial class UserEditModal : ComponentBase, IDisposable
 
     private void ToggleRole(string role)
     {
-        ArgumentNullException.ThrowIfNull(User);
+        ArgumentNullException.ThrowIfNull(Model);
         if (role == Roles.Admin)
         {
-            User.Roles.Clear();
-            User.Roles.Add(role);
+            Model.User.Roles.Clear();
+            Model.User.Roles.Add(role);
         }
         else if (role == Roles.Editor || role == Roles.Operator || role == Roles.Viewer)
         {
-            User.Roles.RemoveAll(r => r == Roles.Admin || r == Roles.Editor || r == Roles.Viewer || r == Roles.Operator);
-            User.Roles.Add(role);
+            Model.User.Roles.RemoveAll(r => r == Roles.Admin || r == Roles.Editor || r == Roles.Viewer || r == Roles.Operator);
+            Model.User.Roles.Add(role);
         }
         else if (role == Roles.DataTableMaintainer)
         {
-            if (User.Roles.Contains(role))
+            if (Model.User.Roles.Contains(role))
             {
-                User.Roles.RemoveAll(r => r == Roles.DataTableMaintainer);
+                Model.User.Roles.RemoveAll(r => r == Roles.DataTableMaintainer);
             }
             else
             {
-                User.Roles.Add(role);
+                Model.User.Roles.Add(role);
             }
         }
         else
@@ -82,50 +80,45 @@ public partial class UserEditModal : ComponentBase, IDisposable
 
     private void ToggleJobAuthorization(ChangeEventArgs args, Job job)
     {
+        ArgumentNullException.ThrowIfNull(Model);
         var enabled = (bool)args.Value!;
         if (enabled)
         {
-            User?.Jobs.Add(job);
+            Model.User.Jobs.Add(job);
         }
         else
         {
-            User?.Jobs.Remove(job);
+            Model.User.Jobs.Remove(job);
         }
     }
 
     private void ToggleDataTableAuthorization(ChangeEventArgs args, MasterDataTable table)
     {
+        ArgumentNullException.ThrowIfNull(Model);
         var enabled = (bool)args.Value!;
         if (enabled)
         {
-            User?.DataTables.Add(table);
+            Model.User.DataTables.Add(table);
         }
         else
         {
-            User?.DataTables.Remove(table);
+            Model.User.DataTables.Remove(table);
         }
     }
 
     private void OnClosed()
     {
-        User = null;
+        Model = null;
     }
 
     private async Task SubmitUser()
     {
+        ArgumentNullException.ThrowIfNull(Model);
         // New user
         if (IsNewUser)
         {
-            Password ??= string.Empty;
-            ConfirmPassword ??= string.Empty;
-
-            if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn && Password.Length < 1 || Password.Length > 250)
-            {
-                Messenger.AddError("Password must be between 1 and 250 characters in length");
-                return;
-            }
-
-            if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn && !Password.Equals(ConfirmPassword))
+            ArgumentNullException.ThrowIfNull(Model.PasswordModel);
+            if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn && !Model.PasswordModel.Password.Equals(Model.PasswordModel.ConfirmPassword))
             {
                 Messenger.AddError("The two passwords do not match");
                 return;
@@ -133,21 +126,20 @@ public partial class UserEditModal : ComponentBase, IDisposable
 
             try
             {
-                ArgumentNullException.ThrowIfNull(User);
                 var context = await DbFactory.CreateDbContextAsync();
                 var transaction = context.Database.BeginTransaction().GetDbTransaction();
 
                 try
                 {
                     // Add user without password
-                    context.Users.Add(User);
+                    context.Users.Add(Model.User);
 
                     await context.SaveChangesAsync();
 
                     var connection = context.Database.GetDbConnection();
 
                     // Update the password hash.
-                    await UserService.AdminUpdatePasswordAsync(User.Username, Password, connection, transaction);
+                    await UserService.AdminUpdatePasswordAsync(Model.User.Username, Model.PasswordModel.Password, connection, transaction);
 
                     await transaction.CommitAsync();
                 }
@@ -157,9 +149,8 @@ public partial class UserEditModal : ComponentBase, IDisposable
                     throw;
                 }
 
-                Password = null;
-                ConfirmPassword = null;
-                await OnUserSubmit.InvokeAsync(User);
+                await OnUserSubmit.InvokeAsync(Model.User);
+                Model = null;
                 await Modal.LetAsync(x => x.HideAsync());
             }
             catch (Exception ex)
@@ -172,10 +163,10 @@ public partial class UserEditModal : ComponentBase, IDisposable
         {
             try
             {
-                ArgumentNullException.ThrowIfNull(User);
-                Context.Attach(User).Property(u => u.Roles).IsModified = true;
+                ArgumentNullException.ThrowIfNull(Model);
+                Context.Attach(Model.User).Property(u => u.Roles).IsModified = true;
                 await Context.SaveChangesAsync();
-                await OnUserSubmit.InvokeAsync(User);
+                await OnUserSubmit.InvokeAsync(Model.User);
                 await Modal.LetAsync(x => x.HideAsync());
             }
             catch (Exception ex)
@@ -193,22 +184,24 @@ public partial class UserEditModal : ComponentBase, IDisposable
         if (userId is null)
         {
             await ResetContext();
-            User = new()
+            var user = new User
             {
                 Username = "",
                 Roles = new() { Roles.Viewer },
                 Jobs = new List<Job>(),
                 DataTables = new List<MasterDataTable>()
             };
+            Model = new(user, new());
         }
         else
         {
             await ResetContext();
-            User = await Context.Users
+            var user = await Context.Users
                 .Include(u => u.Jobs)
                 .Include(u => u.DataTables)
                 .FirstAsync(user => user.UserId == userId);
-            CurrentUsername = User.Username;
+            CurrentUsername = user.Username;
+            Model = new(user, null); // no password model for existing users
         }
         Jobs = await Context.Jobs
             .Include(j => j.Category)
@@ -232,4 +225,15 @@ public partial class UserEditModal : ComponentBase, IDisposable
     public void Dispose() => Context?.Dispose();
 
     private enum AuthorizationPane { Jobs, DataTables }
+
+    private record FormModel(User User, PasswordModel? PasswordModel);
+
+    private class PasswordModel
+    {
+        [Required, ComplexPassword]
+        public string Password { get; set; } = "";
+
+        [Required]
+        public string ConfirmPassword { get; set; } = "";
+    }
 }

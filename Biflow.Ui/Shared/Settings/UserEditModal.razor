@@ -1,13 +1,13 @@
 ﻿
 <HxModal @ref="Modal" Title="@(IsNewUser ? "New user" : $"Edit {CurrentUsername}")" Scrollable="true" Size="ModalSize.Large" OnClosed="OnClosed">
     <BodyTemplate>
-        @if (User is not null)
+        @if (Model is not null)
         {
             <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
-            <EditForm Model="User" id="user_edit_form" OnValidSubmit="SubmitUser">
+            <EditForm Model="Model" id="user_edit_form" OnValidSubmit="SubmitUser">
                 <div class="row">
                     <div class="col-md-10 mx-auto">
-                        <DataAnnotationsValidator />
+                        <ObjectGraphDataAnnotationsValidator />
                         <ValidationSummary />
                         <div>
                             <label class="form-label">Username</label>
@@ -15,7 +15,7 @@
                                 <div class="input-group-text">
                                     <CxIcon Icon="FeatherIcon.User" />
                                 </div>
-                                <InputText class="form-control" @bind-Value="User.Username"></InputText>
+                                <InputText class="form-control" @bind-Value="Model.User.Username"></InputText>
                             </div>
                         </div>
                         <div class="mt-3">
@@ -25,7 +25,7 @@
                             <div class="col">
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" id="role_radio_admin"
-                                           checked=@User.Roles.Contains(Roles.Admin)
+                                           checked=@Model.User.Roles.Contains(Roles.Admin)
                                     @onchange="@(e => ToggleRole(Roles.Admin))">
                                     <label class="form-check-label fw-normal" for="role_radio_admin">
                                         Admin
@@ -36,7 +36,7 @@
                                 </div>
                                 <div class="form-check mt-1">
                                     <input class="form-check-input" type="radio" id="role_radio_editor"
-                                           checked=@User.Roles.Contains(Roles.Editor)
+                                           checked=@Model.User.Roles.Contains(Roles.Editor)
                                     @onchange="@(e => ToggleRole(Roles.Editor))">
                                     <label class="form-check-label fw-normal" for="role_radio_editor">
                                         Editor
@@ -47,7 +47,7 @@
                                 </div>
                                 <div class="form-check mt-1">
                                     <input class="form-check-input" type="radio" id="role_radio_operator"
-                                           checked=@User.Roles.Contains(Roles.Operator)
+                                           checked=@Model.User.Roles.Contains(Roles.Operator)
                                     @onchange="@(e => ToggleRole(Roles.Operator))">
                                     <label class="form-check-label fw-normal" for="role_radio_operator">
                                         Operator
@@ -58,7 +58,7 @@
                                 </div>
                                 <div class="form-check mt-1">
                                     <input class="form-check-input" type="radio" id="role_radio_viewer"
-                                           checked=@User.Roles.Contains(Roles.Viewer)
+                                           checked=@Model.User.Roles.Contains(Roles.Viewer)
                                     @onchange="@(e => ToggleRole(Roles.Viewer))">
                                     <label class="form-check-label fw-normal" for="role_radio_viewer">
                                         Viewer
@@ -69,11 +69,11 @@
                                 </div>
                             </div>
                             <div class="col">
-                                @if (!User.Roles.Contains(Roles.Admin))
+                                @if (!Model.User.Roles.Contains(Roles.Admin))
                                 {
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="role_radio_datatable_maintainer"
-                                               checked=@User.Roles.Contains(Roles.DataTableMaintainer)
+                                               checked=@Model.User.Roles.Contains(Roles.DataTableMaintainer)
                                         @onchange="@(e => ToggleRole(Roles.DataTableMaintainer))">
                                         <label class="form-check-label fw-normal" for="role_radio_datatable_maintainer">
                                             Data Table Maintainer
@@ -91,18 +91,19 @@
                                 <div class="input-group-text">
                                     <CxIcon Icon="FeatherIcon.AtSign" />
                                 </div>
-                                <InputText class="form-control" type="email" @bind-Value="User.Email"></InputText>
+                                <InputText class="form-control" type="email" @bind-Value="Model.User.Email"></InputText>
                             </div>
                         </div>
                         @if (IsNewUser && AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn)
                         {
+                            ArgumentNullException.ThrowIfNull(Model.PasswordModel);
                             <div class="mt-3">
                                 <label class="form-label">Password</label>
                                 <div class="input-group">
                                     <div class="input-group-text">
                                         <CxIcon Icon="FeatherIcon.Lock" />
                                     </div>
-                                    <InputText class="form-control" type="password" @bind-Value="Password"></InputText>
+                                    <InputText class="form-control" type="password" @bind-Value="Model.PasswordModel.Password"></InputText>
                                 </div>
                             </div>
                             <div class="mt-3">
@@ -111,11 +112,11 @@
                                     <div class="input-group-text">
                                         <CxIcon Icon="FeatherIcon.Key" />
                                     </div>
-                                    <InputText class="form-control" type="password" @bind-Value="ConfirmPassword"></InputText>
+                                    <InputText class="form-control" type="password" @bind-Value="Model.PasswordModel.ConfirmPassword"></InputText>
                                 </div>
                             </div>
                         }
-                        @if (!User.Roles.Contains(Roles.Admin))
+                        @if (!Model.User.Roles.Contains(Roles.Admin))
                         {
                             <div class="mt-4">
                                 <strong>Authorization</strong>
@@ -136,7 +137,7 @@
                                     </a>
                                 </li>
                             </ul>
-                            @if (CurrentPane == AuthorizationPane.Jobs && User.Roles.Contains(Roles.Editor))
+                            @if (CurrentPane == AuthorizationPane.Jobs && Model.User.Roles.Contains(Roles.Editor))
                             {
                                 <div class="row mt-3">
                                     <div class="col">
@@ -151,12 +152,12 @@
                                 <div class="mt-3">
                                     <div class="form-check form-check-inline">
                                         <input type="checkbox" class="form-check-input" id="authorize_all_jobs"
-                                           checked=@User.AuthorizeAllJobs
-                                           @bind-value="User.AuthorizeAllJobs">
+                                           checked=@Model.User.AuthorizeAllJobs
+                                        @bind-value="Model.User.AuthorizeAllJobs">
                                         <label class="form-check-label" for="authorize_all_jobs">Authorize all jobs</label>
                                     </div>
                                 </div>
-                                @if (!User.AuthorizeAllJobs)
+                                @if (!Model.User.AuthorizeAllJobs)
                                 {
                                     <div class="list-group mt-3">
                                         @if (Jobs is null)
@@ -187,7 +188,7 @@
                                                             <div class="col-auto">
                                                                 <div class="form-check form-check-inline">
                                                                     <input type="checkbox" class="form-check-input" id="authorize_@job.JobId"
-                                                                           checked=@User.Jobs.Any(j => j.JobId == job.JobId)
+                                                                           checked=@Model.User.Jobs.Any(j => j.JobId == job.JobId)
                                                                            @onchange="args => ToggleJobAuthorization(args, job)">
                                                                     <label class="form-check-label" for="authorize_@job.JobId"></label>
                                                                 </div>
@@ -200,7 +201,7 @@
                                     </div>
                                 }
                             }
-                            else if (CurrentPane == AuthorizationPane.DataTables && User.Roles.Contains(Roles.DataTableMaintainer))
+                            else if (CurrentPane == AuthorizationPane.DataTables && Model.User.Roles.Contains(Roles.DataTableMaintainer))
                             {
                                 <div class="row mt-3">
                                     <div class="col">
@@ -215,12 +216,12 @@
                                 <div class="mt-3">
                                     <div class="form-check form-check-inline">
                                         <input type="checkbox" class="form-check-input" id="authorize_all_datatables"
-                                           checked=@User.AuthorizeAllDataTables
-                                           @bind-value="User.AuthorizeAllDataTables">
+                                               checked=@Model.User.AuthorizeAllDataTables
+                                        @bind-value="Model.User.AuthorizeAllDataTables">
                                         <label class="form-check-label" for="authorize_all_datatables">Authorize all data tables</label>
                                     </div>
                                 </div>
-                                @if (!User.AuthorizeAllDataTables)
+                                @if (!Model.User.AuthorizeAllDataTables)
                                 {
                                     <div class="list-group mt-3">
                                         @if (DataTables is null)
@@ -251,7 +252,7 @@
                                                             <div class="col-auto">
                                                                 <div class="form-check form-check-inline">
                                                                     <input type="checkbox" class="form-check-input" id="authorize_@table.DataTableId"
-                                                                           checked=@User.DataTables.Any(t => t.DataTableId == table.DataTableId)
+                                                                           checked=@Model.User.DataTables.Any(t => t.DataTableId == table.DataTableId)
                                                                            @onchange="args => ToggleDataTableAuthorization(args, table)">
                                                                     <label class="form-check-label" for="authorize_@table.DataTableId"></label>
                                                                 </div>
