@@ -81,8 +81,8 @@ public class BiflowContext : DbContext
                 _httpContextAccessor.HttpContext == null ||
                 // The user is either admin or editor or is granted authorization to the job.
                 _httpContextAccessor.HttpContext.User.Identity != null &&
-                    (_httpContextAccessor.HttpContext.User.IsInRole("Admin") ||
-                    _httpContextAccessor.HttpContext.User.IsInRole("Editor") ||
+                    (_httpContextAccessor.HttpContext.User.IsInRole(Roles.Admin) ||
+                    _httpContextAccessor.HttpContext.User.IsInRole(Roles.Editor) ||
                     Users.Any(u => u.Username == _httpContextAccessor.HttpContext.User.Identity.Name && (u.AuthorizeAllJobs || u.Jobs.Any(j => j.JobId == exec.JobId))))
                 );
             }
@@ -163,8 +163,8 @@ public class BiflowContext : DbContext
                 _httpContextAccessor.HttpContext == null ||
                 // The user is either admin or editor or is granted authorization to the job.
                 _httpContextAccessor.HttpContext.User.Identity != null &&
-                    (_httpContextAccessor.HttpContext.User.IsInRole("Admin") ||
-                    _httpContextAccessor.HttpContext.User.IsInRole("Editor") ||
+                    (_httpContextAccessor.HttpContext.User.IsInRole(Roles.Admin) ||
+                    _httpContextAccessor.HttpContext.User.IsInRole(Roles.Editor) ||
                     Users.Any(u => u.Username == _httpContextAccessor.HttpContext.User.Identity.Name && u.AuthorizeAllJobs) ||
                     j.Users.Any(u => u.Username == _httpContextAccessor.HttpContext.User.Identity.Name))
                 );
@@ -421,8 +421,8 @@ public class BiflowContext : DbContext
                 _httpContextAccessor.HttpContext == null ||
                 // The user is either admin or editor or is granted authorization to the data table.
                 _httpContextAccessor.HttpContext.User.Identity != null &&
-                    (_httpContextAccessor.HttpContext.User.IsInRole("Admin") ||
-                    _httpContextAccessor.HttpContext.User.IsInRole("Editor") ||
+                    (_httpContextAccessor.HttpContext.User.IsInRole(Roles.Admin) ||
+                    _httpContextAccessor.HttpContext.User.IsInRole(Roles.DataTableMaintainer) ||
                     Users.Any(u => u.Username == _httpContextAccessor.HttpContext.User.Identity.Name && u.AuthorizeAllDataTables) ||
                     t.Users.Any(u => u.Username == _httpContextAccessor.HttpContext.User.Identity.Name))
                 );

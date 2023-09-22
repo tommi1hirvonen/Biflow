@@ -62,15 +62,14 @@ public partial class UserEditModal : ComponentBase, IDisposable
             User.Roles.RemoveAll(r => r == Roles.Admin || r == Roles.Editor || r == Roles.Viewer || r == Roles.Operator);
             User.Roles.Add(role);
         }
-        else if (role == Roles.DataTableMaintainer || role == Roles.DataTableEditor)
+        else if (role == Roles.DataTableMaintainer)
         {
             if (User.Roles.Contains(role))
             {
-                User.Roles.RemoveAll(r => r == Roles.DataTableMaintainer || r == Roles.DataTableEditor);
+                User.Roles.RemoveAll(r => r == Roles.DataTableMaintainer);
             }
             else
             {
-                User.Roles.RemoveAll(r => r == Roles.DataTableMaintainer || r == Roles.DataTableEditor);
                 User.Roles.Add(role);
             }
         }
