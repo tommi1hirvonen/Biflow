@@ -52,12 +52,12 @@ public partial class UserEditModal : ComponentBase, IDisposable
     private void ToggleRole(string role)
     {
         ArgumentNullException.ThrowIfNull(User);
-        if (role == Roles.Admin || role == Roles.Editor)
+        if (role == Roles.Admin)
         {
             User.Roles.Clear();
             User.Roles.Add(role);
         }
-        else if (role == Roles.Operator || role == Roles.Viewer)
+        else if (role == Roles.Editor || role == Roles.Operator || role == Roles.Viewer)
         {
             User.Roles.RemoveAll(r => r == Roles.Admin || r == Roles.Editor || r == Roles.Viewer || r == Roles.Operator);
             User.Roles.Add(role);
