@@ -31,49 +31,19 @@
                             </div>
                             <div class="col-auto">
                                 <HxButtonGroup>
-                                    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="edit" @onclick="async () => await ShowEditModalAsync(user)">
+                                    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="edit" @onclick="async () => await ShowEditModalAsync(user)" title="Edit user">
                                         <CxIcon Icon="FeatherIcon.Edit2" />
                                     </HxButton>
 
                                     @if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn)
                                     {
-                                        <HxDropdownButtonGroup>
-                                            <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="Change password" @onclick="ResetPassword">
-                                                <CxIcon Icon="FeatherIcon.Key" />
-                                            </HxDropdownToggleButton>
-                                            <HxDropdownContent CssClass="p-4">
-                                                <div style="min-width: 25rem;">
-                                                    <div class="row">
-                                                        <div class="col">
-                                                            <HxInputText Label="New password" InputSize="InputSize.Small" Type="InputType.Password" @bind-Value="Password">
-                                                                <InputGroupStartTemplate>
-                                                                    <div class="input-group-text">
-                                                                        <CxIcon Icon="FeatherIcon.Lock" />
-                                                                    </div>
-                                                                </InputGroupStartTemplate>
-                                                            </HxInputText>
-                                                        </div>
-                                                    </div>
-                                                    <div class="row mt-3">
-                                                        <div class="col">
-                                                            <HxInputText Label="Confirm password" InputSize="InputSize.Small" Type="InputType.Password" @bind-Value="ConfirmPassword">
-                                                                <InputGroupStartTemplate>
-                                                                    <div class="input-group-text">
-                                                                        <CxIcon Icon="FeatherIcon.Key" />
-                                                                    </div>
-                                                                </InputGroupStartTemplate>
-                                                            </HxInputText>
-                                                        </div>
-                                                    </div>
-                                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Success" CssClass="mt-3" @onclick="() => UpdatePassword(user)">Save</HxButton>
-                                                </div>
-
-                                            </HxDropdownContent>
-                                        </HxDropdownButtonGroup>
+                                        <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="Change password" @onclick="() => ResetPasswordModal.LetAsync(x => x.ShowAsync(user.Username))" title="Reset password">
+                                            <CxIcon Icon="FeatherIcon.Key" />
+                                        </HxButton>
                                     }
 
                                     <HxDropdownButtonGroup>
-                                        <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="delete">
+                                        <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="delete" title="Delete user">
                                             <CxIcon Icon="FeatherIcon.Trash2" />
                                         </HxDropdownToggleButton>
                                         <HxDropdownMenu>
@@ -104,6 +74,8 @@
     </div>
 </div>
 
+<ResetPasswordModal @ref="ResetPasswordModal" />
+
 <UserEditModal @ref="UserEditModal" OnUserSubmit="OnUserSubmit" />
 
 
@@ -111,9 +83,7 @@
     private List<User> Users { get; set; } = null!;
 
     private UserEditModal? UserEditModal { get; set; }
-
-    private string? Password { get; set; }
-    private string? ConfirmPassword { get; set; }
+    private ResetPasswordModal? ResetPasswordModal { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -155,50 +125,4 @@
         await UserEditModal.LetAsync(x => x.ShowAsync(user?.UserId));
     }
 
-    private async Task UpdatePassword(User user)
-    {
-        if (!PasswordCheck())
-        {
-            return;
-        }
-        try
-        {
-            await UserService.AdminUpdatePasswordAsync(user.Username, Password!); // PasswordCheck() makes sure Password is not null
-            ResetPassword();
-            Messenger.AddInformation("Password updated successfully");
-        }
-        catch (Exception)
-        {
-            Messenger.AddError("Error updating password");
-        }
-    }
-
-    private void ResetPassword()
-    {
-        Password = null;
-        ConfirmPassword = null;
-    }
-
-    private bool PasswordCheck()
-    {
-        Password = Password ?? string.Empty;
-        ConfirmPassword = ConfirmPassword ?? string.Empty;
-
-        if (Password.Length < 1 || Password.Length > 250)
-        {
-            Messenger.AddInformation("The password must be between 1 and 250 characters in length");
-            return false;
-        }
-
-        if (!Password.Equals(ConfirmPassword))
-        {
-            Messenger.AddInformation("The two passwords do not match");
-            return false;
-        }
-
-        else
-        {
-            return true;
-        }
-    }
 }
