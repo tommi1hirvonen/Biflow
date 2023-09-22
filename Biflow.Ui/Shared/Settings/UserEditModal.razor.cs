@@ -1,6 +1,7 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Ui.Core;
+using Biflow.Ui.Core.Validation;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
@@ -37,6 +38,8 @@ public partial class UserEditModal : ComponentBase, IDisposable
     private string CurrentUsername { get; set; } = "";
 
     private BiflowContext Context { get; set; } = null!;
+
+    private UserValidator Validator { get; set; } = new(Enumerable.Empty<string>());
 
     private AuthorizationPane CurrentPane { get; set; } = AuthorizationPane.Jobs;
 
@@ -211,6 +214,13 @@ public partial class UserEditModal : ComponentBase, IDisposable
             .Include(t => t.Category)
             .OrderBy(t => t.DataTableName)
             .ToListAsync();
+        var reservedUsernames = await Context.Users
+            .AsNoTracking()
+            .Where(u => u.Username != Model.User.Username)
+            .Select(u => u.Username)
+            .ToArrayAsync();
+        Validator = new(reservedUsernames);
+
     }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
