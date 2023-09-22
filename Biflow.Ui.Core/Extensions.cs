@@ -155,7 +155,6 @@ public static partial class Extensions
     /// <returns>The IServiceCollection passed as parameter</returns>
     public static IServiceCollection AddValidationServices(this IServiceCollection services)
     {
-        services.AddSingleton<PasswordValidationService>();
         services.AddTransient<StepParametersValidator>();
         services.AddTransient<StepValidator>();
         services.AddTransient<JobValidator>();
@@ -403,13 +402,6 @@ public static partial class Extensions
         };
 
     // Using the GeneratedRegex attributes we can create the regex already at compile time.
-
-    /// <summary>
-    /// Regex pattern for min eight characters, max 32 characters, at least one uppercase letter, one lowercase letter, one number and one special character
-    /// </summary>
-    /// <returns></returns>
-    [GeneratedRegex(@"^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[*.!@#$%^&(){}[\]:;<>,.?/~_+-=|]).{8,32}$")]
-    public static partial Regex PasswordValidationRegex();
 
     // Can handle white space inside object names
     [GeneratedRegex("EXEC(?:UTE)?[\\s*](\\[.*\\]).(\\[.*\\])", RegexOptions.IgnoreCase, "en-US")]
