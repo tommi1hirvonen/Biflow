@@ -141,7 +141,7 @@
 
     private void OnUserSubmit(User user)
     {
-        var existingUser = Users.FirstOrDefault(u => u.Username == user.Username);
+        var existingUser = Users.FirstOrDefault(u => u.UserId == user.UserId);
         if (existingUser is not null)
         {
             Users.Remove(existingUser);
@@ -152,7 +152,7 @@
 
     private async Task ShowEditModalAsync(User? user)
     {
-        await UserEditModal.LetAsync(x => x.ShowAsync(user?.Username));
+        await UserEditModal.LetAsync(x => x.ShowAsync(user?.UserId));
     }
 
     private async Task UpdatePassword(User user)

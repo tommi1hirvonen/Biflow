@@ -31,8 +31,9 @@ public partial class UserEditModal : ComponentBase, IDisposable
 
     private User? User { get; set; }
 
-    private bool IsNewUser => PreviousUsername is null;
-    private string? PreviousUsername { get; set; }
+    private bool IsNewUser => PreviousUserId == Guid.Empty;
+    private Guid PreviousUserId { get; set; }
+    private string CurrentUsername { get; set; } = "";
 
     private string? Password { get; set; }
     private string? ConfirmPassword { get; set; }
@@ -184,11 +185,12 @@ public partial class UserEditModal : ComponentBase, IDisposable
         }
     }
 
-    public async Task ShowAsync(string? username)
+    public async Task ShowAsync(Guid? userId)
     {
+        CurrentUsername = "";
         await Modal.LetAsync(x => x.ShowAsync());
-        PreviousUsername = username;
-        if (username is null)
+        PreviousUserId = userId ?? Guid.Empty;
+        if (userId is null)
         {
             await ResetContext();
             User = new()
@@ -205,7 +207,8 @@ public partial class UserEditModal : ComponentBase, IDisposable
             User = await Context.Users
                 .Include(u => u.Jobs)
                 .Include(u => u.DataTables)
-                .FirstAsync(user => user.Username == username);
+                .FirstAsync(user => user.UserId == userId);
+            CurrentUsername = User.Username;
         }
         Jobs = await Context.Jobs
             .Include(j => j.Category)

@@ -1,5 +1,5 @@
 ﻿
-<HxModal @ref="Modal" Title="@(IsNewUser ? "New user" : $"Edit {PreviousUsername}")" Scrollable="true" Size="ModalSize.Large" OnClosed="OnClosed">
+<HxModal @ref="Modal" Title="@(IsNewUser ? "New user" : $"Edit {CurrentUsername}")" Scrollable="true" Size="ModalSize.Large" OnClosed="OnClosed">
     <BodyTemplate>
         @if (User is not null)
         {
@@ -15,7 +15,7 @@
                                 <div class="input-group-text">
                                     <CxIcon Icon="FeatherIcon.User" />
                                 </div>
-                                <InputText class="form-control" disabled=@(!IsNewUser) @bind-Value="User.Username"></InputText>
+                                <InputText class="form-control" @bind-Value="User.Username"></InputText>
                             </div>
                         </div>
                         <div class="mt-3">
