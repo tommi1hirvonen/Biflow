@@ -12,19 +12,15 @@ public interface IAuthHandler
     /// <returns>The role of the authenticated user</returns>
     /// <exception cref="InvalidCredentialException">If the provided credentials were not authroized</exception>
     /// <exception cref="AuthenticationException">If the resulting user role is unrecognized</exception>
-    public async Task<string> AuthenticateUserAsync(string username, string password)
+    public async Task<IEnumerable<string>> AuthenticateUserAsync(string username, string password)
     {
-        var role = await AuthenticateUserInternalAsync(username, password);
-        if (role is null)
+        var roles = await AuthenticateUserInternalAsync(username, password);
+        if (!roles.Any())
         {
             throw new InvalidCredentialException();
         }
-        if (!new[] { "Admin", "Editor", "Operator", "Viewer" }.Contains(role))
-        {
-            throw new AuthenticationException($"Unrecognized user role {role}");
-        }
-        return role;
+        return roles;
     }
 
-    protected abstract Task<string?> AuthenticateUserInternalAsync(string username, string password);
+    protected abstract Task<IEnumerable<string>> AuthenticateUserInternalAsync(string username, string password);
 }

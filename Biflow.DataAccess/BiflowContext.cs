@@ -365,9 +365,15 @@ public class BiflowContext : DbContext
             .OnDelete(DeleteBehavior.Cascade);
         });
 
-        modelBuilder.Entity<User>()
-            .HasMany(user => user.Subscriptions)
+        modelBuilder.Entity<User>(e =>
+        {
+            e.HasMany(user => user.Subscriptions)
             .WithOne(subscription => subscription.User);
+            e.Property(u => u.Roles).HasConversion(
+                from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
+                to => JsonSerializer.Deserialize<List<string>>(to, null as JsonSerializerOptions) ?? new());
+        });
+            
 
         modelBuilder.Entity<PipelineClient>(e =>
         {

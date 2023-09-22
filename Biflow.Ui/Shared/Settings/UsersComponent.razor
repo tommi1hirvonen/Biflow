@@ -1,5 +1,5 @@
 ﻿@inject IDbContextFactory<BiflowContext> DbFactory
-@inject DbHelperService DbHelperService
+@inject UserService UserService
 @inject IHxMessengerService Messenger
 @inject AuthenticationMethodResolver AuthenticationResolver
 
@@ -22,82 +22,82 @@
             }
             else
             {
-                foreach (var users in Users.GroupBy(u => u.Role).OrderBy(g => g.Key))
+                foreach (var user in Users.OrderBy(u => u.Username))
                 {
-                    if (users.Any())
-                    {
-                        <li class="list-group-item fw-bold list-group-header">@users.Key</li>
-                        @foreach (var user in users)
-                        {
-                            <li class="list-group-item list-group-item-action">
-                                <div class="row">
-                                    <div class="col">
-                                        @user.Username
-                                    </div>
-                                    <div class="col-auto">
-                                        <HxButtonGroup>
-                                            <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="edit" @onclick="async () => await ShowEditModalAsync(user)">
-                                                <CxIcon Icon="FeatherIcon.Edit2" />
-                                            </HxButton>
+                    <li class="list-group-item list-group-item-action">
+                        <div class="row">
+                            <div class="col">
+                                @user.Username
+                            </div>
+                            <div class="col-auto">
+                                <HxButtonGroup>
+                                    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="edit" @onclick="async () => await ShowEditModalAsync(user)">
+                                        <CxIcon Icon="FeatherIcon.Edit2" />
+                                    </HxButton>
 
-                                            @if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn)
-                                            {
-                                                <HxDropdownButtonGroup>
-                                                    <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="Change password" @onclick="ResetPassword">
-                                                        <CxIcon Icon="FeatherIcon.Key" />
-                                                    </HxDropdownToggleButton>
-                                                    <HxDropdownContent CssClass="p-4">
-                                                        <div style="min-width: 25rem;">
-                                                            <div class="row">
-                                                                <div class="col">
-                                                                    <HxInputText Label="New password" InputSize="InputSize.Small" Type="InputType.Password" @bind-Value="Password">
-                                                                        <InputGroupStartTemplate>
-                                                                            <div class="input-group-text">
-                                                                                <CxIcon Icon="FeatherIcon.Lock" />
-                                                                            </div>
-                                                                        </InputGroupStartTemplate>
-                                                                    </HxInputText>
-                                                                </div>
-                                                            </div>
-                                                            <div class="row mt-3">
-                                                                <div class="col">
-                                                                    <HxInputText Label="Confirm password" InputSize="InputSize.Small" Type="InputType.Password" @bind-Value="ConfirmPassword">
-                                                                        <InputGroupStartTemplate>
-                                                                            <div class="input-group-text">
-                                                                                <CxIcon Icon="FeatherIcon.Key" />
-                                                                            </div>
-                                                                        </InputGroupStartTemplate>
-                                                                    </HxInputText>
-                                                                </div>
-                                                            </div>
-                                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Success" CssClass="mt-3" @onclick="() => UpdatePassword(user)">Save</HxButton>
+                                    @if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn)
+                                    {
+                                        <HxDropdownButtonGroup>
+                                            <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="Change password" @onclick="ResetPassword">
+                                                <CxIcon Icon="FeatherIcon.Key" />
+                                            </HxDropdownToggleButton>
+                                            <HxDropdownContent CssClass="p-4">
+                                                <div style="min-width: 25rem;">
+                                                    <div class="row">
+                                                        <div class="col">
+                                                            <HxInputText Label="New password" InputSize="InputSize.Small" Type="InputType.Password" @bind-Value="Password">
+                                                                <InputGroupStartTemplate>
+                                                                    <div class="input-group-text">
+                                                                        <CxIcon Icon="FeatherIcon.Lock" />
+                                                                    </div>
+                                                                </InputGroupStartTemplate>
+                                                            </HxInputText>
                                                         </div>
+                                                    </div>
+                                                    <div class="row mt-3">
+                                                        <div class="col">
+                                                            <HxInputText Label="Confirm password" InputSize="InputSize.Small" Type="InputType.Password" @bind-Value="ConfirmPassword">
+                                                                <InputGroupStartTemplate>
+                                                                    <div class="input-group-text">
+                                                                        <CxIcon Icon="FeatherIcon.Key" />
+                                                                    </div>
+                                                                </InputGroupStartTemplate>
+                                                            </HxInputText>
+                                                        </div>
+                                                    </div>
+                                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Success" CssClass="mt-3" @onclick="() => UpdatePassword(user)">Save</HxButton>
+                                                </div>
 
-                                                    </HxDropdownContent>
-                                                </HxDropdownButtonGroup>
-                                            }
+                                            </HxDropdownContent>
+                                        </HxDropdownButtonGroup>
+                                    }
 
-                                            <HxDropdownButtonGroup>
-                                                <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="delete">
-                                                    <CxIcon Icon="FeatherIcon.Trash2" />
-                                                </HxDropdownToggleButton>
-                                                <HxDropdownMenu>
-                                                    <HxDropdownHeader>Delete?</HxDropdownHeader>
-                                                    <HxDropdownItem @onclick="() => DeleteUser(user)">Confirm</HxDropdownItem>
-                                                </HxDropdownMenu>
-                                            </HxDropdownButtonGroup>
-                                        </HxButtonGroup>
-                                    </div>
-                                    <div class="col">
-                                        @user.Email
-                                    </div>
-                                    <div class="col">
-                                        Created on @user.CreatedDateTime.LocalDateTime
-                                    </div>
-                                </div>
-                            </li>
-                        }
-                    }
+                                    <HxDropdownButtonGroup>
+                                        <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="delete">
+                                            <CxIcon Icon="FeatherIcon.Trash2" />
+                                        </HxDropdownToggleButton>
+                                        <HxDropdownMenu>
+                                            <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                            <HxDropdownItem @onclick="() => DeleteUser(user)">Confirm</HxDropdownItem>
+                                        </HxDropdownMenu>
+                                    </HxDropdownButtonGroup>
+                                </HxButtonGroup>
+                            </div>
+                            <div class="col">
+                                @user.Email
+                            </div>
+                            <div class="col">
+                                @foreach (var role in user.Roles.OrderBy(r => r))
+                                {
+                                    var tag = new RoleTag(role);
+                                    <TagComponent Tag="tag" CssClass="m-1" />
+                                }
+                            </div>
+                            <div class="col">
+                                Created on @user.CreatedDateTime.LocalDateTime
+                            </div>
+                        </div>
+                    </li>
                 }
             }
         </ul>
@@ -163,7 +163,7 @@
         }
         try
         {
-            await DbHelperService.UpdatePasswordAsync(user.Username, Password!); // PasswordCheck() makes sure Password is not null
+            await UserService.UpdatePasswordAsync(user.Username, Password!); // PasswordCheck() makes sure Password is not null
             ResetPassword();
             Messenger.AddInformation("Password updated successfully");
         }

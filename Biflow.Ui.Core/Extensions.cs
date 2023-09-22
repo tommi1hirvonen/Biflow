@@ -41,7 +41,7 @@ public static partial class Extensions
     }
 
     /// <summary>
-    /// Adds authentication services based on settings defined in configuration
+    /// Adds authentication services based on settings defined in configuration. Needs to be called after AddUiCoreServices().
     /// </summary>
     /// <param name="configuration">Top level configuration object</param>
     /// <returns>The IServiceCollection passed as parameter</returns>
@@ -61,9 +61,7 @@ public static partial class Extensions
             services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
             services.AddAuthorization(options =>
             {
-                var connectionString = configuration.GetConnectionString("BiflowContext");
-                ArgumentNullException.ThrowIfNull(connectionString);
-                options.FallbackPolicy = new AuthorizationPolicyBuilder().AddRequirements(new UserExistsRequirement(connectionString)).Build();
+                options.FallbackPolicy = new AuthorizationPolicyBuilder().AddRequirements(new UserExistsRequirement()).Build();
             });
             services.AddSingleton<IAuthorizationHandler, WindowsAuthorizationHandler>();
             services.AddSingleton<IClaimsTransformation, ClaimsTransformer>();
@@ -143,7 +141,7 @@ public static partial class Extensions
             throw new ArgumentException($"Error registering scheduler service. Incorrect scheduler type: {schedulerType}. Check appsettings.json.");
         }
 
-        services.AddSingleton<DbHelperService>();
+        services.AddSingleton<UserService>();
         services.AddSingleton<SqlServerHelperService>();
         services.AddSingleton<SubscriptionsHelperService>();
         services.AddDuplicatorServices();

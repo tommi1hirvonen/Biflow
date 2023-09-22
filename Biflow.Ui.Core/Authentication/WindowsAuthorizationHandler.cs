@@ -7,10 +7,12 @@ namespace Biflow.Ui.Core;
 internal class WindowsAuthorizationHandler : AuthorizationHandler<UserExistsRequirement>
 {
     private readonly IMemoryCache _memoryCache;
+    private readonly UserService _users;
 
-    public WindowsAuthorizationHandler(IMemoryCache memoryCache)
+    public WindowsAuthorizationHandler(IMemoryCache memoryCache, UserService users)
     {
         _memoryCache = memoryCache;
+        _users = users;
     }
 
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, UserExistsRequirement requirement)
@@ -28,7 +30,7 @@ internal class WindowsAuthorizationHandler : AuthorizationHandler<UserExistsRequ
         var exists = await _memoryCache.GetOrCreateAsync($"{userName}_Exists", entry =>
         {
             entry.SlidingExpiration = TimeSpan.FromSeconds(5);
-            return requirement.UserExistsAsync(userName);
+            return UserExistsRequirement.UserExistsAsync(_users, userName);
         });
         if (exists)
         {

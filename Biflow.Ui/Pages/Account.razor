@@ -2,7 +2,7 @@
 
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IDbContextFactory<BiflowContext> DbFactory
-@inject DbHelperService DbHelperService
+@inject UserService UserService
 @inject IHxMessengerService Messenger
 @inject AuthenticationMethodResolver AuthenticationResolver
 
@@ -20,10 +20,10 @@
 </div>
 <div class="row mt-2">
     <div class="col-auto">
-        <h6>Role:</h6>
+        <h6>Roles:</h6>
     </div>
     <div class="col-auto">
-        <h6>@User?.Role</h6>
+        <h6>@string.Join(", ", User?.Roles ?? Enumerable.Empty<string>())</h6>
     </div>
 </div>
 
@@ -178,7 +178,7 @@
 
         try
         {
-            await DbHelperService.UpdatePasswordAsync(Username, PasswordModel_.Password);
+            await UserService.UpdatePasswordAsync(Username, PasswordModel_.Password);
             Messenger.AddInformation("Success", "Password updated successfully");
             PasswordModel_.Password = null;
             PasswordModel_.ConfirmPassword = null;

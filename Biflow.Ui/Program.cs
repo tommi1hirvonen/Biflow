@@ -32,8 +32,6 @@ builder.Services.AddHxServices();
 builder.Services.AddHxMessenger();
 builder.Services.AddHxMessageBoxHost();
 
-var schedulerType = builder.Configuration.GetSection("Scheduler").GetValue<string>("Type");
-
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -52,9 +50,21 @@ app.UseCookiePolicy();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
+var schedulerType = app.Configuration.GetSection("Scheduler").GetValue<string>("Type");
 if (schedulerType == "SelfHosted")
 {
     await app.ReadAllSchedulesAsync();
+}
+
+var adminSection = app.Configuration.GetSection("AdminUser");
+if (adminSection.Exists())
+{
+    var adminUsername = adminSection.GetValue<string>("Username");
+    var adminPassword = adminSection.GetValue<string>("Password");
+    ArgumentNullException.ThrowIfNull(adminUsername);
+    ArgumentNullException.ThrowIfNull(adminPassword);
+    var users = app.Services.GetRequiredService<UserService>();
+    await users.EnsureAdminUserExistsAsync(adminUsername, adminPassword);
 }
 
 app.Run();

@@ -8,13 +8,13 @@ namespace Biflow.Ui.Core;
 internal class ClaimsTransformer : IClaimsTransformation
 {
     private readonly IMemoryCache _memoryCache;
-    private readonly DbHelperService _dbHelper;
+    private readonly UserService _users;
     private const string Issuer = "Biflow";
 
-    public ClaimsTransformer(IMemoryCache memoryCache, DbHelperService dbHelper)
+    public ClaimsTransformer(IMemoryCache memoryCache, UserService users)
     {
         _memoryCache = memoryCache;
-        _dbHelper = dbHelper;
+        _users = users;
     }
 
     public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
@@ -30,19 +30,19 @@ internal class ClaimsTransformer : IClaimsTransformation
         }
         // Claims might be transformed multiple times when a user is authorized.
         // Utilize IMemoryCache to store the role for a short period of time.
-        var role = await _memoryCache.GetOrCreateAsync($"{username}_Role", entry =>
+        var roles = await _memoryCache.GetOrCreateAsync($"{username}_Role", entry =>
         {
             entry.SlidingExpiration = TimeSpan.FromSeconds(5);
-            return _dbHelper.GetUserRoleAsync(username);
+            return _users.GetUserRolesAsync(username);
         });
-        if (role is null)
+        if (roles is null)
         {
             return principal;
         }
-        var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Role, role, ClaimValueTypes.String, Issuer)
-        };
+
+        var claims = roles
+            .Select(role => new Claim(ClaimTypes.Role, role, ClaimValueTypes.String, Issuer))
+            .ToArray();
         var claimIdentity = new ClaimsIdentity(claims, NegotiateDefaults.AuthenticationScheme);
         principal.AddIdentity(claimIdentity);
         return principal;

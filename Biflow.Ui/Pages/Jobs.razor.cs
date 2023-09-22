@@ -66,7 +66,7 @@ public partial class Jobs : ComponentBase
 
         // For admins and editors, show all available job categories.
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        if (authState.User.IsInRole("Admin") || authState.User.IsInRole("Editor"))
+        if (authState.User.IsInRole(Roles.Admin) || authState.User.IsInRole(Roles.Editor))
         {
             Categories = await context.JobCategories
                 .AsNoTrackingWithIdentityResolution()

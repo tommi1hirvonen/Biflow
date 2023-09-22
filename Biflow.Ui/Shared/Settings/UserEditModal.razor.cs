@@ -6,7 +6,9 @@ using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.JSInterop;
+using System.Data;
 
 namespace Biflow.Ui.Shared.Settings;
 
@@ -15,9 +17,7 @@ public partial class UserEditModal : ComponentBase, IDisposable
     [Inject] private AuthenticationMethodResolver AuthenticationResolver { get; set; } = null!;
     
     [Inject] private IDbContextFactory<BiflowContext> DbFactory { get; set; } = null!;
-        
-    [Inject] private DbHelperService DbHelperService { get; set; } = null!;
-    
+            
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
     
     [Inject] private IJSRuntime JS { get; set; } = null!;
@@ -47,6 +47,37 @@ public partial class UserEditModal : ComponentBase, IDisposable
             await Context.DisposeAsync();
 
         Context = await DbFactory.CreateDbContextAsync();
+    }
+
+    private void ToggleRole(string role)
+    {
+        ArgumentNullException.ThrowIfNull(User);
+        if (role == Roles.Admin || role == Roles.Editor)
+        {
+            User.Roles.Clear();
+            User.Roles.Add(role);
+        }
+        else if (role == Roles.Operator || role == Roles.Viewer)
+        {
+            User.Roles.RemoveAll(r => r == Roles.Admin || r == Roles.Editor || r == Roles.Viewer || r == Roles.Operator);
+            User.Roles.Add(role);
+        }
+        else if (role == Roles.DataTableMaintainer || role == Roles.DataTableEditor)
+        {
+            if (User.Roles.Contains(role))
+            {
+                User.Roles.RemoveAll(r => r == Roles.DataTableMaintainer || r == Roles.DataTableEditor);
+            }
+            else
+            {
+                User.Roles.RemoveAll(r => r == Roles.DataTableMaintainer || r == Roles.DataTableEditor);
+                User.Roles.Add(role);
+            }
+        }
+        else
+        {
+            throw new ArgumentException($"Unrecognized role {role}", nameof(role));
+        }
     }
 
     private void ToggleJobAuthorization(ChangeEventArgs args, Job job)
@@ -103,32 +134,28 @@ public partial class UserEditModal : ComponentBase, IDisposable
             try
             {
                 ArgumentNullException.ThrowIfNull(User);
-                await DbHelperService.AddUserAsync(User, Password);
-                
-                // Add possible job authorizations.
-                var context = DbFactory.CreateDbContext();
-                var user = await context.Users
-                    .Include(u => u.Jobs)
-                    .Include(u => u.DataTables)
-                    .FirstAsync(u => u.Username == User.Username);
-                var jobs = await context.Jobs.ToListAsync();
-                var dataTables = await context.MasterDataTables.ToListAsync();
-                user.AuthorizeAllJobs = User.AuthorizeAllJobs;
-                user.AuthorizeAllDataTables = User.AuthorizeAllDataTables;
-                foreach (var jobToAdd in User.Jobs)
-                {
-                    var job = jobs.FirstOrDefault(j => j.JobId == jobToAdd.JobId);
-                    if (job is not null)
-                        user.Jobs.Add(job);
-                }
-                foreach (var tableToAdd in User.DataTables)
-                {
-                    var table = dataTables.FirstOrDefault(t => t.DataTableId == tableToAdd.DataTableId);
-                    if (table is not null)
-                        user.DataTables.Add(table);
-                }
+                var context = await DbFactory.CreateDbContextAsync();
+                var transaction = context.Database.BeginTransaction().GetDbTransaction();
 
-                await context.SaveChangesAsync();
+                try
+                {
+                    // Add user without password
+                    context.Users.Add(User);
+
+                    await context.SaveChangesAsync();
+
+                    var connection = context.Database.GetDbConnection();
+
+                    // Update the password hash.
+                    await UserService.UpdatePasswordAsync(User.Username, Password, connection, transaction);
+
+                    await transaction.CommitAsync();
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
 
                 Password = null;
                 ConfirmPassword = null;
@@ -145,6 +172,8 @@ public partial class UserEditModal : ComponentBase, IDisposable
         {
             try
             {
+                ArgumentNullException.ThrowIfNull(User);
+                Context.Attach(User).Property(u => u.Roles).IsModified = true;
                 await Context.SaveChangesAsync();
                 await OnUserSubmit.InvokeAsync(User);
                 await Modal.LetAsync(x => x.HideAsync());
@@ -166,7 +195,7 @@ public partial class UserEditModal : ComponentBase, IDisposable
             User = new()
             {
                 Username = "",
-                Role = "Viewer",
+                Roles = new() { Roles.Viewer },
                 Jobs = new List<Job>(),
                 DataTables = new List<MasterDataTable>()
             };

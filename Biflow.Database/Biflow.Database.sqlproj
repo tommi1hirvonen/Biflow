@@ -67,7 +67,6 @@
     <Folder Include="Properties" />
     <Folder Include="biflow" />
     <Folder Include="biflow\Tables" />
-    <Folder Include="biflow\Stored Procedures" />
     <Folder Include="Security\" />
   </ItemGroup>
   <ItemGroup>
@@ -77,9 +76,6 @@
     <Build Include="biflow\Tables\Step.sql" />
     <Build Include="biflow\Tables\User.sql" />
     <Build Include="biflow\Tables\Schedule.sql" />
-    <Build Include="biflow\Stored Procedures\UserAdd.sql" />
-    <Build Include="biflow\Stored Procedures\UserAuthenticate.sql" />
-    <Build Include="biflow\Stored Procedures\UserUpdatePassword.sql" />
     <Build Include="Security\biflow.sql" />
     <Build Include="biflow\Tables\Subscription.sql" />
     <Build Include="biflow\Tables\PipelineClient.sql" />

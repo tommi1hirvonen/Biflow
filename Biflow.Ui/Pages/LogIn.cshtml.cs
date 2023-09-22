@@ -42,8 +42,8 @@ public class LogInModel : PageModel
 
         try
         {
-            var role = await _authHandler.AuthenticateUserAsync(Login.Username, Login.Password);
-            await SignInUser(Login.Username, role, false);
+            var roles = await _authHandler.AuthenticateUserAsync(Login.Username, Login.Password);
+            await SignInUser(Login.Username, roles, false);
             return LocalRedirect(Url.Content("~/"));
         }
         catch (InvalidCredentialException)
@@ -62,13 +62,14 @@ public class LogInModel : PageModel
         return Page();
     }
 
-    private async Task SignInUser(string username, string role, bool isPersistent)
+    private async Task SignInUser(string username, IEnumerable<string> roles, bool isPersistent)
     {
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, username),
-            new Claim(ClaimTypes.Role, role)
+            new Claim(ClaimTypes.Name, username)
         };
+        var roleClaims = roles.Select(role => new Claim(ClaimTypes.Role, role));
+        claims.AddRange(roleClaims);
         var claimIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         var claimPrincipal = new ClaimsPrincipal(claimIdentity);
         var authenticationProperties = new AuthenticationProperties()

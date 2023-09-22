@@ -7,16 +7,16 @@ namespace Biflow.Ui.Core;
 internal class LdapAuthHandler : IAuthHandler
 {
     private readonly IConfiguration _configuration;
-    private readonly DbHelperService _dbHelper;
+    private readonly UserService _users;
     private readonly string[] _attributesToQuery = new string[] { "userPrincipalName" };
 
-    public LdapAuthHandler(IConfiguration configuration, DbHelperService dbHelper)
+    public LdapAuthHandler(IConfiguration configuration, UserService users)
     {
         _configuration = configuration;
-        _dbHelper = dbHelper;
+        _users = users;
     }
 
-    public async Task<string?> AuthenticateUserInternalAsync(string username, string password)
+    public async Task<IEnumerable<string>> AuthenticateUserInternalAsync(string username, string password)
     {
         var section = _configuration.GetSection("Ldap");
         var server = section.GetValue<string>("Server");
@@ -62,15 +62,15 @@ internal class LdapAuthHandler : IAuthHandler
         var results = response.Entries.Cast<SearchResultEntry>();
         if (!results.Any())
         {
-            return null;
+            return Enumerable.Empty<string>();
         }
 
-        var role = await _dbHelper.GetUserRoleAsync(username);
-        if (role is null)
+        var roles = await _users.GetUserRolesAsync(username);
+        if (!roles.Any())
         {
             throw new AuthenticationException("User is not authorized to access this application");
         }
 
-        return role;
+        return roles;
     }
 }

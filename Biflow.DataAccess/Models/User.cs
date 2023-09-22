@@ -16,14 +16,14 @@ public class User
     public string? Email { get; set; }
 
     [Required]
-    public string? Role { get; set; }
+    public required List<string> Roles { get; init; }
 
     public bool AuthorizeAllJobs { get; set; }
 
     public bool AuthorizeAllDataTables { get; set; }
 
     [Required]
-    public DateTimeOffset CreatedDateTime { get; set; }
+    public DateTimeOffset CreatedDateTime { get; set; } = DateTimeOffset.UtcNow;
 
     [Required]
     public DateTimeOffset LastModifiedDateTime { get; set; }

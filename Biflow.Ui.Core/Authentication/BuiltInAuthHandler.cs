@@ -2,15 +2,15 @@
 
 internal class BuiltInAuthHandler : IAuthHandler
 {
-    private readonly DbHelperService _dbHelper;
+    private readonly UserService _users;
 
-    public BuiltInAuthHandler(DbHelperService dbHelper)
+    public BuiltInAuthHandler(UserService users)
     {
-        _dbHelper = dbHelper;
+        _users = users;
     }
 
-    public async Task<string?> AuthenticateUserInternalAsync(string username, string password)
+    public async Task<IEnumerable<string>> AuthenticateUserInternalAsync(string username, string password)
     {
-        return await _dbHelper.AuthenticateUserAsync(username, password);
+        return await _users.AuthenticateUserAsync(username, password);
     }
 }
