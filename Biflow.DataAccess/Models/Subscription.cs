@@ -5,13 +5,13 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Biflow.DataAccess.Models;
 
 [Table("Subscription")]
-[PrimaryKey("JobId", "Username")]
+[PrimaryKey("JobId", "UserId")]
 public class Subscription
 {
-    public Subscription(Guid jobId, string username)
+    public Subscription(Guid jobId, Guid userId)
     {
         JobId = jobId;
-        Username = username;
+        UserId = userId;
     }
 
     [Required]
@@ -21,7 +21,7 @@ public class Subscription
 
     [Required]
     [ForeignKey("User")]
-    public string Username { get; }
+    public Guid UserId { get; }
 
     /// <summary>
     /// null if regular subscription is not enabled

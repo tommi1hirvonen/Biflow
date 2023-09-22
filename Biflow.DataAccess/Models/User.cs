@@ -7,6 +7,8 @@ namespace Biflow.DataAccess.Models;
 public class User
 {
     [Key]
+    public Guid UserId { get; private set; }
+
     [Required]
     [MaxLength(250)]
     public required string Username { get; set; }

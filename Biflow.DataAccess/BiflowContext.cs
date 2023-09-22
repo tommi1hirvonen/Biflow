@@ -154,7 +154,7 @@ public class BiflowContext : DbContext
             e.HasMany(t => t.Users)
             .WithMany(s => s.Jobs)
             .UsingEntity<Dictionary<string, object>>("JobAuthorization",
-            x => x.HasOne<User>().WithMany().HasForeignKey("Username"),
+            x => x.HasOne<User>().WithMany().HasForeignKey("UserId"),
             x => x.HasOne<Job>().WithMany().HasForeignKey("JobId"));
 
             if (_httpContextAccessor is not null)
@@ -412,7 +412,7 @@ public class BiflowContext : DbContext
             e.HasMany(t => t.Users)
             .WithMany(u => u.DataTables)
             .UsingEntity<Dictionary<string, object>>("DataTableAuthorization",
-            x => x.HasOne<User>().WithMany().HasForeignKey("Username"),
+            x => x.HasOne<User>().WithMany().HasForeignKey("UserId"),
             x => x.HasOne<MasterDataTable>().WithMany().HasForeignKey("DataTableId"));
 
             if (_httpContextAccessor is not null)
