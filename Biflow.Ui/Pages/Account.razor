@@ -5,6 +5,7 @@
 @inject UserService UserService
 @inject IHxMessengerService Messenger
 @inject AuthenticationMethodResolver AuthenticationResolver
+@inject PasswordValidationService PasswordValidation
 
 <PageTitle>Account | Biflow</PageTitle>
 
@@ -118,6 +119,9 @@
                                 </div>
                             </div>
                             <div>
+                                <span class="text-muted small">The password must contain 8-32 characters, at least one uppercase letter, one lowercase letter, one number and one special character</span>
+                            </div>
+                            <div>
                                 <HxSubmit Color="ThemeColor.Success">
                                     <CxIcon Icon="FeatherIcon.Save" />
                                     Save
@@ -172,9 +176,9 @@
             return;
         }
 
-        if (PasswordModel_.Password.Length < 1 || PasswordModel_.Password.Length > 250)
+        if (!PasswordValidation.ValidatePassword(PasswordModel_.Password))
         {
-            Messenger.AddWarning("Warning", "The password length must be between 1 and 250");
+            Messenger.AddWarning("Warning", "The password does not meet the complexity requirements");
             return;
         }
 
