@@ -163,7 +163,7 @@
         }
         try
         {
-            await UserService.UpdatePasswordAsync(user.Username, Password!); // PasswordCheck() makes sure Password is not null
+            await UserService.AdminUpdatePasswordAsync(user.Username, Password!); // PasswordCheck() makes sure Password is not null
             ResetPassword();
             Messenger.AddInformation("Password updated successfully");
         }

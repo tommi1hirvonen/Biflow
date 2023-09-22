@@ -88,6 +88,17 @@
                     else
                     {
                         <EditForm Model="PasswordModel_" OnValidSubmit="UpdatePassword">
+                            <DataAnnotationsValidator />
+                            <ValidationSummary />
+                            <div>
+                                <label class="form-label">Old password</label>
+                                <div class="input-group">
+                                    <div class="input-group-text">
+                                        <CxIcon Icon="FeatherIcon.Unlock" />
+                                    </div>
+                                    <InputText class="form-control" type="password" @bind-Value="PasswordModel_.OldPassword"></InputText>
+                                </div>
+                            </div>
                             <div>
                                 <label class="form-label">New password</label>
                                 <div class="input-group">
@@ -161,9 +172,6 @@
             return;
         }
 
-        PasswordModel_.Password = PasswordModel_.Password ?? string.Empty;
-        PasswordModel_.ConfirmPassword = PasswordModel_.ConfirmPassword ?? string.Empty;
-
         if (PasswordModel_.Password.Length < 1 || PasswordModel_.Password.Length > 250)
         {
             Messenger.AddWarning("Warning", "The password length must be between 1 and 250");
@@ -178,22 +186,26 @@
 
         try
         {
-            await UserService.UpdatePasswordAsync(Username, PasswordModel_.Password);
+            await UserService.UpdatePasswordAsync(Username, PasswordModel_.OldPassword, PasswordModel_.Password);
             Messenger.AddInformation("Success", "Password updated successfully");
-            PasswordModel_.Password = null;
-            PasswordModel_.ConfirmPassword = null;
+            PasswordModel_ = new();
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            Messenger.AddError("Error updating password");
+            Messenger.AddError("Error updating password", ex.Message);
         }
-        
+
     }
 
     private class PasswordModel
     {
-        public string? Password { get; set; }
+        [Required]
+        public string OldPassword { get; set; } = "";
 
-        public string? ConfirmPassword { get; set; }
+        [Required]
+        public string Password { get; set; } = "";
+
+        [Required]
+        public string ConfirmPassword { get; set; } = "";
     }
 }

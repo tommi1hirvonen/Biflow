@@ -147,7 +147,7 @@ public partial class UserEditModal : ComponentBase, IDisposable
                     var connection = context.Database.GetDbConnection();
 
                     // Update the password hash.
-                    await UserService.UpdatePasswordAsync(User.Username, Password, connection, transaction);
+                    await UserService.AdminUpdatePasswordAsync(User.Username, Password, connection, transaction);
 
                     await transaction.CommitAsync();
                 }

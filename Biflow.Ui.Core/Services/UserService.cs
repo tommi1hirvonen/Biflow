@@ -23,7 +23,7 @@ public class UserService
     /// <param name="username">Username for the account</param>
     /// <param name="password">New password</param>
     /// <exception cref="ArgumentException">If no user was found with the provided username</exception>
-    public static async Task UpdatePasswordAsync(string username, string password, IDbConnection connection, IDbTransaction? transaction = null)
+    public static async Task AdminUpdatePasswordAsync(string username, string password, IDbConnection connection, IDbTransaction? transaction = null)
     {
         var hash = BC.HashPassword(password);
         var affectedRows = await connection.ExecuteAsync(
@@ -38,24 +38,29 @@ public class UserService
         }
     }
 
-    public async Task UpdatePasswordAsync(string username, /*string oldPassword,*/ string newPassword)
+    public async Task AdminUpdatePasswordAsync(string username, string newPassword)
+    {
+        await using var connection = _sqlConnectionFactory.Create();
+        await AdminUpdatePasswordAsync(username, newPassword, connection);
+    }
+
+    public async Task UpdatePasswordAsync(string username, string oldPassword, string newPassword)
     {
         await using var sqlConnection = _sqlConnectionFactory.Create();
-        // TODO Activate reauthentication using old password
-        //var result = await sqlConnection.QueryAsync<string?>(
-        //    """
-        //    SELECT TOP 1 [PasswordHash]
-        //    FROM [biflow].[User]
-        //    WHERE [Username] = @Username
-        //    """,
-        //    new { Username = username });
-        //var hash = result.FirstOrDefault() ?? throw new ApplicationException("User not found");
-        //var auth = BC.Verify(oldPassword, hash);
-        //if (!auth)
-        //{
-        //    throw new ApplicationException("Incorrect old password");
-        //}
-        await UpdatePasswordAsync(username, newPassword, sqlConnection);
+        var result = await sqlConnection.QueryAsync<string?>(
+            """
+            SELECT TOP 1 [PasswordHash]
+            FROM [biflow].[User]
+            WHERE [Username] = @Username
+            """,
+            new { Username = username });
+        var hash = result.FirstOrDefault() ?? throw new ApplicationException("User not found");
+        var auth = BC.Verify(oldPassword, hash);
+        if (!auth)
+        {
+            throw new ApplicationException("Incorrect old password");
+        }
+        await AdminUpdatePasswordAsync(username, newPassword, sqlConnection);
     }
 
     public async Task<IEnumerable<string>> AuthenticateUserAsync(string username, string password)
