@@ -5,9 +5,32 @@
 
 <PageTitle>Users | Biflow</PageTitle>
 
-<HxButton Color="ThemeColor.Success" OnClick="async () => await ShowEditModalAsync(null)" Enabled="Users is not null" Spinner="false">
-    Add user
-</HxButton>
+<div class="row">
+    <div class="col-auto">
+        <HxButton Color="ThemeColor.Success" OnClick="async () => await ShowEditModalAsync(null)" Enabled="Users is not null" Spinner="false">
+            Add user
+        </HxButton>
+    </div>
+    <div class="col-auto">
+        <div class="btn-toolbar" role="toolbar">
+            <div class="input-group me-3">
+                <div class="input-group-text">
+                    <CxIcon Icon="FeatherIcon.Search" />
+                </div>
+                <input type="search" class="form-control" @bind-value="UsernameFilter" @bind-value:event="oninput" placeholder="Search by username" style="max-width: 25rem;" />
+            </div>
+            <FilterDropdown ButtonSize="ButtonSize.Regular"
+                            FilterSet="RoleFilter"
+                            Items="Users?.SelectMany(u => u.Roles).Distinct().OrderBy(n => n)"
+                            OnChange="StateHasChanged">
+                <TitleTemplate>
+                    Roles
+                </TitleTemplate>
+            </FilterDropdown>
+        </div>
+    </div>
+</div>
+
 
 <div class="row my-4">
     <div class="col">
@@ -22,12 +45,16 @@
             }
             else
             {
-                foreach (var user in Users.OrderBy(u => u.Username))
+                var users = Users
+                    .Where(u => string.IsNullOrEmpty(UsernameFilter) || u.Username.ContainsIgnoreCase(UsernameFilter))
+                    .Where(u => !RoleFilter.Any() || RoleFilter.Any(r => u.Roles.Contains(r)))
+                    .OrderBy(u => u.Username);
+                foreach (var user in users)
                 {
                     <li class="list-group-item list-group-item-action">
                         <div class="row">
                             <div class="col">
-                                @user.Username
+                                <HighlightableText Text="@user.Username" PartToHighlight="@UsernameFilter" />
                             </div>
                             <div class="col-auto">
                                 <HxButtonGroup>
@@ -84,6 +111,9 @@
 
     private UserEditModal? UserEditModal { get; set; }
     private ResetPasswordModal? ResetPasswordModal { get; set; }
+
+    private string UsernameFilter { get; set; } = "";
+    private HashSet<string> RoleFilter { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {

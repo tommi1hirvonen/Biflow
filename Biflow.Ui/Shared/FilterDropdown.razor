@@ -6,7 +6,7 @@
 }
 
 <HxDropdownButtonGroup AutoClose="DropdownAutoClose.Outside">
-    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="@cssClass" OnShown="OnShown" OnHidden="OnHidden">
+    <HxDropdownToggleButton Size="ButtonSize" Color="ThemeColor.None" CssClass="@cssClass" OnShown="OnShown" OnHidden="OnHidden">
         @TitleTemplate
     </HxDropdownToggleButton>
     <HxDropdownContent CssClass="p-3">
@@ -72,12 +72,13 @@
     public ISet<TItem> FilterSet { get; set; } = new HashSet<TItem>();
 
     [Parameter]
-    public IEnumerable<TItem> Items { get; set; } = new List<TItem>();
+    public IEnumerable<TItem>? Items { get; set; } = new List<TItem>();
 
-    private IEnumerable<TItem> FilteredItems => Items
+    private IEnumerable<TItem> FilteredItems => Items?
         .Where(i => string.IsNullOrEmpty(SearchText)
                     || TextSelector?.Invoke(i).ContainsIgnoreCase(SearchText) == true
-                    || i.ToString()?.ContainsIgnoreCase(SearchText) == true);
+                    || i.ToString()?.ContainsIgnoreCase(SearchText) == true)
+        ?? Enumerable.Empty<TItem>();
 
     [Parameter]
     public EventCallback OnChange { get; set; }
@@ -105,6 +106,9 @@
     /// </summary>
     [Parameter]
     public string? TitleCssClass { get; set; } = "btn-auto";
+
+    [Parameter]
+    public ButtonSize ButtonSize { get; set; } = ButtonSize.Small;
 
     private Guid ComponentInstanceId { get; } = Guid.NewGuid();
 
