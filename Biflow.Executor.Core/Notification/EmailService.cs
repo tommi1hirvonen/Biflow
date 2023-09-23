@@ -52,7 +52,8 @@ internal class EmailService : INotificationService
                     .ToArrayAsync();
                 var subscribers = subscriptions
                     .Where(s => subscriptionTypeFilter.Any(f => f == s.SubscriptionType))
-                    .Select(s => s.User.Email ?? "");
+                    .Select(s => s.User.Email ?? "")
+                    .Distinct();
                 recipients.AddRange(subscribers);
             }
             catch (Exception ex)
@@ -242,7 +243,8 @@ internal class EmailService : INotificationService
                     .ToArrayAsync();
                 var subscribers = subscriptions
                     .Where(s => s.NotifyOnOvertime)
-                    .Select(s => s.User.Email ?? "");
+                    .Select(s => s.User.Email ?? "")
+                    .Distinct();
                 recipients.AddRange(subscribers);
             }
             catch (Exception ex)
@@ -302,7 +304,7 @@ internal class EmailService : INotificationService
             return;
         }
 
-        recipients.ForEach(recipient => mailMessage.Bcc.Add(recipient));
+        recipients.ForEach(mailMessage.Bcc.Add);
 
         try
         {
