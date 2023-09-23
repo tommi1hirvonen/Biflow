@@ -115,7 +115,9 @@
             {
                 foreach (var category in Categories.Append(null))
                 {
-                    var state = category is not null ? CategoryExpandStatuses.GetOrCreateValue(category) : NoCategoryExpanded;
+                    var state = category is not null
+                        ? UserState.JobCategoryExpandStatuses.GetOrCreate(category.CategoryId)
+                        : UserState.JobCategoryExpandStatuses.GetOrCreate(Guid.Empty);
                     var jobs = Jobs_
                         .Where(j => j.CategoryId == category?.CategoryId)
                         .Where(j => j.JobName.ContainsIgnoreCase(JobNameFilter));

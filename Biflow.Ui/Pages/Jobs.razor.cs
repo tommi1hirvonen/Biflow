@@ -28,6 +28,8 @@ public partial class Jobs : ComponentBase
 
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
 
+    [CascadingParameter] public UserState UserState { get; set; } = new();
+
     private List<Job>? Jobs_ { get; set; }
     
     private List<JobCategory>? Categories { get; set; }
@@ -43,10 +45,6 @@ public partial class Jobs : ComponentBase
     private string JobNameFilter { get; set; } = "";
     
     private HashSet<ExecutionStatus> StatusFilter { get; } = new();
-
-    private ConditionalWeakTable<JobCategory, ExpandStatus> CategoryExpandStatuses { get; } = new();
-    
-    private ExpandStatus NoCategoryExpanded { get; } = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -252,20 +250,22 @@ public partial class Jobs : ComponentBase
     {
         foreach (var category in Categories ?? Enumerable.Empty<JobCategory>())
         {
-            var state = CategoryExpandStatuses.GetOrCreateValue(category);
+            var state = UserState.JobCategoryExpandStatuses.GetOrCreate(category.CategoryId);
             state.IsExpanded = true;
         }
-        NoCategoryExpanded.IsExpanded = true;
+        var noCategoryState = UserState.JobCategoryExpandStatuses.GetOrCreate(Guid.Empty);
+        noCategoryState.IsExpanded = true;
     }
 
     private void CollapseAll()
     {
         foreach (var category in Categories ?? Enumerable.Empty<JobCategory>())
         {
-            var state = CategoryExpandStatuses.GetOrCreateValue(category);
+            var state = UserState.JobCategoryExpandStatuses.GetOrCreate(category.CategoryId);
             state.IsExpanded = false;
         }
-        NoCategoryExpanded.IsExpanded = false;
+        var noCategoryState = UserState.JobCategoryExpandStatuses.GetOrCreate(Guid.Empty);
+        noCategoryState.IsExpanded = false;
     }
 
     private class ExpandStatus { public bool IsExpanded { get; set; } = true; }
