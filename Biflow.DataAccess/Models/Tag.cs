@@ -27,6 +27,10 @@ public class Tag : ITag
     public IList<JobStep> JobSteps { get; set; } = null!;
 
     public IList<Schedule> Schedules { get; set; } = null!;
+
+    public IList<TagSubscription> TagSubscriptions { get; set; } = null!;
+
+    public IList<JobTagSubscription> JobTagSubscriptions { get; set; } = null!;
 }
 
 public enum TagColor

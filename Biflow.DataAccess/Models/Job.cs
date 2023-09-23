@@ -115,7 +115,9 @@ public class Job
     
     public ICollection<Execution> Executions { get; set; } = null!;
     
-    public ICollection<Subscription> Subscriptions { get; set; } = null!;
+    public ICollection<JobSubscription> JobSubscriptions { get; set; } = null!;
+
+    public ICollection<JobTagSubscription> JobTagSubscriptions { get; set; } = null!;
 
     [ValidateComplexType]
     public IList<JobParameter> JobParameters { get; set; } = null!;

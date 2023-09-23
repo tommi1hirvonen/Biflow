@@ -1,0 +1,195 @@
+﻿@inject IHxMessengerService Messenger
+@inject IDbContextFactory<BiflowContext> DbContextFactory
+
+<div class="row">
+    <div class="col">
+        <HxButton Color="ThemeColor.Success" OnClick="() => SelectJobOffcanvas.LetAsync(x => x.ShowAsync())">
+            Add subscription
+        </HxButton>
+    </div>
+</div>
+
+<div class="card shadow-sm mt-3">
+    <div class="card-body px-0">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>
+                        Job
+                    </th>
+                    <th>
+                        Alert
+                    </th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (User is null || Jobs is null)
+                {
+                    <tr><td colspan="3" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
+                }
+                else
+                {
+                    var subscriptions = User.Subscriptions
+                        .OfType<JobSubscription>()
+                        .Select(s => (Subscription: s, Job: Jobs.FirstOrDefault(j => j.JobId == s.JobId)))
+                        .OrderBy(s => s.Job?.JobName);
+                    @if (!subscriptions.Any())
+                    {
+                        <tr>
+                            <td colspan="3">No job subscriptions</td>
+                        </tr>
+                    }
+                    foreach (var (sub, job) in subscriptions)
+                    {
+                        <tr>
+                            <td>
+                                @job?.JobName
+                            </td>
+                            <td>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input type="radio" class="form-check-input" id="@(sub.SubscriptionId.ToString() + "_none")"
+                                               checked=@(sub.AlertType is null)
+                                        @onchange="() => ToggleSubscription(sub, null)">
+                                        <label class="form-check-label" for="@(sub.SubscriptionId.ToString() + "_none")">None</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input type="radio" class="form-check-input" id="@(sub.SubscriptionId.ToString() + "_failure")"
+                                               checked=@(sub.AlertType == AlertType.OnFailure)
+                                        @onchange="() => ToggleSubscription(sub, AlertType.OnFailure)">
+                                        <label class="form-check-label" for="@(sub.SubscriptionId.ToString() + "_failure")">On failure</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input type="radio" class="form-check-input" id="@(sub.SubscriptionId.ToString() + "_success")"
+                                               checked=@(sub.AlertType == AlertType.OnSuccess)
+                                        @onchange="() => ToggleSubscription(sub, AlertType.OnSuccess)">
+                                        <label class="form-check-label" for="@(sub.SubscriptionId.ToString() + "_success")">On success</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input type="radio" class="form-check-input" id="@(sub.SubscriptionId.ToString() + "_completion")"
+                                               checked=@(sub.AlertType == AlertType.OnCompletion)
+                                        @onchange="() => ToggleSubscription(sub, AlertType.OnCompletion)">
+                                        <label class="form-check-label" for="@(sub.SubscriptionId.ToString() + "_completion")">On completion</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input type="checkbox" class="form-check-input" id="@(sub.SubscriptionId.ToString() + "_overtime")"
+                                               checked=@(sub.NotifyOnOvertime == true)
+                                        @onchange="args => ToggleSubscription(sub, (bool)args.Value!)">
+                                        <label class="form-check-label" for="@(sub.SubscriptionId.ToString() + "_overtime")">On overtime</label>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto" title="Remove subscription" OnClick="() => RemoveSubscriptionAsync(sub)">
+                                    <CxIcon Icon="FeatherIcon.Delete" />
+                                </HxButton>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<HxOffcanvas @ref="SelectJobOffcanvas" Title="Select job" Backdrop="OffcanvasBackdrop.False">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <div class="list-group">
+                    @foreach (var job in Jobs?.Where(j => !Subscriptions.Any(s => j.JobId == s.JobId)).OrderBy(j => j.JobName) ?? Enumerable.Empty<JobProjection>())
+                    {
+                        <div class="list-group-item list-group-item-action" @onclick="() => AddSubscriptionAsync(job.JobId)">
+                            @job.JobName
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Secondary" OnClick="() => SelectJobOffcanvas.LetAsync(x => x.HideAsync())" Spinner="false">
+            Close
+        </HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
+@code {
+    [Parameter]
+    public User? User { get; set; }
+
+    [Parameter]
+    public IEnumerable<JobProjection>? Jobs { get; set; }
+
+    private IEnumerable<JobSubscription> Subscriptions =>
+        User?.Subscriptions.OfType<JobSubscription>() ?? Enumerable.Empty<JobSubscription>();
+
+    private HxOffcanvas? SelectJobOffcanvas { get; set; }
+
+    private async Task RemoveSubscriptionAsync(JobSubscription subscription)
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(User);
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+            await context.Subscriptions
+                .Where(s => s.SubscriptionId == subscription.SubscriptionId)
+                .ExecuteDeleteAsync();
+            User.Subscriptions.Remove(subscription);
+        }
+        catch (Exception)
+        {
+            Messenger.AddError("Error", "Error removing subscription");
+        }
+    }
+
+    private async Task AddSubscriptionAsync(Guid jobId)
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(User);
+            var subscription = new JobSubscription(User.UserId, jobId);
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+            context.JobSubscriptions.Add(subscription);
+            await context.SaveChangesAsync();
+            User.Subscriptions.Add(subscription);
+        }
+        catch
+        {
+            Messenger.AddError("Error", "Error adding subscription");
+        }
+    }
+
+    private async Task ToggleSubscription(JobSubscription subscription, AlertType? alert)
+    {
+        try
+        {
+            subscription.AlertType = alert;
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+            await context.JobSubscriptions
+                .Where(s => s.SubscriptionId == subscription.SubscriptionId)
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.AlertType, alert));
+        }
+        catch (Exception)
+        {
+            Messenger.AddError("Error", "Error toggling subscription");
+        }
+    }
+
+    private async Task ToggleSubscription(JobSubscription subscription, bool onOvertime)
+    {
+        try
+        {
+            subscription.NotifyOnOvertime = onOvertime;
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+            await context.JobSubscriptions
+                .Where(s => s.SubscriptionId == subscription.SubscriptionId)
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.NotifyOnOvertime, onOvertime));
+        }
+        catch (Exception)
+        {
+            Messenger.AddError("Error", "Error toggling subscription");
+        }
+    }
+}

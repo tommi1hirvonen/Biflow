@@ -15,7 +15,6 @@ internal class EmailService : INotificationService
     private readonly IOptionsMonitor<EmailOptions> _options;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
 
-
     public EmailService(ILogger<EmailService> logger, IOptionsMonitor<EmailOptions> options, IDbContextFactory<ExecutorDbContext> dbContextFactory)
     {
         _logger = logger;
@@ -25,36 +24,58 @@ internal class EmailService : INotificationService
 
     public async Task SendCompletionNotification(Execution execution)
     {
-        if (!execution.Notify && execution.NotifyCaller is null) return;
-
-        var subscriptionTypeFilter = execution.ExecutionStatus switch
+        if (!execution.Notify && execution.NotifyCaller is null)
         {
-            ExecutionStatus.Failed or ExecutionStatus.Stopped or ExecutionStatus.Suspended or ExecutionStatus.NotStarted or ExecutionStatus.Running =>
-            new SubscriptionType[] { SubscriptionType.OnFailure, SubscriptionType.OnCompletion },
-            ExecutionStatus.Succeeded or ExecutionStatus.Warning =>
-            new SubscriptionType[] { SubscriptionType.OnSuccess, SubscriptionType.OnCompletion },
-            _ =>
-            new SubscriptionType[] { SubscriptionType.OnCompletion }
+            return;
+        }
+
+        bool jobSubscriptionShouldAlert(AlertType? alert) => (alert, execution.ExecutionStatus) switch
+        {
+            (AlertType.OnCompletion, _) => true,
+            (AlertType.OnFailure, ExecutionStatus.Failed or ExecutionStatus.Stopped or ExecutionStatus.Suspended or ExecutionStatus.NotStarted or ExecutionStatus.Running) => true,
+            (AlertType.OnSuccess, ExecutionStatus.Succeeded or ExecutionStatus.Warning) => true,
+            _ => false
+        };
+
+        bool stepSubscriptionShouldAlert(AlertType alert, Guid stepId) => (alert, execution.StepExecutions.FirstOrDefault(s => s.StepId == stepId)?.ExecutionStatus) switch
+        {
+            (_, null) => false,
+            (AlertType.OnCompletion, _) => true,
+            (AlertType.OnFailure, StepExecutionStatus.Failed or StepExecutionStatus.Stopped or StepExecutionStatus.DependenciesFailed or StepExecutionStatus.Duplicate) => true,
+            (AlertType.OnSuccess, StepExecutionStatus.Succeeded or StepExecutionStatus.Warning) => true,
+            _ => false
         };
 
         using var context = _dbContextFactory.CreateDbContext();
 
-        List<string> recipients = new();
+        var recipients = new List<string>();
 
         if (execution.Notify)
         {
             try
             {
-                var subscriptions = await context.Subscriptions
-                    .AsNoTrackingWithIdentityResolution()
+                var jobSubscriptions = await context.JobSubscriptions
+                    .AsNoTracking()
                     .Include(s => s.User)
                     .Where(s => s.User.Email != null && s.JobId == execution.JobId)
                     .ToArrayAsync();
-                var subscribers = subscriptions
-                    .Where(s => subscriptionTypeFilter.Any(f => f == s.SubscriptionType))
-                    .Select(s => s.User.Email ?? "")
-                    .Distinct();
-                recipients.AddRange(subscribers);
+                var stepSubscriptions = await context.StepSubscriptions
+                    .AsNoTracking()
+                    .Include(s => s.User)
+                    .Where(s => s.User.Email != null && s.Step.JobId == execution.JobId)
+                    .ToArrayAsync();
+
+                var jobSubscribers = jobSubscriptions
+                    .Where(s => jobSubscriptionShouldAlert(s.AlertType))
+                    .Select(s => s.User.Email ?? "");
+                var stepSubscribers = stepSubscriptions
+                    .Where(s => stepSubscriptionShouldAlert(s.AlertType, s.StepId))
+                    .Select(s => s.User.Email ?? "");
+
+                // TODO Implement job-tag subscriptions
+                // TODO Implement tag subscriptions
+
+                recipients.AddRange(jobSubscribers);
             }
             catch (Exception ex)
             {
@@ -63,7 +84,7 @@ internal class EmailService : INotificationService
             }
         }
         
-        if (execution.NotifyCaller is not null && subscriptionTypeFilter.Any(f => f == execution.NotifyCaller))
+        if (execution.NotifyCaller is not null && jobSubscriptionShouldAlert(execution.NotifyCaller))
         {
             try
             {
@@ -80,7 +101,9 @@ internal class EmailService : INotificationService
         }
 
         if (!recipients.Any())
+        { 
             return;
+        }
 
         string messageBody = string.Empty;
 
@@ -236,7 +259,7 @@ internal class EmailService : INotificationService
         {
             try
             {
-                var subscriptions = await context.Subscriptions
+                var subscriptions = await context.JobSubscriptions
                     .AsNoTrackingWithIdentityResolution()
                     .Include(s => s.User)
                     .Where(s => s.User.Email != null && s.JobId == execution.JobId)

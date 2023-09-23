@@ -112,7 +112,7 @@ public class Execution
     public bool Notify { get; internal set; }
 
     [Display(Name = "Notify caller")]
-    public SubscriptionType? NotifyCaller { get; internal set; }
+    public AlertType? NotifyCaller { get; internal set; }
 
     [Display(Name = "Notify caller overtime")]
     public bool NotifyCallerOvertime { get; internal set; }

@@ -40,6 +40,10 @@ public class BiflowContext : DbContext
     public DbSet<Dependency> Dependencies => Set<Dependency>();
     public DbSet<Schedule> Schedules => Set<Schedule>();
     public DbSet<Subscription> Subscriptions => Set<Subscription>();
+    public DbSet<JobSubscription> JobSubscriptions => Set<JobSubscription>();
+    public DbSet<JobTagSubscription> JobTagSubscriptions => Set<JobTagSubscription>();
+    public DbSet<StepSubscription> StepSubscriptions => Set<StepSubscription>();
+    public DbSet<TagSubscription> TagSubscriptions => Set<TagSubscription>();
     public DbSet<User> Users => Set<User>();
     public DbSet<PipelineClient> PipelineClients => Set<PipelineClient>();
     public DbSet<DataFactory> DataFactories => Set<DataFactory>();
@@ -355,14 +359,11 @@ public class BiflowContext : DbContext
 
         modelBuilder.Entity<Subscription>(e =>
         {
-            e.HasOne(subscription => subscription.Job)
-            .WithMany(job => job.Subscriptions)
-            .IsRequired()
-            .OnDelete(DeleteBehavior.Cascade);
-            e.HasOne(subscription => subscription.User)
-            .WithMany(user => user.Subscriptions)
-            .IsRequired()
-            .OnDelete(DeleteBehavior.Cascade);
+            e.HasDiscriminator<SubscriptionType>("SubscriptionType")
+            .HasValue<JobSubscription>(SubscriptionType.Job)
+            .HasValue<JobTagSubscription>(SubscriptionType.JobTag)
+            .HasValue<StepSubscription>(SubscriptionType.Step)
+            .HasValue<TagSubscription>(SubscriptionType.Tag);
         });
 
         modelBuilder.Entity<User>(e =>
@@ -447,6 +448,7 @@ public class BiflowContext : DbContext
     {
         configurationBuilder.Properties<ExecutionStatus>().HaveConversion<EnumToStringConverter<ExecutionStatus>>();
         configurationBuilder.Properties<StepExecutionStatus>().HaveConversion<EnumToStringConverter<StepExecutionStatus>>();
+        configurationBuilder.Properties<AlertType>().HaveConversion<EnumToStringConverter<AlertType>>();
         configurationBuilder.Properties<SubscriptionType>().HaveConversion<EnumToStringConverter<SubscriptionType>>();
         configurationBuilder.Properties<StepType>().HaveConversion<EnumToStringConverter<StepType>>();
         configurationBuilder.Properties<DuplicateExecutionBehaviour>().HaveConversion<EnumToStringConverter<DuplicateExecutionBehaviour>>();

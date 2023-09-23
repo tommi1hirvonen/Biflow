@@ -128,6 +128,8 @@ public abstract class Step : IComparable
 
     public IList<StepExecution> StepExecutions { get; set; } = null!;
 
+    public ICollection<StepSubscription> StepSubscriptions { get; set; } = null!;
+
     public int CompareTo(object? obj)
     {
         if (obj is null) return 1;

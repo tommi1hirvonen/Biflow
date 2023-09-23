@@ -29,7 +29,7 @@ public partial class ExecutionBuilder : IDisposable
 
     public bool Notify { get => _execution.Notify; set => _execution.Notify = value; }
 
-    public SubscriptionType? NotifyCaller { get => _execution.NotifyCaller; set => _execution.NotifyCaller = value; }
+    public AlertType? NotifyCaller { get => _execution.NotifyCaller; set => _execution.NotifyCaller = value; }
 
     public bool NotifyCallerOvertime { get => _execution.NotifyCallerOvertime; set => _execution.NotifyCallerOvertime = value; }
 

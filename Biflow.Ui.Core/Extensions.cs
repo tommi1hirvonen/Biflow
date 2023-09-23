@@ -144,7 +144,6 @@ public static partial class Extensions
 
         services.AddSingleton<UserService>();
         services.AddSingleton<SqlServerHelperService>();
-        services.AddSingleton<SubscriptionsHelperService>();
         services.AddDuplicatorServices();
 
         return services;

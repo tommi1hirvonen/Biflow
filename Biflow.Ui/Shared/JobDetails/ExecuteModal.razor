@@ -329,20 +329,20 @@
                                 </div>
                                 <div class="form-check">
                                     <input type="radio" class="form-check-input" id="radio_notify_me_completion"
-                                           checked=@(Builder.NotifyCaller == SubscriptionType.OnCompletion)
-                                           @onchange="() => Builder.NotifyCaller = SubscriptionType.OnCompletion">
+                                           checked=@(Builder.NotifyCaller == AlertType.OnCompletion)
+                                           @onchange="() => Builder.NotifyCaller = AlertType.OnCompletion">
                                     <label class="form-check-label" for="radio_notify_me_completion">On completion</label>
                                 </div>
                                 <div class="form-check">
                                     <input type="radio" class="form-check-input" id="radio_notify_me_failure"
-                                           checked=@(Builder.NotifyCaller == SubscriptionType.OnFailure)
-                                           @onchange="() => Builder.NotifyCaller = SubscriptionType.OnFailure">
+                                           checked=@(Builder.NotifyCaller == AlertType.OnFailure)
+                                           @onchange="() => Builder.NotifyCaller = AlertType.OnFailure">
                                     <label class="form-check-label" for="radio_notify_me_failure">On failure</label>
                                 </div>
                                 <div class="form-check">
                                     <input type="radio" class="form-check-input" id="radio_notify_me_success"
-                                           checked=@(Builder.NotifyCaller == SubscriptionType.OnSuccess)
-                                           @onchange="() => Builder.NotifyCaller = SubscriptionType.OnSuccess">
+                                           checked=@(Builder.NotifyCaller == AlertType.OnSuccess)
+                                           @onchange="() => Builder.NotifyCaller = AlertType.OnSuccess">
                                     <label class="form-check-label" for="radio_notify_me_success">On success</label>
                                 </div>
                                 <div class="form-check mt-3">
