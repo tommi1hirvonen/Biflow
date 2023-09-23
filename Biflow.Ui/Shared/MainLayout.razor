@@ -53,7 +53,9 @@
                             @SchedulerServiceErrorMessage
                         </HxAlert>
                     }
-                    @Body
+                    <CascadingValue Value="UserState">
+                        @Body
+                    </CascadingValue>
                 </main>
             </div>
         </div>
@@ -106,6 +108,8 @@
     private bool collapseSidebar = true;
     private string? SidebarClass => collapseSidebar ? "collapse" : null;
     private string? SchedulerServiceErrorMessage { get; set; } = null;
+
+    private UserState UserState { get; } = new();
 
     protected override async Task OnInitializedAsync()
     {

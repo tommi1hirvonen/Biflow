@@ -83,7 +83,9 @@
         </li>
         foreach (var category in Categories.Append(null))
         {
-            var state = category is not null ? CategoryExpandStatuses.GetOrCreateValue(category) : NoCategoryExpanded;
+            var state = category is not null
+                ? UserState.DataTableCategoryExpandStatuses.GetOrCreate(category.CategoryId)
+                : UserState.DataTableCategoryExpandStatuses.GetOrCreate(Guid.Empty);
             var tables = Tables
                 .Where(t => t.CategoryId == category?.CategoryId)
                 .Where(t => t.DataTableName.ContainsIgnoreCase(TableNameFilter))
@@ -213,6 +215,8 @@
 
     [Parameter] public List<SqlConnectionInfo> Connections { get; set; } = new();
 
+    [CascadingParameter] public UserState UserState { get; set; } = new();
+
     private DataTableHelpOffcanvas? HelpOffcanvas { get; set; }
 
     private DataTableEditModal? EditModal { get; set; }
@@ -220,10 +224,7 @@
     private CategoryEditModal? CategoryEditModal { get; set; }
 
     private string TableNameFilter { get; set; } = "";
-    private string TargetTableNameFilter { get; set; } = "";
-
-    private ConditionalWeakTable<MasterDataTableCategory, ExpandStatus> CategoryExpandStatuses { get; } = new();
-    private ExpandStatus NoCategoryExpanded { get; } = new();
+    private string TargetTableNameFilter { get; set; } = "";    
 
     private void OnTableSubmitted(MasterDataTable table)
     {
@@ -295,21 +296,22 @@
     {
         foreach (var category in Categories ?? Enumerable.Empty<MasterDataTableCategory>())
         {
-            var state = CategoryExpandStatuses.GetOrCreateValue(category);
+            var state = UserState.DataTableCategoryExpandStatuses.GetOrCreate(category.CategoryId);
             state.IsExpanded = true;
         }
-        NoCategoryExpanded.IsExpanded = true;
+        var noCategoryState = UserState.DataTableCategoryExpandStatuses.GetOrCreate(Guid.Empty);
+        noCategoryState.IsExpanded = true;
     }
 
     private void CollapseAll()
     {
         foreach (var category in Categories ?? Enumerable.Empty<MasterDataTableCategory>())
         {
-            var state = CategoryExpandStatuses.GetOrCreateValue(category);
+            var state = UserState.DataTableCategoryExpandStatuses.GetOrCreate(category.CategoryId);
             state.IsExpanded = false;
         }
-        NoCategoryExpanded.IsExpanded = false;
+        var noCategoryState = UserState.DataTableCategoryExpandStatuses.GetOrCreate(Guid.Empty);
+        noCategoryState.IsExpanded = false;
     }
 
-    private class ExpandStatus { public bool IsExpanded { get; set; } = true; }
 }

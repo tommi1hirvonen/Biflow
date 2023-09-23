@@ -5,6 +5,7 @@ using Biflow.Executor.Core;
 using Biflow.Executor.Core.WebExtensions;
 using Biflow.Scheduler.Core;
 using CronExpressionDescriptor;
+using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Negotiate;
@@ -400,6 +401,17 @@ public static partial class Extensions
             true => value,
             false => null
         };
+
+    public static TValue GetOrCreate<TKey, TValue>(this IDictionary<TKey, TValue> table, TKey key)
+        where TValue : new()
+    {
+        if (!table.TryGetValue(key, out var value))
+        {
+            value = new TValue();
+            table[key] = value;
+        }
+        return value;
+    }
 
     // Using the GeneratedRegex attributes we can create the regex already at compile time.
 
