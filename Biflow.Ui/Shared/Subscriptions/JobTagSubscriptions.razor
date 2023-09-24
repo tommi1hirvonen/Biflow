@@ -1,0 +1,215 @@
+﻿@inject IHxMessengerService Messenger
+@inject IDbContextFactory<BiflowContext> DbContextFactory
+
+<div class="row">
+    <div class="col">
+        <HxButton Color="ThemeColor.Success" OnClick="() => SelectJobTagOffcanvas.LetAsync(x => x.ShowAsync())">
+            Add subscription
+        </HxButton>
+    </div>
+</div>
+
+<div class="card shadow-sm mt-3">
+    <div class="card-body px-0">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>
+                        Job
+                    </th>
+                    <th>
+                        Tag
+                    </th>
+                    <th>
+                        Alert
+                    </th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (User is null || Jobs is null || Steps is null || Tags is null)
+                {
+                    <tr><td colspan="4" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
+                }
+                else
+                {
+                    var subscriptions = User.Subscriptions
+                        .OfType<JobTagSubscription>()
+                        .Select(sub =>
+                        {
+                            var tag = Tags.FirstOrDefault(s => s.TagId == sub.TagId);
+                            var job = Jobs.FirstOrDefault(j => j.JobId == sub?.JobId);
+                            return (sub, job, tag);
+                        })
+                        .OrderBy(s => s.job?.JobName)
+                        .ThenBy(s => s.tag?.TagName);
+                    @if (!subscriptions.Any())
+                    {
+                        <tr>
+                            <td colspan="3">No job-tag subscriptions</td>
+                        </tr>
+                    }
+                    foreach (var (sub, job, tag) in subscriptions)
+                    {
+                        <tr>
+                            <td>
+                                @job?.JobName
+                            </td>
+                            <td>
+                                <TagComponent Tag="tag" />
+                            </td>
+                            <td>
+                                <div>
+                                    <div class="form-check form-check-inline">
+                                        <input type="radio" class="form-check-input" id="@(sub.SubscriptionId.ToString() + "_failure")"
+                                               checked=@(sub.AlertType == AlertType.OnFailure)
+                                        @onchange="() => ToggleSubscription(sub, AlertType.OnFailure)">
+                                        <label class="form-check-label" for="@(sub.SubscriptionId.ToString() + "_failure")">On failure</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input type="radio" class="form-check-input" id="@(sub.SubscriptionId.ToString() + "_success")"
+                                               checked=@(sub.AlertType == AlertType.OnSuccess)
+                                        @onchange="() => ToggleSubscription(sub, AlertType.OnSuccess)">
+                                        <label class="form-check-label" for="@(sub.SubscriptionId.ToString() + "_success")">On success</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input type="radio" class="form-check-input" id="@(sub.SubscriptionId.ToString() + "_completion")"
+                                               checked=@(sub.AlertType == AlertType.OnCompletion)
+                                        @onchange="() => ToggleSubscription(sub, AlertType.OnCompletion)">
+                                        <label class="form-check-label" for="@(sub.SubscriptionId.ToString() + "_completion")">On completion</label>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto" title="Remove subscription" OnClick="() => RemoveSubscriptionAsync(sub)">
+                                    <CxIcon Icon="FeatherIcon.Delete" />
+                                </HxButton>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<HxOffcanvas @ref="SelectJobTagOffcanvas" Title="Select step" Backdrop="OffcanvasBackdrop.False">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <div class="list-group">
+                    @if (Tags is not null && Jobs is not null && Steps is not null)
+                    {
+                        @foreach (var job in Jobs.OrderBy(j => j.JobName))
+                        {
+                            var expanded = JobExpandState.GetValueOrDefault(job.JobId);
+                            <div class="list-group-item" style="cursor: pointer;" @onclick="() => JobExpandState[job.JobId] = !expanded">
+                                <h6>
+                                    @if (expanded)
+                                    {
+                                        <CxIcon Icon="FeatherIcon.ChevronDown" />
+                                    }
+                                    else
+                                    {
+                                        <CxIcon Icon="FeatherIcon.ChevronRight" />
+                                    }
+                                    @job.JobName
+                                </h6>
+                            </div>
+                            @if (expanded)
+                            {
+                                var tags = Steps
+                                    .Where(s => s.JobId == job.JobId)
+                                    .SelectMany(s => s.Tags)
+                                    .DistinctBy(t => t.TagId)
+                                    .ToArray();
+                                <div class="ps-5 list-group-item d-flex flex-wrap">
+                                    @foreach (var tag in tags.Where(t => !Subscriptions.Any(sub => t.TagId == sub.TagId && sub.JobId == job.JobId)).OrderBy(t => t.TagName))
+                                    {
+                                        <TagComponent Tag="tag" CssClass="m-2" OnClick="() => AddSubscriptionAsync(job.JobId, tag.TagId)" Style="cursor: pointer;" />
+                                    }
+                                </div>
+                            }
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Secondary" OnClick="() => SelectJobTagOffcanvas.LetAsync(x => x.HideAsync())" Spinner="false">
+            Close
+        </HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
+@code {
+    [Parameter]
+    public User? User { get; set; }
+
+    [Parameter]
+    public IEnumerable<JobProjection>? Jobs { get; set; }
+
+    [Parameter]
+    public IEnumerable<StepProjection>? Steps { get; set; }
+
+    [Parameter]
+    public IEnumerable<Tag>? Tags { get; set; }
+
+    private HxOffcanvas? SelectJobTagOffcanvas { get; set; }
+
+    private Dictionary<Guid, bool> JobExpandState { get; } = new();
+
+    private IEnumerable<JobTagSubscription> Subscriptions =>
+        User?.Subscriptions.OfType<JobTagSubscription>() ?? Enumerable.Empty<JobTagSubscription>();
+
+    private async Task AddSubscriptionAsync(Guid jobId, Guid tagId)
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(User);
+            var subscription = new JobTagSubscription(User.UserId, jobId, tagId);
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+            context.Subscriptions.Add(subscription);
+            await context.SaveChangesAsync();
+            User.Subscriptions.Add(subscription);
+        }
+        catch
+        {
+            Messenger.AddError("Error", "Error adding subscription");
+        }
+    }
+
+    private async Task ToggleSubscription(JobTagSubscription subscription, AlertType alert)
+    {
+        try
+        {
+            subscription.AlertType = alert;
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+            await context.JobTagSubscriptions
+                .Where(s => s.SubscriptionId == subscription.SubscriptionId)
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.AlertType, alert));
+        }
+        catch (Exception)
+        {
+            Messenger.AddError("Error", "Error toggling subscription");
+        }
+    }
+
+    private async Task RemoveSubscriptionAsync(Subscription subscription)
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(User);
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+            await context.Subscriptions
+                .Where(s => s.SubscriptionId == subscription.SubscriptionId)
+                .ExecuteDeleteAsync();
+            User.Subscriptions.Remove(subscription);
+        }
+        catch (Exception)
+        {
+            Messenger.AddError("Error", "Error removing subscription");
+        }
+    }
+}
