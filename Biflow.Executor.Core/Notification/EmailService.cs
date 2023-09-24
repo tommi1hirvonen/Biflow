@@ -1,25 +1,25 @@
 ﻿using Biflow.Core;
 using Biflow.DataAccess.Models;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Net.Mail;
-using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("Biflow.Executor.ConsoleApp.Test")]
 namespace Biflow.Executor.Core.Notification;
 
 internal class EmailService : INotificationService
 {
     private readonly ILogger<EmailService> _logger;
     private readonly IOptionsMonitor<EmailOptions> _options;
-    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
+    private readonly ISubscribersResolver _subscribersResolver;
 
-    public EmailService(ILogger<EmailService> logger, IOptionsMonitor<EmailOptions> options, IDbContextFactory<ExecutorDbContext> dbContextFactory)
+    public EmailService(
+        ILogger<EmailService> logger,
+        IOptionsMonitor<EmailOptions> options,
+        ISubscribersResolver subscribersResolver)
     {
         _logger = logger;
         _options = options;
-        _dbContextFactory = dbContextFactory;
+        _subscribersResolver = subscribersResolver;
     }
 
     public async Task SendCompletionNotification(Execution execution)
@@ -29,108 +29,15 @@ internal class EmailService : INotificationService
             return;
         }
 
-        using var context = _dbContextFactory.CreateDbContext();
-
-        // Map tags to steps
-        Dictionary<Guid, Guid[]> tagSteps = (await context.Steps
-            .Where(s => context.StepExecutions.Any(e => e.ExecutionId == execution.ExecutionId && e.StepId == s.StepId))
-            .SelectMany(s => s.Tags.Select(t => new { s.StepId, t.TagId }))
-            .ToArrayAsync())
-            .GroupBy(key => key.TagId)
-            .ToDictionary(key => key.Key, values => values.Select(x => x.StepId).ToArray());
-
-        bool jobSubscriptionShouldAlert(AlertType? alert) => (alert, execution.ExecutionStatus) switch
+        IEnumerable<string> recipients;
+        try
         {
-            (AlertType.OnCompletion, _) => true,
-            (AlertType.OnFailure, ExecutionStatus.Failed or ExecutionStatus.Stopped or ExecutionStatus.Suspended or ExecutionStatus.NotStarted or ExecutionStatus.Running) => true,
-            (AlertType.OnSuccess, ExecutionStatus.Succeeded or ExecutionStatus.Warning) => true,
-            _ => false
-        };
-
-        bool stepSubscriptionShouldAlert(AlertType alert, Guid stepId) => (alert, execution.StepExecutions.FirstOrDefault(s => s.StepId == stepId)?.ExecutionStatus) switch
-        {
-            (_, null) => false,
-            (AlertType.OnCompletion, _) => true,
-            (AlertType.OnFailure, StepExecutionStatus.Failed or StepExecutionStatus.Stopped or StepExecutionStatus.DependenciesFailed or StepExecutionStatus.Duplicate) => true,
-            (AlertType.OnSuccess, StepExecutionStatus.Succeeded or StepExecutionStatus.Warning) => true,
-            _ => false
-        };
-
-        bool tagSubscriptionShouldAlert(AlertType alert, Guid tagId) => tagSteps.TryGetValue(tagId, out var stepIds) switch
-        {
-            true => stepIds.Any(id => stepSubscriptionShouldAlert(alert, id)),
-            false => false
-        };
-
-        var recipients = new List<string>();
-
-        if (execution.Notify)
-        {
-            try
-            {
-                var jobSubscriptions = await context.JobSubscriptions
-                    .AsNoTracking()
-                    .Include(s => s.User)
-                    .Where(s => s.User.Email != null && s.JobId == execution.JobId)
-                    .ToArrayAsync();
-                var stepSubscriptions = await context.StepSubscriptions
-                    .AsNoTracking()
-                    .Include(s => s.User)
-                    .Where(s => s.User.Email != null && context.StepExecutions.Any(e => e.ExecutionId == execution.ExecutionId && e.StepId == s.StepId))
-                    .ToArrayAsync();
-                var tagSubscriptions = await context.TagSubscriptions
-                    .AsNoTracking()
-                    .Include(s => s.User)
-                    .Where(s => s.User.Email != null && context.StepExecutions.Any(e => e.ExecutionId == execution.ExecutionId && e.Step!.Tags.Any(t => t.TagId == s.TagId)))
-                    .ToArrayAsync();
-                var jobTagSubscriptions = await context.JobTagSubscriptions
-                    .AsNoTracking()
-                    .Include(s => s.User)
-                    .Where(s => s.User.Email != null && s.JobId == execution.JobId && context.StepExecutions.Any(e => e.ExecutionId == execution.ExecutionId && e.Step!.Tags.Any(t => t.TagId == s.TagId)))
-                    .ToArrayAsync();
-
-                var jobSubscribers = jobSubscriptions
-                    .Where(s => jobSubscriptionShouldAlert(s.AlertType))
-                    .Select(s => s.User.Email ?? "");
-                var stepSubscribers = stepSubscriptions
-                    .Where(s => stepSubscriptionShouldAlert(s.AlertType, s.StepId))
-                    .Select(s => s.User.Email ?? "");
-                var tagSubscribers = tagSubscriptions
-                    .Where(s => tagSubscriptionShouldAlert(s.AlertType, s.TagId))
-                    .Select(s => s.User.Email ?? "");
-                var jobTagSubscribers = jobTagSubscriptions
-                    .Where(s => tagSubscriptionShouldAlert(s.AlertType, s.TagId))
-                    .Select(s => s.User.Email ?? "");
-
-                var subscribers = jobSubscribers
-                    .Concat(stepSubscribers)
-                    .Concat(tagSubscribers)
-                    .Concat(jobTagSubscribers)
-                    .Distinct();
-
-                recipients.AddRange(subscribers);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{ExecutionId} Error getting recipients for notification", execution.ExecutionId);
-                return;
-            }
+            recipients = await _subscribersResolver.ResolveSubscriberEmailsAsync(execution);
         }
-        
-        if (execution.NotifyCaller is not null && jobSubscriptionShouldAlert(execution.NotifyCaller))
+        catch (Exception ex)
         {
-            try
-            {
-                var user = await context.Users.FirstOrDefaultAsync(u => u.Username == execution.CreatedBy);
-                if (user?.Email is not null && !recipients.Contains(user.Email))
-                {
-                    recipients.Add(user.Email);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{ExecutionId} Error getting launcher user name for notification", execution.ExecutionId);
-            }
+            _logger.LogError(ex, "{ExecutionId} Error getting recipients for notification", execution.ExecutionId);
+            return;
         }
 
         if (!recipients.Any())
@@ -269,7 +176,10 @@ internal class EmailService : INotificationService
             return;
         }
 
-        recipients.ForEach(mailMessage.Bcc.Add);
+        foreach (var recipient in recipients)
+        {
+            mailMessage.Bcc.Add(recipient);
+        }
 
         try
         {
@@ -284,50 +194,21 @@ internal class EmailService : INotificationService
 
     public async Task SendLongRunningExecutionNotification(Execution execution)
     {
-        if (!execution.Notify && !execution.NotifyCallerOvertime) return;
-        
-        List<string> recipients = new();
-        using var context = _dbContextFactory.CreateDbContext();
-        if (execution.Notify)
+        IEnumerable<string> recipients;
+        try
         {
-            try
-            {
-                var subscriptions = await context.JobSubscriptions
-                    .AsNoTrackingWithIdentityResolution()
-                    .Include(s => s.User)
-                    .Where(s => s.User.Email != null && s.JobId == execution.JobId)
-                    .ToArrayAsync();
-                var subscribers = subscriptions
-                    .Where(s => s.NotifyOnOvertime)
-                    .Select(s => s.User.Email ?? "")
-                    .Distinct();
-                recipients.AddRange(subscribers);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{ExecutionId} Error getting recipients for long running execution notification", execution.ExecutionId);
-                return;
-            }
+            recipients = await _subscribersResolver.ResolveLongRunningSubscriberEmailsAsync(execution);
         }
-        
-        if (execution.NotifyCallerOvertime)
+        catch (Exception ex)
         {
-            try
-            {
-                var user = await context.Users.FirstOrDefaultAsync(u => u.Username == execution.CreatedBy);
-                if (user?.Email is not null && !recipients.Contains(user.Email))
-                {
-                    recipients.Add(user.Email);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{ExecutionId} Error getting launcher user name for long running execution notification", execution.ExecutionId);
-            }
+            _logger.LogError(ex, "{ExecutionId} Error getting recipients for long running execution notification", execution.ExecutionId);
+            return;
         }
 
         if (!recipients.Any())
+        {
             return;
+        }
 
         var options = _options.CurrentValue;
         SmtpClient client;
@@ -360,7 +241,10 @@ internal class EmailService : INotificationService
             return;
         }
 
-        recipients.ForEach(mailMessage.Bcc.Add);
+        foreach (var recipient in recipients)
+        {
+            mailMessage.Bcc.Add(recipient);
+        }
 
         try
         {

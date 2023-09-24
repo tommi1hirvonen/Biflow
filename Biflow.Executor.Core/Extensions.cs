@@ -36,6 +36,8 @@ public static class Extensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
         services.Configure<EmailOptions>(executorConfiguration);
+        services.AddSingleton<ISubscriptionsProviderFactory, SubscriptionsProviderFactory>();
+        services.AddSingleton<ISubscribersResolver, SubscribersResolver>();
         services.AddSingleton<INotificationService, EmailService>();
         services.AddSingleton<IStepExecutorFactory, StepExecutorFactory>();
         services.AddSingleton<IGlobalOrchestrator, GlobalOrchestrator>();
