@@ -29,6 +29,16 @@ internal class EmailService : INotificationService
             return;
         }
 
+        using var context = _dbContextFactory.CreateDbContext();
+
+        // Map tags to steps
+        Dictionary<Guid, Guid[]> tagSteps = (await context.Steps
+            .Where(s => context.StepExecutions.Any(e => e.ExecutionId == execution.ExecutionId && e.StepId == s.StepId))
+            .SelectMany(s => s.Tags.Select(t => new { s.StepId, t.TagId }))
+            .ToArrayAsync())
+            .GroupBy(key => key.TagId)
+            .ToDictionary(key => key.Key, values => values.Select(x => x.StepId).ToArray());
+
         bool jobSubscriptionShouldAlert(AlertType? alert) => (alert, execution.ExecutionStatus) switch
         {
             (AlertType.OnCompletion, _) => true,
@@ -46,7 +56,11 @@ internal class EmailService : INotificationService
             _ => false
         };
 
-        using var context = _dbContextFactory.CreateDbContext();
+        bool tagSubscriptionShouldAlert(AlertType alert, Guid tagId) => tagSteps.TryGetValue(tagId, out var stepIds) switch
+        {
+            true => stepIds.Any(id => stepSubscriptionShouldAlert(alert, id)),
+            false => false
+        };
 
         var recipients = new List<string>();
 
@@ -62,7 +76,17 @@ internal class EmailService : INotificationService
                 var stepSubscriptions = await context.StepSubscriptions
                     .AsNoTracking()
                     .Include(s => s.User)
-                    .Where(s => s.User.Email != null && s.Step.JobId == execution.JobId)
+                    .Where(s => s.User.Email != null && context.StepExecutions.Any(e => e.ExecutionId == execution.ExecutionId && e.StepId == s.StepId))
+                    .ToArrayAsync();
+                var tagSubscriptions = await context.TagSubscriptions
+                    .AsNoTracking()
+                    .Include(s => s.User)
+                    .Where(s => s.User.Email != null && context.StepExecutions.Any(e => e.ExecutionId == execution.ExecutionId && e.Step!.Tags.Any(t => t.TagId == s.TagId)))
+                    .ToArrayAsync();
+                var jobTagSubscriptions = await context.JobTagSubscriptions
+                    .AsNoTracking()
+                    .Include(s => s.User)
+                    .Where(s => s.User.Email != null && s.JobId == execution.JobId && context.StepExecutions.Any(e => e.ExecutionId == execution.ExecutionId && e.Step!.Tags.Any(t => t.TagId == s.TagId)))
                     .ToArrayAsync();
 
                 var jobSubscribers = jobSubscriptions
@@ -71,11 +95,20 @@ internal class EmailService : INotificationService
                 var stepSubscribers = stepSubscriptions
                     .Where(s => stepSubscriptionShouldAlert(s.AlertType, s.StepId))
                     .Select(s => s.User.Email ?? "");
+                var tagSubscribers = tagSubscriptions
+                    .Where(s => tagSubscriptionShouldAlert(s.AlertType, s.TagId))
+                    .Select(s => s.User.Email ?? "");
+                var jobTagSubscribers = jobTagSubscriptions
+                    .Where(s => tagSubscriptionShouldAlert(s.AlertType, s.TagId))
+                    .Select(s => s.User.Email ?? "");
 
-                // TODO Implement job-tag subscriptions
-                // TODO Implement tag subscriptions
+                var subscribers = jobSubscribers
+                    .Concat(stepSubscribers)
+                    .Concat(tagSubscribers)
+                    .Concat(jobTagSubscribers)
+                    .Distinct();
 
-                recipients.AddRange(jobSubscribers);
+                recipients.AddRange(subscribers);
             }
             catch (Exception ex)
             {
