@@ -31,7 +31,7 @@ public partial class UserEditModal : ComponentBase, IDisposable
 
     private HxModal? Modal { get; set; }
 
-    private FormModel? Model { get; set; }
+    private UserFormModel? Model { get; set; }
 
     private bool IsNewUser => PreviousUserId == Guid.Empty;
     private Guid PreviousUserId { get; set; }
@@ -39,7 +39,7 @@ public partial class UserEditModal : ComponentBase, IDisposable
 
     private BiflowContext Context { get; set; } = null!;
 
-    private UserValidator Validator { get; set; } = new(Enumerable.Empty<string>());
+    private UserFormModelValidator Validator { get; set; } = new(Enumerable.Empty<string>());
 
     private AuthorizationPane CurrentPane { get; set; } = AuthorizationPane.Jobs;
 
@@ -235,15 +235,4 @@ public partial class UserEditModal : ComponentBase, IDisposable
     public void Dispose() => Context?.Dispose();
 
     private enum AuthorizationPane { Jobs, DataTables }
-
-    private record FormModel(User User, PasswordModel? PasswordModel);
-
-    private class PasswordModel
-    {
-        [Required, ComplexPassword]
-        public string Password { get; set; } = "";
-
-        [Required]
-        public string ConfirmPassword { get; set; } = "";
-    }
 }
