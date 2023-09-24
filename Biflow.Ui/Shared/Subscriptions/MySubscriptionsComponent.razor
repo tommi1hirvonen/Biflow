@@ -47,15 +47,15 @@
         }
         else if (ShowType == SubscriptionType.JobTag)
         {
-            
+            // TODO Implement job-tag subscriptions
         }
         else if (ShowType == SubscriptionType.Tag)
         {
-            
+            // TODO Implement tag subscriptions
         }
         else if (ShowType == SubscriptionType.Step)
         {
-            
+            <StepSubscriptions User="User" Jobs="Jobs" Steps="Steps" />
         }
     </div>
 </div>
@@ -83,7 +83,7 @@
         Jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(job => job.JobName)
-            .Select(j => new JobProjection(j.JobId, j.JobName, j.CategoryId, j.Category))
+            .Select(j => new JobProjection(j.JobId, j.JobName, j.UseDependencyMode, j.CategoryId, j.Category))
             .ToArrayAsync();
         Steps = await context.Steps
             .AsNoTrackingWithIdentityResolution()

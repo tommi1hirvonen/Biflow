@@ -195,7 +195,7 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
         // When loading all steps from the db, the number of steps may be very high.
         JobSlims = await Context.Jobs
             .AsNoTrackingWithIdentityResolution()
-            .Select(j => new JobProjection(j.JobId, j.JobName, j.CategoryId, j.Category))
+            .Select(j => new JobProjection(j.JobId, j.JobName, j.UseDependencyMode, j.CategoryId, j.Category))
             .ToDictionaryAsync(j => j.JobId);
         StepSlims = await Context.Steps
             .AsNoTrackingWithIdentityResolution()

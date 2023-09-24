@@ -3,7 +3,7 @@
 
 <div class="row">
     <div class="col">
-        <HxButton Color="ThemeColor.Success" OnClick="() => SelectJobOffcanvas.LetAsync(x => x.ShowAsync())">
+        <HxButton Color="ThemeColor.Success" OnClick="() => SelectStepOffcanvas.LetAsync(x => x.ShowAsync())">
             Add subscription
         </HxButton>
     </div>
@@ -18,42 +18,49 @@
                         Job
                     </th>
                     <th>
+                        Step
+                    </th>
+                    <th>
                         Alert
                     </th>
                     <th></th>
                 </tr>
             </thead>
             <tbody>
-                @if (User is null || Jobs is null)
+                @if (User is null || Jobs is null || Steps is null)
                 {
-                    <tr><td colspan="3" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
+                    <tr><td colspan="4" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
                 }
                 else
                 {
                     var subscriptions = User.Subscriptions
-                        .OfType<JobSubscription>()
-                        .Select(s => (Subscription: s, Job: Jobs.FirstOrDefault(j => j.JobId == s.JobId)))
-                        .OrderBy(s => s.Job?.JobName);
+                        .OfType<StepSubscription>()
+                        .Select(sub =>
+                        {
+                            var step = Steps.FirstOrDefault(s => s.StepId == sub.StepId);
+                            var job = Jobs.FirstOrDefault(j => j.JobId == step?.JobId);
+                            return (sub, job, step);
+                        })
+                        .OrderBy(s => s.job?.JobName)
+                        .ThenBy(s => s.step?.StepName);
                     @if (!subscriptions.Any())
                     {
                         <tr>
-                            <td colspan="3">No job subscriptions</td>
+                            <td colspan="3">No step subscriptions</td>
                         </tr>
                     }
-                    foreach (var (sub, job) in subscriptions)
+                    foreach (var (sub, job, step) in subscriptions)
                     {
                         <tr>
                             <td>
                                 @job?.JobName
                             </td>
                             <td>
+                                <StepTypeIconComponent StepType_="@step?.StepType" />
+                                @step?.StepName
+                            </td>
+                            <td>
                                 <div>
-                                    <div class="form-check form-check-inline">
-                                        <input type="radio" class="form-check-input" id="@(sub.SubscriptionId.ToString() + "_none")"
-                                               checked=@(sub.AlertType is null)
-                                        @onchange="() => ToggleSubscription(sub, null)">
-                                        <label class="form-check-label" for="@(sub.SubscriptionId.ToString() + "_none")">None</label>
-                                    </div>
                                     <div class="form-check form-check-inline">
                                         <input type="radio" class="form-check-input" id="@(sub.SubscriptionId.ToString() + "_failure")"
                                                checked=@(sub.AlertType == AlertType.OnFailure)
@@ -72,12 +79,6 @@
                                         @onchange="() => ToggleSubscription(sub, AlertType.OnCompletion)">
                                         <label class="form-check-label" for="@(sub.SubscriptionId.ToString() + "_completion")">On completion</label>
                                     </div>
-                                    <div class="form-check form-check-inline">
-                                        <input type="checkbox" class="form-check-input" id="@(sub.SubscriptionId.ToString() + "_overtime")"
-                                               checked=@(sub.NotifyOnOvertime == true)
-                                        @onchange="args => ToggleSubscription(sub, (bool)args.Value!)">
-                                        <label class="form-check-label" for="@(sub.SubscriptionId.ToString() + "_overtime")">On overtime</label>
-                                    </div>
                                 </div>
                             </td>
                             <td>
@@ -93,23 +94,55 @@
     </div>
 </div>
 
-<HxOffcanvas @ref="SelectJobOffcanvas" Title="Select job" Backdrop="OffcanvasBackdrop.False">
+<HxOffcanvas @ref="SelectStepOffcanvas" Title="Select step" Backdrop="OffcanvasBackdrop.False">
     <BodyTemplate>
         <div class="row">
             <div class="col">
                 <div class="list-group">
-                    @foreach (var job in Jobs?.Where(j => !Subscriptions.Any(s => j.JobId == s.JobId)).OrderBy(j => j.JobName) ?? Enumerable.Empty<JobProjection>())
+                    @if (Steps is not null && Jobs is not null)
                     {
-                        <div class="list-group-item list-group-item-action" @onclick="() => AddSubscriptionAsync(job.JobId)" style="cursor: pointer;">
-                            @job.JobName
-                        </div>
+                        @foreach (var job in Jobs.OrderBy(j => j.JobName))
+                        {
+                            var expanded = JobExpandState.GetValueOrDefault(job.JobId);
+                            <div class="list-group-item" style="cursor: pointer;" @onclick="() => JobExpandState[job.JobId] = !expanded">
+                                <h6>
+                                    @if (expanded)
+                                    {
+                                        <CxIcon Icon="FeatherIcon.ChevronDown" />
+                                    }
+                                    else
+                                    {
+                                        <CxIcon Icon="FeatherIcon.ChevronRight" />
+                                    }
+                                    @job.JobName
+                                </h6>
+                            </div>
+                            @if (expanded)
+                            {
+                                var steps = Steps
+                                    .Where(s => s.JobId == job.JobId)
+                                    .ToArray();
+                                IComparer<StepProjection> comparer = job.UseDependencyMode switch
+                                {
+                                    true => new TopologicalStepProjectionComparer(steps),
+                                    false => Comparer<StepProjection>.Default
+                                };
+                                @foreach (var step in steps.Where(s => !Subscriptions.Any(sub => s.StepId == sub.StepId)).OrderBy(s => s, comparer))
+                                {
+                                    <div class="ps-5 list-group-item list-group-item-action" @onclick="() => AddSubscriptionAsync(step.StepId)" style="cursor: pointer;">
+                                        <StepTypeIconComponent StepType_="step.StepType" />
+                                        @step.StepName
+                                    </div>
+                                }
+                            }
+                        }
                     }
                 </div>
             </div>
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" OnClick="() => SelectJobOffcanvas.LetAsync(x => x.HideAsync())" Spinner="false">
+        <HxButton Color="ThemeColor.Secondary" OnClick="() => SelectStepOffcanvas.LetAsync(x => x.HideAsync())" Spinner="false">
             Close
         </HxButton>
     </FooterTemplate>
@@ -120,12 +153,50 @@
     public User? User { get; set; }
 
     [Parameter]
+    public IEnumerable<StepProjection>? Steps { get; set; }
+
+    [Parameter]
     public IEnumerable<JobProjection>? Jobs { get; set; }
 
-    private IEnumerable<JobSubscription> Subscriptions =>
-        User?.Subscriptions.OfType<JobSubscription>() ?? Enumerable.Empty<JobSubscription>();
+    private HxOffcanvas? SelectStepOffcanvas { get; set; }
 
-    private HxOffcanvas? SelectJobOffcanvas { get; set; }
+    private Dictionary<Guid, bool> JobExpandState { get; } = new();
+
+    private IEnumerable<StepSubscription> Subscriptions =>
+        User?.Subscriptions.OfType<StepSubscription>() ?? Enumerable.Empty<StepSubscription>();
+
+    private async Task AddSubscriptionAsync(Guid stepId)
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(User);
+            var subscription = new StepSubscription(User.UserId, stepId);
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+            context.StepSubscriptions.Add(subscription);
+            await context.SaveChangesAsync();
+            User.Subscriptions.Add(subscription);
+        }
+        catch
+        {
+            Messenger.AddError("Error", "Error adding subscription");
+        }
+    }
+
+    private async Task ToggleSubscription(StepSubscription subscription, AlertType alert)
+    {
+        try
+        {
+            subscription.AlertType = alert;
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+            await context.StepSubscriptions
+                .Where(s => s.SubscriptionId == subscription.SubscriptionId)
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.AlertType, alert));
+        }
+        catch (Exception)
+        {
+            Messenger.AddError("Error", "Error toggling subscription");
+        }
+    }
 
     private async Task RemoveSubscriptionAsync(Subscription subscription)
     {
@@ -141,55 +212,6 @@
         catch (Exception)
         {
             Messenger.AddError("Error", "Error removing subscription");
-        }
-    }
-
-    private async Task AddSubscriptionAsync(Guid jobId)
-    {
-        try
-        {
-            ArgumentNullException.ThrowIfNull(User);
-            var subscription = new JobSubscription(User.UserId, jobId);
-            await using var context = await DbContextFactory.CreateDbContextAsync();
-            context.JobSubscriptions.Add(subscription);
-            await context.SaveChangesAsync();
-            User.Subscriptions.Add(subscription);
-        }
-        catch
-        {
-            Messenger.AddError("Error", "Error adding subscription");
-        }
-    }
-
-    private async Task ToggleSubscription(JobSubscription subscription, AlertType? alert)
-    {
-        try
-        {
-            subscription.AlertType = alert;
-            await using var context = await DbContextFactory.CreateDbContextAsync();
-            await context.JobSubscriptions
-                .Where(s => s.SubscriptionId == subscription.SubscriptionId)
-                .ExecuteUpdateAsync(s => s.SetProperty(p => p.AlertType, alert));
-        }
-        catch (Exception)
-        {
-            Messenger.AddError("Error", "Error toggling subscription");
-        }
-    }
-
-    private async Task ToggleSubscription(JobSubscription subscription, bool onOvertime)
-    {
-        try
-        {
-            subscription.NotifyOnOvertime = onOvertime;
-            await using var context = await DbContextFactory.CreateDbContextAsync();
-            await context.JobSubscriptions
-                .Where(s => s.SubscriptionId == subscription.SubscriptionId)
-                .ExecuteUpdateAsync(s => s.SetProperty(p => p.NotifyOnOvertime, onOvertime));
-        }
-        catch (Exception)
-        {
-            Messenger.AddError("Error", "Error toggling subscription");
         }
     }
 }
