@@ -10,13 +10,16 @@ public abstract class ExecutionJobBase : IJob
 {
     private readonly ILogger _logger;
     private readonly IDbContextFactory<SchedulerDbContext> _dbContextFactory;
-    private readonly IExecutionBuilderFactory _executionBuilderFactory;
+    private readonly IExecutionBuilderFactory<SchedulerDbContext> _executionBuilderFactory;
 
     protected abstract Task StartExecutorAsync(Guid executionId);
 
     protected abstract Task WaitForExecutionToFinish(Guid executionId);
 
-    public ExecutionJobBase(ILogger logger, IDbContextFactory<SchedulerDbContext> dbContextFactory, IExecutionBuilderFactory executionBuilderFactory)
+    public ExecutionJobBase(
+        ILogger logger,
+        IDbContextFactory<SchedulerDbContext> dbContextFactory,
+        IExecutionBuilderFactory<SchedulerDbContext> executionBuilderFactory)
     {
         _logger = logger;
         _dbContextFactory = dbContextFactory;

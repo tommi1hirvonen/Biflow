@@ -4,19 +4,19 @@ using System.Linq.Expressions;
 
 namespace Biflow.DataAccess;
 
-internal class ExecutionBuilderFactory : IExecutionBuilderFactory
+internal class ExecutionBuilderFactory<TDbContext> : IExecutionBuilderFactory<TDbContext> where TDbContext : BiflowContext
 {
-    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
+    private readonly IDbContextFactory<TDbContext> _dbContextFactory;
 
-    public ExecutionBuilderFactory(IDbContextFactory<BiflowContext> dbContextFactory)
+    public ExecutionBuilderFactory(IDbContextFactory<TDbContext> dbContextFactory)
     {
         _dbContextFactory = dbContextFactory;
     }
 
-    public Task<ExecutionBuilder?> CreateAsync(Guid jobId, string? createdBy, params Func<BiflowContext, Expression<Func<Step, bool>>>[] predicates) =>
+    public Task<ExecutionBuilder?> CreateAsync(Guid jobId, string? createdBy, params Func<TDbContext, Expression<Func<Step, bool>>>[] predicates) =>
         CreateAsync(jobId, createdBy, null, predicates);
 
-    public async Task<ExecutionBuilder?> CreateAsync(Guid jobId, string? createdBy, StepExecutionAttempt? parent, params Func<BiflowContext, Expression<Func<Step, bool>>>[] predicates)
+    public async Task<ExecutionBuilder?> CreateAsync(Guid jobId, string? createdBy, StepExecutionAttempt? parent, params Func<TDbContext, Expression<Func<Step, bool>>>[] predicates)
     {
         var data = await GetBuilderDataAsync(jobId, predicates);
         if (data is null)
@@ -28,7 +28,7 @@ internal class ExecutionBuilderFactory : IExecutionBuilderFactory
         return new ExecutionBuilder(context, createExecution, steps);
     }
 
-    public async Task<ExecutionBuilder?> CreateAsync(Guid jobId, Guid scheduleId, params Func<BiflowContext, Expression<Func<Step, bool>>>[] predicates)
+    public async Task<ExecutionBuilder?> CreateAsync(Guid jobId, Guid scheduleId, params Func<TDbContext, Expression<Func<Step, bool>>>[] predicates)
     {
         var data = await GetBuilderDataAsync(jobId, predicates);
         if (data is null)
@@ -43,7 +43,7 @@ internal class ExecutionBuilderFactory : IExecutionBuilderFactory
         return new ExecutionBuilder(context, createExecution, steps);
     }
 
-    private async Task<BuilderData?> GetBuilderDataAsync(Guid jobId, Func<BiflowContext, Expression<Func<Step, bool>>>[] predicates)
+    private async Task<BuilderData?> GetBuilderDataAsync(Guid jobId, Func<TDbContext, Expression<Func<Step, bool>>>[] predicates)
     {
         var context = await _dbContextFactory.CreateDbContextAsync();
         var job = await context.Jobs
@@ -75,5 +75,5 @@ internal class ExecutionBuilderFactory : IExecutionBuilderFactory
         return new(context, job, steps);
     }
 
-    private record BuilderData(BiflowContext Context, Job Job, Step[] Steps);
+    private record BuilderData(TDbContext Context, Job Job, Step[] Steps);
 }

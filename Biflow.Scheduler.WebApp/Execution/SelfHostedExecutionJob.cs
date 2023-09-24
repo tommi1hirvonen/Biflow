@@ -14,7 +14,7 @@ internal class SelfHostedExecutionJob : ExecutionJobBase
         IExecutionManager executionManager,
         ILogger<SelfHostedExecutionJob> logger,
         IDbContextFactory<SchedulerDbContext> dbContextFactory,
-        IExecutionBuilderFactory executionBuilderFactory)
+        IExecutionBuilderFactory<SchedulerDbContext> executionBuilderFactory)
         : base(logger, dbContextFactory, executionBuilderFactory)
     {
         _executionManager = executionManager;

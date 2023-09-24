@@ -4,9 +4,10 @@ namespace Biflow.DataAccess;
 
 public static class Extensions
 {
-    public static IServiceCollection AddExecutionBuilderFactory(this IServiceCollection services)
+    public static IServiceCollection AddExecutionBuilderFactory<TDbContext>(this IServiceCollection services)
+        where TDbContext : BiflowContext
     {
-        services.AddSingleton<IExecutionBuilderFactory, ExecutionBuilderFactory>();
+        services.AddSingleton(typeof(IExecutionBuilderFactory<TDbContext>), typeof(ExecutionBuilderFactory<TDbContext>));
         return services;
     }
 

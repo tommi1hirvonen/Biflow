@@ -17,7 +17,7 @@ internal class WebAppExecutionJob : ExecutionJobBase
         IConfiguration configuration,
         ILogger<WebAppExecutionJob> logger,
         IDbContextFactory<SchedulerDbContext> dbContextFactory,
-        IExecutionBuilderFactory executionBuilderFactory,
+        IExecutionBuilderFactory<SchedulerDbContext> executionBuilderFactory,
         IHttpClientFactory httpClientFactory)
         : base(logger, dbContextFactory, executionBuilderFactory)
     {

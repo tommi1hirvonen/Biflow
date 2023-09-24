@@ -9,7 +9,7 @@ namespace Biflow.Executor.Core.StepExecutor;
 internal class JobStepExecutor : StepExecutorBase
 {
     private readonly ILogger<JobStepExecutor> _logger;
-    private readonly IExecutionBuilderFactory _executionBuilderFactory;
+    private readonly IExecutionBuilderFactory<ExecutorDbContext> _executionBuilderFactory;
     private readonly IExecutorLauncher _executorLauncher;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
 
@@ -19,7 +19,7 @@ internal class JobStepExecutor : StepExecutorBase
         ILogger<JobStepExecutor> logger,
         IExecutorLauncher executorLauncher,
         IDbContextFactory<ExecutorDbContext> dbContextFactory,
-        IExecutionBuilderFactory executionBuilderFactory,
+        IExecutionBuilderFactory<ExecutorDbContext> executionBuilderFactory,
         JobStepExecution step)
         : base(logger, dbContextFactory, step)
     {
