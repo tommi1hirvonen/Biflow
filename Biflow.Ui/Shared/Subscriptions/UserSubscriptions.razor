@@ -8,7 +8,16 @@
         @if (User is not null && string.IsNullOrWhiteSpace(User.Email))
         {
             <HxAlert Color="ThemeColor.Warning" CssClass="mb-3">
-                Email address for account <strong>@User.Username</strong> was not set. Go to the <a class="alert-link" href="account">Account page</a> to enter a valid email address.
+                @if (MissingEmailAlertTemplate is not null)
+                {
+                    @MissingEmailAlertTemplate(User)    
+                }
+                else
+                {
+                    <span>
+                        Email address for account <strong>@User.Username</strong> was not set. Go to the <a class="alert-link" href="account">Account page</a> to enter a valid email address.
+                    </span>
+                }
             </HxAlert>
         }
         <div class="row">
@@ -61,39 +70,20 @@
 </div>
 
 @code {
-    private string? Username => HttpContextAccessor.HttpContext?.User?.Identity?.Name;
+    [Parameter]
+    public User? User { get; set; }
 
-    private User? User { get; set; }
+    [Parameter]
+    public IEnumerable<JobProjection>? Jobs { get; set; }
 
-    private IEnumerable<JobProjection>? Jobs { get; set; }
+    [Parameter]
+    public IEnumerable<Tag>? Tags { get; set; }
 
-    private IEnumerable<Tag>? Tags { get; set; }
+    [Parameter]
+    public IEnumerable<StepProjection>? Steps { get; set; }
 
-    private IEnumerable<StepProjection>? Steps { get; set; }
+    [Parameter]
+    public RenderFragment<User>? MissingEmailAlertTemplate { get; set; }
 
     private SubscriptionType ShowType { get; set; } = SubscriptionType.Job;
-
-    protected override async Task OnInitializedAsync()
-    {
-        using var context = await Task.Run(DbFactory.CreateDbContext);
-        User = await context.Users
-            .AsNoTrackingWithIdentityResolution()
-            .Include(user => user.Subscriptions)
-            .FirstAsync(user => user.Username == Username);
-        Jobs = await context.Jobs
-            .AsNoTrackingWithIdentityResolution()
-            .OrderBy(job => job.JobName)
-            .Select(j => new JobProjection(j.JobId, j.JobName, j.UseDependencyMode, j.CategoryId, j.Category))
-            .ToArrayAsync();
-        Steps = await context.Steps
-            .AsNoTrackingWithIdentityResolution()
-            .Select(s => new StepProjection(s.StepId, s.JobId, s.StepName, s.StepType, s.ExecutionPhase, s.IsEnabled, s.Tags.ToArray(), s.Dependencies.Select(d => d.DependantOnStepId).ToArray()))
-            .ToArrayAsync();
-        Tags = await context.Tags
-            .AsNoTrackingWithIdentityResolution()
-            .OrderBy(t => t.TagName)
-            .ToArrayAsync();
-    }
-
-    
 }

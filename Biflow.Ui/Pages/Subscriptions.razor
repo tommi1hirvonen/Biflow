@@ -2,7 +2,6 @@
 
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IDbContextFactory<BiflowContext> DbFactory
-@inject IHxMessengerService Messenger
 
 <PageTitle>Subscriptions | Biflow</PageTitle>
 
@@ -25,13 +24,13 @@
 
 @if (Page is null)
 {
-    <MySubscriptionsComponent />
+    <UserSubscriptions User="User" Jobs="Jobs" Steps="Steps" Tags="Tags" />
 }
 else if (Page == "all")
 {
     <AuthorizeView Roles="@(Roles.Admin)">
         <Authorized>
-
+            <AllSubscriptions Jobs="Jobs" Steps="Steps" Tags="Tags" />
         </Authorized>
         <NotAuthorized>
             <p class="mt-4">Not authorized</p>
@@ -45,4 +44,36 @@ else
 
 @code {
     [Parameter] public string? Page { get; set; }
+
+    private string? Username => HttpContextAccessor.HttpContext?.User?.Identity?.Name;
+
+    private User? User { get; set; }
+
+    private IEnumerable<JobProjection>? Jobs { get; set; }
+
+    private IEnumerable<Tag>? Tags { get; set; }
+
+    private IEnumerable<StepProjection>? Steps { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = await Task.Run(DbFactory.CreateDbContext);
+        User = await context.Users
+            .AsNoTrackingWithIdentityResolution()
+            .Include(user => user.Subscriptions)
+            .FirstAsync(user => user.Username == Username);
+        Jobs = await context.Jobs
+            .AsNoTrackingWithIdentityResolution()
+            .OrderBy(job => job.JobName)
+            .Select(j => new JobProjection(j.JobId, j.JobName, j.UseDependencyMode, j.CategoryId, j.Category))
+            .ToArrayAsync();
+        Steps = await context.Steps
+            .AsNoTrackingWithIdentityResolution()
+            .Select(s => new StepProjection(s.StepId, s.JobId, s.StepName, s.StepType, s.ExecutionPhase, s.IsEnabled, s.Tags.ToArray(), s.Dependencies.Select(d => d.DependantOnStepId).ToArray()))
+            .ToArrayAsync();
+        Tags = await context.Tags
+            .AsNoTrackingWithIdentityResolution()
+            .OrderBy(t => t.TagName)
+            .ToArrayAsync();
+    }
 }
