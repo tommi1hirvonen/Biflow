@@ -1,4 +1,5 @@
 ﻿using Biflow.DataAccess;
+using Biflow.Executor.Core;
 using Biflow.Executor.Core.WebExtensions;
 using Biflow.Scheduler.Core;
 using Microsoft.EntityFrameworkCore;
@@ -12,7 +13,7 @@ public class ExecutionJob : ExecutionJobBase
 
 
     public ExecutionJob(IExecutionManager executionManager,
-        ILogger<ExecutionJob> logger, IDbContextFactory<BiflowContext> dbContextFactory, IExecutionBuilderFactory executionBuilderFactory)
+        ILogger<ExecutionJob> logger, IDbContextFactory<SchedulerDbContext> dbContextFactory, IExecutionBuilderFactory executionBuilderFactory)
         : base(logger, dbContextFactory, executionBuilderFactory)
     {
         _executionManager = executionManager;

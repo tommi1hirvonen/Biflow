@@ -1,5 +1,5 @@
-﻿using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
+﻿using Biflow.DataAccess.Models;
+using Biflow.Executor.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Quartz;
@@ -10,9 +10,9 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
 {
     private readonly ILogger _logger;
     private readonly IScheduler _scheduler;
-    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
+    private readonly IDbContextFactory<SchedulerDbContext> _dbContextFactory;
 
-    public SchedulesManager(ILogger<SchedulesManager<TJob>> logger, IDbContextFactory<BiflowContext> dbContextFactory, ISchedulerFactory schedulerFactory)
+    public SchedulesManager(ILogger<SchedulesManager<TJob>> logger, IDbContextFactory<SchedulerDbContext> dbContextFactory, ISchedulerFactory schedulerFactory)
     {
         _logger = logger;
         _dbContextFactory = dbContextFactory;

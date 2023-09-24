@@ -5,9 +5,9 @@ using Microsoft.Extensions.Configuration;
 
 namespace Biflow.Executor.Core;
 
-internal class ExecutorDbContext : BiflowContext
+public class SchedulerDbContext : BiflowContext
 {
-    public ExecutorDbContext(IConfiguration configuration)
+    public SchedulerDbContext(IConfiguration configuration)
         : base(configuration, httpContextAccessor: null) // Pass null as HttpContextAccessor to disable global query filters.
     {
     }

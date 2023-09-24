@@ -1,4 +1,5 @@
 ﻿using Biflow.DataAccess;
+using Biflow.Executor.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Quartz;
@@ -8,14 +9,14 @@ namespace Biflow.Scheduler.Core;
 public abstract class ExecutionJobBase : IJob
 {
     private readonly ILogger _logger;
-    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
+    private readonly IDbContextFactory<SchedulerDbContext> _dbContextFactory;
     private readonly IExecutionBuilderFactory _executionBuilderFactory;
 
     protected abstract Task StartExecutorAsync(Guid executionId);
 
     protected abstract Task WaitForExecutionToFinish(Guid executionId);
 
-    public ExecutionJobBase(ILogger logger, IDbContextFactory<BiflowContext> dbContextFactory, IExecutionBuilderFactory executionBuilderFactory)
+    public ExecutionJobBase(ILogger logger, IDbContextFactory<SchedulerDbContext> dbContextFactory, IExecutionBuilderFactory executionBuilderFactory)
     {
         _logger = logger;
         _dbContextFactory = dbContextFactory;
