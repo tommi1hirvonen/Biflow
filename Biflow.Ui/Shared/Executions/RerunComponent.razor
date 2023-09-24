@@ -2,7 +2,7 @@
 @inject IDbContextFactory<BiflowContext> DbContextFactory
 @inject IHxMessengerService Messenger
 @inject IHttpContextAccessor HttpContextAccessor
-@inject IExecutionBuilderFactory BuilderFactory
+@inject IExecutionBuilderFactory<BiflowContext> BuilderFactory
 @inject IExecutorService Executor
 
 @if (LastStartedExecutionId is not null)

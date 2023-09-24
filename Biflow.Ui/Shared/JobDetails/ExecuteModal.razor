@@ -1,6 +1,6 @@
 ﻿@inject IHxMessengerService Messenger
 @inject IHttpContextAccessor HttpContextAccessor
-@inject IExecutionBuilderFactory BuilderFactory
+@inject IExecutionBuilderFactory<BiflowContext> BuilderFactory
 @inject IExecutorService Executor
 
 <HxModal @ref="Modal" Fullscreen="ModalFullscreen.Always" Scrollable="true" Title="Execute steps"

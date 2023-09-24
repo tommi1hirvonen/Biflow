@@ -11,9 +11,8 @@ public class ExecutionJob : ExecutionJobBase
 {
     private readonly IExecutionManager _executionManager;
 
-
     public ExecutionJob(IExecutionManager executionManager,
-        ILogger<ExecutionJob> logger, IDbContextFactory<SchedulerDbContext> dbContextFactory, IExecutionBuilderFactory executionBuilderFactory)
+        ILogger<ExecutionJob> logger, IDbContextFactory<SchedulerDbContext> dbContextFactory, IExecutionBuilderFactory<SchedulerDbContext> executionBuilderFactory)
         : base(logger, dbContextFactory, executionBuilderFactory)
     {
         _executionManager = executionManager;
