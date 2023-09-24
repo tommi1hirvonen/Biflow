@@ -38,7 +38,8 @@ public static class Extensions
         services.Configure<EmailOptions>(executorConfiguration);
         services.AddSingleton<ISubscriptionsProviderFactory, SubscriptionsProviderFactory>();
         services.AddSingleton<ISubscribersResolver, SubscribersResolver>();
-        services.AddSingleton<INotificationService, EmailService>();
+        services.AddSingleton<IMessageDispatcher, EmailDispatcher>();
+        services.AddSingleton<INotificationService, NotificationService>();
         services.AddSingleton<IStepExecutorFactory, StepExecutorFactory>();
         services.AddSingleton<IGlobalOrchestrator, GlobalOrchestrator>();
         services.AddSingleton<IJobOrchestratorFactory, JobOrchestratorFactory>();

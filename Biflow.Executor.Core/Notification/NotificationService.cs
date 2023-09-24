@@ -1,24 +1,22 @@
 ﻿using Biflow.Core;
 using Biflow.DataAccess.Models;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System.Net.Mail;
 
 namespace Biflow.Executor.Core.Notification;
 
-internal class EmailService : INotificationService
+internal class NotificationService : INotificationService
 {
-    private readonly ILogger<EmailService> _logger;
-    private readonly IOptionsMonitor<EmailOptions> _options;
+    private readonly ILogger<NotificationService> _logger;
+    private readonly IMessageDispatcher _messageDispatcher;
     private readonly ISubscribersResolver _subscribersResolver;
 
-    public EmailService(
-        ILogger<EmailService> logger,
-        IOptionsMonitor<EmailOptions> options,
+    public NotificationService(
+        ILogger<NotificationService> logger,
+        IMessageDispatcher messageDispatcher,
         ISubscribersResolver subscribersResolver)
     {
         _logger = logger;
-        _options = options;
+        _messageDispatcher = messageDispatcher;
         _subscribersResolver = subscribersResolver;
     }
 
@@ -146,49 +144,16 @@ internal class EmailService : INotificationService
             // Do not return. The notification can be sent even without a body.
         }
 
-        var options = _options.CurrentValue;
-        SmtpClient client;
         try
         {
-            client = options.Client;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "{ExecutionId} Error building notification email SMTP client. Check appsettings.json.", execution.ExecutionId);
-            return;
-        }
-
-        MailMessage mailMessage;
-        try
-        {
-            ArgumentException.ThrowIfNullOrEmpty(options.FromAddress);
-            mailMessage = new MailMessage
-            {
-                From = new MailAddress(options.FromAddress),
-                Subject = $"{execution.JobName} completed with status {execution.ExecutionStatus} – Biflow notification",
-                IsBodyHtml = true,
-                Body = messageBody
-            };
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "{ExecutionId} Error building notification email message object. Check appsettings.json.", execution.ExecutionId);
-            return;
-        }
-
-        foreach (var recipient in recipients)
-        {
-            mailMessage.Bcc.Add(recipient);
-        }
-
-        try
-        {
-            await client.SendMailAsync(mailMessage);
+            var subject = $"{execution.JobName} completed with status {execution.ExecutionStatus} – Biflow notification";
+            await _messageDispatcher.SendMessageAsync(recipients, subject, messageBody, true);
             _logger.LogInformation("{ExecutionId} Notification email sent to: {recipients}", execution.ExecutionId, string.Join(", ", recipients));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} Error sending notification email", execution.ExecutionId);
+            _logger.LogError(ex, "{ExecutionId} Error sending notification email.", execution.ExecutionId);
+            return;
         }
     }
 
@@ -210,68 +175,18 @@ internal class EmailService : INotificationService
             return;
         }
 
-        var options = _options.CurrentValue;
-        SmtpClient client;
         try
         {
-            client = options.Client;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "{ExecutionId} Error building long running execution notification email SMTP client. Check appsettings.json.", execution.ExecutionId);
-            return;
-        }
-
-        MailMessage mailMessage;
-        try
-        {
-            ArgumentException.ThrowIfNullOrEmpty(options.FromAddress);
-            mailMessage = new MailMessage
-            {
-                From = new MailAddress(options.FromAddress),
-                Subject = $"\"{execution.JobName}\" execution is running long – Biflow notification",
-                IsBodyHtml = true,
-                Body = $"Execution of job \"{execution.JobName}\" started at {execution.StartDateTime?.LocalDateTime}"
-                + $" has exceeded the overtime limit of {execution.OvertimeNotificationLimitMinutes} minutes set for this job."
-            };
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "{ExecutionId} Error building notification email message object. Check appsettings.json.", execution.ExecutionId);
-            return;
-        }
-
-        foreach (var recipient in recipients)
-        {
-            mailMessage.Bcc.Add(recipient);
-        }
-
-        try
-        {
-            await client.SendMailAsync(mailMessage);
+            var subject = $"\"{execution.JobName}\" execution is running long – Biflow notification";
+            var messageBody = $"Execution of job \"{execution.JobName}\" started at {execution.StartDateTime?.LocalDateTime}"
+                + $" has exceeded the overtime limit of {execution.OvertimeNotificationLimitMinutes} minutes set for this job.";
+            await _messageDispatcher.SendMessageAsync(recipients, subject, messageBody, false);
             _logger.LogInformation("{ExecutionId} Long running execution notification email sent to: {recipients}", execution.ExecutionId, string.Join(", ", recipients));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} Error sending notification email", execution.ExecutionId);
+            _logger.LogError(ex, "{ExecutionId} Error sending notification email.", execution.ExecutionId);
+            return;
         }
-    }
-
-    public async Task SendNotification(IEnumerable<string> recipients, string subject, string body, CancellationToken cancellationToken)
-    {
-        var options = _options.CurrentValue;
-        ArgumentException.ThrowIfNullOrEmpty(options.FromAddress);
-        var client = options.Client;
-        var mailMessage = new MailMessage
-        {
-            From = new MailAddress(options.FromAddress),
-            Subject = subject,
-            Body = body
-        };
-        foreach (var recipient in recipients)
-        {
-            mailMessage.Bcc.Add(recipient);
-        }
-        await client.SendMailAsync(mailMessage, cancellationToken);
     }
 }

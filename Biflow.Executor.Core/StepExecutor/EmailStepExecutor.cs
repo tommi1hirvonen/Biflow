@@ -8,18 +8,18 @@ namespace Biflow.Executor.Core.StepExecutor;
 
 internal class EmailStepExecutor : StepExecutorBase
 {
-    private readonly INotificationService _notificationService;
+    private readonly IMessageDispatcher _messageDispatcher;
     
     private EmailStepExecution Step { get; }
 
     public EmailStepExecutor(
         ILogger<EmailStepExecutor> logger,
         IDbContextFactory<ExecutorDbContext> dbContextFactory,
-        INotificationService notificationService,
+        IMessageDispatcher messageDispatcher,
         EmailStepExecution stepExecution)
         : base(logger, dbContextFactory, stepExecution)
     {
-        _notificationService = notificationService;
+        _messageDispatcher = messageDispatcher;
         Step = stepExecution;
     }
 
@@ -34,7 +34,7 @@ internal class EmailStepExecutor : StepExecutorBase
         var subject = Step.Subject.Replace(parameters);
         var body = Step.Body.Replace(parameters);
 
-        await _notificationService.SendNotification(recipients, subject, body, cancellationToken);
+        await _messageDispatcher.SendMessageAsync(recipients, subject, body, false, cancellationToken);
 
         return new Success();
     }
