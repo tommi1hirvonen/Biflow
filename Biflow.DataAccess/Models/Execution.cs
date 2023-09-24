@@ -93,7 +93,7 @@ public class Execution
     public int MaxParallelSteps { get; private set; }
 
     [Display(Name = "Notification time limit (min, 0 = indefinite)")]
-    public int OvertimeNotificationLimitMinutes { get; private set; }
+    public double OvertimeNotificationLimitMinutes { get; private set; }
 
     [Display(Name = "Created by")]
     public string? CreatedBy { get; private set; }

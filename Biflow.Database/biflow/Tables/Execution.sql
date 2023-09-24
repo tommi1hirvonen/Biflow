@@ -9,7 +9,7 @@
     [DependencyMode]                    BIT                 NOT NULL,
     [StopOnFirstError]                  BIT                 CONSTRAINT [DF_Execution_StopOnFirstError] DEFAULT (0) NOT NULL,
     [MaxParallelSteps]                  INT                 NOT NULL CONSTRAINT [DF_Execution_MaxParallelSteps] DEFAULT (0),
-    [OvertimeNotificationLimitMinutes]  INT                 NOT NULL CONSTRAINT [DF_Execution_OvertimeNotificationLimitMinutes] DEFAULT(0),
+    [OvertimeNotificationLimitMinutes]  FLOAT               NOT NULL CONSTRAINT [DF_Execution_OvertimeNotificationLimitMinutes] DEFAULT(0),
     [CreatedBy]                         NVARCHAR(250)       NULL,
     [ScheduleId]                        UNIQUEIDENTIFIER    NULL,
     [ExecutorProcessId]                 INT                 NULL,
