@@ -1,7 +1,5 @@
 ﻿using Biflow.DataAccess.Models;
-using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("Biflow.Executor.ConsoleApp.Test")]
 namespace Biflow.Executor.Core.Notification;
 
 internal interface INotificationService
