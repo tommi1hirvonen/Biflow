@@ -1,16 +1,13 @@
 ﻿using Biflow.DataAccess.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Executor.Core.Notification;
 
-internal class SubscribersResolver : ISubscribersResolver
+public class SubscribersResolver : ISubscribersResolver
 {
     private readonly ISubscriptionsProviderFactory _subscriptionsProviderFactory;
-    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
 
-    public SubscribersResolver(IDbContextFactory<ExecutorDbContext> dbContextFactory, ISubscriptionsProviderFactory subscriptionsProviderFactory)
+    public SubscribersResolver(ISubscriptionsProviderFactory subscriptionsProviderFactory)
     {
-        _dbContextFactory = dbContextFactory;
         _subscriptionsProviderFactory = subscriptionsProviderFactory;
     }
 
@@ -64,17 +61,10 @@ internal class SubscribersResolver : ISubscribersResolver
         return allSubscribers;
     }
 
-    private async Task<IEnumerable<string>> GetSubscriberEmailsAsync(ISubscriptionsProvider provider, Execution execution)
+    private static async Task<IEnumerable<string>> GetSubscriberEmailsAsync(ISubscriptionsProvider provider, Execution execution)
     {
-        using var context = _dbContextFactory.CreateDbContext();
-
         // Map tags to steps for tag based subscriptions
-        var tagSteps = (await context.Steps
-                .Where(s => context.StepExecutions.Any(e => e.ExecutionId == execution.ExecutionId && e.StepId == s.StepId))
-                .SelectMany(s => s.Tags.Select(t => new { s.StepId, t.TagId }))
-                .ToArrayAsync())
-                .GroupBy(key => key.TagId)
-                .ToDictionary(key => key.Key, values => values.Select(x => x.StepId).ToArray());
+        var tagSteps = await provider.GetTagStepsAsync();
 
         bool stepSubscriptionShouldAlert(AlertType alert, Guid stepId) => (alert, execution.StepExecutions.FirstOrDefault(s => s.StepId == stepId)?.ExecutionStatus) switch
         {
