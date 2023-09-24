@@ -151,7 +151,7 @@
             ArgumentNullException.ThrowIfNull(User);
             var subscription = new JobSubscription(User.UserId, jobId);
             await using var context = await DbContextFactory.CreateDbContextAsync();
-            context.JobSubscriptions.Add(subscription);
+            context.Subscriptions.Add(subscription);
             await context.SaveChangesAsync();
             User.Subscriptions.Add(subscription);
         }

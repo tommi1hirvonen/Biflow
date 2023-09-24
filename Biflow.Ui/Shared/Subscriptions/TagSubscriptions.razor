@@ -3,7 +3,7 @@
 
 <div class="row">
     <div class="col">
-        <HxButton Color="ThemeColor.Success" OnClick="() => SelectStepOffcanvas.LetAsync(x => x.ShowAsync())">
+        <HxButton Color="ThemeColor.Success" OnClick="() => SelectTagOffcanvas.LetAsync(x => x.ShowAsync())">
             Add subscription
         </HxButton>
     </div>
@@ -15,10 +15,7 @@
             <thead>
                 <tr>
                     <th>
-                        Job
-                    </th>
-                    <th>
-                        Step
+                        Tag
                     </th>
                     <th>
                         Alert
@@ -27,37 +24,27 @@
                 </tr>
             </thead>
             <tbody>
-                @if (User is null || Jobs is null || Steps is null)
+                @if (User is null || Tags is null)
                 {
-                    <tr><td colspan="4" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
+                    <tr><td colspan="3" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
                 }
                 else
                 {
                     var subscriptions = User.Subscriptions
-                        .OfType<StepSubscription>()
-                        .Select(sub =>
-                        {
-                            var step = Steps.FirstOrDefault(s => s.StepId == sub.StepId);
-                            var job = Jobs.FirstOrDefault(j => j.JobId == step?.JobId);
-                            return (sub, job, step);
-                        })
-                        .OrderBy(s => s.job?.JobName)
-                        .ThenBy(s => s.step?.StepName);
+                        .OfType<TagSubscription>()
+                        .Select(s => (Subscription: s, Tag: Tags.FirstOrDefault(t => t.TagId == s.TagId)))
+                        .OrderBy(s => s.Tag?.TagName);
                     @if (!subscriptions.Any())
                     {
                         <tr>
-                            <td colspan="3">No step subscriptions</td>
+                            <td colspan="3">No tag subscriptions</td>
                         </tr>
                     }
-                    foreach (var (sub, job, step) in subscriptions)
+                    foreach (var (sub, tag) in subscriptions)
                     {
                         <tr>
                             <td>
-                                @job?.JobName
-                            </td>
-                            <td>
-                                <StepTypeIconComponent StepType_="@step?.StepType" />
-                                @step?.StepName
+                                <TagComponent Tag="tag" />
                             </td>
                             <td>
                                 <div>
@@ -94,55 +81,19 @@
     </div>
 </div>
 
-<HxOffcanvas @ref="SelectStepOffcanvas" Title="Select step" Backdrop="OffcanvasBackdrop.False">
+<HxOffcanvas @ref="SelectTagOffcanvas" Title="Select tag" Backdrop="OffcanvasBackdrop.False">
     <BodyTemplate>
         <div class="row">
-            <div class="col">
-                <div class="list-group">
-                    @if (Steps is not null && Jobs is not null)
-                    {
-                        @foreach (var job in Jobs.OrderBy(j => j.JobName))
-                        {
-                            var expanded = JobExpandState.GetValueOrDefault(job.JobId);
-                            <div class="list-group-item" style="cursor: pointer;" @onclick="() => JobExpandState[job.JobId] = !expanded">
-                                <h6>
-                                    @if (expanded)
-                                    {
-                                        <CxIcon Icon="FeatherIcon.ChevronDown" />
-                                    }
-                                    else
-                                    {
-                                        <CxIcon Icon="FeatherIcon.ChevronRight" />
-                                    }
-                                    @job.JobName
-                                </h6>
-                            </div>
-                            @if (expanded)
-                            {
-                                var steps = Steps
-                                    .Where(s => s.JobId == job.JobId)
-                                    .ToArray();
-                                IComparer<StepProjection> comparer = job.UseDependencyMode switch
-                                {
-                                    true => new TopologicalStepProjectionComparer(steps),
-                                    false => Comparer<StepProjection>.Default
-                                };
-                                @foreach (var step in steps.Where(s => !Subscriptions.Any(sub => s.StepId == sub.StepId)).OrderBy(s => s, comparer))
-                                {
-                                    <div class="ps-5 list-group-item list-group-item-action" @onclick="() => AddSubscriptionAsync(step.StepId)" style="cursor: pointer;">
-                                        <StepTypeIconComponent StepType_="step.StepType" />
-                                        @step.StepName
-                                    </div>
-                                }
-                            }
-                        }
-                    }
-                </div>
+            <div class="col d-flex flex-wrap">
+                @foreach (var tag in Tags?.Where(t => !Subscriptions.Any(s => t.TagId == s.TagId)).OrderBy(t => t.TagName) ?? Enumerable.Empty<Tag>())
+                {
+                    <TagComponent Tag="tag" CssClass="m-2" OnClick="() => AddSubscriptionAsync(tag.TagId)" Style="cursor: pointer;" />
+                }
             </div>
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" OnClick="() => SelectStepOffcanvas.LetAsync(x => x.HideAsync())" Spinner="false">
+        <HxButton Color="ThemeColor.Secondary" OnClick="() => SelectTagOffcanvas.LetAsync(x => x.HideAsync())" Spinner="false">
             Close
         </HxButton>
     </FooterTemplate>
@@ -153,24 +104,19 @@
     public User? User { get; set; }
 
     [Parameter]
-    public IEnumerable<StepProjection>? Steps { get; set; }
+    public IEnumerable<Tag>? Tags { get; set; }
 
-    [Parameter]
-    public IEnumerable<JobProjection>? Jobs { get; set; }
+    private HxOffcanvas? SelectTagOffcanvas { get; set; }
 
-    private HxOffcanvas? SelectStepOffcanvas { get; set; }
+    private IEnumerable<TagSubscription> Subscriptions =>
+        User?.Subscriptions.OfType<TagSubscription>() ?? Enumerable.Empty<TagSubscription>();
 
-    private Dictionary<Guid, bool> JobExpandState { get; } = new();
-
-    private IEnumerable<StepSubscription> Subscriptions =>
-        User?.Subscriptions.OfType<StepSubscription>() ?? Enumerable.Empty<StepSubscription>();
-
-    private async Task AddSubscriptionAsync(Guid stepId)
+    private async Task AddSubscriptionAsync(Guid tagId)
     {
         try
         {
             ArgumentNullException.ThrowIfNull(User);
-            var subscription = new StepSubscription(User.UserId, stepId);
+            var subscription = new TagSubscription(User.UserId, tagId);
             await using var context = await DbContextFactory.CreateDbContextAsync();
             context.Subscriptions.Add(subscription);
             await context.SaveChangesAsync();
@@ -182,13 +128,13 @@
         }
     }
 
-    private async Task ToggleSubscription(StepSubscription subscription, AlertType alert)
+    private async Task ToggleSubscription(TagSubscription subscription, AlertType alert)
     {
         try
         {
             subscription.AlertType = alert;
             await using var context = await DbContextFactory.CreateDbContextAsync();
-            await context.StepSubscriptions
+            await context.TagSubscriptions
                 .Where(s => s.SubscriptionId == subscription.SubscriptionId)
                 .ExecuteUpdateAsync(s => s.SetProperty(p => p.AlertType, alert));
         }
