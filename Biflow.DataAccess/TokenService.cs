@@ -5,15 +5,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.DataAccess;
 
-public class TokenService : ITokenService
+public class TokenService<TDbContext> : ITokenService where TDbContext : BiflowContext
 {
-    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
+    private readonly IDbContextFactory<TDbContext> _dbContextFactory;
     private readonly SemaphoreSlim _semaphore = new(1, 1); // Synchronize access by setting initial and max values to 1
 
     private Dictionary<Guid, Dictionary<string, (string Token, DateTimeOffset ExpiresOn)>> AccessTokens { get; } = new();
 
 
-    public TokenService(IDbContextFactory<BiflowContext> dbContextFactory)
+    public TokenService(IDbContextFactory<TDbContext> dbContextFactory)
     {
         _dbContextFactory = dbContextFactory;
     }

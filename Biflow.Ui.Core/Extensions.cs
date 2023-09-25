@@ -135,7 +135,7 @@ public static partial class Extensions
             // Passes Windows credentials in on-premise installations to the scheduler API.
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { UseDefaultCredentials = true });
 
-        services.AddSingleton<ITokenService, TokenService>();
+        services.AddSingleton(typeof(ITokenService), typeof(TokenService<BiflowContext>));
 
         var executorType = configuration.GetSection("Executor").GetValue<string>("Type");
         if (executorType == "WebApp")

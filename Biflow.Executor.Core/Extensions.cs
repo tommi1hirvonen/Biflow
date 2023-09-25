@@ -29,7 +29,7 @@ public static class Extensions
         services.AddExecutionBuilderFactory<ExecutorDbContext>();
         services.AddHttpClient();
         services.AddHttpClient("notimeout", client => client.Timeout = Timeout.InfiniteTimeSpan);
-        services.AddSingleton<ITokenService, TokenService>();
+        services.AddSingleton(typeof(ITokenService), typeof(TokenService<ExecutorDbContext>));
         services.AddOptions<ExecutionOptions>()
             .Bind(executorConfiguration)
             .ValidateDataAnnotations()
