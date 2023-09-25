@@ -6,11 +6,17 @@
 
 <h4>Settings</h4>
 
-<ul class="nav nav-tabs mt-3 mb-4" role="tablist">
+<ul class="nav nav-tabs nav-fill mt-3 mb-4" role="tablist">
     <li class="nav-item" role="presentation">
         <NavLink class="nav-link" href="settings" Match="NavLinkMatch.All">
             <CxIcon Icon="FeatherIcon.Users" />
             Users
+        </NavLink>
+    </li>
+    <li class="nav-item" role="presentation">
+        <NavLink class="nav-link" href="settings/subscriptions">
+            <CxIcon Icon="FeatherIcon.Mail" />
+            Subscriptions
         </NavLink>
     </li>
     <li class="nav-item" role="presentation">
@@ -42,6 +48,10 @@
 @if (Page is null)
 {
     <UsersComponent />
+}
+else if (Page == "subscriptions")
+{
+    <AllSubscriptions />
 }
 else if (Page == "connections")
 {

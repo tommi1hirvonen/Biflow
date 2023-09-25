@@ -28,13 +28,10 @@
 </UserSubscriptions>
 
 @code {
-    [Parameter]
     public IEnumerable<JobProjection>? Jobs { get; set; }
 
-    [Parameter]
     public IEnumerable<Tag>? Tags { get; set; }
 
-    [Parameter]
     public IEnumerable<StepProjection>? Steps { get; set; }
 
     private Guid? UserId { get; set; }
@@ -52,5 +49,18 @@
             .ToArrayAsync();
         User = Users.OrderBy(u => u.Username).FirstOrDefault();
         UserId = User?.UserId;
+        Jobs = await context.Jobs
+            .AsNoTrackingWithIdentityResolution()
+            .OrderBy(job => job.JobName)
+            .Select(j => new JobProjection(j.JobId, j.JobName, j.UseDependencyMode, j.CategoryId, j.Category))
+            .ToArrayAsync();
+        Steps = await context.Steps
+            .AsNoTrackingWithIdentityResolution()
+            .Select(s => new StepProjection(s.StepId, s.JobId, s.StepName, s.StepType, s.ExecutionPhase, s.IsEnabled, s.Tags.ToArray(), s.Dependencies.Select(d => d.DependantOnStepId).ToArray()))
+            .ToArrayAsync();
+        Tags = await context.Tags
+            .AsNoTrackingWithIdentityResolution()
+            .OrderBy(t => t.TagName)
+            .ToArrayAsync();
     }
 }
