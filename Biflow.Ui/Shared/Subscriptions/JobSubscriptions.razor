@@ -122,6 +122,9 @@
     [Parameter]
     public IEnumerable<JobProjection>? Jobs { get; set; }
 
+    [Parameter]
+    public EventCallback OnSubscriptionCountChanged { get; set; }
+
     private IEnumerable<JobSubscription> Subscriptions =>
         User?.Subscriptions.OfType<JobSubscription>() ?? Enumerable.Empty<JobSubscription>();
 
@@ -137,6 +140,7 @@
                 .Where(s => s.SubscriptionId == subscription.SubscriptionId)
                 .ExecuteDeleteAsync();
             User.Subscriptions.Remove(subscription);
+            await OnSubscriptionCountChanged.InvokeAsync();
         }
         catch (Exception)
         {
@@ -154,6 +158,7 @@
             context.Subscriptions.Add(subscription);
             await context.SaveChangesAsync();
             User.Subscriptions.Add(subscription);
+            await OnSubscriptionCountChanged.InvokeAsync();
         }
         catch
         {

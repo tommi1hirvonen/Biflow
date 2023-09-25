@@ -1,8 +1,6 @@
 ﻿@inject IHttpContextAccessor HttpContextAccessor
 @inject IDbContextFactory<BiflowContext> DbFactory
 
-
-
 <div class="row mt-4">
     <div class="col">
         @if (User is not null && string.IsNullOrWhiteSpace(User.Email))
@@ -20,6 +18,14 @@
                 }
             </HxAlert>
         }
+        @{
+            var (jobSubs, jobTagSubs, tagSubs, stepSubs) = (
+                User?.Subscriptions.OfType<JobSubscription>().Count(),
+                User?.Subscriptions.OfType<JobTagSubscription>().Count(),
+                User?.Subscriptions.OfType<TagSubscription>().Count(),
+                User?.Subscriptions.OfType<StepSubscription>().Count());
+            string subCountClass(int? count) => count > 0 ? "bg-primary" : "bg-secondary";
+        }
         <div class="row">
             <div class="col">
                 <ul class="nav nav-tabs mb-3">
@@ -27,24 +33,36 @@
                         <span class="nav-link @(ShowType == SubscriptionType.Job ? "active" : null)"
                         @onclick="() => ShowType = SubscriptionType.Job">
                             Job subscriptions
+                            <span class="badge rounded-pill ms-3 @subCountClass(jobSubs)">
+                                @jobSubs
+                            </span>
                         </span>
                     </li>
                     <li class="nav-item">
                         <span class="nav-link @(ShowType == SubscriptionType.JobTag ? "active" : null)"
                         @onclick="() => ShowType = SubscriptionType.JobTag">
                             Job-tag subscriptions
+                            <span class="badge rounded-pill ms-3 @subCountClass(jobTagSubs)">
+                                @jobTagSubs
+                            </span>
                         </span>
                     </li>
                     <li class="nav-item">
                         <span class="nav-link @(ShowType == SubscriptionType.Tag ? "active" : null)"
                         @onclick="() => ShowType = SubscriptionType.Tag">
                             Tag subscriptions
+                            <span class="badge rounded-pill ms-3 @subCountClass(tagSubs)">
+                                @tagSubs
+                            </span>
                         </span>
                     </li>
                     <li class="nav-item">
                         <span class="nav-link @(ShowType == SubscriptionType.Step ? "active" : null)"
                         @onclick="() => ShowType = SubscriptionType.Step">
                             Step subscriptions
+                            <span class="badge rounded-pill ms-3 @subCountClass(stepSubs)">
+                                @stepSubs
+                            </span>
                         </span>
                     </li>
                 </ul>
@@ -52,19 +70,19 @@
         </div>
         @if (ShowType == SubscriptionType.Job)
         {
-            <JobSubscriptions User="User" Jobs="Jobs" />
+            <JobSubscriptions User="User" Jobs="Jobs" OnSubscriptionCountChanged="StateHasChanged" />
         }
         else if (ShowType == SubscriptionType.JobTag)
         {
-            <JobTagSubscriptions User="User" Jobs="Jobs" Steps="Steps" Tags="Tags" />
+            <JobTagSubscriptions User="User" Jobs="Jobs" Steps="Steps" Tags="Tags" OnSubscriptionCountChanged="StateHasChanged" />
         }
         else if (ShowType == SubscriptionType.Tag)
         {
-            <TagSubscriptions User="User" Tags="Tags" />
+            <TagSubscriptions User="User" Tags="Tags" OnSubscriptionCountChanged="StateHasChanged" />
         }
         else if (ShowType == SubscriptionType.Step)
         {
-            <StepSubscriptions User="User" Jobs="Jobs" Steps="Steps" />
+            <StepSubscriptions User="User" Jobs="Jobs" Steps="Steps" OnSubscriptionCountChanged="StateHasChanged" />
         }
     </div>
 </div>

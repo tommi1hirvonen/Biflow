@@ -158,6 +158,9 @@
     [Parameter]
     public IEnumerable<JobProjection>? Jobs { get; set; }
 
+    [Parameter]
+    public EventCallback OnSubscriptionCountChanged { get; set; }
+
     private HxOffcanvas? SelectStepOffcanvas { get; set; }
 
     private Dictionary<Guid, bool> JobExpandState { get; } = new();
@@ -175,6 +178,7 @@
             context.Subscriptions.Add(subscription);
             await context.SaveChangesAsync();
             User.Subscriptions.Add(subscription);
+            await OnSubscriptionCountChanged.InvokeAsync();
         }
         catch
         {
@@ -208,6 +212,7 @@
                 .Where(s => s.SubscriptionId == subscription.SubscriptionId)
                 .ExecuteDeleteAsync();
             User.Subscriptions.Remove(subscription);
+            await OnSubscriptionCountChanged.InvokeAsync();
         }
         catch (Exception)
         {
