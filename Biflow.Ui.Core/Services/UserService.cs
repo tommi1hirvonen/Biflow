@@ -93,7 +93,7 @@ public class UserService
     {
         await using var sqlConnection = _sqlConnectionFactory.Create();
         var rolesJson = await sqlConnection.ExecuteScalarAsync<string?>("""
-            SELECT TOP 1 [Role]
+            SELECT TOP 1 [Roles]
             FROM [biflow].[User]
             WHERE [Username] = @Username
             """, new { Username = username });
