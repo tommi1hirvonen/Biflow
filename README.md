@@ -302,11 +302,14 @@ There are three different installation alternatives: on-premise, Azure (monolith
 |-|-|
 |EnvironmentName|Name of the installation environment to be shown in the UI (e.g. Production, Test, Dev etc.)|
 |ConnectionStrings:BiflowContext|Connection string used to connect to the Biflow database based on steps taken in the database section of this guide. **Note:** The connection string must have `MultipleActiveResultSets=true` enabled.|
-|Authentication|`[ BuiltIn | Windows | AzureAd | Ldap ]`|
+|Authentication|`[ BuiltIn \| Windows \| AzureAd \| Ldap ]`|
 ||`BuiltIn`: Users accounts and passwords are managed in Biflow. Users are application specific.
 ||`Windows`: Authentication is done using Active Directory. User roles and access are defined in the Biflow users management. The user does not need to log in but instead their workstation Windows account is used for authentication.|
 ||`AzureAd`: Authentication is done using Azure Active Directory. User roles and access are defined in the Biflow users management.|
 ||`Ldap`: LDAP connection is used to authenticate users. This also supports Active Directory. User roles and access are defined in the Biflow users management. User matching is done using the LDAP `userPrincipalName` attribute.|
+|AdminUser|When this section is defined, the UI application will ensure at startup that an admin user with the credentials from this configuration section exists in the database. This section can be used to create the first admin user to be able to log in via the UI.|
+|AdminUser:Username|Username for the admin user|
+|AdminUser:Password|Password for the admin user. Only used when `Authentication` is set to `BuiltIn`.|
 |AzureAd|This section needs to be defined only if `Authentication` is set to `AzureAd`|
 |AzureAd:Instance|`https://login.microsoftonline.com/`|
 |AzureAd:Domain|Your organization domain, e.g. `contoso.com`|
@@ -319,11 +322,11 @@ There are three different installation alternatives: on-premise, Azure (monolith
 |Ldap:Port|The port to use for the LDAP server connection |
 |Ldap:UseSsl|Boolean value: `true` to use SSL for the connection, `false` if not|
 |Ldap:UserStoreDistinguishedName|The DN (distinguished name) for the LDAP container which to query for users|
-|Executor:Type|`[ WebApp | SelfHosted ]`|
+|Executor:Type|`[ WebApp \| SelfHosted ]`|
 ||Whether the executor service is installed as a web app or is running self-hosted inside the UI application|
 |Executor:WebApp:Url|Needed only when `Executor:Type` is set to `WebApp`. Url to the executor web app API|
 |Executor:SelfHosted|This section needs to be defined only if `Executor:Type` is set to `SelfHosted`. Refer to the executor web application's settings section to set the values in this section.|
-|Scheduler:Type|`[ WebApp | SelfHosted ]`|
+|Scheduler:Type|`[ WebApp \| SelfHosted ]`|
 ||Whether the scheduler service is installed as a web app or is running self-hosted inside the UI application. If `Executor:Type` is set to `SelfHosted` then this settings must also be set to `SelfHosted`|
 |Scheduler:WebApp:Url|Needed only when `Scheduler:Type` is set to `WebApp`. Url to the scheduler service web app API|
 |Kestrel:Endpoints:Https:Url|The https url and port which the UI application should listen to, for example https://localhost. If there are multiple installations on the same server, the UI applications should listen to different ports. Applies only to on-premise installations.|
@@ -355,7 +358,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
         - EnvironmentName = NameOfYourEnvironment
         - Executor__Type = __SelfHosted__
         - Scheduler__Type = __SelfHosted__
-        - Executor__SelfHosted__MaximumParallelSteps = 5
+        - Executor__SelfHosted__MaximumParallelSteps = 10
         - Executor__SelfHosted__PollingIntervalMs = 5000
     - Connection string
         - BiflowContext
@@ -419,42 +422,38 @@ Some administrative tasks need to be done before the applications are ready for 
 
 ### Admin user
 
-Create an admin user in the Biflow database using the stored procedure `biflow.UserAdd`. How the user is created depends on the selected authentication method.
+In order to be able to log in via the UI, an initial admin user needs to be added to the database. This can be achieved using the `AdminUser` configuration section of the UI application's settings. Make sure that credentials are provided in the application settings before starting the UI application service. The admin user is added during app startup.
 
 #### Built-in authentication
+
+When built-in authentication is enabled, a password must be provided for the admin user in the app settings. The username can be arbitrary, such as 'admin'.
 ```
-exec biflow.UserAdd
-    @Username = 'admin',
-    @Password = 'adminpassword',
-    @Role = 'Admin',
-    @Email = 'admin@mycompany.com'
+"AdminUser": {
+    "Username": "admin",
+    "Password": "my!SECURE#passWord$9000"
+}
 ```
+
 #### Windows authentication
-With Windows authentication, no password is required. Authentication happens at the OS level.
+With Windows authentication, no password is required. Authentication happens at the OS level. The username must be a valid Active Directory or local user.
 ```
-exec biflow.UserAdd
-    @Username = 'DOMAIN\BiflowService',
-    @Password = null,
-    @Role = 'Admin',
-    @Email = 'admin@mycompany.com'
+"AdminUser": {
+    "Username": "DOMAIN\BiflowService"
+}
 ```
 #### Azure AD authentication
-With Azure AD authentication, no password is required. Authentication happens using Microsoft Identity.
+With Azure AD authentication, no password is required. Authentication happens using Microsoft Identity. The username must be a valid Azure AD account.
 ```
-exec biflow.UserAdd
-    @Username = 'admin@mycompany.com',
-    @Password = null,
-    @Role = 'Admin',
-    @Email = 'admin@mycompany.com'
+"AdminUser": {
+    "Username": "admin@mycompany.com"
+}
 ```
 #### LDAP authentication
 With LDAP authentication, no password is required. Authentication happens using the LDAP server. The `userPrincipalName` name attribute should be used to add users to Biflow user management.
 ```
-exec biflow.UserAdd
-    @Username = 'admin@mycompany.com',
-    @Password = null,
-    @Role = 'Admin',
-    @Email = 'admin@mycompany.com'
+"AdminUser": {
+    "Username": "admin@mycompany.com"
+}
 ```
 Navigate to the Biflow UI website. You should be able to log in using the account specified above. With Windows authentication, the user is automatically logged in to Biflow using the account they are currently logged in as on their computer.
 
