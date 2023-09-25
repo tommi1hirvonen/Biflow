@@ -1,4 +1,4 @@
-export function draw(chartId, series, min, max, stepSize, tickSuffix, horizontal) {
+export function draw(chartId, series, min, max, stepSize, tickSuffix, horizontal, isDarkTheme) {
 
     var dataset = JSON.parse(series);
 
@@ -21,6 +21,9 @@ export function draw(chartId, series, min, max, stepSize, tickSuffix, horizontal
         chart.destroy();
     }
 
+    var gridColor = isDarkTheme ? '#393939' : '#e6e6e6';
+    var textColor = isDarkTheme ? '#aaaaaa' : '#666666';
+
     var axis = {
         min: min,
         max: max,
@@ -28,17 +31,31 @@ export function draw(chartId, series, min, max, stepSize, tickSuffix, horizontal
             stepSize: stepSize,
             callback: function (value, index, values) {
                 return tickSuffix != null ? value + tickSuffix : value;
-            }
+            },
+            color: textColor
+        },
+        grid: {
+            color: gridColor
         }
     };
+    var otherAxis = {
+        ticks: {
+            color: textColor
+        },
+        grid: {
+            color: gridColor
+        }
+    }
     var scale;
     if (horizontal) {
         scale = {
-            x: axis
+            x: axis,
+            y: otherAxis
         }
     } else {
         scale = {
-            y: axis
+            y: axis,
+            x: otherAxis
         }
     }
 

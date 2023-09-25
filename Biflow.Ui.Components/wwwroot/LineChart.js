@@ -1,4 +1,4 @@
-export function draw(chartId, series, yAxisTitle, yMin, yStepSize) {
+export function draw(chartId, series, yAxisTitle, yMin, yStepSize, isDarkTheme) {
 
     var datasets = JSON.parse(series);
 
@@ -10,6 +10,9 @@ export function draw(chartId, series, yAxisTitle, yMin, yStepSize) {
         chart.destroy();
     }
 
+    var gridColor = isDarkTheme ? '#393939' : '#e6e6e6';
+    var textColor = isDarkTheme ? '#aaaaaa' : '#666666';
+
     chart = new Chart(chartElement, {
         type: 'line',
         data: {
@@ -20,15 +23,33 @@ export function draw(chartId, series, yAxisTitle, yMin, yStepSize) {
                 y: {
                     title: {
                         display: yAxisTitle != null,
-                        text: yAxisTitle
+                        text: yAxisTitle,
+                        color: textColor
                     },
                     min: yMin,
                     ticks: {
-                        stepSize: yStepSize
+                        stepSize: yStepSize,
+                        color: textColor
+                    },
+                    grid: {
+                        color: gridColor
                     }
                 },
                 x: {
-                    type: 'time'
+                    type: 'time',
+                    grid: {
+                        color: gridColor
+                    },
+                    ticks: {
+                        color: textColor
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: textColor
+                    }
                 }
             }
         }

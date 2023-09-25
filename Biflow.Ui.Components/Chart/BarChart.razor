@@ -6,6 +6,7 @@
 @implements IAsyncDisposable
 
 @inject IJSRuntime JS
+@inject ThemeService Theme
 
 <canvas class="w-100" id="@canvasId" width="900" height="400"></canvas>
 
@@ -62,7 +63,8 @@
             color = s.Color
         });
         var seriesJson = JsonSerializer.Serialize(series, serializationOptions);
-        await jsObject.InvokeVoidAsync("draw", canvasId, seriesJson, Dataset.Min, Dataset.Max, Dataset.StepSize, Dataset.TickSuffix, Dataset.Horizontal);
+        var isDarkTheme = Theme.CurrentTheme == Components.Theme.Dark;
+        await jsObject.InvokeVoidAsync("draw", canvasId, seriesJson, Dataset.Min, Dataset.Max, Dataset.StepSize, Dataset.TickSuffix, Dataset.Horizontal, isDarkTheme);
     }
 
     public async ValueTask DisposeAsync()
