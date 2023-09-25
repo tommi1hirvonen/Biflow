@@ -127,7 +127,17 @@
                                     true => new TopologicalStepProjectionComparer(steps),
                                     false => Comparer<StepProjection>.Default
                                 };
-                                @foreach (var step in steps.Where(s => !Subscriptions.Any(sub => s.StepId == sub.StepId)).OrderBy(s => s, comparer))
+                                var availableSteps = steps
+                                    .Where(s => !Subscriptions.Any(sub => s.StepId == sub.StepId))
+                                    .OrderBy(s => s, comparer)
+                                    .ToArray();
+                                @if (!availableSteps.Any())
+                                {
+                                    <div class="ps-5 list-group-item text-muted">
+                                        No steps available
+                                    </div>
+                                }
+                                @foreach (var step in availableSteps)
                                 {
                                     <div class="ps-5 list-group-item list-group-item-action" @onclick="() => AddSubscriptionAsync(step.StepId)" style="cursor: pointer;">
                                         <StepTypeIconComponent StepType_="step.StepType" />

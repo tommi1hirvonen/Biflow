@@ -122,9 +122,15 @@
                                     .Where(s => s.JobId == job.JobId)
                                     .SelectMany(s => s.Tags)
                                     .DistinctBy(t => t.TagId)
+                                    .Where(t => !Subscriptions.Any(sub => t.TagId == sub.TagId && sub.JobId == job.JobId))
+                                    .OrderBy(t => t.TagName)
                                     .ToArray();
                                 <div class="ps-5 list-group-item d-flex flex-wrap">
-                                    @foreach (var tag in tags.Where(t => !Subscriptions.Any(sub => t.TagId == sub.TagId && sub.JobId == job.JobId)).OrderBy(t => t.TagName))
+                                    @if (!tags.Any())
+                                    {
+                                        <span class="text-muted m-2">No tags available</span>
+                                    }
+                                    @foreach (var tag in tags)
                                     {
                                         <TagComponent Tag="tag" CssClass="m-2" OnClick="() => AddSubscriptionAsync(job.JobId, tag.TagId)" Style="cursor: pointer;" />
                                     }
