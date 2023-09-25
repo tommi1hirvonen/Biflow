@@ -56,15 +56,6 @@ if (schedulerType == "SelfHosted")
     await app.ReadAllSchedulesAsync();
 }
 
-var adminSection = app.Configuration.GetSection("AdminUser");
-if (adminSection.Exists())
-{
-    var adminUsername = adminSection.GetValue<string>("Username");
-    var adminPassword = adminSection.GetValue<string>("Password");
-    ArgumentNullException.ThrowIfNull(adminUsername);
-    ArgumentNullException.ThrowIfNull(adminPassword);
-    var users = app.Services.GetRequiredService<UserService>();
-    await users.EnsureAdminUserExistsAsync(adminUsername, adminPassword);
-}
+await app.EnsureAdminUserAsync();
 
 app.Run();

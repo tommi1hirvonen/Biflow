@@ -105,6 +105,13 @@ public class UserService
         return roles ?? Enumerable.Empty<string>();
     }
 
+    /// <summary>
+    /// Ensures there is a user with Admin role added to the system database.
+    /// This method is used when built-in authentication is used.
+    /// </summary>
+    /// <param name="username">Username for the admin user</param>
+    /// <param name="password">Password for the admin user</param>
+    /// <returns></returns>
     public async Task EnsureAdminUserExistsAsync(string username, string password)
     {
         await using var connection = _sqlConnectionFactory.Create();
@@ -124,6 +131,33 @@ public class UserService
                 INSERT INTO [biflow].[User] ([Username],[PasswordHash],[Roles],[CreatedDateTime],[LastModifiedDateTime]) VALUES
                 (@Username, @PasswordHash, @Roles, getdate(), getdate())
                 """, new { Username = username, PasswordHash = hash, Roles = rolesJson });
+        }
+    }
+
+    /// <summary>
+    /// Ensures there is a user with Admin role added to the system database.
+    /// This method is used when built-in authentication is NOT used.
+    /// </summary>
+    /// <param name="username"></param>
+    /// <returns></returns>
+    public async Task EnsureAdminUserExistsAsync(string username)
+    {
+        await using var connection = _sqlConnectionFactory.Create();
+        var roles = new string[] { Roles.Admin };
+        var rolesJson = JsonSerializer.Serialize(roles);
+        var affectedRows = await connection.ExecuteAsync(
+            """
+            UPDATE [biflow].[User]
+            SET [Roles] = @Roles
+            WHERE [Username] = @Username
+            """, new { Username = username, Roles = rolesJson });
+        if (affectedRows == 0)
+        {
+            await connection.ExecuteAsync(
+                """
+                INSERT INTO [biflow].[User] ([Username],[Roles],[CreatedDateTime],[LastModifiedDateTime]) VALUES
+                (@Username, @Roles, getdate(), getdate())
+                """, new { Username = username, Roles = rolesJson });
         }
     }
 }

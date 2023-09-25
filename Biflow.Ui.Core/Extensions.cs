@@ -2,17 +2,14 @@
 using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Executor.Core;
-using Biflow.Executor.Core.WebExtensions;
 using Biflow.Scheduler.Core;
 using CronExpressionDescriptor;
-using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Identity.Web;
@@ -92,6 +89,34 @@ public static partial class Extensions
         }
         services.AddSingleton(new AuthenticationMethodResolver(method));
         return services;
+    }
+
+    /// <summary>
+    /// Ensures there is an admin user added with credentials provided from configuration.
+    /// </summary>
+    /// <param name="app"></param>
+    /// <returns></returns>
+    public static async Task EnsureAdminUserAsync(this WebApplication app)
+    {
+        var adminSection = app.Configuration.GetSection("AdminUser");
+        if (adminSection.Exists())
+        {
+            var adminUsername = adminSection.GetValue<string>("Username");
+            ArgumentNullException.ThrowIfNull(adminUsername);
+            var users = app.Services.GetRequiredService<UserService>();
+
+            var authentication = app.Configuration.GetValue<string>("Authentication");
+            if (authentication == "BuiltIn")
+            {
+                var adminPassword = adminSection.GetValue<string>("Password");
+                ArgumentNullException.ThrowIfNull(adminPassword);
+                await users.EnsureAdminUserExistsAsync(adminUsername, adminPassword);
+            }
+            else
+            {
+                await users.EnsureAdminUserExistsAsync(adminUsername);
+            }
+        }
     }
 
     /// <summary>
