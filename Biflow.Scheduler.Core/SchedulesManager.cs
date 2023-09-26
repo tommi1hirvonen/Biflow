@@ -39,7 +39,7 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
         var counter = 0;
         foreach (var schedule in schedules)
         {
-            await CreateAndAddScheduleAsync(SchedulerSchedule.From(schedule), cancellationToken);
+            await CreateAndAddScheduleAsync(new SchedulerSchedule(schedule), cancellationToken);
             
             var status = schedule.IsEnabled == true ? "Enabled" : "Paused";
             _logger.LogInformation("Added schedule id {ScheduleId} for job id {JobId} with Cron expression {CronExpression} and status {status}",

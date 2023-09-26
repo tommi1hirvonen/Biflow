@@ -16,19 +16,19 @@ public class SelfHostedSchedulerService : ISchedulerService
 
     public async Task AddScheduleAsync(Schedule schedule)
     {
-        var schedulerSchedule = SchedulerSchedule.From(schedule);
+        var schedulerSchedule = new SchedulerSchedule(schedule);
         await _schedulesManager.AddScheduleAsync(schedulerSchedule, CancellationToken.None);
     }
 
     public async Task RemoveScheduleAsync(Schedule schedule)
     {
-        var schedulerSchedule = SchedulerSchedule.From(schedule);
+        var schedulerSchedule = new SchedulerSchedule(schedule);
         await _schedulesManager.RemoveScheduleAsync(schedulerSchedule, CancellationToken.None);
     }
 
     public async Task UpdateScheduleAsync(Schedule schedule)
     {
-        var schedulerSchedule = SchedulerSchedule.From(schedule);
+        var schedulerSchedule = new SchedulerSchedule(schedule);
         await _schedulesManager.UpdateScheduleAsync(schedulerSchedule, CancellationToken.None);
     }
 
@@ -61,7 +61,7 @@ public class SelfHostedSchedulerService : ISchedulerService
     public async Task ToggleScheduleEnabledAsync(Schedule schedule, bool enabled)
     {
         ArgumentNullException.ThrowIfNull(schedule.JobId);
-        var schedulerSchedule = SchedulerSchedule.From(schedule);
+        var schedulerSchedule = new SchedulerSchedule(schedule);
         if (enabled)
         {
             await _schedulesManager.ResumeScheduleAsync(schedulerSchedule, CancellationToken.None);
