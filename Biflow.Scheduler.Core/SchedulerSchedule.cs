@@ -1,20 +1,12 @@
-﻿namespace Biflow.Scheduler.Core;
+﻿using Biflow.DataAccess.Models;
 
-public class SchedulerSchedule
+namespace Biflow.Scheduler.Core;
+
+public record SchedulerSchedule(Guid ScheduleId, Guid JobId, string CronExpression, bool DisallowConcurrentExecution, bool IsEnabled)
 {
-    public Guid ScheduleId { get; }
-
-    public Guid JobId { get; }
-
-    public string CronExpression { get; }
-
-    public bool DisallowConcurrentExecution { get; }
-
-    public SchedulerSchedule(Guid scheduleId, Guid jobId, string cronExpression, bool disallowConcurrentExecution)
+    public static SchedulerSchedule From(Schedule schedule)
     {
-        ScheduleId = scheduleId;
-        JobId = jobId;
-        CronExpression = cronExpression;
-        DisallowConcurrentExecution = disallowConcurrentExecution;
+        ArgumentNullException.ThrowIfNull(schedule.CronExpression);
+        return new(schedule.ScheduleId, schedule.JobId, schedule.CronExpression, schedule.DisallowConcurrentExecution, schedule.IsEnabled);
     }
 }

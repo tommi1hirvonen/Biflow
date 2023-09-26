@@ -40,7 +40,7 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
         foreach (var schedule in schedules)
         {
             ArgumentNullException.ThrowIfNull(schedule.CronExpression);
-            await CreateAndAddScheduleAsync(schedule.ScheduleId, schedule.JobId, schedule.CronExpression, schedule.DisallowConcurrentExecution, schedule.IsEnabled, cancellationToken);
+            await CreateAndAddScheduleAsync(SchedulerSchedule.From(schedule), cancellationToken);
             
             var status = schedule.IsEnabled == true ? "Enabled" : "Paused";
             _logger.LogInformation("Added schedule id {ScheduleId} for job id {JobId} with Cron expression {CronExpression} and status {status}",
@@ -87,7 +87,7 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
 
     public async Task AddScheduleAsync(SchedulerSchedule schedule, CancellationToken cancellationToken)
     {
-        await CreateAndAddScheduleAsync(schedule.ScheduleId, schedule.JobId, schedule.CronExpression, schedule.DisallowConcurrentExecution, true, cancellationToken);
+        await CreateAndAddScheduleAsync(schedule, cancellationToken);
 
         _logger.LogInformation("Added schedule id {ScheduleId} for job id {JobId} with Cron expression {CronExpression}",
             schedule.ScheduleId, schedule.JobId, schedule.CronExpression);
@@ -101,24 +101,24 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
         _ = await _scheduler.GetJobDetail(jobKey, cancellationToken)
             ?? throw new ArgumentException($"No matching schedule found for job id {schedule.JobId} and schedule id {schedule.ScheduleId}");
         await _scheduler.DeleteJob(jobKey, cancellationToken);
-        await CreateAndAddScheduleAsync(schedule.ScheduleId, schedule.JobId, schedule.CronExpression, schedule.DisallowConcurrentExecution, true, cancellationToken);
+        await CreateAndAddScheduleAsync(schedule, cancellationToken);
     }
 
-    private async Task CreateAndAddScheduleAsync(Guid scheduleId, Guid jobId, string cronExpression, bool disallowConcurrentExecution, bool isEnabled, CancellationToken cancellationToken)
+    private async Task CreateAndAddScheduleAsync(SchedulerSchedule schedule, CancellationToken cancellationToken)
     {
         // Create one JobDetail per schedule.
         // Put schedules for the same job in the same group.
-        var jobKey = new JobKey(scheduleId.ToString(), jobId.ToString());
-        var triggerKey = new TriggerKey(scheduleId.ToString());
+        var jobKey = new JobKey(schedule.ScheduleId.ToString(), schedule.JobId.ToString());
+        var triggerKey = new TriggerKey(schedule.ScheduleId.ToString());
         var jobDetail = await _scheduler.GetJobDetail(jobKey, cancellationToken)
             ?? JobBuilder.Create<TJob>()
             .WithIdentity(jobKey)
-            .DisallowConcurrentExecution(disallowConcurrentExecution)
+            .DisallowConcurrentExecution(schedule.DisallowConcurrentExecution)
             .Build();
         var trigger = TriggerBuilder.Create()
             .WithIdentity(triggerKey)
             .ForJob(jobDetail)
-            .WithCronSchedule(cronExpression, x => x.WithMisfireHandlingInstructionDoNothing())
+            .WithCronSchedule(schedule.CronExpression, x => x.WithMisfireHandlingInstructionDoNothing())
             .Build();
 
         if (!await _scheduler.CheckExists(jobKey, cancellationToken))
@@ -130,7 +130,7 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
             await _scheduler.ScheduleJob(trigger, cancellationToken);
         }
 
-        if (!isEnabled)
+        if (!schedule.IsEnabled)
         {
             await _scheduler.PauseTrigger(triggerKey, cancellationToken);
         }
