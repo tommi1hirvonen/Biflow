@@ -129,8 +129,7 @@ internal class JobExecutor : IJobExecutor
 
             await Task.WhenAny(notificationTask, orchestrationTask);
 
-            // If the notification task completed first and notify is true,
-            // send a notification about a long running execution.
+            // If the notification task completed first, send long running notification.
             if (notificationTask.IsCompleted)
             {
                 await _notificationService.SendLongRunningExecutionNotificationAsync(_execution);

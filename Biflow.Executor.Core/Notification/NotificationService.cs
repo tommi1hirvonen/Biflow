@@ -159,6 +159,11 @@ internal class NotificationService : INotificationService
 
     public async Task SendLongRunningExecutionNotificationAsync(Execution execution)
     {
+        if (!execution.Notify && !execution.NotifyCallerOvertime)
+        {
+            return;
+        }
+
         IEnumerable<string> recipients;
         try
         {
