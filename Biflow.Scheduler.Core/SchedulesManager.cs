@@ -41,7 +41,7 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
             ArgumentNullException.ThrowIfNull(schedule.CronExpression);
             ArgumentNullException.ThrowIfNull(schedule.JobId);
 
-            var jobKey = new JobKey(((Guid)schedule.JobId).ToString());
+            var jobKey = new JobKey(schedule.JobId.ToString());
             var triggerKey = new TriggerKey(schedule.ScheduleId.ToString());
             var jobDetail = JobBuilder.Create<TJob>()
                 .WithIdentity(jobKey)
