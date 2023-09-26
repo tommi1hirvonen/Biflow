@@ -1,6 +1,8 @@
-﻿namespace Biflow.Executor.Core.WebExtensions;
+﻿using Microsoft.Extensions.Hosting;
 
-public interface IExecutionManager
+namespace Biflow.Executor.Core.WebExtensions;
+
+public interface IExecutionManager : IHostedService
 {
     public void CancelExecution(Guid executionId, string username);
     

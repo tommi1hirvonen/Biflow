@@ -1,16 +1,16 @@
 ﻿using Biflow.Executor.Core.JobExecutor;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.WebExtensions;
 
-internal class ExecutionManager : IExecutionManager
+public class ExecutionManager : BackgroundService, IExecutionManager
 {
     private readonly ILogger<ExecutionManager> _logger;
     private readonly IJobExecutorFactory _jobExecutorFactory;
-
-    private Dictionary<Guid, IJobExecutor> JobExecutors { get; } = new();
-
-    private Dictionary<Guid, Task> ExecutionTasks { get; } = new();
+    private readonly Dictionary<Guid, IJobExecutor> _jobExecutors = new();
+    private readonly Dictionary<Guid, Task> _executionTasks = new();
+    private readonly AsyncQueue<Func<CancellationToken, Task>> _backgroundTaskQueue = new();
 
     public ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFactory jobExecutorFactory)
     {
@@ -20,23 +20,74 @@ internal class ExecutionManager : IExecutionManager
 
     public async Task StartExecutionAsync(Guid executionId)
     {
-        if (JobExecutors.ContainsKey(executionId))
+        if (_jobExecutors.ContainsKey(executionId))
         {
             throw new InvalidOperationException($"Execution with id {executionId} is already being managed.");
         }
 
         var jobExecutor = await _jobExecutorFactory.CreateAsync(executionId);
-        _ = RunExecution(executionId, jobExecutor);
+        _backgroundTaskQueue.Enqueue((cancellationToken) => RunExecution(executionId, jobExecutor, cancellationToken));
     }
 
-    private async Task RunExecution(Guid executionId, IJobExecutor jobExecutor)
+    public void CancelExecution(Guid executionId, string username)
+    {
+        if (!_jobExecutors.ContainsKey(executionId))
+        {
+            throw new InvalidOperationException($"No execution with id {executionId} is being managed.");
+        }
+
+        var executor = _jobExecutors[executionId];
+        executor.Cancel(username);
+    }
+
+    public void CancelExecution(Guid executionId, string username, Guid stepId)
+    {
+        if (!_jobExecutors.ContainsKey(executionId))
+        {
+            throw new InvalidOperationException($"No execution with id {executionId} is being managed.");
+        }
+
+        var executor = _jobExecutors[executionId];
+        executor.Cancel(username, stepId);
+    }
+
+    public bool IsExecutionRunning(Guid executionId) => _jobExecutors.ContainsKey(executionId);
+
+    public async Task WaitForTaskCompleted(Guid executionId, CancellationToken cancellationToken)
+    {
+        if (_executionTasks.TryGetValue(executionId, out var task))
+        {
+            await task.WaitAsync(cancellationToken);
+        }
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         try
         {
-            JobExecutors[executionId] = jobExecutor;
-            var task = jobExecutor.RunAsync(executionId);
-            ExecutionTasks[executionId] = task;
+            await foreach (var taskDelegate in _backgroundTaskQueue.WithCancellation(stoppingToken))
+            {
+                _ = taskDelegate(stoppingToken);
+            }
+        }
+        finally
+        {
+            await Task.WhenAll(_executionTasks.Values);
+        }
+    }
+
+    private async Task RunExecution(Guid executionId, IJobExecutor jobExecutor, CancellationToken cancellationToken)
+    {
+        try
+        {
+            _jobExecutors[executionId] = jobExecutor;
+            var task = jobExecutor.RunAsync(executionId, cancellationToken);
+            _executionTasks[executionId] = task;
             await task;
+        }
+        catch (OperationCanceledException ex)
+        {
+            _logger.LogWarning(ex, "Execution with id {executionId} was canceled due to service shutdown", executionId);
         }
         catch (Exception ex)
         {
@@ -44,41 +95,8 @@ internal class ExecutionManager : IExecutionManager
         }
         finally
         {
-            JobExecutors.Remove(executionId);
-            ExecutionTasks.Remove(executionId);
+            _jobExecutors.Remove(executionId);
+            _executionTasks.Remove(executionId);
         }
     }
-
-    public void CancelExecution(Guid executionId, string username)
-    {
-        if (!JobExecutors.ContainsKey(executionId))
-        {
-            throw new InvalidOperationException($"No execution with id {executionId} is being managed.");
-        }
-
-        var executor = JobExecutors[executionId];
-        executor.Cancel(username);
-    }
-
-    public void CancelExecution(Guid executionId, string username, Guid stepId)
-    {
-        if (!JobExecutors.ContainsKey(executionId))
-        {
-            throw new InvalidOperationException($"No execution with id {executionId} is being managed.");
-        }
-
-        var executor = JobExecutors[executionId];
-        executor.Cancel(username, stepId);
-    }
-
-    public bool IsExecutionRunning(Guid executionId) => JobExecutors.ContainsKey(executionId);
-
-    public async Task WaitForTaskCompleted(Guid executionId, CancellationToken cancellationToken)
-    {
-        if (ExecutionTasks.TryGetValue(executionId, out var task))
-        {
-            await task.WaitAsync(cancellationToken);
-        }
-    }
-
 }

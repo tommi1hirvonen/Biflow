@@ -20,7 +20,7 @@ internal class NotificationService : INotificationService
         _subscribersResolver = subscribersResolver;
     }
 
-    public async Task SendCompletionNotification(Execution execution)
+    public async Task SendCompletionNotificationAsync(Execution execution)
     {
         if (!execution.Notify && execution.NotifyCaller is null)
         {
@@ -157,7 +157,7 @@ internal class NotificationService : INotificationService
         }
     }
 
-    public async Task SendLongRunningExecutionNotification(Execution execution)
+    public async Task SendLongRunningExecutionNotificationAsync(Execution execution)
     {
         IEnumerable<string> recipients;
         try

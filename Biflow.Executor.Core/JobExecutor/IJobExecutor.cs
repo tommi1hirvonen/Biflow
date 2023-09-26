@@ -6,5 +6,5 @@ public interface IJobExecutor
 
     public void Cancel(string username, Guid stepId);
 
-    Task RunAsync(Guid executionId);
+    public Task RunAsync(Guid executionId, CancellationToken cancellationToken);
 }

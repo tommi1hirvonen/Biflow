@@ -50,7 +50,7 @@ internal class JobOrchestrator : IJobOrchestrator
         _targetSemaphores = targets.ToDictionary(t => t, t => new SemaphoreSlim(t.MaxConcurrentWrites, t.MaxConcurrentWrites));
     }
 
-    public async Task RunAsync()
+    public async Task RunAsync(CancellationToken cancellationToken)
     {
         var observers = _execution.StepExecutions
             .Select(step =>
@@ -62,7 +62,18 @@ internal class JobOrchestrator : IJobOrchestrator
                 return observer;
             })
             .ToList();
-        await _globalOrchestrator.RegisterStepsAndObservers(observers);
+        var orchestrationTask = _globalOrchestrator.RegisterStepsAndObservers(observers);
+        // CancellationToken is triggered when the executor service is being shut down
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var waitTask = Task.Delay(-1, cts.Token);
+        await Task.WhenAny(orchestrationTask, waitTask);
+        // If shutdown was requested before the orchestration task finished
+        if (cancellationToken.IsCancellationRequested)
+        {
+            CancelExecution("Executor service shutdown");
+        }
+        cts.Cancel(); // Cancel Task.Delay()
+        await orchestrationTask; // Wait for orchestration tasks to finish
     }
 
     public void CancelExecution(string username)

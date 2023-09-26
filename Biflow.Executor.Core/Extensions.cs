@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace Biflow.Executor.Core;
 
@@ -46,7 +47,10 @@ public static class Extensions
         services.AddSingleton<IConnectionTest, ConnectionTest.ConnectionTest>();
         services.AddSingleton<IJobExecutorFactory, JobExecutorFactory>();
         services.AddSingleton<IExecutionManager, ExecutionManager>();
-        services.AddTransient<IExecutorLauncher, TExecutorLauncher>();
+        services.AddSingleton<IExecutorLauncher, TExecutorLauncher>();
+        services.AddHostedService(services => services.GetRequiredService<IExecutionManager>());
+        // Timeout for hosted services (e.g. ExecutionManager) to shut down gracefully when StopAsync() is called.
+        services.Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromSeconds(20));
     }
 
     public static WebApplication MapExecutorEndpoints(this WebApplication app)
