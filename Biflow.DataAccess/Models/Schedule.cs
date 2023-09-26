@@ -26,7 +26,7 @@ public class Schedule
     [Required]
     [Display(Name = "Cron expression")]
     [CronExpression]
-    public string? CronExpression { get; set; }
+    public string CronExpression { get; set; } = "";
 
 
     [Required]

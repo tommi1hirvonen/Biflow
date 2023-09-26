@@ -39,7 +39,6 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
         var counter = 0;
         foreach (var schedule in schedules)
         {
-            ArgumentNullException.ThrowIfNull(schedule.CronExpression);
             await CreateAndAddScheduleAsync(SchedulerSchedule.From(schedule), cancellationToken);
             
             var status = schedule.IsEnabled == true ? "Enabled" : "Paused";

@@ -47,7 +47,6 @@ public class WebAppSchedulerService : ISchedulerService
         }
 
         var endpoint = $"{Url}/schedules/add";
-        ArgumentNullException.ThrowIfNull(schedule.CronExpression);
         var schedulerSchedule = SchedulerSchedule.From(schedule);
         var json = JsonSerializer.Serialize(schedulerSchedule);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -64,7 +63,6 @@ public class WebAppSchedulerService : ISchedulerService
         }
 
         var endpoint = $"{Url}/schedules/remove";
-        ArgumentNullException.ThrowIfNull(schedule.CronExpression);
         var schedulerSchedule = SchedulerSchedule.From(schedule);
         var json = JsonSerializer.Serialize(schedulerSchedule);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -81,7 +79,6 @@ public class WebAppSchedulerService : ISchedulerService
         }
 
         var endpoint = $"{Url}/schedules/update";
-        ArgumentNullException.ThrowIfNull(schedule.CronExpression);
         var schedulerSchedule = SchedulerSchedule.From(schedule);
         var json = JsonSerializer.Serialize(schedulerSchedule);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -123,8 +120,6 @@ public class WebAppSchedulerService : ISchedulerService
             return;
         }
 
-        ArgumentNullException.ThrowIfNull(schedule.CronExpression);
-        ArgumentNullException.ThrowIfNull(schedule.JobId);
         var schedulerSchedule = SchedulerSchedule.From(schedule);
         var json = JsonSerializer.Serialize(schedulerSchedule);
         var content = new StringContent(json, Encoding.UTF8, "application/json");

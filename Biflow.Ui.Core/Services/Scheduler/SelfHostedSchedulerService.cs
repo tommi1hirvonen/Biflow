@@ -16,21 +16,18 @@ public class SelfHostedSchedulerService : ISchedulerService
 
     public async Task AddScheduleAsync(Schedule schedule)
     {
-        ArgumentNullException.ThrowIfNull(schedule.CronExpression);
         var schedulerSchedule = SchedulerSchedule.From(schedule);
         await _schedulesManager.AddScheduleAsync(schedulerSchedule, CancellationToken.None);
     }
 
     public async Task RemoveScheduleAsync(Schedule schedule)
     {
-        ArgumentNullException.ThrowIfNull(schedule.CronExpression);
         var schedulerSchedule = SchedulerSchedule.From(schedule);
         await _schedulesManager.RemoveScheduleAsync(schedulerSchedule, CancellationToken.None);
     }
 
     public async Task UpdateScheduleAsync(Schedule schedule)
     {
-        ArgumentNullException.ThrowIfNull(schedule.CronExpression);
         var schedulerSchedule = SchedulerSchedule.From(schedule);
         await _schedulesManager.UpdateScheduleAsync(schedulerSchedule, CancellationToken.None);
     }
@@ -43,7 +40,7 @@ public class SelfHostedSchedulerService : ISchedulerService
 
     public Task<SchedulerStatusResponse> GetStatusAsync()
     {
-        SchedulerStatusResponse response = new Success();
+        SchedulerStatusResponse response = DatabaseReadError ? new SchedulerError() : new Success();
         return Task.FromResult(response);
     }
 

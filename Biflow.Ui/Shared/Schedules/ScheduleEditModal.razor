@@ -67,7 +67,7 @@
                         </div>
                     </div>
                     <ValidationMessage For="() => Schedule.CronExpression" />
-                    @if (CronExpression.IsValidExpression(Schedule.CronExpression ?? string.Empty))
+                    @if (CronExpression.IsValidExpression(Schedule.CronExpression))
                     {
                         var nextFireTimes = Schedule.NextFireTimes().Take(10).ToList();
                         <small class="text-secondary">Description:</small>

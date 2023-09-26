@@ -357,7 +357,7 @@ public static partial class Extensions
     /// <returns></returns>
     public static IEnumerable<DateTime?> NextFireTimes(this Schedule schedule, DateTimeOffset? start = null)
     {
-        if (schedule.CronExpression is not null && CronExpression.IsValidExpression(schedule.CronExpression))
+        if (CronExpression.IsValidExpression(schedule.CronExpression))
         {
             var cron = new CronExpression(schedule.CronExpression);
             DateTimeOffset? dateTime = start ?? DateTimeOffset.UtcNow;
