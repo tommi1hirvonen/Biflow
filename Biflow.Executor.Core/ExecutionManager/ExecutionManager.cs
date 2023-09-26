@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core;
 
-public class ExecutionManager : BackgroundService, IExecutionManager
+internal class ExecutionManager : BackgroundService, IExecutionManager
 {
     private readonly ILogger<ExecutionManager> _logger;
     private readonly IJobExecutorFactory _jobExecutorFactory;
