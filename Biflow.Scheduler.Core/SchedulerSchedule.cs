@@ -8,10 +8,13 @@ public class SchedulerSchedule
 
     public string CronExpression { get; }
 
-    public SchedulerSchedule(Guid scheduleId, Guid jobId, string cronExpression)
+    public bool DisallowConcurrentExecution { get; }
+
+    public SchedulerSchedule(Guid scheduleId, Guid jobId, string cronExpression, bool disallowConcurrentExecution)
     {
         ScheduleId = scheduleId;
         JobId = jobId;
         CronExpression = cronExpression;
+        DisallowConcurrentExecution = disallowConcurrentExecution;
     }
 }

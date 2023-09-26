@@ -50,7 +50,7 @@ public class WebAppSchedulerService : ISchedulerService
         var endpoint = $"{Url}/schedules/add";
         ArgumentNullException.ThrowIfNull(schedule.CronExpression);
         ArgumentNullException.ThrowIfNull(schedule.JobId);
-        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, (Guid)schedule.JobId, schedule.CronExpression);
+        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, schedule.JobId, schedule.CronExpression, schedule.DisallowConcurrentExecution);
         var json = JsonSerializer.Serialize(schedulerSchedule);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await _httpClient.PostAsync(endpoint, content);
@@ -68,7 +68,7 @@ public class WebAppSchedulerService : ISchedulerService
         var endpoint = $"{Url}/schedules/remove";
         ArgumentNullException.ThrowIfNull(schedule.CronExpression);
         ArgumentNullException.ThrowIfNull(schedule.JobId);
-        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, (Guid)schedule.JobId, schedule.CronExpression);
+        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, schedule.JobId, schedule.CronExpression, schedule.DisallowConcurrentExecution);
         var json = JsonSerializer.Serialize(schedulerSchedule);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await _httpClient.PostAsync(endpoint, content);
@@ -111,7 +111,7 @@ public class WebAppSchedulerService : ISchedulerService
 
         ArgumentNullException.ThrowIfNull(schedule.CronExpression);
         ArgumentNullException.ThrowIfNull(schedule.JobId);
-        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, (Guid)schedule.JobId, schedule.CronExpression);
+        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, schedule.JobId, schedule.CronExpression, schedule.DisallowConcurrentExecution);
         var json = JsonSerializer.Serialize(schedulerSchedule);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var endpoint = enabled switch { true => $"{Url}/schedules/resume", false => $"{Url}/schedules/pause" };

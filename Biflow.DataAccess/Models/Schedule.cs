@@ -33,6 +33,8 @@ public class Schedule
     [Display(Name = "Enabled")]
     public bool IsEnabled { get; set; } = true;
 
+    public bool DisallowConcurrentExecution { get; set; } = false;
+
     [Required]
     [Display(Name = "Created")]
     public DateTimeOffset CreatedDateTime { get; set; }

@@ -3,6 +3,7 @@ using Biflow.Executor.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Quartz;
+using Quartz.Impl.Matchers;
 
 namespace Biflow.Scheduler.Core;
 
@@ -39,7 +40,7 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
         foreach (var schedule in schedules)
         {
             ArgumentNullException.ThrowIfNull(schedule.CronExpression);
-            await CreateAndAddScheduleAsync(schedule.ScheduleId, schedule.JobId, schedule.CronExpression, schedule.IsEnabled, cancellationToken);
+            await CreateAndAddScheduleAsync(schedule.ScheduleId, schedule.JobId, schedule.CronExpression, schedule.DisallowConcurrentExecution, schedule.IsEnabled, cancellationToken);
             
             var status = schedule.IsEnabled == true ? "Enabled" : "Paused";
             _logger.LogInformation("Added schedule id {ScheduleId} for job id {JobId} with Cron expression {CronExpression} and status {status}",
@@ -70,8 +71,9 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
 
     public async Task RemoveJobAsync(SchedulerJob job, CancellationToken cancellationToken)
     {
-        var jobKey = new JobKey(job.JobId.ToString());
-        await _scheduler.DeleteJob(jobKey, cancellationToken);
+        var matcher = GroupMatcher<JobKey>.GroupEquals(job.JobId.ToString());
+        var jobKeys = await _scheduler.GetJobKeys(matcher, cancellationToken);
+        await _scheduler.DeleteJobs(jobKeys, cancellationToken);
 
         _logger.LogInformation("Deleted all schedules for job id {JobId}", job.JobId);
     }
@@ -80,26 +82,31 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
     {
         var triggerKey = new TriggerKey(schedule.ScheduleId.ToString());
         await _scheduler.UnscheduleJob(triggerKey, cancellationToken);
+        
+        var jobKey = new JobKey(schedule.ScheduleId.ToString(), schedule.JobId.ToString());
+        await _scheduler.DeleteJob(jobKey, cancellationToken);
 
         _logger.LogInformation("Deleted schedule id {ScheduleId} for job id {JobId}", schedule.ScheduleId, schedule.JobId);
     }
 
     public async Task AddScheduleAsync(SchedulerSchedule schedule, CancellationToken cancellationToken)
     {
-        await CreateAndAddScheduleAsync(schedule.ScheduleId, schedule.JobId, schedule.CronExpression, true, cancellationToken);
+        await CreateAndAddScheduleAsync(schedule.ScheduleId, schedule.JobId, schedule.CronExpression, schedule.DisallowConcurrentExecution, true, cancellationToken);
 
         _logger.LogInformation("Added schedule id {ScheduleId} for job id {JobId} with Cron expression {CronExpression}",
             schedule.ScheduleId, schedule.JobId, schedule.CronExpression);
     }
 
-    private async Task CreateAndAddScheduleAsync(Guid scheduleId, Guid jobId, string cronExpression, bool isEnabled, CancellationToken cancellationToken)
+    private async Task CreateAndAddScheduleAsync(Guid scheduleId, Guid jobId, string cronExpression, bool disallowConcurrentExecution, bool isEnabled, CancellationToken cancellationToken)
     {
-        var jobKey = new JobKey(jobId.ToString());
+        // Create one JobDetail per schedule.
+        // Put schedules for the same job in the same group.
+        var jobKey = new JobKey(scheduleId.ToString(), jobId.ToString());
         var triggerKey = new TriggerKey(scheduleId.ToString());
-
         var jobDetail = await _scheduler.GetJobDetail(jobKey, cancellationToken)
             ?? JobBuilder.Create<TJob>()
             .WithIdentity(jobKey)
+            .DisallowConcurrentExecution(disallowConcurrentExecution)
             .Build();
         var trigger = TriggerBuilder.Create()
             .WithIdentity(triggerKey)

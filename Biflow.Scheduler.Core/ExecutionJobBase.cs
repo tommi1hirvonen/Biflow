@@ -30,7 +30,8 @@ public abstract class ExecutionJobBase : IJob
     {
         try
         {
-            var jobId = Guid.Parse(context.JobDetail.Key.Name);
+            var jobKey = context.JobDetail.Key;
+            var jobId = Guid.Parse(jobKey.Group);
             try
             {
                 using var dbContext = _dbContextFactory.CreateDbContext();
