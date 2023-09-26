@@ -17,7 +17,6 @@ public class SelfHostedSchedulerService : ISchedulerService
     public async Task AddScheduleAsync(Schedule schedule)
     {
         ArgumentNullException.ThrowIfNull(schedule.CronExpression);
-        ArgumentNullException.ThrowIfNull(schedule.JobId);
         var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, schedule.JobId, schedule.CronExpression, schedule.DisallowConcurrentExecution);
         await _schedulesManager.AddScheduleAsync(schedulerSchedule, CancellationToken.None);
     }
@@ -25,9 +24,15 @@ public class SelfHostedSchedulerService : ISchedulerService
     public async Task RemoveScheduleAsync(Schedule schedule)
     {
         ArgumentNullException.ThrowIfNull(schedule.CronExpression);
-        ArgumentNullException.ThrowIfNull(schedule.JobId);
         var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, schedule.JobId, schedule.CronExpression, schedule.DisallowConcurrentExecution);
         await _schedulesManager.RemoveScheduleAsync(schedulerSchedule, CancellationToken.None);
+    }
+
+    public async Task UpdateScheduleAsync(Schedule schedule)
+    {
+        ArgumentNullException.ThrowIfNull(schedule.CronExpression);
+        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, schedule.JobId, schedule.CronExpression, schedule.DisallowConcurrentExecution);
+        await _schedulesManager.UpdateScheduleAsync(schedulerSchedule, CancellationToken.None);
     }
 
     public async Task DeleteJobAsync(Job job)

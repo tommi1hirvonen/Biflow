@@ -18,6 +18,12 @@ public static class Extensions
         }).WithName("Remove schedule");
 
 
+        app.MapPost("/schedules/update", async (SchedulerSchedule schedule, ISchedulesManager schedulesManager) =>
+        {
+            await schedulesManager.UpdateScheduleAsync(schedule, CancellationToken.None);
+        }).WithName("Update schedule");
+
+
         app.MapPost("/jobs/remove", async (SchedulerJob job, ISchedulesManager schedulesManager) =>
         {
             await schedulesManager.RemoveJobAsync(job, CancellationToken.None);

@@ -13,4 +13,6 @@ public interface ISchedulesManager
     public Task RemoveScheduleAsync(SchedulerSchedule schedule, CancellationToken cancellationToken);
     
     public Task ResumeScheduleAsync(SchedulerSchedule schedule, CancellationToken cancellationToken);
+    
+    public Task UpdateScheduleAsync(SchedulerSchedule schedule, CancellationToken cancellationToken);
 }

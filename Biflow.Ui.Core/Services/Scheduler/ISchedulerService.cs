@@ -13,6 +13,8 @@ public interface ISchedulerService
 
     public Task RemoveScheduleAsync(Schedule schedule);
 
+    public Task UpdateScheduleAsync(Schedule schedule);
+
     public Task SynchronizeAsync();
 
     public Task ToggleScheduleEnabledAsync(Schedule schedule, bool enabled);

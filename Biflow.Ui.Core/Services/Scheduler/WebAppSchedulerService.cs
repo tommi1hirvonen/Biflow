@@ -1,7 +1,6 @@
 ﻿using Biflow.DataAccess.Models;
 using Biflow.Scheduler.Core;
 using Microsoft.Extensions.Configuration;
-using Microsoft.PowerBI.Api.Models;
 using System.Text;
 using System.Text.Json;
 
@@ -49,7 +48,6 @@ public class WebAppSchedulerService : ISchedulerService
 
         var endpoint = $"{Url}/schedules/add";
         ArgumentNullException.ThrowIfNull(schedule.CronExpression);
-        ArgumentNullException.ThrowIfNull(schedule.JobId);
         var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, schedule.JobId, schedule.CronExpression, schedule.DisallowConcurrentExecution);
         var json = JsonSerializer.Serialize(schedulerSchedule);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -67,7 +65,23 @@ public class WebAppSchedulerService : ISchedulerService
 
         var endpoint = $"{Url}/schedules/remove";
         ArgumentNullException.ThrowIfNull(schedule.CronExpression);
-        ArgumentNullException.ThrowIfNull(schedule.JobId);
+        var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, schedule.JobId, schedule.CronExpression, schedule.DisallowConcurrentExecution);
+        var json = JsonSerializer.Serialize(schedulerSchedule);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await _httpClient.PostAsync(endpoint, content);
+        response.EnsureSuccessStatusCode();
+    }
+
+    public async Task UpdateScheduleAsync(Schedule schedule)
+    {
+        var status = await GetStatusAsync();
+        if (!status.TryPickT0(out Success _, out var _))
+        {
+            return;
+        }
+
+        var endpoint = $"{Url}/schedules/update";
+        ArgumentNullException.ThrowIfNull(schedule.CronExpression);
         var schedulerSchedule = new SchedulerSchedule(schedule.ScheduleId, schedule.JobId, schedule.CronExpression, schedule.DisallowConcurrentExecution);
         var json = JsonSerializer.Serialize(schedulerSchedule);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -118,5 +132,5 @@ public class WebAppSchedulerService : ISchedulerService
         var response = await _httpClient.PostAsync(endpoint, content);
         response.EnsureSuccessStatusCode();
     }
-    
+
 }

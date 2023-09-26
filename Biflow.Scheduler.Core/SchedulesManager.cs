@@ -54,7 +54,6 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
 
     public async Task ResumeScheduleAsync(SchedulerSchedule schedule, CancellationToken cancellationToken)
     {
-
         var triggerKey = new TriggerKey(schedule.ScheduleId.ToString());
         await _scheduler.ResumeTrigger(triggerKey, cancellationToken);
 
@@ -79,10 +78,7 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
     }
 
     public async Task RemoveScheduleAsync(SchedulerSchedule schedule, CancellationToken cancellationToken)
-    {
-        var triggerKey = new TriggerKey(schedule.ScheduleId.ToString());
-        await _scheduler.UnscheduleJob(triggerKey, cancellationToken);
-        
+    {        
         var jobKey = new JobKey(schedule.ScheduleId.ToString(), schedule.JobId.ToString());
         await _scheduler.DeleteJob(jobKey, cancellationToken);
 
@@ -95,6 +91,17 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
 
         _logger.LogInformation("Added schedule id {ScheduleId} for job id {JobId} with Cron expression {CronExpression}",
             schedule.ScheduleId, schedule.JobId, schedule.CronExpression);
+    }
+
+    public async Task UpdateScheduleAsync(SchedulerSchedule schedule, CancellationToken cancellationToken)
+    {
+        var jobKey = new JobKey(schedule.ScheduleId.ToString(), schedule.JobId.ToString());
+        // Throw if previous schedule was not found. This could happen if the job of the schedule was changed.
+        // Adding a new schedule without deleting the previous version could lead to undesired state of schedules.
+        _ = await _scheduler.GetJobDetail(jobKey, cancellationToken)
+            ?? throw new ArgumentException($"No matching schedule found for job id {schedule.JobId} and schedule id {schedule.ScheduleId}");
+        await _scheduler.DeleteJob(jobKey, cancellationToken);
+        await CreateAndAddScheduleAsync(schedule.ScheduleId, schedule.JobId, schedule.CronExpression, schedule.DisallowConcurrentExecution, true, cancellationToken);
     }
 
     private async Task CreateAndAddScheduleAsync(Guid scheduleId, Guid jobId, string cronExpression, bool disallowConcurrentExecution, bool isEnabled, CancellationToken cancellationToken)
