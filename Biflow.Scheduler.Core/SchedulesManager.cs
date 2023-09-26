@@ -39,33 +39,8 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
         foreach (var schedule in schedules)
         {
             ArgumentNullException.ThrowIfNull(schedule.CronExpression);
-            ArgumentNullException.ThrowIfNull(schedule.JobId);
-
-            var jobKey = new JobKey(schedule.JobId.ToString());
-            var triggerKey = new TriggerKey(schedule.ScheduleId.ToString());
-            var jobDetail = JobBuilder.Create<TJob>()
-                .WithIdentity(jobKey)
-                .Build();
-            var trigger = TriggerBuilder.Create()
-                .WithIdentity(triggerKey)
-                .ForJob(jobDetail)
-                .WithCronSchedule(schedule.CronExpression, x => x.WithMisfireHandlingInstructionDoNothing())
-                .Build();
-
-            if (!await _scheduler.CheckExists(jobKey, cancellationToken))
-            {
-                await _scheduler.ScheduleJob(jobDetail, trigger, cancellationToken);
-            }
-            else
-            {
-                await _scheduler.ScheduleJob(trigger, cancellationToken);
-            }
-
-            if (!schedule.IsEnabled)
-            {
-                await _scheduler.PauseTrigger(triggerKey, cancellationToken);
-            }
-
+            await CreateAndAddScheduleAsync(schedule.ScheduleId, schedule.JobId, schedule.CronExpression, schedule.IsEnabled, cancellationToken);
+            
             var status = schedule.IsEnabled == true ? "Enabled" : "Paused";
             _logger.LogInformation("Added schedule id {ScheduleId} for job id {JobId} with Cron expression {CronExpression} and status {status}",
                 schedule.ScheduleId, schedule.JobId, schedule.CronExpression, status);
@@ -111,21 +86,25 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
 
     public async Task AddScheduleAsync(SchedulerSchedule schedule, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(schedule.CronExpression);
+        await CreateAndAddScheduleAsync(schedule.ScheduleId, schedule.JobId, schedule.CronExpression, true, cancellationToken);
 
-        // Check that the Cron expression is valid.
-        if (!CronExpression.IsValidExpression(schedule.CronExpression))
-            throw new ArgumentException($"Invalid Cron expression for schedule id {schedule.ScheduleId}: {schedule.CronExpression}");
+        _logger.LogInformation("Added schedule id {ScheduleId} for job id {JobId} with Cron expression {CronExpression}",
+            schedule.ScheduleId, schedule.JobId, schedule.CronExpression);
+    }
 
-        var jobKey = new JobKey(schedule.JobId.ToString());
+    private async Task CreateAndAddScheduleAsync(Guid scheduleId, Guid jobId, string cronExpression, bool isEnabled, CancellationToken cancellationToken)
+    {
+        var jobKey = new JobKey(jobId.ToString());
+        var triggerKey = new TriggerKey(scheduleId.ToString());
+
         var jobDetail = await _scheduler.GetJobDetail(jobKey, cancellationToken)
             ?? JobBuilder.Create<TJob>()
-            .WithIdentity(schedule.JobId.ToString())
+            .WithIdentity(jobKey)
             .Build();
         var trigger = TriggerBuilder.Create()
-            .WithIdentity(schedule.ScheduleId.ToString())
+            .WithIdentity(triggerKey)
             .ForJob(jobDetail)
-            .WithCronSchedule(schedule.CronExpression, x => x.WithMisfireHandlingInstructionDoNothing())
+            .WithCronSchedule(cronExpression, x => x.WithMisfireHandlingInstructionDoNothing())
             .Build();
 
         if (!await _scheduler.CheckExists(jobKey, cancellationToken))
@@ -137,8 +116,10 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
             await _scheduler.ScheduleJob(trigger, cancellationToken);
         }
 
-        _logger.LogInformation("Added schedule id {ScheduleId} for job id {JobId} with Cron expression {CronExpression}",
-            schedule.ScheduleId, schedule.JobId, schedule.CronExpression);
+        if (!isEnabled)
+        {
+            await _scheduler.PauseTrigger(triggerKey, cancellationToken);
+        }
     }
 
 }
