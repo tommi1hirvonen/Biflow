@@ -17,13 +17,7 @@ namespace Biflow.Executor.Core;
 
 public static class Extensions
 {
-    public static void AddExecutorServices(this IServiceCollection services, IConfiguration executorConfiguration) =>
-        AddExecutorServices<ExecutorLauncher>(services, executorConfiguration);
-
-    public static void AddExecutorServices<TExecutorLauncher>(
-        this IServiceCollection services,
-        IConfiguration executorConfiguration)
-        where TExecutorLauncher : class, IExecutorLauncher
+    public static void AddExecutorServices(this IServiceCollection services, IConfiguration executorConfiguration)
     {
         services.AddSqlConnectionFactory();
         services.AddDbContextFactory<ExecutorDbContext>();
@@ -47,7 +41,6 @@ public static class Extensions
         services.AddSingleton<IConnectionTest, ConnectionTest.ConnectionTest>();
         services.AddSingleton<IJobExecutorFactory, JobExecutorFactory>();
         services.AddSingleton<IExecutionManager, ExecutionManager>();
-        services.AddSingleton<IExecutorLauncher, TExecutorLauncher>();
         services.AddHostedService(services => services.GetRequiredService<IExecutionManager>());
         // Timeout for hosted services (e.g. ExecutionManager) to shut down gracefully when StopAsync() is called.
         services.Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromSeconds(20));

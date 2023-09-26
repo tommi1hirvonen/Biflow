@@ -1,6 +1,7 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
+using Biflow.Executor.Core.WebExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -10,14 +11,14 @@ internal class JobStepExecutor : StepExecutorBase
 {
     private readonly ILogger<JobStepExecutor> _logger;
     private readonly IExecutionBuilderFactory<ExecutorDbContext> _executionBuilderFactory;
-    private readonly IExecutorLauncher _executorLauncher;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
+    private readonly IExecutionManager _executionManager;
 
     private JobStepExecution Step { get; }
 
     public JobStepExecutor(
         ILogger<JobStepExecutor> logger,
-        IExecutorLauncher executorLauncher,
+        IExecutionManager executionManager,
         IDbContextFactory<ExecutorDbContext> dbContextFactory,
         IExecutionBuilderFactory<ExecutorDbContext> executionBuilderFactory,
         JobStepExecution step)
@@ -25,7 +26,7 @@ internal class JobStepExecutor : StepExecutorBase
     {
         _logger = logger;
         _executionBuilderFactory = executionBuilderFactory;
-        _executorLauncher = executorLauncher;
+        _executionManager = executionManager;
         _dbContextFactory = dbContextFactory;
         Step = step;
     }
@@ -108,7 +109,7 @@ internal class JobStepExecutor : StepExecutorBase
             
         try
         {
-            await _executorLauncher.StartExecutorAsync(jobExecutionId);
+            await _executionManager.StartExecutionAsync(jobExecutionId);
         }
         catch (Exception ex)
         {
@@ -120,11 +121,11 @@ internal class JobStepExecutor : StepExecutorBase
         {
             try
             {
-                await _executorLauncher.WaitForExitAsync(jobExecutionId, cancellationToken);
+                await _executionManager.WaitForTaskCompleted(jobExecutionId, cancellationToken);
             }
             catch (OperationCanceledException ex)
             {
-                await _executorLauncher.CancelAsync(jobExecutionId, cancellationTokenSource.Username);
+                _executionManager.CancelExecution(jobExecutionId, cancellationTokenSource.Username);
                 return new Cancel(ex);
             }
 
