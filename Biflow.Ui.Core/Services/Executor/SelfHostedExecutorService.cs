@@ -1,4 +1,4 @@
-﻿using Biflow.Executor.Core.WebExtensions;
+﻿using Biflow.Executor.Core;
 
 namespace Biflow.Ui.Core;
 

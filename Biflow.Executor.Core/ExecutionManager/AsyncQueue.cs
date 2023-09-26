@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks.Dataflow;
 
-namespace Biflow.Executor.Core.WebExtensions;
+namespace Biflow.Executor.Core;
 
 internal class AsyncQueue<T> : IAsyncEnumerable<T>
 {

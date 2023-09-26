@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Biflow.Executor.Core.WebExtensions;
+namespace Biflow.Executor.Core;
 
 public class ExecutionManager : BackgroundService, IExecutionManager
 {
