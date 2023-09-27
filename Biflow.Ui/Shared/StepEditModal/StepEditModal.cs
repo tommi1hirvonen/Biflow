@@ -72,10 +72,10 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
     }
 
     /// <summary>
-    /// Called during OnParametersSetAsync() to load an existing Step from BiflowContext.
+    /// Called during OnParametersSetAsync() to load an existing Step from <see cref="AppDbContext"/>.
     /// The Step loaded from the context should be tracked in order to track changes made to the object.
     /// </summary>
-    /// <param name="context">Instance of BiflowContext</param>
+    /// <param name="context">Instance of <see cref="AppDbContext"/></param>
     /// <param name="stepId">Id of an existing Step that is to be edited</param>
     /// <returns></returns>
     protected abstract Task<TStep> GetExistingStepAsync(AppDbContext context, Guid stepId);
