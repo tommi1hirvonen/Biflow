@@ -98,6 +98,28 @@
     <BodyTemplate>
         <div class="row">
             <div class="col">
+                <div class="input-group">
+                    <div class="input-group-text">
+                        <CxIcon Icon="FeatherIcon.Search" />
+                    </div>
+                    <input type="search" class="form-control form-control-sm" placeholder="Search steps" @bind-value="StepSearchTerm" @bind-value:event="oninput" />
+                </div>
+            </div>
+            <div class="col-auto">
+                <FilterDropdown FilterSet="StepTypeFilter" Items="Steps?.Select(s => s.StepType).Distinct()" OnChange="StateHasChanged">
+                    <TitleTemplate>
+                        <CxIcon Icon="FeatherIcon.Tool" />
+                        Step type
+                    </TitleTemplate>
+                    <ItemTemplate Context="item">
+                        <StepTypeIconComponent StepType_="item" />
+                        @item.ToString()
+                    </ItemTemplate>
+                </FilterDropdown>
+            </div>
+        </div>
+        <div class="row mt-3" style="height: calc(100vh - 210px); overflow-y: scroll;">
+            <div class="col">
                 <div class="list-group">
                     @if (Steps is not null && Jobs is not null)
                     {
@@ -129,6 +151,8 @@
                                 };
                                 var availableSteps = steps
                                     .Where(s => !Subscriptions.Any(sub => s.StepId == sub.StepId))
+                                    .Where(s => string.IsNullOrEmpty(StepSearchTerm) || (s.StepName?.ContainsIgnoreCase(StepSearchTerm) ?? false))
+                                    .Where(s => !StepTypeFilter.Any() || StepTypeFilter.Contains(s.StepType))
                                     .OrderBy(s => s, comparer)
                                     .ToArray();
                                 @if (!availableSteps.Any())
@@ -141,7 +165,7 @@
                                 {
                                     <div class="ps-5 list-group-item list-group-item-action" @onclick="() => AddSubscriptionAsync(step.StepId)" style="cursor: pointer;">
                                         <StepTypeIconComponent StepType_="step.StepType" />
-                                        @step.StepName
+                                        <HighlightableText Text="@step.StepName" PartToHighlight="@StepSearchTerm" />
                                     </div>
                                 }
                             }
@@ -177,6 +201,10 @@
 
     private IEnumerable<StepSubscription> Subscriptions =>
         User?.Subscriptions.OfType<StepSubscription>() ?? Enumerable.Empty<StepSubscription>();
+
+    private string StepSearchTerm { get; set; } = "";
+
+    private HashSet<StepType> StepTypeFilter { get; } = new();
 
     private async Task AddSubscriptionAsync(Guid stepId)
     {
