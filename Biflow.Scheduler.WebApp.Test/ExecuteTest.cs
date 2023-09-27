@@ -21,8 +21,7 @@ public class ExecuteTest
 
         var settings = new Dictionary<string, string?>
         {
-            { "ConnectionStrings:BiflowContext", connectionString },
-            { "Executor:ConsoleApp:BiflowExecutorPath", @"C:\Program Files\Biflow\BiflowExecutor\BiflowExecutor.exe" }
+            { "ConnectionStrings:AppDbContext", connectionString }
         };
 
         var configuration = new ConfigurationBuilder()

@@ -19,14 +19,14 @@ public class DatabaseFixture : IAsyncLifetime
 
     public IDbContextFactory<AppDbContext> DbContextFactory { get; }
 
-    public IExecutionBuilderFactory ExecutionBuilderFactory { get; }
+    public IExecutionBuilderFactory<AppDbContext> ExecutionBuilderFactory { get; }
 
     public DatabaseFixture()
     {
         var httpContextAccessor = new MockHttpContextAccessor(Username, Role);
         var settings = new Dictionary<string, string?>
         {
-            { "ConnectionStrings:BiflowContext", ConnectionString }
+            { "ConnectionStrings:AppDbContext", ConnectionString }
         };
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(settings)
@@ -35,10 +35,10 @@ public class DatabaseFixture : IAsyncLifetime
             .AddSingleton<IConfiguration>(configuration)
             .AddSingleton<IHttpContextAccessor>(httpContextAccessor)
             .AddDbContextFactory<AppDbContext>()
-            .AddExecutionBuilderFactory()
+            .AddExecutionBuilderFactory<AppDbContext>()
             .BuildServiceProvider();
         var factory = services.GetRequiredService<IDbContextFactory<AppDbContext>>();
-        var builderFactory = services.GetRequiredService<IExecutionBuilderFactory>();
+        var builderFactory = services.GetRequiredService<IExecutionBuilderFactory<AppDbContext>>();
         ArgumentNullException.ThrowIfNull(factory);
         (DbContextFactory, ExecutionBuilderFactory) = (factory, builderFactory);
     }
