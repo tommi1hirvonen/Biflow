@@ -1,8 +1,8 @@
 ﻿@using System.Linq.Expressions;
-@inject IDbContextFactory<BiflowContext> DbContextFactory
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHxMessengerService Messenger
 @inject IHttpContextAccessor HttpContextAccessor
-@inject IExecutionBuilderFactory<BiflowContext> BuilderFactory
+@inject IExecutionBuilderFactory<AppDbContext> BuilderFactory
 @inject IExecutorService Executor
 
 @if (LastStartedExecutionId is not null)

@@ -54,7 +54,7 @@ public class StepTests : IClassFixture<StepFixture>
 
 public class StepFixture : IAsyncLifetime
 {
-    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
 
     public StepFixture(DatabaseFixture fixture)
     {

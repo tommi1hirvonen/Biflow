@@ -13,7 +13,7 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 {    
     [Inject] public IHxMessengerService Messenger { get; set; } = null!;
 
-    [Inject] public IDbContextFactory<BiflowContext> DbContextFactory { get; set; } = null!;
+    [Inject] public IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
 
     [CascadingParameter] public Job? Job { get; set; }
 
@@ -39,7 +39,7 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     internal Dictionary<Guid, StepProjection>? StepSlims { get; set; }
 
-    private BiflowContext Context { get; set; } = null!;
+    private AppDbContext Context { get; set; } = null!;
 
     protected IEnumerable<Tag>? AllTags { get; private set; }
 
@@ -78,7 +78,7 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
     /// <param name="context">Instance of BiflowContext</param>
     /// <param name="stepId">Id of an existing Step that is to be edited</param>
     /// <returns></returns>
-    protected abstract Task<TStep> GetExistingStepAsync(BiflowContext context, Guid stepId);
+    protected abstract Task<TStep> GetExistingStepAsync(AppDbContext context, Guid stepId);
 
     /// <summary>
     /// Called during OnParametersSetAsync() if a new Step is being created.

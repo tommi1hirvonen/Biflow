@@ -22,7 +22,7 @@ public partial class ExeStepEditModal : StepEditModal<ExeStep>
             StepParameters = new List<ExeStepParameter>()
         };
 
-    protected override Task<ExeStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
+    protected override Task<ExeStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>
         context.ExeSteps
         .Include(step => step.Job)
         .ThenInclude(job => job.JobParameters)

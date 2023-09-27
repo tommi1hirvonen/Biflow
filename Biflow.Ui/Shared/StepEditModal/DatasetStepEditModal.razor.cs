@@ -53,7 +53,7 @@ public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
         }
     }
 
-    protected override async Task<DatasetStep> GetExistingStepAsync(BiflowContext context, Guid stepId)
+    protected override async Task<DatasetStep> GetExistingStepAsync(AppDbContext context, Guid stepId)
     {
         (DatasetGroupName, DatasetName) = (null, null);
         var step = await context.DatasetSteps

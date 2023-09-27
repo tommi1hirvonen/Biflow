@@ -8,9 +8,9 @@ namespace Biflow.Ui.Core;
 
 public class SqlServerHelperService
 {
-    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
 
-    public SqlServerHelperService(IDbContextFactory<BiflowContext> dbContextFactory)
+    public SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFactory)
     {
         _dbContextFactory = dbContextFactory;
     }

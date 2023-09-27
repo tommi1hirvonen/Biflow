@@ -128,14 +128,14 @@ public static partial class Extensions
     public static IServiceCollection AddUiCoreServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddSqlConnectionFactory();
-        services.AddDbContextFactory<BiflowContext>();
-        services.AddExecutionBuilderFactory<BiflowContext>();
+        services.AddDbContextFactory<AppDbContext>();
+        services.AddExecutionBuilderFactory<AppDbContext>();
         services.AddHttpClient();
         services.AddHttpClient("DefaultCredentials")
             // Passes Windows credentials in on-premise installations to the scheduler API.
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { UseDefaultCredentials = true });
 
-        services.AddSingleton(typeof(ITokenService), typeof(TokenService<BiflowContext>));
+        services.AddSingleton(typeof(ITokenService), typeof(TokenService<AppDbContext>));
 
         var executorType = configuration.GetSection("Executor").GetValue<string>("Type");
         if (executorType == "WebApp")

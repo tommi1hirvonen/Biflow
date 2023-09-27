@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 namespace Biflow.DataAccess;
 
-internal class ExecutionBuilderFactory<TDbContext> : IExecutionBuilderFactory<TDbContext> where TDbContext : BiflowContext
+internal class ExecutionBuilderFactory<TDbContext> : IExecutionBuilderFactory<TDbContext> where TDbContext : AppDbContext
 {
     private readonly IDbContextFactory<TDbContext> _dbContextFactory;
 

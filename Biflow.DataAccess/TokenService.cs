@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.DataAccess;
 
-public class TokenService<TDbContext> : ITokenService where TDbContext : BiflowContext
+public class TokenService<TDbContext> : ITokenService where TDbContext : AppDbContext
 {
     private readonly IDbContextFactory<TDbContext> _dbContextFactory;
     private readonly SemaphoreSlim _semaphore = new(1, 1); // Synchronize access by setting initial and max values to 1

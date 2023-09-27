@@ -1,6 +1,6 @@
 ﻿@page "/datatables/{Page?}/{TableId:guid?}"
 
-@inject IDbContextFactory<BiflowContext> DbContextFactory
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Data Tables | Biflow</PageTitle>

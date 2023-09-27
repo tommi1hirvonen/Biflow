@@ -33,7 +33,7 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
             ExecutionConditionParameters = new List<ExecutionConditionParameter>()
         };
 
-    protected override Task<PipelineStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
+    protected override Task<PipelineStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>
         context.PipelineSteps
         .Include(step => step.Job)
         .ThenInclude(job => job.JobParameters)

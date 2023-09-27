@@ -17,7 +17,7 @@ public class DatabaseFixture : IAsyncLifetime
 
     public string Role { get; } = "Admin";
 
-    public IDbContextFactory<BiflowContext> DbContextFactory { get; }
+    public IDbContextFactory<AppDbContext> DbContextFactory { get; }
 
     public IExecutionBuilderFactory ExecutionBuilderFactory { get; }
 
@@ -34,10 +34,10 @@ public class DatabaseFixture : IAsyncLifetime
         var services = new ServiceCollection()
             .AddSingleton<IConfiguration>(configuration)
             .AddSingleton<IHttpContextAccessor>(httpContextAccessor)
-            .AddDbContextFactory<BiflowContext>()
+            .AddDbContextFactory<AppDbContext>()
             .AddExecutionBuilderFactory()
             .BuildServiceProvider();
-        var factory = services.GetRequiredService<IDbContextFactory<BiflowContext>>();
+        var factory = services.GetRequiredService<IDbContextFactory<AppDbContext>>();
         var builderFactory = services.GetRequiredService<IExecutionBuilderFactory>();
         ArgumentNullException.ThrowIfNull(factory);
         (DbContextFactory, ExecutionBuilderFactory) = (factory, builderFactory);

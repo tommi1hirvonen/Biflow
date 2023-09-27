@@ -1,4 +1,4 @@
-﻿@inject IDbContextFactory<BiflowContext> DbFactory
+﻿@inject IDbContextFactory<AppDbContext> DbFactory
 @inject IHxMessengerService Messenger
 
 <style>
@@ -159,7 +159,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        using var context = await Task.Run<BiflowContext>(DbFactory.CreateDbContext);
+        using var context = await Task.Run<AppDbContext>(DbFactory.CreateDbContext);
         PipelineClients = await context.PipelineClients
             .AsNoTrackingWithIdentityResolution()
             .Include(c => c.Steps)

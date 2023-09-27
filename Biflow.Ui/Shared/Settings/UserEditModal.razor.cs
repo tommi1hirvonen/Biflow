@@ -18,7 +18,7 @@ public partial class UserEditModal : ComponentBase, IDisposable
 {
     [Inject] private AuthenticationMethodResolver AuthenticationResolver { get; set; } = null!;
     
-    [Inject] private IDbContextFactory<BiflowContext> DbFactory { get; set; } = null!;
+    [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
             
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
     
@@ -37,7 +37,7 @@ public partial class UserEditModal : ComponentBase, IDisposable
     private Guid PreviousUserId { get; set; }
     private string CurrentUsername { get; set; } = "";
 
-    private BiflowContext Context { get; set; } = null!;
+    private AppDbContext Context { get; set; } = null!;
 
     private UserFormModelValidator Validator { get; set; } = new(Enumerable.Empty<string>());
 

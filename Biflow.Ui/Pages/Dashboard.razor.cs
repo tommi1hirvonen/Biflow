@@ -9,7 +9,7 @@ namespace Biflow.Ui.Pages;
 
 public partial class Dashboard : ComponentBase
 {
-    [Inject] private IDbContextFactory<BiflowContext> DbFactory { get; set; } = null!;
+    [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
 
     private Dictionary<string, TimeSeriesItem[]> TimeSeriesItems { get; set; } = new Dictionary<string, TimeSeriesItem[]>();
 

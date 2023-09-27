@@ -12,7 +12,7 @@ namespace Biflow.Ui.Shared.JobDetails;
 
 public partial class JobParametersComponent : ComponentBase, IDisposable
 {
-    [Inject] private IDbContextFactory<BiflowContext> DbContextFactory { get; set; } = null!;
+    [Inject] private IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
     
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
 
@@ -26,7 +26,7 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
 
     private Job? EditJob { get; set; }
 
-    private BiflowContext? Context { get; set; }
+    private AppDbContext? Context { get; set; }
 
     private bool Loading { get; set; } = false;
 

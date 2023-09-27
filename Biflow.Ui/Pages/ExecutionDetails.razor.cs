@@ -15,7 +15,7 @@ namespace Biflow.Ui.Pages;
 [Route("/executions/{ExecutionId:guid}")]
 public partial class ExecutionDetails : ComponentBase
 {
-    [Inject] private IDbContextFactory<BiflowContext> DbFactory { get; set; } = null!;
+    [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
     
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
     

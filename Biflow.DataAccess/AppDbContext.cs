@@ -8,12 +8,12 @@ using System.Text.Json;
 
 namespace Biflow.DataAccess;
 
-public class BiflowContext : DbContext
+public class AppDbContext : DbContext
 {
     private readonly IHttpContextAccessor? _httpContextAccessor;
     private readonly string _connectionString;
 
-    public BiflowContext(IConfiguration configuration, IHttpContextAccessor? httpContextAccessor = null)
+    public AppDbContext(IConfiguration configuration, IHttpContextAccessor? httpContextAccessor = null)
         : base()
     {
         _httpContextAccessor = httpContextAccessor;

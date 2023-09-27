@@ -5,9 +5,9 @@ namespace Biflow.DataAccess;
 
 public class JobDuplicatorFactory
 {
-    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
 
-    public JobDuplicatorFactory(IDbContextFactory<BiflowContext> dbContextFactory)
+    public JobDuplicatorFactory(IDbContextFactory<AppDbContext> dbContextFactory)
     {
         _dbContextFactory = dbContextFactory;
     }

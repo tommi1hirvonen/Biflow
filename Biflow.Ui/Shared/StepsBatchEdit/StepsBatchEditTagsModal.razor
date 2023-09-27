@@ -1,6 +1,6 @@
 ﻿@implements IDisposable
 
-@inject IDbContextFactory<BiflowContext> DbContextFactory
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 
 <HxModal @ref="Modal" Title="Edit tags">
     <BodyTemplate>
@@ -69,7 +69,7 @@
 
     private bool Saving { get; set; } = false;
 
-    private BiflowContext? Context { get; set; }
+    private AppDbContext? Context { get; set; }
 
     protected HashSet<Tag>? AllTags { get; set; }
 

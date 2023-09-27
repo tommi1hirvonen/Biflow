@@ -7,7 +7,7 @@ namespace Biflow.DataAccess.Test;
 [Collection(nameof(DatabaseCollection))]
 public class DbContextTests
 {
-    private readonly IDbContextFactory<BiflowContext> dbContextFactory;
+    private readonly IDbContextFactory<AppDbContext> dbContextFactory;
 
     public DbContextTests(DatabaseFixture fixture)
     {

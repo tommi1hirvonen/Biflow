@@ -49,7 +49,7 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
             TagFilters = new List<Tag>()
         };
 
-    protected override async Task<JobStep> GetExistingStepAsync(BiflowContext context, Guid stepId)
+    protected override async Task<JobStep> GetExistingStepAsync(AppDbContext context, Guid stepId)
     {
         var step = await context.JobSteps
             .Include(step => step.Job)

@@ -8,7 +8,7 @@ public partial class EmailStepEditModal : StepEditModal<EmailStep>
 {
     internal override string FormId => "email_step_edit_form";
 
-    protected override Task<EmailStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
+    protected override Task<EmailStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>
         context.EmailSteps
         .Include(step => step.Job)
         .ThenInclude(job => job.JobParameters)

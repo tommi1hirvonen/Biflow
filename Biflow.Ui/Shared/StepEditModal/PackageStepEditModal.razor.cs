@@ -27,7 +27,7 @@ public partial class PackageStepEditModal : StepEditModal<PackageStep>
             ExecutionConditionParameters = new List<ExecutionConditionParameter>()
         };
 
-    protected override Task<PackageStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
+    protected override Task<PackageStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>
         context.PackageSteps
         .Include(step => step.Job)
         .ThenInclude(job => job.JobParameters)

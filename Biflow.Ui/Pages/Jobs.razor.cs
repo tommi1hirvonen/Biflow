@@ -14,7 +14,7 @@ namespace Biflow.Ui.Pages;
 [Route("/jobs")]
 public partial class Jobs : ComponentBase
 {
-    [Inject] private IDbContextFactory<BiflowContext> DbFactory { get; set; } = null!;
+    [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
     
     [Inject] private ISchedulerService SchedulerService { get; set; } = null!;
     
@@ -87,7 +87,7 @@ public partial class Jobs : ComponentBase
         IsLoading = false;
     }
 
-    private async Task LoadLastExecutions(BiflowContext context)
+    private async Task LoadLastExecutions(AppDbContext context)
     {
         ArgumentNullException.ThrowIfNull(Jobs_);
         // Get each job's last execution.

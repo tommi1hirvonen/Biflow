@@ -56,7 +56,7 @@ public partial class FunctionStepEditModal : StepEditModal<FunctionStep>
         return Editor.SetLanguageAsync(lang);
     }
 
-    protected override Task<FunctionStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
+    protected override Task<FunctionStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>
         context.FunctionSteps
         .Include(step => step.Job)
         .ThenInclude(job => job.JobParameters)

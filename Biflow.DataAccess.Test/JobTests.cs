@@ -30,7 +30,7 @@ public class JobTests : IClassFixture<JobFixture>
 
 public class JobFixture : IAsyncLifetime
 {
-    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
 
     public Job Job { get; private set; } = null!;
 

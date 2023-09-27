@@ -1,6 +1,6 @@
 ﻿@implements IDisposable
 
-@inject IDbContextFactory<BiflowContext> DbContextFactory
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 
 <HxModal @ref="Modal" Title="Rename steps" Scrollable="true" Size="ModalSize.Large">
     <BodyTemplate>
@@ -154,7 +154,7 @@
 
     private HxModal? Modal { get; set; }
 
-    private BiflowContext? Context { get; set; }
+    private AppDbContext? Context { get; set; }
 
     private List<Step>? Steps { get; set; }
 

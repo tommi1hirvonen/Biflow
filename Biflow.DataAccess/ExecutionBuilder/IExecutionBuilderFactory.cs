@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace Biflow.DataAccess;
 
-public interface IExecutionBuilderFactory<TDbContext> where TDbContext : BiflowContext
+public interface IExecutionBuilderFactory<TDbContext> where TDbContext : AppDbContext
 {
     /// <summary>
     /// 

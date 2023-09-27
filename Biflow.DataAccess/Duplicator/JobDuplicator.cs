@@ -4,9 +4,9 @@ namespace Biflow.DataAccess;
 
 public class JobDuplicator : IDisposable
 {
-    private readonly BiflowContext _context;
+    private readonly AppDbContext _context;
 
-    internal JobDuplicator(BiflowContext context, Job job)
+    internal JobDuplicator(AppDbContext context, Job job)
     {
         _context = context;
         Job = job;

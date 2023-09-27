@@ -32,7 +32,7 @@ public class ExecuteTest
         var services = new ServiceCollection()
             .AddSingleton<IConfiguration>(configuration)
             .AddLogging()
-            .AddDbContextFactory<BiflowContext>(options =>
+            .AddDbContextFactory<AppDbContext>(options =>
                     options.UseSqlServer(connectionString, o =>
                         o.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)))
             .AddSingleton<WebAppExecutionJob>()

@@ -1,6 +1,6 @@
 ﻿@implements IDisposable
 
-@inject IDbContextFactory<BiflowContext> DbContextFactory
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHxMessengerService Messenger
 
 <HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large">
@@ -81,7 +81,7 @@
 
     private DataObject? EditObject { get; set; }
 
-    private BiflowContext? EditContext { get; set; }
+    private AppDbContext? EditContext { get; set; }
 
     private async Task SubmitDataObjectAsync()
     {

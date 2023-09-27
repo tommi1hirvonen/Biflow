@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Biflow.Executor.Core;
 
-public class SchedulerDbContext : BiflowContext
+public class SchedulerDbContext : AppDbContext
 {
     public SchedulerDbContext(IConfiguration configuration)
         : base(configuration, httpContextAccessor: null) // Pass null as HttpContextAccessor to disable global query filters.

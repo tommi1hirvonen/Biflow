@@ -1,6 +1,6 @@
 ﻿@implements IDisposable
 
-@inject IDbContextFactory<BiflowContext> DbContextFactory
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHxMessengerService Messenger
 
 @{
@@ -50,7 +50,7 @@
 
     private HxOffcanvas? Offcanvas { get; set; }
 
-    private BiflowContext? EditContext { get; set; }
+    private AppDbContext? EditContext { get; set; }
 
     private Job Job { get; set; } = new();
 

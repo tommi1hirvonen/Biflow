@@ -27,7 +27,7 @@ public partial class AgentJobStepEditModal : StepEditModal<AgentJobStep>
             ExecutionConditionParameters = new List<ExecutionConditionParameter>()
         };
 
-    protected override Task<AgentJobStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
+    protected override Task<AgentJobStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>
         context.AgentJobSteps
         .Include(step => step.Job)
         .Include(step => step.Tags)

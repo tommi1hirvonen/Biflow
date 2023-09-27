@@ -21,7 +21,7 @@ public class SqlStepTests : IClassFixture<SqlStepFixture>
 
 public class SqlStepFixture : IAsyncLifetime
 {
-    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
 
     public SqlStepFixture(DatabaseFixture fixture)
     {

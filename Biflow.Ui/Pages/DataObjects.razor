@@ -2,7 +2,7 @@
 
 @attribute [Authorize(Roles = $"{Roles.Admin}, {Roles.Editor}")]
 
-@inject IDbContextFactory<BiflowContext> DbContextFactory
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHxMessengerService Messenger
 
 <PageTitle>Data Objects | Biflow</PageTitle>

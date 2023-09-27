@@ -28,7 +28,7 @@ public partial class TabularStepEditModal : StepEditModal<TabularStep>
             ExecutionConditionParameters = new List<ExecutionConditionParameter>()
         };
 
-    protected override Task<TabularStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
+    protected override Task<TabularStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>
         context.TabularSteps
         .Include(step => step.Job)
         .Include(step => step.Tags)

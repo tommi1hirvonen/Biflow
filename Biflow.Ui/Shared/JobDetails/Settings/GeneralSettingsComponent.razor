@@ -1,6 +1,6 @@
 ﻿@implements IDisposable
 
-@inject IDbContextFactory<BiflowContext> DbContextFactory
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHxMessengerService Messenger
 
 @if (EditJob is not null && Categories is not null)
@@ -68,7 +68,7 @@
 
     [CascadingParameter(Name = "OnJobUpdated")] public Action<Job>? OnJobUpdated { get; set; }
 
-    private BiflowContext? Context { get; set; }
+    private AppDbContext? Context { get; set; }
 
     private Job? EditJob { get; set; }
 

@@ -13,7 +13,7 @@ namespace Biflow.Ui.Shared.JobDetails;
 
 public partial class StepsComponent : ComponentBase
 {
-    [Inject] private IDbContextFactory<BiflowContext> DbFactory { get; set; } = null!;
+    [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
         
     [Inject] private StepsDuplicatorFactory StepDuplicatorFactory { get; set; } = null!;
         

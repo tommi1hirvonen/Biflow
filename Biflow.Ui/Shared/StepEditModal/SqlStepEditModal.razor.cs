@@ -18,7 +18,7 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
 
     private CodeEditor? Editor { get; set; }
 
-    protected override Task<SqlStep> GetExistingStepAsync(BiflowContext context, Guid stepId) =>
+    protected override Task<SqlStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>
         context.SqlSteps
         .Include(step => step.Job)
         .ThenInclude(job => job.JobParameters)

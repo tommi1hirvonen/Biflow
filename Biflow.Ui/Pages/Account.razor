@@ -1,7 +1,7 @@
 ﻿@page "/account"
 
 @inject IHttpContextAccessor HttpContextAccessor
-@inject IDbContextFactory<BiflowContext> DbFactory
+@inject IDbContextFactory<AppDbContext> DbFactory
 @inject UserService UserService
 @inject IHxMessengerService Messenger
 @inject AuthenticationMethodResolver AuthenticationResolver

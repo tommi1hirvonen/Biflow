@@ -4,13 +4,13 @@ namespace Biflow.DataAccess;
 
 public partial class ExecutionBuilder : IDisposable
 {
-    private readonly BiflowContext _context;
+    private readonly AppDbContext _context;
     private readonly Step[] _steps;
     private readonly ExecutionBuilderStep[] _builderSteps;
     private readonly Func<Execution> _createExecution;
     private Execution _execution;
 
-    internal ExecutionBuilder(BiflowContext context, Func<Execution> createExecution, Step[] steps)
+    internal ExecutionBuilder(AppDbContext context, Func<Execution> createExecution, Step[] steps)
     {
         _context = context;
         _createExecution = createExecution;

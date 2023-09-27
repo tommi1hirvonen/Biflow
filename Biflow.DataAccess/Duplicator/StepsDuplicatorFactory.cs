@@ -4,9 +4,9 @@ namespace Biflow.DataAccess;
 
 public class StepsDuplicatorFactory
 {
-    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
 
-    public StepsDuplicatorFactory(IDbContextFactory<BiflowContext> dbContextFactory)
+    public StepsDuplicatorFactory(IDbContextFactory<AppDbContext> dbContextFactory)
     {
         _dbContextFactory = dbContextFactory;
     }

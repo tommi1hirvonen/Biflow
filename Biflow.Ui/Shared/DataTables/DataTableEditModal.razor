@@ -3,7 +3,7 @@
 @implements IDisposable
 
 @inject IHxMessengerService Messenger
-@inject IDbContextFactory<BiflowContext> DbContextFactory
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IJSRuntime JS
 @inject DataTableValidator DataTableValidator
 
@@ -383,7 +383,7 @@
 
     private DatabaseTableSelectOffcanvas? Offcanvas { get; set; }
 
-    private BiflowContext? EditContext { get; set; }
+    private AppDbContext? EditContext { get; set; }
 
     private MasterDataTable? EditTable { get; set; }
 

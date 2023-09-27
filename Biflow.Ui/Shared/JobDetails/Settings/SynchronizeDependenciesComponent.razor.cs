@@ -11,7 +11,7 @@ namespace Biflow.Ui.Shared.JobDetails.Settings;
 
 public partial class SynchronizeDependenciesComponent : ComponentBase
 {
-    [Inject] private IDbContextFactory<BiflowContext> DbContextFactory { get; set; } = null!;
+    [Inject] private IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
 
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
 

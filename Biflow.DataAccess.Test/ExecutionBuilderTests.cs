@@ -8,7 +8,7 @@ namespace Biflow.DataAccess.Test;
 public class ExecutionBuilderTests
 {
     private readonly IExecutionBuilderFactory _executionBuilderFactory;
-    private readonly IDbContextFactory<BiflowContext> _dbContextFactory;
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
 
     public ExecutionBuilderTests(DatabaseFixture fixture)
     {

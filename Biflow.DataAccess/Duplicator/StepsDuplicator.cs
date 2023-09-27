@@ -4,9 +4,9 @@ namespace Biflow.DataAccess;
 
 public class StepsDuplicator : IDisposable
 {
-    private readonly BiflowContext _context;
+    private readonly AppDbContext _context;
 
-    internal StepsDuplicator(BiflowContext context, List<Step> steps)
+    internal StepsDuplicator(AppDbContext context, List<Step> steps)
     {
         _context = context;
         Steps = steps;

@@ -1,6 +1,6 @@
 ﻿@implements IDisposable
 
-@inject IDbContextFactory<BiflowContext> DbContextFactory
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHxMessengerService Messenger
 @inject JobValidator JobValidator
 
@@ -90,7 +90,7 @@
 @code {
     [CascadingParameter] Job? Job { get; set; }
 
-    private BiflowContext? Context { get; set; }
+    private AppDbContext? Context { get; set; }
 
     private Job? EditJob { get; set; }
 

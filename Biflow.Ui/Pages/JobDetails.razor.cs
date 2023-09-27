@@ -11,7 +11,7 @@ namespace Biflow.Ui.Pages;
 [Route("/jobs/{Id:guid}/{DetailsPage}/{InitialStepId:guid?}")]
 public partial class JobDetails : ComponentBase
 {
-    [Inject] private IDbContextFactory<BiflowContext> DbFactory { get; set; } = null!;
+    [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
     [Inject] private ISchedulerService SchedulerService { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
@@ -37,7 +37,7 @@ public partial class JobDetails : ComponentBase
 
     private bool DescriptionOpen { get; set; }
 
-    public static IQueryable<Step> BuildStepsQueryWithIncludes(BiflowContext context)
+    public static IQueryable<Step> BuildStepsQueryWithIncludes(AppDbContext context)
     {
         return context.Steps
             .Include(step => step.Dependencies)
