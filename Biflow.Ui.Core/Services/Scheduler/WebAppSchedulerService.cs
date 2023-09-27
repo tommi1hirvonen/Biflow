@@ -47,7 +47,7 @@ public class WebAppSchedulerService : ISchedulerService
         }
 
         var endpoint = $"{Url}/schedules/add";
-        var schedulerSchedule = new SchedulerSchedule(schedule);
+        var schedulerSchedule = SchedulerSchedule.From(schedule);
         var json = JsonSerializer.Serialize(schedulerSchedule);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await _httpClient.PostAsync(endpoint, content);
@@ -63,7 +63,7 @@ public class WebAppSchedulerService : ISchedulerService
         }
 
         var endpoint = $"{Url}/schedules/remove";
-        var schedulerSchedule = new SchedulerSchedule(schedule);
+        var schedulerSchedule = SchedulerSchedule.From(schedule);
         var json = JsonSerializer.Serialize(schedulerSchedule);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await _httpClient.PostAsync(endpoint, content);
@@ -79,7 +79,7 @@ public class WebAppSchedulerService : ISchedulerService
         }
 
         var endpoint = $"{Url}/schedules/update";
-        var schedulerSchedule = new SchedulerSchedule(schedule);
+        var schedulerSchedule = SchedulerSchedule.From(schedule);
         var json = JsonSerializer.Serialize(schedulerSchedule);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await _httpClient.PostAsync(endpoint, content);
@@ -120,7 +120,7 @@ public class WebAppSchedulerService : ISchedulerService
             return;
         }
 
-        var schedulerSchedule = new SchedulerSchedule(schedule);
+        var schedulerSchedule = SchedulerSchedule.From(schedule);
         var json = JsonSerializer.Serialize(schedulerSchedule);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var endpoint = enabled switch { true => $"{Url}/schedules/resume", false => $"{Url}/schedules/pause" };

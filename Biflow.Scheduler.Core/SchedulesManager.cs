@@ -2,6 +2,7 @@
 using Biflow.Executor.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.PowerBI.Api.Models;
 using Quartz;
 using Quartz.Impl.Matchers;
 
@@ -39,12 +40,7 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
         var counter = 0;
         foreach (var schedule in schedules)
         {
-            await CreateAndAddScheduleAsync(new SchedulerSchedule(schedule), cancellationToken);
-            
-            var status = schedule.IsEnabled == true ? "Enabled" : "Paused";
-            _logger.LogInformation("Added schedule id {ScheduleId} for job id {JobId} with Cron expression {CronExpression} and status {status}",
-                schedule.ScheduleId, schedule.JobId, schedule.CronExpression, status);
-
+            await CreateAndAddScheduleAsync(SchedulerSchedule.From(schedule), cancellationToken);
             counter++;
         }
 
@@ -89,9 +85,6 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
     public async Task AddScheduleAsync(SchedulerSchedule schedule, CancellationToken cancellationToken)
     {
         await CreateAndAddScheduleAsync(schedule, cancellationToken);
-
-        _logger.LogInformation("Added schedule id {ScheduleId} for job id {JobId} with Cron expression {CronExpression}",
-            schedule.ScheduleId, schedule.JobId, schedule.CronExpression);
     }
 
     public async Task UpdateScheduleAsync(SchedulerSchedule schedule, CancellationToken cancellationToken)
@@ -136,6 +129,9 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
         {
             await _scheduler.PauseTrigger(triggerKey, cancellationToken);
         }
+
+        _logger.LogInformation("Added schedule id {ScheduleId} for job id {JobId} with Cron expression {CronExpression}, status {status} and ",
+                schedule.ScheduleId, schedule.JobId, schedule.CronExpression, schedule.IsEnabled);
     }
 
 }
