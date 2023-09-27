@@ -63,7 +63,7 @@
                             <div class="input-group-text">
                                 <CxIcon Icon="FeatherIcon.Calendar" />
                             </div>
-                            <OnInputText class="form-control" @bind-Value="Schedule.CronExpression" disabled=@(Schedule.ScheduleId != Guid.Empty) />
+                            <OnInputText class="form-control" @bind-Value="Schedule.CronExpression" />
                         </div>
                     </div>
                     <ValidationMessage For="() => Schedule.CronExpression" />
@@ -105,7 +105,6 @@
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="schedule_concurrency_check"
                                        checked=@Schedule.DisallowConcurrentExecution
-                                       disabled=@(Schedule.ScheduleId != Guid.Empty)
                                        @bind-value="Schedule.DisallowConcurrentExecution">
                                 <label class="form-check-label fw-normal" for="schedule_concurrency_check">
                                     Disallow concurrent execution
@@ -230,7 +229,18 @@
                     Schedule.Tags.Remove(tag);
                 }
 
+                using var transaction = context.Database.BeginTransaction();
                 await context.SaveChangesAsync();
+                try
+                {
+                    await SchedulerService.UpdateScheduleAsync(Schedule);
+                    transaction.Commit();
+                }
+                catch (Exception)
+                {
+                    transaction.Rollback();
+                    throw;
+                }
 
                 await OnSubmit.InvokeAsync(Schedule);
                 await Offcanvas.LetAsync(x => x.HideAsync());
