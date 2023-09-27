@@ -79,8 +79,10 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
     public async Task RemoveScheduleAsync(SchedulerSchedule schedule, CancellationToken cancellationToken)
     {        
         var jobKey = new JobKey(schedule.ScheduleId.ToString(), schedule.JobId.ToString());
-        await _scheduler.DeleteJob(jobKey, cancellationToken);
-
+        if (!await _scheduler.DeleteJob(jobKey, cancellationToken))
+        {
+            throw new ScheduleNotFoundException(schedule);
+        }
         _logger.LogInformation("Deleted schedule id {ScheduleId} for job id {JobId}", schedule.ScheduleId, schedule.JobId);
     }
 
@@ -97,9 +99,10 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
         var jobKey = new JobKey(schedule.ScheduleId.ToString(), schedule.JobId.ToString());
         // Throw if previous schedule was not found. This could happen if the job of the schedule was changed.
         // Adding a new schedule without deleting the previous version could lead to undesired state of schedules.
-        _ = await _scheduler.GetJobDetail(jobKey, cancellationToken)
-            ?? throw new ArgumentException($"No matching schedule found for job id {schedule.JobId} and schedule id {schedule.ScheduleId}");
-        await _scheduler.DeleteJob(jobKey, cancellationToken);
+        if (!await _scheduler.DeleteJob(jobKey, cancellationToken))
+        {
+            throw new ScheduleNotFoundException(schedule);
+        }
         await CreateAndAddScheduleAsync(schedule, cancellationToken);
     }
 
@@ -135,4 +138,10 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
         }
     }
 
+}
+
+public class ScheduleNotFoundException : Exception
+{
+    public ScheduleNotFoundException(SchedulerSchedule schedule)
+        : base($"No matching schedule found for job id {schedule.JobId} and schedule id {schedule.ScheduleId}") { }
 }

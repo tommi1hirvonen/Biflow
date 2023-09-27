@@ -14,13 +14,29 @@ public static class Extensions
 
         app.MapPost("/schedules/remove", async (SchedulerSchedule schedule, ISchedulesManager schedulesManager) =>
         {
-            await schedulesManager.RemoveScheduleAsync(schedule, CancellationToken.None);
+            try
+            {
+                await schedulesManager.RemoveScheduleAsync(schedule, CancellationToken.None);
+                return Results.Ok();
+            }
+            catch (ScheduleNotFoundException)
+            {
+                return Results.NotFound();
+            }
         }).WithName("Remove schedule");
 
 
         app.MapPost("/schedules/update", async (SchedulerSchedule schedule, ISchedulesManager schedulesManager) =>
         {
-            await schedulesManager.UpdateScheduleAsync(schedule, CancellationToken.None);
+            try
+            {
+                await schedulesManager.UpdateScheduleAsync(schedule, CancellationToken.None);
+                return Results.Ok();
+            }
+            catch (ScheduleNotFoundException)
+            {
+                return Results.NotFound();
+            }
         }).WithName("Update schedule");
 
 
