@@ -24,8 +24,8 @@ internal class ObservableDictionary<T, U> : IDictionary<T, U> where T : notnull
         get => _dict[key];
         set
         {
-            _onValueChanged();
             _dict[key] = value;
+            _onValueChanged();
         }
     }
 

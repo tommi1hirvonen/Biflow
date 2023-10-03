@@ -8,6 +8,10 @@ public class Row
     private readonly TableData _parentTable;
     private readonly IDictionary<string, object?>? _initialValues;
     private readonly ObservableDictionary<string, object?> _values;
+    private readonly string[] _upsertableColumns;
+    private readonly string[] _primaryKeyColumns;
+
+    private bool _valuesChanged = false;
 
     public IDictionary<string, object?> Values => _values;
 
@@ -28,6 +32,9 @@ public class Row
 
     public bool IsNewRow { get; }
 
+    public bool HasChanges =>
+        _initialValues is not null && !ToBeDeleted && IsUpdateable && _valuesChanged;
+
     public Row(
         TableData tableData,
         bool isUpdateable,
@@ -36,6 +43,14 @@ public class Row
         _parentTable = tableData;
         _initialValues = initialValues;
         _values = _initialValues is not null ? new(_initialValues, OnValuesChanged) : new(OnValuesChanged);
+        _upsertableColumns = _parentTable.Columns
+            .Where(c => !c.IsIdentity && !c.IsComputed)
+            .Select(c => c.Name)
+            .ToArray();
+        _primaryKeyColumns = _parentTable.Columns
+            .Where(c => c.IsPrimaryKey)
+            .Select(c => c.Name)
+            .ToArray();
 
         IsUpdateable = isUpdateable;
         IsNewRow = initialValues is null;
@@ -91,7 +106,11 @@ public class Row
     private string QuotedSchemaAndTable =>
         $"{_parentTable.MasterDataTable.TargetSchemaName.QuoteName()}.{_parentTable.MasterDataTable.TargetTableName.QuoteName()}";
 
-    private void OnValuesChanged() => _parentTable.HasChanges = true;
+    private void OnValuesChanged()
+    {
+        _parentTable.HasChanges = true;
+        _valuesChanged = Values.Any(HasChanged);
+    }
 
     public void Delete()
     {
@@ -107,21 +126,10 @@ public class Row
     /// <returns>null if there are no pending changes</returns>
     public (string Command, DynamicParameters Parameters, DataTableCommandType Type)? GetChangeSqlCommand()
     {
-        var upsertableColumns = _parentTable.Columns
-            .Where(c => !c.IsIdentity && !c.IsComputed)
-            .Select(c => c.Name)
-            .ToArray();
-        var primaryKey = _parentTable.Columns
-            .Where(c => c.IsPrimaryKey)
-            .Select(c => c.Name)
-            .ToArray();
-
         // Existing entity
         if (_initialValues is not null && !ToBeDeleted && IsUpdateable)
         {
-            var changes = Values
-                .Where(w => upsertableColumns.Any(c => c == w.Key) && w.Value?.ToString() != _initialValues[w.Key]?.ToString())
-                .ToArray();
+            var changes = Values.Where(HasChanged).ToArray();
                         
             // No changes => skip this record
             if (!changes.Any())
@@ -143,12 +151,12 @@ public class Row
                 }
             }
             builder.Append(" WHERE ");
-            foreach (var (pk, index) in primaryKey.Select((pk, i) => (pk, i + 1)))
+            foreach (var (pk, index) in _primaryKeyColumns.Select((pk, i) => (pk, i + 1)))
             {
                 var value = _initialValues[pk];
                 builder.Append(pk.QuoteName()).Append(" = @Orig_").Append(index);
                 parameters.Add($"Orig_{index}", value);
-                if (index < primaryKey.Length)
+                if (index < _primaryKeyColumns.Length)
                 {
                     builder.Append(" AND ");
                 }
@@ -162,12 +170,12 @@ public class Row
             var builder = new StringBuilder();
             var parameters = new DynamicParameters();
             builder.Append("DELETE ").Append(QuotedSchemaAndTable).Append(" WHERE ");
-            foreach (var (pk, index) in primaryKey.Select((pk, i) => (pk, i + 1)))
+            foreach (var (pk, index) in _primaryKeyColumns.Select((pk, i) => (pk, i + 1)))
             {
                 var value = _initialValues[pk];
                 builder.Append(pk.QuoteName()).Append(" = @Orig_").Append(index);
                 parameters.Add($"Orig_{index}", value);
-                if (index < primaryKey.Length)
+                if (index < _primaryKeyColumns.Length)
                 {
                     builder.Append(" AND ");
                 }
@@ -184,14 +192,14 @@ public class Row
                 .Append("INSERT INTO ")
                 .Append(QuotedSchemaAndTable)
                 .Append(" (")
-                .AppendJoin(',', upsertableColumns.Select(c => c.QuoteName()))
+                .AppendJoin(',', _upsertableColumns.Select(c => c.QuoteName()))
                 .Append(") VALUES (");
-            foreach (var (column, index) in upsertableColumns.Select((c, i) => (c, i + 1))) // do not include possible identity column in insert statement
+            foreach (var (column, index) in _upsertableColumns.Select((c, i) => (c, i + 1))) // do not include possible identity column in insert statement
             {
                 var value = Values[column];
                 builder.Append("@Working_").Append(index);
                 parameters.Add($"Working_{index}", value);
-                if (index < upsertableColumns.Length)
+                if (index < _upsertableColumns.Length)
                 {
                     builder.Append(',');
                 }
@@ -202,4 +210,11 @@ public class Row
 
         return null;
     }
+
+    private bool HasChanged(KeyValuePair<string, object?> field) => _initialValues switch
+    {
+        not null => _upsertableColumns.Any(c => c == field.Key) && field.Value?.ToString() != _initialValues[field.Key]?.ToString(),
+        _ => false
+    };
+        
 }
