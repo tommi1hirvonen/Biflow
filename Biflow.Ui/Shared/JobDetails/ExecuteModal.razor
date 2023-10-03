@@ -10,20 +10,34 @@
     <BodyTemplate>
         @if (Builder is not null)
         {
+            var (stepsCount, stepParamsCount, jobParamsCount) = (
+                Builder.StepExecutions.Count(),
+                Builder.StepExecutions.Sum(e => e.Parameters.Count()),
+                Builder.Parameters.Count());
+            string badgeClass(int? count) => count > 0 ? "bg-primary" : "bg-secondary";
             <ul class="nav nav-tabs mt-2" role="tablist">
                 <li class="nav-item" role="presentation">
                     <a class="nav-link @(ActiveView == View.Steps ? "active" : null)" @onclick="() => ActiveView = View.Steps" style="cursor: pointer;">
                         Steps
+                        <span class="badge rounded-pill ms-3 @badgeClass(stepsCount)">
+                            @stepsCount
+                        </span>
                     </a>
                 </li>
                 <li class="nav-item" role="presentation">
                     <a class="nav-link @(ActiveView == View.StepParameters ? "active" : null)" @onclick="() => ActiveView = View.StepParameters" style="cursor: pointer;">
                         Step parameters
+                        <span class="badge rounded-pill ms-3 @badgeClass(stepParamsCount)">
+                            @stepParamsCount
+                        </span>
                     </a>
                 </li>
                 <li class="nav-item" role="presentation">
                     <a class="nav-link @(ActiveView == View.JobParameters ? "active" : null)" @onclick="() => ActiveView = View.JobParameters" style="cursor: pointer;">
                         Job parameters
+                        <span class="badge rounded-pill ms-3 @badgeClass(jobParamsCount)">
+                            @jobParamsCount
+                        </span>
                     </a>
                 </li>
             </ul>
