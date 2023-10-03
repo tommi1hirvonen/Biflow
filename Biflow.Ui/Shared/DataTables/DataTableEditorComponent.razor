@@ -145,7 +145,7 @@
                 @if (rows?.Any() ?? false)
                 {
                     <span class="px-3">
-                        <small class="text-secondary">@rows.Count record(s)</small>
+                        <small class="text-secondary">@rows.Length record(s)</small>
                         @if (TableData?.HasMoreRows ?? false)
                         {
                             <span class="text-warning ms-2" style="cursor: pointer;">

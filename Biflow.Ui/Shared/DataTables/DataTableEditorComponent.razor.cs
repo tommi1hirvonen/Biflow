@@ -61,9 +61,9 @@ public partial class DataTableEditorComponent : ComponentBase
         return Task.CompletedTask;
     }
 
-    private List<Row>? GetOrderedRowRecords()
+    private Row[]? GetOrderedRowRecords()
     {
-        var rows = TableData?.Rows;
+        var rows = TableData?.Rows.OrderBy(r => !r.IsNewRow);
         foreach (var orderBy in OrderBy)
         {
             var column = TableData?.Columns.FirstOrDefault(c => c.Name == orderBy.Column);
@@ -79,14 +79,14 @@ public partial class DataTableEditorComponent : ComponentBase
 
             if (orderBy.Descending)
             {
-                rows = rows?.OrderByDescending(lookupValueOrValue);
+                rows = rows?.ThenByDescending(lookupValueOrValue);
             }
             else
             {
-                rows = rows?.OrderBy(lookupValueOrValue);
+                rows = rows?.ThenBy(lookupValueOrValue);
             }
         }
-        return rows?.ToList();
+        return rows?.ToArray();
     }
 
     private void ToggleOrderBy(string column)

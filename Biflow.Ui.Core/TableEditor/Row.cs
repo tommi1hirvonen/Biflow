@@ -26,6 +26,8 @@ public class Row
     
     public bool IsUpdateable { get; }
 
+    public bool IsNewRow { get; }
+
     public Row(
         TableData tableData,
         bool isUpdateable,
@@ -36,6 +38,7 @@ public class Row
         _values = _initialValues is not null ? new(_initialValues, OnValuesChanged) : new(OnValuesChanged);
 
         IsUpdateable = isUpdateable;
+        IsNewRow = initialValues is null;
         
         ByteIndexer = new(Values);
         ShortIndexer = new(Values);
