@@ -371,7 +371,7 @@
                 </HxDropdownContent>
             </HxDropdownButtonGroup>
         </div>
-        <HxButton Color="ThemeColor.Primary" CssClass="ml-5" @onclick="Execute">
+        <HxButton Color="ThemeColor.Primary" CssClass="ml-5" @onclick="Execute" Enabled="Builder?.StepExecutions.Any() ?? false">
             <CxIcon Icon="FeatherIcon.Play" />
             Execute
         </HxButton>
