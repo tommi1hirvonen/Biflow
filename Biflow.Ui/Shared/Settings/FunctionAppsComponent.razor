@@ -178,7 +178,7 @@
         }
     }
 
-    private async void OnFunctionAppSubmit(FunctionApp functionApp)
+    private async Task OnFunctionAppSubmit(FunctionApp functionApp)
     {
         using var context = DbFactory.CreateDbContext();
         if (functionApp.FunctionAppId == Guid.Empty)

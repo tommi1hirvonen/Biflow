@@ -43,6 +43,11 @@
             Function Apps
         </NavLink>
     </li>
+    <li class="nav-item" role="presentation">
+        <NavLink class="nav-link" href="settings/qlikcloudclients">
+            Qlik Cloud Clients
+        </NavLink>
+    </li>
 </ul>
 
 @if (Page is null)
@@ -68,6 +73,10 @@ else if (Page == "pipelineclients")
 else if (Page == "functionapps")
 {
     <FunctionAppsComponent />
+}
+else if (Page == "qlikcloudclients")
+{
+    <QlikCloudClientsComponent />
 }
 else
 {

@@ -277,7 +277,7 @@
         }
     }
 
-    private async void OnAppRegistrationSubmit(AppRegistration appRegistration)
+    private async Task OnAppRegistrationSubmit(AppRegistration appRegistration)
     {
         using var context = DbFactory.CreateDbContext();
         if (appRegistration.AppRegistrationId == Guid.Empty)

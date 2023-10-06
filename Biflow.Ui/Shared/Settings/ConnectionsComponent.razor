@@ -232,7 +232,7 @@
         }
     }
 
-    private async void OnConnectionSubmit(ConnectionInfoBase connection)
+    private async Task OnConnectionSubmit(ConnectionInfoBase connection)
     {
         using var context = DbFactory.CreateDbContext();
         if (connection.ConnectionId == Guid.Empty)

@@ -59,6 +59,7 @@ public class AppDbContext : DbContext
     public DbSet<MasterDataTable> MasterDataTables => Set<MasterDataTable>();
     public DbSet<MasterDataTableCategory> MasterDataTableCategories => Set<MasterDataTableCategory>();
     public DbSet<JobCategory> JobCategories => Set<JobCategory>();
+    public DbSet<QlikCloudClient> QlikCloudClients => Set<QlikCloudClient>();
 
     protected virtual void ConfigureSqlServer(SqlServerDbContextOptionsBuilder options)
     {

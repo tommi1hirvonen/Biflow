@@ -189,7 +189,7 @@
         }
     }
 
-    private async void OnClientSubmit(PipelineClient client)
+    private async Task OnClientSubmit(PipelineClient client)
     {
         using var context = DbFactory.CreateDbContext();
         if (client.PipelineClientId == Guid.Empty)

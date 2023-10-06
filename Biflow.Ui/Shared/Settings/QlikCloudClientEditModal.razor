@@ -1,0 +1,77 @@
+﻿@inject IDbContextFactory<AppDbContext> dbContextFactory
+
+<HxModal @ref="modal" Size="ModalSize.Large" Title="@(client?.QlikCloudClientId == Guid.Empty ? "New Qlik Cloud client" : "Edit " + client?.QlikCloudClientName)">
+    <BodyTemplate>
+        @if (client is not null)
+        {
+            <EditForm id="qlik_cloud_client_edit_form" Model="client" OnValidSubmit="SubmitAsync">
+                <div class="row">
+                    <div class="col mx-3">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div>
+                            <label class="form-label">Client name</label>
+                            <InputText class="form-control" @bind-Value="client.QlikCloudClientName"></InputText>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-lg">
+                                <label class="form-label">Environment url</label>
+                                <InputText class="form-control" @bind-Value="client.EnvironmentUrl"></InputText>
+                                <div class="form-text">e.g. https://mycompany.eu.qlikcloud.com</div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-lg">
+                                <label class="form-label">API key</label>
+                                <InputTextArea class="form-control form-control-sm" rows="6" @bind-Value="client.ApiToken"></InputTextArea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </EditForm>
+        }
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxSubmit form="qlik_cloud_client_edit_form" Color="ThemeColor.Success">@(client?.QlikCloudClientId == Guid.Empty ? "Add" : "Save")</HxSubmit>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+    </FooterTemplate>
+</HxModal>
+
+    @code {
+    private HxModal? modal;
+    private QlikCloudClient? client;
+
+    [Parameter]
+    public EventCallback<QlikCloudClient> OnClientSubmit { get; set; }
+
+    public async Task ShowAsync(Guid clientId)
+    {
+        client = null;
+        await modal.LetAsync(x => x.ShowAsync());
+        if (clientId != Guid.Empty)
+        {
+            using var context = await dbContextFactory.CreateDbContextAsync();
+            client = await context.QlikCloudClients
+                .AsNoTrackingWithIdentityResolution()
+                .FirstAsync(c => c.QlikCloudClientId == clientId);
+        }
+        else
+        {
+            client = new()
+            {
+                QlikCloudClientName = "",
+                EnvironmentUrl = "",
+                ApiToken = ""
+            };
+        }
+    }
+
+    private async Task SubmitAsync()
+    {
+        await OnClientSubmit.InvokeAsync(client);
+        await modal.LetAsync(x => x.HideAsync());
+    }
+}
