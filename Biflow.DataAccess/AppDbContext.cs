@@ -33,6 +33,7 @@ public class AppDbContext : DbContext
     public DbSet<AgentJobStep> AgentJobSteps => Set<AgentJobStep>();
     public DbSet<TabularStep> TabularSteps => Set<TabularStep>();
     public DbSet<EmailStep> EmailSteps => Set<EmailStep>();
+    public DbSet<QlikStep> QlikSteps => Set<QlikStep>();
     public DbSet<DataObject> DataObjects => Set<DataObject>();
     public DbSet<Execution> Executions => Set<Execution>();
     public DbSet<StepExecution> StepExecutions => Set<StepExecution>();
@@ -109,7 +110,8 @@ public class AppDbContext : DbContext
             .HasValue<FunctionStepExecution>(StepType.Function)
             .HasValue<AgentJobStepExecution>(StepType.AgentJob)
             .HasValue<TabularStepExecution>(StepType.Tabular)
-            .HasValue<EmailStepExecution>(StepType.Email);
+            .HasValue<EmailStepExecution>(StepType.Email)
+            .HasValue<QlikStepExecution>(StepType.Qlik);
             e.OwnsOne(s => s.ExecutionConditionExpression, ece =>
             {
                 ece.Property(p => p.Expression).HasColumnName("ExecutionConditionExpression");
@@ -133,7 +135,8 @@ public class AppDbContext : DbContext
             .HasValue<FunctionStepExecutionAttempt>(StepType.Function)
             .HasValue<AgentJobStepExecutionAttempt>(StepType.AgentJob)
             .HasValue<TabularStepExecutionAttempt>(StepType.Tabular)
-            .HasValue<EmailStepExecutionAttempt>(StepType.Email);
+            .HasValue<EmailStepExecutionAttempt>(StepType.Email)
+            .HasValue<QlikStepExecutionAttempt>(StepType.Qlik);
         });
 
         modelBuilder.Entity<Dependency>(e =>
@@ -193,7 +196,8 @@ public class AppDbContext : DbContext
             .HasValue<FunctionStep>(StepType.Function)
             .HasValue<AgentJobStep>(StepType.AgentJob)
             .HasValue<TabularStep>(StepType.Tabular)
-            .HasValue<EmailStep>(StepType.Email);
+            .HasValue<EmailStep>(StepType.Email)
+            .HasValue<QlikStep>(StepType.Qlik);
             e.HasMany(s => s.StepExecutions)
             .WithOne(e => e.Step)
             .IsRequired(false);
@@ -389,6 +393,12 @@ public class AppDbContext : DbContext
             e.HasDiscriminator<ConnectionType>("ConnectionType")
             .HasValue<SqlConnectionInfo>(ConnectionType.Sql)
             .HasValue<AnalysisServicesConnectionInfo>(ConnectionType.AnalysisServices);
+        });
+
+        modelBuilder.Entity<QlikCloudClient>(e =>
+        {
+            e.HasMany(c => c.Steps)
+            .WithOne(s => s.QlikCloudClient);
         });
 
         modelBuilder.Entity<MasterDataTableLookup>(e =>

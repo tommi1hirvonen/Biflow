@@ -16,6 +16,7 @@
     [WarningMessage]            NVARCHAR(MAX)       NULL,
     [InfoMessage]               NVARCHAR(MAX)       NULL,
     [StoppedBy]                 NVARCHAR(250)       NULL,
+    [ReloadId]                  NVARCHAR(50)        NULL,
     CONSTRAINT [PK_ExecutionStepAttempt] PRIMARY KEY CLUSTERED ([ExecutionId] ASC, [StepId] ASC, [RetryAttemptIndex] ASC),
     CONSTRAINT [FK_ExecutionStepAttempt_ExecutionStep] FOREIGN KEY ([ExecutionId], [StepId]) REFERENCES [biflow].ExecutionStep ([ExecutionId], [StepId]) ON DELETE CASCADE,
     -- Index used by executor application's duplicate step execution check
@@ -30,7 +31,8 @@
         OR [StepType]='Function'
         OR [StepType]='AgentJob'
         OR [StepType]='Tabular'
-        OR [StepType]='Email'),
+        OR [StepType]='Email'
+        OR [StepType]='Qlik'),
     CONSTRAINT [CK_ExecutionStepAttempt_ExecutionStatus] CHECK (
         [ExecutionStatus] = 'NotStarted'
         OR [ExecutionStatus] = 'Queued'

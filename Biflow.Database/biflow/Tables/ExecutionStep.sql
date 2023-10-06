@@ -41,6 +41,8 @@
     [EmailBody]                         NVARCHAR(MAX)       NULL,
     [DuplicateExecutionBehaviour]       VARCHAR(20)         CONSTRAINT [DF_ExecutionStep_DuplicateExecutionBehaviour] DEFAULT ('Wait') NOT NULL,
     [TagFilters]                        VARCHAR(MAX)        NULL, -- JSON array of tag ids
+    [AppId]                             NVARCHAR(36)        NULL,
+    [QlikCloudClientId]                 UNIQUEIDENTIFIER    NULL,
     CONSTRAINT [PK_ExecutionStep] PRIMARY KEY CLUSTERED ([ExecutionId] ASC, [StepId] ASC),
     CONSTRAINT [FK_ExecutionStep_ExecutionParameter] FOREIGN KEY ([ExecutionId], [ResultCaptureJobParameterId]) REFERENCES [biflow].[ExecutionParameter] ([ExecutionId], [ParameterId]),
     CONSTRAINT [CK_ExecutionStep_StepType] CHECK (
@@ -53,7 +55,8 @@
         OR [StepType]='Function'
         OR [StepType]='AgentJob'
         OR [StepType]='Tabular'
-        OR [StepType]='Email'),
+        OR [StepType]='Email'
+        OR [StepType]='Qlik'),
     CONSTRAINT [CK_ExecutionStep_DuplicateExecutionBehaviour] CHECK (
         [DuplicateExecutionBehaviour] = 'Allow'
         OR [DuplicateExecutionBehaviour] = 'Wait'

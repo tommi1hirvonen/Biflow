@@ -8,6 +8,7 @@ public enum StepType
     Function,
     Tabular,
     Dataset,
+    Qlik,
     AgentJob,
     Exe,
     Job,

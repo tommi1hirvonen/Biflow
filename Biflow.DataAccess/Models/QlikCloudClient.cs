@@ -17,4 +17,6 @@ public class QlikCloudClient
 
     [Required]
     public required string ApiToken { get; set; }
+
+    public ICollection<QlikStep> Steps { get; set; } = null!;
 }
