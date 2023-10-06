@@ -34,6 +34,7 @@ public partial class JobDetails : ComponentBase
     private List<PipelineClient>? PipelineClients { get; set; }
     private List<AppRegistration>? AppRegistrations { get; set; }
     private List<FunctionApp>? FunctionApps { get; set; }
+    private List<QlikCloudClient>? QlikCloudClients { get; set; }
 
     private bool DescriptionOpen { get; set; }
 
@@ -73,6 +74,10 @@ public partial class JobDetails : ComponentBase
         FunctionApps = await context.FunctionApps
             .AsNoTracking()
             .OrderBy(app => app.FunctionAppName)
+            .ToListAsync();
+        QlikCloudClients = await context.QlikCloudClients
+            .AsNoTracking()
+            .OrderBy(c => c.QlikCloudClientName)
             .ToListAsync();
         Job = await context.Jobs
             .AsNoTrackingWithIdentityResolution()

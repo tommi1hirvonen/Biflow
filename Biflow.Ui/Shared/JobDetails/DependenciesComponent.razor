@@ -162,6 +162,9 @@
     <EmailStepEditModal @ref="StepEditModals[StepType.Email]"
         Connections="SqlConnections"
         OnStepSubmit="OnStepSubmit" />
+    <QlikStepEditModal @ref="StepEditModals[StepType.Qlik]"
+        Clients="QlikCloudClients"
+        OnStepSubmit="OnStepSubmit" />
 </AuthorizeView>
 
 @code {
@@ -178,6 +181,8 @@
     [Parameter] public List<AppRegistration>? AppRegistrations { get; set; }
 
     [Parameter] public List<FunctionApp>? FunctionApps { get; set; }
+
+    [Parameter] public List<QlikCloudClient>? QlikCloudClients { get; set; }
 
     [Parameter] public Guid? InitialStepId { get; set; }
 

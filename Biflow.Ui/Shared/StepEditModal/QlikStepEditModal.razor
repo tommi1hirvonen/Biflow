@@ -1,0 +1,37 @@
+﻿@inherits StepEditModal<QlikStep>
+
+<StepEditModalTemplate Modal="this" TStep="QlikStep">
+    @if (Step is not null)
+    {
+        <div class="row gap-3 align-items-end">
+            <div class="col-auto">
+                <label class="form-label">Timeout (min) (0 = indefinite)</label>
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <CxIcon Icon="FeatherIcon.XOctagon" />
+                    </div>
+                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 10rem;"></InputNumber>
+                </div>
+            </div>
+            <div class="col-auto">
+                <label class="form-label">App registration</label>
+                <div class="input-group input-group-sm">
+                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.QlikCloudClientId">
+                        @foreach (var client in Clients ?? Enumerable.Empty<QlikCloudClient>())
+                        {
+                            <option value="@client.QlikCloudClientId">@client.QlikCloudClientName</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col">
+                <label class="form-label">App id</label>
+                <div class="input-group input-group-sm">
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.AppId" />
+                </div>
+            </div>
+        </div>
+    }
+</StepEditModalTemplate>

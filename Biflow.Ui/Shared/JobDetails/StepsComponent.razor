@@ -547,7 +547,10 @@
     <PipelineStepEditModal @ref="StepEditModals[StepType.Pipeline]"
         Connections="SqlConnections"
         PipelineClients="PipelineClients"
-        OnStepSubmit="OnStepSubmit" />   
+        OnStepSubmit="OnStepSubmit" />
+    <QlikStepEditModal @ref="StepEditModals[StepType.Qlik]"
+        Clients="QlikCloudClients"
+        OnStepSubmit="OnStepSubmit" />
 </AuthorizeView>
 
 @{

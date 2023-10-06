@@ -343,6 +343,30 @@
                 </dd>
             }
         }
+        else if (StepExecutionAttempt.StepExecution is QlikStepExecution qlik)
+        {
+            <dt class="col-sm-3">
+                App id
+            </dt>
+            <dd class="col-sm-9">
+                @qlik.AppId
+            </dd>
+            <dt class="col-sm-3">
+                Qlik Cloud Client id
+            </dt>
+            <dd class="col-sm-9">
+                @qlik.QlikCloudClientId
+            </dd>
+            @if (StepExecutionAttempt is QlikStepExecutionAttempt qlik_)
+            {
+                <dt class="col-sm-3">
+                    Reload id
+                </dt>
+                <dd class="col-sm-9">
+                    @qlik_.ReloadId
+                </dd>
+            }
+        }
         <dt class="col-sm-3">
             Info message / output
         </dt>

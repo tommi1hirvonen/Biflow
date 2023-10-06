@@ -39,6 +39,8 @@ public partial class StepsComponent : ComponentBase
     
     [Parameter] public List<FunctionApp>? FunctionApps { get; set; }
 
+    [Parameter] public List<QlikCloudClient>? QlikCloudClients { get; set; }
+
     [Parameter] public Guid? InitialStepId { get; set; }
 
     private IEnumerable<Step> FilteredSteps => Steps?
