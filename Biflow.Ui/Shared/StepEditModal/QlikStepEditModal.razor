@@ -24,14 +24,32 @@
                     </InputSelect>
                 </div>
             </div>
+            <div class="col-auto">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenAppSelectOffcanvas">
+                    <CxIcon Icon="FeatherIcon.MoreHorizontal" />
+                    Browse apps
+                </HxButton>
+            </div>
         </div>
         <div class="row mt-2">
-            <div class="col">
+            <div class="col-md-6">
                 <label class="form-label">App id</label>
                 <div class="input-group input-group-sm">
-                    <InputText class="form-control form-control-sm" @bind-Value="Step.AppId" />
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.AppId" @bind-Value:after="() => appName = string.Empty" />
+                </div>
+                <div class="form-text">
+                    @if (appName is null)
+                    {
+                        <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                        <span>Loading app name...</span>
+                    }
+                    else
+                    {
+                        <span>@appName</span>
+                    }
                 </div>
             </div>
         </div>
+        <AppSelectOffcanvas @ref="appSelectOffcanvas" OnAppSelected="OnAppSelected" />
     }
 </StepEditModalTemplate>

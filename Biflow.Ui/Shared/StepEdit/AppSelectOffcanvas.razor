@@ -1,0 +1,116 @@
+﻿
+<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" Title="Select app" OnClosed="OnClosed">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Spaces</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (spaces is null)
+                        {
+                            <tr>
+                                <td colspan="2" class="text-center">
+                                    <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                                </td>
+                            </tr>
+                        }
+                        else if (!spaces.Any())
+                        {
+                            <tr>
+                                <td colspan="2">
+                                    No spaces with apps
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var space in spaces)
+                            {
+                                <tr>
+                                    <td style="cursor: pointer;" @onclick="() => OnSpaceChanged(space)" class="@(space == selectedSpace ? "bg-body-tertiary fw-bold" : null)">
+                                        @space.Name
+                                    </td>
+                                    <td class="text-end">
+                                        <span class="badge rounded-pill bg-primary">
+                                            @space.Apps.Count()
+                                        </span>
+                                    </td>
+                                </tr>
+                                @if (space == selectedSpace)
+                                {
+                                    <tr style="box-shadow: none;">
+                                        <td colspan="2">
+                                            <table class="table table-hover table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Apps</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach (var app in space.Apps)
+                                                    {
+                                                        <tr style="cursor: pointer;" @onclick="() => selectedApp = app" class="@(app == selectedApp ? "bg-body-tertiary fw-bold" : null)">
+                                                            <td>@app.Name</td>
+                                                        </tr>
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectAppAsync"
+                  Enabled="selectedApp is not null">
+            Select
+        </HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
+@code {
+    private HxOffcanvas? offcanvas;
+    private IEnumerable<QlikSpace>? spaces;
+    private QlikSpace? selectedSpace;
+    private QlikApp? selectedApp;
+
+    [Parameter] public EventCallback<QlikApp> OnAppSelected { get; set; }
+
+    public async Task ShowAsync(QlikCloudClient client)
+    {
+        spaces = await client.GetAppsAsync();
+        await offcanvas.LetAsync(x => x.ShowAsync());
+    }
+
+    private async Task SelectAppAsync()
+    {
+        ArgumentNullException.ThrowIfNull(selectedApp);
+        await OnAppSelected.InvokeAsync(selectedApp);
+        await offcanvas.LetAsync(x => x.HideAsync());
+    }
+
+    private void OnSpaceChanged(QlikSpace space)
+    {
+        if (space == selectedSpace)
+        {
+            selectedSpace = null;
+            selectedApp = null;
+            return;
+        }
+        selectedApp = null;
+        selectedSpace = space;
+    }
+
+    private void OnClosed() => (selectedApp, selectedSpace, spaces) = (null, null, null);
+}
