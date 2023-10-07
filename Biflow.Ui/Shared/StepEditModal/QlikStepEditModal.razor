@@ -16,6 +16,9 @@
             <div class="col-auto">
                 <label class="form-label">App registration</label>
                 <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <CxIcon Icon="LucideIcon.ScatterChart" />
+                    </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.QlikCloudClientId">
                         @foreach (var client in Clients ?? Enumerable.Empty<QlikCloudClient>())
                         {
@@ -35,6 +38,9 @@
             <div class="col-md-6">
                 <label class="form-label">App id</label>
                 <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <CxIcon Icon="LucideIcon.FilePieChart" />
+                    </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.AppId" @bind-Value:after="() => appName = string.Empty" />
                 </div>
                 <div class="form-text">

@@ -12,13 +12,24 @@
 
                         <div>
                             <label class="form-label">Client name</label>
-                            <InputText class="form-control" @bind-Value="client.QlikCloudClientName"></InputText>
+                            <div class="input-group">
+                                <div class="input-group-text">
+                                    <CxIcon Icon="FeatherIcon.Edit3" />
+                                </div>
+                                <InputText class="form-control" @bind-Value="client.QlikCloudClientName"></InputText>
+                            </div>
+                            
                         </div>
 
                         <div class="row mt-3">
                             <div class="col-lg">
                                 <label class="form-label">Environment url</label>
-                                <InputText class="form-control" @bind-Value="client.EnvironmentUrl"></InputText>
+                                <div class="input-group">
+                                    <div class="input-group-text">
+                                        <CxIcon Icon="FeatherIcon.Link" />
+                                    </div>
+                                    <InputText class="form-control" @bind-Value="client.EnvironmentUrl"></InputText>
+                                </div>
                                 <div class="form-text">e.g. https://mycompany.eu.qlikcloud.com</div>
                             </div>
                         </div>
@@ -26,7 +37,12 @@
                         <div class="row mt-3">
                             <div class="col-lg">
                                 <label class="form-label">API key</label>
-                                <InputTextArea class="form-control form-control-sm" rows="6" @bind-Value="client.ApiToken"></InputTextArea>
+                                <div class="input-group">
+                                    <div class="input-group-text">
+                                        <CxIcon Icon="FeatherIcon.Key" />
+                                    </div>
+                                    <InputTextArea class="form-control form-control-sm" rows="6" @bind-Value="client.ApiToken"></InputTextArea>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -56,7 +56,7 @@ public partial class QlikStepEditModal : StepEditModal<QlikStep>
         try
         {
             var client = Clients?.FirstOrDefault(c => c.QlikCloudClientId == step.QlikCloudClientId);
-            appName = client is not null
+            appName = client is not null && !string.IsNullOrEmpty(step.AppId)
                 ? await client.GetAppNameAsync(step.AppId)
                 : "";
         }
