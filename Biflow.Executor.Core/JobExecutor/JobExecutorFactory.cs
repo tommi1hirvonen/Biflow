@@ -42,6 +42,8 @@ internal class JobExecutorFactory : IJobExecutorFactory
             .Include(e => e.StepExecutions)
             .ThenInclude(e => (e as FunctionStepExecution)!.FunctionApp)
             .Include(e => e.StepExecutions)
+            .ThenInclude(e => (e as QlikStepExecution)!.QlikCloudClient)
+            .Include(e => e.StepExecutions)
             .ThenInclude(e => (e as PipelineStepExecution)!.PipelineClient)
             .ThenInclude(df => df.AppRegistration)
             .Include($"{nameof(Execution.StepExecutions)}.{nameof(IHasConnection.Connection)}")
