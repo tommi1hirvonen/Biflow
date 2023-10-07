@@ -95,14 +95,12 @@ internal class QlikStepExecutor : StepExecutorBase
             AddWarning(ex, $"Error updating app reload id {reload.Id}");
         }
 
-        // Wait for 5 seconds before first attempting to get the app reload status.
-        await Task.Delay(5000, cancellationToken);
-
         var getReloadUrl = $"{_step.QlikCloudClient.EnvironmentUrl}/api/v1/reloads/{reload.Id}";
         while (true)
         {
             try
             {
+                await Task.Delay(_pollingIntervalMs, linkedCts.Token);
                 reload = await _httpClient.GetFromJsonAsync<Reload>(getReloadUrl, linkedCts.Token)
                     ?? throw new ApplicationException("Reload response was null");
                 Result? result = reload.Status switch
@@ -116,10 +114,6 @@ internal class QlikStepExecutor : StepExecutorBase
                 {
                     AddOutput(reload.Log);
                     return result;
-                }
-                else
-                {
-                    await Task.Delay(_pollingIntervalMs, cancellationToken);
                 }
             }
             catch (OperationCanceledException ex)
