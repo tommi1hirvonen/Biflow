@@ -1,5 +1,3 @@
 ﻿namespace Biflow.Ui.Components;
 
-public class SearchEventArgs : EventArgs
-{
-}
+public class SearchEventArgs : EventArgs;
