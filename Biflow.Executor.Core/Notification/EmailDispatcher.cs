@@ -4,16 +4,10 @@ using System.Net.Mail;
 
 namespace Biflow.Executor.Core.Notification;
 
-internal class EmailDispatcher : IMessageDispatcher
+internal class EmailDispatcher(ILogger<EmailDispatcher> logger, IOptionsMonitor<EmailOptions> options) : IMessageDispatcher
 {
-    private readonly ILogger<EmailDispatcher> _logger;
-    private readonly IOptionsMonitor<EmailOptions> _options;
-
-    public EmailDispatcher(ILogger<EmailDispatcher> logger, IOptionsMonitor<EmailOptions> options)
-    {
-        _logger = logger;
-        _options = options;
-    }
+    private readonly ILogger<EmailDispatcher> _logger = logger;
+    private readonly IOptionsMonitor<EmailOptions> _options = options;
 
     public async Task SendMessageAsync(IEnumerable<string> recipients, string subject, string body, bool isBodyHtml, CancellationToken cancellationToken = default)
     {

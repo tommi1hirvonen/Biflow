@@ -4,21 +4,14 @@ using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.Notification;
 
-internal class NotificationService : INotificationService
+internal class NotificationService(
+    ILogger<NotificationService> logger,
+    IMessageDispatcher messageDispatcher,
+    ISubscribersResolver subscribersResolver) : INotificationService
 {
-    private readonly ILogger<NotificationService> _logger;
-    private readonly IMessageDispatcher _messageDispatcher;
-    private readonly ISubscribersResolver _subscribersResolver;
-
-    public NotificationService(
-        ILogger<NotificationService> logger,
-        IMessageDispatcher messageDispatcher,
-        ISubscribersResolver subscribersResolver)
-    {
-        _logger = logger;
-        _messageDispatcher = messageDispatcher;
-        _subscribersResolver = subscribersResolver;
-    }
+    private readonly ILogger<NotificationService> _logger = logger;
+    private readonly IMessageDispatcher _messageDispatcher = messageDispatcher;
+    private readonly ISubscribersResolver _subscribersResolver = subscribersResolver;
 
     public async Task SendCompletionNotificationAsync(Execution execution)
     {

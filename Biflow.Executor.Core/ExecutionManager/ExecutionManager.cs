@@ -4,19 +4,14 @@ using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core;
 
-internal class ExecutionManager : BackgroundService, IExecutionManager
+internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFactory jobExecutorFactory)
+    : BackgroundService, IExecutionManager
 {
-    private readonly ILogger<ExecutionManager> _logger;
-    private readonly IJobExecutorFactory _jobExecutorFactory;
+    private readonly ILogger<ExecutionManager> _logger = logger;
+    private readonly IJobExecutorFactory _jobExecutorFactory = jobExecutorFactory;
     private readonly Dictionary<Guid, IJobExecutor> _jobExecutors = new();
     private readonly Dictionary<Guid, Task> _executionTasks = new();
     private readonly AsyncQueue<Func<CancellationToken, Task>> _backgroundTaskQueue = new();
-
-    public ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFactory jobExecutorFactory)
-    {
-        _logger = logger;
-        _jobExecutorFactory = jobExecutorFactory;
-    }
 
     public async Task StartExecutionAsync(Guid executionId)
     {
@@ -31,23 +26,23 @@ internal class ExecutionManager : BackgroundService, IExecutionManager
 
     public void CancelExecution(Guid executionId, string username)
     {
-        if (!_jobExecutors.ContainsKey(executionId))
+        if (!_jobExecutors.TryGetValue(executionId, out var value))
         {
             throw new InvalidOperationException($"No execution with id {executionId} is being managed.");
         }
 
-        var executor = _jobExecutors[executionId];
+        var executor = value;
         executor.Cancel(username);
     }
 
     public void CancelExecution(Guid executionId, string username, Guid stepId)
     {
-        if (!_jobExecutors.ContainsKey(executionId))
+        if (!_jobExecutors.TryGetValue(executionId, out var value))
         {
             throw new InvalidOperationException($"No execution with id {executionId} is being managed.");
         }
 
-        var executor = _jobExecutors[executionId];
+        var executor = value;
         executor.Cancel(username, stepId);
     }
 

@@ -3,14 +3,9 @@ using System.Net.Mail;
 
 namespace Biflow.Executor.Core.Notification;
 
-internal class EmailTest : IEmailTest
+internal class EmailTest(IOptions<EmailOptions> options) : IEmailTest
 {
-    private readonly IOptions<EmailOptions> _options;
-
-    public EmailTest(IOptions<EmailOptions> options)
-    {
-        _options = options;
-    }
+    private readonly IOptions<EmailOptions> _options = options;
 
     public async Task RunAsync(string toAddress)
     {

@@ -6,17 +6,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-internal class TabularStepExecutor : StepExecutorBase
+internal class TabularStepExecutor(
+    ILogger<TabularStepExecutor> logger,
+    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    TabularStepExecution step) : StepExecutorBase(logger, dbContextFactory, step)
 {
-    private TabularStepExecution Step { get; }
-
-    public TabularStepExecutor(
-        ILogger<TabularStepExecutor> logger,
-        IDbContextFactory<ExecutorDbContext> dbContextFactory,
-        TabularStepExecution step) : base(logger, dbContextFactory, step)
-    {
-        Step = step;
-    }
+    private TabularStepExecution Step { get; } = step;
 
     protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
     {

@@ -2,14 +2,9 @@
 
 namespace Biflow.Executor.Core.ConnectionTest;
 
-internal class ConnectionTest : IConnectionTest
+internal class ConnectionTest(ISqlConnectionFactory sqlConnectionFactory) : IConnectionTest
 {
-    private readonly ISqlConnectionFactory _sqlConnectionFactory;
-
-    public ConnectionTest(ISqlConnectionFactory sqlConnectionFactory)
-    {
-        _sqlConnectionFactory = sqlConnectionFactory;
-    }
+    private readonly ISqlConnectionFactory _sqlConnectionFactory = sqlConnectionFactory;
 
     public async Task RunAsync()
     {

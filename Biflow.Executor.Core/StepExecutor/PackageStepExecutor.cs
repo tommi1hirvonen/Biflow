@@ -10,28 +10,19 @@ using System.Text;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-internal class PackageStepExecutor : StepExecutorBase
+internal class PackageStepExecutor(
+    ILogger<PackageStepExecutor> logger,
+    IOptionsMonitor<ExecutionOptions> options,
+    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    PackageStepExecution step) : StepExecutorBase(logger, dbContextFactory, step)
 {
-    private readonly ILogger<PackageStepExecutor> _logger;
-    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
-    private readonly int _pollingIntervalMs;
+    private readonly ILogger<PackageStepExecutor> _logger = logger;
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
+    private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
 
-    private PackageStepExecution Step { get; }
+    private PackageStepExecution Step { get; } = step;
 
     private const int MaxRefreshRetries = 3;
-
-    public PackageStepExecutor(
-        ILogger<PackageStepExecutor> logger,
-        IOptionsMonitor<ExecutionOptions> options,
-        IDbContextFactory<ExecutorDbContext> dbContextFactory,
-        PackageStepExecution step)
-        : base(logger, dbContextFactory, step)
-    {
-        _logger = logger;
-        _dbContextFactory = dbContextFactory;
-        _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
-        Step = step;
-    }
 
     protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
     {

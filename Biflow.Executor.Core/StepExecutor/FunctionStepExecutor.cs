@@ -5,19 +5,13 @@ using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-internal class FunctionStepExecutor : FunctionStepExecutorBase
+internal class FunctionStepExecutor(
+    ILogger<FunctionStepExecutor> logger,
+    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    IHttpClientFactory httpClientFactory,
+    FunctionStepExecution step) : FunctionStepExecutorBase(logger, dbContextFactory, step)
 {
-    private readonly IHttpClientFactory _httpClientFactory;
-
-    public FunctionStepExecutor(
-        ILogger<FunctionStepExecutor> logger,
-        IDbContextFactory<ExecutorDbContext> dbContextFactory,
-        IHttpClientFactory httpClientFactory,
-        FunctionStepExecution step)
-        : base(logger, dbContextFactory, step)
-    {
-        _httpClientFactory = httpClientFactory;
-    }
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
     {

@@ -8,30 +8,21 @@ using System.Text.Json;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-internal class DurableFunctionStepExecutor : FunctionStepExecutorBase
+internal class DurableFunctionStepExecutor(
+    ILogger<DurableFunctionStepExecutor> logger,
+    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    IOptionsMonitor<ExecutionOptions> options,
+    IHttpClientFactory httpClientFactory,
+    FunctionStepExecution step) : FunctionStepExecutorBase(logger, dbContextFactory, step)
 {
-    private readonly ILogger<DurableFunctionStepExecutor> _logger;
-    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly int _pollingIntervalMs;
+    private readonly ILogger<DurableFunctionStepExecutor> _logger = logger;
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+    private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
 
     private const int MaxRefreshRetries = 3;
 
     private JsonSerializerOptions JsonSerializerOptions { get; } = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-
-    public DurableFunctionStepExecutor(
-        ILogger<DurableFunctionStepExecutor> logger,
-        IDbContextFactory<ExecutorDbContext> dbContextFactory,
-        IOptionsMonitor<ExecutionOptions> options,
-        IHttpClientFactory httpClientFactory,
-        FunctionStepExecution step)
-        : base(logger, dbContextFactory, step)
-    {
-        _logger = logger;
-        _dbContextFactory = dbContextFactory;
-        _httpClientFactory = httpClientFactory;
-        _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
-    }
 
     protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
     {

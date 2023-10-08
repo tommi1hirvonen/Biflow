@@ -7,27 +7,18 @@ using Microsoft.Extensions.Options;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-internal class DatasetStepExecutor : StepExecutorBase
+internal class DatasetStepExecutor(
+    ILogger<DatasetStepExecutor> logger,
+    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    ITokenService tokenService,
+    IOptionsMonitor<ExecutionOptions> options,
+    DatasetStepExecution step) : StepExecutorBase(logger, dbContextFactory, step)
 {
-    private readonly ILogger<DatasetStepExecutor> _logger;
-    private readonly ITokenService _tokenService;
-    private readonly int _pollingIntervalMs;
+    private readonly ILogger<DatasetStepExecutor> _logger = logger;
+    private readonly ITokenService _tokenService = tokenService;
+    private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
 
-    private DatasetStepExecution Step { get; }
-
-    public DatasetStepExecutor(
-        ILogger<DatasetStepExecutor> logger,
-        IDbContextFactory<ExecutorDbContext> dbContextFactory,
-        ITokenService tokenService,
-        IOptionsMonitor<ExecutionOptions> options,
-        DatasetStepExecution step)
-        : base(logger, dbContextFactory, step)
-    {
-        _logger = logger;
-        _tokenService = tokenService;
-        _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
-        Step = step;
-    }
+    private DatasetStepExecution Step { get; } = step;
 
     protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
     {

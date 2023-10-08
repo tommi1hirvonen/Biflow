@@ -1,15 +1,9 @@
 ﻿namespace Biflow.Executor.Core.Orchestrator;
 
-internal class Unsubscriber : IDisposable
+internal class Unsubscriber(List<IOrchestrationObserver> observers, IOrchestrationObserver observer) : IDisposable
 {
-    private readonly List<IOrchestrationObserver> _observers;
-    private readonly IOrchestrationObserver _observer;
-
-    public Unsubscriber(List<IOrchestrationObserver> observers, IOrchestrationObserver observer)
-    {
-        _observers = observers;
-        _observer = observer;
-    }
+    private readonly List<IOrchestrationObserver> _observers = observers;
+    private readonly IOrchestrationObserver _observer = observer;
 
     public void Dispose()
     {

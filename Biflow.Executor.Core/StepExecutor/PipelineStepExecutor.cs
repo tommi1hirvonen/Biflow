@@ -8,33 +8,23 @@ using Polly;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-internal class PipelineStepExecutor : StepExecutorBase
+internal class PipelineStepExecutor(
+    ILogger<PipelineStepExecutor> logger,
+    IOptionsMonitor<ExecutionOptions> options,
+    ITokenService tokenService,
+    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    PipelineStepExecution step) : StepExecutorBase(logger, dbContextFactory, step)
 {
-    private readonly ILogger<PipelineStepExecutor> _logger;
-    private readonly ITokenService _tokenService;
-    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
-    private readonly int _pollingIntervalMs;
+    private readonly ILogger<PipelineStepExecutor> _logger = logger;
+    private readonly ITokenService _tokenService = tokenService;
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
+    private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
 
-    private PipelineStepExecution Step { get; }
-    
+    private PipelineStepExecution Step { get; } = step;
+
     private PipelineClient PipelineClient => Step.PipelineClient;
 
     private const int MaxRefreshRetries = 3;
-
-    public PipelineStepExecutor(
-        ILogger<PipelineStepExecutor> logger,
-        IOptionsMonitor<ExecutionOptions> options,
-        ITokenService tokenService,
-        IDbContextFactory<ExecutorDbContext> dbContextFactory,
-        PipelineStepExecution step)
-        : base(logger, dbContextFactory, step)
-    {
-        _logger = logger;
-        _tokenService = tokenService;
-        _dbContextFactory = dbContextFactory;
-        _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
-        Step = step;
-    }
 
     protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
     {

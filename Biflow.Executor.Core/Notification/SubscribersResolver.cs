@@ -2,14 +2,9 @@
 
 namespace Biflow.Executor.Core.Notification;
 
-public class SubscribersResolver : ISubscribersResolver
+public class SubscribersResolver(ISubscriptionsProviderFactory subscriptionsProviderFactory) : ISubscribersResolver
 {
-    private readonly ISubscriptionsProviderFactory _subscriptionsProviderFactory;
-
-    public SubscribersResolver(ISubscriptionsProviderFactory subscriptionsProviderFactory)
-    {
-        _subscriptionsProviderFactory = subscriptionsProviderFactory;
-    }
+    private readonly ISubscriptionsProviderFactory _subscriptionsProviderFactory = subscriptionsProviderFactory;
 
     public async Task<IEnumerable<string>> ResolveSubscriberEmailsAsync(Execution execution)
     {

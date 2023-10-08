@@ -6,24 +6,17 @@ using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.Orchestrator;
 
-internal class GlobalOrchestrator : IGlobalOrchestrator, IStepReadyForProcessingListener
+internal class GlobalOrchestrator(
+    ILogger<GlobalOrchestrator> logger,
+    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    IStepExecutorFactory stepExecutorFactory) : IGlobalOrchestrator, IStepReadyForProcessingListener
 {
     private readonly object _lock = new();
-    private readonly ILogger<GlobalOrchestrator> _logger;
-    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
-    private readonly IStepExecutorFactory _stepExecutorFactory;
+    private readonly ILogger<GlobalOrchestrator> _logger = logger;
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
+    private readonly IStepExecutorFactory _stepExecutorFactory = stepExecutorFactory;
     private readonly List<IOrchestrationObserver> _observers = new();
     private readonly Dictionary<StepExecution, OrchestrationStatus> _stepStatuses = new();
-
-    public GlobalOrchestrator(
-        ILogger<GlobalOrchestrator> logger,
-        IDbContextFactory<ExecutorDbContext> dbContextFactory,
-        IStepExecutorFactory stepExecutorFactory)
-    {
-        _logger = logger;
-        _dbContextFactory = dbContextFactory;
-        _stepExecutorFactory = stepExecutorFactory;
-    }
 
     public async Task RegisterStepsAndObservers(IEnumerable<IOrchestrationObserver> observers)
     {

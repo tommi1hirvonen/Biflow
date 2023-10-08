@@ -8,29 +8,20 @@ using System.Text.Json;
 
 namespace Biflow.Executor.Core.JobExecutor;
 
-internal class JobExecutor : IJobExecutor
+internal class JobExecutor(
+    ILogger<JobExecutor> logger,
+    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    INotificationService notificationService,
+    IJobOrchestratorFactory jobOrchestratorFactory,
+    Execution execution) : IJobExecutor
 {
-    private readonly ILogger<JobExecutor> _logger;
-    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
-    private readonly INotificationService _notificationService;
-    private readonly IJobOrchestrator _jobOrchestrator;
-    private readonly Execution _execution;
+    private readonly ILogger<JobExecutor> _logger = logger;
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
+    private readonly INotificationService _notificationService = notificationService;
+    private readonly IJobOrchestrator _jobOrchestrator = jobOrchestratorFactory.Create(execution);
+    private readonly Execution _execution = execution;
 
     private Job Job => _execution.Job ?? throw new ArgumentNullException(nameof(_execution.Job));
-
-    public JobExecutor(
-        ILogger<JobExecutor> logger,
-        IDbContextFactory<ExecutorDbContext> dbContextFactory,
-        INotificationService notificationService,
-        IJobOrchestratorFactory jobOrchestratorFactory,
-        Execution execution)
-    {
-        _logger = logger;
-        _dbContextFactory = dbContextFactory;
-        _notificationService = notificationService;
-        _execution = execution;
-        _jobOrchestrator = jobOrchestratorFactory.Create(execution);
-    }
 
     public async Task RunAsync(Guid executionId, CancellationToken cancellationToken)
     {

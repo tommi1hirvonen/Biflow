@@ -4,16 +4,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Biflow.Executor.Core.JobExecutor;
 
-internal class JobExecutorFactory : IJobExecutorFactory
+internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFactory<ExecutorDbContext> dbContextFactory) : IJobExecutorFactory
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
-
-    public JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFactory<ExecutorDbContext> dbContextFactory)
-    {
-        _serviceProvider = serviceProvider;
-        _dbContextFactory = dbContextFactory;
-    }
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
 
     public async Task<IJobExecutor> CreateAsync(Guid executionId)
     {

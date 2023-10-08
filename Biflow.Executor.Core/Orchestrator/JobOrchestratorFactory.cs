@@ -3,15 +3,10 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Biflow.Executor.Core.Orchestrator;
 
-internal class JobOrchestratorFactory : IJobOrchestratorFactory
+internal class JobOrchestratorFactory(IServiceProvider serviceProvider) : IJobOrchestratorFactory
 {
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
 
-    public JobOrchestratorFactory(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
-
-    public JobOrchestrator Create(Execution execution) =>
+    public IJobOrchestrator Create(Execution execution) =>
         ActivatorUtilities.CreateInstance<JobOrchestrator>(_serviceProvider, execution);
 }

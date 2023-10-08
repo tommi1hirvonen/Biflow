@@ -7,25 +7,17 @@ using System.Text;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-internal class ExeStepExecutor : StepExecutorBase
+internal class ExeStepExecutor(
+    ILogger<ExeStepExecutor> logger,
+    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    ExeStepExecution step) : StepExecutorBase(logger, dbContextFactory, step)
 {
-    private readonly ILogger<ExeStepExecutor> _logger;
-    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
+    private readonly ILogger<ExeStepExecutor> _logger = logger;
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
 
-    private ExeStepExecution Step { get; }
+    private ExeStepExecution Step { get; } = step;
 
     private StringBuilder Error { get; } = new StringBuilder();
-
-    public ExeStepExecutor(
-        ILogger<ExeStepExecutor> logger,
-        IDbContextFactory<ExecutorDbContext> dbContextFactory,
-        ExeStepExecution step)
-        : base(logger, dbContextFactory, step)
-    {
-        _logger = logger;
-        _dbContextFactory = dbContextFactory;
-        Step = step;
-    }
 
     protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
     {

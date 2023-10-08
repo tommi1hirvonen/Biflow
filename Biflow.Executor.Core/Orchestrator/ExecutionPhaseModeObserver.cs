@@ -3,18 +3,14 @@ using Biflow.Executor.Core.Common;
 
 namespace Biflow.Executor.Core.Orchestrator;
 
-internal class ExecutionPhaseModeObserver : OrchestrationObserver
+internal class ExecutionPhaseModeObserver(
+    StepExecution stepExecution,
+    IStepExecutionListener orchestrationListener,
+    ExtendedCancellationTokenSource cancellationTokenSource)
+    : OrchestrationObserver(stepExecution, orchestrationListener, cancellationTokenSource)
 {
     private readonly Dictionary<StepExecution, OrchestrationStatus> _duplicates = new();
     private readonly Dictionary<StepExecution, OrchestrationStatus> _execution = new();
-
-    public ExecutionPhaseModeObserver(
-        StepExecution stepExecution,
-        IStepExecutionListener orchestrationListener,
-        ExtendedCancellationTokenSource cancellationTokenSource)
-        : base(stepExecution, orchestrationListener, cancellationTokenSource)
-    {
-    }
 
     protected override void HandleUpdate(OrchestrationUpdate value)
     {

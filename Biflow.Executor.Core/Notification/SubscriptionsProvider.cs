@@ -3,16 +3,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Executor.Core.Notification;
 
-internal class SubscriptionsProvider : ISubscriptionsProvider
+internal class SubscriptionsProvider(IDbContextFactory<ExecutorDbContext> dbContextFactory, Execution execution) : ISubscriptionsProvider
 {
-    private readonly ExecutorDbContext _dbContext;
-    private readonly Execution _execution;
-
-    public SubscriptionsProvider(IDbContextFactory<ExecutorDbContext> dbContextFactory, Execution execution)
-    {
-        _dbContext = dbContextFactory.CreateDbContext();
-        _execution = execution;
-    }
+    private readonly ExecutorDbContext _dbContext = dbContextFactory.CreateDbContext();
+    private readonly Execution _execution = execution;
 
     public async Task<IEnumerable<JobSubscription>> GetJobSubscriptionsAsync() => await _dbContext.JobSubscriptions
         .AsNoTracking()

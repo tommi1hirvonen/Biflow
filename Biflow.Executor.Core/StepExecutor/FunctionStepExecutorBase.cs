@@ -4,23 +4,15 @@ using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-internal abstract class FunctionStepExecutorBase : StepExecutorBase
+internal abstract class FunctionStepExecutorBase(
+    ILogger<FunctionStepExecutorBase> logger,
+    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    FunctionStepExecution step) : StepExecutorBase(logger, dbContextFactory, step)
 {
-    private readonly ILogger<FunctionStepExecutorBase> _logger;
-    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
+    private readonly ILogger<FunctionStepExecutorBase> _logger = logger;
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
 
-    protected FunctionStepExecution Step { get; }
-
-    public FunctionStepExecutorBase(
-        ILogger<FunctionStepExecutorBase> logger,
-        IDbContextFactory<ExecutorDbContext> dbContextFactory,
-        FunctionStepExecution step)
-        : base(logger, dbContextFactory, step)
-    {
-        _logger = logger;
-        _dbContextFactory = dbContextFactory;
-        Step = step;
-    }
+    protected FunctionStepExecution Step { get; } = step;
 
     protected async Task<HttpRequestMessage> BuildFunctionInvokeRequestAsync(CancellationToken cancellationToken)
     {

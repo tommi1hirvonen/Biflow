@@ -3,19 +3,15 @@ using Biflow.Executor.Core.Common;
 
 namespace Biflow.Executor.Core.Orchestrator;
 
-internal class DependencyModeObserver : OrchestrationObserver
+internal class DependencyModeObserver(
+    StepExecution stepExecution,
+    IStepExecutionListener orchestrationListener,
+    ExtendedCancellationTokenSource cancellationTokenSource)
+    : OrchestrationObserver(stepExecution, orchestrationListener, cancellationTokenSource)
 {
     private readonly Dictionary<StepExecution, OrchestrationStatus> _dependencies = new();
     private readonly Dictionary<StepExecution, OrchestrationStatus> _dependsOnThis = new();
     private readonly Dictionary<StepExecution, OrchestrationStatus> _duplicates = new();
-
-    public DependencyModeObserver(
-        StepExecution stepExecution,
-        IStepExecutionListener orchestrationListener,
-        ExtendedCancellationTokenSource cancellationTokenSource)
-        : base(stepExecution, orchestrationListener, cancellationTokenSource)
-    {
-    }
 
     protected override void HandleUpdate(OrchestrationUpdate value)
     {

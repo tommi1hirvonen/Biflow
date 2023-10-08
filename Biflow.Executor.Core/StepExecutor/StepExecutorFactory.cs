@@ -3,14 +3,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-internal class StepExecutorFactory : IStepExecutorFactory
+internal class StepExecutorFactory(IServiceProvider serviceProvider) : IStepExecutorFactory
 {
-    private readonly IServiceProvider _serviceProvider;
-
-    public StepExecutorFactory(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
+    private readonly IServiceProvider _serviceProvider = serviceProvider;
 
     public StepExecutorBase Create(StepExecution stepExecution)
     {

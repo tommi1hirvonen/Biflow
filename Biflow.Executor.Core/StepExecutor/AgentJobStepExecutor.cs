@@ -10,21 +10,15 @@ using System.Text.Json;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-internal class AgentJobStepExecutor : StepExecutorBase
+internal class AgentJobStepExecutor(
+    ILogger<AgentJobStepExecutor> logger,
+    IOptionsMonitor<ExecutionOptions> options,
+    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    AgentJobStepExecution step) : StepExecutorBase(logger, dbContextFactory, step)
 {
-    private readonly int _pollingIntervalMs;
+    private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
 
-    private AgentJobStepExecution Step { get; }
-
-    public AgentJobStepExecutor(
-        ILogger<AgentJobStepExecutor> logger,
-        IOptionsMonitor<ExecutionOptions> options,
-        IDbContextFactory<ExecutorDbContext> dbContextFactory,
-        AgentJobStepExecution step) : base(logger, dbContextFactory, step)
-    {
-        _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
-        Step = step;
-    }
+    private AgentJobStepExecution Step { get; } = step;
 
     protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
     {

@@ -6,22 +6,15 @@ using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-internal class EmailStepExecutor : StepExecutorBase
+internal class EmailStepExecutor(
+    ILogger<EmailStepExecutor> logger,
+    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    IMessageDispatcher messageDispatcher,
+    EmailStepExecution stepExecution) : StepExecutorBase(logger, dbContextFactory, stepExecution)
 {
-    private readonly IMessageDispatcher _messageDispatcher;
-    
-    private EmailStepExecution Step { get; }
+    private readonly IMessageDispatcher _messageDispatcher = messageDispatcher;
 
-    public EmailStepExecutor(
-        ILogger<EmailStepExecutor> logger,
-        IDbContextFactory<ExecutorDbContext> dbContextFactory,
-        IMessageDispatcher messageDispatcher,
-        EmailStepExecution stepExecution)
-        : base(logger, dbContextFactory, stepExecution)
-    {
-        _messageDispatcher = messageDispatcher;
-        Step = stepExecution;
-    }
+    private EmailStepExecution Step { get; } = stepExecution;
 
     protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
     {

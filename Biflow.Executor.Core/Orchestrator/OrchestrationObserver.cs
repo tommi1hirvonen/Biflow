@@ -3,21 +3,17 @@ using Biflow.Executor.Core.Common;
 
 namespace Biflow.Executor.Core.Orchestrator;
 
-internal abstract class OrchestrationObserver : IOrchestrationObserver, IDisposable
+internal abstract class OrchestrationObserver(
+    StepExecution stepExecution,
+    IStepExecutionListener orchestrationListener,
+    ExtendedCancellationTokenSource cancellationTokenSource) : IOrchestrationObserver, IDisposable
 {
     private readonly TaskCompletionSource<StepAction> _tcs = new();
-    private readonly IStepExecutionListener _orchestrationListener;
-    private readonly ExtendedCancellationTokenSource _cancellationTokenSource;
+    private readonly IStepExecutionListener _orchestrationListener = orchestrationListener;
+    private readonly ExtendedCancellationTokenSource _cancellationTokenSource = cancellationTokenSource;
     private IDisposable? _unsubscriber;
 
-    public StepExecution StepExecution { get; }
-
-    public OrchestrationObserver(StepExecution stepExecution, IStepExecutionListener orchestrationListener, ExtendedCancellationTokenSource cancellationTokenSource)
-    {
-        StepExecution = stepExecution;
-        _orchestrationListener = orchestrationListener;
-        _cancellationTokenSource = cancellationTokenSource;
-    }
+    public StepExecution StepExecution { get; } = stepExecution;
 
     public void Subscribe(IOrchestrationObservable provider)
     {

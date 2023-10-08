@@ -95,17 +95,11 @@ internal class JobOrchestrator : IJobOrchestrator
         }
     }
 
-    private class StepProcessingListener : IStepExecutionListener
+    private class StepProcessingListener(JobOrchestrator instance, StepExecution stepExecution) : IStepExecutionListener
     {
-        private readonly JobOrchestrator _instance;
-        private readonly StepExecution _stepExecution;
+        private readonly JobOrchestrator _instance = instance;
+        private readonly StepExecution _stepExecution = stepExecution;
         private readonly List<SemaphoreSlim> _enteredSemaphores = new();
-
-        public StepProcessingListener(JobOrchestrator instance, StepExecution stepExecution)
-        {
-            _instance = instance;
-            _stepExecution = stepExecution;
-        }
 
         public async Task OnPreExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
         {

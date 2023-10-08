@@ -7,23 +7,15 @@ using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-internal class SqlStepExecutor : StepExecutorBase
+internal class SqlStepExecutor(
+    ILogger<SqlStepExecutor> logger,
+    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    SqlStepExecution step) : StepExecutorBase(logger, dbContextFactory, step)
 {
-    private readonly ILogger<SqlStepExecutor> _logger;
-    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
-    
-    private SqlStepExecution Step { get; }
+    private readonly ILogger<SqlStepExecutor> _logger = logger;
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
 
-    public SqlStepExecutor(
-        ILogger<SqlStepExecutor> logger,
-        IDbContextFactory<ExecutorDbContext> dbContextFactory,
-        SqlStepExecution step)
-        : base(logger, dbContextFactory, step)
-    {
-        _logger = logger;
-        _dbContextFactory = dbContextFactory;
-        Step = step;
-    }
+    private SqlStepExecution Step { get; } = step;
 
     protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
     {

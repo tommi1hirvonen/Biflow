@@ -6,29 +6,19 @@ using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-internal class JobStepExecutor : StepExecutorBase
+internal class JobStepExecutor(
+    ILogger<JobStepExecutor> logger,
+    IExecutionManager executionManager,
+    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    IExecutionBuilderFactory<ExecutorDbContext> executionBuilderFactory,
+    JobStepExecution step) : StepExecutorBase(logger, dbContextFactory, step)
 {
-    private readonly ILogger<JobStepExecutor> _logger;
-    private readonly IExecutionBuilderFactory<ExecutorDbContext> _executionBuilderFactory;
-    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
-    private readonly IExecutionManager _executionManager;
+    private readonly ILogger<JobStepExecutor> _logger = logger;
+    private readonly IExecutionBuilderFactory<ExecutorDbContext> _executionBuilderFactory = executionBuilderFactory;
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
+    private readonly IExecutionManager _executionManager = executionManager;
 
-    private JobStepExecution Step { get; }
-
-    public JobStepExecutor(
-        ILogger<JobStepExecutor> logger,
-        IExecutionManager executionManager,
-        IDbContextFactory<ExecutorDbContext> dbContextFactory,
-        IExecutionBuilderFactory<ExecutorDbContext> executionBuilderFactory,
-        JobStepExecution step)
-        : base(logger, dbContextFactory, step)
-    {
-        _logger = logger;
-        _executionBuilderFactory = executionBuilderFactory;
-        _executionManager = executionManager;
-        _dbContextFactory = dbContextFactory;
-        Step = step;
-    }
+    private JobStepExecution Step { get; } = step;
 
     protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
     {
