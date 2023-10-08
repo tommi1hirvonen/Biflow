@@ -4,19 +4,14 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Biflow.DataAccess.Models;
 
 [Table("PipelineClient")]
-public abstract class PipelineClient
+public abstract class PipelineClient(PipelineClientType type)
 {
-    public PipelineClient(PipelineClientType type)
-    {
-        PipelineClientType = type;
-    }
-
     [Key]
     public Guid PipelineClientId { get; private set; }
 
     public string? PipelineClientName { get; set; }
 
-    public PipelineClientType PipelineClientType { get; }
+    public PipelineClientType PipelineClientType { get; } = type;
 
     [Required]
     [Display(Name = "App registration")]

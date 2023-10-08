@@ -3,13 +3,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class JobSubscription : Subscription
+public class JobSubscription(Guid userId, Guid jobId) : Subscription(userId, SubscriptionType.Job)
 {
-    public JobSubscription(Guid userId, Guid jobId)
-        : base(userId, SubscriptionType.Job)
-    {
-        JobId = jobId;
-    }
 
     /// <summary>
     /// null if regular subscription is not enabled
@@ -19,7 +14,7 @@ public class JobSubscription : Subscription
 
     [Required]
     [Column("JobId")]
-    public Guid JobId { get; set; }
+    public Guid JobId { get; set; } = jobId;
 
     public Job Job { get; set; } = null!;
 

@@ -3,19 +3,14 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class StepSubscription : Subscription
+public class StepSubscription(Guid userId, Guid stepId) : Subscription(userId, SubscriptionType.Step)
 {
-    public StepSubscription(Guid userId, Guid stepId) : base(userId, SubscriptionType.Step)
-    {
-        StepId = stepId;
-    }
-
     [Column("AlertType")]
     public AlertType AlertType { get; set; }
 
     [Required]
     [Column("StepId")]
-    public Guid StepId { get; set; }
+    public Guid StepId { get; set; } = stepId;
 
     public Step Step { get; set; } = null!;
 }

@@ -2,14 +2,9 @@
 
 namespace Biflow.DataAccess;
 
-public class StepsDuplicatorFactory
+public class StepsDuplicatorFactory(IDbContextFactory<AppDbContext> dbContextFactory)
 {
-    private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
-
-    public StepsDuplicatorFactory(IDbContextFactory<AppDbContext> dbContextFactory)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
 
     public Task<StepsDuplicator> CreateAsync(Guid stepId, Guid? targetJobId = null) =>
         CreateAsync(new[] { stepId }, targetJobId);

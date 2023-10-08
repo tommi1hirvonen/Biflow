@@ -5,18 +5,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.DataAccess;
 
-public class TokenService<TDbContext> : ITokenService where TDbContext : AppDbContext
+public class TokenService<TDbContext>(IDbContextFactory<TDbContext> dbContextFactory) : ITokenService
+    where TDbContext : AppDbContext
 {
-    private readonly IDbContextFactory<TDbContext> _dbContextFactory;
+    private readonly IDbContextFactory<TDbContext> _dbContextFactory = dbContextFactory;
     private readonly SemaphoreSlim _semaphore = new(1, 1); // Synchronize access by setting initial and max values to 1
 
     private Dictionary<Guid, Dictionary<string, (string Token, DateTimeOffset ExpiresOn)>> AccessTokens { get; } = new();
-
-
-    public TokenService(IDbContextFactory<TDbContext> dbContextFactory)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
 
     public async Task<(string Token, DateTimeOffset ExpiresOn)> GetTokenAsync(AppRegistration appRegistration, string resourceUrl)
     {
@@ -59,11 +54,13 @@ public class TokenService<TDbContext> : ITokenService where TDbContext : AppDbCo
                     resultToken = accessToken;
                 }
 
-                if (!AccessTokens.ContainsKey(appRegistration.AppRegistrationId))
+                if (!AccessTokens.TryGetValue(appRegistration.AppRegistrationId, out var value))
                 {
-                    AccessTokens[appRegistration.AppRegistrationId] = new();
+                    value = ([]);
+                    AccessTokens[appRegistration.AppRegistrationId] = value;
                 }
-                AccessTokens[appRegistration.AppRegistrationId][resourceUrl] = (resultToken.Token, resultToken.ExpiresOn);
+
+                value[resourceUrl] = (resultToken.Token, resultToken.ExpiresOn);
                 return (resultToken.Token, resultToken.ExpiresOn);
             }
         }
@@ -76,7 +73,7 @@ public class TokenService<TDbContext> : ITokenService where TDbContext : AppDbCo
     private static async Task<(string Token, DateTimeOffset ExpiresOn)> GetTokenFromApiAsync(AppRegistration appRegistration, string resourceUrl)
     {
         var credential = new ClientSecretCredential(appRegistration.TenantId, appRegistration.ClientId, appRegistration.ClientSecret);
-        var context = new TokenRequestContext(new[] { resourceUrl });
+        var context = new TokenRequestContext([resourceUrl]);
         var token = await credential.GetTokenAsync(context);
         return (token.Token, token.ExpiresOn);
     }

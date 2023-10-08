@@ -5,24 +5,16 @@ namespace Biflow.DataAccess.Models;
 
 [Table("AccessToken")]
 [PrimaryKey("AppRegistrationId", "ResourceUrl")]
-public class AccessToken
+public class AccessToken(Guid appRegistrationId, string resourceUrl, string token, DateTimeOffset expiresOn)
 {
-    public AccessToken(Guid appRegistrationId, string resourceUrl, string token, DateTimeOffset expiresOn)
-    {
-        AppRegistrationId = appRegistrationId;
-        ResourceUrl = resourceUrl;
-        Token = token;
-        ExpiresOn = expiresOn;
-    }
-
-    public Guid AppRegistrationId { get; set; }
+    public Guid AppRegistrationId { get; set; } = appRegistrationId;
 
     public AppRegistration AppRegistration { get; set; } = null!;
 
-    public string ResourceUrl { get; set; }
+    public string ResourceUrl { get; set; } = resourceUrl;
 
-    public string Token { get; set; }
+    public string Token { get; set; } = token;
 
-    public DateTimeOffset ExpiresOn { get; set; }
+    public DateTimeOffset ExpiresOn { get; set; } = expiresOn;
 
 }

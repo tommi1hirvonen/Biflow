@@ -5,17 +5,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class SynapseWorkspace : PipelineClient
+public class SynapseWorkspace(string synapseWorkspaceUrl) : PipelineClient(PipelineClientType.Synapse)
 {
-    public SynapseWorkspace(string synapseWorkspaceUrl) : base(PipelineClientType.Synapse)
-    {
-        SynapseWorkspaceUrl = synapseWorkspaceUrl;
-    }
-
     [Required]
     [MinLength(1)]
     [MaxLength(500)]
-    public string SynapseWorkspaceUrl { get; set; }
+    public string SynapseWorkspaceUrl { get; set; } = synapseWorkspaceUrl;
 
     [NotMapped]
     private Uri SynapseEndpoint => new(SynapseWorkspaceUrl);

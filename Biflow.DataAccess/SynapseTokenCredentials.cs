@@ -3,18 +3,12 @@ using Biflow.DataAccess.Models;
 
 namespace Biflow.DataAccess;
 
-internal class SynapseTokenCredential : TokenCredential
+internal class SynapseTokenCredential(ITokenService tokenService, AppRegistration appRegistration) : TokenCredential
 {
-    private readonly ITokenService _tokenService;
-    private readonly AppRegistration _appRegistration;
+    private readonly ITokenService _tokenService = tokenService;
+    private readonly AppRegistration _appRegistration = appRegistration;
 
     private const string ResourceUrl = "https://dev.azuresynapse.net//.default";
-
-    public SynapseTokenCredential(ITokenService tokenService, AppRegistration appRegistration)
-    {
-        _tokenService = tokenService;
-        _appRegistration = appRegistration;
-    }
 
     public override Azure.Core.AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {

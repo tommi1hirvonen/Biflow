@@ -3,14 +3,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.DataAccess;
 
-public class JobDuplicatorFactory
+public class JobDuplicatorFactory(IDbContextFactory<AppDbContext> dbContextFactory)
 {
-    private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
-
-    public JobDuplicatorFactory(IDbContextFactory<AppDbContext> dbContextFactory)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
 
     public async Task<JobDuplicator> CreateAsync(Guid jobId)
     {

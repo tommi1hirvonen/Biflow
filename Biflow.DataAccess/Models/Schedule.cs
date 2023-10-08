@@ -4,18 +4,13 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Biflow.DataAccess.Models;
 
 [Table("Schedule")]
-public class Schedule
+public class Schedule(Guid jobId)
 {
-    public Schedule(Guid jobId)
-    {
-        JobId = jobId;
-    }
-
     [Key]
     public Guid ScheduleId { get; private set; }
 
     [NotEmptyGuid]
-    public Guid JobId { get; set; }
+    public Guid JobId { get; set; } = jobId;
 
     [Required(AllowEmptyStrings = false)]
     [MaxLength(250)]

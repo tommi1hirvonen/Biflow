@@ -4,21 +4,15 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Biflow.DataAccess.Models;
 
 [Table("Tag")]
-public class Tag : ITag
+public class Tag(string tagName) : ITag
 {
-
-    public Tag(string tagName)
-    {
-        TagName = tagName;
-    }
-
     [Key]
     public Guid TagId { get; private set; }
 
     [Required]
     [MaxLength(250)]
     [MinLength(1)]
-    public string TagName { get; set; }
+    public string TagName { get; set; } = tagName;
 
     public TagColor Color { get; set; }
 

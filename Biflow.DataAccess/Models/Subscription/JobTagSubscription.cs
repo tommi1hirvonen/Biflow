@@ -3,25 +3,18 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class JobTagSubscription : Subscription
+public class JobTagSubscription(Guid userId, Guid jobId, Guid tagId) : Subscription(userId, SubscriptionType.JobTag)
 {
-    public JobTagSubscription(Guid userId, Guid jobId, Guid tagId) 
-        : base(userId, SubscriptionType.JobTag)
-    {
-        JobId = jobId;
-        TagId = tagId;
-    }
-
     [Column("AlertType")]
     public AlertType AlertType { get; set; }
 
     [Required]
     [Column("JobId")]
-    public Guid JobId { get; set; }
+    public Guid JobId { get; set; } = jobId;
 
     [Required]
     [Column("TagId")]
-    public Guid TagId { get; set; }
+    public Guid TagId { get; set; } = tagId;
 
     public Job Job { get; set; } = null!;
 

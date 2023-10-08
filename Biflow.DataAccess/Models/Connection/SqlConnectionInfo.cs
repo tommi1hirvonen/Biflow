@@ -2,12 +2,9 @@
 
 namespace Biflow.DataAccess.Models;
 
-public class SqlConnectionInfo : ConnectionInfoBase
+public class SqlConnectionInfo(string connectionName, string connectionString)
+    : ConnectionInfoBase(ConnectionType.Sql, connectionName, connectionString)
 {
-
-    public SqlConnectionInfo(string connectionName, string connectionString)
-        : base(ConnectionType.Sql, connectionName, connectionString) { }
-
     [Display(Name = "Execute packages as login")]
     public string? ExecutePackagesAsLogin
     {

@@ -4,14 +4,9 @@ using System.Linq.Expressions;
 
 namespace Biflow.DataAccess;
 
-internal class ExecutionBuilderFactory<TDbContext> : IExecutionBuilderFactory<TDbContext> where TDbContext : AppDbContext
+internal class ExecutionBuilderFactory<TDbContext>(IDbContextFactory<TDbContext> dbContextFactory) : IExecutionBuilderFactory<TDbContext> where TDbContext : AppDbContext
 {
-    private readonly IDbContextFactory<TDbContext> _dbContextFactory;
-
-    public ExecutionBuilderFactory(IDbContextFactory<TDbContext> dbContextFactory)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
+    private readonly IDbContextFactory<TDbContext> _dbContextFactory = dbContextFactory;
 
     public Task<ExecutionBuilder?> CreateAsync(Guid jobId, string? createdBy, params Func<TDbContext, Expression<Func<Step, bool>>>[] predicates) =>
         CreateAsync(jobId, createdBy, null, predicates);

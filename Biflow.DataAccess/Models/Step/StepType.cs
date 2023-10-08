@@ -77,19 +77,15 @@ public static class StepTypeExtensions
 }
 
 [AttributeUsage(AttributeTargets.Field)]
-file class CategoryAttribute : Attribute
+file class CategoryAttribute(string name, int ordinal) : Attribute
 {
-    public CategoryAttribute(string name, int ordinal) => (Name, Ordinal) = (name, ordinal);
+    public string Name { get; } = name;
 
-    public string Name { get; }
-
-    public int Ordinal { get; }
+    public int Ordinal { get; } = ordinal;
 }
 
 [AttributeUsage(AttributeTargets.Field)]
-file class DescriptionAttribute : Attribute
+file class DescriptionAttribute(string text) : Attribute
 {
-    public DescriptionAttribute(string text) => Text = text;
-
-    public string Text { get; }
+    public string Text { get; } = text;
 }

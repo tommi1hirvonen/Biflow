@@ -8,18 +8,11 @@ using System.Text.Json;
 
 namespace Biflow.DataAccess;
 
-public class AppDbContext : DbContext
+public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? httpContextAccessor = null) : DbContext()
 {
-    private readonly IHttpContextAccessor? _httpContextAccessor;
-    private readonly string _connectionString;
-
-    public AppDbContext(IConfiguration configuration, IHttpContextAccessor? httpContextAccessor = null)
-        : base()
-    {
-        _httpContextAccessor = httpContextAccessor;
-        _connectionString = configuration.GetConnectionString("AppDbContext")
+    private readonly IHttpContextAccessor? _httpContextAccessor = httpContextAccessor;
+    private readonly string _connectionString = configuration.GetConnectionString("AppDbContext")
             ?? throw new ApplicationException("Connection string not found");
-    }
 
     public DbSet<Job> Jobs => Set<Job>();
     public DbSet<Step> Steps => Set<Step>();
