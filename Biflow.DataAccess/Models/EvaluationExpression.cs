@@ -1,9 +1,9 @@
 ﻿using CodingSeb.ExpressionEvaluator;
-using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-[Owned]
+[ComplexType]
 public class EvaluationExpression
 {
     public string? Expression { get; set; }
