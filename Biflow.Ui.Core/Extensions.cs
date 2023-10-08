@@ -17,7 +17,7 @@ using Microsoft.Identity.Web.UI;
 using Quartz;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
-using StartEnd = System.ValueTuple<System.DateTimeOffset?, System.DateTimeOffset?>;
+using StartEnd = (System.DateTimeOffset? Start, System.DateTimeOffset? End);
 
 namespace Biflow.Ui.Core;
 
@@ -265,8 +265,8 @@ public static partial class Extensions
         if (!allExecutions.Any())
             return (0, 0);
 
-        var minTime = allExecutions.Min(e => e.Item1?.LocalDateTime) ?? DateTime.Now;
-        var maxTime = allExecutions.Max(e => e.Item2?.LocalDateTime ?? DateTime.Now);
+        var minTime = allExecutions.Min(e => e.Start?.LocalDateTime) ?? DateTime.Now;
+        var maxTime = allExecutions.Max(e => e.End?.LocalDateTime ?? DateTime.Now);
 
         var minTicks = minTime.Ticks;
         var maxTicks = maxTime.Ticks;
@@ -274,8 +274,8 @@ public static partial class Extensions
         if (minTicks == maxTicks)
             return (0, 0);
 
-        var startTicks = (execution.Item1?.LocalDateTime ?? DateTime.Now).Ticks;
-        var endTicks = (execution.Item2?.LocalDateTime ?? DateTime.Now).Ticks;
+        var startTicks = (execution.Start?.LocalDateTime ?? DateTime.Now).Ticks;
+        var endTicks = (execution.End?.LocalDateTime ?? DateTime.Now).Ticks;
 
         var start = (double)(startTicks - minTicks) / (maxTicks - minTicks) * 100;
         var end = (double)(endTicks - minTicks) / (maxTicks - minTicks) * 100;
