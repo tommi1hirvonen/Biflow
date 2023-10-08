@@ -1,5 +1,4 @@
-﻿using Biflow.DataAccess.Models;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Xunit;
 
 namespace Biflow.DataAccess.Test;
@@ -7,7 +6,7 @@ namespace Biflow.DataAccess.Test;
 [Collection(nameof(DatabaseCollection))]
 public class ExecutionBuilderTests
 {
-    private readonly IExecutionBuilderFactory _executionBuilderFactory;
+    private readonly IExecutionBuilderFactory<AppDbContext> _executionBuilderFactory;
     private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
 
     public ExecutionBuilderTests(DatabaseFixture fixture)

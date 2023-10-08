@@ -37,7 +37,7 @@
                 }
                 @foreach (var item in FilteredItems)
                 {
-                    var id = IdSelector?.Invoke(item) ?? item.ToString();
+                    var id = IdSelector?.Invoke(item) ?? item?.ToString();
                     <div class="row">
                         <div class="col">
                             <div class="form-check form-check-inline">
@@ -51,7 +51,7 @@
                                     }
                                     else
                                     {
-                                        @(TextSelector?.Invoke(item) ?? item.ToString())
+                                        @(TextSelector?.Invoke(item) ?? item?.ToString())
                                     }
                                 </label>
                             </div>
@@ -77,7 +77,7 @@
     private IEnumerable<TItem> FilteredItems => Items?
         .Where(i => string.IsNullOrEmpty(SearchText)
                     || TextSelector?.Invoke(i).ContainsIgnoreCase(SearchText) == true
-                    || i.ToString()?.ContainsIgnoreCase(SearchText) == true)
+                    || i?.ToString()?.ContainsIgnoreCase(SearchText) == true)
         ?? Enumerable.Empty<TItem>();
 
     [Parameter]

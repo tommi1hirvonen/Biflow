@@ -21,7 +21,7 @@
 {
     foreach (var item in Items)
     {
-        var key = KeySelector is not null ? KeySelector(item) : item.ToString();
+        var key = KeySelector is not null ? KeySelector(item) : item?.ToString();
         <div id="@($"{key}_dropdown")" class="dropdown position-absolute">
             <ul class="dependency-graph-dropdown-menu dropdown-menu">
                 @DropdownMenuTemplate(item)

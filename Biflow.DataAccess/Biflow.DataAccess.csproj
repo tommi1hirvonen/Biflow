@@ -1,23 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
 	<Nullable>enable</Nullable>
 	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	<ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.Analytics.Synapse.Artifacts" Version="1.0.0-preview.15" />
-    <PackageReference Include="Azure.Identity" Version="1.8.0" />
-    <PackageReference Include="CodingSeb.ExpressionEvaluator" Version="1.4.39" />
+    <PackageReference Include="Azure.Analytics.Synapse.Artifacts" Version="1.0.0-preview.18" />
+    <PackageReference Include="Azure.Identity" Version="1.10.1" />
+    <PackageReference Include="CodingSeb.ExpressionEvaluator" Version="1.4.40" />
     <PackageReference Include="Microsoft.AspNetCore.Components.DataAnnotations.Validation" Version="3.2.0-rc1.20223.4" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Azure.Management.DataFactory" Version="8.0.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.1" />
-    <PackageReference Include="Microsoft.PowerBI.Api" Version="4.11.0" />
-    <PackageReference Include="Quartz" Version="3.5.0" />
+    <PackageReference Include="Microsoft.Azure.Management.DataFactory" Version="9.3.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.11" />
+    <PackageReference Include="Microsoft.PowerBI.Api" Version="4.16.0" />
+    <PackageReference Include="Quartz" Version="3.7.0" />
   </ItemGroup>
 
 </Project>

@@ -38,11 +38,13 @@ public class TableData
 
     public async Task<(int Inserted, int Updated, int Deleted)> SaveChangesAsync()
     {
+#pragma warning disable CA2021 // Do not call Enumerable.Cast<T> or Enumerable.OfType<T> with incompatible types
         var changes = _rows?
             .OrderByDescending(row => row.ToBeDeleted) // handle records to be deleted first
             .Select(row => row.GetChangeSqlCommand())
             .Where(command => command is not null)
             .Cast<(string Command, DynamicParameters Parameters, DataTableCommandType CommandType)>();
+#pragma warning restore CA2021 // Do not call Enumerable.Cast<T> or Enumerable.OfType<T> with incompatible types
 
         if (changes is null || !changes.Any())
         {

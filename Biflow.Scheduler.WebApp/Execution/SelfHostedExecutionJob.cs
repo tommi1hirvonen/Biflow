@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Scheduler.WebApp;
 
-internal class SelfHostedExecutionJob : ExecutionJobBase
+public class SelfHostedExecutionJob : ExecutionJobBase
 {
     private readonly IExecutionManager _executionManager;
 

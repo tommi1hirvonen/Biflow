@@ -297,7 +297,7 @@ public class SqlServerHelperService
         return results;
     }
 
-    public async Task<string> GetObjectDefinitionAsync(Guid connectionId, string objectName)
+    public async Task<string?> GetObjectDefinitionAsync(Guid connectionId, string objectName)
     {
         var connectionString = await GetSqlConnectionStringAsync(connectionId);
         ArgumentNullException.ThrowIfNull(connectionString);
