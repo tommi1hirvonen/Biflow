@@ -123,6 +123,7 @@ public partial class StepsComponent : ComponentBase
         StepType.Job => Jobs is null || Jobs.Count == 1,
         StepType.AgentJob => SqlConnections?.Any() == false,
         StepType.Tabular => AsConnections?.Any() == false,
+        StepType.Qlik => QlikCloudClients?.Any() == false,
         _ => false,
     };
 
