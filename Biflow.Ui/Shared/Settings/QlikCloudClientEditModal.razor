@@ -1,4 +1,5 @@
-﻿@inject IDbContextFactory<AppDbContext> dbContextFactory
+﻿@inject IHxMessengerService messenger
+@inject IDbContextFactory<AppDbContext> dbContextFactory
 
 <HxModal @ref="modal" Size="ModalSize.Large" Title="@(client?.QlikCloudClientId == Guid.Empty ? "New Qlik Cloud client" : "Edit " + client?.QlikCloudClientName)">
     <BodyTemplate>
@@ -45,6 +46,27 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div class="row mt-3">
+                            <div class="col">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="TestConnectionAsync" Enabled="!testingConnection">
+                                    Test connection
+                                </HxButton>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col">
+                                @if (connectionTestSuccess == true)
+                                {
+                                    <span class="badge bg-success">Success</span>
+                                }
+                                else if (connectionTestSuccess == false)
+                                {
+                                    <span class="badge bg-danger">Failed</span>
+                                }
+                            </div>
+                        </div>
                     </div>
                 </div>
             </EditForm>
@@ -59,6 +81,8 @@
     @code {
     private HxModal? modal;
     private QlikCloudClient? client;
+    private bool? connectionTestSuccess = null;
+    private bool testingConnection = false;
 
     [Parameter]
     public EventCallback<QlikCloudClient> OnClientSubmit { get; set; }
@@ -83,6 +107,24 @@
                 ApiToken = ""
             };
         }
+    }
+
+    private async Task TestConnectionAsync()
+    {
+        ArgumentNullException.ThrowIfNull(client);
+        connectionTestSuccess = null;
+        testingConnection = true;
+        try
+        {
+            await client.TestConnectionAsync();
+            connectionTestSuccess = true;
+        }
+        catch (Exception ex)
+        {
+            connectionTestSuccess = false;
+            messenger.AddError("Connection test failed", ex.Message);
+        }
+        testingConnection = false;
     }
 
     private async Task SubmitAsync()

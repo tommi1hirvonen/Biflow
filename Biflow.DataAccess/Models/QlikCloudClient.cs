@@ -23,6 +23,14 @@ public class QlikCloudClient
 
     public ICollection<QlikStep> Steps { get; set; } = null!;
 
+    public async Task TestConnectionAsync(CancellationToken cancellationToken = default)
+    {
+        var url = $"{EnvironmentUrl}/api/v1/spaces?limit=1";
+        using var httpClient = CreateHttpClient();
+        var response = await httpClient.GetAsync(url, cancellationToken);
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task<string> GetAppNameAsync(string appId, CancellationToken cancellationToken = default)
     {
         var url = $"{EnvironmentUrl}/api/v1/apps/{appId}";
