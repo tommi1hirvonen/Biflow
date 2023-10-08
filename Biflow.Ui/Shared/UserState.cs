@@ -1,6 +1,4 @@
-﻿using Biflow.DataAccess.Models;
-
-namespace Biflow.Ui.Shared;
+﻿namespace Biflow.Ui.Shared;
 
 public class UserState
 {

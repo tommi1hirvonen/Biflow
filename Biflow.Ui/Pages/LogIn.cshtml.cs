@@ -9,14 +9,9 @@ using System.Security.Claims;
 
 namespace Biflow.Ui.Pages;
 
-public class LogInModel : PageModel
+public class LogInModel(IAuthHandler authHandler) : PageModel
 {
-    private readonly IAuthHandler _authHandler;
-
-    public LogInModel(IAuthHandler authHandler)
-    {
-        _authHandler = authHandler;
-    }
+    private readonly IAuthHandler _authHandler = authHandler;
 
     [BindProperty]
     public Login Login { get; set; } = new();
@@ -66,7 +61,7 @@ public class LogInModel : PageModel
     {
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, username)
+            new(ClaimTypes.Name, username)
         };
         var roleClaims = roles.Select(role => new Claim(ClaimTypes.Role, role));
         claims.AddRange(roleClaims);
