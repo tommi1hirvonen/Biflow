@@ -4,17 +4,11 @@ using System.Security.Authentication;
 
 namespace Biflow.Ui.Core;
 
-internal class LdapAuthHandler : IAuthHandler
+internal class LdapAuthHandler(IConfiguration configuration, UserService users) : IAuthHandler
 {
-    private readonly IConfiguration _configuration;
-    private readonly UserService _users;
+    private readonly IConfiguration _configuration = configuration;
+    private readonly UserService _users = users;
     private readonly string[] _attributesToQuery = new string[] { "userPrincipalName" };
-
-    public LdapAuthHandler(IConfiguration configuration, UserService users)
-    {
-        _configuration = configuration;
-        _users = users;
-    }
 
     public async Task<IEnumerable<string>> AuthenticateUserInternalAsync(string username, string password)
     {

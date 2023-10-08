@@ -7,15 +7,9 @@ using BC = BCrypt.Net.BCrypt;
 
 namespace Biflow.Ui.Core;
 
-public class UserService
+public class UserService(ISqlConnectionFactory sqlConnectionFactory)
 {
-    private readonly ISqlConnectionFactory _sqlConnectionFactory;
-
-
-    public UserService(ISqlConnectionFactory sqlConnectionFactory)
-    {
-        _sqlConnectionFactory = sqlConnectionFactory;
-    }
+    private readonly ISqlConnectionFactory _sqlConnectionFactory = sqlConnectionFactory;
 
     /// <summary>
     /// Update the password for an existing user. Should only be used when the authentication mode is BuiltIn.

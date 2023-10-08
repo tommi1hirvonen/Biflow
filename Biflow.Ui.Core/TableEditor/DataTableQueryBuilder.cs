@@ -4,18 +4,11 @@ using System.Text;
 
 namespace Biflow.Ui.Core;
 
-internal class DataTableQueryBuilder
+internal class DataTableQueryBuilder(MasterDataTable table, int? top, FilterSet? filters)
 {
-    private readonly MasterDataTable _table;
-    private readonly FilterSet? _filters;
-    private readonly int? _top;
-
-    public DataTableQueryBuilder(MasterDataTable table, int? top, FilterSet? filters)
-    {
-        _table = table;
-        _filters = filters;
-        _top = top;
-    }
+    private readonly MasterDataTable _table = table;
+    private readonly FilterSet? _filters = filters;
+    private readonly int? _top = top;
 
     private string QuotedSchemaAndTable => $"{_table.TargetSchemaName.QuoteName()}.{_table.TargetTableName.QuoteName()}";
 
@@ -66,7 +59,7 @@ internal class DataTableQueryBuilder
             cmdBuilder.Append(lookupJoin);
         }
 
-        if (activeFilters.Any())
+        if (activeFilters.Length != 0)
         {
             cmdBuilder.Append(" WHERE ");
             var parameterIndex = 1;

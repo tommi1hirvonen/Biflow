@@ -6,16 +6,14 @@ using Microsoft.Extensions.Logging;
 
 namespace Biflow.Ui.Core;
 
-public class ExecutionJob : ExecutionJobBase
+public class ExecutionJob(
+    IExecutionManager executionManager,
+    ILogger<ExecutionJob> logger,
+    IDbContextFactory<SchedulerDbContext> dbContextFactory,
+    IExecutionBuilderFactory<SchedulerDbContext> executionBuilderFactory)
+    : ExecutionJobBase(logger, dbContextFactory, executionBuilderFactory)
 {
-    private readonly IExecutionManager _executionManager;
-
-    public ExecutionJob(IExecutionManager executionManager,
-        ILogger<ExecutionJob> logger, IDbContextFactory<SchedulerDbContext> dbContextFactory, IExecutionBuilderFactory<SchedulerDbContext> executionBuilderFactory)
-        : base(logger, dbContextFactory, executionBuilderFactory)
-    {
-        _executionManager = executionManager;
-    }
+    private readonly IExecutionManager _executionManager = executionManager;
 
     protected override async Task StartExecutorAsync(Guid executionId)
     {

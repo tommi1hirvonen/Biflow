@@ -1,13 +1,8 @@
 ﻿namespace Biflow.Ui.Core;
 
-public class ColumnValueIndexer<T>
+public class ColumnValueIndexer<T>(IDictionary<string, object?> data)
 {
-    private readonly IDictionary<string, object?> _data;
-
-    public ColumnValueIndexer(IDictionary<string, object?> data)
-    {
-        _data = data;
-    }
+    private readonly IDictionary<string, object?> _data = data;
 
     public T? this[string column]
     {

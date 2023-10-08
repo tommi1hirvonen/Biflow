@@ -5,17 +5,11 @@ using System.Security.Claims;
 
 namespace Biflow.Ui.Core;
 
-internal class ClaimsTransformer : IClaimsTransformation
+internal class ClaimsTransformer(IMemoryCache memoryCache, UserService users) : IClaimsTransformation
 {
-    private readonly IMemoryCache _memoryCache;
-    private readonly UserService _users;
+    private readonly IMemoryCache _memoryCache = memoryCache;
+    private readonly UserService _users = users;
     private const string Issuer = "Biflow";
-
-    public ClaimsTransformer(IMemoryCache memoryCache, UserService users)
-    {
-        _memoryCache = memoryCache;
-        _users = users;
-    }
 
     public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
     {

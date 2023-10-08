@@ -2,14 +2,9 @@
 
 namespace Biflow.Ui.Core;
 
-public class SelfHostedExecutorService : IExecutorService
+public class SelfHostedExecutorService(IExecutionManager executionManager) : IExecutorService
 {
-    private readonly IExecutionManager _executionManager;
-
-    public SelfHostedExecutorService(IExecutionManager executionManager)
-    {
-        _executionManager = executionManager;
-    }
+    private readonly IExecutionManager _executionManager = executionManager;
 
     public async Task StartExecutionAsync(Guid executionId)
     {

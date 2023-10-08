@@ -1,16 +1,10 @@
 ﻿namespace Biflow.Ui.Core;
 
-public class CatalogProject
+public class CatalogProject(long projectId, string projectName)
 {
-    public CatalogProject(long projectId, string projectName)
-    {
-        ProjectId = projectId;
-        ProjectName = projectName;
-    }
+    public long ProjectId { get; } = projectId;
 
-    public long ProjectId { get; }
-    
-    public string ProjectName { get; }
-    
+    public string ProjectName { get; } = projectName;
+
     public Dictionary<long, CatalogPackage> Packages { get; } = new();
 }

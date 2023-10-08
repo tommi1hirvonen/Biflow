@@ -3,21 +3,15 @@ using System.Web;
 
 namespace Biflow.Ui.Core;
 
-public class WebAppExecutorService : IExecutorService
+public class WebAppExecutorService(IConfiguration configuration, IHttpClientFactory httpClientFactory) : IExecutorService
 {
-    private readonly IConfiguration _configuration;
-    private readonly HttpClient _httpClient;
+    private readonly IConfiguration _configuration = configuration;
+    private readonly HttpClient _httpClient = httpClientFactory.CreateClient("DefaultCredentials");
 
     private string Url => _configuration
         .GetSection("Executor")
         .GetSection("WebApp")
         .GetValue<string>("Url") ?? throw new ArgumentNullException(nameof(Url));
-
-    public WebAppExecutorService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
-    {
-        _configuration = configuration;
-        _httpClient = httpClientFactory.CreateClient("DefaultCredentials");
-    }
 
     public async Task StartExecutionAsync(Guid executionId)
     {

@@ -1,15 +1,9 @@
 ﻿namespace Biflow.Ui.Core;
 
-public class ValueFilter<T, U> : IFilter
+public class ValueFilter<T, U>(U initialOperator) : IFilter
     where T : struct
     where U : notnull, Enum
 {
-    public ValueFilter(U initialOperator)
-    {
-        TypedOperator1 = initialOperator;
-        TypedOperator2 = initialOperator;
-    }
-
     public bool Enabled1 { get; set; }
 
     public T TypedFilterValue1 { get; set; }
@@ -18,7 +12,7 @@ public class ValueFilter<T, U> : IFilter
 
     public Enum Operator1 => TypedOperator1;
 
-    public U TypedOperator1 { get; set; }
+    public U TypedOperator1 { get; set; } = initialOperator;
 
     public bool Enabled2 { get; set; }
 
@@ -33,5 +27,5 @@ public class ValueFilter<T, U> : IFilter
 
     public Enum Operator2 => TypedOperator2;
 
-    public U TypedOperator2 { get; set; }
+    public U TypedOperator2 { get; set; } = initialOperator;
 }

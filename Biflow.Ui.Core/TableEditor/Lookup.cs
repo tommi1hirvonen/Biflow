@@ -2,18 +2,14 @@
 
 namespace Biflow.Ui.Core;
 
-public class Lookup
+public class Lookup(
+    MasterDataTableLookup dataTableLookup,
+    Type displayValueDatatype,
+    IEnumerable<(object? Value, object? DisplayValue)> values)
 {
-    public MasterDataTableLookup DataTableLookup { get; }
+    public MasterDataTableLookup DataTableLookup { get; } = dataTableLookup;
 
-    public Type DisplayValueDatatype { get; }
+    public Type DisplayValueDatatype { get; } = displayValueDatatype;
 
-    public IEnumerable<(object? Value, object? DisplayValue)> Values { get; }
-
-    public Lookup(MasterDataTableLookup dataTableLookup, Type displayValueDatatype, IEnumerable<(object? Value, object? DisplayValue)> values)
-    {
-        DataTableLookup = dataTableLookup;
-        DisplayValueDatatype = displayValueDatatype;
-        Values = values.OrderBy(v => v.DisplayValue).ToArray();
-    }
+    public IEnumerable<(object? Value, object? DisplayValue)> Values { get; } = values.OrderBy(v => v.DisplayValue).ToArray();
 }

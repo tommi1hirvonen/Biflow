@@ -1,19 +1,12 @@
 ﻿namespace Biflow.Ui.Core;
 
-public class StoredProcedure
+public class StoredProcedure(int procedureId, string schemaName, string procedureName)
 {
-    public StoredProcedure(int procedureId, string schemaName, string procedureName)
-    {
-        ProcedureId = procedureId;
-        SchemaName = schemaName;
-        ProcedureName = procedureName;
-    }
+    public int ProcedureId { get; } = procedureId;
 
-    public int ProcedureId { get; }
-    
-    public string SchemaName { get; }
-    
-    public string ProcedureName { get; }
-    
+    public string SchemaName { get; } = schemaName;
+
+    public string ProcedureName { get; } = procedureName;
+
     public List<StoredProcedureParameter> Parameters { get; } = new();
 }

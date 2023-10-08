@@ -1,11 +1,6 @@
 ﻿namespace Biflow.Ui.Core;
 
-public class SSISCatalog
+public class SSISCatalog(Dictionary<long, CatalogFolder> folders)
 {
-    public SSISCatalog(Dictionary<long, CatalogFolder> folders)
-    {
-        Folders = folders;
-    }
-
-    public Dictionary<long, CatalogFolder> Folders { get; }
+    public Dictionary<long, CatalogFolder> Folders { get; } = folders;
 }

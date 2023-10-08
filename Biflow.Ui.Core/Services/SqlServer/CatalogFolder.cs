@@ -1,16 +1,10 @@
 ﻿namespace Biflow.Ui.Core;
 
-public class CatalogFolder
+public class CatalogFolder(long folderId, string folderName)
 {
-    public CatalogFolder(long folderId, string folderName)
-    {
-        FolderId = folderId;
-        FolderName = folderName;
-    }
+    public long FolderId { get; } = folderId;
 
-    public long FolderId { get; }
-    
-    public string FolderName { get; }
-    
+    public string FolderName { get; } = folderName;
+
     public Dictionary<long, CatalogProject> Projects { get; } = new();
 }

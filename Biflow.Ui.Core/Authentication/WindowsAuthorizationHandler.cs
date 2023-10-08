@@ -4,16 +4,10 @@ using System.Security.Claims;
 
 namespace Biflow.Ui.Core;
 
-internal class WindowsAuthorizationHandler : AuthorizationHandler<UserExistsRequirement>
+internal class WindowsAuthorizationHandler(IMemoryCache memoryCache, UserService users) : AuthorizationHandler<UserExistsRequirement>
 {
-    private readonly IMemoryCache _memoryCache;
-    private readonly UserService _users;
-
-    public WindowsAuthorizationHandler(IMemoryCache memoryCache, UserService users)
-    {
-        _memoryCache = memoryCache;
-        _users = users;
-    }
+    private readonly IMemoryCache _memoryCache = memoryCache;
+    private readonly UserService _users = users;
 
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, UserExistsRequirement requirement)
     {

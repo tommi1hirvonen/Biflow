@@ -6,21 +6,15 @@ using System.Text.Json;
 
 namespace Biflow.Ui.Core;
 
-public class WebAppSchedulerService : ISchedulerService
+public class WebAppSchedulerService(IConfiguration configuration, IHttpClientFactory httpClientFactory) : ISchedulerService
 {
-    private readonly IConfiguration _configuration;
-    private readonly HttpClient _httpClient;
+    private readonly IConfiguration _configuration = configuration;
+    private readonly HttpClient _httpClient = httpClientFactory.CreateClient("DefaultCredentials");
 
     private string Url => _configuration
         .GetSection("Scheduler")
         .GetSection("WebApp")
         .GetValue<string>("Url") ?? throw new ArgumentNullException(nameof(Url));
-
-    public WebAppSchedulerService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
-    {
-        _configuration = configuration;
-        _httpClient = httpClientFactory.CreateClient("DefaultCredentials");
-    }
 
     public async Task DeleteJobAsync(Job job)
     {

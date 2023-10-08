@@ -6,14 +6,9 @@ using Biflow.DataAccess.Models;
 
 namespace Biflow.Ui.Core;
 
-public class SqlServerHelperService
+public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFactory)
 {
-    private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
-
-    public SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFactory)
-    {
-        _dbContextFactory = dbContextFactory;
-    }
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
 
     public async Task<SSISCatalog> GetCatalogPackagesAsync(Guid connectionId)
     {
@@ -329,10 +324,10 @@ public class SqlServerHelperService
         if (!allowedOperators.Contains(referencedNameOperator))
             throw new ArgumentException($"Invalid operator {referencedNameOperator}", nameof(referencedNameOperator));
 
-        if (!referencingSchemaFilter.Any()) referencingSchemaOperator = "like";
-        if (!referencingNameFilter.Any()) referencingNameOperator = "like";
-        if (!referencedSchemaFilter.Any()) referencedSchemaOperator = "like";
-        if (!referencedNameFilter.Any()) referencedNameOperator = "like";
+        if (referencingSchemaFilter.Length == 0) referencingSchemaOperator = "like";
+        if (referencingNameFilter.Length == 0) referencingNameOperator = "like";
+        if (referencedSchemaFilter.Length == 0) referencedSchemaOperator = "like";
+        if (referencedNameFilter.Length == 0) referencedNameOperator = "like";
 
         var encodedReferencingSchemaFilter = referencingSchemaOperator == "=" ? referencingSchemaFilter : $"%{referencingSchemaFilter.EncodeForLike()}%";
         var encodedReferencingNameFilter = referencingNameOperator == "=" ? referencingNameFilter : $"%{referencingNameFilter.EncodeForLike()}%";

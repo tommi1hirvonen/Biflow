@@ -1,13 +1,8 @@
 ﻿namespace Biflow.Ui.Core;
 
-internal class BuiltInAuthHandler : IAuthHandler
+internal class BuiltInAuthHandler(UserService users) : IAuthHandler
 {
-    private readonly UserService _users;
-
-    public BuiltInAuthHandler(UserService users)
-    {
-        _users = users;
-    }
+    private readonly UserService _users = users;
 
     public async Task<IEnumerable<string>> AuthenticateUserInternalAsync(string username, string password)
     {

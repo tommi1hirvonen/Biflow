@@ -3,16 +3,11 @@ using Biflow.Scheduler.Core;
 
 namespace Biflow.Ui.Core;
 
-public class SelfHostedSchedulerService : ISchedulerService
+public class SelfHostedSchedulerService(ISchedulesManager schedulesManager) : ISchedulerService
 {
-    private readonly ISchedulesManager _schedulesManager;
+    private readonly ISchedulesManager _schedulesManager = schedulesManager;
 
     private bool DatabaseReadError { get; set; } = false;
-
-    public SelfHostedSchedulerService(ISchedulesManager schedulesManager)
-    {
-        _schedulesManager = schedulesManager;
-    }
 
     public async Task AddScheduleAsync(Schedule schedule)
     {
