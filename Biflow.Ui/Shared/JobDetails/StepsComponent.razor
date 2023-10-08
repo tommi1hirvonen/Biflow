@@ -11,14 +11,23 @@
                             Add step
                         </HxDropdownToggleButton>
                         <HxDropdownMenu>
-                            <HxDropdownHeader>Step type</HxDropdownHeader>
-                            @foreach (var stepType in Enum.GetValues<StepType>())
+                            @{
+                                var stepTypes = Enum.GetValues<StepType>()
+                                    .GroupBy(t => t.GetCategory())
+                                    .OrderBy(c => c.Key?.Ordinal);
+                            }
+                            @foreach (var group in stepTypes)
                             {
-                                <HxDropdownItem @onclick="() => ShowNewStepModal(stepType)"
-                                            Enabled="!IsStepTypeDisabled(stepType)">
-                                    <StepTypeIconComponent StepType_="stepType" />
-                                    @stepType
-                                </HxDropdownItem>
+                                <HxDropdownHeader>@group.Key?.Name</HxDropdownHeader>
+                                @foreach (var stepType in group)
+                                {
+                                    <HxDropdownItem @onclick="() => ShowNewStepModal(stepType)"
+                                                    Enabled="!IsStepTypeDisabled(stepType)"
+                                                    title="@stepType.GetDescription()">
+                                        <StepTypeIconComponent StepType_="stepType" />
+                                        @stepType
+                                    </HxDropdownItem>
+                                }
                             }
                         </HxDropdownMenu>
                     </HxDropdownButtonGroup>
