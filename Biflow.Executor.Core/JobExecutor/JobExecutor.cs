@@ -4,7 +4,9 @@ using Biflow.Executor.Core.Orchestrator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Unicode;
 
 namespace Biflow.Executor.Core.JobExecutor;
 
@@ -20,6 +22,8 @@ internal class JobExecutor(
     private readonly INotificationService _notificationService = notificationService;
     private readonly IJobOrchestrator _jobOrchestrator = jobOrchestratorFactory.Create(execution);
     private readonly Execution _execution = execution;
+    private readonly JsonSerializerOptions _serializerOptions =
+        new() { WriteIndented = true, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) };
 
     private Job Job => _execution.Job ?? throw new ArgumentNullException(nameof(_execution.Job));
 
@@ -208,8 +212,7 @@ internal class JobExecutor(
         var jobs = cycles
             .Select(c => c.Select(c_ => new { c_.JobId, c_.JobName }).ToArray())
             .ToArray();
-        var encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All);
-        var json = JsonSerializer.Serialize(jobs, new JsonSerializerOptions { WriteIndented = true, Encoder = encoder });
+        var json = JsonSerializer.Serialize(jobs, _serializerOptions);
 
         // There are no circular dependencies or this job is not among the cycles.
         return !cycles.Any() || !cycles.Any(jobs => jobs.Any(j => j.JobId == job.JobId))
@@ -224,10 +227,7 @@ internal class JobExecutor(
         var steps = cycles
             .Select(c1 => c1.Select(c2 => new { c2.StepId, c2.StepName }).ToArray())
             .ToArray();
-
-        var encoder = System.Text.Encodings.Web.JavaScriptEncoder.Create(System.Text.Unicode.UnicodeRanges.All);
-        var json = JsonSerializer.Serialize(steps, new JsonSerializerOptions { WriteIndented = true, Encoder = encoder });
-
+        var json = JsonSerializer.Serialize(steps, _serializerOptions);
         return !cycles.Any() ? null : json;
     }
 

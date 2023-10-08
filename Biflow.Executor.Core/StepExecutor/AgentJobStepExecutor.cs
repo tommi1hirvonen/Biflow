@@ -17,6 +17,8 @@ internal class AgentJobStepExecutor(
     AgentJobStepExecution step) : StepExecutorBase(logger, dbContextFactory, step)
 {
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
+    private readonly JsonSerializerOptions _serializerOptions =
+        new() { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
     private AgentJobStepExecution Step { get; } = step;
 
@@ -107,12 +109,7 @@ internal class AgentJobStepExecutor(
                     """,
                 new { InstanceId = historyId });
 
-            var options = new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-            };
-            var messageString = JsonSerializer.Serialize(messageRows, options);
+            var messageString = JsonSerializer.Serialize(messageRows, _serializerOptions);
             string? jobOutcome = messageRows.LastOrDefault()?.message;
 
             // 0 = Failed, 1 = Succeeded, 2 = Retry, 3 = Canceled, 4 = In Progress
