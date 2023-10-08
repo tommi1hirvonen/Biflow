@@ -32,10 +32,10 @@ public partial class ExecutionDetails : ComponentBase
     private IEnumerable<StepExecutionAttempt>? Executions => Execution?.StepExecutions.SelectMany(e => e.StepExecutionAttempts);
 
     private IEnumerable<StepExecutionProjection>? FilteredExecutions => Executions
-        ?.Where(e => !TagFilter.Any() || e.StepExecution.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true)
-        .Where(e => !StepStatusFilter.Any() || StepStatusFilter.Contains(e.ExecutionStatus))
-        .Where(e => !StepFilter.Any() || StepFilter.Contains((e.StepExecution.StepName, e.StepExecution.StepType)))
-        .Where(e => !StepTypeFilter.Any() || StepTypeFilter.Contains(e.StepExecution.StepType))
+        ?.Where(e => TagFilter.Count == 0 || e.StepExecution.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true)
+        .Where(e => StepStatusFilter.Count == 0 || StepStatusFilter.Contains(e.ExecutionStatus))
+        .Where(e => StepFilter.Count == 0 || StepFilter.Contains((e.StepExecution.StepName, e.StepExecution.StepType)))
+        .Where(e => StepTypeFilter.Count == 0 || StepTypeFilter.Contains(e.StepExecution.StepType))
         .Select(e => new StepExecutionProjection(
             e.StepExecution.ExecutionId,
             e.StepExecution.StepId,
@@ -51,7 +51,7 @@ public partial class ExecutionDetails : ComponentBase
             e.StepExecution.Execution.ScheduleId,
             e.StepExecution.Execution.JobId,
             e.StepExecution.Execution.Job?.JobName ?? e.StepExecution.Execution.JobName,
-            e.StepExecution.Step?.Tags.ToArray() ?? Array.Empty<Tag>()));
+            e.StepExecution.Step?.Tags.ToArray() ?? []));
 
     private Report ShowReport { get; set; } = Report.Table;
 

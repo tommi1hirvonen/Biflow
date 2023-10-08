@@ -49,8 +49,8 @@ public partial class StepsComponent : ComponentBase
         .Where(step => !StepDescriptionFilter.Any() || (step.StepDescription?.ContainsIgnoreCase(StepDescriptionFilter) ?? false))
         .Where(step => !SqlStatementFilter.Any() || step is SqlStep sql && (sql.SqlStatement?.ContainsIgnoreCase(SqlStatementFilter) ?? false))
         .Where(step => TagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName)))
-        .Where(step => !StepTypeFilter.Any() || StepTypeFilter.Contains(step.StepType))
-        .Where(step => !ConnectionFilter.Any() || step is IHasConnection conn && ConnectionFilter.Any(f => f.ConnectionId == conn.ConnectionId))
+        .Where(step => StepTypeFilter.Count == 0 || StepTypeFilter.Contains(step.StepType))
+        .Where(step => ConnectionFilter.Count == 0 || step is IHasConnection conn && ConnectionFilter.Any(f => f.ConnectionId == conn.ConnectionId))
         .Where(step => AdvancedFiltersOffcanvas?.EvaluatePredicates(step) ?? true)
         ?? Enumerable.Empty<Step>();
 

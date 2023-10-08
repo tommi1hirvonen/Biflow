@@ -62,9 +62,11 @@ public partial class Executions : ComponentBase, IAsyncDisposable
     
     private StartType StartTypeFilter { get; set; } = StartType.All;
 
+    private JsonSerializerOptions SerializerOptions { get; } = new() { IncludeFields = true };
+
     private IEnumerable<ExecutionProjection>? FilteredExecutions => Executions_?
-        .Where(e => !JobStatusFilter.Any() || JobStatusFilter.Contains(e.ExecutionStatus))
-        .Where(e => !JobFilter.Any() || JobFilter.Contains(e.JobName))
+        .Where(e => JobStatusFilter.Count == 0 || JobStatusFilter.Contains(e.ExecutionStatus))
+        .Where(e => JobFilter.Count == 0 || JobFilter.Contains(e.JobName))
         .Where(e => StartTypeFilter == StartType.All ||
         StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
         StartTypeFilter == StartType.Manual && e.ScheduleId is null);
@@ -73,11 +75,11 @@ public partial class Executions : ComponentBase, IAsyncDisposable
         .Where(e => StartTypeFilter == StartType.All ||
         StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
         StartTypeFilter == StartType.Manual && e.ScheduleId is null)
-        .Where(e => !TagFilter.Any() || e.Tags.Any(t => TagFilter.Contains(t.TagName)) == true)
-        .Where(e => !StepStatusFilter.Any() || StepStatusFilter.Contains(e.ExecutionStatus))
-        .Where(e => !JobFilter.Any() || JobFilter.Contains(e.JobName))
-        .Where(e => !StepFilter.Any() || StepFilter.Contains((e.StepName, e.StepType)))
-        .Where(e => !StepTypeFilter.Any() || StepTypeFilter.Contains(e.StepType));
+        .Where(e => TagFilter.Count == 0 || e.Tags.Any(t => TagFilter.Contains(t.TagName)) == true)
+        .Where(e => StepStatusFilter.Count == 0 || StepStatusFilter.Contains(e.ExecutionStatus))
+        .Where(e => JobFilter.Count == 0 || JobFilter.Contains(e.JobName))
+        .Where(e => StepFilter.Count == 0 || StepFilter.Contains((e.StepName, e.StepType)))
+        .Where(e => StepTypeFilter.Count == 0 || StepTypeFilter.Contains(e.StepType));
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -191,6 +193,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
                         && e.StepExecution.Execution.CreatedDateTime <= ToDateTime
                         && e.EndDateTime == null));
             }
+#pragma warning disable IDE0305 // Simplify collection initialization
             StepExecutions = await query
                 .AsNoTracking()
                 .OrderByDescending(e => e.StepExecution.Execution.CreatedDateTime)
@@ -213,6 +216,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
                     e.StepExecution.Execution.Job!.JobName ?? e.StepExecution.Execution.JobName,
                     e.StepExecution.Step.Tags.ToArray()))
                 .ToArrayAsync();
+#pragma warning restore IDE0305 // Simplify collection initialization
         }
 
         Loading = false;
@@ -304,7 +308,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
             StepTypes: StepTypeFilter,
             Tags: TagFilter
         );
-        var text = JsonSerializer.Serialize(sessionStorage, new JsonSerializerOptions { IncludeFields = true });
+        var text = JsonSerializer.Serialize(sessionStorage, SerializerOptions);
         await JS.InvokeVoidAsync("sessionStorage.setItem", "ExecutionsSessionStorage", text);
     }
 
@@ -312,7 +316,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
     {
         var text = await JS.InvokeAsync<string>("sessionStorage.getItem", "ExecutionsSessionStorage");
         if (text is null) return;
-        var sessionStorage = JsonSerializer.Deserialize<SessionStorage>(text, new JsonSerializerOptions { IncludeFields = true });
+        var sessionStorage = JsonSerializer.Deserialize<SessionStorage>(text, SerializerOptions);
         ActivePreset = sessionStorage?.Preset;
         (FromDateTime, ToDateTime) = sessionStorage switch
         {

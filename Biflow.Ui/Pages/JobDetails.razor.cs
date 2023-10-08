@@ -143,7 +143,7 @@ public partial class JobDetails : ComponentBase
                     .OrderBy(s => s.Job.JobName)
                     .ThenBy(s => s.StepName)
                     .ToListAsync();
-                if (executingSteps.Any())
+                if (executingSteps.Count != 0)
                 {
                     var steps = string.Join("\n", executingSteps.Select(s => $"– {s.Job.JobName} – {s.StepName}"));
                     var message = $"""

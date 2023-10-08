@@ -37,7 +37,7 @@ public partial class DataTableEditorComponent : ComponentBase
     private HashSet<string> ColumnSelections { get; } = new();
 
     private bool IsColumnSelected(string column) =>
-        ColumnSelections is null || !ColumnSelections.Any() || ColumnSelections.Contains(column);
+        ColumnSelections is null || ColumnSelections.Count == 0 || ColumnSelections.Contains(column);
 
     private FilterSetOffcanvas? FilterSetOffcanvas { get; set; }
 

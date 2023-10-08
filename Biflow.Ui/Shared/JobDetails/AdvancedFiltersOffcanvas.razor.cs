@@ -63,7 +63,7 @@ public partial class AdvancedFiltersOffcanvas : ComponentBase
         ExeArgumentsPredicate(step);
 
     private bool ConnectionsPredicate(Step step) =>
-        !ConnectionsFilter.Any() || step is IHasConnection hc && ConnectionsFilter.Select(c => c.ConnectionId).Contains(hc.ConnectionId ?? Guid.Empty);
+        ConnectionsFilter.Count == 0 || step is IHasConnection hc && ConnectionsFilter.Select(c => c.ConnectionId).Contains(hc.ConnectionId ?? Guid.Empty);
 
     private bool PackageFolderPredicate(Step step) =>
         !PackageFolder.Any() || step is PackageStep p && (p.PackageFolderName?.ContainsIgnoreCase(PackageFolder) ?? false);
@@ -75,14 +75,14 @@ public partial class AdvancedFiltersOffcanvas : ComponentBase
     private bool PipelineNamePredicate(Step step) =>
         !PipelineName.Any() || step is PipelineStep p && (p.PipelineName?.ContainsIgnoreCase(PipelineName) ?? false);
     private bool PipelineClientsPredicate(Step step) =>
-        !PipelineClientsFilter.Any() || step is PipelineStep p && PipelineClientsFilter.Select(c => c.PipelineClientId).Contains(p.PipelineClientId ?? Guid.Empty);
+        PipelineClientsFilter.Count == 0 || step is PipelineStep p && PipelineClientsFilter.Select(c => c.PipelineClientId).Contains(p.PipelineClientId ?? Guid.Empty);
 
     private bool FunctionUrlPredicate(Step step) =>
         !FunctionUrl.Any() || step is FunctionStep f && (f.FunctionUrl?.ContainsIgnoreCase(FunctionUrl) ?? false);
     private bool FunctionInputPredicate(Step step) =>
         !FunctionInput.Any() || step is FunctionStep f && (f.FunctionInput?.ContainsIgnoreCase(FunctionInput) ?? false);
     private bool FunctionAppsPredicate(Step step) =>
-        !FunctionAppsFilter.Any() || step is FunctionStep f && FunctionAppsFilter.Select(a => a.FunctionAppId).Contains(f.FunctionAppId ?? Guid.Empty);
+        FunctionAppsFilter.Count == 0 || step is FunctionStep f && FunctionAppsFilter.Select(a => a.FunctionAppId).Contains(f.FunctionAppId ?? Guid.Empty);
 
     private bool ExeFilePathPredicate(Step step) =>
         !ExeFilePath.Any() || step is ExeStep e && (e.ExeFileName?.ContainsIgnoreCase(ExeFilePath) ?? false);
