@@ -1,13 +1,15 @@
 #  Biflow
 
-Biflow is a powerful platform for easy Business Intelligence (BI) workflow orchestration built on top of the .NET stack. It integrates with several of Microsoft's BI related technologies such as
-- SQL Server (including SSIS and SSAS)
-- Azure SQL
-- Azure Data Factory
-- Azure Synapse
-- Azure Functions
-- Azure Analysis Services
-- Power BI
+Biflow is a powerful platform for easy business intelligence (BI) and data platform workflow orchestration built on top of the .NET stack. It integrates with several data related technologies such as
+- Microsoft SQL Server (including SSIS and SSAS)
+- Microsoft Azure
+  - Azure SQL
+  - Azure Data Factory
+  - Azure Synapse
+  - Azure Functions
+  - Azure Analysis Services
+- Microsoft Power BI
+- Qlik Cloud
 
 The focus of Biflow is ease-of-use. When set up, it should be fairly easy even for relatively non-technical people to start authoring, scheduling, executing and monitoring workflows via the web user interface. Biflows enables intelligent management of even large and complex workflows.
 
@@ -50,6 +52,8 @@ Currently supported step types:
     - Run locally stored executables (e.g. Python or PowerShell scripts)
 - Dataset
     - Refresh datasets published to Power BI Service workspaces
+- Qlik
+    - Reload apps in Qlik Cloud
 - Mail
     - Send emails as part of your workflows
 - Job
