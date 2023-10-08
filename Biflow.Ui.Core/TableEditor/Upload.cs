@@ -103,7 +103,7 @@ public class Upload
             .Where(c => !c.IsIdentity && !c.IsComputed && !c.IsLocked && !c.IsHidden || c.IsPrimaryKey)
             .Select(c => c.Name.QuoteName())
             .ToArray();
-        if (!quotedInsertColumns.Any())
+        if (quotedInsertColumns.Length == 0)
         {
             throw new InvalidOperationException("No insertable columns detected. No changes were made.");
         }
@@ -126,7 +126,7 @@ public class Upload
             .Where(c => !c.IsComputed && !c.IsPrimaryKey && !c.IsIdentity && !c.IsLocked && !c.IsHidden)
             .Select(c => c.Name.QuoteName())
             .ToArray();
-        if (!quotedUpdateColumns.Any())
+        if (quotedUpdateColumns.Length == 0)
         {
             throw new InvalidOperationException("No updateable columns detected. No changes were made.");
         }

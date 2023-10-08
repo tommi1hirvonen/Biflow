@@ -132,7 +132,7 @@ public class Row
             var changes = Values.Where(HasChanged).ToArray();
                         
             // No changes => skip this record
-            if (!changes.Any())
+            if (changes.Length == 0)
             {
                 return null;
             }

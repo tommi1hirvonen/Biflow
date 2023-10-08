@@ -57,10 +57,8 @@ public static partial class Extensions
         else if (authentication == "Windows")
         {
             services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
-            services.AddAuthorization(options =>
-            {
-                options.FallbackPolicy = new AuthorizationPolicyBuilder().AddRequirements(new UserExistsRequirement()).Build();
-            });
+            services.AddAuthorizationBuilder()
+                .SetFallbackPolicy(new AuthorizationPolicyBuilder().AddRequirements(new UserExistsRequirement()).Build());
             services.AddSingleton<IAuthorizationHandler, WindowsAuthorizationHandler>();
             services.AddSingleton<IClaimsTransformation, ClaimsTransformer>();
             method = AuthenticationMethod.Windows;

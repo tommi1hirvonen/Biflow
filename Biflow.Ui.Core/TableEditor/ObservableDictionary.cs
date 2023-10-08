@@ -16,7 +16,7 @@ internal class ObservableDictionary<T, U> : IDictionary<T, U> where T : notnull
     public ObservableDictionary(Action onValueChanged)
     {
         _onValueChanged = onValueChanged;
-        _dict = new();
+        _dict = [];
     }
 
     U IDictionary<T, U>.this[T key]

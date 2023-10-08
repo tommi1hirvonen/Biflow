@@ -8,7 +8,7 @@ internal class LdapAuthHandler(IConfiguration configuration, UserService users) 
 {
     private readonly IConfiguration _configuration = configuration;
     private readonly UserService _users = users;
-    private readonly string[] _attributesToQuery = new string[] { "userPrincipalName" };
+    private readonly string[] _attributesToQuery = ["userPrincipalName"];
 
     public async Task<IEnumerable<string>> AuthenticateUserInternalAsync(string username, string password)
     {
