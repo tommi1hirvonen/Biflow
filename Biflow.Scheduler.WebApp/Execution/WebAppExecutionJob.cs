@@ -5,26 +5,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Scheduler.WebApp;
 
-public class WebAppExecutionJob : ExecutionJobBase
+public class WebAppExecutionJob(
+    IConfiguration configuration,
+    ILogger<WebAppExecutionJob> logger,
+    IDbContextFactory<SchedulerDbContext> dbContextFactory,
+    IExecutionBuilderFactory<SchedulerDbContext> executionBuilderFactory,
+    IHttpClientFactory httpClientFactory) : ExecutionJobBase(logger, dbContextFactory, executionBuilderFactory)
 {
-    private readonly IConfiguration _configuration;
-    private readonly HttpClient _httpClient;
-    private readonly ILogger<WebAppExecutionJob> _logger;
+    private readonly IConfiguration _configuration = configuration;
+    private readonly HttpClient _httpClient = httpClientFactory.CreateClient();
+    private readonly ILogger<WebAppExecutionJob> _logger = logger;
 
     private const int PollingIntervalMs = 5000;
-
-    public WebAppExecutionJob(
-        IConfiguration configuration,
-        ILogger<WebAppExecutionJob> logger,
-        IDbContextFactory<SchedulerDbContext> dbContextFactory,
-        IExecutionBuilderFactory<SchedulerDbContext> executionBuilderFactory,
-        IHttpClientFactory httpClientFactory)
-        : base(logger, dbContextFactory, executionBuilderFactory)
-    {
-        _configuration = configuration;
-        _httpClient = httpClientFactory.CreateClient();
-        _logger = logger;
-    }
 
     private string Url => _configuration
         .GetSection("Executor")

@@ -5,19 +5,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Scheduler.WebApp;
 
-public class SelfHostedExecutionJob : ExecutionJobBase
+public class SelfHostedExecutionJob(
+    IExecutionManager executionManager,
+    ILogger<SelfHostedExecutionJob> logger,
+    IDbContextFactory<SchedulerDbContext> dbContextFactory,
+    IExecutionBuilderFactory<SchedulerDbContext> executionBuilderFactory) : ExecutionJobBase(logger, dbContextFactory, executionBuilderFactory)
 {
-    private readonly IExecutionManager _executionManager;
-
-    public SelfHostedExecutionJob(
-        IExecutionManager executionManager,
-        ILogger<SelfHostedExecutionJob> logger,
-        IDbContextFactory<SchedulerDbContext> dbContextFactory,
-        IExecutionBuilderFactory<SchedulerDbContext> executionBuilderFactory)
-        : base(logger, dbContextFactory, executionBuilderFactory)
-    {
-        _executionManager = executionManager;
-    }
+    private readonly IExecutionManager _executionManager = executionManager;
 
     protected override async Task StartExecutorAsync(Guid executionId)
     {

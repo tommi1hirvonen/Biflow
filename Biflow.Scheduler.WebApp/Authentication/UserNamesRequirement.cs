@@ -1,11 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 
-class UserNamesRequirement : IAuthorizationRequirement
+class UserNamesRequirement(params string[] userNames) : IAuthorizationRequirement
 {
-    public string[] UserNames { get; }
-
-    public UserNamesRequirement(params string[] userNames)
-    {
-        UserNames = userNames;
-    }
+    public string[] UserNames { get; } = userNames;
 }

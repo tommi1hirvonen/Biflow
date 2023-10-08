@@ -5,13 +5,8 @@ using Microsoft.Extensions.Configuration;
 
 namespace Biflow.Executor.Core;
 
-public class SchedulerDbContext : AppDbContext
+public class SchedulerDbContext(IConfiguration configuration) : AppDbContext(configuration, httpContextAccessor: null)
 {
-    public SchedulerDbContext(IConfiguration configuration)
-        : base(configuration, httpContextAccessor: null) // Pass null as HttpContextAccessor to disable global query filters.
-    {
-    }
-
     protected override void ConfigureSqlServer(SqlServerDbContextOptionsBuilder options)
     {
         base.ConfigureSqlServer(options);

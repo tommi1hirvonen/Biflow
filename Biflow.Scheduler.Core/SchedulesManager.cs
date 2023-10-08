@@ -2,24 +2,19 @@
 using Biflow.Executor.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.PowerBI.Api.Models;
 using Quartz;
 using Quartz.Impl.Matchers;
 
 namespace Biflow.Scheduler.Core;
 
-internal class SchedulesManager<TJob> : ISchedulesManager where TJob : ExecutionJobBase
+internal class SchedulesManager<TJob>(
+    ILogger<SchedulesManager<TJob>> logger,
+    IDbContextFactory<SchedulerDbContext> dbContextFactory,
+    ISchedulerFactory schedulerFactory) : ISchedulesManager where TJob : ExecutionJobBase
 {
-    private readonly ILogger _logger;
-    private readonly IScheduler _scheduler;
-    private readonly IDbContextFactory<SchedulerDbContext> _dbContextFactory;
-
-    public SchedulesManager(ILogger<SchedulesManager<TJob>> logger, IDbContextFactory<SchedulerDbContext> dbContextFactory, ISchedulerFactory schedulerFactory)
-    {
-        _logger = logger;
-        _dbContextFactory = dbContextFactory;
-        _scheduler = schedulerFactory.GetScheduler().Result;
-    }
+    private readonly ILogger _logger = logger;
+    private readonly IScheduler _scheduler = schedulerFactory.GetScheduler().Result;
+    private readonly IDbContextFactory<SchedulerDbContext> _dbContextFactory = dbContextFactory;
 
     public async Task ReadAllSchedules(CancellationToken cancellationToken)
     {
@@ -136,8 +131,5 @@ internal class SchedulesManager<TJob> : ISchedulesManager where TJob : Execution
 
 }
 
-public class ScheduleNotFoundException : Exception
-{
-    public ScheduleNotFoundException(SchedulerSchedule schedule)
-        : base($"No matching schedule found for job id {schedule.JobId} and schedule id {schedule.ScheduleId}") { }
-}
+public class ScheduleNotFoundException(SchedulerSchedule schedule)
+    : Exception($"No matching schedule found for job id {schedule.JobId} and schedule id {schedule.ScheduleId}");

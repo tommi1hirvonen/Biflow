@@ -6,25 +6,18 @@ using Quartz;
 
 namespace Biflow.Scheduler.Core;
 
-public abstract class ExecutionJobBase : IJob
+public abstract class ExecutionJobBase(
+    ILogger logger,
+    IDbContextFactory<SchedulerDbContext> dbContextFactory,
+    IExecutionBuilderFactory<SchedulerDbContext> executionBuilderFactory) : IJob
 {
-    private readonly ILogger _logger;
-    private readonly IDbContextFactory<SchedulerDbContext> _dbContextFactory;
-    private readonly IExecutionBuilderFactory<SchedulerDbContext> _executionBuilderFactory;
+    private readonly ILogger _logger = logger;
+    private readonly IDbContextFactory<SchedulerDbContext> _dbContextFactory = dbContextFactory;
+    private readonly IExecutionBuilderFactory<SchedulerDbContext> _executionBuilderFactory = executionBuilderFactory;
 
     protected abstract Task StartExecutorAsync(Guid executionId);
 
     protected abstract Task WaitForExecutionToFinish(Guid executionId);
-
-    public ExecutionJobBase(
-        ILogger logger,
-        IDbContextFactory<SchedulerDbContext> dbContextFactory,
-        IExecutionBuilderFactory<SchedulerDbContext> executionBuilderFactory)
-    {
-        _logger = logger;
-        _dbContextFactory = dbContextFactory;
-        _executionBuilderFactory = executionBuilderFactory;
-    }
 
     public async Task Execute(IJobExecutionContext context)
     {

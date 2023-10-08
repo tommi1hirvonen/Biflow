@@ -1,11 +1,6 @@
 ﻿namespace Biflow.Scheduler.Core;
 
-public class SchedulerJob
+public class SchedulerJob(Guid jobId)
 {
-    public Guid JobId { get; }
-
-    public SchedulerJob(Guid jobId)
-    {
-        JobId = jobId;
-    }
+    public Guid JobId { get; } = jobId;
 }
