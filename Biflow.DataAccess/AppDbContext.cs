@@ -368,9 +368,6 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
         {
             e.HasMany(user => user.Subscriptions)
             .WithOne(subscription => subscription.User);
-            e.Property(u => u.Roles).HasConversion(
-                from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
-                to => JsonSerializer.Deserialize<List<string>>(to, null as JsonSerializerOptions) ?? new());
         });
             
 
@@ -404,15 +401,6 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
         {
             e.HasMany(t => t.Lookups).WithOne(l => l.Table);
             e.HasOne(t => t.Category).WithMany(c => c.Tables).HasForeignKey(p => p.CategoryId);
-            e.Property(t => t.LockedColumns).HasConversion(
-                from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
-                to => JsonSerializer.Deserialize<List<string>>(string.IsNullOrEmpty(to) ? "[]" : to, null as JsonSerializerOptions) ?? new());
-            e.Property(t => t.HiddenColumns).HasConversion(
-                from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
-                to => JsonSerializer.Deserialize<List<string>>(string.IsNullOrEmpty(to) ? "[]" : to, null as JsonSerializerOptions) ?? new());
-            e.Property(t => t.ColumnOrder).HasConversion(
-                from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
-                to => JsonSerializer.Deserialize<List<string>>(to, null as JsonSerializerOptions) ?? new());
 
             e.HasMany(t => t.Users)
             .WithMany(u => u.DataTables)
