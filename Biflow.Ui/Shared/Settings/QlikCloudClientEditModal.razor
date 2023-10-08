@@ -96,6 +96,8 @@
             using var context = await dbContextFactory.CreateDbContextAsync();
             client = await context.QlikCloudClients
                 .AsNoTrackingWithIdentityResolution()
+                .Include(c => c.Steps)
+                .ThenInclude(s => s.Job)
                 .FirstAsync(c => c.QlikCloudClientId == clientId);
         }
         else
@@ -104,7 +106,8 @@
             {
                 QlikCloudClientName = "",
                 EnvironmentUrl = "",
-                ApiToken = ""
+                ApiToken = "",
+                Steps = new List<QlikStep>()
             };
         }
     }

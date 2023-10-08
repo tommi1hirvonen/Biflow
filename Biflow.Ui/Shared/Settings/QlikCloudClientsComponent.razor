@@ -37,8 +37,8 @@
             {
                 @foreach (var client in clients)
                 {
-                    @* var jobs = client.Steps.Select(s => s.Job).Distinct().Count();
-                    var steps = client.Steps.Count(); *@
+                    var jobs = client.Steps.Select(s => s.Job).Distinct().Count();
+                    var steps = client.Steps.Count();
                     <tr>
                         <td class="align-middle">
                             @client.QlikCloudClientName
@@ -62,19 +62,19 @@
                         <td class="align-middle">
                             @client.EnvironmentUrl
                         </td>
-                        @* <td class="align-middle">
+                        <td class="align-middle">
                             @(jobs > 0 ? $"{jobs} job(s)" : null)
                         </td>
                         <td class="align-middle">
                             <a class="text-body" href="javascript:void(0)"
                             @onclick="async () =>
                             {
-                                StepsFunctionApp = app;
-                                await StepsModal.LetAsync(x => x.ShowAsync());
+                                stepsClient = client;
+                                await stepsModal.LetAsync(x => x.ShowAsync());
                             }">
                                 @(steps > 0 ? $"{steps} step(s)" : null)
                             </a>
-                        </td> *@
+                        </td>
                     </tr>
                 }
             }
@@ -84,15 +84,57 @@
 
 <QlikCloudClientEditModal @ref="editModal" OnClientSubmit="OnClientSubmitAsync" />
 
+<HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsClient?.QlikCloudClientName}")">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Job</th>
+                            <th>Step</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var step in stepsClient?.Steps
+                        .OrderBy(s => s.Job.JobName)
+                        .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
+                        {
+                            <tr>
+                                <td>
+                                    @step.Job.JobName
+                                </td>
+                                <td>
+                                    <StepTypeIconComponent StepType_="step.StepType" />
+                                    &nbsp;
+                                    @step.StepName
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <button class="btn btn-secondary" @onclick="async () => await stepsModal.LetAsync(x => x.HideAsync())">Close</button>
+    </FooterTemplate>
+</HxModal>
+
 @code {
     private List<QlikCloudClient>? clients;
     private QlikCloudClientEditModal? editModal;
+
+    private QlikCloudClient? stepsClient;
+    private HxModal? stepsModal;
 
     protected override async Task OnInitializedAsync()
     {
         using var context = await dbContextFactory.CreateDbContextAsync();
         clients = await context.QlikCloudClients
             .AsNoTrackingWithIdentityResolution()
+            .Include(c => c.Steps)
+            .ThenInclude(s => s.Job)
             .ToListAsync();
     }
 
