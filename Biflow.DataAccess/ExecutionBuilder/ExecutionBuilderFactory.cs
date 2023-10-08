@@ -19,7 +19,7 @@ internal class ExecutionBuilderFactory<TDbContext>(IDbContextFactory<TDbContext>
             return null;
         }
         var (context, job, steps) = data;
-        var createExecution = () => new Execution(job, createdBy, parent);
+        Execution createExecution() => new(job, createdBy, parent);
         return new ExecutionBuilder(context, createExecution, steps);
     }
 
@@ -34,7 +34,7 @@ internal class ExecutionBuilderFactory<TDbContext>(IDbContextFactory<TDbContext>
         var schedule = await context.Schedules
             .AsNoTracking()
             .FirstOrDefaultAsync(s => s.ScheduleId == scheduleId);
-        var createExecution = () => new Execution(job, schedule);
+        Execution createExecution() => new(job, schedule);
         return new ExecutionBuilder(context, createExecution, steps);
     }
 

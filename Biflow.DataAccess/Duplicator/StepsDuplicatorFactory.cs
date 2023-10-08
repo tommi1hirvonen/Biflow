@@ -7,7 +7,7 @@ public class StepsDuplicatorFactory(IDbContextFactory<AppDbContext> dbContextFac
     private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
 
     public Task<StepsDuplicator> CreateAsync(Guid stepId, Guid? targetJobId = null) =>
-        CreateAsync(new[] { stepId }, targetJobId);
+        CreateAsync([stepId], targetJobId);
 
     public async Task<StepsDuplicator> CreateAsync(Guid[] stepIds, Guid? targetJobId = null)
     {

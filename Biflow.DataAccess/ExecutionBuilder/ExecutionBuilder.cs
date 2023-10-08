@@ -17,8 +17,8 @@ public partial class ExecutionBuilder : IDisposable
         _execution = _createExecution();
         _steps = _execution.DependencyMode switch
         {
-            true => steps.OrderBy(s => s, new TopologicalStepComparer(steps)).ToArray(),
-            false => steps.OrderBy(s => s.ExecutionPhase).ToArray()
+            true => [.. steps.OrderBy(s => s, new TopologicalStepComparer(steps))],
+            false => [.. steps.OrderBy(s => s.ExecutionPhase)]
         };
         _builderSteps = _steps
             .Select(s => new ExecutionBuilderStep(this, s))
@@ -52,7 +52,7 @@ public partial class ExecutionBuilder : IDisposable
     /// <see langword="null"/> if no <see cref="StepExecution"/> objects were included.</returns>
     public async Task<Execution?> SaveExecutionAsync()
     {
-        if (!_execution.StepExecutions.Any())
+        if (_execution.StepExecutions.Count == 0)
         {
             return null;
         }

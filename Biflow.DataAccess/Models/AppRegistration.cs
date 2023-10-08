@@ -98,14 +98,14 @@ public class AppRegistration
     public async Task TestConnection()
     {
         var credential = new ClientSecretCredential(TenantId, ClientId, ClientSecret);
-        var context = new TokenRequestContext(new[] { AzureResourceUrl });
+        var context = new TokenRequestContext([AzureResourceUrl]);
         var _ = await credential.GetTokenAsync(context);
     }
 
     public async Task TestPowerBIConnection()
     {
         var credential = new ClientSecretCredential(TenantId, ClientId, ClientSecret);
-        var context = new TokenRequestContext(new[] { PowerBIResourceUrl });
+        var context = new TokenRequestContext([PowerBIResourceUrl]);
         var token = await credential.GetTokenAsync(context);
 
         var credentials = new TokenCredentials(token.Token);

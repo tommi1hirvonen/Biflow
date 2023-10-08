@@ -33,13 +33,13 @@ public class Job
             .Select(s => (Orig: s, Copy: s.Copy(this)))
             .ToDictionary(x => x.Orig.StepId, x => x);
 
-        var mapDependency = (Step copy, Dependency dep) =>
+        Dependency mapDependency(Step copy, Dependency dep)
         {
             // Map the dependent step's id from an old value to a new value using the dictionary.
             // In case no matching key is found, it is likely a cross-job dependency => use the id as is.
             var dependentOn = mapping.TryGetValue(dep.DependantOnStepId, out var map) ? map.Copy.StepId : dep.DependantOnStepId;
             return new Dependency(copy.StepId, dependentOn) { DependencyType = dep.DependencyType };
-        };
+        }
 
         Steps = mapping.Values
             .Select(map =>

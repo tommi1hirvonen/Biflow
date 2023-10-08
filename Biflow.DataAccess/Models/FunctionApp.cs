@@ -105,7 +105,7 @@ public class FunctionApp
     public async Task TestConnection(HttpClient client)
     {
         var credential = new ClientSecretCredential(AppRegistration.TenantId, AppRegistration.ClientId, AppRegistration.ClientSecret);
-        var context = new TokenRequestContext(new[] { ResourceUrl });
+        var context = new TokenRequestContext([ResourceUrl]);
         var token = await credential.GetTokenAsync(context);
 
         var functionListUrl = $"https://management.azure.com/subscriptions/{SubscriptionId}/resourceGroups/{ResourceGroupName}/providers/Microsoft.Web/sites/{ResourceName}/functions?api-version=2015-08-01";

@@ -110,7 +110,7 @@ public class DataFactory : PipelineClient
     public async Task TestConnection(AppRegistration appRegistration)
     {
         var credential = new ClientSecretCredential(appRegistration.TenantId, appRegistration.ClientId, appRegistration.ClientSecret);
-        var context = new TokenRequestContext(new[] { ResourceUrl });
+        var context = new TokenRequestContext([ResourceUrl]);
         var token = await credential.GetTokenAsync(context);
 
         var credentials = new TokenCredentials(token.Token);
