@@ -11,9 +11,10 @@ public readonly struct RoleTag(string role) : ITag
     public TagColor Color { get; } = role switch
     {
         Roles.Admin => TagColor.Red,
-        Roles.Editor => TagColor.Yellow,
-        Roles.Operator => TagColor.Purple,
+        Roles.Editor => TagColor.Purple,
+        Roles.Operator => TagColor.Green,
         Roles.DataTableMaintainer => TagColor.Blue,
+        Roles.SettingsEditor => TagColor.Yellow,
         _ => TagColor.DarkGray
     };
 }

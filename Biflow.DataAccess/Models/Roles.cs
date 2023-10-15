@@ -7,4 +7,5 @@ public static class Roles
     public const string Operator = "Operator";
     public const string Viewer = "Viewer";
     public const string DataTableMaintainer = "DataTableMaintainer";
+    public const string SettingsEditor = "SettingsEditor";
 }

@@ -64,7 +64,7 @@
                 Subscriptions
             </NavLink>
         </li>
-        <AuthorizeView Roles="@(Roles.Admin)">
+        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
             <li class="nav-item">
                 <NavLink class="nav-link" href="settings" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
                     <CxIcon Icon="FeatherIcon.Settings" />

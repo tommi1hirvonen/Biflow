@@ -1,83 +1,114 @@
 ﻿@page "/settings/{Page?}"
 
-@attribute [Authorize(Roles = Roles.Admin)]
+@attribute [Authorize(Roles = $"{Roles.Admin}, {Roles.SettingsEditor}")]
 
 @inject IConfiguration Configuration
+@inject IHttpContextAccessor Context
+@inject NavigationManager NavigationManager
 
 <h4>Settings</h4>
 
-<ul class="nav nav-tabs nav-fill mt-3 mb-4" role="tablist">
-    <li class="nav-item" role="presentation">
-        <NavLink class="nav-link" href="settings" Match="NavLinkMatch.All">
-            <CxIcon Icon="FeatherIcon.Users" />
-            Users
-        </NavLink>
-    </li>
-    <li class="nav-item" role="presentation">
-        <NavLink class="nav-link" href="settings/subscriptions">
-            <CxIcon Icon="FeatherIcon.Mail" />
-            Subscriptions
-        </NavLink>
-    </li>
-    <li class="nav-item" role="presentation">
-        <NavLink class="nav-link" href="settings/connections">
-            <CxIcon Icon="FeatherIcon.Database" />
-            Connections
-        </NavLink>
-    </li>
-    <li class="nav-item" role="presentation">
-        <NavLink class="nav-link" href="settings/appregistrations">
-            <CxIcon Icon="FeatherIcon.Globe" />
-            App registrations
-        </NavLink>
-    </li>
-    <li class="nav-item" role="presentation">
-        <NavLink class="nav-link" href="settings/pipelineclients">
-            <CxIcon Icon="FeatherIcon.Pipeline" />
-            Pipeline clients
-        </NavLink>
-    </li>
-    <li class="nav-item" role="presentation">
-        <NavLink class="nav-link" href="settings/functionapps">
-            <CxIcon Icon="FeatherIcon.Zap" />
-            Function Apps
-        </NavLink>
-    </li>
-    <li class="nav-item" role="presentation">
-        <NavLink class="nav-link" href="settings/qlikcloudclients">
-            <CxIcon Icon="LucideIcon.ScatterChart" />
-            Qlik Cloud Clients
-        </NavLink>
-    </li>
+<ul class="nav nav-tabs mt-3 mb-4" role="tablist">
+    <AuthorizeView Roles="@(Roles.Admin)">
+        <li class="nav-item" role="presentation">
+            <NavLink class="nav-link" href="settings/users" Match="NavLinkMatch.All">
+                <CxIcon Icon="FeatherIcon.Users" />
+                Users
+            </NavLink>
+        </li>
+        <li class="nav-item" role="presentation">
+            <NavLink class="nav-link" href="settings/subscriptions">
+                <CxIcon Icon="FeatherIcon.Mail" />
+                Subscriptions
+            </NavLink>
+        </li>
+    </AuthorizeView>
+    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
+        <li class="nav-item" role="presentation">
+            <NavLink class="nav-link" href="settings/connections">
+                <CxIcon Icon="FeatherIcon.Database" />
+                Connections
+            </NavLink>
+        </li>
+        <li class="nav-item" role="presentation">
+            <NavLink class="nav-link" href="settings/appregistrations">
+                <CxIcon Icon="FeatherIcon.Globe" />
+                App registrations
+            </NavLink>
+        </li>
+        <li class="nav-item" role="presentation">
+            <NavLink class="nav-link" href="settings/pipelineclients">
+                <CxIcon Icon="FeatherIcon.Pipeline" />
+                Pipeline clients
+            </NavLink>
+        </li>
+        <li class="nav-item" role="presentation">
+            <NavLink class="nav-link" href="settings/functionapps">
+                <CxIcon Icon="FeatherIcon.Zap" />
+                Function Apps
+            </NavLink>
+        </li>
+        <li class="nav-item" role="presentation">
+            <NavLink class="nav-link" href="settings/qlikcloudclients">
+                <CxIcon Icon="LucideIcon.ScatterChart" />
+                Qlik Cloud Clients
+            </NavLink>
+        </li>
+    </AuthorizeView>
 </ul>
 
-@if (Page is null)
+@if (Page == "users")
 {
-    <UsersComponent />
+    <AuthorizeView Roles="@(Roles.Admin)">
+        <Authorized>
+            <UsersComponent />
+        </Authorized>
+        <NotAuthorized>
+            Not authorized
+        </NotAuthorized>
+    </AuthorizeView>
 }
 else if (Page == "subscriptions")
 {
-    <AllSubscriptions />
+    <AuthorizeView Roles="@(Roles.Admin)">
+        <Authorized>
+            <AllSubscriptions />
+        </Authorized>
+        <NotAuthorized>
+            Not authorized
+        </NotAuthorized>
+    </AuthorizeView>
 }
 else if (Page == "connections")
 {
-    <ConnectionsComponent />
+    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
+
+        <ConnectionsComponent />
+    </AuthorizeView>
 }
 else if (Page == "appregistrations")
 {
-    <AppRegistrationsComponent />
+    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
+        <AppRegistrationsComponent />
+    </AuthorizeView>
 }
 else if (Page == "pipelineclients")
 {
-    <PipelineClientsComponent />
+    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
+        <PipelineClientsComponent />
+    </AuthorizeView>
 }
 else if (Page == "functionapps")
 {
-    <FunctionAppsComponent />
+    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
+        <FunctionAppsComponent />
+    </AuthorizeView>
 }
 else if (Page == "qlikcloudclients")
 {
-    <QlikCloudClientsComponent />
+    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
+        <QlikCloudClientsComponent />
+    </AuthorizeView>
 }
 else
 {
@@ -85,6 +116,21 @@ else
 }
 
 @code {
-    [Parameter]
-    public string? Page { get; set; }
+    [Parameter] public string? Page { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (Page is not null)
+        {
+            return;
+        }
+
+        if (Context.HttpContext?.User.IsInRole(Roles.Admin) ?? false)
+        {
+            NavigationManager.NavigateTo("settings/users");
+            return;
+        }
+
+        NavigationManager.NavigateTo("settings/connections");
+    }
 }

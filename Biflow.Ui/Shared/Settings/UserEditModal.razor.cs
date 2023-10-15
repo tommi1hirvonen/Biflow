@@ -75,6 +75,17 @@ public partial class UserEditModal : ComponentBase, IDisposable
                 Model.User.Roles.Add(role);
             }
         }
+        else if (role == Roles.SettingsEditor)
+        {
+            if (Model.User.Roles.Contains(role))
+            {
+                Model.User.Roles.RemoveAll(r => r == Roles.SettingsEditor);
+            }
+            else
+            {
+                Model.User.Roles.Add(role);
+            }
+        }
         else
         {
             throw new ArgumentException($"Unrecognized role {role}", nameof(role));
@@ -190,7 +201,7 @@ public partial class UserEditModal : ComponentBase, IDisposable
             var user = new User
             {
                 Username = "",
-                Roles = new() { Roles.Viewer },
+                Roles = [Roles.Viewer],
                 Jobs = new List<Job>(),
                 DataTables = new List<MasterDataTable>()
             };

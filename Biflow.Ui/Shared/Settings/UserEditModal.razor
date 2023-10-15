@@ -73,6 +73,17 @@
                                 @if (!Model.User.Roles.Contains(Roles.Admin))
                                 {
                                     <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="role_radio_settings_editor"
+                                               checked=@Model.User.Roles.Contains(Roles.SettingsEditor)
+                                               @onchange="@(e => ToggleRole(Roles.SettingsEditor))">
+                                        <label class="form-check-label fw-normal" for="role_radio_settings_editor">
+                                            Settings Editor
+                                            <HxPopover Trigger="PopoverTrigger.Hover" Content="Settings editors can manage (create, edit, delete) connections, app registrations, pipeline clients, function apps and Qlik environments">
+                                                <CxIcon Icon="FeatherIcon.Info" />
+                                            </HxPopover>
+                                        </label>
+                                    </div>
+                                    <div class="form-check mt-1">
                                         <input class="form-check-input" type="checkbox" id="role_radio_datatable_maintainer"
                                                checked=@Model.User.Roles.Contains(Roles.DataTableMaintainer)
                                         @onchange="@(e => ToggleRole(Roles.DataTableMaintainer))">
