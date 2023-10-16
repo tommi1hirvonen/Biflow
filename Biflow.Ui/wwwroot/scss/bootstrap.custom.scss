@@ -266,43 +266,90 @@ $statuses: (
     fill: var(--bs-secondary);
 }
 
-.dependency-graph .node.running rect {
-    stroke: $primary;
-    stroke-width: 3px;
+$map-secondary: (
+    stroke: $secondary-border-subtle,
+    stroke-dark: $secondary-border-subtle-dark,
+    background: $secondary-bg-subtle,
+    background-dark: $secondary-bg-subtle-dark,    
+    text: $secondary-text-emphasis,
+    text-dark: $secondary-text-emphasis-dark
+);
+$map-primary: (
+    stroke: $primary-border-subtle,
+    stroke-dark: $primary-border-subtle-dark,
+    background: $primary-bg-subtle,
+    background-dark: $primary-bg-subtle-dark,    
+    text: $primary-text-emphasis,
+    text-dark: $primary-text-emphasis-dark
+);
+$map-success: (
+    stroke: $success-border-subtle,
+    stroke-dark: $success-border-subtle-dark,
+    background: $success-bg-subtle,
+    background-dark: $success-bg-subtle-dark,
+    text: $success-text-emphasis,
+    text-dark: $success-text-emphasis-dark
+);
+$map-warning: (
+    stroke: $warning-border-subtle,
+    stroke-dark: $warning-border-subtle-dark,
+    background: $warning-bg-subtle,
+    background-dark: $warning-bg-subtle-dark,    
+    text: $warning-text-emphasis,
+    text-dark: $warning-text-emphasis-dark
+);
+$map-danger: (
+    stroke: $danger-border-subtle,
+    stroke-dark: $danger-border-subtle-dark,
+    background: $danger-bg-subtle,
+    background-dark: $danger-bg-subtle-dark,    
+    text: $danger-text-emphasis,
+    text-dark: $danger-text-emphasis-dark
+);
+
+$dep-statuses: (
+    "notstarted": $map-secondary,
+    "queued": $map-secondary,
+    "running": $map-primary,
+    "succeeded": $map-success,
+    "warning": $map-warning,
+    "failed": $map-danger,
+    "retry": $map-warning,
+    "stopped": $map-warning,
+    "skipped": $map-secondary,
+    "dependenciesfailed": $map-warning,
+    "awaitingretry": $map-secondary,
+    "duplicate": $map-warning
+);
+
+@each $status, $map in $dep-statuses {
+    $stroke: map-get($map, stroke);
+    $stroke-dark: map-get($map, stroke-dark);
+    $background: map-get($map, background);
+    $background-dark: map-get($map, background-dark);
+    $text: map-get($map, text);
+    $text-dark: map-get($map, text-dark);
+
+    .dependency-graph .node.#{$status} rect {
+        stroke: $stroke;
+        fill: $background;
+        stroke-width: 3px;
+    }
+    .dependency-graph .node.#{$status} > g.label {
+        fill: $text;
+    }
+
+    @include color-mode(dark) {
+        .dependency-graph .node.#{$status} rect {
+            stroke: $stroke-dark;
+            fill: $background-dark;
+        }
+        .dependency-graph .node.#{$status} > g.label {
+            fill: $text-dark;
+        }
+    }
 }
 
-.dependency-graph .node.succeeded rect {
-    stroke: $success;
-    stroke-width: 3px;
-}
-
-.dependency-graph .node.failed rect {
-    stroke: $danger;
-    stroke-width: 3px;
-}
-
-.dependency-graph .node.skipped rect {
-    stroke: var(--bs-secondary);
-    stroke-width: 3px;
-}
-
-.dependency-graph .node.skipped > g.label {
-    fill: var(--bs-secondary-color);
-}
-
-.dependency-graph .node.stopped rect,
-.dependency-graph .node.retry rect,
-.dependency-graph .node.duplicate rect,
-.dependency-graph .node.dependenciesfailed rect {
-    stroke: $warning;
-    stroke-width: 3px;
-}
-
-.dependency-graph .node.awaitingretry rect,
-.dependency-graph .node.queued rect {
-    stroke: var(--bs-secondary);
-    stroke-width: 3px;
-}
 
 .dependency-graph .name {
     margin-top: 4px;

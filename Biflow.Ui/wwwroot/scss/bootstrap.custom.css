@@ -12250,42 +12250,220 @@ tr .btn-auto, .list-group-item .btn-auto {
   fill: var(--bs-secondary);
 }
 
-.dependency-graph .node.running rect {
-  stroke: #6a71de;
+.dependency-graph .node.notstarted rect {
+  stroke: #c4c8cb;
+  fill: #e2e3e5;
   stroke-width: 3px;
+}
+
+.dependency-graph .node.notstarted > g.label {
+  fill: #2b2f32;
+}
+
+[data-bs-theme=dark] .dependency-graph .node.notstarted rect {
+  stroke: #41464b;
+  fill: #161719;
+}
+[data-bs-theme=dark] .dependency-graph .node.notstarted > g.label {
+  fill: #a7acb1;
+}
+
+.dependency-graph .node.queued rect {
+  stroke: #c4c8cb;
+  fill: #e2e3e5;
+  stroke-width: 3px;
+}
+
+.dependency-graph .node.queued > g.label {
+  fill: #2b2f32;
+}
+
+[data-bs-theme=dark] .dependency-graph .node.queued rect {
+  stroke: #41464b;
+  fill: #161719;
+}
+[data-bs-theme=dark] .dependency-graph .node.queued > g.label {
+  fill: #a7acb1;
+}
+
+.dependency-graph .node.running rect {
+  stroke: #c3c6f2;
+  fill: #e1e3f8;
+  stroke-width: 3px;
+}
+
+.dependency-graph .node.running > g.label {
+  fill: #2a2d59;
+}
+
+[data-bs-theme=dark] .dependency-graph .node.running rect {
+  stroke: #404485;
+  fill: #15172c;
+}
+[data-bs-theme=dark] .dependency-graph .node.running > g.label {
+  fill: #a6aaeb;
 }
 
 .dependency-graph .node.succeeded rect {
-  stroke: #0cb081;
+  stroke: #9edfcd;
+  fill: #ceefe6;
   stroke-width: 3px;
+}
+
+.dependency-graph .node.succeeded > g.label {
+  fill: #054634;
+}
+
+[data-bs-theme=dark] .dependency-graph .node.succeeded rect {
+  stroke: #076a4d;
+  fill: #02231a;
+}
+[data-bs-theme=dark] .dependency-graph .node.succeeded > g.label {
+  fill: #6dd0b3;
+}
+
+.dependency-graph .node.warning rect {
+  stroke: #f2d999;
+  fill: #f9eccc;
+  stroke-width: 3px;
+}
+
+.dependency-graph .node.warning > g.label {
+  fill: #594000;
+}
+
+[data-bs-theme=dark] .dependency-graph .node.warning rect {
+  stroke: #866100;
+  fill: #2d2000;
+}
+[data-bs-theme=dark] .dependency-graph .node.warning > g.label {
+  fill: #ecc766;
 }
 
 .dependency-graph .node.failed rect {
-  stroke: #e85875;
+  stroke: #f6bcc8;
+  fill: #fadee3;
   stroke-width: 3px;
 }
 
+.dependency-graph .node.failed > g.label {
+  fill: #5d232f;
+}
+
+[data-bs-theme=dark] .dependency-graph .node.failed rect {
+  stroke: #8b3546;
+  fill: #2e1217;
+}
+[data-bs-theme=dark] .dependency-graph .node.failed > g.label {
+  fill: #f19bac;
+}
+
+.dependency-graph .node.retry rect {
+  stroke: #f2d999;
+  fill: #f9eccc;
+  stroke-width: 3px;
+}
+
+.dependency-graph .node.retry > g.label {
+  fill: #594000;
+}
+
+[data-bs-theme=dark] .dependency-graph .node.retry rect {
+  stroke: #866100;
+  fill: #2d2000;
+}
+[data-bs-theme=dark] .dependency-graph .node.retry > g.label {
+  fill: #ecc766;
+}
+
+.dependency-graph .node.stopped rect {
+  stroke: #f2d999;
+  fill: #f9eccc;
+  stroke-width: 3px;
+}
+
+.dependency-graph .node.stopped > g.label {
+  fill: #594000;
+}
+
+[data-bs-theme=dark] .dependency-graph .node.stopped rect {
+  stroke: #866100;
+  fill: #2d2000;
+}
+[data-bs-theme=dark] .dependency-graph .node.stopped > g.label {
+  fill: #ecc766;
+}
+
 .dependency-graph .node.skipped rect {
-  stroke: var(--bs-secondary);
+  stroke: #c4c8cb;
+  fill: #e2e3e5;
   stroke-width: 3px;
 }
 
 .dependency-graph .node.skipped > g.label {
-  fill: var(--bs-secondary-color);
+  fill: #2b2f32;
 }
 
-.dependency-graph .node.stopped rect,
-.dependency-graph .node.retry rect,
-.dependency-graph .node.duplicate rect,
+[data-bs-theme=dark] .dependency-graph .node.skipped rect {
+  stroke: #41464b;
+  fill: #161719;
+}
+[data-bs-theme=dark] .dependency-graph .node.skipped > g.label {
+  fill: #a7acb1;
+}
+
 .dependency-graph .node.dependenciesfailed rect {
-  stroke: #dfa100;
+  stroke: #f2d999;
+  fill: #f9eccc;
   stroke-width: 3px;
 }
 
-.dependency-graph .node.awaitingretry rect,
-.dependency-graph .node.queued rect {
-  stroke: var(--bs-secondary);
+.dependency-graph .node.dependenciesfailed > g.label {
+  fill: #594000;
+}
+
+[data-bs-theme=dark] .dependency-graph .node.dependenciesfailed rect {
+  stroke: #866100;
+  fill: #2d2000;
+}
+[data-bs-theme=dark] .dependency-graph .node.dependenciesfailed > g.label {
+  fill: #ecc766;
+}
+
+.dependency-graph .node.awaitingretry rect {
+  stroke: #c4c8cb;
+  fill: #e2e3e5;
   stroke-width: 3px;
+}
+
+.dependency-graph .node.awaitingretry > g.label {
+  fill: #2b2f32;
+}
+
+[data-bs-theme=dark] .dependency-graph .node.awaitingretry rect {
+  stroke: #41464b;
+  fill: #161719;
+}
+[data-bs-theme=dark] .dependency-graph .node.awaitingretry > g.label {
+  fill: #a7acb1;
+}
+
+.dependency-graph .node.duplicate rect {
+  stroke: #f2d999;
+  fill: #f9eccc;
+  stroke-width: 3px;
+}
+
+.dependency-graph .node.duplicate > g.label {
+  fill: #594000;
+}
+
+[data-bs-theme=dark] .dependency-graph .node.duplicate rect {
+  stroke: #866100;
+  fill: #2d2000;
+}
+[data-bs-theme=dark] .dependency-graph .node.duplicate > g.label {
+  fill: #ecc766;
 }
 
 .dependency-graph .name {
