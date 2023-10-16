@@ -1,4 +1,4 @@
-﻿<span class="badge @ColorClass @CssClass @(Selected ? "text-decoration-underline" : null)" style="@Style" @onclick="OnClick">
+﻿<span class="badge @BadgeCss @CssClass @(Selected ? "text-decoration-underline" : null)" style="@Style" @onclick="OnClick">
     @Tag?.TagName
 </span>
 
@@ -13,15 +13,17 @@
 
     [Parameter] public bool Selected { get; set; }
 
-    private string? ColorClass => Tag?.Color switch
+    private string? Color => Tag?.Color switch
     {
-        TagColor.LightGray => "bg-light text-dark",
-        TagColor.DarkGray => "bg-secondary",
-        TagColor.Purple => "bg-primary",
-        TagColor.Green => "bg-success",
-        TagColor.Blue => "bg-info text-dark",
-        TagColor.Yellow => "bg-warning text-dark",
-        TagColor.Red => "bg-danger",
+        TagColor.LightGray => "light",
+        TagColor.DarkGray => "secondary",
+        TagColor.Purple => "primary",
+        TagColor.Green => "success",
+        TagColor.Blue => "info",
+        TagColor.Yellow => "warning",
+        TagColor.Red => "danger",
         _ => null
     };
+
+    private string? BadgeCss => $"bg-{Color}-subtle border border-{Color}-subtle text-{Color}-emphasis";
 }
