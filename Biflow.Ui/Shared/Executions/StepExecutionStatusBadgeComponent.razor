@@ -1,24 +1,10 @@
 ﻿
 @{
-    var (textClass, borderClass, icon) = ExecutionStatus switch
-    {
-        StepExecutionStatus.Succeeded => ("text-success", "border-success", FeatherIcon.CheckCircle),
-        StepExecutionStatus.Warning => ("text-warning", "border-warning", FeatherIcon.AlertTriangle),
-        StepExecutionStatus.Failed => ("text-danger", "border-danger", FeatherIcon.AlertOctagon),
-        StepExecutionStatus.Stopped => ("text-warning", "border-warning", FeatherIcon.XOctagon),
-        StepExecutionStatus.Duplicate => ("text-warning", "border-warning", FeatherIcon.AlertTriangle),
-        StepExecutionStatus.Retry => ("text-warning", "border-warning", FeatherIcon.Repeat),
-        StepExecutionStatus.AwaitingRetry => ("text-secondary", "border-secondary", FeatherIcon.Clock),
-        StepExecutionStatus.Running => ("text-primary", "border-primary", FeatherIcon.Play),
-        StepExecutionStatus.Skipped => ("text-secondary", "border-secondary", FeatherIcon.SkipForward),
-        StepExecutionStatus.DependenciesFailed => ("text-warning", "border-warning", FeatherIcon.AlertCircle),
-        StepExecutionStatus.Queued => ("text-secondary", "border-secondary", FeatherIcon.Clock),
-        StepExecutionStatus.NotStarted => ("text-secondary", "border-secondary", FeatherIcon.Info),
-        _ => ("", "", FeatherIcon.HelpCircle)
-    };
+    var (color, icon) = Badge;
+    var badgeCss = $"bg-{color}-subtle border-{color}-subtle text-{color}-emphasis";
 }
 
-<span class="rounded border d-inline-flex align-items-center fw-semibold @textClass @borderClass"
+<span class="rounded border d-inline-flex align-items-center fw-semibold @badgeCss"
       style="font-size: 0.8rem; padding-left: 0.3rem; padding-right: 0.3rem; padding-top: 0.1rem; padding-bottom: 0.1rem; border-width: 1.5px !important;">
     <CxIcon Icon="icon" />
     <span class="ms-1">@ExecutionStatus</span>
@@ -26,4 +12,21 @@
 
 @code {
     [Parameter] public StepExecutionStatus? ExecutionStatus { get; set; }
+
+    private (string Color, FeatherIcon Icon) Badge => ExecutionStatus switch
+    {
+        StepExecutionStatus.Succeeded => ("success", FeatherIcon.CheckCircle),
+        StepExecutionStatus.Warning => ("warning", FeatherIcon.AlertTriangle),
+        StepExecutionStatus.Failed => ("danger", FeatherIcon.AlertOctagon),
+        StepExecutionStatus.Stopped => ("warning", FeatherIcon.XOctagon),
+        StepExecutionStatus.Duplicate => ("warning", FeatherIcon.AlertTriangle),
+        StepExecutionStatus.Retry => ("warning", FeatherIcon.Repeat),
+        StepExecutionStatus.AwaitingRetry => ("secondary", FeatherIcon.Clock),
+        StepExecutionStatus.Running => ("primary", FeatherIcon.Play),
+        StepExecutionStatus.Skipped => ("secondary", FeatherIcon.SkipForward),
+        StepExecutionStatus.DependenciesFailed => ("warning", FeatherIcon.AlertCircle),
+        StepExecutionStatus.Queued => ("secondary", FeatherIcon.Clock),
+        StepExecutionStatus.NotStarted => ("secondary", FeatherIcon.Info),
+        _ => ("", FeatherIcon.HelpCircle)
+    };
 } 
