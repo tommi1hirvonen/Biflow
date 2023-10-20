@@ -55,13 +55,9 @@ public partial class ExecutionDetails : ComponentBase
 
     private Report ShowReport { get; set; } = Report.Table;
 
-    private enum Report { Table, Gantt, Dependencies, Rerun, History }
+    private enum Report { Table, Gantt, Dependencies, ExecutionDetails, Parameters, Rerun, History }
 
     private bool Loading { get; set; } = false;
-
-    private bool JobExecutionDetailsOpen { get; set; } = false;
-
-    private bool ParametersOpen { get; set; } = false;
 
     private bool Stopping => StoppingExecutions.Any(id => id == ExecutionId);
 

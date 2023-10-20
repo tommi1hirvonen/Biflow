@@ -20,64 +20,71 @@
             {
                 <strong>@Execution?.JobName</strong>
             }
+            <span>&nbsp;/&nbsp;@Execution?.ExecutionId</span>
         </div>
     </div>
 </div>
 
-<HxButtonToolbar CssClass="mt-3">
+<div class="row mt-3">
+    <div class="col">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <span class="nav-link @(ShowReport == Report.Table ? "active" : null)" @onclick="() => ShowReport = Report.Table">
+                    <CxIcon Icon="FeatherIcon.Table" />
+                    Table
+                </span>
+            </li>
+            <li class="nav-item" role="presentation">
+                <span class="nav-link @(ShowReport == Report.Gantt ? "active" : null)" @onclick="() => ShowReport = Report.Gantt">
+                    <CxIcon Icon="LucideIcon.BarChartHorizontal" />
+                    Gantt
+                </span>
+            </li>
+            <li class="nav-item" role="presentation">
+                <span class="nav-link @(ShowReport == Report.Dependencies ? "active" : null)" @onclick="() => ShowReport = Report.Dependencies">
+                    <CxIcon Icon="LucideIcon.Network" />
+                    Dependencies
+                </span>
+            </li>
+            <li class="nav-item" role="presentation">
+                <span class="nav-link @(ShowReport == Report.ExecutionDetails ? "active" : null)" @onclick="() => ShowReport = Report.ExecutionDetails">
+                    <CxIcon Icon="FeatherIcon.Info" />
+                    Execution details
+                </span>
+            </li>
+            <li class="nav-item" role="presentation">
+                <span class="nav-link @(ShowReport == Report.Parameters ? "active" : null)" @onclick="() => ShowReport = Report.Parameters">
+                    <CxIcon Icon="FeatherIcon.AtSign" />
+                    Parameters
+                </span>
+            </li>
+            <li class="nav-item" role="presentation">
+                <span class="nav-link @(ShowReport == Report.History ? "active" : null) @(Loading ? "disabled" : null)" @onclick="() => ShowReport = Report.History">
+                    <CxIcon Icon="LucideIcon.History" />
+                    History
+                </span>
+            </li>
+            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+                <li class="nav-item" role="presentation">
+                    <span class="nav-link @(ShowReport == Report.Rerun ? "active" : null) @(Loading ? "disabled" : null)" @onclick="() => ShowReport = Report.Rerun">
+                        <CxIcon Icon="FeatherIcon.Repeat" />
+                        Rerun
+                    </span>
+                </li>
+            </AuthorizeView>
+        </ul>
+    </div>
+</div>
 
-    <HxButtonGroup>
-        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => JobExecutionDetailsOpen = !JobExecutionDetailsOpen"
-                  CssClass="@(JobExecutionDetailsOpen ? "active" : null)">
-            <CxIcon Icon="FeatherIcon.Info" />
-            Execution details
+@if (ShowReport == Report.Table || ShowReport == Report.Gantt || ShowReport == Report.Dependencies)
+{
+    <HxButtonToolbar CssClass="mt-4">
+        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!Loading">
+            <CxIcon Icon="FeatherIcon.RefreshCw" />
+            Refresh
         </HxButton>
-        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => ParametersOpen = !ParametersOpen"
-                  CssClass="@(ParametersOpen ? "active" : null)">
-            <CxIcon Icon="FeatherIcon.AtSign" />
-            Parameters
-        </HxButton>
-    </HxButtonGroup>
-    
-
-    <HxButtonGroup CssClass="ms-3">
-        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(ShowReport == Report.Table ? "active" : null)"
-                  @onclick="() => ShowReport = Report.Table">
-            <CxIcon Icon="FeatherIcon.Table" />
-            Table
-        </HxButton>
-        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(ShowReport == Report.Gantt ? "active" : null)"
-                  @onclick="() => ShowReport = Report.Gantt">
-            <CxIcon Icon="LucideIcon.BarChartHorizontal" />
-            Gantt
-        </HxButton>
-        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(ShowReport == Report.Dependencies ? "active" : null)"
-                  @onclick="() => ShowReport = Report.Dependencies">
-            <CxIcon Icon="LucideIcon.Network" />
-            Dependencies
-        </HxButton>
-    </HxButtonGroup>
-
-    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!Loading" CssClass="ms-3">
-        <CxIcon Icon="FeatherIcon.RefreshCw" />
-        Refresh
-    </HxButton>
-
-    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(ShowReport == Report.History ? "active ms-auto" : "ms-auto")"
-            @onclick="() => ShowReport = Report.History" Enabled="!Loading">
-        <CxIcon Icon="LucideIcon.History" />
-        History
-    </HxButton>
-
-    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(ShowReport == Report.Rerun ? "active ms-3" : "ms-3")"
-                  @onclick="() => ShowReport = Report.Rerun" Enabled="!Loading">
-            <CxIcon Icon="FeatherIcon.Repeat" />
-            Rerun
-        </HxButton>
-    </AuthorizeView>
-
-</HxButtonToolbar>
+    </HxButtonToolbar>
+}
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
     @if (Execution is not null && Execution.ExecutionStatus == ExecutionStatus.Running)
@@ -101,176 +108,188 @@
     <p></p>
 </div>
 
-@if (Execution is not null && JobExecutionDetailsOpen)
+@if (ShowReport == Report.ExecutionDetails)
 {
-    <dl class="row border rounded">
-        <dt class="col-sm-3">
-            Execution id
-        </dt>
-        <dd class="col-sm-9">
-            @Execution.ExecutionId
-        </dd>
-        <dt class="col-sm-3">
-            Job id
-        </dt>
-        <dd class="col-sm-9">
-            @if (Execution.Job is not null)
-            {
-                <a href="@($"jobs/{Execution.Job.JobId}/steps")">@Execution.Job.JobId</a>
-            }
-            else
-            {
-                @Execution.JobId
-            }
-        </dd>
-        <dt class="col-sm-3">
-            Executor PID
-        </dt>
-        <dd class="col-sm-9">
-            @Execution.ExecutorProcessId
-        </dd>
-        <dt class="col-sm-3">
-            Execution mode
-        </dt>
-        <dd class="col-sm-9">
-            @if (Execution.DependencyMode)
-            {
-                <span>
-                    <CxIcon Icon="LucideIcon.Network" />
-                    Dependency mode
-                </span>
-            }
-            else
-            {
-                <span>
-                    <CxIcon Icon="FeatherIcon.Layers" />
-                    Execution phase
-                </span>
-            }
-        </dd>
-        @if (!Execution.DependencyMode)
-        {
-            <dt class="col-sm-3">
-                Stop on first error
-            </dt>
-            <dd class="col-sm-9">
-                @Execution.StopOnFirstError
-            </dd>
-        }
-        <dt class="col-sm-3">
-            Max parallel steps
-        </dt>
-        <dd class="col-sm-9">
-            @Execution.MaxParallelSteps
-        </dd>
-        <dt class="col-sm-3">
-            Overtime notification limit (min)
-        </dt>
-        <dd class="col-sm-9">
-            @Execution.OvertimeNotificationLimitMinutes
-        </dd>
-        <dt class="col-sm-3">
-            Created by
-        </dt>
-        <dd class="col-sm-9">
-            @if (Execution.Schedule is not null)
-            {
-                <text>@Execution.Schedule.ScheduleName (schedule, @Execution.Schedule.GetScheduleDescription())</text>
-            }
-            else if (Execution.ScheduleName is not null)
-            {
-                <text>@Execution.ScheduleName (removed schedule, @Biflow.Ui.Core.Extensions.GetCronExpressionDescription(Execution.CronExpression))</text>
-            }
-            else if (Execution.ScheduleId is not null)
-            {
-                <text>Removed schedule (name not available)</text>
-            }
-            else if (Execution.ParentExecution is StepExecutionAttemptReference parent)
-            {
-                var json = JsonSerializer.Serialize(parent);
-                // Replace execution id in json with a link to the parent execution's details.
-                var jsonWithLink = json.Replace(parent.ExecutionId.ToString(), $"<a href=\"executions/{parent.ExecutionId}\">{parent.ExecutionId}</a>");
-                <small>
-                    @((MarkupString)jsonWithLink)
-                </small>
-            }
-            else
-            {
-                <text>@Execution.CreatedBy (user)</text>
-            }
-        </dd>
-        <dt class="col-sm-3">
-            Created
-        </dt>
-        <dd class="col-sm-9">
-            @Execution.CreatedDateTime.LocalDateTime
-        </dd>
-        @if (Execution.Schedule is not null)
-        {
-            <dt class="col-sm-3">
-                Schedule
-            </dt>
-            <dd class="col-sm-9">
-                @Execution.Schedule.ScheduleName (@Execution.Schedule.GetScheduleDescription())
-            </dd>
-        }
-        else if (!string.IsNullOrEmpty(Execution.ScheduleName))
-        {
-            <dt class="col-sm-3">
-                Schedule
-            </dt>
-            <dd class="col-sm-9">
-                @Execution.ScheduleName (@Biflow.Ui.Core.Extensions.GetCronExpressionDescription(Execution.CronExpression))
-            </dd>
-        }
-        <dt class="col-sm-3">
-            Number of steps
-        </dt>
-        <dd class="col-sm-9">
-            @Execution.StepExecutions.Count
-        </dd>
-        <dt class="col-sm-3">
-            Success percent
-        </dt>
-        <dd class="col-sm-9">
-            @Execution.GetSuccessPercent().FormatPercentage(0)
-        </dd>
-        <dt class="col-sm-3">
-            Status
-        </dt>
-        <dd class="col-sm-9">
-            <JobExecutionStatusBadgeComponent ExecutionStatus_="@Execution.ExecutionStatus" />
-        </dd>
-    </dl>
+    <div class="card shadow-sm pt-2 mb-4">
+        <table class="table table-hover">
+            <tbody>
+                @if (Execution is null)
+                {
+                    <tr>
+                        <td class="text-center">
+                            <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    <tr>
+                        <td>Execution id</td>
+                        <td>@Execution.ExecutionId</td>
+                    </tr>
+                    <tr>
+                        <td>Job id</td>
+                        <td>
+                            @if (Execution.Job is not null)
+                            {
+                                <a href="@($"jobs/{Execution.Job.JobId}/steps")">@Execution.Job.JobId</a>
+                            }
+                            else
+                            {
+                                @Execution.JobId
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Executor PID</td>
+                        <td>@Execution.ExecutorProcessId</td>
+                    </tr>
+                    <tr>
+                        <td>Execution mode</td>
+                        <td>
+                            @if (Execution.DependencyMode)
+                            {
+                                <span>
+                                    <CxIcon Icon="LucideIcon.Network" />
+                                    Dependency mode
+                                </span>
+                            }
+                            else
+                            {
+                                <span>
+                                    <CxIcon Icon="FeatherIcon.Layers" />
+                                    Execution phase
+                                </span>
+                            }
+                        </td>
+                    </tr>
+                    @if (!Execution.DependencyMode)
+                    {
+                        <tr>
+                            <td>Stop on first error</td>
+                            <td>@Execution.StopOnFirstError</td>
+                        </tr>
+                    }
+                    <tr>
+                        <td>Max parallel steps</td>
+                        <td>@Execution.MaxParallelSteps</td>
+                    </tr>
+                    <tr>
+                        <td>Overtime notification limit (min)</td>
+                        <td>@Execution.OvertimeNotificationLimitMinutes</td>
+                    </tr>
+                    <tr>
+                        <td>Created by</td>
+                        <td>
+                            @if (Execution.Schedule is not null)
+                            {
+                                <text>@Execution.Schedule.ScheduleName (schedule, @Execution.Schedule.GetScheduleDescription())</text>
+                            }
+                            else if (Execution.ScheduleName is not null)
+                            {
+                                <text>@Execution.ScheduleName (removed schedule, @Biflow.Ui.Core.Extensions.GetCronExpressionDescription(Execution.CronExpression))</text>
+                            }
+                            else if (Execution.ScheduleId is not null)
+                            {
+                                <text>Removed schedule (name not available)</text>
+                            }
+                            else if (Execution.ParentExecution is StepExecutionAttemptReference parent)
+                            {
+                                var json = JsonSerializer.Serialize(parent);
+                                // Replace execution id in json with a link to the parent execution's details.
+                                var jsonWithLink = json.Replace(parent.ExecutionId.ToString(), $"<a href=\"executions/{parent.ExecutionId}\">{parent.ExecutionId}</a>");
+                                <small>
+                                    @((MarkupString)jsonWithLink)
+                                </small>
+                            }
+                            else
+                            {
+                                <text>@Execution.CreatedBy (user)</text>
+                            }
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Created</td>
+                        <td>@Execution.CreatedDateTime.LocalDateTime</td>
+                    </tr>
+                    @if (Execution.Schedule is not null)
+                    {
+                        <tr>
+                            <td>Schedule</td>
+                            <td>@Execution.Schedule.ScheduleName (@Execution.Schedule.GetScheduleDescription())</td>
+                        </tr>
+
+                    }
+                    else if (!string.IsNullOrEmpty(Execution.ScheduleName))
+                    {
+                        <tr>
+                            <td>Schedule</td>
+                            <td>@Execution.ScheduleName (@Biflow.Ui.Core.Extensions.GetCronExpressionDescription(Execution.CronExpression))</td>
+                        </tr>
+                    }
+                    
+                    
+                    <tr>
+                        <td>Number of steps</td>
+                        <td>@Execution.StepExecutions.Count</td>
+                    </tr>
+                    <tr>
+                        <td>Success percent</td>
+                        <td>@Execution.GetSuccessPercent().FormatPercentage(0)</td>
+                    </tr>
+                    <tr>
+                        <td>Status</td>
+                        <td><JobExecutionStatusBadgeComponent ExecutionStatus_="@Execution.ExecutionStatus" /></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }
 
-@if (Execution is not null && ParametersOpen)
+@if (ShowReport == Report.Parameters)
 {
-    if (Execution.ExecutionParameters.Any())
-    {
-        <dl class="row border rounded">
-            @foreach (var param in Execution.ExecutionParameters)
-            {
-                <dt class="col-sm-3">
-                    @param.DisplayName
-                </dt>
-                <dd class="col-sm-9">
-                    @param.DisplayValue
-                </dd>
-            }
-        </dl>
-    }
-    else
-    {
-        <div class="row border rounded">
-            <div class="col">
-                No parameters
-            </div>
-        </div>
-    }
+    <div class="card shadow-sm pt-2 mb-4">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Value</th>
+                    <th>Datatype</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Execution is null)
+                {
+                    <tr>
+                        <td colspan="3" class="text-center">
+                            <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                        </td>
+                    </tr>
+                }
+                else if (!Execution.ExecutionParameters.Any())
+                {
+                    <tr>
+                        <td colspan="3">No parameters</td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var param in Execution.ExecutionParameters)
+                    {
+                        <tr>
+                            <td>@param.DisplayName</td>
+                            <td class="font-monospace">@param.DisplayValue</td>
+                            <td>@param.DisplayValueType</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
 }
 
-@if (ShowReport != Report.Rerun && ShowReport != Report.History)
+@if (ShowReport == Report.Table || ShowReport == Report.Gantt || ShowReport == Report.Dependencies)
 {
     <div class="row">
         <div class="col-6">
