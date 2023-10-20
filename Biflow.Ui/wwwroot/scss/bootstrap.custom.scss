@@ -12,6 +12,9 @@ $btn-font-weight: 500;
 
 $body-bg-dark-custom: shade-color($dark, 15%);
 
+$highlight-bg-dark: #574203;
+$highlight-text-dark: #dee2e6;
+
 // Change the light theme body background to be slightly darker than the default.
 [data-bs-theme="light"], [data-bs-theme="auto"] {
     .bg-body {
@@ -99,8 +102,8 @@ $navbar-gradient: #8F75DA;
 // Highlighted text
 [data-bs-theme="dark"] {
     mark {
-        color: #dee2e6;
-        background-color: #664d03;
+        color: $highlight-text-dark;
+        background-color: $highlight-bg-dark;
     }
 }
 
@@ -149,6 +152,16 @@ tr .btn-auto, .list-group-item .btn-auto {
 
 .table-hover > tbody > tr.no-hover:hover {
     --bs-table-hover-bg: none;
+}
+
+.table tr.table-row-highlight {
+    background-color: var(--bs-highlight-bg);
+}
+
+@include color-mode(dark) {
+    .table tr.table-row-highlight {
+        background-color: $highlight-bg-dark;
+    }
 }
 
 // Custom list group header class with a slightly darker background.

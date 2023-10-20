@@ -213,7 +213,7 @@
                         </thead>
                         <tbody>
                             <Virtualize Items="rows" Context="row" SpacerElement="tr" ItemSize="39.5f">
-                                <tr class="@(row.IsNewRow || row.HasChanges ? "table-warning" : null)">
+                                <tr class="@(row.IsNewRow || row.HasChanges ? "table-row-highlight" : null)">
                                     @foreach (var columnInfo in columns)
                                     {
                                         var isLocked = !row.IsUpdateable || columnInfo.IsLocked;

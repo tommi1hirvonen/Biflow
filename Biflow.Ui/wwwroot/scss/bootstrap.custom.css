@@ -11982,7 +11982,7 @@ textarea.form-control-lg {
 
 [data-bs-theme=dark] mark, [data-bs-theme=dark] .mark {
   color: #dee2e6;
-  background-color: #664d03;
+  background-color: #574203;
 }
 
 .btn-primary, .btn-success, .btn-danger {
@@ -12026,6 +12026,14 @@ tr .btn-auto, .list-group-item .btn-auto {
 
 .table-hover > tbody > tr.no-hover:hover {
   --bs-table-hover-bg: none;
+}
+
+.table tr.table-row-highlight {
+  background-color: var(--bs-highlight-bg);
+}
+
+[data-bs-theme=dark] .table tr.table-row-highlight {
+  background-color: #574203;
 }
 
 [data-bs-theme=dark] .list-group-header {
