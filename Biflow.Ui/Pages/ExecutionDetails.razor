@@ -25,7 +25,7 @@
     </div>
 </div>
 
-<div class="row mt-3">
+<div class="row mt-2">
     <div class="col">
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item" role="presentation">
@@ -76,41 +76,9 @@
     </div>
 </div>
 
-@if (ShowReport == Report.Table || ShowReport == Report.Gantt || ShowReport == Report.Dependencies)
-{
-    <HxButtonToolbar CssClass="mt-4">
-        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!Loading">
-            <CxIcon Icon="FeatherIcon.RefreshCw" />
-            Refresh
-        </HxButton>
-    </HxButtonToolbar>
-}
-
-<AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-    @if (Execution is not null && Execution.ExecutionStatus == ExecutionStatus.Running)
-    {
-        <HxButtonToolbar CssClass="mt-3">
-            <HxDropdownButtonGroup>
-                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None"
-                                        CssClass="@(Stopping ? "btn-auto disabled text-danger" : "btn-auto text-danger")">
-                    <CxIcon Icon="FeatherIcon.XOctagon" />
-                    Stop
-                </HxDropdownToggleButton>
-                <HxDropdownMenu>
-                    <HxDropdownItem @onclick="StopJobExecutionAsync" Enabled="!Stopping">Confirm</HxDropdownItem>
-                </HxDropdownMenu>
-            </HxDropdownButtonGroup>
-        </HxButtonToolbar>
-    }
-</AuthorizeView>
-
-<div class="row my-1">
-    <p></p>
-</div>
-
 @if (ShowReport == Report.ExecutionDetails)
 {
-    <div class="card shadow-sm pt-2 mb-4">
+    <div class="card shadow-sm pt-2 mb-4 mt-3">
         <table class="table table-hover">
             <tbody>
                 @if (Execution is null)
@@ -258,7 +226,7 @@
 
 @if (ShowReport == Report.Parameters)
 {
-    <div class="card shadow-sm pt-2 mb-4">
+    <div class="card shadow-sm pt-2 mb-4 mt-3">
         <table class="table table-hover">
             <thead>
                 <tr>
@@ -300,30 +268,53 @@
 
 @if (ShowReport == Report.Table || ShowReport == Report.Gantt || ShowReport == Report.Dependencies)
 {
-    <div class="row">
-        <div class="col-6">
-            <small>Progress:</small>
-            <div class="progress @Execution?.ExecutionStatus.ToString().ToLower()">
-                <div class="progress-bar" style="width: @($"{Execution?.GetProgressPercent() ?? 0}%");" />
-            </div>
+    <div class="row mt-3">
+        <div class="col-auto align-self-center">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!Loading">
+                <CxIcon Icon="FeatherIcon.RefreshCw" />
+                Refresh
+            </HxButton>
         </div>
-        <div class="col-2">
+        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+            @if (Execution is not null && Execution.ExecutionStatus == ExecutionStatus.Running)
+            {
+                <div class="col-auto align-self-center">
+                    <HxDropdownButtonGroup>
+                        <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None"
+                                                CssClass="@(Stopping ? "btn-auto disabled text-danger" : "btn-auto text-danger")">
+                            <CxIcon Icon="FeatherIcon.XOctagon" />
+                            Stop
+                        </HxDropdownToggleButton>
+                        <HxDropdownMenu>
+                            <HxDropdownItem @onclick="StopJobExecutionAsync" Enabled="!Stopping">Confirm</HxDropdownItem>
+                        </HxDropdownMenu>
+                    </HxDropdownButtonGroup>
+                </div>
+            }
+        </AuthorizeView>
+        <div class="col-auto">
             <dl class="mx-1">
                 <dt>Started</dt>
                 <dd>@Execution?.StartDateTime?.LocalDateTime</dd>
             </dl>
         </div>
-        <div class="col-2">
+        <div class="col-auto">
             <dl class="mx-1">
                 <dt>Ended</dt>
                 <dd>@Execution?.EndDateTime?.LocalDateTime</dd>
             </dl>
         </div>
-        <div class="col-2">
+        <div class="col-auto">
             <dl class="mx-1">
                 <dt>Duration</dt>
                 <dd>@Execution?.GetDurationInReadableFormat()</dd>
             </dl>
+        </div>
+        <div class="col-lg mb-lg-0 mb-3">
+            <span class="fw-bold">Progress</span>
+            <div class="progress mt-1 @Execution?.ExecutionStatus.ToString().ToLower()">
+                <div class="progress-bar" style="width: @($"{Execution?.GetProgressPercent() ?? 0}%");" />
+            </div>
         </div>
     </div>
 }
@@ -419,33 +410,31 @@
                 </HxButton>
             </HxButtonGroup>
         </div>
-    </div>
-    <div class="row mt-3">
-        <div class="col d-inline">
+        <div class="col-xxl d-inline mt-3 mt-xxl-0">
             <CxIcon Icon="LucideIcon.SortDesc" />
             <span class="me-3">Sort</span>
             <div class="form-check form-check-inline">
                 <input type="radio" class="form-check-input" id="radio_started_asc"
-                   checked=@(SortMode == SortMode.StartedAsc)
-                   @onchange="() => SortMode = SortMode.StartedAsc">
+                       checked=@(SortMode == SortMode.StartedAsc)
+                       @onchange="() => SortMode = SortMode.StartedAsc">
                 <label class="form-check-label" for="radio_started_asc">Started <sup>asc</sup></label>
             </div>
             <div class="form-check form-check-inline">
                 <input type="radio" class="form-check-input" id="radio_started_desc"
-                   checked=@(SortMode == SortMode.StartedDesc)
-                   @onchange="() => SortMode = SortMode.StartedDesc">
+                       checked=@(SortMode == SortMode.StartedDesc)
+                       @onchange="() => SortMode = SortMode.StartedDesc">
                 <label class="form-check-label" for="radio_started_desc">Started<sup>desc</sup></label>
             </div>
             <div class="form-check form-check-inline">
                 <input type="radio" class="form-check-input" id="radio_duration_asc"
-                   checked=@(SortMode == SortMode.DurationAsc)
-                   @onchange="() => SortMode = SortMode.DurationAsc">
+                       checked=@(SortMode == SortMode.DurationAsc)
+                       @onchange="() => SortMode = SortMode.DurationAsc">
                 <label class="form-check-label" for="radio_duration_asc">Duration<sup>asc</sup></label>
             </div>
             <div class="form-check form-check-inline">
                 <input type="radio" class="form-check-input" id="radio_duration_desc"
-                   checked=@(SortMode == SortMode.DurationDesc)
-                   @onchange="() => SortMode = SortMode.DurationDesc">
+                       checked=@(SortMode == SortMode.DurationDesc)
+                       @onchange="() => SortMode = SortMode.DurationDesc">
                 <label class="form-check-label" for="radio_duration_desc">Duration<sup>desc</sup></label>
             </div>
         </div>
@@ -545,12 +534,16 @@ else if (ShowReport == Report.Dependencies)
 else if (ShowReport == Report.Rerun)
 {
     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-        <RerunComponent Execution="Execution" />
+        <div class="mt-3">
+            <RerunComponent Execution="Execution" />
+        </div>
     </AuthorizeView>
 }
 else if (ShowReport == Report.History && Execution?.JobId is Guid jobId)
 {
-    <JobHistoryComponent JobId="jobId" JobName="Execution.JobName" />
+    <div class="mt-3">
+        <JobHistoryComponent JobId="jobId" JobName="Execution.JobName" />
+    </div>
 }
 
 <DependencyGraph @ref="DependencyGraph"
