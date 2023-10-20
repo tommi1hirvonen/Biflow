@@ -5,7 +5,7 @@
             <table class="table table-sm">
                 <tbody>
                     <tr class="border-top">
-                        <td class="w-25">Execution id</td>
+                        <td class="fw-bold w-25">Execution id</td>
                         <td>
                             <a href="executions/@StepExecutionAttempt.ExecutionId">
                                 @StepExecutionAttempt.ExecutionId
@@ -13,7 +13,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <td>Step id</td>
+                        <td class="fw-bold">Step id</td>
                         <td>
                             @if (StepExecutionAttempt.StepExecution.Step is not null)
                             {
@@ -30,19 +30,19 @@
                     @if (ShowExtraDetails)
                     {
                         <tr>
-                            <td>Started</td>
+                            <td class="fw-bold">Started</td>
                             <td>@StepExecutionAttempt.StartDateTime?.LocalDateTime</td>
                         </tr>
                         <tr>
-                            <td>Ended</td>
+                            <td class="fw-bold">Ended</td>
                             <td>@StepExecutionAttempt.EndDateTime?.LocalDateTime</td>
                         </tr>
                         <tr>
-                            <td>Duration</td>
+                            <td class="fw-bold">Duration</td>
                             <td>@StepExecutionAttempt.GetDurationInReadableFormat()</td>
                         </tr>
                         <tr>
-                            <td>Status</td>
+                            <td class="fw-bold">Status</td>
                             <td>
                                 <StepExecutionStatusBadgeComponent ExecutionStatus="@StepExecutionAttempt.ExecutionStatus" />
                             </td>
@@ -51,45 +51,45 @@
                     @if (StepExecutionAttempt.ExecutionStatus == StepExecutionStatus.Stopped)
                     {
                         <tr>
-                            <td>Stopped by</td>
+                            <td class="fw-bold">Stopped by</td>
                             <td>@StepExecutionAttempt.StoppedBy</td>
                         </tr>
                     }
                     <tr>
-                        <td>Retry attempts</td>
+                        <td class="fw-bold">Retry attempts</td>
                         <td>@StepExecutionAttempt.StepExecution.RetryAttempts</td>
                     </tr>
                     <tr>
-                        <td>Retry interval (min)</td>
+                        <td class="fw-bold">Retry interval (min)</td>
                         <td>@StepExecutionAttempt.StepExecution.RetryIntervalMinutes</td>
                     </tr>
                     <tr>
-                        <td>Retry attempt index</td>
+                        <td class="fw-bold">Retry attempt index</td>
                         <td>@StepExecutionAttempt.RetryAttemptIndex</td>
                     </tr>
                     <tr>
-                        <td>Duplicate execution behaviour</td>
+                        <td class="fw-bold">Duplicate execution behaviour</td>
                         <td>@StepExecutionAttempt.StepExecution.DuplicateExecutionBehaviour</td>
                     </tr>
                     <tr>
-                        <td>Execution condition</td>
+                        <td class="fw-bold">Execution condition</td>
                         <td><pre class="my-0"><code>@StepExecutionAttempt.StepExecution.ExecutionConditionExpression.Expression</code></pre></td>
                     </tr>
                     @if (StepExecutionAttempt.StepExecution is IHasTimeout timeout)
                     {
                         <tr>
-                            <td>Timeout (min)</td>
+                            <td class="fw-bold">Timeout (min)</td>
                             <td>@timeout.TimeoutMinutes</td>
                         </tr>
                     }
                     @if (StepExecutionAttempt.StepExecution is SqlStepExecution sql)
                     {
                         <tr>
-                            <td>SQL statement</td>
+                            <td class="fw-bold">SQL statement</td>
                             <td><pre class="my-0"><code>@sql.SqlStatement</code></pre></td>
                         </tr>
                         <tr>
-                            <td>Scalar result capture job parameter</td>
+                            <td class="fw-bold">Scalar result capture job parameter</td>
                             <td>
                                 @{
                                     var jobParam = sql.Execution.ExecutionParameters
@@ -99,7 +99,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <td>Capture value</td>
+                            <td class="fw-bold">Capture value</td>
                             <td>
                                 <pre class="my-0"><code style="white-space: pre-wrap;">@sql.ResultCaptureJobParameterValue</code></pre>
                             </td>
@@ -108,19 +108,19 @@
                     else if (StepExecutionAttempt.StepExecution is PackageStepExecution package)
                     {
                         <tr>
-                            <td>Package path</td>
+                            <td class="fw-bold">Package path</td>
                             <td>@package.PackagePath</td>
                         </tr>
                         <tr>
-                            <td>32 bit mode</td>
+                            <td class="fw-bold">32 bit mode</td>
                             <td>@package.ExecuteIn32BitMode</td>
                         </tr>
                         <tr>
-                            <td>Execute as login</td>
+                            <td class="fw-bold">Execute as login</td>
                             <td>@package.ExecuteAsLogin</td>
                         </tr>
                         <tr>
-                            <td>Operation id</td>
+                            <td class="fw-bold">Operation id</td>
                             <td>
                                 @if (StepExecutionAttempt is PackageStepExecutionAttempt package__)
                                 {
@@ -132,11 +132,11 @@
                     else if (StepExecutionAttempt.StepExecution is PipelineStepExecution pipeline)
                     {
                         <tr>
-                            <td>Pipeline name</td>
+                            <td class="fw-bold">Pipeline name</td>
                             <td>@pipeline.PipelineName</td>
                         </tr>
                         <tr>
-                            <td>Pipeline run id</td>
+                            <td class="fw-bold">Pipeline run id</td>
                             <td>
                                 @if (StepExecutionAttempt is PipelineStepExecutionAttempt pipeline__)
                                 {
@@ -145,32 +145,32 @@
                             </td>
                         </tr>
                         <tr>
-                            <td>Pipeline client id</td>
+                            <td class="fw-bold">Pipeline client id</td>
                             <td>@pipeline.PipelineClientId</td>
                         </tr>
                     }
                     else if (StepExecutionAttempt.StepExecution is ExeStepExecution exe)
                     {
                         <tr>
-                            <td>File path</td>
+                            <td class="fw-bold">File path</td>
                             <td>@exe.ExeFileName</td>
                         </tr>
                         <tr>
-                            <td>Arguments</td>
+                            <td class="fw-bold">Arguments</td>
                             <td>@exe.ExeArguments</td>
                         </tr>
                         <tr>
-                            <td>Working directory</td>
+                            <td class="fw-bold">Working directory</td>
                             <td>@exe.ExeWorkingDirectory</td>
                         </tr>
                         <tr>
-                            <td>Success exit code</td>
+                            <td class="fw-bold">Success exit code</td>
                             <td>@exe.ExeSuccessExitCode</td>
                         </tr>
                         @if (StepExecutionAttempt is ExeStepExecutionAttempt exe_)
                         {
                             <tr>
-                                <td>Process id</td>
+                                <td class="fw-bold">Process id</td>
                                 <td>@exe_.ExeProcessId</td>
                             </tr>
                         }
@@ -178,40 +178,40 @@
                     else if (StepExecutionAttempt.StepExecution is DatasetStepExecution dataset)
                     {
                         <tr>
-                            <td>Group id</td>
+                            <td class="fw-bold">Group id</td>
                             <td>@dataset.DatasetGroupId</td>
                         </tr>
                         <tr>
-                            <td>Dataset id</td>
+                            <td class="fw-bold">Dataset id</td>
                             <td>@dataset.DatasetId</td>
                         </tr>
                         <tr>
-                            <td>Power BI Service id</td>
+                            <td class="fw-bold">Power BI Service id</td>
                             <td>@dataset.AppRegistrationId</td>
                         </tr>
                     }
                     else if (StepExecutionAttempt.StepExecution is FunctionStepExecution function)
                     {
                         <tr>
-                            <td>Function url</td>
+                            <td class="fw-bold">Function url</td>
                             <td>@function.FunctionUrl</td>
                         </tr>
                         <tr>
-                            <td>Function input</td>
+                            <td class="fw-bold">Function input</td>
                             <td><pre class="my-0"><code>@function.FunctionInput</code></pre></td>
                         </tr>
                         <tr>
-                            <td>Is durable</td>
+                            <td class="fw-bold">Is durable</td>
                             <td>@function.FunctionIsDurable</td>
                         </tr>
                         <tr>
-                            <td>Function App id</td>
+                            <td class="fw-bold">Function App id</td>
                             <td>@function.FunctionAppId</td>
                         </tr>
                         @if (StepExecutionAttempt is FunctionStepExecutionAttempt function_)
                         {
                             <tr>
-                                <td>Instance id</td>
+                                <td class="fw-bold">Instance id</td>
                                 <td>@function_.FunctionInstanceId</td>
                             </tr>
                         }
@@ -219,50 +219,50 @@
                     else if (StepExecutionAttempt.StepExecution is AgentJobStepExecution agent)
                     {
                         <tr>
-                            <td>Agent job name</td>
+                            <td class="fw-bold">Agent job name</td>
                             <td>@agent.AgentJobName</td>
                         </tr>
                     }
                     else if (StepExecutionAttempt.StepExecution is TabularStepExecution tabular)
                     {
                         <tr>
-                            <td>Model name</td>
+                            <td class="fw-bold">Model name</td>
                             <td>@tabular.TabularModelName</td>
                         </tr>
                         <tr>
-                            <td>Table name</td>
+                            <td class="fw-bold">Table name</td>
                             <td>@tabular.TabularTableName</td>
                         </tr>
                         <tr>
-                            <td>Partition name</td>
+                            <td class="fw-bold">Partition name</td>
                             <td>@tabular.TabularPartitionName</td>
                         </tr>
                     }
                     else if (StepExecutionAttempt.StepExecution is EmailStepExecution email)
                     {
                         <tr>
-                            <td>Recipients</td>
+                            <td class="fw-bold">Recipients</td>
                             <td>@email.Recipients</td>
                         </tr>
                         <tr>
-                            <td>Subject</td>
+                            <td class="fw-bold">Subject</td>
                             <td>@email.Subject</td>
                         </tr>
                         <tr>
-                            <td>Body</td>
+                            <td class="fw-bold">Body</td>
                             <td>@email.Body</td>
                         </tr>
                     }
                     else if (StepExecutionAttempt.StepExecution is JobStepExecution job)
                     {
                         <tr>
-                            <td>Synchronized</td>
+                            <td class="fw-bold">Synchronized</td>
                             <td>@job.JobExecuteSynchronized</td>
                         </tr>
                         @if (StepExecutionAttempt is JobStepExecutionAttempt job_)
                         {
                             <tr>
-                                <td>Child execution id</td>
+                                <td class="fw-bold">Child execution id</td>
                                 <td>
                                     <a href="executions/@job_.ChildJobExecutionId">
                                         @job_.ChildJobExecutionId
@@ -274,29 +274,29 @@
                     else if (StepExecutionAttempt.StepExecution is QlikStepExecution qlik)
                     {
                         <tr>
-                            <td>App id</td>
+                            <td class="fw-bold">App id</td>
                             <td>@qlik.AppId</td>
                         </tr>
                         <tr>
-                            <td>Qlik Cloud Client id</td>
+                            <td class="fw-bold">Qlik Cloud Client id</td>
                             <td>@qlik.QlikCloudClientId</td>
                         </tr>
                         @if (StepExecutionAttempt is QlikStepExecutionAttempt qlik_)
                         {
                             <tr>
-                                <td>Reload id</td>
+                                <td class="fw-bold">Reload id</td>
                                 <td>@qlik_.ReloadId</td>
                             </tr>
                         }
                     }
                     <tr>
-                        <td>Info message / output</td>
+                        <td class="fw-bold">Info message / output</td>
                         <td>
                             <code class="text-body" style="white-space: pre-wrap;">@StepExecutionAttempt.InfoMessage</code>
                         </td>
                     </tr>
                     <tr>
-                        <td>Error message</td>
+                        <td class="fw-bold">Error message</td>
                         <td>
                             <code class="text-danger" style="white-space: pre-wrap;">@StepExecutionAttempt.ErrorMessage</code>
                             <AuthorizeView Roles="@(Roles.Admin)">
@@ -322,7 +322,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <td>Warning message</td>
+                        <td class="fw-bold">Warning message</td>
                         <td>
                             <pre class="my-0"><code>@StepExecutionAttempt.WarningMessage</code></pre>
                         </td>
@@ -347,7 +347,7 @@
                     @foreach (var param in StepExecutionAttempt.StepExecution.ExecutionConditionParameters ?? Enumerable.Empty<StepExecutionConditionParameter>())
                     {
                         <tr>
-                            <td class="w-25">@param.DisplayName</td>
+                            <td class="fw-bold w-25">@param.DisplayName</td>
                             <td>@param.DisplayValue</td>
                         </tr>
                     }
@@ -373,7 +373,7 @@
                         @foreach (var param in hasParams.StepExecutionParameters ?? Enumerable.Empty<StepExecutionParameterBase>())
                         {
                             <tr>
-                                <td class="w-25">
+                                <td class="fw-bold w-25">
                                     @param.DisplayName
                                 </td>
                                 <td>
