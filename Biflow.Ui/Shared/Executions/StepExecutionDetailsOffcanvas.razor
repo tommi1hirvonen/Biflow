@@ -16,6 +16,7 @@
     public async Task ShowAsync(StepExecutionAttempt attempt)
     {
         StepExecutionAttempt = attempt;
+        StateHasChanged();
         await Offcanvas.LetAsync(x => x.ShowAsync());
     }
 }
