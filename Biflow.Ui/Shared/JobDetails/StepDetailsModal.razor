@@ -2,270 +2,243 @@
     <BodyTemplate>
         @if (Step is not null)
         {
-            <dl class="row">
-                <dt class="col-sm-3">
-                    Step name
-                </dt>
-                <dd class="col-sm-9">
-                    @Step.StepName
-                </dd>
-                <dt class="col-sm-3">
-                    Description
-                </dt>
-                <dd class="col-sm-9">
-                    @Step.StepDescription
-                </dd>
-                <dt class="col-sm-3">
-                    Execution phase
-                </dt>
-                <dd class="col-sm-9">
-                    @Step.ExecutionPhase
-                </dd>
-                <dt class="col-sm-3">
-                    Step type
-                </dt>
-                <dd class="col-sm-9">
-                    @Step.StepType
-                </dd>
-                <dt class="col-sm-3">
-                    Retry attempts
-                </dt>
-                <dd class="col-sm-9">
-                    @Step.RetryAttempts
-                </dd>
-                <dt class="col-sm-3">
-                    Retry interval (min)
-                </dt>
-                <dd class="col-sm-9">
-                    @Step.RetryIntervalMinutes
-                </dd>
-                <dt class="col-sm-3">
-                    Duplicate execution behaviour
-                </dt>
-                <dd class="col-sm-9">
-                    @Step.DuplicateExecutionBehaviour
-                </dd>
-                @if (Step is IHasTimeout timeout)
-                {
-                    <dt class="col-sm-3">
-                        Timeout (min)
-                    </dt>
-                    <dd class="col-sm-9">
-                        @timeout.TimeoutMinutes
-                    </dd>
-                }
-                @if (Step is SqlStep sql)
-                {
-                    <dt class="col-sm-3">
-                        SQL statement
-                    </dt>
-                    <dd class="col-sm-9">
-                        <pre><code>@sql.SqlStatement</code></pre>
-                    </dd>
-                }
-                else if (Step is PipelineStep pipeline)
-                {
-                    <dt class="col-sm-3">
-                        Pipeline name
-                    </dt>
-                    <dd class="col-sm-9">
-                        @pipeline.PipelineName
-                    </dd>
-                }
-                else if (Step is JobStep job)
-                {
-                    <dt class="col-sm-3">
-                        Job to execute
-                    </dt>
-                    <dd class="col-sm-9">
-                        @job.JobToExecuteId
-                    </dd>
-                    <dt class="col-sm-3">
-                        Synchronized
-                    </dt>
-                    <dd class="col-sm-9">
-                        @job.JobExecuteSynchronized
-                    </dd>
-                }
-                else if (Step is ExeStep exe)
-                {
-                    <dt class="col-sm-3">
-                        File path
-                    </dt>
-                    <dd class="col-sm-9">
-                        @exe.ExeFileName
-                    </dd>
-                    <dt class="col-sm-3">
-                        Arguments
-                    </dt>
-                    <dd class="col-sm-9">
-                        @exe.ExeArguments
-                    </dd>
-                    <dt class="col-sm-3">
-                        Working directory
-                    </dt>
-                    <dd class="col-sm-9">
-                        @exe.ExeWorkingDirectory
-                    </dd>
-                    <dt class="col-sm-3">
-                        Success exit code
-                    </dt>
-                    <dd class="col-sm-9">
-                        @exe.ExeSuccessExitCode
-                    </dd>
-                }
-                else if (Step is DatasetStep dataset)
-                {
-                    <dt class="col-sm-3">
-                        Group id
-                    </dt>
-                    <dd class="col-sm-9">
-                        @dataset.DatasetGroupId
-                    </dd>
-                    <dt class="col-sm-3">
-                        Dataset id
-                    </dt>
-                    <dd class="col-sm-9">
-                        @dataset.DatasetId
-                    </dd>
-                }
-                else if (Step is PackageStep package)
-                {
-                    <dt class="col-sm-3">
-                        Package folder
-                    </dt>
-                    <dd class="col-sm-9">
-                        @package.PackageFolderName
-                    </dd>
-                    <dt class="col-sm-3">
-                        Package project
-                    </dt>
-                    <dd class="col-sm-9">
-                        @package.PackageProjectName
-                    </dd>
-                    <dt class="col-sm-3">
-                        Package name
-                    </dt>
-                    <dd class="col-sm-9">
-                        @package.PackageName
-                    </dd>
-                    <dt class="col-sm-3">
-                        32 bit mode
-                    </dt>
-                    <dd class="col-sm-9">
-                        <div class="custom-control custom-checkbox">
-                            <input type="checkbox" class="custom-control-input" disabled checked="@(package.ExecuteIn32BitMode ? "checked" : null)">
-                            <label class="custom-control-label"></label>
-                        </div>
-                    </dd>
-                    <dt class="col-sm-3">
-                        Execute as login
-                    </dt>
-                    <dd class="col-sm-9">
-                        @package.ExecuteAsLogin
-                    </dd>
-                }
-                else if (Step is FunctionStep function)
-                {
-                    <dt class="col-sm-3">
-                        Function url
-                    </dt>
-                    <dd class="col-sm-9">
-                        @function.FunctionUrl
-                    </dd>
-                    <dt class="col-sm-3">
-                        Function input
-                    </dt>
-                    <dd class="col-sm-9">
-                        @function.FunctionInput
-                    </dd>
-                    <dt class="col-sm-3">
-                        Function App id
-                    </dt>
-                    <dd class="col-sm-9">
-                        @function.FunctionAppId
-                    </dd>
-                }
-                else if (Step is AgentJobStep agent)
-                {
-                    <dt class="col-sm-3">
-                        Agent job name
-                    </dt>
-                    <dd class="col-sm-9">
-                        @agent.AgentJobName
-                    </dd>
-                }
-                else if (Step is TabularStep tabular)
-                {
-                    <dt class="col-sm-3">
-                        Model name
-                    </dt>
-                    <dd class="col-sm-9">
-                        @tabular.TabularModelName
-                    </dd>
-                    <dt class="col-sm-3">
-                        Table name
-                    </dt>
-                    <dd class="col-sm-9">
-                        @tabular.TabularTableName
-                    </dd>
-                    <dt class="col-sm-3">
-                        Partition name
-                    </dt>
-                    <dd class="col-sm-9">
-                        @tabular.TabularPartitionName
-                    </dd>
-                }
-                else if (Step is EmailStep email)
-                {
-                    <dt class="col-sm-3">
-                        Recipients
-                    </dt>
-                    <dd class="col-sm-9">
-                        @email.Recipients
-                    </dd>
-                    <dt class="col-sm-3">
-                        Subject
-                    </dt>
-                    <dd class="col-sm-9">
-                        @email.Subject
-                    </dd>
-                    <dt class="col-sm-3">
-                        Body
-                    </dt>
-                    <dd class="col-sm-9">
-                        @email.Body
-                    </dd>
-                }
-                <dt class="col-sm-3">
-                    Execution condition
-                </dt>
-                <dd class="col-sm-9">
-                    <pre><code>@Step.ExecutionConditionExpression.Expression</code></pre>
-                </dd>
-            </dl>
+            <div class="row">
+                <div class="col">
+                    <table class="table table-sm">
+                        <tbody class="border-top">
+                            <tr>
+                                <td class="w-25">Step name</td>
+                                <td>@Step.StepName</td>
+                            </tr>
+                            <tr>
+                                <td>Description</td>
+                                <td>@Step.StepDescription</td>
+                            </tr>
+                            <tr>
+                                <td>Execution phase</td>
+                                <td>@Step.ExecutionPhase</td>
+                            </tr>
+                            <tr>
+                                <td>Step type</td>
+                                <td>@Step.StepType</td>
+                            </tr>
+                            <tr>
+                                <td>Retry attempts</td>
+                                <td>@Step.RetryAttempts</td>
+                            </tr>
+                            <tr>
+                                <td>Retry interval (min)</td>
+                                <td>@Step.RetryIntervalMinutes</td>
+                            </tr>
+                            <tr>
+                                <td>Duplicate execution behaviour</td>
+                                <td>@Step.DuplicateExecutionBehaviour</td>
+                            </tr>
+                            @if (Step is IHasTimeout timeout)
+                            {
+                                <tr>
+                                    <td>Timeout (min)</td>
+                                    <td>@timeout.TimeoutMinutes</td>
+                                </tr>
+                            }
+                            @if (Step is SqlStep sql)
+                            {
+                                <tr>
+                                    <td>SQL statement</td>
+                                    <td>
+                                        <pre class="my-0"><code>@sql.SqlStatement</code></pre>
+                                    </td>
+                                </tr>
+                            }
+                            else if (Step is PipelineStep pipeline)
+                            {
+                                <tr>
+                                    <td>Pipeline name</td>
+                                    <td>@pipeline.PipelineName</td>
+                                </tr>
+                            }
+                            else if (Step is JobStep job)
+                            {
+                                <tr>
+                                    <td>Job to execute</td>
+                                    <td>@job.JobToExecuteId</td>
+                                </tr>
+                                <tr>
+                                    <td>Synchronized</td>
+                                    <td>@job.JobExecuteSynchronized</td>
+                                </tr>
+                            }
+                            else if (Step is ExeStep exe)
+                            {
+                                <tr>
+                                    <td>File path</td>
+                                    <td>@exe.ExeFileName</td>
+                                </tr>
+                                <tr>
+                                    <td>Arguments</td>
+                                    <td>@exe.ExeArguments</td>
+                                </tr>
+                                <tr>
+                                    <td>Working directory</td>
+                                    <td>@exe.ExeWorkingDirectory</td>
+                                </tr>
+                                <tr>
+                                    <td>Success exit code</td>
+                                    <td>@exe.ExeSuccessExitCode</td>
+                                </tr>
+                            }
+                            else if (Step is DatasetStep dataset)
+                            {
+                                <tr>
+                                    <td>Group id</td>
+                                    <td>@dataset.DatasetGroupId</td>
+                                </tr>
+                                <tr>
+                                    <td>Dataset id</td>
+                                    <td>@dataset.DatasetId</td>
+                                </tr>
+                            }
+                            else if (Step is PackageStep package)
+                            {
+                                <tr>
+                                    <td>Package folder</td>
+                                    <td>@package.PackageFolderName</td>
+                                </tr>
+                                <tr>
+                                    <td>Package project</td>
+                                    <td>@package.PackageProjectName</td>
+                                </tr>
+                                <tr>
+                                    <td>Package name</td>
+                                    <td>@package.PackageName</td>
+                                </tr>
+                                <tr>
+                                    <td>32 bit mode</td>
+                                    <td>
+                                        <div class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" disabled checked="@(package.ExecuteIn32BitMode ? "checked" : null)">
+                                            <label class="custom-control-label"></label>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Execute as login</td>
+                                    <td>@package.ExecuteAsLogin</td>
+                                </tr>
+                            }
+                            else if (Step is FunctionStep function)
+                            {
+                                <tr>
+                                    <td>Function url</td>
+                                    <td>@function.FunctionUrl</td>
+                                </tr>
+                                <tr>
+                                    <td>Function input</td>
+                                    <td><pre class="my-0"><code>@function.FunctionInput</code></pre></td>
+                                </tr>
+                                <tr>
+                                    <td>Function App id</td>
+                                    <td>@function.FunctionAppId</td>
+                                </tr>
+                            }
+                            else if (Step is AgentJobStep agent)
+                            {
+                                <tr>
+                                    <td>Agent job name</td>
+                                    <td>@agent.AgentJobName</td>
+                                </tr>
+                            }
+                            else if (Step is TabularStep tabular)
+                            {
+                                <tr>
+                                    <td>Model name</td>
+                                    <td>@tabular.TabularModelName</td>
+                                </tr>
+                                <tr>
+                                    <td>Table name</td>
+                                    <td>@tabular.TabularTableName</td>
+                                </tr>
+                                <tr>
+                                    <td>Partition name</td>
+                                    <td>@tabular.TabularPartitionName</td>
+                                </tr>
+                            }
+                            else if (Step is EmailStep email)
+                            {
+                                <tr>
+                                    <td>Recipients</td>
+                                    <td>@email.Recipients</td>
+                                </tr>
+                                <tr>
+                                    <td>Subject</td>
+                                    <td>@email.Subject</td>
+                                </tr>
+                                <tr>
+                                    <td>Body</td>
+                                    <td>@email.Body</td>
+                                </tr>
+                            }
+                            <tr>
+                                <td>Execution condition</td>
+                                <td>
+                                    <pre class="my-0"><code>@Step.ExecutionConditionExpression.Expression</code></pre>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <h6>Execution condition parameters</h6>
-            <dl class="row">
-                @foreach (var param in Step.ExecutionConditionParameters ?? Enumerable.Empty<ExecutionConditionParameter>())
-                {
-                    <dt class="col-sm-3">
-                        @param.DisplayName
-                    </dt>
-                    <dd class="col-sm-9">
-                        @param.DisplayValue
-                    </dd>
-                }
-            </dl>
+            <div class="row">
+                <div class="col">
+                    <table class="table table-sm">
+                        <tbody class="border-top">
+                            @{
+                                var executionConditionParameters = Step.ExecutionConditionParameters ?? Enumerable.Empty<ExecutionConditionParameter>();
+                            }
+                            @if (!executionConditionParameters.Any())
+                            {
+                                <tr><td class="small">No execution condition parameters</td></tr>
+                            }
+                            @foreach (var param in Step.ExecutionConditionParameters ?? Enumerable.Empty<ExecutionConditionParameter>())
+                            {
+                                <tr>
+                                    <td class="w-25">
+                                        @param.DisplayName
+                                    </td>
+                                    <td>
+                                        @param.DisplayValue
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             @if (Step is IHasStepParameters hasParams)
             {
                 <h6>Parameters</h6>
-                <dl class="row">
-                    @foreach (var param in hasParams.StepParameters)
-                    {
-                        <dt class="col-sm-3">@param.DisplayName</dt>
-                        <dd class="col-sm-9">@param.DisplayValue</dd>
-                    }
-                </dl>
+                <div class="row">
+                    <div class="col">
+                        <table class="table table-sm">
+                            <tbody class="border-top">
+                                @if (!hasParams.StepParameters.Any())
+                                {
+                                    <tr><td class="small">No parameters</td></tr>
+                                }
+                                @foreach (var param in hasParams.StepParameters)
+                                {
+                                    <tr>
+                                        <td class="w-25">@param.DisplayName</td>
+                                        <td>@param.DisplayValue</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             }
         }
     </BodyTemplate>
