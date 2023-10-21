@@ -20,6 +20,10 @@ export function setOnContextMenuListener(containerElement, dropdownElement) {
         var tempY = event.pageY + bodyRect.top + menu.clientHeight <= window.innerHeight ? event.pageY : event.pageY - menu.clientHeight;
         dropdownElement.style.top = `${tempY}px`;
         dropdownElement.style.left = `${tempX}px`;
+
+        window.addEventListener('scroll', function (_) {
+            menu.classList.remove('show');
+        }, { once: true });
     }, false);
 }
 
