@@ -15,9 +15,9 @@ export function setOnContextMenuListener(containerElement, dropdownElement) {
         // Place the dropdown to the location of the mouse.
         var bodyRect = document.body.getBoundingClientRect();
         // Check whether the dropdown menu would overflow over the right side of the window.
-        var tempX = event.pageX + menu.clientWidth <= bodyRect.width ? event.pageX : event.pageX - menu.clientWidth;
+        var tempX = event.pageX + menu.clientWidth <= window.innerWidth ? event.pageX : event.pageX - menu.clientWidth;
         // Check whether the dropdown menu would overflow over the bottom of the window.
-        var tempY = event.pageY + bodyRect.top + menu.clientHeight <= bodyRect.height ? event.pageY : event.pageY - menu.clientHeight;
+        var tempY = event.pageY + bodyRect.top + menu.clientHeight <= window.innerHeight ? event.pageY : event.pageY - menu.clientHeight;
         dropdownElement.style.top = `${tempY}px`;
         dropdownElement.style.left = `${tempX}px`;
     }, false);
