@@ -290,7 +290,7 @@
                 {
                     <li @key="item.StepId" class="list-group-item list-group-item-action py-2 @(item.IsEnabled ? null : "step-item-disabled")">
                         <div class="row">
-                            <div class="col-xl-5 col-md-6 col-10 pl-2 d-flex align-items-center">
+                            <div class="col-xl-4 col-md-6 col-10 pl-2 d-flex align-items-center">
                                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                                     <div class="form-check me-2">
                                         <input type="checkbox" class="form-check-input" id="select_step_@item.StepId"
@@ -313,32 +313,30 @@
                                     </span>
                                 </AuthorizeView>
                             </div>
-                            <div class="col-xl-1 col-2 d-inline-flex align-items-center justify-content-between">
+                            <div class="col-xl-2 col-2 d-inline-flex align-items-center justify-content-end">
                                 @if (item.ExecutionConditionParameters.Any(p => p.JobParameterId is not null)
                                || item is IHasStepParameters hasParams && hasParams.StepParameters.Any(p => p.InheritFromJobParameterId is not null || p.ExpressionParameters.Any(ep => ep.InheritFromJobParameter is not null))
                                || item is SqlStep sql && sql.ResultCaptureJobParameterId is not null)
                                 {
-                                    <div title="Step uses job parameters" class="text-body">
+                                    <div title="Step uses job parameters" class="text-body me-2">
                                         <CxIcon Icon="FeatherIcon.AtSign" />
                                     </div>
                                 }
-                                else
-                                {
-                                    <div></div>
-                                }
                                 @if (!string.IsNullOrWhiteSpace(item.ExecutionConditionExpression.Expression))
                                 {
-                                    <div title="Execution condition enabled" class="text-body">
+                                    <div title="Execution condition enabled" class="text-body me-2">
                                         <CxIcon Icon="FeatherIcon.CheckSquare" />
                                     </div>
                                 }
-                                else
+                                @if (item.RetryAttempts > 0)
                                 {
-                                    <div></div>
+                                    <div title="Step has @item.RetryAttempts retry attempts" class="text-body me-2">
+                                        <sup>@item.RetryAttempts</sup>
+                                        <CxIcon Icon="FeatherIcon.Repeat" />
+                                    </div>
                                 }
                                 <div class="justify-content-end @(Job.UseDependencyMode ? "text-body-tertiary" : "text-body")">
-                                    @item.ExecutionPhase
-                                    &nbsp;
+                                    <sup>@item.ExecutionPhase</sup>
                                     <CxIcon Icon="FeatherIcon.Layers" />
                                 </div>
                             </div>
