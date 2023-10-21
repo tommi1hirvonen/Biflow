@@ -153,11 +153,11 @@
                 else
                 {
                     <tr>
-                        <td>Execution id</td>
+                        <td class="fw-bold w-25">Execution id</td>
                         <td>@Execution.ExecutionId</td>
                     </tr>
                     <tr>
-                        <td>Job id</td>
+                        <td class="fw-bold">Job id</td>
                         <td>
                             @if (Execution.Job is not null)
                             {
@@ -170,35 +170,35 @@
                         </td>
                     </tr>
                     <tr>
-                        <td>Created</td>
+                        <td class="fw-bold">Created</td>
                         <td>@Execution.CreatedDateTime.LocalDateTime</td>
                     </tr>
                     <tr>
-                        <td>Started</td>
+                        <td class="fw-bold">Started</td>
                         <td>@Execution.StartDateTime?.LocalDateTime</td>
                     </tr>
                     <tr>
-                        <td>Ended</td>
+                        <td class="fw-bold">Ended</td>
                         <td>@Execution.EndDateTime?.LocalDateTime</td>
                     </tr>
                     <tr>
-                        <td>Duration</td>
+                        <td class="fw-bold">Duration</td>
                         <td>@Execution.GetDurationInReadableFormat()</td>
                     </tr>
                     <tr>
-                        <td>Status</td>
+                        <td class="fw-bold">Status</td>
                         <td><JobExecutionStatusBadgeComponent ExecutionStatus_="@Execution.ExecutionStatus" /></td>
                     </tr>
                     <tr>
-                        <td>Number of steps</td>
+                        <td class="fw-bold">Number of steps</td>
                         <td>@Execution.StepExecutions.Count</td>
                     </tr>
                     <tr>
-                        <td>Success percent</td>
+                        <td class="fw-bold">Success percent</td>
                         <td>@Execution.GetSuccessPercent().FormatPercentage(0)</td>
                     </tr>
                     <tr>
-                        <td>Created by</td>
+                        <td class="fw-bold">Created by</td>
                         <td>
                             @if (Execution.ParentExecution is StepExecutionAttemptReference parent)
                             {
@@ -216,7 +216,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <td>Schedule</td>
+                        <td class="fw-bold">Schedule</td>
                         <td>
                             @if (Execution.Schedule is not null)
                             {
@@ -233,11 +233,11 @@
                         </td>
                     </tr>
                     <tr>
-                        <td>Executor PID</td>
+                        <td class="fw-bold">Executor PID</td>
                         <td>@Execution.ExecutorProcessId</td>
                     </tr>
                     <tr>
-                        <td>Execution mode</td>
+                        <td class="fw-bold">Execution mode</td>
                         <td>
                             @if (Execution.DependencyMode)
                             {
@@ -258,16 +258,16 @@
                     @if (!Execution.DependencyMode)
                     {
                         <tr>
-                            <td>Stop on first error</td>
+                            <td class="fw-bold">Stop on first error</td>
                             <td>@Execution.StopOnFirstError</td>
                         </tr>
                     }
                     <tr>
-                        <td>Max parallel steps</td>
+                        <td class="fw-bold">Max parallel steps</td>
                         <td>@Execution.MaxParallelSteps</td>
                     </tr>
                     <tr>
-                        <td>Overtime notification limit (min)</td>
+                        <td class="fw-bold">Overtime notification limit (min)</td>
                         <td>@Execution.OvertimeNotificationLimitMinutes</td>
                     </tr>
                 }
