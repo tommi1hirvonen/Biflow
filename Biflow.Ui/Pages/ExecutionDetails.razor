@@ -58,7 +58,7 @@
                     Parameters
                 </span>
             </li>
-            <li class="nav-item" role="presentation">
+            <li class="nav-item ms-auto" role="presentation">
                 <span class="nav-link @(ShowReport == Report.History ? "active" : null) @(Loading ? "disabled" : null)" @onclick="() => ShowReport = Report.History">
                     <CxIcon Icon="LucideIcon.History" />
                     History
@@ -75,6 +75,67 @@
         </ul>
     </div>
 </div>
+
+@if (ShowStatusBar)
+{
+    <div class="row mt-3 @(ShowReport == Report.Table || ShowReport == Report.Gantt ? "sticky-top bg-body" : null)">
+        <div class="col-auto align-self-center">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!Loading">
+                <CxIcon Icon="FeatherIcon.RefreshCw" />
+                Refresh
+            </HxButton>
+        </div>
+        <div class="col-auto align-self-center form-check form-check-inline ms-3">
+            <input type="checkbox" class="form-check-input" id="check_auto_refresh"
+                   @bind-value="AutoRefresh"
+                   checked=@AutoRefresh>
+            <label class="form-check-label" for="check_auto_refresh" title="Automatically refresh in 5 second intervals">
+                Auto-refresh
+            </label>
+        </div>
+        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+            @if (Execution is not null && Execution.ExecutionStatus == ExecutionStatus.Running)
+            {
+                <div class="col-auto align-self-center">
+                    <HxDropdownButtonGroup>
+                        <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None"
+                                                CssClass="@(Stopping ? "btn-auto disabled text-danger" : "btn-auto text-danger")">
+                            <CxIcon Icon="FeatherIcon.XOctagon" />
+                            Stop
+                        </HxDropdownToggleButton>
+                        <HxDropdownMenu>
+                            <HxDropdownItem @onclick="StopJobExecutionAsync" Enabled="!Stopping">Confirm</HxDropdownItem>
+                        </HxDropdownMenu>
+                    </HxDropdownButtonGroup>
+                </div>
+            }
+        </AuthorizeView>
+        <div class="col-auto">
+            <dl class="mx-1">
+                <dt>Started</dt>
+                <dd>@Execution?.StartDateTime?.LocalDateTime</dd>
+            </dl>
+        </div>
+        <div class="col-auto">
+            <dl class="mx-1">
+                <dt>Ended</dt>
+                <dd>@Execution?.EndDateTime?.LocalDateTime</dd>
+            </dl>
+        </div>
+        <div class="col-auto">
+            <dl class="mx-1">
+                <dt>Duration</dt>
+                <dd>@Execution?.GetDurationInReadableFormat()</dd>
+            </dl>
+        </div>
+        <div class="col-lg mb-lg-0 mb-3">
+            <span class="fw-bold">Progress</span>
+            <div class="progress mt-1 @Execution?.ExecutionStatus.ToString().ToLower()">
+                <div class="progress-bar" style="width: @($"{Execution?.GetProgressPercent() ?? 0}%");" />
+            </div>
+        </div>
+    </div>
+}
 
 @if (ShowReport == Report.ExecutionDetails)
 {
@@ -263,67 +324,6 @@
                 }
             </tbody>
         </table>
-    </div>
-}
-
-@if (ShowReport == Report.Table || ShowReport == Report.Gantt || ShowReport == Report.Dependencies)
-{
-    <div class="row mt-3 @(ShowReport == Report.Table || ShowReport == Report.Gantt ? "sticky-top bg-body" : null)">
-        <div class="col-auto align-self-center">
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!Loading">
-                <CxIcon Icon="FeatherIcon.RefreshCw" />
-                Refresh
-            </HxButton>
-        </div>
-        <div class="col-auto align-self-center form-check form-check-inline ms-3">
-            <input type="checkbox" class="form-check-input" id="check_auto_refresh"
-                   @bind-value="AutoRefresh"
-                   checked=@AutoRefresh>
-            <label class="form-check-label" for="check_auto_refresh" title="Automatically refresh in 5 second intervals">
-                Auto-refresh
-            </label>
-        </div>
-        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-            @if (Execution is not null && Execution.ExecutionStatus == ExecutionStatus.Running)
-            {
-                <div class="col-auto align-self-center">
-                    <HxDropdownButtonGroup>
-                        <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None"
-                                                CssClass="@(Stopping ? "btn-auto disabled text-danger" : "btn-auto text-danger")">
-                            <CxIcon Icon="FeatherIcon.XOctagon" />
-                            Stop
-                        </HxDropdownToggleButton>
-                        <HxDropdownMenu>
-                            <HxDropdownItem @onclick="StopJobExecutionAsync" Enabled="!Stopping">Confirm</HxDropdownItem>
-                        </HxDropdownMenu>
-                    </HxDropdownButtonGroup>
-                </div>
-            }
-        </AuthorizeView>
-        <div class="col-auto">
-            <dl class="mx-1">
-                <dt>Started</dt>
-                <dd>@Execution?.StartDateTime?.LocalDateTime</dd>
-            </dl>
-        </div>
-        <div class="col-auto">
-            <dl class="mx-1">
-                <dt>Ended</dt>
-                <dd>@Execution?.EndDateTime?.LocalDateTime</dd>
-            </dl>
-        </div>
-        <div class="col-auto">
-            <dl class="mx-1">
-                <dt>Duration</dt>
-                <dd>@Execution?.GetDurationInReadableFormat()</dd>
-            </dl>
-        </div>
-        <div class="col-lg mb-lg-0 mb-3">
-            <span class="fw-bold">Progress</span>
-            <div class="progress mt-1 @Execution?.ExecutionStatus.ToString().ToLower()">
-                <div class="progress-bar" style="width: @($"{Execution?.GetProgressPercent() ?? 0}%");" />
-            </div>
-        </div>
     </div>
 }
 

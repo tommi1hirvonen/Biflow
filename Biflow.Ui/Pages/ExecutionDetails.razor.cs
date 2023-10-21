@@ -123,12 +123,23 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             {
                 return;
             }
-            if (ShowReport == Report.Table || ShowReport == Report.Gantt || ShowReport == Report.Dependencies)
+            if (ShowStatusBar)
             {
                 await LoadData();
             }
+            else
+            {
+                timer.Stop();
+                timer.Start();
+            }
         };
     }
+
+    private bool ShowStatusBar => ShowReport switch
+    {
+        Report.Table or Report.Gantt or Report.Dependencies or Report.ExecutionDetails or Report.Parameters => true,
+        _ => false
+    };
 
     protected override async Task OnParametersSetAsync()
     {
