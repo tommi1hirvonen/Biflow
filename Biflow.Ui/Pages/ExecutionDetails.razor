@@ -268,7 +268,7 @@
 
 @if (ShowReport == Report.Table || ShowReport == Report.Gantt || ShowReport == Report.Dependencies)
 {
-    <div class="row mt-3">
+    <div class="row mt-3 @(ShowReport == Report.Table || ShowReport == Report.Gantt ? "sticky-top bg-body" : null)">
         <div class="col-auto align-self-center">
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!Loading">
                 <CxIcon Icon="FeatherIcon.RefreshCw" />
