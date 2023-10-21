@@ -107,14 +107,6 @@
                             </div>
                         </td>
                         <td>
-                            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-                                <HxButtonGroup Size="ButtonGroupSize.Small">
-                                    <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto"
-                                      @onclick="async () => await EditModal.LetAsync(x => x.ShowAsync(item.ScheduleId))">
-                                        <CxIcon Icon="FeatherIcon.Edit2" />
-                                    </HxButton>
-                                </HxButtonGroup>
-                            </AuthorizeView>
                             @if (!item.Tags.Any())
                             {
                                 <span class="text-secondary ms-2">No tag filters</span>
@@ -126,15 +118,21 @@
                         </td>
                         <td align="center">
                             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-                                <HxDropdownButtonGroup>
-                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                        <CxIcon Icon="FeatherIcon.Trash2" />
-                                    </HxDropdownToggleButton>
-                                    <HxDropdownMenu>
-                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
-                                        <HxDropdownItem @onclick="() => DeleteScheduleAsync(item)">Confirm</HxDropdownItem>
-                                    </HxDropdownMenu>
-                                </HxDropdownButtonGroup>
+                                <HxButtonGroup Size="ButtonGroupSize.Small">
+                                    <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto"
+                                              @onclick="async () => await EditModal.LetAsync(x => x.ShowAsync(item.ScheduleId))">
+                                        <CxIcon Icon="FeatherIcon.Edit2" />
+                                    </HxButton>
+                                    <HxDropdownButtonGroup>
+                                        <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                                            <CxIcon Icon="FeatherIcon.Trash2" />
+                                        </HxDropdownToggleButton>
+                                        <HxDropdownMenu>
+                                            <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                            <HxDropdownItem @onclick="() => DeleteScheduleAsync(item)">Confirm</HxDropdownItem>
+                                        </HxDropdownMenu>
+                                    </HxDropdownButtonGroup>
+                                </HxButtonGroup>
                             </AuthorizeView>
                         </td>
                     </tr>
