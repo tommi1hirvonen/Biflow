@@ -200,19 +200,7 @@
                     <tr>
                         <td>Created by</td>
                         <td>
-                            @if (Execution.Schedule is not null)
-                            {
-                                <text>@Execution.Schedule.ScheduleName (schedule, @Execution.Schedule.GetScheduleDescription())</text>
-                            }
-                            else if (Execution.ScheduleName is not null)
-                            {
-                                <text>@Execution.ScheduleName (removed schedule, @Biflow.Ui.Core.Extensions.GetCronExpressionDescription(Execution.CronExpression))</text>
-                            }
-                            else if (Execution.ScheduleId is not null)
-                            {
-                                <text>Removed schedule (name not available)</text>
-                            }
-                            else if (Execution.ParentExecution is StepExecutionAttemptReference parent)
+                            @if (Execution.ParentExecution is StepExecutionAttemptReference parent)
                             {
                                 var json = JsonSerializer.Serialize(parent);
                                 // Replace execution id in json with a link to the parent execution's details.
@@ -221,26 +209,29 @@
                                     @((MarkupString)jsonWithLink)
                                 </small>
                             }
-                            else
+                            else if (!string.IsNullOrEmpty(Execution.CreatedBy))
                             {
                                 <text>@Execution.CreatedBy (user)</text>
                             }
                         </td>
                     </tr>
-                    @if (Execution.Schedule is not null)
-                    {
-                        <tr>
-                            <td>Schedule</td>
-                            <td>@Execution.Schedule.ScheduleName (@Execution.Schedule.GetScheduleDescription())</td>
-                        </tr>
-                    }
-                    else if (!string.IsNullOrEmpty(Execution.ScheduleName))
-                    {
-                        <tr>
-                            <td>Schedule</td>
-                            <td>@Execution.ScheduleName (@Biflow.Ui.Core.Extensions.GetCronExpressionDescription(Execution.CronExpression))</td>
-                        </tr>
-                    }
+                    <tr>
+                        <td>Schedule</td>
+                        <td>
+                            @if (Execution.Schedule is not null)
+                            {
+                                <text>@Execution.Schedule.ScheduleName (@Execution.Schedule.GetScheduleDescription())</text>
+                            }
+                            else if (!string.IsNullOrEmpty(Execution.ScheduleName))
+                            {
+                                <text>@Execution.ScheduleName (removed schedule, @Biflow.Ui.Core.Extensions.GetCronExpressionDescription(Execution.CronExpression))</text>
+                            }
+                            else if (Execution.ScheduleId is not null)
+                            {
+                                <text>Removed schedule (name not available)</text>
+                            }
+                        </td>
+                    </tr>
                     <tr>
                         <td>Executor PID</td>
                         <td>@Execution.ExecutorProcessId</td>
