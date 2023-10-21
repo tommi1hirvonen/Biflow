@@ -9,11 +9,12 @@ using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
+using System.Timers;
 
 namespace Biflow.Ui.Pages;
 
 [Route("/executions/{ExecutionId:guid}")]
-public partial class ExecutionDetails : ComponentBase
+public partial class ExecutionDetails : ComponentBase, IDisposable
 {
     [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
     
@@ -57,6 +58,24 @@ public partial class ExecutionDetails : ComponentBase
 
     private enum Report { Table, Gantt, Dependencies, ExecutionDetails, Parameters, Rerun, History }
 
+    private readonly System.Timers.Timer timer = new(5000) { AutoReset = false };
+
+    private bool AutoRefresh
+    {
+        get => _autoRefresh;
+        set
+        {
+            _autoRefresh = value;
+            timer.Stop();
+            if (_autoRefresh)
+            {   
+                timer.Start();
+            }
+        }
+    }
+
+    private bool _autoRefresh = true;
+
     private bool Loading { get; set; } = false;
 
     private bool Stopping => StoppingExecutions.Any(id => id == ExecutionId);
@@ -65,13 +84,13 @@ public partial class ExecutionDetails : ComponentBase
     // This same component instance can be used to switch between different job executions.
     // This list allows for stopping multiple executions concurrently
     // and to modify the view based on which job execution is being shown.
-    private List<Guid> StoppingExecutions { get; set; } = new();
+    private List<Guid> StoppingExecutions { get; set; } = [];
 
-    private HashSet<StepExecutionStatus> StepStatusFilter { get; } = new();
-    private HashSet<(string StepName, StepType StepType)> StepFilter { get; } = new();
+    private HashSet<StepExecutionStatus> StepStatusFilter { get; } = [];
+    private HashSet<(string StepName, StepType StepType)> StepFilter { get; } = [];
     private StepExecution? DependencyGraphStepFilter { get; set; }
-    private HashSet<StepType> StepTypeFilter { get; } = new();
-    private HashSet<string> TagFilter { get; } = new();
+    private HashSet<StepType> StepTypeFilter { get; } = [];
+    private HashSet<string> TagFilter { get; } = [];
     private SortMode SortMode { get; set; } = SortMode.StartedAsc;
 
     private StepExecutionDetailsOffcanvas? StepExecutionDetailsOffcanvas { get; set; }
@@ -96,6 +115,21 @@ public partial class ExecutionDetails : ComponentBase
 
     private int _filterDepthForwards;
 
+    protected override void OnInitialized()
+    {
+        timer.Elapsed += async (object? source, ElapsedEventArgs e) =>
+        {
+            if (!AutoRefresh)
+            {
+                return;
+            }
+            if (ShowReport == Report.Table || ShowReport == Report.Gantt || ShowReport == Report.Dependencies)
+            {
+                await LoadData();
+            }
+        };
+    }
+
     protected override async Task OnParametersSetAsync()
     {
         // If the ExecutionId parameter is updated when either the rerun or history view is being shown,
@@ -112,9 +146,10 @@ public partial class ExecutionDetails : ComponentBase
     {
         if (ExecutionId != Guid.Empty)
         {
+            timer.Stop();
             Loading = true;
+            await InvokeAsync(StateHasChanged);
             using var context = DbFactory.CreateDbContext();
-
             Execution = await context.Executions
                 .AsNoTrackingWithIdentityResolution()
                 .Include(e => e.Job)
@@ -133,9 +168,16 @@ public partial class ExecutionDetails : ComponentBase
                 .ThenInclude(e => e.Step)
                 .ThenInclude(s => s!.Tags)
                 .FirstOrDefaultAsync(e => e.ExecutionId == ExecutionId);
-            StateHasChanged();
             Loading = false;
-
+            if (AutoRefresh && (Execution?.ExecutionStatus == ExecutionStatus.Running || Execution?.ExecutionStatus == ExecutionStatus.NotStarted))
+            {
+                timer.Start();
+            }
+            else
+            {
+                AutoRefresh = false;
+            }
+            await InvokeAsync(StateHasChanged);
             GraphShouldRender = true;
         }
     }
@@ -185,7 +227,7 @@ public partial class ExecutionDetails : ComponentBase
             var startStep = Execution?.StepExecutions.FirstOrDefault(s => s.StepId == DependencyGraphStepFilter.StepId);
             if (startStep is not null)
             {
-                var steps = RecurseDependenciesBackward(startStep, new(), 0);
+                var steps = RecurseDependenciesBackward(startStep, [], 0);
                 steps.Remove(startStep);
                 steps = RecurseDependenciesForward(startStep, steps, 0);
 
@@ -332,4 +374,9 @@ public partial class ExecutionDetails : ComponentBase
 
     private static string TextSelector(StepExecution step) => step.StepName ?? "";
 
+    public void Dispose()
+    {
+        timer.Stop();
+        timer.Dispose();
+    }
 }

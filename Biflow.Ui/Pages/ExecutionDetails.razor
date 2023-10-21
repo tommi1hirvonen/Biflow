@@ -275,6 +275,14 @@
                 Refresh
             </HxButton>
         </div>
+        <div class="col-auto align-self-center form-check form-check-inline ms-3">
+            <input type="checkbox" class="form-check-input" id="check_auto_refresh"
+                   @bind-value="AutoRefresh"
+                   checked=@AutoRefresh>
+            <label class="form-check-label" for="check_auto_refresh" title="Automatically refresh in 5 second intervals">
+                Auto-refresh
+            </label>
+        </div>
         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
             @if (Execution is not null && Execution.ExecutionStatus == ExecutionStatus.Running)
             {
