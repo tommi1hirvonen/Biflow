@@ -1,0 +1,59 @@
+@using Microsoft.JSInterop
+
+@implements IAsyncDisposable
+
+@inject IJSRuntime js
+
+@if (ChildContent is not null)
+{
+    <div @ref="container" class="@ContainerCssClass">
+        @ChildContent
+    </div>
+}
+
+@if (MenuContent is not null)
+{
+    <div @ref="dropdown" class="dropdown position-absolute @DropdownCssClass">
+        <ul class="dropdown-menu context-menu">
+            @MenuContent
+        </ul>
+    </div>
+}
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter] public RenderFragment? MenuContent { get; set; }
+
+    [Parameter] public string? ContainerCssClass { get; set; }
+
+    [Parameter] public string? DropdownCssClass { get; set; }
+
+    private ElementReference? container;
+    private ElementReference? dropdown;
+    private IJSObjectReference? jsObject;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            ArgumentNullException.ThrowIfNull(container);
+            jsObject = await js.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/ContextMenuToggle.js");
+            await jsObject.InvokeVoidAsync("setOnContextMenuListener", container, dropdown);
+            await jsObject.InvokeVoidAsync("attachWindowOnClickListener");
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (jsObject is not null)
+        {
+            try
+            {
+                await jsObject.InvokeVoidAsync("disposeWindowOnClickListener");
+            }
+            catch (JSDisconnectedException) { }
+            await jsObject.DisposeAsync();
+        }
+    }
+}
