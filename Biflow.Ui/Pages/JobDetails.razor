@@ -169,7 +169,7 @@
                     }
                     else if (DetailsPage == "history" && Job is not null)
                     {
-                        <JobHistoryComponent JobId="Job.JobId" JobName="Job.JobName" />
+                        <JobHistoryComponent JobId="Job.JobId" JobName="@Job.JobName" />
                     }
                     else if (DetailsPage == "dependencies")
                     {

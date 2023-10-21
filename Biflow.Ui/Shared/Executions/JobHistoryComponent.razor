@@ -1,7 +1,10 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbFactory
 @inject NavigationManager NavigationManager
 
-<PageTitle>@JobName | History | Biflow</PageTitle>
+@if (!string.IsNullOrEmpty(JobName))
+{
+    <PageTitle>@JobName | History | Biflow</PageTitle>
+}
 
 <div class="row">
     <div class="col-auto d-inline-flex align-items-center">

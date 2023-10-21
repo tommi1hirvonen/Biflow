@@ -541,7 +541,7 @@ else if (ShowReport == Report.Rerun)
 else if (ShowReport == Report.History && Execution?.JobId is Guid jobId)
 {
     <div class="mt-3">
-        <JobHistoryComponent JobId="jobId" JobName="Execution.JobName" />
+        <JobHistoryComponent JobId="jobId" />
     </div>
 }
 
