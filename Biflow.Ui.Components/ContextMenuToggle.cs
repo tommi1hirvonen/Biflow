@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
-using Microsoft.JSInterop;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace Biflow.Ui.Components;
 
-public class ContextMenuToggle : ComponentBase, IAsyncDisposable
+public class ContextMenuToggle : ComponentBase
 {
-    [Inject] private IJSRuntime JS { get; set; } = null!;
+    [Inject] private ContextMenuService ContextMenuService { get; set; } = null!;
 
     [Parameter] public string ContainerHtmlTag { get; set; } = "div";
 
@@ -16,50 +16,24 @@ public class ContextMenuToggle : ComponentBase, IAsyncDisposable
 
     [Parameter] public string? ContainerCssClass { get; set; }
 
-    [Parameter] public string? DropdownCssClass { get; set; }
-
-    private ElementReference? container;
-    private ElementReference? dropdown;
-    private IJSObjectReference? jsObject;
+    [Parameter] public bool Disabled { get; set; } = false;
 
     protected override void BuildRenderTree(RenderTreeBuilder builder)
     {
         builder.OpenElement(0, ContainerHtmlTag);
         builder.AddAttribute(1, "class", ContainerCssClass);
-        builder.AddElementReferenceCapture(2, value => container = value);
-        builder.AddContent(3, ChildContent);
-        builder.CloseElement();
-        builder.OpenElement(4, "div");
-        builder.AddAttribute(5, "class", $"dropdown position-absolute {DropdownCssClass}");
-        builder.AddElementReferenceCapture(6, value => dropdown = value);
-        builder.OpenElement(7, "ul");
-        builder.AddAttribute(8, "class", "dropdown-menu context-menu");
-        builder.AddContent(9, MenuContent);
-        builder.CloseElement();
+        builder.AddAttribute(2, "oncontextmenu", EventCallback.Factory.Create<MouseEventArgs>(this, ShowContextMenuAsync));
+        builder.AddEventPreventDefaultAttribute(3, "oncontextmenu", true);
+        builder.AddContent(4, ChildContent);
         builder.CloseElement();
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private async Task ShowContextMenuAsync(MouseEventArgs e)
     {
-        if (firstRender)
+        if (Disabled)
         {
-            ArgumentNullException.ThrowIfNull(container);
-            jsObject = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/ContextMenuToggle.js");
-            await jsObject.InvokeVoidAsync("setOnContextMenuListener", container, dropdown);
-            await jsObject.InvokeVoidAsync("attachWindowOnClickListener");
+            return;
         }
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        if (jsObject is not null)
-        {
-            try
-            {
-                await jsObject.InvokeVoidAsync("disposeWindowOnClickListener");
-            }
-            catch (JSDisconnectedException) { }
-            await jsObject.DisposeAsync();
-        }
+        await ContextMenuService.ShowContextMenuAsync(e, MenuContent);
     }
 }

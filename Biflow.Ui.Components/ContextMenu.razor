@@ -1,0 +1,69 @@
+@using Microsoft.AspNetCore.Components.Rendering
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+
+@implements IAsyncDisposable
+
+@inject IJSRuntime js
+@inject ContextMenuService contextMenuService
+
+<div class="dropdown position-absolute">
+    <ul @ref="dropdown" class="dropdown-menu context-menu">
+        @menuContent
+    </ul>
+</div>
+
+@code {
+    private IJSObjectReference? jsObject;
+    private ElementReference dropdown;
+    private DotNetObjectReference<ContextMenu>? dotNetObject;
+    private RenderFragment? menuContent;
+
+    protected override void OnInitialized()
+    {
+        dotNetObject = DotNetObjectReference.Create(this);
+        contextMenuService.OnShowContextMenu += HandleContextMenu;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            jsObject = await js.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/ContextMenu.js");
+        }
+    }
+
+    private async Task HandleContextMenu(MouseEventArgs e, RenderFragment? renderFragment)
+    {
+        if (renderFragment is null)
+        {
+            return;
+        }
+        await InvokeAsync(async () =>
+        {
+            menuContent = renderFragment;
+            StateHasChanged();
+            if (jsObject is not null && dotNetObject is not null)
+            {
+                await jsObject.InvokeVoidAsync("showContextMenu", dropdown, e.ClientX, e.ClientY, dotNetObject);
+            }
+        });
+    }
+
+    [JSInvokable]
+    public void OnMenuHidden()
+    {
+        menuContent = null;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        contextMenuService.OnShowContextMenu -= HandleContextMenu;
+        if (jsObject is not null)
+        {
+            await jsObject.DisposeAsync();
+        }
+        dotNetObject?.Dispose();
+    }
+}
