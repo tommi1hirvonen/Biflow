@@ -231,27 +231,32 @@
                                                 <HxDropdownMenu Alignment="DropdownMenuAlignment.End">
                                                     <HxDropdownHeader>Batch edit</HxDropdownHeader>
                                                     <HxDropdownItem OnClick="() => BatchEditRenameModal.LetAsync(x => x.ShowAsync())">
+                                                        <CxIcon Icon="FeatherIcon.Edit3" />
                                                         Name
                                                     </HxDropdownItem>
                                                     <HxDropdownItem OnClick="() => BatchEditTagsModal.LetAsync(x => x.ShowAsync())">
+                                                        <CxIcon Icon="FeatherIcon.Tag" />
                                                         Tags
                                                     </HxDropdownItem>
                                                     <HxDropdownItem OnClick="() => BatchEditExecPhaseModal.LetAsync(x => x.ShowAsync())">
+                                                        <CxIcon Icon="FeatherIcon.Layers" />
                                                         Execution phase
                                                     </HxDropdownItem>
                                                     <HxDropdownItem OnClick="() => BatchEditRetriesModal.LetAsync(x => x.ShowAsync())">
+                                                        <CxIcon Icon="FeatherIcon.Repeat" />
                                                         Retry attempts
                                                     </HxDropdownItem>
                                                     <HxDropdownItem OnClick="() => BatchEditRetryIntervalModal.LetAsync(x => x.ShowAsync())">
+                                                        <CxIcon Icon="FeatherIcon.Clock" />
                                                         Retry interval
-                                                    </HxDropdownItem>
-                                                    <HxDropdownItem OnClick="() => ToggleSelectedStepsEnabledAsync(true)">
-                                                        <CxIcon Icon="FeatherIcon.ToggleRight" />
-                                                        Enable
                                                     </HxDropdownItem>
                                                     <HxDropdownItem OnClick="() => ToggleSelectedStepsEnabledAsync(false)">
                                                         <CxIcon Icon="FeatherIcon.ToggleLeft" />
                                                         Disable
+                                                    </HxDropdownItem>
+                                                    <HxDropdownItem OnClick="() => ToggleSelectedStepsEnabledAsync(true)">
+                                                        <CxIcon Icon="FeatherIcon.ToggleRight" />
+                                                        Enable
                                                     </HxDropdownItem>
                                                 </HxDropdownMenu>
                                             </HxDropdownButtonGroup>
