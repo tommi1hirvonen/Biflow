@@ -131,7 +131,7 @@
                     var user = HttpContextAccessor.HttpContext?.User;
                     var userIsAdminOrEditor = (user?.IsInRole(Roles.Admin) ?? false) || (user?.IsInRole(Roles.Editor) ?? false);
                     <ContextMenuToggle ContainerHtmlTag="tr" class="list-group-header" Disabled="category is null || !userIsAdminOrEditor">
-                        <ChildContent>                       
+                        <ChildContent Context="menu">                       
                             <td colspan="4" class="align-middle fw-bold">
                                 @if (state.IsExpanded)
                                 {
@@ -148,13 +148,21 @@
                                     </span>
                                 }
                             </td>
-                            <td colspan="1">
+                            <td colspan="1" class="text-end">
+                                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" Spinner="false" CssClass="btn-auto" @onclick="e => menu.ShowContextMenuAsync(e)">
+                                        <CxIcon Icon="FeatherIcon.MoreHorizontal" />
+                                    </HxButton>
+                                </AuthorizeView>
                             </td>
                         </ChildContent>
                         <MenuContent>
                             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                                 @if (category is not null)
                                 {
+                                    <DropdownMenuHeader>
+                                        @category.CategoryName
+                                    </DropdownMenuHeader>
                                     <DropdownMenuItem @onclick="() => CategoryEditModal.LetAsync(x => x.ShowAsync(category))">
                                         <CxIcon Icon="FeatherIcon.Edit2" />
                                         Edit
@@ -180,7 +188,7 @@
                         }
                         var nextStartTime = GetNextStartTime(item);
                         <ContextMenuToggle ContainerHtmlTag="tr" class="@($"job-row {(item.IsEnabled ? null : "disabled")}")" Disabled="!userIsAdminOrEditor">
-                            <ChildContent>
+                            <ChildContent Context="menu">
                                 <td class="align-middle">
                                     <a class="text-body ms-5" href="@($"jobs/{item.JobId}/steps")">
                                         <HighlightableText PartToHighlight="@JobNameFilter" Text="@item.JobName" />
@@ -214,6 +222,9 @@
                                                 <input class="form-check-input" type="checkbox" id="enabled_@item.JobId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
                                                 <label class="form-check-label" for="enabled_@item.JobId"></label>
                                             </div>
+                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" Spinner="false" CssClass="btn-auto" @onclick="e => menu.ShowContextMenuAsync(e)">
+                                                <CxIcon Icon="FeatherIcon.MoreHorizontal" />
+                                            </HxButton>
                                         </AuthorizeView>
                                         <AuthorizeView Roles="@($"{Roles.Operator}, {Roles.Viewer}")">
                                             <div class="form-check form-switch">
@@ -226,6 +237,9 @@
                             </ChildContent>
                             <MenuContent>
                                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+                                    <DropdownMenuHeader>
+                                        @item.JobName
+                                    </DropdownMenuHeader>
                                     <DropdownMenuItem @onclick="() => JobEditModal.LetAsync(x => x.ShowAsync(item))">
                                         <CxIcon Icon="FeatherIcon.Edit2" />
                                         Edit

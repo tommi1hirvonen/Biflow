@@ -10,12 +10,23 @@ export function showContextMenu(dropdownElement, clientX, clientY, dotNetObjectR
     var tempY = clientY + bodyRect.top + dropdownElement.clientHeight <= window.innerHeight ? clientY : clientY - dropdownElement.clientHeight;
     dropdownElement.style.top = `${tempY}px`;
     dropdownElement.style.left = `${tempX}px`;
-    window.addEventListener('scroll', async function (_) {
-        dropdownElement.classList.remove('show');
-        await dotNetObjectReference.invokeMethodAsync("OnMenuHidden");
-    }, { once: true });
-    window.addEventListener('click', async function (_) {
-        dropdownElement.classList.remove('show');
-        await dotNetObjectReference.invokeMethodAsync("OnMenuHidden");
-    }, { once: true });
+}
+
+var listener;
+
+export function attachWindowListeners(dropdownElement, dotNetObjectReference) {
+    listener = async function (event) {
+        if (dropdownElement.classList.contains("show")) {
+            dropdownElement.classList.remove('show');
+            await dotNetObjectReference.invokeMethodAsync("OnMenuHidden");
+        }
+    }
+    window.addEventListener('scroll', listener);
+    window.addEventListener('click', listener);
+}
+
+export function detachWindowListeners() {
+    window.removeEventListener('scroll', listener);
+    window.removeEventListener('click', listener);
+    listener = null;
 }

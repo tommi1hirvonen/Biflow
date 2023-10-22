@@ -291,7 +291,7 @@
                 {
                     var containerCssClass = $"list-group-item list-group-item-action py-2 {(item.IsEnabled ? null : "step-item-disabled")}";
                     <ContextMenuToggle @key="item.StepId" ContainerHtmlTag="li" class="@containerCssClass">
-                        <ChildContent>
+                        <ChildContent Context="menu">
                             <div class="row">
                                 <div class="col-xl-5 col-sm-7 pl-2 d-flex align-items-center">
                                     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
@@ -359,6 +359,9 @@
                                             <label class="form-check-label" for="enabled_@item.StepId" aria-label="enabled"></label>
                                         </div>
                                     </AuthorizeView>
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" Spinner="false" CssClass="btn-auto" @onclick="e => menu.ShowContextMenuAsync(e)">
+                                        <CxIcon Icon="FeatherIcon.MoreHorizontal" />
+                                    </HxButton>
                                 </div>
 
                                 <div class="col-xl-4 d-flex flex-wrap align-items-center justify-content-xl-end">

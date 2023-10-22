@@ -20,6 +20,7 @@
     private ElementReference dropdown;
     private DotNetObjectReference<ContextMenu>? dotNetObject;
     private RenderFragment? menuContent;
+    private MouseEventArgs? eventArgs;
 
     protected override void OnInitialized()
     {
@@ -32,6 +33,13 @@
         if (firstRender)
         {
             jsObject = await js.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/ContextMenu.js");
+            await jsObject.InvokeVoidAsync("attachWindowListeners", dropdown, dotNetObject);
+        }
+        if (eventArgs is not null && jsObject is not null && dotNetObject is not null)
+        {
+            var e = eventArgs;
+            eventArgs = null; // Reset event arguments before showing menu (could take a while).
+            await jsObject.InvokeVoidAsync("showContextMenu", dropdown, e.ClientX, e.ClientY, dotNetObject);
         }
     }
 
@@ -41,20 +49,23 @@
         {
             return;
         }
-        await InvokeAsync(async () =>
+        await InvokeAsync(() =>
         {
             menuContent = renderFragment;
-            StateHasChanged();
-            if (jsObject is not null && dotNetObject is not null)
-            {
-                await jsObject.InvokeVoidAsync("showContextMenu", dropdown, e.ClientX, e.ClientY, dotNetObject);
-            }
+            eventArgs = e; // Store event arguments...
+            StateHasChanged(); // ...and request rerender.
+            return Task.CompletedTask;
         });
     }
 
     [JSInvokable]
     public void OnMenuHidden()
     {
+        if (eventArgs is not null)
+        {
+            // The menu is waiting for render while it is being requested to be hidden => do nothing.
+            return;
+        }
         menuContent = null;
         InvokeAsync(StateHasChanged);
     }
@@ -64,7 +75,11 @@
         contextMenuService.OnShowContextMenu -= HandleContextMenu;
         if (jsObject is not null)
         {
-            await jsObject.DisposeAsync();
+            try
+            {
+                await jsObject.InvokeVoidAsync("detachWindowListeners");
+            } catch (JSDisconnectedException) {}
+        await jsObject.DisposeAsync();
         }
         dotNetObject?.Dispose();
     }

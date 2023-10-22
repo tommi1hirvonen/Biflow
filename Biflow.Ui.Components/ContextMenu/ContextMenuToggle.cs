@@ -12,7 +12,7 @@ public class ContextMenuToggle : ComponentBase
 
     [Parameter] public string ContainerHtmlTag { get; set; } = "div";
 
-    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public RenderFragment<ContextMenuToggle>? ChildContent { get; set; }
 
     [Parameter] public RenderFragment? MenuContent { get; set; }
 
@@ -24,11 +24,14 @@ public class ContextMenuToggle : ComponentBase
         builder.AddMultipleAttributes(1, InputAttributes);
         builder.AddAttribute(2, "oncontextmenu", EventCallback.Factory.Create<MouseEventArgs>(this, ShowContextMenuAsync));
         builder.AddEventPreventDefaultAttribute(3, "oncontextmenu", true);
-        builder.AddContent(4, ChildContent);
+        if (ChildContent is not null)
+        {
+            builder.AddContent(4, ChildContent(this));
+        }
         builder.CloseElement();
     }
 
-    private async Task ShowContextMenuAsync(MouseEventArgs e)
+    public async Task ShowContextMenuAsync(MouseEventArgs e)
     {
         if (Disabled)
         {
