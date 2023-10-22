@@ -1,5 +1,5 @@
 ﻿
-.list-group-item-action.step-item-disabled {
+::deep .step-item-disabled {
     background-color: var(--bs-list-group-action-hover-bg);
 }
 

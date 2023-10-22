@@ -277,7 +277,7 @@
                 @foreach (var item in FilteredSteps)
                 {
                     var containerCssClass = $"list-group-item list-group-item-action py-2 {(item.IsEnabled ? null : "step-item-disabled")}";
-                    <ContextMenuToggle @key="item.StepId" ContainerHtmlTag="li" ContainerCssClass="@containerCssClass">
+                    <ContextMenuToggle @key="item.StepId" ContainerHtmlTag="li" class="@containerCssClass">
                         <ChildContent>
                             <div class="row">
                                 <div class="col-xl-5 col-sm-7 pl-2 d-flex align-items-center">
