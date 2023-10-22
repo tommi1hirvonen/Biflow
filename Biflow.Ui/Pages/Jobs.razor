@@ -155,18 +155,14 @@
                             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                                 @if (category is not null)
                                 {
-                                    <li>
-                                        <span class="dropdown-item" role="button" @onclick="() => CategoryEditModal.LetAsync(x => x.ShowAsync(category))">
-                                            <CxIcon Icon="FeatherIcon.Edit2" />
-                                            Edit
-                                        </span>
-                                    </li>
-                                    <li>
-                                        <span class="dropdown-item" role="button" @onclick="() => DeleteCategoryAsync(category)">
-                                            <CxIcon Icon="FeatherIcon.Trash2" />
-                                            Delete
-                                        </span>
-                                    </li>
+                                    <DropdownMenuItem @onclick="() => CategoryEditModal.LetAsync(x => x.ShowAsync(category))">
+                                        <CxIcon Icon="FeatherIcon.Edit2" />
+                                        Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem @onclick="() => DeleteCategoryAsync(category)">
+                                        <CxIcon Icon="FeatherIcon.Trash2" />
+                                        Delete
+                                    </DropdownMenuItem>
                                 }
                             </AuthorizeView>
                         </MenuContent>
@@ -230,24 +226,18 @@
                             </ChildContent>
                             <MenuContent>
                                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-                                    <li>
-                                        <span class="dropdown-item" role="button" @onclick="() => JobEditModal.LetAsync(x => x.ShowAsync(item))">
-                                            <CxIcon Icon="FeatherIcon.Edit2" />
-                                            Edit
-                                        </span>
-                                    </li>
-                                    <li>
-                                        <span class="dropdown-item" role="button" @onclick="() => DeleteJob(item)">
-                                            <CxIcon Icon="FeatherIcon.Trash2" />
-                                            Delete
-                                        </span>
-                                    </li>
-                                    <li>
-                                        <span class="dropdown-item" role="button" @onclick="() => CopyJob(item)">
-                                            <CxIcon Icon="FeatherIcon.Copy" />
-                                            Copy
-                                        </span>
-                                    </li>
+                                    <DropdownMenuItem @onclick="() => JobEditModal.LetAsync(x => x.ShowAsync(item))">
+                                        <CxIcon Icon="FeatherIcon.Edit2" />
+                                        Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem @onclick="() => DeleteJob(item)">
+                                        <CxIcon Icon="FeatherIcon.Trash2" />
+                                        Delete
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem @onclick="() => CopyJob(item)">
+                                        <CxIcon Icon="FeatherIcon.Copy" />
+                                        Copy
+                                    </DropdownMenuItem>
                                 </AuthorizeView>
                             </MenuContent>
                         </ContextMenuToggle>
