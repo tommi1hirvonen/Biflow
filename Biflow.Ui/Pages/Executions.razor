@@ -11,12 +11,14 @@
             <HxButtonGroup Size="ButtonGroupSize.Small">
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                 @onclick="ShowExecutionsAsync"
+                Spinner="false"
                 CssClass="@(!ShowSteps ? "active" : null)">
                     <CxIcon Icon="LucideIcon.ClipboardList" />
                     Jobs
                 </HxButton>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                 @onclick="ShowStepExecutionsAsync"
+                Spinner="false"
                 CssClass="@(ShowSteps ? "active" : null)">
                     <CxIcon Icon="LucideIcon.ListChecks" />
                     Steps
@@ -25,12 +27,14 @@
             <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="ms-3">
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                 @onclick="() => ShowGraph = false"
+                Spinner="false"
                 CssClass="@(!ShowGraph ? "active" : null)">
                     <CxIcon Icon="FeatherIcon.Table" />
                     Table
                 </HxButton>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                 @onclick="() => ShowGraph = true"
+                Spinner="false"
                 CssClass="@(ShowGraph ? "active" : null)">
                     <CxIcon Icon="LucideIcon.BarChartHorizontal" />
                     Graph
