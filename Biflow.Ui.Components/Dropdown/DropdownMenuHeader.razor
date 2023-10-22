@@ -1,0 +1,15 @@
+﻿@namespace Biflow.Ui.Components
+
+<li>
+    <h6 class="dropdown-header @CssClass" @attributes="InputAttributes">
+        @ChildContent
+    </h6>
+</li>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter] public string? CssClass { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? InputAttributes { get; set; }
+}
