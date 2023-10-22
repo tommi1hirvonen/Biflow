@@ -245,6 +245,14 @@
                                                     <HxDropdownItem OnClick="() => BatchEditRetryIntervalModal.LetAsync(x => x.ShowAsync())">
                                                         Retry interval
                                                     </HxDropdownItem>
+                                                    <HxDropdownItem OnClick="() => ToggleSelectedStepsEnabledAsync(true)">
+                                                        <CxIcon Icon="FeatherIcon.ToggleRight" />
+                                                        Enable
+                                                    </HxDropdownItem>
+                                                    <HxDropdownItem OnClick="() => ToggleSelectedStepsEnabledAsync(false)">
+                                                        <CxIcon Icon="FeatherIcon.ToggleLeft" />
+                                                        Disable
+                                                    </HxDropdownItem>
                                                 </HxDropdownMenu>
                                             </HxDropdownButtonGroup>
                                         </div>

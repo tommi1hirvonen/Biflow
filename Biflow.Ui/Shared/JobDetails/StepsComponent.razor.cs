@@ -47,9 +47,9 @@ public partial class StepsComponent : ComponentBase
 
     private IEnumerable<Step> FilteredSteps => Steps?
         .Where(step => stateFilter switch { StateFilter.Enabled => step.IsEnabled, StateFilter.Disabled => !step.IsEnabled, _ => true })
-        .Where(step => !StepNameFilter.Any() || (step.StepName?.ContainsIgnoreCase(StepNameFilter) ?? false))
-        .Where(step => !StepDescriptionFilter.Any() || (step.StepDescription?.ContainsIgnoreCase(StepDescriptionFilter) ?? false))
-        .Where(step => !SqlStatementFilter.Any() || step is SqlStep sql && (sql.SqlStatement?.ContainsIgnoreCase(SqlStatementFilter) ?? false))
+        .Where(step => StepNameFilter.Length == 0 || (step.StepName?.ContainsIgnoreCase(StepNameFilter) ?? false))
+        .Where(step => StepDescriptionFilter.Length == 0 || (step.StepDescription?.ContainsIgnoreCase(StepDescriptionFilter) ?? false))
+        .Where(step => SqlStatementFilter.Length == 0 || step is SqlStep sql && (sql.SqlStatement?.ContainsIgnoreCase(SqlStatementFilter) ?? false))
         .Where(step => TagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName)))
         .Where(step => StepTypeFilter.Count == 0 || StepTypeFilter.Contains(step.StepType))
         .Where(step => ConnectionFilter.Count == 0 || step is IHasConnection conn && ConnectionFilter.Any(f => f.ConnectionId == conn.ConnectionId))
@@ -62,9 +62,9 @@ public partial class StepsComponent : ComponentBase
         .OrderBy(t => t.TagName)
         ?? Enumerable.Empty<Tag>();
 
-    private HashSet<Step> SelectedSteps { get; set; } = new();
+    private HashSet<Step> SelectedSteps { get; set; } = [];
 
-    private Dictionary<StepType, IStepEditModal?> StepEditModals { get; } = new();
+    private Dictionary<StepType, IStepEditModal?> StepEditModals { get; } = [];
 
     private StepsBatchEditTagsModal? BatchEditTagsModal { get; set; }
 
@@ -89,9 +89,9 @@ public partial class StepsComponent : ComponentBase
     private string StepNameFilter { get; set; } = string.Empty;
     private string StepDescriptionFilter { get; set; } = string.Empty;
     private string SqlStatementFilter { get; set; } = string.Empty;
-    private HashSet<Tag> TagsFilterSet { get; set; } = new();
-    private HashSet<StepType> StepTypeFilter { get; } = new();
-    private HashSet<ConnectionInfoBase> ConnectionFilter { get; set;} = new();
+    private HashSet<Tag> TagsFilterSet { get; set; } = [];
+    private HashSet<StepType> StepTypeFilter { get; } = [];
+    private HashSet<ConnectionInfoBase> ConnectionFilter { get; set;} = [];
 
     private Guid? LastStartedExecutionId { get; set; }
 
@@ -120,14 +120,14 @@ public partial class StepsComponent : ComponentBase
 
     private bool IsStepTypeDisabled(StepType type) => type switch
     {
-        StepType.Sql or StepType.Package => SqlConnections?.Any() == false,
-        StepType.Pipeline => PipelineClients?.Any() == false,
-        StepType.Function => FunctionApps?.Any() == false,
-        StepType.Dataset => AppRegistrations?.Any() == false,
+        StepType.Sql or StepType.Package => SqlConnections?.Count > 0,
+        StepType.Pipeline => PipelineClients?.Count > 0,
+        StepType.Function => FunctionApps?.Count > 0,
+        StepType.Dataset => AppRegistrations?.Count > 0,
         StepType.Job => Jobs is null || Jobs.Count == 1,
-        StepType.AgentJob => SqlConnections?.Any() == false,
-        StepType.Tabular => AsConnections?.Any() == false,
-        StepType.Qlik => QlikCloudClients?.Any() == false,
+        StepType.AgentJob => SqlConnections?.Count > 0,
+        StepType.Tabular => AsConnections?.Count > 0,
+        StepType.Qlik => QlikCloudClients?.Count > 0,
         _ => false,
     };
 
@@ -275,6 +275,27 @@ public partial class StepsComponent : ComponentBase
         SortSteps?.Invoke();
 
         SelectedSteps = steps.ToHashSet();
+    }
+
+    private async Task ToggleSelectedStepsEnabledAsync(bool enabled)
+    {
+        var steps = SelectedSteps
+            .Where(s => s.IsEnabled != enabled)
+            .ToArray();
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            context.AttachRange(steps);
+            foreach (var step in steps)
+            {
+                step.IsEnabled = enabled;
+            }
+            await context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error toggling steps", ex.Message);
+        }
     }
 
     private void OnExecutionStarted(Guid executionId)
