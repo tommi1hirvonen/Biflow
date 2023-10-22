@@ -11,19 +11,19 @@
                         <CxIcon Icon="LucideIcon.ClipboardList" />
                     </div>
                     <InputSelect class="form-select" @bind-Value="Step.JobToExecuteId" @bind-Value:after="SetJobToExecute">
-                    <option value=""></option>
-                    @foreach (var category in JobCategories)
-                    {
-                        <optgroup label="@(category?.CategoryName ?? "No category")">
-                            @foreach (var job in JobSlims.Values.Where(j => j.CategoryId == category?.CategoryId && j.JobId != Step.JobId).OrderBy(j => j.JobName))
-                            {
-                                <option value="@job.JobId">
-                                    @job.JobName
-                                </option>
-                            }
-                        </optgroup>
-                    }
-                </InputSelect>
+                        <option value=""></option>
+                        @foreach (var category in JobCategories)
+                        {
+                            <optgroup label="@(category?.CategoryName ?? "No category")">
+                                @foreach (var job in JobSlims.Values.Where(j => j.CategoryId == category?.CategoryId && j.JobId != Step.JobId).OrderBy(j => j.JobName))
+                                {
+                                    <option value="@job.JobId">
+                                        @job.JobName
+                                    </option>
+                                }
+                            </optgroup>
+                        }
+                    </InputSelect>
                 </div>
             </div>
             <div class="col-auto">

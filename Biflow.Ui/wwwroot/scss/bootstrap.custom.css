@@ -11962,6 +11962,10 @@ textarea.form-control-lg {
   width: 600px !important;
 }
 
+.offcanvas.hx-offcanvas-sm {
+  width: 450px !important;
+}
+
 .offcanvas.hx-offcanvas-lg {
   width: 800px !important;
 }

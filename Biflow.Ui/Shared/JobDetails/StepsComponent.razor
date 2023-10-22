@@ -1,7 +1,7 @@
 ﻿
 <PageTitle>@Job?.JobName | Steps | Biflow</PageTitle>
 
-<div class="sticky-top pt-2 bg-body rounded-bottom-4" style="margin-left: -3px; margin-right: -3px; padding-left: 3px; padding-right: 3px; margin-top: -1px;">
+<div class="sticky-top-sm pt-2 bg-body rounded-bottom-4" style="margin-left: -3px; margin-right: -3px; padding-left: 3px; padding-right: 3px; margin-top: -1px;">
     <div class="row justify-content-between gap-3">
         <div class="col-auto">
             <div class="btn-toolbar">
@@ -213,32 +213,20 @@
                                     @if (SelectedSteps.Any())
                                     {
                                         <div class="btn-group">
-                                            <HxDropdownButtonGroup>
-                                                <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
-                                                    <CxIcon Icon="FeatherIcon.Trash2" />
-                                                </HxDropdownToggleButton>
-                                                <HxDropdownMenu>
-                                                    <HxDropdownHeader>Delete selected steps?</HxDropdownHeader>
-                                                    <HxDropdownItem @onclick="DeleteSelectedSteps">Confirm</HxDropdownItem>
-                                                </HxDropdownMenu>
-                                            </HxDropdownButtonGroup>
-                                            <HxDropdownButtonGroup>
-                                                <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
-                                                    <CxIcon Icon="FeatherIcon.Copy" />
-                                                </HxDropdownToggleButton>
-                                                <HxDropdownMenu Alignment="DropdownMenuAlignment.End">
-                                                    <HxDropdownHeader>Copy to</HxDropdownHeader>
-                                                    <HxDropdownItem @onclick="() => CopySelectedSteps()">here</HxDropdownItem>
-                                                    <HxDropdownDivider></HxDropdownDivider>
-                                                    @foreach (var job in Jobs.Where(job => job.JobId != Job.JobId))
-                                                    {
-                                                        <HxDropdownItem @onclick="() => CopySelectedSteps(job)">@job.JobName</HxDropdownItem>
-                                                    }
-                                                </HxDropdownMenu>
-                                            </HxDropdownButtonGroup>
+                                            <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" title="Delete selected steps"
+                                                      @onclick="DeleteSelectedSteps">
+                                                <CxIcon Icon="FeatherIcon.Trash2" />
+                                                Delete
+                                            </HxButton>
+                                            <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" title="Copy selected steps"
+                                                      @onclick="() => StepsCopyOffcanvas.LetAsync(x => x.ShowAsync(Job, SelectedSteps))">
+                                                <CxIcon Icon="FeatherIcon.Copy" />
+                                                Copy
+                                            </HxButton>
                                             <HxDropdownButtonGroup>
                                                 <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
                                                     <CxIcon Icon="FeatherIcon.Edit2" />
+                                                    Edit
                                                 </HxDropdownToggleButton>
                                                 <HxDropdownMenu Alignment="DropdownMenuAlignment.End">
                                                     <HxDropdownHeader>Batch edit</HxDropdownHeader>
@@ -288,207 +276,218 @@
             <ol class="list-group shadow-sm steps-list">
                 @foreach (var item in FilteredSteps)
                 {
-                    <li @key="item.StepId" class="list-group-item list-group-item-action py-2 @(item.IsEnabled ? null : "step-item-disabled")">
-                        <div class="row">
-                            <div class="col-xl-4 col-md-6 col-10 pl-2 d-flex align-items-center">
-                                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-                                    <div class="form-check me-2">
-                                        <input type="checkbox" class="form-check-input" id="select_step_@item.StepId"
-                                               checked=@SelectedSteps.Contains(item)
-                                       @onchange="args => { if (SelectedSteps.Contains(item)) SelectedSteps.Remove(item); else SelectedSteps.Add(item); }">
-                                        <label class="form-check-label" for="select_step_@item.StepId"></label>
-                                    </div>
-                                </AuthorizeView>
-                                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-                                    <a class="text-body" href="javascript:void(0)" @onclick="() => ShowEditModal(item)">
-                                        <StepTypeIconComponent StepType_="@item.StepType" />
-                                        &nbsp;
-                                        <HighlightableText Text="@item.StepName" PartToHighlight="@StepNameFilter" />
-                                    </a>
-                                </AuthorizeView>
-                                <AuthorizeView Roles="@($"{Roles.Operator}, {Roles.Viewer}")">
-                                    <span>
-                                        <StepTypeIconComponent StepType_="@item.StepType" />
-                                        <HighlightableText Text="@item.StepName" PartToHighlight="@StepNameFilter" />
-                                    </span>
-                                </AuthorizeView>
-                            </div>
-                            <div class="col-xl-2 col-2 d-inline-flex align-items-center justify-content-end">
-                                @if (item.ExecutionConditionParameters.Any(p => p.JobParameterId is not null)
-                               || item is IHasStepParameters hasParams && hasParams.StepParameters.Any(p => p.InheritFromJobParameterId is not null || p.ExpressionParameters.Any(ep => ep.InheritFromJobParameter is not null))
-                               || item is SqlStep sql && sql.ResultCaptureJobParameterId is not null)
-                                {
-                                    <div title="Step uses job parameters" class="text-body me-2">
-                                        <CxIcon Icon="FeatherIcon.AtSign" />
-                                    </div>
-                                }
-                                @if (!string.IsNullOrWhiteSpace(item.ExecutionConditionExpression.Expression))
-                                {
-                                    <div title="Execution condition enabled" class="text-body me-2">
-                                        <CxIcon Icon="FeatherIcon.CheckSquare" />
-                                    </div>
-                                }
-                                @if (item.RetryAttempts > 0)
-                                {
-                                    <div title="Step has @item.RetryAttempts retry attempts" class="text-body me-2">
-                                        <sup>@item.RetryAttempts</sup>
-                                        <CxIcon Icon="FeatherIcon.Repeat" />
-                                    </div>
-                                }
-                                <div class="justify-content-end @(Job.UseDependencyMode ? "text-body-tertiary" : "text-body")">
-                                    <sup>@item.ExecutionPhase</sup>
-                                    <CxIcon Icon="FeatherIcon.Layers" />
-                                </div>
-                            </div>
-                            <div class="col-xl-3 col-md-4 d-inline-flex align-items-center justify-content-end">
-                                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-                                    <div class="form-check form-switch">
-                                        <input type="checkbox" class="form-check-input" id="enabled_@item.StepId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
-                                        <label class="form-check-label" for="enabled_@item.StepId" aria-label="enabled"></label>
-                                    </div>
-                                </AuthorizeView>
-                                <AuthorizeView Roles="@($"{Roles.Operator}, {Roles.Viewer}")">
-                                    <div class="form-check form-switch">
-                                        <input type="checkbox" class="form-check-input" disabled id="enabled_@item.StepId" checked="@(item.IsEnabled ? "checked" : null)">
-                                        <label class="form-check-label" for="enabled_@item.StepId" aria-label="enabled"></label>
-                                    </div>
-                                </AuthorizeView>
-                                <div class="btn-group ms-2">
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => StepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
-                                        <CxIcon Icon="LucideIcon.History" />
-                                    </HxButton>
-
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => StepDetailsModal.LetAsync(x => x.ShowAsync(item))">
-                                        <CxIcon Icon="FeatherIcon.Info" />
-                                    </HxButton>
-
-                                    @{
-                                        var navigateToDependencies = () => NavigationManager.NavigateTo($"jobs/{Job?.JobId}/dependencies/{item.StepId}");
-                                    }
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="navigateToDependencies">
-                                        <CxIcon Icon="LucideIcon.Network" />
-                                    </HxButton>
-
+                    var containerCssClass = $"list-group-item list-group-item-action py-2 {(item.IsEnabled ? null : "step-item-disabled")}";
+                    <ContextMenuToggle @key="item.StepId" ContainerHtmlTag="li" ContainerCssClass="@containerCssClass">
+                        <ChildContent>
+                            <div class="row">
+                                <div class="col-xl-5 col-sm-7 pl-2 d-flex align-items-center">
+                                    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+                                        <div class="form-check me-2">
+                                            <input type="checkbox" class="form-check-input" id="select_step_@item.StepId"
+                                                   checked=@SelectedSteps.Contains(item)
+                                           @onchange="args => { if (SelectedSteps.Contains(item)) SelectedSteps.Remove(item); else SelectedSteps.Add(item); }">
+                                            <label class="form-check-label" for="select_step_@item.StepId"></label>
+                                        </div>
+                                    </AuthorizeView>
                                     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-                                        <HxDropdownButtonGroup>
-                                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                                <CxIcon Icon="FeatherIcon.Copy" />
-                                            </HxDropdownToggleButton>
-                                            <HxDropdownMenu CssClass="dropdown-menu-right">
-                                                <HxDropdownHeader>Copy to</HxDropdownHeader>
-                                                <HxDropdownItem @onclick="() => CopyStep(item)">here</HxDropdownItem>
-                                                <HxDropdownDivider></HxDropdownDivider>
-                                                @foreach (var job in Jobs.Where(job => job.JobId != Job.JobId))
-                                                {
-                                                    <HxDropdownItem @onclick="() => CopyStep(item, job)">@job.JobName</HxDropdownItem>
-                                                }
-                                            </HxDropdownMenu>
-                                        </HxDropdownButtonGroup>
-
-                                        <HxDropdownButtonGroup>
-                                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                                <CxIcon Icon="FeatherIcon.Trash2" />
-                                            </HxDropdownToggleButton>
-                                            <HxDropdownMenu CssClass="dropdown-menu-right">
-                                                <HxDropdownHeader>Delete?</HxDropdownHeader>
-                                                <HxDropdownItem @onclick="() => DeleteStep(item)">Confirm</HxDropdownItem>
-                                            </HxDropdownMenu>
-                                        </HxDropdownButtonGroup>
+                                        <a class="text-body" href="javascript:void(0)" @onclick="() => ShowEditModal(item)">
+                                            <StepTypeIconComponent StepType_="@item.StepType" />
+                                            &nbsp;
+                                            <HighlightableText Text="@item.StepName" PartToHighlight="@StepNameFilter" />
+                                        </a>
+                                    </AuthorizeView>
+                                    <AuthorizeView Roles="@($"{Roles.Operator}, {Roles.Viewer}")">
+                                        <span>
+                                            <StepTypeIconComponent StepType_="@item.StepType" />
+                                            <HighlightableText Text="@item.StepName" PartToHighlight="@StepNameFilter" />
+                                        </span>
                                     </AuthorizeView>
                                 </div>
-                            </div>
+                                <div class="col-xl-2 col-sm-4 col-6 d-inline-flex align-items-center justify-content-start">
+                                    <div class="justify-content-end @(Job.UseDependencyMode ? "text-body-tertiary" : "text-body")">
+                                        <CxIcon Icon="FeatherIcon.Layers" />
+                                        <sup>@item.ExecutionPhase</sup>
+                                    </div>
 
-                            <div class="col-xl-3 d-flex flex-wrap align-items-center justify-content-end">
-                                @foreach (var tag in item.Tags.OrderBy(t => t.TagName))
-                                {
-                                    <TagComponent Tag="tag" CssClass="m-1" />
-                                }
-                            </div>
-                        </div>
-                        @if (ShowDetails || !string.IsNullOrEmpty(StepDescriptionFilter))
-                        {
-                            <div class="row">
-                                <div class="col text-truncate">
-                                    <small class="text-secondary"><em><HighlightableText Text="@item.StepDescription" PartToHighlight="@StepDescriptionFilter" /></em></small>
-                                </div>
-                            </div>
-                        }
-                        @if ((ShowDetails || !string.IsNullOrEmpty(SqlStatementFilter)) && item is SqlStep sqlStep)
-                        {
-                            <div class="row">
-                                <div class="col text-truncate">
-                                    <small class="text-secondary font-monospace"><HighlightableText Text="@sqlStep.SqlStatement" PartToHighlight="@SqlStatementFilter" /></small>
-                                </div>
-                            </div>
-                        }
-                        @if ((ShowDetails || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.PackageFolder)
-                       || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.PackageProject)
-                       || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.PackageName)) && item is PackageStep package)
-                        {
-                            <div class="row">
-                                <div class="col text-truncate">
-                                    <small class="text-secondary">
-                                        <HighlightableText Text="@package.PackageFolderName" PartToHighlight="@AdvancedFiltersOffcanvas?.PackageFolder" />
-                                        \
-                                        <HighlightableText Text="@package.PackageProjectName" PartToHighlight="@AdvancedFiltersOffcanvas?.PackageProject" />
-                                        \
-                                        <HighlightableText Text="@package.PackageName" PartToHighlight="@AdvancedFiltersOffcanvas?.PackageName" />
-                                    </small>
-                                </div>
-                            </div>
-                        }
-                        @if ((ShowDetails || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.PipelineName)) && item is PipelineStep pipeline)
-                        {
-                            <div class="row">
-                                <div class="col text-truncate">
-                                    <small class="text-secondary">
-                                        <HighlightableText Text="@pipeline.PipelineName" PartToHighlight="@AdvancedFiltersOffcanvas?.PipelineName" />
-                                    </small>
-                                </div>
-                            </div>
-                        }
-                        @if (ShowDetails && item is AgentJobStep agentJob)
-                        {
-                            <div class="row">
-                                <div class="col text-truncate">
-                                    <small class="text-secondary">@agentJob.AgentJobName</small>
-                                </div>
-                            </div>
-                        }
-                        @if ((ShowDetails || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.ExeFilePath)
-                       || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.ExeArguments)) && item is ExeStep exe)
-                        {
-                            <div class="row">
-                                <div class="col text-truncate">
-                                    <small class="text-secondary">
-                                        <HighlightableText Text="@exe.ExeFileName" PartToHighlight="@AdvancedFiltersOffcanvas?.ExeFilePath" />
-                                        <HighlightableText Text="@exe.ExeArguments" PartToHighlight="@AdvancedFiltersOffcanvas?.ExeArguments" />
-                                    </small>
-                                </div>
-                            </div>
-                        }
-                        @if ((ShowDetails || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.FunctionUrl)) && item is FunctionStep function)
-                        {
-                            <div class="row">
-                                <div class="col text-truncate">
-                                    <small class="text-secondary">
-                                        <HighlightableText Text="@function.FunctionUrl" PartToHighlight="@AdvancedFiltersOffcanvas?.FunctionUrl" />
-                                    </small>
-                                </div>
-                            </div>
-                        }
-                        @if (ShowDetails && item is TabularStep tabular)
-                        {
-                            var tableText = string.IsNullOrEmpty(tabular.TabularTableName) ? null : $" \\ {tabular.TabularTableName}";
-                            var partitionText = string.IsNullOrEmpty(tabular.TabularPartitionName) ? null : $" \\ {tabular.TabularPartitionName}";
-                            <div class="row">
-                                <div class="col text-truncate">
+                                    @if (item.RetryAttempts > 0)
+                                    {
+                                        <div title="Step has @item.RetryAttempts retry attempts" class="text-body ms-3">
+                                            <CxIcon Icon="FeatherIcon.Repeat" />
+                                            <sup>@item.RetryAttempts</sup>
+                                        </div>
+                                    }
 
-                                    <small class="text-secondary">@tabular.TabularModelName@tableText@partitionText</small>
+                                    @if (item.ExecutionConditionParameters.Any(p => p.JobParameterId is not null)
+                                   || item is IHasStepParameters hasParams && hasParams.StepParameters.Any(p => p.InheritFromJobParameterId is not null || p.ExpressionParameters.Any(ep => ep.InheritFromJobParameter is not null))
+                                   || item is SqlStep sql && sql.ResultCaptureJobParameterId is not null)
+                                    {
+                                        <div title="Step uses job parameters" class="text-body ms-3">
+                                            <CxIcon Icon="FeatherIcon.AtSign" />
+                                        </div>
+                                    }
+
+                                    @if (!string.IsNullOrWhiteSpace(item.ExecutionConditionExpression.Expression))
+                                    {
+                                        <div title="Execution condition enabled" class="text-body ms-3">
+                                            <CxIcon Icon="FeatherIcon.CheckSquare" />
+                                        </div>
+                                    }
+                                </div>
+                                <div class="col-sm-1 col-6 d-inline-flex align-items-center justify-content-end">
+                                    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+                                        <div class="form-check form-switch">
+                                            <input type="checkbox" class="form-check-input" id="enabled_@item.StepId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
+                                            <label class="form-check-label" for="enabled_@item.StepId" aria-label="enabled"></label>
+                                        </div>
+                                    </AuthorizeView>
+                                    <AuthorizeView Roles="@($"{Roles.Operator}, {Roles.Viewer}")">
+                                        <div class="form-check form-switch">
+                                            <input type="checkbox" class="form-check-input" disabled id="enabled_@item.StepId" checked="@(item.IsEnabled ? "checked" : null)">
+                                            <label class="form-check-label" for="enabled_@item.StepId" aria-label="enabled"></label>
+                                        </div>
+                                    </AuthorizeView>
+                                </div>
+
+                                <div class="col-xl-4 d-flex flex-wrap align-items-center justify-content-xl-end">
+                                    @foreach (var tag in item.Tags.OrderBy(t => t.TagName))
+                                    {
+                                        <TagComponent Tag="tag" CssClass="m-1" />
+                                    }
                                 </div>
                             </div>
-                        }
-                    </li>
+                            @if (ShowDetails || !string.IsNullOrEmpty(StepDescriptionFilter))
+                            {
+                                <div class="row">
+                                    <div class="col text-truncate">
+                                        <small class="text-secondary"><em><HighlightableText Text="@item.StepDescription" PartToHighlight="@StepDescriptionFilter" /></em></small>
+                                    </div>
+                                </div>
+                            }
+                            @if ((ShowDetails || !string.IsNullOrEmpty(SqlStatementFilter)) && item is SqlStep sqlStep)
+                            {
+                                <div class="row">
+                                    <div class="col text-truncate">
+                                        <small class="text-secondary font-monospace"><HighlightableText Text="@sqlStep.SqlStatement" PartToHighlight="@SqlStatementFilter" /></small>
+                                    </div>
+                                </div>
+                            }
+                            @if ((ShowDetails || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.PackageFolder)
+                           || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.PackageProject)
+                           || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.PackageName)) && item is PackageStep package)
+                            {
+                                <div class="row">
+                                    <div class="col text-truncate">
+                                        <small class="text-secondary">
+                                            <HighlightableText Text="@package.PackageFolderName" PartToHighlight="@AdvancedFiltersOffcanvas?.PackageFolder" />
+                                            \
+                                            <HighlightableText Text="@package.PackageProjectName" PartToHighlight="@AdvancedFiltersOffcanvas?.PackageProject" />
+                                            \
+                                            <HighlightableText Text="@package.PackageName" PartToHighlight="@AdvancedFiltersOffcanvas?.PackageName" />
+                                        </small>
+                                    </div>
+                                </div>
+                            }
+                            @if ((ShowDetails || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.PipelineName)) && item is PipelineStep pipeline)
+                            {
+                                <div class="row">
+                                    <div class="col text-truncate">
+                                        <small class="text-secondary">
+                                            <HighlightableText Text="@pipeline.PipelineName" PartToHighlight="@AdvancedFiltersOffcanvas?.PipelineName" />
+                                        </small>
+                                    </div>
+                                </div>
+                            }
+                            @if (ShowDetails && item is AgentJobStep agentJob)
+                            {
+                                <div class="row">
+                                    <div class="col text-truncate">
+                                        <small class="text-secondary">@agentJob.AgentJobName</small>
+                                    </div>
+                                </div>
+                            }
+                            @if ((ShowDetails || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.ExeFilePath)
+                           || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.ExeArguments)) && item is ExeStep exe)
+                            {
+                                <div class="row">
+                                    <div class="col text-truncate">
+                                        <small class="text-secondary">
+                                            <HighlightableText Text="@exe.ExeFileName" PartToHighlight="@AdvancedFiltersOffcanvas?.ExeFilePath" />
+                                            <HighlightableText Text="@exe.ExeArguments" PartToHighlight="@AdvancedFiltersOffcanvas?.ExeArguments" />
+                                        </small>
+                                    </div>
+                                </div>
+                            }
+                            @if ((ShowDetails || !string.IsNullOrEmpty(AdvancedFiltersOffcanvas?.FunctionUrl)) && item is FunctionStep function)
+                            {
+                                <div class="row">
+                                    <div class="col text-truncate">
+                                        <small class="text-secondary">
+                                            <HighlightableText Text="@function.FunctionUrl" PartToHighlight="@AdvancedFiltersOffcanvas?.FunctionUrl" />
+                                        </small>
+                                    </div>
+                                </div>
+                            }
+                            @if (ShowDetails && item is TabularStep tabular)
+                            {
+                                var tableText = string.IsNullOrEmpty(tabular.TabularTableName) ? null : $" \\ {tabular.TabularTableName}";
+                                var partitionText = string.IsNullOrEmpty(tabular.TabularPartitionName) ? null : $" \\ {tabular.TabularPartitionName}";
+                                <div class="row">
+                                    <div class="col text-truncate">
+                                        <small class="text-secondary">@tabular.TabularModelName@tableText@partitionText</small>
+                                    </div>
+                                </div>
+                            }
+                        </ChildContent>
+                        <MenuContent>
+                            <li>
+                                <h6 class="dropdown-header">
+                                    <StepTypeIconComponent StepType_="item.StepType" />
+                                    @item.StepName
+                                </h6>
+                            </li>
+                            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+                                <li>
+                                    <span class="dropdown-item" role="button" @onclick="() => ShowEditModal(item)">
+                                        <CxIcon Icon="FeatherIcon.Edit2" />
+                                        Edit
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="dropdown-item" role="button" @onclick="() => DeleteStep(item)">
+                                        <CxIcon Icon="FeatherIcon.Trash2" />
+                                        Delete
+                                    </span>
+                                </li>
+                                <li>
+                                    <span class="dropdown-item" role="button" @onclick="() => StepsCopyOffcanvas.LetAsync(x => x.ShowAsync(Job, [item]))">
+                                        <CxIcon Icon="FeatherIcon.Copy" />
+                                        Copy
+                                    </span>
+                                </li>
+                            </AuthorizeView>
+                            <li>
+                                <span class="dropdown-item" role="button" @onclick="() => StepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
+                                    <CxIcon Icon="LucideIcon.History" />
+                                    History
+                                </span>
+                            </li>
+                            @{
+                                var navigateToDependencies = () => NavigationManager.NavigateTo($"jobs/{Job?.JobId}/dependencies/{item.StepId}");
+                            }
+                            <li>
+                                <span class="dropdown-item" role="button" @onclick="navigateToDependencies">
+                                    <CxIcon Icon="LucideIcon.Network" />
+                                    Dependencies
+                                </span>
+                            </li>
+                            <li>
+                                <span class="dropdown-item" role="button" @onclick="() => StepDetailsModal.LetAsync(x => x.ShowAsync(item))">
+                                    <CxIcon Icon="FeatherIcon.Info" />
+                                    Details
+                                </span>
+                            </li>
+                        </MenuContent>
+                    </ContextMenuToggle>
                 }
             </ol>
         </div>
@@ -496,6 +495,11 @@
 }
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+    <StepsCopyOffcanvas
+        @ref="StepsCopyOffcanvas"
+        Jobs="Jobs"
+        OnStepsCopied="OnStepsCopied" />
+
     <StepsBatchEditTagsModal
         @ref="BatchEditTagsModal"
         SelectedSteps="SelectedSteps"

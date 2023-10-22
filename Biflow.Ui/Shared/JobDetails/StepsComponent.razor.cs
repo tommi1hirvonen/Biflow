@@ -20,6 +20,8 @@ public partial class StepsComponent : ComponentBase
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
 
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+
+    [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
     
     [CascadingParameter] public Job? Job { get; set; }
     
@@ -73,6 +75,8 @@ public partial class StepsComponent : ComponentBase
     private StepsBatchEditRetriesModal? BatchEditRetriesModal { get; set; }
 
     private StepsBatchEditRetryIntervalModal? BatchEditRetryIntervalModal { get; set; }
+
+    private StepsCopyOffcanvas? StepsCopyOffcanvas { get; set; }
 
     private StepDetailsModal? StepDetailsModal { get; set; }
 
@@ -156,6 +160,10 @@ public partial class StepsComponent : ComponentBase
 
     private async Task DeleteSelectedSteps()
     {
+        if (!await Confirmer.ConfirmAsync("Delete steps", $"Are you sure you want to delete {SelectedSteps.Count} steps?"))
+        {
+            return;
+        }
         try
         {
             using var context = DbFactory.CreateDbContext();
@@ -201,6 +209,10 @@ public partial class StepsComponent : ComponentBase
 
     private async Task DeleteStep(Step step)
     {
+        if (!await Confirmer.ConfirmAsync("Delete step", $"Are you sure you want to delete \"{step.StepName}\"?"))
+        {
+            return;
+        }
         try
         {
             using var context = DbFactory.CreateDbContext();
@@ -222,56 +234,14 @@ public partial class StepsComponent : ComponentBase
         }
     }
 
-    private async Task CopyStep(Step step, Job? job = null)
+    private void OnStepsCopied(IEnumerable<Step> copies)
     {
-        try
+        ArgumentNullException.ThrowIfNull(Job);
+        var steps = copies.Where(s => s.JobId == Job.JobId).ToArray();
+        if (steps.Length > 0)
         {
-            var duplicator = await StepDuplicatorFactory.CreateAsync(step.StepId, job?.JobId);
-            var copy = duplicator.Steps.First();
-            if (job is null)
-            {
-                copy.StepName = $"{copy.StepName} – Copy";
-            }
-            var createdStep = await duplicator.SaveStepsAsync();
-            // If the steps was copied to this job, reload steps.
-            if (job is null)
-            {
-                Steps?.Add(copy);
-                SortSteps?.Invoke();
-            }
-            Messenger.AddInformation("Step(s) copied successfully");
-        }
-        catch (Exception ex)
-        {
-            Messenger.AddError("Error copying step", ex.Message);
-        }
-    }
-
-    private async Task CopySelectedSteps(Job? job = null)
-    {
-        try
-        {
-            var stepIds = SelectedSteps.Select(s => s.StepId).ToArray();
-            var duplicator = await StepDuplicatorFactory.CreateAsync(stepIds, job?.JobId);
-            if (job is null)
-            {
-                foreach (var step in duplicator.Steps)
-                {
-                    step.StepName = $"{step.StepName} – Copy";
-                }
-            }
-            var steps = await duplicator.SaveStepsAsync();
-            // If the steps was copied to this job, reload steps.
-            if (job is null)
-            {
-                Steps?.AddRange(steps);
-                SortSteps?.Invoke();
-            }
-            Messenger.AddInformation("Step(s) copied successfully");
-        }
-        catch (Exception ex)
-        {
-            Messenger.AddError("Error copying steps", ex.Message);
+            Steps?.AddRange(steps);
+            SortSteps?.Invoke();
         }
     }
 
