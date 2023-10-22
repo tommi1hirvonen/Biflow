@@ -7,7 +7,6 @@ using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
-using System.Runtime.CompilerServices;
 
 namespace Biflow.Ui.Pages;
 
@@ -28,6 +27,8 @@ public partial class Jobs : ComponentBase
 
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
 
+    [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; } = null!;
+
     [CascadingParameter] public UserState UserState { get; set; } = new();
 
     private List<Job>? Jobs_ { get; set; }
@@ -44,7 +45,7 @@ public partial class Jobs : ComponentBase
 
     private string JobNameFilter { get; set; } = "";
     
-    private HashSet<ExecutionStatus> StatusFilter { get; } = new();
+    private HashSet<ExecutionStatus> StatusFilter { get; } = [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -156,6 +157,10 @@ public partial class Jobs : ComponentBase
 
     private async Task DeleteJob(Job job)
     {
+        if (!await Confirmer.ConfirmAsync("Delete job", $"Are you sure you want to delete \"{job.JobName}\"?"))
+        {
+            return;
+        }
         using (var context = await DbFactory.CreateDbContextAsync())
         {
             var executingSteps = await context.JobSteps
@@ -228,6 +233,10 @@ public partial class Jobs : ComponentBase
 
     private async Task DeleteCategoryAsync(JobCategory category)
     {
+        if(!await Confirmer.ConfirmAsync("Delete category", $"Are you sure you want to delete \"{category.CategoryName}\"?"))
+        {
+            return;
+        }
         try
         {
             using var context = DbFactory.CreateDbContext();

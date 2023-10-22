@@ -1,8 +1,8 @@
-﻿tr.job-row:hover {
+﻿::deep tr.job-row:hover {
     background-color: var(--bs-table-hover-bg);
 }
 
-tr.job-row.disabled {
+::deep tr.job-row.disabled {
     background-color: var(--bs-tertiary-bg);
 }
 
