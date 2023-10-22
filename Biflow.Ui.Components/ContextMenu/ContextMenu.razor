@@ -21,6 +21,7 @@
     private DotNetObjectReference<ContextMenu>? dotNetObject;
     private RenderFragment? menuContent;
     private MouseEventArgs? eventArgs;
+    private TaskCompletionSource tcs = new();
 
     protected override void OnInitialized()
     {
@@ -56,11 +57,16 @@
             StateHasChanged(); // ...and request rerender.
             return Task.CompletedTask;
         });
+        tcs.SetResult();
+        tcs = new();
+        await tcs.Task;
     }
 
     [JSInvokable]
     public void OnMenuHidden()
     {
+        tcs.SetResult();
+        tcs = new();
         if (eventArgs is not null)
         {
             // The menu is waiting for render while it is being requested to be hidden => do nothing.

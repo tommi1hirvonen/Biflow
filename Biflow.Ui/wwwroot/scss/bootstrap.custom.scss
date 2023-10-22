@@ -146,6 +146,10 @@ tr .btn-auto, .list-group-item .btn-auto {
     border-top: none;
 }
 
+tr.context-menu-toggle.open {
+    background-color: $table-hover-bg;
+}
+
 // No-wrap buttons of btn-group in a table
 .table .btn-group {
     white-space: nowrap;
@@ -185,6 +189,10 @@ tr .btn-auto, .list-group-item .btn-auto {
     .list-group-header {
         background-color: tint-color($body-color, 95%);
     }
+}
+
+.list-group-item.context-menu-toggle.open {
+    background-color: $list-group-hover-bg;
 }
 
 

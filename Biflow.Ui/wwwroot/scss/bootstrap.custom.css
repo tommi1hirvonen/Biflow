@@ -12019,6 +12019,10 @@ tr .btn-auto, .list-group-item .btn-auto {
   border-top: none;
 }
 
+tr.context-menu-toggle.open {
+  background-color: rgba(0, 0, 0, 0.075);
+}
+
 .table .btn-group {
   white-space: nowrap;
 }
@@ -12050,6 +12054,10 @@ tr .btn-auto, .list-group-item .btn-auto {
 
 [data-bs-theme=light] .list-group-header, [data-bs-theme=auto] .list-group-header {
   background-color: #f4f4f4;
+}
+
+.list-group-item.context-menu-toggle.open {
+  background-color: var(--bs-tertiary-bg);
 }
 
 .validation-message {

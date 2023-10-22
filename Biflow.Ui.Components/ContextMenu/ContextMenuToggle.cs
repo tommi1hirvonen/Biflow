@@ -10,6 +10,14 @@ public class ContextMenuToggle : ComponentBase
 
     [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? InputAttributes { get; set; }
 
+    [Parameter] public string? CssClass { get; set; }
+
+    /// <summary>
+    /// Delegate for generating css class string to be added to the container tag.
+    /// The value of the bool is true when the toggle has opened the context menu.
+    /// </summary>
+    [Parameter] public Func<bool, string?>? CssClassDelegate { get; set; } 
+
     [Parameter] public string ContainerHtmlTag { get; set; } = "div";
 
     [Parameter] public RenderFragment<ContextMenuToggle>? ChildContent { get; set; }
@@ -18,15 +26,19 @@ public class ContextMenuToggle : ComponentBase
 
     [Parameter] public bool Disabled { get; set; } = false;
 
+    private bool isShowing;
+
     protected override void BuildRenderTree(RenderTreeBuilder builder)
     {
         builder.OpenElement(0, ContainerHtmlTag);
         builder.AddMultipleAttributes(1, InputAttributes);
-        builder.AddAttribute(2, "oncontextmenu", EventCallback.Factory.Create<MouseEventArgs>(this, ShowContextMenuAsync));
-        builder.AddEventPreventDefaultAttribute(3, "oncontextmenu", true);
+        var cssClass = $"context-menu-toggle {(isShowing ? "open" : null)} {CssClass} {CssClassDelegate?.Invoke(isShowing)}";
+        builder.AddAttribute(2, "class", cssClass);
+        builder.AddAttribute(3, "oncontextmenu", EventCallback.Factory.Create<MouseEventArgs>(this, ShowContextMenuAsync));
+        builder.AddEventPreventDefaultAttribute(4, "oncontextmenu", true);
         if (ChildContent is not null)
         {
-            builder.AddContent(4, ChildContent(this));
+            builder.AddContent(5, ChildContent(this));
         }
         builder.CloseElement();
     }
@@ -37,6 +49,10 @@ public class ContextMenuToggle : ComponentBase
         {
             return;
         }
+        isShowing = true;
+        StateHasChanged();
         await ContextMenuService.ShowContextMenuAsync(e, MenuContent);
+        isShowing = false;
+        StateHasChanged();
     }
 }
