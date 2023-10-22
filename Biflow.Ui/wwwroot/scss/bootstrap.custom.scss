@@ -94,6 +94,12 @@ $navbar-gradient: #8F75DA;
     z-index: 1060;
 }
 
+// Dropdowns
+
+.dropdown-menu {
+    box-shadow: $box-shadow-sm;
+}
+
 // Alert
 [data-bs-theme="light"], [data-bs-theme="auto"] {
     .alert-secondary {

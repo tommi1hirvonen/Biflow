@@ -11978,6 +11978,10 @@ textarea.form-control-lg {
   z-index: 1060;
 }
 
+.dropdown-menu {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
 [data-bs-theme=light] .alert-secondary, [data-bs-theme=auto] .alert-secondary {
   background-color: #e9ecef;
   border-color: #adb5bd;
