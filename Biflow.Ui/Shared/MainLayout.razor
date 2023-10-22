@@ -23,6 +23,7 @@
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}, {Roles.Viewer}")">
     <Authorized>
         <HxMessenger Position="ToastContainerPosition.BottomEnd" />
+        <ContextMenu />
         <div id="hx_message_box_host_container">
             <HxMessageBoxHost />
         </div>
