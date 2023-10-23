@@ -138,14 +138,13 @@
                                                 &nbsp;
                                                 <HighlightableText Text="@step.StepName" PartToHighlight="@ExecuteFilterText" />
                                             </td>
-                                            <td class="text-end @(Builder.DependencyMode == true ? "text-body-tertiary" : null)" @onclick="() => step.AddToExecution()">
-                                                @step.ExecutionPhase
-                                                &nbsp;
+                                            <td class="@(Builder.DependencyMode == true ? "text-body-tertiary" : null)" @onclick="() => step.AddToExecution()">
                                                 <CxIcon Icon="FeatherIcon.Layers" />
+                                                <sup>@step.ExecutionPhase</sup>
                                             </td>
                                             @if (Builder.DependencyMode == true)
                                             {
-                                                <td class="text-end">
+                                                <td class="text-end pe-2">
                                                     @if (step.HasDependencies)
                                                     {
                                                         <HxDropdown>
@@ -181,10 +180,9 @@
                                                 &nbsp;
                                                 @step.StepName
                                             </td>
-                                            <td class="text-end @(Builder.DependencyMode == true ? "text-body-tertiary" : null)">
-                                                @step.ExecutionPhase
-                                                &nbsp;
+                                            <td class="@(Builder.DependencyMode == true ? "text-body-tertiary" : null)">
                                                 <CxIcon Icon="FeatherIcon.Layers" />
+                                                <sup>@step.ExecutionPhase</sup>
                                             </td>
                                             <td class="text-end">
                                                 @if (step.SupportsParameters && step.Parameters.Any())

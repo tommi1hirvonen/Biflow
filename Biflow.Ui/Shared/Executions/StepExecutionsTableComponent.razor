@@ -57,9 +57,8 @@
                         @item.StepName
                     </td>
                     <td class="@(item.DependencyMode ? "text-body-tertiary" : "text-body")" style="">
-                        @item.ExecutionPhase
-                        &nbsp;
                         <CxIcon Icon="FeatherIcon.Layers" />
+                        <sup>@item.ExecutionPhase</sup>
                     </td>
                     <td>
                         @item.StartDateTime?.LocalDateTime
