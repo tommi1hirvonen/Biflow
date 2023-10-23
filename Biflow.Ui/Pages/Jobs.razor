@@ -187,7 +187,7 @@
                             continue;
                         }
                         var nextStartTime = GetNextStartTime(item);
-                        <ContextMenuToggle ContainerHtmlTag="tr" Disabled="!userIsAdminOrEditor" CssClass="@($"job-row {(item.IsEnabled ? null : "disabled")}")">
+                        <ContextMenuToggle ContainerHtmlTag="tr" CssClass="@($"job-row {(item.IsEnabled ? null : "disabled")}")">
                             <ChildContent Context="menu">
                                 <td class="align-middle">
                                     <a class="text-body ms-5" href="@($"jobs/{item.JobId}/steps")">
@@ -236,10 +236,10 @@
                                 </td>
                             </ChildContent>
                             <MenuContent>
+                                <DropdownMenuHeader>
+                                    @item.JobName
+                                </DropdownMenuHeader>
                                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-                                    <DropdownMenuHeader>
-                                        @item.JobName
-                                    </DropdownMenuHeader>
                                     <DropdownMenuItem @onclick="() => JobEditModal.LetAsync(x => x.ShowAsync(item))">
                                         <CxIcon Icon="FeatherIcon.Edit2" />
                                         Edit
@@ -253,6 +253,14 @@
                                         Copy
                                     </DropdownMenuItem>
                                 </AuthorizeView>
+                                <DropdownMenuItem @onclick="@(() => NavigationManager.NavigateTo($"jobs/{item.JobId}/history"))">
+                                    <CxIcon Icon="LucideIcon.History" />
+                                    History
+                                </DropdownMenuItem>
+                                <DropdownMenuItem @onclick="@(() => NavigationManager.NavigateTo($"jobs/{item.JobId}/schedules"))">
+                                    <CxIcon Icon="FeatherIcon.Calendar" />
+                                    Schedules
+                                </DropdownMenuItem>
                             </MenuContent>
                         </ContextMenuToggle>
                     }
