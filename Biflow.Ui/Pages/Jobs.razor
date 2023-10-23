@@ -3,6 +3,15 @@
 
 <h4>Jobs</h4>
 
+@if (LastStartedExecutionId is not null)
+{
+    <div class="alert alert-success mt-3 show alert-dismissible col-xl-6" role="alert">
+        <CxIcon Icon="FeatherIcon.CheckCircle" />
+        Execution started successfully – <a href="executions/@LastStartedExecutionId" class="alert-link">view execution</a>
+        <button type="button" class="btn-close" @onclick="() => LastStartedExecutionId = null"></button>
+    </div>
+}
+
 <div class="row justify-content-between mt-3">
     <div class="col">
         <div class="btn-toolbar">
@@ -261,6 +270,12 @@
                                     <CxIcon Icon="FeatherIcon.Calendar" />
                                     Schedules
                                 </DropdownMenuItem>
+                                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+                                    <DropdownMenuItem @onclick="() => ExecuteModal.LetAsync(x => x.ShowAsync(item.JobId))">
+                                        <CxIcon Icon="FeatherIcon.Play" />
+                                        Execute
+                                    </DropdownMenuItem>
+                                </AuthorizeView>
                             </MenuContent>
                         </ContextMenuToggle>
                     }
@@ -274,4 +289,8 @@
     <JobEditModal @ref="JobEditModal" OnJobSubmitted="OnJobSubmitted" />
 
     <JobCategoryEditModal @ref="CategoryEditModal" OnCategorySubmitted="OnCategorySubmitted" />
+</AuthorizeView>
+
+<AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+    <ExecuteModal @ref="ExecuteModal" OnExecutionStarted="OnExecutionStarted" />
 </AuthorizeView>

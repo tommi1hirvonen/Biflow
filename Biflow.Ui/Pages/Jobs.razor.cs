@@ -2,6 +2,7 @@
 using Biflow.DataAccess.Models;
 using Biflow.Ui.Core;
 using Biflow.Ui.Shared;
+using Biflow.Ui.Shared.JobDetails;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
@@ -43,9 +44,13 @@ public partial class Jobs : ComponentBase
     
     private JobEditModal? JobEditModal { get; set; }
 
+    private ExecuteModal? ExecuteModal { get; set; }
+
     private string JobNameFilter { get; set; } = "";
     
     private HashSet<ExecutionStatus> StatusFilter { get; } = [];
+
+    private Guid? LastStartedExecutionId { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
@@ -253,6 +258,11 @@ public partial class Jobs : ComponentBase
         {
             Messenger.AddError("Error deleting category", ex.Message);
         }
+    }
+
+    private void OnExecutionStarted(Guid executionId)
+    {
+        LastStartedExecutionId = executionId;
     }
 
     private void ExpandAll()
