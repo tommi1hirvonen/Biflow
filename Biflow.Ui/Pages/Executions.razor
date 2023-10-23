@@ -106,30 +106,7 @@
 </div>
 
 <div class="row mt-3">
-    <div class="col">
-        <div class="form-check form-check-inline">
-            <input type="radio" class="form-check-input" id="radio_all"
-                    checked=@(StartTypeFilter == StartType.All)
-                    @onchange="() => StartTypeFilter = StartType.All">
-            <label class="form-check-label" for="radio_all">All</label>
-        </div>
-        <div class="form-check form-check-inline">
-            <input type="radio" class="form-check-input" id="radio_scheduled"
-                    checked=@(StartTypeFilter == StartType.Scheduled)
-                    @onchange="() => StartTypeFilter = StartType.Scheduled">
-            <label class="form-check-label" for="radio_scheduled">Scheduled</label>
-        </div>
-        <div class="form-check form-check-inline">
-            <input type="radio" class="form-check-input" id="radio_manual"
-                    checked=@(StartTypeFilter == StartType.Manual)
-                    @onchange="() => StartTypeFilter = StartType.Manual">
-            <label class="form-check-label" for="radio_manual">Manual</label>
-        </div>
-    </div>
-</div>
-
-<div class="row mt-3">
-    <div class="col d-inline">
+    <div class="col-auto d-inline">
         <CxIcon Icon="FeatherIcon.Filter" />
         <span class="me-3">Filters</span>
 
@@ -290,6 +267,26 @@
                 Reset
             </HxButton>
         </HxButtonGroup>
+    </div>
+    <div class="col-xl-auto mt-3 mt-xl-0 d-flex align-items-center">
+        <div class="form-check form-check-inline">
+            <input type="radio" class="form-check-input" id="radio_all"
+                   checked=@(StartTypeFilter == StartType.All)
+                   @onchange="() => StartTypeFilter = StartType.All">
+            <label class="form-check-label" for="radio_all">All</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input type="radio" class="form-check-input" id="radio_scheduled"
+                   checked=@(StartTypeFilter == StartType.Scheduled)
+                   @onchange="() => StartTypeFilter = StartType.Scheduled">
+            <label class="form-check-label" for="radio_scheduled">Scheduled</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input type="radio" class="form-check-input" id="radio_manual"
+                   checked=@(StartTypeFilter == StartType.Manual)
+                   @onchange="() => StartTypeFilter = StartType.Manual">
+            <label class="form-check-label" for="radio_manual">Manual</label>
+        </div>
     </div>
 </div>
 
