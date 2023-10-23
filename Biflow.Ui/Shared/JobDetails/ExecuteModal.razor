@@ -401,8 +401,6 @@
 </ExpressionEditOffcanvas>
 
 @code {
-    [CascadingParameter] public Job? Job { get; set; }
-
     [Parameter] public EventCallback<Guid> OnExecutionStarted { get; set; }
 
     private ExpressionEditOffcanvas<StepExecutionParameterBase>? ExpressionEditOffcanvas { get; set; }
@@ -469,15 +467,14 @@
         ActiveView = View.Steps;
     }
 
-    public async Task ShowAsync(IEnumerable<Step>? initiallySelectedSteps = null)
+    public async Task ShowAsync(Guid jobId, IEnumerable<Step>? initiallySelectedSteps = null)
     {
         ActiveView = View.Steps;
         Builder = null;
         await Modal.LetAsync(x => x.ShowAsync());
-        ArgumentNullException.ThrowIfNull(Job);
         string user = HttpContextAccessor.HttpContext?.User?.Identity?.Name
             ?? throw new ArgumentNullException(nameof(user), "User was null");
-        Builder = await BuilderFactory.CreateAsync(Job.JobId, user);
+        Builder = await BuilderFactory.CreateAsync(jobId, user);
         if (Builder is null)
         {
             Messenger.AddWarning("Job with the given id could not be found");

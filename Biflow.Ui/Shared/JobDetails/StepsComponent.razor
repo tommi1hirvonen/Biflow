@@ -35,7 +35,7 @@
                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                     <HxButton Color="ThemeColor.Primary"
                               Enabled="Steps is not null && Job is not null && Jobs is not null"
-                              @onclick="() => ExecuteModal.LetAsync(x => x.ShowAsync(SelectedSteps))">
+                              @onclick="() => Job.LetAsync(j => ExecuteModal.LetAsync(m => m.ShowAsync(j.JobId, SelectedSteps)))">
                         <CxIcon Icon="FeatherIcon.Play" />
                         Execute
                     </HxButton>
