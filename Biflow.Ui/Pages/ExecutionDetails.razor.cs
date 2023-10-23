@@ -13,7 +13,7 @@ using System.Timers;
 
 namespace Biflow.Ui.Pages;
 
-[Route("/executions/{ExecutionId:guid}")]
+[Route("/executions/{ExecutionId:guid}/{Page?}")]
 public partial class ExecutionDetails : ComponentBase, IDisposable
 {
     [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
@@ -24,7 +24,13 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
     
     [Inject] private IExecutorService ExecutorService { get; set; } = null!;
 
+    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+
     [Parameter] public Guid ExecutionId { get; set; }
+
+    [Parameter] public string? Page {  get; set; }
+
+    private Guid prevExecutionId;
 
     private DependencyGraph<StepExecution>? DependencyGraph { get; set; }
 
@@ -54,7 +60,16 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             e.StepExecution.Execution.Job?.JobName ?? e.StepExecution.Execution.JobName,
             e.StepExecution.Step?.Tags.ToArray() ?? []));
 
-    private Report ShowReport { get; set; } = Report.Table;
+    private Report ShowReport => Page switch
+    {
+        "gantt" => Report.Gantt,
+        "dependencies" => Report.Dependencies,
+        "executiondetails" => Report.ExecutionDetails,
+        "parameters" => Report.Parameters,
+        "rerun" => Report.Rerun,
+        "history" => Report.History,
+        _ => Report.Table
+    };
 
     private enum Report { Table, Gantt, Dependencies, ExecutionDetails, Parameters, Rerun, History }
 
@@ -143,11 +158,16 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
 
     protected override async Task OnParametersSetAsync()
     {
+        if (ExecutionId == prevExecutionId)
+        {
+            return;
+        }
+        prevExecutionId = ExecutionId;
         // If the ExecutionId parameter is updated when either the rerun or history view is being shown,
         // go back to the table view and refresh (the execution displayed was changed).
         if (ShowReport == Report.Rerun || ShowReport == Report.History)
         {
-            ShowReport = Report.Table;
+            NavigationManager.NavigateTo($"executions/{ExecutionId}/table");
             StateHasChanged();
         }
         await LoadData();

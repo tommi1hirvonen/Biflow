@@ -29,47 +29,47 @@
     <div class="col">
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <span class="nav-link @(ShowReport == Report.Table ? "active" : null)" @onclick="() => ShowReport = Report.Table">
+                <a class="nav-link @(Execution is null ? "disabled" : null) @(ShowReport == Report.Table ? "active" : null)" href="executions/@ExecutionId">
                     <CxIcon Icon="FeatherIcon.Table" />
                     Table
-                </span>
+                </a>
             </li>
             <li class="nav-item" role="presentation">
-                <span class="nav-link @(ShowReport == Report.Gantt ? "active" : null)" @onclick="() => ShowReport = Report.Gantt">
+                <a class="nav-link @(Execution is null ? "disabled" : null) @(ShowReport == Report.Gantt ? "active" : null)" href="executions/@ExecutionId/gantt">
                     <CxIcon Icon="LucideIcon.BarChartHorizontal" />
                     Gantt
-                </span>
+                </a>
             </li>
             <li class="nav-item" role="presentation">
-                <span class="nav-link @(ShowReport == Report.Dependencies ? "active" : null)" @onclick="() => ShowReport = Report.Dependencies">
+                <a class="nav-link @(Execution is null ? "disabled" : null) @(ShowReport == Report.Dependencies ? "active" : null)" href="executions/@ExecutionId/dependencies">
                     <CxIcon Icon="LucideIcon.Network" />
                     Dependencies
-                </span>
+                </a>
             </li>
             <li class="nav-item" role="presentation">
-                <span class="nav-link @(ShowReport == Report.ExecutionDetails ? "active" : null)" @onclick="() => ShowReport = Report.ExecutionDetails">
+                <a class="nav-link @(Execution is null ? "disabled" : null) @(ShowReport == Report.ExecutionDetails ? "active" : null)" href="executions/@ExecutionId/executiondetails">
                     <CxIcon Icon="FeatherIcon.Info" />
                     Execution details
-                </span>
+                </a>
             </li>
             <li class="nav-item" role="presentation">
-                <span class="nav-link @(ShowReport == Report.Parameters ? "active" : null)" @onclick="() => ShowReport = Report.Parameters">
+                <a class="nav-link @(Execution is null ? "disabled" : null) @(ShowReport == Report.Parameters ? "active" : null)" href="executions/@ExecutionId/parameters">
                     <CxIcon Icon="FeatherIcon.AtSign" />
                     Parameters
-                </span>
+                </a>
             </li>
             <li class="nav-item ms-auto" role="presentation">
-                <span class="nav-link @(ShowReport == Report.History ? "active" : null) @(Loading ? "disabled" : null)" @onclick="() => ShowReport = Report.History">
+                <a class="nav-link @(Execution is null ? "disabled" : null) @(ShowReport == Report.History ? "active" : null) @(Loading ? "disabled" : null)" href="executions/@ExecutionId/history">
                     <CxIcon Icon="LucideIcon.History" />
                     History
-                </span>
+                </a>
             </li>
             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                 <li class="nav-item" role="presentation">
-                    <span class="nav-link @(ShowReport == Report.Rerun ? "active" : null) @(Loading ? "disabled" : null)" @onclick="() => ShowReport = Report.Rerun">
+                    <a class="nav-link @(Execution is null ? "disabled" : null) @(ShowReport == Report.Rerun ? "active" : null) @(Loading ? "disabled" : null)" href="executions/@ExecutionId/rerun">
                         <CxIcon Icon="FeatherIcon.Repeat" />
                         Rerun
-                    </span>
+                    </a>
                 </li>
             </AuthorizeView>
         </ul>
