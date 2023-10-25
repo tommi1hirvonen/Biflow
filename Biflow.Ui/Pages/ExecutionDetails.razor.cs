@@ -63,15 +63,15 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
     private Report ShowReport => Page switch
     {
         "gantt" => Report.Gantt,
-        "dependencies" => Report.Dependencies,
+        "graph" => Report.Graph,
         "executiondetails" => Report.ExecutionDetails,
         "parameters" => Report.Parameters,
         "rerun" => Report.Rerun,
         "history" => Report.History,
-        _ => Report.Table
+        _ => Report.List
     };
 
-    private enum Report { Table, Gantt, Dependencies, ExecutionDetails, Parameters, Rerun, History }
+    private enum Report { List, Gantt, Graph, ExecutionDetails, Parameters, Rerun, History }
 
     private readonly System.Timers.Timer timer = new(5000) { AutoReset = false };
 
@@ -152,7 +152,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
 
     private bool ShowStatusBar => ShowReport switch
     {
-        Report.Table or Report.Gantt or Report.Dependencies or Report.ExecutionDetails or Report.Parameters => true,
+        Report.List or Report.Gantt or Report.Graph or Report.ExecutionDetails or Report.Parameters => true,
         _ => false
     };
 
@@ -215,7 +215,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (GraphShouldRender && ShowReport == Report.Dependencies)
+        if (GraphShouldRender && ShowReport == Report.Graph)
         {
             await LoadGraph();
         }

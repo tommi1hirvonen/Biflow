@@ -29,7 +29,7 @@
     <div class="col">
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <a class="nav-link @(Execution is null ? "disabled" : null) @(ShowReport == Report.Table ? "active" : null)" href="executions/@ExecutionId">
+                <a class="nav-link @(Execution is null ? "disabled" : null) @(ShowReport == Report.List ? "active" : null)" href="executions/@ExecutionId">
                     <CxIcon Icon="FeatherIcon.List" />
                     List
                 </a>
@@ -41,9 +41,9 @@
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link @(Execution is null ? "disabled" : null) @(ShowReport == Report.Dependencies ? "active" : null)" href="executions/@ExecutionId/dependencies">
+                <a class="nav-link @(Execution is null ? "disabled" : null) @(ShowReport == Report.Graph ? "active" : null)" href="executions/@ExecutionId/graph">
                     <CxIcon Icon="LucideIcon.Network" />
-                    Dependencies
+                    Graph
                 </a>
             </li>
             <li class="nav-item" role="presentation">
@@ -78,7 +78,7 @@
 
 @if (ShowStatusBar)
 {
-    <div class="row mt-3 @(ShowReport == Report.Table || ShowReport == Report.Gantt ? "sticky-top bg-body" : null)">
+    <div class="row mt-3 @(ShowReport == Report.List || ShowReport == Report.Gantt ? "sticky-top bg-body" : null)">
         <div class="col-auto align-self-center">
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!Loading">
                 <CxIcon Icon="FeatherIcon.RefreshCw" />
@@ -318,7 +318,7 @@
     </div>
 }
 
-@if (ShowReport == Report.Table || ShowReport == Report.Gantt)
+@if (ShowReport == Report.List || ShowReport == Report.Gantt)
 {
     <div class="row mt-1">
         <div class="col d-inline">
@@ -440,7 +440,7 @@
     </div>
 }
 
-@if (ShowReport == Report.Table)
+@if (ShowReport == Report.List)
 {
     <div class="card shadow-sm mt-3 pt-2">
         <StepExecutionsTableComponent
@@ -474,7 +474,7 @@ else if (ShowReport == Report.Gantt)
     </div>
     
 }
-else if (ShowReport == Report.Dependencies)
+else if (ShowReport == Report.Graph)
 {
     if (Execution?.DependencyMode == false)
     {
@@ -550,7 +550,7 @@ else if (ShowReport == Report.History && Execution?.JobId is Guid jobId)
                  Items="Execution?.StepExecutions ?? Enumerable.Empty<StepExecution>()"
                  KeySelector="s => s.StepId.ToString()"
                  CssClass="dependency-graph"
-                 hidden=@(ShowReport != Report.Dependencies)>
+                 hidden=@(ShowReport != Report.Graph)>
     <DropdownMenuTemplate Context="step">
         <li>
             <h6 class="dropdown-header">

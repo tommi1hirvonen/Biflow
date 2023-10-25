@@ -478,7 +478,7 @@
                                 History
                             </DropdownMenuItem>
                             @{
-                                var navigateToDependencies = () => NavigationManager.NavigateTo($"jobs/{Job?.JobId}/dependencies/{item.StepId}");
+                                var navigateToDependencies = () => NavigationManager.NavigateTo($"jobs/{Job?.JobId}/graph/{item.StepId}");
                             }
                             <DropdownMenuItem @onclick="navigateToDependencies">
                                 <CxIcon Icon="LucideIcon.Network" />

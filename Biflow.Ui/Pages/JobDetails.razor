@@ -115,9 +115,9 @@
                 </li>
             </AuthorizeView>
             <li class="nav-item" role="presentation">
-                <NavLink class="nav-link" href="@($"jobs/{Job?.JobId}/dependencies")">
+                <NavLink class="nav-link" href="@($"jobs/{Job?.JobId}/graph")">
                     <CxIcon Icon="LucideIcon.Network" />
-                    Dependencies
+                    Graph
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
@@ -171,7 +171,7 @@
                     {
                         <JobHistoryComponent JobId="Job.JobId" JobName="@Job.JobName" />
                     }
-                    else if (DetailsPage == "dependencies")
+                    else if (DetailsPage == "graph")
                     {
                         <DependenciesComponent SqlConnections="SqlConnections"
                                                AsConnections="AsConnections"
