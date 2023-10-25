@@ -12,12 +12,12 @@
     </div>
 }
 
-<div class="row justify-content-between mt-3">
+<div class="row justify-content-between">
     <div class="col">
         <div class="btn-toolbar">
             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                 <HxButton Color="ThemeColor.Success"
-                          CssClass="me-3"
+                          CssClass="me-3 mt-3"
                           OnClick="() => JobEditModal.LetAsync(x => x.ShowAsync())"
                           Spinner="false"
                           Enabled="Jobs_ is not null">
@@ -25,14 +25,14 @@
                 </HxButton>
 
                 <HxButton Color="ThemeColor.Secondary"
-                          CssClass="me-3"
+                          CssClass="me-3 mt-3"
                           Enabled="Categories is not null"
                           OnClick="() => CategoryEditModal.LetAsync(x => x.ShowAsync())"
                           Spinner="false">
                     Add category
                 </HxButton>
             </AuthorizeView>
-            <HxButton Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!IsLoading" Spinner="IsLoading">
+            <HxButton Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!IsLoading" Spinner="IsLoading" CssClass="mt-3">
                 <CxIcon Icon="FeatherIcon.RefreshCw" />
                 Refresh
             </HxButton>
@@ -42,7 +42,7 @@
         <HxPopover Placement="PopoverPlacement.Left" Trigger="PopoverTrigger.Focus"
                    Content="@("<p>Jobs are collections of steps that can be orchestrated to run in a specific order.</p><p>Jobs can have multiple schedules that trigger the job and its steps to be executed. Authorized users can edit these schedules or execute jobs manually.</p>")"
                    Html>
-            <HxButton Color="ThemeColor.None" CssClass="btn-auto">
+            <HxButton Color="ThemeColor.None" CssClass="btn-auto mt-3">
                 <CxIcon Icon="FeatherIcon.HelpCircle" />
             </HxButton>
         </HxPopover>
@@ -85,7 +85,7 @@
     </div>  
 </div>
 
-<div class="card shadow-sm mt-4 mb-4">
+<div class="card shadow-sm mt-4 mb-4 table-responsive">
     <table class="table mb-0">
         <thead>
             <tr>
@@ -199,7 +199,7 @@
                         <ContextMenuToggle ContainerHtmlTag="tr" CssClass="@($"job-row {(item.IsEnabled ? null : "disabled")}")">
                             <ChildContent Context="menu">
                                 <td class="align-middle">
-                                    <a class="text-body ms-5" href="@($"jobs/{item.JobId}/steps")">
+                                    <a class="text-body ms-sm-5" href="@($"jobs/{item.JobId}/steps")">
                                         <HighlightableText PartToHighlight="@JobNameFilter" Text="@item.JobName" />
                                     </a>
                                 </td>
