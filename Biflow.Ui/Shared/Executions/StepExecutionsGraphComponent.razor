@@ -178,14 +178,7 @@
             string username = HttpContextAccessor.HttpContext?.User?.Identity?.Name
                 ?? throw new ArgumentNullException(nameof(username), "Username cannot be null");
             await ExecutorService.StopExecutionAsync(stepExecution.ExecutionId, stepExecution.StepId, username);
-            if (stepExecution.ExecutionStatus == StepExecutionStatus.NotStarted)
-            {
-                Messenger.AddInformation("Stop request sent successfully to the executor service. The step will be stopped once it reaches the 'Queued' status.");
-            }
-            else
-            {
-                Messenger.AddInformation("Stop request sent successfully to the executor service");
-            }
+            Messenger.AddInformation("Stop request sent successfully to the executor service");
         }
         catch (TimeoutException)
         {
