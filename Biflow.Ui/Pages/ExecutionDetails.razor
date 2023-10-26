@@ -128,9 +128,13 @@
                 <dd>@Execution?.GetDurationInReadableFormat()</dd>
             </dl>
         </div>
-        <div class="col-lg mb-lg-0 mb-3">
-            <span class="fw-bold">Progress</span>
-            <div class="progress mt-1 @Execution?.ExecutionStatus.ToString().ToLower()">
+        <div class="col-lg mb-3">
+            <div class="d-flex justify-content-between">
+                <span class="fw-bold">Progress</span>
+                <span class="small align-self-end">@($"{Execution?.GetProgressPercent() ?? 0}%")</span>
+                <span><JobExecutionStatusBadgeComponent ExecutionStatus_="@Execution?.ExecutionStatus" /></span>
+            </div>
+            <div class="progress mt-1 @Execution?.ExecutionStatus.ToString().ToLower()" style="height: 8px;">
                 <div class="progress-bar" style="width: @($"{Execution?.GetProgressPercent() ?? 0}%");" />
             </div>
         </div>
@@ -278,7 +282,7 @@
 
 @if (ShowReport == Report.Parameters)
 {
-    <div class="card shadow-sm pt-2 mb-4 mt-3">
+    <div class="card shadow-sm pt-2 mb-4 mt-3 table-responsive">
         <table class="table table-hover">
             <thead>
                 <tr>
@@ -442,7 +446,7 @@
 
 @if (ShowReport == Report.List)
 {
-    <div class="card shadow-sm mt-3 pt-2">
+    <div class="card shadow-sm mt-3 pt-2 table-responsive">
         <StepExecutionsTableComponent
             ShowDetailed="false"
             Executions="FilteredExecutions
