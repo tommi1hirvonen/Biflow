@@ -43,8 +43,8 @@ internal class ExeStepExecutor(
         }
 
         var process = new Process() { StartInfo = startInfo };
-        process.OutputDataReceived += (object sender, DataReceivedEventArgs e) => AddOutput(e.Data);
-        process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) => AddError(e.Data);
+        process.OutputDataReceived += (s, e) => AddOutput(e.Data);
+        process.ErrorDataReceived += (s, e) => AddError(e.Data);
 
         try
         {

@@ -25,7 +25,7 @@ internal class SqlStepExecutor(
         {
             _logger.LogInformation("{ExecutionId} {Step} Starting SQL execution", _step.ExecutionId, _step);
             using var connection = new SqlConnection(_step.Connection.ConnectionString);
-            connection.InfoMessage += Connection_InfoMessage;
+            connection.InfoMessage += (s, e) => AddOutput(e.Message);
 
             var parameters = _step.StepExecutionParameters
                 .ToDictionary(key => key.ParameterName, value => value.ParameterValue);
@@ -85,6 +85,4 @@ internal class SqlStepExecutor(
 
         return Result.Success;
     }
-
-    private void Connection_InfoMessage(object sender, SqlInfoMessageEventArgs e) => AddOutput(e.Message);
 }
