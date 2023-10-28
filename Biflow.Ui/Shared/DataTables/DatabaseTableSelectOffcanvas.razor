@@ -1,7 +1,7 @@
 ﻿@inject SqlServerHelperService SqlServerHelper
 @inject IHxMessengerService Messenger
 
-<HxOffcanvas @ref="Offcanvas" Title="Select table" Size="OffcanvasSize.Large" OnClosed="OnClosed" ScrollingEnabled="true">
+<HxOffcanvas @ref="offcanvas" Title="Select table" Size="OffcanvasSize.Large" OnClosed="OnClosed" ScrollingEnabled="true">
     <BodyTemplate>
         <div class="row">
             <div class="col-2">
@@ -12,8 +12,8 @@
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Filter" />
                     </div>
-                    <input type="search" class="form-control" @bind-value="SchemaFilter" @bind-value:event="oninput" placeholder="Schema" />
-                    <input type="search" class="form-control" @bind-value="TableFilter" @bind-value:event="oninput" placeholder="Table" />
+                    <input type="search" class="form-control" @bind-value="schemaFilter" @bind-value:event="oninput" placeholder="Schema" />
+                    <input type="search" class="form-control" @bind-value="tableFilter" @bind-value:event="oninput" placeholder="Table" />
                 </div>
             </div>
         </div>
@@ -28,13 +28,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Tables is null)
+                        @if (tables is null)
                         {
                             <tr>
                                 <td colspan="3" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td>
                             </tr>
                         }
-                        else if (!Tables.Any())
+                        else if (!tables.Any())
                         {
                             <tr>
                                 <td colspan="3">No tables</td>
@@ -44,10 +44,10 @@
                         {
                             @foreach (var table in FilteredTables)
                             {
-                                var className = SelectedTable?.Equals(table) ?? false ? "bg-body-tertiary fw-bold" : null;
-                                <tr class="@className" style="cursor: pointer;" @onclick="() => SelectedTable = table">
-                                    <td><HighlightableText Text="@table.Schema" PartToHighlight="@SchemaFilter" /></td>
-                                    <td><HighlightableText Text="@table.Table" PartToHighlight="@TableFilter" /></td>
+                                var className = selectedTable?.Equals(table) ?? false ? "bg-body-tertiary fw-bold" : null;
+                                <tr class="@className" style="cursor: pointer;" @onclick="() => selectedTable = table">
+                                    <td><HighlightableText Text="@table.Schema" PartToHighlight="@schemaFilter" /></td>
+                                    <td><HighlightableText Text="@table.Table" PartToHighlight="@tableFilter" /></td>
                                     <td class="@(table.HasPrimaryKey ? null : "text-danger")">@table.HasPrimaryKey</td>
                                 </tr>
                             }
@@ -58,10 +58,10 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectTableAsync" Enabled="SelectedTable is not null">
+        <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectTableAsync" Enabled="selectedTable is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">
             Cancel
         </HxButton>
     </FooterTemplate>
@@ -70,55 +70,51 @@
 @code {
     [Parameter] public EventCallback<DatabaseTableSelectedResult> OnTableSelected { get; set; }
 
-    private HxOffcanvas? Offcanvas { get; set; }
-
-    private Guid ConnectionId { get; set; }
-
-    private IEnumerable<DbTable>? Tables { get; set; }
-
-    private DbTable? SelectedTable { get; set; }
-
-    private string SchemaFilter { get; set; } = string.Empty;
-    private string TableFilter { get; set; } = string.Empty;
+    private HxOffcanvas? offcanvas;
+    private Guid connectionId;
+    private IEnumerable<DbTable>? tables;
+    private DbTable? selectedTable;
+    private string schemaFilter = string.Empty;
+    private string tableFilter = string.Empty;
 
     private IEnumerable<DbTable> FilteredTables =>
-        Tables?
-        .Where(o => o.Schema.ContainsIgnoreCase(SchemaFilter))
-        .Where(o => o.Table.ContainsIgnoreCase(TableFilter))
+        tables?
+        .Where(o => o.Schema.ContainsIgnoreCase(schemaFilter))
+        .Where(o => o.Table.ContainsIgnoreCase(tableFilter))
         ?? Enumerable.Empty<DbTable>();
 
     private async Task SelectTableAsync()
     {
-        if (SelectedTable is null)
+        if (selectedTable is null)
         {
             return;
         }
-        await OnTableSelected.InvokeAsync(new (SelectedTable.Schema, SelectedTable.Table));
-        await Offcanvas.LetAsync(x => x.HideAsync());
+        await OnTableSelected.InvokeAsync(new (selectedTable.Schema, selectedTable.Table));
+        await offcanvas.LetAsync(x => x.HideAsync());
     }
 
     private void OnClosed()
     {
-        SelectedTable = null;
-        SchemaFilter = "";
-        TableFilter = "";
+        selectedTable = null;
+        schemaFilter = "";
+        tableFilter = "";
     }
 
     public async Task ShowAsync(Guid connectionId)
     {
-        if (ConnectionId != connectionId)
+        if (this.connectionId != connectionId)
         {
-            Tables = null;
-            ConnectionId = connectionId;
+                tables = null;
+            this.connectionId = connectionId;
             try
             {
-                Tables = await SqlServerHelper.GetDatabaseTablesAsync(ConnectionId);
+                    tables = await SqlServerHelper.GetDatabaseTablesAsync(this.connectionId);
             }
             catch (Exception ex)
             {
-                Messenger.AddError("Error loading tables", ex.Message);
+                    Messenger.AddError("Error loading tables", ex.Message);
             }
         }
-        await Offcanvas.LetAsync(x => x.ShowAsync());
+        await offcanvas.LetAsync(x => x.ShowAsync());
     }
 }

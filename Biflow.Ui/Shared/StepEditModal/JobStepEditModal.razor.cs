@@ -10,7 +10,7 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
 {
     internal override string FormId => "job_step_edit_form";
 
-    private List<string> TagFilters { get; set; } = new();
+    private List<string> TagFilters { get; set; } = [];
 
     private IEnumerable<JobCategory?> JobCategories => JobSlims?.Values
         .Select(j => j.Category)

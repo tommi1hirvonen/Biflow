@@ -29,7 +29,7 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     internal TStep? Step { get; private set; }
 
-    internal List<string> Tags { get; set; } = new();
+    internal List<string> Tags { get; set; } = [];
 
     internal HxModal? Modal { get; set; }
 
@@ -105,7 +105,7 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
     private void ResetTags() => Tags = Step?.Tags
         .Select(t => t.TagName)
         .OrderBy(t => t)
-        .ToList() ?? new();
+        .ToList() ?? [];
 
     internal void OnClosed()
     {

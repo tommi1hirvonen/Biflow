@@ -20,7 +20,17 @@ public partial class DataTableEditorComponent : ComponentBase
 
     [Parameter] public MasterDataTable? Table { get; set; }
 
-    private TableData? TableData { get; set; }
+    private readonly List<(string Column, bool Descending)> orderBy = [];
+    private readonly HashSet<string> columnSelections = [];
+
+    private TableData? tableData;
+    private FilterSet? filterSet;
+    private FilterSetOffcanvas? filterSetOffcanvas;
+    private HxOffcanvas? tableInfoOffcanvas;
+    private bool editModeEnabled = true;
+    private bool exporting = false;
+    private bool discardChanges = false; // used to prevent double confirmation when switching tables
+    private bool initialLoad;
 
     private int TopRows
     {
@@ -30,26 +40,8 @@ public partial class DataTableEditorComponent : ComponentBase
 
     private int _topRows = 100;
 
-    private List<(string Column, bool Descending)> OrderBy { get; } = new();
-
-    private FilterSet? FilterSet { get; set; }
-
-    private HashSet<string> ColumnSelections { get; } = new();
-
     private bool IsColumnSelected(string column) =>
-        ColumnSelections is null || ColumnSelections.Count == 0 || ColumnSelections.Contains(column);
-
-    private FilterSetOffcanvas? FilterSetOffcanvas { get; set; }
-
-    private HxOffcanvas? TableInfoOffcanvas { get; set; }
-
-    private bool EditModeEnabled { get; set; } = true;
-
-    private bool Exporting { get; set; } = false;
-
-    private bool DiscardChanges { get; set; } = false; // used to prevent double confirmation when switching tables
-
-    private bool initialLoad;
+        columnSelections is null || columnSelections.Count == 0 || columnSelections.Contains(column);
 
     protected override Task OnParametersSetAsync()
     {
@@ -63,10 +55,10 @@ public partial class DataTableEditorComponent : ComponentBase
 
     private Row[]? GetOrderedRowRecords()
     {
-        var rows = TableData?.Rows.OrderBy(r => !r.IsNewRow);
-        foreach (var orderBy in OrderBy)
+        var rows = tableData?.Rows.OrderBy(r => !r.IsNewRow);
+        foreach (var orderBy in orderBy)
         {
-            var column = TableData?.Columns.FirstOrDefault(c => c.Name == orderBy.Column);
+            var column = tableData?.Columns.FirstOrDefault(c => c.Name == orderBy.Column);
             var lookup = column?.Lookup;
 
             // Helper function to retrieve lookup display value if it exists and the value itself when it does not.
@@ -92,25 +84,25 @@ public partial class DataTableEditorComponent : ComponentBase
     private void ToggleOrderBy(string column)
     {
         // ascending (false) => descending (true) => removed
-        var index = OrderBy.FindIndex(o => o.Column == column);
+        var index = orderBy.FindIndex(o => o.Column == column);
         if (index >= 0)
         {
-            var orderBy = OrderBy[index];
-            OrderBy.Remove(orderBy);
+            var orderBy = this.orderBy[index];
+            this.orderBy.Remove(orderBy);
             if (!orderBy.Descending)
             {
-                OrderBy.Insert(index, (column, true));
+                this.orderBy.Insert(index, (column, true));
             }
         }
         else
         {
-            OrderBy.Insert(0, (column, false));
+            orderBy.Insert(0, (column, false));
         }
     }
 
     private async Task ReloadDataAsync()
     {
-        if (TableData?.HasChanges == true && !DiscardChanges)
+        if (tableData?.HasChanges == true && !discardChanges)
         {
             var confirmed = await MessageBox.ConfirmAsync("Discard unsaved changes?");
             if (!confirmed)
@@ -118,8 +110,8 @@ public partial class DataTableEditorComponent : ComponentBase
                 return;
             }
         }
-        DiscardChanges = false;
-        TableData = null;
+        discardChanges = false;
+        tableData = null;
         StateHasChanged();
 
         if (Table is null)
@@ -130,8 +122,8 @@ public partial class DataTableEditorComponent : ComponentBase
 
         try
         {
-            TableData = await Table.LoadDataAsync(TopRows, FilterSet);
-            FilterSet ??= TableData.EmptyFilterSet;
+            tableData = await Table.LoadDataAsync(TopRows, filterSet);
+            filterSet ??= tableData.EmptyFilterSet;
         }
         catch (Exception ex)
         {
@@ -141,7 +133,7 @@ public partial class DataTableEditorComponent : ComponentBase
 
     private async Task SaveChangesAsync()
     {
-        if (TableData is null)
+        if (tableData is null)
         {
             Messenger.AddError("Error saving changes", $"Table editor dataset object was null.");
             return;
@@ -149,7 +141,7 @@ public partial class DataTableEditorComponent : ComponentBase
 
         try
         {
-            var (inserted, updated, deleted) = await TableData.SaveChangesAsync();
+            var (inserted, updated, deleted) = await tableData.SaveChangesAsync();
             var message = new StringBuilder();
             if (inserted == 0 && updated == 0 && deleted == 0)
             {
@@ -168,7 +160,7 @@ public partial class DataTableEditorComponent : ComponentBase
                 message.Append("Deleted ").Append(deleted).Append(" record(s)").AppendLine();
             }
             Messenger.AddInformation("Changes saved", message.ToString());
-            TableData = await Table.LetAsync(x => x.LoadDataAsync(TopRows, FilterSet)) ?? TableData;
+            tableData = await Table.LetAsync(x => x.LoadDataAsync(TopRows, filterSet)) ?? tableData;
         }
         catch (Exception ex)
         {
@@ -178,11 +170,11 @@ public partial class DataTableEditorComponent : ComponentBase
 
     private async Task DownloadExportAsync(bool filtered)
     {
-        Exporting = true;
+        exporting = true;
         try
         {
             ArgumentNullException.ThrowIfNull(Table);
-            var filterSet = filtered ? FilterSet : null;
+            var filterSet = filtered ? this.filterSet : null;
             var dataset = await Table.LoadDataAsync(filters: filterSet);
             using var stream = dataset.GetExcelExportStream();
 
@@ -199,7 +191,7 @@ public partial class DataTableEditorComponent : ComponentBase
         }
         finally
         {
-            Exporting = false;
+            exporting = false;
         }
     }
 
@@ -210,6 +202,6 @@ public partial class DataTableEditorComponent : ComponentBase
         {
             context.PreventNavigation();
         }
-        DiscardChanges = true;
+        discardChanges = true;
     }
 }

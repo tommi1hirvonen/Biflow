@@ -17,18 +17,18 @@ public partial class AdvancedFiltersOffcanvas : ComponentBase
 
     private HxOffcanvas? Offcanvas { get; set; }
 
-    private HashSet<ConnectionInfoBase> ConnectionsFilter { get; set; } = new();
+    private HashSet<ConnectionInfoBase> ConnectionsFilter { get; set; } = [];
 
     public string PackageFolder { get; private set; } = "";
     public string PackageProject { get; private set; } = "";
     public string PackageName { get; private set; } = "";
 
     public string PipelineName { get; private set; } = "";
-    private HashSet<PipelineClient> PipelineClientsFilter { get; set; } = new();
+    private HashSet<PipelineClient> PipelineClientsFilter { get; set; } = [];
 
     public string FunctionUrl { get; private set; } = "";
     private string FunctionInput { get; set; } = "";
-    private HashSet<FunctionApp> FunctionAppsFilter { get; set; } = new();
+    private HashSet<FunctionApp> FunctionAppsFilter { get; set; } = [];
 
     public string ExeFilePath { get; private set; } = "";
     public string ExeArguments { get; private set; } = "";

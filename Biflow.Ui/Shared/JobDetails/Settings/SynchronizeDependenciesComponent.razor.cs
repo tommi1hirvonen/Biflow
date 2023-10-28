@@ -40,8 +40,8 @@ public partial class SynchronizeDependenciesComponent : ComponentBase
             .ThenInclude(dep => dep.DependantOnStep)
             .ToListAsync();
 
-        DependenciesToAdd = new();
-        DependenciesToRemove = new();
+        DependenciesToAdd = [];
+        DependenciesToRemove = [];
 
         foreach (var step in steps)
         {
