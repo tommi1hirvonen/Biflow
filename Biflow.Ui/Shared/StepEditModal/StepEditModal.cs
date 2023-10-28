@@ -192,10 +192,10 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     public async Task ShowAsync(Guid stepId, StepEditModalView startView = StepEditModalView.Settings)
     {
-        ArgumentNullException.ThrowIfNull(context);
         CurrentView = startView;
         await Modal.LetAsync(x => x.ShowAsync());
         await ResetContext();
+        ArgumentNullException.ThrowIfNull(context);
         // Use slim classes to only load selected columns from the db.
         // When loading all steps from the db, the number of steps may be very high.
         JobSlims = await context.Jobs
