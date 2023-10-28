@@ -9,10 +9,8 @@ internal abstract class StepExecutorBase
 {
     private readonly ILogger<StepExecutorBase> _logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
-    
-    private StepExecution StepExecution { get; }
-
-    private List<Message> ExecutionMessages { get; } = [];
+    private readonly StepExecution _stepExecution;
+    private readonly List<Message> _executionMessages = [];
 
     protected StepExecutorBase(
         ILogger<StepExecutorBase> logger,
@@ -21,32 +19,32 @@ internal abstract class StepExecutorBase
     {
         _logger = logger;
         _dbContextFactory = dbContextFactory;
-        StepExecution = stepExecution;
+        _stepExecution = stepExecution;
     }
 
     protected abstract Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource);
 
-    protected void AddError(Exception exception) => ExecutionMessages.Add(new Error(exception));
+    protected void AddError(Exception exception) => _executionMessages.Add(new Error(exception));
 
-    protected void AddError(Exception? exception, string message) => ExecutionMessages.Add(new Error(exception, message));
+    protected void AddError(Exception? exception, string message) => _executionMessages.Add(new Error(exception, message));
 
     protected void AddError(string? message)
     {
         if (message is not null)
         {
-            ExecutionMessages.Add(new Error(message));
+            _executionMessages.Add(new Error(message));
         }
     }
 
-    protected void AddWarning(Exception exception) => ExecutionMessages.Add(new Warning(exception));
+    protected void AddWarning(Exception exception) => _executionMessages.Add(new Warning(exception));
 
-    protected void AddWarning(Exception? exception, string message) => ExecutionMessages.Add(new Warning(exception, message));
+    protected void AddWarning(Exception? exception, string message) => _executionMessages.Add(new Warning(exception, message));
 
     protected void AddWarning(string? message)
     {
         if (message is not null)
         {
-            ExecutionMessages.Add(new Warning(message));
+            _executionMessages.Add(new Warning(message));
         }
     }
 
@@ -54,7 +52,7 @@ internal abstract class StepExecutorBase
     {
         if (message is not null)
         {
-            ExecutionMessages.Add(new Output(message));
+            _executionMessages.Add(new Output(message));
         }
     }
 
@@ -69,11 +67,11 @@ internal abstract class StepExecutorBase
             return false;
         }
 
-        var executionAttempt = StepExecution.StepExecutionAttempts.First();
+        var executionAttempt = _stepExecution.StepExecutionAttempts.First();
 
         // If the step is using job parameters, update the job parameter's current value for this execution.
         // Also evaluate step execution parameter expressions.
-        if (StepExecution is IHasStepExecutionParameters hasParameters)
+        if (_stepExecution is IHasStepExecutionParameters hasParameters)
         {
             try
             {
@@ -95,7 +93,7 @@ internal abstract class StepExecutorBase
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{ExecutionId} {Step} Error updating parameter values",
-                StepExecution.ExecutionId, StepExecution);
+                _stepExecution.ExecutionId, _stepExecution);
                 AddError(ex, "Error updating parameter values");
                 await UpdateExecutionFailedAsync(executionAttempt, StepExecutionStatus.Failed);
                 return false;
@@ -106,7 +104,7 @@ internal abstract class StepExecutorBase
         try
         {
             using var context = _dbContextFactory.CreateDbContext();
-            foreach (var param in StepExecution.ExecutionConditionParameters.Where(p => p.ExecutionParameter is not null))
+            foreach (var param in _stepExecution.ExecutionConditionParameters.Where(p => p.ExecutionParameter is not null))
             {
                 context.Attach(param);
                 param.ExecutionParameterValue = param.ExecutionParameter?.ParameterValue;
@@ -116,7 +114,7 @@ internal abstract class StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error updating execution parameter values to step execution condition parameters",
-                StepExecution.ExecutionId, StepExecution);
+                _stepExecution.ExecutionId, _stepExecution);
             AddError(ex, "Error updating execution parameter values to inheriting execution condition parameters");
             await UpdateExecutionFailedAsync(executionAttempt, StepExecutionStatus.Failed);
             return false;
@@ -125,7 +123,7 @@ internal abstract class StepExecutorBase
         // Inspect execution condition expression here
         try
         {
-            var result = await StepExecution.EvaluateExecutionConditionAsync();
+            var result = await _stepExecution.EvaluateExecutionConditionAsync();
             if (!result)
             {
                 await UpdateExecutionSkippedAsync("Execution condition evaluated as false");
@@ -144,7 +142,7 @@ internal abstract class StepExecutorBase
 
     private async Task<bool> ExecuteRecursivelyWithRetriesAsync(StepExecutionAttempt executionAttempt, ExtendedCancellationTokenSource cancellationTokenSource)
     {
-        ExecutionMessages.Clear(); // Clear messages before every execution attempt.
+        _executionMessages.Clear(); // Clear messages before every execution attempt.
 
         await UpdateExecutionRunningAsync(executionAttempt);
 
@@ -171,7 +169,7 @@ internal abstract class StepExecutorBase
         return await result.Match(
             async (Success success) =>
             {
-                _logger.LogInformation("{ExecutionId} {Step} Step executed successfully", StepExecution.ExecutionId, StepExecution);
+                _logger.LogInformation("{ExecutionId} {Step} Step executed successfully", _stepExecution.ExecutionId, _stepExecution);
                 await UpdateExecutionSucceededAsync(executionAttempt);
                 return true;
             },
@@ -182,10 +180,10 @@ internal abstract class StepExecutorBase
             },
             async (Failure failure) =>
             {
-                _logger.LogWarning("{ExecutionId} {Step} Error executing step", StepExecution.ExecutionId, StepExecution);
+                _logger.LogWarning("{ExecutionId} {Step} Error executing step", _stepExecution.ExecutionId, _stepExecution);
 
                 // Check whether retry attempts have been exhausted and return false if so.
-                if (executionAttempt.RetryAttemptIndex >= StepExecution.RetryAttempts)
+                if (executionAttempt.RetryAttemptIndex >= _stepExecution.RetryAttempts)
                 {
                     await UpdateExecutionFailedAsync(executionAttempt, StepExecutionStatus.Failed);
                     return false;
@@ -197,7 +195,7 @@ internal abstract class StepExecutorBase
                 // Copy the execution attempt, increase counter and wait for the retry interval.
                 var nextExecution = executionAttempt.Clone(executionAttempt.RetryAttemptIndex + 1);
                 nextExecution.ExecutionStatus = StepExecutionStatus.AwaitingRetry;
-                StepExecution.StepExecutionAttempts.Add(nextExecution);
+                _stepExecution.StepExecutionAttempts.Add(nextExecution);
                 using (var context = _dbContextFactory.CreateDbContext())
                 {
                     context.Attach(nextExecution).State = EntityState.Added;
@@ -206,12 +204,12 @@ internal abstract class StepExecutorBase
 
                 try
                 {
-                    await Task.Delay(TimeSpan.FromMinutes(StepExecution.RetryIntervalMinutes), cancellationTokenSource.Token);
+                    await Task.Delay(TimeSpan.FromMinutes(_stepExecution.RetryIntervalMinutes), cancellationTokenSource.Token);
                 }
                 catch (OperationCanceledException ex)
                 {
                     AddWarning(ex);
-                    _logger.LogWarning("{ExecutionId} {Step} Step was canceled", StepExecution.ExecutionId, StepExecution);
+                    _logger.LogWarning("{ExecutionId} {Step} Step was canceled", _stepExecution.ExecutionId, _stepExecution);
                     await UpdateExecutionCancelledAsync(nextExecution, cancellationTokenSource.Username);
                     return false;
                 }
@@ -220,15 +218,15 @@ internal abstract class StepExecutorBase
             });
     }
 
-    private IEnumerable<ErrorMessage> ErrorMessages => ExecutionMessages
+    private IEnumerable<ErrorMessage> ErrorMessages => _executionMessages
         .OfType<Error>()
         .Select(e => new ErrorMessage(e.Message, e.Exception?.ToString()));
 
-    private IEnumerable<WarningMessage> WarningMessages => ExecutionMessages
+    private IEnumerable<WarningMessage> WarningMessages => _executionMessages
         .OfType<Warning>()
         .Select(w => new WarningMessage(w.Message, w.Exception?.ToString()));
 
-    private IEnumerable<InfoMessage> OutputMessages => ExecutionMessages
+    private IEnumerable<InfoMessage> OutputMessages => _executionMessages
         .OfType<Output>()
         .Select(o => new InfoMessage(o.Message));
 
@@ -287,7 +285,7 @@ internal abstract class StepExecutorBase
     private async Task UpdateExecutionStoppedAsync(string username)
     {
         using var context = _dbContextFactory.CreateDbContext();
-        foreach (var attempt in StepExecution.StepExecutionAttempts)
+        foreach (var attempt in _stepExecution.StepExecutionAttempts)
         {
             attempt.ExecutionStatus = StepExecutionStatus.Stopped;
             attempt.StartDateTime = DateTimeOffset.Now;
@@ -310,7 +308,7 @@ internal abstract class StepExecutorBase
     private async Task UpdateExecutionSkippedAsync(string infoMessage)
     {
         using var context = _dbContextFactory.CreateDbContext();
-        foreach (var attempt in StepExecution.StepExecutionAttempts)
+        foreach (var attempt in _stepExecution.StepExecutionAttempts)
         {
             attempt.ExecutionStatus = StepExecutionStatus.Skipped;
             attempt.StartDateTime = DateTimeOffset.Now;

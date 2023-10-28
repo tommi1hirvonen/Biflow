@@ -11,7 +11,7 @@ internal class TabularStepExecutor(
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
     TabularStepExecution step) : StepExecutorBase(logger, dbContextFactory, step)
 {
-    private TabularStepExecution Step { get; } = step;
+    private readonly TabularStepExecution _step = step;
 
     protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
     {
@@ -23,17 +23,17 @@ internal class TabularStepExecutor(
         {
             var refreshTask = Task.Run(() =>
             {       
-                server.Connect(Step.Connection.ConnectionString);
+                server.Connect(_step.Connection.ConnectionString);
 
-                var database = server.Databases[Step.TabularModelName];
+                var database = server.Databases[_step.TabularModelName];
                 var model = database.Model;
 
-                if (!string.IsNullOrEmpty(Step.TabularTableName))
+                if (!string.IsNullOrEmpty(_step.TabularTableName))
                 {
-                    var table = model.Tables[Step.TabularTableName];
-                    if (!string.IsNullOrEmpty(Step.TabularPartitionName))
+                    var table = model.Tables[_step.TabularTableName];
+                    if (!string.IsNullOrEmpty(_step.TabularPartitionName))
                     {
-                        var partition = table.Partitions[Step.TabularPartitionName];
+                        var partition = table.Partitions[_step.TabularPartitionName];
                         partition.RequestRefresh(RefreshType.Full);
                     }
                     else
@@ -49,8 +49,8 @@ internal class TabularStepExecutor(
                 model.SaveChanges(); // This is a long running operation. RequestRefresh() returns immediately.
             });
             
-            var timeoutTask = Step.TimeoutMinutes > 0
-                ? Task.Delay(TimeSpan.FromMinutes(Step.TimeoutMinutes), cancellationToken)
+            var timeoutTask = _step.TimeoutMinutes > 0
+                ? Task.Delay(TimeSpan.FromMinutes(_step.TimeoutMinutes), cancellationToken)
                 : Task.Delay(-1, cancellationToken);
 
             await Task.WhenAny(refreshTask, timeoutTask);

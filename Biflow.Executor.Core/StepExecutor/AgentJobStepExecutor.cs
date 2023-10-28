@@ -19,15 +19,14 @@ internal class AgentJobStepExecutor(
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
     private readonly JsonSerializerOptions _serializerOptions =
         new() { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
-
-    private AgentJobStepExecution Step { get; } = step;
+    private readonly AgentJobStepExecution _step = step;
 
     protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
-        var connectionString = Step.Connection.ConnectionString;
+        var connectionString = _step.Connection.ConnectionString;
 
         // Start agent job execution
         try
@@ -35,7 +34,7 @@ internal class AgentJobStepExecutor(
             using var connection = new SqlConnection(connectionString);
             await connection.ExecuteAsync(
                 "EXEC msdb.dbo.sp_start_job @job_name = @AgentJobName",
-                new { Step.AgentJobName });
+                new { _step.AgentJobName });
         }
         catch (Exception ex)
         {
@@ -43,8 +42,8 @@ internal class AgentJobStepExecutor(
             return Result.Failure;
         }
 
-        using var timeoutCts = Step.TimeoutMinutes > 0
-            ? new CancellationTokenSource(TimeSpan.FromMinutes(Step.TimeoutMinutes))
+        using var timeoutCts = _step.TimeoutMinutes > 0
+            ? new CancellationTokenSource(TimeSpan.FromMinutes(_step.TimeoutMinutes))
             : new CancellationTokenSource();
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
@@ -60,7 +59,7 @@ internal class AgentJobStepExecutor(
                 // Column [job_history_id] will contain the history id of the agent job outcome when it has completed.
                 var status = await connection.QueryAsync<dynamic>(
                     "EXEC msdb.dbo.sp_help_jobactivity @job_name = @AgentJobName",
-                    new { Step.AgentJobName });
+                    new { _step.AgentJobName });
                 historyId = status.FirstOrDefault()?.job_history_id;
             }
         }
@@ -69,7 +68,7 @@ internal class AgentJobStepExecutor(
             using var connection = new SqlConnection(connectionString);
             await connection.ExecuteAsync(
                 "EXEC msdb.dbo.sp_stop_job @job_name = @AgentJobName",
-                new { Step.AgentJobName });
+                new { _step.AgentJobName });
             if (timeoutCts.IsCancellationRequested)
             {
                 AddError(ex, "Step execution timed out");

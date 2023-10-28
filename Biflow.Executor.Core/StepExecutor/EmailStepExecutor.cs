@@ -13,19 +13,18 @@ internal class EmailStepExecutor(
     EmailStepExecution stepExecution) : StepExecutorBase(logger, dbContextFactory, stepExecution)
 {
     private readonly IMessageDispatcher _messageDispatcher = messageDispatcher;
-
-    private EmailStepExecution Step { get; } = stepExecution;
+    private readonly EmailStepExecution _step = stepExecution;
 
     protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
-        var parameters = Step.StepExecutionParameters.ToStringDictionary();
+        var parameters = _step.StepExecutionParameters.ToStringDictionary();
 
-        var recipients = Step.GetRecipientsAsList().Select(r => r.Replace(parameters));
-        var subject = Step.Subject.Replace(parameters);
-        var body = Step.Body.Replace(parameters);
+        var recipients = _step.GetRecipientsAsList().Select(r => r.Replace(parameters));
+        var subject = _step.Subject.Replace(parameters);
+        var body = _step.Body.Replace(parameters);
 
         await _messageDispatcher.SendMessageAsync(recipients, subject, body, false, cancellationToken);
 

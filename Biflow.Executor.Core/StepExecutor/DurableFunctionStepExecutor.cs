@@ -22,7 +22,7 @@ internal class DurableFunctionStepExecutor(
 
     private const int MaxRefreshRetries = 3;
 
-    private JsonSerializerOptions JsonSerializerOptions { get; } = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+    private static readonly JsonSerializerOptions CamelCaseOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
     protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
     {
@@ -63,7 +63,7 @@ internal class DurableFunctionStepExecutor(
         try
         {
             response.EnsureSuccessStatusCode();
-            startResponse = JsonSerializer.Deserialize<StartResponse>(content, JsonSerializerOptions)
+            startResponse = JsonSerializer.Deserialize<StartResponse>(content, CamelCaseOptions)
                 ?? throw new InvalidOperationException("Start response was null");
         }
         catch (Exception ex)
@@ -183,7 +183,7 @@ internal class DurableFunctionStepExecutor(
         {
             var response = await client.GetAsync(statusUrl, cancellationToken);
             var content = await response.Content.ReadAsStringAsync(cancellationToken);
-            var statusResponse = JsonSerializer.Deserialize<StatusResponse>(content, JsonSerializerOptions)
+            var statusResponse = JsonSerializer.Deserialize<StatusResponse>(content, CamelCaseOptions)
                 ?? throw new InvalidOperationException("Status response was null");
             return statusResponse;
         }, cancellationToken);

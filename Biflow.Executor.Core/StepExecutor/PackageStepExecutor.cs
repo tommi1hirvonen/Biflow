@@ -19,8 +19,7 @@ internal class PackageStepExecutor(
     private readonly ILogger<PackageStepExecutor> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
-
-    private PackageStepExecution Step { get; } = step;
+    private readonly PackageStepExecution _step = step;
 
     private const int MaxRefreshRetries = 3;
 
@@ -29,35 +28,35 @@ internal class PackageStepExecutor(
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
-        Step.ExecuteAsLogin = string.IsNullOrEmpty(Step.ExecuteAsLogin) ? null : Step.ExecuteAsLogin;
-        Step.Connection.ExecutePackagesAsLogin = string.IsNullOrEmpty(Step.Connection.ExecutePackagesAsLogin) ? null : Step.Connection.ExecutePackagesAsLogin;
-        Step.ExecuteAsLogin ??= Step.Connection.ExecutePackagesAsLogin;
+        _step.ExecuteAsLogin = string.IsNullOrEmpty(_step.ExecuteAsLogin) ? null : _step.ExecuteAsLogin;
+        _step.Connection.ExecutePackagesAsLogin = string.IsNullOrEmpty(_step.Connection.ExecutePackagesAsLogin) ? null : _step.Connection.ExecutePackagesAsLogin;
+        _step.ExecuteAsLogin ??= _step.Connection.ExecutePackagesAsLogin;
 
         // Start the package execution and capture the SSISDB operation id.
         long packageOperationId;
         try
         {
-            _logger.LogInformation("{ExecutionId} {Step} Starting package execution", Step.ExecutionId, Step);
-            packageOperationId = await StartExecutionAsync(Step.Connection.ConnectionString);
+            _logger.LogInformation("{ExecutionId} {Step} Starting package execution", _step.ExecutionId, _step);
+            packageOperationId = await StartExecutionAsync(_step.Connection.ConnectionString);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error executing package", Step.ExecutionId, Step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error executing package", _step.ExecutionId, _step);
             AddError(ex, "Error starting package execution");
             return Result.Failure;
         }
 
         // Initialize timeout cancellation token source already here
         // so that we can start the countdown immediately after the package was started.
-        using var timeoutCts = Step.TimeoutMinutes > 0
-            ? new CancellationTokenSource(TimeSpan.FromMinutes(Step.TimeoutMinutes))
+        using var timeoutCts = _step.TimeoutMinutes > 0
+            ? new CancellationTokenSource(TimeSpan.FromMinutes(_step.TimeoutMinutes))
             : new CancellationTokenSource();
 
         // Update the SSISDB operation id for the target package execution.
         try
         {
             using var context = _dbContextFactory.CreateDbContext();
-            var attempt = Step.StepExecutionAttempts.MaxBy(e => e.RetryAttemptIndex);
+            var attempt = _step.StepExecutionAttempts.MaxBy(e => e.RetryAttemptIndex);
             if (attempt is not null && attempt is PackageStepExecutionAttempt package)
             {
                 package.PackageOperationId = packageOperationId;
@@ -72,7 +71,7 @@ internal class PackageStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error updating target package operation id ({packageOperationId})", Step.ExecutionId, Step, packageOperationId);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error updating target package operation id ({packageOperationId})", _step.ExecutionId, _step, packageOperationId);
             AddWarning(ex, $"Error updating target package operation id {packageOperationId}");
         }
 
@@ -83,14 +82,14 @@ internal class PackageStepExecutor(
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
             while (!completed)
             {
-                (completed, success) = await GetStatusWithRetriesAsync(Step.Connection.ConnectionString, packageOperationId, linkedCts.Token);
+                (completed, success) = await GetStatusWithRetriesAsync(_step.Connection.ConnectionString, packageOperationId, linkedCts.Token);
                 if (!completed)
                     await Task.Delay(_pollingIntervalMs, linkedCts.Token);
             }
         }
         catch (OperationCanceledException ex)
         {
-            await CancelAsync(Step.Connection.ConnectionString, packageOperationId);
+            await CancelAsync(_step.Connection.ConnectionString, packageOperationId);
             if (timeoutCts.IsCancellationRequested)
             {
                 AddError(ex, "Step execution timed out");
@@ -101,7 +100,7 @@ internal class PackageStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error monitoring package execution status", Step.ExecutionId, Step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error monitoring package execution status", _step.ExecutionId, _step);
             AddError(ex, "Error monitoring package execution status");
             return Result.Failure;
         }
@@ -111,7 +110,7 @@ internal class PackageStepExecutor(
         {
             try
             {
-                var errors = await GetErrorMessagesAsync(Step.Connection.ConnectionString, packageOperationId);
+                var errors = await GetErrorMessagesAsync(_step.Connection.ConnectionString, packageOperationId);
                 foreach (var error in errors)
                 {
                     if (error is not null)
@@ -121,7 +120,7 @@ internal class PackageStepExecutor(
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{ExecutionId} {Step} Error getting package error messages", Step.ExecutionId, Step);
+                _logger.LogError(ex, "{ExecutionId} {Step} Error getting package error messages", _step.ExecutionId, _step);
                 AddError(ex, "Error getting package error messages");
                 return Result.Failure;
             }
@@ -136,7 +135,7 @@ internal class PackageStepExecutor(
 
         commandBuilder.Append("USE SSISDB\n");
 
-        if (Step.ExecuteAsLogin is not null)
+        if (_step.ExecuteAsLogin is not null)
             commandBuilder.Append("EXECUTE AS LOGIN = @ExecuteAsLogin\n");
 
         commandBuilder.Append("""
@@ -164,7 +163,7 @@ internal class PackageStepExecutor(
 
             """);
 
-        foreach (var parameter in Step.StepExecutionParameters.Cast<PackageStepExecutionParameter>())
+        foreach (var parameter in _step.StepExecutionParameters.Cast<PackageStepExecutionParameter>())
         {
             var objectType = parameter.ParameterLevel == ParameterLevel.Project ? 20 : 30;  // 20 => project parameter; 30 => package parameter
                                                                                             // Same parameter name can be used for project and package parameter.
@@ -187,12 +186,12 @@ internal class PackageStepExecutor(
 
         string commandString = commandBuilder.ToString();
         var dynamicParams = new DynamicParameters();
-        dynamicParams.AddDynamicParams(new { Step.PackageFolderName, Step.PackageProjectName, Step.PackageName, Step.ExecuteIn32BitMode });
+        dynamicParams.AddDynamicParams(new { _step.PackageFolderName, _step.PackageProjectName, _step.PackageName, _step.ExecuteIn32BitMode });
 
-        if (Step.ExecuteAsLogin is not null)
-            dynamicParams.Add("ExecuteAsLogin", Step.ExecuteAsLogin);
+        if (_step.ExecuteAsLogin is not null)
+            dynamicParams.Add("ExecuteAsLogin", _step.ExecuteAsLogin);
 
-        foreach (var param in Step.StepExecutionParameters.Cast<PackageStepExecutionParameter>())
+        foreach (var param in _step.StepExecutionParameters.Cast<PackageStepExecutionParameter>())
         {
             dynamicParams.Add($"ParameterName{param.ParameterName}{param.ParameterLevel}", param.ParameterName);
             dynamicParams.Add($"ParameterValue{param.ParameterName}{param.ParameterLevel}", param.ParameterValue);
@@ -248,14 +247,14 @@ internal class PackageStepExecutor(
 
     private async Task CancelAsync(string connectionString, long packageOperationId)
     {
-        _logger.LogInformation("{ExecutionId} {Step} Stopping package operation id {PackageOperationId}", Step.ExecutionId, Step, packageOperationId);
+        _logger.LogInformation("{ExecutionId} {Step} Stopping package operation id {PackageOperationId}", _step.ExecutionId, _step, packageOperationId);
         try
         {
             using var sqlConnection = new SqlConnection(connectionString);
             var commandBuilder = new StringBuilder();
             commandBuilder.Append("USE SSISDB\n");
 
-            if (Step.ExecuteAsLogin is not null)
+            if (_step.ExecuteAsLogin is not null)
                 commandBuilder.Append("EXECUTE AS LOGIN = @ExecuteAsLogin\n");
 
             commandBuilder.Append("EXEC SSISDB.catalog.stop_operation @OperationId");
@@ -263,15 +262,15 @@ internal class PackageStepExecutor(
             var dynamicParams = new DynamicParameters();
             dynamicParams.AddDynamicParams(new { OperationId = packageOperationId });
 
-            if (Step.ExecuteAsLogin is not null)
-                dynamicParams.Add("ExecuteAsLogin", Step.ExecuteAsLogin);
+            if (_step.ExecuteAsLogin is not null)
+                dynamicParams.Add("ExecuteAsLogin", _step.ExecuteAsLogin);
 
             var command = commandBuilder.ToString();
             await sqlConnection.ExecuteAsync(command, dynamicParams);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error stopping package operation id {operationId}", Step.ExecutionId, Step, packageOperationId);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error stopping package operation id {operationId}", _step.ExecutionId, _step, packageOperationId);
             AddWarning(ex, $"Error stopping package operation for id {packageOperationId}");
         }
     }

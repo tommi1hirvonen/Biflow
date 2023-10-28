@@ -14,8 +14,7 @@ internal class SqlStepExecutor(
 {
     private readonly ILogger<SqlStepExecutor> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
-
-    private SqlStepExecution Step { get; } = step;
+    private readonly SqlStepExecution _step = step;
 
     protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
     {
@@ -24,34 +23,34 @@ internal class SqlStepExecutor(
 
         try
         {
-            _logger.LogInformation("{ExecutionId} {Step} Starting SQL execution", Step.ExecutionId, Step);
-            using var connection = new SqlConnection(Step.Connection.ConnectionString);
+            _logger.LogInformation("{ExecutionId} {Step} Starting SQL execution", _step.ExecutionId, _step);
+            using var connection = new SqlConnection(_step.Connection.ConnectionString);
             connection.InfoMessage += Connection_InfoMessage;
 
-            var parameters = Step.StepExecutionParameters
+            var parameters = _step.StepExecutionParameters
                 .ToDictionary(key => key.ParameterName, value => value.ParameterValue);
             var dynamicParams = new DynamicParameters(parameters);
 
             // command timeout = 0 => wait indefinitely
             var command = new CommandDefinition(
-                Step.SqlStatement,
-                commandTimeout: Convert.ToInt32(Step.TimeoutMinutes * 60),
+                _step.SqlStatement,
+                commandTimeout: Convert.ToInt32(_step.TimeoutMinutes * 60),
                 parameters: dynamicParams,
                 cancellationToken: cancellationToken);
 
             // Check whether the query result should be captured to a job parameter.
-            if (Step.ResultCaptureJobParameterId is not null)
+            if (_step.ResultCaptureJobParameterId is not null)
             {
                 var result = await connection.ExecuteScalarAsync(command);
 
                 // Update the capture value.
                 using var context = _dbContextFactory.CreateDbContext();
-                context.Attach(Step);
-                Step.ResultCaptureJobParameterValue = result;
+                context.Attach(_step);
+                _step.ResultCaptureJobParameterValue = result;
                 await context.SaveChangesAsync();
 
                 // Update the job execution parameter with the result value for following steps to use.
-                var param = Step.Execution.ExecutionParameters.FirstOrDefault(p => p.ParameterId == Step.ResultCaptureJobParameterId);
+                var param = _step.Execution.ExecutionParameters.FirstOrDefault(p => p.ParameterId == _step.ResultCaptureJobParameterId);
                 if (param is not null)
                 {
                     param.ParameterValue = result;
@@ -79,7 +78,7 @@ internal class SqlStepExecutor(
                 return Result.Cancel;
             }
 
-            _logger.LogWarning(ex, "{ExecutionId} {Step} SQL execution failed", Step.ExecutionId, Step);
+            _logger.LogWarning(ex, "{ExecutionId} {Step} SQL execution failed", _step.ExecutionId, _step);
 
             return Result.Failure;
         }
