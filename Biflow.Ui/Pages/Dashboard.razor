@@ -5,7 +5,7 @@
 <h4>Dashboard</h4>
 
 <div class="btn-toolbar mt-3">
-    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" OnClick="LoadData" Enabled="!Loading">
+    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" OnClick="LoadData" Enabled="!loading">
         <CxIcon Icon="FeatherIcon.RefreshCw" />
         Load report
     </HxButton>
@@ -14,9 +14,9 @@
 <div class="row mt-3">
     <div class="col-auto d-inline-flex align-items-center">
         <label>From:</label>
-        <input @bind-value="FromDate" class="form-control form-control-sm ms-2" type="date">
+        <input @bind-value="fromDate" class="form-control form-control-sm ms-2" type="date">
         <label class="ms-4">To:</label>
-        <input @bind-value="ToDate" class="form-control form-control-sm ms-2" type="date">
+        <input @bind-value="toDate" class="form-control form-control-sm ms-2" type="date">
     </div> 
 </div>
 
@@ -24,14 +24,14 @@
     <div class="col-auto">
         <div class="form-check form-check-inline">
             <input type="checkbox" class="form-check-input" id="only_schedule"
-                   @bind-value="OnlyScheduled"
-                   checked=@OnlyScheduled>
+                   @bind-value="onlyScheduled"
+                   checked=@onlyScheduled>
             <label class="form-check-label" for="only_schedule">Only scheduled executions</label>
         </div>
         <div class="form-check form-check-inline ms-3">
             <input type="checkbox" class="form-check-input" id="include_deleted"
-                   @bind-value="IncludeDeleted"
-                   checked=@IncludeDeleted>
+                   @bind-value="includeDeleted"
+                   checked=@includeDeleted>
             <label class="form-check-label" for="include_deleted">Include deleted jobs/steps</label>
         </div>
     </div>
@@ -46,11 +46,11 @@
                 Average execution duration
             </h6>
             <div class="card-body">
-                @if (!ReportLoaded)
+                @if (!reportLoaded)
                 {
                     <p class="@ReportNotLoadedClass">@ReportNotLoadedMessage</p>
                 }
-                <LineChart Dataset="DurationDataset" />
+                <LineChart Dataset="durationDataset" />
             </div>
         </div>
     </div>
@@ -62,11 +62,11 @@
                 Job success rate
             </h6>
             <div class="card-body">
-                @if (!ReportLoaded)
+                @if (!reportLoaded)
                 {
                     <p class="@ReportNotLoadedClass">@ReportNotLoadedMessage</p>
                 }
-                <BarChart Dataset="SuccessRateDataset" />
+                <BarChart Dataset="successRateDataset" />
             </div>
         </div>
     </div>
@@ -80,11 +80,11 @@
                 Number of executions
             </h6>
             <div class="card-body">
-                @if (!ReportLoaded)
+                @if (!reportLoaded)
                 {
                     <p class="@ReportNotLoadedClass">@ReportNotLoadedMessage</p>
                 }
-                <LineChart Dataset="NoOfExecutionsDataset" />
+                <LineChart Dataset="noOfExecutionsDataset" />
             </div>
         </div>
     </div>
@@ -95,8 +95,8 @@
                 &nbsp;
                 Top 5 failing steps
             </h6>
-            <div class="card-body @(ReportLoaded ? "px-0" : null)">
-                @if (!ReportLoaded)
+            <div class="card-body @(reportLoaded ? "px-0" : null)">
+                @if (!reportLoaded)
                 {
                     <p class="@ReportNotLoadedClass">@ReportNotLoadedMessage</p>
                 }
@@ -113,21 +113,21 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @if (TopFailedSteps is not null)
+                            @if (topFailedSteps is not null)
                             {
-                                @for (int i = 0; i < TopFailedSteps.Length; i++)
+                                @for (int i = 0; i < topFailedSteps.Length; i++)
                                 {
                                     <tr>
                                         <td>@(i + 1)</td>
                                         <td class="align-middle">
-                                            <StepTypeIconComponent StepType_="TopFailedSteps[i].StepType" />
-                                            @TopFailedSteps[i].StepName
+                                            <StepTypeIconComponent StepType_="topFailedSteps[i].StepType" />
+                                            @topFailedSteps[i].StepName
                                         </td>
                                         <td>
-                                            @TopFailedSteps[i].JobName
+                                            @topFailedSteps[i].JobName
                                         </td>
-                                        <td>@TopFailedSteps[i].SuccessPercent.FormatPercentage(2)</td>
-                                        <td>@TopFailedSteps[i].NoOfExecutions</td>
+                                        <td>@topFailedSteps[i].SuccessPercent.FormatPercentage(2)</td>
+                                        <td>@topFailedSteps[i].NoOfExecutions</td>
                                     </tr>
                                 }
                             }

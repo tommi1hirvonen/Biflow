@@ -9,11 +9,11 @@
 
 @if (Page is null)
 {
-    <DataTablesListComponent Tables="Tables" Categories="Categories" Connections="Connections" />
+    <DataTablesListComponent Tables="tables" Categories="categories" Connections="connections" />
 }
 else if (Page == "edit")
 {
-    <DataTableEditorComponent Table="Table" />
+    <DataTableEditorComponent Table="table" />
 }
 else if (Page == "import")
 {
@@ -29,18 +29,15 @@ else
 
     [Parameter] public Guid? TableId { get; set; }
 
-    private MasterDataTable? Table { get; set; }
-
-    private List<MasterDataTable>? Tables { get; set; }
-
-    private List<SqlConnectionInfo>? Connections { get; set; }
-
-    private List<MasterDataTableCategory>? Categories { get; set; }
+    private MasterDataTable? table;
+    private List<MasterDataTable>? tables;
+    private List<SqlConnectionInfo>? connections;
+    private List<MasterDataTableCategory>? categories;
 
     protected override async Task OnInitializedAsync()
     {
         using var context = await Task.Run(DbContextFactory.CreateDbContext);
-        Tables = await context.MasterDataTables
+        tables = await context.MasterDataTables
             .AsNoTrackingWithIdentityResolution()
             .Include(t => t.Category)
             .Include(t => t.Connection)
@@ -48,7 +45,7 @@ else
             .OrderBy(t => t.DataTableName)
             .ToListAsync();
 
-        var lookupTableIds = Tables
+        var lookupTableIds = tables
             .SelectMany(t => t.Lookups)
             .Select(l => l.LookupTableId)
             .Distinct()
@@ -64,7 +61,7 @@ else
             .ToListAsync();
 
         // Map lookup tables to the main tables list.
-        foreach (var table in Tables)
+        foreach (var table in tables)
         {
             foreach (var lookup in table.Lookups)
             {
@@ -80,7 +77,7 @@ else
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         if (authState.User.IsInRole(Roles.Admin) || authState.User.IsInRole(Roles.Editor))
         {
-            Categories = await context.MasterDataTableCategories
+            categories = await context.MasterDataTableCategories
                 .AsNoTrackingWithIdentityResolution()
                 .OrderBy(c => c.CategoryName)
                 .ToListAsync();
@@ -88,14 +85,14 @@ else
         // For other users, only show categories for jobs they are authorized to see.
         else
         {
-            Categories = Tables
+            categories = tables
                 .Select(j => j.Category)
                 .Where(c => c is not null)
                 .Cast<MasterDataTableCategory>()
                 .DistinctBy(c => c.CategoryId)
                 .ToList();
         }
-        Connections = await context.SqlConnections
+        connections = await context.SqlConnections
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(c => c.ConnectionName)
             .ToListAsync();
@@ -103,6 +100,6 @@ else
 
     protected override void OnParametersSet()
     {
-        Table = Tables?.FirstOrDefault(t => t.DataTableId == TableId);
+        table = tables?.FirstOrDefault(t => t.DataTableId == TableId);
     }
 }

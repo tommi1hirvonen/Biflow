@@ -8,19 +8,19 @@
                 All executions
             </a>
             <span>&nbsp;/&nbsp;</span>
-            @if (Execution?.Job is not null)
+            @if (execution?.Job is not null)
             {
                 <strong>
-                    <a href="@($"jobs/{Execution.Job.JobId}/steps")">
-                        @Execution.Job.JobName
+                    <a href="@($"jobs/{execution.Job.JobId}/steps")">
+                        @execution.Job.JobName
                     </a>
                 </strong>   
             }
             else
             {
-                <strong>@Execution?.JobName</strong>
+                <strong>@execution?.JobName</strong>
             }
-            <span>&nbsp;/&nbsp;@Execution?.ExecutionId</span>
+            <span>&nbsp;/&nbsp;@execution?.ExecutionId</span>
         </div>
     </div>
 </div>
@@ -29,44 +29,44 @@
     <div class="col">
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <a class="nav-link @(Execution is null ? "disabled" : null) @(ShowReport == Report.List ? "active" : null)" href="executions/@ExecutionId">
+                <a class="nav-link @(execution is null ? "disabled" : null) @(ShowReport == Report.List ? "active" : null)" href="executions/@ExecutionId">
                     <CxIcon Icon="FeatherIcon.List" />
                     List
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link @(Execution is null ? "disabled" : null) @(ShowReport == Report.Gantt ? "active" : null)" href="executions/@ExecutionId/gantt">
+                <a class="nav-link @(execution is null ? "disabled" : null) @(ShowReport == Report.Gantt ? "active" : null)" href="executions/@ExecutionId/gantt">
                     <CxIcon Icon="LucideIcon.BarChartHorizontal" />
                     Gantt
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link @(Execution is null ? "disabled" : null) @(ShowReport == Report.Graph ? "active" : null)" href="executions/@ExecutionId/graph">
+                <a class="nav-link @(execution is null ? "disabled" : null) @(ShowReport == Report.Graph ? "active" : null)" href="executions/@ExecutionId/graph">
                     <CxIcon Icon="LucideIcon.Network" />
                     Graph
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link @(Execution is null ? "disabled" : null) @(ShowReport == Report.ExecutionDetails ? "active" : null)" href="executions/@ExecutionId/executiondetails">
+                <a class="nav-link @(execution is null ? "disabled" : null) @(ShowReport == Report.ExecutionDetails ? "active" : null)" href="executions/@ExecutionId/executiondetails">
                     <CxIcon Icon="FeatherIcon.Info" />
                     Execution details
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link @(Execution is null ? "disabled" : null) @(ShowReport == Report.Parameters ? "active" : null)" href="executions/@ExecutionId/parameters">
+                <a class="nav-link @(execution is null ? "disabled" : null) @(ShowReport == Report.Parameters ? "active" : null)" href="executions/@ExecutionId/parameters">
                     <CxIcon Icon="FeatherIcon.AtSign" />
                     Parameters
                 </a>
             </li>
             <li class="nav-item ms-auto" role="presentation">
-                <a class="nav-link @(Execution is null ? "disabled" : null) @(ShowReport == Report.History ? "active" : null) @(Loading ? "disabled" : null)" href="executions/@ExecutionId/history">
+                <a class="nav-link @(execution is null ? "disabled" : null) @(ShowReport == Report.History ? "active" : null) @(loading ? "disabled" : null)" href="executions/@ExecutionId/history">
                     <CxIcon Icon="LucideIcon.History" />
                     History
                 </a>
             </li>
             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link @(Execution is null ? "disabled" : null) @(ShowReport == Report.Rerun ? "active" : null) @(Loading ? "disabled" : null)" href="executions/@ExecutionId/rerun">
+                    <a class="nav-link @(execution is null ? "disabled" : null) @(ShowReport == Report.Rerun ? "active" : null) @(loading ? "disabled" : null)" href="executions/@ExecutionId/rerun">
                         <CxIcon Icon="FeatherIcon.Repeat" />
                         Rerun
                     </a>
@@ -80,7 +80,7 @@
 {
     <div class="row mt-3 @(ShowReport == Report.List || ShowReport == Report.Gantt ? "sticky-top bg-body" : null)">
         <div class="col-auto align-self-center">
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!Loading">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!loading">
                 <CxIcon Icon="FeatherIcon.RefreshCw" />
                 Refresh
             </HxButton>
@@ -94,7 +94,7 @@
             </label>
         </div>
         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-            @if (Execution is not null && Execution.ExecutionStatus == ExecutionStatus.Running)
+            @if (execution is not null && execution.ExecutionStatus == ExecutionStatus.Running)
             {
                 <div class="col-auto align-self-center">
                     <HxDropdownButtonGroup>
@@ -113,29 +113,29 @@
         <div class="col-auto">
             <dl class="mx-1">
                 <dt>Started</dt>
-                <dd>@Execution?.StartDateTime?.LocalDateTime</dd>
+                <dd>@execution?.StartDateTime?.LocalDateTime</dd>
             </dl>
         </div>
         <div class="col-auto">
             <dl class="mx-1">
                 <dt>Ended</dt>
-                <dd>@Execution?.EndDateTime?.LocalDateTime</dd>
+                <dd>@execution?.EndDateTime?.LocalDateTime</dd>
             </dl>
         </div>
         <div class="col-auto">
             <dl class="mx-1">
                 <dt>Duration</dt>
-                <dd>@Execution?.GetDurationInReadableFormat()</dd>
+                <dd>@execution?.GetDurationInReadableFormat()</dd>
             </dl>
         </div>
         <div class="col-lg mb-3">
             <div class="d-flex justify-content-between">
                 <span class="fw-bold">Progress</span>
-                <span class="small align-self-end">@($"{Execution?.GetProgressPercent() ?? 0}%")</span>
-                <span><JobExecutionStatusBadgeComponent ExecutionStatus_="@Execution?.ExecutionStatus" /></span>
+                <span class="small align-self-end">@($"{execution?.GetProgressPercent() ?? 0}%")</span>
+                <span><JobExecutionStatusBadgeComponent ExecutionStatus_="@execution?.ExecutionStatus" /></span>
             </div>
-            <div class="progress mt-1 @Execution?.ExecutionStatus.ToString().ToLower()" style="height: 8px;">
-                <div class="progress-bar" style="width: @($"{Execution?.GetProgressPercent() ?? 0}%");" />
+            <div class="progress mt-1 @execution?.ExecutionStatus.ToString().ToLower()" style="height: 8px;">
+                <div class="progress-bar" style="width: @($"{execution?.GetProgressPercent() ?? 0}%");" />
             </div>
         </div>
     </div>
@@ -146,7 +146,7 @@
     <div class="card shadow-sm pt-2 mb-4 mt-3">
         <table class="table table-hover">
             <tbody>
-                @if (Execution is null)
+                @if (execution is null)
                 {
                     <tr>
                         <td class="text-center">
@@ -158,53 +158,53 @@
                 {
                     <tr>
                         <td class="fw-bold w-25">Execution id</td>
-                        <td>@Execution.ExecutionId</td>
+                        <td>@execution.ExecutionId</td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Job id</td>
                         <td>
-                            @if (Execution.Job is not null)
+                            @if (execution.Job is not null)
                             {
-                                <a href="@($"jobs/{Execution.Job.JobId}/steps")">@Execution.Job.JobId</a>
+                                <a href="@($"jobs/{execution.Job.JobId}/steps")">@execution.Job.JobId</a>
                             }
                             else
                             {
-                                @Execution.JobId
+                                @execution.JobId
                             }
                         </td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Created</td>
-                        <td>@Execution.CreatedDateTime.LocalDateTime</td>
+                        <td>@execution.CreatedDateTime.LocalDateTime</td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Started</td>
-                        <td>@Execution.StartDateTime?.LocalDateTime</td>
+                        <td>@execution.StartDateTime?.LocalDateTime</td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Ended</td>
-                        <td>@Execution.EndDateTime?.LocalDateTime</td>
+                        <td>@execution.EndDateTime?.LocalDateTime</td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Duration</td>
-                        <td>@Execution.GetDurationInReadableFormat()</td>
+                        <td>@execution.GetDurationInReadableFormat()</td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Status</td>
-                        <td><JobExecutionStatusBadgeComponent ExecutionStatus_="@Execution.ExecutionStatus" /></td>
+                        <td><JobExecutionStatusBadgeComponent ExecutionStatus_="@execution.ExecutionStatus" /></td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Number of steps</td>
-                        <td>@Execution.StepExecutions.Count</td>
+                        <td>@execution.StepExecutions.Count</td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Success percent</td>
-                        <td>@Execution.GetSuccessPercent().FormatPercentage(0)</td>
+                        <td>@execution.GetSuccessPercent().FormatPercentage(0)</td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Created by</td>
                         <td>
-                            @if (Execution.ParentExecution is StepExecutionAttemptReference parent)
+                            @if (execution.ParentExecution is StepExecutionAttemptReference parent)
                             {
                                 var json = JsonSerializer.Serialize(parent);
                                 // Replace execution id in json with a link to the parent execution's details.
@@ -213,24 +213,24 @@
                                     @((MarkupString)jsonWithLink)
                                 </small>
                             }
-                            else if (!string.IsNullOrEmpty(Execution.CreatedBy))
+                            else if (!string.IsNullOrEmpty(execution.CreatedBy))
                             {
-                                <text>@Execution.CreatedBy (user)</text>
+                                <text>@execution.CreatedBy (user)</text>
                             }
                         </td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Schedule</td>
                         <td>
-                            @if (Execution.Schedule is not null)
+                            @if (execution.Schedule is not null)
                             {
-                                <text>@Execution.Schedule.ScheduleName (@Execution.Schedule.GetScheduleDescription())</text>
+                                <text>@execution.Schedule.ScheduleName (@execution.Schedule.GetScheduleDescription())</text>
                             }
-                            else if (!string.IsNullOrEmpty(Execution.ScheduleName))
+                            else if (!string.IsNullOrEmpty(execution.ScheduleName))
                             {
-                                <text>@Execution.ScheduleName (removed schedule, @Biflow.Ui.Core.Extensions.GetCronExpressionDescription(Execution.CronExpression))</text>
+                                <text>@execution.ScheduleName (removed schedule, @Biflow.Ui.Core.Extensions.GetCronExpressionDescription(execution.CronExpression))</text>
                             }
-                            else if (Execution.ScheduleId is not null)
+                            else if (execution.ScheduleId is not null)
                             {
                                 <text>Removed schedule (name not available)</text>
                             }
@@ -238,12 +238,12 @@
                     </tr>
                     <tr>
                         <td class="fw-bold">Executor PID</td>
-                        <td>@Execution.ExecutorProcessId</td>
+                        <td>@execution.ExecutorProcessId</td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Execution mode</td>
                         <td>
-                            @if (Execution.DependencyMode)
+                            @if (execution.DependencyMode)
                             {
                                 <span>
                                     <CxIcon Icon="LucideIcon.Network" />
@@ -259,20 +259,20 @@
                             }
                         </td>
                     </tr>
-                    @if (!Execution.DependencyMode)
+                    @if (!execution.DependencyMode)
                     {
                         <tr>
                             <td class="fw-bold">Stop on first error</td>
-                            <td>@Execution.StopOnFirstError</td>
+                            <td>@execution.StopOnFirstError</td>
                         </tr>
                     }
                     <tr>
                         <td class="fw-bold">Max parallel steps</td>
-                        <td>@Execution.MaxParallelSteps</td>
+                        <td>@execution.MaxParallelSteps</td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Overtime notification limit (min)</td>
-                        <td>@Execution.OvertimeNotificationLimitMinutes</td>
+                        <td>@execution.OvertimeNotificationLimitMinutes</td>
                     </tr>
                 }
             </tbody>
@@ -292,7 +292,7 @@
                 </tr>
             </thead>
             <tbody>
-                @if (Execution is null)
+                @if (execution is null)
                 {
                     <tr>
                         <td colspan="3" class="text-center">
@@ -300,7 +300,7 @@
                         </td>
                     </tr>
                 }
-                else if (!Execution.ExecutionParameters.Any())
+                else if (!execution.ExecutionParameters.Any())
                 {
                     <tr>
                         <td colspan="3">No parameters</td>
@@ -308,7 +308,7 @@
                 }
                 else
                 {
-                    foreach (var param in Execution.ExecutionParameters)
+                    foreach (var param in execution.ExecutionParameters)
                     {
                         <tr>
                             <td>@param.DisplayName</td>
@@ -331,12 +331,12 @@
 
             <HxButtonGroup Size="ButtonGroupSize.Small">
                 <FilterDropdown TItem="(string StepName, StepType StepType)"
-                            FilterSet="StepFilter"
-                            Items="Execution?.StepExecutions
-                                .Where(s => !TagFilter.Any() || s.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true) // Limit visible steps based on tag filter
-                                .Where(s => !StepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
-                                    StepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible steps based on step status filter
-                                .Where(s => !StepTypeFilter.Any() || StepTypeFilter.Contains(s.StepType)) // Limit visible steps based on step type filter
+                            FilterSet="stepFilter"
+                            Items="execution?.StepExecutions
+                                .Where(s => !tagFilter.Any() || s.Step?.Tags.Any(t => tagFilter.Contains(t.TagName)) == true) // Limit visible steps based on tag filter
+                                .Where(s => !stepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
+                                    stepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible steps based on step status filter
+                                .Where(s => !stepTypeFilter.Any() || stepTypeFilter.Contains(s.StepType)) // Limit visible steps based on step type filter
                                 .Select(s => (s.StepName, s.StepType))
                                 .Distinct()
                                 .OrderBy(j => j) ?? Enumerable.Empty<(string, StepType)>()"
@@ -352,12 +352,12 @@
                     </ItemTemplate>
                 </FilterDropdown>
                 <FilterDropdown TItem="StepType"
-                            FilterSet="StepTypeFilter"
-                            Items="Execution?.StepExecutions
-                                .Where(s => !TagFilter.Any() || s.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true) // Limit visible step types based on tag filter
-                                .Where(s => !StepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
-                                    StepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible step types based on step status filter
-                                .Where(s => !StepFilter.Any() || StepFilter.Contains((s.StepName, s.StepType))) // Limit visible step types based on step filter
+                            FilterSet="stepTypeFilter"
+                            Items="execution?.StepExecutions
+                                .Where(s => !tagFilter.Any() || s.Step?.Tags.Any(t => tagFilter.Contains(t.TagName)) == true) // Limit visible step types based on tag filter
+                                .Where(s => !stepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
+                                    stepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible step types based on step status filter
+                                .Where(s => !stepFilter.Any() || stepFilter.Contains((s.StepName, s.StepType))) // Limit visible step types based on step filter
                                 .Select(s => s.StepType)
                                 .Distinct()
                                 .OrderBy(j => j) ?? Enumerable.Empty<StepType>()"
@@ -372,11 +372,11 @@
                     </ItemTemplate>
                 </FilterDropdown>
                 <FilterDropdown TItem="StepExecutionStatus"
-                            FilterSet="StepStatusFilter"
-                            Items="Execution?.StepExecutions
-                                .Where(s => !TagFilter.Any() || s.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true) // Limit visible step statuses based on tag filter
-                                .Where(s => !StepFilter.Any() || StepFilter.Contains((s.StepName, s.StepType))) // Limit visible step statuses based on step filter
-                                .Where(s => !StepTypeFilter.Any() || StepTypeFilter.Contains(s.StepType)) // Limit visible step statuses based on step type filter
+                            FilterSet="stepStatusFilter"
+                            Items="execution?.StepExecutions
+                                .Where(s => !tagFilter.Any() || s.Step?.Tags.Any(t => tagFilter.Contains(t.TagName)) == true) // Limit visible step statuses based on tag filter
+                                .Where(s => !stepFilter.Any() || stepFilter.Contains((s.StepName, s.StepType))) // Limit visible step statuses based on step filter
+                                .Where(s => !stepTypeFilter.Any() || stepTypeFilter.Contains(s.StepType)) // Limit visible step statuses based on step type filter
                                 .SelectMany(s => s.StepExecutionAttempts)
                                 .Select(e => e.ExecutionStatus)
                                 .Distinct()
@@ -391,12 +391,12 @@
                     </ItemTemplate>
                 </FilterDropdown>
                 <FilterDropdown TItem="string"
-                            FilterSet="TagFilter"
-                            Items="Execution?.StepExecutions
-                                .Where(s => !StepFilter.Any() || StepFilter.Contains((s.StepName, s.StepType))) // Limit visible tags based on step filter
-                                .Where(s => !StepTypeFilter.Any() || StepTypeFilter.Contains(s.StepType)) // Limit visible tags based on step type filter
-                                .Where(s => !StepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
-                                            StepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible tags based on step status filter
+                            FilterSet="tagFilter"
+                            Items="execution?.StepExecutions
+                                .Where(s => !stepFilter.Any() || stepFilter.Contains((s.StepName, s.StepType))) // Limit visible tags based on step filter
+                                .Where(s => !stepTypeFilter.Any() || stepTypeFilter.Contains(s.StepType)) // Limit visible tags based on step type filter
+                                .Where(s => !stepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
+                                            stepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible tags based on step status filter
                                 .SelectMany(e => e.Step?.Tags.Select(t => t.TagName) ?? Enumerable.Empty<string>())
                                 .Distinct()
                                 .OrderBy(s => s) ?? Enumerable.Empty<string>()"
@@ -407,7 +407,7 @@
                     </TitleTemplate>
                 </FilterDropdown>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
-                      @onclick="() => { StepStatusFilter.Clear(); StepFilter.Clear(); StepTypeFilter.Clear(); TagFilter.Clear(); }">
+                      @onclick="() => { stepStatusFilter.Clear(); stepFilter.Clear(); stepTypeFilter.Clear(); tagFilter.Clear(); }">
                     <CxIcon Icon="FeatherIcon.X" />
                     Reset
                 </HxButton>
@@ -418,26 +418,26 @@
             <span class="me-3">Sort</span>
             <div class="form-check form-check-inline">
                 <input type="radio" class="form-check-input" id="radio_started_asc"
-                       checked=@(SortMode == SortMode.StartedAsc)
-                       @onchange="() => SortMode = SortMode.StartedAsc">
+                       checked=@(sortMode == SortMode.StartedAsc)
+                       @onchange="() => sortMode = SortMode.StartedAsc">
                 <label class="form-check-label" for="radio_started_asc">Started <sup>asc</sup></label>
             </div>
             <div class="form-check form-check-inline">
                 <input type="radio" class="form-check-input" id="radio_started_desc"
-                       checked=@(SortMode == SortMode.StartedDesc)
-                       @onchange="() => SortMode = SortMode.StartedDesc">
+                       checked=@(sortMode == SortMode.StartedDesc)
+                       @onchange="() => sortMode = SortMode.StartedDesc">
                 <label class="form-check-label" for="radio_started_desc">Started<sup>desc</sup></label>
             </div>
             <div class="form-check form-check-inline">
                 <input type="radio" class="form-check-input" id="radio_duration_asc"
-                       checked=@(SortMode == SortMode.DurationAsc)
-                       @onchange="() => SortMode = SortMode.DurationAsc">
+                       checked=@(sortMode == SortMode.DurationAsc)
+                       @onchange="() => sortMode = SortMode.DurationAsc">
                 <label class="form-check-label" for="radio_duration_asc">Duration<sup>asc</sup></label>
             </div>
             <div class="form-check form-check-inline">
                 <input type="radio" class="form-check-input" id="radio_duration_desc"
-                       checked=@(SortMode == SortMode.DurationDesc)
-                       @onchange="() => SortMode = SortMode.DurationDesc">
+                       checked=@(sortMode == SortMode.DurationDesc)
+                       @onchange="() => sortMode = SortMode.DurationDesc">
                 <label class="form-check-label" for="radio_duration_desc">Duration<sup>desc</sup></label>
             </div>
         </div>
@@ -450,16 +450,16 @@
         <StepExecutionsTableComponent
             ShowDetailed="false"
             Executions="FilteredExecutions
-                        ?.OrderBy(e => SortMode switch
+                        ?.OrderBy(e => sortMode switch
                         {
                             SortMode.DurationAsc => e.ExecutionInSeconds,
                             SortMode.DurationDesc => -e.ExecutionInSeconds,
                             _ => null
                         })
                         // asc => Show not started steps last. desc => Show not started steps first.
-                        .ThenBy(e => SortMode == SortMode.StartedAsc ? e.StartDateTime is null : e.StartDateTime is not null)
-                        .ThenBy(e => SortMode == SortMode.StartedAsc ? e.StartDateTime : null)
-                        .ThenByDescending(e => SortMode == SortMode.StartedDesc ? e.StartDateTime : null)
+                        .ThenBy(e => sortMode == SortMode.StartedAsc ? e.StartDateTime is null : e.StartDateTime is not null)
+                        .ThenBy(e => sortMode == SortMode.StartedAsc ? e.StartDateTime : null)
+                        .ThenByDescending(e => sortMode == SortMode.StartedDesc ? e.StartDateTime : null)
                         .ThenBy(e => e.EndDateTime is null)
                         .ThenBy(e => e.EndDateTime)
                         .ThenBy(e => e.ExecutionPhase)
@@ -473,14 +473,14 @@ else if (ShowReport == Report.Gantt)
     <div class="card shadow-sm mt-3 pt-3">
         <StepExecutionsGraphComponent
             Executions="FilteredExecutions"
-            SortMode="SortMode"
+            SortMode="sortMode"
             DetailStepProvider="e => Executions?.FirstOrDefault(x => x.ExecutionId == e.ExecutionId && x.StepId == e.StepId && x.RetryAttemptIndex == e.RetryAttemptIndex)" />
     </div>
     
 }
 else if (ShowReport == Report.Graph)
 {
-    if (Execution?.DependencyMode == false)
+    if (execution?.DependencyMode == false)
     {
         <HxAlert Color="ThemeColor.Warning" CssClass="mt-3">
             Job executed in execution phase mode. Dependencies have no effect.
@@ -488,7 +488,7 @@ else if (ShowReport == Report.Graph)
     }
     <div class="row align-items-end mb-3">
         <div class="col-xl-5 col-lg-5 col-12">
-            <HxAutosuggest @bind-Value="DependencyGraphStepFilter"
+            <HxAutosuggest @bind-Value="dependencyGraphStepFilter"
                         @bind-Value:after="LoadGraph"
                         DataProvider="ProvideSuggestions"
                         TextSelector="TextSelector"
@@ -515,7 +515,7 @@ else if (ShowReport == Report.Graph)
                     </span>
                 </ChildContent>
                 </HxPopover>
-                <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthBackwards" disabled=@(DependencyGraphStepFilter is null) style="max-width: 9rem;" />
+                <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthBackwards" disabled=@(dependencyGraphStepFilter is null) style="max-width: 9rem;" />
             </div>
             <div class="form-group ms-3">
                 <label class="form-label">Depth forwards</label>
@@ -526,7 +526,7 @@ else if (ShowReport == Report.Graph)
                     </span>
                 </ChildContent>
                 </HxPopover>
-                <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthForwards" disabled=@(DependencyGraphStepFilter is null) style="max-width: 9rem;" />
+                <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthForwards" disabled=@(dependencyGraphStepFilter is null) style="max-width: 9rem;" />
             </div>
             <HxButton CssClass="ms-3" Size="ButtonSize.Small" Color="ThemeColor.Secondary" OnClick="LoadGraph">
                 Apply depth filters
@@ -538,20 +538,20 @@ else if (ShowReport == Report.Rerun)
 {
     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
         <div class="mt-3">
-            <RerunComponent Execution="Execution" />
+            <RerunComponent Execution="execution" />
         </div>
     </AuthorizeView>
 }
-else if (ShowReport == Report.History && Execution?.JobId is Guid jobId)
+else if (ShowReport == Report.History && execution?.JobId is Guid jobId)
 {
     <div class="mt-3">
         <JobHistoryComponent JobId="jobId" />
     </div>
 }
 
-<DependencyGraph @ref="DependencyGraph"
+<DependencyGraph @ref="dependencyGraph"
                  TItem="StepExecution"
-                 Items="Execution?.StepExecutions ?? Enumerable.Empty<StepExecution>()"
+                 Items="execution?.StepExecutions ?? Enumerable.Empty<StepExecution>()"
                  KeySelector="s => s.StepId.ToString()"
                  CssClass="dependency-graph"
                  hidden=@(ShowReport != Report.Graph)>
@@ -563,7 +563,7 @@ else if (ShowReport == Report.History && Execution?.JobId is Guid jobId)
             </h6>
         </li>
         <li>
-            <span class="dropdown-item" role="button" @onclick="async () => { DependencyGraphStepFilter = step; await LoadGraph(); }">
+            <span class="dropdown-item" role="button" @onclick="async () => { dependencyGraphStepFilter = step; await LoadGraph(); }">
                 <CxIcon Icon="FeatherIcon.Filter" />
                 Limit graph to this
             </span>
@@ -575,7 +575,7 @@ else if (ShowReport == Report.History && Execution?.JobId is Guid jobId)
             </span>
         </li>
         <li>
-            <span class="dropdown-item" role="button" @onclick="() => StepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
+            <span class="dropdown-item" role="button" @onclick="() => stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
                 <CxIcon Icon="LucideIcon.History" />
                 History
             </span>
@@ -583,6 +583,6 @@ else if (ShowReport == Report.History && Execution?.JobId is Guid jobId)
     </DropdownMenuTemplate>
 </DependencyGraph>
 
-<StepExecutionDetailsOffcanvas @ref="StepExecutionDetailsOffcanvas" />
+<StepExecutionDetailsOffcanvas @ref="stepExecutionDetailsOffcanvas" />
 
-<StepHistoryOffcanvas @ref="StepHistoryOffcanvas" />
+<StepHistoryOffcanvas @ref="stepHistoryOffcanvas" />

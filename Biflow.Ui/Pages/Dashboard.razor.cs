@@ -11,53 +11,40 @@ public partial class Dashboard : ComponentBase
 {
     [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
 
-    private Dictionary<string, TimeSeriesItem[]> TimeSeriesItems { get; set; } = new Dictionary<string, TimeSeriesItem[]>();
-
-    private Dictionary<string, string> JobColors { get; set; } = new();
-
-    private ReportingJob[]? Jobs { get; set; }
-
-    private TopStep[]? TopFailedSteps { get; set; }
-
-    private DateTime FromDate { get; set; } = DateTime.Now.Date.AddDays(-90);
-
-    private DateTime ToDate { get; set; } = DateTime.Now.Date.AddDays(1);
-
-    private bool IncludeDeleted { get; set; } = false;
-
-    private bool OnlyScheduled { get; set; } = true;
-
-    private bool Loading { get; set; }
-
-    private bool ReportLoaded { get; set; } = false;
+    private Dictionary<string, TimeSeriesItem[]> timeSeriesItems = [];
+    private Dictionary<string, string> jobColors = [];
+    private ReportingJob[]? jobs;
+    private TopStep[]? topFailedSteps;
+    private DateTime fromDate = DateTime.Now.Date.AddDays(-90);
+    private DateTime toDate = DateTime.Now.Date.AddDays(1);
+    private bool includeDeleted = false;
+    private bool onlyScheduled = true;
+    private bool loading;
+    private bool reportLoaded = false;
+    private LineChartDataset? durationDataset;
+    private LineChartDataset? noOfExecutionsDataset;
+    private BarChartDataset? successRateDataset;
 
     private const string ReportNotLoadedMessage = "Load report to show data.";
-
     private const string ReportNotLoadedClass = "text-secondary small fst-italic";
-
-    private LineChartDataset? DurationDataset { get; set; }
-
-    private LineChartDataset? NoOfExecutionsDataset { get; set; }
-
-    private BarChartDataset? SuccessRateDataset { get; set; }
 
     private async Task LoadData()
     {
-        Loading = true;
+        loading = true;
 
         using var context = await Task.Run(DbFactory.CreateDbContext);
 
         // Get duration executions
         var executionsQuery = context.Executions
             .AsNoTrackingWithIdentityResolution()
-            .Where(e => e.EndDateTime != null && e.CreatedDateTime >= FromDate && e.CreatedDateTime < ToDate);
+            .Where(e => e.EndDateTime != null && e.CreatedDateTime >= fromDate && e.CreatedDateTime < toDate);
 
-        if (!IncludeDeleted)
+        if (!includeDeleted)
         {
             executionsQuery = executionsQuery.Where(e => context.Jobs.Where(job => job.JobId == e.JobId).Any());
         }
 
-        if (OnlyScheduled)
+        if (onlyScheduled)
         {
             executionsQuery = executionsQuery.Where(e => e.ScheduleId != null);
         }
@@ -81,7 +68,7 @@ public partial class Dashboard : ComponentBase
                 NumberOfExecutions = select.Count()
             });
 
-        TimeSeriesItems = executions_
+        timeSeriesItems = executions_
             .GroupBy(e => e.JobName)
             .ToDictionary(e => e.Key, e => e.ToArray());
 
@@ -91,14 +78,14 @@ public partial class Dashboard : ComponentBase
             .AsNoTrackingWithIdentityResolution()
             .Include(e => e.StepExecutions)
             .ThenInclude(e => e.StepExecutionAttempts)
-            .Where(e => e.CreatedDateTime >= FromDate && e.CreatedDateTime < ToDate);
+            .Where(e => e.CreatedDateTime >= fromDate && e.CreatedDateTime < toDate);
 
-        if (!IncludeDeleted)
+        if (!includeDeleted)
         {
             jobsQuery = jobsQuery.Where(e => context.Jobs.Where(job => job.JobId == e.JobId).Any());
         }
 
-        if (OnlyScheduled)
+        if (onlyScheduled)
         {
             jobsQuery = jobsQuery.Where(e => e.ScheduleId != null);
         }
@@ -107,7 +94,7 @@ public partial class Dashboard : ComponentBase
         var jobs = await jobsQuery
             .Select(e => new { Execution = e, e.Job!.JobName })
             .ToArrayAsync();
-        Jobs = jobs
+        this.jobs = jobs
             .GroupBy(group => group.JobName ?? group.Execution.JobName)
             .Select(select => new ReportingJob
             {
@@ -118,14 +105,14 @@ public partial class Dashboard : ComponentBase
             .ToArray();
 
         // Get a temporary list of all job names to retrieve their colors.
-        var jobNames = Jobs
+        var jobNames = jobs
             .Select(job => job.JobName)
-            .Concat(TimeSeriesItems.Select(tsi => tsi.Key))
+            .Concat(timeSeriesItems.Select(tsi => tsi.Key))
             .Distinct()
             .OrderBy(name => name)
             .ToArray();
         var colors = ChartColors.AsArray();
-        JobColors = jobNames
+        jobColors = jobNames
             .Select((name, index) => new { Item = name, Index = index })
             .ToDictionary(elem => elem.Item, elem => colors[elem.Index % colors.Length]);
 
@@ -135,14 +122,14 @@ public partial class Dashboard : ComponentBase
             .AsNoTrackingWithIdentityResolution()
             .Include(e => e.StepExecutionAttempts)
             .Include(e => e.Execution)
-            .Where(e => e.Execution.CreatedDateTime >= FromDate && e.Execution.CreatedDateTime < ToDate);
+            .Where(e => e.Execution.CreatedDateTime >= fromDate && e.Execution.CreatedDateTime < toDate);
 
-        if (!IncludeDeleted)
+        if (!includeDeleted)
         {
             topFailedStepsQuery = topFailedStepsQuery.Where(e => context.Steps.Where(step => step.StepId == e.StepId).Any());
         }
 
-        if (OnlyScheduled)
+        if (onlyScheduled)
         {
             topFailedStepsQuery = topFailedStepsQuery.Where(e => e.Execution.ScheduleId != null);
         }
@@ -152,7 +139,7 @@ public partial class Dashboard : ComponentBase
             .ToArrayAsync();
         // Group step executions by step and job and calculate success percentages
         // based on the number of completed executions and the number of all executions.
-        TopFailedSteps = topFailedStepsGrouping
+        topFailedSteps = topFailedStepsGrouping
             .GroupBy(group => new
             {
                 group.Execution.StepId,
@@ -182,32 +169,32 @@ public partial class Dashboard : ComponentBase
 
         // Create JSON dataset objects that are passed to the JS code in site.js via JSInterop.
 
-        var durationSeries = TimeSeriesItems
+        var durationSeries = timeSeriesItems
             .Select((e, index) =>
             {
                 var datapoints = e.Value.Select(v => new TimeSeriesDataPoint(DateOnly.FromDateTime(v.Date), v.DurationInMinutes)).ToArray();
-                return new LineChartSeries(Label: e.Key, DataPoints: datapoints, Color: JobColors[e.Key]);
+                return new LineChartSeries(Label: e.Key, DataPoints: datapoints, Color: jobColors[e.Key]);
             })
             .ToArray();
-        DurationDataset = new LineChartDataset(durationSeries, "min", 0);
+        durationDataset = new LineChartDataset(durationSeries, "min", 0);
 
-        var noOfExecutionsSeries = TimeSeriesItems
+        var noOfExecutionsSeries = timeSeriesItems
             .Select((e, index) =>
             {
                 var datapoints = e.Value.Select(v => new TimeSeriesDataPoint(DateOnly.FromDateTime(v.Date), v.NumberOfExecutions)).ToArray();
-                return new LineChartSeries(Label: e.Key, DataPoints: datapoints, Color: JobColors[e.Key]);
+                return new LineChartSeries(Label: e.Key, DataPoints: datapoints, Color: jobColors[e.Key]);
             })
             .ToArray();
-        NoOfExecutionsDataset = new LineChartDataset(noOfExecutionsSeries, YMin: 0, YStepSize: 1);
+        noOfExecutionsDataset = new LineChartDataset(noOfExecutionsSeries, YMin: 0, YStepSize: 1);
 
-        var successRateSeries = Jobs
-            .Select(job => new BarChartDataPoint(job.JobName, decimal.Round(job.SuccessPercent, 2), JobColors[job.JobName]))
+        var successRateSeries = this.jobs
+            .Select(job => new BarChartDataPoint(job.JobName, decimal.Round(job.SuccessPercent, 2), jobColors[job.JobName]))
             .ToArray();
-        SuccessRateDataset = new BarChartDataset(successRateSeries, 0, 100, 10, "%", true);
+        successRateDataset = new BarChartDataset(successRateSeries, 0, 100, 10, "%", true);
 
-        ReportLoaded = true;
+        reportLoaded = true;
 
-        Loading = false;
+        loading = false;
     }
 
     public class TimeSeriesItem

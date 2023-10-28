@@ -23,20 +23,16 @@ public partial class JobDetails : ComponentBase
 
     [Parameter] public Guid? InitialStepId { get; set; }
 
-    private Job? Job { get; set; }
-
-    private List<Job> Jobs { get; set; } = new();
-
-    private List<Step> Steps { get; set; } = new();
-
-    private List<SqlConnectionInfo>? SqlConnections { get; set; }
-    private List<AnalysisServicesConnectionInfo>? AsConnections { get; set; }
-    private List<PipelineClient>? PipelineClients { get; set; }
-    private List<AppRegistration>? AppRegistrations { get; set; }
-    private List<FunctionApp>? FunctionApps { get; set; }
-    private List<QlikCloudClient>? QlikCloudClients { get; set; }
-
-    private bool DescriptionOpen { get; set; }
+    private Job? job;
+    private List<Job> jobs = [];
+    private List<Step> steps = [];
+    private List<SqlConnectionInfo>? sqlConnections;
+    private List<AnalysisServicesConnectionInfo>? asConnections;
+    private List<PipelineClient>? pipelineClients;
+    private List<AppRegistration>? appRegistrations;
+    private List<FunctionApp>? functionApps;
+    private List<QlikCloudClient>? qlikCloudClients;
+    private bool descriptionOpen;
 
     public static IQueryable<Step> BuildStepsQueryWithIncludes(AppDbContext context)
     {
@@ -55,39 +51,39 @@ public partial class JobDetails : ComponentBase
     protected override async Task OnInitializedAsync()
     {
         using var context = await DbFactory.CreateDbContextAsync();
-        SqlConnections = await context.SqlConnections
+        sqlConnections = await context.SqlConnections
             .AsNoTracking()
             .OrderBy(c => c.ConnectionName)
             .ToListAsync();
-        AsConnections = await context.AnalysisServicesConnections
+        asConnections = await context.AnalysisServicesConnections
             .AsNoTracking()
             .OrderBy(c => c.ConnectionName)
             .ToListAsync();
-        PipelineClients = await context.PipelineClients
+        pipelineClients = await context.PipelineClients
             .AsNoTracking()
             .OrderBy(df => df.PipelineClientName)
             .ToListAsync();
-        AppRegistrations = await context.AppRegistrations
+        appRegistrations = await context.AppRegistrations
             .AsNoTracking()
             .OrderBy(app => app.AppRegistrationName)
             .ToListAsync();
-        FunctionApps = await context.FunctionApps
+        functionApps = await context.FunctionApps
             .AsNoTracking()
             .OrderBy(app => app.FunctionAppName)
             .ToListAsync();
-        QlikCloudClients = await context.QlikCloudClients
+        qlikCloudClients = await context.QlikCloudClients
             .AsNoTracking()
             .OrderBy(c => c.QlikCloudClientName)
             .ToListAsync();
-        Job = await context.Jobs
+        job = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Include(job => job.Category)
             .FirstAsync(job => job.JobId == Id);
-        Steps = await BuildStepsQueryWithIncludes(context)
-            .Where(step => step.JobId == Job.JobId)
+        steps = await BuildStepsQueryWithIncludes(context)
+            .Where(step => step.JobId == job.JobId)
             .AsNoTrackingWithIdentityResolution()
             .ToListAsync();
-        Jobs = await context.Jobs
+        jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Include(j => j.Category)
             .OrderBy(j => j.JobName)
@@ -97,20 +93,20 @@ public partial class JobDetails : ComponentBase
 
     private void SortSteps()
     {
-        if (Job is null)
+        if (job is null)
         {
             return;
         }
         try
         {
-            if (Job.UseDependencyMode)
+            if (job.UseDependencyMode)
             {
-                var comparer = new TopologicalStepComparer(Steps);
-                Steps.Sort(comparer);
+                var comparer = new TopologicalStepComparer(steps);
+                steps.Sort(comparer);
             }
             else
             {
-                Steps.Sort();
+                steps.Sort();
             }
             StateHasChanged();
         }
@@ -122,11 +118,11 @@ public partial class JobDetails : ComponentBase
 
     private void OnJobUpdated(Job job)
     {
-        if (Job is null)
+        if (this.job is null)
         {
             return;
         }
-        Job = job;
+        this.job = job;
         StateHasChanged();
     }
 
@@ -134,11 +130,11 @@ public partial class JobDetails : ComponentBase
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(Job);
+            ArgumentNullException.ThrowIfNull(job);
             using (var context1 = await DbFactory.CreateDbContextAsync())
             {
                 var executingSteps = await context1.JobSteps
-                    .Where(s => s.JobToExecuteId == Job.JobId)
+                    .Where(s => s.JobToExecuteId == job.JobId)
                     .Include(s => s.Job)
                     .OrderBy(s => s.Job.JobName)
                     .ThenBy(s => s.StepName)
@@ -159,9 +155,9 @@ public partial class JobDetails : ComponentBase
                 }
             }
             using var context2 = DbFactory.CreateDbContext();
-            context2.Jobs.Remove(Job);
+            context2.Jobs.Remove(job);
             await context2.SaveChangesAsync();
-            await SchedulerService.DeleteJobAsync(Job);
+            await SchedulerService.DeleteJobAsync(job);
             NavigationManager.NavigateTo("jobs");
         }
         catch (Exception ex)
@@ -175,13 +171,13 @@ public partial class JobDetails : ComponentBase
         try
         {
             var enabled = (bool)args.Value!;
-            ArgumentNullException.ThrowIfNull(Job);
+            ArgumentNullException.ThrowIfNull(job);
             using var context = DbFactory.CreateDbContext();
-            Job.IsEnabled = enabled;
+            job.IsEnabled = enabled;
             await context.Jobs
-                .Where(j => j.JobId == Job.JobId)
-                .ExecuteUpdateAsync(j => j.SetProperty(p => p.IsEnabled, Job.IsEnabled));
-            var message = Job.IsEnabled ? "Job enabled successfully" : "Job disabled successfully";
+                .Where(j => j.JobId == job.JobId)
+                .ExecuteUpdateAsync(j => j.SetProperty(p => p.IsEnabled, job.IsEnabled));
+            var message = job.IsEnabled ? "Job enabled successfully" : "Job disabled successfully";
             Messenger.AddInformation(message);
         }
         catch (Exception ex)

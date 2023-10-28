@@ -15,20 +15,25 @@ namespace Biflow.Ui.Pages;
 public partial class Executions : ComponentBase, IAsyncDisposable
 {
     [Inject] private IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
-        
     [Inject] private IJSRuntime JS { get; set; } = null!;
-
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
 
-    private bool SessionStorageRetrieved { get; set; } = false;
+    private bool sessionStorageRetrieved = false;
+    private bool showSteps = false;
+    private bool showGraph = false;
+    private bool loading = false;
+    private Preset? activePreset = Preset.OneHour;
+    private IEnumerable<ExecutionProjection>? executions;
+    private IEnumerable<StepExecutionProjection>? stepExecutions;
+    private HashSet<ExecutionStatus> jobStatusFilter = [];
+    private HashSet<StepExecutionStatus> stepStatusFilter = [];
+    private HashSet<string> jobFilter = [];
+    private HashSet<(string StepName, StepType StepType)> stepFilter = [];
+    private HashSet<StepType> stepTypeFilter = [];
+    private HashSet<string> tagFilter = [];
+    private StartType startTypeFilter = StartType.All;
 
-    private bool ShowSteps { get; set; } = false;
-    
-    private bool ShowGraph { get; set; } = false;
-    
-    private bool Loading { get; set; } = false;
-
-    private Preset? ActivePreset { get; set; } = Preset.OneHour;
+    private static readonly JsonSerializerOptions SerializerOptions = new() { IncludeFields = true };
 
     private DateTime FromDateTime
     {
@@ -44,42 +49,22 @@ public partial class Executions : ComponentBase, IAsyncDisposable
     }
     private DateTime _toDateTime = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddMinutes(1);
 
-    private IEnumerable<ExecutionProjection>? Executions_ { get; set; }
+    private IEnumerable<ExecutionProjection>? FilteredExecutions => executions?
+        .Where(e => jobStatusFilter.Count == 0 || jobStatusFilter.Contains(e.ExecutionStatus))
+        .Where(e => jobFilter.Count == 0 || jobFilter.Contains(e.JobName))
+        .Where(e => startTypeFilter == StartType.All ||
+        startTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
+        startTypeFilter == StartType.Manual && e.ScheduleId is null);
 
-    private IEnumerable<StepExecutionProjection>? StepExecutions { get; set; }
-
-    private HashSet<ExecutionStatus> JobStatusFilter { get; set; } = new();
-    
-    private HashSet<StepExecutionStatus> StepStatusFilter { get; set; } = new();
-    
-    private HashSet<string> JobFilter { get; set; } = new();
-    
-    private HashSet<(string StepName, StepType StepType)> StepFilter { get; set; } = new();
-    
-    private HashSet<StepType> StepTypeFilter { get; set; } = new();
-    
-    private HashSet<string> TagFilter { get; set; } = new();
-    
-    private StartType StartTypeFilter { get; set; } = StartType.All;
-
-    private JsonSerializerOptions SerializerOptions { get; } = new() { IncludeFields = true };
-
-    private IEnumerable<ExecutionProjection>? FilteredExecutions => Executions_?
-        .Where(e => JobStatusFilter.Count == 0 || JobStatusFilter.Contains(e.ExecutionStatus))
-        .Where(e => JobFilter.Count == 0 || JobFilter.Contains(e.JobName))
-        .Where(e => StartTypeFilter == StartType.All ||
-        StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
-        StartTypeFilter == StartType.Manual && e.ScheduleId is null);
-
-    private IEnumerable<StepExecutionProjection>? FilteredStepExecutions => StepExecutions?
-        .Where(e => StartTypeFilter == StartType.All ||
-        StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
-        StartTypeFilter == StartType.Manual && e.ScheduleId is null)
-        .Where(e => TagFilter.Count == 0 || e.Tags.Any(t => TagFilter.Contains(t.TagName)) == true)
-        .Where(e => StepStatusFilter.Count == 0 || StepStatusFilter.Contains(e.ExecutionStatus))
-        .Where(e => JobFilter.Count == 0 || JobFilter.Contains(e.JobName))
-        .Where(e => StepFilter.Count == 0 || StepFilter.Contains((e.StepName, e.StepType)))
-        .Where(e => StepTypeFilter.Count == 0 || StepTypeFilter.Contains(e.StepType));
+    private IEnumerable<StepExecutionProjection>? FilteredStepExecutions => stepExecutions?
+        .Where(e => startTypeFilter == StartType.All ||
+        startTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
+        startTypeFilter == StartType.Manual && e.ScheduleId is null)
+        .Where(e => tagFilter.Count == 0 || e.Tags.Any(t => tagFilter.Contains(t.TagName)) == true)
+        .Where(e => stepStatusFilter.Count == 0 || stepStatusFilter.Contains(e.ExecutionStatus))
+        .Where(e => jobFilter.Count == 0 || jobFilter.Contains(e.JobName))
+        .Where(e => stepFilter.Count == 0 || stepFilter.Contains((e.StepName, e.StepType)))
+        .Where(e => stepTypeFilter.Count == 0 || stepTypeFilter.Contains(e.StepType));
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -94,7 +79,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
                 Messenger.AddWarning("Error getting session storage values", ex.Message);
             }
 
-            SessionStorageRetrieved = true;
+            sessionStorageRetrieved = true;
             StateHasChanged();
             await LoadDataAsync();
         }
@@ -102,31 +87,31 @@ public partial class Executions : ComponentBase, IAsyncDisposable
 
     private async Task ShowExecutionsAsync()
     {
-        Executions_ = null;
-        ShowSteps = false;
+        executions = null;
+        showSteps = false;
         await LoadDataAsync();
     }
 
     private async Task ShowStepExecutionsAsync()
     {
-        Executions_ = null;
-        ShowSteps = true;
+        executions = null;
+        showSteps = true;
         await LoadDataAsync();
     }
 
     private async Task LoadDataAsync()
     {
-        Loading = true;
+        loading = true;
         StateHasChanged();
 
-        if (ActivePreset is Preset preset)
+        if (activePreset is Preset preset)
         {
             (FromDateTime, ToDateTime) = GetPreset(preset);
         }
 
         using var context = await Task.Run(DbContextFactory.CreateDbContext);
 
-        if (!ShowSteps)
+        if (!showSteps)
         {
             var query = context.Executions
                 // Index optimized way of querying executions without having to scan the entire table.
@@ -149,7 +134,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
                         // Adds executions that were not started and executions that may still be running.
                         .Where(e => e.CreatedDateTime >= FromDateTime && e.CreatedDateTime <= ToDateTime && e.EndDateTime == null));
             }
-            Executions_ = await query
+            executions = await query
                 .AsNoTracking()
                 .AsSingleQuery()
                 .OrderByDescending(e => e.CreatedDateTime)
@@ -194,7 +179,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
                         && e.EndDateTime == null));
             }
 #pragma warning disable IDE0305 // Simplify collection initialization
-            StepExecutions = await query
+            stepExecutions = await query
                 .AsNoTracking()
                 .OrderByDescending(e => e.StepExecution.Execution.CreatedDateTime)
                 .ThenByDescending(e => e.StartDateTime)
@@ -219,14 +204,14 @@ public partial class Executions : ComponentBase, IAsyncDisposable
 #pragma warning restore IDE0305 // Simplify collection initialization
         }
 
-        Loading = false;
+        loading = false;
         StateHasChanged();
     }
 
     private async Task ApplyPresetAsync(Preset preset)
     {
         (FromDateTime, ToDateTime) = GetPreset(preset);
-        ActivePreset = preset;
+        activePreset = preset;
         await LoadDataAsync();
     }
 
@@ -295,18 +280,18 @@ public partial class Executions : ComponentBase, IAsyncDisposable
     private async Task SetSessionStorageValues()
     {
         var sessionStorage = new SessionStorage(
-            Preset: ActivePreset,
+            Preset: activePreset,
             FromDateTime: FromDateTime,
             ToDateTime: ToDateTime,
-            ShowSteps: ShowSteps,
-            ShowGraph: ShowGraph,
-            StartType: StartTypeFilter,
-            JobStatuses: JobStatusFilter,
-            StepStatuses: StepStatusFilter,
-            JobNames: JobFilter,
-            StepNames: StepFilter,
-            StepTypes: StepTypeFilter,
-            Tags: TagFilter
+            ShowSteps: showSteps,
+            ShowGraph: showGraph,
+            StartType: startTypeFilter,
+            JobStatuses: jobStatusFilter,
+            StepStatuses: stepStatusFilter,
+            JobNames: jobFilter,
+            StepNames: stepFilter,
+            StepTypes: stepTypeFilter,
+            Tags: tagFilter
         );
         var text = JsonSerializer.Serialize(sessionStorage, SerializerOptions);
         await JS.InvokeVoidAsync("sessionStorage.setItem", "ExecutionsSessionStorage", text);
@@ -317,22 +302,22 @@ public partial class Executions : ComponentBase, IAsyncDisposable
         var text = await JS.InvokeAsync<string>("sessionStorage.getItem", "ExecutionsSessionStorage");
         if (text is null) return;
         var sessionStorage = JsonSerializer.Deserialize<SessionStorage>(text, SerializerOptions);
-        ActivePreset = sessionStorage?.Preset;
+        activePreset = sessionStorage?.Preset;
         (FromDateTime, ToDateTime) = sessionStorage switch
         {
             not null and { Preset: Preset preset } => GetPreset(preset),
             not null => (sessionStorage.FromDateTime, sessionStorage.ToDateTime),
             null => (FromDateTime, ToDateTime)
         };
-        ShowSteps = sessionStorage?.ShowSteps ?? ShowSteps;
-        ShowGraph = sessionStorage?.ShowGraph ?? ShowGraph;
-        StartTypeFilter = sessionStorage?.StartType ?? StartTypeFilter;
-        JobStatusFilter = sessionStorage?.JobStatuses ?? JobStatusFilter;
-        StepStatusFilter = sessionStorage?.StepStatuses ?? StepStatusFilter;
-        JobFilter = sessionStorage?.JobNames ?? JobFilter;
-        StepFilter = sessionStorage?.StepNames ?? StepFilter;
-        StepTypeFilter = sessionStorage?.StepTypes ?? StepTypeFilter;
-        TagFilter = sessionStorage?.Tags ?? TagFilter;
+        showSteps = sessionStorage?.ShowSteps ?? showSteps;
+        showGraph = sessionStorage?.ShowGraph ?? showGraph;
+        startTypeFilter = sessionStorage?.StartType ?? startTypeFilter;
+        jobStatusFilter = sessionStorage?.JobStatuses ?? jobStatusFilter;
+        stepStatusFilter = sessionStorage?.StepStatuses ?? stepStatusFilter;
+        jobFilter = sessionStorage?.JobNames ?? jobFilter;
+        stepFilter = sessionStorage?.StepNames ?? stepFilter;
+        stepTypeFilter = sessionStorage?.StepTypes ?? stepTypeFilter;
+        tagFilter = sessionStorage?.Tags ?? tagFilter;
     }
 
     public async ValueTask DisposeAsync()

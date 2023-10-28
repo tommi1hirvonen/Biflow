@@ -17,32 +17,79 @@ namespace Biflow.Ui.Pages;
 public partial class ExecutionDetails : ComponentBase, IDisposable
 {
     [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
-    
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
-    
     [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; } = null!;
-    
     [Inject] private IExecutorService ExecutorService { get; set; } = null!;
-
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
 
     [Parameter] public Guid ExecutionId { get; set; }
 
     [Parameter] public string? Page {  get; set; }
 
+    private readonly System.Timers.Timer timer = new(5000) { AutoReset = false };
+    private readonly HashSet<StepType> stepTypeFilter = [];
+    private readonly HashSet<string> tagFilter = [];
+    private readonly HashSet<StepExecutionStatus> stepStatusFilter = [];
+    private readonly HashSet<(string StepName, StepType StepType)> stepFilter = [];
+
     private Guid prevExecutionId;
+    private DependencyGraph<StepExecution>? dependencyGraph;
+    private Execution? execution;
+    private bool loading = false;
+    private StepExecution? dependencyGraphStepFilter;
+    private SortMode sortMode = SortMode.StartedAsc;
+    private StepExecutionDetailsOffcanvas? stepExecutionDetailsOffcanvas;
+    private StepHistoryOffcanvas? stepHistoryOffcanvas;
+    private bool graphShouldRender = false;
 
-    private DependencyGraph<StepExecution>? DependencyGraph { get; set; }
+    // Maintain a list of executions that are being stopped.
+    // This same component instance can be used to switch between different job executions.
+    // This list allows for stopping multiple executions concurrently
+    // and to modify the view based on which job execution is being shown.
+    private readonly List<Guid> stoppingExecutions = [];
 
-    private Execution? Execution { get; set; }
+    private bool AutoRefresh
+    {
+        get => _autoRefresh;
+        set
+        {
+            _autoRefresh = value;
+            timer.Stop();
+            if (_autoRefresh)
+            {
+                timer.Start();
+            }
+        }
+    }
 
-    private IEnumerable<StepExecutionAttempt>? Executions => Execution?.StepExecutions.SelectMany(e => e.StepExecutionAttempts);
+    private bool _autoRefresh = true;
+
+
+    private int FilterDepthBackwards
+    {
+        get => _filterDepthBackwards;
+        set => _filterDepthBackwards = value >= 0 ? value : _filterDepthBackwards;
+    }
+
+    private int _filterDepthBackwards;
+
+    private int FilterDepthForwards
+    {
+        get => _filterDepthForwards;
+        set => _filterDepthForwards = value >= 0 ? value : _filterDepthForwards;
+    }
+
+    private int _filterDepthForwards;
+
+    private bool Stopping => stoppingExecutions.Any(id => id == ExecutionId);
+
+    private IEnumerable<StepExecutionAttempt>? Executions => execution?.StepExecutions.SelectMany(e => e.StepExecutionAttempts);
 
     private IEnumerable<StepExecutionProjection>? FilteredExecutions => Executions
-        ?.Where(e => TagFilter.Count == 0 || e.StepExecution.Step?.Tags.Any(t => TagFilter.Contains(t.TagName)) == true)
-        .Where(e => StepStatusFilter.Count == 0 || StepStatusFilter.Contains(e.ExecutionStatus))
-        .Where(e => StepFilter.Count == 0 || StepFilter.Contains((e.StepExecution.StepName, e.StepExecution.StepType)))
-        .Where(e => StepTypeFilter.Count == 0 || StepTypeFilter.Contains(e.StepExecution.StepType))
+        ?.Where(e => tagFilter.Count == 0 || e.StepExecution.Step?.Tags.Any(t => tagFilter.Contains(t.TagName)) == true)
+        .Where(e => stepStatusFilter.Count == 0 || stepStatusFilter.Contains(e.ExecutionStatus))
+        .Where(e => stepFilter.Count == 0 || stepFilter.Contains((e.StepExecution.StepName, e.StepExecution.StepType)))
+        .Where(e => stepTypeFilter.Count == 0 || stepTypeFilter.Contains(e.StepExecution.StepType))
         .Select(e => new StepExecutionProjection(
             e.StepExecution.ExecutionId,
             e.StepExecution.StepId,
@@ -72,63 +119,6 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
     };
 
     private enum Report { List, Gantt, Graph, ExecutionDetails, Parameters, Rerun, History }
-
-    private readonly System.Timers.Timer timer = new(5000) { AutoReset = false };
-
-    private bool AutoRefresh
-    {
-        get => _autoRefresh;
-        set
-        {
-            _autoRefresh = value;
-            timer.Stop();
-            if (_autoRefresh)
-            {   
-                timer.Start();
-            }
-        }
-    }
-
-    private bool _autoRefresh = true;
-
-    private bool Loading { get; set; } = false;
-
-    private bool Stopping => StoppingExecutions.Any(id => id == ExecutionId);
-
-    // Maintain a list executions that are being stopped.
-    // This same component instance can be used to switch between different job executions.
-    // This list allows for stopping multiple executions concurrently
-    // and to modify the view based on which job execution is being shown.
-    private List<Guid> StoppingExecutions { get; set; } = [];
-
-    private HashSet<StepExecutionStatus> StepStatusFilter { get; } = [];
-    private HashSet<(string StepName, StepType StepType)> StepFilter { get; } = [];
-    private StepExecution? DependencyGraphStepFilter { get; set; }
-    private HashSet<StepType> StepTypeFilter { get; } = [];
-    private HashSet<string> TagFilter { get; } = [];
-    private SortMode SortMode { get; set; } = SortMode.StartedAsc;
-
-    private StepExecutionDetailsOffcanvas? StepExecutionDetailsOffcanvas { get; set; }
-
-    private StepHistoryOffcanvas? StepHistoryOffcanvas { get; set; }
-
-    private bool GraphShouldRender { get; set; } = false;
-
-    private int FilterDepthBackwards
-    {
-        get => _filterDepthBackwards;
-        set => _filterDepthBackwards = value >= 0 ? value : _filterDepthBackwards;
-    }
-
-    private int _filterDepthBackwards;
-
-    private int FilterDepthForwards
-    {
-        get => _filterDepthForwards;
-        set => _filterDepthForwards = value >= 0 ? value : _filterDepthForwards;
-    }
-
-    private int _filterDepthForwards;
 
     protected override void OnInitialized()
     {
@@ -178,10 +168,10 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
         if (ExecutionId != Guid.Empty)
         {
             timer.Stop();
-            Loading = true;
+            loading = true;
             await InvokeAsync(StateHasChanged);
             using var context = DbFactory.CreateDbContext();
-            Execution = await context.Executions
+            execution = await context.Executions
                 .AsNoTrackingWithIdentityResolution()
                 .Include(e => e.Job)
                 .Include(e => e.Schedule)
@@ -190,8 +180,8 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
                 .ThenInclude(e => e.StepExecutionAttempts)
                 .Include(e => e.StepExecutions)
                 .ThenInclude(e => e.ExecutionDependencies)
-                .Include($"{nameof(Execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
-                .Include($"{nameof(Execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
+                .Include($"{nameof(execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
+                .Include($"{nameof(execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
                 .Include(e => e.StepExecutions)
                 .ThenInclude(e => e.ExecutionConditionParameters)
                 .ThenInclude(p => p.ExecutionParameter)
@@ -199,8 +189,8 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
                 .ThenInclude(e => e.Step)
                 .ThenInclude(s => s!.Tags)
                 .FirstOrDefaultAsync(e => e.ExecutionId == ExecutionId);
-            Loading = false;
-            if (AutoRefresh && (Execution?.ExecutionStatus == ExecutionStatus.Running || Execution?.ExecutionStatus == ExecutionStatus.NotStarted))
+            loading = false;
+            if (AutoRefresh && (execution?.ExecutionStatus == ExecutionStatus.Running || execution?.ExecutionStatus == ExecutionStatus.NotStarted))
             {
                 timer.Start();
             }
@@ -209,13 +199,13 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
                 AutoRefresh = false;
             }
             await InvokeAsync(StateHasChanged);
-            GraphShouldRender = true;
+            graphShouldRender = true;
         }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (GraphShouldRender && ShowReport == Report.Graph)
+        if (graphShouldRender && ShowReport == Report.Graph)
         {
             await LoadGraph();
         }
@@ -223,16 +213,16 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
 
     private async Task LoadGraph()
     {
-        ArgumentNullException.ThrowIfNull(DependencyGraph);
-        ArgumentNullException.ThrowIfNull(Execution);
-        GraphShouldRender = false;
+        ArgumentNullException.ThrowIfNull(dependencyGraph);
+        ArgumentNullException.ThrowIfNull(execution);
+        graphShouldRender = false;
 
         DependencyGraphNode[] nodes;
         DependencyGraphEdge[] edges;
-        if (DependencyGraphStepFilter is null)
+        if (dependencyGraphStepFilter is null)
         {
             // Create a list of steps and dependencies and send them through JSInterop as JSON objects.
-            nodes = Execution.StepExecutions
+            nodes = execution.StepExecutions
                 .Select(step =>
                 {
                     var status = step.ExecutionStatus.ToString() ?? "";
@@ -244,7 +234,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
                         EnableOnClick: true
                     );
                 }).ToArray();
-            edges = Execution.StepExecutions
+            edges = execution.StepExecutions
                 .SelectMany(step => step.ExecutionDependencies)
                 .Where(dep => dep.DependantOnStepExecution is not null)
                 .Select(dep => new DependencyGraphEdge(
@@ -255,7 +245,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
         }
         else
         {
-            var startStep = Execution?.StepExecutions.FirstOrDefault(s => s.StepId == DependencyGraphStepFilter.StepId);
+            var startStep = execution?.StepExecutions.FirstOrDefault(s => s.StepId == dependencyGraphStepFilter.StepId);
             if (startStep is not null)
             {
                 var steps = RecurseDependenciesBackward(startStep, [], 0);
@@ -283,7 +273,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
                 return;
             }
         }
-        await DependencyGraph.DrawAsync(nodes, edges);
+        await dependencyGraph.DrawAsync(nodes, edges);
         StateHasChanged();
     }
 
@@ -295,7 +285,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             return;
         }
         StateHasChanged();
-        await StepExecutionDetailsOffcanvas.LetAsync(x => x.ShowAsync(attempt));
+        await stepExecutionDetailsOffcanvas.LetAsync(x => x.ShowAsync(attempt));
     }
 
     private async Task StopJobExecutionAsync()
@@ -306,35 +296,35 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             return;
         }
 
-        if (Execution is null)
+        if (execution is null)
         {
             Messenger.AddError("Execution was null");
             return;
         }
 
-        StoppingExecutions.Add(ExecutionId);
+        stoppingExecutions.Add(ExecutionId);
         try
         {
             string username = HttpContextAccessor.HttpContext?.User?.Identity?.Name
                 ?? throw new ArgumentNullException(nameof(username), "Username cannot be null");
-            await ExecutorService.StopExecutionAsync(Execution.ExecutionId, username);
+            await ExecutorService.StopExecutionAsync(execution.ExecutionId, username);
             Messenger.AddInformation("Stop request sent successfully to the executor service");
         }
         catch (TimeoutException)
         {
             Messenger.AddError("Operation timed out", "The executor process may no longer be running");
-            StoppingExecutions.RemoveAll(id => id == ExecutionId);
+            stoppingExecutions.RemoveAll(id => id == ExecutionId);
         }
         catch (Exception ex)
         {
             Messenger.AddError("Error stopping execution", ex.Message);
-            StoppingExecutions.RemoveAll(id => id == ExecutionId);
+            stoppingExecutions.RemoveAll(id => id == ExecutionId);
         }
     }
 
     private List<StepExecution> RecurseDependenciesBackward(StepExecution step, List<StepExecution> processedSteps, int depth)
     {
-        ArgumentNullException.ThrowIfNull(Execution?.StepExecutions);
+        ArgumentNullException.ThrowIfNull(execution?.StepExecutions);
 
         // If the step was already handled, return.
         // This way we do not loop indefinitely in case of circular dependencies.
@@ -352,7 +342,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
         processedSteps.Add(step);
 
         // Get dependency steps.
-        List<StepExecution> dependencySteps = Execution.StepExecutions.Where(s => step.ExecutionDependencies.Any(d => s.StepId == d.DependantOnStepId)).ToList();
+        List<StepExecution> dependencySteps = execution.StepExecutions.Where(s => step.ExecutionDependencies.Any(d => s.StepId == d.DependantOnStepId)).ToList();
 
         // Loop through the dependencies and handle them recursively.
         foreach (var depencyStep in dependencySteps)
@@ -367,7 +357,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
 
     private List<StepExecution> RecurseDependenciesForward(StepExecution step, List<StepExecution> processedSteps, int depth)
     {
-        ArgumentNullException.ThrowIfNull(Execution?.StepExecutions);
+        ArgumentNullException.ThrowIfNull(execution?.StepExecutions);
         if (processedSteps.Any(s => s.StepId == step.StepId))
         {
             return processedSteps;
@@ -381,7 +371,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
 
         processedSteps.Add(step);
 
-        List<StepExecution> dependencySteps = Execution.StepExecutions.Where(s => s.ExecutionDependencies.Any(d => d.DependantOnStepId == step.StepId)).ToList();
+        List<StepExecution> dependencySteps = execution.StepExecutions.Where(s => s.ExecutionDependencies.Any(d => d.DependantOnStepId == step.StepId)).ToList();
 
         foreach (var depencyStep in dependencySteps)
         {
@@ -395,8 +385,8 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
 
     private Task<AutosuggestDataProviderResult<StepExecution>> ProvideSuggestions(AutosuggestDataProviderRequest request)
     {
-        ArgumentNullException.ThrowIfNull(Execution);
-        var filtered = Execution.StepExecutions.Where(s => s.StepName?.ContainsIgnoreCase(request.UserInput) ?? false);
+        ArgumentNullException.ThrowIfNull(execution);
+        var filtered = execution.StepExecutions.Where(s => s.StepName?.ContainsIgnoreCase(request.UserInput) ?? false);
         return Task.FromResult(new AutosuggestDataProviderResult<StepExecution>
         {
             Data = filtered

@@ -44,8 +44,8 @@
 <div class="row">
     <div class="col">
         <FilterDropdown TItem="Job"
-                        FilterSet="JobFilter"
-                        Items="Jobs?.Where(j => Schedules_?.Any(s => s.JobId == j.JobId) ?? false) ?? Enumerable.Empty<Job>()"
+                        FilterSet="jobFilter"
+                        Items="jobs?.Where(j => schedules?.Any(s => s.JobId == j.JobId) ?? false) ?? Enumerable.Empty<Job>()"
                         IdSelector="j => j.JobId.ToString()"
                         TextSelector="j => j.JobName"
                         IsSearchable
@@ -60,11 +60,11 @@
 
 @if (Component is null)
 {
-    <SchedulesListComponent Schedules="Schedules_" Jobs="Jobs" FilteredSchedules="FilteredSchedules" OnSchedulesChanged="StateHasChanged" />
+    <SchedulesListComponent Schedules="schedules" Jobs="jobs" FilteredSchedules="FilteredSchedules" OnSchedulesChanged="StateHasChanged" />
 }
 else if (Component == "graph")
 {
-    <SchedulesGraphComponent Schedules="Schedules_" FilteredSchedules="FilteredSchedules" OnSchedulesChanged="StateHasChanged" />
+    <SchedulesGraphComponent Schedules="schedules" FilteredSchedules="FilteredSchedules" OnSchedulesChanged="StateHasChanged" />
 }
 else
 {
@@ -74,25 +74,24 @@ else
 @code {
     [Parameter] public string? Component { get; set; }
 
-    private List<Job>? Jobs { get; set; }
-
-    private List<Schedule>? Schedules_ { get; set; }
-
-    private HashSet<Job> JobFilter { get; set; } = new();
+    private readonly HashSet<Job> jobFilter = new();
+    
+    private List<Job>? jobs;
+    private List<Schedule>? schedules;
 
     private IEnumerable<Schedule> FilteredSchedules =>
-        Schedules_
-        ?.Where(s => !JobFilter.Any() || JobFilter.Any(f => f.JobId == s.JobId))
+        schedules
+        ?.Where(s => !jobFilter.Any() || jobFilter.Any(f => f.JobId == s.JobId))
         ?? Enumerable.Empty<Schedule>();
 
     protected override async Task OnInitializedAsync()
     {
         using var context = await Task.Run(DbFactory.CreateDbContext);
-        Jobs = await context.Jobs
+        jobs = await context.Jobs
             .Include(j => j.Category)
             .OrderBy(job => job.JobName)
             .ToListAsync();
-        Schedules_ = await context.Schedules
+        schedules = await context.Schedules
             .AsNoTrackingWithIdentityResolution()
             .Include(schedule => schedule.Job)
             .Include(schedule => schedule.Tags)

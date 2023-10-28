@@ -3,12 +3,12 @@
 
 <h4>Jobs</h4>
 
-@if (LastStartedExecutionId is not null)
+@if (lastStartedExecutionId is not null)
 {
     <div class="alert alert-success mt-3 show alert-dismissible col-xl-6" role="alert">
         <CxIcon Icon="FeatherIcon.CheckCircle" />
-        Execution started successfully – <a href="executions/@LastStartedExecutionId" class="alert-link">view execution</a>
-        <button type="button" class="btn-close" @onclick="() => LastStartedExecutionId = null"></button>
+        Execution started successfully – <a href="executions/@lastStartedExecutionId" class="alert-link">view execution</a>
+        <button type="button" class="btn-close" @onclick="() => lastStartedExecutionId = null"></button>
     </div>
 }
 
@@ -18,21 +18,21 @@
             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                 <HxButton Color="ThemeColor.Success"
                           CssClass="me-3 mt-3"
-                          OnClick="() => JobEditModal.LetAsync(x => x.ShowAsync())"
+                          OnClick="() => jobEditModal.LetAsync(x => x.ShowAsync())"
                           Spinner="false"
-                          Enabled="Jobs_ is not null">
+                          Enabled="jobs is not null">
                     Add job
                 </HxButton>
 
                 <HxButton Color="ThemeColor.Secondary"
                           CssClass="me-3 mt-3"
-                          Enabled="Categories is not null"
-                          OnClick="() => CategoryEditModal.LetAsync(x => x.ShowAsync())"
+                          Enabled="categories is not null"
+                          OnClick="() => categoryEditModal.LetAsync(x => x.ShowAsync())"
                           Spinner="false">
                     Add category
                 </HxButton>
             </AuthorizeView>
-            <HxButton Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!IsLoading" Spinner="IsLoading" CssClass="mt-3">
+            <HxButton Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!isLoading" Spinner="isLoading" CssClass="mt-3">
                 <CxIcon Icon="FeatherIcon.RefreshCw" />
                 Refresh
             </HxButton>
@@ -55,15 +55,15 @@
             <div class="input-group-text">
                 <CxIcon Icon="FeatherIcon.Filter" />
             </div>
-            <input type="search" class="form-control" @bind-value="JobNameFilter" @bind-value:event="oninput" placeholder="Filter by name" />
+            <input type="search" class="form-control" @bind-value="jobNameFilter" @bind-value:event="oninput" placeholder="Filter by name" />
         </div>
     </div>
         
     <div class="col-sm-5 mt-3 mt-sm-0">
         <HxButtonGroup Size="ButtonGroupSize.Small">
             <FilterDropdown TItem="ExecutionStatus"
-                            FilterSet="StatusFilter"
-                            Items="LastExecutions?.Values.Select(e => e.ExecutionStatus).Distinct().OrderBy(s => s) ?? Enumerable.Empty<ExecutionStatus>()"
+                            FilterSet="statusFilter"
+                            Items="lastExecutions?.Values.Select(e => e.ExecutionStatus).Distinct().OrderBy(s => s) ?? Enumerable.Empty<ExecutionStatus>()"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
                     <CxIcon Icon="FeatherIcon.Info" />
@@ -75,8 +75,8 @@
             </FilterDropdown>
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() =>
                 {
-                    StatusFilter.Clear();
-                    JobNameFilter = string.Empty;
+                    statusFilter.Clear();
+                    jobNameFilter = string.Empty;
                 }">
                 <CxIcon Icon="FeatherIcon.X" />
                 Clear
@@ -104,7 +104,7 @@
             </tr>
         </thead>
         <tbody>
-            @if (Jobs_ is null || Categories is null)
+            @if (jobs is null || categories is null)
             {
                 <tr>
                     <td colspan="5" class="text-center">
@@ -112,7 +112,7 @@
                     </td>
                 </tr>
             }
-            else if (!Jobs_.Any() && !Categories.Any())
+            else if (!jobs.Any() && !categories.Any())
             {
                 <tr>
                     <td colspan="5">
@@ -122,18 +122,18 @@
             }
             else
             {
-                foreach (var category in Categories.Append(null))
+                foreach (var category in categories.Append(null))
                 {
                     var state = category is not null
                         ? UserState.JobCategoryExpandStatuses.GetOrCreate(category.CategoryId)
                         : UserState.JobCategoryExpandStatuses.GetOrCreate(Guid.Empty);
-                    var jobs = Jobs_
+                    var filteredJobs = jobs
                         .Where(j => j.CategoryId == category?.CategoryId)
-                        .Where(j => j.JobName.ContainsIgnoreCase(JobNameFilter));
+                        .Where(j => j.JobName.ContainsIgnoreCase(jobNameFilter));
 
-                    var filtersApplied = JobNameFilter.Any() || StatusFilter.Any();
+                    var filtersApplied = jobNameFilter.Any() || statusFilter.Any();
                     /* Show all categories even if they do not have jobs in them. Show "No category" only if it has jobs */
-                    if ((category is null || filtersApplied) && !jobs.Any())
+                    if ((category is null || filtersApplied) && !filteredJobs.Any())
                     {
                         continue;
                     }
@@ -172,7 +172,7 @@
                                     <DropdownMenuHeader>
                                         @category.CategoryName
                                     </DropdownMenuHeader>
-                                    <DropdownMenuItem @onclick="() => CategoryEditModal.LetAsync(x => x.ShowAsync(category))">
+                                    <DropdownMenuItem @onclick="() => categoryEditModal.LetAsync(x => x.ShowAsync(category))">
                                         <CxIcon Icon="FeatherIcon.Edit2" />
                                         Edit
                                     </DropdownMenuItem>
@@ -191,7 +191,7 @@
                     foreach (var item in jobs)
                     {
                         var lastExecution = GetLastExecution(item);
-                        if (StatusFilter.Any() && (lastExecution is null || !StatusFilter.Contains(lastExecution.ExecutionStatus)))
+                        if (statusFilter.Any() && (lastExecution is null || !statusFilter.Contains(lastExecution.ExecutionStatus)))
                         {
                             continue;
                         }
@@ -200,7 +200,7 @@
                             <ChildContent Context="menu">
                                 <td class="align-middle">
                                     <a class="text-body ms-sm-5" href="@($"jobs/{item.JobId}/steps")">
-                                        <HighlightableText PartToHighlight="@JobNameFilter" Text="@item.JobName" />
+                                        <HighlightableText PartToHighlight="@jobNameFilter" Text="@item.JobName" />
                                     </a>
                                 </td>
                                 <td class="align-middle">
@@ -249,7 +249,7 @@
                                     @item.JobName
                                 </DropdownMenuHeader>
                                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-                                    <DropdownMenuItem @onclick="() => JobEditModal.LetAsync(x => x.ShowAsync(item))">
+                                    <DropdownMenuItem @onclick="() => jobEditModal.LetAsync(x => x.ShowAsync(item))">
                                         <CxIcon Icon="FeatherIcon.Edit2" />
                                         Edit
                                     </DropdownMenuItem>
@@ -271,7 +271,7 @@
                                     Schedules
                                 </DropdownMenuItem>
                                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-                                    <DropdownMenuItem @onclick="() => ExecuteModal.LetAsync(x => x.ShowAsync(item.JobId))">
+                                    <DropdownMenuItem @onclick="() => executeModal.LetAsync(x => x.ShowAsync(item.JobId))">
                                         <CxIcon Icon="FeatherIcon.Play" />
                                         Execute
                                     </DropdownMenuItem>
@@ -286,11 +286,11 @@
 </div>
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-    <JobEditModal @ref="JobEditModal" OnJobSubmitted="OnJobSubmitted" />
+    <JobEditModal @ref="jobEditModal" OnJobSubmitted="OnJobSubmitted" />
 
-    <JobCategoryEditModal @ref="CategoryEditModal" OnCategorySubmitted="OnCategorySubmitted" />
+    <JobCategoryEditModal @ref="categoryEditModal" OnCategorySubmitted="OnCategorySubmitted" />
 </AuthorizeView>
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-    <ExecuteModal @ref="ExecuteModal" OnExecutionStarted="OnExecutionStarted" />
+    <ExecuteModal @ref="executeModal" OnExecutionStarted="OnExecutionStarted" />
 </AuthorizeView>

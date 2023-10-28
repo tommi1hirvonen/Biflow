@@ -32,25 +32,17 @@ public partial class Jobs : ComponentBase
 
     [CascadingParameter] public UserState UserState { get; set; } = new();
 
-    private List<Job>? Jobs_ { get; set; }
-    
-    private List<JobCategory>? Categories { get; set; }
-    
-    private Dictionary<Guid, Execution>? LastExecutions { get; set; }
+    private readonly HashSet<ExecutionStatus> statusFilter = [];
 
-    private bool IsLoading { get; set; } = false;
-    
-    private JobCategoryEditModal? CategoryEditModal { get; set; }
-    
-    private JobEditModal? JobEditModal { get; set; }
-
-    private ExecuteModal? ExecuteModal { get; set; }
-
-    private string JobNameFilter { get; set; } = "";
-    
-    private HashSet<ExecutionStatus> StatusFilter { get; } = [];
-
-    private Guid? LastStartedExecutionId { get; set; }
+    private List<Job>? jobs;    
+    private List<JobCategory>? categories;
+    private Dictionary<Guid, Execution>? lastExecutions;
+    private bool isLoading = false;
+    private JobCategoryEditModal? categoryEditModal;
+    private JobEditModal? jobEditModal;
+    private ExecuteModal? executeModal;
+    private string jobNameFilter = "";
+    private Guid? lastStartedExecutionId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -59,9 +51,9 @@ public partial class Jobs : ComponentBase
 
     private async Task LoadData()
     {
-        IsLoading = true;
+        isLoading = true;
         using var context = await Task.Run(DbFactory.CreateDbContext);
-        Jobs_ = await context.Jobs
+        jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Include(job => job.Schedules)
             .Include(job => job.Category)
@@ -72,7 +64,7 @@ public partial class Jobs : ComponentBase
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         if (authState.User.IsInRole(Roles.Admin) || authState.User.IsInRole(Roles.Editor))
         {
-            Categories = await context.JobCategories
+            categories = await context.JobCategories
                 .AsNoTrackingWithIdentityResolution()
                 .OrderBy(c => c.CategoryName)
                 .ToListAsync();
@@ -80,7 +72,7 @@ public partial class Jobs : ComponentBase
         // For other users, only show categories for jobs they are authorized to see.
         else
         {
-            Categories = Jobs_
+            categories = jobs
                 .Select(j => j.Category)
                 .Where(c => c is not null)
                 .Cast<JobCategory>()
@@ -90,16 +82,16 @@ public partial class Jobs : ComponentBase
 
         StateHasChanged(); // Render/publish results so far (jobs),
         await LoadLastExecutions(context); // Load last execution status for jobs (possibly heavy operation).
-        IsLoading = false;
+        isLoading = false;
     }
 
     private async Task LoadLastExecutions(AppDbContext context)
     {
-        ArgumentNullException.ThrowIfNull(Jobs_);
+        ArgumentNullException.ThrowIfNull(jobs);
         // Get each job's last execution.
         var lastExecutions = await context.Executions
             .AsNoTrackingWithIdentityResolution()
-            .Where(execution => Jobs_.Select(job => job.JobId).Contains(execution.JobId ?? Guid.Empty) && execution.StartDateTime != null)
+            .Where(execution => jobs.Select(job => job.JobId).Contains(execution.JobId ?? Guid.Empty) && execution.StartDateTime != null)
             .Select(execution => execution.JobId)
             .Distinct()
             .Select(key => new
@@ -109,7 +101,7 @@ public partial class Jobs : ComponentBase
             })
             .ToListAsync();
 
-        LastExecutions = lastExecutions.ToDictionary(e => e.Key ?? Guid.Empty, e => e.Execution);
+        this.lastExecutions = lastExecutions.ToDictionary(e => e.Key ?? Guid.Empty, e => e.Execution);
         StateHasChanged();
     }
 
@@ -117,7 +109,7 @@ public partial class Jobs : ComponentBase
     private Execution? GetLastExecution(Job job)
     {
         Execution? execution = null;
-        LastExecutions?.TryGetValue(job.JobId, out execution);
+        lastExecutions?.TryGetValue(job.JobId, out execution);
         return execution;
     }
 
@@ -151,8 +143,8 @@ public partial class Jobs : ComponentBase
             duplicator.Job.JobName = $"{duplicator.Job.JobName} – Copy";
             var createdJob = await duplicator.SaveJobAsync();
             createdJob.Schedules = new List<Schedule>();
-            Jobs_?.Add(createdJob);
-            Jobs_ = Jobs_?.OrderBy(job_ => job_.JobName).ToList();
+            jobs?.Add(createdJob);
+            jobs = jobs?.OrderBy(job_ => job_.JobName).ToList();
         }
         catch (Exception ex)
         {
@@ -196,7 +188,7 @@ public partial class Jobs : ComponentBase
                 .Where(j => j.JobId == job.JobId)
                 .ExecuteDeleteAsync();
             await SchedulerService.DeleteJobAsync(job);
-            Jobs_?.Remove(job);
+            jobs?.Remove(job);
         }
         catch (Exception ex)
         {
@@ -211,29 +203,29 @@ public partial class Jobs : ComponentBase
 
     private void OnJobSubmitted(Job job)
     {
-        var remove = Jobs_?.FirstOrDefault(j => j.JobId == job.JobId);
+        var remove = jobs?.FirstOrDefault(j => j.JobId == job.JobId);
         if (remove is not null)
         {
             job.Schedules = remove.Schedules;
-            Jobs_?.Remove(remove);
+            jobs?.Remove(remove);
         }
         else
         {
             job.Schedules = new List<Schedule>();
         }
-        Jobs_?.Add(job);
-        Jobs_?.Sort((j1, j2) => j1.JobName.CompareTo(j2.JobName));
+        jobs?.Add(job);
+        jobs?.Sort((j1, j2) => j1.JobName.CompareTo(j2.JobName));
     }
 
     private void OnCategorySubmitted(JobCategory category)
     {
-        var remove = Categories?.FirstOrDefault(c => c.CategoryId == category.CategoryId);
+        var remove = categories?.FirstOrDefault(c => c.CategoryId == category.CategoryId);
         if (remove is not null)
         {
-            Categories?.Remove(remove);
+            categories?.Remove(remove);
         }
-        Categories?.Add(category);
-        Categories?.Sort((c1, c2) => c1.CategoryName.CompareTo(c2.CategoryName));
+        categories?.Add(category);
+        categories?.Sort((c1, c2) => c1.CategoryName.CompareTo(c2.CategoryName));
     }
 
     private async Task DeleteCategoryAsync(JobCategory category)
@@ -247,8 +239,8 @@ public partial class Jobs : ComponentBase
             using var context = DbFactory.CreateDbContext();
             context.JobCategories.Remove(category);
             await context.SaveChangesAsync();
-            Categories?.Remove(category);
-            foreach (var job in Jobs_?.Where(t => t.CategoryId == category.CategoryId) ?? Enumerable.Empty<Job>())
+            categories?.Remove(category);
+            foreach (var job in jobs?.Where(t => t.CategoryId == category.CategoryId) ?? Enumerable.Empty<Job>())
             {
                 job.CategoryId = null;
                 job.Category = null;
@@ -262,12 +254,12 @@ public partial class Jobs : ComponentBase
 
     private void OnExecutionStarted(Guid executionId)
     {
-        LastStartedExecutionId = executionId;
+        lastStartedExecutionId = executionId;
     }
 
     private void ExpandAll()
     {
-        foreach (var category in Categories ?? Enumerable.Empty<JobCategory>())
+        foreach (var category in categories ?? Enumerable.Empty<JobCategory>())
         {
             var state = UserState.JobCategoryExpandStatuses.GetOrCreate(category.CategoryId);
             state.IsExpanded = true;
@@ -278,7 +270,7 @@ public partial class Jobs : ComponentBase
 
     private void CollapseAll()
     {
-        foreach (var category in Categories ?? Enumerable.Empty<JobCategory>())
+        foreach (var category in categories ?? Enumerable.Empty<JobCategory>())
         {
             var state = UserState.JobCategoryExpandStatuses.GetOrCreate(category.CategoryId);
             state.IsExpanded = false;

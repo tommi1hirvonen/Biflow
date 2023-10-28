@@ -7,38 +7,35 @@
 
 <h4>Subscriptions</h4>
 
-<UserSubscriptions User="User" Jobs="Jobs" Steps="Steps" Tags="Tags" />
+<UserSubscriptions User="user" Jobs="jobs" Steps="steps" Tags="tags" />
 
 @code {
     [Parameter] public string? Page { get; set; }
 
+    private User? user;
+    private IEnumerable<JobProjection>? jobs;
+    private IEnumerable<Tag>? tags;
+    private IEnumerable<StepProjection>? steps;
+
     private string? Username => HttpContextAccessor.HttpContext?.User?.Identity?.Name;
-
-    private User? User { get; set; }
-
-    private IEnumerable<JobProjection>? Jobs { get; set; }
-
-    private IEnumerable<Tag>? Tags { get; set; }
-
-    private IEnumerable<StepProjection>? Steps { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         using var context = await Task.Run(DbFactory.CreateDbContext);
-        User = await context.Users
+        user = await context.Users
             .AsNoTrackingWithIdentityResolution()
             .Include(user => user.Subscriptions)
             .FirstAsync(user => user.Username == Username);
-        Jobs = await context.Jobs
+        jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(job => job.JobName)
             .Select(j => new JobProjection(j.JobId, j.JobName, j.UseDependencyMode, j.CategoryId, j.Category))
             .ToArrayAsync();
-        Steps = await context.Steps
+        steps = await context.Steps
             .AsNoTrackingWithIdentityResolution()
             .Select(s => new StepProjection(s.StepId, s.JobId, s.StepName, s.StepType, s.ExecutionPhase, s.IsEnabled, s.Tags.ToArray(), s.Dependencies.Select(d => d.DependantOnStepId).ToArray()))
             .ToArrayAsync();
-        Tags = await context.Tags
+        tags = await context.Tags
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(t => t.TagName)
             .ToArrayAsync();

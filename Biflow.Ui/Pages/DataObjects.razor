@@ -26,10 +26,10 @@
                 &nbsp;
                 Filter by
             </div>
-            <input type="search" class="form-control" @bind-value="ServerFilter" @bind-value:event="oninput" placeholder="Server" />
-            <input type="search" class="form-control" @bind-value="DatabaseFilter" @bind-value:event="oninput" placeholder="Database" />
-            <input type="search" class="form-control" @bind-value="SchemaFilter" @bind-value:event="oninput" placeholder="Schema" />
-            <input type="search" class="form-control" @bind-value="ObjectFilter" @bind-value:event="oninput" placeholder="Object" />
+            <input type="search" class="form-control" @bind-value="serverFilter" @bind-value:event="oninput" placeholder="Server" />
+            <input type="search" class="form-control" @bind-value="databaseFilter" @bind-value:event="oninput" placeholder="Database" />
+            <input type="search" class="form-control" @bind-value="schemaFilter" @bind-value:event="oninput" placeholder="Schema" />
+            <input type="search" class="form-control" @bind-value="objectFilter" @bind-value:event="oninput" placeholder="Object" />
         </div>
     </div>
 </div>
@@ -52,13 +52,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Objects is null)
+                        @if (objects is null)
                         {
                             <tr>
                                 <td colspan="8" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td>
                             </tr>
                         }
-                        else if (!Objects.Any())
+                        else if (!objects.Any())
                         {
                             <tr>
                                 <td colspan="8" class="px-3">No data objects</td>
@@ -73,14 +73,14 @@
                                 }
                                 <tr>
                                     
-                                    <td class="align-middle"><HighlightableText Text="@obj.ServerName" PartToHighlight="@ServerFilter" /></td>
-                                    <td class="align-middle"><HighlightableText Text="@obj.DatabaseName" PartToHighlight="@DatabaseFilter" /></td>
-                                    <td class="align-middle"><HighlightableText Text="@obj.SchemaName" PartToHighlight="@SchemaFilter" /></td>
-                                    <td class="align-middle"><HighlightableText Text="@obj.ObjectName" PartToHighlight="@ObjectFilter" /></td>
+                                    <td class="align-middle"><HighlightableText Text="@obj.ServerName" PartToHighlight="@serverFilter" /></td>
+                                    <td class="align-middle"><HighlightableText Text="@obj.DatabaseName" PartToHighlight="@databaseFilter" /></td>
+                                    <td class="align-middle"><HighlightableText Text="@obj.SchemaName" PartToHighlight="@schemaFilter" /></td>
+                                    <td class="align-middle"><HighlightableText Text="@obj.ObjectName" PartToHighlight="@objectFilter" /></td>
                                     <td class="align-middle">@obj.MaxConcurrentWrites</td>
                                     <td>
                                         <div class="btn-group">
-                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => EditOffcanvas.LetAsync(x => x.ShowAsync(obj.ObjectId))">
+                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => editOffcanvas.LetAsync(x => x.ShowAsync(obj.ObjectId))">
                                                 <CxIcon Icon="FeatherIcon.Edit2" />
                                             </HxButton>
                                             <HxDropdownButtonGroup>
@@ -101,11 +101,11 @@
                                         <a class="text-body" href="javascript:void(0)"
                                             @onclick="async () =>
                                             {
-                                                StepssModalDataObject = obj;
-                                                StepsModalGetSteps = o => o.Readers;
-                                                StepsModalGetStepsExpression = o => o.Readers;
-                                                StepsModalTitle = readersTitle;
-                                                await StepsModal.LetAsync(x => x.ShowAsync());
+                                                stepsModalDataObject = obj;
+                                                stepsModalGetSteps = o => o.Readers;
+                                                stepsModalGetStepsExpression = o => o.Readers;
+                                                stepsModalTitle = readersTitle;
+                                                await stepsModal.LetAsync(x => x.ShowAsync());
                                             }">
                                             @(readers > 0 ? $"{readers} reader(s)" : null)
                                         </a>
@@ -117,11 +117,11 @@
                                         <a class="text-body" href="javascript:void(0)"
                                             @onclick="async () =>
                                             {
-                                                StepssModalDataObject = obj;
-                                                StepsModalGetSteps = o => o.Writers;
-                                                StepsModalGetStepsExpression = o => o.Writers;
-                                                StepsModalTitle = writersTitle;
-                                                await StepsModal.LetAsync(x => x.ShowAsync());
+                                                stepsModalDataObject = obj;
+                                                stepsModalGetSteps = o => o.Writers;
+                                                stepsModalGetStepsExpression = o => o.Writers;
+                                                stepsModalTitle = writersTitle;
+                                                await stepsModal.LetAsync(x => x.ShowAsync());
                                             }">
                                             @(writers > 0 ? $"{writers} writer(s)" : null)
                                         </a>
@@ -136,9 +136,9 @@
     </div>
 </div>
 
-<DataObjectEditOffcanvas @ref="EditOffcanvas" OnDataObjectSubmitted="OnDataObjectSubmitted" />
+<DataObjectEditOffcanvas @ref="editOffcanvas" OnDataObjectSubmitted="OnDataObjectSubmitted" />
 
-<HxModal @ref="ConfirmDeleteModal" Size="ModalSize.ExtraLarge" Title="Delete data objects">
+<HxModal @ref="confirmDeleteModal" Size="ModalSize.ExtraLarge" Title="Delete data objects">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -172,12 +172,12 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await ConfirmDeleteModal.LetAsync(x => x.HideAsync())">Cancel</button>
+        <button class="btn btn-secondary" @onclick="async () => await confirmDeleteModal.LetAsync(x => x.HideAsync())">Cancel</button>
         <button class="btn btn-danger" @onclick="DeleteUnusedDatabaseObjectsAsync">Delete</button>
     </FooterTemplate>
 </HxModal>
 
-<HxModal @ref="StepsModal" Size="ModalSize.Large" Title="@StepsModalTitle" Scrollable="true">
+<HxModal @ref="stepsModal" Size="ModalSize.Large" Title="@stepsModalTitle" Scrollable="true">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -190,9 +190,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (StepssModalDataObject is not null)
+                        @if (stepsModalDataObject is not null)
                         {
-                            @foreach (var step in StepsModalGetSteps?.Invoke(StepssModalDataObject)
+                            @foreach (var step in stepsModalGetSteps?.Invoke(stepsModalDataObject)
                                 .OrderBy(s => s.Job.JobName)
                                 .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
                             {
@@ -221,19 +221,30 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await StepsModal.LetAsync(x => x.HideAsync())">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await stepsModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
 @code {
-    private IList<DataObject>? Objects { get; set; }
+    private IList<DataObject>? objects;
+    private DataObjectEditOffcanvas? editOffcanvas;
+    private HxModal? confirmDeleteModal;
+    private HxModal? stepsModal;
+    private string stepsModalTitle = string.Empty;
+    private DataObject? stepsModalDataObject;
+    private Func<DataObject, IList<Step>>? stepsModalGetSteps;
+    System.Linq.Expressions.Expression<Func<DataObject, IList<Step>>>? stepsModalGetStepsExpression;
+    private string serverFilter = string.Empty;
+    private string databaseFilter = string.Empty;
+    private string schemaFilter = string.Empty;
+    private string objectFilter = string.Empty;
 
     private IEnumerable<DataObject> FilteredObjects =>
-        Objects?
-        .Where(o => !ServerFilter.Any() || o.ServerName.ContainsIgnoreCase(ServerFilter))
-        .Where(o => !DatabaseFilter.Any() || o.DatabaseName.ContainsIgnoreCase(DatabaseFilter))
-        .Where(o => !SchemaFilter.Any() || o.SchemaName.ContainsIgnoreCase(SchemaFilter))
-        .Where(o => !ObjectFilter.Any() || o.ObjectName.ContainsIgnoreCase(ObjectFilter))
+        objects?
+        .Where(o => !serverFilter.Any() || o.ServerName.ContainsIgnoreCase(serverFilter))
+        .Where(o => !databaseFilter.Any() || o.DatabaseName.ContainsIgnoreCase(databaseFilter))
+        .Where(o => !schemaFilter.Any() || o.SchemaName.ContainsIgnoreCase(schemaFilter))
+        .Where(o => !objectFilter.Any() || o.ObjectName.ContainsIgnoreCase(objectFilter))
         .OrderBy(o => o.ServerName)
         .ThenBy(o => o.DatabaseName)
         .ThenBy(o => o.SchemaName)
@@ -241,29 +252,14 @@
         ?? Enumerable.Empty<DataObject>();
 
     private IEnumerable<DataObject> UnusedObjects =>
-        Objects?
+        objects?
         .Where(t => !t.Readers.Any() && !t.Writers.Any())
         ?? Enumerable.Empty<DataObject>();
-
-    private DataObjectEditOffcanvas? EditOffcanvas { get; set; }
-
-    private HxModal? ConfirmDeleteModal { get; set; }
-
-    private HxModal? StepsModal { get; set; }
-    private string StepsModalTitle { get; set; } = string.Empty;
-    private DataObject? StepssModalDataObject { get; set; }
-    private Func<DataObject, IList<Step>>? StepsModalGetSteps { get; set; }
-    System.Linq.Expressions.Expression<Func<DataObject, IList<Step>>>? StepsModalGetStepsExpression { get; set; }
-
-    private string ServerFilter { get; set; } = string.Empty;
-    private string DatabaseFilter { get; set; } = string.Empty;
-    private string SchemaFilter { get; set; } = string.Empty;
-    private string ObjectFilter { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
         using var context = await Task.Run(DbContextFactory.CreateDbContext);
-        Objects = await context.DataObjects
+        objects = await context.DataObjects
             .Include(o => o.Readers)
             .ThenInclude(s => s.Job)
             .Include(o => o.Writers)
@@ -279,7 +275,7 @@
             return;
         }
 
-        await ConfirmDeleteModal.LetAsync(x => x.ShowAsync());
+        await confirmDeleteModal.LetAsync(x => x.ShowAsync());
     }
 
     private async Task DeleteUnusedDatabaseObjectsAsync()
@@ -288,10 +284,10 @@
         foreach (var obj in UnusedObjects.ToList())
         {
             context.DataObjects.Remove(obj);
-            Objects?.Remove(obj);
+            objects?.Remove(obj);
         }
         await context.SaveChangesAsync();
-        await ConfirmDeleteModal.LetAsync(x => x.HideAsync());
+        await confirmDeleteModal.LetAsync(x => x.HideAsync());
     }
 
     private async Task DeleteDatabaseObject(DataObject obj)
@@ -299,23 +295,23 @@
         using var context = DbContextFactory.CreateDbContext();
         context.DataObjects.Remove(obj);
         await context.SaveChangesAsync();
-        Objects?.Remove(obj);
+        objects?.Remove(obj);
     }
 
     private async Task DeleteStepDatabaseObjectLinkAsync(Step step)
     {
-        if (StepssModalDataObject is null
-            || StepsModalGetSteps is null
-            || StepsModalGetStepsExpression is null) return;
+        if (stepsModalDataObject is null
+            || stepsModalGetSteps is null
+            || stepsModalGetStepsExpression is null) return;
 
         using var context = DbContextFactory.CreateDbContext();
         var obj = await context.DataObjects
-            .Include(StepsModalGetStepsExpression)
-            .FirstOrDefaultAsync(o => o.ObjectId == StepssModalDataObject.ObjectId);
+            .Include(stepsModalGetStepsExpression)
+            .FirstOrDefaultAsync(o => o.ObjectId == stepsModalDataObject.ObjectId);
 
         if (obj is null) return;
 
-        var steps = StepsModalGetSteps(obj);
+        var steps = stepsModalGetSteps(obj);
         var stepToRemove = steps.FirstOrDefault(s => s.StepId == step.StepId);
         if (stepToRemove is not null)
         {
@@ -323,16 +319,16 @@
             await context.SaveChangesAsync();
         }
 
-        StepsModalGetSteps(StepssModalDataObject).Remove(step);
+        stepsModalGetSteps(stepsModalDataObject).Remove(step);
     }
 
     private void OnDataObjectSubmitted(DataObject dataObject)
     {
-        var toRemove = Objects?.First(o => o.ObjectId == dataObject.ObjectId);
+        var toRemove = objects?.First(o => o.ObjectId == dataObject.ObjectId);
         if (toRemove is not null)
         {
-            Objects?.Remove(toRemove);
-            Objects?.Add(dataObject);
+            objects?.Remove(toRemove);
+            objects?.Add(dataObject);
         }
     }
 

@@ -43,13 +43,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Tags_ is null)
+                        @if (tags is null)
                         {
                             <tr>
                                 <td colspan="5" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td>
                             </tr>
                         }
-                        else if (!Tags_.Any())
+                        else if (!tags.Any())
                         {
                             <tr>
                                 <td colspan="5" class="px-3">No tags</td>
@@ -57,7 +57,7 @@
                         }
                         else
                         {
-                            foreach (var tag in Tags_)
+                            foreach (var tag in tags)
                             {
                                 var jobs = tag.Steps.Select(s => s.Job).Distinct().Count();
                                 var steps = tag.Steps.Count();
@@ -70,16 +70,16 @@
                                         <div class="btn-group">
                                             @*Dropdown to edit the tag's name*@
                                             <HxDropdownButtonGroup>
-                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => TemplateTag.TagName = tag.TagName">
+                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => templateTag.TagName = tag.TagName">
                                                     <CxIcon Icon="FeatherIcon.Edit3" />
                                                 </HxDropdownToggleButton>
                                                 <HxDropdownContent CssClass="p-4">
-                                                    <EditForm Model="TemplateTag" OnValidSubmit="async () => await UpdateTagNameAsync(tag)" Context="_context" style="min-width: 20rem;">
+                                                    <EditForm Model="templateTag" OnValidSubmit="async () => await UpdateTagNameAsync(tag)" Context="_context" style="min-width: 20rem;">
                                                         <DataAnnotationsValidator />
                                                         <ValidationSummary />
                                                         <div>
                                                             <label class="form-label">New name</label>
-                                                            <InputText class="form-control form-control-sm" @bind-Value="TemplateTag.TagName" autocomplete="off"></InputText>
+                                                            <InputText class="form-control form-control-sm" @bind-Value="templateTag.TagName" autocomplete="off"></InputText>
                                                         </div>
                                                         <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Success" CssClass="mt-3">Save</HxSubmit>
                                                     </EditForm>
@@ -133,7 +133,7 @@
     </div>
 </div>
 
-<HxModal @ref="ConfirmDeleteModal" Size="ModalSize.Regular" Title="Delete tags">
+<HxModal @ref="confirmDeleteModal" Size="ModalSize.Regular" Title="Delete tags">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -150,12 +150,12 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await ConfirmDeleteModal.LetAsync(x => x.HideAsync())">Cancel</button>
+        <button class="btn btn-secondary" @onclick="async () => await confirmDeleteModal.LetAsync(x => x.HideAsync())">Cancel</button>
         <button class="btn btn-danger" @onclick="DeleteUnusedTagsAsync">Delete</button>
     </FooterTemplate>
 </HxModal>
 
-<HxModal @ref="EditModal" Size="ModalSize.Large" Title="@($"Edit tag {EditTag?.TagName}")" Scrollable="true">
+<HxModal @ref="editModal" Size="ModalSize.Large" Title="@($"Edit tag {editTag?.TagName}")" Scrollable="true">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -168,7 +168,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var step in EditTag?.Steps
+                        @foreach (var step in editTag?.Steps
                             .OrderBy(s => s.Job.JobName)
                             .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
                         {
@@ -196,11 +196,11 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await EditModal.LetAsync(x => x.HideAsync())">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await editModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
-<HxModal @ref="SchedulesModal" Size="ModalSize.ExtraLarge" Title="@($"Schedules using {SchedulesModalTag?.TagName}")">
+<HxModal @ref="schedulesModal" Size="ModalSize.ExtraLarge" Title="@($"Schedules using {schedulesModalTag?.TagName}")">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -215,7 +215,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var schedule in SchedulesModalTag?.Schedules
+                        @foreach (var schedule in schedulesModalTag?.Schedules
                            .OrderBy(s => s.Job.JobName) ?? Enumerable.Empty<Schedule>())
                         {
                             <tr>
@@ -245,33 +245,26 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await SchedulesModal.LetAsync(x => x.HideAsync())">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await schedulesModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
 @code {
-    private IList<Tag>? Tags_ { get; set; }
+    private readonly Tag templateTag = new(string.Empty);
+    
+    private IList<Tag>? tags;
+    private HxModal? confirmDeleteModal;
+    private HxModal? editModal;
+    private HxModal? schedulesModal;
+    private Tag? editTag;
+    private Tag? schedulesModalTag;
 
-    private IEnumerable<Tag> UnusedTags => Tags_?.Where(t => !t.Steps.Any()) ?? Enumerable.Empty<Tag>();
-
-    private bool? ConfirmResult { get; set; }
-
-    private HxModal? ConfirmDeleteModal { get; set; }
-
-    private HxModal? EditModal { get; set; }
-
-    private HxModal? SchedulesModal { get; set; }
-
-    private Tag? EditTag { get; set; }
-
-    private Tag? SchedulesModalTag { get; set; }
-
-    private Tag TemplateTag { get; set; } = new(string.Empty);
+    private IEnumerable<Tag> UnusedTags => tags?.Where(t => !t.Steps.Any()) ?? Enumerable.Empty<Tag>();
 
     protected override async Task OnInitializedAsync()
     {
         using var context = await Task.Run(DbContextFactory.CreateDbContext);
-        Tags_ = await context.Tags
+        tags = await context.Tags
             .AsNoTrackingWithIdentityResolution()
             .Include(t => t.Steps)
             .ThenInclude(t => t.Job)
@@ -289,7 +282,7 @@
             return;
         }
 
-        await ConfirmDeleteModal.LetAsync(x => x.ShowAsync());
+        await confirmDeleteModal.LetAsync(x => x.ShowAsync());
     }
 
     private async Task DeleteUnusedTagsAsync()
@@ -298,10 +291,10 @@
         foreach (var tag in UnusedTags.ToList())
         {
             context.Tags.Remove(tag);
-            Tags_?.Remove(tag);
+            tags?.Remove(tag);
         }
         await context.SaveChangesAsync();
-        await ConfirmDeleteModal.LetAsync(x => x.HideAsync());
+        await confirmDeleteModal.LetAsync(x => x.HideAsync());
     }
 
     private async Task UpdateTagNameAsync(Tag tag)
@@ -309,7 +302,7 @@
         try
         {
             using var context = DbContextFactory.CreateDbContext();
-            tag.TagName = TemplateTag.TagName;
+            tag.TagName = templateTag.TagName;
             context.Attach(tag).State = EntityState.Modified;
             await context.SaveChangesAsync();
         }
@@ -328,17 +321,17 @@
         using var context = DbContextFactory.CreateDbContext();
         context.Tags.Remove(tag);
         await context.SaveChangesAsync();
-        Tags_?.Remove(tag);
+        tags?.Remove(tag);
     }
 
     private async Task DeleteStepTag(Step step)
     {
-        if (EditTag is null) return;
+        if (editTag is null) return;
 
         using var context = DbContextFactory.CreateDbContext();
         var tag = await context.Tags
             .Include(t => t.Steps)
-            .FirstOrDefaultAsync(t => t.TagId == EditTag.TagId);
+            .FirstOrDefaultAsync(t => t.TagId == editTag.TagId);
 
         if (tag is null) return;
 
@@ -349,7 +342,7 @@
             await context.SaveChangesAsync();
         }
 
-        EditTag.Steps.Remove(step);
+        editTag.Steps.Remove(step);
     }
 
     private async Task SetTagColorAsync(Tag tag, TagColor color)
@@ -366,13 +359,13 @@
 
     private async Task ShowEditModalAsync(Tag tag)
     {
-        EditTag = tag;
-        await EditModal.LetAsync(x => x.ShowAsync());
+        editTag = tag;
+        await editModal.LetAsync(x => x.ShowAsync());
     }
 
     private async Task ShowSchedulesModalAsync(Tag tag)
     {
-        SchedulesModalTag = tag;
-        await SchedulesModal.LetAsync(x => x.ShowAsync());
+        schedulesModalTag = tag;
+        await schedulesModal.LetAsync(x => x.ShowAsync());
     }
 }
