@@ -4,26 +4,26 @@
 <div class="row">
     <div class="col-auto">
         <div class="list-group shadow-sm">
-            <button type="button" class="list-group-item list-group-item-action @(ActiveTab == SettingsTab.General ? "active" : null)"
-                    @onclick="() => ActiveTab = SettingsTab.General">
+            <button type="button" class="list-group-item list-group-item-action @(activeTab == SettingsTab.General ? "active" : null)"
+                    @onclick="() => activeTab = SettingsTab.General">
                 <CxIcon Icon="FeatherIcon.Info" />
                 &nbsp;
                 General
             </button>
-            <button type="button" class="list-group-item list-group-item-action @(ActiveTab == SettingsTab.Execution ? "active" : null)"
-                    @onclick="() => ActiveTab = SettingsTab.Execution">
+            <button type="button" class="list-group-item list-group-item-action @(activeTab == SettingsTab.Execution ? "active" : null)"
+                    @onclick="() => activeTab = SettingsTab.Execution">
                 <CxIcon Icon="FeatherIcon.Tool" />
                 &nbsp;
                 Execution mode
             </button>
-            <button type="button" class="list-group-item list-group-item-action @(ActiveTab == SettingsTab.Concurrency ? "active" : null)"
-                    @onclick="() => ActiveTab = SettingsTab.Concurrency">
+            <button type="button" class="list-group-item list-group-item-action @(activeTab == SettingsTab.Concurrency ? "active" : null)"
+                    @onclick="() => activeTab = SettingsTab.Concurrency">
                 <CxIcon Icon="FeatherIcon.Sliders" />
                 &nbsp;
                 Concurrency
             </button>
-            <button type="button" class="list-group-item list-group-item-action @(ActiveTab == SettingsTab.SyncDependencies ? "active" : null)"
-                    @onclick="() => ActiveTab = SettingsTab.SyncDependencies">
+            <button type="button" class="list-group-item list-group-item-action @(activeTab == SettingsTab.SyncDependencies ? "active" : null)"
+                    @onclick="() => activeTab = SettingsTab.SyncDependencies">
                 <CxIcon Icon="FeatherIcon.RefreshCw" />
                 &nbsp;
                 Sync dependencies
@@ -33,7 +33,7 @@
     <div class="col">
         <div class="card shadow-sm">
             <div class="card-body">
-                @switch (ActiveTab)
+                @switch (activeTab)
                 {
                     case SettingsTab.General:
                         <GeneralSettingsComponent />
@@ -59,7 +59,7 @@
 @code {
     [CascadingParameter] public Job? Job { get; set; }
 
-    private SettingsTab ActiveTab { get; set; } = SettingsTab.General;
+    private SettingsTab activeTab = SettingsTab.General;
 
     private enum SettingsTab { General, Execution, Concurrency, SyncDependencies }
 }

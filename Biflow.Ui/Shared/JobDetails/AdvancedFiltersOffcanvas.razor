@@ -1,11 +1,11 @@
-﻿<HxOffcanvas @ref="Offcanvas" Backdrop="OffcanvasBackdrop.False" Size="OffcanvasSize.Small" ScrollingEnabled="true" Title="Advanced filters">
+﻿<HxOffcanvas @ref="offcanvas" Backdrop="OffcanvasBackdrop.False" Size="OffcanvasSize.Small" ScrollingEnabled="true" Title="Advanced filters">
     <BodyTemplate>
         <div class="row">
             <div class="col">
 
                 <HxButtonGroup Size="ButtonGroupSize.Small">
                     <FilterDropdown TItem="ConnectionInfoBase"
-                                    FilterSet="ConnectionsFilter"
+                                    FilterSet="connectionsFilter"
                                     IdSelector="c => c.ConnectionId.ToString()"
                                     TextSelector="c => c.ConnectionName"
                                     Items="Connections"
@@ -71,7 +71,7 @@
                                         Items="PipelineClients"
                                         TextSelector="fa => fa.PipelineClientName"
                                         IdSelector="fa => fa.PipelineClientId.ToString()"
-                                        FilterSet="PipelineClientsFilter"
+                                        FilterSet="pipelineClientsFilter"
                                         OnChange="async () => await OnFiltersChanged.InvokeAsync()">
                             <TitleTemplate>
                                 Pipeline client
@@ -109,7 +109,7 @@
                                         Items="FunctionApps"
                                         TextSelector="fa => fa.FunctionAppName"
                                         IdSelector="fa => fa.FunctionAppId.ToString()"
-                                        FilterSet="FunctionAppsFilter"
+                                        FilterSet="functionAppsFilter"
                                         OnChange="async () => await OnFiltersChanged.InvokeAsync()">
                             <TitleTemplate>
                                 Function app
@@ -143,6 +143,6 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
     </FooterTemplate>
 </HxOffcanvas>

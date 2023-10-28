@@ -15,35 +15,32 @@ public partial class AdvancedFiltersOffcanvas : ComponentBase
 
     [Parameter] public IEnumerable<ConnectionInfoBase> Connections { get; set; } = Enumerable.Empty<ConnectionInfoBase>();
 
-    private HxOffcanvas? Offcanvas { get; set; }
-
-    private HashSet<ConnectionInfoBase> ConnectionsFilter { get; set; } = [];
-
     public string PackageFolder { get; private set; } = "";
     public string PackageProject { get; private set; } = "";
     public string PackageName { get; private set; } = "";
-
     public string PipelineName { get; private set; } = "";
-    private HashSet<PipelineClient> PipelineClientsFilter { get; set; } = [];
-
     public string FunctionUrl { get; private set; } = "";
     private string FunctionInput { get; set; } = "";
-    private HashSet<FunctionApp> FunctionAppsFilter { get; set; } = [];
-
     public string ExeFilePath { get; private set; } = "";
     public string ExeArguments { get; private set; } = "";
 
+    private readonly HashSet<ConnectionInfoBase> connectionsFilter = [];
+    private readonly HashSet<FunctionApp> functionAppsFilter = [];
+    private readonly HashSet<PipelineClient> pipelineClientsFilter = [];
+
+    private HxOffcanvas? offcanvas;
+
     public async Task ClearAsync()
     {
-        ConnectionsFilter.Clear();
+        connectionsFilter.Clear();
         PackageFolder = "";
         PackageProject = "";
         PackageName = "";
         PipelineName = "";
-        PipelineClientsFilter.Clear();
+        pipelineClientsFilter.Clear();
         FunctionUrl = "";
         FunctionInput = "";
-        FunctionAppsFilter.Clear();
+        functionAppsFilter.Clear();
         ExeFilePath = "";
         ExeArguments = "";
         await OnFiltersChanged.InvokeAsync();
@@ -63,31 +60,31 @@ public partial class AdvancedFiltersOffcanvas : ComponentBase
         ExeArgumentsPredicate(step);
 
     private bool ConnectionsPredicate(Step step) =>
-        ConnectionsFilter.Count == 0 || step is IHasConnection hc && ConnectionsFilter.Select(c => c.ConnectionId).Contains(hc.ConnectionId ?? Guid.Empty);
+        connectionsFilter.Count == 0 || step is IHasConnection hc && connectionsFilter.Select(c => c.ConnectionId).Contains(hc.ConnectionId ?? Guid.Empty);
 
     private bool PackageFolderPredicate(Step step) =>
-        !PackageFolder.Any() || step is PackageStep p && (p.PackageFolderName?.ContainsIgnoreCase(PackageFolder) ?? false);
+        PackageFolder.Length == 0 || step is PackageStep p && (p.PackageFolderName?.ContainsIgnoreCase(PackageFolder) ?? false);
     private bool PackageProjectPredicate(Step step) =>
-        !PackageProject.Any() || step is PackageStep p && (p.PackageProjectName?.ContainsIgnoreCase(PackageProject) ?? false);
+        PackageProject.Length == 0 || step is PackageStep p && (p.PackageProjectName?.ContainsIgnoreCase(PackageProject) ?? false);
     private bool PackageNamePredicate(Step step) =>
-        !PackageName.Any() || step is PackageStep p && (p.PackageName?.ContainsIgnoreCase(PackageName) ?? false);
+        PackageName.Length == 0 || step is PackageStep p && (p.PackageName?.ContainsIgnoreCase(PackageName) ?? false);
 
     private bool PipelineNamePredicate(Step step) =>
-        !PipelineName.Any() || step is PipelineStep p && (p.PipelineName?.ContainsIgnoreCase(PipelineName) ?? false);
+        PipelineName.Length == 0 || step is PipelineStep p && (p.PipelineName?.ContainsIgnoreCase(PipelineName) ?? false);
     private bool PipelineClientsPredicate(Step step) =>
-        PipelineClientsFilter.Count == 0 || step is PipelineStep p && PipelineClientsFilter.Select(c => c.PipelineClientId).Contains(p.PipelineClientId ?? Guid.Empty);
+        pipelineClientsFilter.Count == 0 || step is PipelineStep p && pipelineClientsFilter.Select(c => c.PipelineClientId).Contains(p.PipelineClientId ?? Guid.Empty);
 
     private bool FunctionUrlPredicate(Step step) =>
-        !FunctionUrl.Any() || step is FunctionStep f && (f.FunctionUrl?.ContainsIgnoreCase(FunctionUrl) ?? false);
+        FunctionUrl.Length == 0 || step is FunctionStep f && (f.FunctionUrl?.ContainsIgnoreCase(FunctionUrl) ?? false);
     private bool FunctionInputPredicate(Step step) =>
-        !FunctionInput.Any() || step is FunctionStep f && (f.FunctionInput?.ContainsIgnoreCase(FunctionInput) ?? false);
+        FunctionInput.Length == 0 || step is FunctionStep f && (f.FunctionInput?.ContainsIgnoreCase(FunctionInput) ?? false);
     private bool FunctionAppsPredicate(Step step) =>
-        FunctionAppsFilter.Count == 0 || step is FunctionStep f && FunctionAppsFilter.Select(a => a.FunctionAppId).Contains(f.FunctionAppId ?? Guid.Empty);
+        functionAppsFilter.Count == 0 || step is FunctionStep f && functionAppsFilter.Select(a => a.FunctionAppId).Contains(f.FunctionAppId ?? Guid.Empty);
 
     private bool ExeFilePathPredicate(Step step) =>
-        !ExeFilePath.Any() || step is ExeStep e && (e.ExeFileName?.ContainsIgnoreCase(ExeFilePath) ?? false);
+        ExeFilePath.Length == 0 || step is ExeStep e && (e.ExeFileName?.ContainsIgnoreCase(ExeFilePath) ?? false);
     private bool ExeArgumentsPredicate(Step step) =>
-        !ExeArguments.Any() || step is ExeStep e && (e.ExeArguments?.ContainsIgnoreCase(ExeArguments) ?? false);
+        ExeArguments.Length == 0 || step is ExeStep e && (e.ExeArguments?.ContainsIgnoreCase(ExeArguments) ?? false);
 
-    public Task ShowAsync() => Offcanvas?.ShowAsync() ?? Task.CompletedTask;
+    public Task ShowAsync() => offcanvas?.ShowAsync() ?? Task.CompletedTask;
 }

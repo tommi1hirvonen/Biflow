@@ -3,9 +3,9 @@
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHxMessengerService Messenger
 
-@if (EditJob is not null && Categories is not null)
+@if (editJob is not null && categories is not null)
 {
-    <EditForm Model="EditJob" OnValidSubmit="UpdateJob" Context="_context">
+    <EditForm Model="editJob" OnValidSubmit="UpdateJob" Context="_context">
         <DataAnnotationsValidator />
         <ValidationSummary />
         <div>
@@ -14,7 +14,7 @@
                 <div class="input-group-text">
                     <CxIcon Icon="FeatherIcon.Edit3" />
                 </div>
-                <InputText class="form-control" @bind-Value="EditJob.JobName" autocomplete="off" style="max-width: 50rem;"></InputText>
+                <InputText class="form-control" @bind-Value="editJob.JobName" autocomplete="off" style="max-width: 50rem;"></InputText>
             </div>
         </div>
         <div>
@@ -23,9 +23,9 @@
                 <div class="input-group-text">
                     <CxIcon Icon="FeatherIcon.Folder" />
                 </div>
-                <InputSelect class="form-select" style="max-width: 50rem;" @bind-Value="EditJob.CategoryId" @bind-Value:after="SetCategory">
+                <InputSelect class="form-select" style="max-width: 50rem;" @bind-Value="editJob.CategoryId" @bind-Value:after="SetCategory">
                     <option value="">No category</option>
-                    @foreach (var cat in Categories)
+                    @foreach (var cat in categories)
                     {
                         <option value="@cat.CategoryId">@cat.CategoryName</option>
                     }
@@ -38,7 +38,7 @@
                 <div class="input-group-text">
                     <CxIcon Icon="FeatherIcon.BookOpen" />
                 </div>
-                <InputTextArea class="form-control form-control-sm" @bind-Value="EditJob.JobDescription" rows="5" style="max-width: 50rem;"></InputTextArea>
+                <InputTextArea class="form-control form-control-sm" @bind-Value="editJob.JobDescription" rows="5" style="max-width: 50rem;"></InputTextArea>
             </div>
         </div>
         <div>
@@ -47,7 +47,7 @@
                 <div class="input-group-text">
                     <CxIcon Icon="FeatherIcon.Bell" />
                 </div>
-                <InputNumber class="form-control form-control-sm" style="max-width: 10rem;" @bind-Value="EditJob.OvertimeNotificationLimitMinutes"></InputNumber>
+                <InputNumber class="form-control form-control-sm" style="max-width: 10rem;" @bind-Value="editJob.OvertimeNotificationLimitMinutes"></InputNumber>
             </div>
             <div class="form-text">If the job's execution exceeds the overtime limit, an email is automatically sent to users who have subscribed to this job's overtime notifications.</div>
         </div>
@@ -68,24 +68,22 @@
 
     [CascadingParameter(Name = "OnJobUpdated")] public Action<Job>? OnJobUpdated { get; set; }
 
-    private AppDbContext? Context { get; set; }
-
-    private Job? EditJob { get; set; }
-
-    private IEnumerable<JobCategory>? Categories { get; set; }
+    private AppDbContext? context;
+    private Job? editJob;
+    private IEnumerable<JobCategory>? categories;
 
     protected override async void OnParametersSet()
     {
-        if (Job is null || Job.JobId == Guid.Empty || Context is not null)
+        if (Job is null || Job.JobId == Guid.Empty || context is not null)
         {
             return;
         }
 
-        Context = await DbContextFactory.CreateDbContextAsync();
-        EditJob = await Context.Jobs
+        context = await DbContextFactory.CreateDbContextAsync();
+        editJob = await context.Jobs
             .Include(j => j.Category)
             .FirstAsync(j => j.JobId == Job.JobId);
-        Categories = await Context.JobCategories
+        categories = await context.JobCategories
             .OrderBy(c => c.CategoryName)
             .ToListAsync();
         StateHasChanged();
@@ -93,10 +91,10 @@
 
     private void SetCategory()
     {
-        ArgumentNullException.ThrowIfNull(EditJob);
-        ArgumentNullException.ThrowIfNull(Categories);
-        EditJob.Category = EditJob.CategoryId is not null
-            ? Categories.First(c => c.CategoryId == EditJob.CategoryId)
+        ArgumentNullException.ThrowIfNull(editJob);
+        ArgumentNullException.ThrowIfNull(categories);
+        editJob.Category = editJob.CategoryId is not null
+            ? categories.First(c => c.CategoryId == editJob.CategoryId)
             : null;
     }
 
@@ -104,11 +102,11 @@
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(Context);
-            ArgumentNullException.ThrowIfNull(EditJob);
-            await Context.SaveChangesAsync();
+            ArgumentNullException.ThrowIfNull(context);
+            ArgumentNullException.ThrowIfNull(editJob);
+            await context.SaveChangesAsync();
             Messenger.AddInformation("Job settings saved successfully");
-            OnJobUpdated?.Invoke(EditJob);
+            OnJobUpdated?.Invoke(editJob);
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -122,6 +120,6 @@
 
     public void Dispose()
     {
-        Context?.Dispose();
+        context?.Dispose();
     }
 }

@@ -26,13 +26,13 @@
                 </tr>
             </thead>
             <tbody>
-                @if (DependenciesToAdd is null || DependenciesToRemove is null)
+                @if (dependenciesToAdd is null || dependenciesToRemove is null)
                 {
                     <tr class="text-secondary small">
                         <td colspan="6">Click on Calculate changes to preview modifications</td>
                     </tr>
                 }
-                else if (!DependenciesToAdd.Any() && !DependenciesToRemove.Any())
+                else if (!dependenciesToAdd.Any() && !dependenciesToRemove.Any())
                 {
                     <tr>
                         <td colspan="6">No changes detected</td>
@@ -40,9 +40,9 @@
                 }
                 else
                 {
-                    var dependencies = DependenciesToAdd
+                    var dependencies = dependenciesToAdd
                         .Select(d => (Dependency: d, Add: true))
-                        .Concat(DependenciesToRemove.Select(d => (Dependency: d, Add: false)))
+                        .Concat(dependenciesToRemove.Select(d => (Dependency: d, Add: false)))
                         .OrderBy(d => d.Dependency.Step.StepName)
                         .ThenBy(d => d.Dependency.DependantOnStep.StepName);
                     <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
@@ -50,8 +50,8 @@
                     {
                         var (commitTask, discardAction) = add switch
                         {
-                            true => ((Func<Task>)(() => AddDependencyAsync(dep)), (Func<bool>)(() => DependenciesToAdd.Remove(dep))),
-                            false => (() => RemoveDependencyAsync(dep), () => DependenciesToRemove.Remove(dep))
+                            true => ((Func<Task>)(() => AddDependencyAsync(dep)), (Func<bool>)(() => dependenciesToAdd.Remove(dep))),
+                            false => (() => RemoveDependencyAsync(dep), () => dependenciesToRemove.Remove(dep))
                         };
                         <tr>
                             <td class="align-middle">
@@ -115,7 +115,7 @@
         </table>
         <div class="row">
             <div class="col">
-                @if (DependenciesToRemove?.Any() ?? false)
+                @if (dependenciesToRemove?.Any() ?? false)
                 {
                     <small class="text-secondary">Dependency removal is only suggested for steps which have at least one source defined.</small>
                 }
@@ -123,7 +123,7 @@
         </div>
     </div>
 </div>
-@if ((DependenciesToAdd?.Any() ?? false) || (DependenciesToRemove?.Any() ?? false))
+@if ((dependenciesToAdd?.Any() ?? false) || (dependenciesToRemove?.Any() ?? false))
 {
     <div class="row mt-3">
         <div class="col">

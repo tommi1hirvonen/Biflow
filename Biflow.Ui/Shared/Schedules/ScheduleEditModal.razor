@@ -5,10 +5,10 @@
 @inject ISchedulerService SchedulerService
 @inject IJSRuntime JS
 
-<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Regular" Title="@(Schedule.ScheduleId == Guid.Empty ? "New schedule" : "Edit schedule")">
+<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" Title="@(schedule.ScheduleId == Guid.Empty ? "New schedule" : "Edit schedule")">
     <BodyTemplate>
         <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
-        <EditForm id="schedule_form" Model="Schedule" OnValidSubmit="SubmitSchedule" Context="_context">
+        <EditForm id="schedule_form" Model="schedule" OnValidSubmit="SubmitSchedule" Context="_context">
             <div class="row">
                 <div class="col">
                     <DataAnnotationsValidator />
@@ -18,7 +18,7 @@
                             <div class="input-group-text">
                                 <CxIcon Icon="LucideIcon.ClipboardList" />
                             </div>
-                            <InputSelect DisplayName="Job" class="form-select" @bind-Value="Schedule.JobId" disabled=@(Schedule.ScheduleId != Guid.Empty || Job is not null)>
+                            <InputSelect DisplayName="Job" class="form-select" @bind-Value="schedule.JobId" disabled=@(schedule.ScheduleId != Guid.Empty || Job is not null)>
                                 @if (Job is not null)
                                 {
                                     <option value="@Job.JobId">@Job.JobName</option>
@@ -41,17 +41,17 @@
                             </InputSelect>
                         </div>
                     </div>
-                    <ValidationMessage For="() => Schedule.JobId" />
+                    <ValidationMessage For="() => schedule.JobId" />
                     <div class="mt-3">
                         <label class="form-label">Name</label>
                         <div class="input-group">
                             <div class="input-group-text">
                                 <CxIcon Icon="FeatherIcon.Edit3" />
                             </div>
-                            <InputText DisplayName="Name" class="form-control" @bind-Value="Schedule.ScheduleName"></InputText>
+                            <InputText DisplayName="Name" class="form-control" @bind-Value="schedule.ScheduleName"></InputText>
                         </div>
                     </div>
-                    <ValidationMessage For="() => Schedule.ScheduleName" />
+                    <ValidationMessage For="() => schedule.ScheduleName" />
                     <div class="mt-3">
                         <label class="form-label">
                             Cron expression
@@ -63,16 +63,16 @@
                             <div class="input-group-text">
                                 <CxIcon Icon="FeatherIcon.Calendar" />
                             </div>
-                            <OnInputText class="form-control" @bind-Value="Schedule.CronExpression" />
+                            <OnInputText class="form-control" @bind-Value="schedule.CronExpression" />
                         </div>
                     </div>
-                    <ValidationMessage For="() => Schedule.CronExpression" />
-                    @if (CronExpression.IsValidExpression(Schedule.CronExpression))
+                    <ValidationMessage For="() => schedule.CronExpression" />
+                    @if (CronExpression.IsValidExpression(schedule.CronExpression))
                     {
-                        var nextFireTimes = Schedule.NextFireTimes().Take(10).ToList();
+                        var nextFireTimes = schedule.NextFireTimes().Take(10).ToList();
                         <small class="text-secondary">Description:</small>
                         <br />
-                        <small class="text-secondary ms-3">@Schedule.GetScheduleDescription()</small>
+                        <small class="text-secondary ms-3">@schedule.GetScheduleDescription()</small>
                         <br />
                         <small class="text-secondary mt-2">Next execution(s) (showing first 10):</small>
                         <div class="row">
@@ -92,7 +92,7 @@
                     }
                     <div class="row mt-3">
                         <label class="form-label">Tag filters</label>
-                        <HxInputTags @bind-Value="Tags"
+                        <HxInputTags @bind-Value="tags"
                                      DataProvider="GetTagSuggestions"
                                      AllowCustomTags="false"
                                      SuggestMinimumLength="0"
@@ -104,8 +104,8 @@
                         <div class="col">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="schedule_concurrency_check"
-                                       checked=@Schedule.DisallowConcurrentExecution
-                                       @bind-value="Schedule.DisallowConcurrentExecution">
+                                       checked=@schedule.DisallowConcurrentExecution
+                                       @bind-value="schedule.DisallowConcurrentExecution">
                                 <label class="form-check-label fw-normal" for="schedule_concurrency_check">
                                     Disallow concurrent execution
                                     <HxPopover Trigger="PopoverTrigger.Hover" Content="Allow only one concurrent execution of this job and schedule. This option is useful in cases where the job's duration might overlap with the schedule's next fire time but concurrent execution should not be allowed.">
@@ -122,7 +122,7 @@
     </BodyTemplate>
     <FooterTemplate>
         <HxSubmit FormId="schedule_form" Color="ThemeColor.Success">Save</HxSubmit>
-        <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
@@ -134,12 +134,10 @@
 
     [Parameter] public EventCallback<Schedule> OnSubmit { get; set; }
 
-    private Schedule Schedule { get; set; } = new(Guid.Empty) { Tags = new List<Tag>() }; // assign placeholder
-
-    private HxOffcanvas? Offcanvas { get; set; }
-
-    private List<string> Tags { get; set; } = new();
-    public IEnumerable<Tag> AllTags { get; set; } = Enumerable.Empty<Tag>();
+    private Schedule schedule = new(Guid.Empty) { Tags = new List<Tag>() }; // assign placeholder
+    private HxOffcanvas? offcanvas;
+    private List<string> tags = new();
+    private IEnumerable<Tag> allTags = Enumerable.Empty<Tag>();
 
     private IEnumerable<JobCategory?> JobCategories => Jobs
         .Select(j => j.Category)
@@ -152,10 +150,10 @@
         await Task.Delay(50); // needed for the HxInputTags component to behave correctly (reopen dropdown after selecting one tag)
         return new InputTagsDataProviderResult
         {
-             Data = AllTags
+             Data = allTags
              .Select(t => t.TagName)
              .Where(t => t.ContainsIgnoreCase(request.UserInput))
-             .Where(t => !Tags.Any(tag => t == tag))
+             .Where(t => !tags.Any(tag => t == tag))
              .OrderBy(t => t)
         };
     }
@@ -163,31 +161,31 @@
     protected override async Task OnInitializedAsync()
     {
         using var context = DbContextFactory.CreateDbContext();
-        AllTags = await context.Tags.ToListAsync();
+        allTags = await context.Tags.ToListAsync();
     }
 
     private async Task SubmitSchedule()
     {
         // New schedule
-        if (Schedule.ScheduleId == Guid.Empty)
+        if (schedule.ScheduleId == Guid.Empty)
         {
             try
             {
                 using var context = DbContextFactory.CreateDbContext();
 
                 var tags = await context.Tags.ToListAsync();
-                foreach (var tagName in Tags)
+                foreach (var tagName in this.tags)
                 {
-                    var tag = tags.FirstOrDefault(t => t.TagName == tagName);
-                    if (tag is not null) Schedule.Tags.Add(tag);
+                    var tag = tags.FirstOrDefault<Tag>(t => t.TagName == tagName);
+                    if (tag is not null) schedule.Tags.Add(tag);
                 }
 
                 using var transaction = context.Database.BeginTransaction();
-                context.Schedules.Add(Schedule);
+                context.Schedules.Add(schedule);
                 await context.SaveChangesAsync();
                 try
                 {
-                    await SchedulerService.AddScheduleAsync(Schedule);
+                    await SchedulerService.AddScheduleAsync(schedule);
                     transaction.Commit();
                 }
                 catch (Exception)
@@ -196,12 +194,12 @@
                     throw;
                 }
 
-                Schedule.Job = Job is not null ? Job : Jobs?.FirstOrDefault(job => job.JobId == Schedule.JobId)
+                schedule.Job = Job is not null ? Job : Jobs?.FirstOrDefault(job => job.JobId == schedule.JobId)
                     ?? throw new InvalidOperationException("Job cannot be null");
 
-                await OnSubmit.InvokeAsync(Schedule);
-                await Offcanvas.LetAsync(x => x.HideAsync());
-                Tags.Clear();
+                await OnSubmit.InvokeAsync(schedule);
+                await offcanvas.LetAsync(x => x.HideAsync());
+                this.tags.Clear();
             }
             catch (Exception ex)
             {
@@ -214,26 +212,26 @@
             try
             {
                 using var context = DbContextFactory.CreateDbContext();
-                context.Attach(Schedule).State = EntityState.Modified;
+                context.Attach(schedule).State = EntityState.Modified;
                 var tags = await context.Tags.ToListAsync();
 
                 // Synchronize tags
-                foreach (var text in Tags.Where(str => !Schedule.Tags.Any(t => t.TagName == str)))
+                foreach (var text in this.tags.Where(str => !schedule.Tags.Any(t => t.TagName == str)))
                 {
                     // New tags
                     var tag = tags.FirstOrDefault(t => t.TagName == text) ?? new Tag(text);
-                    Schedule.Tags.Add(tag);
+                        schedule.Tags.Add(tag);
                 }
-                foreach (var tag in Schedule.Tags.Where(t => !Tags.Contains(t.TagName)).ToList() ?? Enumerable.Empty<Tag>())
+                foreach (var tag in schedule.Tags.Where(t => !this.tags.Contains(t.TagName)).ToList() ?? Enumerable.Empty<Tag>())
                 {
-                    Schedule.Tags.Remove(tag);
+                    schedule.Tags.Remove(tag);
                 }
 
                 using var transaction = context.Database.BeginTransaction();
                 await context.SaveChangesAsync();
                 try
                 {
-                    await SchedulerService.UpdateScheduleAsync(Schedule);
+                    await SchedulerService.UpdateScheduleAsync(schedule);
                     transaction.Commit();
                 }
                 catch (Exception)
@@ -242,9 +240,9 @@
                     throw;
                 }
 
-                await OnSubmit.InvokeAsync(Schedule);
-                await Offcanvas.LetAsync(x => x.HideAsync());
-                Tags.Clear();
+                await OnSubmit.InvokeAsync(schedule);
+                await offcanvas.LetAsync(x => x.HideAsync());
+                this.tags.Clear();
             }
             catch (Exception ex)
             {
@@ -258,7 +256,7 @@
         if (scheduleId != Guid.Empty)
         {
             using var context = DbContextFactory.CreateDbContext();
-            Schedule = await context.Schedules
+            schedule = await context.Schedules
                 .AsNoTracking()
                 .Include(s => s.Tags)
                 .Include(s => s.Job)
@@ -268,18 +266,18 @@
         {
             var jobId = Job?.JobId ?? Jobs.FirstOrDefault()?.JobId;
             ArgumentNullException.ThrowIfNull(jobId);
-            Schedule = new((Guid)jobId)
+            schedule = new((Guid)jobId)
             {
                 Tags = new List<Tag>()
             };
         }
 
-        Tags = Schedule.Tags
+        tags = schedule.Tags
                 .Select(t => t.TagName)
                 .OrderBy(t => t)
                 .ToList();
 
-        await Offcanvas.LetAsync(x => x.ShowAsync());
+        await offcanvas.LetAsync(x => x.ShowAsync());
     }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)

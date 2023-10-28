@@ -14,13 +14,9 @@ namespace Biflow.Ui.Shared.JobDetails;
 public partial class StepsComponent : ComponentBase
 {
     [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
-        
     [Inject] private StepsDuplicatorFactory StepDuplicatorFactory { get; set; } = null!;
-        
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
-
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
-
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
     
     [CascadingParameter] public Job? Job { get; set; }
@@ -45,15 +41,41 @@ public partial class StepsComponent : ComponentBase
 
     [Parameter] public Guid? InitialStepId { get; set; }
 
+    private readonly HashSet<StepType> stepTypeFilter = [];
+    private readonly Dictionary<StepType, IStepEditModal?> stepEditModals = [];
+    private readonly HashSet<ConnectionInfoBase> connectionFilter = [];
+    private readonly HashSet<Tag> tagsFilterSet = [];
+
+    private HashSet<Step> selectedSteps = [];
+    private StepsBatchEditTagsModal? batchEditTagsModal;
+    private StepsBatchEditExecPhaseModal? batchEditExecPhaseModal;
+    private StepsBatchEditRenameModal? batchEditRenameModal;
+    private StepsBatchEditRetriesModal? batchEditRetriesModal;
+    private StepsBatchEditRetryIntervalModal? batchEditRetryIntervalModal;
+    private StepsCopyOffcanvas? stepsCopyOffcanvas;
+    private StepDetailsModal? stepDetailsModal;
+    private StepHistoryOffcanvas? stepHistoryOffcanvas;
+    private ExecuteModal? executeModal;
+    private AdvancedFiltersOffcanvas? advancedFiltersOffcanvas;
+    private string stepNameFilter = string.Empty;
+    private string stepDescriptionFilter = string.Empty;
+    private string sqlStatementFilter = string.Empty;
+    private Guid? lastStartedExecutionId;
+    private bool showDetails = false;
+    private bool initialStepModalShouldOpen = true;
+    private StateFilter stateFilter = StateFilter.All;
+
+    private enum StateFilter { All, Enabled, Disabled }
+
     private IEnumerable<Step> FilteredSteps => Steps?
         .Where(step => stateFilter switch { StateFilter.Enabled => step.IsEnabled, StateFilter.Disabled => !step.IsEnabled, _ => true })
-        .Where(step => StepNameFilter.Length == 0 || (step.StepName?.ContainsIgnoreCase(StepNameFilter) ?? false))
-        .Where(step => StepDescriptionFilter.Length == 0 || (step.StepDescription?.ContainsIgnoreCase(StepDescriptionFilter) ?? false))
-        .Where(step => SqlStatementFilter.Length == 0 || step is SqlStep sql && (sql.SqlStatement?.ContainsIgnoreCase(SqlStatementFilter) ?? false))
-        .Where(step => TagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName)))
-        .Where(step => StepTypeFilter.Count == 0 || StepTypeFilter.Contains(step.StepType))
-        .Where(step => ConnectionFilter.Count == 0 || step is IHasConnection conn && ConnectionFilter.Any(f => f.ConnectionId == conn.ConnectionId))
-        .Where(step => AdvancedFiltersOffcanvas?.EvaluatePredicates(step) ?? true)
+        .Where(step => stepNameFilter.Length == 0 || (step.StepName?.ContainsIgnoreCase(stepNameFilter) ?? false))
+        .Where(step => stepDescriptionFilter.Length == 0 || (step.StepDescription?.ContainsIgnoreCase(stepDescriptionFilter) ?? false))
+        .Where(step => sqlStatementFilter.Length == 0 || step is SqlStep sql && (sql.SqlStatement?.ContainsIgnoreCase(sqlStatementFilter) ?? false))
+        .Where(step => tagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName)))
+        .Where(step => stepTypeFilter.Count == 0 || stepTypeFilter.Contains(step.StepType))
+        .Where(step => connectionFilter.Count == 0 || step is IHasConnection conn && connectionFilter.Any(f => f.ConnectionId == conn.ConnectionId))
+        .Where(step => advancedFiltersOffcanvas?.EvaluatePredicates(step) ?? true)
         ?? Enumerable.Empty<Step>();
 
     private IEnumerable<Tag> Tags => Steps?
@@ -62,58 +84,21 @@ public partial class StepsComponent : ComponentBase
         .OrderBy(t => t.TagName)
         ?? Enumerable.Empty<Tag>();
 
-    private HashSet<Step> SelectedSteps { get; set; } = [];
-
-    private Dictionary<StepType, IStepEditModal?> StepEditModals { get; } = [];
-
-    private StepsBatchEditTagsModal? BatchEditTagsModal { get; set; }
-
-    private StepsBatchEditExecPhaseModal? BatchEditExecPhaseModal { get; set; }
-
-    private StepsBatchEditRenameModal? BatchEditRenameModal { get; set; }
-
-    private StepsBatchEditRetriesModal? BatchEditRetriesModal { get; set; }
-
-    private StepsBatchEditRetryIntervalModal? BatchEditRetryIntervalModal { get; set; }
-
-    private StepsCopyOffcanvas? StepsCopyOffcanvas { get; set; }
-
-    private StepDetailsModal? StepDetailsModal { get; set; }
-
-    private StepHistoryOffcanvas? StepHistoryOffcanvas { get; set; }
-
-    private ExecuteModal? ExecuteModal { get; set; }
-
-    private AdvancedFiltersOffcanvas? AdvancedFiltersOffcanvas { get; set; }
-
-    private string StepNameFilter { get; set; } = string.Empty;
-    private string StepDescriptionFilter { get; set; } = string.Empty;
-    private string SqlStatementFilter { get; set; } = string.Empty;
-    private HashSet<Tag> TagsFilterSet { get; set; } = [];
-    private HashSet<StepType> StepTypeFilter { get; } = [];
-    private HashSet<ConnectionInfoBase> ConnectionFilter { get; set;} = [];
-
-    private Guid? LastStartedExecutionId { get; set; }
-
-    private bool ShowDetails { get; set; } = false;
-
-    private bool InitialStepModalShouldOpen { get; set; } = true;
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (InitialStepModalShouldOpen && InitialStepId is Guid stepId)
+        if (initialStepModalShouldOpen && InitialStepId is Guid stepId)
         {
             var step = Steps?.FirstOrDefault(s => s.StepId == stepId);
             if (step is not null)
             {
-                InitialStepModalShouldOpen = false;
-                var editModal = StepEditModals.GetValueOrDefault(step.StepType);
+                initialStepModalShouldOpen = false;
+                var editModal = stepEditModals.GetValueOrDefault(step.StepType);
                 if (editModal is not null)
                 {
                     await editModal.ShowAsync(stepId);
                     return;
                 }
-                await StepDetailsModal.LetAsync(x => x.ShowAsync(step));
+                await stepDetailsModal.LetAsync(x => x.ShowAsync(step));
             }
         }
     }
@@ -131,10 +116,6 @@ public partial class StepsComponent : ComponentBase
         _ => false,
     };
 
-    private enum StateFilter { All, Enabled, Disabled }
-
-    private StateFilter stateFilter = StateFilter.All;
-
     private async Task ShowEditModal(Step step) => await OpenStepEditModal(step.StepId, step.StepType);
 
     private async Task ShowNewStepModal(StepType stepType) => await OpenStepEditModal(Guid.Empty, stepType);
@@ -142,37 +123,37 @@ public partial class StepsComponent : ComponentBase
     private async Task OpenStepEditModal(Guid stepId, StepType? stepType)
     {
         if (stepType is not null)
-            await StepEditModals[(StepType)stepType].LetAsync(x => x.ShowAsync(stepId));
+            await stepEditModals[(StepType)stepType].LetAsync(x => x.ShowAsync(stepId));
     }
 
     private void ToggleAllStepsSelected(bool value)
     {
         if (value)
         {
-            var stepsToAdd = FilteredSteps.Where(s => !SelectedSteps.Contains(s));
-            foreach (var s in stepsToAdd) SelectedSteps.Add(s);
+            var stepsToAdd = FilteredSteps.Where(s => !selectedSteps.Contains(s));
+            foreach (var s in stepsToAdd) selectedSteps.Add(s);
         }
         else
         {
-            SelectedSteps.Clear();
+            selectedSteps.Clear();
         }
     }
 
     private async Task DeleteSelectedSteps()
     {
-        if (!await Confirmer.ConfirmAsync("Delete steps", $"Are you sure you want to delete {SelectedSteps.Count} steps?"))
+        if (!await Confirmer.ConfirmAsync("Delete steps", $"Are you sure you want to delete {selectedSteps.Count} steps?"))
         {
             return;
         }
         try
         {
             using var context = DbFactory.CreateDbContext();
-            foreach (var step in SelectedSteps)
+            foreach (var step in selectedSteps)
             {
                 context.Steps.Remove(step);
             }
             await context.SaveChangesAsync();
-            foreach (var step in SelectedSteps)
+            foreach (var step in selectedSteps)
             {
                 Steps?.Remove(step);
 
@@ -183,7 +164,7 @@ public partial class StepsComponent : ComponentBase
                     dependant.Dependencies.Remove(dependency);
                 }
             }
-            SelectedSteps.Clear();
+            selectedSteps.Clear();
         }
         catch (Exception ex)
         {
@@ -219,7 +200,7 @@ public partial class StepsComponent : ComponentBase
             context.Steps.Remove(step);
             await context.SaveChangesAsync();
             Steps?.Remove(step);
-            SelectedSteps.Remove(step);
+            selectedSteps.Remove(step);
 
             // Remove the deleted step from dependencies.
             foreach (var dependant in Steps?.Where(s => s.Dependencies.Any(d => d.DependantOnStepId == step.StepId)) ?? Enumerable.Empty<Step>())
@@ -255,11 +236,11 @@ public partial class StepsComponent : ComponentBase
         Steps?.Add(step);
         SortSteps?.Invoke();
 
-        var selectedStep = SelectedSteps.FirstOrDefault(s => s.StepId == step.StepId);
+        var selectedStep = selectedSteps.FirstOrDefault(s => s.StepId == step.StepId);
         if (selectedStep is not null)
         {
-            SelectedSteps.Remove(selectedStep);
-            SelectedSteps.Add(step);
+            selectedSteps.Remove(selectedStep);
+            selectedSteps.Add(step);
         }
     }
 
@@ -274,12 +255,12 @@ public partial class StepsComponent : ComponentBase
         Steps?.AddRange(steps);
         SortSteps?.Invoke();
 
-        SelectedSteps = steps.ToHashSet();
+        selectedSteps = steps.ToHashSet();
     }
 
     private async Task ToggleSelectedStepsEnabledAsync(bool enabled)
     {
-        var steps = SelectedSteps
+        var steps = selectedSteps
             .Where(s => s.IsEnabled != enabled)
             .ToArray();
         try
@@ -300,7 +281,7 @@ public partial class StepsComponent : ComponentBase
 
     private void OnExecutionStarted(Guid executionId)
     {
-        LastStartedExecutionId = executionId;
+        lastStartedExecutionId = executionId;
     }
 
 }

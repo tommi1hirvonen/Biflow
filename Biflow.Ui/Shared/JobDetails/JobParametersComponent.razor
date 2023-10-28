@@ -1,6 +1,6 @@
 ﻿<PageTitle>@Job?.JobName | Parameters | Biflow</PageTitle>
 
-@if (EditJob is null || Steps is null)
+@if (editJob is null || Steps is null)
 {
     <div class="row mt-3">
         <div class="col text-center">
@@ -39,10 +39,10 @@ else
     <div class="row my-4">
         <div class="col">
             <div class="card shadow-sm">
-                <EditForm id="job_parameter_form" Model="EditJob" OnValidSubmit="SubmitParameters">
+                <EditForm id="job_parameter_form" Model="editJob" OnValidSubmit="SubmitParameters">
                     <ObjectGraphDataAnnotationsValidator />
                     <ValidationSummary />
-                    <FluentValidationValidator @ref="FluentJobValidator" Validator="JobValidator" />
+                    <FluentValidationValidator @ref="fluentJobValidator" Validator="JobValidator" />
                     <table id="parameters_table" class="table">
                         <thead>
                             <tr>
@@ -62,11 +62,11 @@ else
                             </tr>
                         </thead>
                         <tbody>
-                            @if (!EditJob?.JobParameters?.Any() ?? true)
+                            @if (!editJob?.JobParameters?.Any() ?? true)
                             {
                                 <tr><td colspan="5">No parameters</td></tr>
                             }
-                            @foreach (var param in EditJob?.JobParameters ?? Enumerable.Empty<JobParameter>())
+                            @foreach (var param in editJob?.JobParameters ?? Enumerable.Empty<JobParameter>())
                             {
                                 var referenceCount = GetInheritingSteps(param)
                                     .Concat(GetCapturingSteps(param))
@@ -78,11 +78,11 @@ else
                                         <InputText class="form-control form-control-sm"
                                                    @bind-Value="param.ParameterName"
                                                    placeholder="Name"
-                                                   @bind-Value:after="() => FluentJobValidator.LetAsync(x => x.ValidateAsync())" />
+                                                   @bind-Value:after="() => fluentJobValidator.LetAsync(x => x.ValidateAsync())" />
                                     </td>
                                     <DynamicParameterEditComponent Parameter="param"
                                                                    TParameter="JobParameter"
-                                                                   OnParameterEdit="p => ExpressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))">
+                                                                   OnParameterEdit="p => expressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))">
                                         <StaticEditTemplate>
                                             <ParameterTypeValueEditComponent Parameter="param" />
                                         </StaticEditTemplate>
@@ -112,7 +112,7 @@ else
     </div>
 }
 
-<ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" TParameter="JobParameter" OnExpressionChanged="StateHasChanged">
+<ExpressionEditOffcanvas @ref="expressionEditOffcanvas" TParameter="JobParameter" OnExpressionChanged="StateHasChanged">
     <div class="row mt-3">
         <div class="col text-secondary small">
             Job parameter expressions have the following built-in variables automatically available. They can be used to access the internal ids during execution.
@@ -124,7 +124,7 @@ else
     </div>
 </ExpressionEditOffcanvas>
 
-<HxOffcanvas @ref="ReferencingStepsOffcanvas" Title="@($"Steps referencing {ReferencingSteps.Parameter.ParameterName}")" Backdrop="OffcanvasBackdrop.False">
+<HxOffcanvas @ref="referencingStepsOffcanvas" Title="@($"Steps referencing {referencingSteps.Parameter.ParameterName}")" Backdrop="OffcanvasBackdrop.False">
     <BodyTemplate>
         <h6>
             Inheriting steps
@@ -142,13 +142,13 @@ else
                 </tr>
             </thead>
             <tbody>
-                @if (!ReferencingSteps.InheritingSteps.Any())
+                @if (!referencingSteps.InheritingSteps.Any())
                 {
                     <tr><td class="text-muted">No inheriting steps</td></tr>
                 }
                 else
                 {
-                    foreach (var step in ReferencingSteps.InheritingSteps)
+                    foreach (var step in referencingSteps.InheritingSteps)
                     {
                         <tr>
                             <td>
@@ -177,13 +177,13 @@ else
                 </tr>
             </thead>
             <tbody>
-                @if (!ReferencingSteps.CapturingSteps.Any())
+                @if (!referencingSteps.CapturingSteps.Any())
                 {
                     <tr><td class="text-muted">No capturing steps</td></tr>
                 }
                 else
                 {
-                    foreach (var step in ReferencingSteps.CapturingSteps)
+                    foreach (var step in referencingSteps.CapturingSteps)
                     {
                         <tr>
                             <td>
@@ -215,13 +215,13 @@ else
                 </tr>
             </thead>
             <tbody>
-                @if (!ReferencingSteps.AssigningSteps.Any())
+                @if (!referencingSteps.AssigningSteps.Any())
                 {
                     <tr><td class="text-muted" colspan="2">No assigning steps</td></tr>
                 }
                 else
                 {
-                    foreach (var step in ReferencingSteps.AssigningSteps)
+                    foreach (var step in referencingSteps.AssigningSteps)
                     {
                         <tr>
                             <td>
@@ -254,13 +254,13 @@ else
                 </tr>
             </thead>
             <tbody>
-                @if (!ReferencingSteps.ExecutionConditionSteps.Any())
+                @if (!referencingSteps.ExecutionConditionSteps.Any())
                 {
                     <tr><td class="text-muted" colspan="2">No execution conditions</td></tr>
                 }
                 else
                 {
-                    foreach (var step in ReferencingSteps.ExecutionConditionSteps)
+                    foreach (var step in referencingSteps.ExecutionConditionSteps)
                     {
                         <tr>
                             <td>
@@ -275,7 +275,7 @@ else
         </table>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" OnClick="() => ReferencingStepsOffcanvas.LetAsync(x => x.HideAsync())" Spinner="false">
+        <HxButton Color="ThemeColor.Secondary" OnClick="() => referencingStepsOffcanvas.LetAsync(x => x.HideAsync())" Spinner="false">
             Close
         </HxButton>
     </FooterTemplate>

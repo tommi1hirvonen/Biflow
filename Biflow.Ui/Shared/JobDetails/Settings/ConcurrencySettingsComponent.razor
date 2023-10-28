@@ -4,9 +4,9 @@
 @inject IHxMessengerService Messenger
 @inject JobValidator JobValidator
 
-@if (EditJob is not null)
+@if (editJob is not null)
 {
-    <EditForm id="job_concurrency_form" Model="EditJob" OnValidSubmit="OnSubmit">
+    <EditForm id="job_concurrency_form" Model="editJob" OnValidSubmit="OnSubmit">
 
         <ObjectGraphDataAnnotationsValidator />
         <ValidationSummary />
@@ -19,7 +19,7 @@
 
         <div>
             <label class="form-label">Max parallel steps (0 = use default)</label>
-            <InputNumber class="form-control form-control-sm" style="max-width: 10rem;" @bind-Value="EditJob.MaxParallelSteps"></InputNumber>
+            <InputNumber class="form-control form-control-sm" style="max-width: 10rem;" @bind-Value="editJob.MaxParallelSteps"></InputNumber>
         </div>
 
         <div class="row mt-3">
@@ -33,9 +33,9 @@
                         <HxDropdownHeader>
                             Step type
                         </HxDropdownHeader>
-                        @foreach (var stepType in Enum.GetValues<StepType>().Where(type => !EditJob.JobConcurrencies.Any(c => c.StepType == type)))
+                        @foreach (var stepType in Enum.GetValues<StepType>().Where(type => !editJob.JobConcurrencies.Any(c => c.StepType == type)))
                         {
-                            <HxDropdownItem @onclick="() => EditJob.JobConcurrencies.Add(new JobConcurrency { StepType = stepType })">
+                            <HxDropdownItem @onclick="() => editJob.JobConcurrencies.Add(new JobConcurrency { StepType = stepType })">
                                 <StepTypeIconComponent StepType_="stepType" />
                                 @stepType
                             </HxDropdownItem>
@@ -54,7 +54,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var concur in EditJob.JobConcurrencies.OrderBy(c => c.StepType))
+                @foreach (var concur in editJob.JobConcurrencies.OrderBy(c => c.StepType))
                 {
                     <tr>
                         <td class="align-middle">
@@ -66,7 +66,7 @@
                         </td>
                         <td>
                             <HxButtonGroup Size="ButtonGroupSize.Small">
-                                <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto" @onclick="() => EditJob.JobConcurrencies.Remove(concur)">
+                                <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto" @onclick="() => editJob.JobConcurrencies.Remove(concur)">
                                     <CxIcon Icon="FeatherIcon.Delete" />
                                 </HxButton>
                             </HxButtonGroup>
@@ -90,30 +90,29 @@
 @code {
     [CascadingParameter] Job? Job { get; set; }
 
-    private AppDbContext? Context { get; set; }
-
-    private Job? EditJob { get; set; }
+    private AppDbContext? context;
+    private Job? editJob;
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Job is null || Context is not null)
+        if (Job is null || context is not null)
         {
             return;
         }
 
-        Context = DbContextFactory.CreateDbContext();
-        EditJob = await Context.Jobs
+        context = DbContextFactory.CreateDbContext();
+        editJob = await context.Jobs
             .Include(j => j.JobConcurrencies)
             .FirstAsync(j => j.JobId == Job.JobId);
     }
 
     private async Task OnSubmit()
     {
-        ArgumentNullException.ThrowIfNull(EditJob);
+        ArgumentNullException.ThrowIfNull(editJob);
         try
         {
-            ArgumentNullException.ThrowIfNull(Context);
-            await Context.SaveChangesAsync();
+            ArgumentNullException.ThrowIfNull(context);
+            await context.SaveChangesAsync();
             Messenger.AddInformation("Concurrency settings saved successfully");
         }
         catch (DbUpdateConcurrencyException)
@@ -130,6 +129,6 @@
 
     public void Dispose()
     {
-        Context?.Dispose();
+        context?.Dispose();
     }
 }

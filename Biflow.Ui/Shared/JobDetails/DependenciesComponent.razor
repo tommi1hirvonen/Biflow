@@ -20,7 +20,7 @@
 
 <div class="row align-items-end mb-3">
     <div class="col-xl-5 col-lg-5 col-12">
-        <HxAutosuggest  @bind-Value="StepFilter"
+        <HxAutosuggest  @bind-Value="stepFilter"
                         @bind-Value:after="LoadGraph"
                         DataProvider="ProvideSuggestions"
                         TextSelector="TextSelector"
@@ -47,7 +47,7 @@
                     </span>
                 </ChildContent>
             </HxPopover>
-            <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthBackwards" disabled=@(StepFilter is null) style="max-width: 9rem;" />
+            <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthBackwards" disabled=@(stepFilter is null) style="max-width: 9rem;" />
         </div>
         <div class="form-group ms-3">
             <label class="form-label">Depth forwards</label>
@@ -58,7 +58,7 @@
                     </span>
                 </ChildContent>
             </HxPopover>
-            <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthForwards" disabled=@(StepFilter is null) style="max-width: 9rem;" />
+            <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthForwards" disabled=@(stepFilter is null) style="max-width: 9rem;" />
         </div>
         <HxButton CssClass="ms-3" Size="ButtonSize.Small" Color="ThemeColor.Secondary" OnClick="LoadGraph">
             Apply depth filters
@@ -67,7 +67,7 @@
 
 </div>
 
-<DependencyGraph @ref="DependencyGraph"
+<DependencyGraph @ref="dependencyGraph"
                  TItem="Step"
                  Items="Steps ?? Enumerable.Empty<Step>()"
                  KeySelector="s => s.StepId.ToString()"
@@ -81,7 +81,7 @@
             </h6>
         </li>
         <li>
-            <span class="dropdown-item" role="button" @onclick="async () => { StepFilter = step; await LoadGraph();}">
+            <span class="dropdown-item" role="button" @onclick="async () => { stepFilter = step; await LoadGraph();}">
                 <CxIcon Icon="FeatherIcon.Filter" />
                 Limit graph to this
             </span>
@@ -117,7 +117,7 @@
             </li>
         </AuthorizeView>
         <li>
-            <span class="dropdown-item" role="button" @onclick="() => StepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
+            <span class="dropdown-item" role="button" @onclick="() => stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
                 <CxIcon Icon="LucideIcon.History" />
                 History
             </span>
@@ -125,44 +125,44 @@
     </DropdownMenuTemplate>
 </DependencyGraph>
 
-<StepHistoryOffcanvas @ref="StepHistoryOffcanvas" />
+<StepHistoryOffcanvas @ref="stepHistoryOffcanvas" />
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-    <SqlStepEditModal @ref="StepEditModals[StepType.Sql]"
+    <SqlStepEditModal @ref="stepEditModals[StepType.Sql]"
         Connections="SqlConnections"
         OnStepSubmit="OnStepSubmit" />
-    <TabularStepEditModal @ref="StepEditModals[StepType.Tabular]"
+    <TabularStepEditModal @ref="stepEditModals[StepType.Tabular]"
         Connections="SqlConnections"
         AsConnections="AsConnections"
         OnStepSubmit="OnStepSubmit" />
-    <DatasetStepEditModal @ref="StepEditModals[StepType.Dataset]"
+    <DatasetStepEditModal @ref="stepEditModals[StepType.Dataset]"
         Connections="SqlConnections"
         AppRegistrations="AppRegistrations"
         OnStepSubmit="OnStepSubmit" />
-    <ExeStepEditModal @ref="StepEditModals[StepType.Exe]"
+    <ExeStepEditModal @ref="stepEditModals[StepType.Exe]"
         Connections="SqlConnections"
         OnStepSubmit="OnStepSubmit" />
-    <JobStepEditModal @ref="StepEditModals[StepType.Job]"
+    <JobStepEditModal @ref="stepEditModals[StepType.Job]"
         Connections="SqlConnections"
         OnStepSubmit="OnStepSubmit" />
-    <PackageStepEditModal @ref="StepEditModals[StepType.Package]"
+    <PackageStepEditModal @ref="stepEditModals[StepType.Package]"
         Connections="SqlConnections"
         OnStepSubmit="OnStepSubmit" />
-    <PipelineStepEditModal @ref="StepEditModals[StepType.Pipeline]"
+    <PipelineStepEditModal @ref="stepEditModals[StepType.Pipeline]"
         Connections="SqlConnections"
         PipelineClients="PipelineClients"
         OnStepSubmit="OnStepSubmit" />
-    <FunctionStepEditModal @ref="StepEditModals[StepType.Function]"
+    <FunctionStepEditModal @ref="stepEditModals[StepType.Function]"
         Connections="SqlConnections"
         FunctionApps="FunctionApps"
         OnStepSubmit="OnStepSubmit" />
-    <AgentJobStepEditModal @ref="StepEditModals[StepType.AgentJob]"
+    <AgentJobStepEditModal @ref="stepEditModals[StepType.AgentJob]"
         Connections="SqlConnections"
         OnStepSubmit="OnStepSubmit" />
-    <EmailStepEditModal @ref="StepEditModals[StepType.Email]"
+    <EmailStepEditModal @ref="stepEditModals[StepType.Email]"
         Connections="SqlConnections"
         OnStepSubmit="OnStepSubmit" />
-    <QlikStepEditModal @ref="StepEditModals[StepType.Qlik]"
+    <QlikStepEditModal @ref="stepEditModals[StepType.Qlik]"
         Clients="QlikCloudClients"
         OnStepSubmit="OnStepSubmit" />
 </AuthorizeView>
@@ -186,13 +186,11 @@
 
     [Parameter] public Guid? InitialStepId { get; set; }
 
-    private DependencyGraph<Step>? DependencyGraph { get; set; }
-
-    private Dictionary<StepType, IStepEditModal?> StepEditModals = new();
-
-    private StepHistoryOffcanvas? StepHistoryOffcanvas { get; set; }
-
-    private Step? StepFilter { get; set; }
+    private readonly Dictionary<StepType, IStepEditModal?> stepEditModals = [];
+    
+    private DependencyGraph<Step>? dependencyGraph;
+    private StepHistoryOffcanvas? stepHistoryOffcanvas;
+    private Step? stepFilter;
 
     private int FilterDepthBackwards
     {
@@ -216,7 +214,7 @@
         {
             if (InitialStepId is Guid filterStepId)
             {
-                StepFilter = Steps?.FirstOrDefault(s => s.StepId == filterStepId);
+                stepFilter = Steps?.FirstOrDefault(s => s.StepId == filterStepId);
                 StateHasChanged();
             }
         }
@@ -226,7 +224,7 @@
     {
         ArgumentNullException.ThrowIfNull(Job);
         ArgumentNullException.ThrowIfNull(Steps);
-        ArgumentNullException.ThrowIfNull(DependencyGraph);
+        ArgumentNullException.ThrowIfNull(dependencyGraph);
 
         using var context = await DbFactory.CreateDbContextAsync();
         var stepSlims = await context.Steps
@@ -238,7 +236,7 @@
 
         List<DependencyGraphNode> nodes;
         List<DependencyGraphEdge> edges;
-        if (StepFilter is null)
+        if (stepFilter is null)
         {
             // Create a list of steps and dependencies and send them through JSInterop as JSON objects.
             nodes = stepSlims.Select(step => new DependencyGraphNode(
@@ -258,7 +256,7 @@
         }
         else
         {
-            var startStep = stepSlims.FirstOrDefault(s => s.StepId == StepFilter.StepId);
+            var startStep = stepSlims.FirstOrDefault(s => s.StepId == stepFilter.StepId);
             if (startStep is not null)
             {
                 var steps = RecurseDependenciesBackward(startStep, stepSlims, new(), 0);
@@ -287,7 +285,7 @@
             }
         }
 
-        await DependencyGraph.DrawAsync(nodes, edges);
+        await dependencyGraph.DrawAsync(nodes, edges);
     }
 
     private List<StepProjection> RecurseDependenciesBackward(StepProjection step, List<StepProjection> allSteps, List<StepProjection> processedSteps, int depth)
@@ -352,7 +350,7 @@
     }
 
     private Task OpenStepEditModalAsync(Step step) =>
-        StepEditModals[step.StepType].LetAsync(x => x.ShowAsync(step.StepId, StepEditModalView.Dependencies));
+        stepEditModals[step.StepType].LetAsync(x => x.ShowAsync(step.StepId, StepEditModalView.Dependencies));
 
     private async Task OnStepSubmit(Step step)
     {

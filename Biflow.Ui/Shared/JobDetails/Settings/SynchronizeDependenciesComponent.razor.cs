@@ -23,9 +23,8 @@ public partial class SynchronizeDependenciesComponent : ComponentBase
 
     [CascadingParameter] public List<Step>? Steps { get; set; }
 
-    private List<Dependency>? DependenciesToAdd { get; set; }
-    
-    private List<Dependency>? DependenciesToRemove { get; set; }
+    private List<Dependency>? dependenciesToAdd;
+    private List<Dependency>? dependenciesToRemove;
 
     private async Task CalculateChangesAsync()
     {
@@ -40,8 +39,8 @@ public partial class SynchronizeDependenciesComponent : ComponentBase
             .ThenInclude(dep => dep.DependantOnStep)
             .ToListAsync();
 
-        DependenciesToAdd = [];
-        DependenciesToRemove = [];
+        dependenciesToAdd = [];
+        dependenciesToRemove = [];
 
         foreach (var step in steps)
         {
@@ -55,7 +54,7 @@ public partial class SynchronizeDependenciesComponent : ComponentBase
                     Step = step,
                     DependantOnStep = missing
                 };
-                DependenciesToAdd.Add(dependency);
+                dependenciesToAdd.Add(dependency);
             }
 
             // Check for unnecessary dependencies based on sources and targets.
@@ -63,7 +62,7 @@ public partial class SynchronizeDependenciesComponent : ComponentBase
             if (step.Sources.Any())
             {
                 var extraDependencies = step.Dependencies.Where(d => !dependencies.Any(dep => d.DependantOnStepId == dep.StepId));
-                DependenciesToRemove.AddRange(extraDependencies);
+                dependenciesToRemove.AddRange(extraDependencies);
             }
         }
     }
@@ -72,16 +71,16 @@ public partial class SynchronizeDependenciesComponent : ComponentBase
     {
         try
         {
-            while (DependenciesToAdd?.Any() ?? false)
+            while (dependenciesToAdd?.Count > 0)
             {
-                await AddDependencyAsync(DependenciesToAdd.First());
+                await AddDependencyAsync(dependenciesToAdd.First());
             }
-            while (DependenciesToRemove?.Any() ?? false)
+            while (dependenciesToRemove?.Count > 0)
             {
-                await RemoveDependencyAsync(DependenciesToRemove.First());
+                await RemoveDependencyAsync(dependenciesToRemove.First());
             }
-            DependenciesToAdd = null;
-            DependenciesToRemove = null;
+            dependenciesToAdd = null;
+            dependenciesToRemove = null;
             SortSteps?.Invoke();
             Messenger.AddInformation("Changes saved successfully");
         }
@@ -115,7 +114,7 @@ public partial class SynchronizeDependenciesComponent : ComponentBase
             step.Dependencies.Add(dependency);
         }
 
-        DependenciesToAdd?.Remove(dependency);
+        dependenciesToAdd?.Remove(dependency);
     }
 
     private async Task RemoveDependencyAsync(Dependency dependency)
@@ -139,7 +138,7 @@ public partial class SynchronizeDependenciesComponent : ComponentBase
         }
 
         // Dependency was handled => remove from list of modifications.
-        DependenciesToRemove?.Remove(dependency);
+        dependenciesToRemove?.Remove(dependency);
     }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)

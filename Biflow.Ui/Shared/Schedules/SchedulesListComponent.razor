@@ -6,7 +6,7 @@
     <div class="row mt-3">
         <div class="col">
             <HxButton Color="ThemeColor.Success"
-                      @onclick="async () => await EditModal.LetAsync(x => x.ShowAsync(Guid.Empty))"
+                      @onclick="async () => await editModal.LetAsync(x => x.ShowAsync(Guid.Empty))"
                       Enabled="Jobs is not null && Jobs?.Any() == true">
                 Add schedule
             </HxButton>
@@ -16,7 +16,7 @@
             </HxButton>
         </div>
         <div class="col text-end">
-            <HxButton Color="ThemeColor.None" CssClass="btn-auto" OnClick="async () => await HelpModal.LetAsync(x => x.ShowAsync())">
+            <HxButton Color="ThemeColor.None" CssClass="btn-auto" OnClick="async () => await helpModal.LetAsync(x => x.ShowAsync())">
                 <CxIcon Icon="FeatherIcon.HelpCircle" />
             </HxButton>
         </div>
@@ -120,7 +120,7 @@
                             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                                 <HxButtonGroup Size="ButtonGroupSize.Small">
                                     <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto"
-                                              @onclick="async () => await EditModal.LetAsync(x => x.ShowAsync(item.ScheduleId))">
+                                              @onclick="async () => await editModal.LetAsync(x => x.ShowAsync(item.ScheduleId))">
                                         <CxIcon Icon="FeatherIcon.Edit2" />
                                     </HxButton>
                                     <HxDropdownButtonGroup>
@@ -143,10 +143,10 @@
 </div>
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-    <ScheduleEditModal @ref="EditModal" Jobs="Jobs" OnSubmit="OnScheduleSubmitAsync" />
+    <ScheduleEditModal @ref="editModal" Jobs="Jobs" OnSubmit="OnScheduleSubmitAsync" />
 </AuthorizeView>
 
-<SchedulesHelpModal @ref="HelpModal" />
+<SchedulesHelpModal @ref="helpModal" />
 
 @code {
     [Parameter] public List<Schedule>? Schedules { get; set; }
@@ -157,9 +157,9 @@
 
     [Parameter] public EventCallback OnSchedulesChanged { get; set; }
 
-    private ScheduleEditModal? EditModal { get; set; }
+    private ScheduleEditModal? editModal;
 
-    private SchedulesHelpModal? HelpModal { get; set; }
+    private SchedulesHelpModal? helpModal;
 
     private async Task ToggleEnabled(ChangeEventArgs args, Schedule schedule)
     {

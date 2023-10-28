@@ -24,46 +24,40 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
 
     [CascadingParameter] public List<Step>? Steps { get; set; }
 
-    private Job? EditJob { get; set; }
-
-    private AppDbContext? Context { get; set; }
-
-    private bool Loading { get; set; } = false;
-
-    private FluentValidationValidator? FluentJobValidator { get; set; }
-
-    private ExpressionEditOffcanvas<JobParameter>? ExpressionEditOffcanvas { get; set; }
-
-    private HxOffcanvas? ReferencingStepsOffcanvas { get; set; }
-    
-    private ReferencingStepsModel ReferencingSteps { get; set; } =
+    private Job? editJob;
+    private AppDbContext? context;
+    private bool loading = false;
+    private FluentValidationValidator? fluentJobValidator;
+    private ExpressionEditOffcanvas<JobParameter>? expressionEditOffcanvas;
+    private HxOffcanvas? referencingStepsOffcanvas;
+    private ReferencingStepsModel referencingSteps =
         new(new(), Enumerable.Empty<Step>(), Enumerable.Empty<Step>(), Enumerable.Empty<Step>(), Enumerable.Empty<Step>());
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Job is null || Loading || Job.JobId == EditJob?.JobId)
+        if (Job is null || loading || Job.JobId == editJob?.JobId)
         {
             return;
         }
-        Loading = true;
-        Context?.Dispose();
-        Context = DbContextFactory.CreateDbContext();
-        EditJob = await Context.Jobs
+        loading = true;
+        context?.Dispose();
+        context = DbContextFactory.CreateDbContext();
+        editJob = await context.Jobs
             .Include(j => j.JobParameters)
             .ThenInclude(j => j.AssigningStepParameters)
             .ThenInclude(p => p.Step) // Assigning steps are from other jobs, which means they are not in the Steps List property
             .ThenInclude(s => s.Job)
             .FirstAsync(j => j.JobId == Job.JobId);
-        EditJob.JobParameters = EditJob.JobParameters.OrderBy(p => p.ParameterName).ToList();
-        Loading = false;
+        editJob.JobParameters = editJob.JobParameters.OrderBy(p => p.ParameterName).ToList();
+        loading = false;
     }
 
-    private void AddParameter() => EditJob?.JobParameters
+    private void AddParameter() => editJob?.JobParameters
         .Insert(0, new JobParameter { ParameterValueType = ParameterValueType.String, AssigningStepParameters = new List<JobStepParameter>() });
 
     private async Task SubmitParameters()
     {
-        foreach (var param in EditJob?.JobParameters ?? Enumerable.Empty<JobParameter>())
+        foreach (var param in editJob?.JobParameters ?? Enumerable.Empty<JobParameter>())
         {
             // Update the referencing job step parameter names to match the possibly changed new name.
             foreach (var referencingJobStepParam in param.AssigningStepParameters)
@@ -74,8 +68,8 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
 
         try
         {
-            ArgumentNullException.ThrowIfNull(Context);
-            await Context.SaveChangesAsync();
+            ArgumentNullException.ThrowIfNull(context);
+            await context.SaveChangesAsync();
             Messenger.AddInformation("Job parameters updated successfully");
         }
         catch (DbUpdateConcurrencyException)
@@ -102,12 +96,12 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
             }
         }
 
-        EditJob?.JobParameters.Remove(parameter);
+        editJob?.JobParameters.Remove(parameter);
     }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
-        if (!Context?.ChangeTracker.HasChanges() ?? true)
+        if (!this.context?.ChangeTracker.HasChanges() ?? true)
         {
             return;
         }
@@ -121,8 +115,8 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
 
     private async Task ShowReferencingStepsAsync(JobParameter param)
     {
-        ReferencingSteps = new(param, GetInheritingSteps(param), GetCapturingSteps(param), GetAssigningSteps(param), GetExecutionConditionSteps(param));
-        await ReferencingStepsOffcanvas.LetAsync(x => x.ShowAsync());
+        referencingSteps = new(param, GetInheritingSteps(param), GetCapturingSteps(param), GetAssigningSteps(param), GetExecutionConditionSteps(param));
+        await referencingStepsOffcanvas.LetAsync(x => x.ShowAsync());
     }
 
     private IEnumerable<Step> GetInheritingSteps(JobParameter parameter) => Steps
@@ -146,7 +140,7 @@ public partial class JobParametersComponent : ComponentBase, IDisposable
         ?.Where(s => s.ExecutionConditionParameters.Any(p => p.JobParameterId == parameter.ParameterId))
         ?? Enumerable.Empty<Step>();
 
-    public void Dispose() => Context?.Dispose();
+    public void Dispose() => context?.Dispose();
 
     private record ReferencingStepsModel(
         JobParameter Parameter,

@@ -3,21 +3,21 @@
 @inject IExecutionBuilderFactory<AppDbContext> BuilderFactory
 @inject IExecutorService Executor
 
-<HxModal @ref="Modal" Fullscreen="ModalFullscreen.Always" Scrollable="true" Title="Execute steps"
+<HxModal @ref="modal" Fullscreen="ModalFullscreen.Always" Scrollable="true" Title="Execute steps"
          BodyCssClass="pt-0"
          OnClosed="OnClosed">
 
     <BodyTemplate>
-        @if (Builder is not null)
+        @if (builder is not null)
         {
             var (stepsCount, stepParamsCount, jobParamsCount) = (
-                Builder.StepExecutions.Count(),
-                Builder.StepExecutions.Sum(e => e.Parameters.Count()),
-                Builder.Parameters.Count());
+                builder.StepExecutions.Count(),
+                builder.StepExecutions.Sum(e => e.Parameters.Count()),
+                builder.Parameters.Count());
             string badgeClass(int? count) => count > 0 ? "bg-primary" : "bg-secondary";
             <ul class="nav nav-tabs mt-2" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link @(ActiveView == View.Steps ? "active" : null)" @onclick="() => ActiveView = View.Steps" style="cursor: pointer;">
+                    <a class="nav-link @(activeView == View.Steps ? "active" : null)" @onclick="() => activeView = View.Steps" style="cursor: pointer;">
                         Steps
                         <span class="badge rounded-pill ms-3 @badgeClass(stepsCount)">
                             @stepsCount
@@ -25,7 +25,7 @@
                     </a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link @(ActiveView == View.StepParameters ? "active" : null)" @onclick="() => ActiveView = View.StepParameters" style="cursor: pointer;">
+                    <a class="nav-link @(activeView == View.StepParameters ? "active" : null)" @onclick="() => activeView = View.StepParameters" style="cursor: pointer;">
                         Step parameters
                         <span class="badge rounded-pill ms-3 @badgeClass(stepParamsCount)">
                             @stepParamsCount
@@ -33,7 +33,7 @@
                     </a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link @(ActiveView == View.JobParameters ? "active" : null)" @onclick="() => ActiveView = View.JobParameters" style="cursor: pointer;">
+                    <a class="nav-link @(activeView == View.JobParameters ? "active" : null)" @onclick="() => activeView = View.JobParameters" style="cursor: pointer;">
                         Job parameters
                         <span class="badge rounded-pill ms-3 @badgeClass(jobParamsCount)">
                             @jobParamsCount
@@ -42,7 +42,7 @@
                 </li>
             </ul>
 
-            @if (ActiveView == View.Steps)
+            @if (activeView == View.Steps)
             {
                 <div class="row mt-3">
                     <span class="col fst-italic text-secondary small">Disabled steps, if selected, will be included in manual executions.</span>
@@ -60,10 +60,10 @@
                             @foreach (var tag in Tags)
                             {
                                 <TagComponent Tag="tag"
-                                              Selected="ExecuteTagsFilterSet.Contains(tag)"
+                                              Selected="executeTagsFilterSet.Contains(tag)"
                                               CssClass="mx-1"
                                               Style="cursor: pointer;"
-                                              OnClick="() => { if (ExecuteTagsFilterSet.Contains(tag)) ExecuteTagsFilterSet.Remove(tag); else ExecuteTagsFilterSet.Add(tag); }" />
+                                              OnClick="() => { if (executeTagsFilterSet.Contains(tag)) executeTagsFilterSet.Remove(tag); else executeTagsFilterSet.Add(tag); }" />
                             }
                         </div>
                     </div>
@@ -74,13 +74,13 @@
                                     <div class="input-group-text">
                                         <CxIcon Icon="FeatherIcon.Filter" />
                                     </div>
-                                    <input type="search" class="form-control" @bind-value="ExecuteFilterText" @bind-value:event="oninput"
+                                    <input type="search" class="form-control" @bind-value="executeFilterText" @bind-value:event="oninput"
                                            placeholder="Filter by name" autocomplete="off" />
                                 </div>
                                 <div class="col-auto">
                                     <FilterDropdown TItem="StepType"
-                                                    FilterSet="StepTypeFilter"
-                                                    Items="Builder.Steps.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
+                                                    FilterSet="stepTypeFilter"
+                                                    Items="builder.Steps.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
                                                     OnChange="StateHasChanged">
                                         <TitleTemplate>
                                             <CxIcon Icon="FeatherIcon.Tool" />
@@ -94,7 +94,7 @@
                                 </div>
                                 <div class="col-auto">
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
-                                    @onclick="() => { ExecuteTagsFilterSet.Clear(); StepTypeFilter.Clear(); ExecuteFilterText = string.Empty; }">
+                                    @onclick="() => { executeTagsFilterSet.Clear(); stepTypeFilter.Clear(); executeFilterText = string.Empty; }">
                                         <CxIcon Icon="FeatherIcon.X" />
                                         Clear
                                     </HxButton>
@@ -105,17 +105,17 @@
                             <HxButtonGroup>
                                 @*Add all available AND enabled steps that have not yet been added to selected steps. Also filter based on current filter text.*@
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                @onclick="() => Builder.AddAll(s => s.IsEnabled && StepsAvailableToExecute.Any(available => s.StepId == available.StepId))">
+                                @onclick="() => builder.AddAll(s => s.IsEnabled && StepsAvailableToExecute.Any(available => s.StepId == available.StepId))">
                                     <CxIcon Icon="FeatherIcon.ChevronRight" />
                                     Select enabled
                                 </HxButton>
                                 @*Add all available steps that have not yet been added to selected steps. Also filter based on current filter text.*@
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                @onclick="() => Builder.AddAll(step => StepsAvailableToExecute.Any(available => step.StepId == available.StepId))">
+                                @onclick="() => builder.AddAll(step => StepsAvailableToExecute.Any(available => step.StepId == available.StepId))">
                                     <CxIcon Icon="FeatherIcon.ChevronsRight" />
                                     Select all
                                 </HxButton>
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => Builder.Clear()">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => builder.Clear()">
                                     <CxIcon Icon="FeatherIcon.ChevronsLeft" />
                                     Deselect all
                                 </HxButton>
@@ -136,13 +136,13 @@
                                             <td class="@(step.IsEnabled ? null : "text-secondary") align-middle" @onclick="() => step.AddToExecution()">
                                                 <StepTypeIconComponent StepType_="@step.StepType" />
                                                 &nbsp;
-                                                <HighlightableText Text="@step.StepName" PartToHighlight="@ExecuteFilterText" />
+                                                <HighlightableText Text="@step.StepName" PartToHighlight="@executeFilterText" />
                                             </td>
-                                            <td class="@(Builder.DependencyMode == true ? "text-body-tertiary" : null)" @onclick="() => step.AddToExecution()">
+                                            <td class="@(builder.DependencyMode == true ? "text-body-tertiary" : null)" @onclick="() => step.AddToExecution()">
                                                 <CxIcon Icon="FeatherIcon.Layers" />
                                                 <sup>@step.ExecutionPhase</sup>
                                             </td>
-                                            @if (Builder.DependencyMode == true)
+                                            @if (builder.DependencyMode == true)
                                             {
                                                 <td class="text-end pe-2">
                                                     @if (step.HasDependencies)
@@ -172,7 +172,7 @@
                         <div style="overflow-y: scroll; height: calc(100vh - 375px);">
                             <table class="table table-hover table-sm">
                                 <tbody>
-                                    @foreach (var step in Builder.StepExecutions)
+                                    @foreach (var step in builder.StepExecutions)
                                     {
                                         <tr style="cursor: pointer;" @onclick="() => step.RemoveFromExecution()">
                                             <td>
@@ -180,7 +180,7 @@
                                                 &nbsp;
                                                 @step.StepName
                                             </td>
-                                            <td class="@(Builder.DependencyMode == true ? "text-body-tertiary" : null)">
+                                            <td class="@(builder.DependencyMode == true ? "text-body-tertiary" : null)">
                                                 <CxIcon Icon="FeatherIcon.Layers" />
                                                 <sup>@step.ExecutionPhase</sup>
                                             </td>
@@ -188,7 +188,7 @@
                                                 @if (step.SupportsParameters && step.Parameters.Any())
                                                 {
                                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" title="Edit parameters"
-                                                    @onclick="() => { ParameterEditStep = step; ActiveView = View.StepParameters; }">
+                                                    @onclick="() => { parameterEditStep = step; activeView = View.StepParameters; }">
                                                         <CxIcon Icon="FeatherIcon.AtSign" />
                                                     </HxButton>
                                                 }
@@ -202,7 +202,7 @@
 
                 </div>
             }
-            else if (ActiveView == View.StepParameters)
+            else if (activeView == View.StepParameters)
             {
                 <div class="row mt-3">
                     <div class="col-5">
@@ -216,15 +216,15 @@
                         <div style="overflow-y: scroll; height: calc(100vh - 250px);">
                             <table class="table table-hover table-sm">
                                 <tbody>
-                                    @foreach (var step in Builder.StepExecutions.Where(s => s.Parameters.Any()))
+                                    @foreach (var step in builder.StepExecutions.Where(s => s.Parameters.Any()))
                                     {
-                                        <tr style="cursor: pointer;" class="@(step.StepId == ParameterEditStep?.StepId ? "fw-bold" : null)" @onclick="() => ToggleParameterEditStep(step)">
+                                        <tr style="cursor: pointer;" class="@(step.StepId == parameterEditStep?.StepId ? "fw-bold" : null)" @onclick="() => ToggleParameterEditStep(step)">
                                             <td>
                                                 <StepTypeIconComponent StepType_="@step.StepType" />
                                                 &nbsp;
                                                 @step.StepName
                                             </td>
-                                            <td class="text-end @(Builder.DependencyMode == true ? "text-body-tertiary" : null)">
+                                            <td class="text-end @(builder.DependencyMode == true ? "text-body-tertiary" : null)">
                                                 @step.ExecutionPhase
                                                 &nbsp;
                                                 <CxIcon Icon="FeatherIcon.Layers" />
@@ -240,7 +240,7 @@
                         <div style="overflow-y: scroll; height: calc(100vh - 250px);">
                             <table class="table table-sm">
                                 <tbody>
-                                    @foreach (var parameter in ParameterEditStep?.Parameters.OrderBy(p => p.DisplayName) ?? Enumerable.Empty<StepExecutionParameterBase>())
+                                    @foreach (var parameter in parameterEditStep?.Parameters.OrderBy(p => p.DisplayName) ?? Enumerable.Empty<StepExecutionParameterBase>())
                                     {
                                         <tr>
                                             <td class="align-middle">
@@ -256,7 +256,7 @@
                                             {
                                                 <DynamicParameterEditComponent Parameter="parameter"
                                                                                TParameter="StepExecutionParameterBase"
-                                                                               OnParameterEdit="p => ExpressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))">
+                                                                               OnParameterEdit="p => expressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))">
                                                     <StaticEditTemplate>
                                                         <ParameterTypeValueEditComponent Parameter="parameter" />
                                                     </StaticEditTemplate>
@@ -270,7 +270,7 @@
                     </div>
                 </div>
             }
-            else if (ActiveView == View.JobParameters)
+            else if (activeView == View.JobParameters)
             {
                 <div class="row mt-3">
                     <div class="col">
@@ -283,7 +283,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var parameter in Builder.Parameters.OrderBy(p => p.DisplayName))
+                                @foreach (var parameter in builder.Parameters.OrderBy(p => p.DisplayName))
                                 {
                                     <tr>
                                         <td>
@@ -291,7 +291,7 @@
                                         </td>
                                         <DynamicParameterEditComponent Parameter="parameter"
                                                                        TParameter="DynamicParameter"
-                                                                       OnParameterEdit="p => JobParameterExpressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))">
+                                                                       OnParameterEdit="p => jobParameterExpressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))">
                                             <StaticEditTemplate>
                                                 <ParameterTypeValueEditComponent Parameter="parameter" />
                                             </StaticEditTemplate>
@@ -317,50 +317,50 @@
     <FooterTemplate>
         <div class="col mr-auto">
             <HxDropdownButtonGroup AutoClose="DropdownAutoClose.Outside">
-                <HxDropdownToggleButton Color="ThemeColor.Secondary" Enabled="Builder is not null">
+                <HxDropdownToggleButton Color="ThemeColor.Secondary" Enabled="builder is not null">
                     <CxIcon Icon="FeatherIcon.Bell" />
                     Notifications
                 </HxDropdownToggleButton>
                 <HxDropdownContent>
-                    @if (Builder is not null)
+                    @if (builder is not null)
                     {
                         <div class="row p-3" style="min-width: 20rem;">
                             <div class="col">
                                 <div class="form-check">
                                     <input type="checkbox" class="form-check-input" id="execute_notify"
-                                           checked=@Builder.Notify
-                                           @bind-value="Builder.Notify">
+                                           checked=@builder.Notify
+                                           @bind-value="builder.Notify">
                                     <label class="form-check-label" for="execute_notify">Notify based on subscriptions</label>
                                 </div>
                                 <h6 class="mt-3">Notify me</h6>
                                 <div class="form-check">
                                     <input type="radio" class="form-check-input" id="radio_notify_me_none"
-                                           checked=@(Builder.NotifyCaller is null)
-                                            @onchange="() => Builder.NotifyCaller = null">
+                                           checked=@(builder.NotifyCaller is null)
+                                            @onchange="() => builder.NotifyCaller = null">
                                     <label class="form-check-label" for="radio_notify_me_none">None</label>
                                 </div>
                                 <div class="form-check">
                                     <input type="radio" class="form-check-input" id="radio_notify_me_completion"
-                                           checked=@(Builder.NotifyCaller == AlertType.OnCompletion)
-                                           @onchange="() => Builder.NotifyCaller = AlertType.OnCompletion">
+                                           checked=@(builder.NotifyCaller == AlertType.OnCompletion)
+                                           @onchange="() => builder.NotifyCaller = AlertType.OnCompletion">
                                     <label class="form-check-label" for="radio_notify_me_completion">On completion</label>
                                 </div>
                                 <div class="form-check">
                                     <input type="radio" class="form-check-input" id="radio_notify_me_failure"
-                                           checked=@(Builder.NotifyCaller == AlertType.OnFailure)
-                                           @onchange="() => Builder.NotifyCaller = AlertType.OnFailure">
+                                           checked=@(builder.NotifyCaller == AlertType.OnFailure)
+                                           @onchange="() => builder.NotifyCaller = AlertType.OnFailure">
                                     <label class="form-check-label" for="radio_notify_me_failure">On failure</label>
                                 </div>
                                 <div class="form-check">
                                     <input type="radio" class="form-check-input" id="radio_notify_me_success"
-                                           checked=@(Builder.NotifyCaller == AlertType.OnSuccess)
-                                           @onchange="() => Builder.NotifyCaller = AlertType.OnSuccess">
+                                           checked=@(builder.NotifyCaller == AlertType.OnSuccess)
+                                           @onchange="() => builder.NotifyCaller = AlertType.OnSuccess">
                                     <label class="form-check-label" for="radio_notify_me_success">On success</label>
                                 </div>
                                 <div class="form-check mt-3">
                                     <input type="checkbox" class="form-check-input" id="execute_notify_me_overtime"
-                                           checked=@Builder.NotifyCallerOvertime
-                                           @bind-value="Builder.NotifyCallerOvertime">
+                                           checked=@builder.NotifyCallerOvertime
+                                           @bind-value="builder.NotifyCallerOvertime">
                                     <label class="form-check-label" for="execute_notify_me_overtime">On overtime</label>
                                 </div>
                             </div>
@@ -369,15 +369,15 @@
                 </HxDropdownContent>
             </HxDropdownButtonGroup>
         </div>
-        <HxButton Color="ThemeColor.Primary" CssClass="ml-5" @onclick="Execute" Enabled="Builder?.StepExecutions.Any() ?? false">
+        <HxButton Color="ThemeColor.Primary" CssClass="ml-5" @onclick="Execute" Enabled="builder?.StepExecutions.Any() ?? false">
             <CxIcon Icon="FeatherIcon.Play" />
             Execute
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>
 
-<ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" TParameter="StepExecutionParameterBase" OnExpressionChanged="StateHasChanged">
+<ExpressionEditOffcanvas @ref="expressionEditOffcanvas" TParameter="StepExecutionParameterBase" OnExpressionChanged="StateHasChanged">
     <div class="row mt-3">
         <div class="col">
             <ExpressionParameterEditComponent StepParameter="context" />
@@ -386,7 +386,7 @@
     <StepExpressionParameterNotice />
 </ExpressionEditOffcanvas>
 
-<ExpressionEditOffcanvas @ref="JobParameterExpressionEditOffcanvas" TParameter="DynamicParameter" OnExpressionChanged="StateHasChanged">
+<ExpressionEditOffcanvas @ref="jobParameterExpressionEditOffcanvas" TParameter="DynamicParameter" OnExpressionChanged="StateHasChanged">
     <div class="row mt-3">
         <div class="col text-secondary small">
             Job parameter expressions have the following built-in variables automatically available. They can be used to access the internal ids during execution.
@@ -401,52 +401,47 @@
 @code {
     [Parameter] public EventCallback<Guid> OnExecutionStarted { get; set; }
 
-    private ExpressionEditOffcanvas<StepExecutionParameterBase>? ExpressionEditOffcanvas { get; set; }
+    private readonly HashSet<StepType> stepTypeFilter = new();
+    private readonly HashSet<ITag> executeTagsFilterSet = new();
 
-    private ExpressionEditOffcanvas<DynamicParameter>? JobParameterExpressionEditOffcanvas { get; set; }
+    private ExpressionEditOffcanvas<StepExecutionParameterBase>? expressionEditOffcanvas;
+    private ExpressionEditOffcanvas<DynamicParameter>? jobParameterExpressionEditOffcanvas;
+    private ExecutionBuilder? builder;
+    private HxModal? modal;
+    private string executeFilterText = string.Empty;
+    private View activeView = View.Steps;
+    private ExecutionBuilderStepExecution? parameterEditStep;
 
-    private ExecutionBuilder? Builder { get; set; }
+    private enum View { Steps, StepParameters, JobParameters }
 
-    private IEnumerable<ITag> Tags => Builder?.Steps
+    private IEnumerable<ITag> Tags => builder?.Steps
     .SelectMany(step => step.Tags)
     .DistinctBy(t => t.TagName)
     .OrderBy(t => t.TagName) ?? Enumerable.Empty<ITag>();
 
-    private HxModal? Modal { get; set; }
-
-    private string ExecuteFilterText { get; set; } = string.Empty;
-    private HashSet<ITag> ExecuteTagsFilterSet { get; set; } = new();
-    private HashSet<StepType> StepTypeFilter { get; } = new();
-
     private IEnumerable<ExecutionBuilderStep> StepsAvailableToExecute =>
-    Builder?.Steps
-    .Where(step => step.StepName?.ContainsIgnoreCase(ExecuteFilterText) == true) // Step name filter
-    .Where(step => !StepTypeFilter.Any() || StepTypeFilter.Contains(step.StepType)) // Filter based on step type
-    .Where(step => ExecuteTagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Tag filter
+    builder?.Steps
+    .Where(step => step.StepName?.ContainsIgnoreCase(executeFilterText) == true) // Step name filter
+    .Where(step => !stepTypeFilter.Any() || stepTypeFilter.Contains(step.StepType)) // Filter based on step type
+    .Where(step => executeTagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Tag filter
     ?? Enumerable.Empty<ExecutionBuilderStep>();
 
-    private enum View { Steps, StepParameters, JobParameters }
-
-    private View ActiveView = View.Steps;
-
-    private ExecutionBuilderStepExecution? ParameterEditStep { get; set; }
-
     private void ToggleParameterEditStep(ExecutionBuilderStepExecution step) =>
-        ParameterEditStep = step.StepId == ParameterEditStep?.StepId ? null : step;
+        parameterEditStep = step.StepId == parameterEditStep?.StepId ? null : step;
 
     private async Task Execute()
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(Builder);
-            var execution = await Builder.SaveExecutionAsync();
+            ArgumentNullException.ThrowIfNull(builder);
+            var execution = await builder.SaveExecutionAsync();
             if (execution is not null)
             {
                 await OnExecutionStarted.InvokeAsync(execution.ExecutionId);
                 await Executor.StartExecutionAsync(execution.ExecutionId);
             }
-            Builder = null;
-            await Modal.LetAsync(x => x.HideAsync());
+            builder = null;
+            await modal.LetAsync(x => x.HideAsync());
             StateHasChanged();
         }
         catch (Exception ex)
@@ -457,30 +452,30 @@
 
     private void OnClosed()
     {
-        Builder = null;
-        ExecuteFilterText = string.Empty;
-        ExecuteTagsFilterSet.Clear();
-        StepTypeFilter.Clear();
-        ParameterEditStep = null;
-        ActiveView = View.Steps;
+        builder = null;
+        executeFilterText = string.Empty;
+        executeTagsFilterSet.Clear();
+        stepTypeFilter.Clear();
+        parameterEditStep = null;
+        activeView = View.Steps;
     }
 
     public async Task ShowAsync(Guid jobId, IEnumerable<Step>? initiallySelectedSteps = null)
     {
-        ActiveView = View.Steps;
-        Builder = null;
-        await Modal.LetAsync(x => x.ShowAsync());
+        activeView = View.Steps;
+        builder = null;
+        await modal.LetAsync(x => x.ShowAsync());
         string user = HttpContextAccessor.HttpContext?.User?.Identity?.Name
             ?? throw new ArgumentNullException(nameof(user), "User was null");
-        Builder = await BuilderFactory.CreateAsync(jobId, user);
-        if (Builder is null)
+        builder = await BuilderFactory.CreateAsync(jobId, user);
+        if (builder is null)
         {
             Messenger.AddWarning("Job with the given id could not be found");
             return;
         }
         foreach (var selected in initiallySelectedSteps ?? Enumerable.Empty<Step>())
         {
-            var step = Builder.Steps.FirstOrDefault(s => s.StepId == selected.StepId);
+            var step = builder.Steps.FirstOrDefault(s => s.StepId == selected.StepId);
             step?.AddToExecution();
         }
         StateHasChanged();
