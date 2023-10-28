@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Configuration;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess;
 
@@ -13,6 +14,8 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
     private readonly IHttpContextAccessor? _httpContextAccessor = httpContextAccessor;
     private readonly string _connectionString = configuration.GetConnectionString("AppDbContext")
             ?? throw new ApplicationException("Connection string not found");
+
+    private static JsonSerializerOptions IgnoreNullsOptions = new() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
 
     public DbSet<Job> Jobs => Set<Job>();
     public DbSet<Step> Steps => Set<Step>();
@@ -130,7 +133,20 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             .HasValue<TabularStepExecutionAttempt>(StepType.Tabular)
             .HasValue<EmailStepExecutionAttempt>(StepType.Email)
             .HasValue<QlikStepExecutionAttempt>(StepType.Qlik);
+            e.Property(p => p.InfoMessages).HasConversion(
+                from => JsonSerializer.Serialize(from, IgnoreNullsOptions),
+                to => JsonSerializer.Deserialize<List<InfoMessage>>(to, IgnoreNullsOptions) ?? new());
+            e.Property(p => p.WarningMessages).HasConversion(
+                from => JsonSerializer.Serialize(from, IgnoreNullsOptions),
+                to => JsonSerializer.Deserialize<List<WarningMessage>>(to, IgnoreNullsOptions) ?? new());
+            e.Property(p => p.ErrorMessages).HasConversion(
+                from => JsonSerializer.Serialize(from, IgnoreNullsOptions),
+                to => JsonSerializer.Deserialize<List<ErrorMessage>>(to, IgnoreNullsOptions) ?? new());
         });
+
+        modelBuilder.Entity<InfoMessage>(e => e.HasNoKey());
+        modelBuilder.Entity<WarningMessage>(e => e.HasNoKey());
+        modelBuilder.Entity<ErrorMessage>(e => e.HasNoKey());
 
         modelBuilder.Entity<Dependency>(e =>
         {

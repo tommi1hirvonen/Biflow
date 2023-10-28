@@ -15,8 +15,8 @@ internal class GlobalOrchestrator(
     private readonly ILogger<GlobalOrchestrator> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
     private readonly IStepExecutorFactory _stepExecutorFactory = stepExecutorFactory;
-    private readonly List<IOrchestrationObserver> _observers = new();
-    private readonly Dictionary<StepExecution, OrchestrationStatus> _stepStatuses = new();
+    private readonly List<IOrchestrationObserver> _observers = [];
+    private readonly Dictionary<StepExecution, OrchestrationStatus> _stepStatuses = [];
 
     public async Task RegisterStepsAndObservers(IEnumerable<IOrchestrationObserver> observers)
     {
@@ -185,8 +185,9 @@ internal class GlobalOrchestrator(
         attempt.ExecutionStatus = StepExecutionStatus.Failed;
         attempt.StartDateTime ??= DateTimeOffset.Now;
         attempt.EndDateTime = DateTimeOffset.Now;
-        attempt.ErrorMessage = $"Unhandled error caught in global orchestrator:\n\n{ex.Message}\n\n{attempt.ErrorMessage}";
-        attempt.ErrorStackTrace = $"{ex.StackTrace}\n\n{attempt.ErrorStackTrace}";
+        // Place the error message first on the list.
+        var error = new ErrorMessage($"Unhandled error caught in global orchestrator:\n\n{ex.Message}", ex.ToString());
+        attempt.ErrorMessages.Insert(0, error);
         context.Attach(attempt).State = EntityState.Modified;
         await context.SaveChangesAsync();
     }
@@ -199,7 +200,8 @@ internal class GlobalOrchestrator(
             attempt.ExecutionStatus = status;
             attempt.StartDateTime = DateTimeOffset.Now;
             attempt.EndDateTime = DateTimeOffset.Now;
-            attempt.ErrorMessage = errorMessage;
+            if (!string.IsNullOrEmpty(errorMessage))
+                attempt.ErrorMessages.Add(new(errorMessage, null));
             context.Attach(attempt).State = EntityState.Modified;
         }
         await context.SaveChangesAsync();

@@ -9,9 +9,9 @@ internal class DependencyModeObserver(
     ExtendedCancellationTokenSource cancellationTokenSource)
     : OrchestrationObserver(stepExecution, orchestrationListener, cancellationTokenSource)
 {
-    private readonly Dictionary<StepExecution, OrchestrationStatus> _dependencies = new();
-    private readonly Dictionary<StepExecution, OrchestrationStatus> _dependsOnThis = new();
-    private readonly Dictionary<StepExecution, OrchestrationStatus> _duplicates = new();
+    private readonly Dictionary<StepExecution, OrchestrationStatus> _dependencies = [];
+    private readonly Dictionary<StepExecution, OrchestrationStatus> _dependsOnThis = [];
+    private readonly Dictionary<StepExecution, OrchestrationStatus> _duplicates = [];
 
     protected override void HandleUpdate(OrchestrationUpdate value)
     {

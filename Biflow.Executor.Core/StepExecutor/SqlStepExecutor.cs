@@ -64,17 +64,24 @@ internal class SqlStepExecutor(
         }
         catch (SqlException ex)
         {
+            var errors = ex.Errors.Cast<SqlError>();
+            foreach (var error in errors)
+            {
+                var message = $"Line: {error.LineNumber}\nMessage: {error.Message}";
+                AddError(ex, message);
+            }
+
             // Return Cancel if the SqlCommand failed due to cancel being requested.
             // ExecuteNonQueryAsync() throws SqlException in case cancel was requested.
             if (cancellationToken.IsCancellationRequested)
             {
-                return new Cancel(ex);
+                AddWarning(ex);
+                return new Cancel();
             }
 
             _logger.LogWarning(ex, "{ExecutionId} {Step} SQL execution failed", Step.ExecutionId, Step);
-            var errors = ex.Errors.Cast<SqlError>();
-            var errorMessage = string.Join("\n\n", errors.Select(error => "Line: " + error.LineNumber + "\nMessage: " + error.Message));
-            return new Failure(errorMessage);
+
+            return new Failure();
         }
 
         return new Success();

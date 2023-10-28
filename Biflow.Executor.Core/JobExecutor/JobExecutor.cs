@@ -270,13 +270,15 @@ internal class JobExecutor(
     private async Task UpdateExecutionFailedAsync(string errorMessage)
     {
         using var context = _dbContextFactory.CreateDbContext();
-        await context.StepExecutionAttempts
-            .Where(e => e.ExecutionId == _execution.ExecutionId)
-            .ExecuteUpdateAsync(attempt => attempt
-            .SetProperty(p => p.StartDateTime, DateTimeOffset.Now)
-            .SetProperty(p => p.EndDateTime, DateTimeOffset.Now)
-            .SetProperty(p => p.ErrorMessage, errorMessage)
-            .SetProperty(p => p.ExecutionStatus, StepExecutionStatus.Failed));
+        
+        foreach (var attempt in _execution.StepExecutions.SelectMany(s => s.StepExecutionAttempts))
+        {
+            attempt.StartDateTime = DateTimeOffset.Now;
+            attempt.EndDateTime = DateTimeOffset.Now;
+            attempt.ExecutionStatus = StepExecutionStatus.Failed;
+            attempt.ErrorMessages.Add(new(errorMessage, null));
+            context.Attach(attempt).State = EntityState.Modified;
+        }
 
         _execution.StartDateTime = DateTimeOffset.Now;
         _execution.EndDateTime = DateTimeOffset.Now;

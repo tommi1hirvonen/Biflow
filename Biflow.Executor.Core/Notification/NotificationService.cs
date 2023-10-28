@@ -61,7 +61,7 @@ internal class NotificationService(
                 <td>{e.EndDateTime}</td>
                 <td>{e.GetDurationInReadableFormat()}</td>
                 <td>{e.ExecutionStatus}</td>
-                <td>{e.ErrorMessage}</td>
+                <td>{string.Join("\n\n", e.ErrorMessages.Select(m => m.Message))}</td>
             </tr>
             """);
 

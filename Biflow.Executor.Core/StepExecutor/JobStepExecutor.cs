@@ -72,7 +72,8 @@ internal class JobStepExecutor(
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error initializing execution for job {jobId}", Step.ExecutionId, Step, Step.JobToExecuteId);
-            return new Failure(ex, "Error initializing job execution");
+            AddError(ex, "Error initializing job execution");
+            return new Failure();
         }
 
         try
@@ -103,7 +104,8 @@ internal class JobStepExecutor(
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error starting executor process for execution {executionId}", Step.ExecutionId, Step, jobExecutionId);
-            return new Failure(ex, "Error starting executor process");
+            AddError(ex, "Error starting executor process");
+            return new Failure();
         }
 
         if (Step.JobExecuteSynchronized)
@@ -115,7 +117,8 @@ internal class JobStepExecutor(
             catch (OperationCanceledException ex)
             {
                 _executionManager.CancelExecution(jobExecutionId, cancellationTokenSource.Username);
-                return new Cancel(ex);
+                AddWarning(ex);
+                return new Cancel();
             }
 
             try
@@ -125,21 +128,29 @@ internal class JobStepExecutor(
                     .Where(e => e.ExecutionId == jobExecutionId)
                     .Select(e => e.ExecutionStatus)
                     .FirstAsync();
-                return status switch
+                
+                if (status is ExecutionStatus.Succeeded or ExecutionStatus.Warning)
                 {
-                    ExecutionStatus.Succeeded or ExecutionStatus.Warning => new Success(),
-                    ExecutionStatus.Failed => new Failure("Sub-execution failed"),
-                    ExecutionStatus.Stopped => new Failure("Sub-execution was stopped"),
-                    ExecutionStatus.Suspended => new Failure("Sub-execution was suspended"),
-                    ExecutionStatus.NotStarted => new Failure("Sub-execution failed to start"),
-                    ExecutionStatus.Running => new Failure($"Sub-execution was finished but its status was reported as {status} after finishing"),
-                    _ => new Failure("Unhandled sub-execution status"),
+                    return new Success();
+                }
+
+                var error = status switch
+                {
+                    ExecutionStatus.Failed => "Sub-execution failed",
+                    ExecutionStatus.Stopped => "Sub-execution was stopped",
+                    ExecutionStatus.Suspended => "Sub-execution was suspended",
+                    ExecutionStatus.NotStarted => "Sub-execution failed to start",
+                    ExecutionStatus.Running => $"Sub-execution was finished but its status was reported as {status} after finishing",
+                    _ => "Unhandled sub-execution status",
                 };
+                AddError(error);
+                return new Failure();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{ExecutionId} {Step} Error getting sub-execution status for execution id {executionId}", Step.ExecutionId, Step, jobExecutionId);
-                return new Failure(ex, "Error getting sub-execution status");
+                AddError(ex, "Error getting sub-execution status");
+                return new Failure();
             }
         }
 

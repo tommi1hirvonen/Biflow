@@ -17,8 +17,6 @@ internal class ExeStepExecutor(
 
     private ExeStepExecution Step { get; } = step;
 
-    private StringBuilder Error { get; } = new StringBuilder();
-
     protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
@@ -46,8 +44,8 @@ internal class ExeStepExecutor(
         }
 
         var process = new Process() { StartInfo = startInfo };
-        process.OutputDataReceived += new DataReceivedEventHandler(OutputDataReceived);
-        process.ErrorDataReceived += new DataReceivedEventHandler(ErrorDataReceived);
+        process.OutputDataReceived += (object sender, DataReceivedEventArgs e) => AddOutput(e.Data);
+        process.ErrorDataReceived += (object sender, DataReceivedEventArgs e) => AddError(e.Data);
 
         try
         {
@@ -58,7 +56,8 @@ internal class ExeStepExecutor(
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error starting process for file name {FileName}", Step.ExecutionId, Step, Step.ExeFileName);
-            return new Failure($"Error starting process:\n{ex.Message}");
+            AddError(ex, "Error starting process");
+            return new Failure();
         }
 
         try
@@ -100,8 +99,8 @@ internal class ExeStepExecutor(
             }
             else
             {
-                var errorMessage = $"{Error}\n\nProcess finished with exit code {process.ExitCode}";
-                return new Failure(errorMessage);
+                AddError($"Process finished with exit code {process.ExitCode}");
+                return new Failure();
             }
         }
         catch (OperationCanceledException cancelEx)
@@ -117,19 +116,19 @@ internal class ExeStepExecutor(
                 AddWarning(ex, "Error killing process after timeout");
             }
 
-            return timeoutCts.IsCancellationRequested
-                ? new Failure(cancelEx, "Executing exe timed out")
-                : new Cancel(cancelEx);
+            if (timeoutCts.IsCancellationRequested)
+            {
+                AddError(cancelEx, "Executing exe timed out");
+                return new Failure();
+            }
+            AddWarning(cancelEx);
+            return new Cancel();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error while executing {FileName}", Step.ExecutionId, Step, Step.ExeFileName);
-            return new Failure(ex, "Error while executing exe");
+            AddError(ex, "Error while executing exe");
+            return new Failure();
         }
     }
-
-    private void ErrorDataReceived(object sender, DataReceivedEventArgs e) => Error.AppendLine(e.Data);
-
-    private void OutputDataReceived(object sender, DataReceivedEventArgs e) => AddOutput(e.Data);
-
 }

@@ -43,7 +43,8 @@ internal class PackageStepExecutor(
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error executing package", Step.ExecutionId, Step);
-            return new Failure(ex, "Error starting package execution");
+            AddError(ex, "Error starting package execution");
+            return new Failure();
         }
 
         // Initialize timeout cancellation token source already here
@@ -90,14 +91,19 @@ internal class PackageStepExecutor(
         catch (OperationCanceledException ex)
         {
             await CancelAsync(Step.Connection.ConnectionString, packageOperationId);
-            return timeoutCts.IsCancellationRequested
-                ? new Failure(ex, "Step execution timed out")
-                : new Cancel(ex);
+            if (timeoutCts.IsCancellationRequested)
+            {
+                AddError(ex, "Step execution timed out");
+                return new Failure();
+            }
+            AddWarning(ex);
+            return new Cancel();
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error monitoring package execution status", Step.ExecutionId, Step);
-            return new Failure(ex, "Error monitoring package execution status");
+            AddError(ex, "Error monitoring package execution status");
+            return new Failure();
         }
 
         // The package has completed. If the package failed, retrieve error messages.
@@ -106,12 +112,18 @@ internal class PackageStepExecutor(
             try
             {
                 var errors = await GetErrorMessagesAsync(Step.Connection.ConnectionString, packageOperationId);
-                return new Failure(string.Join("\n\n", errors));
+                foreach (var error in errors)
+                {
+                    if (error is not null)
+                        AddError(error);
+                }
+                return new Failure();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{ExecutionId} {Step} Error getting package error messages", Step.ExecutionId, Step);
-                return new Failure(ex, "Error getting package error messages");
+                AddError(ex, "Error getting package error messages");
+                return new Failure();
             }
         }
 

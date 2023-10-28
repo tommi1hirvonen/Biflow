@@ -62,7 +62,8 @@ internal class QlikStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error starting app refresh");
-            return new Failure(ex, "Error starting dataset refresh operation");
+            AddError(ex, "Error starting app reload");
+            return new Failure();
         }
 
         // Create timeout cancellation token source here
@@ -103,30 +104,36 @@ internal class QlikStepExecutor : StepExecutorBase
                 await Task.Delay(_pollingIntervalMs, linkedCts.Token);
                 reload = await _httpClient.GetFromJsonAsync<Reload>(getReloadUrl, linkedCts.Token)
                     ?? throw new ApplicationException("Reload response was null");
-                Result? result = reload.Status switch
-                {
-                    "SUCCEEDED" => new Success(),
-                    "FAILED" or "CANCELED" or "EXCEEDED_LIMIT" => new Failure($"Reload reported status {reload.Status}"),
-                    _ => null
-                };
 
-                if (result is not null)
+                if (reload is { Status: "SUCCEEDED" })
                 {
                     AddOutput(reload.Log);
-                    return result;
+                    return new Success();
                 }
+                else if (reload is { Status: "FAILED" or "CANCELED" or "EXCEEDED_LIMIT" })
+                {
+                    AddOutput(reload.Log);
+                    AddError($"Reload reported status {reload.Status}");
+                    return new Failure();
+                }
+                // Reload not finished => iterate again
             }
             catch (OperationCanceledException ex)
             {
                 var reason = timeoutCts.IsCancellationRequested ? "StepTimedOut" : "StepWasCanceled";
                 await CancelAsync(reload.Id);
-                return timeoutCts.IsCancellationRequested
-                    ? new Failure(ex, "Step execution timed out")
-                    : new Cancel(ex);
+                if (timeoutCts.IsCancellationRequested)
+                {
+                    AddError(ex, "Step execution timed out");
+                    return new Failure();
+                }
+                AddWarning(ex);
+                return new Cancel();
             }
             catch (Exception ex)
             {
-                return new Failure(ex, "Error getting reload status");
+                AddError(ex, "Error getting reload status");
+                return new Failure();
             }
         }
     }

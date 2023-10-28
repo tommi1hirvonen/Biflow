@@ -290,41 +290,62 @@
                         }
                     }
                     <tr>
-                        <td class="fw-bold">Info message / output</td>
+                        <td class="fw-bold">Info messages / outputs</td>
                         <td>
-                            <code class="text-body" style="white-space: pre-wrap;">@StepExecutionAttempt.InfoMessage</code>
+                            @foreach (var info in StepExecutionAttempt.InfoMessages)
+                            {
+                                <code class="text-body" style="white-space: pre-wrap; display: block;">
+                                    @info.Message
+                                </code>
+                            }
                         </td>
                     </tr>
                     <tr>
-                        <td class="fw-bold">Error message</td>
+                        <td class="fw-bold">Error messages</td>
                         <td>
-                            <code class="text-danger" style="white-space: pre-wrap;">@StepExecutionAttempt.ErrorMessage</code>
-                            <AuthorizeView Roles="@(Roles.Admin)">
-                                @if (!string.IsNullOrWhiteSpace(StepExecutionAttempt.ErrorStackTrace))
-                                {
-                                    if (!ShowErrorStackTrace)
-                                    {
-                                        <div class="mt-2">
-                                            <small>
-                                                <a class="text-secondary" href="javascript:void(0);" @onclick="() => ShowErrorStackTrace = true">
-                                                    Stack trace available
-                                                </a>
-                                            </small>
-                                        </div>
-                                    }
-                                    else
+                            @foreach (var error in StepExecutionAttempt.ErrorMessages)
+                            {
+                                <code class="text-danger" style="white-space: pre-wrap; display: block;">
+                                    @error.Message
+                                </code>
+                                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+                                    @if (ShowErrorStackTrace && !string.IsNullOrWhiteSpace(error.Exception))
                                     {
                                         <br />
-                                        <code class="text-body" style="white-space: pre-wrap;">@StepExecutionAttempt.ErrorStackTrace</code>
+                                        <code class="text-body" style="white-space: pre-wrap; display: block;">@error.Exception</code>
                                     }
+                                </AuthorizeView>
+                            }
+                            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+                                @if (!ShowErrorStackTrace && StepExecutionAttempt.ErrorMessages.Any(e => !string.IsNullOrEmpty(e.Exception)))
+                                {
+                                    <div class="mt-2">
+                                        <small>
+                                            <a class="text-secondary" href="javascript:void(0);" @onclick="() => ShowErrorStackTrace = true">
+                                                Stack trace available
+                                            </a>
+                                        </small>
+                                    </div>
                                 }
                             </AuthorizeView>
                         </td>
                     </tr>
                     <tr>
-                        <td class="fw-bold">Warning message</td>
+                        <td class="fw-bold">Warning messages</td>
                         <td>
-                            <pre class="my-0"><code>@StepExecutionAttempt.WarningMessage</code></pre>
+                            @foreach (var warning in StepExecutionAttempt.WarningMessages)
+                            {
+                                <code class="text-danger" style="white-space: pre-wrap; display: block;">
+                                    @warning.Message
+                                </code>
+                                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+                                    @if (ShowWarningStackTrace && !string.IsNullOrWhiteSpace(warning.Exception))
+                                    {
+                                        <br />
+                                        <code class="text-body" style="white-space: pre-wrap; display: block;">@warning.Exception</code>
+                                    }
+                                </AuthorizeView>
+                            }
                         </td>
                     </tr>
                 </tbody>
@@ -405,4 +426,6 @@
     public bool ShowExtraDetails { get; set; } = false;
 
     private bool ShowErrorStackTrace { get; set; } = false;
+
+    private bool ShowWarningStackTrace { get; set; } = false;
 }

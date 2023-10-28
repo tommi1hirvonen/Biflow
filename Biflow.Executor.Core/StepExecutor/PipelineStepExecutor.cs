@@ -42,7 +42,8 @@ internal class PipelineStepExecutor(
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error retrieving pipeline parameters", Step.ExecutionId, Step);
-            return new Failure(ex, "Error reading pipeline parameters");
+            AddError(ex, "Error reading pipeline parameters");
+            return new Failure();
         }
 
         string runId;
@@ -54,7 +55,8 @@ internal class PipelineStepExecutor(
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error creating pipeline run for Pipeline Client id {PipelineClientId} and pipeline {PipelineName}",
                 Step.ExecutionId, Step, Step.PipelineClientId, Step.PipelineName);
-            return new Failure(ex, "Error starting pipeline run");
+            AddError(ex, "Error starting pipeline run");
+            return new Failure();
         }
 
         // Initialize timeout cancellation token source already here
@@ -105,13 +107,18 @@ internal class PipelineStepExecutor(
         catch (OperationCanceledException ex)
         {
             await CancelAsync(runId);
-            return timeoutCts.IsCancellationRequested
-                ? new Failure(ex, "Step execution timed out")
-                : new Cancel(ex);
+            if (timeoutCts.IsCancellationRequested)
+            {
+                AddError(ex, "Step execution timed out");
+                return new Failure();
+            }
+            AddWarning(ex);
+            return new Cancel();
         }
         catch (Exception ex)
         {
-            return new Failure(ex, "Error getting pipeline run status");
+            AddError(ex, "Error getting pipeline run status");
+            return new Failure();
         }
 
         if (status == "Succeeded")
@@ -121,7 +128,8 @@ internal class PipelineStepExecutor(
         }
         else
         {
-            return new Failure(message);
+            AddError(message);
+            return new Failure();
         }
     }
 

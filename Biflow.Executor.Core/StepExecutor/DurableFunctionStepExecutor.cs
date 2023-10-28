@@ -45,13 +45,18 @@ internal class DurableFunctionStepExecutor(
         }
         catch (OperationCanceledException ex)
         {
-            return cancellationTokenSource.IsCancellationRequested
-                ? new Cancel(ex)
-                : new Failure(ex, "Invoking durable function timed out");
+            if (cancellationTokenSource.IsCancellationRequested)
+            {
+                AddWarning(ex);
+                return new Cancel();
+            }
+            AddError(ex, "Invoking durable function timed out");
+            return new Failure();
         }
         catch (Exception ex)
         {
-            return new Failure(ex, "Error sending POST request to invoke function");
+            AddError(ex, "Error sending POST request to invoke function");
+            return new Failure();
         }
 
         StartResponse startResponse;
@@ -63,7 +68,8 @@ internal class DurableFunctionStepExecutor(
         }
         catch (Exception ex)
         {
-            return new Failure(ex, "Error getting start response for durable function");
+            AddError(ex, "Error getting start response for durable function");
+            return new Failure();
         }
 
         // Create timeout cancellation token source here
@@ -115,13 +121,18 @@ internal class DurableFunctionStepExecutor(
             {
                 var reason = timeoutCts.IsCancellationRequested ? "StepTimedOut" : "StepWasCanceled";
                 await CancelAsync(client, startResponse.TerminatePostUri, reason);
-                return timeoutCts.IsCancellationRequested
-                    ? new Failure(ex, "Step execution timed out")
-                    : new Cancel(ex);
+                if (timeoutCts.IsCancellationRequested)
+                {
+                    AddError(ex, "Step execution timed out");
+                    return new Failure();
+                }
+                AddWarning(ex);
+                return new Cancel();
             }
             catch (Exception ex)
             {
-                return new Failure(ex, "Error getting function status");
+                AddError(ex, "Error getting function status");
+                return new Failure();
             }
         }
         
@@ -132,11 +143,13 @@ internal class DurableFunctionStepExecutor(
         }
         else if (status.RuntimeStatus == "Terminated")
         {
-            return new Failure(status.Output?.ToString() ?? "Function was terminated");
+            AddError(status.Output?.ToString() ?? "Function was terminated");
+            return new Failure();
         }
         else
         {
-            return new Failure(status.Output?.ToString() ?? "Function failed");
+            AddError(status.Output?.ToString() ?? "Function failed");
+            return new Failure();
         }
 
     }

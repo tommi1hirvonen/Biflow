@@ -39,7 +39,8 @@ internal class AgentJobStepExecutor(
         }
         catch (Exception ex)
         {
-            return new Failure(ex, "Error starting agent job");
+            AddError(ex, "Error starting agent job");
+            return new Failure();
         }
 
         using var timeoutCts = Step.TimeoutMinutes > 0
@@ -69,13 +70,18 @@ internal class AgentJobStepExecutor(
             await connection.ExecuteAsync(
                 "EXEC msdb.dbo.sp_stop_job @job_name = @AgentJobName",
                 new { Step.AgentJobName });
-            return timeoutCts.IsCancellationRequested
-                ? new Failure(ex, "Step execution timed out")
-                : new Cancel(ex);
+            if (timeoutCts.IsCancellationRequested)
+            {
+                AddError(ex, "Step execution timed out");
+                return new Failure();
+            }
+            AddWarning(ex);
+            return new Cancel();
         }
         catch (Exception ex)
         {
-            return new Failure(ex, "Error monitoring agent job execution status");
+            AddError(ex, "Error monitoring agent job execution status");
+            return new Failure();
         }
 
         try
@@ -120,17 +126,20 @@ internal class AgentJobStepExecutor(
             }
             else if (status == 0 || status == 3)
             {
-                return new Failure(messageString);
+                AddError(messageString);
+                return new Failure();
             }
             else
             {
                 AddOutput(messageString);
-                return new Failure($"Unexpected agent job history run status ({status}) after execution.\n{jobOutcome}");
+                AddError($"Unexpected agent job history run status ({status}) after execution.\n{jobOutcome}");
+                return new Failure();
             }
         }
         catch (Exception ex)
         {
-            return new Failure(ex, "Error getting agent job status and message from msdb.dbo.sysjobhistory");
+            AddError(ex, "Error getting agent job status and message from msdb.dbo.sysjobhistory");
+            return new Failure();
         }
     }
 
