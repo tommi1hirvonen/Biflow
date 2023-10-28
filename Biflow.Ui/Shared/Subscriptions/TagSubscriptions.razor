@@ -3,7 +3,7 @@
 
 <div class="row">
     <div class="col">
-        <HxButton Color="ThemeColor.Success" OnClick="() => SelectTagOffcanvas.LetAsync(x => x.ShowAsync())">
+        <HxButton Color="ThemeColor.Success" OnClick="() => selectTagOffcanvas.LetAsync(x => x.ShowAsync())">
             Add subscription
         </HxButton>
     </div>
@@ -81,7 +81,7 @@
     </div>
 </div>
 
-<HxOffcanvas @ref="SelectTagOffcanvas" Title="Select tag" Backdrop="OffcanvasBackdrop.False">
+<HxOffcanvas @ref="selectTagOffcanvas" Title="Select tag" Backdrop="OffcanvasBackdrop.False">
     <BodyTemplate>
         <div class="row">
             <div class="col d-flex flex-wrap">
@@ -104,7 +104,7 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" OnClick="() => SelectTagOffcanvas.LetAsync(x => x.HideAsync())" Spinner="false">
+        <HxButton Color="ThemeColor.Secondary" OnClick="() => selectTagOffcanvas.LetAsync(x => x.HideAsync())" Spinner="false">
             Close
         </HxButton>
     </FooterTemplate>
@@ -120,7 +120,7 @@
     [Parameter]
     public EventCallback OnSubscriptionCountChanged { get; set; }
 
-    private HxOffcanvas? SelectTagOffcanvas { get; set; }
+    private HxOffcanvas? selectTagOffcanvas;
 
     private IEnumerable<TagSubscription> Subscriptions =>
         User?.Subscriptions.OfType<TagSubscription>() ?? Enumerable.Empty<TagSubscription>();

@@ -1,37 +1,37 @@
 ﻿
-@switch (StepType)
+@switch (StepType_)
 {
-    case DataAccess.Models.StepType.Sql:
+    case StepType.Sql:
         <CxIcon Icon="FeatherIcon.Code" />
         break;
-    case DataAccess.Models.StepType.Package:
+    case StepType.Package:
         <CxIcon Icon="FeatherIcon.Package" />
         break;
-    case DataAccess.Models.StepType.Pipeline:
+    case StepType.Pipeline:
         <CxIcon Icon="FeatherIcon.Pipeline" />
         break;
-    case DataAccess.Models.StepType.Job:
+    case StepType.Job:
         <CxIcon Icon="LucideIcon.ClipboardList" />
         break;
-    case DataAccess.Models.StepType.Exe:
+    case StepType.Exe:
         <CxIcon Icon="FeatherIcon.Terminal" />
         break;
-    case DataAccess.Models.StepType.Dataset:
+    case StepType.Dataset:
         <CxIcon Icon="LucideIcon.FileBarChart2" />
         break;
-    case DataAccess.Models.StepType.Function:
+    case StepType.Function:
         <CxIcon Icon="FeatherIcon.Zap" />
         break;
-    case DataAccess.Models.StepType.AgentJob:
+    case StepType.AgentJob:
         <CxIcon Icon="FeatherIcon.Server" />
         break;
-    case DataAccess.Models.StepType.Tabular:
+    case StepType.Tabular:
         <CxIcon Icon="FeatherIcon.Box" />
         break;
-    case DataAccess.Models.StepType.Email:
+    case StepType.Email:
         <CxIcon Icon="FeatherIcon.Mail" />
         break;
-    case DataAccess.Models.StepType.Qlik:
+    case StepType.Qlik:
         <CxIcon Icon="LucideIcon.FilePieChart" />
         break;
     default:
@@ -41,5 +41,5 @@
 
 @code {
     [Parameter]
-    public StepType? StepType { get; set; }
+    public StepType? StepType_ { get; set; }
 }

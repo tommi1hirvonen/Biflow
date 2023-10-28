@@ -2,40 +2,40 @@
 
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 
-<HxModal @ref="Modal" Title="Rename steps" Scrollable="true" Size="ModalSize.Large">
+<HxModal @ref="modal" Title="Rename steps" Scrollable="true" Size="ModalSize.Large">
     <BodyTemplate>
         <div class="row">
             <div class="col">
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_batch_edit_rename_replace"
-                           checked=@(EditMode_ == EditMode.Replace)
-                    @onchange="() => EditMode_ = EditMode.Replace">
+                           checked=@(editMode == EditMode.Replace)
+                    @onchange="() => editMode = EditMode.Replace">
                     <label class="form-check-label" for="radio_batch_edit_rename_replace">
                         Replace
                     </label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_batch_edit_rename_prepend"
-                           checked=@(EditMode_ == EditMode.Prepend)
-                    @onchange="() => EditMode_ = EditMode.Prepend">
+                           checked=@(editMode == EditMode.Prepend)
+                    @onchange="() => editMode = EditMode.Prepend">
                     <label class="form-check-label" for="radio_batch_edit_rename_prepend">
                         Prepend
                     </label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_batch_edit_rename_append"
-                           checked=@(EditMode_ == EditMode.Append)
-                    @onchange="() => EditMode_ = EditMode.Append">
+                           checked=@(editMode == EditMode.Append)
+                    @onchange="() => editMode = EditMode.Append">
                     <label class="form-check-label" for="radio_batch_edit_rename_append">
                         Append
                     </label>
                 </div>
-                @if (EditMode_ == EditMode.Replace)
+                @if (editMode == EditMode.Replace)
                 {
                     <div class="form-check form-check-inline ms-4">
                         <input type="checkbox" class="form-check-input" id="check_batch_edit_rename_case_sensitive"
-                               checked=@CaseSensitive
-                        @onchange="() => CaseSensitive = !CaseSensitive">
+                               checked=@caseSensitive
+                        @onchange="() => caseSensitive = !caseSensitive">
                         <label class="form-check-label" for="check_batch_edit_rename_case_sensitive">
                             Case sensitive
                         </label>
@@ -44,19 +44,19 @@
             </div>
         </div>
         <div class="row mt-3">
-            @if (EditMode_ == EditMode.Prepend || EditMode_ == EditMode.Append)
+            @if (editMode == EditMode.Prepend || editMode == EditMode.Append)
             {
                 <div class="col">
-                    <input class="form-control" type="text" @bind-value="PrependAppendString" @bind-value:event="oninput" />
+                    <input class="form-control" type="text" @bind-value="prependAppendString" @bind-value:event="oninput" />
                 </div>
             }
-            else if (EditMode_ == EditMode.Replace)
+            else if (editMode == EditMode.Replace)
             {
                 <div class="col">
-                    <input class="form-control" type="text" placeholder="Old text" @bind-value="OldString" @bind-value:event="oninput" />
+                    <input class="form-control" type="text" placeholder="Old text" @bind-value="oldString" @bind-value:event="oninput" />
                 </div>
                 <div class="col">
-                    <input class="form-control" type="text" placeholder="New text" @bind-value="NewString" @bind-value:event="oninput" />
+                    <input class="form-control" type="text" placeholder="New text" @bind-value="newString" @bind-value:event="oninput" />
                 </div>
             }
         </div>
@@ -69,32 +69,32 @@
             <div class="col">
                 <table class="table table-sm">
                     <tbody>
-                        @if ((EditMode_ == EditMode.Prepend || EditMode_ == EditMode.Append) && !string.IsNullOrEmpty(PrependAppendString))
+                        @if ((editMode == EditMode.Prepend || editMode == EditMode.Append) && !string.IsNullOrEmpty(prependAppendString))
                         {
-                            foreach (var step in Steps?.OrderBy(s => s.StepName) ?? Enumerable.Empty<Step>())
+                            foreach (var step in steps?.OrderBy(s => s.StepName) ?? Enumerable.Empty<Step>())
                             {
-                                var after = EditMode_ switch
+                                var after = editMode switch
                                 {
-                                    EditMode.Prepend => $"{PrependAppendString}{step.StepName}",
-                                    EditMode.Append => $"{step.StepName}{PrependAppendString}",
+                                    EditMode.Prepend => $"{prependAppendString}{step.StepName}",
+                                    EditMode.Append => $"{step.StepName}{prependAppendString}",
                                     _ => step.StepName
                                 };
                                 <tr>
                                     <td>
-                                        <StepTypeIconComponent StepType="step.StepType" />
+                                        <StepTypeIconComponent StepType_="step.StepType" />
                                         @step.StepName
                                     </td>
                                     <td>
                                         <span><CxIcon Icon="FeatherIcon.ArrowRight" /></span>
                                     </td>
                                     <td>
-                                        <StepTypeIconComponent StepType="step.StepType" />
+                                        <StepTypeIconComponent StepType_="step.StepType" />
                                         @after
                                     </td>
                                 </tr>
                             }
                         }
-                        else if (EditMode_ == EditMode.Replace && !string.IsNullOrEmpty(OldString))
+                        else if (editMode == EditMode.Replace && !string.IsNullOrEmpty(oldString))
                         {
                             if (AffectedSteps.Any())
                             {
@@ -102,15 +102,15 @@
                                 {
                                     <tr>
                                         <td>
-                                            <StepTypeIconComponent StepType="step.StepType" />
+                                            <StepTypeIconComponent StepType_="step.StepType" />
                                             @step.StepName
                                         </td>
                                         <td>
                                             <span><CxIcon Icon="FeatherIcon.ArrowRight" /></span>
                                         </td>
                                         <td>
-                                            <StepTypeIconComponent StepType="step.StepType" />
-                                            @step.StepName?.Replace(OldString, NewString, Comparison)
+                                            <StepTypeIconComponent StepType_="step.StepType" />
+                                            @step.StepName?.Replace(oldString, newString, Comparison)
                                         </td>
                                     </tr>
                                 }
@@ -152,31 +152,24 @@
 
     [Parameter] public EventCallback<IEnumerable<Step>> OnStepsSubmit { get; set; }
 
-    private HxModal? Modal { get; set; }
-
-    private AppDbContext? Context { get; set; }
-
-    private List<Step>? Steps { get; set; }
-
-    private EditMode EditMode_ { get; set; } = EditMode.Replace;
-
-    private enum EditMode { Replace, Prepend, Append };
-
-    private bool CaseSensitive { get; set; } = true;
-
-    private string PrependAppendString { get; set; } = "";
-
-    private string OldString { get; set; } = "";
-
-    private string NewString { get; set; } = "";
+    private HxModal? modal;
+    private AppDbContext? context;
+    private List<Step>? steps;
+    private EditMode editMode = EditMode.Replace;
+    private bool caseSensitive = true;
+    private string prependAppendString = "";
+    private string oldString = "";
+    private string newString = "";
 
     private StringComparison Comparison =>
-        CaseSensitive ? StringComparison.InvariantCulture : StringComparison.InvariantCultureIgnoreCase;
+        caseSensitive ? StringComparison.InvariantCulture : StringComparison.InvariantCultureIgnoreCase;
 
-    private IEnumerable<Step> AffectedSteps => Steps
-        ?.Where(s => s.StepName?.Contains(OldString, Comparison) == true)
+    private IEnumerable<Step> AffectedSteps => steps
+        ?.Where(s => s.StepName?.Contains(oldString, Comparison) == true)
         .OrderBy(s => s.StepName)
         ?? Enumerable.Empty<Step>();
+
+    private enum EditMode { Replace, Prepend, Append };
 
     public async Task ShowAsync()
     {
@@ -185,51 +178,51 @@
             return;
         }
 
-        await Modal.LetAsync(x => x.ShowAsync());
+        await modal.LetAsync(x => x.ShowAsync());
 
-        if (Context is not null)
+        if (context is not null)
         {
-            await Context.DisposeAsync();
+            await context.DisposeAsync();
         }
-        Context = await DbContextFactory.CreateDbContextAsync();
+        context = await DbContextFactory.CreateDbContextAsync();
         var stepIds = SelectedSteps.Select(s => s.StepId).ToArray();
-        Steps = await JobDetails.BuildStepsQueryWithIncludes(Context)
+        steps = await JobDetails.BuildStepsQueryWithIncludes(context)
             .Where(s => stepIds.Contains(s.StepId))
             .ToListAsync();
     }
 
     private async Task CloseAsync()
     {
-        (EditMode_, PrependAppendString, OldString, NewString, CaseSensitive) =
+        (editMode, prependAppendString, oldString, newString, caseSensitive) =
             (EditMode.Replace, "", "", "", true);
-        await Modal.LetAsync(x => x.HideAsync());
+        await modal.LetAsync(x => x.HideAsync());
     }
 
     private async Task SubmitStepsAsync()
     {
-        ArgumentNullException.ThrowIfNull(Steps);
-        ArgumentNullException.ThrowIfNull(Context);
+            ArgumentNullException.ThrowIfNull(this.steps);
+        ArgumentNullException.ThrowIfNull(context);
 
-        var steps = EditMode_ switch
+        var steps = editMode switch
         {
             EditMode.Replace => AffectedSteps,
-            _ => Steps
+            _ => this.steps
         };
-        foreach (var step in Steps)
+        foreach (var step in this.steps)
         {
-            step.StepName = EditMode_ switch
+            step.StepName = editMode switch
             {
-                EditMode.Prepend => $"{PrependAppendString}{step.StepName}",
-                EditMode.Append => $"{step.StepName}{PrependAppendString}",
-                EditMode.Replace => step.StepName?.Replace(OldString, NewString, Comparison),
+                EditMode.Prepend => $"{prependAppendString}{step.StepName}",
+                EditMode.Append => $"{step.StepName}{prependAppendString}",
+                EditMode.Replace => step.StepName?.Replace(oldString, newString, Comparison),
                 _ => step.StepName
             };
         }
 
-        await Context.SaveChangesAsync();
-        await OnStepsSubmit.InvokeAsync(Steps);
+        await context.SaveChangesAsync();
+        await OnStepsSubmit.InvokeAsync(this.steps);
         await CloseAsync();
     }
 
-    public void Dispose() => Context?.Dispose();
+    public void Dispose() => context?.Dispose();
 }

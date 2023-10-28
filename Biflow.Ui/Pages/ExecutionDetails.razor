@@ -347,7 +347,7 @@
                         Step
                     </TitleTemplate>
                     <ItemTemplate Context="item">
-                        <StepTypeIconComponent StepType="item.StepType" />
+                        <StepTypeIconComponent StepType_="item.StepType" />
                         @item.StepName
                     </ItemTemplate>
                 </FilterDropdown>
@@ -367,7 +367,7 @@
                         Step type
                     </TitleTemplate>
                     <ItemTemplate Context="item">
-                        <StepTypeIconComponent StepType="item" />
+                        <StepTypeIconComponent StepType_="item" />
                         @item.ToString()
                     </ItemTemplate>
                 </FilterDropdown>
@@ -497,7 +497,7 @@ else if (ShowReport == Report.Graph)
                         InputSize="InputSize.Small"
                         Placeholder="Filter step">
                 <ItemTemplate Context="item">
-                    <StepTypeIconComponent StepType="item.StepType" />
+                    <StepTypeIconComponent StepType_="item.StepType" />
                     @item.StepName
                 </ItemTemplate>
                 <EmptyTemplate>
@@ -558,7 +558,7 @@ else if (ShowReport == Report.History && execution?.JobId is Guid jobId)
     <DropdownMenuTemplate Context="step">
         <li>
             <h6 class="dropdown-header">
-                <StepTypeIconComponent StepType="step.StepType" />
+                <StepTypeIconComponent StepType_="step.StepType" />
                 @step.StepName
             </h6>
         </li>

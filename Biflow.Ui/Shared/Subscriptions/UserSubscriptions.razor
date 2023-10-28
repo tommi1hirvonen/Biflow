@@ -30,8 +30,8 @@
             <div class="col">
                 <ul class="nav nav-tabs mb-3">
                     <li class="nav-item">
-                        <span class="nav-link @(ShowType == SubscriptionType.Job ? "active" : null)"
-                        @onclick="() => ShowType = SubscriptionType.Job">
+                        <span class="nav-link @(showType == SubscriptionType.Job ? "active" : null)"
+                        @onclick="() => showType = SubscriptionType.Job">
                             Job subscriptions
                             <span class="badge rounded-pill ms-3 @subCountClass(jobSubs)">
                                 @jobSubs
@@ -39,8 +39,8 @@
                         </span>
                     </li>
                     <li class="nav-item">
-                        <span class="nav-link @(ShowType == SubscriptionType.JobTag ? "active" : null)"
-                        @onclick="() => ShowType = SubscriptionType.JobTag">
+                        <span class="nav-link @(showType == SubscriptionType.JobTag ? "active" : null)"
+                        @onclick="() => showType = SubscriptionType.JobTag">
                             Job-tag subscriptions
                             <span class="badge rounded-pill ms-3 @subCountClass(jobTagSubs)">
                                 @jobTagSubs
@@ -48,8 +48,8 @@
                         </span>
                     </li>
                     <li class="nav-item">
-                        <span class="nav-link @(ShowType == SubscriptionType.Tag ? "active" : null)"
-                        @onclick="() => ShowType = SubscriptionType.Tag">
+                        <span class="nav-link @(showType == SubscriptionType.Tag ? "active" : null)"
+                        @onclick="() => showType = SubscriptionType.Tag">
                             Tag subscriptions
                             <span class="badge rounded-pill ms-3 @subCountClass(tagSubs)">
                                 @tagSubs
@@ -57,8 +57,8 @@
                         </span>
                     </li>
                     <li class="nav-item">
-                        <span class="nav-link @(ShowType == SubscriptionType.Step ? "active" : null)"
-                        @onclick="() => ShowType = SubscriptionType.Step">
+                        <span class="nav-link @(showType == SubscriptionType.Step ? "active" : null)"
+                        @onclick="() => showType = SubscriptionType.Step">
                             Step subscriptions
                             <span class="badge rounded-pill ms-3 @subCountClass(stepSubs)">
                                 @stepSubs
@@ -68,19 +68,19 @@
                 </ul>
             </div>
         </div>
-        @if (ShowType == SubscriptionType.Job)
+        @if (showType == SubscriptionType.Job)
         {
             <JobSubscriptions User="User" Jobs="Jobs" OnSubscriptionCountChanged="StateHasChanged" />
         }
-        else if (ShowType == SubscriptionType.JobTag)
+        else if (showType == SubscriptionType.JobTag)
         {
             <JobTagSubscriptions User="User" Jobs="Jobs" Steps="Steps" Tags="Tags" OnSubscriptionCountChanged="StateHasChanged" />
         }
-        else if (ShowType == SubscriptionType.Tag)
+        else if (showType == SubscriptionType.Tag)
         {
             <TagSubscriptions User="User" Tags="Tags" OnSubscriptionCountChanged="StateHasChanged" />
         }
-        else if (ShowType == SubscriptionType.Step)
+        else if (showType == SubscriptionType.Step)
         {
             <StepSubscriptions User="User" Jobs="Jobs" Steps="Steps" OnSubscriptionCountChanged="StateHasChanged" />
         }
@@ -103,5 +103,5 @@
     [Parameter]
     public RenderFragment<User>? MissingEmailAlertTemplate { get; set; }
 
-    private SubscriptionType ShowType { get; set; } = SubscriptionType.Job;
+    private SubscriptionType showType = SubscriptionType.Job;
 }

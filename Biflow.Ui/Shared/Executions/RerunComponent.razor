@@ -129,7 +129,7 @@ else if (Builder is null)
                                 Step type
                             </TitleTemplate>
                             <ItemTemplate Context="item">
-                                <StepTypeIconComponent StepType="item" />
+                                <StepTypeIconComponent StepType_="item" />
                                 @item.ToString()
                             </ItemTemplate>
                         </FilterDropdown>
@@ -200,7 +200,7 @@ else if (Builder is null)
                             var status = GetStepExecutionStatus(step.StepId);
                             <tr style="cursor: pointer;" @onclick="() => step.AddToExecution()">
                                 <td class="@(step.IsEnabled ? null : "text-secondary") align-middle">
-                                    <StepTypeIconComponent StepType="@step.StepType" />
+                                    <StepTypeIconComponent StepType_="@step.StepType" />
                                     &nbsp;
                                     <HighlightableText Text="@step.StepName" PartToHighlight="@StepNameFilter" />
                                 </td>
@@ -227,7 +227,7 @@ else if (Builder is null)
                         {
                             <tr style="cursor: pointer;" @onclick="() => step.RemoveFromExecution()">
                                 <td>
-                                    <StepTypeIconComponent StepType="@step.StepType" />
+                                    <StepTypeIconComponent StepType_="@step.StepType" />
                                     &nbsp;
                                     @step.StepName
                                 </td>

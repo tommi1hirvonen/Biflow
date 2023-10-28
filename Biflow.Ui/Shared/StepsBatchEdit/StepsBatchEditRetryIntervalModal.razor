@@ -2,11 +2,11 @@
 
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 
-<HxModal @ref="Modal" Title="Edit tags" Size="ModalSize.Small">
+<HxModal @ref="modal" Title="Edit tags" Size="ModalSize.Small">
     <BodyTemplate>
         <div class="row">
             <div class="col">
-                @if (Steps is not null)
+                @if (steps is not null)
                 {
                     <input class="form-control" type="number" placeholder="Retry interval (min)" min="0" @bind-value="RetryInterval" />
                 }
@@ -32,11 +32,9 @@
 
     [Parameter] public EventCallback<IEnumerable<Step>> OnStepsSubmit { get; set; }
 
-    private HxModal? Modal { get; set; }
-
-    private AppDbContext? Context { get; set; }
-
-    private List<Step>? Steps { get; set; }
+    private HxModal? modal;
+    private AppDbContext? context;
+    private List<Step>? steps;
 
     private int? RetryInterval
     {
@@ -59,15 +57,15 @@
             return;
         }
 
-        await Modal.LetAsync(x => x.ShowAsync());
+        await modal.LetAsync(x => x.ShowAsync());
 
-        if (Context is not null)
+        if (context is not null)
         {
-            await Context.DisposeAsync();
+            await context.DisposeAsync();
         }
-        Context = await DbContextFactory.CreateDbContextAsync();
+        context = await DbContextFactory.CreateDbContextAsync();
         var stepIds = SelectedSteps.Select(s => s.StepId).ToArray();
-        Steps = await JobDetails.BuildStepsQueryWithIncludes(Context)
+        steps = await JobDetails.BuildStepsQueryWithIncludes(context)
             .Where(s => stepIds.Contains(s.StepId))
             .ToListAsync();
     }
@@ -75,13 +73,13 @@
     private async Task CloseAsync()
     {
         RetryInterval = null;
-        await Modal.LetAsync(x => x.HideAsync());
+        await modal.LetAsync(x => x.HideAsync());
     }
 
     private async Task SubmitStepsAsync()
     {
-        ArgumentNullException.ThrowIfNull(Steps);
-        ArgumentNullException.ThrowIfNull(Context);
+        ArgumentNullException.ThrowIfNull(steps);
+        ArgumentNullException.ThrowIfNull(context);
 
         int interval;
         if (RetryInterval is int i)
@@ -93,15 +91,15 @@
             return;
         }
 
-        foreach (var step in Steps)
+        foreach (var step in steps)
         {
             step.RetryIntervalMinutes = interval;
         }
 
-        await Context.SaveChangesAsync();
-        await OnStepsSubmit.InvokeAsync(Steps);
+        await context.SaveChangesAsync();
+        await OnStepsSubmit.InvokeAsync(steps);
         await CloseAsync();
     }
 
-    public void Dispose() => Context?.Dispose();
+    public void Dispose() => context?.Dispose();
 }

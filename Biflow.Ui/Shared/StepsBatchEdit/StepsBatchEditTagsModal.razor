@@ -2,7 +2,7 @@
 
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 
-<HxModal @ref="Modal" Title="Edit tags">
+<HxModal @ref="modal" Title="Edit tags">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -34,10 +34,10 @@
         </div>
         <div class="row mt-3">
             <div class="col">
-                @if (Steps is not null)
+                @if (steps is not null)
                 {
                     <HxInputTags
-                        @bind-Value="Tags"
+                        @bind-Value="tags"
                         DataProvider="GetTagSuggestions"
                         SuggestMinimumLength="0"
                         SuggestDelay="0"
@@ -51,7 +51,7 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Success" Spinner="Saving" Enabled="!Saving" OnClick="SubmitStepsAsync">
+        <HxButton Color="ThemeColor.Success" Spinner="saving" Enabled="!saving" OnClick="SubmitStepsAsync">
             Save
         </HxButton>
         <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="CloseAsync">
@@ -65,18 +65,12 @@
 
     [Parameter] public EventCallback<IEnumerable<Step>> OnStepsSubmit { get; set; }
 
-    private HxModal? Modal { get; set; }
-
-    private bool Saving { get; set; } = false;
-
-    private AppDbContext? Context { get; set; }
-
-    protected HashSet<Tag>? AllTags { get; set; }
-
-    private List<string> Tags { get; set; } = new();
-
-    private List<Step>? Steps { get; set; }
-
+    private HxModal? modal;
+    private bool saving = false;
+    private AppDbContext? context;
+    protected HashSet<Tag>? allTags;
+    private List<string> tags = [];
+    private List<Step>? steps;
     private EditMode editMode = EditMode.Add;
 
     private enum EditMode { Add, Remove }
@@ -88,24 +82,24 @@
             return;
         }
 
-        await Modal.LetAsync(x => x.ShowAsync());
+        await modal.LetAsync(x => x.ShowAsync());
 
-        if (Context is not null)
+        if (context is not null)
         {
-            await Context.DisposeAsync();
+            await context.DisposeAsync();
         }
-        Context = await DbContextFactory.CreateDbContextAsync();
+        context = await DbContextFactory.CreateDbContextAsync();
         var stepIds = SelectedSteps.Select(s => s.StepId).ToArray();
-        Steps = await JobDetails.BuildStepsQueryWithIncludes(Context)
+        steps = await JobDetails.BuildStepsQueryWithIncludes(context)
             .Where(s => stepIds.Contains(s.StepId))
             .ToListAsync();
     }
 
     private async Task CloseAsync()
     {
-        Tags.Clear();
+        tags.Clear();
         SetEditMode(EditMode.Add);
-        await Modal.LetAsync(x => x.HideAsync());
+        await modal.LetAsync(x => x.HideAsync());
     }
 
     private void SetEditMode(EditMode editMode)
@@ -117,11 +111,11 @@
         this.editMode = editMode;
         if (editMode == EditMode.Add)
         {
-            Tags.Clear();
+            tags.Clear();
         }
         else if (editMode == EditMode.Remove)
         {
-            Tags = Steps?
+            tags = steps?
                 .SelectMany(s => s.Tags)
                 .Select(t => t.TagName)
                 .Distinct()
@@ -136,44 +130,44 @@
         await EnsureAllTagsInitialized();
         return new InputTagsDataProviderResult
             {
-                Data = AllTags?
+                Data = allTags?
                 .Select(t => t.TagName)
                 .Where(t => t.ContainsIgnoreCase(request.UserInput))
-                .Where(t => !Tags.Any(tag => t == tag))
+                .Where(t => !tags.Any(tag => t == tag))
                 .OrderBy(t => t) ?? Enumerable.Empty<string>()
             };
     }
 
     private async Task EnsureAllTagsInitialized()
     {
-        ArgumentNullException.ThrowIfNull(Context);
-        AllTags ??= (await Context.Tags.ToListAsync()).ToHashSet();
+        ArgumentNullException.ThrowIfNull(context);
+        allTags ??= (await context.Tags.ToListAsync()).ToHashSet();
     }
 
     private async Task SubmitStepsAsync()
     {
-        ArgumentNullException.ThrowIfNull(Steps);
-        ArgumentNullException.ThrowIfNull(Context);
+        ArgumentNullException.ThrowIfNull(steps);
+        ArgumentNullException.ThrowIfNull(context);
 
-        if (Tags.Any())
+        if (tags.Any())
         {
             if (editMode == EditMode.Add)
             {
-                var stepTagsToAdd = Steps
-                    .SelectMany(s => Tags, (s, t) => (Step: s, Tag: t))
+                var stepTagsToAdd = steps
+                    .SelectMany(s => tags, (s, t) => (Step: s, Tag: t))
                     .Where(st => !st.Step.Tags.Any(t => t.TagName == st.Tag))
                     .ToArray();
                 foreach (var (step, tagName) in stepTagsToAdd)
                 {
-                    var tag = AllTags?.FirstOrDefault(t => t.TagName == tagName) ?? new Tag(tagName);
-                    AllTags?.Add(tag); // In case of new tag, add it to the list.
+                    var tag = allTags?.FirstOrDefault(t => t.TagName == tagName) ?? new Tag(tagName);
+                    allTags?.Add(tag); // In case of new tag, add it to the list.
                     step.Tags.Add(tag);
                 }
             }
             else if (editMode == EditMode.Remove)
             {
-                var stepTagsToRemove = Steps
-                    .SelectMany(s => s.Tags.Where(t => !Tags.Contains(t.TagName)), (s, t) => (Step: s, Tag: t))
+                var stepTagsToRemove = steps
+                    .SelectMany(s => s.Tags.Where(t => !tags.Contains(t.TagName)), (s, t) => (Step: s, Tag: t))
                     .ToArray();
                 foreach (var (step, tag) in stepTagsToRemove)
                 {
@@ -181,12 +175,12 @@
                 }
             }
 
-            await Context.SaveChangesAsync();
-            await OnStepsSubmit.InvokeAsync(Steps);
+            await context.SaveChangesAsync();
+            await OnStepsSubmit.InvokeAsync(steps);
         }
 
         await CloseAsync();
     }
 
-    public void Dispose() => Context?.Dispose();
+    public void Dispose() => context?.Dispose();
 }
