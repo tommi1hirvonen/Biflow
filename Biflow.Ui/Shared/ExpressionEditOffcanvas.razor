@@ -2,25 +2,25 @@
 
 @inject IHxMessengerService Messenger
 
-<HxOffcanvas @ref="Offcanvas" Backdrop="OffcanvasBackdrop.False" Title="@(Parameter?.DisplayName ?? "")" OnClosed="OnClosed">
+<HxOffcanvas @ref="offcanvas" Backdrop="OffcanvasBackdrop.False" Title="@(parameter?.DisplayName ?? "")" OnClosed="OnClosed">
     <BodyTemplate>
-        @if (Parameter is not null)
+        @if (parameter is not null)
         {
             <div class="row">
                 <div class="col">
                     <label class="form-label">
                         Dynamic expression
                     </label>
-                    <CodeEditor @ref="Editor"
-                                InitialValueExpression="() => Parameter.Expression.Expression"
+                    <CodeEditor @ref="editor"
+                                InitialValueExpression="() => parameter.Expression.Expression"
                                 MinimapEnabled="false"
                                 Language="csharp"
-                                OnValueChanged="async (value) => { Parameter.Expression.Expression = value; await OnExpressionChanged.InvokeAsync(); }" />
+                                OnValueChanged="async (value) => { parameter.Expression.Expression = value; await OnExpressionChanged.InvokeAsync(); }" />
                 </div>
             </div>
             <div class="row mt-3">
                 <div class="col">
-                    <HxButton OnClick="() => TestEvaluate(Parameter)" Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
+                    <HxButton OnClick="() => TestEvaluate(parameter)" Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
                         <CxIcon Icon="FeatherIcon.Check" />
                         Test evaluate / validate
                     </HxButton>
@@ -28,7 +28,7 @@
             </div>
             @if (ChildContent is not null)
             {
-                @ChildContent(Parameter)
+                @ChildContent(parameter)
             }
         }
 
@@ -37,19 +37,19 @@
                 Use C# expressions to dynamically evaluate parameter values during job/step executions.
             </div>
             <div class="col-auto">
-                <HxButton CssClass="btn-auto" OnClick="() => HelpOpen = !HelpOpen">
+                <HxButton CssClass="btn-auto" OnClick="() => helpOpen = !helpOpen">
                     <CxIcon Icon="FeatherIcon.HelpCircle" />
                 </HxButton>
             </div>
         </div>
 
-        @if (HelpOpen)
+        @if (helpOpen)
         {
             <DynamicExpressionHelpComponent />
         }
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" OnClick="() => Offcanvas.LetAsync(x => x.HideAsync())">
+        <HxButton Color="ThemeColor.Secondary" OnClick="() => offcanvas.LetAsync(x => x.HideAsync())">
             Close
         </HxButton>
     </FooterTemplate>
@@ -62,22 +62,17 @@
 
     [Parameter] public EventCallback OnClosed { get; set; }
 
-    private HxOffcanvas? Offcanvas { get; set; }
-
-    private TParameter? Parameter { get; set; }
-
-    private CodeEditor? Editor { get; set; }
-
-    private string Title { get; set; } = "";
-
-    private bool HelpOpen { get; set; } = false;
+    private HxOffcanvas? offcanvas;
+    private TParameter? parameter;
+    private CodeEditor? editor;
+    private bool helpOpen = false;
 
     public async Task ShowAsync(TParameter parameter)
     {
-        Parameter = parameter;
-        await Editor.LetAsync(x => x.SetValueAsync(parameter.Expression.Expression));
+        this.parameter = parameter;
+        await editor.LetAsync(x => x.SetValueAsync(parameter.Expression.Expression));
         StateHasChanged(); // To update offcanvas title text
-        await Offcanvas.LetAsync(x => x.ShowAsync());
+        await offcanvas.LetAsync(x => x.ShowAsync());
     }
 
     private async Task TestEvaluate(TParameter parameter)

@@ -36,7 +36,7 @@
                         @foreach (var stepType in Enum.GetValues<StepType>().Where(type => !EditJob.JobConcurrencies.Any(c => c.StepType == type)))
                         {
                             <HxDropdownItem @onclick="() => EditJob.JobConcurrencies.Add(new JobConcurrency { StepType = stepType })">
-                                <StepTypeIconComponent StepType_="stepType" />
+                                <StepTypeIconComponent StepType="stepType" />
                                 @stepType
                             </HxDropdownItem>
                         }
@@ -58,7 +58,7 @@
                 {
                     <tr>
                         <td class="align-middle">
-                            <StepTypeIconComponent StepType_="concur.StepType" />
+                            <StepTypeIconComponent StepType="concur.StepType" />
                             @concur.StepType
                         </td>
                         <td>

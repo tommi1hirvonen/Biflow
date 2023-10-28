@@ -3,11 +3,11 @@
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHxMessengerService Messenger
 
-<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large">
+<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Large">
     <BodyTemplate>
-        @if (EditObject is not null)
+        @if (editObject is not null)
         {
-            <EditForm id="data_object_edit" Model="EditObject" OnValidSubmit="SubmitDataObjectAsync">
+            <EditForm id="data_object_edit" Model="editObject" OnValidSubmit="SubmitDataObjectAsync">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
                 <div class="row">
@@ -17,7 +17,7 @@
                             <div class="input-group-text">
                                 <CxIcon Icon="FeatherIcon.Server" />
                             </div>
-                            <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="EditObject.ServerName" />
+                            <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="editObject.ServerName" />
                         </div>
                     </div>
                     <div class="col">
@@ -26,7 +26,7 @@
                             <div class="input-group-text">
                                 <CxIcon Icon="FeatherIcon.Database" />
                             </div>
-                            <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="EditObject.DatabaseName" />
+                            <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="editObject.DatabaseName" />
                         </div>
                     </div>
                 </div>
@@ -37,7 +37,7 @@
                             <div class="input-group-text">
                                 <CxIcon Icon="FeatherIcon.Folder" />
                             </div>
-                            <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="EditObject.SchemaName" />
+                            <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="editObject.SchemaName" />
                         </div>
                     </div>
                     <div class="col-7">
@@ -46,7 +46,7 @@
                             <div class="input-group-text">
                                 <CxIcon Icon="FeatherIcon.Table" />
                             </div>
-                            <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="EditObject.ObjectName" />
+                            <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="editObject.ObjectName" />
                         </div>
                     </div>
                 </div>
@@ -57,7 +57,7 @@
                             <div class="input-group-text">
                                 <CxIcon Icon="FeatherIcon.Sliders" />
                             </div>
-                            <InputNumber style="max-width: 10rem;" class="form-control form-control-sm" @bind-Value="EditObject.MaxConcurrentWrites" />
+                            <InputNumber style="max-width: 10rem;" class="form-control form-control-sm" @bind-Value="editObject.MaxConcurrentWrites" />
                         </div>
                     </div>
                 </div>
@@ -68,7 +68,7 @@
         <HxSubmit FormId="data_object_edit" Color="ThemeColor.Success">
             Save
         </HxSubmit>
-        <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" OnClick="() => Offcanvas.LetAsync(x => x.HideAsync())">
+        <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" OnClick="() => offcanvas.LetAsync(x => x.HideAsync())">
             Cancel
         </HxButton>
     </FooterTemplate>
@@ -77,23 +77,21 @@
 @code {
     [Parameter] public EventCallback<DataObject> OnDataObjectSubmitted { get; set; }
 
-    private HxOffcanvas? Offcanvas { get; set; }
-
-    private DataObject? EditObject { get; set; }
-
-    private AppDbContext? EditContext { get; set; }
+    private HxOffcanvas? offcanvas;
+    private DataObject? editObject;
+    private AppDbContext? editContext;
 
     private async Task SubmitDataObjectAsync()
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(EditContext);
-            await EditContext.SaveChangesAsync();
-            await Offcanvas.LetAsync(x => x.HideAsync());
-            await OnDataObjectSubmitted.InvokeAsync(EditObject);
-            EditObject = null;
-            EditContext.Dispose();
-            EditContext = null;
+            ArgumentNullException.ThrowIfNull(editContext);
+            await editContext.SaveChangesAsync();
+            await offcanvas.LetAsync(x => x.HideAsync());
+            await OnDataObjectSubmitted.InvokeAsync(editObject);
+            editObject = null;
+            editContext.Dispose();
+            editContext = null;
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -107,15 +105,15 @@
 
     public async Task ShowAsync(Guid dataObjectId)
     {
-        EditContext = await DbContextFactory.CreateDbContextAsync();
-        EditObject = await EditContext.DataObjects
+        editContext = await DbContextFactory.CreateDbContextAsync();
+        editObject = await editContext.DataObjects
             .Include(o => o.Readers)
             .ThenInclude(s => s.Job)
             .Include(o => o.Writers)
             .ThenInclude(s => s.Job)
             .FirstAsync(o => o.ObjectId == dataObjectId);
-        await Offcanvas.LetAsync(x => x.ShowAsync());
+        await offcanvas.LetAsync(x => x.ShowAsync());
     }
 
-    public void Dispose() => EditContext?.Dispose();
+    public void Dispose() => editContext?.Dispose();
 }

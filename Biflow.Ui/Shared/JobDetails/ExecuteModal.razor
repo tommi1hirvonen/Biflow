@@ -87,7 +87,7 @@
                                             Step type
                                         </TitleTemplate>
                                         <ItemTemplate Context="item">
-                                            <StepTypeIconComponent StepType_="item" />
+                                            <StepTypeIconComponent StepType="item" />
                                             @item.ToString()
                                         </ItemTemplate>
                                     </FilterDropdown>
@@ -134,7 +134,7 @@
                                     {
                                         <tr style="cursor: pointer;">
                                             <td class="@(step.IsEnabled ? null : "text-secondary") align-middle" @onclick="() => step.AddToExecution()">
-                                                <StepTypeIconComponent StepType_="@step.StepType" />
+                                                <StepTypeIconComponent StepType="@step.StepType" />
                                                 &nbsp;
                                                 <HighlightableText Text="@step.StepName" PartToHighlight="@ExecuteFilterText" />
                                             </td>
@@ -176,7 +176,7 @@
                                     {
                                         <tr style="cursor: pointer;" @onclick="() => step.RemoveFromExecution()">
                                             <td>
-                                                <StepTypeIconComponent StepType_="@step.StepType" />
+                                                <StepTypeIconComponent StepType="@step.StepType" />
                                                 &nbsp;
                                                 @step.StepName
                                             </td>
@@ -220,7 +220,7 @@
                                     {
                                         <tr style="cursor: pointer;" class="@(step.StepId == ParameterEditStep?.StepId ? "fw-bold" : null)" @onclick="() => ToggleParameterEditStep(step)">
                                             <td>
-                                                <StepTypeIconComponent StepType_="@step.StepType" />
+                                                <StepTypeIconComponent StepType="@step.StepType" />
                                                 &nbsp;
                                                 @step.StepName
                                             </td>

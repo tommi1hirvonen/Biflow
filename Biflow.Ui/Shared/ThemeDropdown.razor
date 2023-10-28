@@ -2,7 +2,7 @@
 
 @inject ThemeService ThemeService
 
-<ThemeManager @ref="ThemeManager" />
+<ThemeManager @ref="themeManager" />
 
 <HxDropdownButtonGroup CssClass="ms-auto">
     <HxDropdownToggleButton Color="ThemeColor.None" CssClass="text-white" style="text-decoration: none;">
@@ -31,19 +31,19 @@
         </li>
         <li class="dropdown-item @(!ThemeService.IsAuto && ThemeService.CurrentTheme == Theme.Light ? "active" : null)"
             role="button"
-        @onclick="() => ThemeManager!.ToggleThemeAsync(Theme.Light)">
+        @onclick="() => themeManager!.ToggleThemeAsync(Theme.Light)">
             <CxIcon Icon="FeatherIcon.Sun" />
             Light
         </li>
         <li class="dropdown-item @(!ThemeService.IsAuto && ThemeService.CurrentTheme == Theme.Dark ? "active" : null)"
             role="button"
-        @onclick="() => ThemeManager!.ToggleThemeAsync(Theme.Dark)">
+        @onclick="() => themeManager!.ToggleThemeAsync(Theme.Dark)">
             <CxIcon Icon="FeatherIcon.Moon" />
             Dark
         </li>
         <li class="dropdown-item @(ThemeService.IsAuto ? "active" : null)"
             role="button"
-        @onclick="() => ThemeManager!.ToggleThemeAutoAsync()">
+        @onclick="() => themeManager!.ToggleThemeAutoAsync()">
             <CxIcon Icon="LucideIcon.Contrast" />
             Auto
         </li>
@@ -51,7 +51,7 @@
 </HxDropdownButtonGroup>
 
 @code {
-    private ThemeManager? ThemeManager { get; set; }
+    private ThemeManager? themeManager;
 
     protected override void OnInitialized()
     {

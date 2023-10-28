@@ -6,9 +6,9 @@
 {
     <td class="align-middle">
         <div class="form-check">
-            <input type="checkbox" class="form-check-input" id="@Id"
+            <input type="checkbox" class="form-check-input" id="@id"
             checked=@Parameter.UseExpression @bind-value="Parameter.UseExpression">
-            <label class="form-check-label fw-normal" for="@Id">Dynamic</label>
+            <label class="form-check-label fw-normal" for="@id">Dynamic</label>
         </div>
     </td>
     @if (Parameter.UseExpression)
@@ -43,7 +43,7 @@
 
     [Parameter] public RenderFragment? StaticEditTemplate { get; set; }
 
-    private Guid Id { get; } = Guid.NewGuid();
+    private readonly Guid id = Guid.NewGuid();
 
     private async Task TestEvaluate(TParameter parameter)
     {

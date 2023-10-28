@@ -69,7 +69,7 @@
                     Step type
                 </TitleTemplate>
                 <ItemTemplate Context="item">
-                    <StepTypeIconComponent StepType_="item" />
+                    <StepTypeIconComponent StepType="item" />
                     @item.ToString()
                 </ItemTemplate>
             </FilterDropdown>
@@ -97,7 +97,7 @@
                     {
                         <tr @onclick="() => AddDependency(step)" style="cursor: pointer;">
                             <td class="align-middle small">
-                                <StepTypeIconComponent StepType_="step.StepType" />
+                                <StepTypeIconComponent StepType="step.StepType" />
                                 <HighlightableText Text="@step.StepName" PartToHighlight="@DependenciesFilterText" />
                                 @if (multiJobAvailable)
                                 {
@@ -140,7 +140,7 @@
                             var title = dependency.IsCandidateForRemoval ? "Dependency not found in source/target mapping" : dependency.IsNewAddition ? "New dependency" : null;
                             <tr>
                                 <td class="align-middle small">
-                                    <StepTypeIconComponent StepType_="step.StepType" />
+                                    <StepTypeIconComponent StepType="step.StepType" />
                                     @step.StepName
                                     @if (externalDependencies)
                                     {

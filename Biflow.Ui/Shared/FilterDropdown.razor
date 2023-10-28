@@ -30,7 +30,7 @@
                                 <div class="input-group-text">
                                     <CxIcon Icon="FeatherIcon.Search" />
                                 </div>
-                                <input type="search" class="form-control" @bind-value="SearchText" @bind-value:event="oninput" placeholder="Search" />
+                                <input type="search" class="form-control" @bind-value="searchText" @bind-value:event="oninput" placeholder="Search" />
                             </div>
                         </div>
                     </div>
@@ -41,10 +41,10 @@
                     <div class="row">
                         <div class="col">
                             <div class="form-check form-check-inline">
-                                <input type="checkbox" class="form-check-input" id="@($"{ComponentInstanceId}_{id}")"
+                                <input type="checkbox" class="form-check-input" id="@($"{componentInstanceId}_{id}")"
                                        checked=@FilterSet.Contains(item)
                                        @onchange="args => Toggle((bool)args.Value!, item)">
-                                <label class="form-check-label fw-normal" for="@($"{ComponentInstanceId}_{id}")">
+                                <label class="form-check-label fw-normal" for="@($"{componentInstanceId}_{id}")">
                                     @if (ItemTemplate is not null)
                                     {
                                         @ItemTemplate(item)
@@ -73,12 +73,6 @@
 
     [Parameter]
     public IEnumerable<TItem>? Items { get; set; } = new List<TItem>();
-
-    private IEnumerable<TItem> FilteredItems => Items?
-        .Where(i => string.IsNullOrEmpty(SearchText)
-                    || TextSelector?.Invoke(i).ContainsIgnoreCase(SearchText) == true
-                    || i?.ToString()?.ContainsIgnoreCase(SearchText) == true)
-        ?? Enumerable.Empty<TItem>();
 
     [Parameter]
     public EventCallback OnChange { get; set; }
@@ -110,9 +104,14 @@
     [Parameter]
     public ButtonSize ButtonSize { get; set; } = ButtonSize.Small;
 
-    private Guid ComponentInstanceId { get; } = Guid.NewGuid();
+    private readonly Guid componentInstanceId = Guid.NewGuid();
+    private string searchText { get; set; } = "";
 
-    private string SearchText { get; set; } = "";
+    private IEnumerable<TItem> FilteredItems => Items?
+        .Where(i => string.IsNullOrEmpty(searchText)
+                    || TextSelector?.Invoke(i).ContainsIgnoreCase(searchText) == true
+                    || i?.ToString()?.ContainsIgnoreCase(searchText) == true)
+        ?? Enumerable.Empty<TItem>();
 
     private void Toggle(bool selected, TItem item)
     {

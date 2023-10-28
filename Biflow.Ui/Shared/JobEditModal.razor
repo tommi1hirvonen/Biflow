@@ -4,28 +4,28 @@
 @inject IHxMessengerService Messenger
 
 @{
-    var title = Job.JobId == Guid.Empty ? "New job" : $"Edit {Job.JobName}";
+    var title = job.JobId == Guid.Empty ? "New job" : $"Edit {job.JobName}";
 }
 
-<HxOffcanvas @ref="Offcanvas" Title="@title">
+<HxOffcanvas @ref="offcanvas" Title="@title">
     <BodyTemplate>
-        @if (Categories is not null)
+        @if (categories is not null)
         {
-            <EditForm Model="Job" OnValidSubmit="OnSubmit" id="job_edit_form">
+            <EditForm Model="job" OnValidSubmit="OnSubmit" id="job_edit_form">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
                 <div class="row">
                     <div class="col">
                         <label class="form-label">Name</label>
-                        <InputText @bind-Value="Job.JobName" class="form-control" />
+                        <InputText @bind-Value="job.JobName" class="form-control" />
                     </div>
                 </div>
                 <div class="row">
                     <div class="col">
                         <label class="form-label">Category</label>
-                        <InputSelect class="form-select" @bind-Value="Job.CategoryId" @bind-Value:after="SetCategory">
+                        <InputSelect class="form-select" @bind-Value="job.CategoryId" @bind-Value:after="SetCategory">
                             <option value="">No category</option>
-                            @foreach (var cat in Categories)
+                            @foreach (var cat in categories)
                             {
                                 <option value="@cat.CategoryId">@cat.CategoryName</option>
                             }
@@ -39,7 +39,7 @@
         <HxSubmit Color="ThemeColor.Success" FormId="job_edit_form">
             Save
         </HxSubmit>
-        <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" OnClick="() => Offcanvas.LetAsync(x => x.HideAsync())">
+        <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" OnClick="() => offcanvas.LetAsync(x => x.HideAsync())">
             Cancel
         </HxButton>
     </FooterTemplate>
@@ -48,29 +48,26 @@
 @code {
     [Parameter] public EventCallback<Job> OnJobSubmitted { get; set; }
 
-    private HxOffcanvas? Offcanvas { get; set; }
-
-    private AppDbContext? EditContext { get; set; }
-
-    private Job Job { get; set; } = new();
-
-    private IEnumerable<JobCategory>? Categories { get; set; }
+    private HxOffcanvas? offcanvas;
+    private AppDbContext? editContext;
+    private Job job = new();
+    private IEnumerable<JobCategory>? categories;
 
     private async Task OnSubmit()
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(EditContext);
-            if (Job.JobId == Guid.Empty)
+            ArgumentNullException.ThrowIfNull(editContext);
+            if (job.JobId == Guid.Empty)
             {
-                EditContext.Jobs.Add(Job);
+                editContext.Jobs.Add(job);
             }
-            await EditContext.SaveChangesAsync();
-            await Offcanvas.LetAsync(x => x.HideAsync());
-            await OnJobSubmitted.InvokeAsync(Job);
-            Job = new();
-            EditContext.Dispose();
-            EditContext = null;
+            await editContext.SaveChangesAsync();
+            await offcanvas.LetAsync(x => x.HideAsync());
+            await OnJobSubmitted.InvokeAsync(job);
+            job = new();
+            editContext.Dispose();
+            editContext = null;
         }
         catch (Exception ex)
         {
@@ -80,8 +77,8 @@
 
     private void SetCategory()
     {
-        Job.Category = Job.CategoryId is not null
-            ? Categories?.First(c => c.CategoryId == Job.CategoryId)
+        job.Category = job.CategoryId is not null
+            ? categories?.First(c => c.CategoryId == job.CategoryId)
             : null;
     }
 
@@ -89,21 +86,21 @@
     {
         try
         {
-            EditContext = await DbContextFactory.CreateDbContextAsync();
-            Categories = await EditContext.JobCategories
+            editContext = await DbContextFactory.CreateDbContextAsync();
+            categories = await editContext.JobCategories
                 .OrderBy(c => c.CategoryName)
                 .ToListAsync();
             if (job is not null)
             {
-                Job = await EditContext.Jobs
+                this.job = await editContext.Jobs
                     .Include(j => j.Category)
                     .FirstAsync(j => j.JobId == job.JobId);
             }
             else
             {
-                Job = new();
+                this.job = new();
             }
-            await Offcanvas.LetAsync(x => x.ShowAsync());
+            await offcanvas.LetAsync(x => x.ShowAsync());
         }
         catch (Exception ex)
         {
@@ -111,5 +108,5 @@
         }
     }
 
-    public void Dispose() => EditContext?.Dispose();
+    public void Dispose() => editContext?.Dispose();
 }

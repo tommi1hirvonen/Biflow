@@ -27,7 +27,7 @@
         <div id="hx_message_box_host_container">
             <HxMessageBoxHost />
         </div>
-        <SchedulerStatusComponent OnStatusMessageResolved="message => SchedulerServiceErrorMessage = message" />
+        <SchedulerStatusComponent OnStatusMessageResolved="message => schedulerServiceErrorMessage = message" />
         <header>
             <nav class="navbar navbar-dark navbar-custom sticky-top flex-lg-nowrap navbar-expand-lg p-0 shadow bg-gradient-primary">
                 <text class="navbar-brand navbar-brand-bg me-0 px-3">Biflow</text>
@@ -48,13 +48,13 @@
             <div role="row">
                 <NavMenu ClassString="@SidebarClass" OnNavLinkClick="CollapseSidebar" />
                 <main class="main pt-4 flex-grow-1">
-                    @if (SchedulerServiceErrorMessage is not null)
+                    @if (schedulerServiceErrorMessage is not null)
                     {
                         <HxAlert Color="ThemeColor.Warning">
-                            @SchedulerServiceErrorMessage
+                            @schedulerServiceErrorMessage
                         </HxAlert>
                     }
-                    <CascadingValue Value="UserState">
+                    <CascadingValue Value="userState">
                         @Body
                     </CascadingValue>
                 </main>
@@ -106,11 +106,12 @@
     [CascadingParameter]
     protected Task<AuthenticationState>? AuthStat { get; set; }
 
-    private bool collapseSidebar = true;
-    private string? SidebarClass => collapseSidebar ? "collapse" : null;
-    private string? SchedulerServiceErrorMessage { get; set; } = null;
+    private readonly UserState userState = new();
 
-    private UserState UserState { get; } = new();
+    private bool collapseSidebar = true;
+    private string? schedulerServiceErrorMessage = null;
+
+    private string? SidebarClass => collapseSidebar ? "collapse" : null;
 
     protected override async Task OnInitializedAsync()
     {

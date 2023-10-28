@@ -6,11 +6,11 @@
 @inject IJSRuntime JS
 
 <style>
-    @($"#{EditorId} {{ height: {InitialHeight}; resize: vertical; overflow: hidden; }}")
+    @($"#{editorId} {{ height: {InitialHeight}; resize: vertical; overflow: hidden; }}")
 </style>
 
-<StandaloneCodeEditor @ref="Editor"
-                      Id="@EditorId"
+<StandaloneCodeEditor @ref="editor"
+                      Id="@editorId"
                       ConstructionOptions="GetEditorOptions"
                       OnDidChangeModelContent="OnDidChangeModelContent"
                       CssClass="border" />
@@ -31,30 +31,29 @@
 
     [Parameter] public bool ReadOnly { get; set; } = false;
 
-    private StandaloneCodeEditor? Editor { get; set; }
-
-    private readonly string EditorId = $"_{Guid.NewGuid().ToString()}"; // prefix with underscode as html id cannot start with a number
+    private StandaloneCodeEditor? editor { get; set; }
+    private readonly string editorId = $"_{Guid.NewGuid().ToString()}"; // prefix with underscode as html id cannot start with a number
 
     public Task SetValueAsync(string? value)
     {
-        ArgumentNullException.ThrowIfNull(Editor);
-        return Editor.SetValue(value);
+        ArgumentNullException.ThrowIfNull(editor);
+        return editor.SetValue(value);
     }
 
     public async Task<string?> GetValueAsync()
     {
-        ArgumentNullException.ThrowIfNull(Editor);
-        var model = await Editor.GetModel();
+        ArgumentNullException.ThrowIfNull(editor);
+        var model = await editor.GetModel();
         var value = await model.GetValue(EndOfLinePreference.TextDefined, false);
         return value;
     }
 
     public async Task SetLanguageAsync(string language)
     {
-        ArgumentNullException.ThrowIfNull(Editor);
+        ArgumentNullException.ThrowIfNull(editor);
         var value = await GetValueAsync();
         var model = await Global.CreateModel(JS, value, language);
-        await Editor.SetModel(model);
+        await editor.SetModel(model);
     }
 
     protected override void OnInitialized()
@@ -89,7 +88,7 @@
         {
             Theme = theme == Theme.Dark ? "vs-dark" : "vs"
         };
-        Editor?.UpdateOptions(options);
+        editor?.UpdateOptions(options);
     }
 
     private async Task OnDidChangeModelContent(ModelContentChangedEvent e)
