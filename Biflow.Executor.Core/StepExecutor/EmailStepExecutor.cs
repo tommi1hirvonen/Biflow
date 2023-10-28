@@ -29,6 +29,6 @@ internal class EmailStepExecutor(
 
         await _messageDispatcher.SendMessageAsync(recipients, subject, body, false, cancellationToken);
 
-        return new Success();
+        return Result.Success;
     }
 }

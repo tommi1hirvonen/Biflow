@@ -67,17 +67,17 @@ internal class TabularStepExecutor(
             if (cancellationTokenSource.IsCancellationRequested)
             {
                 AddWarning(ex);
-                return new Cancel();
+                return Result.Cancel;
             }
             AddError(ex, "Step execution timed out");
-            return new Failure();
+            return Result.Failure;
         }
         catch (Exception ex)
         {
             AddError(ex, "Error processing tabular model");
-            return new Failure();
+            return Result.Failure;
         }
 
-        return new Success();
+        return Result.Success;
     }
 }

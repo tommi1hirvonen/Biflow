@@ -63,7 +63,7 @@ internal class QlikStepExecutor : StepExecutorBase
         {
             _logger.LogError(ex, "Error starting app refresh");
             AddError(ex, "Error starting app reload");
-            return new Failure();
+            return Result.Failure;
         }
 
         // Create timeout cancellation token source here
@@ -108,13 +108,13 @@ internal class QlikStepExecutor : StepExecutorBase
                 if (reload is { Status: "SUCCEEDED" })
                 {
                     AddOutput(reload.Log);
-                    return new Success();
+                    return Result.Success;
                 }
                 else if (reload is { Status: "FAILED" or "CANCELED" or "EXCEEDED_LIMIT" })
                 {
                     AddOutput(reload.Log);
                     AddError($"Reload reported status {reload.Status}");
-                    return new Failure();
+                    return Result.Failure;
                 }
                 // Reload not finished => iterate again
             }
@@ -125,15 +125,15 @@ internal class QlikStepExecutor : StepExecutorBase
                 if (timeoutCts.IsCancellationRequested)
                 {
                     AddError(ex, "Step execution timed out");
-                    return new Failure();
+                    return Result.Failure;
                 }
                 AddWarning(ex);
-                return new Cancel();
+                return Result.Cancel;
             }
             catch (Exception ex)
             {
                 AddError(ex, "Error getting reload status");
-                return new Failure();
+                return Result.Failure;
             }
         }
     }

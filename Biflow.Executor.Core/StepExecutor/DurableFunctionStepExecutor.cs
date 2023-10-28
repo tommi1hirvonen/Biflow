@@ -48,15 +48,15 @@ internal class DurableFunctionStepExecutor(
             if (cancellationTokenSource.IsCancellationRequested)
             {
                 AddWarning(ex);
-                return new Cancel();
+                return Result.Cancel;
             }
             AddError(ex, "Invoking durable function timed out");
-            return new Failure();
+            return Result.Failure;
         }
         catch (Exception ex)
         {
             AddError(ex, "Error sending POST request to invoke function");
-            return new Failure();
+            return Result.Failure;
         }
 
         StartResponse startResponse;
@@ -69,7 +69,7 @@ internal class DurableFunctionStepExecutor(
         catch (Exception ex)
         {
             AddError(ex, "Error getting start response for durable function");
-            return new Failure();
+            return Result.Failure;
         }
 
         // Create timeout cancellation token source here
@@ -124,32 +124,32 @@ internal class DurableFunctionStepExecutor(
                 if (timeoutCts.IsCancellationRequested)
                 {
                     AddError(ex, "Step execution timed out");
-                    return new Failure();
+                    return Result.Failure;
                 }
                 AddWarning(ex);
-                return new Cancel();
+                return Result.Cancel;
             }
             catch (Exception ex)
             {
                 AddError(ex, "Error getting function status");
-                return new Failure();
+                return Result.Failure;
             }
         }
         
         if (status.RuntimeStatus == "Completed")
         {
             AddOutput(status.Output?.ToString());
-            return new Success();
+            return Result.Success;
         }
         else if (status.RuntimeStatus == "Terminated")
         {
             AddError(status.Output?.ToString() ?? "Function was terminated");
-            return new Failure();
+            return Result.Failure;
         }
         else
         {
             AddError(status.Output?.ToString() ?? "Function failed");
-            return new Failure();
+            return Result.Failure;
         }
 
     }

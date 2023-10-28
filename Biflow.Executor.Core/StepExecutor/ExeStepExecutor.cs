@@ -57,7 +57,7 @@ internal class ExeStepExecutor(
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error starting process for file name {FileName}", Step.ExecutionId, Step, Step.ExeFileName);
             AddError(ex, "Error starting process");
-            return new Failure();
+            return Result.Failure;
         }
 
         try
@@ -95,12 +95,12 @@ internal class ExeStepExecutor(
             // If SuccessExitCode was defined, check the actual ExitCode. If SuccessExitCode is not defined, then report success in any case (not applicable).
             if (Step.ExeSuccessExitCode is null || process.ExitCode == Step.ExeSuccessExitCode)
             {
-                return new Success();
+                return Result.Success;
             }
             else
             {
                 AddError($"Process finished with exit code {process.ExitCode}");
-                return new Failure();
+                return Result.Failure;
             }
         }
         catch (OperationCanceledException cancelEx)
@@ -119,16 +119,16 @@ internal class ExeStepExecutor(
             if (timeoutCts.IsCancellationRequested)
             {
                 AddError(cancelEx, "Executing exe timed out");
-                return new Failure();
+                return Result.Failure;
             }
             AddWarning(cancelEx);
-            return new Cancel();
+            return Result.Cancel;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error while executing {FileName}", Step.ExecutionId, Step, Step.ExeFileName);
             AddError(ex, "Error while executing exe");
-            return new Failure();
+            return Result.Failure;
         }
     }
 }

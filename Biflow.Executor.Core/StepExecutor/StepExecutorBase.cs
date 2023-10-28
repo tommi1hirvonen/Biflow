@@ -159,12 +159,12 @@ internal abstract class StepExecutorBase
             if (ex is OperationCanceledException canceled && cancellationTokenSource.IsCancellationRequested)
             {
                 AddWarning(canceled);
-                result = new Cancel();
+                result = Result.Cancel;
             }
             else
             {
                 AddError(ex, "Unhandled error caught in base executor");
-                result = new Failure();
+                result = Result.Failure;
             }
         }
 

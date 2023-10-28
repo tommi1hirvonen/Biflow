@@ -39,7 +39,7 @@ internal class DatasetStepExecutor(
         {
             _logger.LogError(ex, "Error starting dataset refresh");
             AddError(ex, "Error starting dataset refresh operation");
-            return new Failure();
+            return Result.Failure;
         }
 
         // Wait for 5 seconds before first attempting to get the dataset refresh status.
@@ -52,12 +52,12 @@ internal class DatasetStepExecutor(
                 var refresh = await Step.AppRegistration.GetDatasetRefreshStatus(_tokenService, Step.DatasetGroupId, Step.DatasetId, cancellationToken);
                 if (refresh?.Status == "Completed")
                 {
-                    return new Success();
+                    return Result.Success;
                 }
                 else if (refresh?.Status == "Failed" || refresh?.Status == "Disabled")
                 {
                     AddError(refresh.ServiceExceptionJson);
-                    return new Failure();
+                    return Result.Failure;
                 }
                 else
                 {
@@ -67,12 +67,12 @@ internal class DatasetStepExecutor(
             catch (OperationCanceledException ex)
             {
                 AddWarning(ex);
-                return new Cancel();
+                return Result.Cancel;
             }
             catch (Exception ex)
             {
                 AddError(ex, "Error getting dataset refresh status");
-                return new Failure();
+                return Result.Failure;
             }
         }
     }

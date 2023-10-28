@@ -44,7 +44,7 @@ internal class PackageStepExecutor(
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error executing package", Step.ExecutionId, Step);
             AddError(ex, "Error starting package execution");
-            return new Failure();
+            return Result.Failure;
         }
 
         // Initialize timeout cancellation token source already here
@@ -94,16 +94,16 @@ internal class PackageStepExecutor(
             if (timeoutCts.IsCancellationRequested)
             {
                 AddError(ex, "Step execution timed out");
-                return new Failure();
+                return Result.Failure;
             }
             AddWarning(ex);
-            return new Cancel();
+            return Result.Cancel;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error monitoring package execution status", Step.ExecutionId, Step);
             AddError(ex, "Error monitoring package execution status");
-            return new Failure();
+            return Result.Failure;
         }
 
         // The package has completed. If the package failed, retrieve error messages.
@@ -117,17 +117,17 @@ internal class PackageStepExecutor(
                     if (error is not null)
                         AddError(error);
                 }
-                return new Failure();
+                return Result.Failure;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{ExecutionId} {Step} Error getting package error messages", Step.ExecutionId, Step);
                 AddError(ex, "Error getting package error messages");
-                return new Failure();
+                return Result.Failure;
             }
         }
 
-        return new Success();
+        return Result.Success;
     }
 
     private async Task<long> StartExecutionAsync(string connectionString)

@@ -44,26 +44,26 @@ internal class FunctionStepExecutor(
             if (timeoutCts.IsCancellationRequested)
             {
                 AddError(ex, "Step execution timed out");
-                return new Failure();
+                return Result.Failure;
             }
             AddWarning(ex);
-            return new Cancel();
+            return Result.Cancel;
         }
         catch (Exception ex)
         {
             AddError(ex, "Error sending POST request to invoke function");
-            return new Failure();
+            return Result.Failure;
         }
 
         try
         {
             response.EnsureSuccessStatusCode();
-            return new Success();
+            return Result.Success;
         }
         catch (Exception ex)
         {
             AddError(ex, "Function execution failed");
-            return new Failure();
+            return Result.Failure;
         }
     }
 

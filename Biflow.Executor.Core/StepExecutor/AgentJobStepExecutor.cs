@@ -40,7 +40,7 @@ internal class AgentJobStepExecutor(
         catch (Exception ex)
         {
             AddError(ex, "Error starting agent job");
-            return new Failure();
+            return Result.Failure;
         }
 
         using var timeoutCts = Step.TimeoutMinutes > 0
@@ -73,15 +73,15 @@ internal class AgentJobStepExecutor(
             if (timeoutCts.IsCancellationRequested)
             {
                 AddError(ex, "Step execution timed out");
-                return new Failure();
+                return Result.Failure;
             }
             AddWarning(ex);
-            return new Cancel();
+            return Result.Cancel;
         }
         catch (Exception ex)
         {
             AddError(ex, "Error monitoring agent job execution status");
-            return new Failure();
+            return Result.Failure;
         }
 
         try
@@ -122,24 +122,24 @@ internal class AgentJobStepExecutor(
             if (status == 1)
             {
                 AddOutput(messageString);
-                return new Success();
+                return Result.Success;
             }
             else if (status == 0 || status == 3)
             {
                 AddError(messageString);
-                return new Failure();
+                return Result.Failure;
             }
             else
             {
                 AddOutput(messageString);
                 AddError($"Unexpected agent job history run status ({status}) after execution.\n{jobOutcome}");
-                return new Failure();
+                return Result.Failure;
             }
         }
         catch (Exception ex)
         {
             AddError(ex, "Error getting agent job status and message from msdb.dbo.sysjobhistory");
-            return new Failure();
+            return Result.Failure;
         }
     }
 

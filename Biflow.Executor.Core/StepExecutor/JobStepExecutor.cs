@@ -65,7 +65,7 @@ internal class JobStepExecutor(
             if (execution is null)
             {
                 AddWarning("Child job execution contained no steps");
-                return new Success();
+                return Result.Success;
             }
             jobExecutionId = execution.ExecutionId;
         }
@@ -73,7 +73,7 @@ internal class JobStepExecutor(
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error initializing execution for job {jobId}", Step.ExecutionId, Step, Step.JobToExecuteId);
             AddError(ex, "Error initializing job execution");
-            return new Failure();
+            return Result.Failure;
         }
 
         try
@@ -105,7 +105,7 @@ internal class JobStepExecutor(
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error starting executor process for execution {executionId}", Step.ExecutionId, Step, jobExecutionId);
             AddError(ex, "Error starting executor process");
-            return new Failure();
+            return Result.Failure;
         }
 
         if (Step.JobExecuteSynchronized)
@@ -118,7 +118,7 @@ internal class JobStepExecutor(
             {
                 _executionManager.CancelExecution(jobExecutionId, cancellationTokenSource.Username);
                 AddWarning(ex);
-                return new Cancel();
+                return Result.Cancel;
             }
 
             try
@@ -131,7 +131,7 @@ internal class JobStepExecutor(
                 
                 if (status is ExecutionStatus.Succeeded or ExecutionStatus.Warning)
                 {
-                    return new Success();
+                    return Result.Success;
                 }
 
                 var error = status switch
@@ -144,17 +144,17 @@ internal class JobStepExecutor(
                     _ => "Unhandled sub-execution status",
                 };
                 AddError(error);
-                return new Failure();
+                return Result.Failure;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{ExecutionId} {Step} Error getting sub-execution status for execution id {executionId}", Step.ExecutionId, Step, jobExecutionId);
                 AddError(ex, "Error getting sub-execution status");
-                return new Failure();
+                return Result.Failure;
             }
         }
 
-        return new Success();
+        return Result.Success;
     }
 
 }

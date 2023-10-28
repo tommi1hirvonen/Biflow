@@ -76,15 +76,15 @@ internal class SqlStepExecutor(
             if (cancellationToken.IsCancellationRequested)
             {
                 AddWarning(ex);
-                return new Cancel();
+                return Result.Cancel;
             }
 
             _logger.LogWarning(ex, "{ExecutionId} {Step} SQL execution failed", Step.ExecutionId, Step);
 
-            return new Failure();
+            return Result.Failure;
         }
 
-        return new Success();
+        return Result.Success;
     }
 
     private void Connection_InfoMessage(object sender, SqlInfoMessageEventArgs e) => AddOutput(e.Message);
