@@ -1,4 +1,5 @@
-﻿
+﻿@using ES = DataAccess.Models.ExecutionStatus
+
 @{
     var (color, icon) = Badge;
     var badgeCss = $"bg-{color}-subtle border-{color}-subtle text-{color}-emphasis";
@@ -7,21 +8,21 @@
 <span class="rounded border d-inline-flex align-items-center fw-semibold @badgeCss"
       style="font-size: 0.8rem; padding-left: 0.3rem; padding-right: 0.3rem; padding-top: 0.1rem; padding-bottom: 0.1rem; border-width: 1.5px !important;">
     <CxIcon Icon="icon" />
-    <span class="ms-1">@ExecutionStatus_</span>
+    <span class="ms-1">@ExecutionStatus</span>
 </span>
 
 @code {
-    [Parameter] public ExecutionStatus? ExecutionStatus_ { get; set; }
+    [Parameter] public ExecutionStatus? ExecutionStatus { get; set; }
 
-    private (string Color, FeatherIcon Icon) Badge => ExecutionStatus_ switch
+    private (string Color, FeatherIcon Icon) Badge => ExecutionStatus switch
     {
-        ExecutionStatus.Succeeded => ("success", FeatherIcon.CheckCircle),
-        ExecutionStatus.Failed => ("danger", FeatherIcon.AlertOctagon),
-        ExecutionStatus.Warning => ("warning", FeatherIcon.AlertTriangle),
-        ExecutionStatus.Stopped => ("warning", FeatherIcon.XOctagon),
-        ExecutionStatus.Suspended => ("warning", FeatherIcon.AlertTriangle),
-        ExecutionStatus.Running => ("primary", FeatherIcon.Play),
-        ExecutionStatus.NotStarted => ("secondary", FeatherIcon.Clock),
+        ES.Succeeded => ("success", FeatherIcon.CheckCircle),
+        ES.Failed => ("danger", FeatherIcon.AlertOctagon),
+        ES.Warning => ("warning", FeatherIcon.AlertTriangle),
+        ES.Stopped => ("warning", FeatherIcon.XOctagon),
+        ES.Suspended => ("warning", FeatherIcon.AlertTriangle),
+        ES.Running => ("primary", FeatherIcon.Play),
+        ES.NotStarted => ("secondary", FeatherIcon.Clock),
         _ => ("", FeatherIcon.HelpCircle)
     };
 }

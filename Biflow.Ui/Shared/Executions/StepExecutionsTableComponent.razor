@@ -44,7 +44,7 @@
         else
         {
             <Virtualize TItem="StepExecutionProjection" Context="item" SpacerElement="tr" Items="Executions.ToList()" OverscanCount="20" ItemSize="34.2321f">
-                <tr class="@(SelectedStepExecution == item ? "bg-body-tertiary" : null)" style="cursor: pointer;" @onclick="async () => await ToggleSelectedStepExecutionAsync(item)">
+                <tr class="@(selectedStepExecution == item ? "bg-body-tertiary" : null)" style="cursor: pointer;" @onclick="async () => await ToggleSelectedStepExecutionAsync(item)">
                     @if (ShowDetailed)
                     {
                         <td>
@@ -73,9 +73,9 @@
                         <StepExecutionStatusBadgeComponent ExecutionStatus="@item.ExecutionStatus" />
                     </td>
                 </tr>
-                @if (SelectedStepExecution == item)
+                @if (selectedStepExecution == item)
                 {
-                    if (DetailStep is null)
+                    if (detailStep is null)
                     {
                         <tr>
                             <td colspan="7" class="text-center">
@@ -88,12 +88,12 @@
                         <tr class="table-borderless no-hover bg-body-tertiary">
                             <td colspan="7" class="px-3">
                                 <HxButtonToolbar CssClass="mb-3 mt-1 ms-2">
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await StepHistoryOffcanvas.LetAsync(x => x.ShowAsync(DetailStep.StepId))">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(detailStep.StepId))">
                                         <CxIcon Icon="LucideIcon.History" />
                                         History
                                     </HxButton>
                                     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-                                        @if (DetailStep.CanBeStopped)
+                                        @if (detailStep.CanBeStopped)
                                         {
                                             <HxDropdownButtonGroup CssClass="ms-3">
                                                 <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger">
@@ -101,14 +101,14 @@
                                                     Stop
                                                 </HxDropdownToggleButton>
                                                 <HxDropdownMenu>
-                                                    <HxDropdownItem @onclick="async () => await StopStepExecutionAsync(DetailStep)">Confirm</HxDropdownItem>
+                                                    <HxDropdownItem @onclick="async () => await StopStepExecutionAsync(detailStep)">Confirm</HxDropdownItem>
                                                 </HxDropdownMenu>
                                             </HxDropdownButtonGroup>
                                         }
                                     </AuthorizeView>
                                 </HxButtonToolbar>
 
-                                <StepExecutionDetailsComponent StepExecutionAttempt="DetailStep" />
+                                <StepExecutionDetailsComponent StepExecutionAttempt="detailStep" />
                             </td>
                         </tr>
                     }
@@ -118,7 +118,7 @@
     </tbody>
 </table>
 
-<StepHistoryOffcanvas @ref="StepHistoryOffcanvas" />
+<StepHistoryOffcanvas @ref="stepHistoryOffcanvas" />
 
 @code {
     [Parameter]
@@ -130,33 +130,31 @@
     [Parameter]
     public Func<StepExecutionProjection, StepExecutionAttempt?>? DetailStepProvider { get; set; }
 
-    private StepExecutionProjection? SelectedStepExecution { get; set; }
-
-    private StepHistoryOffcanvas? StepHistoryOffcanvas { get; set; }
-
-    private StepExecutionAttempt? DetailStep { get; set; }
+    private StepExecutionProjection? selectedStepExecution;
+    private StepHistoryOffcanvas? stepHistoryOffcanvas;
+    private StepExecutionAttempt? detailStep;
 
     private async Task ToggleSelectedStepExecutionAsync(StepExecutionProjection execution)
     {
         // If the selected execution is the same that was previously selected, set to null
         // => hides step execution details component.
-        if (SelectedStepExecution == execution)
+        if (selectedStepExecution == execution)
         {
-            SelectedStepExecution = null;
-            DetailStep = null;
+            selectedStepExecution = null;
+            detailStep = null;
         }
         else
         {
-            SelectedStepExecution = execution;
+            selectedStepExecution = execution;
 
             if (DetailStepProvider is not null)
             {
-                DetailStep = DetailStepProvider(execution);
+                detailStep = DetailStepProvider(execution);
             }
             else
             {
                 using var context = await DbContextFactory.CreateDbContextAsync();
-                DetailStep = await context.StepExecutionAttempts
+                detailStep = await context.StepExecutionAttempts
                     .AsNoTrackingWithIdentityResolution()
                     .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
                     .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")

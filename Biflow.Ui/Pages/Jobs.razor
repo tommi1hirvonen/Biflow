@@ -70,7 +70,7 @@
                     Status
                 </TitleTemplate>
                 <ItemTemplate Context="item">
-                    <JobExecutionStatusBadgeComponent ExecutionStatus_="item" />
+                    <JobExecutionStatusBadgeComponent ExecutionStatus="item" />
                 </ItemTemplate>
             </FilterDropdown>
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() =>
@@ -214,7 +214,7 @@
                                 <td class="align-middle">
                                     @if (lastExecution is not null)
                                     {
-                                        <JobExecutionStatusBadgeComponent ExecutionStatus_="lastExecution.ExecutionStatus" />
+                                        <JobExecutionStatusBadgeComponent ExecutionStatus="lastExecution.ExecutionStatus" />
                                     }
                                 </td>
                                 <td class="align-middle @(!item.IsEnabled ? "text-body-tertiary" : null)">

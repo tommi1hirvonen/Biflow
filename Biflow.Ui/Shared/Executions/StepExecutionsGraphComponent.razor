@@ -60,7 +60,7 @@
                         {
                             (var offset, var width) = (execution.StartDateTime, execution.EndDateTime)
                                 .GetGanttGraphDimensions(Executions.Select(e => (e.StartDateTime, e.EndDateTime)));
-                            <div class="progress hover @(execution == SelectedStepExecution ? "active" : null) @execution.ExecutionStatus.ToString().ToLower()"
+                            <div class="progress hover @(execution == selectedStepExecution ? "active" : null) @execution.ExecutionStatus.ToString().ToLower()"
                                  style="cursor: pointer; position: absolute; width: @($"{width.ToString("F10", CultureInfo.InvariantCulture)}%"); left: @($"{offset.ToString("F10", CultureInfo.InvariantCulture)}%");"
                                  title="@($"{execution.ExecutionStatus}, {execution.ExecutionInSeconds?.SecondsToReadableFormat()}")"
                                  @onclick="() => ToggleSelectedStepExecutionAsync(execution)">
@@ -69,9 +69,9 @@
                         }
                     </div>
                 </div>
-                @if (SelectedStepExecution is not null && group.Contains(SelectedStepExecution))
+                @if (selectedStepExecution is not null && group.Contains(selectedStepExecution))
                 {
-                    if (DetailStep is null)
+                    if (detailStep is null)
                     {
                         <div class="row bg-body-tertiary">
                             <div class="col text-center">
@@ -84,16 +84,16 @@
                         <div class="row bg-body-tertiary">
                             <div class="col">
                                 <HxButtonToolbar CssClass="mb-3 mt-2 ms-2">
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => ToggleSelectedStepExecutionAsync(SelectedStepExecution)">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => ToggleSelectedStepExecutionAsync(selectedStepExecution)">
                                         <CxIcon Icon="FeatherIcon.X" />
                                         Close
                                     </HxButton>
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto ms-3" @onclick="async () => await StepHistoryOffcanvas.LetAsync(x => x.ShowAsync(DetailStep.StepId))">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto ms-3" @onclick="async () => await stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(detailStep.StepId))">
                                         <CxIcon Icon="LucideIcon.History" />
                                         History
                                     </HxButton>
                                     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-                                        @if (DetailStep.CanBeStopped)
+                                        @if (detailStep.CanBeStopped)
                                         {
                                             <HxDropdownButtonGroup CssClass="ms-3">
                                                 <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger">
@@ -101,14 +101,14 @@
                                                     Stop
                                                 </HxDropdownToggleButton>
                                                 <HxDropdownMenu>
-                                                    <HxDropdownItem @onclick="() => StopStepExecutionAsync(DetailStep)">Confirm</HxDropdownItem>
+                                                    <HxDropdownItem @onclick="() => StopStepExecutionAsync(detailStep)">Confirm</HxDropdownItem>
                                                 </HxDropdownMenu>
                                             </HxDropdownButtonGroup>
                                         }
                                     </AuthorizeView>
                                 </HxButtonToolbar>
 
-                                <StepExecutionDetailsComponent StepExecutionAttempt="DetailStep" ShowExtraDetails />
+                                <StepExecutionDetailsComponent StepExecutionAttempt="detailStep" ShowExtraDetails />
                         </div>
                     </div>
                     }
@@ -118,7 +118,7 @@
     </div>
 </div>
 
-<StepHistoryOffcanvas @ref="StepHistoryOffcanvas" />
+<StepHistoryOffcanvas @ref="stepHistoryOffcanvas" />
 
 @code {
     [Parameter] public IEnumerable<StepExecutionProjection>? Executions { get; set; }
@@ -129,31 +129,29 @@
 
     private const int Columns = 12;
 
-    private StepExecutionProjection? SelectedStepExecution { get; set; }
-
-    private StepHistoryOffcanvas? StepHistoryOffcanvas { get; set; }
-
-    private StepExecutionAttempt? DetailStep { get; set; }
+    private StepExecutionProjection? selectedStepExecution;
+    private StepHistoryOffcanvas? stepHistoryOffcanvas;
+    private StepExecutionAttempt? detailStep;
 
     private async Task ToggleSelectedStepExecutionAsync(StepExecutionProjection execution)
     {
-        if (SelectedStepExecution == execution)
+        if (selectedStepExecution == execution)
         {
-            SelectedStepExecution = null;
-            DetailStep = null;
+            selectedStepExecution = null;
+            detailStep = null;
         }
         else
         {
-            SelectedStepExecution = execution;
+            selectedStepExecution = execution;
 
             if (DetailStepProvider is not null)
             {
-                DetailStep = DetailStepProvider(execution);
+                detailStep = DetailStepProvider(execution);
             }
             else
             {
                 using var context = await DbContextFactory.CreateDbContextAsync();
-                DetailStep = await context.StepExecutionAttempts
+                detailStep = await context.StepExecutionAttempts
                     .AsNoTrackingWithIdentityResolution()
                     .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
                     .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")

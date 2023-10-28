@@ -1,11 +1,11 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbFactory
 
-<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" Title="@StepName">
+<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Large" Title="@StepName">
     <BodyTemplate>
         <div class="row">
             <div class="col-auto d-inline-flex align-items-center">
                 <label>No of executions</label>
-                <input @bind-value="MaxExecutions" class="form-control form-control-sm ms-3" type="number" style="max-width: 5rem;">
+                <input @bind-value="maxExecutions" class="form-control form-control-sm ms-3" type="number" style="max-width: 5rem;">
             </div>
             <div class="col">
                 <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="ReloadAsync">
@@ -16,13 +16,13 @@
         </div>
         <div class="row mt-1">
             <div class="col">
-                <small class="text-muted">Actual no of executions: @Executions?.Count()</small>
+                <small class="text-muted">Actual no of executions: @executions?.Count()</small>
             </div>
         </div>
 
         <div class="row">
             <div class="col">
-                <LineChart Dataset="LineChartDataset" />
+                <LineChart Dataset="lineChartDataset" />
             </div>
         </div>
 
@@ -44,25 +44,25 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Executions is null)
+                        @if (executions is null)
                         {
                             <tr><td colspan="4" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                         }
-                        else if (!Executions.Any())
+                        else if (!executions.Any())
                         {
                             <tr><td colspan="4">No executions</td></tr>
                         }
                         else
                         {
-                            @foreach (var execution in Executions)
+                            @foreach (var execution in executions)
                             {
-                                <tr class="@(SelectedStepExecution == execution ? "bg-body-tertiary" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(execution)">
+                                <tr class="@(selectedStepExecution == execution ? "bg-body-tertiary" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(execution)">
                                     <td>@execution.StartDateTime?.LocalDateTime</td>
                                     <td>@execution.EndDateTime?.LocalDateTime</td>
                                     <td>@execution.GetDurationInReadableFormat()</td>
                                     <td><StepExecutionStatusBadgeComponent ExecutionStatus="@execution.ExecutionStatus" /></td>
                                 </tr>
-                                @if (SelectedStepExecution == execution)
+                                @if (selectedStepExecution == execution)
                                 {
                                     <tr class="table-borderless no-hover bg-body-tertiary">
                                         <td colspan="4">
@@ -78,45 +78,40 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
 @code {
-    private string StepName => Executions?.FirstOrDefault()?.StepExecution?.StepName ?? "";
-
-    private HxOffcanvas? Offcanvas { get; set; }
-
-    private LineChartDataset? LineChartDataset { get; set; }
-
-    private IEnumerable<StepExecutionAttempt>? Executions { get; set; }
+    private HxOffcanvas? offcanvas;
+    private LineChartDataset? lineChartDataset;
+    private IEnumerable<StepExecutionAttempt>? executions;
+    private int maxExecutions = DefaultMaxExecutions;
+    private StepExecutionAttempt? selectedStepExecution;
+    private Guid stepId;
 
     private const int DefaultMaxExecutions = 50;
 
-    private int MaxExecutions = DefaultMaxExecutions;
-
-    private StepExecutionAttempt? SelectedStepExecution { get; set; }
-
-    private Guid StepId;
+    private string StepName => executions?.FirstOrDefault()?.StepExecution?.StepName ?? "";
 
     private double AverageDurationInSeconds =>
-        (int)(Executions
+        (int)(executions
             ?.Where(e => e.ExecutionStatus == StepExecutionStatus.Succeeded || e.ExecutionStatus == StepExecutionStatus.Warning)
             .Average(e => e.ExecutionInSeconds)
             ?? 0);
 
     private void ToggleSelectedStepExecution(StepExecutionAttempt execution)
     {
-        SelectedStepExecution = SelectedStepExecution == execution ? null : execution;
+        selectedStepExecution = selectedStepExecution == execution ? null : execution;
         StateHasChanged();
     }
 
     public async Task ShowAsync(Guid stepId)
     {
-        StepId = stepId;
-        Executions = null;
-        MaxExecutions = DefaultMaxExecutions;
-        await Offcanvas.LetAsync(x => x.ShowAsync());
+        this.stepId = stepId;
+        executions = null;
+        maxExecutions = DefaultMaxExecutions;
+        await offcanvas.LetAsync(x => x.ShowAsync());
         await ReloadAsync();
         StateHasChanged();
     }
@@ -124,7 +119,7 @@
     private async Task ReloadAsync()
     {
         var context = await DbFactory.CreateDbContextAsync();
-        Executions = await context.StepExecutionAttempts
+        executions = await context.StepExecutionAttempts
             .AsNoTrackingWithIdentityResolution()
             .IgnoreQueryFilters()
             .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
@@ -135,13 +130,13 @@
             .Include(e => e.StepExecution)
             .ThenInclude(e => e.ExecutionConditionParameters)
             .ThenInclude(p => p.ExecutionParameter)
-            .Where(e => e.StepId == StepId)
+            .Where(e => e.StepId == stepId)
             .OrderByDescending(execution => execution.StepExecution.Execution.CreatedDateTime)
             .ThenByDescending(Execution => Execution.StartDateTime)
-            .Take(MaxExecutions)
+            .Take(maxExecutions)
             .ToArrayAsync();
 
-        var datapoints = Executions
+        var datapoints = executions
             .Where(e => e.StartDateTime is not null)
             .GroupBy(group => ((DateTimeOffset)group.StartDateTime!).Date)
             .Select(select => new TimeSeriesDataPoint(DateOnly.FromDateTime(select.Key.Date), select.Average(total => (decimal)(total.ExecutionInSeconds ?? 0) / 60))) // Calculate avg. duration in minutes per day
@@ -150,6 +145,6 @@
         {
             new LineChartSeries("Avg. duration", datapoints)
         };
-        LineChartDataset = new LineChartDataset(series, "min", 0);
+        lineChartDataset = new LineChartDataset(series, "min", 0);
     }
 }

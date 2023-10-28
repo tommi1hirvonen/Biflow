@@ -5,16 +5,16 @@
 @inject IExecutionBuilderFactory<AppDbContext> BuilderFactory
 @inject IExecutorService Executor
 
-@if (LastStartedExecutionId is not null)
+@if (lastStartedExecutionId is not null)
 {
     <div class="alert alert-success show alert-dismissible col-xl-6" role="alert">
         <CxIcon Icon="FeatherIcon.CheckCircle" />
-        Execution started successfully – <a href="executions/@LastStartedExecutionId" class="alert-link">view execution</a>
-        <button type="button" class="btn-close" @onclick="() => LastStartedExecutionId = null"></button>
+        Execution started successfully – <a href="executions/@lastStartedExecutionId" class="alert-link">view execution</a>
+        <button type="button" class="btn-close" @onclick="() => lastStartedExecutionId = null"></button>
     </div>
 }
 
-@if (Loading)
+@if (loading)
 {
     <div class="row py-3">
         <div class="col text-center">
@@ -23,7 +23,7 @@
     </div>
     return;
 }
-else if (Builder is null)
+else if (builder is null)
 {
     <div class="row py-3">
         <div class="col text-center">
@@ -45,58 +45,58 @@ else if (Builder is null)
             @foreach (var tag in Tags)
             {
                 <TagComponent Tag="tag"
-                          Selected="TagFilter.Contains(tag)"
+                          Selected="tagFilter.Contains(tag)"
                           CssClass="mx-1"
                           Style="cursor: pointer;"
-                          OnClick="() => { if (TagFilter.Contains(tag)) TagFilter.Remove(tag); else TagFilter.Add(tag); }" />
+                          OnClick="() => { if (tagFilter.Contains(tag)) tagFilter.Remove(tag); else tagFilter.Add(tag); }" />
             }
         </div>
         <div class="col-auto ms-auto">
             <HxDropdownButtonGroup AutoClose="DropdownAutoClose.Outside" CssClass="ms-auto">
-                <HxDropdownToggleButton Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="Builder is not null">
+                <HxDropdownToggleButton Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="builder is not null">
                     <CxIcon Icon="FeatherIcon.Bell" />
                     Notifications
                 </HxDropdownToggleButton>
                 <HxDropdownContent>
-                    @if (Builder is not null)
+                    @if (builder is not null)
                     {
                         <div class="row p-3" style="min-width: 20rem;">
                             <div class="col">
                                 <div class="form-check">
                                     <input type="checkbox" class="form-check-input" id="execute_notify"
-                                           checked=@Builder.Notify
-                                           @bind-value="Builder.Notify">
+                                           checked=@builder.Notify
+                                           @bind-value="builder.Notify">
                                     <label class="form-check-label" for="execute_notify">Notify based on subscriptions</label>
                                 </div>
                                 <h6 class="mt-3">Notify me</h6>
                                 <div class="form-check">
                                     <input type="radio" class="form-check-input" id="radio_notify_me_none"
-                                           checked=@(Builder.NotifyCaller is null)
-                                           @onchange="() => Builder.NotifyCaller = null">
+                                           checked=@(builder.NotifyCaller is null)
+                                           @onchange="() => builder.NotifyCaller = null">
                                     <label class="form-check-label" for="radio_notify_me_none">None</label>
                                 </div>
                                 <div class="form-check">
                                     <input type="radio" class="form-check-input" id="radio_notify_me_completion"
-                                           checked=@(Builder.NotifyCaller == AlertType.OnCompletion)
-                                           @onchange="() => Builder.NotifyCaller = AlertType.OnCompletion">
+                                           checked=@(builder.NotifyCaller == AlertType.OnCompletion)
+                                           @onchange="() => builder.NotifyCaller = AlertType.OnCompletion">
                                     <label class="form-check-label" for="radio_notify_me_completion">On completion</label>
                                 </div>
                                 <div class="form-check">
                                     <input type="radio" class="form-check-input" id="radio_notify_me_failure"
-                                           checked=@(Builder.NotifyCaller == AlertType.OnFailure)
-                                           @onchange="() => Builder.NotifyCaller = AlertType.OnFailure">
+                                           checked=@(builder.NotifyCaller == AlertType.OnFailure)
+                                           @onchange="() => builder.NotifyCaller = AlertType.OnFailure">
                                     <label class="form-check-label" for="radio_notify_me_failure">On failure</label>
                                 </div>
                                 <div class="form-check">
                                     <input type="radio" class="form-check-input" id="radio_notify_me_success"
-                                           checked=@(Builder.NotifyCaller == AlertType.OnSuccess)
-                                           @onchange="() => Builder.NotifyCaller = AlertType.OnSuccess">
+                                           checked=@(builder.NotifyCaller == AlertType.OnSuccess)
+                                           @onchange="() => builder.NotifyCaller = AlertType.OnSuccess">
                                     <label class="form-check-label" for="radio_notify_me_success">On success</label>
                                 </div>
                                 <div class="form-check mt-3">
                                     <input type="checkbox" class="form-check-input" id="execute_notify_me_overtime"
-                                           checked=@Builder.NotifyCallerOvertime
-                                           @bind-value="Builder.NotifyCallerOvertime">
+                                           checked=@builder.NotifyCallerOvertime
+                                           @bind-value="builder.NotifyCallerOvertime">
                                     <label class="form-check-label" for="execute_notify_me_overtime">On overtime</label>
                                 </div>
                             </div>
@@ -114,15 +114,15 @@ else if (Builder is null)
                         <div class="input-group-text">
                             <CxIcon Icon="FeatherIcon.Filter" />
                         </div>
-                        <input type="search" class="form-control" @bind-value="StepNameFilter" @bind-value:event="oninput"
+                        <input type="search" class="form-control" @bind-value="stepNameFilter" @bind-value:event="oninput"
                                placeholder="Filter by name" autocomplete="off" style="max-width: 20rem;" />
                     </div>
                 </div>
                 <div class="col-xxl mt-xxl-0 mt-3">
                     <HxButtonGroup>
                         <FilterDropdown TItem="StepType"
-                                        FilterSet="StepTypeFilter"
-                                        Items="Builder?.Steps.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
+                                        FilterSet="stepTypeFilter"
+                                        Items="builder?.Steps.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
                                         OnChange="StateHasChanged">
                             <TitleTemplate>
                                 <CxIcon Icon="FeatherIcon.Tool" />
@@ -134,7 +134,7 @@ else if (Builder is null)
                             </ItemTemplate>
                         </FilterDropdown>
                         <FilterDropdown TItem="StepExecutionStatus"
-                                        FilterSet="StatusFilter"
+                                        FilterSet="statusFilter"
                                         Items="Statuses"
                                         OnChange="StateHasChanged">
                             <TitleTemplate>
@@ -146,7 +146,7 @@ else if (Builder is null)
                             </ItemTemplate>
                         </FilterDropdown>
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
-                                  @onclick="() => { TagFilter.Clear(); StepTypeFilter.Clear(); StatusFilter.Clear(); StepNameFilter = string.Empty; }">
+                                  @onclick="() => { tagFilter.Clear(); stepTypeFilter.Clear(); statusFilter.Clear(); stepNameFilter = string.Empty; }">
                             <CxIcon Icon="FeatherIcon.X" />
                             Clear
                         </HxButton>
@@ -160,17 +160,17 @@ else if (Builder is null)
                     <HxButtonGroup>
                         @*Add all available AND enabled steps that have not yet been added to selected steps. Also filter based on current filter text.*@
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                  @onclick="() => Builder?.AddAll(s => s.IsEnabled)">
+                                  @onclick="() => builder?.AddAll(s => s.IsEnabled)">
                             <CxIcon Icon="FeatherIcon.ChevronRight" />
                             Select enabled
                         </HxButton>
                         @*Add all available steps that have not yet been added to selected steps. Also filter based on current filter text.*@
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                  @onclick="() => Builder?.AddAll()">
+                                  @onclick="() => builder?.AddAll()">
                             <CxIcon Icon="FeatherIcon.ChevronsRight" />
                             Select all
                         </HxButton>
-                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => Builder?.Clear()">
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => builder?.Clear()">
                             <CxIcon Icon="FeatherIcon.ChevronsLeft" />
                             Deselect all
                         </HxButton>
@@ -178,7 +178,7 @@ else if (Builder is null)
                 </div>
                 <div class="col-xxl-auto mt-xxl-0 mt-3 text-end">
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" @onclick="Execute"
-                              Enabled="!StartingExecution" Spinner="StartingExecution">
+                              Enabled="!startingExecution" Spinner="startingExecution">
                         <CxIcon Icon="FeatherIcon.Play" />
                         Execute
                     </HxButton>
@@ -202,12 +202,12 @@ else if (Builder is null)
                                 <td class="@(step.IsEnabled ? null : "text-secondary") align-middle">
                                     <StepTypeIconComponent StepType_="@step.StepType" />
                                     &nbsp;
-                                    <HighlightableText Text="@step.StepName" PartToHighlight="@StepNameFilter" />
+                                    <HighlightableText Text="@step.StepName" PartToHighlight="@stepNameFilter" />
                                 </td>
                                 <td>
                                     <StepExecutionStatusBadgeComponent ExecutionStatus="status" />
                                 </td>
-                                <td class="@(Builder?.DependencyMode == true ? "text-body-tertiary" : null)">
+                                <td class="@(builder?.DependencyMode == true ? "text-body-tertiary" : null)">
                                     <CxIcon Icon="FeatherIcon.Layers" />
                                     <sup>@step.ExecutionPhase</sup>
                                 </td>
@@ -223,7 +223,7 @@ else if (Builder is null)
             <div style="overflow-y: scroll; height: calc(100vh - 320px);">
                 <table class="table table-hover table-sm">
                     <tbody>
-                        @foreach (var step in Builder?.StepExecutions ?? Enumerable.Empty<ExecutionBuilderStepExecution>())
+                        @foreach (var step in builder?.StepExecutions ?? Enumerable.Empty<ExecutionBuilderStepExecution>())
                         {
                             <tr style="cursor: pointer;" @onclick="() => step.RemoveFromExecution()">
                                 <td>
@@ -231,7 +231,7 @@ else if (Builder is null)
                                     &nbsp;
                                     @step.StepName
                                 </td>
-                                <td class="@(Builder?.DependencyMode == true ? "text-body-tertiary" : null)">
+                                <td class="@(builder?.DependencyMode == true ? "text-body-tertiary" : null)">
                                     <CxIcon Icon="FeatherIcon.Layers" />
                                     <sup>@step.ExecutionPhase</sup>
                                 </td>
@@ -247,23 +247,16 @@ else if (Builder is null)
 @code {
     [Parameter] public Execution? Execution { get; set; }
 
-    private ExecutionBuilder? Builder { get; set; }
+    private readonly HashSet<StepType> stepTypeFilter = new();
+    private readonly HashSet<StepExecutionStatus> statusFilter = new();
 
-    private string StepNameFilter { get; set; } = string.Empty;
-
-    private HashSet<ITag> TagFilter { get; set; } = new();
-
-    private HashSet<StepType> StepTypeFilter { get; } = new();
-
-    private HashSet<StepExecutionStatus> StatusFilter { get; } = new();
-
-    private bool Loading { get; set; } = true;
-
-    private bool BuilderConsumed { get; set; } = false;
-
-    private bool StartingExecution { get; set; } = false;
-
-    private Guid? LastStartedExecutionId { get; set; }
+    private ExecutionBuilder? builder;
+    private string stepNameFilter = string.Empty;
+    private HashSet<ITag> tagFilter = new();
+    private bool loading = true;
+    private bool builderConsumed = false;
+    private bool startingExecution = false;
+    private Guid? lastStartedExecutionId;
 
     private IEnumerable<StepExecutionStatus> Statuses => Execution?.StepExecutions
         .Select(e => e.StepExecutionAttempts)
@@ -273,27 +266,27 @@ else if (Builder is null)
         .Distinct()
         .Order() ?? Enumerable.Empty<StepExecutionStatus>();
 
-    private IEnumerable<ITag> Tags => Builder?.Steps
+    private IEnumerable<ITag> Tags => builder?.Steps
         .SelectMany(step => step.Tags)
         .DistinctBy(t => t.TagName)
         .OrderBy(t => t.TagName)
         ?? Enumerable.Empty<ITag>();
 
-    private IEnumerable<ExecutionBuilderStep> StepsAvailableToExecute => Builder?.Steps
-        .Where(step => step.StepName?.ContainsIgnoreCase(StepNameFilter) == true) // Step name filter
-        .Where(step => !StepTypeFilter.Any() || StepTypeFilter.Contains(step.StepType)) // Filter based on step type
-        .Where(step => TagFilter.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Tag filter
+    private IEnumerable<ExecutionBuilderStep> StepsAvailableToExecute => builder?.Steps
+        .Where(step => step.StepName?.ContainsIgnoreCase(stepNameFilter) == true) // Step name filter
+        .Where(step => !stepTypeFilter.Any() || stepTypeFilter.Contains(step.StepType)) // Filter based on step type
+        .Where(step => tagFilter.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Tag filter
         .Where(step =>
         {
-            if (!StatusFilter.Any()) return true;
+            if (!statusFilter.Any()) return true;
             var status = GetStepExecutionStatus(step.StepId);
-            return status is not null ? StatusFilter.Contains((StepExecutionStatus)status) : false;
+            return status is not null ? statusFilter.Contains((StepExecutionStatus)status) : false;
         }) // Status filter
         ?? Enumerable.Empty<ExecutionBuilderStep>();
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Execution is null || Builder is not null)
+        if (Execution is null || builder is not null)
         {
             return;
         }
@@ -305,13 +298,13 @@ else if (Builder is null)
             var stepIds = Execution.StepExecutions
                 .Select(e => e.StepId)
                 .ToArray();
-            Builder = await BuilderFactory.CreateAsync((Guid)Execution.JobId, user, context => step => stepIds.Contains(step.StepId));
+            builder = await BuilderFactory.CreateAsync((Guid)Execution.JobId, user, context => step => stepIds.Contains(step.StepId));
         }
         catch (Exception ex)
         {
             Messenger.AddError(ex.Message);
         }
-        Loading = false;
+        loading = false;
     }
 
     private StepExecutionStatus? GetStepExecutionStatus(Guid stepId)
@@ -323,24 +316,24 @@ else if (Builder is null)
 
     private async Task Execute()
     {
-        StartingExecution = true;
+        startingExecution = true;
         StateHasChanged();
         try
         {
-            ArgumentNullException.ThrowIfNull(Builder);
-            var execution = await Builder.SaveExecutionAsync();
+            ArgumentNullException.ThrowIfNull(builder);
+            var execution = await builder.SaveExecutionAsync();
             if (execution is not null)
             {
-                LastStartedExecutionId = execution.ExecutionId;
+                lastStartedExecutionId = execution.ExecutionId;
                 await Executor.StartExecutionAsync(execution.ExecutionId);
             }
-            Builder.Reset();
+            builder.Reset();
             StateHasChanged();
         }
         catch (Exception ex)
         {
             Messenger.AddError("Error starting execution", ex.Message);
         }
-        StartingExecution = false;
+        startingExecution = false;
     }
 }

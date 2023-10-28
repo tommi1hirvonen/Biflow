@@ -132,7 +132,7 @@
             <div class="d-flex justify-content-between">
                 <span class="fw-bold">Progress</span>
                 <span class="small align-self-end">@($"{execution?.GetProgressPercent() ?? 0}%")</span>
-                <span><JobExecutionStatusBadgeComponent ExecutionStatus_="@execution?.ExecutionStatus" /></span>
+                <span><JobExecutionStatusBadgeComponent ExecutionStatus="@execution?.ExecutionStatus" /></span>
             </div>
             <div class="progress mt-1 @execution?.ExecutionStatus.ToString().ToLower()" style="height: 8px;">
                 <div class="progress-bar" style="width: @($"{execution?.GetProgressPercent() ?? 0}%");" />
@@ -191,7 +191,7 @@
                     </tr>
                     <tr>
                         <td class="fw-bold">Status</td>
-                        <td><JobExecutionStatusBadgeComponent ExecutionStatus_="@execution.ExecutionStatus" /></td>
+                        <td><JobExecutionStatusBadgeComponent ExecutionStatus="@execution.ExecutionStatus" /></td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Number of steps</td>
