@@ -11,18 +11,16 @@ public partial class FunctionStepEditModal : StepEditModal<FunctionStep>
 {
     [Parameter] public IList<FunctionApp>? FunctionApps { get; set; }
 
-    private FunctionSelectOffcanvas? FunctionSelectOffcanvas { get; set; }
-
     internal override string FormId => "function_step_edit_form";
 
-    private CodeEditor? Editor { get; set; }
-
-    private InputLanguage Language { get; set; } = InputLanguage.Text;
+    private FunctionSelectOffcanvas? functionSelectOffcanvas;
+    private CodeEditor? editor;
+    private InputLanguage language = InputLanguage.Text;
 
     private Task OpenFunctionSelectOffcanvas()
     {
         ArgumentNullException.ThrowIfNull(Step?.FunctionAppId);
-        return FunctionSelectOffcanvas.LetAsync(x => x.ShowAsync((Guid)Step.FunctionAppId));
+        return functionSelectOffcanvas.LetAsync(x => x.ShowAsync((Guid)Step.FunctionAppId));
     }
 
     private void OnFunctionSelected(string functionUrl)
@@ -33,12 +31,12 @@ public partial class FunctionStepEditModal : StepEditModal<FunctionStep>
 
     protected override async Task OnModalShownAsync(FunctionStep step)
     {
-        Language = InputLanguage.Text;
-        if (Editor is not null)
+        language = InputLanguage.Text;
+        if (editor is not null)
         {
             try
             {
-                await Editor.SetValueAsync(step.FunctionInput);
+                await editor.SetValueAsync(step.FunctionInput);
             }
             catch { }
         }
@@ -46,14 +44,14 @@ public partial class FunctionStepEditModal : StepEditModal<FunctionStep>
 
     private Task SetLanguageAsync(InputLanguage language)
     {
-        Language = language;
-        ArgumentNullException.ThrowIfNull(Editor);
-        var lang = Language switch
+        this.language = language;
+        ArgumentNullException.ThrowIfNull(editor);
+        var lang = this.language switch
         {
             InputLanguage.Json => "json",
             _ => ""
         };
-        return Editor.SetLanguageAsync(lang);
+        return editor.SetLanguageAsync(lang);
     }
 
     protected override Task<FunctionStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>

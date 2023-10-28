@@ -11,9 +11,8 @@ namespace Biflow.Ui.Shared.StepEditModal;
 
 public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable, IStepEditModal where TStep : Step
 {    
-    [Inject] public IHxMessengerService Messenger { get; set; } = null!;
-
-    [Inject] public IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
+    [Inject] protected IHxMessengerService Messenger { get; set; } = null!;
+    [Inject] protected IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
 
     [CascadingParameter] public Job? Job { get; set; }
 
@@ -39,13 +38,12 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     internal Dictionary<Guid, StepProjection>? StepSlims { get; set; }
 
-    private AppDbContext Context { get; set; } = null!;
+    internal bool Saving { get; set; } = false;
 
     protected IEnumerable<Tag>? AllTags { get; private set; }
 
-    private IEnumerable<DataObject>? DataObjects { get; set; }
-
-    internal bool Saving { get; set; } = false;
+    private AppDbContext? context;
+    private IEnumerable<DataObject>? dataObjects;
 
     internal async Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
     {
@@ -61,14 +59,19 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
         };
     }
 
-    protected async Task EnsureAllTagsInitialized() => AllTags ??= await Context.Tags.ToListAsync();
+    protected async Task EnsureAllTagsInitialized()
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        AllTags ??= await context.Tags.ToListAsync();
+    }
 
     protected virtual Task OnModalShownAsync(TStep step) => Task.CompletedTask;
 
     public async Task<IEnumerable<DataObject>> GetDataObjectsAsync()
     {
-        DataObjects ??= await Context.DataObjects.ToListAsync();
-        return DataObjects;
+        ArgumentNullException.ThrowIfNull(context);
+        dataObjects ??= await context.DataObjects.ToListAsync();
+        return dataObjects;
     }
 
     /// <summary>
@@ -96,10 +99,10 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     private async Task ResetContext()
     {
-        if (Context is not null)
-            await Context.DisposeAsync();
+        if (context is not null)
+            await context.DisposeAsync();
 
-        Context = await DbContextFactory.CreateDbContextAsync();
+        context = await DbContextFactory.CreateDbContextAsync();
     }
 
     private void ResetTags() => Tags = Step?.Tags
@@ -111,7 +114,7 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
     {
         Step = null;
         AllTags = null;
-        DataObjects = null;
+        dataObjects = null;
         JobSlims = null;
         StepSlims = null;
     }
@@ -122,6 +125,7 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
         try
         {
+            ArgumentNullException.ThrowIfNull(context);
             if (Step is null)
             {
                 Messenger.AddError("Error submitting step", "Step was null");
@@ -150,11 +154,11 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
             // New step
             if (Step.StepId == Guid.Empty)
             {
-                Context.Steps.Add(Step);
+                context.Steps.Add(Step);
             }
             // If the Step was an existing Step, the context has been tracking its changes.
             // => No need to attach it to the context separately.
-            await Context.SaveChangesAsync();
+            await context.SaveChangesAsync();
 
             await OnStepSubmit.InvokeAsync(Step);
             await Modal.LetAsync(x => x.HideAsync());
@@ -188,26 +192,27 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     public async Task ShowAsync(Guid stepId, StepEditModalView startView = StepEditModalView.Settings)
     {
+        ArgumentNullException.ThrowIfNull(context);
         CurrentView = startView;
         await Modal.LetAsync(x => x.ShowAsync());
         await ResetContext();
         // Use slim classes to only load selected columns from the db.
         // When loading all steps from the db, the number of steps may be very high.
-        JobSlims = await Context.Jobs
+        JobSlims = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Select(j => new JobProjection(j.JobId, j.JobName, j.UseDependencyMode, j.CategoryId, j.Category))
             .ToDictionaryAsync(j => j.JobId);
-        StepSlims = await Context.Steps
+        StepSlims = await context.Steps
             .AsNoTrackingWithIdentityResolution()
             .Select(s => new StepProjection(s.StepId, s.JobId, s.StepName, s.StepType, s.ExecutionPhase, s.IsEnabled, s.Tags.ToArray(), s.Dependencies.Select(d => d.DependantOnStepId).ToArray()))
             .ToDictionaryAsync(s => s.StepId);
         if (stepId != Guid.Empty)
         {
-            Step = await GetExistingStepAsync(Context, stepId);
+            Step = await GetExistingStepAsync(context, stepId);
         }
         else if (stepId == Guid.Empty && Job is not null)
         {
-            var job = await Context.Jobs.Include(j => j.JobParameters).FirstAsync(j => j.JobId == Job.JobId);
+            var job = await context.Jobs.Include(j => j.JobParameters).FirstAsync(j => j.JobId == Job.JobId);
             Step = CreateNewStep(job);
         }
         ResetTags();
@@ -216,5 +221,5 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
             await OnModalShownAsync(Step);
     }
 
-    public virtual void Dispose() => Context?.Dispose();
+    public virtual void Dispose() => context?.Dispose();
 }

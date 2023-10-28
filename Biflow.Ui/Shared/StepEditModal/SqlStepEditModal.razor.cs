@@ -14,9 +14,8 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
 
     internal override string FormId => "sql_step_edit_form";
 
-    private StoredProcedureSelectOffcanvas? StoredProcedureSelectModal { get; set; }
-
-    private CodeEditor? Editor { get; set; }
+    private StoredProcedureSelectOffcanvas? storedProcedureSelectModal;
+    private CodeEditor? editor;
 
     protected override Task<SqlStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>
         context.SqlSteps
@@ -35,11 +34,11 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
 
     protected override async Task OnModalShownAsync(SqlStep step)
     {
-        if (Editor is not null)
+        if (editor is not null)
         {
             try
             {
-                await Editor.SetValueAsync(step.SqlStatement);
+                await editor.SetValueAsync(step.SqlStatement);
             }
             catch { }
         }
@@ -73,7 +72,7 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
         }
     }
 
-    private Task OpenStoredProcedureSelectModal() => StoredProcedureSelectModal.LetAsync(x => x.ShowAsync());
+    private Task OpenStoredProcedureSelectModal() => storedProcedureSelectModal.LetAsync(x => x.ShowAsync());
 
     private async Task ImportParametersAsync()
     {
@@ -111,10 +110,10 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
 
     private Task OnStoredProcedureSelected(string procedure)
     {
-        ArgumentNullException.ThrowIfNull(Editor);
+        ArgumentNullException.ThrowIfNull(editor);
         ArgumentNullException.ThrowIfNull(Step);
         Step.SqlStatement = $"EXEC {procedure}";
-        return Editor.SetValueAsync(Step.SqlStatement);
+        return editor.SetValueAsync(Step.SqlStatement);
     }
     
 }

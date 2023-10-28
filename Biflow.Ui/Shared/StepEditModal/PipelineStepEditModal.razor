@@ -47,7 +47,7 @@
                 </HxButtonGroup>
             </div>
         </div>
-        <PipelineSelectOffcanvas @ref="PipelineSelectOffcanvas" OnPipelineSelected="OnPipelineSelected" />
+        <PipelineSelectOffcanvas @ref="pipelineSelectOffcanvas" OnPipelineSelected="OnPipelineSelected" />
         <StepParameterEditComponent Step="Step" NewParameterDelegate="() => new() { Step = Step }" OnImportParameters="ImportParametersAsync" />
     }
 </StepEditModalTemplate>

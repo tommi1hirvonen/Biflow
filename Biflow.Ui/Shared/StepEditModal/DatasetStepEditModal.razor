@@ -33,17 +33,17 @@
                         <CxIcon Icon="FeatherIcon.Folder" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.DatasetGroupId"
-                               @bind-Value:after="() => DatasetGroupName = string.Empty"></InputText>
+                               @bind-Value:after="() => datasetGroupName = string.Empty"></InputText>
                 </div>
                 <div class="form-text">
-                    @if (DatasetGroupName is null)
+                    @if (datasetGroupName is null)
                     {
                         <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
                         <span>Loading group name...</span>
                     }
                     else
                     {
-                        <span>@DatasetGroupName</span>
+                        <span>@datasetGroupName</span>
                     }
                 </div>
             </div>
@@ -54,21 +54,21 @@
                         <CxIcon Icon="LucideIcon.FileBarChart2" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.DatasetId"
-                               @bind-Value:after="() => DatasetName = string.Empty"></InputText>
+                               @bind-Value:after="() => datasetName = string.Empty"></InputText>
                 </div>
                 <div class="form-text">
-                    @if (DatasetName is null)
+                    @if (datasetName is null)
                     {
                         <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
                         <span>Loading dataset name...</span>
                     }
                     else
                     {
-                        <span>@DatasetName</span>
+                        <span>@datasetName</span>
                     }
                 </div>
             </div>
         </div>
-        <DatasetSelectOffcanvas @ref="DatasetSelectOffcanvas" AppRegistrationId="Step.AppRegistrationId" OnDatasetSelected="OnDatasetSelected" />
+        <DatasetSelectOffcanvas @ref="datasetSelectOffcanvas" AppRegistrationId="Step.AppRegistrationId" OnDatasetSelected="OnDatasetSelected" />
     }
 </StepEditModalTemplate>

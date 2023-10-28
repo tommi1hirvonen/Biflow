@@ -39,7 +39,7 @@
         <div class="row mt-3">
             <div class="col">
                 <label class="form-label">SQL statement</label>
-                <CodeEditor @ref="Editor"
+                <CodeEditor @ref="editor"
                             Language="sql"
                             MinimapEnabled="false"
                             InitialValueExpression="() => Step?.SqlStatement"
@@ -47,7 +47,7 @@
             </div>
         </div>
 
-        <StoredProcedureSelectOffcanvas @ref="StoredProcedureSelectModal" ConnectionId="Step.ConnectionId" OnProcedureSelected="OnStoredProcedureSelected" />
+        <StoredProcedureSelectOffcanvas @ref="storedProcedureSelectModal" ConnectionId="Step.ConnectionId" OnProcedureSelected="OnStoredProcedureSelected" />
 
         <div class="row mt-3">
             <div class="col-auto">

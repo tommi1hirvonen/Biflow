@@ -8,9 +8,9 @@ namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class PackageStepEditModal : StepEditModal<PackageStep>
 {
-    private PackageSelectOffcanvas? PackageSelectOffcanvas { get; set; }
-
     internal override string FormId => "package_step_edit_form";
+
+    private PackageSelectOffcanvas? packageSelectOffcanvas;
 
     protected override PackageStep CreateNewStep(Job job) =>
         new(job.JobId)
@@ -45,7 +45,7 @@ public partial class PackageStepEditModal : StepEditModal<PackageStep>
     private Task OpenPackageSelectOffcanvas()
     {
         ArgumentNullException.ThrowIfNull(Step?.ConnectionId);
-        return PackageSelectOffcanvas.LetAsync(x => x.ShowAsync((Guid)Step.ConnectionId));
+        return packageSelectOffcanvas.LetAsync(x => x.ShowAsync((Guid)Step.ConnectionId));
     }
 
     private void OnPackageSelected(PackageSelectedResponse package)

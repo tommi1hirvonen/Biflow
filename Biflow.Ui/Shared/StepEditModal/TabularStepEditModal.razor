@@ -28,7 +28,7 @@
                 </div>
             </div>
             <div class="col-auto">
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await Offcanvas.LetAsync(x => x.ShowAsync())">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await offcanvas.LetAsync(x => x.ShowAsync())">
                     <CxIcon Icon="FeatherIcon.MoreHorizontal" />
                     Browse objects
                 </HxButton>
@@ -66,6 +66,6 @@
                 <div class="form-text">Blank if the entire model or table should be processed.</div>
             </div>
         </div>
-        <AnalysisServicesObjectSelectOffcanvas @ref="Offcanvas" ConnectionId="Step.ConnectionId" OnObjectSelected="OnAnalysisServicesObjectSelected" />
+        <AnalysisServicesObjectSelectOffcanvas @ref="offcanvas" ConnectionId="Step.ConnectionId" OnObjectSelected="OnAnalysisServicesObjectSelected" />
     }
 </StepEditModalTemplate>

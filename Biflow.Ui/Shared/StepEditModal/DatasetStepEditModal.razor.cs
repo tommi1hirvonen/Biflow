@@ -9,32 +9,30 @@ namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
 {
-    [Parameter] public IList<AppRegistration>? AppRegistrations { get; set; }
-
     [Inject] private ITokenService TokenService { get; set; } = null!;
 
-    private DatasetSelectOffcanvas? DatasetSelectOffcanvas { get; set; }
+    [Parameter] public IList<AppRegistration>? AppRegistrations { get; set; }
 
     internal override string FormId => "dataset_step_edit_form";
 
-    private Task OpenDatasetSelectOffcanvas() => DatasetSelectOffcanvas.LetAsync(x => x.ShowAsync());
-
-    private string? DatasetGroupName { get; set; }
-
-    private string? DatasetName { get; set; }
+    private DatasetSelectOffcanvas? datasetSelectOffcanvas;
+    private string? datasetGroupName;
+    private string? datasetName;
 
     private void OnDatasetSelected(DatasetSelectedResponse dataset)
     {
         ArgumentNullException.ThrowIfNull(Step);
-        (Step.DatasetGroupId, DatasetGroupName, Step.DatasetId, DatasetName) = dataset;
+        (Step.DatasetGroupId, datasetGroupName, Step.DatasetId, datasetName) = dataset;
     }
+
+    private Task OpenDatasetSelectOffcanvas() => datasetSelectOffcanvas.LetAsync(x => x.ShowAsync());
 
     protected override async Task OnModalShownAsync(DatasetStep step)
     {
         try
         {
             var appRegistration = AppRegistrations?.FirstOrDefault(a => a.AppRegistrationId == step.AppRegistrationId);
-            (DatasetGroupName, DatasetName) = (appRegistration, step) switch
+            (datasetGroupName, datasetName) = (appRegistration, step) switch
             {
                 (not null, { DatasetGroupId: not null, DatasetId: not null }) => (
                     await appRegistration.GetGroupNameAsync(step.DatasetGroupId, TokenService),
@@ -45,7 +43,7 @@ public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
         }
         catch
         {
-            (DatasetGroupName, DatasetName) = ("", "");
+            (datasetGroupName, datasetName) = ("", "");
         }
         finally
         {
@@ -55,7 +53,7 @@ public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
 
     protected override async Task<DatasetStep> GetExistingStepAsync(AppDbContext context, Guid stepId)
     {
-        (DatasetGroupName, DatasetName) = (null, null);
+        (datasetGroupName, datasetName) = (null, null);
         var step = await context.DatasetSteps
             .Include(step => step.Job)
             .Include(step => step.Tags)
@@ -70,7 +68,7 @@ public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
 
     protected override DatasetStep CreateNewStep(Job job)
     {
-        (DatasetGroupName, DatasetName) = ("", "");
+        (datasetGroupName, datasetName) = ("", "");
         return new(job.JobId)
         {
             Job = job,

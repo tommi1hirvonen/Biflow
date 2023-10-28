@@ -10,7 +10,7 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
 {
     internal override string FormId => "job_step_edit_form";
 
-    private List<string> TagFilters { get; set; } = [];
+    private List<string> tagFilters = [];
 
     private IEnumerable<JobCategory?> JobCategories => JobSlims?.Values
         .Select(j => j.Category)
@@ -28,7 +28,7 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
             Data = AllTags?
             .Select(t => t.TagName)
             .Where(t => t.ContainsIgnoreCase(request.UserInput))
-            .Where(t => !TagFilters.Any(tag => t == tag))
+            .Where(t => !tagFilters.Any(tag => t == tag))
             .OrderBy(t => t) ?? Enumerable.Empty<string>()
         };
     }
@@ -66,7 +66,7 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
             .Include(step => step.ExecutionConditionParameters)
             .FirstAsync(step => step.StepId == stepId);
         SetJobToExecute();
-        TagFilters = step.TagFilters
+        tagFilters = step.TagFilters
                 .Select(t => t.TagName)
                 .OrderBy(t => t)
                 .ToList();
@@ -76,13 +76,13 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
     protected override Task OnSubmitAsync(JobStep step)
     {
         // Synchronize tags
-        foreach (var text in TagFilters.Where(str => !step.TagFilters.Any(t => t.TagName == str)))
+        foreach (var text in tagFilters.Where(str => !step.TagFilters.Any(t => t.TagName == str)))
         {
             // New tags
             var tag = AllTags?.FirstOrDefault(t => t.TagName == text) ?? new Tag(text);
             step.TagFilters.Add(tag);
         }
-        foreach (var tag in step.TagFilters.Where(t => !TagFilters.Contains(t.TagName)).ToList() ?? Enumerable.Empty<Tag>())
+        foreach (var tag in step.TagFilters.Where(t => !tagFilters.Contains(t.TagName)).ToList() ?? [])
         {
             step.TagFilters.Remove(tag);
         }

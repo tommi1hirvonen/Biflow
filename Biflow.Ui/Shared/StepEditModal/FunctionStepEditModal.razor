@@ -63,7 +63,7 @@
                 }
             </div>
         </div>
-        <FunctionSelectOffcanvas @ref="FunctionSelectOffcanvas" OnFunctionSelected="OnFunctionSelected" />
+        <FunctionSelectOffcanvas @ref="functionSelectOffcanvas" OnFunctionSelected="OnFunctionSelected" />
         <div class="row">
             <div class="col-auto">
                 <div class="form-check form-check-inline">
@@ -82,13 +82,13 @@
                 <label class="form-label me-3">Input format</label>
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_function_input_raw"
-                           checked=@(Language == InputLanguage.Text)
+                           checked=@(language == InputLanguage.Text)
                     @onchange="() => SetLanguageAsync(InputLanguage.Text)">
                     <label class="form-check-label fw-normal" for="radio_function_input_raw">Text</label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_function_input_json"
-                           checked=@(Language == InputLanguage.Json)
+                           checked=@(language == InputLanguage.Json)
                     @onchange="() => SetLanguageAsync(InputLanguage.Json)">
                     <label class="form-check-label fw-normal" for="radio_function_input_json">JSON</label>
                 </div>
@@ -96,7 +96,7 @@
         </div>
         <div class="row">
             <div class="col">
-                <CodeEditor @ref="Editor"
+                <CodeEditor @ref="editor"
                             Language=""
                             MinimapEnabled="false"
                             InitialValueExpression="() => Step.FunctionInput"

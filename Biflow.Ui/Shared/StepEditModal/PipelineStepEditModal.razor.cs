@@ -16,7 +16,7 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
 
     internal override string FormId => "pipeline_step_edit_form";
 
-    private PipelineSelectOffcanvas? PipelineSelectOffcanvas { get; set; }
+    private PipelineSelectOffcanvas? pipelineSelectOffcanvas;
 
     protected override PipelineStep CreateNewStep(Job job) =>
         new(job.JobId)
@@ -88,7 +88,7 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
     private Task OpenPipelineSelectOffcanvas()
     {
         ArgumentNullException.ThrowIfNull(Step?.PipelineClientId);
-        return PipelineSelectOffcanvas.LetAsync(x => x.ShowAsync((Guid)Step.PipelineClientId));
+        return pipelineSelectOffcanvas.LetAsync(x => x.ShowAsync((Guid)Step.PipelineClientId));
     }
 
     private void OnPipelineSelected(string pipelineName)
