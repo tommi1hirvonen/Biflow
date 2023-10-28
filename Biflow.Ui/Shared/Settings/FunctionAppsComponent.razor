@@ -15,7 +15,7 @@
 
 <HxButton Color="ThemeColor.Success"
           @onclick="() => ShowEditModal(null)"
-          Enabled="FunctionApps is not null && AppRegistrations is not null && AppRegistrations.Any()">
+          Enabled="functionApps is not null && appRegistrations is not null && appRegistrations.Any()">
     Add Function App
 </HxButton>
 
@@ -38,17 +38,17 @@
             </tr>
         </thead>
         <tbody>
-            @if (FunctionApps is null)
+            @if (functionApps is null)
             {
                 <tr><td colspan="6" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
-            else if (FunctionApps.Count == 0)
+            else if (functionApps.Count == 0)
             {
                 <tr><td colspan="6">No Function Apps</td></tr>
             }
             else
             {
-                @foreach (var app in FunctionApps)
+                @foreach (var app in functionApps)
                 {
                     var jobs = app.Steps.Select(s => s.Job).Distinct().Count();
                     var steps = app.Steps.Count();
@@ -85,8 +85,8 @@
                             <a class="text-body" href="javascript:void(0)"
                             @onclick="async () =>
                             {
-                                StepsFunctionApp = app;
-                                await StepsModal.LetAsync(x => x.ShowAsync());
+                                stepsFunctionApp = app;
+                                await stepsModal.LetAsync(x => x.ShowAsync());
                             }">
                                 @(steps > 0 ? $"{steps} step(s)" : null)
                             </a>
@@ -98,9 +98,9 @@
     </table>
 </div>
 
-<FunctionAppEditModal @ref="FunctionAppEditModal" AppRegistrations="AppRegistrations" OnFunctionAppSubmit="OnFunctionAppSubmit" />
+<FunctionAppEditModal @ref="functionAppEditModal" AppRegistrations="appRegistrations" OnFunctionAppSubmit="OnFunctionAppSubmit" />
 
-<HxModal @ref="StepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {StepsFunctionApp?.FunctionAppName}")">
+<HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsFunctionApp?.FunctionAppName}")">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -112,7 +112,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var step in StepsFunctionApp?.Steps
+                        @foreach (var step in stepsFunctionApp?.Steps
                             .OrderBy(s => s.Job.JobName)
                             .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
                         {
@@ -133,29 +133,27 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await StepsModal.LetAsync(x => x.HideAsync())">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await stepsModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
 @code {
-    private List<FunctionApp>? FunctionApps { get; set; }
-    private List<AppRegistration>? AppRegistrations { get; set; }
-
-    private FunctionAppEditModal? FunctionAppEditModal { get; set; }
-
-    private FunctionApp? StepsFunctionApp { get; set; }
-    private HxModal? StepsModal { get; set; }
+    private List<FunctionApp>? functionApps;
+    private List<AppRegistration>? appRegistrations;
+    private FunctionAppEditModal? functionAppEditModal;
+    private FunctionApp? stepsFunctionApp;
+    private HxModal? stepsModal;
 
     protected override async Task OnInitializedAsync()
     {
         using var context = await Task.Run<AppDbContext>(DbFactory.CreateDbContext);
-        FunctionApps = await context.FunctionApps
+        functionApps = await context.FunctionApps
             .AsNoTrackingWithIdentityResolution()
             .Include(f => f.Steps)
             .ThenInclude(step => step.Job)
             .OrderBy(f => f.FunctionAppName)
             .ToListAsync();
-        AppRegistrations = await context.AppRegistrations
+        appRegistrations = await context.AppRegistrations
             .AsNoTracking()
             .OrderBy(ar => ar.AppRegistrationName)
             .ToListAsync();
@@ -169,7 +167,7 @@
             await context.FunctionApps
                 .Where(x => x.FunctionAppId == functionApp.FunctionAppId)
                 .ExecuteDeleteAsync();
-            FunctionApps?.Remove(functionApp);
+            functionApps?.Remove(functionApp);
         }
         catch (Exception ex)
         {
@@ -184,12 +182,12 @@
         if (functionApp.FunctionAppId == Guid.Empty)
         {
             context.Add(functionApp);
-            FunctionApps?.Add(functionApp);
+            functionApps?.Add(functionApp);
         }
         else
         {
-            FunctionApps?.RemoveAll(f => f.FunctionAppId == functionApp.FunctionAppId);
-            FunctionApps?.Add(functionApp);
+            functionApps?.RemoveAll(f => f.FunctionAppId == functionApp.FunctionAppId);
+            functionApps?.Add(functionApp);
             context.Attach(functionApp).State = EntityState.Modified;
         }
         await context.SaveChangesAsync();
@@ -197,5 +195,5 @@
     }
 
     private async Task ShowEditModal(FunctionApp? functionApp) =>
-        await FunctionAppEditModal.LetAsync(x => x.ShowAsync(functionApp?.FunctionAppId ?? Guid.Empty));
+        await functionAppEditModal.LetAsync(x => x.ShowAsync(functionApp?.FunctionAppId ?? Guid.Empty));
 }

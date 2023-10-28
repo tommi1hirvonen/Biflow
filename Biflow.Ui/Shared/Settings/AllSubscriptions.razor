@@ -8,10 +8,10 @@
             <div class="input-group-text">
                 <CxIcon Icon="FeatherIcon.User" />
             </div>
-            <select class="form-select" @bind="UserId" @bind:after="() => User = Users?.FirstOrDefault(u => u.UserId == UserId)">
-                @if (Users is not null)
+            <select class="form-select" @bind="userId" @bind:after="() => user = users?.FirstOrDefault(u => u.UserId == userId)">
+                @if (users is not null)
                 {
-                    @foreach (var user in Users.OrderBy(u => u.Username))
+                    @foreach (var user in users.OrderBy(u => u.Username))
                     {
                         <option value="@user.UserId">@user.Username</option>
                     }
@@ -21,7 +21,7 @@
     </div>
 </div>
 
-<UserSubscriptions User="User" Jobs="Jobs" Steps="Steps" Tags="Tags">
+<UserSubscriptions User="user" Jobs="jobs" Steps="steps" Tags="tags">
     <MissingEmailAlertTemplate Context="user">
         <span>
             Email address for account <strong>@user.Username</strong> was not set. Go to the <a class="alert-link" href="settings">Settings page</a> to enter a valid email address for the user.
@@ -30,37 +30,32 @@
 </UserSubscriptions>
 
 @code {
-    public IEnumerable<JobProjection>? Jobs { get; set; }
-
-    public IEnumerable<Tag>? Tags { get; set; }
-
-    public IEnumerable<StepProjection>? Steps { get; set; }
-
-    private Guid? UserId { get; set; }
-
-    private User? User { get; set; }
-
-    private IEnumerable<User>? Users { get; set; }
+    private IEnumerable<JobProjection>? jobs;
+    private IEnumerable<Tag>? tags;
+    private IEnumerable<StepProjection>? steps;
+    private Guid? userId;
+    private User? user;
+    private IEnumerable<User>? users;
 
     protected override async Task OnInitializedAsync()
     {
         using var context = await DbFactory.CreateDbContextAsync();
-        Users = await context.Users
+        users = await context.Users
             .AsNoTrackingWithIdentityResolution()
             .Include(u => u.Subscriptions)
             .ToArrayAsync();
-        User = Users.OrderBy(u => u.Username).FirstOrDefault();
-        UserId = User?.UserId;
-        Jobs = await context.Jobs
+        user = users.OrderBy(u => u.Username).FirstOrDefault();
+        userId = user?.UserId;
+        jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(job => job.JobName)
             .Select(j => new JobProjection(j.JobId, j.JobName, j.UseDependencyMode, j.CategoryId, j.Category))
             .ToArrayAsync();
-        Steps = await context.Steps
+        steps = await context.Steps
             .AsNoTrackingWithIdentityResolution()
             .Select(s => new StepProjection(s.StepId, s.JobId, s.StepName, s.StepType, s.ExecutionPhase, s.IsEnabled, s.Tags.ToArray(), s.Dependencies.Select(d => d.DependantOnStepId).ToArray()))
             .ToArrayAsync();
-        Tags = await context.Tags
+        tags = await context.Tags
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(t => t.TagName)
             .ToArrayAsync();

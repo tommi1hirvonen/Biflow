@@ -1,5 +1,5 @@
-﻿@inject IHxMessengerService messenger
-@inject IDbContextFactory<AppDbContext> dbContextFactory
+﻿@inject IHxMessengerService Messenger
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 
 <HxModal @ref="modal" Size="ModalSize.Large" Title="@(client?.QlikCloudClientId == Guid.Empty ? "New Qlik Cloud client" : "Edit " + client?.QlikCloudClientName)">
     <BodyTemplate>
@@ -78,14 +78,14 @@
     </FooterTemplate>
 </HxModal>
 
-    @code {
+@code {
+    [Parameter]
+    public EventCallback<QlikCloudClient> OnClientSubmit { get; set; }
+
     private HxModal? modal;
     private QlikCloudClient? client;
     private bool? connectionTestSuccess = null;
     private bool testingConnection = false;
-
-    [Parameter]
-    public EventCallback<QlikCloudClient> OnClientSubmit { get; set; }
 
     public async Task ShowAsync(Guid clientId)
     {
@@ -93,7 +93,7 @@
         await modal.LetAsync(x => x.ShowAsync());
         if (clientId != Guid.Empty)
         {
-            using var context = await dbContextFactory.CreateDbContextAsync();
+            using var context = await DbContextFactory.CreateDbContextAsync();
             client = await context.QlikCloudClients
                 .AsNoTrackingWithIdentityResolution()
                 .Include(c => c.Steps)
@@ -125,7 +125,7 @@
         catch (Exception ex)
         {
             connectionTestSuccess = false;
-            messenger.AddError("Connection test failed", ex.Message);
+            Messenger.AddError("Connection test failed", ex.Message);
         }
         testingConnection = false;
     }

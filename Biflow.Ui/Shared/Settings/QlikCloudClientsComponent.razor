@@ -1,5 +1,5 @@
-﻿@inject IDbContextFactory<AppDbContext> dbContextFactory
-@inject IHxMessengerService messenger
+﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject IHxMessengerService Messenger
 
 <PageTitle>Qlik Cloud Clients | Biflow</PageTitle>
 
@@ -130,7 +130,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = await dbContextFactory.CreateDbContextAsync();
+        using var context = await DbContextFactory.CreateDbContextAsync();
         clients = await context.QlikCloudClients
             .AsNoTrackingWithIdentityResolution()
             .Include(c => c.Steps)
@@ -142,7 +142,7 @@
     {
         try
         {
-            using var context = await dbContextFactory.CreateDbContextAsync();
+            using var context = await DbContextFactory.CreateDbContextAsync();
             await context.QlikCloudClients
                 .Where(x => x.QlikCloudClientId == client.QlikCloudClientId)
                 .ExecuteDeleteAsync();
@@ -151,13 +151,13 @@
         catch (Exception ex)
         {
             var message = ex.InnerException?.Message ?? ex.Message;
-            messenger.AddError("Error deleting Qlik Cloud client", message);
+            Messenger.AddError("Error deleting Qlik Cloud client", message);
         }
     }
 
     private async Task OnClientSubmitAsync(QlikCloudClient client)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync();
+        using var context = await DbContextFactory.CreateDbContextAsync();
         if (client.QlikCloudClientId == Guid.Empty)
         {
             context.Add(client);

@@ -7,7 +7,7 @@
 
 <div class="row">
     <div class="col-auto">
-        <HxButton Color="ThemeColor.Success" OnClick="async () => await ShowEditModalAsync(null)" Enabled="Users is not null" Spinner="false">
+        <HxButton Color="ThemeColor.Success" OnClick="async () => await ShowEditModalAsync(null)" Enabled="users is not null" Spinner="false">
             Add user
         </HxButton>
     </div>
@@ -17,11 +17,11 @@
                 <div class="input-group-text">
                     <CxIcon Icon="FeatherIcon.Search" />
                 </div>
-                <input type="search" class="form-control" @bind-value="UsernameFilter" @bind-value:event="oninput" placeholder="Search by username" style="max-width: 25rem;" />
+                <input type="search" class="form-control" @bind-value="usernameFilter" @bind-value:event="oninput" placeholder="Search by username" style="max-width: 25rem;" />
             </div>
             <FilterDropdown ButtonSize="ButtonSize.Regular"
-                            FilterSet="RoleFilter"
-                            Items="Users?.SelectMany(u => u.Roles).Distinct().OrderBy(n => n)"
+                            FilterSet="roleFilter"
+                            Items="users?.SelectMany(u => u.Roles).Distinct().OrderBy(n => n)"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
                     Roles
@@ -35,26 +35,26 @@
 <div class="row my-4">
     <div class="col">
         <ul class="list-group shadow-sm">
-            @if (Users is null)
+            @if (users is null)
             {
                 <li class="list-group-item text-center"><HxSpinner Color="ThemeColor.Secondary" /></li>
             }
-            else if (Users.Count == 0)
+            else if (users.Count == 0)
             {
                 <li class="list-group-item">No users</li>
             }
             else
             {
-                var users = Users
-                    .Where(u => string.IsNullOrEmpty(UsernameFilter) || u.Username.ContainsIgnoreCase(UsernameFilter))
-                    .Where(u => !RoleFilter.Any() || RoleFilter.Any(r => u.Roles.Contains(r)))
+                var users = this.users
+                    .Where(u => string.IsNullOrEmpty(usernameFilter) || u.Username.ContainsIgnoreCase(usernameFilter))
+                    .Where(u => !roleFilter.Any() || roleFilter.Any(r => u.Roles.Contains(r)))
                     .OrderBy(u => u.Username);
                 foreach (var user in users)
                 {
                     <li class="list-group-item list-group-item-action">
                         <div class="row">
                             <div class="col">
-                                <HighlightableText Text="@user.Username" PartToHighlight="@UsernameFilter" />
+                                <HighlightableText Text="@user.Username" PartToHighlight="@usernameFilter" />
                             </div>
                             <div class="col-auto">
                                 <HxButtonGroup>
@@ -64,7 +64,7 @@
 
                                     @if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn)
                                     {
-                                        <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="Change password" @onclick="() => ResetPasswordModal.LetAsync(x => x.ShowAsync(user.Username))" title="Reset password">
+                                        <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="Change password" @onclick="() => resetPasswordModal.LetAsync(x => x.ShowAsync(user.Username))" title="Reset password">
                                             <CxIcon Icon="FeatherIcon.Key" />
                                         </HxButton>
                                     }
@@ -101,24 +101,23 @@
     </div>
 </div>
 
-<ResetPasswordModal @ref="ResetPasswordModal" />
+<ResetPasswordModal @ref="resetPasswordModal" />
 
-<UserEditModal @ref="UserEditModal" OnUserSubmit="OnUserSubmit" />
+<UserEditModal @ref="userEditModal" OnUserSubmit="OnUserSubmit" />
 
 
 @code {
-    private List<User> Users { get; set; } = null!;
+    private readonly HashSet<string> roleFilter = [];
 
-    private UserEditModal? UserEditModal { get; set; }
-    private ResetPasswordModal? ResetPasswordModal { get; set; }
-
-    private string UsernameFilter { get; set; } = "";
-    private HashSet<string> RoleFilter { get; set; } = new();
+    private List<User>? users;
+    private UserEditModal? userEditModal;
+    private ResetPasswordModal? resetPasswordModal;
+    private string usernameFilter = "";
 
     protected override async Task OnInitializedAsync()
     {
         using var context = await Task.Run(DbFactory.CreateDbContext);
-        Users = await context.Users
+        users = await context.Users
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(user => user.Username)
             .ToListAsync();
@@ -128,10 +127,11 @@
     {
         try
         {
+            ArgumentNullException.ThrowIfNull(users);
             using var context = DbFactory.CreateDbContext();
             context.Users.Remove(user);
             await context.SaveChangesAsync();
-            Users.Remove(user);
+            users.Remove(user);
         }
         catch (Exception)
         {
@@ -141,18 +141,19 @@
 
     private void OnUserSubmit(User user)
     {
-        var existingUser = Users.FirstOrDefault(u => u.UserId == user.UserId);
+        ArgumentNullException.ThrowIfNull(users);
+        var existingUser = users.FirstOrDefault(u => u.UserId == user.UserId);
         if (existingUser is not null)
         {
-            Users.Remove(existingUser);
+            users.Remove(existingUser);
         }
-        Users.Add(user);
-        Users.Sort((u1, u2) => u1.Username.CompareTo(u2.Username));
+        users.Add(user);
+        users.Sort((u1, u2) => u1.Username.CompareTo(u2.Username));
     }
 
     private async Task ShowEditModalAsync(User? user)
     {
-        await UserEditModal.LetAsync(x => x.ShowAsync(user?.UserId));
+        await userEditModal.LetAsync(x => x.ShowAsync(user?.UserId));
     }
 
 }

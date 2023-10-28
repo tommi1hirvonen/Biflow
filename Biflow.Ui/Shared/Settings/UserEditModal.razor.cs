@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.JSInterop;
-using System.ComponentModel.DataAnnotations;
 using System.Data;
 
 namespace Biflow.Ui.Shared.Settings;
@@ -17,73 +16,65 @@ namespace Biflow.Ui.Shared.Settings;
 public partial class UserEditModal : ComponentBase, IDisposable
 {
     [Inject] private AuthenticationMethodResolver AuthenticationResolver { get; set; } = null!;
-    
     [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
-            
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
-    
     [Inject] private IJSRuntime JS { get; set; } = null!;
 
     [Parameter] public EventCallback<User> OnUserSubmit { get; set; }
 
-    private List<Job>? Jobs { get; set; }
-    private List<MasterDataTable>? DataTables { get; set; }
+    private List<Job>? jobs;
+    private List<MasterDataTable>? dataTables;
+    private HxModal? modal;
+    private UserFormModel? model;
+    private Guid previousUserId;
+    private string currentUsername = "";
+    private AppDbContext context = null!;
+    private UserFormModelValidator validator = new(Enumerable.Empty<string>());
+    private AuthorizationPane currentPane = AuthorizationPane.Jobs;
 
-    private HxModal? Modal { get; set; }
-
-    private UserFormModel? Model { get; set; }
-
-    private bool IsNewUser => PreviousUserId == Guid.Empty;
-    private Guid PreviousUserId { get; set; }
-    private string CurrentUsername { get; set; } = "";
-
-    private AppDbContext Context { get; set; } = null!;
-
-    private UserFormModelValidator Validator { get; set; } = new(Enumerable.Empty<string>());
-
-    private AuthorizationPane CurrentPane { get; set; } = AuthorizationPane.Jobs;
+    private bool IsNewUser => previousUserId == Guid.Empty;
 
     private async Task ResetContext()
     {
-        if (Context is not null)
-            await Context.DisposeAsync();
+        if (context is not null)
+            await context.DisposeAsync();
 
-        Context = await DbFactory.CreateDbContextAsync();
+        context = await DbFactory.CreateDbContextAsync();
     }
 
     private void ToggleRole(string role)
     {
-        ArgumentNullException.ThrowIfNull(Model);
+        ArgumentNullException.ThrowIfNull(model);
         if (role == Roles.Admin)
         {
-            Model.User.Roles.Clear();
-            Model.User.Roles.Add(role);
+            model.User.Roles.Clear();
+            model.User.Roles.Add(role);
         }
         else if (role == Roles.Editor || role == Roles.Operator || role == Roles.Viewer)
         {
-            Model.User.Roles.RemoveAll(r => r == Roles.Admin || r == Roles.Editor || r == Roles.Viewer || r == Roles.Operator);
-            Model.User.Roles.Add(role);
+            model.User.Roles.RemoveAll(r => r == Roles.Admin || r == Roles.Editor || r == Roles.Viewer || r == Roles.Operator);
+            model.User.Roles.Add(role);
         }
         else if (role == Roles.DataTableMaintainer)
         {
-            if (Model.User.Roles.Contains(role))
+            if (model.User.Roles.Contains(role))
             {
-                Model.User.Roles.RemoveAll(r => r == Roles.DataTableMaintainer);
+                model.User.Roles.RemoveAll(r => r == Roles.DataTableMaintainer);
             }
             else
             {
-                Model.User.Roles.Add(role);
+                model.User.Roles.Add(role);
             }
         }
         else if (role == Roles.SettingsEditor)
         {
-            if (Model.User.Roles.Contains(role))
+            if (model.User.Roles.Contains(role))
             {
-                Model.User.Roles.RemoveAll(r => r == Roles.SettingsEditor);
+                model.User.Roles.RemoveAll(r => r == Roles.SettingsEditor);
             }
             else
             {
-                Model.User.Roles.Add(role);
+                model.User.Roles.Add(role);
             }
         }
         else
@@ -94,45 +85,45 @@ public partial class UserEditModal : ComponentBase, IDisposable
 
     private void ToggleJobAuthorization(ChangeEventArgs args, Job job)
     {
-        ArgumentNullException.ThrowIfNull(Model);
+        ArgumentNullException.ThrowIfNull(model);
         var enabled = (bool)args.Value!;
         if (enabled)
         {
-            Model.User.Jobs.Add(job);
+            model.User.Jobs.Add(job);
         }
         else
         {
-            Model.User.Jobs.Remove(job);
+            model.User.Jobs.Remove(job);
         }
     }
 
     private void ToggleDataTableAuthorization(ChangeEventArgs args, MasterDataTable table)
     {
-        ArgumentNullException.ThrowIfNull(Model);
+        ArgumentNullException.ThrowIfNull(model);
         var enabled = (bool)args.Value!;
         if (enabled)
         {
-            Model.User.DataTables.Add(table);
+            model.User.DataTables.Add(table);
         }
         else
         {
-            Model.User.DataTables.Remove(table);
+            model.User.DataTables.Remove(table);
         }
     }
 
     private void OnClosed()
     {
-        Model = null;
+        model = null;
     }
 
     private async Task SubmitUser()
     {
-        ArgumentNullException.ThrowIfNull(Model);
+        ArgumentNullException.ThrowIfNull(model);
         // New user
         if (IsNewUser)
         {
-            ArgumentNullException.ThrowIfNull(Model.PasswordModel);
-            if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn && !Model.PasswordModel.Password.Equals(Model.PasswordModel.ConfirmPassword))
+            ArgumentNullException.ThrowIfNull(model.PasswordModel);
+            if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn && !model.PasswordModel.Password.Equals(model.PasswordModel.ConfirmPassword))
             {
                 Messenger.AddError("The two passwords do not match");
                 return;
@@ -146,14 +137,14 @@ public partial class UserEditModal : ComponentBase, IDisposable
                 try
                 {
                     // Add user without password
-                    context.Users.Add(Model.User);
+                    context.Users.Add(model.User);
 
                     await context.SaveChangesAsync();
 
                     var connection = context.Database.GetDbConnection();
 
                     // Update the password hash.
-                    await UserService.AdminUpdatePasswordAsync(Model.User.Username, Model.PasswordModel.Password, connection, transaction);
+                    await UserService.AdminUpdatePasswordAsync(model.User.Username, model.PasswordModel.Password, connection, transaction);
 
                     await transaction.CommitAsync();
                 }
@@ -163,9 +154,9 @@ public partial class UserEditModal : ComponentBase, IDisposable
                     throw;
                 }
 
-                await OnUserSubmit.InvokeAsync(Model.User);
-                Model = null;
-                await Modal.LetAsync(x => x.HideAsync());
+                await OnUserSubmit.InvokeAsync(model.User);
+                model = null;
+                await modal.LetAsync(x => x.HideAsync());
             }
             catch (Exception ex)
             {
@@ -177,11 +168,11 @@ public partial class UserEditModal : ComponentBase, IDisposable
         {
             try
             {
-                ArgumentNullException.ThrowIfNull(Model);
-                Context.Attach(Model.User).Property(u => u.Roles).IsModified = true;
-                await Context.SaveChangesAsync();
-                await OnUserSubmit.InvokeAsync(Model.User);
-                await Modal.LetAsync(x => x.HideAsync());
+                ArgumentNullException.ThrowIfNull(model);
+                context.Attach(model.User).Property(u => u.Roles).IsModified = true;
+                await context.SaveChangesAsync();
+                await OnUserSubmit.InvokeAsync(model.User);
+                await modal.LetAsync(x => x.HideAsync());
             }
             catch (Exception ex)
             {
@@ -192,9 +183,9 @@ public partial class UserEditModal : ComponentBase, IDisposable
 
     public async Task ShowAsync(Guid? userId)
     {
-        CurrentUsername = "";
-        await Modal.LetAsync(x => x.ShowAsync());
-        PreviousUserId = userId ?? Guid.Empty;
+        currentUsername = "";
+        await modal.LetAsync(x => x.ShowAsync());
+        previousUserId = userId ?? Guid.Empty;
         if (userId is null)
         {
             await ResetContext();
@@ -205,32 +196,32 @@ public partial class UserEditModal : ComponentBase, IDisposable
                 Jobs = new List<Job>(),
                 DataTables = new List<MasterDataTable>()
             };
-            Model = new(user, new());
+            model = new(user, new());
         }
         else
         {
             await ResetContext();
-            var user = await Context.Users
+            var user = await context.Users
                 .Include(u => u.Jobs)
                 .Include(u => u.DataTables)
                 .FirstAsync(user => user.UserId == userId);
-            CurrentUsername = user.Username;
-            Model = new(user, null); // no password model for existing users
+            currentUsername = user.Username;
+            model = new(user, null); // no password model for existing users
         }
-        Jobs = await Context.Jobs
+        jobs = await context.Jobs
             .Include(j => j.Category)
             .OrderBy(j => j.JobName)
             .ToListAsync();
-        DataTables = await Context.MasterDataTables
+        dataTables = await context.MasterDataTables
             .Include(t => t.Category)
             .OrderBy(t => t.DataTableName)
             .ToListAsync();
-        var reservedUsernames = await Context.Users
+        var reservedUsernames = await context.Users
             .AsNoTracking()
-            .Where(u => u.Username != Model.User.Username)
+            .Where(u => u.Username != model.User.Username)
             .Select(u => u.Username)
             .ToArrayAsync();
-        Validator = new(reservedUsernames);
+        validator = new(reservedUsernames);
 
     }
 
@@ -243,7 +234,7 @@ public partial class UserEditModal : ComponentBase, IDisposable
         }
     }
 
-    public void Dispose() => Context?.Dispose();
+    public void Dispose() => context?.Dispose();
 
     private enum AuthorizationPane { Jobs, DataTables }
 }

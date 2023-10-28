@@ -14,7 +14,7 @@
 <PageTitle>Connections | Biflow</PageTitle>
 
 <HxDropdownButtonGroup>
-    <HxDropdownToggleButton Color="ThemeColor.Success" Enabled="Connections is not null">
+    <HxDropdownToggleButton Color="ThemeColor.Success" Enabled="connections is not null">
         Add connection
     </HxDropdownToggleButton>
     <HxDropdownMenu>
@@ -49,17 +49,17 @@
             </tr>
         </thead>
         <tbody>
-            @if (Connections is null)
+            @if (connections is null)
             {
                 <tr><td colspan="7" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
-            else if (Connections.Count == 0)
+            else if (connections.Count == 0)
             {
                 <tr><td colspan="7">No connections</td></tr>
             }
             else
             {
-                @foreach (var connection in Connections)
+                @foreach (var connection in connections)
                 {
                     var steps = connection switch
                     {
@@ -101,8 +101,8 @@
                         <td>
                             <HxButtonGroup>
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
-                                            @onclick="() => ShowConnectionString[connection.ConnectionId] = !ShowConnectionString[connection.ConnectionId]">
-                                    @if (ShowConnectionString[connection.ConnectionId])
+                                            @onclick="() => showConnectionString[connection.ConnectionId] = !showConnectionString[connection.ConnectionId]">
+                                    @if (showConnectionString[connection.ConnectionId])
                                     {
                                         <CxIcon Icon="FeatherIcon.EyeOff" />
                                     }
@@ -114,7 +114,7 @@
                             </HxButtonGroup>
                         </td>
                         <td class="align-middle font-monospace small">
-                            @if (ShowConnectionString[connection.ConnectionId])
+                            @if (showConnectionString[connection.ConnectionId])
                             {
                                 @connection.ConnectionString
                             }
@@ -130,8 +130,8 @@
                             <a class="text-body" href="javascript:void(0)"
                             @onclick="async () =>
                             {
-                                StepsConnection = connection;
-                                await StepsModal.LetAsync(x => x.ShowAsync());
+                                stepsConnection = connection;
+                                await stepsModal.LetAsync(x => x.ShowAsync());
                             }">
                                 @(steps > 0 ? $"{steps} step(s)" : null)
                             </a>
@@ -143,13 +143,13 @@
     </table>
 </div>
 
-<AnalysisServicesConnectionEditModal @ref="ConnectionEditModals[ConnectionType.AnalysisServices]"
+<AnalysisServicesConnectionEditModal @ref="connectionEditModals[ConnectionType.AnalysisServices]"
                                      OnConnectionSubmit="OnConnectionSubmit" />
 
-<SqlConnectionEditModal @ref="ConnectionEditModals[ConnectionType.Sql]"
+<SqlConnectionEditModal @ref="connectionEditModals[ConnectionType.Sql]"
                         OnConnectionSubmit="OnConnectionSubmit" />
 
-<HxModal @ref="StepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {StepsConnection?.ConnectionName}")">
+<HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsConnection?.ConnectionName}")">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -161,7 +161,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var step in StepsConnection?.Steps
+                        @foreach (var step in stepsConnection?.Steps
                             .OrderBy(s => s.Job.JobName)
                             .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
                         {
@@ -182,23 +182,22 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await StepsModal.LetAsync(x => x.HideAsync())">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await stepsModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
 @code {
-    private List<ConnectionInfoBase>? Connections { get; set; }
-    private Dictionary<Guid, bool> ShowConnectionString { get; set; } = new();
+    private readonly Dictionary<ConnectionType, IConnectionEditModal?> connectionEditModals = [];
 
-    Dictionary<ConnectionType, IConnectionEditModal?> ConnectionEditModals { get; } = new();
-
-    private ConnectionInfoBase? StepsConnection { get; set; }
-    private HxModal? StepsModal { get; set; }
+    private List<ConnectionInfoBase>? connections;
+    private Dictionary<Guid, bool> showConnectionString = [];
+    private ConnectionInfoBase? stepsConnection;
+    private HxModal? stepsModal;
 
     protected override async Task OnInitializedAsync()
     {
         using var context = await Task.Run<AppDbContext>(DbFactory.CreateDbContext);
-        Connections = await context.Connections
+        connections = await context.Connections
             .AsNoTrackingWithIdentityResolution()
             .Include(c => (c as SqlConnectionInfo)!.SqlSteps)
             .ThenInclude(step => step.Job)
@@ -210,7 +209,7 @@
             .ThenInclude(step => step.Job)
             .OrderBy(c => c.ConnectionName)
             .ToListAsync();
-        ShowConnectionString = Connections.ToDictionary(key => key.ConnectionId, value => false);
+        showConnectionString = connections.ToDictionary(key => key.ConnectionId, value => false);
     }
 
     private async Task DeleteConnection(ConnectionInfoBase connection)
@@ -222,8 +221,8 @@
             await context.Connections
                 .Where(x => x.ConnectionId == connection.ConnectionId)
                 .ExecuteDeleteAsync();
-            Connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
-            ShowConnectionString.Remove(connection.ConnectionId);
+            connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
+            showConnectionString.Remove(connection.ConnectionId);
         }
         catch (Exception ex)
         {
@@ -238,16 +237,16 @@
         if (connection.ConnectionId == Guid.Empty)
         {
             context.Add(connection);
-            Connections?.Add(connection);
-            ShowConnectionString[connection.ConnectionId] = false;
+            connections?.Add(connection);
+            showConnectionString[connection.ConnectionId] = false;
         }
         else
         {
-            Connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
-            Connections?.Add(connection);
+            connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
+            connections?.Add(connection);
             context.Attach(connection).State = EntityState.Modified;
         }
-        Connections?.Sort();
+        connections?.Sort();
         await context.SaveChangesAsync();
         StateHasChanged();
     }
@@ -264,7 +263,7 @@
 
     private async Task OpenConnectionEditModalAsync(ConnectionType connectionType, Guid connectionId)
     {
-        await ConnectionEditModals[connectionType].LetAsync(x => x.ShowAsync(connectionId));
+        await connectionEditModals[connectionType].LetAsync(x => x.ShowAsync(connectionId));
     }
 
 }

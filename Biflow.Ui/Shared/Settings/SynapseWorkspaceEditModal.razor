@@ -4,12 +4,12 @@
 @inject IHxMessengerService Messenger
 @inject IJSRuntime JS
 
-<HxModal @ref="Modal" Size="ModalSize.Large" OnClosed="() => ConnectionTestSuccess = null" Title="@(SynapseWorkspace?.PipelineClientId == Guid.Empty ? "New Synapse workspace" : "Edit " + SynapseWorkspace?.PipelineClientName)">
+<HxModal @ref="modal" Size="ModalSize.Large" OnClosed="() => connectionTestSuccess = null" Title="@(synapseWorkspace?.PipelineClientId == Guid.Empty ? "New Synapse workspace" : "Edit " + synapseWorkspace?.PipelineClientName)">
     <BodyTemplate>
-        @if (SynapseWorkspace is not null)
+        @if (synapseWorkspace is not null)
         {
             <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
-            <EditForm Model="SynapseWorkspace" id="df_edit_form" OnValidSubmit="SubmitSynapseAsync">
+            <EditForm Model="synapseWorkspace" id="df_edit_form" OnValidSubmit="SubmitSynapseAsync">
                 <div class="row">
                     <div class="col mx-3">
                         <DataAnnotationsValidator />
@@ -18,14 +18,14 @@
                         <div class="row">
                             <div class="col">
                                 <label class="form-label">Synapse workspace name</label>
-                                <InputText class="form-control" @bind-Value="SynapseWorkspace.PipelineClientName"></InputText>
+                                <InputText class="form-control" @bind-Value="synapseWorkspace.PipelineClientName"></InputText>
                             </div>
                         </div>
 
                         <div class=" row mt-3">
                             <div class="col-lg-6">
                                 <label class="form-label">App registration</label>
-                                <InputSelect class="form-select" @bind-Value="SynapseWorkspace.AppRegistrationId">
+                                <InputSelect class="form-select" @bind-Value="synapseWorkspace.AppRegistrationId">
                                     @foreach (var app in AppRegistrations ?? Enumerable.Empty<AppRegistration>())
                                         {
                                         <option value="@app.AppRegistrationId">@app.AppRegistrationName</option>
@@ -37,13 +37,13 @@
                         <div class="row mt-3">
                             <div class="col-lg">
                                 <label class="form-label">Synapse workspace URL</label>
-                                <InputText class="form-control" @bind-Value="SynapseWorkspace.SynapseWorkspaceUrl"></InputText>
+                                <InputText class="form-control" @bind-Value="synapseWorkspace.SynapseWorkspaceUrl"></InputText>
                             </div>
                         </div>
 
                         <div class="row mt-3">
                             <div class="col">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="TestConnection" Enabled="!TestingConnection">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="TestConnection" Enabled="!testingConnection">
                                     Test connection
                                 </HxButton>
                             </div>
@@ -51,11 +51,11 @@
 
                         <div class="row mt-3">
                             <div class="col">
-                                @if (ConnectionTestSuccess == true)
+                                @if (connectionTestSuccess == true)
                                 {
                                     <span class="badge bg-success">Success</span>
                                 }
-                                else if (ConnectionTestSuccess == false)
+                                else if (connectionTestSuccess == false)
                                 {
                                     <span class="badge bg-danger">Failed</span>
                                 }
@@ -67,8 +67,8 @@
         }
     </BodyTemplate>
     <FooterTemplate>
-        <HxSubmit form="df_edit_form" Color="ThemeColor.Success">@(SynapseWorkspace?.PipelineClientId == Guid.Empty ? "Create" : "Save")</HxSubmit>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxSubmit form="df_edit_form" Color="ThemeColor.Success">@(synapseWorkspace?.PipelineClientId == Guid.Empty ? "Create" : "Save")</HxSubmit>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>
 
@@ -79,52 +79,50 @@
     [Parameter]
     public List<AppRegistration>? AppRegistrations { get; set; }
 
-    private SynapseWorkspace? SynapseWorkspace { get; set; }
-
-    private HxModal? Modal { get; set; }
-
-    private bool? ConnectionTestSuccess { get; set; } = null;
-    private bool TestingConnection { get; set; } = false;
+    private SynapseWorkspace? synapseWorkspace;
+    private HxModal? modal;
+    private bool? connectionTestSuccess = null;
+    private bool testingConnection = false;
 
     private async Task SubmitSynapseAsync()
     {
-        await OnSynapseWorkspaceSubmit.InvokeAsync(SynapseWorkspace);
-        await Modal.LetAsync(x => x.HideAsync());
+        await OnSynapseWorkspaceSubmit.InvokeAsync(synapseWorkspace);
+        await modal.LetAsync(x => x.HideAsync());
     }
 
     private async Task TestConnection()
     {
-        ConnectionTestSuccess = null;
-        TestingConnection = true;
+        connectionTestSuccess = null;
+        testingConnection = true;
         try
         {
-            var appRegistration = AppRegistrations?.First(ar => ar.AppRegistrationId == SynapseWorkspace?.AppRegistrationId)
+            var appRegistration = AppRegistrations?.First(ar => ar.AppRegistrationId == synapseWorkspace?.AppRegistrationId)
                 ?? throw new ArgumentNullException("App registration cannot be null");
-            await (SynapseWorkspace?.TestConnection(appRegistration) ?? Task.CompletedTask);
-            ConnectionTestSuccess = true;
+            await (synapseWorkspace?.TestConnection(appRegistration) ?? Task.CompletedTask);
+            connectionTestSuccess = true;
         }
         catch (Exception ex)
         {
-            ConnectionTestSuccess = false;
+            connectionTestSuccess = false;
             Messenger.AddError("Connection test failed", ex.Message);
         }
-        TestingConnection = false;
+        testingConnection = false;
     }
 
     private void OnOpenChanged(bool isOpen)
     {
         if (!isOpen)
-            ConnectionTestSuccess = null;
+            connectionTestSuccess = null;
     }
 
     public async Task ShowAsync(Guid pipelineClientId)
     {
-        SynapseWorkspace = null;
-        await Modal.LetAsync(x => x.ShowAsync());
+        synapseWorkspace = null;
+        await modal.LetAsync(x => x.ShowAsync());
         if (pipelineClientId != Guid.Empty)
         {
             using var context = DbFactory.CreateDbContext();
-            SynapseWorkspace = await context.SynapseWorkspaces
+            synapseWorkspace = await context.SynapseWorkspaces
                 .AsNoTrackingWithIdentityResolution()
                 .Include(s => s.Steps)
                 .ThenInclude(step => step.Job)
@@ -132,14 +130,14 @@
         }
         else
         {
-            SynapseWorkspace = new(string.Empty)
+            synapseWorkspace = new(string.Empty)
             {
                 AppRegistrationId = AppRegistrations?.FirstOrDefault()?.AppRegistrationId,
                 Steps = new List<PipelineStep>()
             };
         }
-        ConnectionTestSuccess = null;
-        TestingConnection = false;
+        connectionTestSuccess = null;
+        testingConnection = false;
     }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)

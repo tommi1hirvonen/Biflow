@@ -14,7 +14,7 @@
 <PageTitle>Pipeline clients | Biflow</PageTitle>
 
 <HxDropdownButtonGroup>
-    <HxDropdownToggleButton Color="ThemeColor.Success" Enabled="PipelineClients is not null">
+    <HxDropdownToggleButton Color="ThemeColor.Success" Enabled="pipelineClients is not null">
         Add client
     </HxDropdownToggleButton>
     <HxDropdownMenu>
@@ -45,17 +45,17 @@
             </tr>
         </thead>
         <tbody>
-            @if (PipelineClients is null)
+            @if (pipelineClients is null)
             {
                 <tr><td colspan="5" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
-            else if (PipelineClients.Count == 0)
+            else if (pipelineClients.Count == 0)
             {
                 <tr><td colspan="5">No clients</td></tr>
             }
             else
             {
-                @foreach (var client in PipelineClients)
+                @foreach (var client in pipelineClients)
                 {
                     var jobs = client.Steps.Select(s => s.Job).Distinct().Count();
                     var steps = client.Steps.Count();
@@ -90,8 +90,8 @@
                             <a class="text-body" href="javascript:void(0)"
                             @onclick="async () =>
                             {
-                                StepsClient = client;
-                                await StepsModal.LetAsync(x => x.ShowAsync());
+                                stepsClient = client;
+                                await stepsModal.LetAsync(x => x.ShowAsync());
                             }">
                                 @(steps > 0 ? $"{steps} step(s)" : null)
                             </a>
@@ -103,15 +103,15 @@
     </table>
 </div>
 
-<DataFactoryEditModal @ref="ClientEditModals[PipelineClientType.DataFactory]"
-                      AppRegistrations="AppRegistrations"
+<DataFactoryEditModal @ref="clientEditModals[PipelineClientType.DataFactory]"
+                      AppRegistrations="appRegistrations"
                       OnDataFactorySubmit="OnClientSubmit" />
 
-<SynapseWorkspaceEditModal @ref="ClientEditModals[PipelineClientType.Synapse]"
-                  AppRegistrations="AppRegistrations"
+<SynapseWorkspaceEditModal @ref="clientEditModals[PipelineClientType.Synapse]"
+                  AppRegistrations="appRegistrations"
                   OnSynapseWorkspaceSubmit="OnClientSubmit"/>
 
-<HxModal @ref="StepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {StepsClient?.PipelineClientName}")">
+<HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsClient?.PipelineClientName}")">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -123,7 +123,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var step in StepsClient?.Steps
+                        @foreach (var step in stepsClient?.Steps
                             .OrderBy(s => s.Job.JobName)
                             .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
                         {
@@ -144,29 +144,28 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await StepsModal.LetAsync(x => x.HideAsync())">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await stepsModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
 @code {
-    private List<PipelineClient>? PipelineClients { get; set; }
-    private List<AppRegistration>? AppRegistrations { get; set; }
-
-    private Dictionary<PipelineClientType, IPipelineClientEditModal?> ClientEditModals { get; } = new();
-
-    private PipelineClient? StepsClient { get; set; }
-    private HxModal? StepsModal { get; set; }
+    private readonly Dictionary<PipelineClientType, IPipelineClientEditModal?> clientEditModals = [];
+    
+    private List<PipelineClient>? pipelineClients;
+    private List<AppRegistration>? appRegistrations;
+    private PipelineClient? stepsClient;
+    private HxModal? stepsModal;
 
     protected override async Task OnParametersSetAsync()
     {
         using var context = await Task.Run<AppDbContext>(DbFactory.CreateDbContext);
-        PipelineClients = await context.PipelineClients
+        pipelineClients = await context.PipelineClients
             .AsNoTrackingWithIdentityResolution()
             .Include(c => c.Steps)
             .ThenInclude(step => step.Job)
             .OrderBy(c => c.PipelineClientName)
             .ToListAsync();
-        AppRegistrations = await context.AppRegistrations
+        appRegistrations = await context.AppRegistrations
             .AsNoTracking()
             .OrderBy(ar => ar.AppRegistrationName)
             .ToListAsync();
@@ -180,7 +179,7 @@
             await context.PipelineClients
                 .Where(x => x.PipelineClientId == client.PipelineClientId)
                 .ExecuteDeleteAsync();
-            PipelineClients?.Remove(client);
+            pipelineClients?.Remove(client);
         }
         catch (Exception ex)
         {
@@ -195,12 +194,12 @@
         if (client.PipelineClientId == Guid.Empty)
         {
             context.Add(client);
-            PipelineClients?.Add(client);
+            pipelineClients?.Add(client);
         }
         else
         {
-            PipelineClients?.RemoveAll(df => df.PipelineClientId == client.PipelineClientId);
-            PipelineClients?.Add(client);
+            pipelineClients?.RemoveAll(df => df.PipelineClientId == client.PipelineClientId);
+            pipelineClients?.Add(client);
             context.Attach(client).State = EntityState.Modified;
         }
         await context.SaveChangesAsync();
@@ -219,6 +218,6 @@
 
     private async Task OpenClientEditModalAsync(PipelineClientType type, Guid clientId)
     {
-        await ClientEditModals[type].LetAsync(x => x.ShowAsync(clientId));
+        await clientEditModals[type].LetAsync(x => x.ShowAsync(clientId));
     }
 }
