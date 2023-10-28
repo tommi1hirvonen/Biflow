@@ -105,14 +105,14 @@ public partial class StepsComponent : ComponentBase
 
     private bool IsStepTypeDisabled(StepType type) => type switch
     {
-        StepType.Sql or StepType.Package => SqlConnections?.Count > 0,
-        StepType.Pipeline => PipelineClients?.Count > 0,
-        StepType.Function => FunctionApps?.Count > 0,
-        StepType.Dataset => AppRegistrations?.Count > 0,
+        StepType.Sql or StepType.Package => (SqlConnections?.Count ?? 0) == 0,
+        StepType.Pipeline => (PipelineClients?.Count ?? 0) == 0,
+        StepType.Function => (FunctionApps?.Count ?? 0) == 0,
+        StepType.Dataset => (AppRegistrations?.Count ?? 0) == 0,
         StepType.Job => Jobs is null || Jobs.Count == 1,
-        StepType.AgentJob => SqlConnections?.Count > 0,
-        StepType.Tabular => AsConnections?.Count > 0,
-        StepType.Qlik => QlikCloudClients?.Count > 0,
+        StepType.AgentJob => (SqlConnections?.Count ?? 0) == 0,
+        StepType.Tabular => (AsConnections?.Count ?? 0) == 0,
+        StepType.Qlik => (QlikCloudClients?.Count ?? 0) == 0,
         _ => false,
     };
 
