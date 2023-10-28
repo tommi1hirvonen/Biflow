@@ -99,7 +99,7 @@ internal class JobOrchestrator : IJobOrchestrator
     {
         private readonly JobOrchestrator _instance = instance;
         private readonly StepExecution _stepExecution = stepExecution;
-        private readonly List<SemaphoreSlim> _enteredSemaphores = new();
+        private readonly List<SemaphoreSlim> _enteredSemaphores = [];
 
         public async Task OnPreExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
         {

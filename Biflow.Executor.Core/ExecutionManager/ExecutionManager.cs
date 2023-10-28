@@ -9,8 +9,8 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
 {
     private readonly ILogger<ExecutionManager> _logger = logger;
     private readonly IJobExecutorFactory _jobExecutorFactory = jobExecutorFactory;
-    private readonly Dictionary<Guid, IJobExecutor> _jobExecutors = new();
-    private readonly Dictionary<Guid, Task> _executionTasks = new();
+    private readonly Dictionary<Guid, IJobExecutor> _jobExecutors = [];
+    private readonly Dictionary<Guid, Task> _executionTasks = [];
     private readonly AsyncQueue<Func<CancellationToken, Task>> _backgroundTaskQueue = new();
 
     public async Task StartExecutionAsync(Guid executionId)

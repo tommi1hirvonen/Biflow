@@ -49,7 +49,7 @@ internal static class DependencyExtensions
         var visited = new Dictionary<T, VisitState>();
         foreach (var node in nodes)
         {
-            DepthFirstSearch(node, edges, new List<T>(), visited, cycles);
+            DepthFirstSearch(node, edges, [], visited, cycles);
         }
         return cycles;
     }

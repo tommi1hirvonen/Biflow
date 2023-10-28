@@ -9,8 +9,8 @@ internal class ExecutionPhaseModeObserver(
     ExtendedCancellationTokenSource cancellationTokenSource)
     : OrchestrationObserver(stepExecution, orchestrationListener, cancellationTokenSource)
 {
-    private readonly Dictionary<StepExecution, OrchestrationStatus> _duplicates = new();
-    private readonly Dictionary<StepExecution, OrchestrationStatus> _execution = new();
+    private readonly Dictionary<StepExecution, OrchestrationStatus> _duplicates = [];
+    private readonly Dictionary<StepExecution, OrchestrationStatus> _execution = [];
 
     protected override void HandleUpdate(OrchestrationUpdate value)
     {
