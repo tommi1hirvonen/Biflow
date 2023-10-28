@@ -188,7 +188,7 @@
                     {
                         continue;
                     }
-                    foreach (var item in jobs)
+                    foreach (var item in filteredJobs)
                     {
                         var lastExecution = GetLastExecution(item);
                         if (statusFilter.Any() && (lastExecution is null || !statusFilter.Contains(lastExecution.ExecutionStatus)))
