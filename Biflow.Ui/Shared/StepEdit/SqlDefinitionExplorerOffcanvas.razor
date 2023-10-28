@@ -2,7 +2,7 @@
 @inject IHxMessengerService Messenger
 @inject IJSRuntime JS
 
-<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true" Title="Explore SQL definitions">
+<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Large" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true" Title="Explore SQL definitions">
     <BodyTemplate>
         <div class="row">
             <div class="col-3">
@@ -13,7 +13,7 @@
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Database" />
                     </div>
-                    <select class="form-select form-select-sm" @bind="ConnectionId">
+                    <select class="form-select form-select-sm" @bind="connectionId">
                         @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
@@ -37,7 +37,7 @@
                                MinimumLength="0"
                                InputSize="InputSize.Small"
                                ValueChanged="RunQuery"
-                               ValueExpression="() => ObjectName">
+                               ValueExpression="() => objectName">
                     <ItemTemplate Context="item">@($"{item?.Item1}.{@item?.Item2}") <sup>@item?.Item3</sup></ItemTemplate>
                     <EmptyTemplate>
                         <span class="p-2">No matching modules</span>
@@ -47,7 +47,7 @@
         </div>
 
         <hr />
-        @if (ObjectDefinition is not null)
+        @if (objectDefinition is not null)
         {
             <div class="row">
                 <div class="col">
@@ -56,19 +56,19 @@
             </div>
             <div class="row mt-3">
                 <div class="col">
-                    <CodeEditor @ref="Editor"
+                    <CodeEditor @ref="editor"
                                 Language="sql"
                                 ReadOnly="true"
-                                InitialValueExpression="() => ObjectDefinition"
+                                InitialValueExpression="() => objectDefinition"
                                 InitialHeight="calc(100vh - 320px)" />
                 </div>
             </div>
         }
-        @if (ErrorMessage is not null)
+        @if (errorMessage is not null)
         {
             <div class="row mt-3">
                 <div class="col">
-                    <pre><code>@ErrorMessage</code></pre>
+                    <pre><code>@errorMessage</code></pre>
                 </div>
             </div>
         }
@@ -76,41 +76,35 @@
     </BodyTemplate>
 
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
 @code {
-
-    private Guid? ConnectionId { get; set; }
-    private Guid PrevConnectionId { get; set; }
-
     [Parameter] public IEnumerable<SqlConnectionInfo> Connections { get; set; } = Enumerable.Empty<SqlConnectionInfo>();
 
-    private CodeEditor? Editor { get; set; }
-
-    private HxOffcanvas? Offcanvas { get; set; }
-
-    private IEnumerable<(string, string, string)?>? SqlModules { get; set; }
-
-    private string ObjectName { get; set; } = string.Empty;
-
-    private string? ObjectDefinition { get; set; }
-    private string? ErrorMessage { get; set; }
+    private Guid? connectionId;
+    private Guid prevConnectionId;
+    private CodeEditor? editor;
+    private HxOffcanvas? offcanvas;
+    private IEnumerable<(string, string, string)?>? sqlModules;
+    private string objectName = string.Empty;
+    private string? objectDefinition;
+    private string? errorMessage;
 
     private async Task<AutosuggestDataProviderResult<(string, string, string)?>> ProvideSuggestions(AutosuggestDataProviderRequest request)
     {
         try
         {
-            Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
-            if (connectionId != PrevConnectionId)
+            Guid connectionId = this.connectionId ?? throw new ArgumentNullException(nameof(connectionId), "Connection id was null");
+            if (connectionId != prevConnectionId)
             {
-                PrevConnectionId = connectionId;
-                SqlModules = null;
+                prevConnectionId = connectionId;
+                sqlModules = null;
             }
-            SqlModules ??= await SqlServerHelper.GetSqlModulesAsync(connectionId);
+            sqlModules ??= await SqlServerHelper.GetSqlModulesAsync(connectionId);
 
-            var filteredModules = SqlModules?
+            var filteredModules = sqlModules?
                 .Where(module => $"{module?.Item1}.{module?.Item2}".ContainsIgnoreCase(request.UserInput));
             return new AutosuggestDataProviderResult<(string, string, string)?>
             {
@@ -133,30 +127,30 @@
 
     private async Task<(string, string, string)?> ResolveAutosuggestItemFromValue(string value)
     {
-        var module = await Task.FromResult(SqlModules?.FirstOrDefault(module => $"[{module?.Item1}].[{module?.Item2}]" == value));
+        var module = await Task.FromResult(sqlModules?.FirstOrDefault(module => $"[{module?.Item1}].[{module?.Item2}]" == value));
         return module;
     }
 
     private async Task RunQuery(string objectName)
     {
-        ObjectName = objectName;
-        ObjectDefinition = null;
-        await Editor.LetAsync(x => x.SetValueAsync(""));
-        ErrorMessage = null;
-        if (string.IsNullOrEmpty(ObjectName)) return;
+        this.objectName = objectName;
+        objectDefinition = null;
+        await editor.LetAsync(x => x.SetValueAsync(""));
+        errorMessage = null;
+        if (string.IsNullOrEmpty(this.objectName)) return;
         try
         {
-            Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
-            ObjectDefinition = await SqlServerHelper.GetObjectDefinitionAsync(connectionId, ObjectName);
-            if (ObjectDefinition is null)
+            Guid connectionId = this.connectionId ?? throw new ArgumentNullException(nameof(connectionId), "Connection id was null");
+                objectDefinition = await SqlServerHelper.GetObjectDefinitionAsync(connectionId, this.objectName);
+            if (objectDefinition is null)
             {
-                ErrorMessage = $"No object definition found for '{ObjectName}'";
+                    errorMessage = $"No object definition found for '{this.objectName}'";
             }
-            await Editor.LetAsync(x => x.SetValueAsync(ObjectDefinition));
+            await editor.LetAsync(x => x.SetValueAsync(objectDefinition));
         }
         catch (SqlException ex)
         {
-            ObjectDefinition = ex.Message;
+            objectDefinition = ex.Message;
         }
         catch (Exception ex)
         {
@@ -168,7 +162,7 @@
     {
         try
         {
-            await JS.InvokeVoidAsync("navigator.clipboard.writeText", ObjectDefinition);
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", objectDefinition);
             Messenger.AddInformation("Code copied to clipboard");
         }
         catch (Exception ex)
@@ -179,7 +173,7 @@
 
     public async Task ShowAsync(Guid? connectionId = null, string? sqlStatement = null)
     {
-        ConnectionId = connectionId ?? Connections.FirstOrDefault()?.ConnectionId;
+        this.connectionId = connectionId ?? Connections.FirstOrDefault()?.ConnectionId;
         var proc = sqlStatement?.ParseStoredProcedureFromSqlStatement();
         var schema = proc?.Schema;
         var name = proc?.ProcedureName;
@@ -191,7 +185,7 @@
         {
             await RunQuery($"[{name}]");
         }
-        await Offcanvas.LetAsync(x => x.ShowAsync());
+        await offcanvas.LetAsync(x => x.ShowAsync());
     }
 
 }

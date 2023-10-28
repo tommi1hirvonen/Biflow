@@ -75,10 +75,11 @@
 </HxOffcanvas>
 
 @code {
+    private readonly Dictionary<QlikSpace, bool> spaceExpandState = [];
+
     private HxOffcanvas? offcanvas;
     private IEnumerable<QlikSpace>? spaces;
-    private QlikApp? selectedApp;
-    private Dictionary<QlikSpace, bool> spaceExpandState = new();
+    private QlikApp? selectedApp;    
     private string appSearchTerm = "";
 
     [Parameter] public EventCallback<QlikApp> OnAppSelected { get; set; }

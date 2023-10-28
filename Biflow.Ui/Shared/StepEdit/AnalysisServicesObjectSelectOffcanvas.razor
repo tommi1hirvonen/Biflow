@@ -1,7 +1,7 @@
 ﻿@inject IHxMessengerService Messenger
 @inject SqlServerHelperService SqlServerHelperService
 
-<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select Analysis Services object">
+<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select Analysis Services object">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -15,20 +15,20 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Models is null)
+                        @if (models is null)
                         {
                             <tr><td class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                         }
-                        else if (!Models.Any())
+                        else if (!models.Any())
                         {
                             <tr><td class="text-secondary">No models</td></tr>
                         }
                         else
                         {
-                            foreach (var model in Models.OrderBy(m => m.ModelName))
+                            foreach (var model in models.OrderBy(m => m.ModelName))
                             {
                                 <tr style="cursor: pointer;"
-                                    class="@(model == SelectedModel ? "bg-body-tertiary fw-bold" : null)"
+                                    class="@(model == selectedModel ? "bg-body-tertiary fw-bold" : null)"
                                     @onclick="() => SelectModel(model)">
                                     <td>@model.ModelName</td>
                                 </tr>
@@ -50,24 +50,24 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Models is null)
+                        @if (models is null)
                         {
                             <tr><td class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                         }
-                        else if (SelectedModel is null)
+                        else if (selectedModel is null)
                         {
                             <tr><td class="text-secondary">Select a model to view tables</td></tr>
                         }
-                        else if (!SelectedModel.Tables.Any())
+                        else if (!selectedModel.Tables.Any())
                         {
                             <tr><td class="text-secondary">No tables</td></tr>
                         }
                         else
                         {
-                            foreach (var table in SelectedModel.Tables.OrderBy(t => t.TableName))
+                            foreach (var table in selectedModel.Tables.OrderBy(t => t.TableName))
                             {
                                 <tr style="cursor: pointer;"
-                                    class="@(table == SelectedTable ? "bg-body-tertiary fw-bold" : null)"
+                                    class="@(table == selectedTable ? "bg-body-tertiary fw-bold" : null)"
                                     @onclick="() => SelectTable(table)">
                                     <td>@table.TableName</td>
                                 </tr>
@@ -89,24 +89,24 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Models is null)
+                        @if (models is null)
                         {
                             <tr><td class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                         }
-                        else if (SelectedTable is null)
+                        else if (selectedTable is null)
                         {
                             <tr><td class="text-secondary">Select a table to view partitions</td></tr>
                         }
-                        else if (!SelectedTable.Partitions.Any())
+                        else if (!selectedTable.Partitions.Any())
                         {
                             <tr><td class="text-secondary">No partitions</td></tr>
                         }
                         else
                         {
-                            foreach (var partition in SelectedTable.Partitions.OrderBy(p => p.PartitionName))
+                            foreach (var partition in selectedTable.Partitions.OrderBy(p => p.PartitionName))
                             {
                                 <tr style="cursor: pointer;"
-                                    class="@(partition == SelectedPartition ? "bg-body-tertiary fw-bold" : null)"
+                                    class="@(partition == selectedPartition ? "bg-body-tertiary fw-bold" : null)"
                                     @onclick="() => SelectPartition(partition)">
                                     <td>@partition.PartitionName</td>
                                 </tr>
@@ -119,10 +119,10 @@
     </BodyTemplate>
     <FooterTemplate>
         <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectObjectAsync"
-                  Enabled="SelectedModel is not null || SelectedTable is not null || SelectedPartition is not null">
+                  Enabled="selectedModel is not null || selectedTable is not null || selectedPartition is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
@@ -134,69 +134,67 @@
     [Parameter]
     public EventCallback<AnalysisServicesObjectSelectedResponse> OnObjectSelected { get; set; }
 
-    private HxOffcanvas? Offcanvas { get; set; }
-
-    private IEnumerable<AsModel>? Models { get; set; }
-
-    private AsModel? SelectedModel { get; set; }
-    private AsTable? SelectedTable { get; set; }
-    private AsPartition? SelectedPartition { get; set; }
+    private HxOffcanvas? offcanvas;
+    private IEnumerable<AsModel>? models;
+    private AsModel? selectedModel;
+    private AsTable? selectedTable;
+    private AsPartition? selectedPartition;
 
     private void OnClosed()
     {
-        Models = null;
-        SelectedModel = null;
-        SelectedTable = null;
-        SelectedPartition = null;
+        models = null;
+        selectedModel = null;
+        selectedTable = null;
+        selectedPartition = null;
     }
 
     private void SelectModel(AsModel model)
     {
-        SelectedPartition = null;
-        SelectedTable = null;
-        SelectedModel = SelectedModel == model ? null : model;
+        selectedPartition = null;
+        selectedTable = null;
+        selectedModel = selectedModel == model ? null : model;
     }
 
     private void SelectTable(AsTable table)
     {
-        SelectedPartition = null;
-        SelectedTable = SelectedTable == table ? null : table;
+        selectedPartition = null;
+        selectedTable = selectedTable == table ? null : table;
     }
 
-    private void SelectPartition(AsPartition partition) => SelectedPartition = SelectedPartition == partition ? null : partition;
+    private void SelectPartition(AsPartition partition) => selectedPartition = selectedPartition == partition ? null : partition;
 
     private async Task SelectObjectAsync()
     {
-        if (SelectedPartition is not null)
+        if (selectedPartition is not null)
         {
             var obj = new AnalysisServicesObjectSelectedResponse(
-                SelectedPartition.Table.Model.ModelName,
-                SelectedPartition.Table.TableName,
-                SelectedPartition.PartitionName);
+                selectedPartition.Table.Model.ModelName,
+                selectedPartition.Table.TableName,
+                selectedPartition.PartitionName);
             await OnObjectSelected.InvokeAsync(obj);
-            await Offcanvas.LetAsync(x => x.HideAsync());
+            await offcanvas.LetAsync(x => x.HideAsync());
         }
-        else if (SelectedTable is not null)
+        else if (selectedTable is not null)
         {
-            var obj = new AnalysisServicesObjectSelectedResponse(SelectedTable.Model.ModelName, SelectedTable.TableName);
+            var obj = new AnalysisServicesObjectSelectedResponse(selectedTable.Model.ModelName, selectedTable.TableName);
             await OnObjectSelected.InvokeAsync(obj);
-            await Offcanvas.LetAsync(x => x.HideAsync());
+            await offcanvas.LetAsync(x => x.HideAsync());
         }
-        else if (SelectedModel is not null)
+        else if (selectedModel is not null)
         {
-            var obj = new AnalysisServicesObjectSelectedResponse(SelectedModel.ModelName);
+            var obj = new AnalysisServicesObjectSelectedResponse(selectedModel.ModelName);
             await OnObjectSelected.InvokeAsync(obj);
-            await Offcanvas.LetAsync(x => x.HideAsync());
+            await offcanvas.LetAsync(x => x.HideAsync());
         }
     }
 
     public async Task ShowAsync()
     {
-        await Offcanvas.LetAsync(x => x.ShowAsync());
+        await offcanvas.LetAsync(x => x.ShowAsync());
         if (ConnectionId is null || ConnectionId == Guid.Empty) return;
         try
         {
-            Models = await SqlServerHelperService.GetAnalysisServicesModelsAsync((Guid)ConnectionId);
+            models = await SqlServerHelperService.GetAnalysisServicesModelsAsync((Guid)ConnectionId);
             StateHasChanged();
         }
         catch (Exception ex)

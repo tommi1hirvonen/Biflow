@@ -16,49 +16,43 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase, IDisposable
 
     [Parameter] public Action<(string, string, string, string), bool>? OnDbObjectSelected { get; set; }
 
-    private Guid? ConnectionId { get; set; }
+    private readonly SemaphoreSlim semaphore = new(1, 1);
 
-    private HxOffcanvas? Offcanvas { get; set; }
+    private Guid? connectionId;
+    private HxOffcanvas? offcanvas;
+    private IEnumerable<DbObject>? databaseObjects;
+    private string schemaSearchTerm = string.Empty;
+    private string nameSearchTerm = string.Empty;
+    private CancellationTokenSource cts = new();
+    private Task<IEnumerable<DbObject>>? queryTask;
 
-    private IEnumerable<DbObject>? DatabaseObjects { get; set; }
-
-    private string SchemaSearchTerm { get; set; } = string.Empty;
-
-    private string NameSearchTerm { get; set; } = string.Empty;
-
-    private CancellationTokenSource Cts { get; set; } = new();
-
-    private bool Loading => QueryTask is not null;
-
-    private SemaphoreSlim Semaphore { get; } = new(1, 1);
-
-    private Task<IEnumerable<DbObject>>? QueryTask { get; set; }
+    private bool Loading => queryTask is not null;
 
     private async Task RunQueryAsync()
     {
-        if (SchemaSearchTerm.Length < 2 && NameSearchTerm.Length < 2)
+        if (schemaSearchTerm.Length < 2 && nameSearchTerm.Length < 2)
         {
             return;
         }
 
         // If another query task is alerady running, cancel it, wait for its completion and continue with a new query.
-        if (QueryTask is not null && !Cts.IsCancellationRequested)
+        if (queryTask is not null && !cts.IsCancellationRequested)
         {
-            Cts.Cancel();
+            cts.Cancel();
         }
 
         try
         {
-            await Semaphore.WaitAsync();
-            Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
-            QueryTask = SqlServerHelper.GetDatabaseObjectsAsync(connectionId, SchemaSearchTerm, NameSearchTerm, 50, Cts.Token);
+            await semaphore.WaitAsync();
+            Guid connectionId = this.connectionId ?? throw new ArgumentNullException(nameof(connectionId), "Connection id was null");
+            queryTask = SqlServerHelper.GetDatabaseObjectsAsync(connectionId, schemaSearchTerm, nameSearchTerm, 50, cts.Token);
             StateHasChanged();
-            DatabaseObjects = await QueryTask;
+            databaseObjects = await queryTask;
         }
         catch (OperationCanceledException)
         {
-            Cts.Dispose();
-            Cts = new();
+            cts.Dispose();
+            cts = new();
         }
         catch (Exception ex)
         {
@@ -66,24 +60,24 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase, IDisposable
         }
         finally
         {
-            QueryTask = null;
-            Semaphore.Release();
+            queryTask = null;
+            semaphore.Release();
         }
     }
 
     private async Task CloseAsync()
     {
-        if (QueryTask is not null && !Cts.IsCancellationRequested)
+        if (queryTask is not null && !cts.IsCancellationRequested)
         {
-            Cts.Cancel();
-            Cts = new();
+            cts.Cancel();
+            cts = new();
         }
-        await Offcanvas.LetAsync(x => x.HideAsync());
+        await offcanvas.LetAsync(x => x.HideAsync());
     }
 
     private async Task SelectDbObjectAsync((string Server, string Database, string Schema, string Name) dbObject, bool commit)
     {
-        await Offcanvas.LetAsync(x => x.HideAsync());
+        await offcanvas.LetAsync(x => x.HideAsync());
         if (OnDbObjectSelected is not null)
         {
             OnDbObjectSelected(dbObject, commit);
@@ -92,15 +86,15 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase, IDisposable
 
     public async Task ShowAsync(Guid? connectionId)
     {
-        DatabaseObjects = null;
-        SchemaSearchTerm = "";
-        NameSearchTerm = "";
-        ConnectionId = connectionId ?? Connections.FirstOrDefault()?.ConnectionId;
-        await Offcanvas.LetAsync(x => x.ShowAsync());
+        databaseObjects = null;
+        schemaSearchTerm = "";
+        nameSearchTerm = "";
+        this.connectionId = connectionId ?? Connections.FirstOrDefault()?.ConnectionId;
+        await offcanvas.LetAsync(x => x.ShowAsync());
     }
 
     public void Dispose()
     {
-        Cts.Dispose();
+        cts.Dispose();
     }
 }

@@ -1,7 +1,7 @@
 ﻿@inject SqlServerHelperService SqlServerHelperService
 @inject IHxMessengerService Messenger
 
-<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select Agent job">
+<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select Agent job">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -10,7 +10,7 @@
                         <CxIcon Icon="FeatherIcon.Filter" />
                     </span>
                     <input type="text" class="form-control form-control-sm" autocomplete="off" placeholder="Name"
-                           @bind-value="FilterTextName" @bind-value:event="oninput" />
+                           @bind-value="filterTextName" @bind-value:event="oninput" />
                 </div>
             </div>
         </div>
@@ -28,13 +28,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (AgentJobs is null)
+                        @if (agentJobs is null)
                         {
                             <tr>
                                 <td colspan="2" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td>
                             </tr>
                         }
-                        else if (!AgentJobs.Any())
+                        else if (!agentJobs.Any())
                         {
                             <tr>
                                 <td colspan="2">No Agent jobs</td>
@@ -42,15 +42,15 @@
                         }
                         else
                         {
-                            foreach (var job in AgentJobs
-                                .Where(aj => aj.AgentJobName.ContainsIgnoreCase(FilterTextName))
+                            foreach (var job in agentJobs
+                                .Where(aj => aj.AgentJobName.ContainsIgnoreCase(filterTextName))
                                 .OrderBy(aj => aj.AgentJobName))
                             {
                                 <tr style="cursor: pointer;"
-                                    @onclick="() => SelectedAgentJob = job.AgentJobName"
-                                    class="@(job.AgentJobName == SelectedAgentJob ? "bg-body-tertiary fw-bold" : null)">
+                                    @onclick="() => selectedAgentJob = job.AgentJobName"
+                                    class="@(job.AgentJobName == selectedAgentJob ? "bg-body-tertiary fw-bold" : null)">
                                     <td>
-                                        <HighlightableText Text="@job.AgentJobName" PartToHighlight="@FilterTextName" />
+                                        <HighlightableText Text="@job.AgentJobName" PartToHighlight="@filterTextName" />
                                     </td>
                                     <td>
                                         <div class="form-check form-switch">
@@ -69,52 +69,48 @@
 
     <FooterTemplate>
         <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectAgentJob"
-                  Enabled="SelectedAgentJob is not null">
+                  Enabled="selectedAgentJob is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
 @code {
-
-    private HxOffcanvas? Offcanvas { get; set; }
-
     [Parameter]
     public Guid? ConnectionId { get; set; }
 
     [Parameter]
     public EventCallback<string> OnAgentJobSelected { get; set; }
 
-    private IEnumerable<(string AgentJobName, bool IsEnabled)>? AgentJobs { get; set; }
-
-    private string FilterTextName { get; set; } = string.Empty;
-
-    private string? SelectedAgentJob { get; set; }
+    private HxOffcanvas? offcanvas;
+    private IEnumerable<(string AgentJobName, bool IsEnabled)>? agentJobs;
+    private string filterTextName = string.Empty;
+    private string? selectedAgentJob;
 
     private async Task SelectAgentJob()
     {
-        if (SelectedAgentJob is not null)
+        if (selectedAgentJob is not null)
         {
-            await OnAgentJobSelected.InvokeAsync(SelectedAgentJob);
-            await Offcanvas.LetAsync(x => x.HideAsync());
+            await OnAgentJobSelected.InvokeAsync(selectedAgentJob);
+            await offcanvas.LetAsync(x => x.HideAsync());
         }
     }
 
     public void OnClosed()
     {
-        AgentJobs = null;
-        SelectedAgentJob = null;
-        FilterTextName = string.Empty;
+        agentJobs = null;
+        selectedAgentJob = null;
+        filterTextName = string.Empty;
     }
 
     public async Task ShowAsync()
     {
-        await Offcanvas.LetAsync(x => x.ShowAsync());
+        await offcanvas.LetAsync(x => x.ShowAsync());
         if (ConnectionId is null || ConnectionId == Guid.Empty) return;
         try
         {
-            AgentJobs = await SqlServerHelperService.GetAgentJobsAsync((Guid)ConnectionId);
+            agentJobs = await SqlServerHelperService.GetAgentJobsAsync((Guid)ConnectionId);
             StateHasChanged();
         }
         catch (Exception ex)

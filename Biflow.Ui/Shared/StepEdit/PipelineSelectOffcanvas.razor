@@ -2,7 +2,7 @@
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject ITokenService TokenService
 
-<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Regular" Title="Select pipeline">
+<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" Title="Select pipeline">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -16,20 +16,20 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Pipelines is null)
+                        @if (pipelines is null)
                         {
                             <tr><td class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                         }
-                        else if (Pipelines.Count == 0)
+                        else if (pipelines.Count == 0)
                         {
                             <tr><td>No pipelines</td></tr>
                         }
                         else
                         {
-                            foreach (var folder in Pipelines.Keys.OrderBy(folder => folder))
+                            foreach (var folder in pipelines.Keys.OrderBy(folder => folder))
                             {
                                 <tr style="cursor: pointer;" @onclick="() => OnFolderChanged(folder)"
-                                    class="@(folder == SelectedFolder ? "bg-body-tertiary fw-bold" : null)">
+                                    class="@(folder == selectedFolder ? "bg-body-tertiary fw-bold" : null)">
                                     <td>@folder</td>
                                 </tr>
                             }
@@ -44,7 +44,7 @@
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Filter" />
                     </div>
-                    <input type="search" class="form-control" @bind-value="FilterText" @bind-value:event="oninput"
+                    <input type="search" class="form-control" @bind-value="filterText" @bind-value:event="oninput"
                            placeholder="Filter by name" autocomplete="off" />
                 </div>
             </div>
@@ -61,17 +61,17 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Pipelines is not null && SelectedFolder is not null)
+                        @if (pipelines is not null && selectedFolder is not null)
                         {
-                            foreach (var pipeline in Pipelines[SelectedFolder].Where(p => p.Name.ContainsIgnoreCase(FilterText)).OrderBy(p => p.Name))
+                            foreach (var pipeline in pipelines[selectedFolder].Where(p => p.Name.ContainsIgnoreCase(filterText)).OrderBy(p => p.Name))
                             {
-                                <tr style="cursor: pointer;" @onclick="() => SelectedPipeline = pipeline"
-                                class="@(pipeline == SelectedPipeline ? "bg-body-tertiary fw-bold" : null)">
+                                <tr style="cursor: pointer;" @onclick="() => selectedPipeline = pipeline"
+                                class="@(pipeline == selectedPipeline ? "bg-body-tertiary fw-bold" : null)">
                                     <td>
-                                        <HighlightableText Text="@pipeline.Name" PartToHighlight="@FilterText" />
+                                        <HighlightableText Text="@pipeline.Name" PartToHighlight="@filterText" />
                                     </td>
                                 </tr>
-                                @if (pipeline == SelectedPipeline && pipeline.Parameters?.Any() == true)
+                                @if (pipeline == selectedPipeline && pipeline.Parameters?.Any() == true)
                                 {
                                     <tr class="no-hover">
                                         <td colspan="2" class="bg-body-tertiary">
@@ -102,10 +102,10 @@
 
     <FooterTemplate>
         <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectPipelineAsync"
-                  Enabled="SelectedPipeline is not null">
+                  Enabled="selectedPipeline is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
@@ -113,38 +113,35 @@
     [Parameter]
     public EventCallback<string> OnPipelineSelected { get; set; }
 
-    private HxOffcanvas? Offcanvas { get; set; }
-
-    private IDictionary<string, IEnumerable<PipelineInfo>>? Pipelines { get; set; }
-
-    private string FilterText { get; set; } = string.Empty;
-
-    private string? SelectedFolder { get; set; }
-    private PipelineInfo? SelectedPipeline { get; set; }
+    private HxOffcanvas? offcanvas;
+    private IDictionary<string, IEnumerable<PipelineInfo>>? pipelines;
+    private string filterText = string.Empty;
+    private string? selectedFolder;
+    private PipelineInfo? selectedPipeline;
 
     private void OnFolderChanged(string folder)
     {
-        if (folder != SelectedFolder)
+        if (folder != selectedFolder)
         {
-            SelectedPipeline = null;
+            selectedPipeline = null;
         }
-        SelectedFolder = folder;
+        selectedFolder = folder;
     }
 
     private async Task SelectPipelineAsync()
     {
-        await OnPipelineSelected.InvokeAsync(SelectedPipeline?.Name);
-        await Offcanvas.LetAsync(x => x.HideAsync());
+        await OnPipelineSelected.InvokeAsync(selectedPipeline?.Name);
+        await offcanvas.LetAsync(x => x.HideAsync());
     }
 
     public async Task ShowAsync(Guid pipelineClientId)
     {
-        Pipelines = null;
-        SelectedFolder = null;
-        SelectedPipeline = null;
-        FilterText = string.Empty;
+        pipelines = null;
+        selectedFolder = null;
+        selectedPipeline = null;
+        filterText = string.Empty;
 
-        await Offcanvas.LetAsync(x => x.ShowAsync());
+        await offcanvas.LetAsync(x => x.ShowAsync());
         
         try
         {
@@ -153,7 +150,7 @@
                 .AsNoTrackingWithIdentityResolution()
                 .Include(c => c.AppRegistration)
                 .FirstAsync(c => c.PipelineClientId == pipelineClientId);
-            Pipelines = await client.GetPipelinesAsync(TokenService);
+            pipelines = await client.GetPipelinesAsync(TokenService);
             StateHasChanged();
         }
         catch (Exception ex)

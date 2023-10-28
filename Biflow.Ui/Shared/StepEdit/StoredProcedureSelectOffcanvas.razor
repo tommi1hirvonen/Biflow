@@ -1,7 +1,7 @@
 ﻿@inject SqlServerHelperService SqlServerHelperService
 @inject IHxMessengerService Messenger
 
-<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select stored procedure">
+<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select stored procedure">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -10,9 +10,9 @@
                         <CxIcon Icon="FeatherIcon.Filter" />
                     </span>
                     <input type="text" class="form-control form-control-sm" autocomplete="off" placeholder="Schema"
-                           @bind-value="FilterTextSchema" @bind-value:event="oninput" />
+                           @bind-value="filterTextSchema" @bind-value:event="oninput" />
                     <input type="text" class="form-control form-control-sm" autocomplete="off" placeholder="Name"
-                           @bind-value="FilterTextName" @bind-value:event="oninput" />
+                           @bind-value="filterTextName" @bind-value:event="oninput" />
                 </div>
             </div>
         </div>
@@ -27,11 +27,11 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Procedures is null)
+                        @if (procedures is null)
                         {
                             <tr><td class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                         }
-                        else if (Procedures.Count() == 0)
+                        else if (procedures.Count() == 0)
                         {
                             <tr><td>No stored procedures</td></tr>
                         }
@@ -40,13 +40,13 @@
                             foreach (var proc in ProceduresFiltered)
                             {
                                 <tr style="cursor: pointer;"
-                                    @onclick="() => SelectedProcedure = proc"
-                                    class="@(proc == SelectedProcedure ? "bg-body-tertiary fw-bold" : null)">
+                                    @onclick="() => selectedProcedure = proc"
+                                    class="@(proc == selectedProcedure ? "bg-body-tertiary fw-bold" : null)">
                                     <td>
-                                        <HighlightableText Text="@($"[{proc.SchemaName}]")" PartToHighlight="@FilterTextSchema" />.<HighlightableText Text="@($"[{proc.ProcedureName}]")" PartToHighlight="@FilterTextName" />
+                                        <HighlightableText Text="@($"[{proc.SchemaName}]")" PartToHighlight="@filterTextSchema" />.<HighlightableText Text="@($"[{proc.ProcedureName}]")" PartToHighlight="@filterTextName" />
                                     </td>
                                 </tr>
-                                @if (proc == SelectedProcedure && proc.Parameters.Any())
+                                @if (proc == selectedProcedure && proc.Parameters.Any())
                                 {
                                     <tr class="no-hover">
                                         <td colspan="2" class="bg-body-tertiary">
@@ -75,60 +75,56 @@
 
     <FooterTemplate>
         <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectProcedure"
-                  Enabled="SelectedProcedure is not null">
+                  Enabled="selectedProcedure is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
 @code {
-
-    private HxOffcanvas? Offcanvas { get; set; }
-
     [Parameter]
     public Guid? ConnectionId { get; set; }
 
     [Parameter]
     public EventCallback<string> OnProcedureSelected { get; set; }
 
-    private IEnumerable<StoredProcedure>? Procedures { get; set; }
+    private HxOffcanvas? offcanvas;
+    private IEnumerable<StoredProcedure>? procedures;
+    private string filterTextName = string.Empty;
+    private string filterTextSchema = string.Empty;
+    private StoredProcedure? selectedProcedure;
 
-    private IEnumerable<StoredProcedure> ProceduresFiltered => Procedures?
-        .Where(proc => $"[{proc.SchemaName}]".ContainsIgnoreCase(FilterTextSchema))
-        .Where(proc => $"[{proc.ProcedureName}]".ContainsIgnoreCase(FilterTextName))
+    private IEnumerable<StoredProcedure> ProceduresFiltered => procedures?
+        .Where(proc => $"[{proc.SchemaName}]".ContainsIgnoreCase(filterTextSchema))
+        .Where(proc => $"[{proc.ProcedureName}]".ContainsIgnoreCase(filterTextName))
         .OrderBy(proc => proc.SchemaName)
         .ThenBy(proc => proc.ProcedureName) ?? Enumerable.Empty<StoredProcedure>();
 
-    private string FilterTextName { get; set; } = string.Empty;
-    private string FilterTextSchema { get; set; } = string.Empty;
-
-    private StoredProcedure? SelectedProcedure { get; set; }
-
     private async Task SelectProcedure()
     {
-        if (SelectedProcedure is not null)
+        if (selectedProcedure is not null)
         {
-            await OnProcedureSelected.InvokeAsync($"[{SelectedProcedure.SchemaName}].[{SelectedProcedure.ProcedureName}]");
-            await Offcanvas.LetAsync(x => x.HideAsync());
+            await OnProcedureSelected.InvokeAsync($"[{selectedProcedure.SchemaName}].[{selectedProcedure.ProcedureName}]");
+            await offcanvas.LetAsync(x => x.HideAsync());
         }
     }
 
     public void OnClosed()
     {
-        Procedures = null;
-        SelectedProcedure = null;
-        FilterTextSchema = string.Empty;
-        FilterTextName = string.Empty;
+        procedures = null;
+        selectedProcedure = null;
+        filterTextSchema = string.Empty;
+        filterTextName = string.Empty;
     }
 
     public async Task ShowAsync()
     {
-        await Offcanvas.LetAsync(x => x.ShowAsync());
+        await offcanvas.LetAsync(x => x.ShowAsync());
         if (ConnectionId is null || ConnectionId == Guid.Empty) return;
         try
         {
-            Procedures = await SqlServerHelperService.GetStoredProceduresAsync((Guid)ConnectionId);
+            procedures = await SqlServerHelperService.GetStoredProceduresAsync((Guid)ConnectionId);
             StateHasChanged();
         }
         catch (Exception ex)

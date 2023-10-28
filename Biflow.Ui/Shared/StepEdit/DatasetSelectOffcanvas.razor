@@ -2,7 +2,7 @@
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject ITokenService TokenService
 
-<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select dataset">
+<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select dataset">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -16,19 +16,19 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Datasets is null)
+                        @if (datasets is null)
                         {
                             <tr><td class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                         }
-                        else if (Datasets.Count == 0)
+                        else if (datasets.Count == 0)
                         {
                             <tr><td>No workspaces</td></tr>
                         }
                         else
                         {
-                            foreach (var group in Datasets.Keys.OrderBy(folder => folder.GroupName))
+                            foreach (var group in datasets.Keys.OrderBy(folder => folder.GroupName))
                             {
-                                <tr style="cursor: pointer;" @onclick="() => OnGroupChanged(group)" class="@(group == SelectedGroup ? "bg-body-tertiary fw-bold" : null)">
+                                <tr style="cursor: pointer;" @onclick="() => OnGroupChanged(group)" class="@(group == selectedGroup ? "bg-body-tertiary fw-bold" : null)">
                                     <td>@group.GroupName</td>
                                 </tr>
                             }
@@ -49,9 +49,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Datasets is not null && SelectedGroup is not null)
+                        @if (datasets is not null && selectedGroup is not null)
                         {
-                            var datasets = Datasets[SelectedGroup.Value];
+                            var datasets = this.datasets[selectedGroup.Value];
                             if (datasets.Count == 0)
                             {
                                 <tr><td>No datasets</td></tr>
@@ -60,7 +60,7 @@
                             {
                                 foreach (var dataset in datasets.OrderBy(p => p.DatasetName))
                                 {
-                                    <tr style="cursor: pointer;" @onclick="() => SelectedDataset = dataset" class="@(dataset == SelectedDataset ? "bg-body-tertiary fw-bold" : null)">
+                                    <tr style="cursor: pointer;" @onclick="() => selectedDataset = dataset" class="@(dataset == selectedDataset ? "bg-body-tertiary fw-bold" : null)">
                                         <td>@dataset.DatasetName</td>
                                     </tr>
                                 }
@@ -74,61 +74,58 @@
 
     <FooterTemplate>
         <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectDatasetAsync"
-                  Enabled="SelectedDataset is not null">
+                  Enabled="selectedDataset is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
 @code {
-
-    private HxOffcanvas? Offcanvas { get; set; }
-
     [Parameter]
     public Guid? AppRegistrationId { get; set; }
 
     [Parameter]
     public EventCallback<DatasetSelectedResponse> OnDatasetSelected { get; set; }
 
-    private Dictionary<(string GroupId, string GroupName), List<(string DatasetId, string DatasetName)>>? Datasets { get; set; }
-
-    private (string GroupId, string GroupName)? SelectedGroup { get; set; }
-    private (string DatasetId, string DatasetName)? SelectedDataset { get; set; }
+    private HxOffcanvas? offcanvas;
+    private Dictionary<(string GroupId, string GroupName), List<(string DatasetId, string DatasetName)>>? datasets;
+    private (string GroupId, string GroupName)? selectedGroup;
+    private (string DatasetId, string DatasetName)? selectedDataset;
 
     private void OnGroupChanged((string Id, string Name) group)
     {
-        if (group != SelectedGroup)
+        if (group != selectedGroup)
         {
-            SelectedDataset = null;
+            selectedDataset = null;
         }
-        SelectedGroup = group;
+        selectedGroup = group;
     }
 
     private async Task SelectDatasetAsync()
     {
-        if (SelectedGroup is null || SelectedDataset is null)
+        if (selectedGroup is null || selectedDataset is null)
         {
             return;
         }
         var selectedResponse = new DatasetSelectedResponse(
-            SelectedGroup.Value.GroupId, SelectedGroup.Value.GroupName,
-            SelectedDataset.Value.DatasetId, SelectedDataset.Value.DatasetName
+            selectedGroup.Value.GroupId, selectedGroup.Value.GroupName,
+            selectedDataset.Value.DatasetId, selectedDataset.Value.DatasetName
         );
         await OnDatasetSelected.InvokeAsync(selectedResponse);
-        await Offcanvas.LetAsync(x => x.HideAsync());
+        await offcanvas.LetAsync(x => x.HideAsync());
     }
 
     private void OnClosed()
     {
-        Datasets = null;
-        SelectedGroup = null;
-        SelectedDataset = null;
+        datasets = null;
+        selectedGroup = null;
+        selectedDataset = null;
     }
 
     public async Task ShowAsync()
     {
-        await Offcanvas.LetAsync(x => x.ShowAsync());
+        await offcanvas.LetAsync(x => x.ShowAsync());
         if (AppRegistrationId is null || AppRegistrationId == Guid.Empty) return;
         try
         {
@@ -137,7 +134,7 @@
             var appRegistration = await context.AppRegistrations
                 .AsNoTracking()
                 .FirstAsync(r => r.AppRegistrationId == id);
-            Datasets = await appRegistration.GetAllDatasetsAsync(TokenService);
+            datasets = await appRegistration.GetAllDatasetsAsync(TokenService);
             StateHasChanged();
         }
         catch (Exception ex)

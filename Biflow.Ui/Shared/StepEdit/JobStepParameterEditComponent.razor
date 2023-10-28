@@ -1,6 +1,6 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
 
-@if (Loading)
+@if (loading)
 {
     <div class="row mt-3">
         <div class="col text-center">
@@ -8,7 +8,7 @@
         </div>
     </div>
 }
-else if (Step is not null && TargetJob is not null)
+else if (Step is not null && targetJob is not null)
 {
     <p />
     <h5>
@@ -35,7 +35,7 @@ else if (Step is not null && TargetJob is not null)
             }
             @foreach (var param in Step.StepParameters.OrderBy(p => p.ParameterName))
             {
-                var targetParam = TargetJob.JobParameters.First(p => p.ParameterId == param.AssignToJobParameterId);
+                var targetParam = targetJob.JobParameters.First(p => p.ParameterId == param.AssignToJobParameterId);
                 var availableJobParams = GetAvailableJobParameters(param);
                 <tr>
                     <td>
@@ -115,7 +115,7 @@ else if (Step is not null)
     </div>
 }
 
-<ExpressionEditOffcanvas @ref="ExpressionEditOffcanvas" TParameter="StepParameterBase" OnExpressionChanged="StateHasChanged">
+<ExpressionEditOffcanvas @ref="expressionEditOffcanvas" TParameter="StepParameterBase" OnExpressionChanged="StateHasChanged">
     <div class="row mt-3">
         <div class="col">
             <ExpressionParameterEditComponent StepParameter="context" />
@@ -129,39 +129,37 @@ else if (Step is not null)
 
     [Parameter] public Guid? TargetJobId { get; set; }
 
+    private Job? targetJob;
+    private bool loading = false;
+    private ExpressionEditOffcanvas<StepParameterBase>? expressionEditOffcanvas;
+
     private IEnumerable<JobParameter> JobParameters => (Step as Step)?.Job.JobParameters ?? Enumerable.Empty<JobParameter>();
 
-    private Job? TargetJob { get; set; }
-
-    private bool Loading { get; set; } = false;
-
-    private IEnumerable<JobParameter> AvailableTargetParameters => TargetJob?.JobParameters
+    private IEnumerable<JobParameter> AvailableTargetParameters => targetJob?.JobParameters
         .Where(jp => !Step?.StepParameters.Cast<JobStepParameter>().Any(sp => sp.AssignToJobParameterId == jp.ParameterId) ?? false)
         .OrderBy(jp => jp.ParameterName)
         ?? Enumerable.Empty<JobParameter>();
 
-    private ExpressionEditOffcanvas<StepParameterBase>? ExpressionEditOffcanvas { get; set; }
-
     protected override async Task OnParametersSetAsync()
     {
-        if (TargetJobId == TargetJob?.JobId || Loading)
+        if (TargetJobId == targetJob?.JobId || loading)
         {
             return;
         }
         else if (TargetJobId is null)
         {
-            TargetJob = null;
+            targetJob = null;
             return;
         }
 
-        Loading = true;
+        loading = true;
 
         using var context = await DbContextFactory.CreateDbContextAsync();
-        TargetJob = await context.Jobs
+        targetJob = await context.Jobs
             .Include(j => j.JobParameters)
             .FirstOrDefaultAsync(j => j.JobId == TargetJobId);
 
-        Loading = false;
+        loading = false;
     }
 
     private void AddParameter(JobParameter targetParam)
@@ -183,7 +181,7 @@ else if (Step is not null)
     private void OnTargetParameterChanged(ChangeEventArgs args, JobStepParameter parameter)
     {
         var idString = args.Value?.ToString();
-        if (idString is null || TargetJob is null)
+        if (idString is null || targetJob is null)
         {
             return;
         }
@@ -194,7 +192,7 @@ else if (Step is not null)
         parameter.ParameterName = targetParam.ParameterName;
     }
 
-    private Task OnParameterEdit(StepParameterBase parameter) => ExpressionEditOffcanvas.LetAsync(x => x.ShowAsync(parameter));
+    private Task OnParameterEdit(StepParameterBase parameter) => expressionEditOffcanvas.LetAsync(x => x.ShowAsync(parameter));
 
     private IEnumerable<JobParameter> GetAvailableJobParameters(StepParameterBase param) => JobParameters
         .Where(p => p.ParameterValueType == param.ParameterValueType || p.UseExpression)

@@ -22,20 +22,20 @@
     <div class="col-auto">
         <div class="form-check form-check-inline">
             <input type="checkbox" class="form-check-input" id="only_schedule"
-                    @bind-value="ShowServer"
-                    checked=@ShowServer>
+                    @bind-value="showServer"
+                    checked=@showServer>
             <label class="form-check-label" for="only_schedule">Show server name</label>
         </div>
         <div class="form-check form-check-inline ms-3">
             <input type="checkbox" class="form-check-input" id="include_deleted"
-                    @bind-value="ShowDatabase"
-                    checked=@ShowDatabase>
+                    @bind-value="showDatabase"
+                    checked=@showDatabase>
             <label class="form-check-label" for="include_deleted">Show database name</label>
         </div>
     </div>
 </div>
 @{
-    var colspan = (ShowServer, ShowDatabase, NewObject is not null) switch
+    var colspan = (showServer, showDatabase, newObject is not null) switch
     {
         (true, true, _) or (_, _, true) => 6,
         (false, true, _) or (true, false, _) => 5,
@@ -45,11 +45,11 @@
 <table class="table table-sm table-hover small">
     <thead>
         <tr>
-            @if (ShowServer || NewObject is not null)
+            @if (showServer || newObject is not null)
             {
                 <th>Server</th>
             }
-            @if (ShowDatabase || NewObject is not null)
+            @if (showDatabase || newObject is not null)
             {
                 <th>Database</th>
             }
@@ -89,13 +89,13 @@
                     _ => null
                 };
                 <tr title="@title">
-                    @if (ShowServer || NewObject is not null)
+                    @if (showServer || newObject is not null)
                     {
                         <td class="align-middle">
                             @obj.ServerName
                         </td>
                     }
-                    @if (ShowDatabase || NewObject is not null)
+                    @if (showDatabase || newObject is not null)
                     {
                         <td class="align-middle">
                             @obj.DatabaseName
@@ -131,113 +131,113 @@
                 </tr>
             }
         }
-        @if (NewObject is not null)
+        @if (newObject is not null)
         {
             <tr>
                 <td>
                     <input class="form-control form-control-sm" type="text" autocomplete="off"
-                            @bind="NewObject.ServerName"
+                            @bind="newObject.ServerName"
                             @bind:event="oninput"
-                            @onfocusin="() => SuggestType = DatabaseObjectType.Server" />
+                            @onfocusin="() => suggestType = DatabaseObjectType.Server" />
                 </td>
                 <td>
                     <input class="form-control form-control-sm" type="text" autocomplete="off"
-                            @bind="NewObject.DatabaseName"
+                            @bind="newObject.DatabaseName"
                             @bind:event="oninput"
-                            @onfocusin="() => SuggestType = DatabaseObjectType.Database" />
+                            @onfocusin="() => suggestType = DatabaseObjectType.Database" />
                 </td>
                 <td>
                     <input class="form-control form-control-sm" type="text" autocomplete="off"
-                            @bind="NewObject.SchemaName"
+                            @bind="newObject.SchemaName"
                             @bind:event="oninput"
-                            @onfocusin="() => SuggestType = DatabaseObjectType.Schema" />
+                            @onfocusin="() => suggestType = DatabaseObjectType.Schema" />
                 </td>
                 <td>
                     <input class="form-control form-control-sm" type="text" autocomplete="off"
-                            @bind="NewObject.ObjectName"
+                            @bind="newObject.ObjectName"
                             @bind:event="oninput"
-                            @onfocusin="() => SuggestType = DatabaseObjectType.Object" />
+                            @onfocusin="() => suggestType = DatabaseObjectType.Object" />
                 </td>
                 <td colspan="2">
                     <HxButtonGroup Size="ButtonGroupSize.Small">
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-success" OnClick="SubmitNewObject" title="Add">
                             <CxIcon Icon="FeatherIcon.Check" />
                         </HxButton>
-                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger" OnClick="() => NewObject = null" title="Discard">
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger" OnClick="() => newObject = null" title="Discard">
                             <CxIcon Icon="FeatherIcon.X" />
                         </HxButton>
                     </HxButtonGroup>
                 </td>
             </tr>
-            @if (SuggestType == DatabaseObjectType.Server)
+            @if (suggestType == DatabaseObjectType.Server)
             {
-                var servers = AllObjects?
+                var servers = allObjects?
                     .Select(o => o.ServerName)
                     .Distinct()
                     .OrderBy(o => o)
                     .Take(10) ?? Enumerable.Empty<string>();
                 @foreach (var server in servers)
                 {
-                    <tr style="cursor: pointer;" @onclick="() => NewObject.ServerName = server">
-                        <td colspan="6"><HighlightableText Text="@server" PartToHighlight="@NewObject.ServerName" /></td>
+                    <tr style="cursor: pointer;" @onclick="() => newObject.ServerName = server">
+                        <td colspan="6"><HighlightableText Text="@server" PartToHighlight="@newObject.ServerName" /></td>
                     </tr>
                 }
             }
-            else if (SuggestType == DatabaseObjectType.Database)
+            else if (suggestType == DatabaseObjectType.Database)
             {
-                var databases = AllObjects?
-                    .Where(o => string.IsNullOrEmpty(NewObject.ServerName) || o.ServerName == NewObject.ServerName)
-                    .Where(o => o.DatabaseName.ContainsIgnoreCase(NewObject.DatabaseName))
+                var databases = allObjects?
+                    .Where(o => string.IsNullOrEmpty(newObject.ServerName) || o.ServerName == newObject.ServerName)
+                    .Where(o => o.DatabaseName.ContainsIgnoreCase(newObject.DatabaseName))
                     .Select(o => (o.ServerName, o.DatabaseName))
                     .Distinct()
                     .OrderBy(o => o.ServerName).ThenBy(o => o.DatabaseName)
                     .Take(10) ?? Enumerable.Empty<(string, string)>();
                 @foreach (var database in databases)
                 {
-                    <tr style="cursor: pointer;" @onclick="() => { NewObject.ServerName = database.ServerName; NewObject.DatabaseName = database.DatabaseName; }">
+                    <tr style="cursor: pointer;" @onclick="() => { newObject.ServerName = database.ServerName; newObject.DatabaseName = database.DatabaseName; }">
                         <td colspan="1">@database.ServerName</td>
-                        <td colspan="5"><HighlightableText Text="@database.DatabaseName" PartToHighlight="@NewObject.DatabaseName" /></td>
+                        <td colspan="5"><HighlightableText Text="@database.DatabaseName" PartToHighlight="@newObject.DatabaseName" /></td>
                     </tr>
                 }
             }
-            else if (SuggestType == DatabaseObjectType.Schema)
+            else if (suggestType == DatabaseObjectType.Schema)
             {
-                var schemas = AllObjects?
-                    .Where(o => string.IsNullOrEmpty(NewObject.ServerName) || o.ServerName == NewObject.ServerName)
-                    .Where(o => string.IsNullOrEmpty(NewObject.DatabaseName) || o.DatabaseName == NewObject.DatabaseName)
-                    .Where(o => o.SchemaName.ContainsIgnoreCase(NewObject.SchemaName))
+                var schemas = allObjects?
+                    .Where(o => string.IsNullOrEmpty(newObject.ServerName) || o.ServerName == newObject.ServerName)
+                    .Where(o => string.IsNullOrEmpty(newObject.DatabaseName) || o.DatabaseName == newObject.DatabaseName)
+                    .Where(o => o.SchemaName.ContainsIgnoreCase(newObject.SchemaName))
                     .Select(o => (o.ServerName, o.DatabaseName, o.SchemaName))
                     .Distinct()
                     .OrderBy(o => o.ServerName).ThenBy(o => o.DatabaseName).ThenBy(o => o.SchemaName)
                     .Take(10) ?? Enumerable.Empty<(string, string, string)>();
                 @foreach (var schema in schemas)
                 {
-                    <tr style="cursor: pointer;" @onclick="() => { NewObject.ServerName = schema.ServerName; NewObject.DatabaseName = schema.DatabaseName; NewObject.SchemaName = schema.SchemaName; }">
+                    <tr style="cursor: pointer;" @onclick="() => { newObject.ServerName = schema.ServerName; newObject.DatabaseName = schema.DatabaseName; newObject.SchemaName = schema.SchemaName; }">
                         <td colspan="1">@schema.ServerName</td>
                         <td colspan="1">@schema.DatabaseName</td>
-                        <td colspan="4"><HighlightableText Text="@schema.SchemaName" PartToHighlight="@NewObject.SchemaName" /></td>
+                        <td colspan="4"><HighlightableText Text="@schema.SchemaName" PartToHighlight="@newObject.SchemaName" /></td>
                     </tr>
                 }
             }
-            else if (SuggestType == DatabaseObjectType.Object)
+            else if (suggestType == DatabaseObjectType.Object)
             {
-                var objects = AllObjects?
-                    .Where(o => string.IsNullOrEmpty(NewObject.ServerName) || o.ServerName == NewObject.ServerName)
-                    .Where(o => string.IsNullOrEmpty(NewObject.DatabaseName) || o.DatabaseName == NewObject.DatabaseName)
-                    .Where(o => string.IsNullOrEmpty(NewObject.SchemaName) || o.SchemaName == NewObject.SchemaName)
-                    .Where(o => o.ObjectName.ContainsIgnoreCase(NewObject.ObjectName))
+                var objects = allObjects?
+                    .Where(o => string.IsNullOrEmpty(newObject.ServerName) || o.ServerName == newObject.ServerName)
+                    .Where(o => string.IsNullOrEmpty(newObject.DatabaseName) || o.DatabaseName == newObject.DatabaseName)
+                    .Where(o => string.IsNullOrEmpty(newObject.SchemaName) || o.SchemaName == newObject.SchemaName)
+                    .Where(o => o.ObjectName.ContainsIgnoreCase(newObject.ObjectName))
                     .OrderBy(o => o.ServerName).ThenBy(o => o.DatabaseName).ThenBy(o => o.SchemaName).ThenBy(o => o.ObjectName)
                     .Take(10) ?? Enumerable.Empty<DataObject>();
                 @foreach (var obj in objects)
                 {
-                    <tr style="cursor: pointer;" @onclick="() => { NewObject = obj; SubmitNewObject(); }">
+                    <tr style="cursor: pointer;" @onclick="() => { newObject = obj; SubmitNewObject(); }">
                         <td class="align-middle">@obj.ServerName</td>
                         <td class="align-middle">@obj.DatabaseName</td>
                         <td class="align-middle">@obj.SchemaName</td>
-                        <td class="align-middle" colspan="2"><HighlightableText Text="@obj.ObjectName" PartToHighlight="@NewObject.ObjectName" /></td>
+                        <td class="align-middle" colspan="2"><HighlightableText Text="@obj.ObjectName" PartToHighlight="@newObject.ObjectName" /></td>
                         <td>
                             <HxButtonGroup Size="ButtonGroupSize.Small">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => { NewObject = obj; }" title="Edit before adding">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => { newObject = obj; }" title="Edit before adding">
                                     <CxIcon Icon="FeatherIcon.Edit2" />
                                 </HxButton>
                             </HxButtonGroup>
@@ -249,7 +249,7 @@
     </tbody>
 </table>
 <HxDropdownButtonGroup Split>
-    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" OnClick="() => DbObjectExplorerOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId))">
+    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" OnClick="() => dbObjectExplorerOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId))">
         <CxIcon Icon="FeatherIcon.Plus" />
         @AddButtonText
     </HxButton>
@@ -264,7 +264,7 @@
 </HxDropdownButtonGroup>
 
 
-<DbObjectExplorerOffcanvas @ref="DbObjectExplorerOffcanvas" Connections="Connections" OnDbObjectSelected="OnDbObjectSelected" />
+<DbObjectExplorerOffcanvas @ref="dbObjectExplorerOffcanvas" Connections="Connections" OnDbObjectSelected="OnDbObjectSelected" />
 
 @code {
     [Parameter] public string ListName { get; set; } = string.Empty;
@@ -291,17 +291,12 @@
 
     [Parameter] public string NoDataObjectsText { get; set; } = "";
 
-    private IEnumerable<DataObject>? AllObjects { get; set; }
-
-    private bool ShowServer { get; set; } = false;
-
-    private bool ShowDatabase { get; set; } = true;
-
-    private DataObject? NewObject { get; set; }
-
-    private DatabaseObjectType? SuggestType { get; set; }
-
-    private DbObjectExplorerOffcanvas? DbObjectExplorerOffcanvas { get; set; }
+    private IEnumerable<DataObject>? allObjects;
+    private bool showServer = false;
+    private bool showDatabase = true;
+    private DataObject? newObject;
+    private DatabaseObjectType? suggestType;
+    private DbObjectExplorerOffcanvas? dbObjectExplorerOffcanvas;
 
     private enum DatabaseObjectType
     {
@@ -310,23 +305,23 @@
 
     private async Task AddNewObjectAsync()
     {
-        AllObjects ??= await LoadAllDataObjects();
-        NewObject = new();
+        allObjects ??= await LoadAllDataObjects();
+        newObject = new();
     }
 
     private void SubmitNewObject()
     {
-        ArgumentNullException.ThrowIfNull(NewObject);
+        ArgumentNullException.ThrowIfNull(newObject);
         ArgumentNullException.ThrowIfNull(DataObjects);
 
-        if (DataObjects.Any(o => o.NamesEqual(NewObject)))
+        if (DataObjects.Any(o => o.NamesEqual(newObject)))
         {
             Messenger.AddWarning($"Duplicate {ListName} object");
             return;
         }
 
-        var existing = AllObjects?.FirstOrDefault(o => o.NamesEqual(NewObject))
-            ?? ComparisonObjects.FirstOrDefault(o => o.NamesEqual(NewObject));
+        var existing = allObjects?.FirstOrDefault(o => o.NamesEqual(newObject))
+            ?? ComparisonObjects.FirstOrDefault(o => o.NamesEqual(newObject));
         if (existing is not null)
         {
             GetMappingResult(existing).IsNewAddition = true;
@@ -334,10 +329,10 @@
         }
         else
         {
-            GetMappingResult(NewObject).IsNewAddition = true;
-            DataObjects.Add(NewObject);
+            GetMappingResult(newObject).IsNewAddition = true;
+            DataObjects.Add(newObject);
         }
-        NewObject = null;
+        newObject = null;
     }
 
     private async Task GetDatabaseObjectsAsync()
@@ -351,7 +346,7 @@
             var name = proc?.ProcedureName;
             if (name is null) return;
 
-            AllObjects ??= await LoadAllDataObjects();
+            allObjects ??= await LoadAllDataObjects();
 
             Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
             var dependencies = await LoadDataObjectDependencies(connectionId, schema, name);
@@ -366,7 +361,7 @@
                 if (comparison is not null)
                     continue;
 
-                var dbObject = AllObjects?.FirstOrDefault(o => o.NamesEqual(dependency)) ??
+                var dbObject = allObjects?.FirstOrDefault(o => o.NamesEqual(dependency)) ??
                     new DataObject
                         {
                             ServerName = dependency.ServerName,
@@ -401,14 +396,14 @@
 
     private void OnDbObjectSelected((string Server, string Database, string Schema, string Object) tuple, bool commit)
     {
-        if (NewObject is null)
+        if (newObject is null)
         {
-            NewObject = new();
+            newObject = new();
         }
-        NewObject.ServerName = tuple.Server;
-        NewObject.DatabaseName = tuple.Database;
-        NewObject.SchemaName = tuple.Schema;
-        NewObject.ObjectName = tuple.Object;
+        newObject.ServerName = tuple.Server;
+        newObject.DatabaseName = tuple.Database;
+        newObject.SchemaName = tuple.Schema;
+        newObject.ObjectName = tuple.Object;
         if (commit)
         {
             SubmitNewObject();

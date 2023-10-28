@@ -7,11 +7,11 @@
             <label class="form-label">
                 Execution condition expression
                 &nbsp;
-                <span style="cursor: pointer;" @onclick="async () => await HelpOffcanvas.LetAsync(x => x.ShowAsync())">
+                <span style="cursor: pointer;" @onclick="async () => await helpOffcanvas.LetAsync(x => x.ShowAsync())">
                     <CxIcon Icon="FeatherIcon.HelpCircle" />
                 </span>
             </label>
-            <CodeEditor @ref="Editor"
+            <CodeEditor @ref="editor"
                         Language="csharp"
                         MinimapEnabled="false"
                         InitialValueExpression="() => Step?.ExecutionConditionExpression.Expression"
@@ -101,7 +101,7 @@
     </HxButton>
 }
 
-<HxOffcanvas @ref="HelpOffcanvas" Size="OffcanvasSize.Large" Backdrop="OffcanvasBackdrop.False" Title="Execution conditions">
+<HxOffcanvas @ref="helpOffcanvas" Size="OffcanvasSize.Large" Backdrop="OffcanvasBackdrop.False" Title="Execution conditions">
     <BodyTemplate>
         <p>Use C# expressions to control whether the step is executed or not when the step's execution phase is reached (in execution phase mode) or all its dependencies have completed (in dependency mode).</p>
         <p>The return type for the final expression must always be boolean (True/False), however you can test and develop expressions using any kind of return type.</p>
@@ -110,7 +110,7 @@
         <DynamicExpressionHelpComponent />
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" OnClick="async () => await HelpOffcanvas.LetAsync(x => x.HideAsync())">
+        <HxButton Color="ThemeColor.Secondary" OnClick="async () => await helpOffcanvas.LetAsync(x => x.HideAsync())">
             Close
         </HxButton>
     </FooterTemplate>
@@ -121,9 +121,8 @@
 
     [Parameter] public EventCallback OnExecutionConditionChanged {get;set;}
 
-    private HxOffcanvas? HelpOffcanvas { get; set; }
-
-    private CodeEditor? Editor { get; set; }
+    private HxOffcanvas? helpOffcanvas;
+    private CodeEditor? editor;
 
     private void SetJobParameter(bool inheritFromJob, ExecutionConditionParameter param)
     {

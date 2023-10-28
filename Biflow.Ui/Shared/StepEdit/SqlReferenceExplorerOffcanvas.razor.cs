@@ -9,46 +9,40 @@ public partial class SqlReferenceExplorerOffcanvas : ComponentBase
 {
     [Parameter] public IEnumerable<SqlConnectionInfo> Connections { get; set; } = Enumerable.Empty<SqlConnectionInfo>();
 
-    private Guid? ConnectionId { get; set; }
+    private Guid? connectionId;
+    private HxOffcanvas? offcanvas;
+    private string referencingSchemaOperator = "like";
+    private string referencingSchemaFilter = string.Empty;
+    private string referencingNameOperator = "like";
+    private string referencingNameFilter = string.Empty;
+    private string referencedSchemaOperator = "like";
+    private string referencedSchemaFilter = string.Empty;
+    private string referencedNameOperator = "like";
+    private string referencedNameFilter = string.Empty;
+    private string referencingTypeFilter = string.Empty;
+    private string referencedTypeFilter = string.Empty;
 
-    private HxOffcanvas? Offcanvas { get; set; }
+    private IEnumerable<SqlReference> queryResults = [];
 
-    private string ReferencingSchemaOperator { get; set; } = "like";
-    private string ReferencingSchemaFilter { get; set; } = string.Empty;
-
-    private string ReferencingNameOperator { get; set; } = "like";
-    private string ReferencingNameFilter { get; set; } = string.Empty;
-
-    private string ReferencedSchemaOperator { get; set; } = "like";
-    private string ReferencedSchemaFilter { get; set; } = string.Empty;
-
-    private string ReferencedNameOperator { get; set; } = "like";
-    private string ReferencedNameFilter { get; set; } = string.Empty;
-
-    private string ReferencingTypeFilter { get; set; } = string.Empty;
-    private string ReferencedTypeFilter { get; set; } = string.Empty;
-
-    private IEnumerable<SqlReference> FilteredQueryResults => QueryResults
-        .Where(r => !ReferencingTypeFilter.Any() || r.ReferencingType == ReferencingTypeFilter)
-        .Where(r => !ReferencedTypeFilter.Any() || r.ReferencedType == ReferencedTypeFilter);
-
-    private IEnumerable<SqlReference> QueryResults { get; set; } = Enumerable.Empty<SqlReference>();
+    private IEnumerable<SqlReference> FilteredQueryResults => queryResults
+        .Where(r => referencingTypeFilter.Length == 0 || r.ReferencingType == referencingTypeFilter)
+        .Where(r => referencedTypeFilter.Length == 0 || r.ReferencedType == referencedTypeFilter);
 
     private async Task RunQueryAsync()
     {
         try
         {
-            Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
-            QueryResults = await SqlServerHelper.GetSqlReferencedObjectsAsync(
+            Guid connectionId = this.connectionId ?? throw new ArgumentNullException(nameof(connectionId), "Connection id was null");
+            queryResults = await SqlServerHelper.GetSqlReferencedObjectsAsync(
                 connectionId,
-                referencingSchemaOperator: ReferencingSchemaOperator,
-                referencingSchemaFilter: ReferencingSchemaFilter,
-                referencingNameOperator: ReferencingNameOperator,
-                referencingNameFilter: ReferencingNameFilter,
-                referencedSchemaOperator: ReferencedSchemaOperator,
-                referencedSchemaFilter: ReferencedSchemaFilter,
-                referencedNameOperator: ReferencedNameOperator,
-                referencedNameFilter: ReferencedNameFilter);
+                referencingSchemaOperator: referencingSchemaOperator,
+                referencingSchemaFilter: referencingSchemaFilter,
+                referencingNameOperator: referencingNameOperator,
+                referencingNameFilter: referencingNameFilter,
+                referencedSchemaOperator: referencedSchemaOperator,
+                referencedSchemaFilter: referencedSchemaFilter,
+                referencedNameOperator: referencedNameOperator,
+                referencedNameFilter: referencedNameFilter);
         }
         catch (Exception ex)
         {
@@ -59,73 +53,73 @@ public partial class SqlReferenceExplorerOffcanvas : ComponentBase
 
     private async Task NavigateReferencingObjectAsync(SqlReference reference)
     {
-        ReferencingSchemaFilter = reference.ReferencingSchema;
-        ReferencingSchemaOperator = "=";
+        referencingSchemaFilter = reference.ReferencingSchema;
+        referencingSchemaOperator = "=";
 
-        ReferencingNameFilter = reference.ReferencingName;
-        ReferencingNameOperator = "=";
+        referencingNameFilter = reference.ReferencingName;
+        referencingNameOperator = "=";
 
-        ReferencedSchemaFilter = string.Empty;
-        ReferencedSchemaOperator = "like";
-        ReferencedNameFilter = string.Empty;
-        ReferencedNameOperator = "like";
+        referencedSchemaFilter = string.Empty;
+        referencedSchemaOperator = "like";
+        referencedNameFilter = string.Empty;
+        referencedNameOperator = "like";
         await RunQueryAsync();
     }
 
     private async Task NavigateReferencedObjectAsync(SqlReference reference)
     {
-        ReferencedSchemaFilter = reference.ReferencedSchema;
-        ReferencedSchemaOperator = "=";
+        referencedSchemaFilter = reference.ReferencedSchema;
+        referencedSchemaOperator = "=";
 
-        ReferencedNameFilter = reference.ReferencedName;
-        ReferencedNameOperator = "=";
+        referencedNameFilter = reference.ReferencedName;
+        referencedNameOperator = "=";
 
-        ReferencingSchemaFilter = string.Empty;
-        ReferencingSchemaOperator = "like";
-        ReferencingNameFilter = string.Empty;
-        ReferencingNameOperator = "like";
+        referencingSchemaFilter = string.Empty;
+        referencingSchemaOperator = "like";
+        referencingNameFilter = string.Empty;
+        referencingNameOperator = "like";
         await RunQueryAsync();
     }
 
     private void ClearFilters()
     {
-        ReferencingSchemaOperator = "like";
-        ReferencingSchemaFilter = string.Empty;
+        referencingSchemaOperator = "like";
+        referencingSchemaFilter = string.Empty;
 
-        ReferencingNameOperator = "like";
-        ReferencingNameFilter = string.Empty;
+        referencingNameOperator = "like";
+        referencingNameFilter = string.Empty;
 
-        ReferencedSchemaOperator = "like";
-        ReferencedSchemaFilter = string.Empty;
+        referencedSchemaOperator = "like";
+        referencedSchemaFilter = string.Empty;
 
-        ReferencedNameOperator = "like";
-        ReferencedNameFilter = string.Empty;
+        referencedNameOperator = "like";
+        referencedNameFilter = string.Empty;
 
-        ReferencingTypeFilter = string.Empty;
-        ReferencedTypeFilter = string.Empty;
+        referencingTypeFilter = string.Empty;
+        referencedTypeFilter = string.Empty;
     }
 
     public async Task ShowAsync(Guid? connectionId, string? sqlStatement = null)
     {
-        ConnectionId = connectionId ?? Connections.FirstOrDefault()?.ConnectionId;
+        this.connectionId = connectionId ?? Connections.FirstOrDefault()?.ConnectionId;
         var proc = sqlStatement?.ParseStoredProcedureFromSqlStatement();
         var schema = proc?.Schema;
         var name = proc?.ProcedureName;
         if (schema is not null)
         {
-            ReferencingSchemaFilter = schema;
-            ReferencingSchemaOperator = "=";
+            referencingSchemaFilter = schema;
+            referencingSchemaOperator = "=";
         }
         if (name is not null)
         {
-            ReferencingNameFilter = name;
-            ReferencingNameOperator = "=";
+            referencingNameFilter = name;
+            referencingNameOperator = "=";
         }
-        await Offcanvas.LetAsync(x => x.ShowAsync());
+        await offcanvas.LetAsync(x => x.ShowAsync());
 
         // Only run the query automatically when opening the modal if some kind of a filter was set.
         // Running a query without filters should only be done on demand.
-        if (!string.IsNullOrEmpty(ReferencingSchemaFilter) || !string.IsNullOrEmpty(ReferencingNameFilter))
+        if (!string.IsNullOrEmpty(referencingSchemaFilter) || !string.IsNullOrEmpty(referencingNameFilter))
         {
             await RunQueryAsync();
         }

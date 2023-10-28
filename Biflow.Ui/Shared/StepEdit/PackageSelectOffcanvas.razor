@@ -1,7 +1,7 @@
 ﻿@inject IHxMessengerService Messenger
 @inject SqlServerHelperService SqlServerHelperService
 
-<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Regular" Title="Select package">
+<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" Title="Select package">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -15,20 +15,20 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Catalog is null)
+                        @if (catalog is null)
                         {
                             <tr><td class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                         }
-                        else if (Catalog.Folders.Count == 0)
+                        else if (catalog.Folders.Count == 0)
                         {
                             <tr><td>No folders</td></tr>
                         }
                         else
                         {
-                            foreach (var folder in Catalog.Folders.Values)
+                            foreach (var folder in catalog.Folders.Values)
                             {
                                 <tr style="cursor: pointer;" @onclick="() => OnFolderChanged(folder)"
-                                    class="@(folder == SelectedFolder ? "bg-body-tertiary fw-bold" : null)">
+                                    class="@(folder == selectedFolder ? "bg-body-tertiary fw-bold" : null)">
                                     <td>@folder.FolderName</td>
                                 </tr>
                             }
@@ -49,9 +49,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Catalog is not null && SelectedFolder is not null)
+                        @if (catalog is not null && selectedFolder is not null)
                         {
-                            var projects = SelectedFolder.Projects.Values;
+                            var projects = selectedFolder.Projects.Values;
                             if (projects.Count == 0)
                             {
                                 <tr><td>No projects</td></tr>
@@ -61,7 +61,7 @@
                                 foreach (var project in projects)
                                 {
                                     <tr style="cursor: pointer;" @onclick="() => OnProjectChanged(project)"
-                                        class="@(project == SelectedProject ? "bg-body-tertiary fw-bold" : null)">
+                                        class="@(project == selectedProject ? "bg-body-tertiary fw-bold" : null)">
                                         <td>@project.ProjectName</td>
                                     </tr>
                                 }
@@ -77,7 +77,7 @@
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Filter" />
                     </div>
-                    <input type="search" class="form-control" @bind-value="FilterText" @bind-value:event="oninput"
+                    <input type="search" class="form-control" @bind-value="filterText" @bind-value:event="oninput"
                            placeholder="Filter by name" autocomplete="off" />
                 </div>
             </div>
@@ -94,30 +94,30 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Catalog is not null && SelectedFolder is not null && SelectedProject is not null)
+                        @if (catalog is not null && selectedFolder is not null && selectedProject is not null)
                         {
-                            var packages = SelectedProject.Packages.Values;
+                            var packages = selectedProject.Packages.Values;
                             if (packages.Count == 0)
                             {
                                 <tr><td>No packages</td></tr>
                             }
                             else
                             {
-                                foreach (var package in packages.Where(p => p.PackageName.ContainsIgnoreCase(FilterText)).OrderBy(p => p.PackageName))
+                                foreach (var package in packages.Where(p => p.PackageName.ContainsIgnoreCase(filterText)).OrderBy(p => p.PackageName))
                                 {
                                     var parameters = package.Parameters.Values
-                                        .Where(p => !p.ConnectionManagerParameter || ShowConnectionManagerParameters)
+                                        .Where(p => !p.ConnectionManagerParameter || showConnectionManagerParameters)
                                         .OrderBy(p => p.ProjectParameter)
                                         .ThenBy(p => p.ParameterName);
                                     
-                                        <tr style="cursor: pointer;" @onclick="() => SelectedPackage = package"
-                                        class="@(package == SelectedPackage ? "bg-body-tertiary fw-bold" : null)">
+                                        <tr style="cursor: pointer;" @onclick="() => selectedPackage = package"
+                                        class="@(package == selectedPackage ? "bg-body-tertiary fw-bold" : null)">
                                         <td>
-                                            <HighlightableText Text="@package.PackageName" PartToHighlight="@FilterText" />
+                                            <HighlightableText Text="@package.PackageName" PartToHighlight="@filterText" />
                                         </td>
                                     </tr>
 
-                                    @if (package == SelectedPackage && parameters.Any())
+                                    @if (package == selectedPackage && parameters.Any())
                                     {
                                         <tr class="no-hover">
                                             <td colspan="2" class="bg-body-tertiary">
@@ -149,15 +149,15 @@
 
     <FooterTemplate>
         <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectPackageAsync"
-                  Enabled="SelectedPackage is not null && SelectedProject is not null && SelectedFolder is not null">
+                  Enabled="selectedPackage is not null && selectedProject is not null && selectedFolder is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
         
             <div class="form-check ms-auto d-flex align-items-center">
                 <input type="checkbox" class="form-check-input" id="show_connection_manager_parameters"
-                   checked=@ShowConnectionManagerParameters
-                   @onchange="args => ShowConnectionManagerParameters = (bool)args.Value!">
+                   checked=@showConnectionManagerParameters
+                   @onchange="args => showConnectionManagerParameters = (bool)args.Value!">
                 <label class="form-check-label fw-normal ms-2" for="show_connection_manager_parameters">Show connection manager parameters</label>
             </div>
     </FooterTemplate>
@@ -167,63 +167,58 @@
     [Parameter]
     public EventCallback<PackageSelectedResponse> OnPackageSelected { get; set; }
 
-    private HxOffcanvas? Offcanvas { get; set; }
-
-    private Guid ConnectionId { get; set; }
-
-    private SSISCatalog? Catalog { get; set; }
-
-    private string FilterText { get; set; } = string.Empty;
-
-    private CatalogFolder? SelectedFolder { get; set; }
-    private CatalogProject? SelectedProject { get; set; }
-    private CatalogPackage? SelectedPackage { get; set; }
-
-    private bool ShowConnectionManagerParameters { get; set; } = false;
+    private HxOffcanvas? offcanvas;
+    private Guid connectionId;
+    private SSISCatalog? catalog;
+    private string filterText = string.Empty;
+    private CatalogFolder? selectedFolder;
+    private CatalogProject? selectedProject;
+    private CatalogPackage? selectedPackage;
+    private bool showConnectionManagerParameters = false;
 
     private void OnFolderChanged(CatalogFolder folder)
     {
-        if (folder != SelectedFolder)
+        if (folder != selectedFolder)
         {
-            SelectedPackage = null;
-            SelectedProject = null;
+            selectedPackage = null;
+            selectedProject = null;
         }
-        SelectedFolder = folder;
+        selectedFolder = folder;
     }
 
     private void OnProjectChanged(CatalogProject project)
     {
-        if (project != SelectedProject)
+        if (project != selectedProject)
         {
-            SelectedPackage = null;
+            selectedPackage = null;
         }
-        SelectedProject = project;
+        selectedProject = project;
     }
 
     private async Task SelectPackageAsync()
     {
-        if (SelectedFolder is not null && SelectedProject is not null && SelectedPackage is not null)
+        if (selectedFolder is not null && selectedProject is not null && selectedPackage is not null)
         {
-            var package = new PackageSelectedResponse(SelectedFolder.FolderName, SelectedProject.ProjectName, SelectedPackage.PackageName);
+            var package = new PackageSelectedResponse(selectedFolder.FolderName, selectedProject.ProjectName, selectedPackage.PackageName);
             await OnPackageSelected.InvokeAsync(package);
-            await Offcanvas.LetAsync(x => x.HideAsync());
+            await offcanvas.LetAsync(x => x.HideAsync());
         }
     }
 
     public async Task ShowAsync(Guid connectionId)
     {
-        Catalog = null;
-        SelectedFolder = null;
-        SelectedProject = null;
-        SelectedPackage = null;
-        FilterText = string.Empty;
+        catalog = null;
+        selectedFolder = null;
+        selectedProject = null;
+        selectedPackage = null;
+        filterText = string.Empty;
 
-        await Offcanvas.LetAsync(x => x.ShowAsync());
+        await offcanvas.LetAsync(x => x.ShowAsync());
         
         try
         {
-            Catalog = await SqlServerHelperService.GetCatalogPackagesAsync(connectionId);
-            ConnectionId = connectionId;
+            catalog = await SqlServerHelperService.GetCatalogPackagesAsync(connectionId);
+            this.connectionId = connectionId;
             StateHasChanged();
         }
         catch (Exception ex)

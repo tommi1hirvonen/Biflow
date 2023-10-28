@@ -27,8 +27,8 @@
             <TagComponent Tag="tag"
                           Style="cursor: pointer;"
                           CssClass="mx-1"
-                          Selected="TagFilter.Contains(tag)"
-                          OnClick="() => { if (TagFilter.Contains(tag)) TagFilter.Remove(tag); else TagFilter.Add(tag); }" />
+                          Selected="tagFilter.Contains(tag)"
+                          OnClick="() => { if (tagFilter.Contains(tag)) tagFilter.Remove(tag); else tagFilter.Add(tag); }" />
         }
     </div>
 </div>
@@ -38,13 +38,13 @@
         <HxButtonGroup>
             <FilterDropdown TItem="JobProjection"
                             Items="JobSlims.Values"
-                            FilterSet="JobFilter"                            
+                            FilterSet="jobFilter"                            
                             IdSelector="x => x.JobId.ToString()"
                             TextSelector="x => x.JobName"
                             OnChange="StateHasChanged"
                             IsSearchable>
                 <TitleTemplate>
-                    @if (JobsLoading && JobSlims is null)
+                    @if (jobsLoading && JobSlims is null)
                     {
                         <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
                         <span>Loading...</span>
@@ -61,7 +61,7 @@
             </FilterDropdown>
 
             <FilterDropdown TItem="StepType"
-                            FilterSet="StepTypeFilter"
+                            FilterSet="stepTypeFilter"
                             Items="Steps.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
@@ -79,7 +79,7 @@
         <div class="input-group-text rounded-left">
             <CxIcon Icon="FeatherIcon.Search" />
         </div>
-        <input type="search" class="form-control" @bind-value="DependenciesFilterText" @bind-value:event="oninput" placeholder="Search" autocomplete="off" />
+        <input type="search" class="form-control" @bind-value="dependenciesFilterText" @bind-value:event="oninput" placeholder="Search" autocomplete="off" />
     </div>    
 </div>
 
@@ -98,7 +98,7 @@
                         <tr @onclick="() => AddDependency(step)" style="cursor: pointer;">
                             <td class="align-middle small">
                                 <StepTypeIconComponent StepType_="step.StepType" />
-                                <HighlightableText Text="@step.StepName" PartToHighlight="@DependenciesFilterText" />
+                                <HighlightableText Text="@step.StepName" PartToHighlight="@dependenciesFilterText" />
                                 @if (multiJobAvailable)
                                 {
                                     var job = JobSlims.GetValueOrDefault(step.JobId);
@@ -201,31 +201,29 @@
     [Parameter]
     public Step? Step { get; set; }
 
+    [Parameter]
+    public IEnumerable<Step> Steps { get; set; } = [];
+
+    [Parameter]
+    public Dictionary<Guid, StepProjection> StepSlims { get; set; } = [];
+
+    [Parameter]
+    public Dictionary<Guid, JobProjection> JobSlims { get; set; } = [];
+
+    private readonly HashSet<JobProjection> jobFilter = [];
+    private readonly HashSet<Tag> tagFilter = [];
+    private readonly HashSet<StepType> stepTypeFilter = [];
+    
     private Step? previousStep;
-
-    [Parameter]
-    public IEnumerable<Step> Steps { get; set; } = Enumerable.Empty<Step>();
-
-    [Parameter]
-    public Dictionary<Guid, StepProjection> StepSlims { get; set; } = new Dictionary<Guid, StepProjection>();
-
-    [Parameter]
-    public Dictionary<Guid, JobProjection> JobSlims { get; set; } = new Dictionary<Guid, JobProjection>();
-
-    private HashSet<Tag> TagFilter { get; } = new();
-    private HashSet<StepType> StepTypeFilter { get; } = new();
-    private string DependenciesFilterText { get; set; } = string.Empty;
-
-    private bool JobsLoading { get; set; } = false;
-
-    private HashSet<JobProjection> JobFilter { get; } = new();
+    private string dependenciesFilterText = string.Empty;
+    private bool jobsLoading = false;
 
     private IEnumerable<StepProjection> FilteredSteps => StepSlims.Values
-            .Where(step => !JobFilter.Any() || JobFilter.Any(j => step.JobId == j.JobId))
+            .Where(step => !jobFilter.Any() || jobFilter.Any(j => step.JobId == j.JobId))
             .Where(step => step.StepId != Step?.StepId) // Exclude current step => step cannot depend on itself.
-            .Where(step => step.StepName?.ContainsIgnoreCase(DependenciesFilterText) == true) // Filter based on search filter.
-            .Where(step => !StepTypeFilter.Any() || StepTypeFilter.Contains(step.StepType)) // Filter based on step type
-            .Where(step => TagFilter.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Filter based on tags
+            .Where(step => step.StepName?.ContainsIgnoreCase(dependenciesFilterText) == true) // Filter based on search filter.
+            .Where(step => !stepTypeFilter.Any() || stepTypeFilter.Contains(step.StepType)) // Filter based on step type
+            .Where(step => tagFilter.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Filter based on tags
             .Where(step => !Step?.Dependencies.Any(d => d.DependantOnStepId == step.StepId) ?? true) // Exclude steps which are already listed as dependencies
             ?? Enumerable.Empty<StepProjection>();
 
@@ -244,10 +242,10 @@
         if (Step is not null && previousStep != Step)
         {
             previousStep = Step;
-            JobFilter.Clear();
+            jobFilter.Clear();
             var job = JobSlims.GetValueOrDefault(Step.JobId);
             if (job is not null)
-                JobFilter.Add(job);
+                jobFilter.Add(job);
         }
     }
 

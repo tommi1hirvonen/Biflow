@@ -1,7 +1,7 @@
 ﻿@inject SqlServerHelperService SqlServerHelper
 @inject IHxMessengerService Messenger
 
-<HxOffcanvas @ref="Offcanvas" Size="OffcanvasSize.Large" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true" Title="Explore SQL references">
+<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Large" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true" Title="Explore SQL references">
     <BodyTemplate>
         <div class="row">
             <div class="col-auto">
@@ -12,7 +12,7 @@
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Database" />
                     </div>
-                    <select class="form-select form-select-sm" @bind="ConnectionId">
+                    <select class="form-select form-select-sm" @bind="connectionId">
                         @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
@@ -37,19 +37,19 @@
                 <label class="form-label">Referencing object</label>
                 <div class="input-group input-group-sm">
                     <span class="input-group-text">Schema</span>
-                    <select class="form-select form-select-sm" @bind="ReferencingSchemaOperator" style="max-width: 5rem;">
+                    <select class="form-select form-select-sm" @bind="referencingSchemaOperator" style="max-width: 5rem;">
                         <option value="=">=</option>
                         <option value="like">like</option>
                     </select>
                     <input type="text" class="form-control form-control-sm" autocomplete="off"
-                           @bind="ReferencingSchemaFilter" @bind:event="oninput" />
+                           @bind="referencingSchemaFilter" @bind:event="oninput" />
                     <span class="input-group-text">Name</span>
-                    <select class="form-select form-select-sm" @bind="ReferencingNameOperator" style="max-width: 5rem;">
+                    <select class="form-select form-select-sm" @bind="referencingNameOperator" style="max-width: 5rem;">
                         <option value="=">=</option>
                         <option value="like">like</option>
                     </select>
                     <input type="text" class="form-control form-control-sm" autocomplete="off"
-                           @bind="ReferencingNameFilter" @bind:event="oninput" />
+                           @bind="referencingNameFilter" @bind:event="oninput" />
                 </div>
             </div>
         </div>
@@ -57,9 +57,9 @@
             <div class="col-sm-6">
                 <div class="input-group input-group-sm">
                     <span class="input-group-text">Type</span>
-                    <select class="form-select form-select-sm" @bind="ReferencingTypeFilter">
+                    <select class="form-select form-select-sm" @bind="referencingTypeFilter">
                         <option value="">ALL</option>
-                        @foreach (var type in QueryResults.Select(r => r.ReferencingType).Distinct().OrderBy(s => s))
+                        @foreach (var type in queryResults.Select(r => r.ReferencingType).Distinct().OrderBy(s => s))
                         {
                             <option value="@type">@type</option>
                         }
@@ -72,19 +72,19 @@
                 <label class="form-label">Referenced object</label>
                 <div class="input-group input-group-sm">
                     <span class="input-group-text">Schema</span>
-                    <select class="form-select form-select-sm" @bind="ReferencedSchemaOperator" style="max-width: 5rem;">
+                    <select class="form-select form-select-sm" @bind="referencedSchemaOperator" style="max-width: 5rem;">
                         <option value="=">=</option>
                         <option value="like">like</option>
                     </select>
                     <input type="text" class="form-control form-control-sm" autocomplete="off"
-                           @bind="ReferencedSchemaFilter" @bind:event="oninput" />
+                           @bind="referencedSchemaFilter" @bind:event="oninput" />
                     <span class="input-group-text">Name</span>
-                    <select class="form-select form-select-sm" @bind="ReferencedNameOperator" style="max-width: 5rem;">
+                    <select class="form-select form-select-sm" @bind="referencedNameOperator" style="max-width: 5rem;">
                         <option value="=">=</option>
                         <option value="like">like</option>
                     </select>
                     <input type="text" class="form-control form-control-sm" autocomplete="off"
-                           @bind="ReferencedNameFilter" @bind:event="oninput" />
+                           @bind="referencedNameFilter" @bind:event="oninput" />
                 </div>
             </div>
         </div>
@@ -92,9 +92,9 @@
             <div class="col-sm-6">
                 <div class="input-group input-group-sm">
                     <span class="input-group-text">Type</span>
-                    <select class="form-select form-select-sm" @bind="ReferencedTypeFilter">
+                    <select class="form-select form-select-sm" @bind="referencedTypeFilter">
                         <option value="">ALL</option>
-                        @foreach (var type in QueryResults.Select(r => r.ReferencedType).Distinct().OrderBy(s => s))
+                        @foreach (var type in queryResults.Select(r => r.ReferencedType).Distinct().OrderBy(s => s))
                         {
                             <option value="@type">@type</option>
                         }
@@ -148,6 +148,6 @@
     </BodyTemplate>
 
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
