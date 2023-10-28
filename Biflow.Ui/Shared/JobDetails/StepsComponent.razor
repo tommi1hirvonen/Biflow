@@ -24,7 +24,7 @@
                                     <HxDropdownItem @onclick="() => ShowNewStepModal(stepType)"
                                                     Enabled="!IsStepTypeDisabled(stepType)"
                                                     title="@stepType.GetDescription()">
-                                        <StepTypeIconComponent StepType_="stepType" />
+                                        <StepTypeIconComponent StepType="stepType" />
                                         @stepType
                                     </HxDropdownItem>
                                 }
@@ -140,7 +140,7 @@
                         Step type
                     </TitleTemplate>
                     <ItemTemplate Context="item">
-                        <StepTypeIconComponent StepType_="item" />
+                        <StepTypeIconComponent StepType="item" />
                         @item.ToString()
                     </ItemTemplate>
                 </FilterDropdown>
@@ -304,14 +304,14 @@
                                     </AuthorizeView>
                                     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                                         <a class="text-body" href="javascript:void(0)" @onclick="() => ShowEditModal(item)">
-                                            <StepTypeIconComponent StepType_="@item.StepType" />
+                                            <StepTypeIconComponent StepType="@item.StepType" />
                                             &nbsp;
                                             <HighlightableText Text="@item.StepName" PartToHighlight="@stepNameFilter" />
                                         </a>
                                     </AuthorizeView>
                                     <AuthorizeView Roles="@($"{Roles.Operator}, {Roles.Viewer}")">
                                         <span>
-                                            <StepTypeIconComponent StepType_="@item.StepType" />
+                                            <StepTypeIconComponent StepType="@item.StepType" />
                                             <HighlightableText Text="@item.StepName" PartToHighlight="@stepNameFilter" />
                                         </span>
                                     </AuthorizeView>
@@ -456,7 +456,7 @@
                         </ChildContent>
                         <MenuContent>
                             <DropdownMenuHeader>
-                                <StepTypeIconComponent StepType_="item.StepType" />
+                                <StepTypeIconComponent StepType="item.StepType" />
                                 @item.StepName
                             </DropdownMenuHeader>
                             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">

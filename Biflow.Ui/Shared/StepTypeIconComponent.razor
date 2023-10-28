@@ -1,37 +1,38 @@
-﻿
-@switch (StepType_)
+﻿@using ST = DataAccess.Models.StepType
+
+@switch (StepType)
 {
-    case StepType.Sql:
+    case ST.Sql:
         <CxIcon Icon="FeatherIcon.Code" />
         break;
-    case StepType.Package:
+    case ST.Package:
         <CxIcon Icon="FeatherIcon.Package" />
         break;
-    case StepType.Pipeline:
+    case ST.Pipeline:
         <CxIcon Icon="FeatherIcon.Pipeline" />
         break;
-    case StepType.Job:
+    case ST.Job:
         <CxIcon Icon="LucideIcon.ClipboardList" />
         break;
-    case StepType.Exe:
+    case ST.Exe:
         <CxIcon Icon="FeatherIcon.Terminal" />
         break;
-    case StepType.Dataset:
+    case ST.Dataset:
         <CxIcon Icon="LucideIcon.FileBarChart2" />
         break;
-    case StepType.Function:
+    case ST.Function:
         <CxIcon Icon="FeatherIcon.Zap" />
         break;
-    case StepType.AgentJob:
+    case ST.AgentJob:
         <CxIcon Icon="FeatherIcon.Server" />
         break;
-    case StepType.Tabular:
+    case ST.Tabular:
         <CxIcon Icon="FeatherIcon.Box" />
         break;
-    case StepType.Email:
+    case ST.Email:
         <CxIcon Icon="FeatherIcon.Mail" />
         break;
-    case StepType.Qlik:
+    case ST.Qlik:
         <CxIcon Icon="LucideIcon.FilePieChart" />
         break;
     default:
@@ -41,5 +42,5 @@
 
 @code {
     [Parameter]
-    public StepType? StepType_ { get; set; }
+    public StepType? StepType { get; set; }
 }
