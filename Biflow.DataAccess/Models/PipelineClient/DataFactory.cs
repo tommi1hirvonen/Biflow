@@ -91,7 +91,17 @@ public class DataFactory : PipelineClient
                 datatype = ParameterValueType.Double;
             else if (p.Value.ParameterType == EntityParameterType.Bool)
                 datatype = ParameterValueType.Boolean;
-            return (p.Key, datatype, (object?)p.Value.DefaultValue?.ToString());
+
+            object? defaultValue = datatype switch
+            {
+                ParameterValueType.String => p.Value.DefaultValue?.ToObjectFromJson<string>(),
+                ParameterValueType.Int32 => p.Value.DefaultValue?.ToObjectFromJson<int>(),
+                ParameterValueType.Double => p.Value.DefaultValue?.ToObjectFromJson<double>(),
+                ParameterValueType.Boolean => p.Value.DefaultValue?.ToObjectFromJson<bool>(),
+                _ => p.Value.DefaultValue?.ToString()
+            };
+
+            return (p.Key, datatype, defaultValue);
         }).ToArray();
     }
 
