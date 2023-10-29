@@ -65,18 +65,21 @@ public class AppRegistration
         return refresh.Value.FirstOrDefault();
     }
 
-    public async Task<Dictionary<(string GroupId, string GroupName), List<(string DatasetId, string DatasetName)>>> GetAllDatasetsAsync(ITokenService tokenService)
+    public async Task<IEnumerable<DatasetGroup>> GetAllDatasetsAsync(ITokenService tokenService)
     {
         var client = await GetClientAsync(tokenService);
         var groups = await client.Groups.GetGroupsAsync();
-        var datasets = new Dictionary<(string GroupId, string GroupName), List<(string DatasetId, string DatasetName)>>();
+        var datasetGroups = new List<DatasetGroup>();
         foreach (var group in groups.Value)
         {
             var groupDatasets = await client.Datasets.GetDatasetsInGroupAsync(group.Id);
-            var key = (group.Id.ToString(), group.Name);
-            datasets[key] = groupDatasets.Value.Select(d => (d.Id.ToString(), d.Name)).ToList();
+            var datasets = groupDatasets.Value
+                .Select(d => new Dataset(group.Id.ToString(), group.Name, d.Id.ToString(), d.Name))
+                .ToArray();
+            var datasetGroup = new DatasetGroup(group.Id.ToString(), group.Name, datasets);
+            datasetGroups.Add(datasetGroup);
         }
-        return datasets;
+        return datasetGroups;
     }
 
     public async Task<string> GetGroupNameAsync(string groupId, ITokenService tokenService, CancellationToken cancellationToken = default)

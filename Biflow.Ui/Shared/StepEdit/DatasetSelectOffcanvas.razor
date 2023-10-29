@@ -2,72 +2,91 @@
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject ITokenService TokenService
 
-<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select dataset">
+<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" Title="Select dataset">
     <BodyTemplate>
         <div class="row">
             <div class="col">
-                <table class="table table-hover table-sm">
-                    <thead>
-                        <tr>
-                            <th>
-                                <CxIcon Icon="FeatherIcon.Folder" />
-                                Workspaces
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (datasets is null)
-                        {
-                            <tr><td class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
-                        }
-                        else if (datasets.Count == 0)
-                        {
-                            <tr><td>No workspaces</td></tr>
-                        }
-                        else
-                        {
-                            foreach (var group in datasets.Keys.OrderBy(folder => folder.GroupName))
-                            {
-                                <tr style="cursor: pointer;" @onclick="() => OnGroupChanged(group)" class="@(group == selectedGroup ? "bg-body-tertiary fw-bold" : null)">
-                                    <td>@group.GroupName</td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
+                <div class="input-group">
+                    <div class="input-group-text">
+                        <CxIcon Icon="FeatherIcon.Search" />
+                    </div>
+                    <input type="search" class="form-control form-control-sm" placeholder="Search datasets" @bind-value="filterText" @bind-value:event="oninput" />
+                </div>
             </div>
         </div>
-        <div class="row mt-3">
+        <div class="row mt-3" style="height: calc(100vh - 210px); overflow-y: scroll;">
             <div class="col">
-                <table class="table table-hover table-sm">
-                    <thead>
-                        <tr>
-                            <th>
-                                <CxIcon Icon="FeatherIcon.File" />
-                                Datasets
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (datasets is not null && selectedGroup is not null)
+                <div class="list-group">
+                    @if (datasets is null)
+                    {
+                        <div class="list-group-item text-center">
+                            <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                        </div>
+                    }
+                    else if (datasets.Count() == 0)
+                    {
+                        <div class="list-group-item small">
+                            No workspaces
+                        </div>
+                    }
+                    else
+                    {
+                        var filteredGroups = datasets
+                            .Where(g => string.IsNullOrEmpty(filterText) || g.Datasets.Any(d => d.DatasetName.ContainsIgnoreCase(filterText)))
+                            .OrderBy(d => d.Name)
+                            .ToArray();
+                        if (filteredGroups.Length == 0)
                         {
-                            var datasets = this.datasets[selectedGroup.Value];
-                            if (datasets.Count == 0)
+                            <div class="list-group-item small">
+                                No matching results
+                            </div>
+                        }
+                        foreach (var group in filteredGroups)
+                        {
+                            var datasets = group.Datasets
+                                .Where(d => string.IsNullOrEmpty(filterText) || d.DatasetName.ContainsIgnoreCase(filterText))
+                                .OrderBy(d => d.DatasetName)
+                                .ToArray();
+                            var expanded = !string.IsNullOrEmpty(filterText) || expandedStates.GetValueOrDefault(group);
+                            <div class="list-group-item list-group-item-action" style="cursor: pointer;" @onclick="() => expandedStates[group] = !expanded">
+                                <div class="row">
+                                    <div class="col d-flex align-items-center small">
+                                        @if (expanded)
+                                        {
+                                            <CxIcon Icon="FeatherIcon.ChevronDown" />
+                                        }
+                                        else
+                                        {
+                                            <CxIcon Icon="FeatherIcon.ChevronRight" />
+                                        }
+                                        &nbsp;
+                                        <CxIcon Icon="FeatherIcon.Folder" />
+                                        &nbsp;
+                                        @group.Name
+                                        <span class="ms-auto badge rounded-pill @(datasets.Length > 0 ? "bg-primary" : "bg-secondary")">
+                                            @datasets.Length
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            @if (expanded)
                             {
-                                <tr><td>No datasets</td></tr>
-                            }
-                            else
-                            {
-                                foreach (var dataset in datasets.OrderBy(p => p.DatasetName))
+                                foreach (var dataset in datasets)
                                 {
-                                    <tr style="cursor: pointer;" @onclick="() => selectedDataset = dataset" class="@(dataset == selectedDataset ? "bg-body-tertiary fw-bold" : null)">
-                                        <td>@dataset.DatasetName</td>
-                                    </tr>
+                                    <div class="list-group-item list-group-item-action @(dataset == selectedDataset ? "fw-bold bg-body" : null)" style="cursor: pointer;" @onclick="() => selectedDataset = dataset">
+                                        <div class="row">
+                                            <div class="col d-flex align-items-center ps-5 small">
+                                                <CxIcon Icon="LucideIcon.FileBarChart2" />
+                                                &nbsp;
+                                                <HighlightableText Text="@dataset.DatasetName" PartToHighlight="@filterText" />
+                                            </div>
+                                        </div>
+                                    </div>
                                 }
                             }
                         }
-                    </tbody>
-                </table>
+                    }
+                </div>
             </div>
         </div>
     </BodyTemplate>
@@ -86,45 +105,32 @@
     public Guid? AppRegistrationId { get; set; }
 
     [Parameter]
-    public EventCallback<DatasetSelectedResponse> OnDatasetSelected { get; set; }
+    public EventCallback<Dataset> OnDatasetSelected { get; set; }
+
+    private readonly Dictionary<DatasetGroup, bool> expandedStates = [];
 
     private HxOffcanvas? offcanvas;
-    private Dictionary<(string GroupId, string GroupName), List<(string DatasetId, string DatasetName)>>? datasets;
-    private (string GroupId, string GroupName)? selectedGroup;
-    private (string DatasetId, string DatasetName)? selectedDataset;
-
-    private void OnGroupChanged((string Id, string Name) group)
-    {
-        if (group != selectedGroup)
-        {
-            selectedDataset = null;
-        }
-        selectedGroup = group;
-    }
+    private IEnumerable<DatasetGroup>? datasets;
+    private Dataset? selectedDataset;
+    private string filterText = "";
 
     private async Task SelectDatasetAsync()
     {
-        if (selectedGroup is null || selectedDataset is null)
+        if (selectedDataset is null)
         {
             return;
         }
-        var selectedResponse = new DatasetSelectedResponse(
-            selectedGroup.Value.GroupId, selectedGroup.Value.GroupName,
-            selectedDataset.Value.DatasetId, selectedDataset.Value.DatasetName
-        );
-        await OnDatasetSelected.InvokeAsync(selectedResponse);
+        await OnDatasetSelected.InvokeAsync(selectedDataset);
         await offcanvas.LetAsync(x => x.HideAsync());
-    }
-
-    private void OnClosed()
-    {
-        datasets = null;
-        selectedGroup = null;
-        selectedDataset = null;
     }
 
     public async Task ShowAsync()
     {
+        datasets = null;
+        selectedDataset = null;
+        expandedStates.Clear();
+        filterText = "";
+
         await offcanvas.LetAsync(x => x.ShowAsync());
         if (AppRegistrationId is null || AppRegistrationId == Guid.Empty) return;
         try

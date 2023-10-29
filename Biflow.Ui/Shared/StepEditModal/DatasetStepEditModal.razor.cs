@@ -19,7 +19,7 @@ public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
     private string? datasetGroupName;
     private string? datasetName;
 
-    private void OnDatasetSelected(DatasetSelectedResponse dataset)
+    private void OnDatasetSelected(Dataset dataset)
     {
         ArgumentNullException.ThrowIfNull(Step);
         (Step.DatasetGroupId, datasetGroupName, Step.DatasetId, datasetName) = dataset;
