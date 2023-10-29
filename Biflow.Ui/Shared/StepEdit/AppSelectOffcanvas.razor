@@ -22,40 +22,62 @@
                     }
                     else if (!spaces.Any())
                     {
-                        <div class="list-group-item">
+                        <div class="list-group-item small">
                             No spaces with apps
                         </div>
                     }
                     else
                     {
-                        foreach (var space in spaces.Where(s => string.IsNullOrEmpty(appSearchTerm) || s.Apps.Any(a => a.Name.ContainsIgnoreCase(appSearchTerm))))
+                        var filteredSpaces = spaces
+                            .Where(s => string.IsNullOrEmpty(appSearchTerm) || s.Apps.Any(a => a.Name.ContainsIgnoreCase(appSearchTerm)))
+                            .OrderBy(s => s.Name)
+                            .ToArray();
+                        if (filteredSpaces.Length == 0)
+                        {
+                            <div class="list-group-item small">
+                                No matching results
+                            </div>
+                        }
+                        foreach (var space in filteredSpaces)
                         {
                             var apps = space.Apps
                                 .Where(a => string.IsNullOrEmpty(appSearchTerm) || a.Name.ContainsIgnoreCase(appSearchTerm))
+                                .OrderBy(a => a.Name)
                                 .ToArray();
                             var expanded = !string.IsNullOrEmpty(appSearchTerm) || spaceExpandState.GetValueOrDefault(space);
-                            <div class="list-group-item d-flex justify-content-between align-items-start" style="cursor: pointer;" @onclick="() => spaceExpandState[space] = !expanded">
-                                <span class="fw-bold">
-                                    @if (expanded)
-                                    {
-                                        <CxIcon Icon="FeatherIcon.ChevronDown" />
-                                    }
-                                    else
-                                    {
-                                        <CxIcon Icon="FeatherIcon.ChevronRight" />
-                                    }
-                                    @space.Name
-                                </span>
-                                <span class="badge rounded-pill bg-primary">
-                                    @apps.Count()
-                                </span>
+                            <div class="list-group-item list-group-item-action" style="cursor: pointer;" @onclick="() => spaceExpandState[space] = !expanded">
+                                <div class="row">
+                                    <div class="col d-flex align-items-center small">
+                                        @if (expanded)
+                                        {
+                                            <CxIcon Icon="FeatherIcon.ChevronDown" />
+                                        }
+                                        else
+                                        {
+                                            <CxIcon Icon="FeatherIcon.ChevronRight" />
+                                        }
+                                        &nbsp;
+                                        <CxIcon Icon="FeatherIcon.Folder" />
+                                        &nbsp;
+                                        @space.Name
+                                        <span class="ms-auto badge rounded-pill @(apps.Length > 0 ? "bg-primary" : "bg-secondary")">
+                                            @apps.Length
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
-                            @if (expanded || !string.IsNullOrEmpty(appSearchTerm))
+                            @if (expanded)
                             {
                                 foreach (var app in apps)
                                 {
-                                    <div class="ps-5 list-group-item list-group-item-action @(app == selectedApp ? "active" : null)" @onclick="() => selectedApp = app" style="cursor: pointer;">
-                                        <HighlightableText Text="@app.Name" PartToHighlight="@appSearchTerm" />
+                                    <div class="list-group-item list-group-item-action @(app == selectedApp ? "fw-bold bg-body" : null)" style="cursor: pointer;" @onclick="() => selectedApp = app">
+                                        <div class="row">
+                                            <div class="col d-flex align-items-center ps-5 small">
+                                                <CxIcon Icon="LucideIcon.FilePieChart" />
+                                                &nbsp;
+                                                <HighlightableText Text="@app.Name" PartToHighlight="@appSearchTerm" />
+                                            </div>
+                                        </div>
                                     </div>
                                 }
                             }
