@@ -48,9 +48,11 @@ public partial class PackageStepEditModal : StepEditModal<PackageStep>
         return packageSelectOffcanvas.LetAsync(x => x.ShowAsync((Guid)Step.ConnectionId));
     }
 
-    private void OnPackageSelected(PackageSelectedResponse package)
+    private void OnPackageSelected(CatalogPackage package)
     {
         ArgumentNullException.ThrowIfNull(Step);
-        (Step.PackageFolderName, Step.PackageProjectName, Step.PackageName) = package;
+        Step.PackageFolderName = package.Project.Folder.FolderName;
+        Step.PackageProjectName = package.Project.ProjectName;
+        Step.PackageName = package.PackageName;
     }
 }

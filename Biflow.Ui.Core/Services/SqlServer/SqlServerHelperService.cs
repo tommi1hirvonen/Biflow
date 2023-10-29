@@ -16,7 +16,7 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
         ArgumentNullException.ThrowIfNull(catalogConnectionString);
         using var sqlConnection = new SqlConnection(catalogConnectionString);
         var folders = new Dictionary<long, CatalogFolder>();
-        var rows = await sqlConnection.QueryAsync<CatalogFolder, CatalogProject?, CatalogPackage?, CatalogParameter?, CatalogFolder>("""
+        var rows = await sqlConnection.QueryAsync<CatalogFolder, CatalogProjectDto?, CatalogPackageDto?, CatalogParameter?, CatalogFolder>("""
             SELECT
                 FolderId = [f].[folder_id],
                 FolderName = [f].[name],
@@ -72,14 +72,14 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
                 {
                     if (!folderEntry.Projects.TryGetValue(project.ProjectId, out var projectEntry))
                     {
-                        projectEntry = project;
+                        projectEntry = new(project.ProjectId, project.ProjectName, folderEntry);
                         folderEntry.Projects[projectEntry.ProjectId] = projectEntry;
                     }
                     if (package is not null)
                     {
                         if (!projectEntry.Packages.TryGetValue(package.PackageId, out var packageEntry))
                         {
-                            packageEntry = package;
+                            packageEntry = new(package.PackageId, package.PackageName, projectEntry);
                             projectEntry.Packages[packageEntry.PackageId] = packageEntry;
                         }
                         if (param is not null)
