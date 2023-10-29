@@ -10,7 +10,7 @@
   <ItemGroup>
 	<FrameworkReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Azure.Analytics.Synapse.Artifacts" Version="1.0.0-preview.18" />
-    <PackageReference Include="Azure.Identity" Version="1.10.1" />
+    <PackageReference Include="Azure.Identity" Version="1.10.3" />
     <PackageReference Include="CodingSeb.ExpressionEvaluator" Version="1.4.40" />
     <PackageReference Include="Microsoft.AspNetCore.Components.DataAnnotations.Validation" Version="3.2.0-rc1.20223.4" />
     <PackageReference Include="Microsoft.Azure.Management.DataFactory" Version="9.3.0" />
