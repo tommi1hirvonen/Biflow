@@ -1,7 +1,6 @@
 ﻿using Azure.Core;
-using Biflow.DataAccess.Models;
 
-namespace Biflow.DataAccess;
+namespace Biflow.DataAccess.Models;
 
 internal class SynapseTokenCredential(ITokenService tokenService, AppRegistration appRegistration) : TokenCredential
 {

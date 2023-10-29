@@ -1,4 +1,4 @@
-﻿namespace Biflow.DataAccess;
+﻿namespace Biflow.DataAccess.Models;
 
 public class PipelineInfo(string name, Dictionary<string, (string Type, object? DefaultValue)> parameters)
 {
