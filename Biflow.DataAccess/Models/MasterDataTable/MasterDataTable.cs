@@ -51,13 +51,13 @@ public class MasterDataTable
 
     public ICollection<MasterDataTableLookup> DependentLookups { get; set; } = null!;
 
-    public List<string> LockedColumns { get; set; } = new();
+    public List<string> LockedColumns { get; set; } = [];
 
     public bool LockedColumnsExcludeMode { get; set; } = false;
 
-    public List<string> HiddenColumns { get; set; } = new();
+    public List<string> HiddenColumns { get; set; } = [];
 
-    public List<string> ColumnOrder { get; set; } = new();
+    public List<string> ColumnOrder { get; set; } = [];
 
     [Timestamp]
     public byte[]? Timestamp { get; set; }

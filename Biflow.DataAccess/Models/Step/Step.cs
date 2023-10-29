@@ -38,7 +38,7 @@ public abstract class Step : IComparable
         Tags = other.Tags.ToList();
         Dependencies = job is null // If step is being copied to the same job, duplicate dependencies.
             ? other.Dependencies.Select(d => new Dependency(d, this)).ToList()
-            : new List<Dependency>();
+            : [];
         ExecutionConditionParameters = other.ExecutionConditionParameters
             .Select(p => new ExecutionConditionParameter(p, this, job))
             .ToList();

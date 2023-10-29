@@ -10,8 +10,7 @@ public class TokenService<TDbContext>(IDbContextFactory<TDbContext> dbContextFac
 {
     private readonly IDbContextFactory<TDbContext> _dbContextFactory = dbContextFactory;
     private readonly SemaphoreSlim _semaphore = new(1, 1); // Synchronize access by setting initial and max values to 1
-
-    private Dictionary<Guid, Dictionary<string, (string Token, DateTimeOffset ExpiresOn)>> AccessTokens { get; } = new();
+    private readonly Dictionary<Guid, Dictionary<string, (string Token, DateTimeOffset ExpiresOn)>> _accessTokens = [];
 
     public async Task<(string Token, DateTimeOffset ExpiresOn)> GetTokenAsync(AppRegistration appRegistration, string resourceUrl)
     {
@@ -19,7 +18,7 @@ public class TokenService<TDbContext>(IDbContextFactory<TDbContext> dbContextFac
         try
         {
             // If the token can be found in the dictionary and it is valid.
-            if (AccessTokens.TryGetValue(appRegistration.AppRegistrationId, out var tokens)
+            if (_accessTokens.TryGetValue(appRegistration.AppRegistrationId, out var tokens)
                 && tokens is not null && tokens.TryGetValue(resourceUrl, out var token) && token.ExpiresOn >= DateTimeOffset.Now.AddMinutes(5))
             {
                 return (token.Token, token.ExpiresOn);
@@ -54,10 +53,10 @@ public class TokenService<TDbContext>(IDbContextFactory<TDbContext> dbContextFac
                     resultToken = accessToken;
                 }
 
-                if (!AccessTokens.TryGetValue(appRegistration.AppRegistrationId, out var value))
+                if (!_accessTokens.TryGetValue(appRegistration.AppRegistrationId, out var value))
                 {
-                    value = ([]);
-                    AccessTokens[appRegistration.AppRegistrationId] = value;
+                    value = [];
+                    _accessTokens[appRegistration.AppRegistrationId] = value;
                 }
 
                 value[resourceUrl] = (resultToken.Token, resultToken.ExpiresOn);
@@ -80,7 +79,7 @@ public class TokenService<TDbContext>(IDbContextFactory<TDbContext> dbContextFac
 
     public void Clear()
     {
-        AccessTokens.Clear();
+        _accessTokens.Clear();
     }
 
 }

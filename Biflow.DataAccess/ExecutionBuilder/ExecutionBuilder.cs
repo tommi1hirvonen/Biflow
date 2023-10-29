@@ -111,7 +111,7 @@ public partial class ExecutionBuilder : IDisposable
         _execution.StepExecutions.Remove(stepExecution);
 
     internal void AddWithDependencies(Step step, bool onlyOnSuccess) =>
-        RecurseDependencies(step, new(), onlyOnSuccess);
+        RecurseDependencies(step, [], onlyOnSuccess);
 
     private void RecurseDependencies(Step step, List<Step> processedSteps, bool onlyOnSuccess)
     {
@@ -141,7 +141,7 @@ public partial class ExecutionBuilder : IDisposable
         List<Step> dependencySteps = _steps
             ?.Where(s => s.IsEnabled && dependencyStepIds.Any(id => s.StepId == id))
             .ToList()
-            ?? new();
+            ?? [];
 
         // Loop through the dependencies and handle them recursively.
         foreach (var depencyStep in dependencySteps)

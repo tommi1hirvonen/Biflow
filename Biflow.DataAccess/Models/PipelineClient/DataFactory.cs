@@ -79,7 +79,7 @@ public class DataFactory : PipelineClient
         static PipelineInfo infoFromResource(PipelineResource res)
         {
             var parameters = res.Parameters?.ToDictionary(p => p.Key, p => (p.Value.Type, p.Value?.DefaultValue));
-            return new(res.Name, parameters ?? new Dictionary<string, (string Type, object? DefaultValue)>());
+            return new(res.Name, parameters ?? []);
         };
 
         // Key = Folder
@@ -104,7 +104,7 @@ public class DataFactory : PipelineClient
                 _ => ParameterValueType.String
             };
             return (param.Key, datatype, (object?)param.Value.DefaultValue);
-        }) ?? Enumerable.Empty<(string, ParameterValueType, object?)>();
+        }) ?? [];
     }
 
     public async Task TestConnection(AppRegistration appRegistration)
