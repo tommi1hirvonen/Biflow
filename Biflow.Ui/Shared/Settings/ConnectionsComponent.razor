@@ -59,7 +59,7 @@
             }
             else
             {
-                @foreach (var connection in connections)
+                @foreach (var connection in connections.OrderBy(c => c.ConnectionName))
                 {
                     var steps = connection switch
                     {

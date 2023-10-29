@@ -55,7 +55,7 @@
             }
             else
             {
-                @foreach (var client in pipelineClients)
+                @foreach (var client in pipelineClients.OrderBy(p => p.PipelineClientName))
                 {
                     var jobs = client.Steps.Select(s => s.Job).Distinct().Count();
                     var steps = client.Steps.Count();

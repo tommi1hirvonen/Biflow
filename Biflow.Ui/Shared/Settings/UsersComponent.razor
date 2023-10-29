@@ -45,11 +45,11 @@
             }
             else
             {
-                var users = this.users
+                var filteredUsers = users
                     .Where(u => string.IsNullOrEmpty(usernameFilter) || u.Username.ContainsIgnoreCase(usernameFilter))
                     .Where(u => !roleFilter.Any() || roleFilter.Any(r => u.Roles.Contains(r)))
                     .OrderBy(u => u.Username);
-                foreach (var user in users)
+                foreach (var user in filteredUsers)
                 {
                     <li class="list-group-item list-group-item-action">
                         <div class="row">

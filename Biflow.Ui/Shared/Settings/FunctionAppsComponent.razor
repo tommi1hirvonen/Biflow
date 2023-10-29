@@ -48,7 +48,7 @@
             }
             else
             {
-                @foreach (var app in functionApps)
+                @foreach (var app in functionApps.OrderBy(f => f.FunctionAppName))
                 {
                     var jobs = app.Steps.Select(s => s.Job).Distinct().Count();
                     var steps = app.Steps.Count();
