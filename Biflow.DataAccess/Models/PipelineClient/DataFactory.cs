@@ -34,7 +34,7 @@ public class DataFactory : PipelineClient
     {
         var client = GetArmClient(tokenService);
         var resource = GetPipelineResource(client, pipelineName);
-        var parameterSpecification = parameters.ToDictionary(key => key.Key, value => new BinaryData(value));
+        var parameterSpecification = parameters.ToDictionary(key => key.Key, value => new BinaryData(value.Value));
         var result = await resource.CreateRunAsync(parameterValueSpecification: parameterSpecification, cancellationToken: cancellationToken);
         return result.Value.RunId.ToString();
     }
