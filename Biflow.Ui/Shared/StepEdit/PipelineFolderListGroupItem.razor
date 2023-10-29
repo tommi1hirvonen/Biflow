@@ -1,0 +1,90 @@
+﻿@using System.Globalization
+
+@if (Folder is not null && ExpandStatuses is not null)
+{
+    var pipelines = Folder.Pipelines
+        .Where(p => string.IsNullOrEmpty(FilterText) || p.Name.ContainsIgnoreCase(FilterText))
+        .OrderBy(p => p.Name)
+        .ToArray();
+    var folderExpanded = Folder.Depth == 0 || !string.IsNullOrEmpty(FilterText) || ExpandStatuses.GetValueOrDefault(Folder);
+    @if (Folder.Depth > 0)
+    {
+        var folderPadding = $"{(Folder.Depth - 0.7).ToString("F2", CultureInfo.InvariantCulture)}rem;";
+        <div class="list-group-item list-group-item-action">
+            <div class="row">
+                <div class="col d-flex align-items-center small" style="cursor: pointer; padding-left: @(folderPadding)" @onclick="() => ExpandStatuses[Folder] = !folderExpanded">
+                    @if (folderExpanded)
+                    {
+                        <CxIcon Icon="FeatherIcon.ChevronDown" />
+                    }
+                    else
+                    {
+                        <CxIcon Icon="FeatherIcon.ChevronRight" />
+                    }
+                    &nbsp;
+                    <CxIcon Icon="FeatherIcon.Folder" />
+                    &nbsp;
+                    @Folder.Name
+                    <span class="ms-auto badge rounded-pill @(pipelines.Length > 0 ? "bg-primary" : "bg-secondary")">
+                        @pipelines.Length
+                    </span>
+                </div>
+            </div>
+            
+        </div>
+    }
+    @if (folderExpanded)
+    {
+        @foreach (var pipeline in pipelines)
+        {
+            var pipelinePadding = $"{(Folder.Depth + 1.4).ToString("F2", CultureInfo.InvariantCulture)}rem;";
+            <div class="list-group-item list-group-item-action small @(pipeline == SelectedPipeline ? "bg-body" : null)" style="cursor: pointer;" @onclick="() => OnPipelineSelected.InvokeAsync(pipeline)">
+                <div class="row">
+                    <div class="col d-flex align-items-center @(pipeline == SelectedPipeline ? "fw-bold" : null)" style="padding-left: @(pipelinePadding)">
+                        <CxIcon Icon="FeatherIcon.Pipeline" />
+                        &nbsp;
+                        <HighlightableText Text="@pipeline.Name" PartToHighlight="@FilterText" />
+                    </div>
+                </div>
+                @if (pipeline == SelectedPipeline && pipeline.Parameters.Any())
+                {
+                    <div class="row mt-3">
+                        <div class="col">
+                            <h6 class="mx-2">Parameters</h6>
+                            <dl class="row mx-3">
+                                @foreach (var param in pipeline.Parameters)
+                                {
+                                    var defaultValue = param.Value.DefaultValue;
+                                    var defaultValueText = defaultValue is not null ? $"({defaultValue})" : null;
+                                    <dt class="col-sm-6">@param.Key</dt>
+                                    <dd class="col-sm-6">@param.Value.Type @defaultValueText</dd>
+                                }
+                            </dl>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        @foreach (var folder in Folder.Folders.OrderBy(f => f.Name))
+        {
+            <PipelineFolderListGroupItem Folder="folder"
+                                         ExpandStatuses="ExpandStatuses"
+                                         SelectedPipeline="SelectedPipeline"
+                                         OnPipelineSelected="OnPipelineSelected"
+                                         FilterText="@FilterText" />
+        }
+    }
+}
+
+
+@code {
+    [Parameter] public PipelineFolder? Folder { get; set; }
+
+    [Parameter] public Dictionary<PipelineFolder, bool>? ExpandStatuses { get; set; }
+
+    [Parameter] public PipelineInfo? SelectedPipeline { get; set; }
+
+    [Parameter] public EventCallback<PipelineInfo> OnPipelineSelected { get; set; }
+
+    [Parameter] public string FilterText { get; set; } = "";
+}

@@ -27,7 +27,7 @@ public abstract class PipelineClient(PipelineClientType type)
 
     public abstract Task CancelPipelineRunAsync(ITokenService tokenService, string runId);
 
-    public abstract Task<IDictionary<string, IEnumerable<PipelineInfo>>> GetPipelinesAsync(ITokenService tokenService);
+    public abstract Task<PipelineFolder> GetPipelinesAsync(ITokenService tokenService);
 
     public abstract Task<IEnumerable<(string Name, ParameterValueType Type, object? Default)>> GetPipelineParametersAsync(ITokenService tokenService, string pipelineName);
 }

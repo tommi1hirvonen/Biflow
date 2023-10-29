@@ -4,6 +4,7 @@ using Azure.ResourceManager.DataFactory;
 using Azure.ResourceManager.DataFactory.Models;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Biflow.DataAccess.Models;
 
@@ -54,27 +55,27 @@ public class DataFactory : PipelineClient
         await resource.CancelPipelineRunAsync(runId, true);
     }
 
-    public override async Task<IDictionary<string, IEnumerable<PipelineInfo>>> GetPipelinesAsync(ITokenService tokenService)
+    public override async Task<PipelineFolder> GetPipelinesAsync(ITokenService tokenService)
     {
         var client = GetArmClient(tokenService);
         var dataFactory = GetDataFactoryResource(client);
 
-        var pipelines = new List<DataFactoryPipelineResource>();
+        var pipelineResources = new List<DataFactoryPipelineResource>();
         await foreach (var pipelineResource in dataFactory.GetDataFactoryPipelines().GetAllAsync())
         {
-            pipelines.Add(pipelineResource);
+            pipelineResources.Add(pipelineResource);
         }
 
-        static PipelineInfo infoFromData(DataFactoryPipelineData data)
+        var pipelines = pipelineResources.Select(p =>
         {
-            var parameters = data.Parameters?.ToDictionary(p => p.Key, p => (p.Value.ParameterType.ToString(), p.Value.DefaultValue?.ToString()));
-            return new(data.Name, parameters ?? []);
-        };
+            var folder = (string?)p.Data.FolderName;
+            var parameters = p.Data.Parameters?.ToDictionary(p => p.Key, p => (p.Value.ParameterType.ToString(), p.Value.DefaultValue?.ToString()));
+            var pipeline = new PipelineInfo(p.Data.Name, folder, parameters ?? []);
+            return pipeline;
+        });
 
-        return pipelines
-            .Select(p => (Folder: p.Data.FolderName ?? "/", Pipeline: p.Data))
-            .GroupBy(p => p.Folder)
-            .ToDictionary(g => g.Key, g => g.Select(p => infoFromData(p.Pipeline)).ToArray().AsEnumerable());
+        var folder = PipelineFolder.FromPipelines(pipelines);
+        return folder;
     }
 
     public override async Task<IEnumerable<(string Name, ParameterValueType Type, object? Default)>> GetPipelineParametersAsync(ITokenService tokenService, string pipelineName)

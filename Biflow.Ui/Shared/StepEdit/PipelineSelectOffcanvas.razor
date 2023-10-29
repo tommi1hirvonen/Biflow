@@ -6,96 +6,39 @@
     <BodyTemplate>
         <div class="row">
             <div class="col">
-                <table class="table table-hover table-sm">
-                    <thead>
-                        <tr>
-                            <th>
-                                <CxIcon Icon="FeatherIcon.Folder" />
-                                Folders
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (pipelines is null)
-                        {
-                            <tr><td class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
-                        }
-                        else if (pipelines.Count == 0)
-                        {
-                            <tr><td>No pipelines</td></tr>
-                        }
-                        else
-                        {
-                            foreach (var folder in pipelines.Keys.OrderBy(folder => folder))
-                            {
-                                <tr style="cursor: pointer;" @onclick="() => OnFolderChanged(folder)"
-                                    class="@(folder == selectedFolder ? "bg-body-tertiary fw-bold" : null)">
-                                    <td>@folder</td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="row mt-3">
-            <div class="col-lg-6">
-                <div class="input-group input-group-sm">
+                <div class="input-group">
                     <div class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.Filter" />
+                        <CxIcon Icon="FeatherIcon.Search" />
                     </div>
-                    <input type="search" class="form-control" @bind-value="filterText" @bind-value:event="oninput"
-                           placeholder="Filter by name" autocomplete="off" />
+                    <input type="search" class="form-control form-control-sm" placeholder="Search packages" @bind-value="filterText" @bind-value:event="oninput" />
                 </div>
             </div>
         </div>
-        <div class="row mt-2">
+        <div class="row mt-3" style="height: calc(100vh - 210px); overflow-y: scroll;">
             <div class="col">
-                <table class="table table-hover table-sm">
-                    <thead>
-                        <tr>
-                            <th>
-                                <CxIcon Icon="FeatherIcon.Pipeline" />
-                                Pipelines
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (pipelines is not null && selectedFolder is not null)
-                        {
-                            foreach (var pipeline in pipelines[selectedFolder].Where(p => p.Name.ContainsIgnoreCase(filterText)).OrderBy(p => p.Name))
-                            {
-                                <tr style="cursor: pointer;" @onclick="() => selectedPipeline = pipeline"
-                                class="@(pipeline == selectedPipeline ? "bg-body-tertiary fw-bold" : null)">
-                                    <td>
-                                        <HighlightableText Text="@pipeline.Name" PartToHighlight="@filterText" />
-                                    </td>
-                                </tr>
-                                @if (pipeline == selectedPipeline && pipeline.Parameters?.Any() == true)
-                                {
-                                    <tr class="no-hover">
-                                        <td colspan="2" class="bg-body-tertiary">
-                                            <div class="row">
-                                                <div class="col">
-                                                    <h6 class="mx-2">Parameters</h6>
-                                                    <dl class="row mx-3 small">
-                                                        @foreach (var param in pipeline.Parameters)
-                                                        {
-                                                            var defaultValue = param.Value.DefaultValue;
-                                                            var defaultValueText = defaultValue is not null ? $"({defaultValue})" : null;
-                                                            <dt class="col-sm-6">@param.Key</dt>
-                                                            <dd class="col-sm-6">@param.Value.Type @defaultValueText</dd>
-                                                        }
-                                                    </dl>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                }
-                            }
-                        }
-                    </tbody>
-                </table>
+                <div class="list-group">
+                    @if (root is null)
+                    {
+                        <div class="list-group-item text-center">
+                            <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                        </div>
+                    }
+                    else if (root.Pipelines.Count() == 0 && root.Folders.Count() == 0)
+                    {
+                        <div class="list-group-item small">
+                            No pipelines
+                        </div>
+                    }
+                    else
+                    {
+                        <PipelineFolderListGroupItem
+                            Folder="root"
+                            ExpandStatuses="folderExpandedStates"
+                            SelectedPipeline="selectedPipeline"
+                            OnPipelineSelected="TogglePipeline"
+                            FilterText="@filterText" />
+                    }
+                </div>
             </div>
         </div>
     </BodyTemplate>
@@ -113,20 +56,12 @@
     [Parameter]
     public EventCallback<string> OnPipelineSelected { get; set; }
 
-    private HxOffcanvas? offcanvas;
-    private IDictionary<string, IEnumerable<PipelineInfo>>? pipelines;
-    private string filterText = string.Empty;
-    private string? selectedFolder;
-    private PipelineInfo? selectedPipeline;
+    private readonly Dictionary<PipelineFolder, bool> folderExpandedStates = [];
 
-    private void OnFolderChanged(string folder)
-    {
-        if (folder != selectedFolder)
-        {
-            selectedPipeline = null;
-        }
-        selectedFolder = folder;
-    }
+    private HxOffcanvas? offcanvas;
+    private PipelineFolder? root;
+    private string filterText = string.Empty;
+    private PipelineInfo? selectedPipeline;
 
     private async Task SelectPipelineAsync()
     {
@@ -136,13 +71,13 @@
 
     public async Task ShowAsync(Guid pipelineClientId)
     {
-        pipelines = null;
-        selectedFolder = null;
+        folderExpandedStates.Clear();
+        root = null;
         selectedPipeline = null;
         filterText = string.Empty;
 
         await offcanvas.LetAsync(x => x.ShowAsync());
-        
+
         try
         {
             using var context = DbContextFactory.CreateDbContext();
@@ -150,12 +85,22 @@
                 .AsNoTrackingWithIdentityResolution()
                 .Include(c => c.AppRegistration)
                 .FirstAsync(c => c.PipelineClientId == pipelineClientId);
-            pipelines = await client.GetPipelinesAsync(TokenService);
+            root = await client.GetPipelinesAsync(TokenService);
             StateHasChanged();
         }
         catch (Exception ex)
         {
             Messenger.AddError("Error reading pipelines", ex.Message);
         }
+    }
+
+    private void TogglePipeline(PipelineInfo pipeline)
+    {
+        if (selectedPipeline == pipeline)
+        {
+            selectedPipeline = null;
+            return;
+        }
+        selectedPipeline = pipeline;
     }
 }

@@ -34,27 +34,26 @@ public class SynapseWorkspace(string synapseWorkspaceUrl) : PipelineClient(Pipel
         return (run.Value.Status, run.Value.Message);
     }
 
-    public override async Task<IDictionary<string, IEnumerable<PipelineInfo>>> GetPipelinesAsync(ITokenService tokenService)
+    public override async Task<PipelineFolder> GetPipelinesAsync(ITokenService tokenService)
     {
         var token = new AzureTokenCredential(tokenService, AppRegistration, ResourceUrl);
         var pipelineClient = new SynapsePipelineClient(SynapseEndpoint, token);
-        var list = new List<PipelineResource>();
-        var pipelines = pipelineClient.GetPipelinesByWorkspaceAsync();
-        await foreach (var pipeline in pipelines)
+        var pipelineResources = new List<PipelineResource>();
+        await foreach (var pipeline in pipelineClient.GetPipelinesByWorkspaceAsync())
         {
-            list.Add(pipeline);
+            pipelineResources.Add(pipeline);
         }
 
-        static PipelineInfo infoFromResource(PipelineResource res)
+        var pipelines = pipelineResources.Select(p =>
         {
-            var parameters = res.Parameters.ToDictionary(p => p.Key, p => (p.Value.Type.ToString(), p.Value.DefaultValue?.ToString()));
-            return new(res.Name, parameters);
-        };
+            var folder = p.Folder?.Name;
+            var parameters = p.Parameters.ToDictionary(p => p.Key, p => (p.Value.Type.ToString(), p.Value.DefaultValue?.ToString()));
+            var pipeline = new PipelineInfo(p.Name, folder, parameters ?? []);
+            return pipeline;
+        });
 
-        return list
-            .Select(p => (Folder: p.Folder?.Name ?? "/", Pipeline: p))
-            .GroupBy(p => p.Folder)
-            .ToDictionary(p => p.Key, p => p.Select(p_ => infoFromResource(p_.Pipeline)).ToArray().AsEnumerable());
+        var folder = PipelineFolder.FromPipelines(pipelines);
+        return folder;
     }
 
     public override async Task<IEnumerable<(string Name, ParameterValueType Type, object? Default)>> GetPipelineParametersAsync(ITokenService tokenService, string pipelineName)

@@ -182,14 +182,12 @@
 
     private void ToggleFolder(CatalogFolder folder)
     {
-        selectedPackage = null;
         var folderExpanded = folderExpandedStates.GetValueOrDefault(folder);
         folderExpandedStates[folder] = !folderExpanded;
     }
 
     private void ToggleProject(CatalogProject project)
     {
-        selectedPackage = null;
         var projectExpanded = projectExpandedStates.GetValueOrDefault(project);
         projectExpandedStates[project] = !projectExpanded;
     }
