@@ -17,16 +17,18 @@ public class SynapseWorkspace(string synapseWorkspaceUrl) : PipelineClient(Pipel
     [NotMapped]
     private Uri SynapseEndpoint => new(SynapseWorkspaceUrl);
 
+    private const string ResourceUrl = "https://dev.azuresynapse.net//.default";
+
     public override async Task CancelPipelineRunAsync(ITokenService tokenService, string runId)
     {
-        var token = new SynapseTokenCredential(tokenService, AppRegistration);
+        var token = new AzureTokenCredential(tokenService, AppRegistration, ResourceUrl);
         var pipelineClient = new PipelineRunClient(SynapseEndpoint, token);
         await pipelineClient.CancelPipelineRunAsync(runId, isRecursive: true);
     }
 
     public override async Task<(string Status, string Message)> GetPipelineRunAsync(ITokenService tokenService, string runId, CancellationToken cancellationToken)
     {
-        var token = new SynapseTokenCredential(tokenService, AppRegistration);
+        var token = new AzureTokenCredential(tokenService, AppRegistration, ResourceUrl);
         var pipelineClient = new PipelineRunClient(SynapseEndpoint, token);
         var run = await pipelineClient.GetPipelineRunAsync(runId, cancellationToken);
         return (run.Value.Status, run.Value.Message);
@@ -34,7 +36,7 @@ public class SynapseWorkspace(string synapseWorkspaceUrl) : PipelineClient(Pipel
 
     public override async Task<IDictionary<string, IEnumerable<PipelineInfo>>> GetPipelinesAsync(ITokenService tokenService)
     {
-        var token = new SynapseTokenCredential(tokenService, AppRegistration);
+        var token = new AzureTokenCredential(tokenService, AppRegistration, ResourceUrl);
         var pipelineClient = new SynapsePipelineClient(SynapseEndpoint, token);
         var list = new List<PipelineResource>();
         var pipelines = pipelineClient.GetPipelinesByWorkspaceAsync();
@@ -45,7 +47,7 @@ public class SynapseWorkspace(string synapseWorkspaceUrl) : PipelineClient(Pipel
 
         static PipelineInfo infoFromResource(PipelineResource res)
         {
-            var parameters = res.Parameters.ToDictionary(p => p.Key, p => (p.Value.Type.ToString(), p.Value?.DefaultValue));
+            var parameters = res.Parameters.ToDictionary(p => p.Key, p => (p.Value.Type.ToString(), p.Value.DefaultValue?.ToString()));
             return new(res.Name, parameters);
         };
 
@@ -57,7 +59,7 @@ public class SynapseWorkspace(string synapseWorkspaceUrl) : PipelineClient(Pipel
 
     public override async Task<IEnumerable<(string Name, ParameterValueType Type, object? Default)>> GetPipelineParametersAsync(ITokenService tokenService, string pipelineName)
     {
-        var token = new SynapseTokenCredential(tokenService, AppRegistration);
+        var token = new AzureTokenCredential(tokenService, AppRegistration, ResourceUrl);
         var client = new SynapsePipelineClient(SynapseEndpoint, token);
         var pipeline = await client.GetPipelineAsync(pipelineName);
         return pipeline.Value.Parameters.Select(param =>
@@ -75,7 +77,7 @@ public class SynapseWorkspace(string synapseWorkspaceUrl) : PipelineClient(Pipel
 
     public override async Task<string> StartPipelineRunAsync(ITokenService tokenService, string pipelineName, IDictionary<string, object> parameters, CancellationToken cancellationToken)
     {
-        var token = new SynapseTokenCredential(tokenService, AppRegistration);
+        var token = new AzureTokenCredential(tokenService, AppRegistration, ResourceUrl);
         var pipelineClient = new SynapsePipelineClient(SynapseEndpoint, token);
         var response = await pipelineClient.CreatePipelineRunAsync(pipelineName, parameters: parameters, cancellationToken: cancellationToken);
         return response.Value.RunId;

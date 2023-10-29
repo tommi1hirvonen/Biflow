@@ -2,22 +2,21 @@
 
 namespace Biflow.DataAccess.Models;
 
-internal class SynapseTokenCredential(ITokenService tokenService, AppRegistration appRegistration) : TokenCredential
+internal class AzureTokenCredential(ITokenService tokenService, AppRegistration appRegistration, string resourceUrl) : TokenCredential
 {
     private readonly ITokenService _tokenService = tokenService;
     private readonly AppRegistration _appRegistration = appRegistration;
-
-    private const string ResourceUrl = "https://dev.azuresynapse.net//.default";
+    private readonly string resourceUrl = resourceUrl;
 
     public override Azure.Core.AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {
-        var (token, expiresOn) = _tokenService.GetTokenAsync(_appRegistration, ResourceUrl).Result;
+        var (token, expiresOn) = _tokenService.GetTokenAsync(_appRegistration, resourceUrl).Result;
         return new Azure.Core.AccessToken(token, expiresOn);
     }
 
     public override async ValueTask<Azure.Core.AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {
-        var (token, expiresOn) = await _tokenService.GetTokenAsync(_appRegistration, ResourceUrl);
+        var (token, expiresOn) = await _tokenService.GetTokenAsync(_appRegistration, resourceUrl);
         return new Azure.Core.AccessToken(token, expiresOn);
     }
 }
