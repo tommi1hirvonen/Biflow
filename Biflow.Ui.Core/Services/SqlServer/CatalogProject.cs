@@ -6,5 +6,5 @@ public class CatalogProject(long projectId, string projectName)
 
     public string ProjectName { get; } = projectName;
 
-    public Dictionary<long, CatalogPackage> Packages { get; } = new();
+    public Dictionary<long, CatalogPackage> Packages { get; } = [];
 }

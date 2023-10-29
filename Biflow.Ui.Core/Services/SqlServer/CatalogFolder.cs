@@ -6,5 +6,5 @@ public class CatalogFolder(long folderId, string folderName)
 
     public string FolderName { get; } = folderName;
 
-    public Dictionary<long, CatalogProject> Projects { get; } = new();
+    public Dictionary<long, CatalogProject> Projects { get; } = [];
 }

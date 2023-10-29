@@ -8,5 +8,5 @@ public class StoredProcedure(int procedureId, string schemaName, string procedur
 
     public string ProcedureName { get; } = procedureName;
 
-    public List<StoredProcedureParameter> Parameters { get; } = new();
+    public List<StoredProcedureParameter> Parameters { get; } = [];
 }

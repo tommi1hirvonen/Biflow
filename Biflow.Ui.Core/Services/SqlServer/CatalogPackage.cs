@@ -6,5 +6,5 @@ public class CatalogPackage(long packageId, string packageName)
 
     public string PackageName { get; } = packageName;
 
-    public Dictionary<long, CatalogParameter> Parameters { get; } = new();
+    public Dictionary<long, CatalogParameter> Parameters { get; } = [];
 }

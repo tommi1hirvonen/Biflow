@@ -2,7 +2,7 @@
 
 public class FilterSet
 {
-    public Dictionary<string, IFilter> Filters { get; } = new();
+    public Dictionary<string, IFilter> Filters { get; } = [];
 
     public FilterIndexer<ValueFilter<byte, NumberFilterOperator>> ByteIndexer { get; }
     public FilterIndexer<ValueFilter<short, NumberFilterOperator>> ShortIndexer { get; }
