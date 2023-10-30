@@ -54,152 +54,162 @@
                  @if (currentView == TableEditView.Settings)
                 {
                     <div class="row">
-                        <div class="col">
-                            <div class="row">
-                                <div class="col">
-                                    <div class="row">
-                                        <div class="col">
-                                            <label class="form-label">Data table name</label>
-                                            <InputText form="" class="form-control form-control-sm" autocomplete="off" @bind-Value="editTable.DataTableName" />
-                                        </div>
-                                        <div class="col">
-                                            <label class="form-label">Category</label>
-                                            <InputSelect class="form-select form-select-sm" @bind-Value="editTable.CategoryId">
-                                                <option value="">No category</option>
-                                                @foreach (var cat in categories)
-                                                {
-                                                    <option value="@cat.CategoryId">@cat.CategoryName</option>
-                                                }
-                                            </InputSelect>
-                                        </div>
-                                    </div>
-                                    <div class="row mt-3 align-items-end">
-                                        <div class="col">
-                                            <label class="form-label">Connection</label>
-                                            <select class="form-select form-select-sm" @onchange="ConnectionChanged">
-                                                @foreach (var connection in connections ?? Enumerable.Empty<SqlConnectionInfo>())
-                                                {
-                                                    <option value="@connection.ConnectionId"
-                                                            selected="@(connection.ConnectionId == editTable.Connection.ConnectionId)">
-                                                        @connection.ConnectionName
-                                                    </option>
-                                                }
-                                            </select>
-                                        </div>
-                                        <div class="col-auto">
-                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                                      OnClick="async () => await offcanvas.LetAsync(x => x.ShowAsync(editTable.Connection.ConnectionId))">
-                                                <CxIcon Icon="FeatherIcon.MoreHorizontal" />
-                                                Select table
-                                            </HxButton>
-                                        </div>
-                                    </div>
-                                    <div class="row mt-3">
-                                        <div class="col">
-                                            <label class="form-label">Target schema and table</label>
-                                            <div class="input-group input-group-sm">
-                                                <InputText class="form-control form-control-sm" disabled placeholder="Schema" autocomplete="off" @bind-Value="editTable.TargetSchemaName" />
-                                                <InputText class="form-control form-control-sm" disabled placeholder="Table" autocomplete="off" @bind-Value="editTable.TargetTableName" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md">
-                                    <div class="row">
-                                        <div class="col">
-                                            <label class="form-label">Description</label>
-                                            <InputTextArea class="form-control form-control-sm" rows="8" @bind-Value="editTable.DataTableDescription" />
-                                        </div>
-                                    </div>
-                                </div>
+                        <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                            <label class="form-label mb-lg-0">Data table name</label>
+                        </div>
+                        <div class="col-md-6">
+                            <InputText form="" class="form-control form-control-sm" autocomplete="off" @bind-Value="editTable.DataTableName" />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                            <label class="form-label mb-lg-0">Category</label>
+                        </div>
+                        <div class="col-md-6">
+                            <InputSelect class="form-select form-select-sm" @bind-Value="editTable.CategoryId">
+                                <option value="">No category</option>
+                                @foreach (var cat in categories)
+                                {
+                                    <option value="@cat.CategoryId">@cat.CategoryName</option>
+                                }
+                            </InputSelect>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                            <label class="form-label mb-lg-0">Connection</label>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group input-group-sm">
+                                <select class="form-select form-select-sm" @onchange="ConnectionChanged">
+                                    @foreach (var connection in connections ?? Enumerable.Empty<SqlConnectionInfo>())
+                                    {
+                                        <option value="@connection.ConnectionId"
+                                                selected="@(connection.ConnectionId == editTable.Connection.ConnectionId)">
+                                            @connection.ConnectionName
+                                        </option>
+                                    }
+                                </select>
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
+                                          OnClick="async () => await offcanvas.LetAsync(x => x.ShowAsync(editTable.Connection.ConnectionId))">
+                                    <CxIcon Icon="FeatherIcon.MoreHorizontal" />
+                                    Select table
+                                </HxButton>
                             </div>
                         </div>
                     </div>
+
                     <div class="row">
-                        <div class="col">
-                            <div class="row">
-                                <div class="col">
-                                    <div class="form-check form-check-inline">
-                                        <input type="checkbox" class="form-check-input" id="allow_insert"
-                                               checked=@editTable.AllowInsert
-                                        @bind-value="editTable.AllowInsert">
-                                        <label class="form-check-label" for="allow_insert">Allow insert</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input type="checkbox" class="form-check-input" id="allow_delete"
-                                               checked=@editTable.AllowDelete
-                                        @bind-value="editTable.AllowDelete">
-                                        <label class="form-check-label" for="allow_delete">Allow delete</label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input type="checkbox" class="form-check-input" id="allow_update"
-                                               checked=@editTable.AllowUpdate
-                                        @bind-value="editTable.AllowUpdate">
-                                        <label class="form-check-label" for="allow_update">Allow update</label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row mt-1">
-                                <div class="col">
-                                    <div class="form-check form-check-inline">
-                                        <input type="checkbox" class="form-check-input" id="allow_import"
-                                               checked=@editTable.AllowImport
-                                        @bind-value="editTable.AllowImport">
-                                        <label class="form-check-label" for="allow_import">Allow import</label>
-                                    </div>
-                                </div>
+                        <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                            <label class="form-label mb-lg-0">Target schema and table</label>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group input-group-sm">
+                                <InputText class="form-control form-control-sm" disabled placeholder="Schema" autocomplete="off" @bind-Value="editTable.TargetSchemaName" />
+                                <InputText class="form-control form-control-sm" disabled placeholder="Table" autocomplete="off" @bind-Value="editTable.TargetTableName" />
                             </div>
                         </div>
                     </div>
+
                     <div class="row">
-                        <div class="col">
-                            <div class="row">
-                                <div class="col">
-                                    <label class="form-label">
-                                        Locked columns
-                                        <HxPopover Trigger="PopoverTrigger.Hover" Content="Define a list of locked columns to prevent editing. If the table has a column with a matching name, the column's edit fields will be disabled.">
-                                            <CxIcon Icon="FeatherIcon.Info" />
-                                        </HxPopover>
-                                    </label>
-                                    <HxInputTags Delimiters="new()"
-                                                 InputSize="InputSize.Small"
-                                                 SuggestDelay="0"
-                                                 SuggestMinimumLength="0"
-                                                 TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
-                                                 DataProvider="GetLockedColumnSuggestions"
-                                    @bind-Value="editTable.LockedColumns" />
-                                </div>
+                        <div class="col-md-4 d-md-flex justify-content-end">
+                            <label class="form-label mb-lg-0">Description</label>
+                        </div>
+                        <div class="col-md-6">
+                            <InputTextArea class="form-control form-control-sm" rows="4" @bind-Value="editTable.DataTableDescription" />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 d-md-flex justify-content-end">
+                            <label class="form-label mb-lg-0"></label>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-check-inline">
+                                <input type="checkbox" class="form-check-input" id="allow_insert"
+                                       checked=@editTable.AllowInsert
+                                       @bind-value="editTable.AllowInsert">
+                                <label class="form-check-label" for="allow_insert">Allow insert</label>
                             </div>
-                            <div class="row mt-1">
-                                <div class="col">
-                                    <div class="form-check form-check-inline">
-                                        <input type="checkbox" class="form-check-input" id="locked_columns_exclude"
-                                               checked=@editTable.LockedColumnsExcludeMode
-                                        @bind-value="editTable.LockedColumnsExcludeMode">
-                                        <label class="form-check-label" for="locked_columns_exclude">
-                                            Exclude mode
-                                            <HxPopover Trigger="PopoverTrigger.Hover" Content="When enabled, columns not listed will be locked.">
-                                                <CxIcon Icon="FeatherIcon.Info" />
-                                            </HxPopover>
-                                        </label>
-                                    </div>
-                                </div>
+                            <div class="form-check form-check-inline">
+                                <input type="checkbox" class="form-check-input" id="allow_delete"
+                                       checked=@editTable.AllowDelete
+                                       @bind-value="editTable.AllowDelete">
+                                <label class="form-check-label" for="allow_delete">Allow delete</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input type="checkbox" class="form-check-input" id="allow_update"
+                                       checked=@editTable.AllowUpdate
+                                       @bind-value="editTable.AllowUpdate">
+                                <label class="form-check-label" for="allow_update">Allow update</label>
                             </div>
                         </div>
-                        <div class="col">
-                            <label class="form-label">
-                                Hidden columns
-                                <HxPopover Trigger="PopoverTrigger.Hover" Content="Define a list of hidden columns. If a hidden column is part of the primary key and 'allow import' is enabled, the column will be included in Excel exports.">
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 d-md-flex justify-content-end">
+                            <label class="form-label mb-lg-0"></label>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-check-inline">
+                                <input type="checkbox" class="form-check-input" id="allow_import"
+                                       checked=@editTable.AllowImport
+                                       @bind-value="editTable.AllowImport">
+                                <label class="form-check-label" for="allow_import">Allow import</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 d-md-flex justify-content-end">
+                            <label class="form-label mb-lg-0">
+                                Locked columns
+                                <HxPopover Trigger="PopoverTrigger.Hover" Content="Define a list of locked columns to prevent editing. If the table has a column with a matching name, the column's edit fields will be disabled.">
                                     <CxIcon Icon="FeatherIcon.Info" />
                                 </HxPopover>
                             </label>
+                        </div>
+                        <div class="col-md-6">
+                            <HxInputTags Delimiters="new()"
+                                        InputSize="InputSize.Small"
+                                        SuggestDelay="0"
+                                        SuggestMinimumLength="0"
+                                        TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
+                                        DataProvider="GetLockedColumnSuggestions"
+                                        @bind-Value="editTable.LockedColumns" />
+                            <div class="form-check form-check-inline">
+                                <input type="checkbox" class="form-check-input" id="locked_columns_exclude"
+                                       checked=@editTable.LockedColumnsExcludeMode
+                                       @bind-value="editTable.LockedColumnsExcludeMode">
+                                <label class="form-check-label" for="locked_columns_exclude">
+                                    Exclude mode
+                                    <HxPopover Trigger="PopoverTrigger.Hover" Content="When enabled, columns not listed will be locked.">
+                                        <CxIcon Icon="FeatherIcon.Info" />
+                                    </HxPopover>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4 d-md-flex justify-content-end">
+                            <label class="form-label mb-lg-0">
+                                Hidden columns
+                                <HxPopover Trigger="PopoverTrigger.Hover" Content="Define a list of hidden columns. If a hidden column is part of the primary key and 'allow import' is enabled, the column will still be included in Excel exports.">
+                                    <CxIcon Icon="FeatherIcon.Info" />
+                                </HxPopover>
+                            </label>
+                        </div>
+                        <div class="col-md-6">
                             <HxInputTags Delimiters="new()"
                                          InputSize="InputSize.Small"
                                          SuggestDelay="0"
                                          SuggestMinimumLength="0"
                                          TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
                                          DataProvider="GetHiddenColumnSuggestions"
-                            @bind-Value="editTable.HiddenColumns" />
+                                         @bind-Value="editTable.HiddenColumns" />
                         </div>
                     </div>
                 }
