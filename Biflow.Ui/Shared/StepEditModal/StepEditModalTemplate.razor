@@ -106,11 +106,11 @@
                                         <label class="form-label mb-lg-0">Step name</label>
                                     </div>
                                     <div class="col-md-6">
-                                        <div class="input-group">
+                                        <div class="input-group input-group-sm">
                                             <div class="input-group-text">
                                                 <CxIcon Icon="FeatherIcon.Edit3" />
                                             </div>
-                                            <InputText class="form-control" @bind-Value="Modal.Step.StepName"></InputText>
+                                            <InputText class="form-control form-control-sm" @bind-Value="Modal.Step.StepName"></InputText>
                                         </div>
                                     </div>
                                 </div>
@@ -141,6 +141,19 @@
                                 </div>
                                 <div class="row">
                                     <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                                        <label class="form-label mb-lg-0">Execution phase</label>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="input-group input-group-sm">
+                                            <div class="input-group-text">
+                                                <CxIcon Icon="FeatherIcon.Layers" />
+                                            </div>
+                                            <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.ExecutionPhase" style="max-width: 6rem;"></InputNumber>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4 d-md-flex align-items-center justify-content-end">
                                         <label class="form-label mb-lg-0">
                                             Duplicate execution behaviour
                                             <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@DuplicateBehaviourPopoverContent">
@@ -155,19 +168,6 @@
                                                 <option>@type</option>
                                             }
                                         </InputSelect>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-4 d-md-flex align-items-center justify-content-end">
-                                        <label class="form-label mb-lg-0">Execution phase</label>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="input-group input-group-sm">
-                                            <div class="input-group-text">
-                                                <CxIcon Icon="FeatherIcon.Layers" />
-                                            </div>
-                                            <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.ExecutionPhase" style="max-width: 6rem;"></InputNumber>
-                                        </div>
                                     </div>
                                 </div>
                                 <div class="row">
