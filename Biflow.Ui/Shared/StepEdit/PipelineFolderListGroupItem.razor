@@ -10,9 +10,9 @@
     @if (Folder.Depth > 0)
     {
         var folderPadding = $"{(Folder.Depth - 0.7).ToString("F2", CultureInfo.InvariantCulture)}rem;";
-        <div class="list-group-item list-group-item-action">
+        <div class="list-group-item list-group-item-action" style="cursor: pointer;" @onclick="() => ExpandStatuses[Folder] = !folderExpanded">
             <div class="row">
-                <div class="col d-flex align-items-center small" style="cursor: pointer; padding-left: @(folderPadding)" @onclick="() => ExpandStatuses[Folder] = !folderExpanded">
+                <div class="col d-flex align-items-center small" style="padding-left: @(folderPadding)">
                     @if (folderExpanded)
                     {
                         <CxIcon Icon="FeatherIcon.ChevronDown" />
@@ -30,7 +30,6 @@
                     </span>
                 </div>
             </div>
-            
         </div>
     }
     @if (folderExpanded)
