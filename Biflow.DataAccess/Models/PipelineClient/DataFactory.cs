@@ -1,10 +1,11 @@
-﻿using Azure.Identity;
-using Azure.ResourceManager;
-using Azure.ResourceManager.DataFactory;
-using Azure.ResourceManager.DataFactory.Models;
+﻿using Azure.Core;
+using Azure.Identity;
+using Microsoft.Azure.Management.DataFactory;
+using Microsoft.Azure.Management.DataFactory.Models;
+using Microsoft.Rest;
+using Microsoft.Rest.Azure;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Biflow.DataAccess.Models;
 
@@ -31,6 +32,92 @@ public class DataFactory : PipelineClient
 
     private const string ResourceUrl = "https://management.azure.com//.default";
 
+    private async Task<DataFactoryManagementClient> GetClientAsync(ITokenService tokenService)
+    {
+        var (accessToken, _) = await tokenService.GetTokenAsync(AppRegistration, ResourceUrl);
+        var credentials = new TokenCredentials(accessToken);
+        return new DataFactoryManagementClient(credentials) { SubscriptionId = SubscriptionId };
+    }
+
+    public override async Task<string> StartPipelineRunAsync(ITokenService tokenService, string pipelineName, IDictionary<string, object> parameters, CancellationToken cancellationToken)
+    {
+        var client = await GetClientAsync(tokenService);
+        var createRunResponse = await client.Pipelines.CreateRunAsync(ResourceGroupName, ResourceName, pipelineName,
+            parameters: parameters, cancellationToken: cancellationToken);
+        return createRunResponse.RunId;
+    }
+
+    public override async Task<(string Status, string Message)> GetPipelineRunAsync(ITokenService tokenService, string runId, CancellationToken cancellationToken)
+    {
+        var client = await GetClientAsync(tokenService);
+        var run = await client.PipelineRuns.GetAsync(ResourceGroupName, ResourceName, runId, cancellationToken);
+        return (run.Status, run.Message);
+    }
+
+    public override async Task CancelPipelineRunAsync(ITokenService tokenService, string runId)
+    {
+        var client = await GetClientAsync(tokenService);
+        await client.PipelineRuns.CancelAsync(ResourceGroupName, ResourceName, runId, isRecursive: true);
+    }
+
+    public override async Task<PipelineFolder> GetPipelinesAsync(ITokenService tokenService)
+    {
+        var client = await GetClientAsync(tokenService);
+        var allPipelines = new List<IPage<PipelineResource>>();
+
+        var pipelineResources = await client.Pipelines.ListByFactoryAsync(ResourceGroupName, ResourceName);
+        allPipelines.Add(pipelineResources);
+        var nextPage = pipelineResources.NextPageLink;
+
+        while (nextPage is not null)
+        {
+            var pipelines_ = await client.Pipelines.ListByFactoryNextAsync(nextPage);
+            allPipelines.Add(pipelines_);
+            nextPage = pipelines_.NextPageLink;
+        }
+
+        var pipelines = pipelineResources.Select(p =>
+        {
+            var folder = p.Folder?.Name;
+            var parameters = p.Parameters?.ToDictionary(p => p.Key, p => (p.Value.Type, p.Value?.DefaultValue?.ToString()));
+            var pipeline = new PipelineInfo(p.Name, folder, parameters ?? []);
+            return pipeline;
+        });
+
+        var folder = PipelineFolder.FromPipelines(pipelines);
+        return folder;
+    }
+
+    public override async Task<IEnumerable<(string Name, ParameterValueType Type, object? Default)>> GetPipelineParametersAsync(ITokenService tokenService, string pipelineName)
+    {
+        var client = await GetClientAsync(tokenService);
+        var pipeline = await client.Pipelines.GetAsync(ResourceGroupName, ResourceName, pipelineName);
+        return pipeline.Parameters?.Select(param =>
+        {
+            var datatype = param.Value.Type switch
+            {
+                "int" => ParameterValueType.Int32,
+                "bool" => ParameterValueType.Boolean,
+                "float" => ParameterValueType.Double,
+                _ => ParameterValueType.String
+            };
+            return (param.Key, datatype, (object?)param.Value.DefaultValue);
+        }) ?? [];
+    }
+
+    public async Task TestConnection(AppRegistration appRegistration)
+    {
+        var credential = new ClientSecretCredential(appRegistration.TenantId, appRegistration.ClientId, appRegistration.ClientSecret);
+        var context = new TokenRequestContext([ResourceUrl]);
+        var token = await credential.GetTokenAsync(context);
+
+        var credentials = new TokenCredentials(token.Token);
+        var client = new DataFactoryManagementClient(credentials) { SubscriptionId = SubscriptionId };
+        var _ = await client.Factories.GetAsync(ResourceGroupName, ResourceName);
+    }
+
+    #region The following is an implementation with the new Azure Resource Manager SDK (Azure.ResourceManager.DataFactory). Take into use when affecting bugs have been fixed https://github.com/Azure/azure-sdk-for-net/issues/39187
+    /*
     public override async Task<string> StartPipelineRunAsync(ITokenService tokenService, string pipelineName, IDictionary<string, object> parameters, CancellationToken cancellationToken)
     {
         var client = GetArmClient(tokenService);
@@ -134,4 +221,6 @@ public class DataFactory : PipelineClient
         var resource = client.GetDataFactoryPipelineResource(identifier);
         return resource;
     }
+    */
+    #endregion 
 }
