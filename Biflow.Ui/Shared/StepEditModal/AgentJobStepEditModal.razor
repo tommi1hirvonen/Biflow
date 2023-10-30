@@ -3,18 +3,26 @@
 <StepEditModalTemplate Modal="this" TStep="AgentJobStep">
     @if (Step is not null)
     {
-        <div class="row gap-3 align-items-end">
-            <div class="col-auto">
-                <label class="form-label">Timeout (min) (0 = indefinite)</label>
+        <div class="row">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Timeout (min)</label>
+            </div>
+            <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.XOctagon" />
                     </div>
-                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 10rem;"></InputNumber>
+                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 5rem;"></InputNumber>
                 </div>
+                <span class="form-text">0 = indefinite</span>
             </div>
-            <div class="col-auto">
-                <label class="form-label">Connection</label>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                <label class="form-label mb-lg-0">Connection</label>
+            </div>
+            <div class="col-md-6 d-inline">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Database" />
@@ -25,23 +33,25 @@
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }
                     </InputSelect>
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenAgentJobSelectOffcanvas">
+                        <CxIcon Icon="FeatherIcon.MoreHorizontal" />
+                        Browse Agent jobs
+                    </HxButton>
                 </div>
-            </div>
-            <div class="col-auto">
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenAgentJobSelectOffcanvas">
-                    <CxIcon Icon="FeatherIcon.MoreHorizontal" />
-                    Browse Agent jobs
-                </HxButton>
+
             </div>
         </div>
-        <div class="row mt-2">
-            <div class="col">
-                <label class="form-label">Agent job name</label>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Agent job name</label>
+            </div>
+            <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Server" />
                     </div>
-                    <InputText class="form-control form-control-sm" @bind-Value="Step.AgentJobName" style="max-width: 30rem;" />
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.AgentJobName" />
                 </div>
             </div>
         </div>

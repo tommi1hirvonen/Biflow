@@ -3,9 +3,11 @@
 <StepEditModalTemplate Modal="this" TStep="EmailStep">
     @if (Step is not null)
     {
-        <div class="row">
-            <div class="col">
-                <label class="form-label">Recipients</label>
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Recipients</label>
+            </div>
+            <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Users" />
@@ -15,9 +17,12 @@
                 <div class="form-text">Comma separated list of recipient email addresses. Step parameters can be used to dynamically set the value of recipients, subject and body properties.</div>
             </div>
         </div>
-        <div class="row mt-2">
-            <div class="col">
-                <label class="form-label">Subject</label>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Subject</label>
+            </div>
+            <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Type" />
@@ -26,12 +31,16 @@
                 </div>
             </div>
         </div>
-        <div class="row mt-2">
-            <div class="col">
-                <label class="form-label">Body</label>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Body</label>
+            </div>
+            <div class="col-md-6">
                 <InputTextArea class="form-control form-control-sm" @bind-Value="Step.Body" rows="3"></InputTextArea>
             </div>
         </div>
+
         <StepParameterEditComponent Step="Step" NewParameterDelegate="() => new() { Step = Step }" />
     }
 </StepEditModalTemplate>

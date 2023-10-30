@@ -5,8 +5,17 @@
 @inject ThemeService ThemeService
 @inject IJSRuntime JS
 
+@{
+    var resize = Resize switch
+    {
+        CodeEditorResize.Horizontal => "horizontal",
+        CodeEditorResize.Both => "both",
+        _ => "vertical"
+    };
+}
+
 <style>
-    @($"#{editorId} {{ height: {InitialHeight}; resize: vertical; overflow: hidden; }}")
+    @($"#{editorId} {{ height: {InitialHeight}; resize: {resize}; overflow: hidden; }}")
 </style>
 
 <StandaloneCodeEditor @ref="editor"
@@ -31,8 +40,12 @@
 
     [Parameter] public bool ReadOnly { get; set; } = false;
 
+    [Parameter] public CodeEditorResize Resize { get; set; } = CodeEditorResize.Vertical;
+
     private StandaloneCodeEditor? editor { get; set; }
     private readonly string editorId = $"_{Guid.NewGuid().ToString()}"; // prefix with underscode as html id cannot start with a number
+
+    public enum CodeEditorResize { Vertical, Horizontal, Both }
 
     public Task SetValueAsync(string? value)
     {

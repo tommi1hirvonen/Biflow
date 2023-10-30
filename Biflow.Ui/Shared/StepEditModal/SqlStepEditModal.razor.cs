@@ -59,19 +59,6 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
             ExecutionConditionParameters = new List<ExecutionConditionParameter>()
         };
 
-    private void SetCaptureResultJobParameter(bool enabled)
-    {
-        ArgumentNullException.ThrowIfNull(Step);
-        if (enabled)
-        {
-            Step.ResultCaptureJobParameterId = Step.Job.JobParameters.FirstOrDefault()?.ParameterId;
-        }
-        else
-        {
-            Step.ResultCaptureJobParameterId = null;
-        }
-    }
-
     private Task OpenStoredProcedureSelectModal() => storedProcedureSelectModal.LetAsync(x => x.ShowAsync());
 
     private async Task ImportParametersAsync()

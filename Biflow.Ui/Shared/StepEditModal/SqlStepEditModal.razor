@@ -3,18 +3,26 @@
 <StepEditModalTemplate Modal="this" TStep="SqlStep">
     @if (Step is not null)
     {
-        <div class="row align-items-end gap-3">
-            <div class="col-auto">
-                <label class="form-label">Timeout (min) (0 = indefinite)</label>
+        <div class="row">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Timeout (min)</label>
+            </div>
+            <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.XOctagon" />
                     </div>
-                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 10rem;"></InputNumber>
+                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 5rem;"></InputNumber>
                 </div>
+                <span class="form-text">0 = indefinite</span>
             </div>
-            <div class="col-auto">
-                <label class="form-label">Connection</label>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                <label class="form-label mb-lg-0">Connection</label>
+            </div>
+            <div class="col-md-6 d-inline">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Database" />
@@ -25,58 +33,54 @@
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }
                     </InputSelect>
-                </div>
-            </div>
-            <div class="col-auto">
-                <HxButtonGroup Size="ButtonGroupSize.Small">
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenStoredProcedureSelectModal">
                         <CxIcon Icon="FeatherIcon.MoreHorizontal" />
                         Stored procedures
                     </HxButton>
-                </HxButtonGroup>
+                </div>
+                
             </div>
         </div>
+
         <div class="row mt-3">
-            <div class="col">
-                <label class="form-label">SQL statement</label>
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">SQL statement</label>
+            </div>
+            <div class="col-md-6">
                 <CodeEditor @ref="editor"
                             Language="sql"
                             MinimapEnabled="false"
                             InitialValueExpression="() => Step?.SqlStatement"
-                            OnValueChanged="value => Step.SqlStatement = value" />
+                            OnValueChanged="value => Step.SqlStatement = value"
+                            Resize="CodeEditor.CodeEditorResize.Both"/>
             </div>
         </div>
 
         <StoredProcedureSelectOffcanvas @ref="storedProcedureSelectModal" ConnectionId="Step.ConnectionId" OnProcedureSelected="OnStoredProcedureSelected" />
 
         <div class="row mt-3">
-            <div class="col-auto">
-                <div class="form-check form-check-inline">
-                    <input type="checkbox" class="form-check-input" id="capture_result"
-                           checked=@(Step.ResultCaptureJobParameterId is not null)
-                           disabled=@(Step.Job.JobParameters.Any() == false)
-                           @onchange="args => SetCaptureResultJobParameter((bool)args.Value!)">
-                    <label class="form-check-label" for="capture_result">Capture scalar result</label>
-                </div>
+            <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                <label class="form-label mb-md-0">
+                    Capture scalar result
+                    <HxPopover Trigger="PopoverTrigger.Hover" Content="Capture and assign the scalar result of the SQL statement to a job parameter">
+                         <CxIcon Icon="FeatherIcon.Info" />
+                     </HxPopover>
+                </label>
             </div>
-            <div class="col-auto d-flex align-items-center">
-                @if (Step.ResultCaptureJobParameterId is not null)
-                {
-                    <label class="form-label mb-0 me-3">To:</label>
-                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.ResultCaptureJobParameterId">
-                        @foreach (var jobParam in Step.Job.JobParameters.OrderBy(p => p.ParameterName) ?? Enumerable.Empty<JobParameter>())
-                            {
-                            <option value="@jobParam.ParameterId">
-                                @jobParam.ParameterName (@jobParam.ParameterValueType = @jobParam.ParameterValue)
-                            </option>
-                            }
-                    </InputSelect>
+            <div class="col-md-6">
+                @{
+                    var noneOption = Step.Job.JobParameters.Any() ? "None" : "None (job has no parameters)";
                 }
+                <InputSelect class="form-select form-select-sm" @bind-Value="Step.ResultCaptureJobParameterId" disabled=@(Step.Job.JobParameters.Any() == false)>
+                    <option value="">@noneOption</option>
+                    @foreach (var jobParam in Step.Job.JobParameters.OrderBy(p => p.ParameterName) ?? Enumerable.Empty<JobParameter>())
+                    {
+                        <option value="@jobParam.ParameterId">
+                            @jobParam.ParameterName (@jobParam.ParameterValueType = @jobParam.ParameterValue)
+                        </option>
+                    }
+                </InputSelect>
             </div>
-            @if (!Step.Job.JobParameters.Any())
-            {
-                <div class="form-text">No job parameters to store result value</div>
-            }
         </div>
         <StepParameterEditComponent Step="Step" NewParameterDelegate="() => new() { Step = Step }" OnImportParameters="ImportParametersAsync" />
     }

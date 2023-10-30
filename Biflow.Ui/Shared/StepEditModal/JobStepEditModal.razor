@@ -3,9 +3,11 @@
 <StepEditModalTemplate Modal="this" TStep="JobStep">
     @if (Step is not null && JobSlims is not null)
     {
-        <div class="row align-items-end gap-3">
-            <div class="col-auto">
-                <label class="form-label">Job to execute</label>
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end pt-md-1">
+                <label class="form-label mb-lg-0">Job to execute</label>
+            </div>
+            <div class="col-md-6">
                 <div class="input-group">
                     <div class="input-group-text">
                         <CxIcon Icon="LucideIcon.ClipboardList" />
@@ -26,31 +28,42 @@
                     </InputSelect>
                 </div>
             </div>
-            <div class="col-auto">
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-check-label mb-lg-0" for="new_step_job_synchronized">
+                    Synchronized
+                    &nbsp;
+                    <HxPopover Trigger="PopoverTrigger.Hover" Content="By default child job executions are launched asynchronously (fire and forget). If synchronized execution is enabled, the step completes only after the child job's execution is completed.">
+                        <CxIcon Icon="FeatherIcon.Info" />
+                    </HxPopover>
+                </label>
+            </div>
+            <div class="col-md-6">
                 <div class="form-check form-check-inline">
                     <input type="checkbox" class="form-check-input" id="new_step_job_synchronized"
-                       checked=@Step.JobExecuteSynchronized
-                       @bind-value="Step.JobExecuteSynchronized">
-                    <label class="form-check-label" for="new_step_job_synchronized">
-                        Synchronized
-                        &nbsp;
-                        <HxPopover Trigger="PopoverTrigger.Hover" Content="By default child job executions are launched asynchronously (fire and forget). If synchronized execution is enabled, the step completes only after the child job's execution is completed.">
-                            <CxIcon Icon="FeatherIcon.Info" />
-                        </HxPopover>
-                    </label>
+                           checked=@Step.JobExecuteSynchronized
+                           @bind-value="Step.JobExecuteSynchronized">
                 </div>
             </div>
         </div>
+
         <div class="row mt-3">
-            <label class="form-label">Tag filters</label>
-            <HxInputTags @bind-Value="tagFilters"
-                     DataProvider="GetTagFilterSuggestions"
-                     AllowCustomTags="false"
-                     SuggestMinimumLength="0"
-                     SuggestDelay="0"
-                     TagBadgeSettings="new BadgeSettings() { Color = ThemeColor.Secondary }" />
-            <div class="form-text">Use tag filters to only include steps with specific tags in job executions.</div>
+            <div class="col-md-4 d-md-flex justify-content-end pt-md-1">
+                <label class="form-label mb-lg-0">Tag filters</label>
+            </div>
+            <div class="col-md-6">
+                <HxInputTags @bind-Value="tagFilters"
+                             DataProvider="GetTagFilterSuggestions"
+                             AllowCustomTags="false"
+                             SuggestMinimumLength="0"
+                             SuggestDelay="0"
+                             TagBadgeSettings="new BadgeSettings() { Color = ThemeColor.Secondary }" />
+                <div class="form-text">Use tag filters to only include steps with specific tags in job executions.</div>
+            </div>
         </div>
+
         <JobStepParameterEditComponent Step="Step" TargetJobId="Step.JobToExecuteId" />
     }
 </StepEditModalTemplate>

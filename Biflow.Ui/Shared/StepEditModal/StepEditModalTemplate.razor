@@ -101,91 +101,95 @@
                             }
                             else if (Modal.CurrentView == StepEditModalView.Settings)
                             {
-                                <div class="row gap-2">
-                                
-                                    <div class="col">
-                                    
-                                        <div class="row gap-2">
-                                            <div class="col">
-                                                <label class="form-label">Step name</label>
-                                                <div class="input-group">
-                                                    <div class="input-group-text">
-                                                        <CxIcon Icon="FeatherIcon.Edit3" />
-                                                    </div>
-                                                    <InputText class="form-control" @bind-Value="Modal.Step.StepName"></InputText>
-                                                </div>
-                                            </div>
-                                            <div class="col-lg">
-                                                <label class="form-label">Tags</label>
-                                                <HxInputTags @bind-Value="Modal.Tags"
-                                                        DataProvider="Modal.GetTagSuggestions"
-                                                        SuggestMinimumLength="0"
-                                                        SuggestDelay="0"
-                                                        TagBadgeSettings="new BadgeSettings() { Color = ThemeColor.Secondary }" />
-                                            </div>
-                                        </div>
-
-                                        <div class="row mt-2">
-                                            <div class="col">
-                                                <label class="form-label">Description</label>
-                                                <div class="input-group input-group-sm">
-                                                    <div class="input-group-text">
-                                                        <CxIcon Icon="FeatherIcon.BookOpen" />
-                                                    </div>
-                                                    <InputTextArea class="form-control form-control-sm" @bind-Value="Modal.Step.StepDescription" rows="4"></InputTextArea>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="row mt-2">
-                                            <div class="col">
-                                                <label class="form-label">
-                                                    Duplicate execution behaviour
-                                                    <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@DuplicateBehaviourPopoverContent">
-                                                        <CxIcon Icon="FeatherIcon.Info" />
-                                                    </HxPopover>
-                                                </label>
-                                                <InputSelect class="form-select form-select-sm" @bind-Value="Modal.Step.DuplicateExecutionBehaviour" style="max-width: 17rem;">
-                                                    @foreach (var type in Enum.GetValues<DuplicateExecutionBehaviour>())
-                                                    {
-                                                        <option>@type</option>
-                                                    }
-                                                </InputSelect>
-                                            </div>
-                                        </div>
-
+                                <div class="row">
+                                    <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                                        <label class="form-label mb-lg-0">Step name</label>
                                     </div>
-
-                                    <div class="col-lg-auto d-flex flex-lg-column">
-                                        <div>
-                                            <label class="form-label">Execution phase</label>
-                                            <div class="input-group input-group-sm">
-                                                <div class="input-group-text">
-                                                    <CxIcon Icon="FeatherIcon.Layers" />
-                                                </div>
-                                                <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.ExecutionPhase" style="max-width: 6rem;"></InputNumber>
+                                    <div class="col-md-6">
+                                        <div class="input-group">
+                                            <div class="input-group-text">
+                                                <CxIcon Icon="FeatherIcon.Edit3" />
                                             </div>
-                                        </div>
-                                        <div class="my-lg-2 mx-3 mx-lg-0">
-                                            <label class="form-label">Retry attempts</label>
-                                            <div class="input-group input-group-sm">
-                                                <div class="input-group-text">
-                                                    <CxIcon Icon="FeatherIcon.Repeat" />
-                                                </div>
-                                                <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.RetryAttempts" style="max-width: 6rem;"></InputNumber>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label class="form-label">Retry interval (min)</label>
-                                            <div class="input-group input-group-sm">
-                                                <div class="input-group-text">
-                                                    <CxIcon Icon="FeatherIcon.Clock" />
-                                                </div>
-                                                <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.RetryIntervalMinutes" style="max-width: 6rem;"></InputNumber>
-                                            </div>
+                                            <InputText class="form-control" @bind-Value="Modal.Step.StepName"></InputText>
                                         </div>
                                     </div>
-
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                                        <label class="form-label mb-lg-0">Tags</label>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <HxInputTags @bind-Value="Modal.Tags"
+                                                     DataProvider="Modal.GetTagSuggestions"
+                                                     SuggestMinimumLength="0"
+                                                     SuggestDelay="0"
+                                                     TagBadgeSettings="new BadgeSettings() { Color = ThemeColor.Secondary }" />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4 d-md-flex justify-content-end">
+                                        <label class="form-label mb-lg-0">Description</label>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="input-group input-group-sm">
+                                            <div class="input-group-text">
+                                                <CxIcon Icon="FeatherIcon.BookOpen" />
+                                            </div>
+                                            <InputTextArea class="form-control form-control-sm" @bind-Value="Modal.Step.StepDescription" rows="3"></InputTextArea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                                        <label class="form-label mb-lg-0">
+                                            Duplicate execution behaviour
+                                            <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@DuplicateBehaviourPopoverContent">
+                                                <CxIcon Icon="FeatherIcon.Info" />
+                                            </HxPopover>
+                                        </label>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <InputSelect class="form-select form-select-sm" @bind-Value="Modal.Step.DuplicateExecutionBehaviour" style="max-width: 8rem;">
+                                            @foreach (var type in Enum.GetValues<DuplicateExecutionBehaviour>())
+                                            {
+                                                <option>@type</option>
+                                            }
+                                        </InputSelect>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                                        <label class="form-label mb-lg-0">Execution phase</label>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="input-group input-group-sm">
+                                            <div class="input-group-text">
+                                                <CxIcon Icon="FeatherIcon.Layers" />
+                                            </div>
+                                            <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.ExecutionPhase" style="max-width: 6rem;"></InputNumber>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                                        <label class="form-label mb-lg-0">Retries</label>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="input-group input-group-sm">
+                                            <div class="input-group-text">
+                                                <CxIcon Icon="FeatherIcon.Repeat" />
+                                                &nbsp;
+                                                Attempts
+                                            </div>
+                                            <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.RetryAttempts" style="max-width: 5rem;"></InputNumber>
+                                            <div class="input-group-text">
+                                                <CxIcon Icon="FeatherIcon.Clock" />
+                                                &nbsp;
+                                                Interval (min)
+                                            </div>
+                                            <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.RetryIntervalMinutes" style="max-width: 5rem;"></InputNumber>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <CascadingValue Value="fluentStepParametersValidator" Name="StepParametersValidator">

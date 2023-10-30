@@ -3,18 +3,26 @@
 <StepEditModalTemplate Modal="this" TStep="FunctionStep">
     @if (Step is not null)
     {
-        <div class="row gap-3 align-items-end">
-            <div class="col-auto">
-                <label class="form-label">Timeout (min) (0 = indefinite)</label>
+        <div class="row">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Timeout (min)</label>
+            </div>
+            <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.XOctagon" />
                     </div>
-                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 10rem;"></InputNumber>
+                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 5rem;"></InputNumber>
                 </div>
+                <span class="form-text">0 = indefinite</span>
             </div>
-            <div class="col-auto">
-                <label class="form-label">Function App</label>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                <label class="form-label mb-lg-0">Function app</label>
+            </div>
+            <div class="col-md-6 d-inline">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Zap" />
@@ -25,18 +33,19 @@
                             <option value="@app.FunctionAppId">@app.FunctionAppName</option>
                         }
                     </InputSelect>
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenFunctionSelectOffcanvas">
+                        <CxIcon Icon="FeatherIcon.MoreHorizontal" />
+                        Browse functions
+                    </HxButton>
                 </div>
             </div>
-            <div class="col-auto">
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenFunctionSelectOffcanvas">
-                    <CxIcon Icon="FeatherIcon.MoreHorizontal" />
-                    Browse functions
-                </HxButton>
-            </div>
         </div>
-        <div class="row mt-3 gap-2">
-            <div class="col">
-                <label class="form-label">Function url</label>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Function url</label>
+            </div>
+            <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Code" />
@@ -44,15 +53,22 @@
                     <InputText class="form-control form-control-sm" @bind-Value="Step.FunctionUrl"></InputText>
                 </div>
             </div>
-            <div class="col-lg">
-                <label class="form-label">Function key</label>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Function key</label>
+            </div>
+            <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Key" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.FunctionKey"></InputText>
                 </div>
-                @{ var functionAppKey = FunctionApps?.FirstOrDefault(app => app.FunctionAppId == Step.FunctionAppId)?.FunctionAppKey; }
+                @{
+                    var functionAppKey = FunctionApps?.FirstOrDefault(app => app.FunctionAppId == Step.FunctionAppId)?.FunctionAppKey;
+                }
                 @if (functionAppKey is null)
                 {
                     <div class="form-text">No key was configured for the Function App in settings. A function key must be set.</div>
@@ -63,46 +79,56 @@
                 }
             </div>
         </div>
+
         <FunctionSelectOffcanvas @ref="functionSelectOffcanvas" OnFunctionSelected="OnFunctionSelected" />
-        <div class="row">
-            <div class="col-auto">
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-check-label mb-lg-0" for="function_is_durable">Is durable function</label>
+            </div>
+            <div class="col-md-6">
                 <div class="form-check form-check-inline">
                     <input type="checkbox" class="form-check-input" id="function_is_durable"
-                       checked=@Step.FunctionIsDurable
-                       @bind-value="Step.FunctionIsDurable">
-                    <label class="form-check-label" for="function_is_durable">Is durable</label>
+                           checked=@Step.FunctionIsDurable
+                           @bind-value="Step.FunctionIsDurable">
                 </div>
             </div>
         </div>
+
         <div class="row mt-3">
-            <div class="col">
-                <label class="form-label">Function input</label>
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Function input</label>
             </div>
-            <div class="col text-end">
-                <label class="form-label me-3">Input format</label>
+            <div class="col-md-6">
+                <CodeEditor @ref="editor"
+                            Language=""
+                            MinimapEnabled="false"
+                            InitialValueExpression="() => Step.FunctionInput"
+                            OnValueChanged="value => Step.FunctionInput = value"
+                            Resize="CodeEditor.CodeEditorResize.Both" />
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-check-label mb-lg-0">Input format</label>
+            </div>
+            <div class="col-md-6">
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_function_input_raw"
                            checked=@(language == InputLanguage.Text)
-                    @onchange="() => SetLanguageAsync(InputLanguage.Text)">
+                           @onchange="() => SetLanguageAsync(InputLanguage.Text)">
                     <label class="form-check-label fw-normal" for="radio_function_input_raw">Text</label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_function_input_json"
                            checked=@(language == InputLanguage.Json)
-                    @onchange="() => SetLanguageAsync(InputLanguage.Json)">
+                           @onchange="() => SetLanguageAsync(InputLanguage.Json)">
                     <label class="form-check-label fw-normal" for="radio_function_input_json">JSON</label>
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col">
-                <CodeEditor @ref="editor"
-                            Language=""
-                            MinimapEnabled="false"
-                            InitialValueExpression="() => Step.FunctionInput"
-                            OnValueChanged="value => Step.FunctionInput = value" />
-            </div>
-        </div>
+        
         <StepParameterEditComponent Step="Step" NewParameterDelegate="() => new() { Step = Step }" />
     }
 </StepEditModalTemplate>

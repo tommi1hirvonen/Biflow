@@ -3,18 +3,26 @@
 <StepEditModalTemplate Modal="this" TStep="PackageStep">
     @if (Step is not null)
     {
-        <div class="row gap-3">
-            <div class="col-auto">
-                <label class="form-label">Timeout (min) (0 = indefinite)</label>
+        <div class="row">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Timeout (min)</label>
+            </div>
+            <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.XOctagon" />
                     </div>
-                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 10rem;"></InputNumber>
+                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 5rem;"></InputNumber>
                 </div>
+                <span class="form-text">0 = indefinite</span>
             </div>
-            <div class="col-auto">
-                <label class="form-label">Connection</label>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                <label class="form-label mb-lg-0">Connection</label>
+            </div>
+            <div class="col-md-6 d-inline">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Database" />
@@ -25,12 +33,19 @@
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }
                     </InputSelect>
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenPackageSelectOffcanvas">
+                        <CxIcon Icon="FeatherIcon.MoreHorizontal" />
+                        Browse catalog
+                    </HxButton>
                 </div>
             </div>
         </div>
-        <div class="row mt-2 gap-2">
-            <div class="col">
-                <label class="form-label">Folder name</label>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Folder name</label>
+            </div>
+            <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Folder" />
@@ -38,8 +53,13 @@
                     <InputText class="form-control form-control-sm" @bind-Value="Step.PackageFolderName"></InputText>
                 </div>
             </div>
-            <div class="col-md">
-                <label class="form-label">Project name</label>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Project name</label>
+            </div>
+            <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Briefcase" />
@@ -48,9 +68,12 @@
                 </div>
             </div>
         </div>
-        <div class="row mt-2 align-items-end gap-2">
-            <div class="col">
-                <label class="form-label">Package name</label>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Package name</label>
+            </div>
+            <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Package" />
@@ -58,35 +81,38 @@
                     <InputText class="form-control form-control-sm" @bind-Value="Step.PackageName"></InputText>
                 </div>
             </div>
-            <div class="col-md-auto">
-                <HxButtonGroup Size="ButtonGroupSize.Small">
-                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenPackageSelectOffcanvas">
-                        <CxIcon Icon="FeatherIcon.MoreHorizontal" />
-                        Browse catalog
-                    </HxButton>
-                </HxButtonGroup>
-            </div>
         </div>
-        <PackageSelectOffcanvas @ref="packageSelectOffcanvas" OnPackageSelected="OnPackageSelected" />
-        <div class="row mt-3 gap-3">
-            <div class="col-auto">
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-check-label mb-lg-0" for="new_step_32bit_mode">Execute in 32 bit mode</label>
+            </div>
+            <div class="col-md-6">
                 <div class="form-check form-check-inline">
                     <input type="checkbox" class="form-check-input" id="new_step_32bit_mode"
                            checked=@Step.ExecuteIn32BitMode
                            @bind-value="Step.ExecuteIn32BitMode">
-                    <label class="form-check-label" for="new_step_32bit_mode">Execute in 32 bit mode</label>
                 </div>
             </div>
-            <div class="col">
-                <label class="form-label">Execute as login (blank = no impersonation)</label>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Execute as login</label>
+            </div>
+            <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.User" />
                     </div>
-                    <InputText class="form-control form-control-sm" @bind-Value="Step.ExecuteAsLogin" style="max-width: 30rem;"></InputText>
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.ExecuteAsLogin"></InputText>
                 </div>
+                <span class="form-text">blank = no impersonation</span>
             </div>
         </div>
+
+        <PackageSelectOffcanvas @ref="packageSelectOffcanvas" OnPackageSelected="OnPackageSelected" />
+
         <PackageParameterEditComponent Step="Step" />
     }
 </StepEditModalTemplate>

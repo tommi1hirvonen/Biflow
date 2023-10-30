@@ -3,9 +3,11 @@
 <StepEditModalTemplate Modal="this" TStep="DatasetStep">
     @if (Step is not null)
     {
-        <div class="row gap-3 align-items-end">
-            <div class="col-auto">
-                <label class="form-label">App registration</label>
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                <label class="form-label mb-lg-0">App registration</label>
+            </div>
+            <div class="col-md-6 d-inline">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Globe" />
@@ -16,18 +18,19 @@
                             <option value="@app.AppRegistrationId">@app.AppRegistrationName</option>
                         }
                     </InputSelect>
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenDatasetSelectOffcanvas">
+                        <CxIcon Icon="FeatherIcon.MoreHorizontal" />
+                        Browse datasets
+                    </HxButton>
                 </div>
             </div>
-            <div class="col-auto">
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenDatasetSelectOffcanvas">
-                    <CxIcon Icon="FeatherIcon.MoreHorizontal" />
-                    Browse datasets
-                </HxButton>
-            </div>
         </div>
-        <div class="row mt-2 gap-3 gap-md-1">
-            <div class="col">
-                <label class="form-label">Group id</label>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Group id</label>
+            </div>
+            <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Folder" />
@@ -47,8 +50,13 @@
                     }
                 </div>
             </div>
-            <div class="col-md">
-                <label class="form-label">Dataset id</label>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Dataset id</label>
+            </div>
+            <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <CxIcon Icon="LucideIcon.FileBarChart2" />
@@ -69,6 +77,7 @@
                 </div>
             </div>
         </div>
+
         <DatasetSelectOffcanvas @ref="datasetSelectOffcanvas" AppRegistrationId="Step.AppRegistrationId" OnDatasetSelected="OnDatasetSelected" />
     }
 </StepEditModalTemplate>
