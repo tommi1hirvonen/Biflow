@@ -31,4 +31,10 @@ public record StepExecutionProjection(
     public override int GetHashCode() => base.GetHashCode();
 
     public double? ExecutionInSeconds => ((EndDateTime ?? DateTime.Now) - StartDateTime)?.TotalSeconds;
+
+    public bool CanBeStopped =>
+        ExecutionStatus == StepExecutionStatus.Running
+        || ExecutionStatus == StepExecutionStatus.AwaitingRetry
+        || ExecutionStatus == StepExecutionStatus.Queued
+        || ExecutionStatus == StepExecutionStatus.NotStarted && ParentExecutionStatus == DataAccess.Models.ExecutionStatus.Running;
 }

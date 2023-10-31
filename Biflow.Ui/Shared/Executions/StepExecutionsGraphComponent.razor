@@ -5,6 +5,7 @@
 @inject IExecutorService ExecutorService
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject NavigationManager NavigationManager
+@inject IHxMessageBoxService Confirmer
 
 <div class="row mx-1 my-2">
     <div class="col">
@@ -61,12 +62,38 @@
                         {
                             (var offset, var width) = (execution.StartDateTime, execution.EndDateTime)
                                 .GetGanttGraphDimensions(Executions.Select(e => (e.StartDateTime, e.EndDateTime)));
-                            <div class="progress hover @(execution == selectedStepExecution ? "active" : null) @execution.ExecutionStatus.ToString().ToLower()"
-                                 style="cursor: pointer; position: absolute; width: @($"{width.ToString("F10", CultureInfo.InvariantCulture)}%"); left: @($"{offset.ToString("F10", CultureInfo.InvariantCulture)}%");"
-                                 title="@($"{execution.ExecutionStatus}, {execution.ExecutionInSeconds?.SecondsToReadableFormat()}")"
-                                 @onclick="() => ToggleSelectedStepExecutionAsync(execution)">
-                                <div class="progress-bar" style="width: 100%;"></div>
-                            </div>
+                            <ContextMenuToggle ContainerHtmlTag="div"
+                                               CssClass="@($"progress hover {(execution == selectedStepExecution ? "active" : null)} {execution.ExecutionStatus.ToString().ToLower()}")"
+                                               title="@($"{execution.ExecutionStatus}, {execution.ExecutionInSeconds?.SecondsToReadableFormat()}")"
+                                               style="@($"cursor: pointer; position: absolute; width: {width.ToString("F10", CultureInfo.InvariantCulture)}%; left: {offset.ToString("F10", CultureInfo.InvariantCulture)}%;")"
+                                               @onclick="() => ToggleSelectedStepExecutionAsync(execution)">
+                                <ChildContent>
+                                    <div class="progress-bar" style="width: 100%;"></div>
+                                </ChildContent>
+                                <MenuContent>
+                                    <DropdownMenuHeader>
+                                        <StepTypeIconComponent StepType="execution.StepType" />
+                                        @execution.StepName
+                                    </DropdownMenuHeader>
+                                    <DropdownMenuItem @onclick="async () => await stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(execution.StepId))">
+                                        <CxIcon Icon="LucideIcon.History" />
+                                        History
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem @onclick="@(() => NavigationManager.NavigateTo($"executions/{execution.ExecutionId}/graph/{execution.StepId}"))">
+                                        <CxIcon Icon="LucideIcon.Network" />
+                                        Dependencies
+                                    </DropdownMenuItem>
+                                    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+                                        @if (execution.CanBeStopped)
+                                        {
+                                            <DropdownMenuItem @onclick="async () => await StopStepExecutionAsync(execution.ExecutionId, execution.StepId, execution.StepName)">
+                                                <CxIcon Icon="FeatherIcon.XOctagon" />
+                                                Stop...
+                                            </DropdownMenuItem>
+                                        }
+                                    </AuthorizeView>
+                                </MenuContent>
+                            </ContextMenuToggle>
                         }
                     </div>
                 </div>
@@ -100,15 +127,10 @@
                                     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                                         @if (detailStep.CanBeStopped)
                                         {
-                                            <HxDropdownButtonGroup CssClass="ms-3">
-                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger">
-                                                    <CxIcon Icon="FeatherIcon.XOctagon" />
-                                                    Stop
-                                                </HxDropdownToggleButton>
-                                                <HxDropdownMenu>
-                                                    <HxDropdownItem @onclick="() => StopStepExecutionAsync(detailStep)">Confirm</HxDropdownItem>
-                                                </HxDropdownMenu>
-                                            </HxDropdownButtonGroup>
+                                            <DropdownMenuItem @onclick="async () => await StopStepExecutionAsync(detailStep.ExecutionId, detailStep.StepId, detailStep.StepExecution.StepName)">
+                                                <CxIcon Icon="FeatherIcon.XOctagon" />
+                                                Stop...
+                                            </DropdownMenuItem>
                                         }
                                     </AuthorizeView>
                                 </HxButtonToolbar>
@@ -174,13 +196,17 @@
         StateHasChanged();
     }
 
-    private async Task StopStepExecutionAsync(StepExecutionAttempt stepExecution)
+    private async Task StopStepExecutionAsync(Guid executionId, Guid stepId, string stepName)
     {
+        if (!await Confirmer.ConfirmAsync("Stop step execution", $"Are you sure you want to stop \"{stepName}\"?"))
+        {
+            return;
+        }
         try
         {
             string username = HttpContextAccessor.HttpContext?.User?.Identity?.Name
                 ?? throw new ArgumentNullException(nameof(username), "Username cannot be null");
-            await ExecutorService.StopExecutionAsync(stepExecution.ExecutionId, stepExecution.StepId, username);
+            await ExecutorService.StopExecutionAsync(executionId, stepId, username);
             Messenger.AddInformation("Stop request sent successfully to the executor service");
         }
         catch (TimeoutException)
