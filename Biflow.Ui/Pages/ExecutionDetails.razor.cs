@@ -130,13 +130,6 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             return;
         }
         prevExecutionId = ExecutionId;
-        // If the ExecutionId parameter is updated when either the rerun or history view is being shown,
-        // go back to the table view and refresh (the execution displayed was changed).
-        if (ShowReport == Report.Rerun || ShowReport == Report.History)
-        {
-            NavigationManager.NavigateTo($"executions/{ExecutionId}/list");
-            StateHasChanged();
-        }
         await LoadData();
     }
 
