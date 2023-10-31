@@ -53,7 +53,7 @@
 
                         <div class="row my-3">
                             <div class="col">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="TestConnection" Enabled="!testingConnection">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="TestConnection" Enabled="!testingConnection">
                                     Test connection
                                 </HxButton>
                                 @if (connectionTestSuccess == true)
@@ -77,7 +77,7 @@
 
                         <div class="row mt-3">
                             <div class="col">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="OpenKeySelectOffcanvasAsync">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenKeySelectOffcanvasAsync">
                                     <CxIcon Icon="FeatherIcon.MoreHorizontal" />
                                     Browse function app keys
                                 </HxButton>
