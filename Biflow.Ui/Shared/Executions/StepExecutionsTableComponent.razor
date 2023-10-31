@@ -2,6 +2,7 @@
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IExecutorService ExecutorService
 @inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject NavigationManager NavigationManager
 
 <table class="table table-sm table-hover">
     <thead>
@@ -91,6 +92,10 @@
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(detailStep.StepId))">
                                         <CxIcon Icon="LucideIcon.History" />
                                         History
+                                    </HxButton>
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto ms-3" @onclick="@(() => NavigationManager.NavigateTo($"executions/{detailStep.ExecutionId}/graph/{detailStep.StepId}"))">
+                                        <CxIcon Icon="LucideIcon.Network" />
+                                        Dependencies
                                     </HxButton>
                                     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                                         @if (detailStep.CanBeStopped)

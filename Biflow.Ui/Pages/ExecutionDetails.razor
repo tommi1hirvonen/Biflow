@@ -29,7 +29,7 @@
     <div class="col">
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <a class="nav-link @(execution is null ? "disabled" : null) @(ShowReport == Report.List ? "active" : null)" href="executions/@ExecutionId">
+                <a class="nav-link @(execution is null ? "disabled" : null) @(ShowReport == Report.List ? "active" : null)" href="executions/@ExecutionId/list">
                     <CxIcon Icon="FeatherIcon.List" />
                     List
                 </a>
@@ -480,59 +480,7 @@ else if (ShowReport == Report.Gantt)
 }
 else if (ShowReport == Report.Graph)
 {
-    if (execution?.DependencyMode == false)
-    {
-        <HxAlert Color="ThemeColor.Warning" CssClass="mt-3">
-            Job executed in execution phase mode. Dependencies have no effect.
-        </HxAlert>
-    }
-    <div class="row align-items-end mb-3">
-        <div class="col-xl-5 col-lg-5 col-12">
-            <HxAutosuggest @bind-Value="dependencyGraphStepFilter"
-                        @bind-Value:after="LoadGraph"
-                        DataProvider="ProvideSuggestions"
-                        TextSelector="TextSelector"
-                        MinimumLength="0"
-                        Delay="1"
-                        InputSize="InputSize.Small"
-                        Placeholder="Filter step">
-                <ItemTemplate Context="item">
-                    <StepTypeIconComponent StepType="item.StepType" />
-                    @item.StepName
-                </ItemTemplate>
-                <EmptyTemplate>
-                    <span class="p-2">No matching steps</span>
-                </EmptyTemplate>
-            </HxAutosuggest>
-        </div>
-        <div class="col-lg-auto d-flex flex-row align-items-end">
-            <div class="form-group">
-                <label class="form-label">Depth backwards</label>
-                <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal backwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
-                <ChildContent>
-                    <span style="cursor: pointer;">
-                        <CxIcon Icon="FeatherIcon.Info" />
-                    </span>
-                </ChildContent>
-                </HxPopover>
-                <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthBackwards" disabled=@(dependencyGraphStepFilter is null) style="max-width: 9rem;" />
-            </div>
-            <div class="form-group ms-3">
-                <label class="form-label">Depth forwards</label>
-                <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal forwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
-                <ChildContent>
-                    <span style="cursor: pointer;">
-                        <CxIcon Icon="FeatherIcon.Info" />
-                    </span>
-                </ChildContent>
-                </HxPopover>
-                <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthForwards" disabled=@(dependencyGraphStepFilter is null) style="max-width: 9rem;" />
-            </div>
-            <HxButton CssClass="ms-3" Size="ButtonSize.Small" Color="ThemeColor.Secondary" OnClick="LoadGraph">
-                Apply depth filters
-            </HxButton>
-        </div>
-    </div>
+    <ExecutionDependenciesGraph Execution="execution" InitialStepId="InitialStepId" />
 }
 else if (ShowReport == Report.Rerun)
 {
@@ -548,41 +496,3 @@ else if (ShowReport == Report.History && execution?.JobId is Guid jobId)
         <JobHistoryComponent JobId="jobId" />
     </div>
 }
-
-<DependencyGraph @ref="dependencyGraph"
-                 TItem="StepExecution"
-                 Items="execution?.StepExecutions ?? Enumerable.Empty<StepExecution>()"
-                 KeySelector="s => s.StepId.ToString()"
-                 CssClass="dependency-graph"
-                 hidden=@(ShowReport != Report.Graph)>
-    <DropdownMenuTemplate Context="step">
-        <li>
-            <h6 class="dropdown-header">
-                <StepTypeIconComponent StepType="step.StepType" />
-                @step.StepName
-            </h6>
-        </li>
-        <li>
-            <span class="dropdown-item" role="button" @onclick="async () => { dependencyGraphStepFilter = step; await LoadGraph(); }">
-                <CxIcon Icon="FeatherIcon.Filter" />
-                Limit graph to this
-            </span>
-        </li>
-        <li>
-            <span class="dropdown-item" role="button" @onclick="() => ShowStepExecutionOffcanvas(step)">
-                <CxIcon Icon="FeatherIcon.Info" />
-                Details
-            </span>
-        </li>
-        <li>
-            <span class="dropdown-item" role="button" @onclick="() => stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
-                <CxIcon Icon="LucideIcon.History" />
-                History
-            </span>
-        </li>
-    </DropdownMenuTemplate>
-</DependencyGraph>
-
-<StepExecutionDetailsOffcanvas @ref="stepExecutionDetailsOffcanvas" />
-
-<StepHistoryOffcanvas @ref="stepHistoryOffcanvas" />

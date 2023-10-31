@@ -198,7 +198,7 @@ public partial class Jobs : ComponentBase
 
     private void GoToExecutionDetails(Guid executionId)
     {
-        NavigationManager.NavigateTo($"executions/{executionId}");
+        NavigationManager.NavigateTo($"executions/{executionId}/list");
     }
 
     private void OnJobSubmitted(Job job)

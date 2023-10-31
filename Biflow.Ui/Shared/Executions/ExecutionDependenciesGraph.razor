@@ -1,0 +1,280 @@
+﻿@if (Execution?.DependencyMode == false)
+{
+    <HxAlert Color="ThemeColor.Warning" CssClass="mt-3">
+        Job executed in execution phase mode. Dependencies have no effect.
+    </HxAlert>
+}
+
+<div class="row align-items-end mb-3">
+    <div class="col-xl-5 col-lg-5 col-12">
+        <HxAutosuggest @bind-Value="dependencyGraphStepFilter"
+                       @bind-Value:after="LoadGraph"
+                       DataProvider="ProvideSuggestions"
+                       TextSelector="TextSelector"
+                       MinimumLength="0"
+                       Delay="1"
+                       InputSize="InputSize.Small"
+                       Placeholder="Filter step">
+            <ItemTemplate Context="item">
+                <StepTypeIconComponent StepType="item.StepType" />
+                @item.StepName
+            </ItemTemplate>
+            <EmptyTemplate>
+                <span class="p-2">No matching steps</span>
+            </EmptyTemplate>
+        </HxAutosuggest>
+    </div>
+    <div class="col-lg-auto d-flex flex-row align-items-end">
+        <div class="form-group">
+            <label class="form-label">Depth backwards</label>
+            <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal backwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
+                 <ChildContent>
+                     <span style="cursor: pointer;">
+                         <CxIcon Icon="FeatherIcon.Info" />
+                     </span>
+                 </ChildContent>
+             </HxPopover>
+             <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthBackwards" disabled=@(dependencyGraphStepFilter is null) style="max-width: 9rem;" />
+         </div>
+         <div class="form-group ms-3">
+             <label class="form-label">Depth forwards</label>
+             <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal forwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
+                 <ChildContent>
+                     <span style="cursor: pointer;">
+                         <CxIcon Icon="FeatherIcon.Info" />
+                     </span>
+                 </ChildContent>
+             </HxPopover>
+             <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthForwards" disabled=@(dependencyGraphStepFilter is null) style="max-width: 9rem;" />
+         </div>
+         <HxButton CssClass="ms-3" Size="ButtonSize.Small" Color="ThemeColor.Secondary" OnClick="LoadGraph">
+             Apply depth filters
+         </HxButton>
+     </div>
+ </div>
+
+<DependencyGraph @ref="dependencyGraph"
+                 TItem="StepExecution"
+                 Items="Execution?.StepExecutions ?? Enumerable.Empty<StepExecution>()"
+                 KeySelector="s => s.StepId.ToString()"
+                 AfterRender="LoadGraph"
+                 CssClass="dependency-graph">
+    <DropdownMenuTemplate Context="step">
+        <li>
+            <h6 class="dropdown-header">
+                <StepTypeIconComponent StepType="step.StepType" />
+                @step.StepName
+            </h6>
+        </li>
+        <li>
+            <span class="dropdown-item" role="button" @onclick="async () => { dependencyGraphStepFilter = step; await LoadGraph(); }">
+                <CxIcon Icon="FeatherIcon.Filter" />
+                Limit graph to this
+            </span>
+        </li>
+        <li>
+            <span class="dropdown-item" role="button" @onclick="() => ShowStepExecutionOffcanvas(step)">
+                <CxIcon Icon="FeatherIcon.Info" />
+                Details
+            </span>
+        </li>
+        <li>
+            <span class="dropdown-item" role="button" @onclick="() => stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
+                <CxIcon Icon="LucideIcon.History" />
+                History
+            </span>
+        </li>
+    </DropdownMenuTemplate>
+</DependencyGraph>
+
+<StepExecutionDetailsOffcanvas @ref="stepExecutionDetailsOffcanvas" />
+
+<StepHistoryOffcanvas @ref="stepHistoryOffcanvas" />
+
+@code {
+    [Parameter] public Execution? Execution { get; set; }
+
+    [Parameter] public Guid? InitialStepId { get; set; }
+
+    private DependencyGraph<StepExecution>? dependencyGraph;
+    private StepExecution? dependencyGraphStepFilter;
+    private StepExecutionDetailsOffcanvas? stepExecutionDetailsOffcanvas;
+    private StepHistoryOffcanvas? stepHistoryOffcanvas;
+
+    private int FilterDepthBackwards
+    {
+        get => _filterDepthBackwards;
+        set => _filterDepthBackwards = value >= 0 ? value : _filterDepthBackwards;
+    }
+
+    private int _filterDepthBackwards;
+
+    private int FilterDepthForwards
+    {
+        get => _filterDepthForwards;
+        set => _filterDepthForwards = value >= 0 ? value : _filterDepthForwards;
+    }
+
+    private int _filterDepthForwards;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (InitialStepId is Guid filterStepId)
+            {
+                dependencyGraphStepFilter = Execution?.StepExecutions?.FirstOrDefault(s => s.StepId == filterStepId);
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task LoadGraph()
+    {
+        ArgumentNullException.ThrowIfNull(dependencyGraph);
+        ArgumentNullException.ThrowIfNull(Execution);
+
+        DependencyGraphNode[] nodes;
+        DependencyGraphEdge[] edges;
+        if (dependencyGraphStepFilter is null)
+        {
+            // Create a list of steps and dependencies and send them through JSInterop as JSON objects.
+            nodes = Execution.StepExecutions
+                .Select(step =>
+                {
+                    var status = step.ExecutionStatus.ToString() ?? "";
+                    return new DependencyGraphNode(
+                        Id: step.StepId.ToString(),
+                        Name: step.StepName,
+                        CssClass: $"enabled {status.ToLower()} internal",
+                        TooltipText: $"{step.StepType}, {status}, {step.GetDurationInSeconds().SecondsToReadableFormat()}",
+                        EnableOnClick: true
+                    );
+                }).ToArray();
+            edges = Execution.StepExecutions
+                .SelectMany(step => step.ExecutionDependencies)
+                .Where(dep => dep.DependantOnStepExecution is not null)
+                .Select(dep => new DependencyGraphEdge(
+                    Id: dep.StepId.ToString(),
+                    DependsOnId: dep.DependantOnStepId.ToString(),
+                    CssClass: dep.DependencyType.ToString().ToLower()
+                )).ToArray();
+        }
+        else
+        {
+            var startStep = Execution?.StepExecutions.FirstOrDefault(s => s.StepId == dependencyGraphStepFilter.StepId);
+            if (startStep is not null)
+            {
+                var steps = RecurseDependenciesBackward(startStep, [], 0);
+                steps.Remove(startStep);
+                steps = RecurseDependenciesForward(startStep, steps, 0);
+
+                nodes = steps.Select(step => new DependencyGraphNode(
+                    Id: step.StepId.ToString(),
+                    Name: step.StepName,
+                    CssClass: $"enabled {step.ExecutionStatus?.ToString().ToLower() ?? ""} internal",
+                    TooltipText: $"{step.StepType}",
+                    EnableOnClick: true
+                )).ToArray();
+                edges = steps
+                    .SelectMany(step => step.ExecutionDependencies)
+                    .Where(d => steps.Any(s => d.DependantOnStepId == s.StepId) && steps.Any(s => d.StepId == s.StepId)) // only include dependencies whose step is included
+                    .Select(dep => new DependencyGraphEdge(
+                        Id: dep.StepId.ToString(),
+                        DependsOnId: dep.DependantOnStepId.ToString(),
+                        CssClass: dep.DependencyType.ToString().ToLower()
+                    )).ToArray();
+            }
+            else
+            {
+                return;
+            }
+        }
+        await dependencyGraph.DrawAsync(nodes, edges);
+        StateHasChanged();
+    }
+
+    private List<StepExecution> RecurseDependenciesBackward(StepExecution step, List<StepExecution> processedSteps, int depth)
+    {
+        ArgumentNullException.ThrowIfNull(Execution?.StepExecutions);
+
+        // If the step was already handled, return.
+        // This way we do not loop indefinitely in case of circular dependencies.
+        if (processedSteps.Any(s => s.StepId == step.StepId))
+        {
+            return processedSteps;
+        }
+
+        if (depth++ > FilterDepthBackwards && FilterDepthBackwards > 0)
+        {
+            depth--;
+            return processedSteps;
+        }
+
+        processedSteps.Add(step);
+
+        // Get dependency steps.
+        List<StepExecution> dependencySteps = Execution.StepExecutions.Where(s => step.ExecutionDependencies.Any(d => s.StepId == d.DependantOnStepId)).ToList();
+
+        // Loop through the dependencies and handle them recursively.
+        foreach (var depencyStep in dependencySteps)
+        {
+            RecurseDependenciesBackward(depencyStep, processedSteps, depth);
+        }
+
+        depth--;
+
+        return processedSteps;
+    }
+
+    private List<StepExecution> RecurseDependenciesForward(StepExecution step, List<StepExecution> processedSteps, int depth)
+    {
+        ArgumentNullException.ThrowIfNull(Execution?.StepExecutions);
+        if (processedSteps.Any(s => s.StepId == step.StepId))
+        {
+            return processedSteps;
+        }
+
+        if (depth++ > FilterDepthForwards && FilterDepthForwards > 0)
+        {
+            depth--;
+            return processedSteps;
+        }
+
+        processedSteps.Add(step);
+
+        List<StepExecution> dependencySteps = Execution.StepExecutions.Where(s => s.ExecutionDependencies.Any(d => d.DependantOnStepId == step.StepId)).ToList();
+
+        foreach (var depencyStep in dependencySteps)
+        {
+            RecurseDependenciesForward(depencyStep, processedSteps, depth);
+        }
+
+        depth--;
+
+        return processedSteps;
+    }
+
+    private async Task ShowStepExecutionOffcanvas(StepExecution step)
+    {
+        var attempt = step?.StepExecutionAttempts.OrderByDescending(s => s.StartDateTime).First();
+        if (attempt is null)
+        {
+            return;
+        }
+        StateHasChanged();
+        await stepExecutionDetailsOffcanvas.LetAsync(x => x.ShowAsync(attempt));
+    }
+
+    private Task<AutosuggestDataProviderResult<StepExecution>> ProvideSuggestions(AutosuggestDataProviderRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(Execution);
+        var filtered = Execution.StepExecutions.Where(s => s.StepName?.ContainsIgnoreCase(request.UserInput) ?? false);
+        return Task.FromResult(new AutosuggestDataProviderResult<StepExecution>
+            {
+                Data = filtered
+            });
+    }
+
+    private static string TextSelector(StepExecution step) => step.StepName ?? "";
+}
