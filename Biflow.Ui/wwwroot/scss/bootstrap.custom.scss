@@ -198,6 +198,10 @@ tr.context-menu-toggle.open {
 
 // Forms and inputs
 
+form {
+    gap: 1rem;
+}
+
 .validation-message {
     color: $danger;
 }

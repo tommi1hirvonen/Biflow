@@ -42,7 +42,7 @@
         _ => 4
     };
 }
-<table class="table table-sm table-hover small">
+<table class="table table-sm table-hover small mt-3">
     <thead>
         <tr>
             @if (showServer || newObject is not null)
@@ -248,7 +248,7 @@
         }
     </tbody>
 </table>
-<HxDropdownButtonGroup Split>
+<HxDropdownButtonGroup Split CssClass="mt-2">
     <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" OnClick="() => dbObjectExplorerOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId))">
         <CxIcon Icon="FeatherIcon.Plus" />
         @AddButtonText

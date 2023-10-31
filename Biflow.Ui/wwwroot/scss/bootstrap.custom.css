@@ -12060,6 +12060,10 @@ tr.context-menu-toggle.open {
   background-color: var(--bs-tertiary-bg);
 }
 
+form {
+  gap: 1rem;
+}
+
 .validation-message {
   color: #e85875;
 }

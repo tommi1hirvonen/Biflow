@@ -179,7 +179,7 @@
                                         TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
                                         DataProvider="GetLockedColumnSuggestions"
                                         @bind-Value="editTable.LockedColumns" />
-                            <div class="form-check form-check-inline">
+                            <div class="form-check form-check-inline mt-1">
                                 <input type="checkbox" class="form-check-input" id="locked_columns_exclude"
                                        checked=@editTable.LockedColumnsExcludeMode
                                        @bind-value="editTable.LockedColumnsExcludeMode">
@@ -215,7 +215,7 @@
                 }
                 else if (currentView == TableEditView.ColumnOrder)
                 {
-                    <div class="row">
+                    <div class="row justify-content-center">
                         <div class="col-auto mx-4">
                             <div class="row">
                                 <div class="col">
