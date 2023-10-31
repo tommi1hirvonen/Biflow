@@ -64,9 +64,6 @@
             <thead>
                 <tr>
                     <th>
-                        Created
-                    </th>
-                    <th>
                         Started
                     </th>
                     <th>
@@ -83,7 +80,6 @@
                     </th>
                 </tr>
                 <tr>
-                    <th></th>
                     <th></th>
                     <th></th>
                     <th><text>@AverageDurationInSeconds.SecondsToReadableFormat()</text></th>
@@ -121,9 +117,6 @@
                     @foreach (var item in FilteredExecutions)
                     {
                         <tr style="cursor: pointer;" @onclick="() => GoToExecutionDetails(item.ExecutionId)">
-                            <td>
-                                @item.CreatedDateTime.LocalDateTime
-                            </td>
                             <td>
                                 @item.StartDateTime?.LocalDateTime
                             </td>
