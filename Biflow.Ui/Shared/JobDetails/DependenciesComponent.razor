@@ -172,6 +172,8 @@
 
     [CascadingParameter] public List<Step>? Steps { get; set; }
 
+    [CascadingParameter(Name = "SortSteps")] public Action? SortSteps { get; set; }
+
     [Parameter] public List<SqlConnectionInfo>? SqlConnections { get; set; }
 
     [Parameter] public List<AnalysisServicesConnectionInfo>? AsConnections { get; set; }
@@ -355,13 +357,20 @@
     private async Task OnStepSubmit(Step step)
     {
         ArgumentNullException.ThrowIfNull(Steps);
-        var existingStep = Steps.FirstOrDefault(s => s.StepId == step.StepId);
-        if (existingStep is not null)
+        
+        var index = Steps.FindIndex(s => s.StepId == step.StepId);
+        if (index is int i and >= 0)
         {
-            Steps.Remove(existingStep);
+            Steps.RemoveAt(i);
+            Steps.Insert(i, step);
         }
-        Steps.Add(step);
-        SortSteps();
+        else
+        {
+            Steps.Add(step);
+        }
+
+        SortSteps?.Invoke();
+
         await LoadGraph();
         StateHasChanged();
     }
@@ -410,27 +419,6 @@
         catch (Exception ex)
         {
             Messenger.AddError("Error deleting step", ex.Message);
-        }
-    }
-
-    private void SortSteps()
-    {
-        if (Job is null || Steps is null) return;
-        try
-        {
-            if (Job.UseDependencyMode)
-            {
-                var comparer = new TopologicalStepComparer(Steps);
-                Steps.Sort(comparer);
-            }
-            else
-            {
-                Steps.Sort();
-            }
-        }
-        catch (Exception ex)
-        {
-            Messenger.AddError("Error sorting steps", ex.Message);
         }
     }
 

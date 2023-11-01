@@ -228,12 +228,17 @@ public partial class StepsComponent : ComponentBase
 
     private void OnStepSubmit(Step step)
     {
-        var existingStep = Steps?.FirstOrDefault(s => s.StepId == step.StepId);
-        if (existingStep is not null)
+        var index = Steps?.FindIndex(s => s.StepId == step.StepId);
+        if (index is int i and >= 0)
         {
-            Steps?.Remove(existingStep);
+            Steps?.RemoveAt(i);
+            Steps?.Insert(i, step);
         }
-        Steps?.Add(step);
+        else
+        {
+            Steps?.Add(step);
+        }
+
         SortSteps?.Invoke();
 
         var selectedStep = selectedSteps.FirstOrDefault(s => s.StepId == step.StepId);
@@ -246,13 +251,20 @@ public partial class StepsComponent : ComponentBase
 
     private void OnStepsSubmit(IEnumerable<Step> steps)
     {
-        var existingSteps = Steps?.Where(s1 => steps.Any(s2 => s1.StepId == s2.StepId)).ToList();
-        foreach (var s in existingSteps ?? Enumerable.Empty<Step>())
+        foreach (var step in steps.ToArray())
         {
-            Steps?.Remove(s);
+            var index = Steps?.FindIndex(s => s.StepId == step.StepId);
+            if (index is int i and >= 0)
+            {
+                Steps?.RemoveAt(i);
+                Steps?.Insert(i, step);
+            }
+            else
+            {
+                Steps?.Add(step);
+            }
         }
-        
-        Steps?.AddRange(steps);
+
         SortSteps?.Invoke();
 
         selectedSteps = steps.ToHashSet();
