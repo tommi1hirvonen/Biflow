@@ -70,10 +70,10 @@
 <DependencyGraph @ref="dependencyGraph"
                  TItem="Step"
                  Items="Steps ?? Enumerable.Empty<Step>()"
-                 KeySelector="s => s.StepId.ToString()"
+                 ItemFromNodeIdSelector="nodeId => Steps?.FirstOrDefault(s => s.StepId.ToString() == nodeId)"
                  AfterRender="LoadGraph"
                  CssClass="dependency-graph">
-    <DropdownMenuTemplate Context="step">
+    <ContextMenuTemplate Context="step">
         <li>
             <h6 class="dropdown-header">
                 <StepTypeIconComponent StepType="step.StepType" />
@@ -122,7 +122,7 @@
                 History
             </span>
         </li>
-    </DropdownMenuTemplate>
+    </ContextMenuTemplate>
 </DependencyGraph>
 
 <StepHistoryOffcanvas @ref="stepHistoryOffcanvas" />

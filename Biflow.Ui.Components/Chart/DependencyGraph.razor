@@ -1,3 +1,4 @@
+@using Microsoft.AspNetCore.Components.Web
 @using Microsoft.JSInterop
 @using System.Text.Json
 
@@ -8,6 +9,7 @@
 @implements IAsyncDisposable
 
 @inject IJSRuntime JS
+@inject ContextMenuService ContextMenu
 
 <div @attributes="AdditionalAttributes" class="border" style="resize: both; overflow: hidden;">
     <div class="p-1 @CssClass">
@@ -17,44 +19,34 @@
     </div>
 </div>
 
-@if (Items is not null && DropdownMenuTemplate is not null)
-{
-    foreach (var item in Items)
-    {
-        var key = KeySelector is not null ? KeySelector(item) : item?.ToString();
-        <div id="@($"{key}_dropdown")" class="dropdown position-absolute">
-            <ul class="dependency-graph-dropdown-menu dropdown-menu">
-                @DropdownMenuTemplate(item)
-            </ul>
-        </div>
-    }
-}
-
 @code {
     [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
 
     [Parameter] public IEnumerable<TItem>? Items { get; set; }
 
-    [Parameter] public RenderFragment<TItem>? DropdownMenuTemplate { get; set; }
+    [Parameter] public Func<string, TItem?>? ItemFromNodeIdSelector { get; set; }
 
-    [Parameter] public Func<TItem, string>? KeySelector { get; set; }
+    [Parameter] public RenderFragment<TItem>? ContextMenuTemplate { get; set; }
 
     [Parameter] public EventCallback AfterRender { get; set; }
 
     [Parameter] public string? CssClass { get; set; }
 
     private ElementReference graphContainer;
-
     private string svgId = $"svg-{Guid.NewGuid().ToString()}";
-
+    private DotNetObjectReference<DependencyGraph<TItem>>? dotNetObject;
     private IJSObjectReference? jsObject;
+
+    protected override void OnInitialized()
+    {
+        dotNetObject = DotNetObjectReference.Create(this);
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             jsObject = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/DependencyGraph.js");
-            await jsObject.InvokeVoidAsync("attachDependencyGraphBodyListener");
             await AfterRender.InvokeAsync();
         }
     }
@@ -62,21 +54,35 @@
     public async Task DrawAsync(IEnumerable<DependencyGraphNode> nodes, IEnumerable<DependencyGraphEdge> edges)
     {
         ArgumentNullException.ThrowIfNull(jsObject);
+        ArgumentNullException.ThrowIfNull(dotNetObject);
         var nodesJson = JsonSerializer.Serialize(nodes);
         var edgesJson = JsonSerializer.Serialize(edges);
-        await jsObject.InvokeVoidAsync("drawDependencyGraph", graphContainer, svgId, nodesJson, edgesJson);
+        await jsObject.InvokeVoidAsync("drawDependencyGraph", dotNetObject, graphContainer, svgId, nodesJson, edgesJson);
+    }
+
+    [JSInvokable]
+    public void OnNodeClick(string nodeId, int pageX, int pageY)
+    {
+        if (ContextMenuTemplate is null || ItemFromNodeIdSelector is null)
+        {
+            return;
+        }
+        var mouseEvent = new MouseEventArgs { ClientX = pageX, ClientY = pageY };
+        var item = ItemFromNodeIdSelector(nodeId);
+        if (item is null)
+        {
+            return;
+        }
+        var template = ContextMenuTemplate(item);
+        _ = ContextMenu.ShowContextMenuAsync(mouseEvent, template);
     }
 
     public async ValueTask DisposeAsync()
     {
         if (jsObject is not null)
         {
-            try
-            {
-                await jsObject.InvokeVoidAsync("disposeDependencyGraphBodyListener");
-            }
-            catch (JSDisconnectedException) { }
             await jsObject.DisposeAsync();
         }
+        dotNetObject?.Dispose();
     }
 }

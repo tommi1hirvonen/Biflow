@@ -1,4 +1,4 @@
-export function drawDependencyGraph(graphContainer, svgId, nodesJson, edgesJson) {
+export function drawDependencyGraph(dotNetObject, graphContainer, svgId, nodesJson, edgesJson) {
 
     var nodes = JSON.parse(nodesJson);
     var edges = JSON.parse(edgesJson);
@@ -61,27 +61,8 @@ export function drawDependencyGraph(graphContainer, svgId, nodesJson, edgesJson)
 
     svg.call(zoom.transform, d3.zoomIdentity.translate(translateX, translateY).scale(zoomScale));
 
-    var nodeOnClick = function (event) {
-        var dropdownId = `${this.id}_dropdown`;
-        var dropdown = document.getElementById(dropdownId);
-        var menu = dropdown.querySelector('.dropdown-menu');
-        menu.classList.add('show');
-        // Place the dropdown to the location of the mouse.
-        var bodyRect = document.body.getBoundingClientRect();
-        // Check whether the dropdown menu would overflow over the right side of the window.
-        var tempX = event.pageX + menu.clientWidth <= window.innerWidth ? event.pageX : event.pageX - menu.clientWidth;
-        // Check whether the dropdown menu would overflow over the bottom of the window.
-        var tempY = event.pageY + bodyRect.top + menu.clientHeight <= window.innerHeight ? event.pageY : event.pageY - menu.clientHeight;
-        dropdown.style.top = `${tempY}px`;
-        dropdown.style.left = `${tempX}px`;
-
-        // Close all other dependency graph dropdown menus.
-        var menus = document.querySelectorAll('.dependency-graph-dropdown-menu');
-        for (var i = 0; i < menus.length; i++) {
-            var menu = menus[i];
-            if (menu.parentElement.id == dropdownId) continue;
-            menu.classList.remove('show');
-        }
+    var nodeOnClick = async function (event) {
+        await dotNetObject.invokeMethodAsync("OnNodeClick", this.id, event.pageX, event.pageY);
     };
 
     var nodeElements = document.getElementsByClassName("node");
@@ -98,25 +79,5 @@ export function drawDependencyGraph(graphContainer, svgId, nodesJson, edgesJson)
                 title: tooltipText
             });
         }
-    }
-}
-
-export function attachDependencyGraphBodyListener() {
-    document.body.addEventListener('click', dependencyGraphBodyOnClick);
-}
-
-export function disposeDependencyGraphBodyListener() {
-    document.body.removeEventListener('click', dependencyGraphBodyOnClick);
-}
-
-function dependencyGraphBodyOnClick(event) {
-    // If the event target was a dependency graph node, skip that specific dropdown menu.
-    // Close all other dropdown menus that might be open.
-    var dropdownId = `${event.target.__data__}_dropdown`;
-    var menus = document.querySelectorAll('.dependency-graph-dropdown-menu');
-    for (var i = 0; i < menus.length; i++) {
-        var menu = menus[i];
-        if (menu.parentElement.id == dropdownId) continue;
-        menu.classList.remove('show');
     }
 }

@@ -85,7 +85,7 @@
             {
                 await jsObject.InvokeVoidAsync("detachWindowListeners");
             } catch (JSDisconnectedException) {}
-        await jsObject.DisposeAsync();
+            await jsObject.DisposeAsync();
         }
         dotNetObject?.Dispose();
     }
