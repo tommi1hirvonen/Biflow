@@ -149,35 +149,32 @@
         ArgumentNullException.ThrowIfNull(steps);
         ArgumentNullException.ThrowIfNull(context);
 
-        if (tags.Any())
+        if (editMode == EditMode.Add)
         {
-            if (editMode == EditMode.Add)
+            var stepTagsToAdd = steps
+                .SelectMany(s => tags, (s, t) => (Step: s, Tag: t))
+                .Where(st => !st.Step.Tags.Any(t => t.TagName == st.Tag))
+                .ToArray();
+            foreach (var (step, tagName) in stepTagsToAdd)
             {
-                var stepTagsToAdd = steps
-                    .SelectMany(s => tags, (s, t) => (Step: s, Tag: t))
-                    .Where(st => !st.Step.Tags.Any(t => t.TagName == st.Tag))
-                    .ToArray();
-                foreach (var (step, tagName) in stepTagsToAdd)
-                {
-                    var tag = allTags?.FirstOrDefault(t => t.TagName == tagName) ?? new Tag(tagName);
-                    allTags?.Add(tag); // In case of new tag, add it to the list.
-                    step.Tags.Add(tag);
-                }
+                var tag = allTags?.FirstOrDefault(t => t.TagName == tagName) ?? new Tag(tagName);
+                allTags?.Add(tag); // In case of new tag, add it to the list.
+                step.Tags.Add(tag);
             }
-            else if (editMode == EditMode.Remove)
-            {
-                var stepTagsToRemove = steps
-                    .SelectMany(s => s.Tags.Where(t => !tags.Contains(t.TagName)), (s, t) => (Step: s, Tag: t))
-                    .ToArray();
-                foreach (var (step, tag) in stepTagsToRemove)
-                {
-                    step.Tags.Remove(tag);
-                }
-            }
-
-            await context.SaveChangesAsync();
-            await OnStepsSubmit.InvokeAsync(steps);
         }
+        else if (editMode == EditMode.Remove)
+        {
+            var stepTagsToRemove = steps
+                .SelectMany(s => s.Tags.Where(t => !tags.Contains(t.TagName)), (s, t) => (Step: s, Tag: t))
+                .ToArray();
+            foreach (var (step, tag) in stepTagsToRemove)
+            {
+                step.Tags.Remove(tag);
+            }
+        }
+
+        await context.SaveChangesAsync();
+        await OnStepsSubmit.InvokeAsync(steps);
 
         await CloseAsync();
     }
