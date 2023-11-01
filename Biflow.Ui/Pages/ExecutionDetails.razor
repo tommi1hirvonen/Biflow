@@ -324,7 +324,7 @@
 
 @if (ShowReport == Report.List || ShowReport == Report.Gantt)
 {
-    <div class="row mt-1 mb-4">
+    <div class="row mt-1">
         <div class="col d-inline">
             <CxIcon Icon="FeatherIcon.Filter" />
             <span class="me-3">Filter</span>
@@ -446,7 +446,7 @@
 
 @if (ShowReport == Report.List)
 {
-    <div class="card shadow-sm mt-3 pt-2 table-responsive">
+    <div class="card shadow-sm mt-3 pt-2 table-responsive mb-4">
         <StepExecutionsTableComponent
             ShowDetailed="false"
             Executions="FilteredExecutions
@@ -470,7 +470,7 @@
 }
 else if (ShowReport == Report.Gantt)
 {
-    <div class="card shadow-sm mt-3 pt-3">
+    <div class="card shadow-sm mt-3 pt-3 mb-4">
         <StepExecutionsGraphComponent
             Executions="FilteredExecutions"
             SortMode="sortMode"
