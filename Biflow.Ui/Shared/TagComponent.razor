@@ -1,17 +1,27 @@
-﻿<span class="badge @BadgeCss @CssClass @(Selected ? "text-decoration-underline" : null)" style="@Style" @onclick="OnClick">
+﻿<span @attributes="InputAttributes" class="badge d-inline-flex align-items-center py-1 px-2 @BadgeCss @CssClass @(Selected ? "text-decoration-underline" : null)" @onclick="OnClick">
     @Tag?.TagName
+    @if (IsRemovable)
+    {
+        <span class="ms-1" @onclick="OnRemoveClick">
+            <CxIcon Icon="FeatherIcon.X" />
+        </span>
+    }
 </span>
 
 @code {
     [Parameter] public ITag? Tag { get; set; }
 
-    [Parameter] public string? CssClass { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? InputAttributes { get;set; }
 
-    [Parameter] public string? Style { get; set; }
+    [Parameter] public string? CssClass { get; set; }
 
     [Parameter] public EventCallback OnClick { get; set; }
 
     [Parameter] public bool Selected { get; set; }
+
+    [Parameter] public bool IsRemovable { get; set; }
+
+    [Parameter] public EventCallback OnRemoveClick { get; set; }
 
     private string? Color => Tag?.Color switch
     {
