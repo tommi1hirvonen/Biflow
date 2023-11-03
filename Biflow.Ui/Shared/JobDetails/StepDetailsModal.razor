@@ -4,47 +4,51 @@
         {
             <div class="row">
                 <div class="col">
-                    <table class="table table-sm">
-                        <tbody class="border-top">
+                    <table class="table table-sm table-step-details">
+                        <tbody>
                             <tr>
-                                <td class="fw-bold w-25">Step name</td>
+                                <td>Step name</td>
                                 <td>@step.StepName</td>
                             </tr>
                             <tr>
-                                <td class="fw-bold">Description</td>
+                                <td>Step id</td>
+                                <td>@step.StepId</td>
+                            </tr>
+                            <tr>
+                                <td>Description</td>
                                 <td>@step.StepDescription</td>
                             </tr>
                             <tr>
-                                <td class="fw-bold">Execution phase</td>
+                                <td>Execution phase</td>
                                 <td>@step.ExecutionPhase</td>
                             </tr>
                             <tr>
-                                <td class="fw-bold">Step type</td>
+                                <td>Step type</td>
                                 <td>@step.StepType</td>
                             </tr>
                             <tr>
-                                <td class="fw-bold">Retry attempts</td>
+                                <td>Retry attempts</td>
                                 <td>@step.RetryAttempts</td>
                             </tr>
                             <tr>
-                                <td class="fw-bold">Retry interval (min)</td>
+                                <td>Retry interval (min)</td>
                                 <td>@step.RetryIntervalMinutes</td>
                             </tr>
                             <tr>
-                                <td class="fw-bold">Duplicate execution behaviour</td>
+                                <td>Duplicate execution behaviour</td>
                                 <td>@step.DuplicateExecutionBehaviour</td>
                             </tr>
                             @if (step is IHasTimeout timeout)
                             {
                                 <tr>
-                                    <td class="fw-bold">Timeout (min)</td>
+                                    <td>Timeout (min)</td>
                                     <td>@timeout.TimeoutMinutes</td>
                                 </tr>
                             }
                             @if (step is SqlStep sql)
                             {
                                 <tr>
-                                    <td class="fw-bold">SQL statement</td>
+                                    <td>SQL statement</td>
                                     <td>
                                         <pre class="my-0"><code>@sql.SqlStatement</code></pre>
                                     </td>
@@ -53,67 +57,67 @@
                             else if (step is PipelineStep pipeline)
                             {
                                 <tr>
-                                    <td class="fw-bold">Pipeline name</td>
+                                    <td>Pipeline name</td>
                                     <td>@pipeline.PipelineName</td>
                                 </tr>
                             }
                             else if (step is JobStep job)
                             {
                                 <tr>
-                                    <td class="fw-bold">Job to execute</td>
+                                    <td>Job to execute</td>
                                     <td>@job.JobToExecuteId</td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">Synchronized</td>
+                                    <td>Synchronized</td>
                                     <td>@job.JobExecuteSynchronized</td>
                                 </tr>
                             }
                             else if (step is ExeStep exe)
                             {
                                 <tr>
-                                    <td class="fw-bold">File path</td>
+                                    <td>File path</td>
                                     <td>@exe.ExeFileName</td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">Arguments</td>
+                                    <td>Arguments</td>
                                     <td>@exe.ExeArguments</td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">Working directory</td>
+                                    <td>Working directory</td>
                                     <td>@exe.ExeWorkingDirectory</td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">Success exit code</td>
+                                    <td>Success exit code</td>
                                     <td>@exe.ExeSuccessExitCode</td>
                                 </tr>
                             }
                             else if (step is DatasetStep dataset)
                             {
                                 <tr>
-                                    <td class="fw-bold">Group id</td>
+                                    <td>Group id</td>
                                     <td>@dataset.DatasetGroupId</td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">Dataset id</td>
+                                    <td>Dataset id</td>
                                     <td>@dataset.DatasetId</td>
                                 </tr>
                             }
                             else if (step is PackageStep package)
                             {
                                 <tr>
-                                    <td class="fw-bold">Package folder</td>
+                                    <td>Package folder</td>
                                     <td>@package.PackageFolderName</td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">Package project</td>
+                                    <td>Package project</td>
                                     <td>@package.PackageProjectName</td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">Package name</td>
+                                    <td>Package name</td>
                                     <td>@package.PackageName</td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">32 bit mode</td>
+                                    <td>32 bit mode</td>
                                     <td>
                                         <div class="custom-control custom-checkbox">
                                             <input type="checkbox" class="custom-control-input" disabled checked="@(package.ExecuteIn32BitMode ? "checked" : null)">
@@ -122,64 +126,64 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">Execute as login</td>
+                                    <td>Execute as login</td>
                                     <td>@package.ExecuteAsLogin</td>
                                 </tr>
                             }
                             else if (step is FunctionStep function)
                             {
                                 <tr>
-                                    <td class="fw-bold">Function url</td>
+                                    <td>Function url</td>
                                     <td>@function.FunctionUrl</td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">Function input</td>
+                                    <td>Function input</td>
                                     <td><pre class="my-0"><code>@function.FunctionInput</code></pre></td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">Function App id</td>
+                                    <td>Function App id</td>
                                     <td>@function.FunctionAppId</td>
                                 </tr>
                             }
                             else if (step is AgentJobStep agent)
                             {
                                 <tr>
-                                    <td class="fw-bold">Agent job name</td>
+                                    <td>Agent job name</td>
                                     <td>@agent.AgentJobName</td>
                                 </tr>
                             }
                             else if (step is TabularStep tabular)
                             {
                                 <tr>
-                                    <td class="fw-bold">Model name</td>
+                                    <td>Model name</td>
                                     <td>@tabular.TabularModelName</td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">Table name</td>
+                                    <td>Table name</td>
                                     <td>@tabular.TabularTableName</td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">Partition name</td>
+                                    <td>Partition name</td>
                                     <td>@tabular.TabularPartitionName</td>
                                 </tr>
                             }
                             else if (step is EmailStep email)
                             {
                                 <tr>
-                                    <td class="fw-bold">Recipients</td>
+                                    <td>Recipients</td>
                                     <td>@email.Recipients</td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">Subject</td>
+                                    <td>Subject</td>
                                     <td>@email.Subject</td>
                                 </tr>
                                 <tr>
-                                    <td class="fw-bold">Body</td>
+                                    <td>Body</td>
                                     <td>@email.Body</td>
                                 </tr>
                             }
                             <tr>
-                                <td class="fw-bold">Execution condition</td>
+                                <td>Execution condition</td>
                                 <td>
                                     <pre class="my-0"><code>@step.ExecutionConditionExpression.Expression</code></pre>
                                 </td>

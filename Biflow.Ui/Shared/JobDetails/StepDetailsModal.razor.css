@@ -1,0 +1,6 @@
+﻿table.table-step-details tbody tr td:nth-child(1) {
+    font-weight: 600;
+    text-align: right !important;
+    padding-right: 1rem;
+    width: 25% !important;
+}
