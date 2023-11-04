@@ -78,47 +78,8 @@
         </div>
     }
 
-    <div class="row mt-3">
-        <div class="col-auto">
-            <div class="form-check form-check-inline">
-                <input type="radio" class="form-check-input" id="radio_all"
-                       checked=@(stateFilter == StateFilter.All)
-                       @onchange="() => stateFilter = StateFilter.All">
-                <label class="form-check-label" for="radio_all">All</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input type="radio" class="form-check-input" id="radio_enabled"
-                       checked=@(stateFilter == StateFilter.Enabled)
-                       @onchange="() => stateFilter = StateFilter.Enabled">
-                <label class="form-check-label" for="radio_enabled">Enabled</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input type="radio" class="form-check-input" id="radio_disabled"
-                       checked=@(stateFilter == StateFilter.Disabled)
-                       @onchange="() => stateFilter = StateFilter.Disabled">
-                <label class="form-check-label" for="radio_disabled">Disabled</label>
-            </div>
-        </div>
-        <div class="col-lg mt-2 mt-lg-0">
-            <CxIcon Icon="FeatherIcon.Tag" />
-            <span class="me-3">Tags</span>
-            @if (!Tags.Any())
-            {
-                <small class="text-secondary me-2">No tags</small>
-            }
-            @foreach (var tag in Tags)
-            {
-                <TagComponent Tag="tag"
-                              Selected="tagsFilterSet.Contains(tag)"
-                              CssClass="mx-1"
-                              Style="cursor: pointer;"
-                              OnClick="() => { if (tagsFilterSet.Contains(tag)) tagsFilterSet.Remove(tag); else tagsFilterSet.Add(tag); }" />
-            }
-        </div>
-    </div>
-
-    <div class="row mt-3">
-        <div class="col-auto">
+    <div class="row">
+        <div class="col-auto mt-3">
             <div class="input-group input-group-sm">
                 <div class="input-group-text">
                     <CxIcon Icon="FeatherIcon.Search" />
@@ -126,8 +87,7 @@
                 <DebounceTextInput type="search" class="form-control" @bind-Value="stepNameFilter" placeholder="Search by name" style="min-width: 15rem; max-width: 15rem;" />
             </div>
         </div>
-        
-        <div class="col-xxl-auto mt-3 mt-xxl-0 d-inline-flex align-items-center">
+        <div class="col-auto mt-3">
             <HxButtonGroup Size="ButtonGroupSize.Small">
                 <FilterDropdown TItem="StepType"
                                 FilterSet="stepTypeFilter"
@@ -140,6 +100,21 @@
                     <ItemTemplate Context="item">
                         <StepTypeIconComponent StepType="item" />
                         @item.ToString()
+                    </ItemTemplate>
+                </FilterDropdown>
+                <FilterDropdown TItem="Tag"
+                                FilterSet="tagsFilterSet"
+                                Items="Tags"
+                                IdSelector="tag => tag.TagId.ToString()"
+                                TextSelector="tag => tag.TagName"
+                                IsSearchable
+                                OnChange="StateHasChanged">
+                    <TitleTemplate>
+                        <CxIcon Icon="FeatherIcon.Tag" />
+                        Tags
+                    </TitleTemplate>
+                    <ItemTemplate Context="item">
+                        <TagComponent Tag="item" />
                     </ItemTemplate>
                 </FilterDropdown>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => advancedFiltersOffcanvas.LetAsync(x => x.ShowAsync())">
@@ -158,17 +133,38 @@
                     Clear
                 </HxButton>
             </HxButtonGroup>
-            <div class="form-check ms-4">
-                <input type="checkbox" class="form-check-input" id="show_details"
-                       checked=@showDetails
-                       @onchange="args => showDetails = (bool)args.Value!">
-                <label class="form-check-label" for="show_details">Show details</label>
-            </div>
         </div>
-        
+         <div class="col-auto mt-3">
+             <div class="form-check form-check-inline">
+                 <input type="radio" class="form-check-input" id="radio_all"
+                        checked=@(stateFilter == StateFilter.All)
+                        @onchange="() => stateFilter = StateFilter.All">
+                 <label class="form-check-label" for="radio_all">All</label>
+             </div>
+             <div class="form-check form-check-inline">
+                 <input type="radio" class="form-check-input" id="radio_enabled"
+                        checked=@(stateFilter == StateFilter.Enabled)
+                        @onchange="() => stateFilter = StateFilter.Enabled">
+                 <label class="form-check-label" for="radio_enabled">Enabled</label>
+             </div>
+             <div class="form-check form-check-inline">
+                 <input type="radio" class="form-check-input" id="radio_disabled"
+                        checked=@(stateFilter == StateFilter.Disabled)
+                        @onchange="() => stateFilter = StateFilter.Disabled">
+                 <label class="form-check-label" for="radio_disabled">Disabled</label>
+             </div>
+         </div>
+         <div class="col-auto mt-3">
+             <div class="form-check">
+                 <input type="checkbox" class="form-check-input" id="show_details"
+                        checked=@showDetails
+                        @onchange="args => showDetails = (bool)args.Value!">
+                 <label class="form-check-label" for="show_details">Show details</label>
+             </div>
+         </div>
     </div>
 
-    <div class="row mt-3">
+    <div class="row mt-3 align-items-center">
         <div class="col">
             <ol class="list-group shadow-sm">
                 @if (Steps is null || Jobs is null || Job is null)
