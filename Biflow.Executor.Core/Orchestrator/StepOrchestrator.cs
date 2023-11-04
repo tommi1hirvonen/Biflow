@@ -7,12 +7,15 @@ using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.Orchestrator;
 
-internal class StepOrchestrator(
-    ILogger<StepOrchestrator> logger,
+internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
+    ILogger<StepOrchestrator<TStep, TAttempt, TExecutor>> logger,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
     IServiceProvider serviceProvider) : IStepOrchestrator
+    where TStep : StepExecution
+    where TAttempt : StepExecutionAttempt
+    where TExecutor : IStepExecutor<TAttempt>
 {
-    private readonly ILogger<StepOrchestrator> _logger = logger;
+    private readonly ILogger<StepOrchestrator<TStep, TAttempt, TExecutor>> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
     private readonly IServiceProvider _serviceProvider = serviceProvider;
 
@@ -97,66 +100,20 @@ internal class StepOrchestrator(
             return false;
         }
 
-        switch (stepExecution, executionAttempt)
+        if (stepExecution is TStep step && executionAttempt is TAttempt attempt)
         {
-            case (AgentJobStepExecution agentStep, AgentJobStepExecutionAttempt agentAttempt):
-                var agentExecutor = ActivatorUtilities.CreateInstance<AgentJobStepExecutor>(_serviceProvider, agentStep);
-                return await ExecuteRecursivelyWithRetriesAsync(agentExecutor, agentStep, agentAttempt, cts);
-            
-            case (DatasetStepExecution datasetStep, DatasetStepExecutionAttempt datasetAttempt):
-                var datasetExecutor = ActivatorUtilities.CreateInstance<DatasetStepExecutor>(_serviceProvider, datasetStep);
-                return await ExecuteRecursivelyWithRetriesAsync(datasetExecutor, datasetStep, datasetAttempt, cts);
-            
-            case (FunctionStepExecution durableStep and { FunctionIsDurable: true }, FunctionStepExecutionAttempt durableAttempt):
-                var durableExecutor = ActivatorUtilities.CreateInstance<DurableFunctionStepExecutor>(_serviceProvider, durableStep);
-                return await ExecuteRecursivelyWithRetriesAsync(durableExecutor, durableStep, durableAttempt, cts);
-            
-            case (EmailStepExecution emailStep, EmailStepExecutionAttempt emailAttempt):
-                var emailExecutor = ActivatorUtilities.CreateInstance<EmailStepExecutor>(_serviceProvider, emailStep);
-                return await ExecuteRecursivelyWithRetriesAsync(emailExecutor, emailStep, emailAttempt, cts);
-            
-            case (ExeStepExecution exeStep, ExeStepExecutionAttempt exeAttempt):
-                var exeExecutor = ActivatorUtilities.CreateInstance<ExeStepExecutor>(_serviceProvider, exeStep);
-                return await ExecuteRecursivelyWithRetriesAsync(exeExecutor, exeStep, exeAttempt, cts);
-            
-            case (FunctionStepExecution functionStep, FunctionStepExecutionAttempt functionAttempt):
-                var functionExecutor = ActivatorUtilities.CreateInstance<FunctionStepExecutor>(_serviceProvider, functionStep);
-                return await ExecuteRecursivelyWithRetriesAsync(functionExecutor, functionStep, functionAttempt, cts);
-            
-            case (JobStepExecution jobStep, JobStepExecutionAttempt jobAttempt):
-                var jobExecutor = ActivatorUtilities.CreateInstance<JobStepExecutor>(_serviceProvider, jobStep);
-                return await ExecuteRecursivelyWithRetriesAsync(jobExecutor, jobStep, jobAttempt, cts);
-            
-            case (PackageStepExecution packageStep, PackageStepExecutionAttempt packageAttempt):
-                var packageExecutor = ActivatorUtilities.CreateInstance<PackageStepExecutor>(_serviceProvider, packageStep);
-                return await ExecuteRecursivelyWithRetriesAsync(packageExecutor, packageStep, packageAttempt, cts);
-            
-            case (PipelineStepExecution pipelineStep, PipelineStepExecutionAttempt pipelineAttempt):
-                var pipelineExecutor = ActivatorUtilities.CreateInstance<PipelineStepExecutor>(_serviceProvider, pipelineStep);
-                return await ExecuteRecursivelyWithRetriesAsync(pipelineExecutor, pipelineStep, pipelineAttempt, cts);
-            
-            case (QlikStepExecution qlikStep, QlikStepExecutionAttempt qlikAttempt):
-                var qlikExecutor = ActivatorUtilities.CreateInstance<QlikStepExecutor>(_serviceProvider, qlikStep);
-                return await ExecuteRecursivelyWithRetriesAsync(qlikExecutor, qlikStep, qlikAttempt, cts);
-            
-            case (SqlStepExecution sqlStep, SqlStepExecutionAttempt sqlAttempt):
-                var sqlExecutor = ActivatorUtilities.CreateInstance<SqlStepExecutor>(_serviceProvider, sqlStep);
-                return await ExecuteRecursivelyWithRetriesAsync(sqlExecutor, sqlStep, sqlAttempt, cts);
-            
-            case (TabularStepExecution tabularStep, TabularStepExecutionAttempt tabularAttempt):
-                var tabularExecutor = ActivatorUtilities.CreateInstance<TabularStepExecutor>(_serviceProvider, tabularStep);
-                return await ExecuteRecursivelyWithRetriesAsync(tabularExecutor, tabularStep, tabularAttempt, cts);
-            
-            default:
-                throw new InvalidOperationException($"No matching executor found for types {stepExecution.GetType()} and {executionAttempt.GetType()}");
+            var executor = ActivatorUtilities.CreateInstance<TExecutor>(_serviceProvider, step);
+            return await ExecuteRecursivelyWithRetriesAsync(executor, step, attempt, cts);
         }
+
+        throw new InvalidOperationException($"No matching step executor found for types {stepExecution.GetType()} and {executionAttempt.GetType()}");
     }
 
-    private async Task<bool> ExecuteRecursivelyWithRetriesAsync<TAttempt>(
+    private async Task<bool> ExecuteRecursivelyWithRetriesAsync(
         IStepExecutor<TAttempt> stepExecutor,
-        StepExecution stepExecution,
+        TStep stepExecution,
         TAttempt executionAttempt,
-        ExtendedCancellationTokenSource cts) where TAttempt : StepExecutionAttempt
+        ExtendedCancellationTokenSource cts)
     {
         await UpdateExecutionRunningAsync(executionAttempt);
 

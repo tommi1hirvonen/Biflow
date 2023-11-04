@@ -5,6 +5,7 @@ using Biflow.Executor.Core.ConnectionTest;
 using Biflow.Executor.Core.JobExecutor;
 using Biflow.Executor.Core.Notification;
 using Biflow.Executor.Core.Orchestrator;
+using Biflow.Executor.Core.StepExecutor;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -32,7 +33,22 @@ public static class Extensions
         services.AddSingleton<ISubscribersResolver, SubscribersResolver>();
         services.AddSingleton<IMessageDispatcher, EmailDispatcher>();
         services.AddSingleton<INotificationService, NotificationService>();
-        services.AddSingleton<IStepOrchestrator, StepOrchestrator>();
+
+        // Register step executors
+        services.AddSingleton<StepOrchestrator<AgentJobStepExecution, AgentJobStepExecutionAttempt, AgentJobStepExecutor>>();
+        services.AddSingleton<StepOrchestrator<DatasetStepExecution, DatasetStepExecutionAttempt, DatasetStepExecutor>>();
+        services.AddSingleton<StepOrchestrator<FunctionStepExecution, FunctionStepExecutionAttempt, DurableFunctionStepExecutor>>();
+        services.AddSingleton<StepOrchestrator<EmailStepExecution, EmailStepExecutionAttempt, EmailStepExecutor>>();
+        services.AddSingleton<StepOrchestrator<ExeStepExecution, ExeStepExecutionAttempt, ExeStepExecutor>>();
+        services.AddSingleton<StepOrchestrator<FunctionStepExecution, FunctionStepExecutionAttempt, FunctionStepExecutor>>();
+        services.AddSingleton<StepOrchestrator<JobStepExecution, JobStepExecutionAttempt, JobStepExecutor>>();
+        services.AddSingleton<StepOrchestrator<PackageStepExecution, PackageStepExecutionAttempt, PackageStepExecutor>>();
+        services.AddSingleton<StepOrchestrator<PipelineStepExecution, PipelineStepExecutionAttempt, PipelineStepExecutor>>();
+        services.AddSingleton<StepOrchestrator<QlikStepExecution, QlikStepExecutionAttempt, QlikStepExecutor>>();
+        services.AddSingleton<StepOrchestrator<SqlStepExecution, SqlStepExecutionAttempt, SqlStepExecutor>>();
+        services.AddSingleton<StepOrchestrator<TabularStepExecution, TabularStepExecutionAttempt, TabularStepExecutor>>();
+        services.AddSingleton<IStepOrchestratorProvider, StepOrchestratorProvider>();
+
         services.AddSingleton<IGlobalOrchestrator, GlobalOrchestrator>();
         services.AddSingleton<IJobOrchestratorFactory, JobOrchestratorFactory>();
         services.AddSingleton<IEmailTest, EmailTest>();
