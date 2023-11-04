@@ -9,7 +9,7 @@ using System.Text.Json;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-internal class QlikStepExecutor : StepExecutorBase
+internal class QlikStepExecutor : IStepExecutor<QlikStepExecutionAttempt>
 {
     private readonly ILogger<QlikStepExecutor> _logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
@@ -23,7 +23,7 @@ internal class QlikStepExecutor : StepExecutorBase
         IDbContextFactory<ExecutorDbContext> dbContextFactory,
         IOptionsMonitor<ExecutionOptions> options,
         IHttpClientFactory httpClientFactory,
-        QlikStepExecution stepExecution) : base(logger, dbContextFactory, stepExecution)
+        QlikStepExecution stepExecution)
     {
         _logger = logger;
         _dbContextFactory = dbContextFactory;
@@ -33,7 +33,10 @@ internal class QlikStepExecutor : StepExecutorBase
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _step.QlikCloudClient.ApiToken);
     }
 
-    protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+    public QlikStepExecutionAttempt Clone(QlikStepExecutionAttempt other, int retryAttemptIndex) =>
+        new(other, retryAttemptIndex);
+
+    public async Task<Result> ExecuteAsync(QlikStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
@@ -62,7 +65,7 @@ internal class QlikStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error starting app refresh");
-            AddError(ex, "Error starting app reload");
+            attempt.AddError(ex, "Error starting app reload");
             return Result.Failure;
         }
 
@@ -77,23 +80,15 @@ internal class QlikStepExecutor : StepExecutorBase
         try
         {
             using var context = await _dbContextFactory.CreateDbContextAsync();
-            var attempt = _step.StepExecutionAttempts.MaxBy(e => e.RetryAttemptIndex);
-            if (attempt is not null && attempt is QlikStepExecutionAttempt qlik)
-            {
-                qlik.ReloadId = reload.Id;
-                context.Attach(qlik);
-                context.Entry(qlik).Property(e => e.ReloadId).IsModified = true;
-                await context.SaveChangesAsync(CancellationToken.None);
-            }
-            else
-            {
-                throw new InvalidOperationException("Could not find step execution attempt to update app reload id");
-            }
+            attempt.ReloadId = reload.Id;
+            context.Attach(attempt);
+            context.Entry(attempt).Property(e => e.ReloadId).IsModified = true;
+            await context.SaveChangesAsync(CancellationToken.None);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating app reload id", _step.ExecutionId, _step);
-            AddWarning(ex, $"Error updating app reload id {reload.Id}");
+            attempt.AddWarning(ex, $"Error updating app reload id {reload.Id}");
         }
 
         var getReloadUrl = $"{_step.QlikCloudClient.EnvironmentUrl}/api/v1/reloads/{reload.Id}";
@@ -107,13 +102,13 @@ internal class QlikStepExecutor : StepExecutorBase
 
                 if (reload is { Status: "SUCCEEDED" })
                 {
-                    AddOutput(reload.Log);
+                    attempt.AddOutput(reload.Log);
                     return Result.Success;
                 }
                 else if (reload is { Status: "FAILED" or "CANCELED" or "EXCEEDED_LIMIT" })
                 {
-                    AddOutput(reload.Log);
-                    AddError($"Reload reported status {reload.Status}");
+                    attempt.AddOutput(reload.Log);
+                    attempt.AddError($"Reload reported status {reload.Status}");
                     return Result.Failure;
                 }
                 // Reload not finished => iterate again
@@ -121,24 +116,24 @@ internal class QlikStepExecutor : StepExecutorBase
             catch (OperationCanceledException ex)
             {
                 var reason = timeoutCts.IsCancellationRequested ? "StepTimedOut" : "StepWasCanceled";
-                await CancelAsync(reload.Id);
+                await CancelAsync(attempt, reload.Id);
                 if (timeoutCts.IsCancellationRequested)
                 {
-                    AddError(ex, "Step execution timed out");
+                    attempt.AddError(ex, "Step execution timed out");
                     return Result.Failure;
                 }
-                AddWarning(ex);
+                attempt.AddWarning(ex);
                 return Result.Cancel;
             }
             catch (Exception ex)
             {
-                AddError(ex, "Error getting reload status");
+                attempt.AddError(ex, "Error getting reload status");
                 return Result.Failure;
             }
         }
     }
 
-    private async Task CancelAsync(string reloadId)
+    private async Task CancelAsync(QlikStepExecutionAttempt attempt, string reloadId)
     {
         try
         {
@@ -149,7 +144,7 @@ internal class QlikStepExecutor : StepExecutorBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error canceling reload", _step.ExecutionId, _step);
-            AddWarning(ex, "Error canceling reload");
+            attempt.AddWarning(ex, "Error canceling reload");
         }
     }
 

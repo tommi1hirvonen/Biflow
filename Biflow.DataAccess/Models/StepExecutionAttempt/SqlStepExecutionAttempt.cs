@@ -7,13 +7,11 @@ public class SqlStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
-    protected SqlStepExecutionAttempt(SqlStepExecutionAttempt other) : base(other)
+    public SqlStepExecutionAttempt(SqlStepExecutionAttempt other, int retryAttemptIndex) : base(other, retryAttemptIndex)
     {
     }
 
-    public SqlStepExecutionAttempt(SqlStepExecution execution) : base(execution)
+    internal SqlStepExecutionAttempt(SqlStepExecution execution) : base(execution)
     {
     }
-
-    protected override StepExecutionAttempt Clone() => new SqlStepExecutionAttempt(this);
 }

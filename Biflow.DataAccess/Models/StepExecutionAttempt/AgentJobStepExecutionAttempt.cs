@@ -7,11 +7,9 @@ public class AgentJobStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
-    protected AgentJobStepExecutionAttempt(AgentJobStepExecutionAttempt other) : base(other)
+    public AgentJobStepExecutionAttempt(AgentJobStepExecutionAttempt other, int retryAttemptIndex) : base(other, retryAttemptIndex)
     {
     }
 
     public AgentJobStepExecutionAttempt(AgentJobStepExecution execution) : base(execution) { }
-
-    protected override StepExecutionAttempt Clone() => new AgentJobStepExecutionAttempt(this);
 }

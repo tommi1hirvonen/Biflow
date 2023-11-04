@@ -7,11 +7,9 @@ public class TabularStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
-    protected TabularStepExecutionAttempt(TabularStepExecutionAttempt other) : base(other)
+    public TabularStepExecutionAttempt(TabularStepExecutionAttempt other, int retryAttemptIndex) : base(other, retryAttemptIndex)
     {
     }
 
     public TabularStepExecutionAttempt(TabularStepExecution execution) : base(execution) { }
-
-    protected override StepExecutionAttempt Clone() => new TabularStepExecutionAttempt(this);
 }

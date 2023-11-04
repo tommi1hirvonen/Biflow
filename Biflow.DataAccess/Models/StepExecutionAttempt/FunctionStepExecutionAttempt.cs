@@ -10,7 +10,7 @@ public class FunctionStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
-    protected FunctionStepExecutionAttempt(FunctionStepExecutionAttempt other) : base(other)
+    public FunctionStepExecutionAttempt(FunctionStepExecutionAttempt other, int retryAttemptIndex) : base(other, retryAttemptIndex)
     {
     }
 
@@ -18,6 +18,4 @@ public class FunctionStepExecutionAttempt : StepExecutionAttempt
 
     [Display(Name = "Function instance id")]
     public string? FunctionInstanceId { get; set; }
-
-    protected override StepExecutionAttempt Clone() => new FunctionStepExecutionAttempt(this);
 }

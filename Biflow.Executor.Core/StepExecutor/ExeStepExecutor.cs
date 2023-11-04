@@ -10,13 +10,16 @@ namespace Biflow.Executor.Core.StepExecutor;
 internal class ExeStepExecutor(
     ILogger<ExeStepExecutor> logger,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    ExeStepExecution step) : StepExecutorBase(logger, dbContextFactory, step)
+    ExeStepExecution step) : IStepExecutor<ExeStepExecutionAttempt>
 {
     private readonly ILogger<ExeStepExecutor> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
     private readonly ExeStepExecution _step = step;
 
-    protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+    public ExeStepExecutionAttempt Clone(ExeStepExecutionAttempt other, int retryAttemptIndex) =>
+        new(other, retryAttemptIndex);
+
+    public async Task<Result> ExecuteAsync(ExeStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
@@ -43,8 +46,8 @@ internal class ExeStepExecutor(
         }
 
         var process = new Process() { StartInfo = startInfo };
-        process.OutputDataReceived += (s, e) => AddOutput(e.Data);
-        process.ErrorDataReceived += (s, e) => AddError(e.Data);
+        process.OutputDataReceived += (s, e) => attempt.AddOutput(e.Data);
+        process.ErrorDataReceived += (s, e) => attempt.AddError(e.Data);
 
         try
         {
@@ -55,30 +58,22 @@ internal class ExeStepExecutor(
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error starting process for file name {FileName}", _step.ExecutionId, _step, _step.ExeFileName);
-            AddError(ex, "Error starting process");
+            attempt.AddError(ex, "Error starting process");
             return Result.Failure;
         }
 
         try
         {
-            var executionAttempt = _step.StepExecutionAttempts.MaxBy(e => e.RetryAttemptIndex);
-            if (executionAttempt is ExeStepExecutionAttempt exe)
-            {
-                using var context = _dbContextFactory.CreateDbContext();
-                exe.ExeProcessId = process.Id;
-                context.Attach(exe);
-                context.Entry(exe).Property(p => p.ExeProcessId).IsModified = true;
-                await context.SaveChangesAsync(CancellationToken.None);
-            }
-            else
-            {
-                throw new InvalidOperationException("Could not find ExeStepExecutionAttempt from StepExecution");
-            }
+            using var context = _dbContextFactory.CreateDbContext();
+            attempt.ExeProcessId = process.Id;
+            context.Attach(attempt);
+            context.Entry(attempt).Property(p => p.ExeProcessId).IsModified = true;
+            await context.SaveChangesAsync(CancellationToken.None);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error logging child process id", _step.ExecutionId, _step);
-            AddWarning(ex, "Error logging child process id");
+            attempt.AddWarning(ex, "Error logging child process id");
         }
 
         using var timeoutCts = _step.TimeoutMinutes > 0
@@ -98,7 +93,7 @@ internal class ExeStepExecutor(
             }
             else
             {
-                AddError($"Process finished with exit code {process.ExitCode}");
+                attempt.AddError($"Process finished with exit code {process.ExitCode}");
                 return Result.Failure;
             }
         }
@@ -112,21 +107,21 @@ internal class ExeStepExecutor(
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{ExecutionId} {Step} Error killing process after timeout", _step.ExecutionId, _step);
-                AddWarning(ex, "Error killing process after timeout");
+                attempt.AddWarning(ex, "Error killing process after timeout");
             }
 
             if (timeoutCts.IsCancellationRequested)
             {
-                AddError(cancelEx, "Executing exe timed out");
+                attempt.AddError(cancelEx, "Executing exe timed out");
                 return Result.Failure;
             }
-            AddWarning(cancelEx);
+            attempt.AddWarning(cancelEx);
             return Result.Cancel;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error while executing {FileName}", _step.ExecutionId, _step, _step.ExeFileName);
-            AddError(ex, "Error while executing exe");
+            attempt.AddError(ex, "Error while executing exe");
             return Result.Failure;
         }
     }

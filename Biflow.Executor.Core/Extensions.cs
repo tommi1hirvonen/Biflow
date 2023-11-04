@@ -5,7 +5,6 @@ using Biflow.Executor.Core.ConnectionTest;
 using Biflow.Executor.Core.JobExecutor;
 using Biflow.Executor.Core.Notification;
 using Biflow.Executor.Core.Orchestrator;
-using Biflow.Executor.Core.StepExecutor;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
@@ -33,7 +32,7 @@ public static class Extensions
         services.AddSingleton<ISubscribersResolver, SubscribersResolver>();
         services.AddSingleton<IMessageDispatcher, EmailDispatcher>();
         services.AddSingleton<INotificationService, NotificationService>();
-        services.AddSingleton<IStepExecutorFactory, StepExecutorFactory>();
+        services.AddSingleton<IStepOrchestrator, StepOrchestrator>();
         services.AddSingleton<IGlobalOrchestrator, GlobalOrchestrator>();
         services.AddSingleton<IJobOrchestratorFactory, JobOrchestratorFactory>();
         services.AddSingleton<IEmailTest, EmailTest>();
@@ -133,5 +132,56 @@ public static class Extensions
         where T : class
     {
         return source.Select(selector).Where(t => t is not null).Cast<T>();
+    }
+
+    internal static void AddError(this StepExecutionAttempt attempt, Exception? ex, string message)
+    {
+        var error = new ErrorMessage(message, ex?.ToString());
+        attempt.ErrorMessages.Add(error);
+    }
+
+    internal static void AddError(this StepExecutionAttempt attempt, Exception ex)
+    {
+        var error = new ErrorMessage(ex.Message, ex.ToString());
+        attempt.ErrorMessages.Add(error);
+    }
+
+    internal static void AddError(this StepExecutionAttempt attempt, string? message)
+    {
+        if (!string.IsNullOrEmpty(message))
+        {
+            var error = new ErrorMessage(message, null);
+            attempt.ErrorMessages.Add(error);
+        }
+    }
+
+    internal static void AddWarning(this StepExecutionAttempt attempt, Exception? ex, string message)
+    {
+        var warning = new WarningMessage(message, ex?.ToString());
+        attempt.WarningMessages.Add(warning);
+    }
+
+    internal static void AddWarning(this StepExecutionAttempt attempt, Exception ex)
+    {
+        var warning = new WarningMessage(ex.Message, ex.ToString());
+        attempt.WarningMessages.Add(warning);
+    }
+
+    internal static void AddWarning(this StepExecutionAttempt attempt, string? message)
+    {
+        if (!string.IsNullOrEmpty(message))
+        {
+            var warning = new WarningMessage(message, null);
+            attempt.WarningMessages.Add(warning);
+        }
+    }
+
+    internal static void AddOutput(this StepExecutionAttempt attempt, string? message)
+    {
+        if (!string.IsNullOrEmpty(message))
+        {
+            var info = new InfoMessage(message);
+            attempt.InfoMessages.Add(info);
+        }
     }
 }

@@ -11,7 +11,7 @@ internal class JobStepExecutor(
     IExecutionManager executionManager,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
     IExecutionBuilderFactory<ExecutorDbContext> executionBuilderFactory,
-    JobStepExecution step) : StepExecutorBase(logger, dbContextFactory, step)
+    JobStepExecution step) : IStepExecutor<JobStepExecutionAttempt>
 {
     private readonly ILogger<JobStepExecutor> _logger = logger;
     private readonly IExecutionBuilderFactory<ExecutorDbContext> _executionBuilderFactory = executionBuilderFactory;
@@ -19,7 +19,10 @@ internal class JobStepExecutor(
     private readonly IExecutionManager _executionManager = executionManager;
     private readonly JobStepExecution _step = step;
 
-    protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+    public JobStepExecutionAttempt Clone(JobStepExecutionAttempt other, int retryAttemptIndex) =>
+        new(other, retryAttemptIndex);
+
+    public async Task<Result> ExecuteAsync(JobStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
@@ -63,7 +66,7 @@ internal class JobStepExecutor(
             var execution = await builder.SaveExecutionAsync();
             if (execution is null)
             {
-                AddWarning("Child job execution contained no steps");
+                attempt.AddWarning("Child job execution contained no steps");
                 return Result.Success;
             }
             jobExecutionId = execution.ExecutionId;
@@ -71,29 +74,22 @@ internal class JobStepExecutor(
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error initializing execution for job {jobId}", _step.ExecutionId, _step, _step.JobToExecuteId);
-            AddError(ex, "Error initializing job execution");
+            attempt.AddError(ex, "Error initializing job execution");
             return Result.Failure;
         }
 
         try
         {
-            if (executionAttempt is JobStepExecutionAttempt job)
-            {
-                using var context = _dbContextFactory.CreateDbContext();
-                job.ChildJobExecutionId = jobExecutionId;
-                context.Attach(job);
-                context.Entry(job).Property(p => p.ChildJobExecutionId).IsModified = true;
-                await context.SaveChangesAsync(CancellationToken.None);
-            }
-            else
-            {
-                throw new InvalidOperationException("Could not find JobStepExecutionAttempt from StepExecution");
-            }
+            using var context = _dbContextFactory.CreateDbContext();
+            attempt.ChildJobExecutionId = jobExecutionId;
+            context.Attach(attempt);
+            context.Entry(attempt).Property(p => p.ChildJobExecutionId).IsModified = true;
+            await context.SaveChangesAsync(CancellationToken.None);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error logging child job execution id {executionId}", _step.ExecutionId, _step, jobExecutionId);
-            AddWarning(ex, $"Error logging child job execution id {jobExecutionId}");
+            attempt.AddWarning(ex, $"Error logging child job execution id {jobExecutionId}");
         }
             
         try
@@ -103,7 +99,7 @@ internal class JobStepExecutor(
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error starting executor process for execution {executionId}", _step.ExecutionId, _step, jobExecutionId);
-            AddError(ex, "Error starting executor process");
+            attempt.AddError(ex, "Error starting executor process");
             return Result.Failure;
         }
 
@@ -116,7 +112,7 @@ internal class JobStepExecutor(
             catch (OperationCanceledException ex)
             {
                 _executionManager.CancelExecution(jobExecutionId, cancellationTokenSource.Username);
-                AddWarning(ex);
+                attempt.AddWarning(ex);
                 return Result.Cancel;
             }
 
@@ -142,13 +138,13 @@ internal class JobStepExecutor(
                     ExecutionStatus.Running => $"Sub-execution was finished but its status was reported as {status} after finishing",
                     _ => "Unhandled sub-execution status",
                 };
-                AddError(error);
+                attempt.AddError(error);
                 return Result.Failure;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{ExecutionId} {Step} Error getting sub-execution status for execution id {executionId}", _step.ExecutionId, _step, jobExecutionId);
-                AddError(ex, "Error getting sub-execution status");
+                attempt.AddError(ex, "Error getting sub-execution status");
                 return Result.Failure;
             }
         }

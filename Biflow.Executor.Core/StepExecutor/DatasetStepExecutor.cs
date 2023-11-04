@@ -1,7 +1,6 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -9,17 +8,19 @@ namespace Biflow.Executor.Core.StepExecutor;
 
 internal class DatasetStepExecutor(
     ILogger<DatasetStepExecutor> logger,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory,
     ITokenService tokenService,
     IOptionsMonitor<ExecutionOptions> options,
-    DatasetStepExecution step) : StepExecutorBase(logger, dbContextFactory, step)
+    DatasetStepExecution step) : IStepExecutor<DatasetStepExecutionAttempt>
 {
     private readonly ILogger<DatasetStepExecutor> _logger = logger;
     private readonly ITokenService _tokenService = tokenService;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
     private readonly DatasetStepExecution _step = step;
 
-    protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+    public DatasetStepExecutionAttempt Clone(DatasetStepExecutionAttempt other, int retryAttemptIndex) =>
+        new(other, retryAttemptIndex);
+
+    public async Task<Result> ExecuteAsync(DatasetStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
@@ -37,7 +38,7 @@ internal class DatasetStepExecutor(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error starting dataset refresh");
-            AddError(ex, "Error starting dataset refresh operation");
+            attempt.AddError(ex, "Error starting dataset refresh operation");
             return Result.Failure;
         }
 
@@ -55,7 +56,7 @@ internal class DatasetStepExecutor(
                 }
                 else if (refresh?.Status == "Failed" || refresh?.Status == "Disabled")
                 {
-                    AddError(refresh.ServiceExceptionJson);
+                    attempt.AddError(refresh.ServiceExceptionJson);
                     return Result.Failure;
                 }
                 else
@@ -65,12 +66,12 @@ internal class DatasetStepExecutor(
             }
             catch (OperationCanceledException ex)
             {
-                AddWarning(ex);
+                attempt.AddWarning(ex);
                 return Result.Cancel;
             }
             catch (Exception ex)
             {
-                AddError(ex, "Error getting dataset refresh status");
+                attempt.AddError(ex, "Error getting dataset refresh status");
                 return Result.Failure;
             }
         }

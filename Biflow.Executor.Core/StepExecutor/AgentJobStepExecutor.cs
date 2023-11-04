@@ -3,25 +3,24 @@ using Biflow.Executor.Core.Common;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-internal class AgentJobStepExecutor(
-    ILogger<AgentJobStepExecutor> logger,
-    IOptionsMonitor<ExecutionOptions> options,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    AgentJobStepExecution step) : StepExecutorBase(logger, dbContextFactory, step)
+internal class AgentJobStepExecutor(IOptionsMonitor<ExecutionOptions> options, AgentJobStepExecution step)
+    : IStepExecutor<AgentJobStepExecutionAttempt>
 {
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
     private readonly JsonSerializerOptions _serializerOptions =
         new() { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
     private readonly AgentJobStepExecution _step = step;
 
-    protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+    public AgentJobStepExecutionAttempt Clone(AgentJobStepExecutionAttempt other, int retryAttemptIndex) =>
+        new(other, retryAttemptIndex);
+
+    public async Task<Result> ExecuteAsync(AgentJobStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
@@ -38,7 +37,7 @@ internal class AgentJobStepExecutor(
         }
         catch (Exception ex)
         {
-            AddError(ex, "Error starting agent job");
+            attempt.AddError(ex, "Error starting agent job");
             return Result.Failure;
         }
 
@@ -71,15 +70,15 @@ internal class AgentJobStepExecutor(
                 new { _step.AgentJobName });
             if (timeoutCts.IsCancellationRequested)
             {
-                AddError(ex, "Step execution timed out");
+                attempt.AddError(ex, "Step execution timed out");
                 return Result.Failure;
             }
-            AddWarning(ex);
+            attempt.AddWarning(ex);
             return Result.Cancel;
         }
         catch (Exception ex)
         {
-            AddError(ex, "Error monitoring agent job execution status");
+            attempt.AddError(ex, "Error monitoring agent job execution status");
             return Result.Failure;
         }
 
@@ -120,24 +119,24 @@ internal class AgentJobStepExecutor(
             // 0 = Failed, 1 = Succeeded, 2 = Retry, 3 = Canceled, 4 = In Progress
             if (status == 1)
             {
-                AddOutput(messageString);
+                attempt.AddOutput(messageString);
                 return Result.Success;
             }
             else if (status == 0 || status == 3)
             {
-                AddError(messageString);
+                attempt.AddError(messageString);
                 return Result.Failure;
             }
             else
             {
-                AddOutput(messageString);
-                AddError($"Unexpected agent job history run status ({status}) after execution.\n{jobOutcome}");
+                attempt.AddOutput(messageString);
+                attempt.AddError($"Unexpected agent job history run status ({status}) after execution.\n{jobOutcome}");
                 return Result.Failure;
             }
         }
         catch (Exception ex)
         {
-            AddError(ex, "Error getting agent job status and message from msdb.dbo.sysjobhistory");
+            attempt.AddError(ex, "Error getting agent job status and message from msdb.dbo.sysjobhistory");
             return Result.Failure;
         }
     }

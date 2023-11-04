@@ -7,11 +7,11 @@ public class QlikStepExecutionAttempt : StepExecutionAttempt
         ExecutionStatus = executionStatus;
     }
 
-    protected QlikStepExecutionAttempt(QlikStepExecutionAttempt other) : base(other) { }
+    public QlikStepExecutionAttempt(QlikStepExecutionAttempt other, int retryAttemptIndex) : base(other, retryAttemptIndex)
+    {
+    }
 
     public QlikStepExecutionAttempt(QlikStepExecution execution) : base(execution) { }
 
     public string? ReloadId { get; set; }
-
-    protected override QlikStepExecutionAttempt Clone() => new(this);
 }

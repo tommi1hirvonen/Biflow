@@ -10,13 +10,16 @@ namespace Biflow.Executor.Core.StepExecutor;
 internal class SqlStepExecutor(
     ILogger<SqlStepExecutor> logger,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    SqlStepExecution step) : StepExecutorBase(logger, dbContextFactory, step)
+    SqlStepExecution step) : IStepExecutor<SqlStepExecutionAttempt>
 {
     private readonly ILogger<SqlStepExecutor> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
     private readonly SqlStepExecution _step = step;
 
-    protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+    public SqlStepExecutionAttempt Clone(SqlStepExecutionAttempt other, int retryAttemptIndex) =>
+        new(other, retryAttemptIndex);
+
+    public async Task<Result> ExecuteAsync(SqlStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
@@ -25,7 +28,7 @@ internal class SqlStepExecutor(
         {
             _logger.LogInformation("{ExecutionId} {Step} Starting SQL execution", _step.ExecutionId, _step);
             using var connection = new SqlConnection(_step.Connection.ConnectionString);
-            connection.InfoMessage += (s, e) => AddOutput(e.Message);
+            connection.InfoMessage += (s, e) => attempt.AddOutput(e.Message);
 
             var parameters = _step.StepExecutionParameters
                 .ToDictionary(key => key.ParameterName, value => value.ParameterValue);
@@ -67,14 +70,14 @@ internal class SqlStepExecutor(
             foreach (var error in errors)
             {
                 var message = $"Line: {error.LineNumber}\nMessage: {error.Message}";
-                AddError(ex, message);
+                attempt.AddError(ex, message);
             }
 
             // Return Cancel if the SqlCommand failed due to cancel being requested.
             // ExecuteNonQueryAsync() throws SqlException in case cancel was requested.
             if (cancellationToken.IsCancellationRequested)
             {
-                AddWarning(ex);
+                attempt.AddWarning(ex);
                 return Result.Cancel;
             }
 

@@ -14,7 +14,7 @@ internal class PackageStepExecutor(
     ILogger<PackageStepExecutor> logger,
     IOptionsMonitor<ExecutionOptions> options,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    PackageStepExecution step) : StepExecutorBase(logger, dbContextFactory, step)
+    PackageStepExecution step) : IStepExecutor<PackageStepExecutionAttempt>
 {
     private readonly ILogger<PackageStepExecutor> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
@@ -23,7 +23,10 @@ internal class PackageStepExecutor(
 
     private const int MaxRefreshRetries = 3;
 
-    protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+    public PackageStepExecutionAttempt Clone(PackageStepExecutionAttempt other, int retryAttemptIndex) =>
+        new(other, retryAttemptIndex);
+
+    public async Task<Result> ExecuteAsync(PackageStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
@@ -42,7 +45,7 @@ internal class PackageStepExecutor(
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error executing package", _step.ExecutionId, _step);
-            AddError(ex, "Error starting package execution");
+            attempt.AddError(ex, "Error starting package execution");
             return Result.Failure;
         }
 
@@ -56,23 +59,15 @@ internal class PackageStepExecutor(
         try
         {
             using var context = _dbContextFactory.CreateDbContext();
-            var attempt = _step.StepExecutionAttempts.MaxBy(e => e.RetryAttemptIndex);
-            if (attempt is not null && attempt is PackageStepExecutionAttempt package)
-            {
-                package.PackageOperationId = packageOperationId;
-                context.Attach(package);
-                context.Entry(package).Property(e => e.PackageOperationId).IsModified = true;
-                await context.SaveChangesAsync(CancellationToken.None);
-            }
-            else
-            {
-                throw new InvalidOperationException("Could not find step execution attempt to update package operation id");
-            }
+            attempt.PackageOperationId = packageOperationId;
+            context.Attach(attempt);
+            context.Entry(attempt).Property(e => e.PackageOperationId).IsModified = true;
+            await context.SaveChangesAsync(CancellationToken.None);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error updating target package operation id ({packageOperationId})", _step.ExecutionId, _step, packageOperationId);
-            AddWarning(ex, $"Error updating target package operation id {packageOperationId}");
+            attempt.AddWarning(ex, $"Error updating target package operation id {packageOperationId}");
         }
 
         // Monitor the package's execution.
@@ -89,19 +84,19 @@ internal class PackageStepExecutor(
         }
         catch (OperationCanceledException ex)
         {
-            await CancelAsync(_step.Connection.ConnectionString, packageOperationId);
+            await CancelAsync(attempt, _step.Connection.ConnectionString, packageOperationId);
             if (timeoutCts.IsCancellationRequested)
             {
-                AddError(ex, "Step execution timed out");
+                attempt.AddError(ex, "Step execution timed out");
                 return Result.Failure;
             }
-            AddWarning(ex);
+            attempt.AddWarning(ex);
             return Result.Cancel;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error monitoring package execution status", _step.ExecutionId, _step);
-            AddError(ex, "Error monitoring package execution status");
+            attempt.AddError(ex, "Error monitoring package execution status");
             return Result.Failure;
         }
 
@@ -114,14 +109,14 @@ internal class PackageStepExecutor(
                 foreach (var error in errors)
                 {
                     if (error is not null)
-                        AddError(error);
+                        attempt.AddError(error);
                 }
                 return Result.Failure;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "{ExecutionId} {Step} Error getting package error messages", _step.ExecutionId, _step);
-                AddError(ex, "Error getting package error messages");
+                attempt.AddError(ex, "Error getting package error messages");
                 return Result.Failure;
             }
         }
@@ -245,7 +240,7 @@ internal class PackageStepExecutor(
         return messages.ToArray();
     }
 
-    private async Task CancelAsync(string connectionString, long packageOperationId)
+    private async Task CancelAsync(PackageStepExecutionAttempt attempt, string connectionString, long packageOperationId)
     {
         _logger.LogInformation("{ExecutionId} {Step} Stopping package operation id {PackageOperationId}", _step.ExecutionId, _step, packageOperationId);
         try
@@ -271,7 +266,7 @@ internal class PackageStepExecutor(
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error stopping package operation id {operationId}", _step.ExecutionId, _step, packageOperationId);
-            AddWarning(ex, $"Error stopping package operation for id {packageOperationId}");
+            attempt.AddWarning(ex, $"Error stopping package operation for id {packageOperationId}");
         }
     }
 }

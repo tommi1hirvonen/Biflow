@@ -1,21 +1,20 @@
 ﻿using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
 using Biflow.Executor.Core.Notification;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
 internal class EmailStepExecutor(
-    ILogger<EmailStepExecutor> logger,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory,
     IMessageDispatcher messageDispatcher,
-    EmailStepExecution stepExecution) : StepExecutorBase(logger, dbContextFactory, stepExecution)
+    EmailStepExecution stepExecution) : IStepExecutor<EmailStepExecutionAttempt>
 {
     private readonly IMessageDispatcher _messageDispatcher = messageDispatcher;
     private readonly EmailStepExecution _step = stepExecution;
 
-    protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+    public EmailStepExecutionAttempt Clone(EmailStepExecutionAttempt other, int retryAttemptIndex) =>
+        new(other, retryAttemptIndex);
+
+    public async Task<Result> ExecuteAsync(EmailStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();

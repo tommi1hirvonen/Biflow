@@ -7,14 +7,14 @@ namespace Biflow.Executor.Core.StepExecutor;
 internal abstract class FunctionStepExecutorBase(
     ILogger<FunctionStepExecutorBase> logger,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    FunctionStepExecution step) : StepExecutorBase(logger, dbContextFactory, step)
+    FunctionStepExecution step)
 {
     private readonly ILogger<FunctionStepExecutorBase> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
 
     protected FunctionStepExecution Step { get; } = step;
 
-    protected async Task<HttpRequestMessage> BuildFunctionInvokeRequestAsync(CancellationToken cancellationToken)
+    protected async Task<HttpRequestMessage> BuildFunctionInvokeRequestAsync(FunctionStepExecutionAttempt attempt, CancellationToken cancellationToken)
     {
         string? functionKey = null;
         try
@@ -30,7 +30,7 @@ internal abstract class FunctionStepExecutorBase(
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error reading FunctionKey from database", Step.ExecutionId, Step);
-            AddWarning(ex, "Error reading function key from database");
+            attempt.AddWarning(ex, "Error reading function key from database");
         }
 
         var message = new HttpRequestMessage(HttpMethod.Post, Step.FunctionUrl);

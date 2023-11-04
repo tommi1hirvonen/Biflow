@@ -7,11 +7,9 @@ public class DatasetStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
-    protected DatasetStepExecutionAttempt(DatasetStepExecutionAttempt other) : base(other)
+    public DatasetStepExecutionAttempt(DatasetStepExecutionAttempt other, int retryAttemptIndex) : base(other, retryAttemptIndex)
     {
     }
 
     public DatasetStepExecutionAttempt(DatasetStepExecution execution) : base(execution) { }
-
-    protected override StepExecutionAttempt Clone() => new DatasetStepExecutionAttempt(this);
 }

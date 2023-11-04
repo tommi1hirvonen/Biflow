@@ -9,11 +9,15 @@ internal class FunctionStepExecutor(
     ILogger<FunctionStepExecutor> logger,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
     IHttpClientFactory httpClientFactory,
-    FunctionStepExecution step) : FunctionStepExecutorBase(logger, dbContextFactory, step)
+    FunctionStepExecution step)
+    : FunctionStepExecutorBase(logger, dbContextFactory, step), IStepExecutor<FunctionStepExecutionAttempt>
 {
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
-    protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+    public FunctionStepExecutionAttempt Clone(FunctionStepExecutionAttempt other, int retryAttemptIndex) =>
+        new(other, retryAttemptIndex);
+
+    public async Task<Result> ExecuteAsync(FunctionStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
@@ -29,7 +33,7 @@ internal class FunctionStepExecutor(
             // The linked timeout token will cancel if the timeout expires or the step was canceled manually.
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
-            var request = await BuildFunctionInvokeRequestAsync(cancellationToken);
+            var request = await BuildFunctionInvokeRequestAsync(attempt, cancellationToken);
 
             // A regular httpTrigger function can run for several minutes. Use an HttpClient with no timeout for httpTrigger functions.
             var noTimeoutClient = _httpClientFactory.CreateClient("notimeout");
@@ -37,21 +41,21 @@ internal class FunctionStepExecutor(
             // Send the request to the function url. This will start the function, if the request was successful.
             response = await noTimeoutClient.SendAsync(request, linkedCts.Token);
             content = await response.Content.ReadAsStringAsync(CancellationToken.None);
-            AddOutput(content);
+            attempt.AddOutput(content);
         }
         catch (OperationCanceledException ex)
         {
             if (timeoutCts.IsCancellationRequested)
             {
-                AddError(ex, "Step execution timed out");
+                attempt.AddError(ex, "Step execution timed out");
                 return Result.Failure;
             }
-            AddWarning(ex);
+            attempt.AddWarning(ex);
             return Result.Cancel;
         }
         catch (Exception ex)
         {
-            AddError(ex, "Error sending POST request to invoke function");
+            attempt.AddError(ex, "Error sending POST request to invoke function");
             return Result.Failure;
         }
 
@@ -62,7 +66,7 @@ internal class FunctionStepExecutor(
         }
         catch (Exception ex)
         {
-            AddError(ex, "Function execution failed");
+            attempt.AddError(ex, "Function execution failed");
             return Result.Failure;
         }
     }

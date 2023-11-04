@@ -7,13 +7,11 @@ public class ExeStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
-    protected ExeStepExecutionAttempt(ExeStepExecutionAttempt other) : base(other)
+    public ExeStepExecutionAttempt(ExeStepExecutionAttempt other, int retryAttemptIndex) : base(other, retryAttemptIndex)
     {
     }
 
     public ExeStepExecutionAttempt(ExeStepExecution execution) : base(execution) { }
 
     public int? ExeProcessId { get; set; }
-
-    protected override StepExecutionAttempt Clone() => new ExeStepExecutionAttempt(this);
 }

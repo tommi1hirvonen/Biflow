@@ -8,13 +8,11 @@ public class PipelineStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
-    protected PipelineStepExecutionAttempt(PipelineStepExecutionAttempt other) : base(other)
+    public PipelineStepExecutionAttempt(PipelineStepExecutionAttempt other, int retryAttemptIndex) : base(other, retryAttemptIndex)
     {
     }
 
     public PipelineStepExecutionAttempt(PipelineStepExecution execution) : base(execution) { }
 
     public string? PipelineRunId { get; set; }
-
-    protected override StepExecutionAttempt Clone() => new PipelineStepExecutionAttempt(this);
 }

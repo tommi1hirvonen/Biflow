@@ -7,13 +7,11 @@ public class JobStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
-    protected JobStepExecutionAttempt(JobStepExecutionAttempt other) : base(other)
+    public JobStepExecutionAttempt(JobStepExecutionAttempt other, int retryAttemptIndex) : base(other, retryAttemptIndex)
     {
     }
 
     public JobStepExecutionAttempt(JobStepExecution execution) : base(execution) { }
 
     public Guid? ChildJobExecutionId { get; set; }
-
-    protected override StepExecutionAttempt Clone() => new JobStepExecutionAttempt(this);
 }

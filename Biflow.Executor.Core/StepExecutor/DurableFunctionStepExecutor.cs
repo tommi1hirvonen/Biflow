@@ -13,7 +13,8 @@ internal class DurableFunctionStepExecutor(
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
     IOptionsMonitor<ExecutionOptions> options,
     IHttpClientFactory httpClientFactory,
-    FunctionStepExecution step) : FunctionStepExecutorBase(logger, dbContextFactory, step)
+    FunctionStepExecution step)
+    : FunctionStepExecutorBase(logger, dbContextFactory, step), IStepExecutor<FunctionStepExecutionAttempt>
 {
     private readonly ILogger<DurableFunctionStepExecutor> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
@@ -24,7 +25,10 @@ internal class DurableFunctionStepExecutor(
 
     private static readonly JsonSerializerOptions CamelCaseOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
-    protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+    public FunctionStepExecutionAttempt Clone(FunctionStepExecutionAttempt other, int retryAttemptIndex) =>
+        new(other, retryAttemptIndex);
+
+    public async Task<Result> ExecuteAsync(FunctionStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
@@ -35,27 +39,27 @@ internal class DurableFunctionStepExecutor(
         string content;
         try
         {
-            var request = await BuildFunctionInvokeRequestAsync(cancellationToken);
+            var request = await BuildFunctionInvokeRequestAsync(attempt, cancellationToken);
 
             // Send the request to the function url. This will start the function, if the request was successful.
             // A durable function will return immediately and run asynchronously.
             response = await client.SendAsync(request, cancellationToken);
             content = await response.Content.ReadAsStringAsync(CancellationToken.None);
-            AddOutput(content);
+            attempt.AddOutput(content);
         }
         catch (OperationCanceledException ex)
         {
             if (cancellationTokenSource.IsCancellationRequested)
             {
-                AddWarning(ex);
+                attempt.AddWarning(ex);
                 return Result.Cancel;
             }
-            AddError(ex, "Invoking durable function timed out");
+            attempt.AddError(ex, "Invoking durable function timed out");
             return Result.Failure;
         }
         catch (Exception ex)
         {
-            AddError(ex, "Error sending POST request to invoke function");
+            attempt.AddError(ex, "Error sending POST request to invoke function");
             return Result.Failure;
         }
 
@@ -68,7 +72,7 @@ internal class DurableFunctionStepExecutor(
         }
         catch (Exception ex)
         {
-            AddError(ex, "Error getting start response for durable function");
+            attempt.AddError(ex, "Error getting start response for durable function");
             return Result.Failure;
         }
 
@@ -83,23 +87,15 @@ internal class DurableFunctionStepExecutor(
         try
         {
             using var context = _dbContextFactory.CreateDbContext();
-            var attempt = Step.StepExecutionAttempts.MaxBy(e => e.RetryAttemptIndex);
-            if (attempt is not null && attempt is FunctionStepExecutionAttempt function)
-            {
-                function.FunctionInstanceId = startResponse.Id;
-                context.Attach(function);
-                context.Entry(function).Property(e => e.FunctionInstanceId).IsModified = true;
-                await context.SaveChangesAsync(CancellationToken.None);
-            }
-            else
-            {
-                throw new InvalidOperationException("Could not find step execution attempt to update function instance id");
-            }
+            attempt.FunctionInstanceId = startResponse.Id;
+            context.Attach(attempt);
+            context.Entry(attempt).Property(e => e.FunctionInstanceId).IsModified = true;
+            await context.SaveChangesAsync(CancellationToken.None);
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating function instance id", Step.ExecutionId, Step);
-            AddWarning(ex, $"Error updating function instance id {startResponse.Id}");
+            attempt.AddWarning(ex, $"Error updating function instance id {startResponse.Id}");
         }
 
         StatusResponse status;
@@ -120,41 +116,41 @@ internal class DurableFunctionStepExecutor(
             catch (OperationCanceledException ex)
             {
                 var reason = timeoutCts.IsCancellationRequested ? "StepTimedOut" : "StepWasCanceled";
-                await CancelAsync(client, startResponse.TerminatePostUri, reason);
+                await CancelAsync(attempt, client, startResponse.TerminatePostUri, reason);
                 if (timeoutCts.IsCancellationRequested)
                 {
-                    AddError(ex, "Step execution timed out");
+                    attempt.AddError(ex, "Step execution timed out");
                     return Result.Failure;
                 }
-                AddWarning(ex);
+                attempt.AddWarning(ex);
                 return Result.Cancel;
             }
             catch (Exception ex)
             {
-                AddError(ex, "Error getting function status");
+                attempt.AddError(ex, "Error getting function status");
                 return Result.Failure;
             }
         }
         
         if (status.RuntimeStatus == "Completed")
         {
-            AddOutput(status.Output?.ToString());
+            attempt.AddOutput(status.Output?.ToString());
             return Result.Success;
         }
         else if (status.RuntimeStatus == "Terminated")
         {
-            AddError(status.Output?.ToString() ?? "Function was terminated");
+            attempt.AddError(status.Output?.ToString() ?? "Function was terminated");
             return Result.Failure;
         }
         else
         {
-            AddError(status.Output?.ToString() ?? "Function failed");
+            attempt.AddError(status.Output?.ToString() ?? "Function failed");
             return Result.Failure;
         }
 
     }
 
-    private async Task CancelAsync(HttpClient client, string terminateUrl, string reason)
+    private async Task CancelAsync(FunctionStepExecutionAttempt attempt, HttpClient client, string terminateUrl, string reason)
     {
         try
         {
@@ -165,7 +161,7 @@ internal class DurableFunctionStepExecutor(
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error stopping function ", Step.ExecutionId, Step);
-            AddWarning(ex, "Error stopping function");
+            attempt.AddWarning(ex, "Error stopping function");
         }
     }
 

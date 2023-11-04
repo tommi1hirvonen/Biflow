@@ -7,11 +7,9 @@ public class EmailStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
-    protected EmailStepExecutionAttempt(EmailStepExecutionAttempt other) : base(other)
+    public EmailStepExecutionAttempt(EmailStepExecutionAttempt other, int retryAttemptIndex) : base(other, retryAttemptIndex)
     {
     }
 
     public EmailStepExecutionAttempt(EmailStepExecution execution) : base(execution) { }
-
-    protected override StepExecutionAttempt Clone() => new EmailStepExecutionAttempt(this);
 }

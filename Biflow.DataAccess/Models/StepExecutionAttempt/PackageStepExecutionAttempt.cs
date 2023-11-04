@@ -8,13 +8,11 @@ public class PackageStepExecutionAttempt : StepExecutionAttempt
     {
     }
 
-    protected PackageStepExecutionAttempt(PackageStepExecutionAttempt other) : base(other)
+    public PackageStepExecutionAttempt(PackageStepExecutionAttempt other, int retryAttemptIndex) : base(other, retryAttemptIndex)
     {
     }
 
     public PackageStepExecutionAttempt(PackageStepExecution execution) : base(execution) { }
 
     public long? PackageOperationId { get; set; }
-
-    protected override StepExecutionAttempt Clone() => new PackageStepExecutionAttempt(this);
 }

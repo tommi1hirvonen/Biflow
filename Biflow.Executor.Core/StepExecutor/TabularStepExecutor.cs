@@ -6,14 +6,14 @@ using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-internal class TabularStepExecutor(
-    ILogger<TabularStepExecutor> logger,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    TabularStepExecution step) : StepExecutorBase(logger, dbContextFactory, step)
+internal class TabularStepExecutor(TabularStepExecution step) : IStepExecutor<TabularStepExecutionAttempt>
 {
     private readonly TabularStepExecution _step = step;
 
-    protected override async Task<Result> ExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+    public TabularStepExecutionAttempt Clone(TabularStepExecutionAttempt other, int retryAttemptIndex) =>
+        new(other, retryAttemptIndex);
+
+    public async Task<Result> ExecuteAsync(TabularStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
@@ -66,15 +66,15 @@ internal class TabularStepExecutor(
             await Task.Run(server.CancelCommand); // Cancel the SaveChanges operation.
             if (cancellationTokenSource.IsCancellationRequested)
             {
-                AddWarning(ex);
+                attempt.AddWarning(ex);
                 return Result.Cancel;
             }
-            AddError(ex, "Step execution timed out");
+            attempt.AddError(ex, "Step execution timed out");
             return Result.Failure;
         }
         catch (Exception ex)
         {
-            AddError(ex, "Error processing tabular model");
+            attempt.AddError(ex, "Error processing tabular model");
             return Result.Failure;
         }
 

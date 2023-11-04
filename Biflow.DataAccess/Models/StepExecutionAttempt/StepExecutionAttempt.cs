@@ -14,11 +14,11 @@ public abstract class StepExecutionAttempt
         StepType = stepType;
     }
 
-    protected StepExecutionAttempt(StepExecutionAttempt other)
+    protected StepExecutionAttempt(StepExecutionAttempt other, int retryAttemptIndex)
     {
         ExecutionId = other.ExecutionId;
         StepId = other.StepId;
-        RetryAttemptIndex = other.RetryAttemptIndex;
+        RetryAttemptIndex = retryAttemptIndex;
         ExecutionStatus = other.ExecutionStatus;
         StepType = other.StepType;
         StepExecution = other.StepExecution;
@@ -66,25 +66,10 @@ public abstract class StepExecutionAttempt
     [NotMapped]
     public double? ExecutionInSeconds => ((EndDateTime ?? DateTime.Now) - StartDateTime)?.TotalSeconds;
 
-    /// <summary>
-    /// Creates a new instance where the execution attempt specific properties have not yet been set.
-    /// The returned new instance can act as a placeholder for a new execution attempt.
-    /// </summary>
-    /// <returns>New instance where non-attempt specific properties have been copied from this instance.</returns>
-    public StepExecutionAttempt Clone(int retryAttemptIndex)
-    {
-        var clone = Clone();
-        clone.RetryAttemptIndex = retryAttemptIndex;
-        return clone;
-    }
-
-    protected abstract StepExecutionAttempt Clone(); 
-
     [NotMapped]
     public bool CanBeStopped =>
         ExecutionStatus == StepExecutionStatus.Running
         || ExecutionStatus == StepExecutionStatus.AwaitingRetry
         || ExecutionStatus == StepExecutionStatus.Queued
         || ExecutionStatus == StepExecutionStatus.NotStarted && StepExecution.Execution.ExecutionStatus == Models.ExecutionStatus.Running;
-
 }
