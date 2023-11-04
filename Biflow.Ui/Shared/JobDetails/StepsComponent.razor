@@ -121,11 +121,9 @@
         <div class="col">
             <div class="input-group input-group-sm me-3">
                 <div class="input-group-text">
-                    <CxIcon Icon="FeatherIcon.Filter" />
+                    <CxIcon Icon="FeatherIcon.Search" />
                 </div>
                 <DebounceTextInput type="search" class="form-control" @bind-Value="stepNameFilter" placeholder="Filter by name" />
-                <DebounceTextInput type="search" class="form-control" @bind-Value="stepDescriptionFilter" placeholder="Filter by description" />
-                <DebounceTextInput type="search" class="form-control" @bind-Value="sqlStatementFilter" placeholder="Filter by SQL statement" />
             </div>
         </div>
         
@@ -154,8 +152,6 @@
                         stepTypeFilter.Clear();
                         connectionFilter.Clear();
                         stepNameFilter = string.Empty;
-                        stepDescriptionFilter = string.Empty;
-                        sqlStatementFilter = string.Empty;
                         await advancedFiltersOffcanvas.LetAsync(x => x.ClearAsync());
                     }">
                     <CxIcon Icon="FeatherIcon.X" />
@@ -371,19 +367,19 @@
                                     }
                                 </div>
                             </div>
-                            @if (showDetails || !string.IsNullOrEmpty(stepDescriptionFilter))
+                            @if (showDetails || !string.IsNullOrEmpty(advancedFiltersOffcanvas?.Description))
                             {
                                 <div class="row">
                                     <div class="col text-truncate">
-                                        <small class="text-secondary"><em><HighlightableText Text="@item.StepDescription" PartToHighlight="@stepDescriptionFilter" /></em></small>
+                                        <small class="text-secondary"><em><HighlightableText Text="@item.StepDescription" PartToHighlight="@advancedFiltersOffcanvas?.Description" /></em></small>
                                     </div>
                                 </div>
                             }
-                            @if ((showDetails || !string.IsNullOrEmpty(sqlStatementFilter)) && item is SqlStep sqlStep)
+                            @if ((showDetails || !string.IsNullOrEmpty(advancedFiltersOffcanvas?.SqlStatement)) && item is SqlStep sqlStep)
                             {
                                 <div class="row">
                                     <div class="col text-truncate">
-                                        <small class="text-secondary font-monospace"><HighlightableText Text="@sqlStep.SqlStatement" PartToHighlight="@sqlStatementFilter" /></small>
+                                        <small class="text-secondary font-monospace"><HighlightableText Text="@sqlStep.SqlStatement" PartToHighlight="@advancedFiltersOffcanvas?.SqlStatement" /></small>
                                     </div>
                                 </div>
                             }

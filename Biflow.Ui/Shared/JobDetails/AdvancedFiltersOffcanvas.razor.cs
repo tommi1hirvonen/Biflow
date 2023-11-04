@@ -15,6 +15,8 @@ public partial class AdvancedFiltersOffcanvas : ComponentBase
 
     [Parameter] public IEnumerable<ConnectionInfoBase> Connections { get; set; } = Enumerable.Empty<ConnectionInfoBase>();
 
+    public string Description { get; private set; } = "";
+    public string SqlStatement { get; private set; } = "";
     public string PackageFolder { get; private set; } = "";
     public string PackageProject { get; private set; } = "";
     public string PackageName { get; private set; } = "";
@@ -27,12 +29,15 @@ public partial class AdvancedFiltersOffcanvas : ComponentBase
     private readonly HashSet<ConnectionInfoBase> connectionsFilter = [];
     private readonly HashSet<FunctionApp> functionAppsFilter = [];
     private readonly HashSet<PipelineClient> pipelineClientsFilter = [];
+    private readonly Dictionary<StepType, bool> expandedSections = [];
 
     private HxOffcanvas? offcanvas;
 
     public async Task ClearAsync()
     {
         connectionsFilter.Clear();
+        Description = "";
+        SqlStatement = "";
         PackageFolder = "";
         PackageProject = "";
         PackageName = "";
@@ -47,6 +52,8 @@ public partial class AdvancedFiltersOffcanvas : ComponentBase
     }
 
     public bool EvaluatePredicates(Step step) =>
+        DescriptionPredicate(step) &&
+        SqlStatementPredicate(step) &&
         ConnectionsPredicate(step) &&
         PackageFolderPredicate(step) &&
         PackageProjectPredicate(step) &&
@@ -58,6 +65,12 @@ public partial class AdvancedFiltersOffcanvas : ComponentBase
         FunctionAppsPredicate(step) &&
         ExeFilePathPredicate(step) &&
         ExeArgumentsPredicate(step);
+
+    private bool DescriptionPredicate(Step step) =>
+        string.IsNullOrEmpty(Description) || (step.StepDescription?.ContainsIgnoreCase(Description) ?? false);
+
+    private bool SqlStatementPredicate(Step step) =>
+        string.IsNullOrEmpty(SqlStatement) || step is SqlStep sql && (sql.SqlStatement?.ContainsIgnoreCase(SqlStatement) ?? false);
 
     private bool ConnectionsPredicate(Step step) =>
         connectionsFilter.Count == 0 || step is IHasConnection hc && connectionsFilter.Select(c => c.ConnectionId).Contains(hc.ConnectionId ?? Guid.Empty);

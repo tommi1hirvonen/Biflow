@@ -58,8 +58,6 @@ public partial class StepsComponent : ComponentBase
     private ExecuteModal? executeModal;
     private AdvancedFiltersOffcanvas? advancedFiltersOffcanvas;
     private string stepNameFilter = string.Empty;
-    private string stepDescriptionFilter = string.Empty;
-    private string sqlStatementFilter = string.Empty;
     private Guid? lastStartedExecutionId;
     private bool showDetails = false;
     private bool initialStepModalShouldOpen = true;
@@ -70,8 +68,6 @@ public partial class StepsComponent : ComponentBase
     private IEnumerable<Step> FilteredSteps => Steps?
         .Where(step => stateFilter switch { StateFilter.Enabled => step.IsEnabled, StateFilter.Disabled => !step.IsEnabled, _ => true })
         .Where(step => stepNameFilter.Length == 0 || (step.StepName?.ContainsIgnoreCase(stepNameFilter) ?? false))
-        .Where(step => stepDescriptionFilter.Length == 0 || (step.StepDescription?.ContainsIgnoreCase(stepDescriptionFilter) ?? false))
-        .Where(step => sqlStatementFilter.Length == 0 || step is SqlStep sql && (sql.SqlStatement?.ContainsIgnoreCase(sqlStatementFilter) ?? false))
         .Where(step => tagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName)))
         .Where(step => stepTypeFilter.Count == 0 || stepTypeFilter.Contains(step.StepType))
         .Where(step => connectionFilter.Count == 0 || step is IHasConnection conn && connectionFilter.Any(f => f.ConnectionId == conn.ConnectionId))
