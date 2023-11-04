@@ -34,165 +34,160 @@ else if (builder is null)
 }
 
 <div class="row">
-    <div class="row">
-        <div class="col-auto">
-            <CxIcon Icon="FeatherIcon.Tag" />
-            <span class="me-3">Tags</span>
-            @if (!Tags.Any())
-            {
-                <small class="text-secondary me-2">No tags</small>
-            }
-            @foreach (var tag in Tags)
-            {
-                <TagComponent Tag="tag"
-                          Selected="tagFilter.Contains(tag)"
-                          CssClass="mx-1"
-                          Style="cursor: pointer;"
-                          OnClick="() => { if (tagFilter.Contains(tag)) tagFilter.Remove(tag); else tagFilter.Add(tag); }" />
-            }
-        </div>
-        <div class="col-auto ms-auto">
-            <HxDropdownButtonGroup AutoClose="DropdownAutoClose.Outside" CssClass="ms-auto">
-                <HxDropdownToggleButton Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="builder is not null">
-                    <CxIcon Icon="FeatherIcon.Bell" />
-                    Notifications
-                </HxDropdownToggleButton>
-                <HxDropdownContent>
-                    @if (builder is not null)
-                    {
-                        <div class="row p-3" style="min-width: 20rem;">
-                            <div class="col">
-                                <div class="form-check">
-                                    <input type="checkbox" class="form-check-input" id="execute_notify"
-                                           checked=@builder.Notify
-                                           @bind-value="builder.Notify">
-                                    <label class="form-check-label" for="execute_notify">Notify based on subscriptions</label>
-                                </div>
-                                <h6 class="mt-3">Notify me</h6>
-                                <div class="form-check">
-                                    <input type="radio" class="form-check-input" id="radio_notify_me_none"
-                                           checked=@(builder.NotifyCaller is null)
-                                           @onchange="() => builder.NotifyCaller = null">
-                                    <label class="form-check-label" for="radio_notify_me_none">None</label>
-                                </div>
-                                <div class="form-check">
-                                    <input type="radio" class="form-check-input" id="radio_notify_me_completion"
-                                           checked=@(builder.NotifyCaller == AlertType.OnCompletion)
-                                           @onchange="() => builder.NotifyCaller = AlertType.OnCompletion">
-                                    <label class="form-check-label" for="radio_notify_me_completion">On completion</label>
-                                </div>
-                                <div class="form-check">
-                                    <input type="radio" class="form-check-input" id="radio_notify_me_failure"
-                                           checked=@(builder.NotifyCaller == AlertType.OnFailure)
-                                           @onchange="() => builder.NotifyCaller = AlertType.OnFailure">
-                                    <label class="form-check-label" for="radio_notify_me_failure">On failure</label>
-                                </div>
-                                <div class="form-check">
-                                    <input type="radio" class="form-check-input" id="radio_notify_me_success"
-                                           checked=@(builder.NotifyCaller == AlertType.OnSuccess)
-                                           @onchange="() => builder.NotifyCaller = AlertType.OnSuccess">
-                                    <label class="form-check-label" for="radio_notify_me_success">On success</label>
-                                </div>
-                                <div class="form-check mt-3">
-                                    <input type="checkbox" class="form-check-input" id="execute_notify_me_overtime"
-                                           checked=@builder.NotifyCallerOvertime
-                                           @bind-value="builder.NotifyCallerOvertime">
-                                    <label class="form-check-label" for="execute_notify_me_overtime">On overtime</label>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </HxDropdownContent>
-            </HxDropdownButtonGroup>
-        </div>
-    </div>
-    <div class="row mt-3">
-        <div class="col">
-            <div class="row">
-                <div class="col">
-                    <div class="input-group input-group-sm">
-                        <div class="input-group-text">
-                            <CxIcon Icon="FeatherIcon.Filter" />
-                        </div>
-                        <input type="search" class="form-control" @bind-value="stepNameFilter" @bind-value:event="oninput"
-                               placeholder="Filter by name" autocomplete="off" style="max-width: 20rem;" />
+    <div class="col">
+        <div class="row">
+            <div class="col-auto mt-3">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <CxIcon Icon="FeatherIcon.Filter" />
                     </div>
-                </div>
-                <div class="col-xxl mt-xxl-0 mt-3">
-                    <HxButtonGroup>
-                        <FilterDropdown TItem="StepType"
-                                        FilterSet="stepTypeFilter"
-                                        Items="builder?.Steps.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
-                                        OnChange="StateHasChanged">
-                            <TitleTemplate>
-                                <CxIcon Icon="FeatherIcon.Tool" />
-                                Step type
-                            </TitleTemplate>
-                            <ItemTemplate Context="item">
-                                <StepTypeIconComponent StepType="item" />
-                                @item.ToString()
-                            </ItemTemplate>
-                        </FilterDropdown>
-                        <FilterDropdown TItem="StepExecutionStatus"
-                                        FilterSet="statusFilter"
-                                        Items="Statuses"
-                                        OnChange="StateHasChanged">
-                            <TitleTemplate>
-                                <CxIcon Icon="FeatherIcon.Info" />
-                                Status
-                            </TitleTemplate>
-                            <ItemTemplate Context="item">
-                                <StepExecutionStatusBadgeComponent ExecutionStatus="item" />
-                            </ItemTemplate>
-                        </FilterDropdown>
-                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
-                                  @onclick="() => { tagFilter.Clear(); stepTypeFilter.Clear(); statusFilter.Clear(); stepNameFilter = string.Empty; }">
-                            <CxIcon Icon="FeatherIcon.X" />
-                            Clear
-                        </HxButton>
-                    </HxButtonGroup>
+                    <input type="search" class="form-control" @bind-value="stepNameFilter" @bind-value:event="oninput"
+                            placeholder="Filter by name" autocomplete="off" style="min-width: 15rem; max-width: 15rem;" />
                 </div>
             </div>
-        </div>
-        <div class="col">
-            <div class="row justify-content-xxl-between justify-content-end">
-                <div class="col-auto">
-                    <HxButtonGroup>
-                        @*Add all available AND enabled steps that have not yet been added to selected steps. Also filter based on current filter text.*@
-                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                  @onclick="() => builder.AddAll(s => s.IsEnabled && StepsAvailableToExecute.Any(available => s.StepId == available.StepId))">
-                            <CxIcon Icon="FeatherIcon.ChevronRight" />
-                            Select enabled
-                        </HxButton>
-                        @*Add all available steps that have not yet been added to selected steps. Also filter based on current filter text.*@
-                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                  @onclick="() => builder.AddAll(step => StepsAvailableToExecute.Any(available => step.StepId == available.StepId))">
-                            <CxIcon Icon="FeatherIcon.ChevronsRight" />
-                            Select all
-                        </HxButton>
-                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => builder?.Clear()">
-                            <CxIcon Icon="FeatherIcon.ChevronsLeft" />
-                            Deselect all
-                        </HxButton>
-                    </HxButtonGroup>
-                </div>
-                <div class="col-xxl-auto mt-xxl-0 mt-3 text-end">
-                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" @onclick="Execute"
-                              Enabled="!startingExecution" Spinner="startingExecution">
-                        <CxIcon Icon="FeatherIcon.Play" />
-                        Execute
+            <div class="col-auto mt-3">
+                <HxButtonGroup>
+                    <FilterDropdown TItem="StepType"
+                                    FilterSet="stepTypeFilter"
+                                    Items="builder?.Steps.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
+                                    OnChange="StateHasChanged">
+                        <TitleTemplate>
+                            <CxIcon Icon="FeatherIcon.Tool" />
+                            Step type
+                        </TitleTemplate>
+                        <ItemTemplate Context="item">
+                            <StepTypeIconComponent StepType="item" />
+                            @item.ToString()
+                        </ItemTemplate>
+                    </FilterDropdown>
+                    <FilterDropdown TItem="ITag"
+                                    FilterSet="tagFilter"
+                                    Items="Tags"
+                                    IdSelector="tag => tag.TagId.ToString()"
+                                    TextSelector="tag => tag.TagName"
+                                    IsSearchable
+                                    OnChange="StateHasChanged">
+                            <TitleTemplate>
+                                <CxIcon Icon="FeatherIcon.Tag" />
+                                Tags
+                            </TitleTemplate>
+                            <ItemTemplate Context="item">
+                                <TagComponent Tag="item" />
+                            </ItemTemplate>
+                        </FilterDropdown>
+                    <FilterDropdown TItem="StepExecutionStatus"
+                                    FilterSet="statusFilter"
+                                    Items="Statuses"
+                                    OnChange="StateHasChanged">
+                        <TitleTemplate>
+                            <CxIcon Icon="FeatherIcon.Info" />
+                            Status
+                        </TitleTemplate>
+                        <ItemTemplate Context="item">
+                            <StepExecutionStatusBadgeComponent ExecutionStatus="item" />
+                        </ItemTemplate>
+                    </FilterDropdown>
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
+                                @onclick="() => { tagFilter.Clear(); stepTypeFilter.Clear(); statusFilter.Clear(); stepNameFilter = string.Empty; }">
+                        <CxIcon Icon="FeatherIcon.X" />
+                        Clear
                     </HxButton>
-                </div>
+                </HxButtonGroup>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="row justify-content-xxl-between justify-content-end">
+            <div class="col-auto mt-3">
+                <HxButtonGroup>
+                    @*Add all available AND enabled steps that have not yet been added to selected steps. Also filter based on current filter text.*@
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
+                                @onclick="() => builder.AddAll(s => s.IsEnabled && StepsAvailableToExecute.Any(available => s.StepId == available.StepId))">
+                        <CxIcon Icon="FeatherIcon.ChevronRight" />
+                        Select enabled
+                    </HxButton>
+                    @*Add all available steps that have not yet been added to selected steps. Also filter based on current filter text.*@
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
+                                @onclick="() => builder.AddAll(step => StepsAvailableToExecute.Any(available => step.StepId == available.StepId))">
+                        <CxIcon Icon="FeatherIcon.ChevronsRight" />
+                        Select all
+                    </HxButton>
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => builder?.Clear()">
+                        <CxIcon Icon="FeatherIcon.ChevronsLeft" />
+                        Deselect all
+                    </HxButton>
+                </HxButtonGroup>
+            </div>
+                <div class="col-auto ms-auto mt-3">
+                    <HxDropdownButtonGroup AutoClose="DropdownAutoClose.Outside" CssClass="ms-auto">
+                        <HxDropdownToggleButton Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="builder is not null">
+                            <CxIcon Icon="FeatherIcon.Bell" />
+                            Notifications
+                        </HxDropdownToggleButton>
+                        <HxDropdownContent>
+                            @if (builder is not null)
+                        {
+                            <div class="row p-3" style="min-width: 20rem;">
+                                <div class="col">
+                                    <div class="form-check">
+                                        <input type="checkbox" class="form-check-input" id="execute_notify"
+                                                checked=@builder.Notify
+                                                @bind-value="builder.Notify">
+                                        <label class="form-check-label" for="execute_notify">Notify based on subscriptions</label>
+                                    </div>
+                                    <h6 class="mt-3">Notify me</h6>
+                                    <div class="form-check">
+                                        <input type="radio" class="form-check-input" id="radio_notify_me_none"
+                                                checked=@(builder.NotifyCaller is null)
+                                                @onchange="() => builder.NotifyCaller = null">
+                                        <label class="form-check-label" for="radio_notify_me_none">None</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="radio" class="form-check-input" id="radio_notify_me_completion"
+                                                checked=@(builder.NotifyCaller == AlertType.OnCompletion)
+                                                @onchange="() => builder.NotifyCaller = AlertType.OnCompletion">
+                                        <label class="form-check-label" for="radio_notify_me_completion">On completion</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="radio" class="form-check-input" id="radio_notify_me_failure"
+                                                checked=@(builder.NotifyCaller == AlertType.OnFailure)
+                                                @onchange="() => builder.NotifyCaller = AlertType.OnFailure">
+                                        <label class="form-check-label" for="radio_notify_me_failure">On failure</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input type="radio" class="form-check-input" id="radio_notify_me_success"
+                                                checked=@(builder.NotifyCaller == AlertType.OnSuccess)
+                                                @onchange="() => builder.NotifyCaller = AlertType.OnSuccess">
+                                        <label class="form-check-label" for="radio_notify_me_success">On success</label>
+                                    </div>
+                                    <div class="form-check mt-3">
+                                        <input type="checkbox" class="form-check-input" id="execute_notify_me_overtime"
+                                                checked=@builder.NotifyCallerOvertime
+                                                @bind-value="builder.NotifyCallerOvertime">
+                                        <label class="form-check-label" for="execute_notify_me_overtime">On overtime</label>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </HxDropdownContent>
+                </HxDropdownButtonGroup>
+            </div>
+            <div class="col-auto ms-auto mt-3">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" @onclick="Execute"
+                            Enabled="(builder?.StepExecutions.Any() ?? false) && !startingExecution" Spinner="startingExecution">
+                    <CxIcon Icon="FeatherIcon.Play" />
+                    Execute
+                </HxButton>
             </div>
         </div>
     </div>
 </div>
 
-<div class="card shadow-sm mt-3 pt-1">
+<div class="card shadow-sm mt-3 pt-1 mb-4">
     <div class="row g-0">
         <div class="col">
             <h6 class="mx-2">Available steps</h6>
-            <div style="overflow-y: scroll; height: calc(100vh - 320px);">
+            <div style="overflow-y: scroll; height: calc(100vh - 300px);">
                 <table class="table table-hover table-sm">
                     <tbody>
                         @foreach (var step in StepsAvailableToExecute)
@@ -220,7 +215,7 @@ else if (builder is null)
 
         <div class="col">
             <h6 class="mx-2">Selected steps</h6>
-            <div style="overflow-y: scroll; height: calc(100vh - 320px);">
+            <div style="overflow-y: scroll; height: calc(100vh - 300px);">
                 <table class="table table-hover table-sm">
                     <tbody>
                         @foreach (var step in builder?.StepExecutions ?? Enumerable.Empty<ExecutionBuilderStepExecution>())
