@@ -48,60 +48,59 @@
                     <span class="col fst-italic text-secondary small">Disabled steps, if selected, will be included in manual executions.</span>
                 </div>
 
-                <div class="row py-3">
+                <div class="row">
                     <div class="row">
                         <div class="col">
-                            <CxIcon Icon="FeatherIcon.Tag" />
-                            <span class="me-3">Tags</span>
-                            @if (!Tags.Any())
-                            {
-                                <small class="text-secondary me-2">No tags</small>
-                            }
-                            @foreach (var tag in Tags)
-                            {
-                                <TagComponent Tag="tag"
-                                              Selected="executeTagsFilterSet.Contains(tag)"
-                                              CssClass="mx-1"
-                                              Style="cursor: pointer;"
-                                              OnClick="() => { if (executeTagsFilterSet.Contains(tag)) executeTagsFilterSet.Remove(tag); else executeTagsFilterSet.Add(tag); }" />
-                            }
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <div class="col">
                             <div class="row">
-                                <div class="col input-group input-group-sm">
-                                    <div class="input-group-text">
-                                        <CxIcon Icon="FeatherIcon.Filter" />
+                                <div class="col-auto mt-3">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-text">
+                                            <CxIcon Icon="FeatherIcon.Filter" />
+                                        </div>
+                                        <input type="search" class="form-control" @bind-value="executeFilterText" @bind-value:event="oninput"
+                                               placeholder="Filter by name" autocomplete="off" style="min-width: 15rem; max-width: 15rem;" />
                                     </div>
-                                    <input type="search" class="form-control" @bind-value="executeFilterText" @bind-value:event="oninput"
-                                           placeholder="Filter by name" autocomplete="off" />
                                 </div>
-                                <div class="col-auto">
-                                    <FilterDropdown TItem="StepType"
-                                                    FilterSet="stepTypeFilter"
-                                                    Items="builder.Steps.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
-                                                    OnChange="StateHasChanged">
-                                        <TitleTemplate>
-                                            <CxIcon Icon="FeatherIcon.Tool" />
-                                            Step type
-                                        </TitleTemplate>
-                                        <ItemTemplate Context="item">
-                                            <StepTypeIconComponent StepType="item" />
-                                            @item.ToString()
-                                        </ItemTemplate>
-                                    </FilterDropdown>
-                                </div>
-                                <div class="col-auto">
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
-                                    @onclick="() => { executeTagsFilterSet.Clear(); stepTypeFilter.Clear(); executeFilterText = string.Empty; }">
-                                        <CxIcon Icon="FeatherIcon.X" />
-                                        Clear
-                                    </HxButton>
+                                <div class="col-auto mt-3">
+                                    <HxButtonGroup Size="ButtonGroupSize.Small">
+                                        <FilterDropdown TItem="StepType"
+                                                        FilterSet="stepTypeFilter"
+                                                        Items="builder.Steps.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
+                                                        OnChange="StateHasChanged">
+                                            <TitleTemplate>
+                                                <CxIcon Icon="FeatherIcon.Tool" />
+                                                Step type
+                                            </TitleTemplate>
+                                            <ItemTemplate Context="item">
+                                                <StepTypeIconComponent StepType="item" />
+                                                @item.ToString()
+                                            </ItemTemplate>
+                                        </FilterDropdown>
+                                        <FilterDropdown TItem="ITag"
+                                                        FilterSet="executeTagsFilterSet"
+                                                        Items="Tags"
+                                                        IdSelector="tag => tag.TagId.ToString()"
+                                                        TextSelector="tag => tag.TagName"
+                                                                                    IsSearchable
+                                                         OnChange="StateHasChanged">
+                                             <TitleTemplate>
+                                                 <CxIcon Icon="FeatherIcon.Tag" />
+                                                 Tags
+                                             </TitleTemplate>
+                                             <ItemTemplate Context="item">
+                                                 <TagComponent Tag="item" />
+                                             </ItemTemplate>
+                                         </FilterDropdown>
+                                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
+                                                   @onclick="() => { executeTagsFilterSet.Clear(); stepTypeFilter.Clear(); executeFilterText = string.Empty; }">
+                                             <CxIcon Icon="FeatherIcon.X" />
+                                             Clear
+                                         </HxButton>
+                                    </HxButtonGroup>
                                 </div>
                             </div>
                         </div>
-                        <div class="col">
+                        <div class="col mt-3">
                             <HxButtonGroup>
                                 @*Add all available AND enabled steps that have not yet been added to selected steps. Also filter based on current filter text.*@
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
@@ -124,10 +123,10 @@
                     </div>
                 </div>
 
-                <div class="row mt-1">
+                <div class="row mt-3">
                     <div class="col">
                         <h6>Available steps</h6>
-                        <div style="overflow-y: scroll; height: calc(100vh - 375px);">
+                        <div style="overflow-y: scroll; height: calc(100vh - 325px);">
                             <table class="table table-hover table-sm">
                                 <tbody>
                                     @foreach (var step in StepsAvailableToExecute)
@@ -169,7 +168,7 @@
 
                     <div class="col">
                         <h6>Selected steps</h6>
-                        <div style="overflow-y: scroll; height: calc(100vh - 375px);">
+                        <div style="overflow-y: scroll; height: calc(100vh - 325px);">
                             <table class="table table-hover table-sm">
                                 <tbody>
                                     @foreach (var step in builder.StepExecutions)
