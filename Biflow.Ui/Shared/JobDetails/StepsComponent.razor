@@ -118,16 +118,16 @@
     </div>
 
     <div class="row mt-3">
-        <div class="col">
-            <div class="input-group input-group-sm me-3">
+        <div class="col-auto">
+            <div class="input-group input-group-sm">
                 <div class="input-group-text">
                     <CxIcon Icon="FeatherIcon.Search" />
                 </div>
-                <DebounceTextInput type="search" class="form-control" @bind-Value="stepNameFilter" placeholder="Filter by name" />
+                <DebounceTextInput type="search" class="form-control" @bind-Value="stepNameFilter" placeholder="Search by name" style="min-width: 15rem; max-width: 15rem;" />
             </div>
         </div>
         
-        <div class="col-xxl mt-3 mt-xxl-0 d-inline-flex align-items-center">
+        <div class="col-xxl-auto mt-3 mt-xxl-0 d-inline-flex align-items-center">
             <HxButtonGroup Size="ButtonGroupSize.Small">
                 <FilterDropdown TItem="StepType"
                                 FilterSet="stepTypeFilter"
