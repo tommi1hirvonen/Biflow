@@ -4,8 +4,8 @@ namespace Biflow.DataAccess;
 
 internal static class DuplicatorExtensions
 {
-    internal static string[] StepNavigationPaths => new[]
-    {
+    internal static readonly string[] StepNavigationPaths =
+    [
         nameof(Step.Job),
         nameof(Step.Dependencies),
         nameof(Step.Sources),
@@ -20,6 +20,7 @@ internal static class DuplicatorExtensions
         nameof(DatasetStep.AppRegistration),
         nameof(JobStep.JobToExecute),
         nameof(PipelineStep.PipelineClient),
+        nameof(QlikStep.QlikCloudClient),
         nameof(SqlStep.ResultCaptureJobParameter)
-    };
+    ];
 }
