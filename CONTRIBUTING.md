@@ -47,6 +47,8 @@ The following new or existing files/classes need to be added or edited when addi
     - Add navigation property mapping between FooStep and FooStepParameter
     - Add discriminator mapping for FooStepExecutionParameter
     - Add navigation property mapping between FooStepExecution and FooStepExecutionParameter
+- DuplicatorExtensions
+    - Add potential new navigation paths that should be considered when copying steps and jobs.
 
 ### Biflow.Database
 
@@ -73,14 +75,16 @@ The following new or existing files/classes need to be added or edited when addi
 **Add new classes**
 
 - FooStepExecutor
-  - Inherits StepExecutorBase
+  - Implements IStepExecutor<,>
 
 **Update existing classes**
 
 - JobExecutorFactory
-  - Add possible new navigation property include statements to the initial execution load command
-- StepExecutorFactory
-  - Add mapping from FooStep to FooStepExecutor
+  - Add possible new navigation property include statements to the initial execution load command.
+- Extensions
+  - Register new StepOrchestrator service using the new step executor class.
+- StepOrchestratorProvider
+  - Add mapping from FooStepExecution and FooStepExecutionAttempt to the appropriate step orchestrator and executor.
 
 ### Biflow.Ui
 
