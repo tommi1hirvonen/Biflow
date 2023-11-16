@@ -122,8 +122,8 @@ public class UserService(ISqlConnectionFactory sqlConnectionFactory)
         {
             await connection.ExecuteAsync(
                 """
-                INSERT INTO [biflow].[User] ([Username],[PasswordHash],[Roles],[CreatedDateTime],[LastModifiedDateTime]) VALUES
-                (@Username, @PasswordHash, @Roles, getdate(), getdate())
+                INSERT INTO [biflow].[User] ([UserId],[Username],[PasswordHash],[Roles],[CreatedDateTime],[LastModifiedDateTime]) VALUES
+                (newid(), @Username, @PasswordHash, @Roles, getdate(), getdate())
                 """, new { Username = username, PasswordHash = hash, Roles = rolesJson });
         }
     }
@@ -149,8 +149,8 @@ public class UserService(ISqlConnectionFactory sqlConnectionFactory)
         {
             await connection.ExecuteAsync(
                 """
-                INSERT INTO [biflow].[User] ([Username],[Roles],[CreatedDateTime],[LastModifiedDateTime]) VALUES
-                (@Username, @Roles, getdate(), getdate())
+                INSERT INTO [biflow].[User] ([UserId],[Username],[Roles],[CreatedDateTime],[LastModifiedDateTime]) VALUES
+                (newid(), @Username, @Roles, getdate(), getdate())
                 """, new { Username = username, Roles = rolesJson });
         }
     }
