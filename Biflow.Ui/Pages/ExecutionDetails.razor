@@ -310,6 +310,7 @@
                 {
                     foreach (var param in execution.ExecutionParameters)
                     {
+                        // TODO Consider adding an offcanvas to display the execution parameter's value change history through SQL step captures.
                         <tr>
                             <td>@param.DisplayName</td>
                             <td class="font-monospace">@param.DisplayValue</td>
