@@ -365,7 +365,7 @@
                     {
                         <tr><td class="small">No execution condition parameters</td></tr>
                     }
-                    @foreach (var param in StepExecutionAttempt.StepExecution.ExecutionConditionParameters ?? Enumerable.Empty<StepExecutionConditionParameter>())
+                    @foreach (var param in StepExecutionAttempt.StepExecution.ExecutionConditionParameters?.OrderBy(p => p.ParameterName) ?? Enumerable.Empty<StepExecutionConditionParameter>())
                     {
                         <tr>
                             <td class="fw-bold w-25">@param.DisplayName</td>
@@ -391,7 +391,7 @@
                         {
                             <tr><td class="small">No parameters</td></tr>
                         }
-                        @foreach (var param in hasParams.StepExecutionParameters ?? Enumerable.Empty<StepExecutionParameterBase>())
+                        @foreach (var param in parameters.OrderBy(p => p.ParameterName))
                         {
                             <tr>
                                 <td class="fw-bold w-25">
