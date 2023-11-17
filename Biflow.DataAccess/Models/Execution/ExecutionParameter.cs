@@ -11,6 +11,7 @@ public class ExecutionParameter : DynamicParameter
     {
         ParameterName = parameterName;
         ParameterValue = parameterValue;
+        DefaultValue = parameterValue;
         ParameterValueType = parameterValueType;
     }
 
@@ -25,6 +26,9 @@ public class ExecutionParameter : DynamicParameter
     }
 
     public Guid ExecutionId { get; private set; }
+
+    [Column(TypeName = "sql_variant")]
+    public object? DefaultValue { get; private set; }
 
     public Execution Execution { get; set; } = null!;
 

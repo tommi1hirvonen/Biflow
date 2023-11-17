@@ -7,6 +7,7 @@
 	[ParameterValueType] VARCHAR(20) NOT NULL,
     [UseExpression] BIT NOT NULL CONSTRAINT [DF_ExecutionParameter_UseExpression] DEFAULT (0),
     [Expression] NVARCHAR(MAX) NULL,
+    [DefaultValue] SQL_VARIANT NULL,
     CONSTRAINT [PK_ExecutionParameter] PRIMARY KEY CLUSTERED ([ExecutionId], [ParameterId]),
 	CONSTRAINT [FK_ExecutionParameter_Execution] FOREIGN KEY ([ExecutionId]) REFERENCES [biflow].[Execution] ([ExecutionId]),
 	CONSTRAINT [CK_ExecutionParameter_ParameterValueType] CHECK (

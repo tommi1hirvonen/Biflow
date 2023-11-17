@@ -287,7 +287,8 @@
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Value</th>
+                    <th>Default value</th>
+                    <th>Actual value</th>
                     <th>Datatype</th>
                 </tr>
             </thead>
@@ -295,7 +296,7 @@
                 @if (execution is null)
                 {
                     <tr>
-                        <td colspan="3" class="text-center">
+                        <td colspan="4" class="text-center">
                             <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
                         </td>
                     </tr>
@@ -303,7 +304,7 @@
                 else if (!execution.ExecutionParameters.Any())
                 {
                     <tr>
-                        <td colspan="3">No parameters</td>
+                        <td colspan="4">No parameters</td>
                     </tr>
                 }
                 else
@@ -313,6 +314,7 @@
                         // TODO Consider adding an offcanvas to display the execution parameter's value change history through SQL step captures.
                         <tr>
                             <td>@param.DisplayName</td>
+                            <td class="font-monospace">@param.DefaultValue</td>
                             <td class="font-monospace">@param.DisplayValue</td>
                             <td>@param.DisplayValueType</td>
                         </tr>
