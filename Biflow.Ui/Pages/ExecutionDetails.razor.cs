@@ -35,6 +35,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
     private Execution? execution;
     private bool loading = false;
     private SortMode sortMode = SortMode.StartedAsc;
+    private ExecutionParameterLineageOffcanvas? parameterLineageOffcanvas;
 
     // Maintain a list of executions that are being stopped.
     // This same component instance can be used to switch between different job executions.

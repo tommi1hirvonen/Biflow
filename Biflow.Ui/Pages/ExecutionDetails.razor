@@ -290,13 +290,14 @@
                     <th>Default value</th>
                     <th>Actual value</th>
                     <th>Datatype</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
                 @if (execution is null)
                 {
                     <tr>
-                        <td colspan="4" class="text-center">
+                        <td colspan="5" class="text-center">
                             <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
                         </td>
                     </tr>
@@ -304,7 +305,7 @@
                 else if (!execution.ExecutionParameters.Any())
                 {
                     <tr>
-                        <td colspan="4">No parameters</td>
+                        <td colspan="5">No parameters</td>
                     </tr>
                 }
                 else
@@ -317,6 +318,11 @@
                             <td class="font-monospace">@param.DefaultValue</td>
                             <td class="font-monospace">@param.DisplayValue</td>
                             <td>@param.DisplayValueType</td>
+                            <td class="small">
+                                <a class="link-body-emphasis" style="cursor: pointer;" @onclick="() => parameterLineageOffcanvas.LetAsync(x => x.ShowAsync(param))">
+                                    Show lineage
+                                </a>
+                            </td>
                         </tr>
                     }
                 }
@@ -499,3 +505,5 @@ else if (ShowReport == Report.History && execution?.JobId is Guid jobId)
         <JobHistoryComponent JobId="jobId" />
     </div>
 }
+
+<ExecutionParameterLineageOffcanvas @ref="parameterLineageOffcanvas" />

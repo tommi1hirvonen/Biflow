@@ -1,0 +1,112 @@
+﻿
+<HxOffcanvas @ref="offcanvas" Backdrop="OffcanvasBackdrop.False" Title="@($"{lineageParameter?.ParameterName} lineage")">
+    <BodyTemplate>
+        @if (lineageParameter is not null && lineageItems is not null)
+        {
+            <div class="row">
+                <div class="col">
+                    <ul class="list-group">
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col h6">
+                                    Default value
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col font-monospace">
+                                    @lineageParameter.DefaultValue
+                                </div>
+                            </div>
+                        </li>
+                        @foreach (var item in lineageItems)
+                        {
+                            <div class="list-group-item">
+                                <div class="row">
+                                    <div class="col h6">
+                                        <StepTypeIconComponent StepType="item.Step.StepType" />
+                                        @item.Step.StepName
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col">
+                                        @item.Timestamp?.LocalDateTime
+                                    </div>
+                                    <div class="col-auto">
+                                        @if (item.Capture)
+                                        {
+                                            <span class="badge rounded-pill text-bg-primary text-white">Capture</span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="row mt-1">
+                                    <div class="col font-monospace">
+                                        @item.Value
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        <li class="list-group-item">
+                            <div class="row">
+                                <div class="col h6">
+                                    End value
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col font-monospace">
+                                    @lineageParameter.ParameterValue
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+        }
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Secondary" OnClick="() => offcanvas.LetAsync(x => x.HideAsync())">
+            Close
+        </HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
+@code {
+    private HxOffcanvas? offcanvas;
+    private ExecutionParameter? lineageParameter;
+    private IEnumerable<LineageItem>? lineageItems;
+
+    public async Task ShowAsync(ExecutionParameter parameter)
+    {
+        lineageItems = null;
+        lineageParameter = parameter;
+
+        List<LineageItem> items = [];
+        foreach (var step in lineageParameter.Execution.StepExecutions)
+        {
+            if (step is IHasStepExecutionParameters hasParams)
+            {
+                var param = hasParams.StepExecutionParameters.FirstOrDefault(p => p.InheritFromExecutionParameterId == lineageParameter.ParameterId);
+                if (param is not null)
+                {
+                    var time = step.StepExecutionAttempts.MinBy(a => a.RetryAttemptIndex)?.StartDateTime;
+                    items.Add(new(step, time, param.ParameterValue, false));
+                }
+            }
+            if (step is SqlStepExecution sql && sql.ResultCaptureJobParameterId == lineageParameter.ParameterId)
+            {
+                var time = step.StepExecutionAttempts.MaxBy(a => a.RetryAttemptIndex)?.EndDateTime;
+                items.Add(new(step, time, sql.ResultCaptureJobParameterValue, true));
+            }
+        }
+        lineageItems = items.OrderBy(i => i.Timestamp).ToArray();
+
+        StateHasChanged();
+
+        if (offcanvas is not null)
+        {
+            await offcanvas.ShowAsync();
+        }
+    }
+
+    private record LineageItem(StepExecution Step, DateTimeOffset? Timestamp, object? Value, bool Capture);
+}
