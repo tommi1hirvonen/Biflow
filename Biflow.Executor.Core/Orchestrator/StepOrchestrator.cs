@@ -45,7 +45,7 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
                     context.Attach(param);
                     param.ExecutionParameterValue = param.InheritFromExecutionParameter?.ParameterValue;
                 }
-                // Also evaluate expressiosn and save the result to the step parameter's value property.
+                // Also evaluate expressions and save the result to the step parameter's value property.
                 foreach (var param in hasParameters.StepExecutionParameters.Where(p => p.UseExpression))
                 {
                     context.Attach(param);
@@ -55,8 +55,7 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{ExecutionId} {Step} Error updating parameter values",
-                stepExecution.ExecutionId, stepExecution);
+                _logger.LogError(ex, "{ExecutionId} {Step} Error updating parameter values", stepExecution.ExecutionId, stepExecution);
                 executionAttempt.AddError(ex, "Error updating parameter values");
                 await UpdateExecutionFailedAsync(executionAttempt, StepExecutionStatus.Failed);
                 return false;

@@ -50,15 +50,15 @@ internal class SqlStepExecutor(
                 using var context = _dbContextFactory.CreateDbContext();
                 context.Attach(_step);
                 _step.ResultCaptureJobParameterValue = result;
-                await context.SaveChangesAsync();
-
+                
                 // Update the job execution parameter with the result value for following steps to use.
                 var param = _step.Execution.ExecutionParameters.FirstOrDefault(p => p.ParameterId == _step.ResultCaptureJobParameterId);
                 if (param is not null)
                 {
                     param.ParameterValue = result;
                 }
-                // TODO Consider saving changes here instead to persist the changed execution parameter value.
+
+                await context.SaveChangesAsync();
             }
             else
             {
