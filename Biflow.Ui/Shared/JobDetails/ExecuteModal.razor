@@ -44,10 +44,6 @@
 
             @if (activeView == View.Steps)
             {
-                <div class="row mt-3">
-                    <span class="col fst-italic text-secondary small">Disabled steps, if selected, will be included in manual executions.</span>
-                </div>
-
                 <div class="row">
                     <div class="row">
                         <div class="col">
@@ -99,18 +95,34 @@
                                     </HxButtonGroup>
                                 </div>
                             </div>
+                            <div class="row">
+                                <div class="col-auto mt-2">
+                                    <div class="form-check form-check-inline">
+                                        <input type="radio" class="form-check-input" id="execute_radio_all"
+                                               checked=@(stateFilter == StateFilter.All)
+                                               @onchange="() => stateFilter = StateFilter.All">
+                                        <label class="form-check-label" for="execute_radio_all">All</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input type="radio" class="form-check-input" id="execute_radio_enabled"
+                                               checked=@(stateFilter == StateFilter.Enabled)
+                                               @onchange="() => stateFilter = StateFilter.Enabled">
+                                        <label class="form-check-label" for="execute_radio_enabled">Enabled</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input type="radio" class="form-check-input" id="execute_radio_disabled"
+                                               checked=@(stateFilter == StateFilter.Disabled)
+                                               @onchange="() => stateFilter = StateFilter.Disabled">
+                                        <label class="form-check-label" for="execute_radio_disabled">Disabled</label>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="col mt-3">
                             <HxButtonGroup>
                                 @*Add all available AND enabled steps that have not yet been added to selected steps. Also filter based on current filter text.*@
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                @onclick="() => builder.AddAll(s => s.IsEnabled && StepsAvailableToExecute.Any(available => s.StepId == available.StepId))">
-                                    <CxIcon Icon="FeatherIcon.ChevronRight" />
-                                    Select enabled
-                                </HxButton>
-                                @*Add all available steps that have not yet been added to selected steps. Also filter based on current filter text.*@
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                @onclick="() => builder.AddAll(step => StepsAvailableToExecute.Any(available => step.StepId == available.StepId))">
+                                            @onclick="() => builder.AddAll(s => StepsAvailableToExecute.Any(available => s.StepId == available.StepId))">
                                     <CxIcon Icon="FeatherIcon.ChevronsRight" />
                                     Select all
                                 </HxButton>
@@ -131,7 +143,7 @@
                                 <tbody>
                                     @foreach (var step in StepsAvailableToExecute)
                                     {
-                                        <tr style="cursor: pointer;">
+                                        <tr style="cursor: pointer;" title="@(step.IsEnabled ? null : "Step is disabled")">
                                             <td class="@(step.IsEnabled ? null : "text-secondary") align-middle" @onclick="() => step.AddToExecution()">
                                                 <StepTypeIconComponent StepType="@step.StepType" />
                                                 &nbsp;
@@ -410,20 +422,23 @@
     private string executeFilterText = string.Empty;
     private View activeView = View.Steps;
     private ExecutionBuilderStepExecution? parameterEditStep;
+    private StateFilter stateFilter = StateFilter.Enabled;
+
+    private enum StateFilter { All, Enabled, Disabled }
 
     private enum View { Steps, StepParameters, JobParameters }
 
     private IEnumerable<ITag> Tags => builder?.Steps
-    .SelectMany(step => step.Tags)
-    .DistinctBy(t => t.TagName)
-    .OrderBy(t => t.TagName) ?? Enumerable.Empty<ITag>();
+        .SelectMany(step => step.Tags)
+        .DistinctBy(t => t.TagName)
+        .OrderBy(t => t.TagName) ?? Enumerable.Empty<ITag>();
 
-    private IEnumerable<ExecutionBuilderStep> StepsAvailableToExecute =>
-    builder?.Steps
-    .Where(step => step.StepName?.ContainsIgnoreCase(executeFilterText) == true) // Step name filter
-    .Where(step => !stepTypeFilter.Any() || stepTypeFilter.Contains(step.StepType)) // Filter based on step type
-    .Where(step => executeTagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Tag filter
-    ?? Enumerable.Empty<ExecutionBuilderStep>();
+    private IEnumerable<ExecutionBuilderStep> StepsAvailableToExecute => builder?.Steps
+        .Where(step => stateFilter switch { StateFilter.Enabled => step.IsEnabled, StateFilter.Disabled => !step.IsEnabled, _ => true })
+        .Where(step => step.StepName?.ContainsIgnoreCase(executeFilterText) == true) // Step name filter
+        .Where(step => !stepTypeFilter.Any() || stepTypeFilter.Contains(step.StepType)) // Filter based on step type
+        .Where(step => executeTagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Tag filter
+        ?? Enumerable.Empty<ExecutionBuilderStep>();
 
     private void ToggleParameterEditStep(ExecutionBuilderStepExecution step) =>
         parameterEditStep = step.StepId == parameterEditStep?.StepId ? null : step;

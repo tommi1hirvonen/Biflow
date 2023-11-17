@@ -494,9 +494,7 @@ else if (ShowReport == Report.Graph)
 else if (ShowReport == Report.Rerun)
 {
     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-        <div class="mt-3">
             <RerunComponent Execution="execution" />
-        </div>
     </AuthorizeView>
 }
 else if (ShowReport == Report.History && execution?.JobId is Guid jobId)

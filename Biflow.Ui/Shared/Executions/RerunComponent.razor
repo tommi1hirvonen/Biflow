@@ -95,6 +95,28 @@ else if (builder is null)
                 </HxButtonGroup>
             </div>
         </div>
+        <div class="row">
+            <div class="col-auto mt-2">
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="execute_radio_all"
+                           checked=@(stateFilter == StateFilter.All)
+                           @onchange="() => stateFilter = StateFilter.All">
+                    <label class="form-check-label" for="execute_radio_all">All</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="execute_radio_enabled"
+                           checked=@(stateFilter == StateFilter.Enabled)
+                           @onchange="() => stateFilter = StateFilter.Enabled">
+                    <label class="form-check-label" for="execute_radio_enabled">Enabled</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="execute_radio_disabled"
+                           checked=@(stateFilter == StateFilter.Disabled)
+                           @onchange="() => stateFilter = StateFilter.Disabled">
+                    <label class="form-check-label" for="execute_radio_disabled">Disabled</label>
+                </div>
+            </div>
+        </div>
     </div>
     <div class="col">
         <div class="row justify-content-xxl-between justify-content-end">
@@ -102,13 +124,7 @@ else if (builder is null)
                 <HxButtonGroup>
                     @*Add all available AND enabled steps that have not yet been added to selected steps. Also filter based on current filter text.*@
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                @onclick="() => builder.AddAll(s => s.IsEnabled && StepsAvailableToExecute.Any(available => s.StepId == available.StepId))">
-                        <CxIcon Icon="FeatherIcon.ChevronRight" />
-                        Select enabled
-                    </HxButton>
-                    @*Add all available steps that have not yet been added to selected steps. Also filter based on current filter text.*@
-                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                @onclick="() => builder.AddAll(step => StepsAvailableToExecute.Any(available => step.StepId == available.StepId))">
+                                @onclick="() => builder.AddAll(s => StepsAvailableToExecute.Any(available => s.StepId == available.StepId))">
                         <CxIcon Icon="FeatherIcon.ChevronsRight" />
                         Select all
                     </HxButton>
@@ -126,49 +142,49 @@ else if (builder is null)
                         </HxDropdownToggleButton>
                         <HxDropdownContent>
                             @if (builder is not null)
-                        {
-                            <div class="row p-3" style="min-width: 20rem;">
-                                <div class="col">
-                                    <div class="form-check">
-                                        <input type="checkbox" class="form-check-input" id="execute_notify"
-                                                checked=@builder.Notify
-                                                @bind-value="builder.Notify">
-                                        <label class="form-check-label" for="execute_notify">Notify based on subscriptions</label>
-                                    </div>
-                                    <h6 class="mt-3">Notify me</h6>
-                                    <div class="form-check">
-                                        <input type="radio" class="form-check-input" id="radio_notify_me_none"
-                                                checked=@(builder.NotifyCaller is null)
-                                                @onchange="() => builder.NotifyCaller = null">
-                                        <label class="form-check-label" for="radio_notify_me_none">None</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input type="radio" class="form-check-input" id="radio_notify_me_completion"
-                                                checked=@(builder.NotifyCaller == AlertType.OnCompletion)
-                                                @onchange="() => builder.NotifyCaller = AlertType.OnCompletion">
-                                        <label class="form-check-label" for="radio_notify_me_completion">On completion</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input type="radio" class="form-check-input" id="radio_notify_me_failure"
-                                                checked=@(builder.NotifyCaller == AlertType.OnFailure)
-                                                @onchange="() => builder.NotifyCaller = AlertType.OnFailure">
-                                        <label class="form-check-label" for="radio_notify_me_failure">On failure</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input type="radio" class="form-check-input" id="radio_notify_me_success"
-                                                checked=@(builder.NotifyCaller == AlertType.OnSuccess)
-                                                @onchange="() => builder.NotifyCaller = AlertType.OnSuccess">
-                                        <label class="form-check-label" for="radio_notify_me_success">On success</label>
-                                    </div>
-                                    <div class="form-check mt-3">
-                                        <input type="checkbox" class="form-check-input" id="execute_notify_me_overtime"
-                                                checked=@builder.NotifyCallerOvertime
-                                                @bind-value="builder.NotifyCallerOvertime">
-                                        <label class="form-check-label" for="execute_notify_me_overtime">On overtime</label>
+                            {
+                                <div class="row p-3" style="min-width: 20rem;">
+                                    <div class="col">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" id="execute_notify"
+                                                    checked=@builder.Notify
+                                                    @bind-value="builder.Notify">
+                                            <label class="form-check-label" for="execute_notify">Notify based on subscriptions</label>
+                                        </div>
+                                        <h6 class="mt-3">Notify me</h6>
+                                        <div class="form-check">
+                                            <input type="radio" class="form-check-input" id="radio_notify_me_none"
+                                                    checked=@(builder.NotifyCaller is null)
+                                                    @onchange="() => builder.NotifyCaller = null">
+                                            <label class="form-check-label" for="radio_notify_me_none">None</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input type="radio" class="form-check-input" id="radio_notify_me_completion"
+                                                    checked=@(builder.NotifyCaller == AlertType.OnCompletion)
+                                                    @onchange="() => builder.NotifyCaller = AlertType.OnCompletion">
+                                            <label class="form-check-label" for="radio_notify_me_completion">On completion</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input type="radio" class="form-check-input" id="radio_notify_me_failure"
+                                                    checked=@(builder.NotifyCaller == AlertType.OnFailure)
+                                                    @onchange="() => builder.NotifyCaller = AlertType.OnFailure">
+                                            <label class="form-check-label" for="radio_notify_me_failure">On failure</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input type="radio" class="form-check-input" id="radio_notify_me_success"
+                                                    checked=@(builder.NotifyCaller == AlertType.OnSuccess)
+                                                    @onchange="() => builder.NotifyCaller = AlertType.OnSuccess">
+                                            <label class="form-check-label" for="radio_notify_me_success">On success</label>
+                                        </div>
+                                        <div class="form-check mt-3">
+                                            <input type="checkbox" class="form-check-input" id="execute_notify_me_overtime"
+                                                    checked=@builder.NotifyCallerOvertime
+                                                    @bind-value="builder.NotifyCallerOvertime">
+                                            <label class="form-check-label" for="execute_notify_me_overtime">On overtime</label>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        }
+                            }
                     </HxDropdownContent>
                 </HxDropdownButtonGroup>
             </div>
@@ -187,13 +203,13 @@ else if (builder is null)
     <div class="row g-0">
         <div class="col">
             <h6 class="mx-2">Available steps</h6>
-            <div style="overflow-y: scroll; height: calc(100vh - 300px);">
+            <div style="overflow-y: scroll; height: calc(100vh - 310px);">
                 <table class="table table-hover table-sm">
                     <tbody>
                         @foreach (var step in StepsAvailableToExecute)
                         {
                             var status = GetStepExecutionStatus(step.StepId);
-                            <tr style="cursor: pointer;" @onclick="() => step.AddToExecution()">
+                            <tr style="cursor: pointer;" @onclick="() => step.AddToExecution()" title="@(step.IsEnabled ? null : "Step is disabled")">
                                 <td class="@(step.IsEnabled ? null : "text-secondary") align-middle">
                                     <StepTypeIconComponent StepType="@step.StepType" />
                                     &nbsp;
@@ -215,7 +231,7 @@ else if (builder is null)
 
         <div class="col">
             <h6 class="mx-2">Selected steps</h6>
-            <div style="overflow-y: scroll; height: calc(100vh - 300px);">
+            <div style="overflow-y: scroll; height: calc(100vh - 310px);">
                 <table class="table table-hover table-sm">
                     <tbody>
                         @foreach (var step in builder?.StepExecutions ?? Enumerable.Empty<ExecutionBuilderStepExecution>())
@@ -251,6 +267,9 @@ else if (builder is null)
     private bool loading = true;
     private bool startingExecution = false;
     private Guid? lastStartedExecutionId;
+    private StateFilter stateFilter = StateFilter.Enabled;
+
+    private enum StateFilter { All, Enabled, Disabled }
 
     private IEnumerable<StepExecutionStatus> Statuses => Execution?.StepExecutions
         .Select(e => e.StepExecutionAttempts)
@@ -267,6 +286,7 @@ else if (builder is null)
         ?? Enumerable.Empty<ITag>();
 
     private IEnumerable<ExecutionBuilderStep> StepsAvailableToExecute => builder?.Steps
+        .Where(step => stateFilter switch { StateFilter.Enabled => step.IsEnabled, StateFilter.Disabled => !step.IsEnabled, _ => true })
         .Where(step => step.StepName?.ContainsIgnoreCase(stepNameFilter) == true) // Step name filter
         .Where(step => !stepTypeFilter.Any() || stepTypeFilter.Contains(step.StepType)) // Filter based on step type
         .Where(step => tagFilter.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Tag filter
