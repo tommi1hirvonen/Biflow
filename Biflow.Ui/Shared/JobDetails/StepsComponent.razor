@@ -11,24 +11,44 @@
                             Add step
                         </HxDropdownToggleButton>
                         <HxDropdownMenu>
-                            @{
-                                var stepTypes = Enum.GetValues<StepType>()
-                                    .GroupBy(t => t.GetCategory())
-                                    .OrderBy(c => c.Key?.Ordinal);
-                            }
-                            @foreach (var group in stepTypes)
-                            {
-                                <HxDropdownHeader>@group.Key?.Name</HxDropdownHeader>
-                                @foreach (var stepType in group)
-                                {
-                                    <HxDropdownItem @onclick="() => ShowNewStepModal(stepType)"
-                                                    Enabled="!IsStepTypeDisabled(stepType)"
-                                                    title="@stepType.GetDescription()">
-                                        <StepTypeIconComponent StepType="stepType" />
-                                        @stepType
-                                    </HxDropdownItem>
+                            <div class="px-3 g-3" style="min-width: 38rem;">
+                                @{
+                                    var stepTypes = Enum.GetValues<StepType>()
+                                        .GroupBy(t => t.GetCategory())
+                                        .OrderBy(c => c.Key?.Ordinal);
+                                    var stepTypeGroupIndex = 0;
                                 }
-                            }
+                                @foreach (var group in stepTypes)
+                                {
+                                    var stepTypeIndex = 0;
+                                    <div class="row @(stepTypeGroupIndex > 0 ? "pt-2 mt-2" : null)">
+                                        <div class="col-auto small fw-semibold">
+                                            @group.Key?.Name
+                                        </div>
+                                        <div class="col d-flex">
+                                            @foreach (var stepType in group)
+                                            {
+                                                var (isDisabled, disabledMessage) = IsStepTypeDisabled(stepType);
+                                                var description = stepType.GetDescription();
+                                                var popoverContent = isDisabled
+                                                    ? $"<p>Step type is disabled - {disabledMessage}</p><span>{description}</span>"
+                                                    : $"<span>{description}</span>";
+                                                <button class="btn btn-step d-inline-flex align-items-center px-3 fw-normal border rounded-pill @(stepTypeIndex > 0 ? "ms-3" : null) @(isDisabled ? "disabled" : null)"
+                                                      @onclick="() => ShowNewStepModal(stepType)">
+                                                    <StepTypeIconComponent StepType="stepType" />
+                                                    &nbsp;
+                                                    @stepType                                                    
+                                                </button>
+                                                <HxPopover Trigger="PopoverTrigger.Hover" Content="@popoverContent" Html WrapperCssClass="d-inline-flex ms-1 mt-1 align-self-start feather-sm text-muted">
+                                                    <CxIcon Icon="FeatherIcon.Info" />
+                                                </HxPopover>
+                                                stepTypeIndex++;
+                                            }
+                                        </div>
+                                    </div>
+                                    stepTypeGroupIndex++;
+                                }
+                            </div>
                         </HxDropdownMenu>
                     </HxDropdownButtonGroup>
                 </AuthorizeView>

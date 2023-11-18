@@ -99,17 +99,17 @@ public partial class StepsComponent : ComponentBase
         }
     }
 
-    private bool IsStepTypeDisabled(StepType type) => type switch
+    private (bool, string) IsStepTypeDisabled(StepType type) => type switch
     {
-        StepType.Sql or StepType.Package => (SqlConnections?.Count ?? 0) == 0,
-        StepType.Pipeline => (PipelineClients?.Count ?? 0) == 0,
-        StepType.Function => (FunctionApps?.Count ?? 0) == 0,
-        StepType.Dataset => (AppRegistrations?.Count ?? 0) == 0,
-        StepType.Job => Jobs is null || Jobs.Count == 1,
-        StepType.AgentJob => (SqlConnections?.Count ?? 0) == 0,
-        StepType.Tabular => (AsConnections?.Count ?? 0) == 0,
-        StepType.Qlik => (QlikCloudClients?.Count ?? 0) == 0,
-        _ => false,
+        StepType.Sql or StepType.Package => ((SqlConnections?.Count ?? 0) == 0, "No SQL connections defined"),
+        StepType.Pipeline => ((PipelineClients?.Count ?? 0) == 0, "No pipeline clients defined"),
+        StepType.Function => ((FunctionApps?.Count ?? 0) == 0, "No Function Apps defined"),
+        StepType.Dataset => ((AppRegistrations?.Count ?? 0) == 0, "No app registrations defined"),
+        StepType.Job => (Jobs is null || Jobs.Count == 1, ""),
+        StepType.AgentJob => ((SqlConnections?.Count ?? 0) == 0, "No SQL connections defined"),
+        StepType.Tabular => ((AsConnections?.Count ?? 0) == 0, "No Analysis Services connections defined"),
+        StepType.Qlik => ((QlikCloudClients?.Count ?? 0) == 0, "No Qlik Cloud clients defined"),
+        _ => (false, "")
     };
 
     private async Task ShowEditModal(Step step) => await OpenStepEditModal(step.StepId, step.StepType);

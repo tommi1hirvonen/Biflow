@@ -57,6 +57,16 @@ $highlight-text-dark: #dee2e6;
             $active-background: shade-color($dark, 40%)
         );
     }
+
+    .btn-step {
+        @include button-variant(
+            rgba(0, 0, 0, 0),
+            tint-color($dark, 25%),
+            $hover-background: shade-color($dark, 35%),
+            $active-background: $primary,
+            $active-color: $white
+        );
+    }
 }
 
 [data-bs-theme="light"], [data-bs-theme="auto"] {
@@ -66,6 +76,16 @@ $highlight-text-dark: #dee2e6;
             shade-color($light, 25%),
             $hover-background: shade-color($light, $btn-hover-bg-shade-amount),
             $active-background: shade-color($light, $btn-active-bg-shade-amount)
+        );
+    }
+
+    .btn-step {
+        @include button-variant(
+            rgba(255, 255, 255, 0),
+            shade-color($light, 25%),
+            $hover-background: shade-color($light, $btn-hover-bg-shade-amount),
+            $active-background: $primary,
+            $active-color: $white
         );
     }
 }
@@ -416,6 +436,11 @@ $dep-statuses: (
 .feather {
     width: 16px;
     height: 16px;
+}
+
+.feather-sm .feather {
+    width: 14px;
+    height: 14px;
 }
 
 .tag-remove .feather {

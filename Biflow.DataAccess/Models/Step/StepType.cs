@@ -21,7 +21,7 @@ public enum StepType
     Sql,
     
     [Category("Reporting", 3)]
-    [Description("SQL Server or Azure Analysis Services tabular model")]
+    [Description("SQL Server Analysis Services or Azure Analysis Services tabular model")]
     Tabular,
     
     [Category("Reporting", 3)]
