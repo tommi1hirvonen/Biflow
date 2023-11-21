@@ -141,10 +141,12 @@ public partial class UserEditModal : ComponentBase, IDisposable
 
                     await context.SaveChangesAsync();
 
-                    var connection = context.Database.GetDbConnection();
-
-                    // Update the password hash.
-                    await UserService.AdminUpdatePasswordAsync(model.User.Username, model.PasswordModel.Password, connection, transaction);
+                    if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn)
+                    {
+                        var connection = context.Database.GetDbConnection();
+                        // Update the password hash.
+                        await UserService.AdminUpdatePasswordAsync(model.User.Username, model.PasswordModel.Password, connection, transaction);
+                    }
 
                     await transaction.CommitAsync();
                 }
