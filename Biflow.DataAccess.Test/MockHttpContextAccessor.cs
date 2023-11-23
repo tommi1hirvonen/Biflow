@@ -2,12 +2,7 @@
 
 namespace Biflow.DataAccess.Test;
 
-internal class MockHttpContextAccessor : IHttpContextAccessor
+internal class MockHttpContextAccessor(string username, string role) : IHttpContextAccessor
 {
-    public HttpContext HttpContext { get; set; }
-
-    public MockHttpContextAccessor(string username, string role)
-    {
-        HttpContext = new MockHttpContext(username, role);
-    }
+    public HttpContext? HttpContext { get; set; } = new MockHttpContext(username, role);
 }

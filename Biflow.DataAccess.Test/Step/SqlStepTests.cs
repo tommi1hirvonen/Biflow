@@ -5,28 +5,18 @@ using Xunit;
 namespace Biflow.DataAccess.Test;
 
 [Collection(nameof(DatabaseCollection))]
-public class SqlStepTests : IClassFixture<SqlStepFixture>
+public class SqlStepTests(SqlStepFixture fixture) : IClassFixture<SqlStepFixture>
 {
-    private SqlStep SqlStep { get; }
-
-    public SqlStepTests(SqlStepFixture fixture)
-    {
-        SqlStep = fixture.SqlStep;
-    }
+    private SqlStep SqlStep { get; } = fixture.SqlStep;
 
     [Fact] public void Connection_NotNull() => Assert.NotNull(SqlStep.Connection);
 
     [Fact] public void Parameters_NotEmpty() => Assert.NotEmpty(SqlStep.StepParameters);
 }
 
-public class SqlStepFixture : IAsyncLifetime
+public class SqlStepFixture(DatabaseFixture fixture) : IAsyncLifetime
 {
-    private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
-
-    public SqlStepFixture(DatabaseFixture fixture)
-    {
-        _dbContextFactory = fixture.DbContextFactory;
-    }
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory = fixture.DbContextFactory;
 
     public SqlStep SqlStep { get; private set; } = null!;
 

@@ -5,17 +5,11 @@ using Xunit;
 namespace Biflow.DataAccess.Test;
 
 [Collection(nameof(DatabaseCollection))]
-public class JobTests : IClassFixture<JobFixture>
+public class JobTests(JobFixture fixture) : IClassFixture<JobFixture>
 {
-    private readonly string _username;
+    private readonly string _username = fixture.Username;
 
-    public JobTests(JobFixture fixture)
-    {
-        Job = fixture.Job;
-        _username = fixture.Username;
-    }
-
-    private Job Job { get; }
+    private Job Job { get; } = fixture.Job;
 
     [Fact] public void CreatedBy_Equals_Username() => Assert.Equal(_username, Job.CreatedBy);
 
@@ -28,19 +22,13 @@ public class JobTests : IClassFixture<JobFixture>
     [Fact] public void Category_NotNull() => Assert.NotNull(Job.Category);
 }
 
-public class JobFixture : IAsyncLifetime
+public class JobFixture(DatabaseFixture fixture) : IAsyncLifetime
 {
-    private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory = fixture.DbContextFactory;
 
     public Job Job { get; private set; } = null!;
 
-    public string Username { get; }
-
-    public JobFixture(DatabaseFixture fixture)
-    {
-        _dbContextFactory = fixture.DbContextFactory;
-        Username = fixture.Username;
-    }
+    public string Username { get; } = fixture.Username;
 
     public Task DisposeAsync() => Task.CompletedTask;
 

@@ -4,16 +4,10 @@ using Xunit;
 namespace Biflow.DataAccess.Test;
 
 [Collection(nameof(DatabaseCollection))]
-public class ExecutionBuilderTests
+public class ExecutionBuilderTests(DatabaseFixture fixture)
 {
-    private readonly IExecutionBuilderFactory<AppDbContext> _executionBuilderFactory;
-    private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
-
-    public ExecutionBuilderTests(DatabaseFixture fixture)
-    {
-        _executionBuilderFactory = fixture.ExecutionBuilderFactory;
-        _dbContextFactory = fixture.DbContextFactory;
-    }
+    private readonly IExecutionBuilderFactory<AppDbContext> _executionBuilderFactory = fixture.ExecutionBuilderFactory;
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory = fixture.DbContextFactory;
 
     [Fact]
     public async Task TestBuildingExecution()
@@ -92,6 +86,6 @@ public class ExecutionBuilderTests
         builder.AddAll();
         var execution = await builder.SaveExecutionAsync();
         Assert.NotNull(execution);
-        Assert.Equal(1, execution.StepExecutions.Count);
+        Assert.Single(execution.StepExecutions);
     }
 }

@@ -5,14 +5,9 @@ using Xunit;
 namespace Biflow.DataAccess.Test;
 
 [Collection(nameof(DatabaseCollection))]
-public class DbContextTests
+public class DbContextTests(DatabaseFixture fixture)
 {
-    private readonly IDbContextFactory<AppDbContext> dbContextFactory;
-
-    public DbContextTests(DatabaseFixture fixture)
-    {
-        dbContextFactory = fixture.DbContextFactory;
-    }
+    private readonly IDbContextFactory<AppDbContext> dbContextFactory = fixture.DbContextFactory;
 
     [Fact]
     public async Task TestLoadingSteps()
@@ -105,6 +100,6 @@ public class DbContextTests
             .ThenInclude(e => e.DependantOnStepExecution)
             .FirstAsync(e => e.ExecutionId == executionId);
         var step = execution.StepExecutions.First();
-        Assert.True(step.ExecutionDependencies.Any());
+        Assert.True(step.ExecutionDependencies.Count != 0);
     }
 }

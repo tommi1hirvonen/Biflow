@@ -5,17 +5,11 @@ using Xunit;
 namespace Biflow.DataAccess.Test;
 
 [Collection(nameof(DatabaseCollection))]
-public class StepTests : IClassFixture<StepFixture>
+public class StepTests(StepFixture stepFixture) : IClassFixture<StepFixture>
 {
-    private string Username { get; }
+    private string Username { get; } = stepFixture.Username;
 
-    private Step Step { get; }
-
-    public StepTests(StepFixture stepFixture)
-    {
-        Username = stepFixture.Username;
-        Step = stepFixture.Step;
-    }
+    private Step Step { get; } = stepFixture.Step;
 
     [Fact] public void CreatedBy_Equals_Username() => Assert.Equal(Username, Step.CreatedBy);
 
@@ -52,19 +46,13 @@ public class StepTests : IClassFixture<StepFixture>
     }
 }
 
-public class StepFixture : IAsyncLifetime
+public class StepFixture(DatabaseFixture fixture) : IAsyncLifetime
 {
-    private readonly IDbContextFactory<AppDbContext> _dbContextFactory;
-
-    public StepFixture(DatabaseFixture fixture)
-    {
-        _dbContextFactory = fixture.DbContextFactory;
-        Username = fixture.Username;
-    }
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory = fixture.DbContextFactory;
 
     public Step Step { get; private set; } = null!;
 
-    public string Username { get; private set; }
+    public string Username { get; private set; } = fixture.Username;
 
     public Task DisposeAsync() => Task.CompletedTask;
 
