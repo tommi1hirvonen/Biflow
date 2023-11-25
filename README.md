@@ -386,6 +386,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
 - Make sure websockets are enabled for the UI application and that "Always on" is enabled for the scheduler and executor applications.
 - Create a virtual network resource.
 - Create a lightweight Linux virtual machine resource (B1s is sufficient).
+    - This VM is used to configure and deploy the application files to the Web App resources.
     - Attach the virtual machine to the default subnet of the virtual network created in the previous step.
     - Allow SSH traffic from your desired IP addresses or networks to the virtual machine.
 - Apply access restrictions to the UI app to allow inbound traffic only from trusted IP addresses or networks.
@@ -393,7 +394,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
     - Configure the UI and scheduler applications' outbound traffic to route through the previously created virtual network subnet (biflow-subnet).
 - Configure private endpoints for the inbound traffic of the scheduler and executor applications.
     - Create the private endpoints in the default subnet of the virtual network.
-- Add service endpoints for the following services to the virtual network
+- Add service endpoints for the following services to the virtual network (subnet biflow-vcfidw):
     - Microsoft.AzureActiveDirectory
     - Microsoft.Sql
     - Microsoft.Web
@@ -422,11 +423,35 @@ Add application configurations for each app based on the table below. __Note tha
 |Executor__WebApp__Url|Executor web app URL, e.g. `https://biflow-executor.azurewebsites.net`|
 
 Deploying the application code can be done via the Linux virtual machine.
-- Copy the zip files for the three applications to the virtual machine (`Biflow.Ui`, `Biflow.Executor.WebApp` and `Biflow.Scheduler.WebApp`). Make sure to delete the configuration sections from the appsettings files except for the `Logging` section.
-- Connect remotely to the VM via SSH.
+- Connect remotely to the VM via SSH using e.g. PowerShell.
 - <a href="https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux?pivots=apt">Install the Azure CLI</a> on the Linux VM.
+- Copy the zip files for the three applications to the virtual machine (`Biflow.Ui`, `Biflow.Executor.WebApp` and `Biflow.Scheduler.WebApp`). Make sure to delete the configuration sections from the appsettings files except for the `Logging` section.
 - Deploy the zip files to the respective Web Apps from the Linux VM.
 
+The following commands act as a reference for how to achieve the above steps. They assume the Azure CLI has already been installed.
+```
+> ssh <admin_user>@<vm_public_ip>
+#Enter Linux VM credentials
+
+admin@biflow-vm:~$ scp "C:/Users/John Smith/Desktop/Biflow.Executor.WebApp.zip" admin@biflow-vm:/home/admin
+
+admin@biflow-vm:~$ scp "C:/Users/John Smith/Desktop/Biflow.Scheduler.WebApp.zip" admin@biflow-vm:/home/admin
+
+admin@biflow-vm:~$ scp "C:/Users/John Smith/Desktop/Biflow.Ui.zip" admin@biflow-vm:/home/admin
+
+admin@biflow-vm:~$ az login
+#Enter Azure credentials
+
+admin@biflow-vm:~$ az account set --subscription <azure_subscription_id>
+
+admin@biflow-vm:~$ az webapp deploy --resource-group <resource_group_name> --name <executor_web_app_name> --src-path ./Biflow.Executor.WebApp.zip --type zip
+#Repeat for the scheduler and UI applications
+
+#Test connections
+admin@biflow-vm:~$ curl https://<executor_web_app_name>.azurewebsites.net/connection/test
+
+admin@biflow-vm:~$ curl https://<scheduler_web_app_name>.azurewebsites.net/status
+```
 
 ## First use
 
