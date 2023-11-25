@@ -72,7 +72,7 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.HasDefaultSchema("biflow");
+        modelBuilder.HasDefaultSchema("app");
 
         modelBuilder.Entity<Execution>(e =>
         {

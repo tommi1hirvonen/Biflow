@@ -1,0 +1,67 @@
+﻿CREATE TABLE [app].[ExecutionParameter]
+(
+	[ExecutionId] UNIQUEIDENTIFIER NOT NULL,
+	[ParameterId] UNIQUEIDENTIFIER NOT NULL,
+	[ParameterName] NVARCHAR(128) NOT NULL,
+	[ParameterValue] SQL_VARIANT NULL,
+	[ParameterValueType] VARCHAR(20) NOT NULL,
+    [UseExpression] BIT NOT NULL CONSTRAINT [DF_ExecutionParameter_UseExpression] DEFAULT (0),
+    [Expression] NVARCHAR(MAX) NULL,
+    [DefaultValue] SQL_VARIANT NULL,
+    CONSTRAINT [PK_ExecutionParameter] PRIMARY KEY CLUSTERED ([ExecutionId], [ParameterId]),
+	CONSTRAINT [FK_ExecutionParameter_Execution] FOREIGN KEY ([ExecutionId]) REFERENCES [app].[Execution] ([ExecutionId]),
+	CONSTRAINT [CK_ExecutionParameter_ParameterValueType] CHECK (
+        [ParameterValueType] = 'Boolean' OR
+        [ParameterValueType] = 'DateTime' OR
+        [ParameterValueType] = 'Decimal' OR
+        [ParameterValueType] = 'Double' OR
+        [ParameterValueType] = 'Int16' OR
+        [ParameterValueType] = 'Int32' OR
+        [ParameterValueType] = 'Int64' OR
+        [ParameterValueType] = 'Single' OR
+        [ParameterValueType] = 'String'
+        )
+)
+
+GO
+
+CREATE TRIGGER [app].[Trigger_ExecutionParameter]
+    ON [app].[ExecutionParameter]
+    INSTEAD OF DELETE
+    AS
+    BEGIN
+        SET NOCOUNT ON
+
+        UPDATE app.ExecutionStep
+        SET ResultCaptureJobParameterId = NULL
+        WHERE EXISTS (
+            SELECT *
+            FROM deleted
+            WHERE ExecutionStep.ExecutionId = deleted.ExecutionId AND ExecutionStep.ResultCaptureJobParameterId = deleted.ParameterId
+        )
+
+        UPDATE app.ExecutionStepParameter
+        SET InheritFromExecutionParameterId = NULL
+        WHERE EXISTS (
+            SELECT *
+            FROM deleted
+            WHERE ExecutionStepParameter.ExecutionId = deleted.ExecutionId AND ExecutionStepParameter.InheritFromExecutionParameterId = deleted.ParameterId
+        )
+
+        UPDATE app.ExecutionStepConditionParameter
+        SET ExecutionParameterId = NULL
+        WHERE EXISTS (
+            SELECT *
+            FROM deleted
+            WHERE ExecutionStepConditionParameter.ExecutionId = deleted.ExecutionId
+                AND ExecutionStepConditionParameter.ExecutionParameterId = deleted.ParameterId
+        )
+
+        DELETE FROM app.ExecutionParameter
+        WHERE EXISTS (
+            SELECT *
+            FROM deleted
+            WHERE ExecutionParameter.ExecutionId = deleted.ExecutionId AND ExecutionParameter.ParameterId = deleted.ParameterId
+        )
+
+    END

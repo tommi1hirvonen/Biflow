@@ -1,0 +1,8 @@
+﻿CREATE TABLE [app].[StepTarget]
+(
+	[StepId] UNIQUEIDENTIFIER NOT NULL,
+	[ObjectId] UNIQUEIDENTIFIER NOT NULL,
+	CONSTRAINT [PK_StepTarget] PRIMARY KEY CLUSTERED ([StepId], [ObjectId]),
+	CONSTRAINT [FK_StepTarget_Step] FOREIGN KEY ([StepId]) REFERENCES [app].[Step] ([StepId]) ON DELETE CASCADE,
+	CONSTRAINT [FK_StepTarget_DataObject] FOREIGN KEY ([ObjectId]) REFERENCES [app].[DataObject] ([ObjectId]) ON DELETE CASCADE
+)

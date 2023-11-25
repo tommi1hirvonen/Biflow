@@ -22,7 +22,7 @@ public class UserService(ISqlConnectionFactory sqlConnectionFactory)
         var hash = BC.HashPassword(password);
         var affectedRows = await connection.ExecuteAsync(
             """
-            UPDATE [biflow].[User]
+            UPDATE [app].[User]
             SET [PasswordHash] = @PasswordHash
             WHERE [Username] = @Username
             """, new { Username = username, PasswordHash = hash }, transaction);
@@ -44,7 +44,7 @@ public class UserService(ISqlConnectionFactory sqlConnectionFactory)
         var result = await sqlConnection.QueryAsync<string?>(
             """
             SELECT TOP 1 [PasswordHash]
-            FROM [biflow].[User]
+            FROM [app].[User]
             WHERE [Username] = @Username
             """,
             new { Username = username });
@@ -63,7 +63,7 @@ public class UserService(ISqlConnectionFactory sqlConnectionFactory)
         var result = await sqlConnection.QueryAsync<(string?, string?)>(
             """
             SELECT TOP 1 [PasswordHash], [Roles]
-            FROM [biflow].[User]
+            FROM [app].[User]
             WHERE [Username] = @Username
             """,
             new { Username = username });
@@ -88,7 +88,7 @@ public class UserService(ISqlConnectionFactory sqlConnectionFactory)
         await using var sqlConnection = _sqlConnectionFactory.Create();
         var rolesJson = await sqlConnection.ExecuteScalarAsync<string?>("""
             SELECT TOP 1 [Roles]
-            FROM [biflow].[User]
+            FROM [app].[User]
             WHERE [Username] = @Username
             """, new { Username = username });
         if (string.IsNullOrWhiteSpace(rolesJson))
@@ -114,7 +114,7 @@ public class UserService(ISqlConnectionFactory sqlConnectionFactory)
         var hash = BC.HashPassword(password);
         var affectedRows = await connection.ExecuteAsync(
             """
-            UPDATE [biflow].[User]
+            UPDATE [app].[User]
             SET [PasswordHash] = @PasswordHash, [Roles] = @Roles
             WHERE [Username] = @Username
             """, new { Username = username, PasswordHash = hash, Roles = rolesJson });
@@ -122,7 +122,7 @@ public class UserService(ISqlConnectionFactory sqlConnectionFactory)
         {
             await connection.ExecuteAsync(
                 """
-                INSERT INTO [biflow].[User] ([UserId],[Username],[PasswordHash],[Roles],[CreatedDateTime],[LastModifiedDateTime]) VALUES
+                INSERT INTO [app].[User] ([UserId],[Username],[PasswordHash],[Roles],[CreatedDateTime],[LastModifiedDateTime]) VALUES
                 (newid(), @Username, @PasswordHash, @Roles, getdate(), getdate())
                 """, new { Username = username, PasswordHash = hash, Roles = rolesJson });
         }
@@ -141,7 +141,7 @@ public class UserService(ISqlConnectionFactory sqlConnectionFactory)
         var rolesJson = JsonSerializer.Serialize(roles);
         var affectedRows = await connection.ExecuteAsync(
             """
-            UPDATE [biflow].[User]
+            UPDATE [app].[User]
             SET [Roles] = @Roles
             WHERE [Username] = @Username
             """, new { Username = username, Roles = rolesJson });
@@ -149,7 +149,7 @@ public class UserService(ISqlConnectionFactory sqlConnectionFactory)
         {
             await connection.ExecuteAsync(
                 """
-                INSERT INTO [biflow].[User] ([UserId],[Username],[Roles],[CreatedDateTime],[LastModifiedDateTime]) VALUES
+                INSERT INTO [app].[User] ([UserId],[Username],[Roles],[CreatedDateTime],[LastModifiedDateTime]) VALUES
                 (newid(), @Username, @Roles, getdate(), getdate())
                 """, new { Username = username, Roles = rolesJson });
         }
