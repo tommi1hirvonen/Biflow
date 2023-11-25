@@ -74,7 +74,7 @@ Some requirements apply depending on whether Biflow is configured to run either 
 
 ### On-premise
 - Windows Server
-    - ASP.NET 7 Hosting Bundle installed
+    - ASP.NET 8 Hosting Bundle installed
 - Windows account
     - Biflow can operate using either Windows Authentication or SQL Server Authentication
     - SSIS compatibility can be achieved using either method, but Windows Authentication is simpler and recommended.
@@ -237,10 +237,14 @@ There are three different installation alternatives: on-premise, Azure (monolith
         - Create a new SQL Server login or select an existing one to use to connect to the installation database
         - Add the login to the `db_owner` role in the installation database
 
-### ASP.NET 7 Hosting Bundle
+### ASP.NET 8 Hosting Bundle
 
-1. On machines where any of the application components (UI, executor, scheduler) are installed, also install the ASP.NET 7 Hosting Bundle. Follow the instructions on the <a href="https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-aspnetcore-7.0.0-windows-hosting-bundle-installer">.NET download page</a>.
+1. On machines where any of the application components (UI, executor, scheduler) are installed, also install the ASP.NET 8 Hosting Bundle. Follow the instructions on the <a href="https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-aspnetcore-8.0.0-windows-hosting-bundle-installer">.NET download page</a>.
+    - NOTE! If the Hosting Bundle is installed before IIS, the bundle installation must be repaired. Run the Hosting Bundle installer again after installing IIS.
 
+### Service account
+
+- It is recommended to use either a local or an AD account as the service account for all Biflow services. Make sure the service account has full control rights to the installation folders. Otherwise you might experience unexpected behaviour, such as log files not being generated.
 
 ### Executor web application
 
@@ -342,6 +346,10 @@ There are three different installation alternatives: on-premise, Azure (monolith
     - Add the login information for the service account used to run the service and scheduled executions. If Windows Authentication is used to connect to the database, then this account’s credentials are used to connect.
     - Start the service.
     - Navigate to `C:\Biflow\BiflowScheduler\log` and open the log text file. There should be no error reports if the scheduler was able to connect to the database and load schedules into the service.
+6. Hosting the UI application as a Windows Service uses the Kestrel web server built into the ASP.NET Core runtime. To configure the HTTP and HTTPS endpoints for the UI, refer to these guides:
+    - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-8.0#configure-endpoints-in-appsettingsjson
+    - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-8.0#configure-https-in-appsettingsjson
+7. Alternatively you can host the UI application using IIS (Internet Information Services).
 
 ## Azure (monolithic)
 
@@ -349,7 +357,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
     - Recommended pricing tier B2 or B3
 - Create a new Web App and set the following settings
     - Publish: Code
-    - Runtime stack: .NET 7 (STS)
+    - Runtime stack: .NET 8 (LTS)
     - Operating System: Linux
     - Linux Plan: Previously created App Service Plan
 - When the Web App has been created, go to the resource and its Configuration settings.

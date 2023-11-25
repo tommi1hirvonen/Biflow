@@ -4,11 +4,11 @@
 
 Visual Studio 2022 is recommended as the IDE for development.
 
-<a href="https://marketplace.visualstudio.com/items?itemName=Failwyn.WebCompiler64">Web Compiler 2022+</a> Visual Studio extension is used to compile the Scss code in `Biflow.Ui/wwwroot/scss/bootstrap.custom.scss`.
+<a href="https://marketplace.visualstudio.com/items?itemName=Failwyn.WebCompiler64">Web Compiler 2022+</a> Visual Studio extension is used to compile the Scss code in `Biflow.Ui/wwwroot/scss/bootstrap.custom.scss`. The configuration file for compiling the Scss code is located in `Biflow.Ui/compilerconfig.json`.
 
 ## Adding new step types
 
-The following new or existing files/classes need to be added or edited when adding support for new step types. Other files and classes may also need to be updated or created if there are dependencies from the new step to other classes or resources (e.g. app registrations, pipeline clients, function apps etc.).
+The following new or existing files/classes need to be added or edited when adding support for new step types. Other files and classes may also need to be updated or created if there are references from the new step to other classes or resources (e.g. app registrations, pipeline clients, function apps etc.).
 
 ### Biflow.DataAccess
 
@@ -35,6 +35,7 @@ The following new or existing files/classes need to be added or edited when addi
 
 - StepType
   - Add a new enum value for the new step type
+  - Apply the `[Category]` and `[Description]` attributes to the new enum value.
 - SqlConnectionInfo
   - If the new step type relies on a SQL connection, add navigation property from SqlConnectionInfo to a list of steps of the new type
 - AppDbContext
