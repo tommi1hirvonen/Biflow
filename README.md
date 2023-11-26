@@ -423,24 +423,29 @@ Add application configurations for each app based on the table below. __Note tha
 |Executor__WebApp__Url|Executor web app URL, e.g. `https://biflow-executor.azurewebsites.net`|
 
 Deploying the application code can be done via the Linux virtual machine.
+- Copy the zip files for the three applications to the virtual machine (`Biflow.Ui`, `Biflow.Executor.WebApp` and `Biflow.Scheduler.WebApp`). Make sure to delete the configuration sections from the appsettings files except for the `Logging` section.
 - Connect remotely to the VM via SSH using e.g. PowerShell.
 - <a href="https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux?pivots=apt">Install the Azure CLI</a> on the Linux VM.
-- Copy the zip files for the three applications to the virtual machine (`Biflow.Ui`, `Biflow.Executor.WebApp` and `Biflow.Scheduler.WebApp`). Make sure to delete the configuration sections from the appsettings files except for the `Logging` section.
 - Deploy the zip files to the respective Web Apps from the Linux VM.
 
-The following commands act as a reference for how to achieve the above steps. They assume the Azure CLI has already been installed.
+The following commands act as a reference for how to achieve the above steps. They assume the Azure CLI has already been installed on the VM.
+
+On your local machine, run the following PowerShell commands to copy files to the VM. Replace the values inside the angle brackets (including the brackets) with your corresponding values.
+
+```
+> scp .\BiflowExecutor.zip <admin_user>@<vm_public_ip>:/home/<admin_user_>
+> scp .\BiflowScheduler.zip <admin_user>@<vm_public_ip>:/home/<admin_user_>
+> scp .\BiflowUi.zip <admin_user>@<vm_public_ip>:/home/<admin_user_>
+```
+
+Then launch a remote session from PowerShell to the VM using ssh and deply the application code.
+
 ```
 > ssh <admin_user>@<vm_public_ip>
 #Enter Linux VM credentials
 
-admin@biflow-vm:~$ scp "C:/Users/John Smith/Desktop/Biflow.Executor.WebApp.zip" admin@biflow-vm:/home/admin
-
-admin@biflow-vm:~$ scp "C:/Users/John Smith/Desktop/Biflow.Scheduler.WebApp.zip" admin@biflow-vm:/home/admin
-
-admin@biflow-vm:~$ scp "C:/Users/John Smith/Desktop/Biflow.Ui.zip" admin@biflow-vm:/home/admin
-
 admin@biflow-vm:~$ az login
-#Enter Azure credentials
+#Complete authentication flow
 
 admin@biflow-vm:~$ az account set --subscription <azure_subscription_id>
 
@@ -451,6 +456,18 @@ admin@biflow-vm:~$ az webapp deploy --resource-group <resource_group_name> --nam
 admin@biflow-vm:~$ curl https://<executor_web_app_name>.azurewebsites.net/connection/test
 
 admin@biflow-vm:~$ curl https://<scheduler_web_app_name>.azurewebsites.net/status
+```
+
+The log streams for the UI application should be available from the Azure portal since network traffic to the app should be allowed from your location. The executor and scheduler applications' logs can be viewed from the VM using the following command templates. The commands shown here are for the executor application.
+
+```
+admin@biflow-vm:~$ username=$(az webapp deployment list-publishing-credentials --name <executor_web_app_name> --resource-group <resource_group_name> --query publishingUserName -o t
+sv)
+
+admin@biflow-vm:~$ password=$(az webapp deployment list-publishing-credentials --name <executor_web_app_name> --resource-group <resource_group_name> --query publishingPassword -o t
+sv)
+
+admin@biflow-vm:~$ curl -u "$username:$password" https://<executor_web_app_name>.scm.azurewebsites.net/api/logstream
 ```
 
 ## First use
