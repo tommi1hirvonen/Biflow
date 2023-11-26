@@ -15,6 +15,17 @@ $body-bg-dark-custom: shade-color($dark, 15%);
 $highlight-bg-dark: #574203;
 $highlight-text-dark: #dee2e6;
 
+// Custom fonts
+@font-face {
+    font-family: "Urbanist";
+    src: url("/fonts/Urbanist-VariableFont_wght.ttf") format('truetype-variations');
+}
+@font-face {
+    font-family: "Urbanist";
+    src: url("/fonts/Urbanist-Italic-VariableFont_wght.ttf") format('truetype-variations');
+    font-style: italic;
+}
+
 // Change the light theme body background to be slightly darker than the default.
 [data-bs-theme="light"], [data-bs-theme="auto"] {
     .bg-body {
@@ -568,13 +579,6 @@ $dep-statuses: (
     color: #eee;
 }
 
-.navbar-brand {
-    padding-top: .75rem;
-    padding-bottom: .75rem;
-    font-weight: bold;
-    width: 100%;
-}
-
 @media (min-width: 992px) {
     .navbar-brand {
         width: 200px;
@@ -584,6 +588,10 @@ $dep-statuses: (
     .sidebar.collapse {
         display: block;
     }
+}
+
+.navbar-brand {
+    font-family: Urbanist;
 }
 
 .navbar-brand-bg {

@@ -11900,6 +11900,15 @@ textarea.form-control-lg {
     display: none !important;
   }
 }
+@font-face {
+  font-family: "Urbanist";
+  src: url("/fonts/Urbanist-VariableFont_wght.ttf") format("truetype-variations");
+}
+@font-face {
+  font-family: "Urbanist";
+  src: url("/fonts/Urbanist-Italic-VariableFont_wght.ttf") format("truetype-variations");
+  font-style: italic;
+}
 [data-bs-theme=light] .bg-body, [data-bs-theme=auto] .bg-body {
   background-color: #f8f9fa !important;
 }
@@ -12673,13 +12682,6 @@ form {
   color: #eee;
 }
 
-.navbar-brand {
-  padding-top: 0.75rem;
-  padding-bottom: 0.75rem;
-  font-weight: bold;
-  width: 100%;
-}
-
 @media (min-width: 992px) {
   .navbar-brand {
     width: 200px;
@@ -12688,6 +12690,10 @@ form {
     display: block;
   }
 }
+.navbar-brand {
+  font-family: Urbanist;
+}
+
 .navbar-brand-bg {
   background-color: rgba(0, 0, 0, 0.2);
   box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.2);
