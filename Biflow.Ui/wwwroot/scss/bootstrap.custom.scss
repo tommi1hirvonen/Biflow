@@ -485,7 +485,7 @@ $dep-statuses: (
     z-index: 100; /* Behind the navbar */
     padding: 55px 0 0; /* Height of navbar */
     background-color: var(--bs-body-bg);
-    box-shadow: 0 0.3rem .5rem rgb(0 0 0 / 50%)
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
 }
 
 // Empty space between top bar and navigation menu with smaller screens (in case there are buttons on the top bar)
@@ -579,6 +579,11 @@ $dep-statuses: (
     color: #eee;
 }
 
+.navbar-brand {
+    font-family: Urbanist;
+    width: 100%;
+}
+
 @media (min-width: 992px) {
     .navbar-brand {
         width: 200px;
@@ -588,10 +593,6 @@ $dep-statuses: (
     .sidebar.collapse {
         display: block;
     }
-}
-
-.navbar-brand {
-    font-family: Urbanist;
 }
 
 .navbar-brand-bg {

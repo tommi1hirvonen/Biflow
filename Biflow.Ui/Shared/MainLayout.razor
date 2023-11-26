@@ -30,7 +30,7 @@
         <SchedulerStatusComponent OnStatusMessageResolved="message => schedulerServiceErrorMessage = message" />
         <header>
             <nav class="navbar navbar-dark navbar-custom sticky-top flex-lg-nowrap navbar-expand-lg p-0 shadow bg-gradient-primary">
-                <span class="navbar-brand navbar-brand-bg fw-bold ps-4 py-2 fs-4">biflow</span>
+                <span class="navbar-brand navbar-brand-bg fw-bold ps-4 py-2 fs-4 me-0">biflow</span>
                 <button class="navbar-toggler position-absolute d-lg-none" type="button" aria-label="Toggle navigation" @onclick="ToggleSidebar">
                     <span class="navbar-toggler-icon"></span>
                 </button>
@@ -47,7 +47,7 @@
         <div class="container-fluid">
             <div role="row">
                 <NavMenu ClassString="@SidebarClass" OnNavLinkClick="CollapseSidebar" />
-                <main class="main pt-4 flex-grow-1">
+                <main class="main pt-3 flex-grow-1">
                     @if (schedulerServiceErrorMessage is not null)
                     {
                         <HxAlert Color="ThemeColor.Warning">
