@@ -154,23 +154,22 @@
 
 <HxOffcanvas @ref="statusOffcanvas" Title="Scheduler service status" Backdrop="OffcanvasBackdrop.False">
     <BodyTemplate>
-                @if (schedulerStatus is null)
-                {
-                    <div class="row">
-                        <div class="col text-center">
-                            <HxSpinner Color="ThemeColor.Secondary" />
-                        </div>
-                    </div>
-                }
-                else
-                {
-                    <div class="row">
-                        <div class="col">
-                            <pre><code>@schedulerStatus</code></pre>
-                        </div>
-                    </div>
-                }
-
+        @if (schedulerStatus is null)
+        {
+            <div class="row">
+                <div class="col text-center">
+                    <HxSpinner Color="ThemeColor.Secondary" />
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                <div class="col">
+                    <pre><code>@schedulerStatus</code></pre>
+                </div>
+            </div>
+        }
     </BodyTemplate>
     <FooterTemplate>
         <HxButton Color="ThemeColor.Secondary" OnClick="() => statusOffcanvas.LetAsync(x => x.HideAsync())">
@@ -267,15 +266,32 @@
         {
             var status = await SchedulerService.GetStatusAsync();
             schedulerStatus = status.Match(
-                    (Success success) => JsonSerializer.Serialize(success.Jobs, SerializerOptions),
-                    (AuthorizationError error1) => "Authorization failed when getting scheduler service status. Check the scheduler service auth configuration.",
-                    (SchedulerError error2) => "Scheduler service reported internal error. Check the scheduler service log for details.",
-                    (UndefinedError error3) => "Undefined error getting scheduler service status. Make sure the service is configured and running correctly.");
+                (Success success) => GenerateStatusJson(success.Jobs),
+                (AuthorizationError error1) => "Authorization failed when getting scheduler service status. Check the scheduler service auth configuration.",
+                (SchedulerError error2) => "Scheduler service reported internal error. Check the scheduler service log for details.",
+                (UndefinedError error3) => "Undefined error getting scheduler service status. Make sure the service is configured and running correctly.");
         }
         catch (Exception ex)
         {
             schedulerStatus = $"Error getting scheduler service status. Make sure the service is configured and running correctly.\n\n{ex.Message}";
         }
+    }
+
+    private string GenerateStatusJson(IEnumerable<Scheduler.Core.JobStatus> jobs)
+    {
+        // Add names if they can be found from the component state's lists.
+        var statuses = jobs.Select(j =>
+        {
+            var jobName = Jobs?.FirstOrDefault(job => job.JobId.ToString().ToLower() == j.JobId.ToLower())?.JobName;
+            var schedules = j.Schedules.Select(s =>
+            {
+                var scheduleName = Schedules?.FirstOrDefault(sched => sched.ScheduleId.ToString().ToLower() == s.ScheduleId.ToLower())?.ScheduleName;
+                return new ScheduleStatus(s.ScheduleId, scheduleName, s.CronExpression, s.IsEnabled, s.IsRunning, s.DisallowConcurrentExecution);
+            }).OrderBy(s => s.ScheduleName);
+
+            return new JobStatus(j.JobId, jobName, schedules);
+        }).OrderBy(j => j.JobName);
+        return JsonSerializer.Serialize(statuses, SerializerOptions);
     }
 
     private async Task SynchronizeSchedulerService()
@@ -289,4 +305,8 @@
             Messenger.AddError("Error synchronizing", ex.Message);
         }
     }
+
+    private record JobStatus(string JobId, string? JobName, IEnumerable<ScheduleStatus> Schedules);
+
+    private record ScheduleStatus(string ScheduleId, string? ScheduleName, string? CronExpression, bool IsEnabled, bool IsRunning, bool DisallowConcurrentExecution);
 }
