@@ -62,7 +62,7 @@ export function drawDependencyGraph(dotNetObject, graphContainer, svgId, nodesJs
     svg.call(zoom.transform, d3.zoomIdentity.translate(translateX, translateY).scale(zoomScale));
 
     var nodeOnClick = async function (event) {
-        await dotNetObject.invokeMethodAsync("OnNodeClick", this.id, event.pageX, event.pageY);
+        await dotNetObject.invokeMethodAsync("OnNodeClick", this.id, event.clientX, event.clientY);
     };
 
     var nodeElements = document.getElementsByClassName("node");

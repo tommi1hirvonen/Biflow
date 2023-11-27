@@ -61,13 +61,13 @@
     }
 
     [JSInvokable]
-    public void OnNodeClick(string nodeId, int pageX, int pageY)
+    public void OnNodeClick(string nodeId, int clientX, int clientY)
     {
         if (ContextMenuTemplate is null || ItemFromNodeIdSelector is null)
         {
             return;
         }
-        var mouseEvent = new MouseEventArgs { ClientX = pageX, ClientY = pageY };
+        var mouseEvent = new MouseEventArgs { ClientX = clientX, ClientY = clientY };
         var item = ItemFromNodeIdSelector(nodeId);
         if (item is null)
         {
