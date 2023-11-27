@@ -217,7 +217,7 @@ If you want to implement Always Encrypted, these columns are good candidates for
 - biflow.FunctionApp.FunctionAppKey
 - biflow.Step.FunctionKey
 
-If Always Encrypted is utilized, this should be reflected in the connection strings set in the application settings (BiflowContext). Always Encrypted is enabled with the following connection string property: `Column Encryption Setting=enabled`
+If Always Encrypted is utilized, this should be reflected in the connection strings set in the application settings (AppDbContext). Always Encrypted is enabled with the following connection string property: `Column Encryption Setting=enabled`
 
 # Installation
 
@@ -253,7 +253,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
 
 |Setting|Description|
 |-|-|
-|ConnectionStrings:BiflowContext|Connection string used to connect to the Biflow system database based on steps taken in the database section of this guide. **Note:** the connection string must have `MultipleActiveResultSets=true` enabled.|
+|ConnectionStrings:AppDbContext|Connection string used to connect to the Biflow system database based on steps taken in the database section of this guide. **Note:** the connection string must have `MultipleActiveResultSets=true` enabled.|
 |EmailSettings|Settings used to send email notifications.|
 |PollingIntervalMs|Time interval in milliseconds between status polling operations (applies to some step types). Default value is `5000`.|
 |MaximumParallelSteps|Maximum number of parallel steps allowed during execution. Default value is `10`.|
@@ -275,7 +275,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
 
 |Setting|Description|
 |-|-|
-|ConnectionStrings:BiflowContext|Connection string used to connect to the Biflow database based on steps taken in the database section of this guide. **Note:** The connection string must have `MultipleActiveResultSets=true` enabled.|
+|ConnectionStrings:AppDbContext|Connection string used to connect to the Biflow database based on steps taken in the database section of this guide. **Note:** The connection string must have `MultipleActiveResultSets=true` enabled.|
 |Executor:WebApp:Url|Url to the executor web app|
 |Authorization:Windows:AllowedUsers|Array of Windows users who are authorized to issue requests to the scheduler API, e.g. `[ "DOMAIN\\BiflowService", "DOMAIN\\AdminUser" ]`. If no authorization is required, remove the `Authorization` section. Only applies to on-premise Windows environments.|
 |Kestrel:Endpoints:Http:Url|The http url and port which the scheduler API should listen to, for example `http://localhost:5432`. If there are multiple installations/environments of the scheduler service on the same server, the scheduler applications should listen to different ports.|
@@ -309,7 +309,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
 |Setting|Description|
 |-|-|
 |EnvironmentName|Name of the installation environment to be shown in the UI (e.g. Production, Test, Dev etc.)|
-|ConnectionStrings:BiflowContext|Connection string used to connect to the Biflow database based on steps taken in the database section of this guide. **Note:** The connection string must have `MultipleActiveResultSets=true` enabled.|
+|ConnectionStrings:AppDbContext|Connection string used to connect to the Biflow database based on steps taken in the database section of this guide. **Note:** The connection string must have `MultipleActiveResultSets=true` enabled.|
 |Authentication|`[ BuiltIn \| Windows \| AzureAd \| Ldap ]`|
 ||`BuiltIn`: Users accounts and passwords are managed in Biflow. Users are application specific.
 ||`Windows`: Authentication is done using Active Directory. User roles and access are defined in the Biflow users management. The user does not need to log in but instead their workstation Windows account is used for authentication.|
@@ -372,9 +372,9 @@ There are three different installation alternatives: on-premise, Azure (monolith
         - Scheduler__Type = __SelfHosted__
         - Executor__SelfHosted__MaximumParallelSteps = 10
         - Executor__SelfHosted__PollingIntervalMs = 5000
-    - Connection string
-        - BiflowContext
-            - Connection string to the Biflow system database
+        - ConnectionStrings__AppDbContext = Connection string to the Biflow system database
+        - WEBSITE_TIME_ZONE = Time zone for the application (defaults to UTC), e.g. Europe/Helsinki
+            - On Linux, use the TZ identifier from the <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">tz database</a>.
 - Deploy the UI application code (`Biflow.Ui`) as a zip file to the target Web App. Before deploying remove all other configuration sections from the appsettings.json file except the `Logging` section. This way there are no unwanted settings that are applied via the appsettings file.
 - Using System Assigned Managed Identities for authentication to the system database is recommended to avoid having to save sensitive information inside connection strings.
 - Recommended: Apply desired access restrictions to the Web App to allow inbound traffic only from trusted IP addresses or networks.
@@ -406,21 +406,24 @@ Add application configurations for each app based on the table below. __Note tha
 |Setting|Value|
 |-|-|
 |__UI__||
-|ConnectionStrings__BiflowContext|Connection string to the system database|
+|ConnectionStrings__AppDbContext|Connection string to the system database|
 |Authentication|See the on-premise section for configuring authentication|
 |EnvironmentName|`NameOfYourEnvironment`|
 |Executor__Type|`WebApp`|
 |Scheduler__Type|`WebApp`|
 |Executor__WebApp__Url|Executor web app URL, e.g. `https://biflow-executor.azurewebsites.net`|
 |Scheduler__WebApp__Url|Scheduler web app URL, e.g. `https://biflow-scheduler.azurewebsites.net`|
+|WEBSITE_TIME_ZONE|Time zone, e.g. `Europe/Helsinki`|
 |__Executor__||
-|ConnectionStrings__BiflowContext|Connection string to the system database|
+|ConnectionStrings__AppDbContext|Connection string to the system database|
 |MaximumParallelSteps|`10` (default)|
 |PollingIntervalMs|`5000` (default)|
+|WEBSITE_TIME_ZONE|Time zone, e.g. `Europe/Helsinki`|
 |__Scheduler__||
-|ConnectionStrings__BiflowContext|Connection string to the system database|
+|ConnectionStrings__AppDbContext|Connection string to the system database|
 |Executor__Type|`WebApp`|
 |Executor__WebApp__Url|Executor web app URL, e.g. `https://biflow-executor.azurewebsites.net`|
+|WEBSITE_TIME_ZONE|Time zone, e.g. `Europe/Helsinki`|
 
 Deploying the application code can be done via the Linux virtual machine.
 - Copy the zip files for the three applications to the virtual machine (`Biflow.Ui`, `Biflow.Executor.WebApp` and `Biflow.Scheduler.WebApp`). Make sure to delete the configuration sections from the appsettings files except for the `Logging` section.
