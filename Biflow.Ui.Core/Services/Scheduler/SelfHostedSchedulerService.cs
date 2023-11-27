@@ -33,10 +33,13 @@ public class SelfHostedSchedulerService(ISchedulesManager schedulesManager) : IS
         await _schedulesManager.RemoveJobAsync(schedulerJob, CancellationToken.None);
     }
 
-    public Task<SchedulerStatusResponse> GetStatusAsync()
+    public async Task<SchedulerStatusResponse> GetStatusAsync()
     {
-        SchedulerStatusResponse response = DatabaseReadError ? new SchedulerError() : new Success();
-        return Task.FromResult(response);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        SchedulerStatusResponse response = DatabaseReadError
+            ? new SchedulerError()
+            : new Success(await _schedulesManager.GetStatusAsync(cts.Token));
+        return response;
     }
 
     public async Task SynchronizeAsync()

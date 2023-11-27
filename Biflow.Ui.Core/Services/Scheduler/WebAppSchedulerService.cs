@@ -1,6 +1,7 @@
 ﻿using Biflow.DataAccess.Models;
 using Biflow.Scheduler.Core;
 using Microsoft.Extensions.Configuration;
+using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 
@@ -86,7 +87,8 @@ public class WebAppSchedulerService(IConfiguration configuration, IHttpClientFac
         var response = await _httpClient.GetAsync(endpoint);
         if (response.IsSuccessStatusCode)
         {
-            return new Success();
+            var jobs = await response.Content.ReadFromJsonAsync<IEnumerable<JobStatus>>();
+            return new Success(jobs ?? []);
         }
         else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
         {
