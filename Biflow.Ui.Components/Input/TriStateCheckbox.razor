@@ -38,7 +38,11 @@
         }
         if (Indeterminate.HasValue && jsObject is not null)
         {
-            await jsObject.InvokeVoidAsync("setPropByElement", _inputElement, "indeterminate", Indeterminate.Value);
+            try
+            {
+                await jsObject.InvokeVoidAsync("setPropByElement", _inputElement, "indeterminate", Indeterminate.Value);
+            }
+            catch (JSDisconnectedException) { }
         }
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -53,7 +57,11 @@
     {
         if (jsObject is not null)
         {
-            await jsObject.DisposeAsync();
+            try
+            {
+                await jsObject.DisposeAsync();
+            }
+            catch (JSDisconnectedException) { }
         }
     }
 }
