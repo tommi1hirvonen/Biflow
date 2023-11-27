@@ -50,7 +50,7 @@
             }
             else
             {
-                @foreach (var item in schedules)
+                @foreach (var item in schedules.OrderBy(s => s.ScheduleName))
                 {
                     <tr class="schedule-row @(item.IsEnabled ? null : "disabled")">
                         <td class="align-middle">

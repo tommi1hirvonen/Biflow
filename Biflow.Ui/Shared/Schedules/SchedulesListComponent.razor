@@ -64,7 +64,7 @@
             }
             else
             {
-                @foreach (var item in FilteredSchedules)
+                @foreach (var item in FilteredSchedules.OrderBy(s => s.Job.JobName).ThenBy(s => s.ScheduleName))
                 {
                     <tr class="schedule-row @(item.IsEnabled ? null : "disabled")">
                         <td class="align-middle">
