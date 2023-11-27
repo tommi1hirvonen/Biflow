@@ -14,6 +14,10 @@
                 <CxIcon Icon="FeatherIcon.RefreshCw" />
                 Synchronize
             </HxButton>
+            <HxButton CssClass="ms-3 btn-auto" Color="ThemeColor.None" OnClick="ShowStatusOffcanvasAsync" title="Show scheduler service status">
+                <CxIcon Icon="FeatherIcon.Info" />
+                Status
+            </HxButton>
         </div>
         <div class="col text-end">
             <HxButton Color="ThemeColor.None" CssClass="btn-auto" OnClick="async () => await helpModal.LetAsync(x => x.ShowAsync())">
@@ -148,6 +152,33 @@
 
 <SchedulesHelpModal @ref="helpModal" />
 
+<HxOffcanvas @ref="statusOffcanvas" Title="Scheduler service status" Backdrop="OffcanvasBackdrop.False">
+    <BodyTemplate>
+                @if (schedulerStatus is null)
+                {
+                    <div class="row">
+                        <div class="col text-center">
+                            <HxSpinner Color="ThemeColor.Secondary" />
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="row">
+                        <div class="col">
+                            <pre><code>@schedulerStatus</code></pre>
+                        </div>
+                    </div>
+                }
+
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Secondary" OnClick="() => statusOffcanvas.LetAsync(x => x.HideAsync())">
+            Close
+        </HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
 @code {
     [Parameter] public List<Schedule>? Schedules { get; set; }
 
@@ -157,9 +188,12 @@
 
     [Parameter] public EventCallback OnSchedulesChanged { get; set; }
 
-    private ScheduleEditModal? editModal;
+    private static readonly JsonSerializerOptions SerializerOptions = new() { WriteIndented = true };
 
+    private ScheduleEditModal? editModal;
     private SchedulesHelpModal? helpModal;
+    private HxOffcanvas? statusOffcanvas;
+    private string? schedulerStatus = null;
 
     private async Task ToggleEnabled(ChangeEventArgs args, Schedule schedule)
     {
@@ -221,6 +255,26 @@
         catch (Exception ex)
         {
             Messenger.AddError("Error deleting schedule", ex.Message);
+        }
+    }
+
+    private async Task ShowStatusOffcanvasAsync()
+    {
+        schedulerStatus = null;
+        StateHasChanged();
+        await statusOffcanvas.LetAsync(x => x.ShowAsync());
+        try
+        {
+            var status = await SchedulerService.GetStatusAsync();
+            schedulerStatus = status.Match(
+                    (Success success) => JsonSerializer.Serialize(success.Jobs, SerializerOptions),
+                    (AuthorizationError error1) => "Authorization failed when getting scheduler service status. Check the scheduler service auth configuration.",
+                    (SchedulerError error2) => "Scheduler service reported internal error. Check the scheduler service log for details.",
+                    (UndefinedError error3) => "Undefined error getting scheduler service status. Make sure the service is configured and running correctly.");
+        }
+        catch (Exception ex)
+        {
+            schedulerStatus = $"Error getting scheduler service status. Make sure the service is configured and running correctly.\n\n{ex.Message}";
         }
     }
 
