@@ -16,6 +16,46 @@ internal class SchedulesManager<TJob>(
     private readonly IScheduler _scheduler = schedulerFactory.GetScheduler().Result;
     private readonly IDbContextFactory<SchedulerDbContext> _dbContextFactory = dbContextFactory;
 
+    public async Task<IEnumerable<JobStatus>> GetStatusAsync(CancellationToken cancellationToken)
+    {
+        var jobIds = await _scheduler.GetJobGroupNames(cancellationToken);
+        var jobKeys = await _scheduler.GetJobKeys(GroupMatcher<JobKey>.AnyGroup(), cancellationToken);
+        var triggerKeys = await _scheduler.GetTriggerKeys(GroupMatcher<TriggerKey>.AnyGroup(), cancellationToken);
+        
+        var runningSchedules = await _scheduler.GetCurrentlyExecutingJobs(cancellationToken);
+        var triggerStates = new Dictionary<TriggerKey, TriggerState>();
+        foreach (var trigger in  triggerKeys)
+        {
+            var state = await _scheduler.GetTriggerState(trigger, cancellationToken);
+            triggerStates[trigger] = state;
+        }
+        var jobDetails = new Dictionary<JobKey, IJobDetail>();
+        foreach (var jobKey in jobKeys)
+        {
+            var detail = await _scheduler.GetJobDetail(jobKey, cancellationToken);
+            if (detail is not null)
+                jobDetails[jobKey] = detail;
+        }
+
+        var jobStatuses = jobIds.Select(jobId =>
+        {
+            var statusSchedules = jobKeys
+                .Where(key => key.Group == jobId) // Quartz job group maps to job id
+                .Select(key =>
+                {
+                    var scheduleId = key.Name; // Quartz job name maps to schedule id
+                    var trigger = triggerKeys.First(t => t.Name == scheduleId); // Trigger name maps to schedule id
+                    var isEnabled = triggerStates.TryGetValue(trigger, out var state) && state != TriggerState.Paused;
+                    var isRunning = runningSchedules.Any(r => r.JobDetail.Key == key);
+                    var disallowConcurrentExecution = jobDetails.TryGetValue(key, out var detail) && detail.ConcurrentExecutionDisallowed;
+                    return new ScheduleStatus(scheduleId, isEnabled, isRunning, disallowConcurrentExecution);
+                }).ToArray();
+            return new JobStatus(jobId, statusSchedules);
+        }).ToArray();
+
+        return jobStatuses;
+    }
+
     public async Task ReadAllSchedules(CancellationToken cancellationToken)
     {
         _logger.LogInformation("Loading schedules from database");

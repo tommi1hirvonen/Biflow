@@ -1,8 +1,11 @@
-﻿namespace Biflow.Scheduler.Core;
+﻿
+namespace Biflow.Scheduler.Core;
 
 public interface ISchedulesManager
 {
     public Task AddScheduleAsync(SchedulerSchedule schedule, CancellationToken cancellationToken);
+    
+    public Task<IEnumerable<JobStatus>> GetStatusAsync(CancellationToken cancellationToken);
     
     public Task PauseScheduleAsync(SchedulerSchedule schedule, CancellationToken cancellationToken);
     

@@ -73,11 +73,11 @@ public static class Extensions
         }).WithName("Synchronize");
 
 
-        app.MapGet("/status", (StatusTracker statusTracker) =>
+        app.MapGet("/status", async (StatusTracker statusTracker, ISchedulesManager schedulesManager, CancellationToken cancellationToken) =>
         {
             return statusTracker.DatabaseReadError
                 ? throw new ApplicationException("Scheduler is running but has encountered a database read error.")
-                : Results.Ok();
+                : Results.Ok(await schedulesManager.GetStatusAsync(cancellationToken));
         }).WithName("Status");
 
         return app;
