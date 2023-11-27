@@ -23,9 +23,9 @@
 
   <ItemGroup>
     <PackageReference Include="BlazorMonaco" Version="3.1.0" />
-    <PackageReference Include="Havit.Blazor.Components.Web.Bootstrap" Version="4.2.1" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="7.0.1" />
-    <PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
+    <PackageReference Include="Havit.Blazor.Components.Web.Bootstrap" Version="4.3.3" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
