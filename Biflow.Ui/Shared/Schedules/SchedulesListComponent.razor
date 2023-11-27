@@ -152,7 +152,7 @@
 
 <SchedulesHelpModal @ref="helpModal" />
 
-<HxOffcanvas @ref="statusOffcanvas" Title="Scheduler service status" Backdrop="OffcanvasBackdrop.False">
+<HxOffcanvas @ref="statusOffcanvas" Title="Scheduler service status" Backdrop="OffcanvasBackdrop.False" Size="OffcanvasSize.Large">
     <BodyTemplate>
         @if (schedulerStatus is null)
         {
@@ -166,7 +166,11 @@
         {
             <div class="row">
                 <div class="col">
-                    <pre><code>@schedulerStatus</code></pre>
+                    <CodeEditor @ref="editor"
+                                Language="json"
+                                ReadOnly="true"
+                                InitialValueExpression="() => schedulerStatus"
+                                InitialHeight="calc(100vh - 170px)" />
                 </div>
             </div>
         }
@@ -192,6 +196,7 @@
     private ScheduleEditModal? editModal;
     private SchedulesHelpModal? helpModal;
     private HxOffcanvas? statusOffcanvas;
+    private CodeEditor? editor;
     private string? schedulerStatus = null;
 
     private async Task ToggleEnabled(ChangeEventArgs args, Schedule schedule)

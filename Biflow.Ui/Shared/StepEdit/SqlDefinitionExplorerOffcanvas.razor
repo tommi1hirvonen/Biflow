@@ -141,10 +141,10 @@
         try
         {
             Guid connectionId = this.connectionId ?? throw new ArgumentNullException(nameof(connectionId), "Connection id was null");
-                objectDefinition = await SqlServerHelper.GetObjectDefinitionAsync(connectionId, this.objectName);
+            objectDefinition = await SqlServerHelper.GetObjectDefinitionAsync(connectionId, this.objectName);
             if (objectDefinition is null)
             {
-                    errorMessage = $"No object definition found for '{this.objectName}'";
+                errorMessage = $"No object definition found for '{this.objectName}'";
             }
             await editor.LetAsync(x => x.SetValueAsync(objectDefinition));
         }

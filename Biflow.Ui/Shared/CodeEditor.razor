@@ -42,6 +42,8 @@
 
     [Parameter] public CodeEditorResize Resize { get; set; } = CodeEditorResize.Vertical;
 
+    [Parameter] public int? FontSize { get; set; }
+
     private StandaloneCodeEditor? editor { get; set; }
     private readonly string editorId = $"_{Guid.NewGuid().ToString()}"; // prefix with underscode as html id cannot start with a number
 
@@ -91,6 +93,7 @@
         Language = Language,
         Value = InitialValueExpression(),
         ReadOnly = ReadOnly,
+        FontSize = FontSize,
         Minimap = new EditorMinimapOptions { Enabled = MinimapEnabled },
         Theme = ThemeService.CurrentTheme == Theme.Dark ? "custom-dark" : "vs"
     };
