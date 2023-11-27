@@ -36,6 +36,13 @@ internal class SchedulesManager<TJob>(
             if (detail is not null)
                 jobDetails[jobKey] = detail;
         }
+        var triggerDetails = new Dictionary<TriggerKey, ICronTrigger>();
+        foreach (var triggerKey in  triggerKeys)
+        {
+            var detail = await _scheduler.GetTrigger(triggerKey, cancellationToken);
+            if (detail is not null && detail is ICronTrigger cron)
+                triggerDetails[triggerKey] = cron;
+        }
 
         var jobStatuses = jobIds.Select(jobId =>
         {
@@ -48,7 +55,8 @@ internal class SchedulesManager<TJob>(
                     var isEnabled = triggerStates.TryGetValue(trigger, out var state) && state != TriggerState.Paused;
                     var isRunning = runningSchedules.Any(r => r.JobDetail.Key == key);
                     var disallowConcurrentExecution = jobDetails.TryGetValue(key, out var detail) && detail.ConcurrentExecutionDisallowed;
-                    return new ScheduleStatus(scheduleId, isEnabled, isRunning, disallowConcurrentExecution);
+                    var cronExpression = triggerDetails.GetValueOrDefault(trigger)?.CronExpressionString;
+                    return new ScheduleStatus(scheduleId, cronExpression, isEnabled, isRunning, disallowConcurrentExecution);
                 }).ToArray();
             return new JobStatus(jobId, statusSchedules);
         }).ToArray();
