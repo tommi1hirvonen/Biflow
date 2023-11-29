@@ -94,10 +94,11 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
         "parameters" => Report.Parameters,
         "rerun" => Report.Rerun,
         "history" => Report.History,
+        "statuses" => Report.Statuses,
         _ => Report.List
     };
 
-    private enum Report { List, Gantt, Graph, ExecutionDetails, Parameters, Rerun, History }
+    private enum Report { List, Gantt, Graph, ExecutionDetails, Parameters, Rerun, History, Statuses }
 
     protected override void OnInitialized()
     {
@@ -208,7 +209,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
         }
     }
 
-    private async Task UpdateExecutionStatus(ExecutionStatus status)
+    private async Task UpdateExecutionStatusAsync(ExecutionStatus status)
     {
         try
         {

@@ -154,12 +154,15 @@
                         <HxDropdownMenu>
                             @foreach (var status in Enum.GetValues<ExecutionStatus>())
                             {
-                                <HxDropdownItem OnClick="() => UpdateExecutionStatus(status)">
+                                <HxDropdownItem OnClick="() => UpdateExecutionStatusAsync(status)">
                                     <JobExecutionStatusBadgeComponent ExecutionStatus="status" />
                                 </HxDropdownItem>
                             }
                         </HxDropdownMenu>
                     </HxDropdownButtonGroup>
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="@(() => NavigationManager.NavigateTo($"executions/{ExecutionId}/statuses"))">
+                        Update step statuses...
+                    </HxButton>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger" OnClick="DeleteExecutionAsync">
                         Delete...
                     </HxButton>
@@ -519,6 +522,12 @@ else if (ShowReport == Report.Rerun)
 {
     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
             <RerunComponent Execution="execution" />
+    </AuthorizeView>
+}
+else if (ShowReport == Report.Statuses)
+{
+    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+        <StepStatusesComponent Execution="execution" />
     </AuthorizeView>
 }
 else if (ShowReport == Report.History && execution?.JobId is Guid jobId)
