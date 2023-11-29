@@ -19,6 +19,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
     [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; } = null!;
     [Inject] private IExecutorService ExecutorService { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
+    [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
 
     [Parameter] public Guid ExecutionId { get; set; }
 
@@ -204,6 +205,52 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
         {
             Messenger.AddError("Error stopping execution", ex.Message);
             stoppingExecutions.RemoveAll(id => id == ExecutionId);
+        }
+    }
+
+    private async Task UpdateExecutionStatus(ExecutionStatus status)
+    {
+        try
+        {
+            using var context = await DbFactory.CreateDbContextAsync();
+            await context.Executions
+                .Where(e => e.ExecutionId == ExecutionId)
+                .ExecuteUpdateAsync(update => update
+                    .SetProperty(e => e.ExecutionStatus, status)
+                    .SetProperty(e => e.StartDateTime, e => e.StartDateTime ?? DateTimeOffset.Now)
+                    .SetProperty(e => e.EndDateTime, e => e.EndDateTime ?? DateTimeOffset.Now));
+            if (execution is not null)
+            {
+                execution.ExecutionStatus = status;
+                execution.StartDateTime ??= DateTimeOffset.Now;
+                execution.EndDateTime ??= DateTimeOffset.Now;
+            }
+            Messenger.AddInformation("Status updated successfully");
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error updating status", ex.Message);
+        }
+    }
+
+    private async Task DeleteExecutionAsync()
+    {
+        if (!await Confirmer.ConfirmAsync("Delete execution?", "Deleting executions that might be running can lead to undefined behaviour of the executor service. Are you sure you want to delete this execution?"))
+        {
+            return;
+        }
+        try
+        {
+            using var context = await DbFactory.CreateDbContextAsync();
+            await context.Executions
+                .Where(e => e.ExecutionId == ExecutionId)
+                .ExecuteDeleteAsync();
+            NavigationManager.NavigateTo("/executions");
+            Messenger.AddInformation("Execution deleted successfully");
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error deleting execution", ex.Message);
         }
     }
 

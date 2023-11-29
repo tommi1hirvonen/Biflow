@@ -143,6 +143,30 @@
 
 @if (ShowReport == Report.ExecutionDetails)
 {
+    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+        <div class="row">
+            <div class="col text-end">
+                <HxButtonGroup Size="ButtonGroupSize.Small">
+                    <HxDropdownButtonGroup>
+                        <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                            Mark status as
+                        </HxDropdownToggleButton>
+                        <HxDropdownMenu>
+                            @foreach (var status in Enum.GetValues<ExecutionStatus>())
+                            {
+                                <HxDropdownItem OnClick="() => UpdateExecutionStatus(status)">
+                                    <JobExecutionStatusBadgeComponent ExecutionStatus="status" />
+                                </HxDropdownItem>
+                            }
+                        </HxDropdownMenu>
+                    </HxDropdownButtonGroup>
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger" OnClick="DeleteExecutionAsync">
+                        Delete...
+                    </HxButton>
+                </HxButtonGroup>
+            </div>
+        </div>
+    </AuthorizeView>
     <div class="card shadow-sm pt-2 mb-4 mt-3">
         <table class="table table-hover">
             <tbody>
