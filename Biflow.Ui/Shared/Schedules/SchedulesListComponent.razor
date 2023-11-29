@@ -14,7 +14,7 @@
                 <CxIcon Icon="FeatherIcon.RefreshCw" />
                 Synchronize
             </HxButton>
-            <HxButton CssClass="ms-3 btn-auto" Color="ThemeColor.None" OnClick="ShowStatusOffcanvasAsync" title="Show scheduler service status">
+            <HxButton CssClass="ms-3 btn-auto" Color="ThemeColor.None" OnClick="ShowStatusOffcanvasAsync" Spinner="false" title="Show scheduler service status">
                 <CxIcon Icon="FeatherIcon.Info" />
                 Status
             </HxButton>
@@ -152,7 +152,7 @@
 
 <SchedulesHelpModal @ref="helpModal" />
 
-<HxOffcanvas @ref="statusOffcanvas" Title="Scheduler service status" Backdrop="OffcanvasBackdrop.False" Size="OffcanvasSize.Large">
+<HxOffcanvas @ref="statusOffcanvas" Title="Scheduler service status" Backdrop="OffcanvasBackdrop.False">
     <BodyTemplate>
         @if (schedulerStatus is null)
         {
@@ -169,6 +169,8 @@
                     <CodeEditor @ref="editor"
                                 Language="json"
                                 ReadOnly="true"
+                                MinimapEnabled="false"
+                                FontSize="12"
                                 InitialValueExpression="() => schedulerStatus"
                                 InitialHeight="calc(100vh - 170px)" />
                 </div>
