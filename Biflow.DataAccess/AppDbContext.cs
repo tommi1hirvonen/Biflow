@@ -57,6 +57,8 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
     public DbSet<MasterDataTableCategory> MasterDataTableCategories => Set<MasterDataTableCategory>();
     public DbSet<JobCategory> JobCategories => Set<JobCategory>();
     public DbSet<QlikCloudClient> QlikCloudClients => Set<QlikCloudClient>();
+    public DbSet<StepSource> StepSources => Set<StepSource>();
+    public DbSet<StepTarget> StepTargets => Set<StepTarget>();
 
     protected virtual void ConfigureSqlServer(SqlServerDbContextOptionsBuilder options)
     {
@@ -240,36 +242,6 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             .UsingEntity<Dictionary<string, object>>("ScheduleTag",
             x => x.HasOne<Schedule>().WithMany().HasForeignKey("ScheduleId"),
             x => x.HasOne<Tag>().WithMany().HasForeignKey("TagId"));
-        });
-
-        modelBuilder.Entity<DataObject>(e =>
-        {
-            e.HasMany(o => o.Readers)
-            .WithMany(s => s.Sources)
-            .UsingEntity<Dictionary<string, object>>("StepSource",
-            x => x.HasOne<Step>().WithMany().HasForeignKey("StepId"),
-            x => x.HasOne<DataObject>().WithMany().HasForeignKey("ObjectId"));
-
-            e.HasMany(o => o.Writers)
-            .WithMany(t => t.Targets)
-            .UsingEntity<Dictionary<string, object>>("StepTarget",
-            x => x.HasOne<Step>().WithMany().HasForeignKey("StepId"),
-            x => x.HasOne<DataObject>().WithMany().HasForeignKey("ObjectId"));
-        });
-
-        modelBuilder.Entity<ExecutionDataObject>(e =>
-        {
-            e.HasMany(o => o.Sources)
-            .WithMany(s => s.Sources)
-            .UsingEntity<Dictionary<string, object>>("ExecutionStepSource",
-            x => x.HasOne<StepExecution>().WithMany().HasForeignKey("ExecutionId", "StepId"),
-            x => x.HasOne<ExecutionDataObject>().WithMany().HasForeignKey("ExecutionId", "ObjectId"));
-
-            e.HasMany(o => o.Targets)
-            .WithMany(t => t.Targets)
-            .UsingEntity<Dictionary<string, object>>("ExecutionStepTarget",
-            x => x.HasOne<StepExecution>().WithMany().HasForeignKey("ExecutionId", "StepId"),
-            x => x.HasOne<ExecutionDataObject>().WithMany().HasForeignKey("ExecutionId", "ObjectId"));
         });
 
         modelBuilder.Entity<Schedule>()

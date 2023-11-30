@@ -22,9 +22,9 @@ public class DataObject : IDataObject
     [NotMapped] public DataObjectMappingResult SourceMappingResult { get; set; } = new();
     [NotMapped] public DataObjectMappingResult TargetMappingResult { get; set; } = new();
 
-    public IList<Step> Writers { get; set; } = null!;
+    public IList<StepTarget> Writers { get; set; } = null!;
 
-    public IList<Step> Readers { get; set; } = null!;
+    public IList<StepSource> Readers { get; set; } = null!;
 
     public bool UriEquals(IDataObject? other) =>
         other is not null &&

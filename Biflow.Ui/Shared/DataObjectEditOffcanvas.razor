@@ -79,8 +79,10 @@
         editContext = await DbContextFactory.CreateDbContextAsync();
         editObject = await editContext.DataObjects
             .Include(o => o.Readers)
+            .ThenInclude(r => r.Step)
             .ThenInclude(s => s.Job)
             .Include(o => o.Writers)
+            .ThenInclude(w => w.Step)
             .ThenInclude(s => s.Job)
             .FirstAsync(o => o.ObjectId == dataObjectId);
         await offcanvas.LetAsync(x => x.ShowAsync());

@@ -208,8 +208,10 @@
                                         <DataObjectManagementComponent
                                         ListName="source"
                                         StepType="Modal.Step.StepType"
-                                        DataObjects="Modal.Step.Sources"
-                                        ComparisonObjects="Modal.Step.Targets"
+                                        DataObjects="Modal.Step.Sources.Select(s => s.DataObject)"
+                                        ComparisonObjects="Modal.Step.Targets.Select(t => t.DataObject)"
+                                        OnAdd="AddSource"
+                                        OnDelete="DeleteSource"
                                         ConnectionId="ConnectionId"
                                         Connections="Modal.Connections"
                                         SqlStatement="@SqlStatement"
@@ -229,8 +231,10 @@
                                         <DataObjectManagementComponent
                                         ListName="target"
                                         StepType="Modal.Step.StepType"
-                                        DataObjects="Modal.Step.Targets"
-                                        ComparisonObjects="Modal.Step.Sources"
+                                        DataObjects="Modal.Step.Targets.Select(t => t.DataObject)"
+                                        ComparisonObjects="Modal.Step.Sources.Select(s => s.DataObject)"
+                                        OnAdd="AddTarget"
+                                        OnDelete="DeleteTarget"
                                         ConnectionId="ConnectionId"
                                         Connections="Modal.Connections"
                                         SqlStatement="@SqlStatement"
@@ -327,6 +331,42 @@
         IHasConnection<SqlConnectionInfo> sql => sql.ConnectionId,
         _ => null
     };
+
+    private void AddSource(DataObject data)
+    {
+        ArgumentNullException.ThrowIfNull(Modal.Step);
+        var source = new StepSource
+        {
+            Step = Modal.Step,
+            DataObject = data
+        };
+        Modal.Step.Sources.Add(source);
+    }
+
+    private void DeleteSource(DataObject data)
+    {
+        ArgumentNullException.ThrowIfNull(Modal.Step);
+        var source = Modal.Step.Sources.First(s => s.DataObject == data);
+        Modal.Step.Sources.Remove(source);
+    }
+
+    private void AddTarget(DataObject data)
+    {
+        ArgumentNullException.ThrowIfNull(Modal.Step);
+        var target = new StepTarget
+        {
+            Step = Modal.Step,
+            DataObject = data
+        };
+        Modal.Step.Targets.Add(target);
+    }
+
+    private void DeleteTarget(DataObject data)
+    {
+        ArgumentNullException.ThrowIfNull(Modal.Step);
+        var target = Modal.Step.Targets.First(t => t.DataObject == data);
+        Modal.Step.Targets.Remove(target);
+    }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {

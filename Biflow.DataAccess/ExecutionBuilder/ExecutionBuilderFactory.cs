@@ -63,7 +63,9 @@ internal class ExecutionBuilderFactory<TDbContext>(IDbContextFactory<TDbContext>
             .Include(s => (s as JobStep)!.TagFilters)
             .Include(s => s.Dependencies)
             .Include(s => s.Targets)
+            .ThenInclude(t => t.DataObject)
             .Include(s => s.Sources)
+            .ThenInclude(s => s.DataObject)
             .Include(s => s.Tags)
             .Include(s => s.ExecutionConditionParameters)
             .ToArrayAsync();

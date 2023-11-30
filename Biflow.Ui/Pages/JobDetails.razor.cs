@@ -39,7 +39,9 @@ public partial class JobDetails : ComponentBase
         return context.Steps
             .Include(step => step.Dependencies)
             .Include(step => step.Sources)
+            .ThenInclude(s => s.DataObject)
             .Include(step => step.Targets)
+            .ThenInclude(t => t.DataObject)
             .Include(step => step.Tags)
             .Include(step => step.ExecutionConditionParameters)
             .ThenInclude(p => p.JobParameter)

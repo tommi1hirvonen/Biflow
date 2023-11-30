@@ -72,7 +72,7 @@
                     </td>
                     <td>
                         <HxButtonGroup Size="ButtonGroupSize.Small">
-                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => DataObjects.Remove(obj)">
+                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => OnDelete.InvokeAsync(obj)">
                                 <CxIcon Icon="FeatherIcon.Delete" />
                             </HxButton>
                         </HxButtonGroup>
@@ -160,9 +160,13 @@
 
     [Parameter] public StepType StepType { get; set; }
 
-    [Parameter] public IList<DataObject>? DataObjects { get; set; }
+    [Parameter] public IEnumerable<DataObject>? DataObjects { get; set; }
 
-    [Parameter] public IList<DataObject> ComparisonObjects { get; set; } = null!;
+    [Parameter] public IEnumerable<DataObject> ComparisonObjects { get; set; } = null!;
+
+    [Parameter] public EventCallback<DataObject> OnDelete { get; set; }
+
+    [Parameter] public EventCallback<DataObject> OnAdd { get; set; }
 
     [Parameter] public Guid? ConnectionId { get; set; }
 
@@ -190,7 +194,7 @@
         newObject = new();
     }
 
-    private void SubmitNewObject()
+    private async void SubmitNewObject()
     {
         ArgumentNullException.ThrowIfNull(newObject);
         ArgumentNullException.ThrowIfNull(DataObjects);
@@ -212,12 +216,12 @@
         if (existing is not null)
         {
             GetMappingResult(existing).IsNewAddition = true;
-            DataObjects.Add(existing);
+            await OnAdd.InvokeAsync(existing);
         }
         else
         {
             GetMappingResult(newObject).IsNewAddition = true;
-            DataObjects.Add(newObject);
+            await OnAdd.InvokeAsync(newObject);
         }
         newObject = null;
     }
@@ -255,7 +259,7 @@
                 {
                     GetMappingResult(dbObject).IsNewAddition = true;
                     GetMappingResult(dbObject).IsUnreliableMapping = dependency.IsUnreliable;
-                    DataObjects.Add(dbObject);
+                    await OnAdd.InvokeAsync(dbObject);
                 }
             }
 

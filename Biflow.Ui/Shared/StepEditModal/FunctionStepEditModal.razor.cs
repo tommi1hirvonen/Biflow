@@ -65,7 +65,9 @@ public partial class FunctionStepEditModal : StepEditModal<FunctionStep>
         .Include(step => step.Tags)
         .Include(step => step.Dependencies)
         .Include(step => step.Sources)
+        .ThenInclude(s => s.DataObject)
         .Include(step => step.Targets)
+        .ThenInclude(t => t.DataObject)
         .Include(step => step.ExecutionConditionParameters)
         .FirstAsync(step => step.StepId == stepId);
 
@@ -79,8 +81,8 @@ public partial class FunctionStepEditModal : StepEditModal<FunctionStep>
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
             StepParameters = new List<FunctionStepParameter>(),
-            Sources = new List<DataObject>(),
-            Targets = new List<DataObject>(),
+            Sources = new List<StepSource>(),
+            Targets = new List<StepTarget>(),
             ExecutionConditionParameters = new List<ExecutionConditionParameter>()
         };
 

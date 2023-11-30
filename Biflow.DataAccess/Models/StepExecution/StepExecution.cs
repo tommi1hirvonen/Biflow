@@ -36,18 +36,20 @@ public abstract class StepExecution
             .Select(s =>
             {
                 var existing = execution.StepExecutions
-                    .SelectMany(e => e.Sources.Concat(e.Targets))
+                    .SelectMany(e => e.Sources.Select(s => s.DataObject).Concat(e.Targets.Select(t => t.DataObject)))
                     .FirstOrDefault(o => o.ObjectId == s.ObjectId);
-                return existing ?? new ExecutionDataObject(s, execution);
+                var dataObject = existing ?? new ExecutionDataObject(s.DataObject, execution);
+                return new StepExecutionSource(this, dataObject);
             })
             .ToArray();
         Targets = step.Targets
             .Select(t =>
             {
                 var existing = execution.StepExecutions
-                    .SelectMany(e => e.Sources.Concat(e.Targets).Concat(Sources)) // Also check for this step execution's sources as they are not yet added to the execution.
+                    .SelectMany(e => e.Sources.Select(s => s.DataObject).Concat(e.Targets.Select(t => t.DataObject)).Concat(Sources.Select(s => s.DataObject))) // Also check for this step execution's sources as they are not yet added to the execution.
                     .FirstOrDefault(o => o.ObjectId == t.ObjectId);
-                return existing ?? new ExecutionDataObject(t, execution);
+                var dataObject = existing ?? new ExecutionDataObject(t.DataObject, execution);
+                return new StepExecutionTarget(this, dataObject);
             })
             .ToArray();
     }
@@ -86,9 +88,9 @@ public abstract class StepExecution
 
     public IList<StepExecutionConditionParameter> ExecutionConditionParameters { get; set; } = null!;
 
-    public IList<ExecutionDataObject> Sources { get; set; } = null!;
+    public IList<StepExecutionSource> Sources { get; set; } = null!;
 
-    public IList<ExecutionDataObject> Targets { get; set; } = null!;
+    public IList<StepExecutionTarget> Targets { get; set; } = null!;
 
     public override string ToString() =>
         $"{GetType().Name} {{ ExecutionId = \"{ExecutionId}\", StepId = \"{StepId}\", StepName = \"{StepName}\" }}";

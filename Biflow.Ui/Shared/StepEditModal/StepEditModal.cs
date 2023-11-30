@@ -132,8 +132,8 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
                 return;
             }
 
-            await MapExistingObjectsAsync(Step.Sources);
-            await MapExistingObjectsAsync(Step.Targets);
+            await MapExistingSourcesAsync(Step.Sources);
+            await MapExistingTargetsAsync(Step.Targets);
 
             // Synchronize tags
             foreach (var text in Tags.Where(str => !Step.Tags.Any(t => t.TagName == str)))
@@ -178,15 +178,23 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
         }
     }
 
-    private async Task MapExistingObjectsAsync(IList<DataObject> objects)
+    private async Task MapExistingSourcesAsync(IList<StepSource> sources)
     {
         var allObjects = await GetDataObjectsAsync();
-        var existing = allObjects.Where(o => objects.Any(d => d.ObjectId == Guid.Empty && o.UriEquals(d)));
-        foreach (var dbObject in existing)
+        var replace = sources.Where(s => s.ObjectId == Guid.Empty && allObjects.Any(o => o.UriEquals(s.DataObject))).ToArray();
+        foreach (var source in replace)
         {
-            var remove = objects.First(d => d.UriEquals(dbObject));
-            objects.Remove(remove);
-            objects.Add(dbObject);
+            source.DataObject = allObjects.First(o => o.UriEquals(source.DataObject));
+        }
+    }
+
+    private async Task MapExistingTargetsAsync(IList<StepTarget> targets)
+    {
+        var allObjects = await GetDataObjectsAsync();
+        var replace = targets.Where(t => t.ObjectId == Guid.Empty && allObjects.Any(o => o.UriEquals(t.DataObject))).ToArray();
+        foreach (var target in replace)
+        {
+            target.DataObject = allObjects.First(o => o.UriEquals(target.DataObject));
         }
     }
 

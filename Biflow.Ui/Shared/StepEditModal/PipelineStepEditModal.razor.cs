@@ -28,8 +28,8 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
             StepParameters = new List<PipelineStepParameter>(),
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
-            Sources = new List<DataObject>(),
-            Targets = new List<DataObject>(),
+            Sources = new List<StepSource>(),
+            Targets = new List<StepTarget>(),
             ExecutionConditionParameters = new List<ExecutionConditionParameter>()
         };
 
@@ -44,7 +44,9 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
         .Include(step => step.Tags)
         .Include(step => step.Dependencies)
         .Include(step => step.Sources)
+        .ThenInclude(s => s.DataObject)
         .Include(step => step.Targets)
+        .ThenInclude(t => t.DataObject)
         .Include(step => step.ExecutionConditionParameters)
         .FirstAsync(step => step.StepId == stepId);
 

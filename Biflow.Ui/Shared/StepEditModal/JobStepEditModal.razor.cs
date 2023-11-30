@@ -42,8 +42,8 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
             JobToExecuteId = null,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
-            Sources = new List<DataObject>(),
-            Targets = new List<DataObject>(),
+            Sources = new List<StepSource>(),
+            Targets = new List<StepTarget>(),
             StepParameters = new List<JobStepParameter>(),
             ExecutionConditionParameters = new List<ExecutionConditionParameter>(),
             TagFilters = new List<Tag>()
@@ -58,7 +58,9 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
             .Include(step => step.TagFilters)
             .Include(step => step.Dependencies)
             .Include(step => step.Sources)
+            .ThenInclude(s => s.DataObject)
             .Include(step => step.Targets)
+            .ThenInclude(t => t.DataObject)
             .Include(step => step.StepParameters)
             .ThenInclude(p => p.InheritFromJobParameter)
             .Include(step => step.StepParameters)

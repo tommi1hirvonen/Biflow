@@ -84,17 +84,11 @@
                                         </div>
                                     </td>
                                     <td class="align-middle">
-                                        @{
-                                            var readersTitle = $"Steps reading from '{obj.ObjectUri}'";
-                                        }
                                         <a class="text-body" href="javascript:void(0)"
                                             @onclick="async () =>
                                             {
                                                 stepsModalDataObject = obj;
-                                                stepsModalGetSteps = o => o.Readers;
-                                                stepsModalGetStepsExpression = o => o.Readers;
-                                                stepsModalTitle = readersTitle;
-                                                await stepsModal.LetAsync(x => x.ShowAsync());
+                                                await readersModal.LetAsync(x => x.ShowAsync());
                                             }">
                                             @(readers > 0 ? $"{readers} reader(s)" : null)
                                         </a>
@@ -107,10 +101,7 @@
                                             @onclick="async () =>
                                             {
                                                 stepsModalDataObject = obj;
-                                                stepsModalGetSteps = o => o.Writers;
-                                                stepsModalGetStepsExpression = o => o.Writers;
-                                                stepsModalTitle = writersTitle;
-                                                await stepsModal.LetAsync(x => x.ShowAsync());
+                                                await writersModal.LetAsync(x => x.ShowAsync());
                                             }">
                                             @(writers > 0 ? $"{writers} writer(s)" : null)
                                         </a>
@@ -162,8 +153,13 @@
     </FooterTemplate>
 </HxModal>
 
-<HxModal @ref="stepsModal" Size="ModalSize.Large" Title="@stepsModalTitle" Scrollable="true">
+<HxModal @ref="readersModal" Size="ModalSize.Large" Scrollable="true">
     <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                Steps reading <span class="font-monospace">@stepsModalDataObject?.ObjectUri</span>
+            </div>
+        </div>
         <div class="row">
             <div class="col">
                 <table class="table table-sm table-hover">
@@ -177,22 +173,22 @@
                     <tbody>
                         @if (stepsModalDataObject is not null)
                         {
-                            @foreach (var step in stepsModalGetSteps?.Invoke(stepsModalDataObject)
-                                .OrderBy(s => s.Job.JobName)
-                                .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
+                            @foreach (var reader in stepsModalDataObject.Readers
+                                .OrderBy(r => r.Step.Job.JobName)
+                                .ThenBy(r => r.Step.StepName) ?? Enumerable.Empty<StepSource>())
                             {
                                 <tr>
                                     <td class="align-middle">
-                                        @step.Job.JobName
+                                        @reader.Step.Job.JobName
                                     </td>
                                     <td class="align-middle">
-                                        <StepTypeIconComponent StepType="step.StepType" />
+                                        <StepTypeIconComponent StepType="reader.Step.StepType" />
                                         &nbsp;
-                                        @step.StepName
+                                        @reader.Step.StepName
                                     </td>
                                     <td>
                                         <div class="btn-group">
-                                            <button class="btn btn-sm btn-auto" @onclick="async () => await DeleteStepDatabaseObjectLinkAsync(step)">
+                                            <button class="btn btn-sm btn-auto" @onclick="async () => await DeleteReaderAsync(reader)">
                                                 <CxIcon Icon="FeatherIcon.Delete" />
                                             </button>
                                         </div>
@@ -206,7 +202,60 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await stepsModal.LetAsync(x => x.HideAsync())">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await readersModal.LetAsync(x => x.HideAsync())">Close</button>
+    </FooterTemplate>
+</HxModal>
+
+<HxModal @ref="writersModal" Size="ModalSize.Large" Scrollable="true">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                Steps writing to <span class="font-monospace">@stepsModalDataObject?.ObjectUri</span>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Job</th>
+                            <th>Step</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (stepsModalDataObject is not null)
+                        {
+                            @foreach (var writer in stepsModalDataObject.Writers
+                           .OrderBy(w => w.Step.Job.JobName)
+                           .ThenBy(w => w.Step.StepName) ?? Enumerable.Empty<StepTarget>())
+                            {
+                                <tr>
+                                    <td class="align-middle">
+                                        @writer.Step.Job.JobName
+                                    </td>
+                                    <td class="align-middle">
+                                        <StepTypeIconComponent StepType="writer.Step.StepType" />
+                                        &nbsp;
+                                        @writer.Step.StepName
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-auto" @onclick="async () => await DeleteWriterAsync(writer)">
+                                                <CxIcon Icon="FeatherIcon.Delete" />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <button class="btn btn-secondary" @onclick="async () => await writersModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
@@ -214,11 +263,9 @@
     private IList<DataObject>? objects;
     private DataObjectEditOffcanvas? editOffcanvas;
     private HxModal? confirmDeleteModal;
-    private HxModal? stepsModal;
-    private string stepsModalTitle = string.Empty;
+    private HxModal? readersModal;
+    private HxModal? writersModal;
     private DataObject? stepsModalDataObject;
-    private Func<DataObject, IList<Step>>? stepsModalGetSteps;
-    System.Linq.Expressions.Expression<Func<DataObject, IList<Step>>>? stepsModalGetStepsExpression;
     private string searchTerm = string.Empty;
 
     private IEnumerable<DataObject> FilteredObjects =>
@@ -237,8 +284,10 @@
         using var context = await Task.Run(DbContextFactory.CreateDbContext);
         objects = await context.DataObjects
             .Include(o => o.Readers)
+            .ThenInclude(s => s.Step)
             .ThenInclude(s => s.Job)
             .Include(o => o.Writers)
+            .ThenInclude(w => w.Step)
             .ThenInclude(s => s.Job)
             .ToListAsync();
     }
@@ -274,28 +323,24 @@
         objects?.Remove(obj);
     }
 
-    private async Task DeleteStepDatabaseObjectLinkAsync(Step step)
+    private async Task DeleteReaderAsync(StepSource step)
     {
-        if (stepsModalDataObject is null
-            || stepsModalGetSteps is null
-            || stepsModalGetStepsExpression is null) return;
-
+        step.DataObject.Readers.Remove(step);
+        step.Step.Sources.Remove(step);
         using var context = DbContextFactory.CreateDbContext();
-        var obj = await context.DataObjects
-            .Include(stepsModalGetStepsExpression)
-            .FirstOrDefaultAsync(o => o.ObjectId == stepsModalDataObject.ObjectId);
+        await context.StepSources
+            .Where(s => s.StepId == step.StepId && s.ObjectId == step.ObjectId)
+            .ExecuteDeleteAsync();
+    }
 
-        if (obj is null) return;
-
-        var steps = stepsModalGetSteps(obj);
-        var stepToRemove = steps.FirstOrDefault(s => s.StepId == step.StepId);
-        if (stepToRemove is not null)
-        {
-            steps.Remove(stepToRemove);
-            await context.SaveChangesAsync();
-        }
-
-        stepsModalGetSteps(stepsModalDataObject).Remove(step);
+    private async Task DeleteWriterAsync(StepTarget step)
+    {
+        step.DataObject.Writers.Remove(step);
+        step.Step.Targets.Remove(step);
+        using var context = DbContextFactory.CreateDbContext();
+        await context.StepTargets
+            .Where(s => s.StepId == step.StepId && s.ObjectId == step.ObjectId)
+            .ExecuteDeleteAsync();
     }
 
     private void OnDataObjectSubmitted(DataObject dataObject)

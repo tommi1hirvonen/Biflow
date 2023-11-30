@@ -34,7 +34,9 @@ public partial class SynchronizeDependenciesComponent : ComponentBase
             .AsNoTrackingWithIdentityResolution()
             .Where(step => step.JobId == Job.JobId)
             .Include(step => step.Sources)
+            .ThenInclude(s => s.DataObject)
             .Include(step => step.Targets)
+            .ThenInclude(t => t.DataObject)
             .Include(step => step.Dependencies)
             .ThenInclude(dep => dep.DependantOnStep)
             .ToListAsync();
@@ -45,7 +47,7 @@ public partial class SynchronizeDependenciesComponent : ComponentBase
         foreach (var step in steps)
         {
             // Check for missing dependencies based on sources and targets.
-            var dependencies = steps.Where(s => s.Targets.Any(target => step.Sources.Any(source => source.UriEquals(target))));
+            var dependencies = steps.Where(s => s.Targets.Any(target => step.Sources.Any(source => source.DataObject.UriEquals(target.DataObject))));
             var missingDependencies = dependencies.Where(s => !step.Dependencies.Any(d => s.StepId == d.DependantOnStepId));
             foreach (var missing in missingDependencies)
             {

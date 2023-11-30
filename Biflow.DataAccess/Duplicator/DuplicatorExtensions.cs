@@ -8,8 +8,8 @@ internal static class DuplicatorExtensions
     [
         nameof(Step.Job),
         nameof(Step.Dependencies),
-        nameof(Step.Sources),
-        nameof(Step.Targets),
+        $"{nameof(Step.Sources)}.{nameof(StepSource.DataObject)}",
+        $"{nameof(Step.Targets)}.{nameof(StepTarget.DataObject)}",
         nameof(Step.Tags),
         $"{nameof(Step.ExecutionConditionParameters)}.{nameof(ExecutionConditionParameter.JobParameter)}",
         $"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.InheritFromJobParameter)}",
