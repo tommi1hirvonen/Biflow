@@ -201,6 +201,12 @@
             return;
         }
 
+        if (!Uri.IsWellFormedUriString(newObject.ObjectUri, UriKind.RelativeOrAbsolute))
+        {
+            Messenger.AddWarning("Not a valid Uri");
+            return;
+        }
+
         var existing = allObjects?.FirstOrDefault(o => o.UriEquals(newObject))
             ?? ComparisonObjects.FirstOrDefault(o => o.UriEquals(newObject));
         if (existing is not null)
