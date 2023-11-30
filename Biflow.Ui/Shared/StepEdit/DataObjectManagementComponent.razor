@@ -19,7 +19,7 @@
     </div>
 }
 
-<table class="table table-sm table-hover small mt-3">
+<table class="table table-sm small mt-3">
     <thead>
         <tr>
             <th>Uri</th>
@@ -34,7 +34,7 @@
                 <td colspan="3">Loading...</td>
             </tr>
         }
-        else if (!DataObjects.Any())
+        else if (!DataObjects.Any() && newObject is null)
         {
             <tr>
                 <td colspan="3">@NoDataObjectsText</td>
@@ -52,7 +52,7 @@
                     { IsNewAddition: true } => "New object",
                     _ => null
                 };
-                <tr title="@title">
+                <tr class="table-hover" title="@title">
                     <td class="align-middle font-monospace">
                         @obj.ObjectUri
                     </td>
@@ -84,7 +84,7 @@
         {
             <tr>
                 <td>
-                    <input class="form-control form-control-sm font-monospace" type="text" autocomplete="off"
+                    <input class="form-control form-control-sm font-monospace" type="text" autocomplete="off" placeholder="Uri"
                             @bind="newObject.ObjectUri"
                             @bind:event="oninput" />
                 </td>
@@ -103,37 +103,55 @@
                 .Where(o => o.ObjectUri.ContainsIgnoreCase(newObject.ObjectUri))
                 .OrderBy(o => o.ObjectUri)
                 .Take(10) ?? Enumerable.Empty<DataObject>();
-            @foreach (var obj in objects)
-            {
-                <tr style="cursor: pointer;" @onclick="() => { newObject = obj; SubmitNewObject(); }">
-                    <td class="align-middle font-monospace ps-5" colspan="2"><HighlightableText Text="@obj.ObjectUri" PartToHighlight="@newObject.ObjectUri" /></td>
-                    <td>
-                        <HxButtonGroup Size="ButtonGroupSize.Small">
-                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => { newObject = obj; }" title="Edit before adding">
-                                <CxIcon Icon="FeatherIcon.Edit2" />
-                            </HxButton>
-                        </HxButtonGroup>
-                    </td>
-                </tr>
-            }
+            <tr>
+                <td class="px-5" colspan="3">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Suggestions</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var obj in objects)
+                            {
+                                <tr style="cursor: pointer;" @onclick="() => { newObject = obj; SubmitNewObject(); }">
+                                    <td class="align-middle font-monospace">
+                                        <HighlightableText Text="@obj.ObjectUri" PartToHighlight="@newObject.ObjectUri" />
+                                    </td>
+                                    <td>
+                                        <HxButtonGroup Size="ButtonGroupSize.Small">
+                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => { newObject = obj; }" title="Edit before adding">
+                                                <CxIcon Icon="FeatherIcon.Edit2" />
+                                            </HxButton>
+                                        </HxButtonGroup>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
         }
     </tbody>
 </table>
-<HxDropdownButtonGroup Split CssClass="mt-2">
-    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" OnClick="() => dbObjectExplorerOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId))">
+
+<HxDropdownButtonGroup CssClass="mt-2">
+    <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
         <CxIcon Icon="FeatherIcon.Plus" />
         @AddButtonText
-    </HxButton>
-    <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
-        <span class="visually-hidden">Toggle dropdown</span>
     </HxDropdownToggleButton>
     <HxDropdownMenu>
+        <HxDropdownItem OnClick="() => dbObjectExplorerOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId))">
+            <CxIcon Icon="FeatherIcon.Table" />
+            Add table
+        </HxDropdownItem>
         <HxDropdownItem OnClick="AddNewObjectAsync">
+            <CxIcon Icon="FeatherIcon.Edit3" />
             Add manually
         </HxDropdownItem>
     </HxDropdownMenu>
 </HxDropdownButtonGroup>
-
 
 <DbObjectExplorerOffcanvas @ref="dbObjectExplorerOffcanvas" Connections="Connections" OnDbObjectSelected="OnDbObjectSelected" />
 
