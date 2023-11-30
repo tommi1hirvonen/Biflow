@@ -146,7 +146,7 @@ public class DatabaseFixture : IAsyncLifetime
 
         var step3Target = new DataObject
         {
-            ObjectUri = "table://TestServer/TestDb/TestSchema/TestTable",
+            ObjectUri = DataObject.CreateTableUri("TestServer", "TestDb", "TestSchema", "TestTable"),
             MaxConcurrentWrites = 1,
             Writers = new List<Step> { step3 },
             Readers = new List<Step> { step4 }
@@ -156,7 +156,7 @@ public class DatabaseFixture : IAsyncLifetime
 
         var step4Target = new DataObject
         {
-            ObjectUri = "table://TestServer/TestDb/TestSchema/TestTable2",
+            ObjectUri = DataObject.CreateTableUri("TestServer", "TestDb", "TestSchema", "TestTable2"),
             MaxConcurrentWrites = 1,
             Writers = new List<Step> { step4 }
         };
