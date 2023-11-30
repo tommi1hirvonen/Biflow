@@ -13,10 +13,7 @@ public class ExecutionDataObject
     {
         ExecutionId = execution.ExecutionId;
         ObjectId = dataObject.ObjectId;
-        ServerName = dataObject.ServerName;
-        DatabaseName = dataObject.DatabaseName;
-        SchemaName = dataObject.SchemaName;
-        ObjectName = dataObject.ObjectName;
+        ObjectUri = dataObject.ObjectUri;
         MaxConcurrentWrites = dataObject.MaxConcurrentWrites;
     }
 
@@ -24,13 +21,7 @@ public class ExecutionDataObject
 
     public Guid ObjectId { get; private set; }
 
-    public string ServerName { get; private set; } = string.Empty;
-
-    public string DatabaseName { get; private set; } = string.Empty;
-
-    public string SchemaName { get; private set; } = string.Empty;
-
-    public string ObjectName { get; private set; } = string.Empty;
+    public string ObjectUri { get; private set; } = string.Empty;
 
     public int MaxConcurrentWrites { get; private set; } = 1;
 

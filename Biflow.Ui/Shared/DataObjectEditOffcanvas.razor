@@ -3,7 +3,7 @@
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHxMessengerService Messenger
 
-<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Large">
+<HxModal @ref="offcanvas" Size="ModalSize.Large">
     <BodyTemplate>
         @if (editObject is not null)
         {
@@ -12,41 +12,12 @@
                 <ValidationSummary />
                 <div class="row">
                     <div class="col">
-                        <label class="form-label">Server</label>
+                        <label class="form-label">Uri</label>
                         <div class="input-group">
                             <div class="input-group-text">
-                                <CxIcon Icon="FeatherIcon.Server" />
+                                <CxIcon Icon="FeatherIcon.Link" />
                             </div>
-                            <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="editObject.ServerName" />
-                        </div>
-                    </div>
-                    <div class="col">
-                        <label class="form-label">Database</label>
-                        <div class="input-group">
-                            <div class="input-group-text">
-                                <CxIcon Icon="FeatherIcon.Database" />
-                            </div>
-                            <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="editObject.DatabaseName" />
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-5">
-                        <label class="form-label">Schema</label>
-                        <div class="input-group">
-                            <div class="input-group-text">
-                                <CxIcon Icon="FeatherIcon.Folder" />
-                            </div>
-                            <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="editObject.SchemaName" />
-                        </div>
-                    </div>
-                    <div class="col-7">
-                        <label class="form-label">Object</label>
-                        <div class="input-group">
-                            <div class="input-group-text">
-                                <CxIcon Icon="FeatherIcon.Table" />
-                            </div>
-                            <InputText class="form-control form-control-sm" autocomplete="off" @bind-Value="editObject.ObjectName" />
+                            <InputText class="form-control form-control-sm font-monospace" autocomplete="off" @bind-Value="editObject.ObjectUri" />
                         </div>
                     </div>
                 </div>
@@ -72,12 +43,12 @@
             Cancel
         </HxButton>
     </FooterTemplate>
-</HxOffcanvas>
+</HxModal>
 
 @code {
     [Parameter] public EventCallback<DataObject> OnDataObjectSubmitted { get; set; }
 
-    private HxOffcanvas? offcanvas;
+    private HxModal? offcanvas;
     private DataObject? editObject;
     private AppDbContext? editContext;
 

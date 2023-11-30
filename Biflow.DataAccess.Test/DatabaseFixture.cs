@@ -146,10 +146,7 @@ public class DatabaseFixture : IAsyncLifetime
 
         var step3Target = new DataObject
         {
-            ServerName = "TestServer",
-            DatabaseName = "TestDb",
-            SchemaName = "TestSchema",
-            ObjectName = "TestTable",
+            ObjectUri = "table://TestServer/TestDb/TestSchema/TestTable",
             MaxConcurrentWrites = 1,
             Writers = new List<Step> { step3 },
             Readers = new List<Step> { step4 }
@@ -159,10 +156,7 @@ public class DatabaseFixture : IAsyncLifetime
 
         var step4Target = new DataObject
         {
-            ServerName = "TestServer",
-            DatabaseName = "TestDb",
-            SchemaName = "TestSchema",
-            ObjectName = "TestTable2",
+            ObjectUri = "table://TestServer/TestDb/TestSchema/TestTable2",
             MaxConcurrentWrites = 1,
             Writers = new List<Step> { step4 }
         };

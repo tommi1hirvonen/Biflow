@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Web;
 
 namespace Biflow.DataAccess.Models;
 
@@ -10,24 +11,9 @@ public class DataObject : IDataObject
     public Guid ObjectId { get; private set; }
 
     [Required]
-    [MinLength(1)]
-    [MaxLength(128)]
-    public string ServerName { get; set; } = string.Empty;
-
-    [Required]
-    [MinLength(1)]
-    [MaxLength(128)]
-    public string DatabaseName { get; set; } = string.Empty;
-
-    [Required]
-    [MinLength(1)]
-    [MaxLength(128)]
-    public string SchemaName { get; set; } = string.Empty;
-
-    [Required]
-    [MinLength(1)]
-    [MaxLength(128)]
-    public string ObjectName { get; set; } = string.Empty;
+    [Uri]
+    [MaxLength(500)]
+    public string ObjectUri { get; set; } = string.Empty;
 
     [Required]
     [Range(0, 100)]
@@ -40,12 +26,18 @@ public class DataObject : IDataObject
 
     public IList<Step> Readers { get; set; } = null!;
 
-    public bool NamesEqual(IDataObject other) =>
+    public bool UriEquals(IDataObject? other) =>
         other is not null &&
-        ServerName.EqualsIgnoreCase(other.ServerName)
-        && DatabaseName.EqualsIgnoreCase(other.DatabaseName)
-        && SchemaName.EqualsIgnoreCase(other.SchemaName)
-        && ObjectName.EqualsIgnoreCase(other.ObjectName);
+        ObjectUri.EqualsIgnoreCase(other.ObjectUri);
+
+    public static string CreateTableUri(string server, string database, string schema, string table)
+    {
+        server = Uri.EscapeDataString(server);
+        database = Uri.EscapeDataString(database);
+        schema = Uri.EscapeDataString(schema);
+        table = Uri.EscapeDataString(table);
+        return $"table://{server}/{database}/{schema}/{table}";
+    }
 }
 
 public class DataObjectMappingResult
@@ -59,8 +51,5 @@ public class DataObjectMappingResult
 
 public interface IDataObject
 {
-    public string ServerName { get; }
-    public string DatabaseName { get; }
-    public string SchemaName { get; }
-    public string ObjectName { get; }
+    public string ObjectUri { get; }
 }

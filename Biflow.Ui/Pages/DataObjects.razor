@@ -19,17 +19,12 @@
 </div>
 
 <div class="row mt-3">
-    <div class="col col-xl-9">
-        <div class="input-group input-group-sm me-3">
+    <div class="col">
+        <div class="input-group input-group-sm">
             <div class="input-group-text">
-                <CxIcon Icon="FeatherIcon.Filter" />
-                &nbsp;
-                Filter by
+                <CxIcon Icon="FeatherIcon.Search" />
             </div>
-            <input type="search" class="form-control" @bind-value="serverFilter" @bind-value:event="oninput" placeholder="Server" />
-            <input type="search" class="form-control" @bind-value="databaseFilter" @bind-value:event="oninput" placeholder="Database" />
-            <input type="search" class="form-control" @bind-value="schemaFilter" @bind-value:event="oninput" placeholder="Schema" />
-            <input type="search" class="form-control" @bind-value="objectFilter" @bind-value:event="oninput" placeholder="Object" />
+            <input type="search" class="form-control" @bind-value="searchTerm" @bind-value:event="oninput" placeholder="Search" style="max-width: 30rem;" />
         </div>
     </div>
 </div>
@@ -41,10 +36,7 @@
                 <table class="table table-sm table-hover small">
                     <thead>
                         <tr>
-                            <th>Server</th>
-                            <th>Database</th>
-                            <th>Schema</th>
-                            <th>Object</th>
+                            <th>Uri</th>
                             <th>Max conc. writes</th>
                             <th></th>
                             <th></th>
@@ -73,10 +65,7 @@
                                 }
                                 <tr>
                                     
-                                    <td class="align-middle"><HighlightableText Text="@obj.ServerName" PartToHighlight="@serverFilter" /></td>
-                                    <td class="align-middle"><HighlightableText Text="@obj.DatabaseName" PartToHighlight="@databaseFilter" /></td>
-                                    <td class="align-middle"><HighlightableText Text="@obj.SchemaName" PartToHighlight="@schemaFilter" /></td>
-                                    <td class="align-middle"><HighlightableText Text="@obj.ObjectName" PartToHighlight="@objectFilter" /></td>
+                                    <td class="align-middle font-monospace"><HighlightableText Text="@obj.ObjectUri" PartToHighlight="@searchTerm" /></td>
                                     <td class="align-middle">@obj.MaxConcurrentWrites</td>
                                     <td>
                                         <div class="btn-group">
@@ -96,7 +85,7 @@
                                     </td>
                                     <td class="align-middle">
                                         @{
-                                            var readersTitle = $"Steps reading from '{obj.ObjectName}'";
+                                            var readersTitle = $"Steps reading from '{obj.ObjectUri}'";
                                         }
                                         <a class="text-body" href="javascript:void(0)"
                                             @onclick="async () =>
@@ -112,7 +101,7 @@
                                     </td>
                                     <td class="align-middle">
                                         @{
-                                            var writersTitle = $"Steps writing to '{obj.ObjectName}'";
+                                            var writersTitle = $"Steps writing to '{obj.ObjectUri}'";
                                         }
                                         <a class="text-body" href="javascript:void(0)"
                                             @onclick="async () =>
@@ -150,20 +139,16 @@
                 <table class="table table-sm">
                     <thead>
                         <tr>
-                            <th>Server</th>
-                            <th>Database</th>
-                            <th>Schema</th>
-                            <th>Object</th>
+                            <th>Uri</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var obj in UnusedObjects)
                         {
                             <tr>
-                                <td>@obj.ServerName</td>
-                                <td>@obj.DatabaseName</td>
-                                <td>@obj.SchemaName</td>
-                                <td>@obj.ObjectName</td>
+                                <td class="font-monospace">
+                                    @obj.ObjectUri
+                                </td>
                             </tr>
                         }
                     </tbody>
@@ -234,21 +219,12 @@
     private DataObject? stepsModalDataObject;
     private Func<DataObject, IList<Step>>? stepsModalGetSteps;
     System.Linq.Expressions.Expression<Func<DataObject, IList<Step>>>? stepsModalGetStepsExpression;
-    private string serverFilter = string.Empty;
-    private string databaseFilter = string.Empty;
-    private string schemaFilter = string.Empty;
-    private string objectFilter = string.Empty;
+    private string searchTerm = string.Empty;
 
     private IEnumerable<DataObject> FilteredObjects =>
         objects?
-        .Where(o => !serverFilter.Any() || o.ServerName.ContainsIgnoreCase(serverFilter))
-        .Where(o => !databaseFilter.Any() || o.DatabaseName.ContainsIgnoreCase(databaseFilter))
-        .Where(o => !schemaFilter.Any() || o.SchemaName.ContainsIgnoreCase(schemaFilter))
-        .Where(o => !objectFilter.Any() || o.ObjectName.ContainsIgnoreCase(objectFilter))
-        .OrderBy(o => o.ServerName)
-        .ThenBy(o => o.DatabaseName)
-        .ThenBy(o => o.SchemaName)
-        .ThenBy(o => o.ObjectName)
+        .Where(o => !searchTerm.Any() || o.ObjectUri.ContainsIgnoreCase(searchTerm))
+        .OrderBy(o => o.ObjectUri)
         ?? Enumerable.Empty<DataObject>();
 
     private IEnumerable<DataObject> UnusedObjects =>

@@ -83,22 +83,12 @@ public class StepValidator : AsyncAbstractValidator<Step>
 
     private static bool HaveNoDuplicates(IEnumerable<DataObject> objects)
     {
-        var ordered = objects
-            .OrderBy(x => x.ServerName)
-            .ThenBy(x => x.DatabaseName)
-            .ThenBy(x => x.SchemaName)
-            .ThenBy(x => x.ObjectName)
-            .ToArray();
-        for (int i = 0; i < ordered.Length - 1; i++)
-        {
-            var current = ordered.ElementAt(i);
-            var next = ordered.ElementAt(i + 1);
-            if (current.Equals(next))
-            {
-                return false;
-            }
-        }
-        return true;
+        var count = objects.Count();
+        var distinctCount = objects
+            .Select(o => o.ObjectUri)
+            .Distinct()
+            .Count();
+        return count == distinctCount;
     }
 }
 

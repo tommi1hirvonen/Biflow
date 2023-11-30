@@ -45,7 +45,7 @@ public partial class SynchronizeDependenciesComponent : ComponentBase
         foreach (var step in steps)
         {
             // Check for missing dependencies based on sources and targets.
-            var dependencies = steps.Where(s => s.Targets.Any(target => step.Sources.Any(source => source.NamesEqual(target))));
+            var dependencies = steps.Where(s => s.Targets.Any(target => step.Sources.Any(source => source.UriEquals(target))));
             var missingDependencies = dependencies.Where(s => !step.Dependencies.Any(d => s.StepId == d.DependantOnStepId));
             foreach (var missing in missingDependencies)
             {

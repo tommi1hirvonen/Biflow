@@ -2,4 +2,7 @@
 
 namespace Biflow.Ui.Core;
 
-public record DbObjectReference(string ServerName, string DatabaseName, string SchemaName, string ObjectName, bool IsUnreliable) : IDataObject;
+public record DbObjectReference(string ServerName, string DatabaseName, string SchemaName, string ObjectName, bool IsUnreliable) : IDataObject
+{
+    public string ObjectUri => $"table://{ServerName}/{DatabaseName}/{SchemaName}/{ObjectName}";
+}

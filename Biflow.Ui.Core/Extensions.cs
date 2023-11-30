@@ -398,6 +398,12 @@ public static partial class Extensions
         return dt.AddDays(-1 * diff).Date;
     }
 
+    public static bool EqualsIgnoreCase(this string source, string? toCheck) => toCheck switch
+    {
+        not null => source.Equals(toCheck, StringComparison.OrdinalIgnoreCase),
+        _ => false
+    };
+
     public static bool ContainsIgnoreCase(this string source, string? toCheck) => toCheck switch
     {
         not null => source.Contains(toCheck, StringComparison.OrdinalIgnoreCase),

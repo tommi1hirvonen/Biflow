@@ -181,10 +181,10 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
     private async Task MapExistingObjectsAsync(IList<DataObject> objects)
     {
         var allObjects = await GetDataObjectsAsync();
-        var existing = allObjects.Where(o => objects.Any(d => d.ObjectId == Guid.Empty && o.NamesEqual(d)));
+        var existing = allObjects.Where(o => objects.Any(d => d.ObjectId == Guid.Empty && o.UriEquals(d)));
         foreach (var dbObject in existing)
         {
-            var remove = objects.First(d => d.NamesEqual(dbObject));
+            var remove = objects.First(d => d.UriEquals(dbObject));
             objects.Remove(remove);
             objects.Add(dbObject);
         }
