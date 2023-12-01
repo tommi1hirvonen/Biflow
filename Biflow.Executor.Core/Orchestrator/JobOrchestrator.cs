@@ -74,7 +74,7 @@ internal class JobOrchestrator : IJobOrchestrator
         {
             CancelExecution("Executor service shutdown");
         }
-        cts.Cancel(); // Cancel Task.Delay()
+        cts.Cancel(); // Cancel
         await orchestrationTask; // Wait for orchestration tasks to finish
     }
 
