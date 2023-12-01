@@ -15,7 +15,7 @@
     </div>
 }
 
-<table class="table table-sm small mt-3">
+<table class="table mt-3">
     <thead>
         <tr>
             <th>Uri</th>
@@ -49,10 +49,34 @@
                     _ => null
                 };
                 <tr class="table-hover" title="@title">
-                    <td class="align-middle font-monospace">
-                        @reference.DataObject.ObjectUri
+                    <td class="align-middle">
+                        <div class="row font-monospace small">
+                            <span>@reference.DataObject.ObjectUri</span>
+                        </div>
+                        @if (reference.DataAttributes.Count > 0 && reference != editReference)
+                        {
+                            <div class="row">
+                                <div class="col">
+                                @foreach (var value in reference.DataAttributes)
+                                {
+                                    <span class="badge bg-light-subtle border border-light-subtle text-light-emphasis d-inline-flex">@value</span>
+                                }
+                                </div>
+                            </div>
+                        }
+                        else if (reference == editReference)
+                        {
+                            <div class="row">
+                                <div class="col">
+                                    <HxInputTags Delimiters="new()"
+                                                 InputSize="InputSize.Small"
+                                                 TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
+                                                 @bind-Value="editReferenceAttributes" />
+                                </div>
+                            </div>
+                        }
                     </td>
-                    <td>
+                    <td class="align-middle">
                         @if (mappingResult.IsCandidateForRemoval)
                         {
                             <span class="text-danger fw-bold fs-5 pb-1">–</span>
@@ -66,11 +90,41 @@
                             <span class="text-success fw-bold fs-5 pb-1">+</span>
                         }
                     </td>
-                    <td>
+                    <td class="align-middle">
                         <HxButtonGroup Size="ButtonGroupSize.Small">
-                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => references.Remove(reference)">
-                                <CxIcon Icon="FeatherIcon.Delete" />
-                            </HxButton>
+                            @if (reference == editReference)
+                            {
+                                <HxButton Size="ButtonSize.Small"
+                                          Color="ThemeColor.None"
+                                          CssClass="btn-auto text-success"
+                                          OnClick="() => { reference.DataAttributes.Clear(); reference.DataAttributes.AddRange(editReferenceAttributes); editReferenceAttributes.Clear(); editReference = null; }"
+                                          title="Done">
+                                    <CxIcon Icon="FeatherIcon.Check" />
+                                </HxButton>
+                                <HxButton Size="ButtonSize.Small"
+                                          Color="ThemeColor.None"
+                                          CssClass="btn-auto text-danger"
+                                          OnClick="() => { editReference = null; editReferenceAttributes.Clear(); }"
+                                          title="Discard">
+                                    <CxIcon Icon="FeatherIcon.X" />
+                                </HxButton>
+                            }
+                            else
+                            {
+                                <HxButton Size="ButtonSize.Small"
+                                          Color="ThemeColor.None"
+                                          CssClass="btn-auto"
+                                          OnClick="() => { editReference = reference; editReferenceAttributes = reference.DataAttributes.ToList(); }"
+                                          title="Edit data attributes">
+                                    <CxIcon Icon="LucideIcon.Asterisk" />
+                                </HxButton>
+                                <HxButton Size="ButtonSize.Small"
+                                          Color="ThemeColor.None"
+                                          CssClass="btn-auto"
+                                          OnClick="() => references.Remove(reference)">
+                                    <CxIcon Icon="FeatherIcon.Delete" />
+                                </HxButton>
+                            }
                         </HxButtonGroup>
                     </td>
                 </tr>
@@ -175,6 +229,8 @@
     private string popoverContent = "";
     private IEnumerable<DataObject>? allObjects;
     private DataObject? newObject;
+    private StepDataObject? editReference;
+    private List<string> editReferenceAttributes = [];
     private DbObjectExplorerOffcanvas? dbObjectExplorerOffcanvas;
 
     protected override void OnParametersSet()
@@ -218,7 +274,7 @@
         if (existing is not null)
         {
             GetMappingResult(existing).IsNewAddition = true;
-            AddReference(existing);;
+            AddReference(existing);
         }
         else
         {

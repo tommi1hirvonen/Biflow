@@ -2,7 +2,7 @@
 
 <div class="row">
     <div class="col">
-        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Link" OnClick="InferDependenciesFromDatabaseObjects">
+        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Link" OnClick="InferDependenciesFromDataObjects">
             Infer dependencies from sources and targets
         </HxButton>
     </div>
@@ -272,13 +272,21 @@
         }
     }
 
-    private void InferDependenciesFromDatabaseObjects()
+    private void InferDependenciesFromDataObjects()
     {
         ArgumentNullException.ThrowIfNull(Step);
         var sources = Step.DataObjects.Where(d => d.ReferenceType == DataObjectReferenceType.Source);
         static IEnumerable<StepDataObject> targetsOf(Step step) => step.DataObjects.Where(d => d.ReferenceType == DataObjectReferenceType.Target);
-        var dependsOnSteps = Steps.Where(step => targetsOf(step).Any(target => sources.Any(source => target.DataObject.UriEquals(source.DataObject))));
+
+        var dependsOnSteps = Steps.Where(step =>
+            targetsOf(step).Any(target =>
+                sources.Any(source =>
+                    // The target and source data object Uris match
+                    // AND
+                    // (1) the source has no data attributes, (2) the target has no data attributes, (3) they have at least one matching data attributes
+                    source.DataObject.UriEquals(target.DataObject) && (source.DataAttributes.Count == 0 || target.DataAttributes.Count == 0 || source.DataAttributes.Any(a => target.DataAttributes.Contains(a))))));
         var missingDependencies = dependsOnSteps.Where(d1 => !Step.Dependencies.Any(d2 => d2.DependantOnStepId == d1.StepId));
+
         foreach (var step in missingDependencies)
         {
             var dependency = new Dependency(Step.StepId, step.StepId)
@@ -287,6 +295,7 @@
             };
             Step.Dependencies.Add(dependency);
         }
+
         var candidatesForRemoval = Step.Dependencies.Where(d => !dependsOnSteps.Any(s => s.StepId == d.DependantOnStepId));
         foreach (var candidate in candidatesForRemoval)
         {
