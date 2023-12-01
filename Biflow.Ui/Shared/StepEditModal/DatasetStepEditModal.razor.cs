@@ -58,10 +58,8 @@ public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
             .Include(step => step.Job)
             .Include(step => step.Tags)
             .Include(step => step.Dependencies)
-            .Include(step => step.Sources)
+            .Include(step => step.DataObjects)
             .ThenInclude(s => s.DataObject)
-            .Include(step => step.Targets)
-            .ThenInclude(t => t.DataObject)
             .Include(step => step.ExecutionConditionParameters)
             .FirstAsync(step => step.StepId == stepId);
         
@@ -79,8 +77,7 @@ public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
             AppRegistrationId = AppRegistrations?.FirstOrDefault()?.AppRegistrationId,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
-            Sources = new List<StepSource>(),
-            Targets = new List<StepTarget>(),
+            DataObjects = new List<StepDataObject>(),
             ExecutionConditionParameters = new List<ExecutionConditionParameter>()
         };
     }

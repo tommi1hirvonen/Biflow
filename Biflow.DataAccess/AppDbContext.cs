@@ -57,8 +57,7 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
     public DbSet<MasterDataTableCategory> MasterDataTableCategories => Set<MasterDataTableCategory>();
     public DbSet<JobCategory> JobCategories => Set<JobCategory>();
     public DbSet<QlikCloudClient> QlikCloudClients => Set<QlikCloudClient>();
-    public DbSet<StepSource> StepSources => Set<StepSource>();
-    public DbSet<StepTarget> StepTargets => Set<StepTarget>();
+    public DbSet<StepDataObject> StepDataObjects => Set<StepDataObject>();
 
     protected virtual void ConfigureSqlServer(SqlServerDbContextOptionsBuilder options)
     {
@@ -440,6 +439,7 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
         configurationBuilder.Properties<ConnectionType>().HaveConversion<EnumToStringConverter<ConnectionType>>();
         configurationBuilder.Properties<PipelineClientType>().HaveConversion<EnumToStringConverter<PipelineClientType>>();
         configurationBuilder.Properties<LookupDisplayType>().HaveConversion<EnumToStringConverter<LookupDisplayType>>();
+        configurationBuilder.Properties<DataObjectReferenceType>().HaveConversion<EnumToStringConverter<DataObjectReferenceType>>();
     }
 
     public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)

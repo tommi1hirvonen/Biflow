@@ -85,18 +85,11 @@ CREATE TRIGGER [app].[Trigger_ExecutionStep]
                 WHERE ExecutionDependency.ExecutionId = deleted.ExecutionId AND ExecutionDependency.DependantOnStepId = deleted.StepId
             )
 
-        DELETE FROM app.ExecutionStepSource
+        DELETE FROM app.ExecutionStepDataObject
         WHERE EXISTS (
             SELECT *
             FROM deleted
-            WHERE ExecutionStepSource.ExecutionId = deleted.ExecutionId AND ExecutionStepSource.StepId = deleted.StepId
-        )
-
-        DELETE FROM app.ExecutionStepTarget
-        WHERE EXISTS (
-            SELECT *
-            FROM deleted
-            WHERE ExecutionStepTarget.ExecutionId = deleted.ExecutionId AND ExecutionStepTarget.StepId = deleted.StepId
+            WHERE ExecutionStepDataObject.ExecutionId = deleted.ExecutionId AND ExecutionStepDataObject.StepId = deleted.StepId
         )
         
         DELETE FROM app.ExecutionStep

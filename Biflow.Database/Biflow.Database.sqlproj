@@ -96,11 +96,9 @@
     <Build Include="app\Tables\JobConcurrency.sql" />
     <Build Include="app\Tables\ExecutionConcurrency.sql" />
     <Build Include="app\Tables\DataObject.sql" />
-    <Build Include="app\Tables\StepSource.sql" />
-    <Build Include="app\Tables\StepTarget.sql" />
+    <Build Include="app\Tables\StepDataObject.sql" />
     <Build Include="app\Tables\ExecutionDataObject.sql" />
-    <Build Include="app\Tables\ExecutionStepSource.sql" />
-    <Build Include="app\Tables\ExecutionStepTarget.sql" />
+    <Build Include="app\Tables\ExecutionStepDataObject.sql" />
     <Build Include="app\Tables\JobAuthorization.sql" />
     <Build Include="app\Tables\DataTable.sql" />
     <Build Include="app\Tables\DataTableAuthorization.sql" />

@@ -32,24 +32,14 @@ public abstract class StepExecution
         ExecutionDependencies = step.Dependencies
             .Select(d => new ExecutionDependency(d, this))
             .ToList();
-        Sources = step.Sources
-            .Select(s =>
+        DataObjects = step.DataObjects
+            .Select(d =>
             {
                 var existing = execution.StepExecutions
-                    .SelectMany(e => e.Sources.Select(s => s.DataObject).Concat(e.Targets.Select(t => t.DataObject)))
-                    .FirstOrDefault(o => o.ObjectId == s.ObjectId);
-                var dataObject = existing ?? new ExecutionDataObject(s.DataObject, execution);
-                return new StepExecutionSource(this, dataObject);
-            })
-            .ToArray();
-        Targets = step.Targets
-            .Select(t =>
-            {
-                var existing = execution.StepExecutions
-                    .SelectMany(e => e.Sources.Select(s => s.DataObject).Concat(e.Targets.Select(t => t.DataObject)).Concat(Sources.Select(s => s.DataObject))) // Also check for this step execution's sources as they are not yet added to the execution.
-                    .FirstOrDefault(o => o.ObjectId == t.ObjectId);
-                var dataObject = existing ?? new ExecutionDataObject(t.DataObject, execution);
-                return new StepExecutionTarget(this, dataObject);
+                    .SelectMany(e => e.DataObjects.Select(x => x.DataObject))
+                    .FirstOrDefault(o => o.ObjectId == d.ObjectId);
+                var dataObject = existing ?? new ExecutionDataObject(d.DataObject, execution);
+                return new StepExecutionDataObject(this, dataObject, d.ReferenceType, d.DataAttributes);
             })
             .ToArray();
     }
@@ -88,9 +78,7 @@ public abstract class StepExecution
 
     public IList<StepExecutionConditionParameter> ExecutionConditionParameters { get; set; } = null!;
 
-    public IList<StepExecutionSource> Sources { get; set; } = null!;
-
-    public IList<StepExecutionTarget> Targets { get; set; } = null!;
+    public IList<StepExecutionDataObject> DataObjects { get; set; } = null!;
 
     public override string ToString() =>
         $"{GetType().Name} {{ ExecutionId = \"{ExecutionId}\", StepId = \"{StepId}\", StepName = \"{StepName}\" }}";

@@ -44,7 +44,8 @@ internal class JobOrchestrator : IJobOrchestrator
         // Create a Dictionary with max concurrent steps for each target.
         // This allows only a predefined number of steps to write to the same target concurrently.
         var targets = _execution.StepExecutions
-            .SelectMany(e => e.Targets)
+            .SelectMany(e => e.DataObjects)
+            .Where(d => d.ReferenceType == DataObjectReferenceType.Target)
             .Select(t => t.DataObject)
             .Where(t => t.MaxConcurrentWrites > 0)
             .Distinct();
@@ -110,7 +111,10 @@ internal class JobOrchestrator : IJobOrchestrator
             // Start from the most detailed semaphores and move towards the main semaphore.
             // Keep track of semaphores that have been entered. If the step is stopped/canceled
             // while waiting to enter one of the semaphores, they can be released afterwards.
-            foreach (var target in _stepExecution.Targets.Select(t => t.DataObject))
+            var targets = _stepExecution.DataObjects
+                .Where(d => d.ReferenceType == DataObjectReferenceType.Target)
+                .Select(d => d.DataObject);
+            foreach (var target in targets)
             {
                 // If the target has a max no of concurrent writes defined, wait until the target semaphore can be entered.
                 if (_instance._targetSemaphores.TryGetValue(target, out var semaphore))

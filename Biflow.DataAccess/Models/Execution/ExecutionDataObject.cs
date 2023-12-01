@@ -25,7 +25,5 @@ public class ExecutionDataObject
 
     public int MaxConcurrentWrites { get; private set; } = 1;
 
-    public IList<StepExecutionTarget> Writers { get; set; } = null!;
-
-    public IList<StepExecutionSource> Readers { get; set; } = null!;
+    public IList<StepExecutionDataObject> StepExecutions { get; set; } = null!;
 }

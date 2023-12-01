@@ -10,10 +10,10 @@ public class StepValidator : AsyncAbstractValidator<Step>
         RuleFor(step => step)
             .Must(step => step.ExecutionConditionParameters.DistinctBy(p => p.ParameterName).Count() == step.ExecutionConditionParameters.Count)
             .WithMessage("Execution condition parameter names must be unique");
-        RuleFor(step => step.Sources.Select(s => s.DataObject))
+        RuleFor(step => step.DataObjects.Where(d => d.ReferenceType == DataObjectReferenceType.Source).Select(s => s.DataObject))
             .Must(HaveNoDuplicates)
             .WithMessage("Source object names must be unique");
-        RuleFor(step => step.Targets.Select(t => t.DataObject))
+        RuleFor(step => step.DataObjects.Where(d => d.ReferenceType == DataObjectReferenceType.Target).Select(t => t.DataObject))
             .Must(HaveNoDuplicates)
             .WithMessage("Target object names must be unique");
         RuleFor(step => step.ExecutionConditionExpression)

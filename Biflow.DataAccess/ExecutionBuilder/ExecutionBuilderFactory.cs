@@ -62,10 +62,8 @@ internal class ExecutionBuilderFactory<TDbContext>(IDbContextFactory<TDbContext>
             .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.InheritFromJobParameter)}")
             .Include(s => (s as JobStep)!.TagFilters)
             .Include(s => s.Dependencies)
-            .Include(s => s.Targets)
+            .Include(s => s.DataObjects)
             .ThenInclude(t => t.DataObject)
-            .Include(s => s.Sources)
-            .ThenInclude(s => s.DataObject)
             .Include(s => s.Tags)
             .Include(s => s.ExecutionConditionParameters)
             .ToArrayAsync();

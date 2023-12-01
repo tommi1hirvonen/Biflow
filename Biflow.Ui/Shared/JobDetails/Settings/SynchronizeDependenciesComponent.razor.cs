@@ -33,10 +33,8 @@ public partial class SynchronizeDependenciesComponent : ComponentBase
         var steps = await context.Steps
             .AsNoTrackingWithIdentityResolution()
             .Where(step => step.JobId == Job.JobId)
-            .Include(step => step.Sources)
+            .Include(step => step.DataObjects)
             .ThenInclude(s => s.DataObject)
-            .Include(step => step.Targets)
-            .ThenInclude(t => t.DataObject)
             .Include(step => step.Dependencies)
             .ThenInclude(dep => dep.DependantOnStep)
             .ToListAsync();
@@ -47,7 +45,10 @@ public partial class SynchronizeDependenciesComponent : ComponentBase
         foreach (var step in steps)
         {
             // Check for missing dependencies based on sources and targets.
-            var dependencies = steps.Where(s => s.Targets.Any(target => step.Sources.Any(source => source.DataObject.UriEquals(target.DataObject))));
+            var sources = step.DataObjects.Where(d => d.ReferenceType == DataObjectReferenceType.Source);
+            static IEnumerable<StepDataObject> targetsOf(Step step) => step.DataObjects.Where(d => d.ReferenceType == DataObjectReferenceType.Target);
+
+            var dependencies = steps.Where(s => targetsOf(s).Any(target => sources.Any(source => source.DataObject.UriEquals(target.DataObject))));
             var missingDependencies = dependencies.Where(s => !step.Dependencies.Any(d => s.StepId == d.DependantOnStepId));
             foreach (var missing in missingDependencies)
             {
@@ -61,7 +62,7 @@ public partial class SynchronizeDependenciesComponent : ComponentBase
 
             // Check for unnecessary dependencies based on sources and targets.
             // Only do this if there are any sources listed.
-            if (step.Sources.Any())
+            if (sources.Any())
             {
                 var extraDependencies = step.Dependencies.Where(d => !dependencies.Any(dep => d.DependantOnStepId == dep.StepId));
                 dependenciesToRemove.AddRange(extraDependencies);

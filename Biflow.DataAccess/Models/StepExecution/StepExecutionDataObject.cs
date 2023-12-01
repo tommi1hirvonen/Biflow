@@ -3,19 +3,25 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-[Table("ExecutionStepTarget")]
+[Table("ExecutionStepDataObject")]
 [PrimaryKey("ExecutionId", "StepId", "ObjectId")]
-public class StepExecutionTarget
+public class StepExecutionDataObject
 {
-    public StepExecutionTarget() { }
+    public StepExecutionDataObject() { }
 
-    public StepExecutionTarget(StepExecution step, ExecutionDataObject dataObject)
+    public StepExecutionDataObject(
+        StepExecution step,
+        ExecutionDataObject dataObject,
+        DataObjectReferenceType referenceType,
+        IEnumerable<string> dataAttributes)
     {
         StepExecution = step;
         DataObject = dataObject;
         ExecutionId = step.ExecutionId;
         StepId = step.StepId;
         ObjectId = dataObject.ObjectId;
+        ReferenceType = referenceType;
+        DataAttributes = dataAttributes.ToList();
     }
 
     public Guid ExecutionId { get; set; }
@@ -27,4 +33,8 @@ public class StepExecutionTarget
     public StepExecution StepExecution { get; set; } = null!;
 
     public ExecutionDataObject DataObject { get; set; } = null!;
+
+    public DataObjectReferenceType ReferenceType { get; set; }
+
+    public List<string> DataAttributes { get; set; } = [];
 }

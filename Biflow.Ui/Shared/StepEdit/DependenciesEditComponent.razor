@@ -213,7 +213,7 @@
     private readonly HashSet<JobProjection> jobFilter = [];
     private readonly HashSet<Tag> tagFilter = [];
     private readonly HashSet<StepType> stepTypeFilter = [];
-    
+
     private Step? previousStep;
     private string dependenciesFilterText = string.Empty;
     private bool jobsLoading = false;
@@ -275,7 +275,9 @@
     private void InferDependenciesFromDatabaseObjects()
     {
         ArgumentNullException.ThrowIfNull(Step);
-        var dependsOnSteps = Steps.Where(step => step.Targets.Any(target => Step.Sources.Any(source => target.DataObject.UriEquals(source.DataObject))));
+        var sources = Step.DataObjects.Where(d => d.ReferenceType == DataObjectReferenceType.Source);
+        static IEnumerable<StepDataObject> targetsOf(Step step) => step.DataObjects.Where(d => d.ReferenceType == DataObjectReferenceType.Target);
+        var dependsOnSteps = Steps.Where(step => targetsOf(step).Any(target => sources.Any(source => target.DataObject.UriEquals(source.DataObject))));
         var missingDependencies = dependsOnSteps.Where(d1 => !Step.Dependencies.Any(d2 => d2.DependantOnStepId == d1.StepId));
         foreach (var step in missingDependencies)
         {

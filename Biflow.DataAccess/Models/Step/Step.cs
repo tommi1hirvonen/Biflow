@@ -33,22 +33,15 @@ public abstract class Step : IComparable
         RetryAttempts = other.RetryAttempts;
         RetryIntervalMinutes = other.RetryIntervalMinutes;
         ExecutionConditionExpression = new() { Expression = other.ExecutionConditionExpression.Expression };
-        Sources = other.Sources
-            .Select(s => new StepSource
+        DataObjects = other.DataObjects
+            .Select(d => new StepDataObject
             {
                 StepId = StepId,
                 Step = this,
-                ObjectId = s.DataObject.ObjectId,
-                DataObject = s.DataObject
-            })
-            .ToList();
-        Targets = other.Targets
-            .Select(t => new StepTarget
-            {
-                StepId = StepId,
-                Step = this,
-                ObjectId = t.DataObject.ObjectId,
-                DataObject = t.DataObject
+                ObjectId = d.DataObject.ObjectId,
+                DataObject = d.DataObject,
+                ReferenceType = d.ReferenceType,
+                DataAttributes = d.DataAttributes.ToList()
             })
             .ToList();
         Tags = other.Tags.ToList();
@@ -132,10 +125,7 @@ public abstract class Step : IComparable
     public IList<Dependency> Dependencies { get; set; } = null!;
 
     [ValidateComplexType]
-    public IList<StepSource> Sources { get; set; } = null!;
-
-    [ValidateComplexType]
-    public IList<StepTarget> Targets { get; set; } = null!;
+    public IList<StepDataObject> DataObjects { get; set; } = null!;
 
     [ValidateComplexType]
     public IList<ExecutionConditionParameter> ExecutionConditionParameters { get; set; } = null!;

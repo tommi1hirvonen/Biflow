@@ -60,8 +60,8 @@
                         {
                             <Virtualize TItem="DataObject" Context="obj" SpacerElement="tr" Items="FilteredObjects.ToList()">
                                 @{
-                                    var readers = obj.Readers.Count;
-                                    var writers = obj.Writers.Count;
+                                    var readers = obj.Steps.Count(s => s.ReferenceType == DataObjectReferenceType.Source);
+                                    var writers = obj.Steps.Count(s => s.ReferenceType == DataObjectReferenceType.Target);
                                 }
                                 <tr>
                                     
@@ -87,8 +87,9 @@
                                         <a class="text-body" href="javascript:void(0)"
                                             @onclick="async () =>
                                             {
+                                                referenceType = DataObjectReferenceType.Source;
                                                 stepsModalDataObject = obj;
-                                                await readersModal.LetAsync(x => x.ShowAsync());
+                                                await referencesModal.LetAsync(x => x.ShowAsync());
                                             }">
                                             @(readers > 0 ? $"{readers} reader(s)" : null)
                                         </a>
@@ -100,8 +101,9 @@
                                         <a class="text-body" href="javascript:void(0)"
                                             @onclick="async () =>
                                             {
+                                                referenceType = DataObjectReferenceType.Target;
                                                 stepsModalDataObject = obj;
-                                                await writersModal.LetAsync(x => x.ShowAsync());
+                                                await referencesModal.LetAsync(x => x.ShowAsync());
                                             }">
                                             @(writers > 0 ? $"{writers} writer(s)" : null)
                                         </a>
@@ -153,11 +155,14 @@
     </FooterTemplate>
 </HxModal>
 
-<HxModal @ref="readersModal" Size="ModalSize.Large" Scrollable="true">
+<HxModal @ref="referencesModal" Size="ModalSize.Large" Scrollable="true">
     <BodyTemplate>
+        @{
+            var title = referenceType switch { DataObjectReferenceType.Source => "reading from", _ => "writing to" };
+        }
         <div class="row">
             <div class="col">
-                Steps reading <span class="font-monospace">@stepsModalDataObject?.ObjectUri</span>
+                Steps @title <span class="font-monospace">@stepsModalDataObject?.ObjectUri</span>
             </div>
         </div>
         <div class="row">
@@ -173,9 +178,9 @@
                     <tbody>
                         @if (stepsModalDataObject is not null)
                         {
-                            @foreach (var reader in stepsModalDataObject.Readers
+                            @foreach (var reader in stepsModalDataObject.Steps.Where(s => s.ReferenceType == referenceType)
                                 .OrderBy(r => r.Step.Job.JobName)
-                                .ThenBy(r => r.Step.StepName) ?? Enumerable.Empty<StepSource>())
+                                .ThenBy(r => r.Step.StepName) ?? Enumerable.Empty<StepDataObject>())
                             {
                                 <tr>
                                     <td class="align-middle">
@@ -188,7 +193,7 @@
                                     </td>
                                     <td>
                                         <div class="btn-group">
-                                            <button class="btn btn-sm btn-auto" @onclick="async () => await DeleteReaderAsync(reader)">
+                                            <button class="btn btn-sm btn-auto" @onclick="async () => await DeleteReferenceAsync(reader)">
                                                 <CxIcon Icon="FeatherIcon.Delete" />
                                             </button>
                                         </div>
@@ -202,60 +207,7 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await readersModal.LetAsync(x => x.HideAsync())">Close</button>
-    </FooterTemplate>
-</HxModal>
-
-<HxModal @ref="writersModal" Size="ModalSize.Large" Scrollable="true">
-    <BodyTemplate>
-        <div class="row">
-            <div class="col">
-                Steps writing to <span class="font-monospace">@stepsModalDataObject?.ObjectUri</span>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col">
-                <table class="table table-sm table-hover">
-                    <thead>
-                        <tr>
-                            <th>Job</th>
-                            <th>Step</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (stepsModalDataObject is not null)
-                        {
-                            @foreach (var writer in stepsModalDataObject.Writers
-                           .OrderBy(w => w.Step.Job.JobName)
-                           .ThenBy(w => w.Step.StepName) ?? Enumerable.Empty<StepTarget>())
-                            {
-                                <tr>
-                                    <td class="align-middle">
-                                        @writer.Step.Job.JobName
-                                    </td>
-                                    <td class="align-middle">
-                                        <StepTypeIconComponent StepType="writer.Step.StepType" />
-                                        &nbsp;
-                                        @writer.Step.StepName
-                                    </td>
-                                    <td>
-                                        <div class="btn-group">
-                                            <button class="btn btn-sm btn-auto" @onclick="async () => await DeleteWriterAsync(writer)">
-                                                <CxIcon Icon="FeatherIcon.Delete" />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </BodyTemplate>
-    <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await writersModal.LetAsync(x => x.HideAsync())">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await referencesModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
@@ -263,8 +215,8 @@
     private IList<DataObject>? objects;
     private DataObjectEditOffcanvas? editOffcanvas;
     private HxModal? confirmDeleteModal;
-    private HxModal? readersModal;
-    private HxModal? writersModal;
+    private HxModal? referencesModal;
+    private DataObjectReferenceType referenceType;
     private DataObject? stepsModalDataObject;
     private string searchTerm = string.Empty;
 
@@ -275,19 +227,14 @@
         ?? Enumerable.Empty<DataObject>();
 
     private IEnumerable<DataObject> UnusedObjects =>
-        objects?
-        .Where(t => !t.Readers.Any() && !t.Writers.Any())
-        ?? Enumerable.Empty<DataObject>();
+        objects?.Where(t => !t.Steps.Any()) ?? Enumerable.Empty<DataObject>();
 
     protected override async Task OnInitializedAsync()
     {
         using var context = await Task.Run(DbContextFactory.CreateDbContext);
         objects = await context.DataObjects
-            .Include(o => o.Readers)
+            .Include(o => o.Steps)
             .ThenInclude(s => s.Step)
-            .ThenInclude(s => s.Job)
-            .Include(o => o.Writers)
-            .ThenInclude(w => w.Step)
             .ThenInclude(s => s.Job)
             .ToListAsync();
     }
@@ -323,23 +270,13 @@
         objects?.Remove(obj);
     }
 
-    private async Task DeleteReaderAsync(StepSource step)
+    private async Task DeleteReferenceAsync(StepDataObject reference)
     {
-        step.DataObject.Readers.Remove(step);
-        step.Step.Sources.Remove(step);
+        reference.DataObject.Steps.Remove(reference);
+        reference.Step.DataObjects.Remove(reference);
         using var context = DbContextFactory.CreateDbContext();
-        await context.StepSources
-            .Where(s => s.StepId == step.StepId && s.ObjectId == step.ObjectId)
-            .ExecuteDeleteAsync();
-    }
-
-    private async Task DeleteWriterAsync(StepTarget step)
-    {
-        step.DataObject.Writers.Remove(step);
-        step.Step.Targets.Remove(step);
-        using var context = DbContextFactory.CreateDbContext();
-        await context.StepTargets
-            .Where(s => s.StepId == step.StepId && s.ObjectId == step.ObjectId)
+        await context.StepDataObjects
+            .Where(x => x.StepId == reference.StepId && x.ObjectId == reference.ObjectId && x.ReferenceType == reference.ReferenceType)
             .ExecuteDeleteAsync();
     }
 

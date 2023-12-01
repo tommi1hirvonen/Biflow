@@ -1,18 +1,14 @@
-﻿
-@inject IHxMessengerService Messenger
+﻿@inject IHxMessengerService Messenger
+@inject SqlServerHelperService SqlServerHelper
 
-
-@if (StepType == StepType.Sql)
+@if (Step is SqlStep sql && sql.SqlStatement is not null)
 {
     <div class="row">
         <div class="col">
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Link" OnClick="GetDatabaseObjectsAsync">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Link" OnClick="() => GetDatabaseObjectsAsync(sql.SqlStatement)">
                 Attempt to infer from stored procedure
             </HxButton>
-            @{
-                var content = $"Read {ListName} objects from the database based on stored procedure definition. Mapping can be unreliable especially when temporary tables are used. Manually remove extra {ListName}s after mapping.";
-            }
-            <HxPopover Trigger="PopoverTrigger.Hover" Content="@content">
+            <HxPopover Trigger="PopoverTrigger.Hover" Content="@popoverContent">
                 <CxIcon Icon="FeatherIcon.Info" />
             </HxPopover>
         </div>
@@ -28,23 +24,23 @@
         </tr>
     </thead>
     <tbody>
-        @if (DataObjects is null)
+        @if (references is null)
         {
             <tr>
                 <td colspan="3">Loading...</td>
             </tr>
         }
-        else if (!DataObjects.Any() && newObject is null)
+        else if (!references.Any() && newObject is null)
         {
             <tr>
-                <td colspan="3">@NoDataObjectsText</td>
+                <td colspan="3">@noDataObjects</td>
             </tr>
         }
         else
         {
-            foreach (var obj in DataObjects.OrderBy(x => x.ObjectUri))
+            foreach (var reference in references.Where(d => d.ReferenceType == ReferenceType).OrderBy(x => x.DataObject.ObjectUri))
             {
-                var mappingResult = GetMappingResult(obj);
+                var mappingResult = GetMappingResult(reference.DataObject);
                 var title = mappingResult switch
                 {
                     { IsCandidateForRemoval: true } => "Object not found in latest mapping result",
@@ -54,7 +50,7 @@
                 };
                 <tr class="table-hover" title="@title">
                     <td class="align-middle font-monospace">
-                        @obj.ObjectUri
+                        @reference.DataObject.ObjectUri
                     </td>
                     <td>
                         @if (mappingResult.IsCandidateForRemoval)
@@ -72,7 +68,7 @@
                     </td>
                     <td>
                         <HxButtonGroup Size="ButtonGroupSize.Small">
-                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => OnDelete.InvokeAsync(obj)">
+                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => references.Remove(reference)">
                                 <CxIcon Icon="FeatherIcon.Delete" />
                             </HxButton>
                         </HxButtonGroup>
@@ -139,7 +135,7 @@
 <HxDropdownButtonGroup CssClass="mt-2">
     <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
         <CxIcon Icon="FeatherIcon.Plus" />
-        @AddButtonText
+        @addButton
     </HxDropdownToggleButton>
     <HxDropdownMenu>
         <HxDropdownItem OnClick="() => dbObjectExplorerOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId))">
@@ -156,37 +152,43 @@
 <DbObjectExplorerOffcanvas @ref="dbObjectExplorerOffcanvas" Connections="Connections" OnDbObjectSelected="OnDbObjectSelected" />
 
 @code {
-    [Parameter] public string ListName { get; set; } = string.Empty;
+    [Parameter] public DataObjectReferenceType ReferenceType { get; set; }
 
-    [Parameter] public StepType StepType { get; set; }
-
-    [Parameter] public IEnumerable<DataObject>? DataObjects { get; set; }
-
-    [Parameter] public IEnumerable<DataObject> ComparisonObjects { get; set; } = null!;
-
-    [Parameter] public EventCallback<DataObject> OnDelete { get; set; }
-
-    [Parameter] public EventCallback<DataObject> OnAdd { get; set; }
+    [Parameter] public Step? Step { get; set; }
 
     [Parameter] public Guid? ConnectionId { get; set; }
 
     [Parameter] public IEnumerable<SqlConnectionInfo> Connections { get; set; } = null!;
 
-    [Parameter] public string? SqlStatement { get; set; }
-
-    [Parameter] public Func<Guid, string?, string, Task<IEnumerable<DbObjectReference>>> LoadDataObjectDependencies { get; set; } = null!;
-
     [Parameter] public Func<Task<IEnumerable<DataObject>>> LoadAllDataObjects { get; set; } = null!;
 
-    [Parameter] public Func<DataObject, DataObjectMappingResult> GetMappingResult { get; set; } = null!;
+    private Func<DataObject, DataObjectMappingResult> GetMappingResult => ReferenceType switch
+    {
+        DataObjectReferenceType.Source => (DataObject d) => d.SourceMappingResult,
+        _ => (DataObject d) => d.TargetMappingResult
+    };
 
-    [Parameter] public string AddButtonText { get; set; } = "";
-
-    [Parameter] public string NoDataObjectsText { get; set; } = "";
-
+    private IList<StepDataObject>? references;
+    private string listName = "";
+    private string noDataObjects = "";
+    private string addButton = "";
+    private string popoverContent = "";
     private IEnumerable<DataObject>? allObjects;
     private DataObject? newObject;
     private DbObjectExplorerOffcanvas? dbObjectExplorerOffcanvas;
+
+    protected override void OnParametersSet()
+    {
+        references = Step?.DataObjects;
+        listName = ReferenceType switch
+        {
+            DataObjectReferenceType.Source => "source",
+            _ => "target"
+        };
+        noDataObjects = $"No {listName}s";
+        popoverContent = $"Read {listName} objects from the database based on stored procedure definition. Mapping can be unreliable especially when temporary tables are used. Manually remove extra {listName}s after mapping.";
+        addButton = $"Add {listName}";
+    }
 
     private async Task AddNewObjectAsync()
     {
@@ -194,14 +196,14 @@
         newObject = new();
     }
 
-    private async void SubmitNewObject()
+    private void SubmitNewObject()
     {
         ArgumentNullException.ThrowIfNull(newObject);
-        ArgumentNullException.ThrowIfNull(DataObjects);
+        ArgumentNullException.ThrowIfNull(references);
 
-        if (DataObjects.Any(o => o.UriEquals(newObject)))
+        if (references.Any(o => o.ReferenceType == ReferenceType && o.DataObject.UriEquals(newObject)))
         {
-            Messenger.AddWarning($"Duplicate {ListName} object");
+            Messenger.AddWarning($"Duplicate {listName} object");
             return;
         }
 
@@ -212,71 +214,94 @@
         }
 
         var existing = allObjects?.FirstOrDefault(o => o.UriEquals(newObject))
-            ?? ComparisonObjects.FirstOrDefault(o => o.UriEquals(newObject));
+            ?? references.Select(d => d.DataObject).FirstOrDefault(o => o.UriEquals(newObject));
         if (existing is not null)
         {
             GetMappingResult(existing).IsNewAddition = true;
-            await OnAdd.InvokeAsync(existing);
+            AddReference(existing);;
         }
         else
         {
             GetMappingResult(newObject).IsNewAddition = true;
-            await OnAdd.InvokeAsync(newObject);
+            AddReference(newObject);
         }
         newObject = null;
     }
 
-    private async Task GetDatabaseObjectsAsync()
+    private async Task GetDatabaseObjectsAsync(string sqlStatement)
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(DataObjects);
+            ArgumentNullException.ThrowIfNull(references);
 
-            var proc = SqlStatement?.ParseStoredProcedureFromSqlStatement();
+            var proc = sqlStatement.ParseStoredProcedureFromSqlStatement();
             var schema = proc?.Schema;
             var name = proc?.ProcedureName;
-            if (name is null) return;
+            if (name is null)
+            {
+                return;
+            }
 
             allObjects ??= await LoadAllDataObjects();
 
             Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
-            var dependencies = await LoadDataObjectDependencies(connectionId, schema, name);
+            var dependencies = ReferenceType switch
+            {
+                DataObjectReferenceType.Source => await SqlServerHelper.GetSourceObjectsAsync(connectionId, schema, name),
+                _ => await SqlServerHelper.GetTargetObjectsAsync(connectionId, schema, name)
+            };
 
             // Add new data objects for the step if they are not present.
             foreach (var dependency in dependencies)
             {
-                // Check if the same object exists in the comparison list. Skip this object if it does.
+                // Check if the same object exists in the list already. Skip this object if it does.
                 // This way we do not accidentally add objects that might be a target as sources,
                 // thus creating a self reference.
-                var comparison = ComparisonObjects.FirstOrDefault(o => o.UriEquals(dependency));
-                if (comparison is not null)
-                    continue;
+                if (references.Any(d => d.DataObject.UriEquals(dependency)))
+                {
+                    return;
+                }
 
                 var dbObject = allObjects?.FirstOrDefault(o => o.UriEquals(dependency)) ??
                     new DataObject { ObjectUri = dependency.ObjectUri };
 
-                if (!DataObjects.Any(s => s.UriEquals(dbObject)))
+                if (!references.Any(d => d.DataObject.UriEquals(dbObject)))
                 {
                     GetMappingResult(dbObject).IsNewAddition = true;
                     GetMappingResult(dbObject).IsUnreliableMapping = dependency.IsUnreliable;
-                    await OnAdd.InvokeAsync(dbObject);
+                    AddReference(dbObject);
                 }
             }
 
-            foreach (var dbObject in DataObjects) GetMappingResult(dbObject).IsCandidateForRemoval = false;
+            foreach (var dbObject in references)
+            {
+                GetMappingResult(dbObject.DataObject).IsCandidateForRemoval = false;
+            }
 
             // Check if there are objects in the list that are not mentioned in the dependencies.
             // Flag them as candidates for removal.
-            var candidatesForRemoval = DataObjects.Where(o => !dependencies.Any(d => o.UriEquals(d))).ToList();
+            var candidatesForRemoval = references.Where(o => !dependencies.Any(d => o.DataObject.UriEquals(d))).ToList();
             foreach (var candidate in candidatesForRemoval)
             {
-                GetMappingResult(candidate).IsCandidateForRemoval = true;
+                GetMappingResult(candidate.DataObject).IsCandidateForRemoval = true;
             }
         }
         catch (Exception ex)
         {
             Messenger.AddError("Error getting object dependencies", ex.Message);
         }
+    }
+
+    private void AddReference(DataObject dataObject)
+    {
+        ArgumentNullException.ThrowIfNull(Step);
+        var reference = new StepDataObject
+        {
+            Step = Step,
+            DataObject = dataObject,
+            ReferenceType = ReferenceType
+        };
+        references?.Add(reference);
     }
 
     private void OnDbObjectSelected((string Server, string Database, string Schema, string Object) tuple, bool commit)
