@@ -1,0 +1,13 @@
+﻿span.data-attribute-edit {
+    padding: 0.2rem;
+}
+
+::deep span.data-attribute-edit .feather {
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+}
+
+    ::deep span.data-attribute-edit .feather:hover {
+        filter: brightness(140%);
+    }
