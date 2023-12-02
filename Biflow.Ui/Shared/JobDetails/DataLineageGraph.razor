@@ -11,6 +11,38 @@
 
 <PageTitle>@Job?.JobName | Data objects | Biflow</PageTitle>
 
+<div class="row align-items-end mb-3">
+    <div class="col-xl-8 col-lg-10 col-12">
+        <HxAutosuggest @bind-Value="filterNode"
+                       @bind-Value:after="LoadGraph"
+                       TItem="INode"
+                       TValue="INode"
+                       TextSelector="x => x.Name"
+                       DataProvider="ProvideSuggestionsAsync"
+                       MinimumLength="0"
+                       Delay="1"
+                       InputSize="InputSize.Small"
+                       Placeholder="Filter node">
+            <ItemTemplate Context="item">
+                @if (item is StepNode step)
+                {
+                    <span class="small">
+                        <StepTypeIconComponent StepType="step.Step.StepType" />
+                        @step.Name
+                    </span>
+                }
+                else if (item is DataNode data)
+                {
+                    <span class="small font-monospace">@data.Name</span>
+                }
+            </ItemTemplate>
+            <EmptyTemplate>
+                <span class="p-2">No matching nodes</span>
+            </EmptyTemplate>
+        </HxAutosuggest>
+    </div>
+</div>
+
 <DependencyGraph @ref="dependencyGraph"
                  TItem="Step"
                  AfterRender="LoadGraph"
@@ -23,6 +55,24 @@
     [CascadingParameter] public List<Step>? Steps { get; set; }
 
     private DependencyGraph<Step>? dependencyGraph;
+    private INode? filterNode;
+    private List<INode> graphNodes = [];
+
+    private int FilterDepthBackwards
+    {
+        get => _filterDepthBackwards;
+        set => _filterDepthBackwards = value >= 0 ? value : _filterDepthBackwards;
+    }
+
+    private int _filterDepthBackwards;
+
+    private int FilterDepthForwards
+    {
+        get => _filterDepthForwards;
+        set => _filterDepthForwards = value >= 0 ? value : _filterDepthForwards;
+    }
+
+    private int _filterDepthForwards;
 
     private async Task LoadGraph()
     {
@@ -36,36 +86,186 @@
             .Distinct()
             .ToArray();
 
-        // Create a list of steps and dependencies and send them through JSInterop as JSON objects.
-        var nodes = Steps.Select(step => new DependencyGraphNode(
-            Id: step.StepId.ToString(),
-            Name: step.StepName ?? "",
-            CssClass: step.IsEnabled ? "enabled" : "disabled",
-            TooltipText: step.StepType.ToString(),
-            EnableOnClick: step.JobId == Job.JobId
-        )).Concat(uris.Select(uri => new DependencyGraphNode(
-            Id: uri,
-            Name: uri,
-            CssClass: "font-monospace",
-            TooltipText: "Data object",
-            EnableOnClick: false,
-            Rounded: false
-        ))).ToList();
-        var edges = Steps
-            .SelectMany(step =>
-            {
-                var sources = step.DataObjects
-                    .Where(d => d.ReferenceType == DataObjectReferenceType.Source)
-                    .Select(s => new DependencyGraphEdge(
-                        Id: step.StepId.ToString(), DependsOnId: s.DataObject.ObjectUri, CssClass: ""));
-                var targets = step.DataObjects
-                    .Where(d => d.ReferenceType == DataObjectReferenceType.Target)
-                    .Select(t => new DependencyGraphEdge(
-                        Id: t.DataObject.ObjectUri, DependsOnId: step.StepId.ToString(), CssClass: ""));
-                return sources.Concat(targets);
-            })
+        var stepNodes = Steps.Select(step =>
+        {
+            var node = new DependencyGraphNode(
+                Id: step.StepId.ToString(),
+                Name: step.StepName ?? "",
+                CssClass: step.IsEnabled ? "enabled" : "disabled",
+                TooltipText: step.StepType.ToString(),
+                EnableOnClick: step.JobId == Job.JobId
+            );
+            return new StepNode(step.StepId.ToString(), step.StepName ?? "", node, step) as INode;
+        });
+        var dataNodes = uris.Select(uri =>
+        {
+            var node = new DependencyGraphNode(
+                Id: uri,
+                Name: uri,
+                CssClass: "font-monospace",
+                TooltipText: "Data object",
+                EnableOnClick: false,
+                Rounded: false
+            );
+            return new DataNode(uri, uri, node, uri) as INode;
+        });
+
+        graphNodes = stepNodes
+            .Concat(dataNodes)
             .ToList();
+
+        List<DependencyGraphNode> nodes;
+        List<DependencyGraphEdge> edges;
+        if (filterNode is null)
+        {
+            nodes = graphNodes.Select(n => n.Node).ToList();
+            edges = Steps
+                .SelectMany(step =>
+                {
+                    var sources = step.DataObjects
+                        .Where(d => d.ReferenceType == DataObjectReferenceType.Source)
+                        .Select(s => new DependencyGraphEdge(
+                            Id: step.StepId.ToString(), DependsOnId: s.DataObject.ObjectUri, CssClass: ""));
+                    var targets = step.DataObjects
+                        .Where(d => d.ReferenceType == DataObjectReferenceType.Target)
+                        .Select(t => new DependencyGraphEdge(
+                            Id: t.DataObject.ObjectUri, DependsOnId: step.StepId.ToString(), CssClass: ""));
+                    return sources.Concat(targets);
+                })
+                .ToList();
+        }
+        else
+        {
+            var iNodes = RecurseDependenciesBackward(filterNode, graphNodes, new(), 0);
+            iNodes.Remove(filterNode);
+            iNodes = RecurseDependenciesForward(filterNode, graphNodes, iNodes, 0);
+            nodes = iNodes.Select(n => n.Node).ToList();
+            edges = Steps
+                .SelectMany(step =>
+                {
+                    var sources = step.DataObjects
+                        .Where(d => d.ReferenceType == DataObjectReferenceType.Source)
+                        .Where(d => iNodes.Any(n => n.Id == d.DataObject.ObjectUri) && iNodes.Any(n => n.Id == d.StepId.ToString()))
+                        .Select(s => new DependencyGraphEdge(
+                            Id: step.StepId.ToString(), DependsOnId: s.DataObject.ObjectUri, CssClass: ""));
+                    var targets = step.DataObjects
+                        .Where(d => d.ReferenceType == DataObjectReferenceType.Target)
+                        .Where(d => iNodes.Any(n => n.Id == d.DataObject.ObjectUri) && iNodes.Any(n => n.Id == d.StepId.ToString()))
+                        .Select(t => new DependencyGraphEdge(
+                            Id: t.DataObject.ObjectUri, DependsOnId: step.StepId.ToString(), CssClass: ""));
+                    return sources.Concat(targets);
+                })
+                .ToList();
+        }
 
         await dependencyGraph.DrawAsync(nodes, edges);
     }
+
+    private List<INode> RecurseDependenciesBackward(INode node, List<INode> allNodes, List<INode> processedNodes, int depth)
+    {
+        ArgumentNullException.ThrowIfNull(Steps);
+
+        // If the node was already handled, return.
+        // This way we do not loop indefinitely in case of circular dependencies.
+        if (processedNodes.Any(n => n.Id == node.Id))
+        {
+            return processedNodes;
+        }
+
+        if (depth++ > FilterDepthBackwards && FilterDepthBackwards > 0)
+        {
+            depth--;
+            return processedNodes;
+        }
+
+        processedNodes.Add(node);
+
+        List<INode> dependencyNodes = node switch
+        {
+            StepNode step => allNodes
+                .OfType<DataNode>()
+                .Where(dn => step.Step.DataObjects.Any(d => d.ReferenceType == DataObjectReferenceType.Source && d.DataObject.ObjectUri == dn.Uri))
+                .Cast<INode>()
+                .ToList(),
+            DataNode data => allNodes
+                .OfType<StepNode>()
+                .Where(sn => sn.Step.DataObjects.Any(d => d.ReferenceType == DataObjectReferenceType.Target && d.DataObject.ObjectUri == data.Uri))
+                .Cast<INode>()
+                .ToList(),
+            _ => []
+        };
+
+        // Loop through the dependencies and handle them recursively.
+        foreach (var depencyNode in dependencyNodes)
+        {
+            RecurseDependenciesBackward(depencyNode, allNodes, processedNodes, depth);
+        }
+
+        depth--;
+
+        return processedNodes;
+    }
+
+    private List<INode> RecurseDependenciesForward(INode node, List<INode> allNodes, List<INode> processedNodes, int depth)
+    {
+        ArgumentNullException.ThrowIfNull(Steps);
+
+        if (processedNodes.Any(n => n.Id == node.Id))
+        {
+            return processedNodes;
+        }
+
+        if (depth++ > FilterDepthForwards && FilterDepthForwards > 0)
+        {
+            depth--;
+            return processedNodes;
+        }
+
+        processedNodes.Add(node);
+
+        List<INode> dependencyNodes = node switch
+        {
+            StepNode step => allNodes
+                .OfType<DataNode>()
+                .Where(dn => step.Step.DataObjects.Any(d => d.ReferenceType == DataObjectReferenceType.Target && d.DataObject.ObjectUri == dn.Uri))
+                .Cast<INode>()
+                .ToList(),
+            DataNode data => allNodes
+                .OfType<StepNode>()
+                .Where(sn => sn.Step.DataObjects.Any(d => d.ReferenceType == DataObjectReferenceType.Source && d.DataObject.ObjectUri == data.Uri))
+                .Cast<INode>()
+                .ToList(),
+            _ => []
+        };
+
+        foreach (var depencyNode in dependencyNodes)
+        {
+            RecurseDependenciesForward(depencyNode, allNodes, processedNodes, depth);
+        }
+
+        depth--;
+
+        return processedNodes;
+    }
+
+    private Task<AutosuggestDataProviderResult<INode>> ProvideSuggestionsAsync(AutosuggestDataProviderRequest request)
+    {
+        return Task.FromResult(new AutosuggestDataProviderResult<INode>
+        {
+            Data = graphNodes.Where(n => n.Name.ContainsIgnoreCase(request.UserInput))
+        });
+    }
+
+    private interface INode
+    {
+        public string Id { get; }
+
+        public string Name { get; }
+
+        public DependencyGraphNode Node { get; }
+    }
+
+    private record StepNode(string Id, string Name, DependencyGraphNode Node, Step Step) : INode;
+
+    private record DataNode(string Id, string Name, DependencyGraphNode Node, string Uri) : INode;
 }
