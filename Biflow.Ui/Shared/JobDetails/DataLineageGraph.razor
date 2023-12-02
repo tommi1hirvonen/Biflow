@@ -44,9 +44,18 @@
 </div>
 
 <DependencyGraph @ref="dependencyGraph"
-                 TItem="Step"
+                 TItem="INode"
                  AfterRender="LoadGraph"
+                 ItemFromNodeIdSelector="nodeId => graphNodes.FirstOrDefault(node => node.Id == nodeId)"
                  CssClass="dependency-graph">
+    <ContextMenuTemplate Context="node">
+        <li>
+            <span class="dropdown-item" role="button" @onclick="async () => { filterNode = node; await LoadGraph();}">
+                <CxIcon Icon="FeatherIcon.Filter" />
+                Limit graph to this
+            </span>
+        </li>
+    </ContextMenuTemplate>
 </DependencyGraph>
 
 @code {
@@ -54,7 +63,7 @@
 
     [CascadingParameter] public List<Step>? Steps { get; set; }
 
-    private DependencyGraph<Step>? dependencyGraph;
+    private DependencyGraph<INode>? dependencyGraph;
     private INode? filterNode;
     private List<INode> graphNodes = [];
 
@@ -91,9 +100,9 @@
             var node = new DependencyGraphNode(
                 Id: step.StepId.ToString(),
                 Name: step.StepName ?? "",
-                CssClass: step.IsEnabled ? "enabled" : "disabled",
+                CssClass: step.IsEnabled ? "enabled internal" : "disabled internal",
                 TooltipText: step.StepType.ToString(),
-                EnableOnClick: step.JobId == Job.JobId
+                EnableOnClick: true
             );
             return new StepNode(step.StepId.ToString(), step.StepName ?? "", node, step) as INode;
         });
@@ -102,9 +111,9 @@
             var node = new DependencyGraphNode(
                 Id: uri,
                 Name: uri,
-                CssClass: "font-monospace",
+                CssClass: "font-monospace internal",
                 TooltipText: "Data object",
-                EnableOnClick: false,
+                EnableOnClick: true,
                 Rounded: false
             );
             return new DataNode(uri, uri, node, uri) as INode;
