@@ -9,8 +9,6 @@ namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class QlikStepEditModal : StepEditModal<QlikStep>
 {
-    [Parameter] public IList<QlikCloudClient>? Clients { get; set; }
-
     internal override string FormId => "qlik_step_edit_form";
 
     private AppSelectOffcanvas? appSelectOffcanvas;
@@ -33,7 +31,7 @@ public partial class QlikStepEditModal : StepEditModal<QlikStep>
     protected override QlikStep CreateNewStep(Job job)
     {
         appName = "";
-        var client = Clients?.FirstOrDefault();
+        var client = QlikClients?.FirstOrDefault();
         ArgumentNullException.ThrowIfNull(client);
         return new(job.JobId, "")
         {
@@ -42,7 +40,6 @@ public partial class QlikStepEditModal : StepEditModal<QlikStep>
             RetryIntervalMinutes = 0,
             TimeoutMinutes = 0,
             QlikCloudClientId = client.QlikCloudClientId,
-            QlikCloudClient = client,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
             DataObjects = new List<StepDataObject>(),
@@ -54,7 +51,7 @@ public partial class QlikStepEditModal : StepEditModal<QlikStep>
     {
         try
         {
-            var client = Clients?.FirstOrDefault(c => c.QlikCloudClientId == step.QlikCloudClientId);
+            var client = QlikClients?.FirstOrDefault(c => c.QlikCloudClientId == step.QlikCloudClientId);
             appName = client is not null && !string.IsNullOrEmpty(step.AppId)
                 ? await client.GetAppNameAsync(step.AppId)
                 : "";

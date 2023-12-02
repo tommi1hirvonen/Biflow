@@ -28,7 +28,7 @@
                         <CxIcon Icon="LucideIcon.ScatterChart" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.QlikCloudClientId">
-                        @foreach (var client in Clients ?? Enumerable.Empty<QlikCloudClient>())
+                        @foreach (var client in QlikClients ?? [])
                         {
                             <option value="@client.QlikCloudClientId">@client.QlikCloudClientName</option>
                         }
