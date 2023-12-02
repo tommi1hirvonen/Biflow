@@ -79,8 +79,6 @@ public partial class QlikStepEditModal : StepEditModal<QlikStep>
     private Task OpenAppSelectOffcanvas()
     {
         ArgumentNullException.ThrowIfNull(Step);
-        ArgumentNullException.ThrowIfNull(Clients);
-        var client = Clients.First(c => c.QlikCloudClientId == Step.QlikCloudClientId);
-        return appSelectOffcanvas.LetAsync(x => x.ShowAsync(client));
+        return appSelectOffcanvas.LetAsync(x => x.ShowAsync(Step.QlikCloudClientId));
     }
 }

@@ -197,7 +197,12 @@
     <HxDropdownMenu>
         @{
             var appRegistrationId = Step is DatasetStep ds ? ds.AppRegistrationId : null;
+            var qlikClientId = Step is QlikStep qlik ? (Guid?)qlik.QlikCloudClientId : null;
         }
+        <HxDropdownItem OnClick="() => appOffcanvas.LetAsync(x => x.ShowAsync(qlikClientId))">
+            <CxIcon Icon="LucideIcon.FilePieChart" />
+            Add app
+        </HxDropdownItem>
         <HxDropdownItem OnClick="() => datasetOffcanvas.LetAsync(x => x.ShowAsync(appRegistrationId))">
             <CxIcon Icon="LucideIcon.FileBarChart2" />
             Add dataset
@@ -217,6 +222,8 @@
 
 <DatasetSelectOffcanvas @ref="datasetOffcanvas" AppRegistrations="AppRegistrations" AllowAppRegistrationChange OnDatasetSelected="OnDatasetSelected" />
 
+<AppSelectOffcanvas @ref="appOffcanvas" QlikClients="QlikClients" AllowClientChange OnAppSelected="OnAppSelected" />
+
 @code {
     [Parameter] public DataObjectReferenceType ReferenceType { get; set; }
 
@@ -227,6 +234,8 @@
     [Parameter] public IEnumerable<SqlConnectionInfo> Connections { get; set; } = null!;
 
     [Parameter] public IEnumerable<AppRegistration>? AppRegistrations { get; set; }
+
+    [Parameter] public IEnumerable<QlikCloudClient>? QlikClients { get; set; }
 
     [Parameter] public Func<Task<IEnumerable<DataObject>>> LoadAllDataObjects { get; set; } = null!;
 
@@ -247,6 +256,7 @@
     private List<string> editReferenceAttributes = [];
     private DbObjectExplorerOffcanvas? dbObjectExplorerOffcanvas;
     private DatasetSelectOffcanvas? datasetOffcanvas;
+    private AppSelectOffcanvas? appOffcanvas;
 
     protected override void OnParametersSet()
     {
@@ -390,6 +400,13 @@
     {
         newObject ??= new();
         newObject.ObjectUri = DataObject.CreateDatasetUri(dataset.GroupName, dataset.DatasetName);
+        StateHasChanged();
+    }
+
+    private void OnAppSelected(QlikApp app)
+    {
+        newObject ??= new();
+        newObject.ObjectUri = DataObject.CreateQlikUri(app.Name);
         StateHasChanged();
     }
 

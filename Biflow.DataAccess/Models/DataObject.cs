@@ -46,6 +46,12 @@ public partial class DataObject : IDataObject
         return $"pbi://{workspaceName}/{datasetName}";
     }
 
+    public static string CreateQlikUri(string appName)
+    {
+        appName = NonAsciiCharsRegex().Replace(appName, Replacement);
+        return $"qlik://{appName}";
+    }
+
     private const string Replacement = "_";
 
     [GeneratedRegex(@"[^\u0000-\u007F]+", RegexOptions.IgnoreCase, "en-US")]

@@ -26,6 +26,8 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     [Parameter] public IEnumerable<AppRegistration> AppRegistrations { get; set; } = [];
 
+    [Parameter] public IEnumerable<QlikCloudClient> QlikClients { get; set; } = [];
+
     internal abstract string FormId { get; }
 
     internal TStep? Step { get; private set; }

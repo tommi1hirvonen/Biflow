@@ -1,6 +1,32 @@
-﻿
+﻿@inject IHxMessengerService Messenger
+
 <HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" Title="Select app" OnClosed="OnClosed">
     <BodyTemplate>
+        @if (AllowClientChange)
+        {
+            <div class="row mb-3 align-items-end">
+                <div class="col">
+                    <label class="form-label">App registration</label>
+                    <div class="input-group input-group-sm">
+                        <div class="input-group-text">
+                            <CxIcon Icon="FeatherIcon.Globe" />
+                        </div>
+                        <select class="form-select form-select-sm" @bind="clientId">
+                            @foreach (var client in QlikClients ?? [])
+                            {
+                                <option value="@client.QlikCloudClientId">@client.QlikCloudClientName</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="() => LoadAsync()">
+                        <CxIcon Icon="FeatherIcon.RefreshCw" />
+                        Refresh
+                    </HxButton>
+                </div>
+            </div>
+        }
         <div class="row">
             <div class="col">
                 <div class="input-group">
@@ -11,6 +37,11 @@
                 </div>
             </div>
         </div>
+        @{
+            var style = AllowClientChange
+                ? "height: calc(100vh - 290px); overflow-y: scroll;"
+                : "height: calc(100vh - 210px); overflow-y: scroll;";
+        }
         <div class="row mt-3" style="height: calc(100vh - 210px); overflow-y: scroll;">
             <div class="col">
                 <div class="list-group group">
@@ -97,19 +128,41 @@
 </HxOffcanvas>
 
 @code {
+    [Parameter]
+    public IEnumerable<QlikCloudClient>? QlikClients { get; set; }
+
+    [Parameter]
+    public bool AllowClientChange { get; set; } = false;
+
+    [Parameter] public EventCallback<QlikApp> OnAppSelected { get; set; }
+
     private readonly Dictionary<QlikSpace, bool> spaceExpandState = [];
 
+    private Guid clientId;
     private HxOffcanvas? offcanvas;
     private IEnumerable<QlikSpace>? spaces;
     private QlikApp? selectedApp;    
     private string appSearchTerm = "";
 
-    [Parameter] public EventCallback<QlikApp> OnAppSelected { get; set; }
-
-    public async Task ShowAsync(QlikCloudClient client)
+    public async Task ShowAsync(Guid? clientId = null)
     {
+        if (clientId is Guid id)
+        {
+            this.clientId = id;
+        }
+        else
+        {
+            this.clientId = QlikClients?.FirstOrDefault()?.QlikCloudClientId ?? Guid.Empty;
+        }
+
+        if (this.clientId == Guid.Empty)
+        {
+            Messenger.AddWarning("No Qlik clients found");
+            return;
+        }
+
         await offcanvas.LetAsync(x => x.ShowAsync());
-        spaces = await client.GetAppsAsync();
+        await LoadAsync();
     }
 
     private async Task SelectAppAsync()
@@ -117,6 +170,24 @@
         ArgumentNullException.ThrowIfNull(selectedApp);
         await OnAppSelected.InvokeAsync(selectedApp);
         await offcanvas.LetAsync(x => x.HideAsync());
+    }
+
+    private async Task LoadAsync()
+    {
+        spaces = null;
+        selectedApp = null;
+        spaceExpandState.Clear();
+
+        try
+        {
+            var client = QlikClients?.FirstOrDefault(c => c.QlikCloudClientId == clientId);
+            ArgumentNullException.ThrowIfNull(client);
+            spaces = await client.GetAppsAsync();
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error getting apps", ex.Message);
+        }
     }
 
     private void OnClosed()
