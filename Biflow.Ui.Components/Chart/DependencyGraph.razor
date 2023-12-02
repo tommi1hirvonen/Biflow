@@ -22,8 +22,6 @@
 @code {
     [Parameter(CaptureUnmatchedValues = true)] public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
 
-    [Parameter] public IEnumerable<TItem>? Items { get; set; }
-
     [Parameter] public Func<string, TItem?>? ItemFromNodeIdSelector { get; set; }
 
     [Parameter] public RenderFragment<TItem>? ContextMenuTemplate { get; set; }

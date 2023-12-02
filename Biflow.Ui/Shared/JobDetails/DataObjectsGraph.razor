@@ -1,0 +1,71 @@
+﻿@inject IHxMessengerService Messenger
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject IHxMessageBoxService Confirmer
+
+@*CSS definitions for the dependency graph nodes and paths created in site.js through JSInterop.*@
+<style>
+    html, body {
+        height: 100%;
+    }
+</style>
+
+<PageTitle>@Job?.JobName | Data objects | Biflow</PageTitle>
+
+<DependencyGraph @ref="dependencyGraph"
+                 TItem="Step"
+                 AfterRender="LoadGraph"
+                 CssClass="dependency-graph">
+</DependencyGraph>
+
+@code {
+    [CascadingParameter] public Job? Job { get; set; }
+
+    [CascadingParameter] public List<Step>? Steps { get; set; }
+
+    private DependencyGraph<Step>? dependencyGraph;
+
+    private async Task LoadGraph()
+    {
+        ArgumentNullException.ThrowIfNull(Job);
+        ArgumentNullException.ThrowIfNull(Steps);
+        ArgumentNullException.ThrowIfNull(dependencyGraph);
+
+        var uris = Steps
+            .SelectMany(step => step.DataObjects)
+            .Select(d => d.DataObject.ObjectUri)
+            .Distinct()
+            .ToArray();
+
+        // Create a list of steps and dependencies and send them through JSInterop as JSON objects.
+        var nodes = Steps.Select(step => new DependencyGraphNode(
+            Id: step.StepId.ToString(),
+            Name: step.StepName ?? "",
+            CssClass: step.IsEnabled ? "enabled" : "disabled",
+            TooltipText: step.StepType.ToString(),
+            EnableOnClick: step.JobId == Job.JobId
+        )).Concat(uris.Select(uri => new DependencyGraphNode(
+            Id: uri,
+            Name: uri,
+            CssClass: "",
+            TooltipText: "Data object",
+            EnableOnClick: false,
+            Rounded: false
+        ))).ToList();
+        var edges = Steps
+            .SelectMany(step =>
+            {
+                var sources = step.DataObjects
+                    .Where(d => d.ReferenceType == DataObjectReferenceType.Source)
+                    .Select(s => new DependencyGraphEdge(
+                        Id: step.StepId.ToString(), DependsOnId: s.DataObject.ObjectUri, CssClass: ""));
+                var targets = step.DataObjects
+                    .Where(d => d.ReferenceType == DataObjectReferenceType.Target)
+                    .Select(t => new DependencyGraphEdge(
+                        Id: t.DataObject.ObjectUri, DependsOnId: step.StepId.ToString(), CssClass: ""));
+                return sources.Concat(targets);
+            })
+            .ToList();
+
+        await dependencyGraph.DrawAsync(nodes, edges);
+    }
+}

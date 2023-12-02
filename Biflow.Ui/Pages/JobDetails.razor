@@ -121,6 +121,12 @@
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
+                <NavLink class="nav-link" href="@($"jobs/{job?.JobId}/lineage")">
+                    <CxIcon Icon="LucideIcon.Network" />
+                    Data objects
+                </NavLink>
+            </li>
+            <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" href="@($"jobs/{job?.JobId}/schedules")">
                     <CxIcon Icon="FeatherIcon.Calendar" />
                     Schedules
@@ -180,6 +186,10 @@
                                                FunctionApps="functionApps"
                                                InitialStepId="InitialStepId"
                                                QlikCloudClients="qlikCloudClients" />
+                    }
+                    else if (DetailsPage == "lineage")
+                    {
+                        <DataObjectsGraph />
                     }
                     else if (DetailsPage == "schedules")
                     {

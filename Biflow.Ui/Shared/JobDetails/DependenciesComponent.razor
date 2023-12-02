@@ -69,7 +69,6 @@
 
 <DependencyGraph @ref="dependencyGraph"
                  TItem="Step"
-                 Items="Steps ?? Enumerable.Empty<Step>()"
                  ItemFromNodeIdSelector="nodeId => Steps?.FirstOrDefault(s => s.StepId.ToString() == nodeId)"
                  AfterRender="LoadGraph"
                  CssClass="dependency-graph">

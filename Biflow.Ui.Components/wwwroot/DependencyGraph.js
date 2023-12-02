@@ -33,8 +33,8 @@ export function drawDependencyGraph(dotNetObject, graphContainer, svgId, nodesJs
         var className = node.CssClass;
         g.setNode(node.Id, {
             label: node.Name,
-            rx: 20,
-            ry: 20,
+            rx: node.Rounded ? 20 : 0,
+            ry: node.Rounded ? 20 : 0,
             class: className
         });
         g.node(node.Id).id = node.Id; // Set the id of the node element. Used for onclick purposes.
