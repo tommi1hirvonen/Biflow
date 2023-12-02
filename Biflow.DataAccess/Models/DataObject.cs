@@ -36,6 +36,13 @@ public class DataObject : IDataObject
         table = Uri.EscapeDataString(table);
         return $"table://{server}/{database}/{schema}/{table}";
     }
+
+    public static string CreatePowerBIUri(string workspaceName, string datasetName)
+    {
+        workspaceName = Uri.EscapeDataString(workspaceName);
+        datasetName = Uri.EscapeDataString(datasetName);
+        return $"pbi://{workspaceName}/{datasetName}";
+    }
 }
 
 public class DataObjectMappingResult

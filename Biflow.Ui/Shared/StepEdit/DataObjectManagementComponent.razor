@@ -195,6 +195,13 @@
         @addButton
     </HxDropdownToggleButton>
     <HxDropdownMenu>
+        @{
+            var appRegistrationId = Step is DatasetStep ds ? ds.AppRegistrationId : null;
+        }
+        <HxDropdownItem OnClick="() => datasetOffcanvas.LetAsync(x => x.ShowAsync(appRegistrationId))">
+            <CxIcon Icon="LucideIcon.FileBarChart2" />
+            Add dataset
+        </HxDropdownItem>
         <HxDropdownItem OnClick="() => dbObjectExplorerOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId))">
             <CxIcon Icon="FeatherIcon.Table" />
             Add table
@@ -208,6 +215,8 @@
 
 <DbObjectExplorerOffcanvas @ref="dbObjectExplorerOffcanvas" Connections="Connections" OnDbObjectSelected="OnDbObjectSelected" />
 
+<DatasetSelectOffcanvas @ref="datasetOffcanvas" AppRegistrations="AppRegistrations" AllowAppRegistrationChange OnDatasetSelected="OnDatasetSelected" />
+
 @code {
     [Parameter] public DataObjectReferenceType ReferenceType { get; set; }
 
@@ -216,6 +225,8 @@
     [Parameter] public Guid? ConnectionId { get; set; }
 
     [Parameter] public IEnumerable<SqlConnectionInfo> Connections { get; set; } = null!;
+
+    [Parameter] public IEnumerable<AppRegistration>? AppRegistrations { get; set; }
 
     [Parameter] public Func<Task<IEnumerable<DataObject>>> LoadAllDataObjects { get; set; } = null!;
 
@@ -235,6 +246,7 @@
     private StepDataObject? editReference;
     private List<string> editReferenceAttributes = [];
     private DbObjectExplorerOffcanvas? dbObjectExplorerOffcanvas;
+    private DatasetSelectOffcanvas? datasetOffcanvas;
 
     protected override void OnParametersSet()
     {
@@ -365,15 +377,19 @@
 
     private void OnDbObjectSelected((string Server, string Database, string Schema, string Object) tuple, bool commit)
     {
-        if (newObject is null)
-        {
-            newObject = new();
-        }
+        newObject ??= new();
         newObject.ObjectUri = DataObject.CreateTableUri(tuple.Server, tuple.Database, tuple.Schema, tuple.Object);
         if (commit)
         {
             SubmitNewObject();
         }
+        StateHasChanged();
+    }
+
+    private void OnDatasetSelected(Dataset dataset)
+    {
+        newObject ??= new();
+        newObject.ObjectUri = DataObject.CreatePowerBIUri(dataset.GroupName, dataset.DatasetName);
         StateHasChanged();
     }
 

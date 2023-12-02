@@ -11,8 +11,6 @@ public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
 {
     [Inject] private ITokenService TokenService { get; set; } = null!;
 
-    [Parameter] public IList<AppRegistration>? AppRegistrations { get; set; }
-
     internal override string FormId => "dataset_step_edit_form";
 
     private DatasetSelectOffcanvas? datasetSelectOffcanvas;
@@ -25,7 +23,7 @@ public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
         (Step.DatasetGroupId, datasetGroupName, Step.DatasetId, datasetName) = dataset;
     }
 
-    private Task OpenDatasetSelectOffcanvas() => datasetSelectOffcanvas.LetAsync(x => x.ShowAsync());
+    private Task OpenDatasetSelectOffcanvas() => datasetSelectOffcanvas.LetAsync(x => x.ShowAsync(Step?.AppRegistrationId));
 
     protected override async Task OnModalShownAsync(DatasetStep step)
     {
