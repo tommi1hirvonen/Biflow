@@ -278,9 +278,9 @@
             return;
         }
 
-        if (!Uri.IsWellFormedUriString(newObject.ObjectUri, UriKind.RelativeOrAbsolute))
+        if (!newObject.IsValid)
         {
-            Messenger.AddWarning("Not a valid Uri");
+            Messenger.AddWarning("Only ASCII characters allowed");
             return;
         }
 
@@ -389,7 +389,7 @@
     private void OnDatasetSelected(Dataset dataset)
     {
         newObject ??= new();
-        newObject.ObjectUri = DataObject.CreatePowerBIUri(dataset.GroupName, dataset.DatasetName);
+        newObject.ObjectUri = DataObject.CreateDatasetUri(dataset.GroupName, dataset.DatasetName);
         StateHasChanged();
     }
 

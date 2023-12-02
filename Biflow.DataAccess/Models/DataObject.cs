@@ -1,17 +1,17 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Web;
+using System.Text.RegularExpressions;
 
 namespace Biflow.DataAccess.Models;
 
 [Table("DataObject")]
-public class DataObject : IDataObject
+public partial class DataObject : IDataObject
 {
     [Key]
     public Guid ObjectId { get; private set; }
 
     [Required]
-    [Uri]
+    [Ascii]
     [MaxLength(500)]
     public string ObjectUri { get; set; } = string.Empty;
 
@@ -28,21 +28,28 @@ public class DataObject : IDataObject
         other is not null &&
         ObjectUri.EqualsIgnoreCase(other.ObjectUri);
 
+    public bool IsValid => ObjectUri.All(char.IsAscii);
+
     public static string CreateTableUri(string server, string database, string schema, string table)
     {
-        server = Uri.EscapeDataString(server);
-        database = Uri.EscapeDataString(database);
-        schema = Uri.EscapeDataString(schema);
-        table = Uri.EscapeDataString(table);
+        server = NonAsciiCharsRegex().Replace(server, Replacement);
+        database = NonAsciiCharsRegex().Replace(database, Replacement);
+        schema = NonAsciiCharsRegex().Replace(schema, Replacement);
+        table = NonAsciiCharsRegex().Replace(table, Replacement);
         return $"table://{server}/{database}/{schema}/{table}";
     }
 
-    public static string CreatePowerBIUri(string workspaceName, string datasetName)
+    public static string CreateDatasetUri(string workspaceName, string datasetName)
     {
-        workspaceName = Uri.EscapeDataString(workspaceName);
-        datasetName = Uri.EscapeDataString(datasetName);
+        workspaceName = NonAsciiCharsRegex().Replace(workspaceName, Replacement);
+        datasetName = NonAsciiCharsRegex().Replace(datasetName, Replacement);
         return $"pbi://{workspaceName}/{datasetName}";
     }
+
+    private const string Replacement = "_";
+
+    [GeneratedRegex(@"[^\u0000-\u007F]+", RegexOptions.IgnoreCase, "en-US")]
+    private static partial Regex NonAsciiCharsRegex();
 }
 
 public class DataObjectMappingResult
