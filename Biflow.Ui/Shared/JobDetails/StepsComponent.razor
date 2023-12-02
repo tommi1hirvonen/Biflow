@@ -71,7 +71,7 @@
                         <span>
                             Execution mode:
                             &nbsp;
-                            <CxIcon Icon="LucideIcon.Network" />
+                            <CxIcon Icon="LucideIcon.Workflow" />
                             Dependency mode
                         </span>
                     }
@@ -493,7 +493,7 @@
                                 var navigateToDependencies = () => NavigationManager.NavigateTo($"jobs/{Job?.JobId}/graph/{item.StepId}");
                             }
                             <DropdownMenuItem @onclick="navigateToDependencies">
-                                <CxIcon Icon="LucideIcon.Network" />
+                                <CxIcon Icon="LucideIcon.Workflow" />
                                 Dependencies
                             </DropdownMenuItem>
                             <DropdownMenuItem @onclick="() => stepDetailsModal.LetAsync(x => x.ShowAsync(item))">

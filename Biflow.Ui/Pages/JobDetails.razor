@@ -116,14 +116,14 @@
             </AuthorizeView>
             <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" href="@($"jobs/{job?.JobId}/graph")">
-                    <CxIcon Icon="LucideIcon.Network" />
+                    <CxIcon Icon="LucideIcon.Workflow" />
                     Graph
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" href="@($"jobs/{job?.JobId}/lineage")">
                     <CxIcon Icon="LucideIcon.Network" />
-                    Data objects
+                    Lineage
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
@@ -189,7 +189,7 @@
                     }
                     else if (DetailsPage == "lineage")
                     {
-                        <DataObjectsGraph />
+                        <DataLineageGraph />
                     }
                     else if (DetailsPage == "schedules")
                     {

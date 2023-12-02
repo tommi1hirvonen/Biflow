@@ -42,7 +42,7 @@
             </li>
             <li class="nav-item" role="presentation">
                 <a class="nav-link @(execution is null ? "disabled" : null) @(ShowReport == Report.Graph ? "active" : null)" href="executions/@ExecutionId/graph">
-                    <CxIcon Icon="LucideIcon.Network" />
+                    <CxIcon Icon="LucideIcon.Workflow" />
                     Graph
                 </a>
             </li>
@@ -273,7 +273,7 @@
                             @if (execution.DependencyMode)
                             {
                                 <span>
-                                    <CxIcon Icon="LucideIcon.Network" />
+                                    <CxIcon Icon="LucideIcon.Workflow" />
                                     Dependency mode
                                 </span>
                             }

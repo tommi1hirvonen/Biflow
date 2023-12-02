@@ -90,7 +90,7 @@
                             History
                         </DropdownMenuItem>
                         <DropdownMenuItem @onclick="@(() => NavigationManager.NavigateTo($"executions/{item.ExecutionId}/graph/{item.StepId}"))">
-                            <CxIcon Icon="LucideIcon.Network" />
+                            <CxIcon Icon="LucideIcon.Workflow" />
                             Dependencies
                         </DropdownMenuItem>
                         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
@@ -124,7 +124,7 @@
                                         History
                                     </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto ms-3" @onclick="@(() => NavigationManager.NavigateTo($"executions/{item.ExecutionId}/graph/{item.StepId}"))">
-                                        <CxIcon Icon="LucideIcon.Network" />
+                                        <CxIcon Icon="LucideIcon.Workflow" />
                                         Dependencies
                                     </HxButton>
                                     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
