@@ -52,6 +52,12 @@ public partial class DataObject : IDataObject
         return $"qlik://{appName}";
     }
 
+    public static string CreateBlobUri(string accountName, string containerName, string blobPath)
+    {
+        blobPath = NonAsciiCharsRegex().Replace(blobPath, Replacement);
+        return $"blob://{accountName}/{containerName}/{blobPath}";
+    }
+
     private const string Replacement = "_";
 
     [GeneratedRegex(@"[^\u0000-\u007F]+", RegexOptions.IgnoreCase, "en-US")]

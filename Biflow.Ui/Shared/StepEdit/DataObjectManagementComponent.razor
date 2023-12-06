@@ -207,6 +207,10 @@
             <CxIcon Icon="LucideIcon.FileBarChart2" />
             Add dataset
         </HxDropdownItem>
+        <HxDropdownItem OnClick="() => blobOffcanvas.LetAsync(x => x.ShowAsync())">
+            <CxIcon Icon="FeatherIcon.File" />
+            Add blob
+        </HxDropdownItem>
         <HxDropdownItem OnClick="() => dbObjectExplorerOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId))">
             <CxIcon Icon="FeatherIcon.Table" />
             Add table
@@ -223,6 +227,8 @@
 <DatasetSelectOffcanvas @ref="datasetOffcanvas" AppRegistrations="AppRegistrations" AllowAppRegistrationChange OnDatasetSelected="OnDatasetSelected" />
 
 <AppSelectOffcanvas @ref="appOffcanvas" QlikClients="QlikClients" AllowClientChange OnAppSelected="OnAppSelected" />
+
+<BlobSelectOffcanvas @ref="blobOffcanvas" OnBlobSelected="OnBlobSelected" />
 
 @code {
     [Parameter] public DataObjectReferenceType ReferenceType { get; set; }
@@ -257,6 +263,7 @@
     private DbObjectExplorerOffcanvas? dbObjectExplorerOffcanvas;
     private DatasetSelectOffcanvas? datasetOffcanvas;
     private AppSelectOffcanvas? appOffcanvas;
+    private BlobSelectOffcanvas? blobOffcanvas;
 
     protected override void OnParametersSet()
     {
@@ -407,6 +414,13 @@
     {
         newObject ??= new();
         newObject.ObjectUri = DataObject.CreateQlikUri(app.Name);
+        StateHasChanged();
+    }
+
+    private void OnBlobSelected(BlobSelectedResponse blob)
+    {
+        newObject ??= new();
+        newObject.ObjectUri = DataObject.CreateBlobUri(blob.AccountName, blob.ContainerName, blob.Path);
         StateHasChanged();
     }
 
