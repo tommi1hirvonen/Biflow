@@ -1,0 +1,151 @@
+﻿@using Azure.Storage.Blobs.Models
+
+@inject ITokenService TokenService
+
+<div class="row">
+    <div class="col small">
+        @if (accountName is not null)
+        {
+            <span class="link-primary text-decoration-underline pointer" @onclick="() => items = null">
+                @accountName
+            </span>
+            <span> / </span>
+        }
+        @if (container is not null)
+        {
+            <span class="link-primary text-decoration-underline pointer" @onclick="() => BrowseAsync(container)">
+                @container.Name
+            </span>
+            <span> / </span>
+        }
+        @foreach (var (segment, index) in prefix?.Split('/').SkipLast(1).Select((s, i) => (s, i)) ?? [])
+        {
+            <span class="link-primary text-decoration-underline pointer" @onclick="() => BrowseAsync(index)">
+                @segment
+            </span>
+            <span> / </span>
+        }
+    </div>
+</div>
+
+<ul class="list-group small mt-3">
+    @if (loading)
+    {
+        <li class="list-group-item text-center">
+            <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+        </li>
+    }
+    else if (items is not null)
+    {
+        @foreach (var i in items)
+        {
+            @if (i.IsBlob)
+            {
+                <li class="list-group-item list-group-item-action pointer d-flex align-items-center @(item == i ? "active" : null)" @onclick="() => SelectItemAsync(i)">
+                    <CxIcon Icon="FeatherIcon.File" />
+                    <span class="ms-1">
+                        @i.Blob.Name.Substring(prefix?.Length ?? 0)
+                    </span>
+                </li>
+            }
+            else if (i.IsPrefix)
+            {
+                <li class="list-group-item d-flex align-items-center">
+                    <CxIcon Icon="FeatherIcon.Folder" />
+                    <span class="link-primary text-decoration-underline pointer ms-1" @onclick="() => BrowseAsync(i)">
+                        @i.Prefix.Substring(prefix?.Length ?? 0, i.Prefix.Length - (prefix?.Length ?? 0) - 1)
+                    </span>
+                </li>
+            }
+        }
+    }
+    else if (containers is not null)
+    {
+        @foreach (var c in containers)
+        {
+            <li class="list-group-item d-flex align-items-center">
+                <CxIcon Icon="LucideIcon.Container" />
+                <span class="link-primary text-decoration-underline pointer ms-1" @onclick="() => BrowseAsync(c)">
+                    @c.Name
+                </span>                
+            </li>
+        }
+    }
+</ul>
+
+@code {
+    [Parameter]
+    public EventCallback<BlobHierarchyItem?> OnItemSelected { get; set; }
+
+    private BlobStorageClient? client;
+    private string? accountName;
+    private IEnumerable<BlobContainerItem>? containers;
+    private BlobContainerItem? container;
+    private IEnumerable<BlobHierarchyItem>? items;
+    private BlobHierarchyItem? item;
+    private bool loading = false;
+    private string? prefix;
+
+    public async Task SetClientAsync(BlobStorageClient client)
+    {
+        this.client = client;
+        prefix = null;
+        containers = null;
+        accountName = null;
+        container = null;
+        items = null;
+        item = null;
+        loading = true;
+        StateHasChanged();
+        containers = await client.GetContainersAsync(TokenService);
+        accountName = client.GetStorageAccountName(TokenService);
+        loading = false;
+
+    }
+
+    private async Task SelectItemAsync(BlobHierarchyItem item)
+    {
+        this.item = item;
+        await OnItemSelected.InvokeAsync(item);
+    }
+
+    private async Task BrowseAsync(BlobContainerItem container)
+    {
+        ArgumentNullException.ThrowIfNull(client);
+        this.container = container;
+        prefix = null;
+        item = null;
+        await OnItemSelected.InvokeAsync(null);
+        loading = true;
+        StateHasChanged();
+        items = await client.GetItemsAsync(TokenService, container);
+        loading = false;
+    }
+
+    private async Task BrowseAsync(int index)
+    {
+        ArgumentNullException.ThrowIfNull(client);
+        ArgumentNullException.ThrowIfNull(container);
+        ArgumentNullException.ThrowIfNull(prefix);
+        item = null;
+        prefix = string.Join('/', prefix.Split('/').Take(index + 1)) + "/";
+        await OnItemSelected.InvokeAsync(null);
+        loading = true;
+        StateHasChanged();
+        items = await client.GetItemsAsync(TokenService, container, prefix);
+        loading = false;
+    }
+
+    private async Task BrowseAsync(BlobHierarchyItem item)
+    {
+        ArgumentNullException.ThrowIfNull(client);
+        ArgumentNullException.ThrowIfNull(container);
+        this.item = null;
+        prefix = item.Prefix;
+        await OnItemSelected.InvokeAsync(null);
+        loading = true;
+        StateHasChanged();
+        items = await client.GetItemsAsync(TokenService, container, item.Prefix);
+        loading = false;
+    }
+}

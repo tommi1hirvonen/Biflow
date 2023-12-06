@@ -26,6 +26,11 @@ $highlight-text-dark: #dee2e6;
     font-style: italic;
 }
 
+// Utilities
+.pointer {
+    cursor: pointer;
+}
+
 // Change the light theme body background to be slightly darker than the default.
 [data-bs-theme="light"], [data-bs-theme="auto"] {
     .bg-body {

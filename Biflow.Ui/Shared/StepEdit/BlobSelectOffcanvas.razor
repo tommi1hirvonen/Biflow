@@ -1,0 +1,91 @@
+﻿@using Azure.Storage.Blobs.Models
+@inject IDbContextFactory<AppDbContext> DbContextFactory
+
+<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" Title="Select blob">
+    <BodyTemplate>
+        <div class="row align-items-end">
+            <div class="col">
+                <label class="form-label">Blob storage client</label>
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <CxIcon Icon="LucideIcon.Container" />
+                    </div>
+                    <select class="form-select form-select-sm" @bind="clientId" @bind:after="LoadAsync">
+                        <option value="@Guid.Empty">Select client</option>
+                        @foreach (var client in clients ?? [])
+                        {
+                            <option value="@client.BlobStorageClientId">@client.BlobStorageClientName</option>
+                        }
+                    </select>
+                </div>
+            </div>
+        </div>
+        @* <div class="row mt-3">
+            <div class="col">
+                <div class="input-group">
+                    <div class="input-group-text">
+                        <CxIcon Icon="FeatherIcon.Search" />
+                    </div>
+                    <input type="search" class="form-control form-control-sm" placeholder="Search datasets" @bind-value="filterText" @bind-value:event="oninput" />
+                </div>
+            </div>
+        </div> *@
+        <div class="row mt-3" style="height: calc(100vh - 290px); overflow-y: scroll;">
+            <div class="col">
+                <BlobStorageBrowser @ref="browser" OnItemSelected="item => selectedBlob = item" />
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectBlobAsync"
+                  Enabled="selectedBlob is not null">
+            Select
+        </HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
+@code {
+    [Parameter]
+    public EventCallback<string> OnBlobSelected { get; set; }
+
+    private HxOffcanvas? offcanvas;
+    private IEnumerable<BlobStorageClient>? clients;
+    private Guid clientId;
+    private BlobHierarchyItem? selectedBlob;
+    private BlobStorageBrowser? browser;
+
+    public async Task ShowAsync()
+    {
+        if (clients is null)
+        {
+            using var context = await DbContextFactory.CreateDbContextAsync();
+            clients = await context.BlobStorageClients
+                .Include(c => c.AppRegistration)
+                .OrderBy(c => c.BlobStorageClientName)
+                .ToArrayAsync();
+        }
+        await offcanvas.LetAsync(x => x.ShowAsync());
+    }
+
+    private async Task LoadAsync()
+    {
+        ArgumentNullException.ThrowIfNull(clients);
+        var client = clients.FirstOrDefault(c => c.BlobStorageClientId == clientId);
+        if (client is null)
+        {
+            return;
+        }
+        await browser.LetAsync(x => x.SetClientAsync(client));
+    }
+
+    private async Task SelectBlobAsync()
+    {
+        if (selectedBlob is null)
+        {
+            return;
+        }
+        await OnBlobSelected.InvokeAsync(selectedBlob.Blob.Name);
+        await offcanvas.LetAsync(x => x.HideAsync());
+    }
+}

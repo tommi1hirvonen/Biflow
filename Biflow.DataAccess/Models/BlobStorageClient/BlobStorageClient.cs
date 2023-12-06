@@ -29,7 +29,10 @@ public class BlobStorageClient
 
     public const string ResourceUrl = "https://storage.azure.com//.default";
 
-    public async Task<IEnumerable<BlobContainerItem>> GetContainersAsync(ITokenService tokenService, CancellationToken cancellationToken)
+    public string GetStorageAccountName(ITokenService tokenService) =>
+        GetBlobServiceClient(tokenService).AccountName;
+
+    public async Task<IEnumerable<BlobContainerItem>> GetContainersAsync(ITokenService tokenService, CancellationToken cancellationToken = default)
     {
         var client = GetBlobServiceClient(tokenService);
         var containers = await client
@@ -41,8 +44,8 @@ public class BlobStorageClient
     public async Task<IEnumerable<BlobHierarchyItem>> GetItemsAsync(
         ITokenService tokenService,
         BlobContainerItem container,
-        string? prefix,
-        CancellationToken cancellationToken)
+        string? prefix = null,
+        CancellationToken cancellationToken = default)
     {
         var blobServiceClient = GetBlobServiceClient(tokenService);
         var containerClient = blobServiceClient.GetBlobContainerClient(container.Name);
