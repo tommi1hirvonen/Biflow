@@ -10,7 +10,7 @@ internal class AzureTokenCredential(ITokenService tokenService, AppRegistration 
 
     public override Azure.Core.AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {
-        var (token, expiresOn) = _tokenService.GetTokenAsync(_appRegistration, resourceUrl).Result;
+        var (token, expiresOn) = _tokenService.GetTokenAsync(_appRegistration, resourceUrl).GetAwaiter().GetResult();
         return new Azure.Core.AccessToken(token, expiresOn);
     }
 

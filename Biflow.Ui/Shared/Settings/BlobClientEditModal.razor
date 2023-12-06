@@ -1,0 +1,234 @@
+﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject IJSRuntime JS
+@inject IHxMessengerService Messenger
+@inject ITokenService TokenService
+
+<HxModal @ref="modal" Size="ModalSize.Large" OnClosed="() => connectionTestSuccess = null" Title="@(client?.BlobStorageClientId == Guid.Empty ? "New blob client" : "Edit " + client?.BlobStorageClientName)">
+    <BodyTemplate>
+        @if (client is not null)
+        {
+            <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
+            <EditForm Model="client" id="blob_client_edit_form" OnValidSubmit="SubmitClientAsync">
+                <div class="row">
+                    <div class="col mx-3">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div>
+                            <label class="form-label">Blob storage client name</label>
+                            <InputText class="form-control" @bind-Value="client.BlobStorageClientName"></InputText>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" id="connection_method_radio_app_registration"
+                                           checked=@(client.ConnectionMethod == BlobStorageConnectionMethod.AppRegistration)
+                                           disabled=@(!AppRegistrations?.Any() ?? true)
+                                           @onchange="e => ChangeConnectionMethod(BlobStorageConnectionMethod.AppRegistration)">
+                                    <label class="form-check-label fw-normal" for="connection_method_radio_app_registration">
+                                        App registration
+                                        <HxPopover Trigger="PopoverTrigger.Hover" Content="Use an app registration to authenticate against the Blob Storage account. The account url also needs to be provided. It is most likely in the format https://<accountname>.blob.core.windows.net/">
+                                            <CxIcon Icon="FeatherIcon.Info" />
+                                        </HxPopover>
+                                    </label>
+                                </div>
+                                <div class="form-check mt-1">
+                                    <input class="form-check-input" type="radio" id="connection_method_radio_connection_string"
+                                           checked=@(client.ConnectionMethod == BlobStorageConnectionMethod.ConnectionString)
+                                           @onchange="e => ChangeConnectionMethod(BlobStorageConnectionMethod.ConnectionString)">
+                                    <label class="form-check-label fw-normal" for="connection_method_radio_connection_string">
+                                        Connection string
+                                        <HxPopover Trigger="PopoverTrigger.Hover" Content="Use a connection string to authenticate against the Blob Storage account. The connection string may contain either an account key or a SAS token.">
+                                            <CxIcon Icon="FeatherIcon.Info" />
+                                        </HxPopover>
+                                    </label>
+                                </div>
+                                <div class="form-check mt-1">
+                                    <input class="form-check-input" type="radio" id="connection_method_radio_url"
+                                           checked=@(client.ConnectionMethod == BlobStorageConnectionMethod.Url)
+                                           @onchange="e => ChangeConnectionMethod(BlobStorageConnectionMethod.Url)">
+                                    <label class="form-check-label fw-normal" for="connection_method_radio_url">
+                                        URL
+                                        <HxPopover Trigger="PopoverTrigger.Hover" Content="Use a URL containing a SAS token to authenticate against the Blob Storage account.">
+                                            <CxIcon Icon="FeatherIcon.Info" />
+                                        </HxPopover>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (client.ConnectionMethod == BlobStorageConnectionMethod.AppRegistration)
+                        {
+                            <div class="row mt-3">
+                                <div class="col-lg-6">
+                                    <label class="form-label">App registration</label>
+                                    <InputSelect class="form-select" @bind-Value="client.AppRegistrationId" @onchange="args => AppRegistrationChanged(args.Value)">
+                                        @foreach (var app in AppRegistrations ?? Enumerable.Empty<AppRegistration>())
+                                        {
+                                            <option value="@app.AppRegistrationId">@app.AppRegistrationName</option>
+                                        }
+                                    </InputSelect>
+                                </div>
+                            </div>
+                        }
+                        
+                        @if (client.ConnectionMethod == BlobStorageConnectionMethod.AppRegistration || client.ConnectionMethod == BlobStorageConnectionMethod.Url)
+                        {
+                            <div class="row mt-3">
+                                <div class="col-lg">
+                                    <label class="form-label">Blob storage URL</label>
+                                    <InputText class="form-control" @bind-Value="client.StorageAccountUrl"></InputText>
+                                </div>
+                            </div>
+                        }
+                        
+                        @if (client.ConnectionMethod == BlobStorageConnectionMethod.ConnectionString)
+                        {
+                            <div class="row mt-3">
+                                <div class="col-lg">
+                                    <label class="form-label">Connection string</label>
+                                    <InputText class="form-control" @bind-Value="client.ConnectionString"></InputText>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="row my-3">
+                            <div class="col">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="TestConnection" Enabled="!testingConnection">
+                                    Test connection
+                                </HxButton>
+                                @if (connectionTestSuccess == true)
+                                {
+                                    <span class="badge bg-success ms-3">Success</span>
+                                }
+                                else if (connectionTestSuccess == false)
+                                {
+                                    <span class="badge bg-danger ms-3">Failed</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </EditForm>
+        }
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxSubmit form="blob_client_edit_form" Color="ThemeColor.Success">@(client?.BlobStorageClientId == Guid.Empty ? "Add" : "Save")</HxSubmit>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+    </FooterTemplate>
+</HxModal>
+
+@code {
+    [Parameter]
+    public EventCallback<BlobStorageClient> OnBlobClientSubmit { get; set; }
+
+    [Parameter]
+    public List<AppRegistration>? AppRegistrations { get; set; }
+
+    private BlobStorageClient? client;
+    private HxModal? modal;
+    private bool? connectionTestSuccess = null;
+    private bool testingConnection = false;
+
+    public async Task ShowAsync(Guid clientId)
+    {
+        client = null;
+        connectionTestSuccess = null;
+        await modal.LetAsync(x => x.ShowAsync());
+        if (clientId != Guid.Empty)
+        {
+            using var context = DbContextFactory.CreateDbContext();
+            client = await context.BlobStorageClients
+                .AsNoTrackingWithIdentityResolution()
+                .Include(c => c.AppRegistration)
+                .FirstAsync(c => c.BlobStorageClientId == clientId);
+        }
+        else
+        {
+            client = new()
+            {
+                ConnectionMethod = BlobStorageConnectionMethod.ConnectionString
+            };
+        }
+    }
+
+    private void ChangeConnectionMethod(BlobStorageConnectionMethod method)
+    {
+        if (client is null)
+        {
+            return;
+        }
+
+        client.ConnectionMethod = method;
+
+        if (method == BlobStorageConnectionMethod.AppRegistration)
+        {
+            var appRegistration = AppRegistrations?.FirstOrDefault();
+            client.ConnectionString = null;
+            client.AppRegistrationId = appRegistration?.AppRegistrationId;
+            client.AppRegistration = appRegistration;
+        }
+        else if (method == BlobStorageConnectionMethod.ConnectionString)
+        {
+            client.AppRegistrationId = null;
+            client.AppRegistration = null;
+            client.StorageAccountUrl = null;
+        }
+        else if (method == BlobStorageConnectionMethod.Url)
+        {
+            client.AppRegistrationId = null;
+            client.AppRegistration = null;
+            client.ConnectionString = null;
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task SubmitClientAsync()
+    {
+        if (client is not null) client.AppRegistration = null!;
+        await OnBlobClientSubmit.InvokeAsync(client);
+        await modal.LetAsync(x => x.HideAsync());
+    }
+
+    private async Task TestConnection()
+    {
+        connectionTestSuccess = null;
+        testingConnection = true;
+        try
+        {
+            if (client is not null) await client.GetContainersAsync(TokenService, CancellationToken.None);
+            connectionTestSuccess = true;
+        }
+        catch (Exception ex)
+        {
+            connectionTestSuccess = false;
+            Messenger.AddError("Connection test failed", ex.Message);
+        }
+        testingConnection = false;
+    }
+
+    private void AppRegistrationChanged(object? value)
+    {
+        var idString = value?.ToString();
+        if (idString is not null)
+        {
+            var id = Guid.Parse(idString);
+            var appRegistration = AppRegistrations?.FirstOrDefault(a => a.AppRegistrationId == id);
+            if (appRegistration is not null && client is not null)
+            {
+                client.AppRegistration = appRegistration;
+            }
+        }
+    }
+
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        if (!confirmed)
+        {
+            context.PreventNavigation();
+        }
+    }
+}

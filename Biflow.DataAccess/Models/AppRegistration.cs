@@ -42,6 +42,8 @@ public class AppRegistration
 
     public IList<FunctionApp> FunctionApps { get; set; } = null!;
 
+    public IList<BlobStorageClient> BlobStorageClients { get; set; } = null!;
+
     private const string PowerBIResourceUrl = "https://analysis.windows.net/powerbi/api/.default";
     private const string AzureResourceUrl = "https://management.azure.com//.default";
 

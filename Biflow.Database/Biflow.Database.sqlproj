@@ -111,6 +111,7 @@
     <Build Include="app\Tables\ExecutionStepParameterExpressionParameter.sql" />
     <Build Include="app\Tables\JobStepTagFilter.sql" />
     <Build Include="app\Tables\QlikCloudClient.sql" />
+    <Build Include="app\Tables\BlobStorageClient.sql" />
   </ItemGroup>
   <Import Condition="'$(NetCoreBuild)' == 'true'" Project="$(NETCoreTargetsPath)\Microsoft.Data.Tools.Schema.SqlTasks.targets" />
   <ItemGroup>
