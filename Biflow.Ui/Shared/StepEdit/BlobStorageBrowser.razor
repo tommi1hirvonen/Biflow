@@ -42,7 +42,7 @@
             @if (i.IsBlob)
             {
                 <li class="list-group-item list-group-item-action pointer d-flex align-items-center @(item == i ? "active" : null)" @onclick="() => SelectItemAsync(i)">
-                    <CxIcon Icon="FeatherIcon.File" />
+                    <FileTypeIcon Filename="@i.Blob.Name" />
                     <span class="ms-1">
                         @i.Blob.Name.Substring(prefix?.Length ?? 0)
                     </span>

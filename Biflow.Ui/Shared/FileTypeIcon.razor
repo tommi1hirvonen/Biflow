@@ -1,0 +1,15 @@
+﻿
+<CxIcon Icon="Icon" />
+
+@code {
+    [Parameter] public string? Filename { get; set; }
+
+    private Components.IconBase Icon => Filename switch
+    {
+        string json when json.EndsWith(".json") => LucideIcon.FileJson,
+        string xml when xml.EndsWith(".xml") => LucideIcon.FileCode,
+        string xls when xls.EndsWith(".xlsx") || xls.EndsWith(".xls") || xls.EndsWith(".xlsm") || xls.EndsWith(".csv") => LucideIcon.FileSpreadsheet,
+        string txt when txt.EndsWith(".txt") => LucideIcon.FileText,
+        _ => FeatherIcon.File
+    };
+}
