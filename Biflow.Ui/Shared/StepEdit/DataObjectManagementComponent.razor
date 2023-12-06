@@ -198,10 +198,15 @@
         @{
             var appRegistrationId = Step is DatasetStep ds ? ds.AppRegistrationId : null;
             var qlikClientId = Step is QlikStep qlik ? (Guid?)qlik.QlikCloudClientId : null;
+            var tabularConnectionId = Step is TabularStep tabular ? tabular.ConnectionId : null;
         }
         <HxDropdownItem OnClick="() => appOffcanvas.LetAsync(x => x.ShowAsync(qlikClientId))">
             <CxIcon Icon="LucideIcon.FilePieChart" />
             Add app
+        </HxDropdownItem>
+        <HxDropdownItem OnClick="() => tabularOffcanvas.LetAsync(x => x.ShowAsync(tabularConnectionId))">
+            <CxIcon Icon="FeatherIcon.Box" />
+            Add tabular
         </HxDropdownItem>
         <HxDropdownItem OnClick="() => datasetOffcanvas.LetAsync(x => x.ShowAsync(appRegistrationId))">
             <CxIcon Icon="LucideIcon.FileBarChart2" />
@@ -222,13 +227,15 @@
     </HxDropdownMenu>
 </HxDropdownButtonGroup>
 
-<DbObjectExplorerOffcanvas @ref="dbObjectExplorerOffcanvas" Connections="Connections" OnDbObjectSelected="OnDbObjectSelected" />
+<DbObjectExplorerOffcanvas @ref="dbObjectExplorerOffcanvas" Connections="SqlConnections" OnDbObjectSelected="OnDbObjectSelected" />
 
 <DatasetSelectOffcanvas @ref="datasetOffcanvas" AppRegistrations="AppRegistrations" AllowAppRegistrationChange OnDatasetSelected="OnDatasetSelected" />
 
 <AppSelectOffcanvas @ref="appOffcanvas" QlikClients="QlikClients" AllowClientChange OnAppSelected="OnAppSelected" />
 
 <BlobSelectOffcanvas @ref="blobOffcanvas" OnBlobSelected="OnBlobSelected" />
+
+<AnalysisServicesObjectSelectOffcanvas @ref="tabularOffcanvas" Connections="AsConnections" AllowAppRegistrationChange OnObjectSelected="OnTabularSelected" />
 
 @code {
     [Parameter] public DataObjectReferenceType ReferenceType { get; set; }
@@ -237,7 +244,9 @@
 
     [Parameter] public Guid? ConnectionId { get; set; }
 
-    [Parameter] public IEnumerable<SqlConnectionInfo> Connections { get; set; } = null!;
+    [Parameter] public IEnumerable<SqlConnectionInfo>? SqlConnections { get; set; }
+
+    [Parameter] public IEnumerable<AnalysisServicesConnectionInfo>? AsConnections { get; set; }
 
     [Parameter] public IEnumerable<AppRegistration>? AppRegistrations { get; set; }
 
@@ -264,6 +273,7 @@
     private DatasetSelectOffcanvas? datasetOffcanvas;
     private AppSelectOffcanvas? appOffcanvas;
     private BlobSelectOffcanvas? blobOffcanvas;
+    private AnalysisServicesObjectSelectOffcanvas? tabularOffcanvas;
 
     protected override void OnParametersSet()
     {
@@ -407,6 +417,13 @@
     {
         newObject ??= new();
         newObject.ObjectUri = DataObject.CreateDatasetUri(dataset.GroupName, dataset.DatasetName);
+        StateHasChanged();
+    }
+
+    private void OnTabularSelected(AnalysisServicesObjectSelectedResponse tabular)
+    {
+        newObject ??= new();
+        newObject.ObjectUri = DataObject.CreateTabularUri(tabular.ModelName, tabular.TableName, tabular.PartitionName);
         StateHasChanged();
     }
 

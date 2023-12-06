@@ -24,6 +24,8 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
     
     [Parameter] public IEnumerable<SqlConnectionInfo> Connections { get; set; } = [];
 
+    [Parameter] public IEnumerable<AnalysisServicesConnectionInfo> AsConnections { get; set; } = [];
+
     [Parameter] public IEnumerable<AppRegistration> AppRegistrations { get; set; } = [];
 
     [Parameter] public IEnumerable<QlikCloudClient> QlikClients { get; set; } = [];

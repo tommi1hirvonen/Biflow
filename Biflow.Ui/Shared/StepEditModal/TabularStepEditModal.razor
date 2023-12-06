@@ -33,7 +33,7 @@
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }
                     </InputSelect>
-                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await offcanvas.LetAsync(x => x.ShowAsync())">
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await offcanvas.LetAsync(x => x.ShowAsync(Step?.ConnectionId))">
                         <CxIcon Icon="FeatherIcon.MoreHorizontal" />
                         Browse models
                     </HxButton>
@@ -86,6 +86,6 @@
             </div>
         </div>
 
-        <AnalysisServicesObjectSelectOffcanvas @ref="offcanvas" ConnectionId="Step.ConnectionId" OnObjectSelected="OnAnalysisServicesObjectSelected" />
+        <AnalysisServicesObjectSelectOffcanvas @ref="offcanvas" OnObjectSelected="OnAnalysisServicesObjectSelected" />
     }
 </StepEditModalTemplate>

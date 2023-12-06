@@ -1,15 +1,12 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Ui.Shared.StepEdit;
-using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class TabularStepEditModal : StepEditModal<TabularStep>
 {
-    [Parameter] public IList<AnalysisServicesConnectionInfo>? AsConnections { get; set; }
-
     internal override string FormId => "tabular_step_edit_form";
 
     private AnalysisServicesObjectSelectOffcanvas? offcanvas;
