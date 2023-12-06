@@ -423,7 +423,7 @@
     private void OnTabularSelected(AnalysisServicesObjectSelectedResponse tabular)
     {
         newObject ??= new();
-        newObject.ObjectUri = DataObject.CreateTabularUri(tabular.ModelName, tabular.TableName, tabular.PartitionName);
+        newObject.ObjectUri = DataObject.CreateTabularUri(tabular.ServerName, tabular.ModelName, tabular.TableName, tabular.PartitionName);
         StateHasChanged();
     }
 

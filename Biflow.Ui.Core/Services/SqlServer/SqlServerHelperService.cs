@@ -557,23 +557,23 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
             .ToArray();
     }
 
-    public async Task<IEnumerable<AsModel>> GetAnalysisServicesModelsAsync(Guid connectionId)
+    public async Task<AsServer> GetAnalysisServicesModelsAsync(Guid connectionId)
     {
         var connectionString = await GetAsConnectionStringAsync(connectionId);
         ArgumentNullException.ThrowIfNull(connectionString);
-
-        var models = new List<AsModel>();
-        await Task.Run(() =>
+        return await Task.Run(() =>
         {
             using var server = new Microsoft.AnalysisServices.Tabular.Server();
             server.Connect(connectionString);
+            var models = new List<AsModel>();
+            var asServer = new AsServer(server.Name, models);
             var databases = server.Databases;
             for (int dbi = 0; dbi < databases.Count; dbi++)
             {
                 var database = databases[dbi];
                 var model = database.Model;
                 var tables = new List<AsTable>();
-                var asModel = new AsModel(database.Name, tables);
+                var asModel = new AsModel(database.Name, tables, asServer);
                 for (int tbi = 0; tbi < model.Tables.Count; tbi++)
                 {
                     var table = model.Tables[tbi];
@@ -589,8 +589,8 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
                 }
                 models.Add(asModel);
             }
+            return asServer;
         });
-        return models;
     }
 
     private async Task<string?> GetSqlConnectionStringAsync(Guid connectionId, CancellationToken cancellationToken = default)

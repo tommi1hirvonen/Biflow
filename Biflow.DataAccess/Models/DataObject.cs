@@ -46,22 +46,22 @@ public partial class DataObject : IDataObject
         return $"pbi://{workspaceName}/{datasetName}";
     }
 
-    public static string CreateTabularUri(string model, string? table, string? partition)
+    public static string CreateTabularUri(string server, string model, string? table, string? partition)
     {
         model = NonAsciiCharsRegex().Replace(model, Replacement);
         if (partition is not null && table is not null)
         {
             table = NonAsciiCharsRegex().Replace(table, Replacement);
             partition = NonAsciiCharsRegex().Replace(partition, Replacement);
-            return $"tabular://{model}/{table}/{partition}";
+            return $"tabular://{server}/{model}/{table}/{partition}";
         }
         else if (table is not null)
         {
             table = NonAsciiCharsRegex().Replace(table, Replacement);
-            return $"tabular://{model}/{table}";
+            return $"tabular://{server}/{model}/{table}";
         }
 
-        return $"tabular://{model}";
+        return $"tabular://{server}/{model}";
     }
 
     public static string CreateQlikUri(string appName)

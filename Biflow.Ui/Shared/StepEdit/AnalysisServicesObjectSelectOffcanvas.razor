@@ -40,17 +40,17 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (models is null)
+                        @if (server is null)
                         {
                             <tr><td class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                         }
-                        else if (!models.Any())
+                        else if (!server.Models.Any())
                         {
                             <tr><td class="text-secondary">No models</td></tr>
                         }
                         else
                         {
-                            foreach (var model in models.OrderBy(m => m.ModelName))
+                            foreach (var model in server.Models.OrderBy(m => m.ModelName))
                             {
                                 <tr style="cursor: pointer;"
                                     class="@(model == selectedModel ? "bg-body-tertiary fw-bold" : null)"
@@ -75,7 +75,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (models is null)
+                        @if (server is null)
                         {
                             <tr><td class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                         }
@@ -114,7 +114,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (models is null)
+                        @if (server is null)
                         {
                             <tr><td class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                         }
@@ -163,14 +163,14 @@
 
     private Guid connectionId;
     private HxOffcanvas? offcanvas;
-    private IEnumerable<AsModel>? models;
+    private AsServer? server;
     private AsModel? selectedModel;
     private AsTable? selectedTable;
     private AsPartition? selectedPartition;
 
     private void OnClosed()
     {
-        models = null;
+        server = null;
         selectedModel = null;
         selectedTable = null;
         selectedPartition = null;
@@ -196,6 +196,7 @@
         if (selectedPartition is not null)
         {
             var obj = new AnalysisServicesObjectSelectedResponse(
+                selectedPartition.Table.Model.Server.Name,
                 selectedPartition.Table.Model.ModelName,
                 selectedPartition.Table.TableName,
                 selectedPartition.PartitionName);
@@ -204,13 +205,13 @@
         }
         else if (selectedTable is not null)
         {
-            var obj = new AnalysisServicesObjectSelectedResponse(selectedTable.Model.ModelName, selectedTable.TableName);
+            var obj = new AnalysisServicesObjectSelectedResponse(selectedTable.Model.Server.Name, selectedTable.Model.ModelName, selectedTable.TableName);
             await OnObjectSelected.InvokeAsync(obj);
             await offcanvas.LetAsync(x => x.HideAsync());
         }
         else if (selectedModel is not null)
         {
-            var obj = new AnalysisServicesObjectSelectedResponse(selectedModel.ModelName);
+            var obj = new AnalysisServicesObjectSelectedResponse(selectedModel.Server.Name, selectedModel.ModelName);
             await OnObjectSelected.InvokeAsync(obj);
             await offcanvas.LetAsync(x => x.HideAsync());
         }
@@ -239,13 +240,13 @@
 
     private async Task LoadAsync()
     {
-        models = null;
+        server = null;
         selectedModel = null;
         selectedTable = null;
         selectedPartition = null;
         try
         {
-            models = await SqlServerHelperService.GetAnalysisServicesModelsAsync(connectionId);
+            server = await SqlServerHelperService.GetAnalysisServicesModelsAsync(connectionId);
         }
         catch (Exception ex)
         {
