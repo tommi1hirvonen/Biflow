@@ -18,4 +18,24 @@ public class StepDataObject
     public DataObjectReferenceType ReferenceType { get; set; }
 
     public List<string> DataAttributes { get; set; } = [];
+
+    public bool IsSubsetOf(StepDataObject? other)
+    {
+        if (other is null)
+        {
+            return false;
+        }
+
+        if (!DataObject.UriIsPartOf(other.DataObject))
+        {
+            return false;
+        }
+
+        if (DataAttributes.Count == 0 || other.DataAttributes.Count == 0 || DataAttributes.Any(other.DataAttributes.Contains))
+        {
+            return true;
+        }
+
+        return false;
+    }
 }

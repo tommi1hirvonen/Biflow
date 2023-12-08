@@ -50,11 +50,7 @@ public partial class SynchronizeDependenciesComponent : ComponentBase
 
             var dependencies = steps.Where(s =>
                 targetsOf(s).Any(target =>
-                    sources.Any(source =>
-                        // The target and source data object Uris match
-                        // AND
-                        // (1) the source has no data attributes, (2) the target has no data attributes, (3) they have at least one matching data attributes
-                        source.DataObject.UriEquals(target.DataObject) && (source.DataAttributes.Count == 0 || target.DataAttributes.Count == 0 || source.DataAttributes.Any(a => target.DataAttributes.Contains(a))))));
+                    sources.Any(source => source.IsSubsetOf(target))));
             var missingDependencies = dependencies.Where(s => !step.Dependencies.Any(d => s.StepId == d.DependantOnStepId));
             foreach (var missing in missingDependencies)
             {

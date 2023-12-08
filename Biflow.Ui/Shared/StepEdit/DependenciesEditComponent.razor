@@ -280,11 +280,7 @@
 
         var dependsOnSteps = Steps.Where(step =>
             targetsOf(step).Any(target =>
-                sources.Any(source =>
-                    // The target and source data object Uris match
-                    // AND
-                    // (1) the source has no data attributes, (2) the target has no data attributes, (3) they have at least one matching data attributes
-                    source.DataObject.UriEquals(target.DataObject) && (source.DataAttributes.Count == 0 || target.DataAttributes.Count == 0 || source.DataAttributes.Any(a => target.DataAttributes.Contains(a))))));
+                sources.Any(source => source.IsSubsetOf(target))));
         var missingDependencies = dependsOnSteps.Where(d1 => !Step.Dependencies.Any(d2 => d2.DependantOnStepId == d1.StepId));
 
         foreach (var step in missingDependencies)
