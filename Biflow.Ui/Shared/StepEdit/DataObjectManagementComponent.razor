@@ -60,6 +60,7 @@
                                 {
                                     <HxInputTags Delimiters="new()"
                                                 InputSize="InputSize.Small"
+                                                Placeholder="Add data attributes"
                                                 SuggestDelay="0"
                                                 SuggestMinimumLength="3"
                                                 DataProvider="GetDataAttributeSuggestionsAsync"
@@ -86,21 +87,24 @@
                             </div>
                         </div>
                     </td>
-                    <td class="align-middle">
-                        @if (mappingResult.IsCandidateForRemoval)
-                        {
-                            <span class="text-danger fw-bold fs-5 pb-1">–</span>
-                        }
-                        else if (mappingResult.IsUnreliableMapping)
-                        {
-                            <span class="text-warning fw-bold fs-5 pb-1">?</span>
-                        }
-                        else if (mappingResult.IsNewAddition)
-                        {
-                            <span class="text-success fw-bold fs-5 pb-1">+</span>
-                        }
-                    </td>
-                    <td class="align-middle">
+                    @if (reference != editReference)
+                    {
+                        <td class="align-middle">
+                            @if (mappingResult.IsCandidateForRemoval)
+                            {
+                                <span class="text-danger fw-bold fs-5 pb-1">–</span>
+                            }
+                            else if (mappingResult.IsUnreliableMapping)
+                            {
+                                <span class="text-warning fw-bold fs-5 pb-1">?</span>
+                            }
+                            else if (mappingResult.IsNewAddition)
+                            {
+                                <span class="text-success fw-bold fs-5 pb-1">+</span>
+                            }
+                        </td>
+                    }
+                    <td class="@(reference == editReference ? "align-bottom" : "align-middle")" colspan="@(reference == editReference ? "2" : "1")">
                         <HxButtonGroup Size="ButtonGroupSize.Small">
                             @if (reference == editReference)
                             {
