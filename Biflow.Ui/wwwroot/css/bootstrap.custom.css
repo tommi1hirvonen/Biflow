@@ -12539,6 +12539,24 @@ form {
   fill: #ecc766;
 }
 
+.dependency-graph .node.selected rect {
+  stroke: #c3c6f2;
+  fill: #e1e3f8;
+  stroke-width: 3px;
+}
+
+.dependency-graph .node.selected > g.label {
+  fill: #2a2d59;
+}
+
+[data-bs-theme=dark] .dependency-graph .node.selected rect {
+  stroke: #404485;
+  fill: #15172c;
+}
+[data-bs-theme=dark] .dependency-graph .node.selected > g.label {
+  fill: #a6aaeb;
+}
+
 .dependency-graph .name {
   margin-top: 4px;
 }

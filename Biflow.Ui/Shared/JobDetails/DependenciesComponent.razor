@@ -297,7 +297,7 @@
                 nodes = steps.Select(step => new DependencyGraphNode(
                     Id: step.StepId.ToString(),
                     Name: step.StepName ?? "",
-                    CssClass: $"{(step.IsEnabled ? "enabled" : "disabled")} {(step.JobId != Job.JobId ? "external" : "internal")}",
+                    CssClass: $"{(step.IsEnabled ? "enabled" : "disabled")} {(step.JobId != Job.JobId ? "external" : "internal")} {(step.StepId == stepFilter.StepId ? "selected" : null)}",
                     TooltipText: $"{step.StepType}",
                     EnableOnClick: step.JobId == Job.JobId
                 )).ToList();

@@ -390,7 +390,8 @@ $dep-statuses: (
     "skipped": $map-secondary,
     "dependenciesfailed": $map-warning,
     "awaitingretry": $map-secondary,
-    "duplicate": $map-warning
+    "duplicate": $map-warning,
+    "selected": $map-primary // also add artificial status for selected item (used in job details lineage view)
 );
 
 @each $status, $map in $dep-statuses {

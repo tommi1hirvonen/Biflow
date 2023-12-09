@@ -100,7 +100,7 @@
             var node = new DependencyGraphNode(
                 Id: step.StepId.ToString(),
                 Name: step.StepName ?? "",
-                CssClass: step.IsEnabled ? "enabled internal" : "disabled internal",
+                CssClass: $"{(step.IsEnabled ? "enabled" : "disabled")} internal {(filterNode?.Id == step.StepId.ToString() ? "selected" : null)}",
                 TooltipText: step.StepType.ToString(),
                 EnableOnClick: true
             );
@@ -111,7 +111,7 @@
             var node = new DependencyGraphNode(
                 Id: uri,
                 Name: uri,
-                CssClass: "font-monospace internal",
+                CssClass: $"font-monospace internal {(filterNode?.Id == uri ? "selected" : null)}",
                 TooltipText: "Data object",
                 EnableOnClick: true,
                 Rounded: false
@@ -122,6 +122,9 @@
         graphNodes = stepNodes
             .Concat(dataNodes)
             .ToList();
+
+        // Replace filterNode with a new reference from graphNodes so that it has the selected css class.
+        filterNode = graphNodes.FirstOrDefault(n => n.Id == filterNode?.Id) ?? filterNode;
 
         List<DependencyGraphNode> nodes;
         List<DependencyGraphEdge> edges;
