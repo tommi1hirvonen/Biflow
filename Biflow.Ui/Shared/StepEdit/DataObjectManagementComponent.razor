@@ -62,7 +62,7 @@
                                                 InputSize="InputSize.Small"
                                                 Placeholder="Add data attributes"
                                                 SuggestDelay="0"
-                                                SuggestMinimumLength="3"
+                                                SuggestMinimumLength="0"
                                                 DataProvider="GetDataAttributeSuggestionsAsync"
                                                 TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
                                                 @bind-Value="editReferenceAttributes" />
@@ -458,7 +458,12 @@
             ?? [];
         return new InputTagsDataProviderResult
         {
-                Data = fromDb.SelectMany(a => a).Concat(current).Distinct().ToArray()
+            Data = fromDb
+                .SelectMany(a => a)
+                .Where(a => a.ContainsIgnoreCase(request.UserInput))
+                .Concat(current)
+                .Distinct()
+                .ToArray()
         };
     }
 
