@@ -63,7 +63,7 @@
                             <div class="row mt-3">
                                 <div class="col-lg-6">
                                     <label class="form-label">App registration</label>
-                                    <InputSelect class="form-select" @bind-Value="client.AppRegistrationId" @onchange="args => AppRegistrationChanged(args.Value)">
+                                    <InputSelect class="form-select" @bind-Value="client.AppRegistrationId" @bind-Value:after="AppRegistrationChanged">
                                         @foreach (var app in AppRegistrations ?? Enumerable.Empty<AppRegistration>())
                                         {
                                             <option value="@app.AppRegistrationId">@app.AppRegistrationName</option>
@@ -209,12 +209,12 @@
         testingConnection = false;
     }
 
-    private void AppRegistrationChanged(object? value)
+    private void AppRegistrationChanged()
     {
-        var idString = value?.ToString();
-        if (idString is not null)
+        var appRegistrationId = client?.AppRegistrationId;
+        if (appRegistrationId is Guid id)
         {
-            var id = Guid.Parse(idString);
+            
             var appRegistration = AppRegistrations?.FirstOrDefault(a => a.AppRegistrationId == id);
             if (appRegistration is not null && client is not null)
             {
