@@ -2,6 +2,7 @@
 using ClosedXML.Excel;
 using Dapper;
 using Microsoft.Data.SqlClient;
+using System.Runtime.InteropServices;
 
 namespace Biflow.Ui.Core;
 
@@ -113,8 +114,15 @@ public class TableData
         var lastCell = sheet.Cell(_rows.Count + 1, exportColumns.Length); // Add 1 to row count to account for header row
         var range = sheet.Range(firstCell, lastCell);
         range.CreateTable();
+
         // Adjust column widths based on only the first 100 rows for much better performance.
-        sheet.Columns(1, exportColumns.Length).AdjustToContents(1, 100);
+        // Do this only when running on Windows, as the required fonts may be missing on non-Windows systems.
+        // https://github.com/ClosedXML/ClosedXML/wiki/Graphic-Engine/8ee9bf5415f5e590da01c676baa71e118e76f31c
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            sheet.Columns(1, exportColumns.Length).AdjustToContents(1, 100);
+        }
+        
         var stream = new MemoryStream();
         workbook.SaveAs(stream);
         stream.Position = 0;
