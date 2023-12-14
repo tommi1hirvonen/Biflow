@@ -158,19 +158,19 @@
 
                     @* Leave steps component rendered but only update the visibility css class. This way rendering is quicker when returning to the component. *@
                     <div class="@(DetailsPage == "steps" ? null : "d-none")">
-                        <StepsComponent SqlConnections="sqlConnections"
-                                        AsConnections="asConnections"
-                                        PipelineClients="pipelineClients"
-                                        AppRegistrations="appRegistrations"
-                                        FunctionApps="functionApps"
-                                        QlikCloudClients="qlikCloudClients"
-                                        InitialStepId="@(DetailsPage == "steps" ? InitialStepId : null)" />
+                        <StepsList SqlConnections="sqlConnections"
+                                   AsConnections="asConnections"
+                                   PipelineClients="pipelineClients"
+                                   AppRegistrations="appRegistrations"
+                                   FunctionApps="functionApps"
+                                   QlikCloudClients="qlikCloudClients"
+                                   InitialStepId="@(DetailsPage == "steps" ? InitialStepId : null)" />
                     </div>
 
                     @if (DetailsPage == "parameters")
                     {
                         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-                            <JobParametersComponent />
+                            <JobParameters />
                         </AuthorizeView>
                     }
                     else if (DetailsPage == "history" && job is not null)
@@ -179,13 +179,13 @@
                     }
                     else if (DetailsPage == "graph")
                     {
-                        <DependenciesComponent SqlConnections="sqlConnections"
-                                               AsConnections="asConnections"
-                                               PipelineClients="pipelineClients"
-                                               AppRegistrations="appRegistrations"
-                                               FunctionApps="functionApps"
-                                               InitialStepId="InitialStepId"
-                                               QlikCloudClients="qlikCloudClients" />
+                        <DependenciesGraph SqlConnections="sqlConnections"
+                                           AsConnections="asConnections"
+                                           PipelineClients="pipelineClients"
+                                           AppRegistrations="appRegistrations"
+                                           FunctionApps="functionApps"
+                                           InitialStepId="InitialStepId"
+                                           QlikCloudClients="qlikCloudClients" />
                     }
                     else if (DetailsPage == "lineage")
                     {
@@ -193,12 +193,12 @@
                     }
                     else if (DetailsPage == "schedules")
                     {
-                        <SchedulesComponent />
+                        <SchedulesList />
                     }
                     else if (DetailsPage == "settings")
                     {
                         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-                            <JobSettingsComponent />
+                            <JobSettings />
                         </AuthorizeView>
                     }
                 </CascadingValue>

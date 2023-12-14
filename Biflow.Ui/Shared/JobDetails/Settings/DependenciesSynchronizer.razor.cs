@@ -5,11 +5,10 @@ using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.JSInterop;
 
 namespace Biflow.Ui.Shared.JobDetails.Settings;
 
-public partial class SynchronizeDependenciesComponent : ComponentBase
+public partial class DependenciesSynchronizer : ComponentBase
 {
     [Inject] private IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
 

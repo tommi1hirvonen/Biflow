@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Shared.JobDetails;
 
-public partial class JobParametersComponent : ComponentBase, IDisposable
+public partial class JobParameters : ComponentBase, IDisposable
 {
     [Inject] private IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
     

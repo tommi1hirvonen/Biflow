@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Shared.JobDetails;
 
-public partial class StepsComponent : ComponentBase
+public partial class StepsList : ComponentBase
 {
     [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
     [Inject] private StepsDuplicatorFactory StepDuplicatorFactory { get; set; } = null!;

@@ -36,16 +36,16 @@
                 @switch (activeTab)
                 {
                     case SettingsTab.General:
-                        <GeneralSettingsComponent />
+                        <GeneralSettings />
                         break;
                     case SettingsTab.Execution:
-                        <ExecutionSettingsComponent />
+                        <ExecutionSettings />
                         break;
                     case SettingsTab.Concurrency:
-                        <ConcurrencySettingsComponent />
+                        <ConcurrencySettings />
                         break;
                     case SettingsTab.SyncDependencies:
-                        <SynchronizeDependenciesComponent />
+                        <DependenciesSynchronizer />
                         break;
                     default:
                         <span>No component to display</span>
