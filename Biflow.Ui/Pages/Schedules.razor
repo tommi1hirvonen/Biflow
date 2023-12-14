@@ -60,11 +60,11 @@
 
 @if (Component is null)
 {
-    <SchedulesListComponent Schedules="schedules" Jobs="jobs" FilteredSchedules="FilteredSchedules" OnSchedulesChanged="StateHasChanged" />
+    <SchedulesList Schedules="schedules" Jobs="jobs" FilteredSchedules="FilteredSchedules" OnSchedulesChanged="StateHasChanged" />
 }
 else if (Component == "graph")
 {
-    <SchedulesGraphComponent Schedules="schedules" FilteredSchedules="FilteredSchedules" OnSchedulesChanged="StateHasChanged" />
+    <SchedulesGraph Schedules="schedules" FilteredSchedules="FilteredSchedules" OnSchedulesChanged="StateHasChanged" />
 }
 else
 {
