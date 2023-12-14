@@ -76,10 +76,25 @@ public class TableData
         }
     }
 
-    public void AddRow()
+    public void AddRow(Row? other = null)
     {
+        if (!MasterDataTable.AllowInsert)
+        {
+            throw new InvalidOperationException("Inserting records is not allowed on this data table.");
+        }
         HasChanges = true;
-        _rows.AddFirst(new Row(this, true));
+        if (other is null)
+        {
+            _rows.AddFirst(new Row(this, true));
+        }
+        else
+        {
+            var copy = new Row(other);
+            var node = _rows.Find(other);
+            ArgumentNullException.ThrowIfNull(node);
+            _rows.AddAfter(node, copy);
+        }
+        
     }
 
     public Stream GetExcelExportStream()

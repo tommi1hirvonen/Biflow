@@ -55,7 +55,7 @@ public partial class DataTableEditor : ComponentBase
 
     private Row[]? GetOrderedRowRecords()
     {
-        var rows = tableData?.Rows.OrderBy(r => !r.IsNewRow);
+        var rows = tableData?.Rows.OrderBy(r => !r.StickToTop);
         foreach (var orderBy in orderBy)
         {
             var column = tableData?.Columns.FirstOrDefault(c => c.Name == orderBy.Column);
