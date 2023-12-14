@@ -352,12 +352,24 @@
                                             }
                                         </td>
                                     }
-                                    @if (tableData.IsEditable && editModeEnabled && Table.AllowDelete)
+                                    @if (tableData.IsEditable && editModeEnabled && (Table.AllowDelete || Table.AllowInsert))
                                     {
                                         <td>
-                                            <button class="btn btn-sm btn-auto text-danger" @onclick="row.Delete">
-                                                <CxIcon Icon="FeatherIcon.Delete" />
-                                            </button>
+                                            <div class="btn-group btn-group-sm">
+                                                @if (Table.AllowInsert)
+                                                {
+                                                    <button class="btn btn-sm btn-auto" @onclick="() => tableData.AddRow(row)" title="Copy record">
+                                                        <CxIcon Icon="FeatherIcon.Copy" />
+                                                    </button>
+                                                }
+                                                @if (Table.AllowDelete)
+                                                {
+                                                    <button class="btn btn-sm btn-auto btn-delete-record" @onclick="row.Delete" title="Delete record">
+                                                        <CxIcon Icon="FeatherIcon.Delete" />
+                                                    </button>
+                                                }
+                                            </div>
+                                            
                                         </td>
                                     }
                                 </tr>

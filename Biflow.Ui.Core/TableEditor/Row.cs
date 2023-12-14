@@ -12,6 +12,7 @@ public class Row
     private readonly string[] _primaryKeyColumns;
 
     private bool _valuesChanged = false;
+    private bool _isCopy = false;
 
     public IDictionary<string, object?> Values => _values;
 
@@ -26,14 +27,28 @@ public class Row
     public ColumnValueIndexer<bool?> BooleanIndexer { get; }
     public ColumnValueIndexer<DateTime?> DateTimeIndexer { get; }
 
-    public bool ToBeDeleted { get; private set; }
+    internal bool ToBeDeleted { get; private set; }
     
     public bool IsUpdateable { get; }
 
     public bool IsNewRow { get; }
 
-    public bool HasChanges =>
-        _initialValues is not null && !ToBeDeleted && IsUpdateable && _valuesChanged;
+    public bool HasChanges => IsNewRow || _isCopy || _valuesChanged;
+
+    public Row(Row other) : this(other._parentTable, other.IsUpdateable, other.Values.ToDictionary())
+    {
+        // Clear initial values after base constructor because this is in essence a new row.
+        _initialValues = null;
+        _isCopy = true;
+        var columnsToClear = _parentTable.Columns
+            .Where(c => c.IsIdentity || c.IsComputed)
+            .Select(c => c.Name)
+            .ToArray();
+        foreach (var column in columnsToClear)
+        {
+            Values[column] = default;
+        }
+    }
 
     public Row(
         TableData tableData,
@@ -114,6 +129,10 @@ public class Row
 
     public void Delete()
     {
+        if (!_parentTable.MasterDataTable.AllowDelete)
+        {
+            throw new InvalidOperationException("Deleting records is not allowed on this data table.");
+        }
         OnValuesChanged();
         ToBeDeleted = true;
     }
