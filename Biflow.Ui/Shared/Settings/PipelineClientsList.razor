@@ -22,7 +22,7 @@
         @foreach (var clientType in Enum.GetValues<PipelineClientType>())
         {
             <HxDropdownItem @onclick="async () => await ShowNewClientModalAsync(clientType)">
-                <PipelineClientTypeIconComponent ClientType="clientType" />
+                <PipelineClientTypeIcon ClientType="clientType" />
                 @clientType.ToString()
             </HxDropdownItem>
         }
@@ -80,7 +80,7 @@
                             </HxButtonGroup>
                         </td>
                         <td class="align-middle">
-                            <PipelineClientTypeIconComponent ClientType="client.PipelineClientType" />
+                            <PipelineClientTypeIcon ClientType="client.PipelineClientType" />
                             @client.PipelineClientType
                         </td>
                         <td class="align-middle">
@@ -132,7 +132,7 @@
                                     @step.Job.JobName
                                 </td>
                                 <td>
-                                    <StepTypeIconComponent StepType="step.StepType" />
+                                    <StepTypeIcon StepType="step.StepType" />
                                     &nbsp;
                                     @step.StepName
                                 </td>

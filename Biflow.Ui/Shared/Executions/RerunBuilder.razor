@@ -56,7 +56,7 @@ else if (builder is null)
                             Step type
                         </TitleTemplate>
                         <ItemTemplate Context="item">
-                            <StepTypeIconComponent StepType="item" />
+                            <StepTypeIcon StepType="item" />
                             @item.ToString()
                         </ItemTemplate>
                     </FilterDropdown>
@@ -72,7 +72,7 @@ else if (builder is null)
                                 Tags
                             </TitleTemplate>
                             <ItemTemplate Context="item">
-                                <TagComponent Tag="item" />
+                                <TagBadge Tag="item" />
                             </ItemTemplate>
                         </FilterDropdown>
                     <FilterDropdown TItem="StepExecutionStatus"
@@ -211,7 +211,7 @@ else if (builder is null)
                             var status = GetStepExecutionStatus(step.StepId);
                             <tr style="cursor: pointer;" @onclick="() => step.AddToExecution()" title="@(step.IsEnabled ? null : "Step is disabled")">
                                 <td class="@(step.IsEnabled ? null : "text-secondary") align-middle">
-                                    <StepTypeIconComponent StepType="@step.StepType" />
+                                    <StepTypeIcon StepType="@step.StepType" />
                                     &nbsp;
                                     <HighlightableText Text="@step.StepName" PartToHighlight="@stepNameFilter" />
                                 </td>
@@ -238,7 +238,7 @@ else if (builder is null)
                         {
                             <tr style="cursor: pointer;" @onclick="() => step.RemoveFromExecution()">
                                 <td>
-                                    <StepTypeIconComponent StepType="@step.StepType" />
+                                    <StepTypeIcon StepType="@step.StepType" />
                                     &nbsp;
                                     @step.StepName
                                 </td>

@@ -49,7 +49,7 @@
                         <small>
                             @group.Key.StepName
                             &nbsp;
-                            <StepTypeIconComponent StepType="group.Key.StepType" />
+                            <StepTypeIcon StepType="group.Key.StepType" />
                         </small>
                     </div>
                     <div class="col-xl-9 col-lg-8 col-7 d-flex align-items-center" style="position: relative;">
@@ -72,7 +72,7 @@
                                 </ChildContent>
                                 <MenuContent>
                                     <DropdownMenuHeader>
-                                        <StepTypeIconComponent StepType="execution.StepType" />
+                                        <StepTypeIcon StepType="execution.StepType" />
                                         @execution.StepName
                                     </DropdownMenuHeader>
                                     <DropdownMenuItem @onclick="async () => await stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(execution.StepId))">

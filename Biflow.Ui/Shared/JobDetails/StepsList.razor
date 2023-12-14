@@ -35,7 +35,7 @@
                                                     : $"<span>{description}</span>";
                                                 <button class="btn btn-step d-inline-flex align-items-center px-3 fw-normal border rounded-pill @(stepTypeIndex > 0 ? "ms-3" : null) @(isDisabled ? "disabled" : null)"
                                                       @onclick="() => ShowNewStepModal(stepType)">
-                                                    <StepTypeIconComponent StepType="stepType" />
+                                                    <StepTypeIcon StepType="stepType" />
                                                     &nbsp;
                                                     @stepType                                                    
                                                 </button>
@@ -118,7 +118,7 @@
                         Step type
                     </TitleTemplate>
                     <ItemTemplate Context="item">
-                        <StepTypeIconComponent StepType="item" />
+                        <StepTypeIcon StepType="item" />
                         @item.ToString()
                     </ItemTemplate>
                 </FilterDropdown>
@@ -134,7 +134,7 @@
                         Tags
                     </TitleTemplate>
                     <ItemTemplate Context="item">
-                        <TagComponent Tag="item" />
+                        <TagBadge Tag="item" />
                     </ItemTemplate>
                 </FilterDropdown>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => advancedFiltersOffcanvas.LetAsync(x => x.ShowAsync())">
@@ -316,14 +316,14 @@
                                     </AuthorizeView>
                                     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                                         <a class="text-body" href="javascript:void(0)" @onclick="() => ShowEditModal(item)">
-                                            <StepTypeIconComponent StepType="@item.StepType" />
+                                            <StepTypeIcon StepType="@item.StepType" />
                                             &nbsp;
                                             <HighlightableText Text="@item.StepName" PartToHighlight="@stepNameFilter" />
                                         </a>
                                     </AuthorizeView>
                                     <AuthorizeView Roles="@($"{Roles.Operator}, {Roles.Viewer}")">
                                         <span>
-                                            <StepTypeIconComponent StepType="@item.StepType" />
+                                            <StepTypeIcon StepType="@item.StepType" />
                                             <HighlightableText Text="@item.StepName" PartToHighlight="@stepNameFilter" />
                                         </span>
                                     </AuthorizeView>
@@ -379,7 +379,7 @@
                                 <div class="col-xl-4 d-flex flex-wrap align-items-center justify-content-xl-end">
                                     @foreach (var tag in item.Tags.OrderBy(t => t.TagName))
                                     {
-                                        <TagComponent Tag="tag" CssClass="m-1" />
+                                        <TagBadge Tag="tag" CssClass="m-1" />
                                     }
                                 </div>
                             </div>
@@ -468,7 +468,7 @@
                         </ChildContent>
                         <MenuContent>
                             <DropdownMenuHeader>
-                                <StepTypeIconComponent StepType="item.StepType" />
+                                <StepTypeIcon StepType="item.StepType" />
                                 @item.StepName
                             </DropdownMenuHeader>
                             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">

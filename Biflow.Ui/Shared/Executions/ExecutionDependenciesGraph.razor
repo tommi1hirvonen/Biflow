@@ -16,7 +16,7 @@
                        InputSize="InputSize.Small"
                        Placeholder="Filter step">
             <ItemTemplate Context="item">
-                <StepTypeIconComponent StepType="item.StepType" />
+                <StepTypeIcon StepType="item.StepType" />
                 @item.StepName
             </ItemTemplate>
             <EmptyTemplate>
@@ -61,7 +61,7 @@
     <ContextMenuTemplate Context="step">
         <li>
             <h6 class="dropdown-header">
-                <StepTypeIconComponent StepType="step.StepType" />
+                <StepTypeIcon StepType="step.StepType" />
                 @step.StepName
             </h6>
         </li>

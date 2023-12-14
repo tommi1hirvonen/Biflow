@@ -65,7 +65,7 @@
                             {
                                 <tr style="cursor: pointer;" @onclick="() => selectedAttempts.Add(attempt)">
                                     <td>
-                                        <StepTypeIconComponent StepType="@attempt.StepType" />
+                                        <StepTypeIcon StepType="@attempt.StepType" />
                                         &nbsp;
                                         @attempt.StepExecution.StepName
                                     </td>
@@ -88,7 +88,7 @@
                             {
                                 <tr style="cursor: pointer;" @onclick="() => selectedAttempts.Remove(attempt)">
                                     <td>
-                                        <StepTypeIconComponent StepType="@attempt.StepType" />
+                                        <StepTypeIcon StepType="@attempt.StepType" />
                                         &nbsp;
                                         @attempt.StepExecution.StepName
                                     </td>

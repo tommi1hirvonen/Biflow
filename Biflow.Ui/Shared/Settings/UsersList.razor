@@ -87,7 +87,7 @@
                                 @foreach (var role in user.Roles.OrderBy(r => r))
                                 {
                                     var tag = new RoleTag(role);
-                                    <TagComponent Tag="tag" CssClass="m-1" />
+                                    <TagBadge Tag="tag" CssClass="m-1" />
                                 }
                             </div>
                             <div class="col">

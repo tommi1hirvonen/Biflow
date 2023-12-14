@@ -44,7 +44,7 @@
                     {
                         <tr>
                             <td>
-                                <TagComponent Tag="tag" />
+                                <TagBadge Tag="tag" />
                             </td>
                             <td>
                                 <div>
@@ -98,7 +98,7 @@
                 }
                 @foreach (var tag in tags)
                 {
-                    <TagComponent Tag="tag" CssClass="m-2" OnClick="() => AddSubscriptionAsync(tag.TagId)" style="cursor: pointer;" />
+                    <TagBadge Tag="tag" CssClass="m-2" OnClick="() => AddSubscriptionAsync(tag.TagId)" style="cursor: pointer;" />
                 }
             </div>
         </div>

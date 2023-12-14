@@ -59,7 +59,7 @@
                             </td>
                         }
                         <td>
-                            <StepTypeIconComponent StepType="item.StepType" />
+                            <StepTypeIcon StepType="item.StepType" />
                             &nbsp;
                             @item.StepName
                         </td>
@@ -82,7 +82,7 @@
                     </ChildContent>
                     <MenuContent>
                         <DropdownMenuHeader>
-                            <StepTypeIconComponent StepType="item.StepType" />
+                            <StepTypeIcon StepType="item.StepType" />
                             @item.StepName
                         </DropdownMenuHeader>
                         <DropdownMenuItem @onclick="async () => await stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">

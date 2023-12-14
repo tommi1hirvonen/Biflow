@@ -64,7 +64,7 @@
                                 var schedules = tag.Schedules.Count;
                                 <tr>
                                     <td class="align-middle">
-                                        <TagComponent Tag="tag" />
+                                        <TagBadge Tag="tag" />
                                     </td>
                                     <td>
                                         <div class="btn-group">
@@ -144,7 +144,7 @@
             <div class="col">
                 @foreach (var tag in UnusedTags)
                 {
-                    <TagComponent Tag="tag" CssClass="m-1" />
+                    <TagBadge Tag="tag" CssClass="m-1" />
                 }
             </div>
         </div>
@@ -177,7 +177,7 @@
                                     @step.Job.JobName
                                 </td>
                                 <td class="align-middle">
-                                    <StepTypeIconComponent StepType="step.StepType" />
+                                    <StepTypeIcon StepType="step.StepType" />
                                     &nbsp;
                                     @step.StepName
                                 </td>
