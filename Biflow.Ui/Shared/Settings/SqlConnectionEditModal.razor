@@ -29,7 +29,7 @@
                                 <div class="input-group-text">
                                     <CxIcon Icon="FeatherIcon.Database" />
                                 </div>
-                                <InputText class="form-control" @bind-Value="connection.ConnectionString" style="font-family:monospace;"></InputText>
+                                <InputTextArea class="form-control" rows="3" @bind-Value="connection.ConnectionString" style="font-family:monospace;"></InputTextArea>
                             </div>
                             <div class="form-text">MARS must be enabled in the connection string (MultipleActiveResultSets=true)</div>
                         </div>
