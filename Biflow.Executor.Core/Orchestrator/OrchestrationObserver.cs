@@ -15,6 +15,8 @@ internal abstract class OrchestrationObserver(
 
     public StepExecution StepExecution { get; } = stepExecution;
 
+    public int Priority => StepExecution.ExecutionPhase;
+
     public void Subscribe(IOrchestrationObservable provider)
     {
         _unsubscriber = provider.Subscribe(this);
