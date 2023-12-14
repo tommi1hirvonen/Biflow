@@ -9,15 +9,15 @@
 
 @if (Page is null)
 {
-    <DataTablesListComponent Tables="tables" Categories="categories" Connections="connections" />
+    <DataTablesList Tables="tables" Categories="categories" Connections="connections" />
 }
 else if (Page == "edit")
 {
-    <DataTableEditorComponent Table="table" />
+    <DataTableEditor Table="table" />
 }
 else if (Page == "import")
 {
-    <DataTableImportComponent TableId="TableId" />
+    <DataTableImport TableId="TableId" />
 }
 else
 {

@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 
 namespace Biflow.Ui.Shared.DataTables;
 
-public partial class DataTableEditorComponent : ComponentBase
+public partial class DataTableEditor : ComponentBase
 {
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
     
