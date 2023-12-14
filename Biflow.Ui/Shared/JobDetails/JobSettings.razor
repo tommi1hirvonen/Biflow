@@ -1,0 +1,65 @@
+﻿
+<PageTitle>@Job?.JobName | Settings | Biflow</PageTitle>
+
+<div class="row">
+    <div class="col-auto">
+        <div class="list-group shadow-sm">
+            <button type="button" class="list-group-item list-group-item-action @(activeTab == SettingsTab.General ? "active" : null)"
+                    @onclick="() => activeTab = SettingsTab.General">
+                <CxIcon Icon="FeatherIcon.Info" />
+                &nbsp;
+                General
+            </button>
+            <button type="button" class="list-group-item list-group-item-action @(activeTab == SettingsTab.Execution ? "active" : null)"
+                    @onclick="() => activeTab = SettingsTab.Execution">
+                <CxIcon Icon="FeatherIcon.Tool" />
+                &nbsp;
+                Execution mode
+            </button>
+            <button type="button" class="list-group-item list-group-item-action @(activeTab == SettingsTab.Concurrency ? "active" : null)"
+                    @onclick="() => activeTab = SettingsTab.Concurrency">
+                <CxIcon Icon="FeatherIcon.Sliders" />
+                &nbsp;
+                Concurrency
+            </button>
+            <button type="button" class="list-group-item list-group-item-action @(activeTab == SettingsTab.SyncDependencies ? "active" : null)"
+                    @onclick="() => activeTab = SettingsTab.SyncDependencies">
+                <CxIcon Icon="FeatherIcon.RefreshCw" />
+                &nbsp;
+                Sync dependencies
+            </button>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                @switch (activeTab)
+                {
+                    case SettingsTab.General:
+                        <GeneralSettings />
+                        break;
+                    case SettingsTab.Execution:
+                        <ExecutionSettings />
+                        break;
+                    case SettingsTab.Concurrency:
+                        <ConcurrencySettings />
+                        break;
+                    case SettingsTab.SyncDependencies:
+                        <DependenciesSynchronizer />
+                        break;
+                    default:
+                        <span>No component to display</span>
+                        break;
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter] public Job? Job { get; set; }
+
+    private SettingsTab activeTab = SettingsTab.General;
+
+    private enum SettingsTab { General, Execution, Concurrency, SyncDependencies }
+}

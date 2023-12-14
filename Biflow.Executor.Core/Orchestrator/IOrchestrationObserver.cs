@@ -7,6 +7,13 @@ internal interface IOrchestrationObserver
     public StepExecution StepExecution { get; }
 
     /// <summary>
+    /// Value denoting the priority of this observer.
+    /// Lower value means higher priority.
+    /// Higher priority observers will receive status updates first.
+    /// </summary>
+    public int Priority { get; }
+
+    /// <summary>
     /// Called once to provide current snapshot of global orchestration step execution statuses
     /// </summary>
     /// <param name="initialStatuses"></param>

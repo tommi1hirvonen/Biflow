@@ -1,0 +1,180 @@
+﻿@inject IHxMessengerService Messenger
+
+@if (Step is not null)
+{
+    <div class="row mt-1">
+        <div class="col">
+            <label class="form-label">
+                Execution condition expression
+                &nbsp;
+                <span style="cursor: pointer;" @onclick="async () => await helpOffcanvas.LetAsync(x => x.ShowAsync())">
+                    <CxIcon Icon="FeatherIcon.HelpCircle" />
+                </span>
+            </label>
+            <CodeEditor @ref="editor"
+                        Language="csharp"
+                        MinimapEnabled="false"
+                        InitialValueExpression="() => Step?.ExecutionConditionExpression.Expression"
+                        OnValueChanged="OnValueChanged" />
+            <div class="form-text">Blank = no execution condition. The return type of the expression should always be boolean (True/False).</div>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col">
+            <HxButton OnClick="TestEvaluate" Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
+                <CxIcon Icon="FeatherIcon.Check" />
+                Test evaluate / validate
+            </HxButton>
+        </div>
+    </div>
+    <h5 class="mt-3">Parameters</h5>
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th></th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Step.ExecutionConditionParameters.Any())
+            {
+                <tr><td colspan="4">No parameters</td></tr>
+            }
+            @{
+                var count = 0;
+            }
+            @foreach (var param in Step.ExecutionConditionParameters)
+            {
+                <tr>
+                    <td>
+                        <InputText class="form-control form-control-sm"
+                                   @bind-Value="param.ParameterName"
+                                   placeholder="Name" />
+                    </td>
+                    <td class="align-middle">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="condition_inherit_param_@count"
+                                    checked=@(param.JobParameterId is not null)
+                                    disabled=@((!Step.Job.JobParameters?.Any() ?? true))
+                                    @onchange="args => SetJobParameter((bool)args.Value!, param)">
+                            <label class="form-check-label fw-normal" for="condition_inherit_param_@count">Inherit</label>
+                        </div>
+                    </td>
+                    @if (param.JobParameterId is not null)
+                    {
+                        <td>
+                            <InputSelect class="form-select form-select-sm" @bind-Value="param.JobParameterId" @bind-Value:after="() => JobParameterChanged(param)">
+                                @foreach (var jobParam in Step.Job.JobParameters?.OrderBy(p => p.ParameterName) ?? Enumerable.Empty<JobParameter>())
+                                            {
+                                    <option value="@jobParam.ParameterId">
+                                        @jobParam.DisplaySummary
+                                    </option>
+                                            }
+                            </InputSelect>
+                        </td>
+                    }
+                    else
+                    {
+                        <ParameterTypeValueEditor Parameter="param" />
+                    }
+                    <td>
+                        <HxButtonGroup Size="ButtonGroupSize.Small">
+                            <HxButton Color="ThemeColor.None"
+                                      Size="ButtonSize.Small"
+                                      CssClass="btn-auto"
+                                      @onclick="() => Step.ExecutionConditionParameters.Remove(param)">
+                                <CxIcon Icon="FeatherIcon.Delete" />
+                            </HxButton>
+                        </HxButtonGroup>
+                    </td>
+                </tr>
+                count++;
+            }
+        </tbody>
+    </table>
+    var type = ParameterValueType.String;
+    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="() => Step.ExecutionConditionParameters.Add(new ExecutionConditionParameter { ParameterValueType = type, ParameterValue = string.Empty })">
+        <CxIcon Icon="FeatherIcon.Plus" />
+        Add parameter
+    </HxButton>
+}
+
+<HxOffcanvas @ref="helpOffcanvas" Size="OffcanvasSize.Large" Backdrop="OffcanvasBackdrop.False" Title="Execution conditions">
+    <BodyTemplate>
+        <p>Use C# expressions to control whether the step is executed or not when the step's execution phase is reached (in execution phase mode) or all its dependencies have completed (in dependency mode).</p>
+        <p>The return type for the final expression must always be boolean (True/False), however you can test and develop expressions using any kind of return type.</p>
+        <p>Use parameters to dynamically pass values to the evaluated expression.</p>
+        
+        <DynamicExpressionHelp />
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Secondary" OnClick="async () => await helpOffcanvas.LetAsync(x => x.HideAsync())">
+            Close
+        </HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
+@code {
+    [Parameter] public Step? Step { get; set; }
+
+    [Parameter] public EventCallback OnExecutionConditionChanged {get;set;}
+
+    private HxOffcanvas? helpOffcanvas;
+    private CodeEditor? editor;
+
+    private void SetJobParameter(bool inheritFromJob, ExecutionConditionParameter param)
+    {
+        if (inheritFromJob)
+        {
+            var jobParam = Step?.Job.JobParameters.FirstOrDefault();
+            param.JobParameterId = jobParam?.ParameterId;
+            param.JobParameter = jobParam;
+        }
+        else
+        {
+            param.JobParameterId = null;
+            param.JobParameter = null;
+        }
+    }
+
+    private void JobParameterChanged(ExecutionConditionParameter param)
+    {
+        param.JobParameter = Step?.Job.JobParameters.FirstOrDefault(p => p.ParameterId == param.JobParameterId);
+    }
+
+    private async Task TestEvaluate()
+    {
+        if (string.IsNullOrWhiteSpace(Step?.ExecutionConditionExpression.Expression))
+        {
+            Messenger.AddWarning("Execution condition expression is empty");
+            return;
+        }
+
+        try
+        {
+            var result = await Step.EvaluateExecutionConditionAsync();
+            if (result is bool b)
+            {
+                Messenger.AddInformation($"Result: {b}");
+            }
+            else
+            {
+                Messenger.AddWarning("Return type is not boolean", $"Result: {result}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError(ex.Message);
+        }
+    }
+
+    private async Task OnValueChanged(string? value)
+    {
+        ArgumentNullException.ThrowIfNull(Step);
+        Step.ExecutionConditionExpression.Expression = value;
+        await OnExecutionConditionChanged.InvokeAsync();
+    }
+
+}

@@ -1,0 +1,123 @@
+﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject IHxMessengerService Messenger
+
+<PageTitle>Blob Clients | Biflow</PageTitle>
+
+<HxButton Color="ThemeColor.Success"
+          @onclick="() => ShowEditModal(null)"
+          Enabled="blobClients is not null">
+    Add blob storage
+</HxButton>
+
+<div class="card shadow-sm pt-2 my-4">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>
+                    Name
+                </th>
+                <th>Connection method</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (blobClients is null)
+            {
+                <tr><td colspan="3" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
+            }
+            else if (blobClients.Count == 0)
+            {
+                <tr><td colspan="3">No blob storage clients</td></tr>
+            }
+            else
+            {
+                @foreach (var client in blobClients.OrderBy(c => c.BlobStorageClientName))
+                {
+                    <tr>
+                        <td class="align-middle">
+                            @client.BlobStorageClientName
+                        </td>
+                        <td class="align-middle">
+                            @client.ConnectionMethod
+                        </td>
+                        <td class="align-middle">
+                            <HxButtonGroup Size="ButtonGroupSize.Small">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="() => ShowEditModal(client)">
+                                    <CxIcon Icon="FeatherIcon.Edit2" />
+                                </HxButton>
+                                <HxDropdownButtonGroup>
+                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="delete">
+                                        <CxIcon Icon="FeatherIcon.Trash2" />
+                                    </HxDropdownToggleButton>
+                                    <HxDropdownMenu>
+                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                        <HxDropdownItem @onclick="() => DeleteBlobClientAsync(client)">Confirm</HxDropdownItem>
+                                    </HxDropdownMenu>
+                                </HxDropdownButtonGroup>
+                            </HxButtonGroup>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<BlobClientEditModal @ref="blobClientEditModal" AppRegistrations="appRegistrations" OnBlobClientSubmit="OnBlobClientSubmitAsync" />
+
+@code {
+    private List<BlobStorageClient>? blobClients;
+    private List<AppRegistration>? appRegistrations;
+    private BlobClientEditModal? blobClientEditModal;
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        blobClients = await context.BlobStorageClients
+            .AsNoTrackingWithIdentityResolution()
+            .OrderBy(f => f.BlobStorageClientName)
+            .ToListAsync();
+        appRegistrations = await context.AppRegistrations
+            .AsNoTracking()
+            .OrderBy(ar => ar.AppRegistrationName)
+            .ToListAsync();
+    }
+
+    private async Task DeleteBlobClientAsync(BlobStorageClient client)
+    {
+        try
+        {
+            using var context = DbContextFactory.CreateDbContext();
+            await context.BlobStorageClients
+                .Where(x => x.BlobStorageClientId == client.BlobStorageClientId)
+                .ExecuteDeleteAsync();
+            blobClients?.Remove(client);
+        }
+        catch (Exception ex)
+        {
+            var message = ex.InnerException?.Message ?? ex.Message;
+            Messenger.AddError("Error deleting blob storage client", message);
+        }
+    }
+
+    private async Task OnBlobClientSubmitAsync(BlobStorageClient client)
+    {
+        using var context = DbContextFactory.CreateDbContext();
+        if (client.BlobStorageClientId == Guid.Empty)
+        {
+            context.Add(client);
+            blobClients?.Add(client);
+        }
+        else
+        {
+            blobClients?.RemoveAll(b => b.BlobStorageClientId == client.BlobStorageClientId);
+            blobClients?.Add(client);
+            context.Attach(client).State = EntityState.Modified;
+        }
+        await context.SaveChangesAsync();
+        StateHasChanged();
+    }
+
+    private async Task ShowEditModal(BlobStorageClient? blobClient) =>
+        await blobClientEditModal.LetAsync(x => x.ShowAsync(blobClient?.BlobStorageClientId ?? Guid.Empty));
+}

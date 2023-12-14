@@ -56,7 +56,7 @@
                                 @job?.JobName
                             </td>
                             <td>
-                                <TagComponent Tag="tag" />
+                                <TagBadge Tag="tag" />
                             </td>
                             <td>
                                 <div>
@@ -132,7 +132,7 @@
                                     }
                                     @foreach (var tag in tags)
                                     {
-                                        <TagComponent Tag="tag" CssClass="m-2" OnClick="() => AddSubscriptionAsync(job.JobId, tag.TagId)" style="cursor: pointer;" />
+                                        <TagBadge Tag="tag" CssClass="m-2" OnClick="() => AddSubscriptionAsync(job.JobId, tag.TagId)" style="cursor: pointer;" />
                                     }
                                 </div>
                             }

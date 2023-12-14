@@ -68,7 +68,7 @@
                                                 Step type
                                             </TitleTemplate>
                                             <ItemTemplate Context="item">
-                                                <StepTypeIconComponent StepType="item" />
+                                                <StepTypeIcon StepType="item" />
                                                 @item.ToString()
                                             </ItemTemplate>
                                         </FilterDropdown>
@@ -84,7 +84,7 @@
                                                  Tags
                                              </TitleTemplate>
                                              <ItemTemplate Context="item">
-                                                 <TagComponent Tag="item" />
+                                                 <TagBadge Tag="item" />
                                              </ItemTemplate>
                                          </FilterDropdown>
                                          <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
@@ -145,7 +145,7 @@
                                     {
                                         <tr style="cursor: pointer;" title="@(step.IsEnabled ? null : "Step is disabled")">
                                             <td class="@(step.IsEnabled ? null : "text-secondary") align-middle" @onclick="() => step.AddToExecution()">
-                                                <StepTypeIconComponent StepType="@step.StepType" />
+                                                <StepTypeIcon StepType="@step.StepType" />
                                                 &nbsp;
                                                 <HighlightableText Text="@step.StepName" PartToHighlight="@executeFilterText" />
                                             </td>
@@ -187,7 +187,7 @@
                                     {
                                         <tr style="cursor: pointer;" @onclick="() => step.RemoveFromExecution()">
                                             <td>
-                                                <StepTypeIconComponent StepType="@step.StepType" />
+                                                <StepTypeIcon StepType="@step.StepType" />
                                                 &nbsp;
                                                 @step.StepName
                                             </td>
@@ -231,7 +231,7 @@
                                     {
                                         <tr style="cursor: pointer;" class="@(step.StepId == parameterEditStep?.StepId ? "fw-bold" : null)" @onclick="() => ToggleParameterEditStep(step)">
                                             <td>
-                                                <StepTypeIconComponent StepType="@step.StepType" />
+                                                <StepTypeIcon StepType="@step.StepType" />
                                                 &nbsp;
                                                 @step.StepName
                                             </td>
@@ -265,13 +265,13 @@
                                             }
                                             else
                                             {
-                                                <DynamicParameterEditComponent Parameter="parameter"
+                                                <DynamicParameterEditor Parameter="parameter"
                                                                                TParameter="StepExecutionParameterBase"
                                                                                OnParameterEdit="p => expressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))">
                                                     <StaticEditTemplate>
-                                                        <ParameterTypeValueEditComponent Parameter="parameter" />
+                                                        <ParameterTypeValueEditor Parameter="parameter" />
                                                     </StaticEditTemplate>
-                                                </DynamicParameterEditComponent>
+                                                </DynamicParameterEditor>
                                             }
                                         </tr>
                                     }
@@ -300,13 +300,13 @@
                                         <td>
                                             @parameter.DisplayName
                                         </td>
-                                        <DynamicParameterEditComponent Parameter="parameter"
+                                        <DynamicParameterEditor Parameter="parameter"
                                                                        TParameter="DynamicParameter"
                                                                        OnParameterEdit="p => jobParameterExpressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))">
                                             <StaticEditTemplate>
-                                                <ParameterTypeValueEditComponent Parameter="parameter" />
+                                                <ParameterTypeValueEditor Parameter="parameter" />
                                             </StaticEditTemplate>
-                                        </DynamicParameterEditComponent>
+                                        </DynamicParameterEditor>
                                     </tr>
                                 }
                             </tbody>
@@ -391,7 +391,7 @@
 <ExpressionEditOffcanvas @ref="expressionEditOffcanvas" TParameter="StepExecutionParameterBase" OnExpressionChanged="StateHasChanged">
     <div class="row mt-3">
         <div class="col">
-            <ExpressionParameterEditComponent StepParameter="context" />
+            <ExpressionParameterEditor StepParameter="context" />
         </div>
     </div>
     <StepExpressionParameterNotice />

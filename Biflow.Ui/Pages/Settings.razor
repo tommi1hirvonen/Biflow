@@ -67,7 +67,7 @@
 {
     <AuthorizeView Roles="@(Roles.Admin)">
         <Authorized>
-            <UsersComponent />
+            <UsersList />
         </Authorized>
         <NotAuthorized>
             <Unauthorized />
@@ -88,37 +88,37 @@ else if (Page == "subscriptions")
 else if (Page == "connections")
 {
     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
-        <ConnectionsComponent />
+        <ConnectionsList />
     </AuthorizeView>
 }
 else if (Page == "appregistrations")
 {
     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
-        <AppRegistrationsComponent />
+        <AppRegistrationsList />
     </AuthorizeView>
 }
 else if (Page == "pipelineclients")
 {
     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
-        <PipelineClientsComponent />
+        <PipelineClientsList />
     </AuthorizeView>
 }
 else if (Page == "functionapps")
 {
     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
-        <FunctionAppsComponent />
+        <FunctionAppsList />
     </AuthorizeView>
 }
 else if (Page == "qlikcloudclients")
 {
     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
-        <QlikCloudClientsComponent />
+        <QlikCloudClientsList />
     </AuthorizeView>
 }
 else if (Page == "blobclients")
 {
     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
-        <BlobClientsComponent />
+        <BlobClientsList />
     </AuthorizeView>
 }
 else

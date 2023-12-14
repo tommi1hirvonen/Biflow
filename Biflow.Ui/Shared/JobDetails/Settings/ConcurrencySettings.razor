@@ -1,0 +1,134 @@
+﻿@implements IDisposable
+
+@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject IHxMessengerService Messenger
+@inject JobValidator JobValidator
+
+@if (editJob is not null)
+{
+    <EditForm id="job_concurrency_form" Model="editJob" OnValidSubmit="OnSubmit">
+
+        <ObjectGraphDataAnnotationsValidator />
+        <ValidationSummary />
+        <FluentValidationValidator Validator="JobValidator" />
+
+        <div class="text-secondary">
+            <p>Define the maximum number of steps allowed to run at the same time. The default value is defined in the executer application's configuration file.</p>
+            <p>You can fine-tune the level of concurrency by defining maximum parallel steps for each step type. The main max parallel steps setting is always respected, however. This means that step type based limits only apply when they are lower than the main value.</p>
+        </div>
+
+        <div>
+            <label class="form-label">Max parallel steps (0 = use default)</label>
+            <InputNumber class="form-control form-control-sm" style="max-width: 10rem;" @bind-Value="editJob.MaxParallelSteps"></InputNumber>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col">
+                <HxDropdownButtonGroup>
+                    <HxDropdownToggleButton Color="ThemeColor.Secondary" Size="ButtonSize.Small">
+                        <CxIcon Icon="FeatherIcon.Plus" />
+                        Add step type
+                    </HxDropdownToggleButton>
+                    <HxDropdownMenu>
+                        <HxDropdownHeader>
+                            Step type
+                        </HxDropdownHeader>
+                        @foreach (var stepType in Enum.GetValues<StepType>().Where(type => !editJob.JobConcurrencies.Any(c => c.StepType == type)))
+                        {
+                            <HxDropdownItem @onclick="() => editJob.JobConcurrencies.Add(new JobConcurrency { StepType = stepType })">
+                                <StepTypeIcon StepType="stepType" />
+                                @stepType
+                            </HxDropdownItem>
+                        }
+                    </HxDropdownMenu>
+                </HxDropdownButtonGroup>
+            </div>
+        </div>
+
+        <table id="concurrency_table" class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Step type</th>
+                    <th>Max parallel steps</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var concur in editJob.JobConcurrencies.OrderBy(c => c.StepType))
+                {
+                    <tr>
+                        <td class="align-middle">
+                            <StepTypeIcon StepType="concur.StepType" />
+                            @concur.StepType
+                        </td>
+                        <td>
+                            <InputNumber class="form-control form-control-sm" style="max-width: 10rem;" @bind-Value="concur.MaxParallelSteps" />
+                        </td>
+                        <td>
+                            <HxButtonGroup Size="ButtonGroupSize.Small">
+                                <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto" @onclick="() => editJob.JobConcurrencies.Remove(concur)">
+                                    <CxIcon Icon="FeatherIcon.Delete" />
+                                </HxButton>
+                            </HxButtonGroup>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="row">
+            <div class="col">
+                <HxSubmit Color="ThemeColor.Success">
+                    <CxIcon Icon="FeatherIcon.Save" />
+                    Save
+                </HxSubmit>
+            </div>
+        </div>
+    </EditForm>
+}
+
+@code {
+    [CascadingParameter] Job? Job { get; set; }
+
+    private AppDbContext? context;
+    private Job? editJob;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Job is null || context is not null)
+        {
+            return;
+        }
+
+        context = DbContextFactory.CreateDbContext();
+        editJob = await context.Jobs
+            .Include(j => j.JobConcurrencies)
+            .FirstAsync(j => j.JobId == Job.JobId);
+    }
+
+    private async Task OnSubmit()
+    {
+        ArgumentNullException.ThrowIfNull(editJob);
+        try
+        {
+            ArgumentNullException.ThrowIfNull(context);
+            await context.SaveChangesAsync();
+            Messenger.AddInformation("Concurrency settings saved successfully");
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            Messenger.AddError("Concurrency error",
+                "The job has been modified outside of this session. Reload the page to view the most recent settings.");
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error saving concurrency settings", $"{ex.Message}\n{ex.InnerException?.Message}");
+        }
+
+    }
+
+    public void Dispose()
+    {
+        context?.Dispose();
+    }
+}

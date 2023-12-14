@@ -1,0 +1,187 @@
+﻿@inject SqlServerHelperService SqlServerHelper
+@inject IHxMessengerService Messenger
+
+@if (Step is not null)
+{
+    <p />
+    <h5>Parameters</h5>
+    <table id="parameters_table" class="table table-sm">
+        <thead>
+            <tr>
+                <th>Level</th>
+                <th>Name</th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Step.StepParameters.Any())
+            {
+                <tr><td colspan="6">No parameters</td></tr>
+            }
+            @foreach (var param in Step.StepParameters)
+            {
+                <tr>
+                    <td>
+                        <div class="input-group">
+                            <InputSelect class="form-select form-select-sm"
+                                         @bind-Value="param.ParameterLevel"
+                                         @bind-Value:after="() => ParametersValidator.LetAsync(x => x.ValidateAsync())">
+                                <option>@ParameterLevel.Package</option>
+                                <option>@ParameterLevel.Project</option>
+                            </InputSelect>
+                        </div>
+                    </td>
+                    <td>
+                        <InputText class="form-control form-control-sm"
+                                   @bind-Value="param.ParameterName"
+                                   placeholder="Name"
+                                   @bind-Value:after="() => ParametersValidator.LetAsync(x => x.ValidateAsync())" />
+                    </td>
+                    <td class="align-middle">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="inherit_@(param.ParameterId)"
+                                   checked=@(param.InheritFromJobParameterId is not null)
+                                   disabled=@(!JobParameters.Any())
+                                   @onchange="args => SetJobParameter((bool)args.Value!, param)">
+                            <label class="form-check-label fw-normal" for="inherit_@(param.ParameterId)">Inherit</label>
+                        </div>
+                    </td>
+                    @if (param.InheritFromJobParameterId is not null)
+                    {
+                        <td colspan="2">
+                            <InputSelect class="form-select form-select-sm" @bind-Value="param.InheritFromJobParameterId">
+                                @foreach (var jobParam in JobParameters.OrderBy(p => p.ParameterName))
+                                            {
+                                    <option value="@jobParam.ParameterId">
+                                        @jobParam.DisplaySummary
+                                    </option>
+                                            }
+                            </InputSelect>
+                        </td>
+                    }
+                    else
+                    {
+                        <DynamicParameterEditor Parameter="param"
+                                                TParameter="StepParameterBase"
+                                                OnParameterEdit="OnParameterEdit">
+                            <StaticEditTemplate>
+                                <ParameterTypeValueEditor Parameter="param" />
+                            </StaticEditTemplate>
+                        </DynamicParameterEditor>
+                    }
+                    <td>
+                        <HxButtonGroup Size="ButtonGroupSize.Small">
+                            <HxButton Color="ThemeColor.None"
+                                      Size="ButtonSize.Small"
+                                      CssClass="btn-auto"
+                                      @onclick="async () => { Step.StepParameters.Remove(param); await ParametersValidator.LetAsync(x => x.ValidateAsync()); }">
+                                <CxIcon Icon="FeatherIcon.Delete" />
+                            </HxButton>
+                        </HxButtonGroup>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <HxButtonGroup Size="ButtonGroupSize.Small">
+        <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="AddParameter">
+            <CxIcon Icon="FeatherIcon.Plus" />
+            Add parameter
+        </HxButton>
+        <HxDropdownButtonGroup>
+            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" Spinner="loadingParameters" Enabled="!loadingParameters">
+                <CxIcon Icon="FeatherIcon.AtSign" />
+                Import parameters
+            </HxDropdownToggleButton>
+            <HxDropdownMenu>
+                <HxDropdownItem OnClick="() => ImportParametersAsync(false)">User defined</HxDropdownItem>
+                <HxDropdownItem OnClick="() => ImportParametersAsync(true)">Include connection manager parameters</HxDropdownItem>
+            </HxDropdownMenu>
+        </HxDropdownButtonGroup>
+    </HxButtonGroup>
+    
+}
+
+<ExpressionEditOffcanvas @ref="expressionEditOffcanvas" OnExpressionChanged="StateHasChanged" TParameter="StepParameterBase">
+    <div class="row mt-3">
+        <div class="col">
+            <ExpressionParameterEditor StepParameter="context" />
+        </div>
+    </div>
+    <StepExpressionParameterNotice />
+</ExpressionEditOffcanvas>
+
+@code {
+    [CascadingParameter(Name = "StepParametersValidator")] FluentValidationValidator? ParametersValidator { get; set; }
+
+    [Parameter] public PackageStep? Step { get; set; }
+
+    [Parameter] public EventCallback OnImportParameters { get; set; }
+
+    private ExpressionEditOffcanvas<StepParameterBase>? expressionEditOffcanvas;
+    private bool loadingParameters = false;
+
+    private IEnumerable<JobParameter> JobParameters => (Step as Step)?.Job.JobParameters ?? Enumerable.Empty<JobParameter>();
+
+    private Task OnParameterEdit(StepParameterBase parameter) => expressionEditOffcanvas.LetAsync(x => x.ShowAsync(parameter));
+
+    private void AddParameter()
+    {
+        ArgumentNullException.ThrowIfNull(Step);
+        Step.StepParameters.Add(new(ParameterLevel.Package) { Step = Step });
+    }
+
+    private void SetJobParameter(bool inheritFromJob, PackageStepParameter param)
+    {
+        if (inheritFromJob)
+        {
+            param.InheritFromJobParameterId = JobParameters.FirstOrDefault()?.ParameterId;
+            param.InheritFromJobParameter = JobParameters.FirstOrDefault();
+        }
+        else
+        {
+            param.InheritFromJobParameterId = null;
+            param.InheritFromJobParameter = null;
+        }
+    }
+
+    private async Task ImportParametersAsync(bool includeConnectionManagerParameters)
+    {
+        try
+        {
+            if (Step?.ConnectionId is null || Step.PackageFolderName is null || Step.PackageProjectName is null || Step.PackageName is null)
+            {
+                return;
+            }
+            loadingParameters = true;
+            var parameters = await SqlServerHelper.GetPackageParametersAsync((Guid)Step.ConnectionId, Step.PackageFolderName, Step.PackageProjectName, Step.PackageName, includeConnectionManagerParameters);
+            if (!parameters.Any())
+            {
+                Messenger.AddInformation($"No parameters for package");
+                return;
+            }
+            Step.StepParameters.Clear();
+            foreach (var parameter in parameters)
+            {
+                Step.StepParameters.Add(new PackageStepParameter(parameter.ParameterLevel)
+                    {
+                        ParameterName = parameter.ParameterName,
+                        ParameterValueType = parameter.ParameterType,
+                        ParameterValue = parameter.DefaultValue
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error importing parameters", ex.Message);
+        }
+        finally
+        {
+            loadingParameters = false;
+        }
+    }
+
+}

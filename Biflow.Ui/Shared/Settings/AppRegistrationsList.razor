@@ -1,0 +1,307 @@
+﻿@inject IDbContextFactory<AppDbContext> DbFactory
+@inject ITokenService TokenService
+@inject IHxMessengerService Messenger
+
+<style>
+    tr a {
+        text-decoration: none;
+    }
+        
+        tr:hover a {
+            text-decoration: underline;
+        }
+</style>
+
+<PageTitle>App registrations | Biflow</PageTitle>
+
+<HxButton Color="ThemeColor.Success" @onclick="async () => await ShowEditModalAsync(null)" IsDisabled="AppRegistrations is null">
+    Add App registration
+</HxButton>
+
+<div class="card shadow-sm pt-2 my-4">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>
+                    Name
+                </th>
+                <th></th>
+                <th>
+                    Tenant id
+                </th>
+                <th></th>
+                <th></th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (appRegistrations is null)
+            {
+                <tr><td colspan="7" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
+            }
+            else if (appRegistrations.Count == 0)
+            {
+                <tr><td colspan="7">No App registrations</td></tr>
+            }
+            else
+            {
+                @foreach (var app in appRegistrations.OrderBy(a => a.AppRegistrationName))
+                {
+                    var jobs = app.Steps.Select(s => s.Job).Distinct().Count();
+                    var steps = app.Steps.Count();
+                    var pipelineClients = app.PipelineClients.Count();
+                    var functionApps = app.FunctionApps.Count();
+                    <tr>
+                        <td class="align-middle">
+                            @app.AppRegistrationName
+                        </td>
+                        <td class="align-middle">
+                            <HxButtonGroup>
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="async () => await ShowEditModalAsync(app)">
+                                    <CxIcon Icon="FeatherIcon.Edit2" />
+                                </HxButton>
+                                <HxDropdownButtonGroup>
+                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="delete">
+                                        <CxIcon Icon="FeatherIcon.Trash2" />
+                                    </HxDropdownToggleButton>
+                                    <HxDropdownMenu>
+                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                        <HxDropdownItem @onclick="() => DeleteAppRegistration(app)">Confirm</HxDropdownItem>
+                                    </HxDropdownMenu>
+                                </HxDropdownButtonGroup>
+                                <HxDropdownButtonGroup>
+                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="clear tokens">
+                                        <CxIcon Icon="FeatherIcon.X" />
+                                    </HxDropdownToggleButton>
+                                    <HxDropdownMenu>
+                                        <HxDropdownHeader>Clear access tokens?</HxDropdownHeader>
+                                        <HxDropdownItem @onclick="() => ClearTokens(app)">Confirm</HxDropdownItem>
+                                    </HxDropdownMenu>
+                                </HxDropdownButtonGroup>
+                            </HxButtonGroup>
+                        </td>
+                        <td class="align-middle">
+                            @app.TenantId
+                        </td>
+                        <td class="align-middle">
+                            @(jobs > 0 ? $"{jobs} job(s)" : null)
+                        </td>
+                        <td class="align-middle">
+                            <a class="text-body" href="javascript:void(0)"
+                            @onclick="async () =>
+                            {
+                                stepsAppRegistration = app;
+                                await stepsModal.LetAsync(x => x.ShowAsync());
+                            }">
+                                @(steps > 0 ? $"{steps} step(s)" : null)
+                            </a>
+                        </td>
+                        <td>
+                            <a class="text-body" href="javascript:void(0)" @onclick="async () =>
+                            {
+                                pipelineClientsAppRegistration = app;
+                                await pipelineClientsModal.LetAsync(x => x.ShowAsync());
+                            }">
+                                @(pipelineClients > 0 ? $"{pipelineClients} pipeline clients" : null)
+                            </a>
+                        </td>
+                        <td>
+                            <a class="text-body" href="javascript:void(0)" @onclick="async () =>
+                            {
+                                functionAppsAppRegistration = app;
+                                await functionAppsModal.LetAsync(x => x.ShowAsync());
+                            }">
+                                @(functionApps > 0 ? $"{functionApps} Function Apps" : null)
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<AppRegistrationEditModal @ref="appRegistrationEditModal" OnAppRegistrationSubmit="OnAppRegistrationSubmit" />
+
+<HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsAppRegistration?.AppRegistrationName}")">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Job</th>
+                            <th>Step</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var step in stepsAppRegistration?.Steps
+                            .OrderBy(s => s.Job.JobName)
+                            .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
+                        {
+                            <tr>
+                                <td>
+                                    @step.Job.JobName
+                                </td>
+                                <td>
+                                    <StepTypeIcon StepType="step.StepType" />
+                                    &nbsp;
+                                    @step.StepName
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <button class="btn btn-secondary" @onclick="async () => await stepsModal.LetAsync(x => x.HideAsync())">Close</button>
+    </FooterTemplate>
+</HxModal>
+
+<HxModal @ref="pipelineClientsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Pipeline clients using {stepsAppRegistration?.AppRegistrationName}")">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Pipeline client name</th>
+                            <th>Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var client in pipelineClientsAppRegistration?.PipelineClients
+                            .OrderBy(c => c.PipelineClientName) ?? Enumerable.Empty<PipelineClient>())
+                        {
+                            <tr>
+                                <td>
+                                    @client.PipelineClientName
+                                </td>
+                                <td>
+                                    @client.PipelineClientType
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <button class="btn btn-secondary" @onclick="async () => await pipelineClientsModal.LetAsync(x => x.HideAsync())">Close</button>
+    </FooterTemplate>
+</HxModal>
+
+<HxModal @ref="functionAppsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Function Apps using {stepsAppRegistration?.AppRegistrationName}")">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Function App name</th>
+                            <th>Resource group name</th>
+                            <th>Resource name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var functionApp in functionAppsAppRegistration?.FunctionApps
+                            .OrderBy(fa => fa.FunctionAppName) ?? Enumerable.Empty<FunctionApp>())
+                        {
+                            <tr>
+                                <td>
+                                    @functionApp.FunctionAppName
+                                </td>
+                                <td>
+                                    @functionApp.ResourceGroupName
+                                </td>
+                                <td>
+                                    @functionApp.ResourceName
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <button class="btn btn-secondary" @onclick="async () => await functionAppsModal.LetAsync(x => x.HideAsync())">Close</button>
+    </FooterTemplate>
+</HxModal>
+
+@code {
+    private List<AppRegistration>? appRegistrations;
+    private AppRegistrationEditModal? appRegistrationEditModal;
+    private AppRegistration? stepsAppRegistration;
+    private HxModal? stepsModal;
+    private AppRegistration? pipelineClientsAppRegistration;
+    private HxModal? pipelineClientsModal;
+    private AppRegistration? functionAppsAppRegistration;
+    private HxModal? functionAppsModal;
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = await Task.Run<AppDbContext>(DbFactory.CreateDbContext);
+        appRegistrations = await context.AppRegistrations
+            .AsNoTrackingWithIdentityResolution()
+            .Include(app => app.Steps)
+            .ThenInclude(step => step.Job)
+            .Include(app => app.PipelineClients)
+            .Include(app => app.FunctionApps)
+            .OrderBy(df => df.AppRegistrationName)
+            .ToListAsync();
+    }
+
+    private async Task DeleteAppRegistration(AppRegistration appRegistration)
+    {
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            await context.AppRegistrations
+                .Where(x => x.AppRegistrationId == appRegistration.AppRegistrationId)
+                .ExecuteDeleteAsync();
+            appRegistrations?.Remove(appRegistration);
+        }
+        catch (Exception ex)
+        {
+            var message = ex.InnerException?.Message ?? ex.Message;
+            Messenger.AddError("Error deleting app registration", message);
+        }
+    }
+
+    private async Task OnAppRegistrationSubmit(AppRegistration appRegistration)
+    {
+        using var context = DbFactory.CreateDbContext();
+        if (appRegistration.AppRegistrationId == Guid.Empty)
+        {
+            context.Add(appRegistration);
+            appRegistrations?.Add(appRegistration);
+        }
+        else
+        {
+            appRegistrations?.RemoveAll(a => a.AppRegistrationId == appRegistration.AppRegistrationId);
+            appRegistrations?.Add(appRegistration);
+            context.Attach(appRegistration).State = EntityState.Modified;
+        }
+        await context.SaveChangesAsync();
+        StateHasChanged();
+    }
+
+    private async Task ClearTokens(AppRegistration appRegistration)
+    {
+        using var context = DbFactory.CreateDbContext();
+        var tokens = await context.AccessTokens.Where(t => t.AppRegistrationId == appRegistration.AppRegistrationId).ToListAsync();
+        tokens.ForEach(t => context.Remove(t));
+        await context.SaveChangesAsync();
+        TokenService.Clear();
+    }
+
+    private async Task ShowEditModalAsync(AppRegistration? appRegistration)
+    {
+        await appRegistrationEditModal.LetAsync(x => x.ShowAsync(appRegistration?.AppRegistrationId ?? Guid.Empty));
+    }
+}

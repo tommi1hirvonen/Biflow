@@ -35,7 +35,10 @@ internal class GlobalOrchestrator(
                     observer.RegisterInitialUpdates(statuses);
                     observer.Subscribe(this);
                 }
-                tasks = observers.Select(o => o.WaitForProcessingAsync(this)).ToArray();
+                tasks = observers
+                    .OrderBy(o => o.Priority) // Start tasks with higher priority (lower value) first.
+                    .Select(o => o.WaitForProcessingAsync(this))
+                    .ToArray();
             }
             await Task.WhenAll(tasks);
         }

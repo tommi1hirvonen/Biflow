@@ -1,0 +1,228 @@
+﻿@inject IHxMessengerService Messenger
+@inject IHxMessageBoxService Confirmer
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IExecutorService ExecutorService
+@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject NavigationManager NavigationManager
+
+<table class="table table-sm table-hover">
+    <thead>
+        <tr>
+            @if (ShowDetailed)
+            {
+                <th>
+                    Job
+                </th>
+            }
+            <th>
+                Step
+            </th>
+            <th>
+                Execution phase
+            </th>
+            <th>
+                Started
+            </th>
+            <th>
+                Ended
+            </th>
+            <th>
+                Duration
+            </th>
+            <th>
+                Status
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Executions is null)
+        {
+            <tr><td colspan="@(ShowDetailed ? 7 : 6)" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
+        }
+        else if (!Executions.Any())
+        {
+            <tr><td colspan="@(ShowDetailed ? 7 : 6)">No executions</td></tr>
+        }
+        else
+        {
+            <Virtualize TItem="StepExecutionProjection" Context="item" SpacerElement="tr" Items="Executions.ToList()" OverscanCount="20" ItemSize="34.2321f">
+                <ContextMenuToggle ContainerHtmlTag="tr"
+                                   CssClass="@(selectedStepExecution == item ? "bg-body-tertiary" : null)"
+                                   CssClassDelegate="@(open => open ? "bg-body-tertiary" : null)"
+                                   style="cursor: pointer;"
+                                   @onclick="async () => await ToggleSelectedStepExecutionAsync(item)">
+                    <ChildContent>
+                        @if (ShowDetailed)
+                        {
+                            <td>
+                                @item.JobName
+                            </td>
+                        }
+                        <td>
+                            <StepTypeIcon StepType="item.StepType" />
+                            &nbsp;
+                            @item.StepName
+                        </td>
+                        <td class="@(item.DependencyMode ? "text-body-tertiary" : "text-body")" style="">
+                            <CxIcon Icon="FeatherIcon.Layers" />
+                            <sup>@item.ExecutionPhase</sup>
+                        </td>
+                        <td>
+                            @item.StartDateTime?.LocalDateTime
+                        </td>
+                        <td>
+                            @item.EndDateTime?.LocalDateTime
+                        </td>
+                        <td>
+                            <text>@item.ExecutionInSeconds?.SecondsToReadableFormat()</text>
+                        </td>
+                        <td>
+                            <StepExecutionStatusBadge ExecutionStatus="@item.ExecutionStatus" />
+                        </td>
+                    </ChildContent>
+                    <MenuContent>
+                        <DropdownMenuHeader>
+                            <StepTypeIcon StepType="item.StepType" />
+                            @item.StepName
+                        </DropdownMenuHeader>
+                        <DropdownMenuItem @onclick="async () => await stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
+                            <CxIcon Icon="LucideIcon.History" />
+                            History
+                        </DropdownMenuItem>
+                        <DropdownMenuItem @onclick="@(() => NavigationManager.NavigateTo($"executions/{item.ExecutionId}/graph/{item.StepId}"))">
+                            <CxIcon Icon="LucideIcon.Workflow" />
+                            Dependencies
+                        </DropdownMenuItem>
+                        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+                            @if (item.CanBeStopped)
+                            {
+                                <DropdownMenuItem @onclick="async () => await StopStepExecutionAsync(item.ExecutionId, item.StepId, item.StepName)">
+                                    <CxIcon Icon="FeatherIcon.XOctagon" />
+                                    Stop...
+                                </DropdownMenuItem>
+                            }
+                        </AuthorizeView>
+                    </MenuContent>
+                </ContextMenuToggle>
+                @if (selectedStepExecution == item)
+                {
+                    if (detailStep is null)
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center">
+                                <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        <tr class="table-borderless no-hover bg-body-tertiary">
+                            <td colspan="7" class="px-3">
+                                <HxButtonToolbar CssClass="mb-3 mt-1 ms-2">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
+                                        <CxIcon Icon="LucideIcon.History" />
+                                        History
+                                    </HxButton>
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto ms-3" @onclick="@(() => NavigationManager.NavigateTo($"executions/{item.ExecutionId}/graph/{item.StepId}"))">
+                                        <CxIcon Icon="LucideIcon.Workflow" />
+                                        Dependencies
+                                    </HxButton>
+                                    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+                                        @if (detailStep.CanBeStopped)
+                                        {
+                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger ms-3"
+                                                      @onclick="async () => await StopStepExecutionAsync(item.ExecutionId, item.StepId, item.StepName)">
+                                                <CxIcon Icon="FeatherIcon.XOctagon" />
+                                                Stop...
+                                            </HxButton>
+                                        }
+                                    </AuthorizeView>
+                                </HxButtonToolbar>
+
+                                <StepExecutionDetails StepExecutionAttempt="detailStep" />
+                            </td>
+                        </tr>
+                    }
+                }
+            </Virtualize>
+        }
+    </tbody>
+</table>
+
+<StepHistoryOffcanvas @ref="stepHistoryOffcanvas" />
+
+@code {
+    [Parameter]
+    public IEnumerable<StepExecutionProjection>? Executions { get; set; }
+
+    [Parameter]
+    public bool ShowDetailed { get; set; } = true;
+
+    [Parameter]
+    public Func<StepExecutionProjection, StepExecutionAttempt?>? DetailStepProvider { get; set; }
+
+    private StepExecutionProjection? selectedStepExecution;
+    private StepHistoryOffcanvas? stepHistoryOffcanvas;
+    private StepExecutionAttempt? detailStep;
+
+    private async Task ToggleSelectedStepExecutionAsync(StepExecutionProjection execution)
+    {
+        // If the selected execution is the same that was previously selected, set to null
+        // => hides step execution details component.
+        if (selectedStepExecution == execution)
+        {
+            selectedStepExecution = null;
+            detailStep = null;
+        }
+        else
+        {
+            selectedStepExecution = execution;
+
+            if (DetailStepProvider is not null)
+            {
+                detailStep = DetailStepProvider(execution);
+            }
+            else
+            {
+                using var context = await DbContextFactory.CreateDbContextAsync();
+                detailStep = await context.StepExecutionAttempts
+                    .AsNoTrackingWithIdentityResolution()
+                    .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
+                    .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
+                    .Include(e => e.StepExecution)
+                    .ThenInclude(e => e.Execution)
+                    .ThenInclude(e => e.ExecutionParameters)
+                    .Include(e => e.StepExecution)
+                    .ThenInclude(e => e.ExecutionConditionParameters)
+                    .ThenInclude(e => e.ExecutionParameter)
+                    .Include(e => e.StepExecution)
+                    .ThenInclude(e => e.Step)
+                    .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId && e.StepId == execution.StepId && e.RetryAttemptIndex == execution.RetryAttemptIndex);
+            }   
+        }
+        StateHasChanged();
+    }
+
+    private async Task StopStepExecutionAsync(Guid executionId, Guid stepId, string stepName)
+    {
+        if (!await Confirmer.ConfirmAsync("Stop step execution", $"Are you sure you want to stop \"{stepName}\"?"))
+        {
+            return;
+        }
+        try
+        {
+            string username = HttpContextAccessor.HttpContext?.User?.Identity?.Name
+                ?? throw new ArgumentNullException(nameof(username), "Error getting username from HttpContext");
+            await ExecutorService.StopExecutionAsync(executionId, stepId, username);
+            Messenger.AddInformation("Stop request sent successfully to the executor service");
+        }
+        catch (TimeoutException)
+        {
+            Messenger.AddError("Operation timed out", "The executor process may no longer be running");
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error stopping execution", ex.Message);
+        }
+    }
+}

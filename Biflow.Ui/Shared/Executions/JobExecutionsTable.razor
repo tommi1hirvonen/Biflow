@@ -1,0 +1,70 @@
+﻿@inject NavigationManager NavigationManager
+
+<table class="table table-sm table-hover">
+    <thead>
+        <tr>
+            <th>
+                Job
+            </th>
+            <th>
+                Started
+            </th>
+            <th>
+                Ended
+            </th>
+            <th>
+                Duration
+            </th>
+            <th>
+                Number of steps
+            </th>
+            <th>
+                Status
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Executions is null)
+        {
+            <tr><td colspan="6" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
+        }
+        else if (!Executions.Any())
+        {
+            <tr><td colspan="6">No executions</td></tr>
+        }
+        else
+        {
+            <Virtualize TItem="ExecutionProjection" Context="item" OverscanCount="20" SpacerElement="tr" Items="Executions.ToList()" ItemSize="34.2321f">
+                <tr style="cursor: pointer;" @onclick="() => GoToExecutionDetails(item.ExecutionId)">
+                    <td>
+                        @item.JobName
+                    </td>
+                    <td>
+                        @item.StartDateTime?.LocalDateTime
+                    </td>
+                    <td>
+                        @item.EndDateTime?.LocalDateTime
+                    </td>
+                    <td>
+                        <text>@item.ExecutionInSeconds?.SecondsToReadableFormat()</text>
+                    </td>
+                    <td>
+                        @item.StepExecutionCount
+                    </td>
+                    <td>
+                        <JobExecutionStatusBadge ExecutionStatus="@item.ExecutionStatus" />
+                    </td>
+                </tr>
+            </Virtualize>
+        }
+    </tbody>
+</table>
+
+@code {
+    [Parameter] public IEnumerable<ExecutionProjection>? Executions { get; set; }
+
+    private void GoToExecutionDetails(Guid executionId)
+    {
+        NavigationManager.NavigateTo($"executions/{executionId}/list");
+    }
+}
