@@ -90,10 +90,10 @@
                                 {
                                     <div class="row">
                                         <div class="col">
-                                            <DependenciesEditComponent Step="Modal.Step"
-                                                                       Steps="Modal.Steps"
-                                                                       JobSlims="Modal.JobSlims"
-                                                                       StepSlims="Modal.StepSlims" />
+                                            <DependenciesEditor Step="Modal.Step"
+                                                                Steps="Modal.Steps"
+                                                                JobSlims="Modal.JobSlims"
+                                                                StepSlims="Modal.StepSlims" />
                                         </div>
                                     </div>
                                 }
@@ -204,7 +204,7 @@
                             {
                                 <div class="row">
                                     <div class="col">
-                                        <DataObjectManagementComponent
+                                        <DataObjectsEditor
                                             ReferenceType="DataObjectReferenceType.Source"
                                             Step="Modal.Step"
                                             ConnectionId="ConnectionId"
@@ -221,7 +221,7 @@
                             {
                                 <div class="row">
                                     <div class="col">
-                                        <DataObjectManagementComponent
+                                        <DataObjectsEditor
                                             ReferenceType="DataObjectReferenceType.Target"
                                             Step="Modal.Step"
                                             ConnectionId="ConnectionId"
@@ -237,7 +237,7 @@
                             {
                                 <div class="row">
                                     <div class="col">
-                                        <ExecutionConditionEditComponent Step="Modal.Step" OnExecutionConditionChanged="StateHasChanged" />
+                                        <ExecutionConditionEditor Step="Modal.Step" OnExecutionConditionChanged="StateHasChanged" />
                                     </div>
                                 </div>
                             }

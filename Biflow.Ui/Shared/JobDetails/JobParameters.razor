@@ -80,13 +80,13 @@ else
                                                    placeholder="Name"
                                                    @bind-Value:after="() => fluentJobValidator.LetAsync(x => x.ValidateAsync())" />
                                     </td>
-                                    <DynamicParameterEditComponent Parameter="param"
+                                    <DynamicParameterEditor Parameter="param"
                                                                    TParameter="JobParameter"
                                                                    OnParameterEdit="p => expressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))">
                                         <StaticEditTemplate>
-                                            <ParameterTypeValueEditComponent Parameter="param" />
+                                            <ParameterTypeValueEditor Parameter="param" />
                                         </StaticEditTemplate>
-                                    </DynamicParameterEditComponent>
+                                    </DynamicParameterEditor>
                                     <td>
                                         @if (referenceCount > 0)
                                         {

@@ -265,13 +265,13 @@
                                             }
                                             else
                                             {
-                                                <DynamicParameterEditComponent Parameter="parameter"
+                                                <DynamicParameterEditor Parameter="parameter"
                                                                                TParameter="StepExecutionParameterBase"
                                                                                OnParameterEdit="p => expressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))">
                                                     <StaticEditTemplate>
-                                                        <ParameterTypeValueEditComponent Parameter="parameter" />
+                                                        <ParameterTypeValueEditor Parameter="parameter" />
                                                     </StaticEditTemplate>
-                                                </DynamicParameterEditComponent>
+                                                </DynamicParameterEditor>
                                             }
                                         </tr>
                                     }
@@ -300,13 +300,13 @@
                                         <td>
                                             @parameter.DisplayName
                                         </td>
-                                        <DynamicParameterEditComponent Parameter="parameter"
+                                        <DynamicParameterEditor Parameter="parameter"
                                                                        TParameter="DynamicParameter"
                                                                        OnParameterEdit="p => jobParameterExpressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))">
                                             <StaticEditTemplate>
-                                                <ParameterTypeValueEditComponent Parameter="parameter" />
+                                                <ParameterTypeValueEditor Parameter="parameter" />
                                             </StaticEditTemplate>
-                                        </DynamicParameterEditComponent>
+                                        </DynamicParameterEditor>
                                     </tr>
                                 }
                             </tbody>
@@ -391,7 +391,7 @@
 <ExpressionEditOffcanvas @ref="expressionEditOffcanvas" TParameter="StepExecutionParameterBase" OnExpressionChanged="StateHasChanged">
     <div class="row mt-3">
         <div class="col">
-            <ExpressionParameterEditComponent StepParameter="context" />
+            <ExpressionParameterEditor StepParameter="context" />
         </div>
     </div>
     <StepExpressionParameterNotice />
