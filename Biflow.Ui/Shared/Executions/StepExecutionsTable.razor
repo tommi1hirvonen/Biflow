@@ -77,7 +77,7 @@
                             <text>@item.ExecutionInSeconds?.SecondsToReadableFormat()</text>
                         </td>
                         <td>
-                            <StepExecutionStatusBadgeComponent ExecutionStatus="@item.ExecutionStatus" />
+                            <StepExecutionStatusBadge ExecutionStatus="@item.ExecutionStatus" />
                         </td>
                     </ChildContent>
                     <MenuContent>
@@ -139,7 +139,7 @@
                                     </AuthorizeView>
                                 </HxButtonToolbar>
 
-                                <StepExecutionDetailsComponent StepExecutionAttempt="detailStep" />
+                                <StepExecutionDetails StepExecutionAttempt="detailStep" />
                             </td>
                         </tr>
                     }

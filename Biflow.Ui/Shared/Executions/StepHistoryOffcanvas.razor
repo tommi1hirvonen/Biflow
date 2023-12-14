@@ -60,13 +60,13 @@
                                     <td>@execution.StartDateTime?.LocalDateTime</td>
                                     <td>@execution.EndDateTime?.LocalDateTime</td>
                                     <td>@execution.GetDurationInReadableFormat()</td>
-                                    <td><StepExecutionStatusBadgeComponent ExecutionStatus="@execution.ExecutionStatus" /></td>
+                                    <td><StepExecutionStatusBadge ExecutionStatus="@execution.ExecutionStatus" /></td>
                                 </tr>
                                 @if (selectedStepExecution == execution)
                                 {
                                     <tr class="table-borderless no-hover bg-body-tertiary">
                                         <td colspan="4">
-                                            <StepExecutionDetailsComponent StepExecutionAttempt="execution" />
+                                            <StepExecutionDetails StepExecutionAttempt="execution" />
                                         </td>
                                     </tr>
                                 }

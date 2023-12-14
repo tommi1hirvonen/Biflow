@@ -15,7 +15,7 @@
                         Status
                     </TitleTemplate>
                     <ItemTemplate Context="item">
-                        <StepExecutionStatusBadgeComponent ExecutionStatus="item" />
+                        <StepExecutionStatusBadge ExecutionStatus="item" />
                     </ItemTemplate>
                 </FilterDropdown>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
@@ -46,7 +46,7 @@
                     @foreach (var status in Enum.GetValues<StepExecutionStatus>())
                     {
                         <HxDropdownItem OnClick="() => UpdateExecutionStatusAsync(status)">
-                            <StepExecutionStatusBadgeComponent ExecutionStatus="status" />
+                            <StepExecutionStatusBadge ExecutionStatus="status" />
                         </HxDropdownItem>
                     }
                 </HxDropdownMenu>
@@ -70,7 +70,7 @@
                                         @attempt.StepExecution.StepName
                                     </td>
                                     <td>
-                                        <StepExecutionStatusBadgeComponent ExecutionStatus="attempt.ExecutionStatus" />
+                                        <StepExecutionStatusBadge ExecutionStatus="attempt.ExecutionStatus" />
                                     </td>
                                 </tr>
                             }
@@ -93,7 +93,7 @@
                                         @attempt.StepExecution.StepName
                                     </td>
                                     <td>
-                                        <StepExecutionStatusBadgeComponent ExecutionStatus="attempt.ExecutionStatus" />
+                                        <StepExecutionStatusBadge ExecutionStatus="attempt.ExecutionStatus" />
                                     </td>
                                 </tr>
                             }

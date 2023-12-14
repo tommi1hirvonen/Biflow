@@ -1,7 +1,7 @@
 ﻿
 ﻿<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Large" Title="@stepExecutionAttempt?.StepExecution.StepName">
     <BodyTemplate>
-        <StepExecutionDetailsComponent StepExecutionAttempt="stepExecutionAttempt" ShowExtraDetails="true" />
+        <StepExecutionDetails StepExecutionAttempt="stepExecutionAttempt" ShowExtraDetails="true" />
     </BodyTemplate>
     <FooterTemplate>
         <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>

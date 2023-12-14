@@ -211,7 +211,7 @@
                         Status
                     </TitleTemplate>
                     <ItemTemplate Context="item">
-                        <JobExecutionStatusBadgeComponent ExecutionStatus="item" />
+                        <JobExecutionStatusBadge ExecutionStatus="item" />
                     </ItemTemplate>
                 </FilterDropdown>
             }
@@ -236,7 +236,7 @@
                         Status
                     </TitleTemplate>
                     <ItemTemplate Context="item">
-                        <StepExecutionStatusBadgeComponent ExecutionStatus="item" />
+                        <StepExecutionStatusBadge ExecutionStatus="item" />
                     </ItemTemplate>
                 </FilterDropdown>
                 <FilterDropdown TItem="string"
@@ -293,18 +293,18 @@
 <div class="card shadow-sm pt-2 mt-3 my-3 table-responsive">
     @if (!showSteps && !showGraph)
     {
-        <JobExecutionsTableComponent Executions="FilteredExecutions" />
+        <JobExecutionsTable Executions="FilteredExecutions" />
     }
     else if (!showSteps)
     {
-        <JobExecutionsGraphComponent Executions="FilteredExecutions" />
+        <JobExecutionsGraph Executions="FilteredExecutions" />
     }
     else if (!showGraph)
     {
-        <StepExecutionsTableComponent Executions="FilteredStepExecutions" />
+        <StepExecutionsTable Executions="FilteredStepExecutions" />
     }
     else
     {
-        <StepExecutionsGraphComponent Executions="FilteredStepExecutions" />
+        <StepExecutionsGraph Executions="FilteredStepExecutions" />
     }
 </div>

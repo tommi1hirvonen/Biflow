@@ -132,7 +132,7 @@
             <div class="d-flex justify-content-between">
                 <span class="fw-bold">Progress</span>
                 <span class="small align-self-end">@($"{execution?.GetProgressPercent() ?? 0}%")</span>
-                <span><JobExecutionStatusBadgeComponent ExecutionStatus="@execution?.ExecutionStatus" /></span>
+                <span><JobExecutionStatusBadge ExecutionStatus="@execution?.ExecutionStatus" /></span>
             </div>
             <div class="progress mt-1 @execution?.ExecutionStatus.ToString().ToLower()" style="height: 8px;">
                 <div class="progress-bar" style="width: @($"{execution?.GetProgressPercent() ?? 0}%");" />
@@ -155,7 +155,7 @@
                             @foreach (var status in Enum.GetValues<ExecutionStatus>())
                             {
                                 <HxDropdownItem OnClick="() => UpdateExecutionStatusAsync(status)">
-                                    <JobExecutionStatusBadgeComponent ExecutionStatus="status" />
+                                    <JobExecutionStatusBadge ExecutionStatus="status" />
                                 </HxDropdownItem>
                             }
                         </HxDropdownMenu>
@@ -218,7 +218,7 @@
                     </tr>
                     <tr>
                         <td class="fw-bold">Status</td>
-                        <td><JobExecutionStatusBadgeComponent ExecutionStatus="@execution.ExecutionStatus" /></td>
+                        <td><JobExecutionStatusBadge ExecutionStatus="@execution.ExecutionStatus" /></td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Number of steps</td>
@@ -423,7 +423,7 @@
                         Status
                     </TitleTemplate>
                     <ItemTemplate Context="item">
-                        <StepExecutionStatusBadgeComponent ExecutionStatus="item" />
+                        <StepExecutionStatusBadge ExecutionStatus="item" />
                     </ItemTemplate>
                 </FilterDropdown>
                 <FilterDropdown TItem="string"
@@ -483,7 +483,7 @@
 @if (ShowReport == Report.List)
 {
     <div class="card shadow-sm mt-3 pt-2 table-responsive mb-4">
-        <StepExecutionsTableComponent
+        <StepExecutionsTable
             ShowDetailed="false"
             Executions="FilteredExecutions
                         ?.OrderBy(e => sortMode switch
@@ -507,7 +507,7 @@
 else if (ShowReport == Report.Gantt)
 {
     <div class="card shadow-sm mt-3 pt-3 mb-4">
-        <StepExecutionsGraphComponent
+        <StepExecutionsGraph
             Executions="FilteredExecutions"
             SortMode="sortMode"
             DetailStepProvider="e => Executions?.FirstOrDefault(x => x.ExecutionId == e.ExecutionId && x.StepId == e.StepId && x.RetryAttemptIndex == e.RetryAttemptIndex)" />
@@ -521,19 +521,19 @@ else if (ShowReport == Report.Graph)
 else if (ShowReport == Report.Rerun)
 {
     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-            <RerunComponent Execution="execution" />
+            <RerunBuilder Execution="execution" />
     </AuthorizeView>
 }
 else if (ShowReport == Report.Statuses)
 {
     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-        <StepStatusesComponent Execution="execution" />
+        <StepStatusesEdit Execution="execution" />
     </AuthorizeView>
 }
 else if (ShowReport == Report.History && execution?.JobId is Guid jobId)
 {
     <div class="mt-3">
-        <JobHistoryComponent JobId="jobId" />
+        <JobHistory JobId="jobId" />
     </div>
 }
 

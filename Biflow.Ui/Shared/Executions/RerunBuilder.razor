@@ -84,7 +84,7 @@ else if (builder is null)
                             Status
                         </TitleTemplate>
                         <ItemTemplate Context="item">
-                            <StepExecutionStatusBadgeComponent ExecutionStatus="item" />
+                            <StepExecutionStatusBadge ExecutionStatus="item" />
                         </ItemTemplate>
                     </FilterDropdown>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
@@ -216,7 +216,7 @@ else if (builder is null)
                                     <HighlightableText Text="@step.StepName" PartToHighlight="@stepNameFilter" />
                                 </td>
                                 <td>
-                                    <StepExecutionStatusBadgeComponent ExecutionStatus="status" />
+                                    <StepExecutionStatusBadge ExecutionStatus="status" />
                                 </td>
                                 <td class="@(builder?.DependencyMode == true ? "text-body-tertiary" : null)">
                                     <CxIcon Icon="FeatherIcon.Layers" />
