@@ -205,7 +205,7 @@
                                         }
                                     </th>
                                 }
-                                @if (tableData.IsEditable && editModeEnabled && Table.AllowDelete)
+                                @if (tableData.IsEditable && editModeEnabled)
                                 {
                                     <th></th>    
                                 }
@@ -352,10 +352,13 @@
                                             }
                                         </td>
                                     }
-                                    @if (tableData.IsEditable && editModeEnabled && (Table.AllowDelete || Table.AllowInsert))
+                                    @if (tableData.IsEditable && editModeEnabled)
                                     {
                                         <td>
                                             <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-sm btn-auto" @onclick="row.RevertChanges" title="Revert changes" disabled=@(!row.HasChanges)>
+                                                    <CxIcon Icon="LucideIcon.Undo2" />
+                                                </button>
                                                 @if (Table.AllowInsert)
                                                 {
                                                     <button class="btn btn-sm btn-auto" @onclick="() => tableData.AddRow(row)" title="Copy record">

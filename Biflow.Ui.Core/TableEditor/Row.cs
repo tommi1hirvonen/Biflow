@@ -7,25 +7,24 @@ public class Row
 {
     private readonly TableData _parentTable;
     private readonly IDictionary<string, object?>? _initialValues;
-    private readonly ObservableDictionary<string, object?> _values;
     private readonly string[] _upsertableColumns;
     private readonly string[] _primaryKeyColumns;
 
+    private ObservableDictionary<string, object?> _values;
     private bool _valuesChanged = false;
-    private bool _isCopy = false;
 
     public IDictionary<string, object?> Values => _values;
 
-    public ColumnValueIndexer<byte?> ByteIndexer { get; }
-    public ColumnValueIndexer<short?> ShortIndexer { get; }
-    public ColumnValueIndexer<int?> IntIndexer { get; }
-    public ColumnValueIndexer<long?> LongIndexer { get; }
-    public ColumnValueIndexer<decimal?> DecimalIndexer { get; }
-    public ColumnValueIndexer<double?> DoubleIndexer { get; }
-    public ColumnValueIndexer<float?> FloatIndexer { get; }
-    public ColumnValueIndexer<string?> StringIndexer { get; }
-    public ColumnValueIndexer<bool?> BooleanIndexer { get; }
-    public ColumnValueIndexer<DateTime?> DateTimeIndexer { get; }
+    public ColumnValueIndexer<byte?> ByteIndexer { get; private set; }
+    public ColumnValueIndexer<short?> ShortIndexer { get; private set; }
+    public ColumnValueIndexer<int?> IntIndexer { get; private set; }
+    public ColumnValueIndexer<long?> LongIndexer { get; private set; }
+    public ColumnValueIndexer<decimal?> DecimalIndexer { get; private set; }
+    public ColumnValueIndexer<double?> DoubleIndexer { get; private set; }
+    public ColumnValueIndexer<float?> FloatIndexer { get; private set; }
+    public ColumnValueIndexer<string?> StringIndexer { get; private set; }
+    public ColumnValueIndexer<bool?> BooleanIndexer { get; private set; }
+    public ColumnValueIndexer<DateTime?> DateTimeIndexer { get; private set; }
 
     internal bool ToBeDeleted { get; private set; }
     
@@ -33,13 +32,15 @@ public class Row
 
     public bool IsNewRow { get; }
 
-    public bool HasChanges => IsNewRow || _isCopy || _valuesChanged;
+    public bool StickToTop { get; } = false;
+
+    public bool HasChanges => _valuesChanged;
 
     public Row(Row other) : this(other._parentTable, other.IsUpdateable, other.Values.ToDictionary())
     {
         // Clear initial values after base constructor because this is in essence a new row.
         _initialValues = null;
-        _isCopy = true;
+        IsNewRow = true;
         var columnsToClear = _parentTable.Columns
             .Where(c => c.IsIdentity || c.IsComputed)
             .Select(c => c.Name)
@@ -69,7 +70,8 @@ public class Row
 
         IsUpdateable = isUpdateable;
         IsNewRow = initialValues is null;
-        
+        StickToTop = initialValues is null;
+
         ByteIndexer = new(Values);
         ShortIndexer = new(Values);
         IntIndexer = new(Values);
@@ -125,6 +127,27 @@ public class Row
     {
         _parentTable.HasChanges = true;
         _valuesChanged = Values.Any(HasChanged);
+    }
+
+    public void RevertChanges()
+    {
+        if (_initialValues is null)
+        {
+            return;
+        }
+
+        _values = new(_initialValues, OnValuesChanged);
+        ByteIndexer = new(Values);
+        ShortIndexer = new(Values);
+        IntIndexer = new(Values);
+        LongIndexer = new(Values);
+        DecimalIndexer = new(Values);
+        DoubleIndexer = new(Values);
+        FloatIndexer = new(Values);
+        StringIndexer = new(Values);
+        BooleanIndexer = new(Values);
+        DateTimeIndexer = new(Values);
+        _valuesChanged = false;
     }
 
     public void Delete()
