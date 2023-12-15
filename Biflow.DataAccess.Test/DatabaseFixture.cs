@@ -96,9 +96,9 @@ public class DatabaseFixture : IAsyncLifetime
                 ParameterValueType = ParameterValueType.Double,
                 ValueDouble = 123.456
             };
-            job1.JobParameters = new List<JobParameter> { jobParameter1, jobParameter2, jobParameter3 };
+            job1.JobParameters = [jobParameter1, jobParameter2, jobParameter3];
             var jobConcurrency = new JobConcurrency { Job = job1, StepType = StepType.Sql, MaxParallelSteps = 1 };
-            job1.JobConcurrencies = new List<JobConcurrency> { jobConcurrency };
+            job1.JobConcurrencies = [jobConcurrency];
 
             var tag1 = new Tag("Test tag") { Color = TagColor.DarkGray };
             var tag2 = new Tag("Another tag") { Color = TagColor.Red };
@@ -109,7 +109,7 @@ public class DatabaseFixture : IAsyncLifetime
                 ExecutionPhase = 10,
                 SqlStatement = "select 1",
                 Connection = connection,
-                Tags = new List<Tag> { tag1, tag2 }
+                Tags = [tag1, tag2]
             };
 
             var step2 = new SqlStep(job1.JobId)
@@ -119,10 +119,10 @@ public class DatabaseFixture : IAsyncLifetime
                 ExecutionPhase = 20,
                 SqlStatement = "select @param",
                 Connection = connection,
-                Tags = new List<Tag> { tag1 }
+                Tags = [tag1]
             };
             var step2Dependency = new Dependency(step2.StepId, step1.StepId) { Step = step2, DependantOnStep = step1, DependencyType = DependencyType.OnCompleted };
-            step2.Dependencies = new List<Dependency> { step2Dependency };
+            step2.Dependencies = [step2Dependency];
             var step2Parameter = new SqlStepParameter
             {
                 Step = step2,
@@ -130,7 +130,7 @@ public class DatabaseFixture : IAsyncLifetime
                 ParameterValueType = ParameterValueType.Int32,
                 ValueInt32 = 10
             };
-            step2.StepParameters = new List<SqlStepParameter> { step2Parameter };
+            step2.StepParameters = [step2Parameter];
 
             var step3 = new SqlStep(job1.JobId)
             {
@@ -138,7 +138,7 @@ public class DatabaseFixture : IAsyncLifetime
                 ExecutionPhase = 20,
                 SqlStatement = "select @param",
                 Connection = connection,
-                Tags = new List<Tag> { tag1 }
+                Tags = [tag1]
             };
             var step3Parameter = new SqlStepParameter
             {
@@ -147,7 +147,7 @@ public class DatabaseFixture : IAsyncLifetime
                 ParameterValueType = ParameterValueType.String,
                 InheritFromJobParameter = jobParameter1
             };
-            step3.StepParameters = new List<SqlStepParameter> { step3Parameter };
+            step3.StepParameters = [step3Parameter];
 
             var step4 = new SqlStep(job1.JobId)
             {
@@ -155,10 +155,10 @@ public class DatabaseFixture : IAsyncLifetime
                 ExecutionPhase = 30,
                 SqlStatement = "select @param",
                 Connection = connection,
-                Tags = new List<Tag> { tag1 }
+                Tags = [tag1]
             };
             var step4Dependency = new Dependency(step4.StepId, step3.StepId) { Step = step4, DependantOnStep = step3, DependencyType = DependencyType.OnSucceeded };
-            step4.Dependencies = new List<Dependency> { step4Dependency };
+            step4.Dependencies = [step4Dependency];
             var step4Parameter = new SqlStepParameter
             {
                 Step = step4,
@@ -167,7 +167,7 @@ public class DatabaseFixture : IAsyncLifetime
                 UseExpression = true,
                 Expression = new EvaluationExpression { Expression = "DateTime.Now" }
             };
-            step4.StepParameters = new List<SqlStepParameter> { step4Parameter };
+            step4.StepParameters = [step4Parameter];
 
             var step3Target = new DataObject
             {
@@ -192,7 +192,7 @@ public class DatabaseFixture : IAsyncLifetime
 
             step4.DataObjects = [dataObjectLink_4_4];
 
-            job1.Steps = new List<Step> { step1, step2, step3, step4 };
+            job1.Steps = [step1, step2, step3, step4];
 
             var job2 = new Job
             {
@@ -211,8 +211,8 @@ public class DatabaseFixture : IAsyncLifetime
                 ExecutionPhase = 0,
                 JobExecuteSynchronized = true,
                 JobToExecute = job1,
-                TagFilters = new List<Tag> { tag2 },
-                Tags = new List<Tag>()
+                TagFilters = [tag2],
+                Tags = []
             };
 
             var step6 = new JobStep(job2.JobId)
@@ -221,8 +221,8 @@ public class DatabaseFixture : IAsyncLifetime
                 ExecutionPhase = 0,
                 JobExecuteSynchronized = true,
                 JobToExecute = job1,
-                TagFilters = new List<Tag> { tag1, tag2 },
-                Tags = new List<Tag>()
+                TagFilters = [tag1, tag2],
+                Tags = []
             };
 
             var step7 = new SqlStep(job2.JobId)
@@ -232,7 +232,7 @@ public class DatabaseFixture : IAsyncLifetime
                 ExecutionPhase = 30,
                 SqlStatement = "select 1",
                 Connection = connection,
-                Tags = new List<Tag> { tag1 }
+                Tags = [tag1]
             };
 
             var step8 = new SqlStep(job2.JobId)
@@ -241,24 +241,24 @@ public class DatabaseFixture : IAsyncLifetime
                 ExecutionPhase = 30,
                 SqlStatement = "select 1",
                 Connection = connection,
-                Tags = new List<Tag> { tag1 }
+                Tags = [tag1]
             };
 
-            job2.Steps = new List<Step> { step5, step6, step7, step8 };
+            job2.Steps = [step5, step6, step7, step8];
 
             var schedule1 = new Schedule(job1.JobId)
             {
                 Job = job1,
                 ScheduleName = "Test schedule",
                 CronExpression = "",
-                Tags = new List<Tag>()
+                Tags = []
             };
             var schedule2 = new Schedule(job2.JobId)
             {
                 Job = job2,
                 ScheduleName = "Another schedule",
                 CronExpression = "",
-                Tags = new List<Tag>() { tag1 }
+                Tags = [tag1]
             };
 
             context.AddRange(job1, job2, schedule1, schedule2);
