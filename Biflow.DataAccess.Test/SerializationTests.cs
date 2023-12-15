@@ -87,6 +87,16 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
         Assert.NotEmpty(items);
         Assert.All(items, x => Assert.NotEqual(x.BlobStorageClientId, Guid.Empty));
     }
+
+    [Fact]
+    public void Serialize_Tags()
+    {
+        var json = JsonSerializer.Serialize(fixture.Tags, Options);
+        var items = JsonSerializer.Deserialize<Tag[]>(json, Options);
+        Assert.NotNull(items);
+        Assert.NotEmpty(items);
+        Assert.All(items, x => Assert.NotEqual(x.TagId, Guid.Empty));
+    }
 }
 
 public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
@@ -101,6 +111,7 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
     public FunctionApp[] FunctionApps { get; private set; } = [];
     public QlikCloudClient[] QlikCloudClients { get; private set; } = [];
     public BlobStorageClient[] BlobStorageClients { get; private set; } = [];
+    public Tag[] Tags { get; private set; } = [];
 
     public Task DisposeAsync() => Task.CompletedTask;
 
@@ -111,6 +122,7 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
             .AsNoTracking()
             .Include(j => j.JobParameters)
             .Include(j => j.JobConcurrencies)
+            .Include(j => j.Schedules).ThenInclude(s => s.Tags)
             .ToArrayAsync();
         JobCategories = await context.JobCategories
             .AsNoTracking()
@@ -140,6 +152,9 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
             .ThenInclude(t => t.DataObject)
             .Include(s => s.Tags)
             .Include(s => s.ExecutionConditionParameters)
+            .ToArrayAsync();
+        Tags = await context.Tags
+            .AsNoTracking()
             .ToArrayAsync();
     }
 }

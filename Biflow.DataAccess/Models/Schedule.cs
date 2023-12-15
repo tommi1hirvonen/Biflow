@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
@@ -7,6 +8,7 @@ namespace Biflow.DataAccess.Models;
 public class Schedule(Guid jobId)
 {
     [Key]
+    [JsonInclude]
     public Guid ScheduleId { get; private set; }
 
     [NotEmptyGuid]
@@ -16,6 +18,7 @@ public class Schedule(Guid jobId)
     [MaxLength(250)]
     public string ScheduleName { get; set; } = string.Empty;
 
+    [JsonIgnore]
     public Job Job { get; set; } = null!;
 
     [Required]

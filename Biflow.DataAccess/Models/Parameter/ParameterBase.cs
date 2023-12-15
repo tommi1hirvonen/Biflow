@@ -8,6 +8,7 @@ public abstract class ParameterBase
 {
     [Required]
     [Display(Name = "Id")]
+    [JsonInclude]
     public Guid ParameterId { get; protected set; }
 
     [Required]
