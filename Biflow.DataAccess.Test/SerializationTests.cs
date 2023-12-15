@@ -97,6 +97,16 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
         Assert.NotEmpty(items);
         Assert.All(items, x => Assert.NotEqual(x.TagId, Guid.Empty));
     }
+
+    [Fact]
+    public void Serialize_DataObjects()
+    {
+        var json = JsonSerializer.Serialize(fixture.DataObjects, Options);
+        var items = JsonSerializer.Deserialize<DataObject[]>(json, Options);
+        Assert.NotNull(items);
+        Assert.NotEmpty(items);
+        Assert.All(items, x => Assert.NotEqual(x.ObjectId, Guid.Empty));
+    }
 }
 
 public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
@@ -112,6 +122,7 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
     public QlikCloudClient[] QlikCloudClients { get; private set; } = [];
     public BlobStorageClient[] BlobStorageClients { get; private set; } = [];
     public Tag[] Tags { get; private set; } = [];
+    public DataObject[] DataObjects {  get; private set; } = [];
 
     public Task DisposeAsync() => Task.CompletedTask;
 
@@ -154,6 +165,9 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
             .Include(s => s.ExecutionConditionParameters)
             .ToArrayAsync();
         Tags = await context.Tags
+            .AsNoTracking()
+            .ToArrayAsync();
+        DataObjects = await context.DataObjects
             .AsNoTracking()
             .ToArrayAsync();
     }
