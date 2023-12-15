@@ -3,6 +3,7 @@ using Azure.Identity;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
@@ -11,6 +12,7 @@ public class FunctionApp
 {
     [Required]
     [Display(Name = "Function app id")]
+    [JsonInclude]
     public Guid FunctionAppId { get; private set; }
 
     [Required]
@@ -44,8 +46,10 @@ public class FunctionApp
     [Display(Name = "App registration")]
     public Guid? AppRegistrationId { get; set; }
 
+    [JsonIgnore]
     public AppRegistration AppRegistration { get; set; } = null!;
 
+    [JsonIgnore]
     public IList<FunctionStep> Steps { get; set; } = null!;
 
     private const string ResourceUrl = "https://management.azure.com//.default";

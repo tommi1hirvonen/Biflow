@@ -65,7 +65,7 @@ public class DatabaseFixture : IAsyncLifetime
             var context = await DbContextFactory.CreateDbContextAsync();
 
 
-            // SETTINGS
+            #region SETTINGS
             var connection = new SqlConnectionInfo("Test connection", _connectionString);
 
             var appRegistration = new AppRegistration
@@ -91,9 +91,18 @@ public class DatabaseFixture : IAsyncLifetime
                 PipelineClientName = "Test Synapse"
             };
 
+            var functionApp = new FunctionApp
+            {
+                AppRegistration = appRegistration,
+                FunctionAppName = "Test function app",
+                SubscriptionId = "some-subscription-id",
+                ResourceGroupName = "some-resource-group-name",
+                ResourceName = "some-resource-name",
+                FunctionAppKey = "somefunctionappkey"
+            };
+            #endregion
 
-            // JOB 1
-
+            #region JOB 1
             var job1 = new Job
             {
                 JobName = "Test job",
@@ -222,9 +231,9 @@ public class DatabaseFixture : IAsyncLifetime
             step4.DataObjects = [dataObjectLink_4_4];
 
             job1.Steps = [step1, step2, step3, step4];
+            #endregion
 
-            // JOB 2
-
+            #region JOB 2
             var job2 = new Job
             {
                 JobName = "Another job",
@@ -293,11 +302,20 @@ public class DatabaseFixture : IAsyncLifetime
                 Tags = []
             };
 
-            job2.Steps = [step5, step6, step7, step8, step9, step10];
+            var step11 = new FunctionStep(job2.JobId)
+            {
+                StepName = "Test step 11",
+                ExecutionPhase = 45,
+                FunctionApp = functionApp,
+                FunctionInput = "test-input",
+                FunctionUrl = "http://function-url.com/test-function",
+                Tags = []
+            };
 
+            job2.Steps = [step5, step6, step7, step8, step9, step10, step11];
+            #endregion
 
-            // SCHEDULES
-
+            #region SCHEDULES
             var schedule1 = new Schedule(job1.JobId)
             {
                 Job = job1,
@@ -312,6 +330,7 @@ public class DatabaseFixture : IAsyncLifetime
                 CronExpression = "",
                 Tags = [tag1]
             };
+            #endregion
 
             context.AddRange(job1, job2, schedule1, schedule2);
             await context.SaveChangesAsync();

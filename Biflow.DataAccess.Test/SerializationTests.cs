@@ -57,6 +57,16 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
         Assert.NotEmpty(items);
         Assert.All(items, x => Assert.NotEqual(x.PipelineClientId, Guid.Empty));
     }
+
+    [Fact]
+    public void Serialize_FunctionApps()
+    {
+        var json = JsonSerializer.Serialize(fixture.FunctionApps, Options);
+        var items = JsonSerializer.Deserialize<FunctionApp[]>(json, Options);
+        Assert.NotNull(items);
+        Assert.NotEmpty(items);
+        Assert.All(items, x => Assert.NotEqual(x.FunctionAppId, Guid.Empty));
+    }
 }
 
 public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
@@ -68,6 +78,7 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
     public Step[] Steps {  get; private set; } = [];
     public AppRegistration[] AppRegistrations { get; private set; } = [];
     public PipelineClient[] PipelineClients { get; private set; } = [];
+    public FunctionApp[] FunctionApps { get; private set; } = [];
 
     public Task DisposeAsync() => Task.CompletedTask;
 
@@ -86,6 +97,9 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
             .AsNoTracking()
             .ToArrayAsync();
         PipelineClients = await context.PipelineClients
+            .AsNoTracking()
+            .ToArrayAsync();
+        FunctionApps = await context.FunctionApps
             .AsNoTracking()
             .ToArrayAsync();
         Steps = await context.Steps
