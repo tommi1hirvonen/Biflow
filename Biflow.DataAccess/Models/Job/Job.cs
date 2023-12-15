@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
@@ -105,18 +106,25 @@ public class Job
     [Column("JobCategoryId")]
     public Guid? CategoryId { get; set; }
 
+    [JsonIgnore]
     public JobCategory? Category { get; set; }
 
+    [JsonIgnore]
     public ICollection<Step> Steps { get; set; } = null!;
-    
+
+    [JsonIgnore]
     public ICollection<JobStep> JobSteps { get; set; } = null!;
-    
+
+    [JsonIgnore]
     public ICollection<Schedule> Schedules { get; set; } = null!;
-    
+
+    [JsonIgnore]
     public ICollection<Execution> Executions { get; set; } = null!;
-    
+
+    [JsonIgnore]
     public ICollection<JobSubscription> JobSubscriptions { get; set; } = null!;
 
+    [JsonIgnore]
     public ICollection<JobTagSubscription> JobTagSubscriptions { get; set; } = null!;
 
     [ValidateComplexType]
@@ -125,6 +133,7 @@ public class Job
     [ValidateComplexType]
     public ICollection<JobConcurrency> JobConcurrencies { get; set; } = null!;
 
+    [JsonIgnore]
     public ICollection<User> Users { get; set; } = null!;
 
     [Display(Name = "Created by")]
