@@ -19,17 +19,43 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
     };
 
     [Fact]
-    public void SerializeJobs()
+    public void Serialize_Jobs()
     {
         var json = JsonSerializer.Serialize(fixture.Jobs, Options);
-        var _ = JsonSerializer.Deserialize<Job[]>(json, Options);
+        var items = JsonSerializer.Deserialize<Job[]>(json, Options);
+        Assert.NotNull(items);
+        Assert.NotEmpty(items);
+        Assert.All(items, x => Assert.NotEqual(x.JobId, Guid.Empty));
     }
 
     [Fact]
-    public void SerializeJobCategories()
+    public void Serialize_JobCategories()
     {
         var json = JsonSerializer.Serialize(fixture.JobCategories, Options);
-        var _ = JsonSerializer.Deserialize<JobCategory[]>(json, Options);
+        var items = JsonSerializer.Deserialize<JobCategory[]>(json, Options);
+        Assert.NotNull(items);
+        Assert.NotEmpty(items);
+        Assert.All(items, x => Assert.NotEqual(x.CategoryId, Guid.Empty));
+    }
+
+    [Fact]
+    public void Serialize_AppRegistrations()
+    {
+        var json = JsonSerializer.Serialize(fixture.AppRegistrations, Options);
+        var items = JsonSerializer.Deserialize<AppRegistration[]>(json, Options);
+        Assert.NotNull(items);
+        Assert.NotEmpty(items);
+        Assert.All(items, x => Assert.NotEqual(x.AppRegistrationId, Guid.Empty));
+    }
+
+    [Fact]
+    public void Serialize_PipelineClients()
+    {
+        var json = JsonSerializer.Serialize(fixture.PipelineClients, Options);
+        var items = JsonSerializer.Deserialize<PipelineClient[]>(json, Options);
+        Assert.NotNull(items);
+        Assert.NotEmpty(items);
+        Assert.All(items, x => Assert.NotEqual(x.PipelineClientId, Guid.Empty));
     }
 }
 
@@ -40,6 +66,8 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
     public Job[] Jobs { get; private set; } = [];
     public JobCategory[] JobCategories { get; private set; } = [];
     public Step[] Steps {  get; private set; } = [];
+    public AppRegistration[] AppRegistrations { get; private set; } = [];
+    public PipelineClient[] PipelineClients { get; private set; } = [];
 
     public Task DisposeAsync() => Task.CompletedTask;
 
@@ -52,6 +80,12 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
             .Include(j => j.JobConcurrencies)
             .ToArrayAsync();
         JobCategories = await context.JobCategories
+            .AsNoTracking()
+            .ToArrayAsync();
+        AppRegistrations = await context.AppRegistrations
+            .AsNoTracking()
+            .ToArrayAsync();
+        PipelineClients = await context.PipelineClients
             .AsNoTracking()
             .ToArrayAsync();
         Steps = await context.Steps

@@ -1,12 +1,16 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
 [Table("PipelineClient")]
+[JsonDerivedType(typeof(DataFactory), nameof(PipelineClientType.DataFactory))]
+[JsonDerivedType(typeof(SynapseWorkspace), nameof(PipelineClientType.Synapse))]
 public abstract class PipelineClient(PipelineClientType type)
 {
     [Key]
+    [JsonInclude]
     public Guid PipelineClientId { get; private set; }
 
     public string? PipelineClientName { get; set; }
@@ -17,8 +21,10 @@ public abstract class PipelineClient(PipelineClientType type)
     [Display(Name = "App registration")]
     public Guid? AppRegistrationId { get; set; }
 
+    [JsonIgnore]
     public AppRegistration AppRegistration { get; set; } = null!;
 
+    [JsonIgnore]
     public IList<PipelineStep> Steps { get; set; } = null!;
 
     public abstract Task<string> StartPipelineRunAsync(ITokenService tokenService, string pipelineName, IDictionary<string, object> parameters, CancellationToken cancellationToken);

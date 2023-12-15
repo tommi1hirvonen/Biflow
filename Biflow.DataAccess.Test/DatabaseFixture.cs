@@ -63,7 +63,36 @@ public class DatabaseFixture : IAsyncLifetime
 
             // Initialize seed data
             var context = await DbContextFactory.CreateDbContextAsync();
+
+
+            // SETTINGS
             var connection = new SqlConnectionInfo("Test connection", _connectionString);
+
+            var appRegistration = new AppRegistration
+            {
+                AppRegistrationName = "Test app registration",
+                ClientId = "some-client-id",
+                ClientSecret = "some-client-secret",
+                TenantId = "some-tenant-id"
+            };
+
+            var dataFactory = new DataFactory
+            {
+                AppRegistration = appRegistration,
+                PipelineClientName = "Test Data Factory",
+                SubscriptionId = "some-subscription-id",
+                ResourceGroupName = "some-resource-group-name",
+                ResourceName = "some-resource-name"
+            };
+
+            var synapseWorkspace = new SynapseWorkspace("some-workspace-url")
+            {
+                AppRegistration = appRegistration,
+                PipelineClientName = "Test Synapse"
+            };
+
+
+            // JOB 1
 
             var job1 = new Job
             {
@@ -194,6 +223,8 @@ public class DatabaseFixture : IAsyncLifetime
 
             job1.Steps = [step1, step2, step3, step4];
 
+            // JOB 2
+
             var job2 = new Job
             {
                 JobName = "Another job",
@@ -244,7 +275,28 @@ public class DatabaseFixture : IAsyncLifetime
                 Tags = [tag1]
             };
 
-            job2.Steps = [step5, step6, step7, step8];
+            var step9 = new PipelineStep(job2.JobId)
+            {
+                StepName = "Test step 9",
+                ExecutionPhase = 35,
+                PipelineClient = dataFactory,
+                PipelineName = "test pipeline",
+                Tags = []
+            };
+
+            var step10 = new PipelineStep(job2.JobId)
+            {
+                StepName = "Test step 10",
+                ExecutionPhase = 40,
+                PipelineClient = synapseWorkspace,
+                PipelineName = "test pipeline 2",
+                Tags = []
+            };
+
+            job2.Steps = [step5, step6, step7, step8, step9, step10];
+
+
+            // SCHEDULES
 
             var schedule1 = new Schedule(job1.JobId)
             {

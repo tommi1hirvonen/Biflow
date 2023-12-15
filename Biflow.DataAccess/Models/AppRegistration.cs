@@ -5,6 +5,7 @@ using Microsoft.PowerBI.Api.Models;
 using Microsoft.Rest;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
@@ -14,6 +15,7 @@ public class AppRegistration
     [Key]
     [Required]
     [Display(Name = "App registration id")]
+    [JsonInclude]
     public Guid AppRegistrationId { get; private set; }
 
     [Required]
@@ -36,12 +38,16 @@ public class AppRegistration
     [Display(Name = "Client secret")]
     public string? ClientSecret { get; set; }
 
+    [JsonIgnore]
     public IList<DatasetStep> Steps { get; set; } = null!;
 
+    [JsonIgnore]
     public IList<PipelineClient> PipelineClients { get; set; } = null!;
 
+    [JsonIgnore]
     public IList<FunctionApp> FunctionApps { get; set; } = null!;
 
+    [JsonIgnore]
     public IList<BlobStorageClient> BlobStorageClients { get; set; } = null!;
 
     private const string PowerBIResourceUrl = "https://analysis.windows.net/powerbi/api/.default";

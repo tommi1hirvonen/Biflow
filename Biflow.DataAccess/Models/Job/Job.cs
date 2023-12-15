@@ -55,6 +55,7 @@ public class Job
     }
 
     [Key]
+    [JsonInclude]
     public Guid JobId { get; private set; }
 
     [Required]
