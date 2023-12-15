@@ -67,6 +67,16 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
         Assert.NotEmpty(items);
         Assert.All(items, x => Assert.NotEqual(x.FunctionAppId, Guid.Empty));
     }
+
+    [Fact]
+    public void Serialize_QlikCloudClients()
+    {
+        var json = JsonSerializer.Serialize(fixture.QlikCloudClients, Options);
+        var items = JsonSerializer.Deserialize<QlikCloudClient[]>(json, Options);
+        Assert.NotNull(items);
+        Assert.NotEmpty(items);
+        Assert.All(items, x => Assert.NotEqual(x.QlikCloudClientId, Guid.Empty));
+    }
 }
 
 public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
@@ -79,6 +89,7 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
     public AppRegistration[] AppRegistrations { get; private set; } = [];
     public PipelineClient[] PipelineClients { get; private set; } = [];
     public FunctionApp[] FunctionApps { get; private set; } = [];
+    public QlikCloudClient[] QlikCloudClients { get; private set; } = [];
 
     public Task DisposeAsync() => Task.CompletedTask;
 
@@ -100,6 +111,9 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
             .AsNoTracking()
             .ToArrayAsync();
         FunctionApps = await context.FunctionApps
+            .AsNoTracking()
+            .ToArrayAsync();
+        QlikCloudClients = await context.QlikCloudClients
             .AsNoTracking()
             .ToArrayAsync();
         Steps = await context.Steps

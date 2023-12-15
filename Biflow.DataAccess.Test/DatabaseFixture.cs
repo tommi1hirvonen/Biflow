@@ -100,6 +100,13 @@ public class DatabaseFixture : IAsyncLifetime
                 ResourceName = "some-resource-name",
                 FunctionAppKey = "somefunctionappkey"
             };
+
+            var qlikClient = new QlikCloudClient
+            {
+                QlikCloudClientName = "Test Qlik Cloud Client",
+                EnvironmentUrl = "https://test-qlik-url.com",
+                ApiToken = "some-api-token"
+            };
             #endregion
 
             #region JOB 1
@@ -312,7 +319,15 @@ public class DatabaseFixture : IAsyncLifetime
                 Tags = []
             };
 
-            job2.Steps = [step5, step6, step7, step8, step9, step10, step11];
+            var step12 = new QlikStep(job2.JobId, "some-app-id")
+            {
+                StepName = "Test step 12",
+                ExecutionPhase = 50,
+                QlikCloudClient = qlikClient,
+                Tags = []
+            };
+
+            job2.Steps = [step5, step6, step7, step8, step9, step10, step11, step12];
             #endregion
 
             #region SCHEDULES
