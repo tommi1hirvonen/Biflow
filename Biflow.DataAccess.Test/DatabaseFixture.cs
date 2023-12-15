@@ -147,20 +147,25 @@ public class DatabaseFixture : IAsyncLifetime
         var step3Target = new DataObject
         {
             ObjectUri = DataObject.CreateTableUri("TestServer", "TestDb", "TestSchema", "TestTable"),
-            MaxConcurrentWrites = 1,
-            Writers = new List<Step> { step3 },
-            Readers = new List<Step> { step4 }
+            MaxConcurrentWrites = 1
         };
-        step3.Targets = new List<DataObject> { step3Target };
-        step4.Sources = new List<DataObject> { step3Target };
+
+        var dataObjectLink_3_3 = new StepDataObject { DataObject = step3Target, Step = step3, ReferenceType = DataObjectReferenceType.Target };
+        var dataObjectLink_3_4 = new StepDataObject { DataObject = step3Target, Step = step4, ReferenceType = DataObjectReferenceType.Source };
+        step3Target.Steps = [dataObjectLink_3_3, dataObjectLink_3_4];
+
+        step3.DataObjects = [dataObjectLink_3_3];
 
         var step4Target = new DataObject
         {
             ObjectUri = DataObject.CreateTableUri("TestServer", "TestDb", "TestSchema", "TestTable2"),
-            MaxConcurrentWrites = 1,
-            Writers = new List<Step> { step4 }
+            MaxConcurrentWrites = 1
         };
-        step4.Targets = new List<DataObject> { step4Target };
+
+        var dataObjectLink_4_4 = new StepDataObject { DataObject = step4Target, Step = step4, ReferenceType = DataObjectReferenceType.Target };
+        step4Target.Steps = [dataObjectLink_4_4];
+
+        step4.DataObjects = [dataObjectLink_4_4];
 
         job1.Steps = new List<Step> { step1, step2, step3, step4 };
 

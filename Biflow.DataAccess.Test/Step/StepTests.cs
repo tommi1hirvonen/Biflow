@@ -21,9 +21,7 @@ public class StepTests(StepFixture stepFixture) : IClassFixture<StepFixture>
 
     [Fact] public void Job_NotNull() => Assert.NotNull(Step.Job);
 
-    [Fact] public void Sources_NotEmpty() => Assert.NotEmpty(Step.Sources);
-
-    [Fact] public void Targets_NotEmpty() => Assert.NotEmpty(Step.Targets);
+    [Fact] public void DataObjects_NotEmpty() => Assert.NotEmpty(Step.DataObjects);
 
     [Fact] public void Dependencies_NotEmpty() => Assert.NotEmpty(Step.Dependencies);
 
@@ -64,8 +62,7 @@ public class StepFixture(DatabaseFixture fixture) : IAsyncLifetime
             .Include(step => step.Tags)
             .Include(step => step.Dependencies)
             .ThenInclude(dep => dep.DependantOnStep)
-            .Include(step => step.Sources)
-            .Include(step => step.Targets)
+            .Include(step => step.DataObjects)
             .FirstAsync(step => step.StepName == "Test step 4");
     }
 }
