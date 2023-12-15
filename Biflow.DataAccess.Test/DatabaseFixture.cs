@@ -107,6 +107,14 @@ public class DatabaseFixture : IAsyncLifetime
                 EnvironmentUrl = "https://test-qlik-url.com",
                 ApiToken = "some-api-token"
             };
+
+            var blobClient = new BlobStorageClient
+            {
+                AppRegistration = appRegistration,
+                BlobStorageClientName = "Test blob storage client",
+                ConnectionMethod = BlobStorageConnectionMethod.AppRegistration,
+                StorageAccountUrl = "https://some-storage-account-url.com/"
+            };
             #endregion
 
             #region JOB 1
@@ -347,7 +355,7 @@ public class DatabaseFixture : IAsyncLifetime
             };
             #endregion
 
-            context.AddRange(job1, job2, schedule1, schedule2);
+            context.AddRange(job1, job2, schedule1, schedule2, blobClient);
             await context.SaveChangesAsync();
 
             _databaseInitialized = true;

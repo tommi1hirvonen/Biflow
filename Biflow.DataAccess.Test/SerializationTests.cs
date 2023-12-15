@@ -77,6 +77,16 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
         Assert.NotEmpty(items);
         Assert.All(items, x => Assert.NotEqual(x.QlikCloudClientId, Guid.Empty));
     }
+
+    [Fact]
+    public void Serialize_BlobStorageClients()
+    {
+        var json = JsonSerializer.Serialize(fixture.BlobStorageClients, Options);
+        var items = JsonSerializer.Deserialize<BlobStorageClient[]>(json, Options);
+        Assert.NotNull(items);
+        Assert.NotEmpty(items);
+        Assert.All(items, x => Assert.NotEqual(x.BlobStorageClientId, Guid.Empty));
+    }
 }
 
 public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
@@ -90,6 +100,7 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
     public PipelineClient[] PipelineClients { get; private set; } = [];
     public FunctionApp[] FunctionApps { get; private set; } = [];
     public QlikCloudClient[] QlikCloudClients { get; private set; } = [];
+    public BlobStorageClient[] BlobStorageClients { get; private set; } = [];
 
     public Task DisposeAsync() => Task.CompletedTask;
 
@@ -114,6 +125,9 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
             .AsNoTracking()
             .ToArrayAsync();
         QlikCloudClients = await context.QlikCloudClients
+            .AsNoTracking()
+            .ToArrayAsync();
+        BlobStorageClients = await context.BlobStorageClients
             .AsNoTracking()
             .ToArrayAsync();
         Steps = await context.Steps
