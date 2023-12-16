@@ -138,6 +138,27 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
         Assert.NotEmpty(items);
         Assert.All(items, x => Assert.NotEqual(x.ObjectId, Guid.Empty));
     }
+
+    [Fact]
+    public void Serialize_DataTables()
+    {
+        var json = JsonSerializer.Serialize(fixture.DataTables, Options);
+        var items = JsonSerializer.Deserialize<MasterDataTable[]>(json, Options);
+        Assert.NotNull(items);
+        Assert.NotEmpty(items);
+        Assert.All(items, x => Assert.NotEqual(x.DataTableId, Guid.Empty));
+        Assert.All(items.SelectMany(i => i.Lookups), x => Assert.NotEqual(x.LookupId, Guid.Empty));
+    }
+
+    [Fact]
+    public void Serialize_DataTableCategories()
+    {
+        var json = JsonSerializer.Serialize(fixture.DataTableCategories, Options);
+        var items = JsonSerializer.Deserialize<MasterDataTableCategory[]>(json, Options);
+        Assert.NotNull(items);
+        Assert.NotEmpty(items);
+        Assert.All(items, x => Assert.NotEqual(x.CategoryId, Guid.Empty));
+    }
 }
 
 public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
@@ -157,6 +178,9 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
 
     public Tag[] Tags { get; private set; } = [];
     public DataObject[] DataObjects {  get; private set; } = [];
+
+    public MasterDataTable[] DataTables { get; private set; } = [];
+    public MasterDataTableCategory[] DataTableCategories { get; private set; } = [];
 
     public Task DisposeAsync() => Task.CompletedTask;
 
@@ -207,6 +231,14 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
             .AsNoTracking()
             .ToArrayAsync();
         DataObjects = await context.DataObjects
+            .AsNoTracking()
+            .ToArrayAsync();
+
+        DataTables = await context.MasterDataTables
+            .AsNoTracking()
+            .Include(t => t.Lookups)
+            .ToArrayAsync();
+        DataTableCategories = await context.MasterDataTableCategories
             .AsNoTracking()
             .ToArrayAsync();
     }

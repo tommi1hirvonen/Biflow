@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
@@ -7,6 +8,7 @@ namespace Biflow.DataAccess.Models;
 public class MasterDataTable
 {
     [Key]
+    [JsonInclude]
     public Guid DataTableId { get; private set; }
 
     [Required]
@@ -37,18 +39,22 @@ public class MasterDataTable
     [Required]
     public Guid ConnectionId { get; set; }
 
+    [JsonIgnore]
     public SqlConnectionInfo Connection { get; set; } = null!;
 
     [Column("DataTableCategoryId")]
     public Guid? CategoryId { get; set; }
 
+    [JsonIgnore]
     public MasterDataTableCategory? Category { get; set; }
 
+    [JsonIgnore]
     public ICollection<User> Users { get; set; } = null!;
 
     [ValidateComplexType]
     public ICollection<MasterDataTableLookup> Lookups { get; set; } = null!;
 
+    [JsonIgnore]
     public ICollection<MasterDataTableLookup> DependentLookups { get; set; } = null!;
 
     public List<string> LockedColumns { get; set; } = [];

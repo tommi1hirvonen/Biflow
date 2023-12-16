@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
@@ -16,5 +17,6 @@ public class MasterDataTableCategory
     [Column("DataTableCategoryName")]
     public string CategoryName { get; set; } = "";
 
+    [JsonIgnore]
     public ICollection<MasterDataTable> Tables { get; set; } = null!;
 }

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
@@ -33,7 +34,9 @@ public class MasterDataTableLookup
 
     public LookupDisplayType LookupDisplayType { get; set; }
 
+    [JsonIgnore]
     public MasterDataTable Table { get; set; } = null!;
 
+    [JsonIgnore]
     public MasterDataTable LookupTable { get; set; } = null!;
 }

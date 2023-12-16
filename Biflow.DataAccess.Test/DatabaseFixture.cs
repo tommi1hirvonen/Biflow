@@ -421,7 +421,44 @@ public class DatabaseFixture : IAsyncLifetime
             };
             #endregion
 
-            context.AddRange(job1, job2, schedule1, schedule2, blobClient1, blobClient2, blobClient3);
+            #region DATA TABLES
+
+            var tableCategory = new MasterDataTableCategory { CategoryName = "Customer" };
+            var table1 = new MasterDataTable
+            {
+                DataTableName = "Customer Groups",
+                DataTableDescription = "Customer groups",
+                TargetSchemaName = "dbo",
+                TargetTableName = "CustomerGroup",
+                Connection = sqlConnection,
+                Category = tableCategory,
+                ColumnOrder = ["Customer Group ID", "Customer Group Name"]
+            };
+            var table2 = new MasterDataTable
+            {
+                DataTableName = "Customers",
+                DataTableDescription = "Customers",
+                TargetSchemaName = "dbo",
+                TargetTableName = "Customer",
+                Connection = sqlConnection,
+                Category = tableCategory,
+                ColumnOrder = ["Customer ID", "Customer Name", "Customer Group"],
+                HiddenColumns = ["Hidden Column"],
+                LockedColumns = ["Locked Column 1", "Locked Column 2"]
+            };
+            var lookup = new MasterDataTableLookup
+            {
+                Table = table2,
+                LookupTable = table1,
+                ColumnName = "Customer Group",
+                LookupValueColumn = "Customer Group ID",
+                LookupDescriptionColumn = "Customer Group Name",
+                LookupDisplayType = LookupDisplayType.ValueAndDescription
+            };
+            table2.Lookups = [lookup];
+            #endregion
+
+            context.AddRange(job1, job2, schedule1, schedule2, blobClient1, blobClient2, blobClient3, table1, table2);
             await context.SaveChangesAsync();
 
             _databaseInitialized = true;
