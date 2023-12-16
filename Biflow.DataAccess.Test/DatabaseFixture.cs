@@ -66,7 +66,9 @@ public class DatabaseFixture : IAsyncLifetime
 
 
             #region SETTINGS
-            var connection = new SqlConnectionInfo("Test connection", _connectionString);
+            var sqlConnection = new SqlConnectionInfo("Test SQL connection", _connectionString);
+
+            var asConnection = new AnalysisServicesConnectionInfo("Test AS connection", "Data Source=localhost");
 
             var appRegistration = new AppRegistration
             {
@@ -161,7 +163,7 @@ public class DatabaseFixture : IAsyncLifetime
                 StepName = "Test step 1",
                 ExecutionPhase = 10,
                 SqlStatement = "select 1",
-                Connection = connection,
+                Connection = sqlConnection,
                 Tags = [tag1, tag2]
             };
 
@@ -171,7 +173,7 @@ public class DatabaseFixture : IAsyncLifetime
                 StepDescription = "Test step 2 description",
                 ExecutionPhase = 20,
                 SqlStatement = "select @param",
-                Connection = connection,
+                Connection = sqlConnection,
                 Tags = [tag1]
             };
             var step2Dependency = new Dependency(step2.StepId, step1.StepId) { Step = step2, DependantOnStep = step1, DependencyType = DependencyType.OnCompleted };
@@ -190,7 +192,7 @@ public class DatabaseFixture : IAsyncLifetime
                 StepName = "Test step 3",
                 ExecutionPhase = 20,
                 SqlStatement = "select @param",
-                Connection = connection,
+                Connection = sqlConnection,
                 Tags = [tag1]
             };
             var step3Parameter = new SqlStepParameter
@@ -207,7 +209,7 @@ public class DatabaseFixture : IAsyncLifetime
                 StepName = "Test step 4",
                 ExecutionPhase = 30,
                 SqlStatement = "select @param",
-                Connection = connection,
+                Connection = sqlConnection,
                 Tags = [tag1]
             };
             var step4Dependency = new Dependency(step4.StepId, step3.StepId) { Step = step4, DependantOnStep = step3, DependencyType = DependencyType.OnSucceeded };
@@ -286,7 +288,7 @@ public class DatabaseFixture : IAsyncLifetime
                 StepName = "Test step 7",
                 ExecutionPhase = 30,
                 SqlStatement = "select 1",
-                Connection = connection,
+                Connection = sqlConnection,
                 Tags = [tag1]
             };
 
@@ -295,7 +297,7 @@ public class DatabaseFixture : IAsyncLifetime
                 StepName = "Test step 8",
                 ExecutionPhase = 30,
                 SqlStatement = "select 1",
-                Connection = connection,
+                Connection = sqlConnection,
                 Tags = [tag1]
             };
 
@@ -335,7 +337,14 @@ public class DatabaseFixture : IAsyncLifetime
                 Tags = []
             };
 
-            job2.Steps = [step5, step6, step7, step8, step9, step10, step11, step12];
+            var step13 = new TabularStep(job2.JobId, "TestModel")
+            {
+                StepName = "Test step 13",
+                ExecutionPhase = 55,
+                Connection = asConnection
+            };
+
+            job2.Steps = [step5, step6, step7, step8, step9, step10, step11, step12, step13];
             #endregion
 
             #region SCHEDULES

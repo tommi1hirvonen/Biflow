@@ -19,23 +19,13 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
     };
 
     [Fact]
-    public void Serialize_Jobs()
+    public void Serialize_Connections()
     {
-        var json = JsonSerializer.Serialize(fixture.Jobs, Options);
-        var items = JsonSerializer.Deserialize<Job[]>(json, Options);
+        var json = JsonSerializer.Serialize(fixture.Connections, Options);
+        var items = JsonSerializer.Deserialize<ConnectionInfoBase[]>(json, Options);
         Assert.NotNull(items);
         Assert.NotEmpty(items);
-        Assert.All(items, x => Assert.NotEqual(x.JobId, Guid.Empty));
-    }
-
-    [Fact]
-    public void Serialize_JobCategories()
-    {
-        var json = JsonSerializer.Serialize(fixture.JobCategories, Options);
-        var items = JsonSerializer.Deserialize<JobCategory[]>(json, Options);
-        Assert.NotNull(items);
-        Assert.NotEmpty(items);
-        Assert.All(items, x => Assert.NotEqual(x.CategoryId, Guid.Empty));
+        Assert.All(items, x => Assert.NotEqual(x.ConnectionId, Guid.Empty));
     }
 
     [Fact]
@@ -89,6 +79,26 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
     }
 
     [Fact]
+    public void Serialize_Jobs()
+    {
+        var json = JsonSerializer.Serialize(fixture.Jobs, Options);
+        var items = JsonSerializer.Deserialize<Job[]>(json, Options);
+        Assert.NotNull(items);
+        Assert.NotEmpty(items);
+        Assert.All(items, x => Assert.NotEqual(x.JobId, Guid.Empty));
+    }
+
+    [Fact]
+    public void Serialize_JobCategories()
+    {
+        var json = JsonSerializer.Serialize(fixture.JobCategories, Options);
+        var items = JsonSerializer.Deserialize<JobCategory[]>(json, Options);
+        Assert.NotNull(items);
+        Assert.NotEmpty(items);
+        Assert.All(items, x => Assert.NotEqual(x.CategoryId, Guid.Empty));
+    }
+
+    [Fact]
     public void Serialize_Tags()
     {
         var json = JsonSerializer.Serialize(fixture.Tags, Options);
@@ -113,14 +123,17 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
 {
     private readonly IDbContextFactory<AppDbContext> dbContextFactory = fixture.DbContextFactory;
 
-    public Job[] Jobs { get; private set; } = [];
-    public JobCategory[] JobCategories { get; private set; } = [];
-    public Step[] Steps {  get; private set; } = [];
+    public ConnectionInfoBase[] Connections { get; private set; } = [];
     public AppRegistration[] AppRegistrations { get; private set; } = [];
     public PipelineClient[] PipelineClients { get; private set; } = [];
     public FunctionApp[] FunctionApps { get; private set; } = [];
     public QlikCloudClient[] QlikCloudClients { get; private set; } = [];
     public BlobStorageClient[] BlobStorageClients { get; private set; } = [];
+    
+    public Job[] Jobs { get; private set; } = [];
+    public JobCategory[] JobCategories { get; private set; } = [];
+    public Step[] Steps { get; private set; } = [];
+
     public Tag[] Tags { get; private set; } = [];
     public DataObject[] DataObjects {  get; private set; } = [];
 
@@ -129,13 +142,8 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
     public async Task InitializeAsync()
     {
         using var context = await dbContextFactory.CreateDbContextAsync();
-        Jobs = await context.Jobs
-            .AsNoTracking()
-            .Include(j => j.JobParameters)
-            .Include(j => j.JobConcurrencies)
-            .Include(j => j.Schedules).ThenInclude(s => s.Tags)
-            .ToArrayAsync();
-        JobCategories = await context.JobCategories
+
+        Connections = await context.Connections
             .AsNoTracking()
             .ToArrayAsync();
         AppRegistrations = await context.AppRegistrations
@@ -153,6 +161,16 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
         BlobStorageClients = await context.BlobStorageClients
             .AsNoTracking()
             .ToArrayAsync();
+
+        Jobs = await context.Jobs
+            .AsNoTracking()
+            .Include(j => j.JobParameters)
+            .Include(j => j.JobConcurrencies)
+            .Include(j => j.Schedules).ThenInclude(s => s.Tags)
+            .ToArrayAsync();
+        JobCategories = await context.JobCategories
+            .AsNoTracking()
+            .ToArrayAsync();
         Steps = await context.Steps
             .AsNoTracking()
             .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.ExpressionParameters)}")
@@ -164,6 +182,7 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
             .Include(s => s.Tags)
             .Include(s => s.ExecutionConditionParameters)
             .ToArrayAsync();
+
         Tags = await context.Tags
             .AsNoTracking()
             .ToArrayAsync();

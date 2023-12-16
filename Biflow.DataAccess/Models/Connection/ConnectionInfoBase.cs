@@ -1,13 +1,17 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
 [Table("Connection")]
+[JsonDerivedType(typeof(SqlConnectionInfo), nameof(ConnectionType.Sql))]
+[JsonDerivedType(typeof(AnalysisServicesConnectionInfo), nameof(ConnectionType.AnalysisServices))]
 public abstract class ConnectionInfoBase(ConnectionType connectionType, string connectionName, string connectionString) : IComparable
 {
     [Key]
     [Display(Name = "Connection id")]
+    [JsonInclude]
     public Guid ConnectionId { get; private set; }
 
     [Required]
@@ -31,6 +35,7 @@ public abstract class ConnectionInfoBase(ConnectionType connectionType, string c
     };
 
     [NotMapped]
+    [JsonIgnore]
     public abstract IEnumerable<Step> Steps { get; }
 
 }
