@@ -159,7 +159,45 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
         Assert.NotEmpty(items);
         Assert.All(items, x => Assert.NotEqual(x.CategoryId, Guid.Empty));
     }
+
+    [Fact]
+    public void Serialize_Snapshot()
+    {
+        var snapshot = new Snapshot(
+            fixture.Connections,
+            fixture.AppRegistrations,
+            fixture.PipelineClients,
+            fixture.FunctionApps,
+            fixture.QlikCloudClients,
+            fixture.BlobStorageClients,
+            fixture.Jobs,
+            fixture.JobCategories,
+            fixture.Steps,
+            fixture.Tags,
+            fixture.DataObjects,
+            fixture.DataTables,
+            fixture.DataTableCategories);
+        var json = JsonSerializer.Serialize(snapshot, Options);
+        var items = JsonSerializer.Deserialize<Snapshot>(json, Options);
+        Assert.NotNull(items);
+    }
 }
+
+file record Snapshot(
+    ConnectionInfoBase[] Connections,
+    AppRegistration[] AppRegistrations,
+    PipelineClient[] PipelineClients,
+    FunctionApp[] FunctionApps,
+    QlikCloudClient[] QlikCloudClients,
+    BlobStorageClient[] BlobStorageClients,
+    Job[] Jobs,
+    JobCategory[] JobCategories,
+    Step[] Steps,
+    Tag[] Tags,
+    DataObject[] DataObjects,
+    MasterDataTable[] DataTables,
+    MasterDataTableCategory[] DataTableCategories
+);
 
 public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
 {
