@@ -7,9 +7,8 @@ namespace Biflow.DataAccess.Models;
 public class AgentJobStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout
 {
     [JsonConstructor]
-    public AgentJobStep(Guid jobId, string agentJobName) : base(StepType.AgentJob, jobId)
+    public AgentJobStep() : base(StepType.AgentJob)
     {
-        AgentJobName = agentJobName;
     }
 
     private AgentJobStep(AgentJobStep other, Job? targetJob) : base(other, targetJob)
@@ -30,11 +29,12 @@ public class AgentJobStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout
     [Required]
     [MinLength(1)]
     [MaxLength(128)]
-    public string AgentJobName { get; set; }
+    public string AgentJobName { get; set; } = "";
 
     [Column("ConnectionId")]
     [Required]
-    public Guid? ConnectionId { get; set; }
+    [NotEmptyGuid]
+    public Guid ConnectionId { get; set; }
 
     [JsonIgnore]
     public SqlConnectionInfo Connection { get; set; } = null!;

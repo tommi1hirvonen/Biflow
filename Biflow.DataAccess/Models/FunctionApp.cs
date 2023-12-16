@@ -55,6 +55,8 @@ public class FunctionApp
 
     private const string ResourceUrl = "https://management.azure.com//.default";
 
+    private static readonly JsonSerializerOptions SerializerOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+
     public async Task<List<(string FunctionName, string FunctionUrl)>> GetFunctionsAsync(HttpClient client, ITokenService tokenService)
     {
         var (accessToken, _) = await tokenService.GetTokenAsync(AppRegistration, ResourceUrl);
@@ -96,8 +98,7 @@ public class FunctionApp
         message.Headers.Add("authorization", $"Bearer {accessToken}");
         var response = await client.SendAsync(message);
         var content = await response.Content.ReadAsStringAsync();
-        var options = new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-        var json = JsonSerializer.Deserialize<HostKeys>(content, options) ?? throw new InvalidOperationException("JSON object was null");
+        var json = JsonSerializer.Deserialize<HostKeys>(content, SerializerOptions) ?? throw new InvalidOperationException("JSON object was null");
         var list =
             new List<(string, string)> { ("masterKey", json.MasterKey) }
             .Concat(json.FunctionKeys.Select(f => (f.Key, f.Value)))

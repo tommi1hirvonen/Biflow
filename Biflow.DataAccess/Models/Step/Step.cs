@@ -18,10 +18,9 @@ namespace Biflow.DataAccess.Models;
 [JsonDerivedType(typeof(TabularStep), nameof(StepType.Tabular))]
 public abstract class Step : IComparable
 {
-    public Step(StepType stepType, Guid jobId)
+    public Step(StepType stepType)
     {
         StepType = stepType;
-        JobId = jobId;
     }
 
     /// <summary>
@@ -67,12 +66,14 @@ public abstract class Step : IComparable
 
     [Key]
     [Required]
+    [NotEmptyGuid]
     [JsonInclude]
     public Guid StepId { get; private set; }
 
     [Required]
+    [NotEmptyGuid]
     [JsonInclude]
-    public Guid JobId { get; private set; }
+    public Guid JobId { get; init; }
 
     [JsonIgnore]
     public Job Job { get; set; } = null!;

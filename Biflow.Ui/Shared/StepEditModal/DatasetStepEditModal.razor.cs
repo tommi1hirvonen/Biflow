@@ -30,9 +30,9 @@ public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
         try
         {
             var appRegistration = AppRegistrations?.FirstOrDefault(a => a.AppRegistrationId == step.AppRegistrationId);
-            (datasetGroupName, datasetName) = (appRegistration, step) switch
+            (datasetGroupName, datasetName) = appRegistration switch
             {
-                (not null, { DatasetGroupId: not null, DatasetId: not null }) => (
+                not null => (
                     await appRegistration.GetGroupNameAsync(step.DatasetGroupId, TokenService),
                     await appRegistration.GetDatasetNameAsync(step.DatasetGroupId, step.DatasetId, TokenService)
                     ),
@@ -67,12 +67,13 @@ public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
     protected override DatasetStep CreateNewStep(Job job)
     {
         (datasetGroupName, datasetName) = ("", "");
-        return new(job.JobId)
+        return new()
         {
+            JobId = job.JobId,
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            AppRegistrationId = AppRegistrations?.FirstOrDefault()?.AppRegistrationId,
+            AppRegistrationId = AppRegistrations.First().AppRegistrationId,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
             DataObjects = new List<StepDataObject>(),

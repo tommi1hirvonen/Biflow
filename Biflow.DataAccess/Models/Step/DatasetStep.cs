@@ -6,7 +6,7 @@ namespace Biflow.DataAccess.Models;
 public class DatasetStep : Step
 {
     [JsonConstructor]
-    public DatasetStep(Guid jobId) : base(StepType.Dataset, jobId) { }
+    public DatasetStep() : base(StepType.Dataset) { }
 
     private DatasetStep(DatasetStep other, Job? targetJob) : base(other, targetJob)
     {
@@ -17,19 +17,19 @@ public class DatasetStep : Step
     }
 
     [Required]
-    public Guid? AppRegistrationId { get; set; }
+    public Guid AppRegistrationId { get; set; }
 
     [Display(Name = "Group id")]
     [MaxLength(36)]
     [MinLength(36)]
     [Required]
-    public string? DatasetGroupId { get; set; }
+    public string DatasetGroupId { get; set; } = "";
 
     [Display(Name = "Dataset id")]
     [MaxLength(36)]
     [MinLength(36)]
     [Required]
-    public string? DatasetId { get; set; }
+    public string DatasetId { get; set; } = "";
 
     [JsonIgnore]
     public AppRegistration? AppRegistration { get; set; }

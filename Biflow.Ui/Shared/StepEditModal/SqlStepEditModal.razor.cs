@@ -45,12 +45,13 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
     }
 
     protected override SqlStep CreateNewStep(Job job) =>
-        new(job.JobId)
+        new()
         {
+            JobId = job.JobId,
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            ConnectionId = Connections?.FirstOrDefault()?.ConnectionId,
+            ConnectionId = Connections.First().ConnectionId,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
             StepParameters = new List<SqlStepParameter>(),
@@ -64,15 +65,16 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
     {
         try
         {
-            var procedure = Step?.SqlStatement?.ParseStoredProcedureFromSqlStatement();
-            if (procedure is null || procedure.Value.ProcedureName is null || Step?.ConnectionId is null)
+            ArgumentNullException.ThrowIfNull(Step);
+            var procedure = Step.SqlStatement.ParseStoredProcedureFromSqlStatement();
+            if (procedure is null || procedure.Value.ProcedureName is null || Step.ConnectionId == Guid.Empty)
             {
                 Messenger.AddWarning("Stored procedure could not be parsed from SQL statement");
                 return;
             }
             var schema = procedure.Value.Schema ?? "dbo";
             var name = procedure.Value.ProcedureName;
-            var parameters = await SqlServerHelper.GetStoredProcedureParametersAsync((Guid)Step.ConnectionId, schema, name);
+            var parameters = await SqlServerHelper.GetStoredProcedureParametersAsync(Step.ConnectionId, schema, name);
             if (!parameters.Any())
             {
                 Messenger.AddInformation($"No parameters for [{schema}].[{name}]");

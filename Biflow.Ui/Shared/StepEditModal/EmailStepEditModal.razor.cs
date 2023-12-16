@@ -24,8 +24,9 @@ public partial class EmailStepEditModal : StepEditModal<EmailStep>
         .FirstAsync(step => step.StepId == stepId);
 
     protected override EmailStep CreateNewStep(Job job) =>
-        new(job.JobId)
+        new()
         {
+            JobId = job.JobId,
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
@@ -35,7 +36,4 @@ public partial class EmailStepEditModal : StepEditModal<EmailStep>
             DataObjects = new List<StepDataObject>(),
             ExecutionConditionParameters = new List<ExecutionConditionParameter>()
         };
-
-    private static EmailStepParameter GenerateNewParameter() =>
-        new() { ParameterValueType = ParameterValueType.String, ParameterValue = string.Empty };
 }

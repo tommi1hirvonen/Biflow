@@ -13,10 +13,7 @@ public class FunctionStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
 
     public FunctionStepExecution(FunctionStep step, Execution execution) : base(step, execution)
     {
-        ArgumentNullException.ThrowIfNull(step.FunctionAppId);
-        ArgumentNullException.ThrowIfNull(step.FunctionUrl);
-
-        FunctionAppId = (Guid)step.FunctionAppId;
+        FunctionAppId = step.FunctionAppId;
         FunctionUrl = step.FunctionUrl;
         FunctionInput = step.FunctionInput;
         FunctionIsDurable = step.FunctionIsDurable;

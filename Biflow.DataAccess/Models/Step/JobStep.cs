@@ -6,7 +6,7 @@ namespace Biflow.DataAccess.Models;
 public class JobStep : Step, IHasStepParameters<JobStepParameter>
 {
     [JsonConstructor]
-    public JobStep(Guid jobId) : base(StepType.Job, jobId) { }
+    public JobStep() : base(StepType.Job) { }
 
     private JobStep(JobStep other, Job? targetJob) : base(other, targetJob)
     {

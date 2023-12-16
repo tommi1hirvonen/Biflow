@@ -70,10 +70,10 @@ public partial class AdvancedFiltersOffcanvas : ComponentBase
         string.IsNullOrEmpty(Description) || (step.StepDescription?.ContainsIgnoreCase(Description) ?? false);
 
     private bool SqlStatementPredicate(Step step) =>
-        string.IsNullOrEmpty(SqlStatement) || step is SqlStep sql && (sql.SqlStatement?.ContainsIgnoreCase(SqlStatement) ?? false);
+        string.IsNullOrEmpty(SqlStatement) || step is SqlStep sql && sql.SqlStatement.ContainsIgnoreCase(SqlStatement);
 
     private bool ConnectionsPredicate(Step step) =>
-        connectionsFilter.Count == 0 || step is IHasConnection hc && connectionsFilter.Select(c => c.ConnectionId).Contains(hc.ConnectionId ?? Guid.Empty);
+        connectionsFilter.Count == 0 || step is IHasConnection hc && connectionsFilter.Select(c => c.ConnectionId).Contains(hc.ConnectionId);
 
     private bool PackageFolderPredicate(Step step) =>
         PackageFolder.Length == 0 || step is PackageStep p && (p.PackageFolderName?.ContainsIgnoreCase(PackageFolder) ?? false);
@@ -85,14 +85,14 @@ public partial class AdvancedFiltersOffcanvas : ComponentBase
     private bool PipelineNamePredicate(Step step) =>
         PipelineName.Length == 0 || step is PipelineStep p && (p.PipelineName?.ContainsIgnoreCase(PipelineName) ?? false);
     private bool PipelineClientsPredicate(Step step) =>
-        pipelineClientsFilter.Count == 0 || step is PipelineStep p && pipelineClientsFilter.Select(c => c.PipelineClientId).Contains(p.PipelineClientId ?? Guid.Empty);
+        pipelineClientsFilter.Count == 0 || step is PipelineStep p && pipelineClientsFilter.Select(c => c.PipelineClientId).Contains(p.PipelineClientId);
 
     private bool FunctionUrlPredicate(Step step) =>
-        FunctionUrl.Length == 0 || step is FunctionStep f && (f.FunctionUrl?.ContainsIgnoreCase(FunctionUrl) ?? false);
+        FunctionUrl.Length == 0 || step is FunctionStep f && f.FunctionUrl.ContainsIgnoreCase(FunctionUrl);
     private bool FunctionInputPredicate(Step step) =>
         FunctionInput.Length == 0 || step is FunctionStep f && (f.FunctionInput?.ContainsIgnoreCase(FunctionInput) ?? false);
     private bool FunctionAppsPredicate(Step step) =>
-        functionAppsFilter.Count == 0 || step is FunctionStep f && functionAppsFilter.Select(a => a.FunctionAppId).Contains(f.FunctionAppId ?? Guid.Empty);
+        functionAppsFilter.Count == 0 || step is FunctionStep f && functionAppsFilter.Select(a => a.FunctionAppId).Contains(f.FunctionAppId);
 
     private bool ExeFilePathPredicate(Step step) =>
         ExeFilePath.Length == 0 || step is ExeStep e && (e.ExeFileName?.ContainsIgnoreCase(ExeFilePath) ?? false);

@@ -7,7 +7,7 @@ namespace Biflow.DataAccess.Models;
 public class ExeStep : Step, IHasTimeout, IHasStepParameters<ExeStepParameter>
 {
     [JsonConstructor]
-    public ExeStep(Guid jobId) : base(StepType.Exe, jobId) { }
+    public ExeStep() : base(StepType.Exe) { }
 
     private ExeStep(ExeStep other, Job? targetJob) : base(other, targetJob)
     {

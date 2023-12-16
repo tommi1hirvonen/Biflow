@@ -12,11 +12,8 @@ public class SqlStepExecution : StepExecution, IHasTimeout, IHasStepExecutionPar
 
     public SqlStepExecution(SqlStep step, Execution execution) : base(step, execution)
     {
-        ArgumentNullException.ThrowIfNull(step.SqlStatement);
-        ArgumentNullException.ThrowIfNull(step.ConnectionId);
-
         SqlStatement = step.SqlStatement;
-        ConnectionId = (Guid)step.ConnectionId;
+        ConnectionId = step.ConnectionId;
         ResultCaptureJobParameterId = step.ResultCaptureJobParameterId;
         TimeoutMinutes = step.TimeoutMinutes;
         StepExecutionParameters = step.StepParameters

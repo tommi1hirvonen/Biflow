@@ -7,9 +7,8 @@ namespace Biflow.DataAccess.Models;
 public class QlikStep : Step, IHasTimeout
 {
     [JsonConstructor]
-    public QlikStep(Guid jobId, string appId) : base(StepType.Qlik, jobId)
+    public QlikStep() : base(StepType.Qlik)
     {
-        AppId = appId;
     }
 
     public QlikStep(QlikStep other, Job? targetJob) : base(other, targetJob)
@@ -20,7 +19,7 @@ public class QlikStep : Step, IHasTimeout
     }
 
     [Required]
-    public string AppId { get; set; }
+    public string AppId { get; set; } = "";
 
     [Required]
     public Guid QlikCloudClientId { get; set; }

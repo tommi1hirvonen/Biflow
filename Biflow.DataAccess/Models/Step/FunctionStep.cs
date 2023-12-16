@@ -7,7 +7,7 @@ namespace Biflow.DataAccess.Models;
 public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepParameter>
 {
     [JsonConstructor]
-    public FunctionStep(Guid jobId) : base(StepType.Function, jobId) { }
+    public FunctionStep() : base(StepType.Function) { }
 
     private FunctionStep(FunctionStep other, Job? targetJob) : base(other, targetJob)
     {
@@ -30,12 +30,13 @@ public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepPa
     public double TimeoutMinutes { get; set; }
 
     [Required]
-    public Guid? FunctionAppId { get; set; }
+    [NotEmptyGuid]
+    public Guid FunctionAppId { get; set; }
 
     [Display(Name = "Function url")]
     [MaxLength(1000)]
     [Required]
-    public string? FunctionUrl { get; set; }
+    public string FunctionUrl { get; set; } = "";
 
     [Display(Name = "Function input")]
     public string? FunctionInput

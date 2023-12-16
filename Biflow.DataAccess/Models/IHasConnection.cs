@@ -10,7 +10,7 @@ public interface IHasConnection<T> : IHasConnection
 
 public interface IHasConnection
 {
-    public Guid? ConnectionId { get; }
+    public Guid ConnectionId { get; }
 
     public ConnectionInfoBase Connection { get; }
 }

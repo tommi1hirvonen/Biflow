@@ -12,11 +12,7 @@ public class DatasetStepExecution : StepExecution
 
     public DatasetStepExecution(DatasetStep step, Execution execution) : base(step, execution)
     {
-        ArgumentNullException.ThrowIfNull(step.AppRegistrationId);
-        ArgumentNullException.ThrowIfNull(step.DatasetGroupId);
-        ArgumentNullException.ThrowIfNull(step.DatasetId);
-
-        AppRegistrationId = (Guid)step.AppRegistrationId;
+        AppRegistrationId = step.AppRegistrationId;
         DatasetGroupId = step.DatasetGroupId;
         DatasetId = step.DatasetId;
 

@@ -164,41 +164,44 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
     [Fact]
     public void Serialize_Snapshot()
     {
-        var snapshot = new Snapshot(
-            fixture.Connections,
-            fixture.AppRegistrations,
-            fixture.PipelineClients,
-            fixture.FunctionApps,
-            fixture.QlikCloudClients,
-            fixture.BlobStorageClients,
-            fixture.Jobs,
-            fixture.JobCategories,
-            fixture.Steps,
-            fixture.Tags,
-            fixture.DataObjects,
-            fixture.DataTables,
-            fixture.DataTableCategories);
+        var snapshot = new Snapshot
+        {
+            Connections = fixture.Connections,
+            AppRegistrations = fixture.AppRegistrations,
+            PipelineClients = fixture.PipelineClients,
+            FunctionApps = fixture.FunctionApps,
+            QlikCloudClients = fixture.QlikCloudClients,
+            BlobStorageClients = fixture.BlobStorageClients,
+            Jobs = fixture.Jobs,
+            JobCategories = fixture.JobCategories,
+            Steps = fixture.Steps,
+            Tags = fixture.Tags,
+            DataObjects = fixture.DataObjects,
+            DataTables = fixture.DataTables,
+            DataTableCategories = fixture.DataTableCategories
+        };
         var json = JsonSerializer.Serialize(snapshot, Options);
         var items = JsonSerializer.Deserialize<Snapshot>(json, Options);
         Assert.NotNull(items);
     }
 }
 
-file record Snapshot(
-    ConnectionInfoBase[] Connections,
-    AppRegistration[] AppRegistrations,
-    PipelineClient[] PipelineClients,
-    FunctionApp[] FunctionApps,
-    QlikCloudClient[] QlikCloudClients,
-    BlobStorageClient[] BlobStorageClients,
-    Job[] Jobs,
-    JobCategory[] JobCategories,
-    Step[] Steps,
-    Tag[] Tags,
-    DataObject[] DataObjects,
-    MasterDataTable[] DataTables,
-    MasterDataTableCategory[] DataTableCategories
-);
+file class Snapshot
+{
+    public required ConnectionInfoBase[] Connections { get; init; }
+    public required AppRegistration[] AppRegistrations { get; init; }
+    public required PipelineClient[] PipelineClients { get; init; }
+    public required FunctionApp[] FunctionApps { get; init; }
+    public required QlikCloudClient[] QlikCloudClients { get; init; }
+    public required BlobStorageClient[] BlobStorageClients { get; init; }
+    public required Job[] Jobs { get; init; }
+    public required JobCategory[] JobCategories { get; init; }
+    public required Step[] Steps { get; init; }
+    public required Tag[] Tags { get; init; }
+    public required DataObject[] DataObjects { get; init; }
+    public required MasterDataTable[] DataTables { get; init; }
+    public required MasterDataTableCategory[] DataTableCategories { get; init; }
+}
 
 public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
 {

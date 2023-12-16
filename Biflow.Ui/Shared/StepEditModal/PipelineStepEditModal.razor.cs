@@ -10,7 +10,7 @@ namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
 {
-    [Parameter] public IList<PipelineClient>? PipelineClients { get; set; }
+    [Parameter] public IList<PipelineClient> PipelineClients { get; set; } = [];
 
     [Inject] private ITokenService TokenService { get; set; } = null!;
 
@@ -19,12 +19,13 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
     private PipelineSelectOffcanvas? pipelineSelectOffcanvas;
 
     protected override PipelineStep CreateNewStep(Job job) =>
-        new(job.JobId)
+        new()
         {
+            JobId = job.JobId,
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            PipelineClientId = PipelineClients?.FirstOrDefault()?.PipelineClientId,
+            PipelineClientId = PipelineClients.First().PipelineClientId,
             StepParameters = new List<PipelineStepParameter>(),
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
@@ -87,7 +88,7 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
     private Task OpenPipelineSelectOffcanvas()
     {
         ArgumentNullException.ThrowIfNull(Step?.PipelineClientId);
-        return pipelineSelectOffcanvas.LetAsync(x => x.ShowAsync((Guid)Step.PipelineClientId));
+        return pipelineSelectOffcanvas.LetAsync(x => x.ShowAsync(Step.PipelineClientId));
     }
 
     private void OnPipelineSelected(string pipelineName)

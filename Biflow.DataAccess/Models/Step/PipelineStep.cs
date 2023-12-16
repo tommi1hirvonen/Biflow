@@ -7,7 +7,7 @@ namespace Biflow.DataAccess.Models;
 public class PipelineStep : Step, IHasTimeout, IHasStepParameters<PipelineStepParameter>
 {
     [JsonConstructor]
-    public PipelineStep(Guid jobId) : base(StepType.Pipeline, jobId) { }
+    public PipelineStep() : base(StepType.Pipeline) { }
 
     private PipelineStep(PipelineStep other, Job? targetJob) : base(other, targetJob) 
     {
@@ -27,7 +27,7 @@ public class PipelineStep : Step, IHasTimeout, IHasStepParameters<PipelineStepPa
     public double TimeoutMinutes { get; set; }
 
     [Required]
-    public Guid? PipelineClientId { get; set; }
+    public Guid PipelineClientId { get; set; }
 
     [MaxLength(250)]
     [Display(Name = "Pipeline name")]

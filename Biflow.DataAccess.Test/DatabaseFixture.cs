@@ -181,7 +181,7 @@ public class DatabaseFixture : IAsyncLifetime
             var tag1 = new Tag("Test tag") { Color = TagColor.DarkGray };
             var tag2 = new Tag("Another tag") { Color = TagColor.Red };
 
-            var step1 = new SqlStep(job1.JobId)
+            var step1 = new SqlStep
             {
                 StepName = "Test step 1",
                 ExecutionPhase = 10,
@@ -190,7 +190,7 @@ public class DatabaseFixture : IAsyncLifetime
                 Tags = [tag1, tag2]
             };
 
-            var step2 = new SqlStep(job1.JobId)
+            var step2 = new SqlStep
             {
                 StepName = "Test step 2",
                 StepDescription = "Test step 2 description",
@@ -199,7 +199,14 @@ public class DatabaseFixture : IAsyncLifetime
                 Connection = sqlConnection,
                 Tags = [tag1]
             };
-            var step2Dependency = new Dependency(step2.StepId, step1.StepId) { Step = step2, DependantOnStep = step1, DependencyType = DependencyType.OnCompleted };
+            var step2Dependency = new Dependency
+            {
+                StepId = step2.StepId,
+                Step = step2,
+                DependantOnStepId = step1.StepId,
+                DependantOnStep = step1,
+                DependencyType = DependencyType.OnCompleted
+            };
             step2.Dependencies = [step2Dependency];
             var step2Parameter = new SqlStepParameter
             {
@@ -210,7 +217,7 @@ public class DatabaseFixture : IAsyncLifetime
             };
             step2.StepParameters = [step2Parameter];
 
-            var step3 = new SqlStep(job1.JobId)
+            var step3 = new SqlStep
             {
                 StepName = "Test step 3",
                 ExecutionPhase = 20,
@@ -227,7 +234,7 @@ public class DatabaseFixture : IAsyncLifetime
             };
             step3.StepParameters = [step3Parameter];
 
-            var step4 = new SqlStep(job1.JobId)
+            var step4 = new SqlStep
             {
                 StepName = "Test step 4",
                 ExecutionPhase = 30,
@@ -235,7 +242,14 @@ public class DatabaseFixture : IAsyncLifetime
                 Connection = sqlConnection,
                 Tags = [tag1]
             };
-            var step4Dependency = new Dependency(step4.StepId, step3.StepId) { Step = step4, DependantOnStep = step3, DependencyType = DependencyType.OnSucceeded };
+            var step4Dependency = new Dependency
+            {
+                StepId = step4.StepId,
+                Step = step4,
+                DependantOnStepId = step3.StepId,
+                DependantOnStep = step3,
+                DependencyType = DependencyType.OnSucceeded
+            };
             step4.Dependencies = [step4Dependency];
             var step4Parameter = new SqlStepParameter
             {
@@ -285,7 +299,7 @@ public class DatabaseFixture : IAsyncLifetime
                 Category = null
             };
 
-            var step5 = new JobStep(job2.JobId)
+            var step5 = new JobStep
             {
                 StepName = "Test step 5",
                 ExecutionPhase = 0,
@@ -295,7 +309,7 @@ public class DatabaseFixture : IAsyncLifetime
                 Tags = []
             };
 
-            var step6 = new JobStep(job2.JobId)
+            var step6 = new JobStep
             {
                 StepName = "Test step 6",
                 ExecutionPhase = 0,
@@ -305,7 +319,7 @@ public class DatabaseFixture : IAsyncLifetime
                 Tags = []
             };
 
-            var step7 = new SqlStep(job2.JobId)
+            var step7 = new SqlStep
             {
                 IsEnabled = false,
                 StepName = "Test step 7",
@@ -315,7 +329,7 @@ public class DatabaseFixture : IAsyncLifetime
                 Tags = [tag1]
             };
 
-            var step8 = new SqlStep(job2.JobId)
+            var step8 = new SqlStep
             {
                 StepName = "Test step 8",
                 ExecutionPhase = 30,
@@ -324,7 +338,7 @@ public class DatabaseFixture : IAsyncLifetime
                 Tags = [tag1]
             };
 
-            var step9 = new PipelineStep(job2.JobId)
+            var step9 = new PipelineStep
             {
                 StepName = "Test step 9",
                 ExecutionPhase = 35,
@@ -333,7 +347,7 @@ public class DatabaseFixture : IAsyncLifetime
                 Tags = []
             };
 
-            var step10 = new PipelineStep(job2.JobId)
+            var step10 = new PipelineStep
             {
                 StepName = "Test step 10",
                 ExecutionPhase = 40,
@@ -342,7 +356,7 @@ public class DatabaseFixture : IAsyncLifetime
                 Tags = []
             };
 
-            var step11 = new FunctionStep(job2.JobId)
+            var step11 = new FunctionStep
             {
                 StepName = "Test step 11",
                 ExecutionPhase = 45,
@@ -353,29 +367,30 @@ public class DatabaseFixture : IAsyncLifetime
                 Tags = []
             };
 
-            var step12 = new QlikStep(job2.JobId, "some-app-id")
+            var step12 = new QlikStep
             {
                 StepName = "Test step 12",
                 ExecutionPhase = 50,
+                AppId = "some-app-id",
                 QlikCloudClient = qlikClient,
                 Tags = []
             };
 
-            var step13 = new TabularStep(job2.JobId, "TestModel")
+            var step13 = new TabularStep
             {
                 StepName = "Test step 13",
                 ExecutionPhase = 55,
                 Connection = asConnection
             };
 
-            var step14 = new AgentJobStep(job2.JobId, "Test agent job")
+            var step14 = new AgentJobStep
             {
                 StepName = "Test step 14",
                 ExecutionPhase = 60,
                 Connection = sqlConnection
             };
 
-            var step15 = new DatasetStep(job2.JobId)
+            var step15 = new DatasetStep
             {
                 StepName = "Test step 15",
                 ExecutionPhase = 65,
@@ -384,7 +399,7 @@ public class DatabaseFixture : IAsyncLifetime
                 DatasetId = "some-dataset-id"
             };
 
-            var step16 = new EmailStep(job2.JobId)
+            var step16 = new EmailStep
             {
                 StepName = "Test step 16",
                 Recipients = "recipient@test.com",
@@ -392,7 +407,7 @@ public class DatabaseFixture : IAsyncLifetime
                 Body = "This is a test email"
             };
 
-            var step17 = new ExeStep(job2.JobId)
+            var step17 = new ExeStep
             {
                 StepName = "Test step 17",
                 ExeFileName = "dotnet",
@@ -401,7 +416,7 @@ public class DatabaseFixture : IAsyncLifetime
                 ExeWorkingDirectory = @"C:\"
             };
 
-            var step18 = new PackageStep(job2.JobId)
+            var step18 = new PackageStep
             {
                 StepName = "Test step 18",
                 Connection = sqlConnection,

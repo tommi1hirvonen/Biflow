@@ -264,8 +264,10 @@
         ArgumentNullException.ThrowIfNull(Step);
         if (!Step.Dependencies.Any(dep => dep.DependantOnStepId == step.StepId))
         {
-            var newDep = new Dependency(Step.StepId, step.StepId)
+            var newDep = new Dependency
                 {
+                    StepId = Step.StepId,
+                    DependantOnStepId = step.StepId,
                     IsNewAddition = true
                 };
             Step.Dependencies.Add(newDep);
@@ -285,8 +287,10 @@
 
         foreach (var step in missingDependencies)
         {
-            var dependency = new Dependency(Step.StepId, step.StepId)
+            var dependency = new Dependency
             {
+                StepId = Step.StepId,
+                DependantOnStepId = step.StepId,
                 IsNewAddition = true
             };
             Step.Dependencies.Add(dependency);

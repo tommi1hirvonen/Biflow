@@ -33,8 +33,9 @@ public partial class QlikStepEditModal : StepEditModal<QlikStep>
         appName = "";
         var client = QlikClients?.FirstOrDefault();
         ArgumentNullException.ThrowIfNull(client);
-        return new(job.JobId, "")
+        return new()
         {
+            JobId = job.JobId,
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,

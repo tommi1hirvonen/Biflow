@@ -9,10 +9,8 @@ namespace Biflow.DataAccess.Models;
 [PrimaryKey("StepId", "DependantOnStepId")]
 public class Dependency
 {
-    public Dependency(Guid stepId, Guid dependantOnStepId)
+    public Dependency()
     {
-        StepId = stepId;
-        DependantOnStepId = dependantOnStepId;
     }
 
     internal Dependency(Dependency other, Step step)
@@ -24,12 +22,12 @@ public class Dependency
         DependencyType = other.DependencyType;
     }
 
-    public Guid StepId { get; }
+    public Guid StepId { get; init; }
 
     [JsonIgnore]
     public Step Step { get; set; } = null!;
 
-    public Guid DependantOnStepId { get; }
+    public Guid DependantOnStepId { get; init; }
 
     [JsonIgnore]
     public Step DependantOnStep { get; set; } = null!;

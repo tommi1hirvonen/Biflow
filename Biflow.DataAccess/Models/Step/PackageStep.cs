@@ -7,7 +7,7 @@ namespace Biflow.DataAccess.Models;
 public class PackageStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout, IHasStepParameters<PackageStepParameter>
 {
     [JsonConstructor]
-    public PackageStep(Guid jobId) : base(StepType.Package, jobId) { }
+    public PackageStep() : base(StepType.Package) { }
 
     private PackageStep(PackageStep other, Job? targetJob) : base(other, targetJob)
     {
@@ -32,7 +32,8 @@ public class PackageStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout,
 
     [Column("ConnectionId")]
     [Required]
-    public Guid? ConnectionId { get; set; }
+    [NotEmptyGuid]
+    public Guid ConnectionId { get; set; }
 
     [MaxLength(128)]
     [Display(Name = "Folder name")]
