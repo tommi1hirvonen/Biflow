@@ -19,6 +19,7 @@ public class QlikCloudClient
     public required string EnvironmentUrl { get; set; }
 
     [Required]
+    [JsonSensitive]
     public required string ApiToken { get; set; }
 
     [JsonIgnore]

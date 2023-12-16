@@ -36,6 +36,7 @@ public class AppRegistration
 
     [Required]
     [Display(Name = "Client secret")]
+    [JsonSensitive]
     public string? ClientSecret { get; set; }
 
     [JsonIgnore]

@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using Xunit;
 
 namespace Biflow.DataAccess.Test;
@@ -12,9 +13,10 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
     private static readonly JsonSerializerOptions Options = new()
     {
         WriteIndented = true,
-        Converters =
+        Converters = { new JsonStringEnumConverter() },
+        TypeInfoResolver = new DefaultJsonTypeInfoResolver
         {
-            new JsonStringEnumConverter()
+            Modifiers = { JsonSensitiveAttribute.SensitiveModifier }
         }
     };
 
@@ -26,6 +28,7 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
         Assert.NotNull(items);
         Assert.NotEmpty(items);
         Assert.All(items, x => Assert.NotEqual(x.ConnectionId, Guid.Empty));
+        Assert.All(items, x => Assert.DoesNotContain("password", x.ConnectionString, StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -36,6 +39,7 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
         Assert.NotNull(items);
         Assert.NotEmpty(items);
         Assert.All(items, x => Assert.NotEqual(x.AppRegistrationId, Guid.Empty));
+        Assert.All(items, x => Assert.Empty(x.ClientSecret ?? ""));
     }
 
     [Fact]
@@ -56,6 +60,7 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
         Assert.NotNull(items);
         Assert.NotEmpty(items);
         Assert.All(items, x => Assert.NotEqual(x.FunctionAppId, Guid.Empty));
+        Assert.All(items, x => Assert.Empty(x.FunctionAppKey ?? ""));
     }
 
     [Fact]
@@ -66,6 +71,7 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
         Assert.NotNull(items);
         Assert.NotEmpty(items);
         Assert.All(items, x => Assert.NotEqual(x.QlikCloudClientId, Guid.Empty));
+        Assert.All(items, x => Assert.Empty(x.ApiToken));
     }
 
     [Fact]
@@ -76,6 +82,8 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
         Assert.NotNull(items);
         Assert.NotEmpty(items);
         Assert.All(items, x => Assert.NotEqual(x.BlobStorageClientId, Guid.Empty));
+        Assert.All(items, x => Assert.Empty(x.ConnectionString ?? ""));
+        Assert.All(items, x => Assert.DoesNotContain("sig=", x.StorageAccountUrl, StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -107,6 +115,8 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
         Assert.NotEmpty(items);
         Assert.All(items, x => Assert.NotEqual(x.StepId, Guid.Empty));
         Assert.All(items, x => Assert.NotEqual(x.JobId, Guid.Empty));
+        var functionSteps = items.OfType<FunctionStep>();
+        Assert.All(functionSteps, x => Assert.Empty(x.FunctionKey ?? ""));
     }
 
     [Fact]

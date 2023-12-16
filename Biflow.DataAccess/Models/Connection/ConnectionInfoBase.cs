@@ -25,6 +25,7 @@ public abstract class ConnectionInfoBase(ConnectionType connectionType, string c
 
     [Required]
     [Display(Name = "Connection string")]
+    [JsonSensitive(WhenContains = "password")]
     public string ConnectionString { get; set; } = connectionString;
 
     public int CompareTo(object? obj) => obj switch

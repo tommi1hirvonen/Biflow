@@ -20,6 +20,7 @@ public class FunctionApp
     public string? FunctionAppName { get; set; }
 
     [Display(Name = "Function app key")]
+    [JsonSensitive]
     public string? FunctionAppKey
     {
         get => _functionAppKey;

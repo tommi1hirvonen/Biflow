@@ -21,8 +21,10 @@ public class BlobStorageClient
     [Required]
     public BlobStorageConnectionMethod ConnectionMethod { get; set; }
 
+    [JsonSensitive(WhenContains = "sig=")]
     public string? StorageAccountUrl { get; set; }
 
+    [JsonSensitive]
     public string? ConnectionString { get; set; }
 
     public Guid? AppRegistrationId { get; set; }

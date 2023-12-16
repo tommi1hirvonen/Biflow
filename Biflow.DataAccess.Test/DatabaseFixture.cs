@@ -68,7 +68,7 @@ public class DatabaseFixture : IAsyncLifetime
             #region SETTINGS
             var sqlConnection = new SqlConnectionInfo("Test SQL connection", _connectionString);
 
-            var asConnection = new AnalysisServicesConnectionInfo("Test AS connection", "Data Source=localhost");
+            var asConnection = new AnalysisServicesConnectionInfo("Test AS connection", "Data Source=localhost;Password=asd");
 
             var appRegistration = new AppRegistration
             {
@@ -110,12 +110,26 @@ public class DatabaseFixture : IAsyncLifetime
                 ApiToken = "some-api-token"
             };
 
-            var blobClient = new BlobStorageClient
+            var blobClient1 = new BlobStorageClient
             {
                 AppRegistration = appRegistration,
                 BlobStorageClientName = "Test blob storage client",
                 ConnectionMethod = BlobStorageConnectionMethod.AppRegistration,
                 StorageAccountUrl = "https://some-storage-account-url.com/"
+            };
+
+            var blobClient2 = new BlobStorageClient
+            {
+                BlobStorageClientName = "Test blob storage client 2",
+                ConnectionMethod = BlobStorageConnectionMethod.Url,
+                StorageAccountUrl = "https://some-storage-account-url.com?sig=asdasd"
+            };
+
+            var blobClient3 = new BlobStorageClient
+            {
+                BlobStorageClientName = "Test blob storage client 3",
+                ConnectionMethod = BlobStorageConnectionMethod.ConnectionString,
+                ConnectionString = "some-connection-string"
             };
             #endregion
 
@@ -325,6 +339,7 @@ public class DatabaseFixture : IAsyncLifetime
                 ExecutionPhase = 45,
                 FunctionApp = functionApp,
                 FunctionInput = "test-input",
+                FunctionKey = "some-key",
                 FunctionUrl = "http://function-url.com/test-function",
                 Tags = []
             };
@@ -406,7 +421,7 @@ public class DatabaseFixture : IAsyncLifetime
             };
             #endregion
 
-            context.AddRange(job1, job2, schedule1, schedule2, blobClient);
+            context.AddRange(job1, job2, schedule1, schedule2, blobClient1, blobClient2, blobClient3);
             await context.SaveChangesAsync();
 
             _databaseInitialized = true;
