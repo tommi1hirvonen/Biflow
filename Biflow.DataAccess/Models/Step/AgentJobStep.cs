@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
 public class AgentJobStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout
 {
+    [JsonConstructor]
     public AgentJobStep(Guid jobId, string agentJobName) : base(StepType.AgentJob, jobId)
     {
         AgentJobName = agentJobName;
@@ -34,6 +36,7 @@ public class AgentJobStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout
     [Required]
     public Guid? ConnectionId { get; set; }
 
+    [JsonIgnore]
     public SqlConnectionInfo Connection { get; set; } = null!;
 
     internal override AgentJobStep Copy(Job? targetJob = null) => new(this, targetJob);

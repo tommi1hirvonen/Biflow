@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
 public class ExeStep : Step, IHasTimeout, IHasStepParameters<ExeStepParameter>
 {
+    [JsonConstructor]
     public ExeStep(Guid jobId) : base(StepType.Exe, jobId) { }
 
     private ExeStep(ExeStep other, Job? targetJob) : base(other, targetJob)

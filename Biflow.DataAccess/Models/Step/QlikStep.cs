@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
 public class QlikStep : Step, IHasTimeout
 {
+    [JsonConstructor]
     public QlikStep(Guid jobId, string appId) : base(StepType.Qlik, jobId)
     {
         AppId = appId;
@@ -23,6 +25,7 @@ public class QlikStep : Step, IHasTimeout
     [Required]
     public Guid QlikCloudClientId { get; set; }
 
+    [JsonIgnore]
     public QlikCloudClient QlikCloudClient { get; set; } = null!;
 
     [Column("TimeoutMinutes")]

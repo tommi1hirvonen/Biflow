@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
@@ -18,9 +19,12 @@ public class PackageStepParameter : StepParameterBase
     [Required]
     public ParameterLevel ParameterLevel { get; set; }
 
+    [JsonIgnore]
     public PackageStep Step { get; set; } = null!;
 
+    [JsonIgnore]
     public override Step BaseStep => Step;
 
+    [JsonIgnore]
     public override string DisplayName => $"${ParameterLevel}::{ParameterName}";
 }

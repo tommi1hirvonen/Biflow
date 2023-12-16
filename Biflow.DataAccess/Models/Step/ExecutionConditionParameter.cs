@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
@@ -42,10 +43,12 @@ public class ExecutionConditionParameter : ParameterBase, IAsyncEvaluable
     [Display(Name = "Step id")]
     public Guid StepId { get; set; }
 
+    [JsonIgnore]
     public Step Step { get; set; } = null!;
 
     public Guid? JobParameterId { get; set; }
 
+    [JsonIgnore]
     public JobParameter? JobParameter { get; set; }
 
     public async Task<object?> EvaluateAsync()
@@ -58,11 +61,13 @@ public class ExecutionConditionParameter : ParameterBase, IAsyncEvaluable
         return ParameterValue;
     }
 
+    [JsonIgnore]
     public override string DisplayValue => JobParameter switch
     {
         not null => $"{JobParameter.DisplayValue?.ToString() ?? "null"} (inherited from job parameter {JobParameter.DisplayName})",
         _ => base.DisplayValue
     };
 
+    [JsonIgnore]
     public override string DisplayValueType => JobParameter?.DisplayValueType ?? base.DisplayValueType;
 }

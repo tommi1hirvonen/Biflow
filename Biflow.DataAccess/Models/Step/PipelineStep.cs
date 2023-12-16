@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
 public class PipelineStep : Step, IHasTimeout, IHasStepParameters<PipelineStepParameter>
 {
+    [JsonConstructor]
     public PipelineStep(Guid jobId) : base(StepType.Pipeline, jobId) { }
 
     private PipelineStep(PipelineStep other, Job? targetJob) : base(other, targetJob) 
@@ -32,6 +34,7 @@ public class PipelineStep : Step, IHasTimeout, IHasStepParameters<PipelineStepPa
     [Required]
     public string? PipelineName { get; set; }
 
+    [JsonIgnore]
     public PipelineClient? PipelineClient { get; set; }
 
     [ValidateComplexType]

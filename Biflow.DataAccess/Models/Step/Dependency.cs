@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
@@ -25,10 +26,12 @@ public class Dependency
 
     public Guid StepId { get; }
 
+    [JsonIgnore]
     public Step Step { get; set; } = null!;
 
     public Guid DependantOnStepId { get; }
 
+    [JsonIgnore]
     public Step DependantOnStep { get; set; } = null!;
 
     [Display(Name = "Type")]
@@ -42,8 +45,10 @@ public class Dependency
     public string? CreatedBy { get; set; }
 
     [NotMapped]
+    [JsonIgnore]
     public bool IsCandidateForRemoval { get; set; } = false;
 
     [NotMapped]
+    [JsonIgnore]
     public bool IsNewAddition { get; set; } = false;
 }

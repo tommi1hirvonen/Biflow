@@ -1,9 +1,21 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
 [Table("Step")]
+[JsonDerivedType(typeof(AgentJobStep), nameof(StepType.AgentJob))]
+[JsonDerivedType(typeof(DatasetStep), nameof(StepType.Dataset))]
+[JsonDerivedType(typeof(EmailStep), nameof(StepType.Email))]
+[JsonDerivedType(typeof(ExeStep), nameof(StepType.Exe))]
+[JsonDerivedType(typeof(FunctionStep), nameof(StepType.Function))]
+[JsonDerivedType(typeof(JobStep), nameof(StepType.Job))]
+[JsonDerivedType(typeof(PackageStep), nameof(StepType.Package))]
+[JsonDerivedType(typeof(PipelineStep), nameof(StepType.Pipeline))]
+[JsonDerivedType(typeof(QlikStep), nameof(StepType.Qlik))]
+[JsonDerivedType(typeof(SqlStep), nameof(StepType.Sql))]
+[JsonDerivedType(typeof(TabularStep), nameof(StepType.Tabular))]
 public abstract class Step : IComparable
 {
     public Step(StepType stepType, Guid jobId)
@@ -55,11 +67,14 @@ public abstract class Step : IComparable
 
     [Key]
     [Required]
+    [JsonInclude]
     public Guid StepId { get; private set; }
 
     [Required]
+    [JsonInclude]
     public Guid JobId { get; private set; }
 
+    [JsonIgnore]
     public Job Job { get; set; } = null!;
 
     [Required]
@@ -132,8 +147,10 @@ public abstract class Step : IComparable
 
     public IList<Tag> Tags { get; set; } = null!;
 
+    [JsonIgnore]
     public IList<StepExecution> StepExecutions { get; set; } = null!;
 
+    [JsonIgnore]
     public ICollection<StepSubscription> StepSubscriptions { get; set; } = null!;
 
     public int CompareTo(object? obj)

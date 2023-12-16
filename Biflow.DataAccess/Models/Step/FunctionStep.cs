@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
 public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepParameter>
 {
+    [JsonConstructor]
     public FunctionStep(Guid jobId) : base(StepType.Function, jobId) { }
 
     private FunctionStep(FunctionStep other, Job? targetJob) : base(other, targetJob)
@@ -50,6 +52,7 @@ public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepPa
     [Display(Name = "Function key")]
     public string? FunctionKey { get; set; }
 
+    [JsonIgnore]
     public FunctionApp FunctionApp { get; set; } = null!;
 
     [ValidateComplexType]

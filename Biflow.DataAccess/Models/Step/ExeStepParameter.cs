@@ -1,4 +1,6 @@
-﻿namespace Biflow.DataAccess.Models;
+﻿using System.Text.Json.Serialization;
+
+namespace Biflow.DataAccess.Models;
 
 public class ExeStepParameter : StepParameterBase
 {
@@ -11,7 +13,9 @@ public class ExeStepParameter : StepParameterBase
         Step = step;
     }
 
+    [JsonIgnore]
     public ExeStep Step { get; set; } = null!;
 
+    [JsonIgnore]
     public override Step BaseStep => Step;
 }

@@ -99,6 +99,17 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
     }
 
     [Fact]
+    public void Serialize_Steps()
+    {
+        var json = JsonSerializer.Serialize(fixture.Steps, Options);
+        var items = JsonSerializer.Deserialize<Step[]>(json, Options);
+        Assert.NotNull(items);
+        Assert.NotEmpty(items);
+        Assert.All(items, x => Assert.NotEqual(x.StepId, Guid.Empty));
+        Assert.All(items, x => Assert.NotEqual(x.JobId, Guid.Empty));
+    }
+
+    [Fact]
     public void Serialize_Tags()
     {
         var json = JsonSerializer.Serialize(fixture.Tags, Options);
@@ -178,7 +189,6 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
             .Include(s => (s as JobStep)!.TagFilters)
             .Include(s => s.Dependencies)
             .Include(s => s.DataObjects)
-            .ThenInclude(t => t.DataObject)
             .Include(s => s.Tags)
             .Include(s => s.ExecutionConditionParameters)
             .ToArrayAsync();

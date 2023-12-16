@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
@@ -9,10 +10,12 @@ public class StepDataObject
 {
     public Guid StepId { get; set; }
 
+    [JsonIgnore]
     public Step Step { get; set; } = null!;
 
     public Guid ObjectId { get; set; }
 
+    [JsonIgnore]
     public DataObject DataObject { get; set; } = null!;
 
     public DataObjectReferenceType ReferenceType { get; set; }

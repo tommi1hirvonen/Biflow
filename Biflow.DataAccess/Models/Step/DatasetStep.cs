@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
 public class DatasetStep : Step
 {
+    [JsonConstructor]
     public DatasetStep(Guid jobId) : base(StepType.Dataset, jobId) { }
 
     private DatasetStep(DatasetStep other, Job? targetJob) : base(other, targetJob)
@@ -29,6 +31,7 @@ public class DatasetStep : Step
     [Required]
     public string? DatasetId { get; set; }
 
+    [JsonIgnore]
     public AppRegistration? AppRegistration { get; set; }
 
     internal override DatasetStep Copy(Job? targetJob = null) => new(this, targetJob);

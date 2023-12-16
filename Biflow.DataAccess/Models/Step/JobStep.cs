@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
 public class JobStep : Step, IHasStepParameters<JobStepParameter>
 {
+    [JsonConstructor]
     public JobStep(Guid jobId) : base(StepType.Job, jobId) { }
 
     private JobStep(JobStep other, Job? targetJob) : base(other, targetJob)
@@ -25,6 +27,7 @@ public class JobStep : Step, IHasStepParameters<JobStepParameter>
     [Required]
     public bool JobExecuteSynchronized { get; set; }
 
+    [JsonIgnore]
     public Job JobToExecute { get; set; } = null!;
 
     [ValidateComplexType]

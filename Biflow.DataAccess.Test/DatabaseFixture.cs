@@ -344,7 +344,49 @@ public class DatabaseFixture : IAsyncLifetime
                 Connection = asConnection
             };
 
-            job2.Steps = [step5, step6, step7, step8, step9, step10, step11, step12, step13];
+            var step14 = new AgentJobStep(job2.JobId, "Test agent job")
+            {
+                StepName = "Test step 14",
+                ExecutionPhase = 60,
+                Connection = sqlConnection
+            };
+
+            var step15 = new DatasetStep(job2.JobId)
+            {
+                StepName = "Test step 15",
+                ExecutionPhase = 65,
+                AppRegistration = appRegistration,
+                DatasetGroupId = "some-workspace-id",
+                DatasetId = "some-dataset-id"
+            };
+
+            var step16 = new EmailStep(job2.JobId)
+            {
+                StepName = "Test step 16",
+                Recipients = "recipient@test.com",
+                Subject = "This is a test email",
+                Body = "This is a test email"
+            };
+
+            var step17 = new ExeStep(job2.JobId)
+            {
+                StepName = "Test step 17",
+                ExeFileName = "dotnet",
+                ExeArguments = "--version",
+                ExeSuccessExitCode = 0,
+                ExeWorkingDirectory = @"C:\"
+            };
+
+            var step18 = new PackageStep(job2.JobId)
+            {
+                StepName = "Test step 18",
+                Connection = sqlConnection,
+                PackageFolderName = "TestFolder",
+                PackageProjectName = "TestProject",
+                PackageName = "TestPackage.dtsx"
+            };
+
+            job2.Steps = [step5, step6, step7, step8, step9, step10, step11, step12, step13, step14, step15, step16, step17, step18];
             #endregion
 
             #region SCHEDULES

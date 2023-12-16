@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
 public class PackageStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout, IHasStepParameters<PackageStepParameter>
 {
+    [JsonConstructor]
     public PackageStep(Guid jobId) : base(StepType.Package, jobId) { }
 
     private PackageStep(PackageStep other, Job? targetJob) : base(other, targetJob)
@@ -60,6 +62,7 @@ public class PackageStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout,
 
     private string? _executeAsLogin;
 
+    [JsonIgnore]
     public SqlConnectionInfo Connection { get; set; } = null!;
 
     [ValidateComplexType]
