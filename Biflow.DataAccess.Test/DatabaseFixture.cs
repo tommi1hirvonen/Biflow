@@ -66,9 +66,17 @@ public class DatabaseFixture : IAsyncLifetime
 
 
             #region SETTINGS
-            var sqlConnection = new SqlConnectionInfo("Test SQL connection", _connectionString);
+            var sqlConnection = new SqlConnectionInfo
+            {
+                ConnectionName = "Test SQL connection",
+                ConnectionString = _connectionString
+            };
 
-            var asConnection = new AnalysisServicesConnectionInfo("Test AS connection", "Data Source=localhost;Password=asd");
+            var asConnection = new AnalysisServicesConnectionInfo
+            {
+                ConnectionName = "Test AS connection",
+                ConnectionString = "Data Source=localhost;Password=asd"
+            };
 
             var appRegistration = new AppRegistration
             {
@@ -87,10 +95,11 @@ public class DatabaseFixture : IAsyncLifetime
                 ResourceName = "some-resource-name"
             };
 
-            var synapseWorkspace = new SynapseWorkspace("some-workspace-url")
+            var synapseWorkspace = new SynapseWorkspace
             {
                 AppRegistration = appRegistration,
-                PipelineClientName = "Test Synapse"
+                PipelineClientName = "Test Synapse",
+                SynapseWorkspaceUrl = "some-workspace-url"
             };
 
             var functionApp = new FunctionApp
@@ -405,15 +414,17 @@ public class DatabaseFixture : IAsyncLifetime
             #endregion
 
             #region SCHEDULES
-            var schedule1 = new Schedule(job1.JobId)
+            var schedule1 = new Schedule
             {
+                JobId = job1.JobId,
                 Job = job1,
                 ScheduleName = "Test schedule",
                 CronExpression = "",
                 Tags = []
             };
-            var schedule2 = new Schedule(job2.JobId)
+            var schedule2 = new Schedule
             {
+                JobId = job2.JobId,
                 Job = job2,
                 ScheduleName = "Another schedule",
                 CronExpression = "",

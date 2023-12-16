@@ -5,14 +5,14 @@ using System.Text.Json.Serialization;
 namespace Biflow.DataAccess.Models;
 
 [Table("Schedule")]
-public class Schedule(Guid jobId)
+public class Schedule
 {
     [Key]
     [JsonInclude]
     public Guid ScheduleId { get; private set; }
 
     [NotEmptyGuid]
-    public Guid JobId { get; set; } = jobId;
+    public Guid JobId { get; set; }
 
     [Required(AllowEmptyStrings = false)]
     [MaxLength(250)]

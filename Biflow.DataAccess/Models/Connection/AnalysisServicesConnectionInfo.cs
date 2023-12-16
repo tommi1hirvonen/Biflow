@@ -2,8 +2,7 @@
 
 namespace Biflow.DataAccess.Models;
 
-public class AnalysisServicesConnectionInfo(string connectionName, string connectionString)
-    : ConnectionInfoBase(ConnectionType.AnalysisServices, connectionName, connectionString)
+public class AnalysisServicesConnectionInfo() : ConnectionInfoBase(ConnectionType.AnalysisServices)
 {
     [JsonIgnore]
     public IList<TabularStep> TabularSteps { get; set; } = null!;

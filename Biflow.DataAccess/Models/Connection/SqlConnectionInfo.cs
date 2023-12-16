@@ -3,8 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
-public class SqlConnectionInfo(string connectionName, string connectionString)
-    : ConnectionInfoBase(ConnectionType.Sql, connectionName, connectionString)
+public class SqlConnectionInfo() : ConnectionInfoBase(ConnectionType.Sql)
 {
     [Display(Name = "Execute packages as login")]
     public string? ExecutePackagesAsLogin

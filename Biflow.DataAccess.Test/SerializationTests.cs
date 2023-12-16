@@ -13,6 +13,7 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
     private static readonly JsonSerializerOptions Options = new()
     {
         WriteIndented = true,
+        ReferenceHandler = ReferenceHandler.Preserve,
         Converters = { new JsonStringEnumConverter() },
         TypeInfoResolver = new DefaultJsonTypeInfoResolver
         {

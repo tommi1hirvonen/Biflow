@@ -7,7 +7,7 @@ namespace Biflow.DataAccess.Models;
 [Table("Connection")]
 [JsonDerivedType(typeof(SqlConnectionInfo), nameof(ConnectionType.Sql))]
 [JsonDerivedType(typeof(AnalysisServicesConnectionInfo), nameof(ConnectionType.AnalysisServices))]
-public abstract class ConnectionInfoBase(ConnectionType connectionType, string connectionName, string connectionString) : IComparable
+public abstract class ConnectionInfoBase(ConnectionType connectionType) : IComparable
 {
     [Key]
     [Display(Name = "Connection id")]
@@ -21,12 +21,12 @@ public abstract class ConnectionInfoBase(ConnectionType connectionType, string c
     [Required]
     [MaxLength(250)]
     [Display(Name = "Connection name")]
-    public string ConnectionName { get; set; } = connectionName;
+    public string ConnectionName { get; set; } = "";
 
     [Required]
     [Display(Name = "Connection string")]
     [JsonSensitive(WhenContains = "password")]
-    public string ConnectionString { get; set; } = connectionString;
+    public string ConnectionString { get; set; } = "";
 
     public int CompareTo(object? obj) => obj switch
     {

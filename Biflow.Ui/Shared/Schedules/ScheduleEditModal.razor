@@ -134,7 +134,7 @@
 
     [Parameter] public EventCallback<Schedule> OnSubmit { get; set; }
 
-    private Schedule schedule = new(Guid.Empty) { Tags = new List<Tag>() }; // assign placeholder
+    private Schedule schedule = new() { Tags = new List<Tag>() }; // assign placeholder
     private HxOffcanvas? offcanvas;
     private List<string> tags = new();
     private IEnumerable<Tag> allTags = Enumerable.Empty<Tag>();
@@ -220,7 +220,7 @@
                 {
                     // New tags
                     var tag = tags.FirstOrDefault(t => t.TagName == text) ?? new Tag(text);
-                        schedule.Tags.Add(tag);
+                    schedule.Tags.Add(tag);
                 }
                 foreach (var tag in schedule.Tags.Where(t => !this.tags.Contains(t.TagName)).ToList() ?? Enumerable.Empty<Tag>())
                 {
@@ -266,8 +266,9 @@
         {
             var jobId = Job?.JobId ?? Jobs.FirstOrDefault()?.JobId;
             ArgumentNullException.ThrowIfNull(jobId);
-            schedule = new((Guid)jobId)
+            schedule = new()
             {
+                JobId = (Guid)jobId,
                 Tags = new List<Tag>()
             };
         }

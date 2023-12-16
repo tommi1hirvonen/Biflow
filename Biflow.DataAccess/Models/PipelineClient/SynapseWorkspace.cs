@@ -7,12 +7,12 @@ using SynapsePipelineClient = Azure.Analytics.Synapse.Artifacts.PipelineClient;
 
 namespace Biflow.DataAccess.Models;
 
-public class SynapseWorkspace(string synapseWorkspaceUrl) : PipelineClient(PipelineClientType.Synapse)
+public class SynapseWorkspace() : PipelineClient(PipelineClientType.Synapse)
 {
     [Required]
     [MinLength(1)]
     [MaxLength(500)]
-    public string SynapseWorkspaceUrl { get; set; } = synapseWorkspaceUrl;
+    public string SynapseWorkspaceUrl { get; set; } = "";
 
     [NotMapped]
     private Uri SynapseEndpoint => new(SynapseWorkspaceUrl);

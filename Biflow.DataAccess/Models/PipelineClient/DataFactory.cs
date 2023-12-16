@@ -9,10 +9,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class DataFactory : PipelineClient
+public class DataFactory() : PipelineClient(PipelineClientType.DataFactory)
 {
-    public DataFactory() : base(PipelineClientType.DataFactory) { }
-
     [Column("SubscriptionId")]
     [Required]
     [Display(Name = "Subscription id")]
