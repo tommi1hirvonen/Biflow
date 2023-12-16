@@ -1,8 +1,6 @@
 ﻿using Biflow.DataAccess.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Text.Json.Serialization.Metadata;
 using Xunit;
 
 namespace Biflow.DataAccess.Test;
@@ -10,16 +8,7 @@ namespace Biflow.DataAccess.Test;
 [Collection(nameof(DatabaseCollection))]
 public class SerializationTests(SerializationFixture fixture) : IClassFixture<SerializationFixture>
 {
-    private static readonly JsonSerializerOptions Options = new()
-    {
-        WriteIndented = true,
-        ReferenceHandler = ReferenceHandler.Preserve,
-        Converters = { new JsonStringEnumConverter() },
-        TypeInfoResolver = new DefaultJsonTypeInfoResolver
-        {
-            Modifiers = { JsonSensitiveAttribute.SensitiveModifier }
-        }
-    };
+    private static JsonSerializerOptions Options => EnvironmentSnapshot.JsonSerializerOptions;
 
     [Fact]
     public void Serialize_Connections()
@@ -164,7 +153,7 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
     [Fact]
     public void Serialize_Snapshot()
     {
-        var snapshot = new Snapshot
+        var snapshot = new EnvironmentSnapshot
         {
             Connections = fixture.Connections,
             AppRegistrations = fixture.AppRegistrations,
@@ -181,26 +170,9 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
             DataTableCategories = fixture.DataTableCategories
         };
         var json = JsonSerializer.Serialize(snapshot, Options);
-        var items = JsonSerializer.Deserialize<Snapshot>(json, Options);
+        var items = JsonSerializer.Deserialize<EnvironmentSnapshot>(json, Options);
         Assert.NotNull(items);
     }
-}
-
-file class Snapshot
-{
-    public required ConnectionInfoBase[] Connections { get; init; }
-    public required AppRegistration[] AppRegistrations { get; init; }
-    public required PipelineClient[] PipelineClients { get; init; }
-    public required FunctionApp[] FunctionApps { get; init; }
-    public required QlikCloudClient[] QlikCloudClients { get; init; }
-    public required BlobStorageClient[] BlobStorageClients { get; init; }
-    public required Job[] Jobs { get; init; }
-    public required JobCategory[] JobCategories { get; init; }
-    public required Step[] Steps { get; init; }
-    public required Tag[] Tags { get; init; }
-    public required DataObject[] DataObjects { get; init; }
-    public required MasterDataTable[] DataTables { get; init; }
-    public required MasterDataTableCategory[] DataTableCategories { get; init; }
 }
 
 public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
