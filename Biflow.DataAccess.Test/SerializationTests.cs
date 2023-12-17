@@ -165,6 +165,7 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
             JobCategories = fixture.JobCategories,
             Steps = fixture.Steps,
             Tags = fixture.Tags,
+            Schedules = fixture.Schedules,
             DataObjects = fixture.DataObjects,
             DataTables = fixture.DataTables,
             DataTableCategories = fixture.DataTableCategories
@@ -189,6 +190,7 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
     public Job[] Jobs { get; private set; } = [];
     public JobCategory[] JobCategories { get; private set; } = [];
     public Step[] Steps { get; private set; } = [];
+    public Schedule[] Schedules { get; private set; } = [];
 
     public Tag[] Tags { get; private set; } = [];
     public DataObject[] DataObjects {  get; private set; } = [];
@@ -204,31 +206,38 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
 
         Connections = await context.Connections
             .AsNoTracking()
+            .OrderBy(c => c.ConnectionId)
             .ToArrayAsync();
         AppRegistrations = await context.AppRegistrations
             .AsNoTracking()
+            .OrderBy(a => a.AppRegistrationId)
             .ToArrayAsync();
         PipelineClients = await context.PipelineClients
             .AsNoTracking()
+            .OrderBy(p => p.PipelineClientId)
             .ToArrayAsync();
         FunctionApps = await context.FunctionApps
             .AsNoTracking()
+            .OrderBy(f => f.FunctionAppId)
             .ToArrayAsync();
         QlikCloudClients = await context.QlikCloudClients
             .AsNoTracking()
+            .OrderBy(q => q.QlikCloudClientId)
             .ToArrayAsync();
         BlobStorageClients = await context.BlobStorageClients
             .AsNoTracking()
+            .OrderBy(b => b.BlobStorageClientId)
             .ToArrayAsync();
 
         Jobs = await context.Jobs
             .AsNoTracking()
             .Include(j => j.JobParameters)
             .Include(j => j.JobConcurrencies)
-            .Include(j => j.Schedules).ThenInclude(s => s.Tags)
+            .OrderBy(j => j.JobId)
             .ToArrayAsync();
         JobCategories = await context.JobCategories
             .AsNoTracking()
+            .OrderBy(c => c.CategoryId)
             .ToArrayAsync();
         Steps = await context.Steps
             .AsNoTracking()
@@ -239,21 +248,31 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
             .Include(s => s.DataObjects)
             .Include(s => s.Tags)
             .Include(s => s.ExecutionConditionParameters)
+            .OrderBy(s => s.JobId).ThenBy(s => s.StepId)
+            .ToArrayAsync();
+        Schedules = await context.Schedules
+            .AsNoTracking()
+            .Include(s => s.Tags)
+            .OrderBy(s => s.JobId).ThenBy(s => s.ScheduleId)
             .ToArrayAsync();
 
         Tags = await context.Tags
             .AsNoTracking()
+            .OrderBy(t => t.TagId)
             .ToArrayAsync();
         DataObjects = await context.DataObjects
             .AsNoTracking()
+            .OrderBy(d => d.ObjectId)
             .ToArrayAsync();
 
         DataTables = await context.MasterDataTables
             .AsNoTracking()
             .Include(t => t.Lookups)
+            .OrderBy(t => t.DataTableId)
             .ToArrayAsync();
         DataTableCategories = await context.MasterDataTableCategories
             .AsNoTracking()
+            .OrderBy(c => c.CategoryId)
             .ToArrayAsync();
     }
 }

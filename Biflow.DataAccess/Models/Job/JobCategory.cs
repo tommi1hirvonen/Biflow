@@ -18,5 +18,6 @@ public class JobCategory
     [Column("JobCategoryName")]
     public string CategoryName { get; set; } = "";
 
+    [JsonIgnore]
     public ICollection<Job> Jobs { get; set; } = null!;
 }

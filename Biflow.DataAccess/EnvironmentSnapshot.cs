@@ -10,7 +10,7 @@ public class EnvironmentSnapshot
     public static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         WriteIndented = true,
-        ReferenceHandler = ReferenceHandler.Preserve,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         Converters = { new JsonStringEnumConverter() },
         TypeInfoResolver = new DefaultJsonTypeInfoResolver
         {
@@ -18,31 +18,22 @@ public class EnvironmentSnapshot
         }
     };
 
-    public required ConnectionInfoBase[] Connections { get; init; }
-    
-    public required AppRegistration[] AppRegistrations { get; init; }
-    
-    public required PipelineClient[] PipelineClients { get; init; }
-    
-    public required FunctionApp[] FunctionApps { get; init; }
-    
-    public required QlikCloudClient[] QlikCloudClients { get; init; }
-    
-    public required BlobStorageClient[] BlobStorageClients { get; init; }
-    
-    public required Job[] Jobs { get; init; }
-    
     public required JobCategory[] JobCategories { get; init; }
-    
+    public required Job[] Jobs { get; init; }
     public required Step[] Steps { get; init; }
-    
+    public required Schedule[] Schedules { get; init; }
     public required Tag[] Tags { get; init; }
-    
     public required DataObject[] DataObjects { get; init; }
-    
-    public required MasterDataTable[] DataTables { get; init; }
-    
+
+    public required ConnectionInfoBase[] Connections { get; init; }
+    public required AppRegistration[] AppRegistrations { get; init; }
+    public required PipelineClient[] PipelineClients { get; init; }
+    public required FunctionApp[] FunctionApps { get; init; }
+    public required QlikCloudClient[] QlikCloudClients { get; init; }
+    public required BlobStorageClient[] BlobStorageClients { get; init; }
+
     public required MasterDataTableCategory[] DataTableCategories { get; init; }
+    public required MasterDataTable[] DataTables { get; init; }
 
     private static void SensitiveModifier(JsonTypeInfo typeInfo)
     {

@@ -121,6 +121,7 @@ public class Job
     [JsonIgnore]
     public ICollection<JobStep> JobSteps { get; set; } = null!;
 
+    [JsonIgnore]
     public ICollection<Schedule> Schedules { get; set; } = null!;
 
     [JsonIgnore]
