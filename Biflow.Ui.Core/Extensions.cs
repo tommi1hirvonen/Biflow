@@ -165,6 +165,7 @@ public static partial class Extensions
             throw new ArgumentException($"Error registering scheduler service. Incorrect scheduler type: {schedulerType}. Check appsettings.json.");
         }
 
+        services.AddSingleton<EnvironmentSnapshotBuilder>();
         services.AddSingleton<UserService>();
         services.AddSingleton<SqlServerHelperService>();
         services.AddDuplicatorServices();

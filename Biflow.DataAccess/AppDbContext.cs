@@ -59,6 +59,7 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
     public DbSet<QlikCloudClient> QlikCloudClients => Set<QlikCloudClient>();
     public DbSet<StepDataObject> StepDataObjects => Set<StepDataObject>();
     public DbSet<BlobStorageClient> BlobStorageClients => Set<BlobStorageClient>();
+    public DbSet<EnvironmentVersion> EnvironmentVersions => Set<EnvironmentVersion>();
 
     protected virtual void ConfigureSqlServer(SqlServerDbContextOptionsBuilder options)
     {
