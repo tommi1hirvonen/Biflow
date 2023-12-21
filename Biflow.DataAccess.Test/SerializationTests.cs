@@ -163,9 +163,7 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
             BlobStorageClients = fixture.BlobStorageClients,
             Jobs = fixture.Jobs,
             JobCategories = fixture.JobCategories,
-            Steps = fixture.Steps,
             Tags = fixture.Tags,
-            Schedules = fixture.Schedules,
             DataObjects = fixture.DataObjects,
             DataTables = fixture.DataTables,
             DataTableCategories = fixture.DataTableCategories
@@ -229,15 +227,17 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
             .OrderBy(b => b.BlobStorageClientId)
             .ToArrayAsync();
 
+        
+        JobCategories = await context.JobCategories
+            .AsNoTracking()
+            .OrderBy(c => c.CategoryId)
+            .ToArrayAsync();
+
         Jobs = await context.Jobs
             .AsNoTracking()
             .Include(j => j.JobParameters)
             .Include(j => j.JobConcurrencies)
             .OrderBy(j => j.JobId)
-            .ToArrayAsync();
-        JobCategories = await context.JobCategories
-            .AsNoTracking()
-            .OrderBy(c => c.CategoryId)
             .ToArrayAsync();
         Steps = await context.Steps
             .AsNoTracking()
@@ -255,6 +255,12 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
             .Include(s => s.Tags)
             .OrderBy(s => s.JobId).ThenBy(s => s.ScheduleId)
             .ToArrayAsync();
+
+        foreach (var job in Jobs)
+        {
+            job.Steps = Steps.Where(s => s.JobId == job.JobId).ToArray();
+            job.Schedules = Schedules.Where(s => s.JobId == job.JobId).ToArray();
+        }
 
         Tags = await context.Tags
             .AsNoTracking()

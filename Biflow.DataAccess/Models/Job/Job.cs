@@ -115,13 +115,19 @@ public class Job
     [JsonIgnore]
     public JobCategory? Category { get; set; }
 
-    [JsonIgnore]
+    [ValidateComplexType]
+    public IList<JobParameter> JobParameters { get; set; } = null!;
+
+    [ValidateComplexType]
+    public ICollection<JobConcurrency> JobConcurrencies { get; set; } = null!;
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public ICollection<Step> Steps { get; set; } = null!;
 
     [JsonIgnore]
     public ICollection<JobStep> JobSteps { get; set; } = null!;
 
-    [JsonIgnore]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public ICollection<Schedule> Schedules { get; set; } = null!;
 
     [JsonIgnore]
@@ -132,12 +138,6 @@ public class Job
 
     [JsonIgnore]
     public ICollection<JobTagSubscription> JobTagSubscriptions { get; set; } = null!;
-
-    [ValidateComplexType]
-    public IList<JobParameter> JobParameters { get; set; } = null!;
-
-    [ValidateComplexType]
-    public ICollection<JobConcurrency> JobConcurrencies { get; set; } = null!;
 
     [JsonIgnore]
     public ICollection<User> Users { get; set; } = null!;

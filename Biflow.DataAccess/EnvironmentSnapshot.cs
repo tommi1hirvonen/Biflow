@@ -20,8 +20,6 @@ public class EnvironmentSnapshot
 
     public required JobCategory[] JobCategories { get; init; }
     public required Job[] Jobs { get; init; }
-    public required Step[] Steps { get; init; }
-    public required Schedule[] Schedules { get; init; }
     public required Tag[] Tags { get; init; }
     public required DataObject[] DataObjects { get; init; }
 
