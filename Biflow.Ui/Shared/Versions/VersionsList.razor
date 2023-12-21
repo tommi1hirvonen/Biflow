@@ -8,7 +8,7 @@
 
 <div class="row">
     <div class="col">
-        <HxButton Color="ThemeColor.Success" OnClick="CreateVersionAsync">
+        <HxButton Color="ThemeColor.Success" OnClick="() => createModal.LetAsync(x => x.ShowAsync())">
             Create version
         </HxButton>
     </div>
@@ -94,12 +94,32 @@
     </BodyTemplate>
 </HxOffcanvas>
 
+<HxModal @ref="createModal" Title="Create new version snapshot" Size="ModalSize.Large" Scrollable="true">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <textarea class="form-control form-control-sm" @bind="description" rows="5" placeholder="Version description" />
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Success" OnClick="CreateVersionAsync">
+            Save
+        </HxButton>
+        <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Spinner="false" OnClick="() => createModal.LetAsync(x => x.HideAsync())">
+            Cancel
+        </HxButton>
+    </FooterTemplate>
+</HxModal>
+
 @code {
     [Parameter] public IList<VersionProjection>? Versions { get; set; }
 
     private HxOffcanvas? detailsOffcanvas;
     private EnvironmentVersion? detailsVersion;
     private CodeEditor? detailsEditor;
+    private HxModal? createModal;
+    private string? description;
 
     private async Task CreateVersionAsync()
     {
@@ -109,13 +129,15 @@
             var version = new EnvironmentVersion
                 {
                     Snapshot = snapshot,
-                    Description = "Test description",
+                    Description = description,
                     CreatedDateTime = DateTimeOffset.Now,
                     CreatedBy = HttpContext.HttpContext?.User.Identity?.Name
                 };
             using var context = await DbContextFactory.CreateDbContextAsync();
             context.EnvironmentVersions.Add(version);
             await context.SaveChangesAsync();
+            await createModal.LetAsync(x => x.HideAsync());
+            description = null;
             Versions?.Insert(0, new(version.VersionId, version.Description, version.CreatedDateTime, version.CreatedBy));
         }
         catch (Exception ex)
