@@ -1,109 +1,54 @@
-﻿@page "/versions"
+﻿@page "/versions/{Page?}"
 
-@using System.Text
+@attribute [Authorize(Roles = $"{Roles.Admin}")]
 
+@inject NavigationManager NavigationManager
 @inject IDbContextFactory<AppDbContext> DbContextFactory
-@inject EnvironmentSnapshotBuilder SnapshotBuilder
-@inject IHttpContextAccessor HttpContext
-@inject IHxMessengerService Messenger
-@inject IJSRuntime JS
 
 <PageTitle>Versions | Biflow</PageTitle>
 
 <h4>Versions</h4>
 
-<div class="row mt-3">
+<div class="row mt-3 mb-4">
     <div class="col">
-        <HxButton Color="ThemeColor.Success" OnClick="CreateVersionAsync">
-            Create version
-        </HxButton>
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <NavLink class="nav-link" href="versions/list">
+                    List
+                </NavLink>
+            </li>
+            <li class="nav-item" role="presentation">
+                <NavLink class="nav-link" href="versions/compare">
+                    Compare
+                </NavLink>
+            </li>
+        </ul>
     </div>
 </div>
 
-<div class="row my-4">
-    <div class="col">
-        <div class="card shadow-sm">
-            <div class="card-body px-0">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Version id</th>
-                            <th>Description</th>
-                            <th>Created on</th>
-                            <th>Created by</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (versions is null)
-                        {
-                            <tr>
-                                <td colspan="5" class="text-center">
-                                    <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
-                                </td>
-                            </tr>
-                        }
-                        else if (versions.Count == 0)
-                        {
-                            <tr>
-                                <td colspan="5">
-                                    No versions
-                                </td>
-                            </tr>
-                        }
-                        else
-                        {
-                            foreach (var version in versions)
-                            {
-                                <tr>
-                                    <td class="align-middle">
-                                        <span class="link-primary text-decoration-underline pointer" @onclick="() => OpenDetailsAsync(version.VersionId)">
-                                            @version.VersionId
-                                        </span>
-                                    </td>
-                                    <td class="align-middle">
-                                        @version.Description
-                                    </td>
-                                    <td class="align-middle">
-                                        @version.CreatedDateTime
-                                    </td>
-                                    <td class="align-middle">
-                                        @version.CreatedBy
-                                    </td>
-                                    <td>
-                                        <HxButtonGroup Size="ButtonGroupSize.Small">
-                                            <HxButton Color="ThemeColor.None" CssClass="btn-auto" title="Download JSON" OnClick="() => DownloadAsync(version.VersionId)">
-                                                <CxIcon Icon="FeatherIcon.Download" />
-                                            </HxButton>
-                                        </HxButtonGroup>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<HxOffcanvas @ref="detailsOffcanvas" Size="OffcanvasSize.Large" Title="@($"Version {detailsVersion?.VersionId}")">
-    <BodyTemplate>
-        <div>
-            <CodeEditor @ref="detailsEditor"
-                        Language="json"
-                        ReadOnly
-                        InitialHeight="calc(100vh - 120px)"
-                        InitialValueExpression="() => detailsVersion?.Snapshot"/>
-        </div>
-    </BodyTemplate>
-</HxOffcanvas>
+@if (Page == "list")
+{
+    <VersionsList Versions="versions" />   
+}
+else if (Page == "compare")
+{
+    <VersionsCompare Versions="versions" />
+}
 
 @code {
+    [Parameter] public string? Page { get; set; }
+
     private IList<VersionProjection>? versions;
-    private HxOffcanvas? detailsOffcanvas;
-    private EnvironmentVersion? detailsVersion;
-    private CodeEditor? detailsEditor;
+
+    protected override void OnInitialized()
+    {
+        if (Page is not null)
+        {
+            return;
+        }
+
+        NavigationManager.NavigateTo("versions/list");
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -113,55 +58,4 @@
             .Select(v => new VersionProjection(v.VersionId, v.Description, v.CreatedDateTime, v.CreatedBy))
             .ToListAsync();
     }
-
-    private async Task CreateVersionAsync()
-    {
-        try
-        {
-            var snapshot = await SnapshotBuilder.CreateAsync();
-            var version = new EnvironmentVersion
-            {
-                Snapshot = snapshot,
-                Description = "Test description",
-                CreatedDateTime = DateTimeOffset.Now,
-                CreatedBy = HttpContext.HttpContext?.User.Identity?.Name
-            };
-            using var context = await DbContextFactory.CreateDbContextAsync();
-            context.EnvironmentVersions.Add(version);
-            await context.SaveChangesAsync();
-            versions?.Insert(0, new(version.VersionId, version.Description, version.CreatedDateTime, version.CreatedBy));
-        }
-        catch (Exception ex)
-        {
-            Messenger.AddError("Error creating version", ex.Message);
-        }
-    }
-
-    private async Task OpenDetailsAsync(int versionId)
-    {
-        using var context = await DbContextFactory.CreateDbContextAsync();
-        detailsVersion = await context.EnvironmentVersions.FirstOrDefaultAsync(v => v.VersionId == versionId);
-        await detailsOffcanvas.LetAsync(x => x.ShowAsync());
-    }
-
-    private async Task DownloadAsync(int versionId)
-    {
-        try
-        {
-            using var context = await DbContextFactory.CreateDbContextAsync();
-            var version = await context.EnvironmentVersions.FirstOrDefaultAsync(v => v.VersionId == versionId);
-            ArgumentNullException.ThrowIfNull(version);
-            var filename = $"version_{version.VersionId}.json";
-            var bytes = Encoding.UTF8.GetBytes(version.Snapshot);
-            using var stream = new MemoryStream(bytes);
-            using var streamRef = new DotNetStreamReference(stream: stream);
-            await JS.InvokeVoidAsync("downloadFileFromStream", filename, streamRef);
-        }
-        catch (Exception ex)
-        {
-            Messenger.AddError("Error exporting version", ex.Message);
-        }
-    }
-
-    private record VersionProjection(int VersionId, string? Description, DateTimeOffset CreatedDateTime, string? CreatedBy);
 }

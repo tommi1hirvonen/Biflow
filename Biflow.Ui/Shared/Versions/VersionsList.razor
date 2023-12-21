@@ -1,0 +1,152 @@
+﻿@using System.Text
+
+@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject EnvironmentSnapshotBuilder SnapshotBuilder
+@inject IHttpContextAccessor HttpContext
+@inject IHxMessengerService Messenger
+@inject IJSRuntime JS
+
+<div class="row">
+    <div class="col">
+        <HxButton Color="ThemeColor.Success" OnClick="CreateVersionAsync">
+            Create version
+        </HxButton>
+    </div>
+</div>
+
+<div class="row my-4">
+    <div class="col">
+        <div class="card shadow-sm">
+            <div class="card-body px-0">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Version id</th>
+                            <th>Description</th>
+                            <th>Created on</th>
+                            <th>Created by</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Versions is null)
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center">
+                                    <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                                </td>
+                            </tr>
+                        }
+                        else if (Versions.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="5">
+                                    No versions
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var version in Versions)
+                            {
+                                <tr>
+                                    <td class="align-middle">
+                                        <span class="link-primary text-decoration-underline pointer" @onclick="() => OpenDetailsAsync(version.VersionId)">
+                                            @version.VersionId
+                                        </span>
+                                    </td>
+                                    <td class="align-middle">
+                                        @version.Description
+                                    </td>
+                                    <td class="align-middle">
+                                        @version.CreatedDateTime.LocalDateTime
+                                    </td>
+                                    <td class="align-middle">
+                                        @version.CreatedBy
+                                    </td>
+                                    <td>
+                                        <HxButtonGroup Size="ButtonGroupSize.Small">
+                                            <HxButton Color="ThemeColor.None" CssClass="btn-auto" title="Download JSON" OnClick="() => DownloadAsync(version.VersionId)">
+                                                <CxIcon Icon="FeatherIcon.Download" />
+                                            </HxButton>
+                                        </HxButtonGroup>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<HxOffcanvas @ref="detailsOffcanvas" Size="OffcanvasSize.Large" Title="@($"Version {detailsVersion?.VersionId}")">
+    <BodyTemplate>
+        <div>
+            <CodeEditor @ref="detailsEditor"
+                        Language="json"
+                        ReadOnly
+                        FontSize="12"
+                        InitialHeight="calc(100vh - 120px)"
+                        InitialValueExpression="() => detailsVersion?.Snapshot" />
+        </div>
+    </BodyTemplate>
+</HxOffcanvas>
+
+@code {
+    [Parameter] public IList<VersionProjection>? Versions { get; set; }
+
+    private HxOffcanvas? detailsOffcanvas;
+    private EnvironmentVersion? detailsVersion;
+    private CodeEditor? detailsEditor;
+
+    private async Task CreateVersionAsync()
+    {
+        try
+        {
+            var snapshot = await SnapshotBuilder.CreateAsync();
+            var version = new EnvironmentVersion
+                {
+                    Snapshot = snapshot,
+                    Description = "Test description",
+                    CreatedDateTime = DateTimeOffset.Now,
+                    CreatedBy = HttpContext.HttpContext?.User.Identity?.Name
+                };
+            using var context = await DbContextFactory.CreateDbContextAsync();
+            context.EnvironmentVersions.Add(version);
+            await context.SaveChangesAsync();
+            Versions?.Insert(0, new(version.VersionId, version.Description, version.CreatedDateTime, version.CreatedBy));
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error creating version", ex.Message);
+        }
+    }
+
+    private async Task OpenDetailsAsync(int versionId)
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        detailsVersion = await context.EnvironmentVersions.FirstOrDefaultAsync(v => v.VersionId == versionId);
+        await detailsOffcanvas.LetAsync(x => x.ShowAsync());
+    }
+
+    private async Task DownloadAsync(int versionId)
+    {
+        try
+        {
+            using var context = await DbContextFactory.CreateDbContextAsync();
+            var version = await context.EnvironmentVersions.FirstOrDefaultAsync(v => v.VersionId == versionId);
+            ArgumentNullException.ThrowIfNull(version);
+            var filename = $"version_{version.VersionId}.json";
+            var bytes = Encoding.UTF8.GetBytes(version.Snapshot);
+            using var stream = new MemoryStream(bytes);
+            using var streamRef = new DotNetStreamReference(stream: stream);
+            await JS.InvokeVoidAsync("downloadFileFromStream", filename, streamRef);
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error exporting version", ex.Message);
+        }
+    }
+}

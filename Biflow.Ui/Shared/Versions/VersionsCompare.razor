@@ -1,0 +1,82 @@
+﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject IHxMessengerService Messenger
+
+@if (Versions is not null)
+{
+    <div class="row">
+        <div class="col d-flex align-items-center">
+            <label class="form-label mb-0">
+                Source version
+            </label>
+            <select class="form-select form-select-sm ms-3" @bind="sourceVersionId" @bind:after="CompareAsync" style="max-width: 20rem;">
+                <option value="0">Select source version</option>
+                @foreach (var version in Versions)
+                {
+                    <option value="@version.VersionId">@version.VersionId – @version.CreatedDateTime.LocalDateTime</option>
+                }
+            </select>
+            <label class="form-label mb-0 ms-4">
+                Target version
+            </label>
+            <select class="form-select form-select-sm ms-3" @bind="targetVersionId" @bind:after="CompareAsync" style="max-width: 20rem;">
+                <option value="0">Select target version</option>
+                @foreach (var version in Versions)
+                {
+                    <option value="@version.VersionId">@version.VersionId – @version.CreatedDateTime.LocalDateTime</option>
+                }
+            </select>
+            @if (loading)
+            {
+                <HxSpinner Color="ThemeColor.Secondary" CssClass="ms-4" />
+            }
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col">
+            <CodeDiffEditor @ref="diffEditor" InitialHeight="calc(100vh - 250px)" FontSize="12" />
+        </div>
+    </div>
+}
+else
+{
+    <div class="row">
+        <div class="col text-center">
+            <HxSpinner Color="ThemeColor.Secondary" />
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public IList<VersionProjection>? Versions { get; set; }
+
+    private CodeDiffEditor? diffEditor;
+    private int sourceVersionId;
+    private int targetVersionId;
+    private bool loading;
+
+    private async Task CompareAsync()
+    {
+        if (sourceVersionId <= 0 || targetVersionId <= 0)
+        {
+            return;
+        }
+
+        try
+        {
+            loading = true;
+            using var context = await DbContextFactory.CreateDbContextAsync();
+            var sourceVersion = await context.EnvironmentVersions.FirstOrDefaultAsync(v => v.VersionId == sourceVersionId);
+            var targetVersion = await context.EnvironmentVersions.FirstOrDefaultAsync(v => v.VersionId == targetVersionId);
+            await diffEditor.LetAsync(x => x.SetDiffEditor(sourceVersion?.Snapshot, targetVersion?.Snapshot, "json"));
+        }
+        catch (Exception ex)
+        {
+            Messenger.AddError("Error generating comparison", ex.Message);
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+}
