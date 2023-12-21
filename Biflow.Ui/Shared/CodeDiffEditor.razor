@@ -1,0 +1,93 @@
+﻿@using BlazorMonaco.Editor
+
+@implements IDisposable
+
+@inject ThemeService ThemeService
+@inject IJSRuntime JS
+
+@{
+    var resize = Resize switch
+    {
+        CodeEditorResize.Horizontal => "horizontal",
+        CodeEditorResize.Both => "both",
+        _ => "vertical"
+    };
+}
+
+<style>
+    @($"#{editorId} {{ height: {InitialHeight}; resize: {resize}; overflow: hidden; }}")
+</style>
+
+<StandaloneDiffEditor @ref="editor"
+                      Id="@editorId"
+                      ConstructionOptions="GetEditorOptions"
+                      CssClass="border" />
+
+@code {
+    /// <summary>
+    /// Initial editor height in css. Default is "100px".
+    /// </summary>
+    [Parameter] public string InitialHeight { get; set; } = "100px";
+
+    [Parameter] public CodeEditorResize Resize { get; set; } = CodeEditorResize.Vertical;
+
+    [Parameter] public int? FontSize { get; set; }
+
+    private StandaloneDiffEditor? editor { get; set; }
+    private readonly string editorId = $"_{Guid.NewGuid().ToString()}"; // prefix with underscode as html id cannot start with a number
+
+    public enum CodeEditorResize { Vertical, Horizontal, Both }
+
+    public async Task SetDiffEditor(string? original, string? modified, string language)
+    {
+        ArgumentNullException.ThrowIfNull(editor);
+        var originalModel = await Global.CreateModel(JS, original, language);
+        var modifiedModel = await Global.CreateModel(JS, modified, language);
+        await editor.SetModel(new()
+        {
+            Original = originalModel,
+            Modified = modifiedModel
+        });
+    }
+
+    protected override void OnInitialized()
+    {
+        ThemeService.OnThemeChanged += OnThemeChanged;
+        var darkTheme = new StandaloneThemeData
+        {
+            Base = "vs-dark",
+            Inherit = true,
+            Rules = new(),
+            Colors = new Dictionary<string, string>
+            {
+                { "editor.background", "#212529" }
+            }
+        };
+        Global.DefineTheme(JS, "custom-dark", darkTheme);
+    }
+
+    private StandaloneDiffEditorConstructionOptions GetEditorOptions(StandaloneDiffEditor editor) => new()
+    {
+        AutomaticLayout = true,
+        OriginalEditable = false,
+        ReadOnly = true,
+        FontSize = FontSize,
+        Minimap = new EditorMinimapOptions { Enabled = true },
+        Theme = ThemeService.CurrentTheme == Theme.Dark ? "custom-dark" : "vs"
+    };
+
+    private void OnThemeChanged(Theme theme, bool isAuto)
+    {
+        var options = new EditorUpdateOptions
+        {
+            Theme = theme == Theme.Dark ? "vs-dark" : "vs"
+        };
+        editor?.OriginalEditor.UpdateOptions(options);
+        editor?.ModifiedEditor.UpdateOptions(options);
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnThemeChanged -= OnThemeChanged;
+    }
+}
