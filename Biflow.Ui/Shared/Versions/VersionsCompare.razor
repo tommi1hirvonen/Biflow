@@ -53,10 +53,22 @@ else
 @code {
     [Parameter] public IList<VersionProjection>? Versions { get; set; }
 
+    [Parameter] public int? InitialSourceVersionId { get; set; }
+
     private CodeDiffEditor? diffEditor;
     private int sourceVersionId = -1;
     private int targetVersionId = -1;
     private bool loading;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (InitialSourceVersionId is int i)
+        {
+            sourceVersionId = i;
+            targetVersionId = 0; // current;
+            await CompareAsync();
+        }
+    }
 
     private async Task CompareAsync()
     {

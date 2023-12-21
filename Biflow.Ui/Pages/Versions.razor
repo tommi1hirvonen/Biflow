@@ -1,4 +1,4 @@
-﻿@page "/versions/{Page?}"
+﻿@page "/versions/{Page?}/{InitialSourceVersionId:int?}"
 
 @attribute [Authorize(Roles = $"{Roles.Admin}")]
 
@@ -34,11 +34,13 @@
 }
 else if (Page == "compare")
 {
-    <VersionsCompare Versions="versions" />
+    <VersionsCompare Versions="versions" InitialSourceVersionId="InitialSourceVersionId" />
 }
 
 @code {
     [Parameter] public string? Page { get; set; }
+
+    [Parameter] public int? InitialSourceVersionId { get; set; }
 
     private IList<VersionProjection>? versions;
 

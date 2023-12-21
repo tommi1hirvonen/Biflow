@@ -5,6 +5,7 @@
 @inject IHttpContextAccessor HttpContext
 @inject IHxMessengerService Messenger
 @inject IJSRuntime JS
+@inject NavigationManager NavigationManager
 
 <div class="row">
     <div class="col">
@@ -66,6 +67,9 @@
                                     </td>
                                     <td>
                                         <HxButtonGroup Size="ButtonGroupSize.Small">
+                                            <HxButton Color="ThemeColor.None" CssClass="btn-auto" title="Compare to current" OnClick="@(() => NavigationManager.NavigateTo($"versions/compare/{version.VersionId}"))">
+                                                <CxIcon Icon="LucideIcon.GitCompareArrows" />
+                                            </HxButton>
                                             <HxButton Color="ThemeColor.None" CssClass="btn-auto" title="Download JSON" OnClick="() => DownloadAsync(version.VersionId)">
                                                 <CxIcon Icon="FeatherIcon.Download" />
                                             </HxButton>
@@ -106,7 +110,7 @@
         <HxButton Color="ThemeColor.Success" OnClick="CreateVersionAsync">
             Save
         </HxButton>
-        <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Spinner="false" OnClick="() => createModal.LetAsync(x => x.HideAsync())">
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" OnClick="() => createModal.LetAsync(x => x.HideAsync())">
             Cancel
         </HxButton>
     </FooterTemplate>
