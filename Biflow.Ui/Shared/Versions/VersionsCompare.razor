@@ -1,5 +1,6 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHxMessengerService Messenger
+@inject EnvironmentSnapshotBuilder SnapshotBuilder
 
 @if (Versions is not null)
 {
@@ -9,7 +10,8 @@
                 Source version
             </label>
             <select class="form-select form-select-sm ms-3" @bind="sourceVersionId" @bind:after="CompareAsync" style="max-width: 20rem;">
-                <option value="0">Select source version</option>
+                <option value="-1">Select source version</option>
+                <option value="0">Current</option>
                 @foreach (var version in Versions)
                 {
                     <option value="@version.VersionId">@version.VersionId – @version.CreatedDateTime.LocalDateTime</option>
@@ -19,7 +21,8 @@
                 Target version
             </label>
             <select class="form-select form-select-sm ms-3" @bind="targetVersionId" @bind:after="CompareAsync" style="max-width: 20rem;">
-                <option value="0">Select target version</option>
+                <option value="-1">Select target version</option>
+                <option value="0">Current</option>
                 @foreach (var version in Versions)
                 {
                     <option value="@version.VersionId">@version.VersionId – @version.CreatedDateTime.LocalDateTime</option>
@@ -51,13 +54,13 @@ else
     [Parameter] public IList<VersionProjection>? Versions { get; set; }
 
     private CodeDiffEditor? diffEditor;
-    private int sourceVersionId;
-    private int targetVersionId;
+    private int sourceVersionId = -1;
+    private int targetVersionId = -1;
     private bool loading;
 
     private async Task CompareAsync()
     {
-        if (sourceVersionId <= 0 || targetVersionId <= 0)
+        if (sourceVersionId < 0 || targetVersionId < 0)
         {
             return;
         }
@@ -66,9 +69,17 @@ else
         {
             loading = true;
             using var context = await DbContextFactory.CreateDbContextAsync();
-            var sourceVersion = await context.EnvironmentVersions.FirstOrDefaultAsync(v => v.VersionId == sourceVersionId);
-            var targetVersion = await context.EnvironmentVersions.FirstOrDefaultAsync(v => v.VersionId == targetVersionId);
-            await diffEditor.LetAsync(x => x.SetDiffEditor(sourceVersion?.Snapshot, targetVersion?.Snapshot, "json"));
+            var sourceVersion = sourceVersionId switch
+            {
+                0 => await SnapshotBuilder.CreateAsync(),
+                _ => await context.EnvironmentVersions.Where(v => v.VersionId == sourceVersionId).Select(v => v.Snapshot).FirstOrDefaultAsync()
+            };
+            var targetVersion = targetVersionId switch
+            {
+                0 => await SnapshotBuilder.CreateAsync(),
+                _ => await context.EnvironmentVersions.Where(v => v.VersionId == targetVersionId).Select(v => v.Snapshot).FirstOrDefaultAsync()
+            };
+            await diffEditor.LetAsync(x => x.SetDiffEditor(sourceVersion, targetVersion, "json"));
         }
         catch (Exception ex)
         {
