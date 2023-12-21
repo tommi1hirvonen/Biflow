@@ -21,6 +21,7 @@
 <StandaloneDiffEditor @ref="editor"
                       Id="@editorId"
                       ConstructionOptions="GetEditorOptions"
+                      OnDidInit="OnDidInitAsync"
                       CssClass="border" />
 
 @code {
@@ -75,6 +76,30 @@
         Minimap = new EditorMinimapOptions { Enabled = true },
         Theme = ThemeService.CurrentTheme == Theme.Dark ? "custom-dark" : "vs"
     };
+
+    private async Task OnDidInitAsync()
+    {
+        ArgumentNullException.ThrowIfNull(editor);
+        var diffNavigatorOptions = new
+        {
+            followsCaret = true,
+            ignoreCharChanges = true,
+            alwaysRevealFirst = true
+        };
+        var navOptionJson = JsonSerializer.Serialize(diffNavigatorOptions);
+        var navOptionsDict = JsonSerializer.Deserialize<JsonElement>(navOptionJson);
+        await JS.InvokeVoidAsync("createDiffNavigator", editor.Id, navOptionsDict);
+    }
+
+    private async Task GotoPreviousDiff()
+    {
+        await JS.InvokeVoidAsync("diffNavigationPrevious");
+    }
+
+    private async Task GotoNextDiff()
+    {
+        await JS.InvokeVoidAsync("diffNavigationNext");
+    }
 
     private void OnThemeChanged(Theme theme, bool isAuto)
     {

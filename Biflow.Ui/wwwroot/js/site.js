@@ -9,3 +9,19 @@
     anchorElement.remove();
     URL.revokeObjectURL(url);
 }
+
+// Extensions for BlazorMonaco to get diff navigation.
+var navi;
+
+function createDiffNavigator(id, options) {
+    let editor = blazorMonaco.editor.getEditor(id);
+    navi = monaco.editor.createDiffNavigator(editor, options);
+}
+
+function diffNavigationNext() {
+    navi.next();
+}
+
+function diffNavigationPrevious() {
+    navi.previous();
+}
