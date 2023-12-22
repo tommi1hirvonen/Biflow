@@ -66,7 +66,6 @@ public abstract class Step : IComparable
 
     [Key]
     [Required]
-    [NotEmptyGuid]
     [JsonInclude]
     public Guid StepId { get; private set; }
 
