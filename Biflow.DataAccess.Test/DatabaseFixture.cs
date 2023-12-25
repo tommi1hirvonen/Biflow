@@ -260,10 +260,20 @@ public class DatabaseFixture : IAsyncLifetime
             {
                 StepName = "Test step 4",
                 ExecutionPhase = 30,
+                StepDescription = "Test step 4",
                 SqlStatement = "select @param",
                 Connection = sqlConnection,
+                ExecutionConditionExpression = new() { Expression = "dt >= 2023" },
                 Tags = [tag1]
             };
+            var step4ExecConditionParam = new ExecutionConditionParameter
+            {
+                Step = step4,
+                JobParameter = jobParameter2,
+                ParameterValueType = ParameterValueType.DateTime,
+                ParameterName = "dt"
+            };
+            step4.ExecutionConditionParameters = [step4ExecConditionParam];
             var step4Dependency = new Dependency
             {
                 StepId = step4.StepId,
