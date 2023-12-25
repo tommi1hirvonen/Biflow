@@ -37,6 +37,6 @@ public class JobFixture(DatabaseFixture fixture) : IAsyncLifetime
         using var context = await _dbContextFactory.CreateDbContextAsync();
         Job = await context.Jobs
             .Include(job => job.Category)
-            .FirstAsync(job => job.JobName == "Test job");
+            .FirstAsync(job => job.JobName == "Test job 1");
     }
 }

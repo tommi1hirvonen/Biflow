@@ -15,7 +15,7 @@ public class ExecutionBuilderTests(DatabaseFixture fixture)
         using var context = await _dbContextFactory.CreateDbContextAsync();
         var job = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
-            .FirstAsync(j => j.JobName == "Test job");
+            .FirstAsync(j => j.JobName == "Test job 1");
 
         var builder = await _executionBuilderFactory.CreateAsync(job.JobId, "testuser");
         Assert.NotNull(builder);
@@ -33,7 +33,7 @@ public class ExecutionBuilderTests(DatabaseFixture fixture)
         using var context = await _dbContextFactory.CreateDbContextAsync();
         var job = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
-            .FirstAsync(j => j.JobName == "Another job");
+            .FirstAsync(j => j.JobName == "Test job 2");
 
         var builder = await _executionBuilderFactory.CreateAsync(job.JobId, "testuser");
         Assert.NotNull(builder);
@@ -51,7 +51,7 @@ public class ExecutionBuilderTests(DatabaseFixture fixture)
         using var ctx = await _dbContextFactory.CreateDbContextAsync();
         var schedule = await ctx.Schedules
             .AsNoTracking()
-            .FirstAsync(s => s.ScheduleName == "Test schedule");
+            .FirstAsync(s => s.ScheduleName == "Test schedule 1");
 
         var builder = await _executionBuilderFactory.CreateAsync(schedule.JobId, schedule.ScheduleId,
             context => step => step.IsEnabled,
@@ -64,7 +64,7 @@ public class ExecutionBuilderTests(DatabaseFixture fixture)
         builder.AddAll();
         var execution = await builder.SaveExecutionAsync();
         Assert.NotNull(execution);
-        Assert.Equal(4, execution.StepExecutions.Count);
+        Assert.Equal(5, execution.StepExecutions.Count);
     }
 
     [Fact]
@@ -73,7 +73,7 @@ public class ExecutionBuilderTests(DatabaseFixture fixture)
         using var ctx = await _dbContextFactory.CreateDbContextAsync();
         var schedule = await ctx.Schedules
             .AsNoTracking()
-            .FirstAsync(s => s.ScheduleName == "Another schedule");
+            .FirstAsync(s => s.ScheduleName == "Test schedule 2");
 
         var builder = await _executionBuilderFactory.CreateAsync(schedule.JobId, schedule.ScheduleId,
             context => step => step.IsEnabled,

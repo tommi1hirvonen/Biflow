@@ -23,6 +23,10 @@ public class DatabaseFixture : IAsyncLifetime
 
     public IExecutionBuilderFactory<AppDbContext> ExecutionBuilderFactory { get; }
 
+    public JobDuplicatorFactory JobDuplicatorFactory { get; }
+
+    public StepsDuplicatorFactory StepsDuplicatorFactory { get; }
+
     public DatabaseFixture()
     {
         var httpContextAccessor = new MockHttpContextAccessor(Username, Role);
@@ -38,11 +42,16 @@ public class DatabaseFixture : IAsyncLifetime
             .AddSingleton<IHttpContextAccessor>(httpContextAccessor)
             .AddDbContextFactory<AppDbContext>()
             .AddExecutionBuilderFactory<AppDbContext>()
+            .AddDuplicatorServices()
             .BuildServiceProvider();
-        var factory = services.GetRequiredService<IDbContextFactory<AppDbContext>>();
-        var builderFactory = services.GetRequiredService<IExecutionBuilderFactory<AppDbContext>>();
-        ArgumentNullException.ThrowIfNull(factory);
-        (DbContextFactory, ExecutionBuilderFactory) = (factory, builderFactory);
+        var dbContextFactory = services.GetRequiredService<IDbContextFactory<AppDbContext>>();
+        var executionBuilderFactory = services.GetRequiredService<IExecutionBuilderFactory<AppDbContext>>();
+        var jobDuplicatoryFactory = services.GetRequiredService<JobDuplicatorFactory>();
+        var stepsDuplicatoryFactory = services.GetRequiredService<StepsDuplicatorFactory>();
+        DbContextFactory = dbContextFactory;
+        ExecutionBuilderFactory = executionBuilderFactory;
+        JobDuplicatorFactory = jobDuplicatoryFactory;
+        StepsDuplicatorFactory = stepsDuplicatoryFactory;
     }
 
     public Task DisposeAsync() => Task.CompletedTask;
@@ -145,8 +154,8 @@ public class DatabaseFixture : IAsyncLifetime
             #region JOB 1
             var job1 = new Job
             {
-                JobName = "Test job",
-                JobDescription = "Test job",
+                JobName = "Test job 1",
+                JobDescription = "Test job 1",
                 UseDependencyMode = true,
                 StopOnFirstError = true,
                 MaxParallelSteps = 4,
@@ -174,7 +183,20 @@ public class DatabaseFixture : IAsyncLifetime
                 ParameterValueType = ParameterValueType.Double,
                 ValueDouble = 123.456
             };
-            job1.JobParameters = [jobParameter1, jobParameter2, jobParameter3];
+            var jobParameter4 = new JobParameter
+            {
+                Job = job1,
+                ParameterName = "JobParameter4",
+                ParameterValueType = ParameterValueType.String,
+                UseExpression = true,
+                Expression = new()
+                {
+                    Expression = """
+                    $"{100 + 23}-{400 + 56}"
+                    """
+                }
+            };
+            job1.JobParameters = [jobParameter1, jobParameter2, jobParameter3, jobParameter4];
             var jobConcurrency = new JobConcurrency { Job = job1, StepType = StepType.Sql, MaxParallelSteps = 1 };
             job1.JobConcurrencies = [jobConcurrency];
 
@@ -255,11 +277,33 @@ public class DatabaseFixture : IAsyncLifetime
             {
                 Step = step4,
                 ParameterName = "@param",
-                ParameterValueType = ParameterValueType.DateTime,
+                ParameterValueType = ParameterValueType.String,
                 UseExpression = true,
-                Expression = new EvaluationExpression { Expression = "DateTime.Now" }
+                Expression = new()
+                {
+                    Expression = """
+                    $"{100 + 23}-{400 + 56}"
+                    """
+                }
             };
             step4.StepParameters = [step4Parameter];
+
+            var step_1_5 = new SqlStep
+            {
+                StepName = "Test step 5",
+                ExecutionPhase = 35,
+                SqlStatement = "select @param",
+                Connection = sqlConnection,
+                Tags = []
+            };
+            var step_1_5_param = new SqlStepParameter
+            {
+                Step = step_1_5,
+                ParameterName = "@param",
+                ParameterValueType = ParameterValueType.String,
+                InheritFromJobParameter = jobParameter4
+            };
+            step_1_5.StepParameters = [step_1_5_param];
 
             var step3Target = new DataObject
             {
@@ -284,14 +328,14 @@ public class DatabaseFixture : IAsyncLifetime
 
             step4.DataObjects = [dataObjectLink_4_4];
 
-            job1.Steps = [step1, step2, step3, step4];
+            job1.Steps = [step1, step2, step3, step4, step_1_5];
             #endregion
 
             #region JOB 2
             var job2 = new Job
             {
-                JobName = "Another job",
-                JobDescription = "Another job",
+                JobName = "Test job 2",
+                JobDescription = "Test job 2",
                 UseDependencyMode = false,
                 StopOnFirstError = true,
                 MaxParallelSteps = 5,
@@ -433,7 +477,7 @@ public class DatabaseFixture : IAsyncLifetime
             {
                 JobId = job1.JobId,
                 Job = job1,
-                ScheduleName = "Test schedule",
+                ScheduleName = "Test schedule 1",
                 CronExpression = "",
                 Tags = []
             };
@@ -441,7 +485,7 @@ public class DatabaseFixture : IAsyncLifetime
             {
                 JobId = job2.JobId,
                 Job = job2,
-                ScheduleName = "Another schedule",
+                ScheduleName = "Test schedule 2",
                 CronExpression = "",
                 Tags = [tag1]
             };
@@ -486,6 +530,18 @@ public class DatabaseFixture : IAsyncLifetime
 
             context.AddRange(job1, job2, schedule1, schedule2, blobClient1, blobClient2, blobClient3, table1, table2);
             await context.SaveChangesAsync();
+
+            #region EXECUTIONS
+            var executionBuilder1 = await ExecutionBuilderFactory.CreateAsync(job1.JobId, Username);
+            ArgumentNullException.ThrowIfNull(executionBuilder1);
+            executionBuilder1.AddAll();
+            await executionBuilder1.SaveExecutionAsync();
+
+            var executionBuilder2 = await ExecutionBuilderFactory.CreateAsync(job2.JobId, schedule1.ScheduleId, (ctx) => (step) => step.IsEnabled);
+            ArgumentNullException.ThrowIfNull(executionBuilder2);
+            executionBuilder2.AddAll();
+            await executionBuilder2.SaveExecutionAsync();
+            #endregion
 
             _databaseInitialized = true;
         }
