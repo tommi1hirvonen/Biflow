@@ -154,7 +154,7 @@ public partial class Dashboard : ComponentBase
                 StepId = select.Key.StepId,
                 StepType = select.Key.StepType,
                 JobName = select.Key.JobName,
-                JobId = select.Key.JobId ?? Guid.Empty,
+                JobId = select.Key.JobId,
                 NoOfExecutions = select.Count(),
                 SuccessPercent = (decimal)select
                         .Count(e =>

@@ -91,7 +91,7 @@ public partial class Jobs : ComponentBase
         // Get each job's last execution.
         var lastExecutions = await context.Executions
             .AsNoTrackingWithIdentityResolution()
-            .Where(execution => jobs.Select(job => job.JobId).Contains(execution.JobId ?? Guid.Empty) && execution.StartDateTime != null)
+            .Where(execution => jobs.Select(job => job.JobId).Contains(execution.JobId) && execution.StartDateTime != null)
             .Select(execution => execution.JobId)
             .Distinct()
             .Select(key => new
@@ -101,7 +101,7 @@ public partial class Jobs : ComponentBase
             })
             .ToListAsync();
 
-        this.lastExecutions = lastExecutions.ToDictionary(e => e.Key ?? Guid.Empty, e => e.Execution);
+        this.lastExecutions = lastExecutions.ToDictionary(e => e.Key, e => e.Execution);
         StateHasChanged();
     }
 

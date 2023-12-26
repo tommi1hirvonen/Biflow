@@ -530,10 +530,10 @@ else if (ShowReport == Report.Statuses)
         <StepStatusesEdit Execution="execution" />
     </AuthorizeView>
 }
-else if (ShowReport == Report.History && execution?.JobId is Guid jobId)
+else if (ShowReport == Report.History && execution is not null)
 {
     <div class="mt-3">
-        <JobHistory JobId="jobId" />
+        <JobHistory JobId="execution.JobId" />
     </div>
 }
 

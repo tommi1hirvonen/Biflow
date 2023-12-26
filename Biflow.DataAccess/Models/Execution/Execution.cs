@@ -55,7 +55,7 @@ public class Execution
     public Guid ExecutionId { get; private set; }
 
     [Display(Name = "Job id")]
-    public Guid? JobId { get; private set; }
+    public Guid JobId { get; private set; }
 
     [Display(Name = "Job")]
     [MaxLength(250)]
