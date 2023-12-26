@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
@@ -34,6 +35,8 @@ public class StepExecutionDataObject
 
     public ExecutionDataObject DataObject { get; set; } = null!;
 
+    [MaxLength(20)]
+    [Unicode(false)]
     public DataObjectReferenceType ReferenceType { get; set; }
 
     public List<string> DataAttributes { get; set; } = [];
