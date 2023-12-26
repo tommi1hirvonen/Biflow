@@ -34,7 +34,7 @@ public class JobStepExecution : StepExecution, IHasStepExecutionParameters<JobSt
     /// <summary>
     /// List of tag tuples that should be used to filter steps in executed job.
     /// </summary>
-    public IList<TagFilter> TagFilters { get; set; } = new List<TagFilter>();
+    public List<TagFilter> TagFilters { get; set; } = [];
 
     public record TagFilter(Guid TagId, string TagName);
 }

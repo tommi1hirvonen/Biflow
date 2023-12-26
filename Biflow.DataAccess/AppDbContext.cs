@@ -1,6 +1,7 @@
 ﻿using Biflow.DataAccess.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
@@ -139,7 +140,11 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
         modelBuilder.Entity<JobStepExecution>()
             .Property(p => p.TagFilters).HasConversion(
                 from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
-                to => JsonSerializer.Deserialize<List<JobStepExecution.TagFilter>>(string.IsNullOrEmpty(to) ? "[]" : to, null as JsonSerializerOptions) ?? new());
+                to => JsonSerializer.Deserialize<List<JobStepExecution.TagFilter>>(string.IsNullOrEmpty(to) ? "[]" : to, null as JsonSerializerOptions) ?? new(),
+                new ValueComparer<List<JobStepExecution.TagFilter>>(
+                    (x, y) => x != null && y != null && x.SequenceEqual(y),
+                    x => x.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                    x => x.ToList()));
 
         modelBuilder.Entity<StepExecutionAttempt>(e =>
         {
@@ -157,13 +162,25 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             .HasValue<QlikStepExecutionAttempt>(StepType.Qlik);
             e.Property(p => p.InfoMessages).HasConversion(
                 from => JsonSerializer.Serialize(from, IgnoreNullsOptions),
-                to => JsonSerializer.Deserialize<List<InfoMessage>>(to, IgnoreNullsOptions) ?? new());
+                to => JsonSerializer.Deserialize<List<InfoMessage>>(to, IgnoreNullsOptions) ?? new(),
+                new ValueComparer<List<InfoMessage>>(
+                    (x, y) => x != null && y != null && x.SequenceEqual(y),
+                    x => x.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                    x => x.ToList()));
             e.Property(p => p.WarningMessages).HasConversion(
                 from => JsonSerializer.Serialize(from, IgnoreNullsOptions),
-                to => JsonSerializer.Deserialize<List<WarningMessage>>(to, IgnoreNullsOptions) ?? new());
+                to => JsonSerializer.Deserialize<List<WarningMessage>>(to, IgnoreNullsOptions) ?? new(),
+                new ValueComparer<List<WarningMessage>>(
+                    (x, y) => x != null && y != null && x.SequenceEqual(y),
+                    x => x.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                    x => x.ToList()));
             e.Property(p => p.ErrorMessages).HasConversion(
                 from => JsonSerializer.Serialize(from, IgnoreNullsOptions),
-                to => JsonSerializer.Deserialize<List<ErrorMessage>>(to, IgnoreNullsOptions) ?? new());
+                to => JsonSerializer.Deserialize<List<ErrorMessage>>(to, IgnoreNullsOptions) ?? new(),
+                new ValueComparer<List<ErrorMessage>>(
+                    (x, y) => x != null && y != null && x.SequenceEqual(y),
+                    x => x.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                    x => x.ToList()));
             e.HasOne(x => x.StepExecution)
             .WithMany(x => x.StepExecutionAttempts)
             .OnDelete(DeleteBehavior.Cascade);

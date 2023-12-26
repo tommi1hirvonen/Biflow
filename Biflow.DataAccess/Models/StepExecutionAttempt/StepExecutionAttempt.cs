@@ -51,13 +51,13 @@ public abstract class StepExecutionAttempt
     public StepType StepType { get; }
 
     [Display(Name = "Error message")]
-    public IList<ErrorMessage> ErrorMessages { get; set; } = [];
+    public List<ErrorMessage> ErrorMessages { get; set; } = [];
 
     [Display(Name = "Warning message")]
-    public IList<WarningMessage> WarningMessages { get; set; } = [];
+    public List<WarningMessage> WarningMessages { get; set; } = [];
 
     [Display(Name = "Info message")]
-    public IList<InfoMessage> InfoMessages { get; set; } = [];
+    public List<InfoMessage> InfoMessages { get; set; } = [];
 
     [Display(Name = "Stopped by")]
     [MaxLength(250)]
