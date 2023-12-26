@@ -16,7 +16,10 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
     private readonly string _connectionString = configuration.GetConnectionString("AppDbContext")
             ?? throw new ApplicationException("Connection string not found");
 
-    private static readonly JsonSerializerOptions IgnoreNullsOptions = new() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
+    private static readonly JsonSerializerOptions IgnoreNullsOptions = new()
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+    };
 
     public DbSet<Job> Jobs => Set<Job>();
     public DbSet<Step> Steps => Set<Step>();
@@ -65,6 +68,7 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
     protected virtual void ConfigureSqlServer(SqlServerDbContextOptionsBuilder options)
     {
         options.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+        options.MigrationsHistoryTable("__MigrationsHistory", "app");
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -633,6 +637,4 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
 
         return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
-
-
 }
