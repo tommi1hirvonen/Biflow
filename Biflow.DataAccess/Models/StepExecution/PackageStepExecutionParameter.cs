@@ -1,4 +1,7 @@
-﻿namespace Biflow.DataAccess.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+
+namespace Biflow.DataAccess.Models;
 
 public class PackageStepExecutionParameter : StepExecutionParameterBase
 {
@@ -18,6 +21,8 @@ public class PackageStepExecutionParameter : StepExecutionParameterBase
 
     public override StepExecution BaseStepExecution => StepExecution;
 
+    [MaxLength(20)]
+    [Unicode(false)]
     public ParameterLevel ParameterLevel { get; set; }
 
     public override string DisplayName => $"${ParameterLevel}::{ParameterName}";

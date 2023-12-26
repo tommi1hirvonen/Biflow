@@ -21,11 +21,13 @@ public class DataFactory() : PipelineClient(PipelineClientType.DataFactory)
     [Column("ResourceGroupName")]
     [Required]
     [Display(Name = "Resource group name")]
+    [MaxLength(250)]
     public string? ResourceGroupName { get; set; }
 
     [Column("ResourceName")]
     [Required]
     [Display(Name = "Resource name")]
+    [MaxLength(250)]
     public string? ResourceName { get; set; }
 
     private const string ResourceUrl = "https://management.azure.com//.default";

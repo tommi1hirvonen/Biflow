@@ -51,11 +51,16 @@ public abstract class StepExecution
     public Guid StepId { get; private set; }
 
     [Display(Name = "Step")]
+    [MaxLength(250)]
     public string StepName { get; private set; }
 
     [Display(Name = "Step type")]
+    [MaxLength(20)]
+    [Unicode(false)]
     public StepType StepType { get; }
 
+    [MaxLength(20)]
+    [Unicode(false)]
     public DuplicateExecutionBehaviour DuplicateExecutionBehaviour { get; private set; }
 
     public int ExecutionPhase { get; private set; }

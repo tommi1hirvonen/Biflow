@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
@@ -57,6 +58,7 @@ public class Execution
     public Guid? JobId { get; private set; }
 
     [Display(Name = "Job")]
+    [MaxLength(250)]
     public string JobName
     {
         get => Job?.JobName ?? _jobName;
@@ -81,6 +83,8 @@ public class Execution
     public DateTimeOffset? EndDateTime { get; set; }
 
     [Display(Name = "Status")]
+    [MaxLength(50)]
+    [Unicode(false)]
     public ExecutionStatus ExecutionStatus { get; set; }
 
     [Display(Name = "Dependency mode")]
@@ -96,13 +100,17 @@ public class Execution
     public double OvertimeNotificationLimitMinutes { get; private set; }
 
     [Display(Name = "Created by")]
+    [MaxLength(250)]
     public string? CreatedBy { get; private set; }
 
     [Display(Name = "Schedule id")]
     public Guid? ScheduleId { get; private set; }
 
+    [MaxLength(250)]
     public string? ScheduleName { get; private set; }
 
+    [MaxLength(200)]
+    [Unicode(false)]
     public string? CronExpression { get; private set; }
 
     [Display(Name = "Executor PID")]
@@ -112,11 +120,15 @@ public class Execution
     public bool Notify { get; internal set; }
 
     [Display(Name = "Notify caller")]
+    [MaxLength(20)]
+    [Unicode(false)]
     public AlertType? NotifyCaller { get; internal set; }
 
     [Display(Name = "Notify caller overtime")]
     public bool NotifyCallerOvertime { get; internal set; }
 
+    [Unicode(false)]
+    [MaxLength(200)]
     public StepExecutionAttemptReference? ParentExecution { get; private set; }
 
     public ICollection<StepExecution> StepExecutions { get; internal set; } = null!;
@@ -124,6 +136,8 @@ public class Execution
     public ICollection<ExecutionParameter> ExecutionParameters { get; internal set; } = null!;
 
     public ICollection<ExecutionConcurrency> ExecutionConcurrencies { get; internal set; } = null!;
+
+    public ICollection<ExecutionDataObject> DataObjects { get; private set; } = null!;
 
     public Job? Job { get; private set; }
 

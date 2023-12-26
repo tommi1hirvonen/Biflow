@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
@@ -23,7 +24,6 @@ public class MasterDataTableLookup
     public Guid LookupTableId { get; set; }
 
     [Required]
-    [MinLength(1)]
     [MaxLength(128)]
     public string LookupValueColumn { get; set; } = "";
 
@@ -32,6 +32,8 @@ public class MasterDataTableLookup
     [MaxLength(128)]
     public string LookupDescriptionColumn { get; set; } = "";
 
+    [Unicode(false)]
+    [MaxLength(20)]
     public LookupDisplayType LookupDisplayType { get; set; }
 
     [JsonIgnore]

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
@@ -16,6 +17,8 @@ public abstract class ConnectionInfoBase(ConnectionType connectionType) : ICompa
 
     [Required]
     [Display(Name = "Connection type")]
+    [MaxLength(20)]
+    [Unicode(false)]
     public ConnectionType ConnectionType { get; } = connectionType;
 
     [Required]

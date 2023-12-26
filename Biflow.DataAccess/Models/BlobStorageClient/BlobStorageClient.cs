@@ -1,6 +1,7 @@
 ﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Biflow.DataAccess.Models.Validation;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
@@ -16,14 +17,19 @@ public class BlobStorageClient
     public Guid BlobStorageClientId { get; private set; }
 
     [Required]
+    [MaxLength(250)]
     public string BlobStorageClientName { get; set; } = "";
 
     [Required]
+    [Unicode(false)]
+    [MaxLength(20)]
     public BlobStorageConnectionMethod ConnectionMethod { get; set; }
 
+    [MaxLength(4000)]
     [JsonSensitive(WhenContains = "sig=")]
     public string? StorageAccountUrl { get; set; }
 
+    [MaxLength(4000)]
     [JsonSensitive]
     public string? ConnectionString { get; set; }
 

@@ -51,6 +51,7 @@ public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepPa
     public bool FunctionIsDurable { get; set; }
 
     [Display(Name = "Function key")]
+    [MaxLength(1000)]
     [JsonSensitive]
     public string? FunctionKey { get; set; }
 

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
@@ -9,6 +10,8 @@ public abstract class Subscription(Guid userId, SubscriptionType subscriptionTyp
     [Key]
     public Guid SubscriptionId { get; private set; }
 
+    [MaxLength(20)]
+    [Unicode(false)]
     public SubscriptionType SubscriptionType { get; } = subscriptionType;
 
     [Required]

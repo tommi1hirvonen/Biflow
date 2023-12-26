@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
@@ -19,8 +20,12 @@ public class ExecutionDataObject
 
     public Guid ExecutionId { get; private set; }
 
+    public Execution Execution { get; private set; } = null!;
+
     public Guid ObjectId { get; private set; }
 
+    [MaxLength(500)]
+    [Unicode(false)]
     public string ObjectUri { get; private set; } = string.Empty;
 
     public int MaxConcurrentWrites { get; private set; } = 1;

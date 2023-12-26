@@ -1,13 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
 public class PackageStepParameter : StepParameterBase
 {
-    public PackageStepParameter(ParameterLevel parameterLevel) : base(ParameterType.Package)
+    public PackageStepParameter() : base(ParameterType.Package)
     {
-        ParameterLevel = parameterLevel;
     }
 
     internal PackageStepParameter(PackageStepParameter other, PackageStep step, Job? job) : base(other, step, job)
@@ -17,7 +17,9 @@ public class PackageStepParameter : StepParameterBase
     }
 
     [Required]
-    public ParameterLevel ParameterLevel { get; set; }
+    [MaxLength(20)]
+    [Unicode(false)]
+    public ParameterLevel ParameterLevel { get; set; } = ParameterLevel.Package;
 
     [JsonIgnore]
     public PackageStep Step { get; set; } = null!;

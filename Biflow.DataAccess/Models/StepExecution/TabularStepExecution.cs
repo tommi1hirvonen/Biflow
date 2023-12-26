@@ -25,17 +25,14 @@ public class TabularStepExecution : StepExecution, IHasTimeout
 
     [Display(Name = "Model name")]
     [Required]
-    [MinLength(1)]
     [MaxLength(128)]
     public string TabularModelName { get; private set; }
 
     [Display(Name = "Table name")]
-    [MinLength(1)]
     [MaxLength(128)]
     public string? TabularTableName { get; private set; }
 
     [Display(Name = "Partition name")]
-    [MinLength(1)]
     [MaxLength(128)]
     public string? TabularPartitionName { get; private set; }
 

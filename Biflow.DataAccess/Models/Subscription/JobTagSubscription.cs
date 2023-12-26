@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
@@ -6,6 +7,8 @@ namespace Biflow.DataAccess.Models;
 public class JobTagSubscription(Guid userId, Guid jobId, Guid tagId) : Subscription(userId, SubscriptionType.JobTag)
 {
     [Column("AlertType")]
+    [MaxLength(20)]
+    [Unicode(false)]
     public AlertType AlertType { get; set; }
 
     [Required]

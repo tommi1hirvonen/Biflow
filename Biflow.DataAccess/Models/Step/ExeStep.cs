@@ -29,6 +29,7 @@ public class ExeStep : Step, IHasTimeout, IHasStepParameters<ExeStepParameter>
 
     [Required]
     [Display(Name = "File path")]
+    [MaxLength(1000)]
     public string? ExeFileName { get; set; }
 
     [Display(Name = "Arguments")]
@@ -41,6 +42,7 @@ public class ExeStep : Step, IHasTimeout, IHasStepParameters<ExeStepParameter>
     private string? _exeArguments;
 
     [Display(Name = "Working directory")]
+    [MaxLength(1000)]
     public string? ExeWorkingDirectory
     {
         get => _exeWorkingDirectory;

@@ -42,8 +42,12 @@ public abstract class StepExecutionAttempt
 
     public DateTimeOffset? EndDateTime { get; set; }
 
+    [MaxLength(50)]
+    [Unicode(false)]
     public StepExecutionStatus ExecutionStatus { get; set; }
 
+    [MaxLength(20)]
+    [Unicode(false)]
     public StepType StepType { get; }
 
     [Display(Name = "Error message")]
@@ -56,6 +60,7 @@ public abstract class StepExecutionAttempt
     public IList<InfoMessage> InfoMessages { get; set; } = [];
 
     [Display(Name = "Stopped by")]
+    [MaxLength(250)]
     public string? StoppedBy { get; set; }
 
     public StepExecution StepExecution { get; set; } = null!;

@@ -6,6 +6,7 @@ namespace Biflow.DataAccess.Models;
 public class SqlConnectionInfo() : ConnectionInfoBase(ConnectionType.Sql)
 {
     [Display(Name = "Execute packages as login")]
+    [MaxLength(128)]
     public string? ExecutePackagesAsLogin
     {
         get => _executePackagesAsLogin;

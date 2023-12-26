@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
@@ -15,6 +16,7 @@ public partial class DataObject : IDataObject
     [Required]
     [Ascii]
     [MaxLength(500)]
+    [Unicode(false)]
     public string ObjectUri { get; set; } = string.Empty;
 
     [Required]

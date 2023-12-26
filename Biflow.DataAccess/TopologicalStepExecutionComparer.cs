@@ -9,4 +9,4 @@ namespace Biflow.DataAccess;
 public class TopologicalStepExecutionComparer(IEnumerable<StepExecution> steps) : TopologicalComparer<StepExecution, Guid>(
         steps,
         step => step?.StepId ?? Guid.Empty,
-        step => step.ExecutionDependencies.Select(d => d.DependantOnStepId));
+        step => step.ExecutionDependencies.Select(d => d.DependantOnStepId ?? Guid.Empty));

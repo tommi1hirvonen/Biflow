@@ -55,6 +55,7 @@ public class PackageStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout,
     public bool ExecuteIn32BitMode { get; set; }
 
     [Display(Name = "Execute as login")]
+    [MaxLength(128)]
     public string? ExecuteAsLogin
     {
         get => _executeAsLogin;

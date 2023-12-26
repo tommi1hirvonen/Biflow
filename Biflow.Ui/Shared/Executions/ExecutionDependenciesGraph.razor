@@ -155,7 +155,7 @@
                 .Where(dep => dep.DependantOnStepExecution is not null)
                 .Select(dep => new DependencyGraphEdge(
                     Id: dep.StepId.ToString(),
-                    DependsOnId: dep.DependantOnStepId.ToString(),
+                    DependsOnId: ((Guid)dep.DependantOnStepId!).ToString(),
                     CssClass: dep.DependencyType.ToString().ToLower()
                 )).ToArray();
         }
@@ -180,7 +180,7 @@
                     .Where(d => steps.Any(s => d.DependantOnStepId == s.StepId) && steps.Any(s => d.StepId == s.StepId)) // only include dependencies whose step is included
                     .Select(dep => new DependencyGraphEdge(
                         Id: dep.StepId.ToString(),
-                        DependsOnId: dep.DependantOnStepId.ToString(),
+                        DependsOnId: ((Guid)dep.DependantOnStepId!).ToString(),
                         CssClass: dep.DependencyType.ToString().ToLower()
                     )).ToArray();
             }

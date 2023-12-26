@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
@@ -19,6 +20,8 @@ public class QlikStep : Step, IHasTimeout
     }
 
     [Required]
+    [MaxLength(36)]
+    [Unicode(false)]
     public string AppId { get; set; } = "";
 
     [Required]

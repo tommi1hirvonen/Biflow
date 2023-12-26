@@ -1,5 +1,6 @@
 ﻿using Azure.Core;
 using Azure.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.PowerBI.Api;
 using Microsoft.PowerBI.Api.Models;
 using Microsoft.Rest;
@@ -19,6 +20,7 @@ public class AppRegistration
     public Guid AppRegistrationId { get; private set; }
 
     [Required]
+    [MaxLength(250)]
     [Display(Name = "Power BI Service name")]
     public string? AppRegistrationName { get; set; }
 
@@ -26,16 +28,20 @@ public class AppRegistration
     [Display(Name = "Tenant id")]
     [MaxLength(36)]
     [MinLength(36)]
+    [Unicode(false)]
     public string? TenantId { get; set; }
 
     [Required]
     [Display(Name = "Client id")]
     [MaxLength(36)]
     [MinLength(36)]
+    [Unicode(false)]
     public string? ClientId { get; set; }
 
     [Required]
     [Display(Name = "Client secret")]
+    [MaxLength(1000)]
+    [Unicode(false)]
     [JsonSensitive]
     public string? ClientSecret { get; set; }
 
@@ -50,6 +56,9 @@ public class AppRegistration
 
     [JsonIgnore]
     public IList<BlobStorageClient> BlobStorageClients { get; set; } = null!;
+
+    [JsonIgnore]
+    public IList<AccessToken> AccessTokens { get; set; } = null!;
 
     private const string PowerBIResourceUrl = "https://analysis.windows.net/powerbi/api/.default";
     private const string AzureResourceUrl = "https://management.azure.com//.default";

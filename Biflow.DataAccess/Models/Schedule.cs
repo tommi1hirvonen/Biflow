@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
@@ -24,6 +25,8 @@ public class Schedule
     [Required]
     [Display(Name = "Cron expression")]
     [CronExpression]
+    [MaxLength(200)]
+    [Unicode(false)]
     public string CronExpression { get; set; } = "";
 
 
@@ -38,6 +41,7 @@ public class Schedule
     public DateTimeOffset CreatedDateTime { get; set; }
 
     [Display(Name = "Created by")]
+    [MaxLength(250)]
     public string? CreatedBy { get; set; }
 
     public IList<Tag> Tags { get; set; } = null!;

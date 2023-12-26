@@ -25,6 +25,7 @@ public class PipelineStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
     }
 
     [Display(Name = "Pipeline name")]
+    [MaxLength(250)]
     public string PipelineName { get; private set; }
 
     [Display(Name = "Pipeline client id")]

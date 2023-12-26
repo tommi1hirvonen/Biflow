@@ -25,9 +25,11 @@ public class DatasetStepExecution : StepExecution
     public AppRegistration AppRegistration { get; set; } = null!;
 
     [Display(Name = "Group id")]
+    [MaxLength(36)]
     public string DatasetGroupId { get; private set; }
 
     [Display(Name = "Dataset id")]
+    [MaxLength(36)]
     public string DatasetId { get; private set; }
 
 }

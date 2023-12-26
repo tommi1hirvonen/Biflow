@@ -33,6 +33,8 @@ public class Dependency
     public Step DependantOnStep { get; set; } = null!;
 
     [Display(Name = "Type")]
+    [MaxLength(20)]
+    [Unicode(false)]
     public DependencyType DependencyType { get; set; }
 
     [Required]
@@ -40,6 +42,7 @@ public class Dependency
     public DateTimeOffset CreatedDateTime { get; set; }
 
     [Display(Name = "Created by")]
+    [MaxLength(250)]
     public string? CreatedBy { get; set; }
 
     [NotMapped]

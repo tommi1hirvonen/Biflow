@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
@@ -18,6 +19,7 @@ public class QlikStepExecution : StepExecution, IHasTimeout
         StepExecutionAttempts = new[] { new QlikStepExecutionAttempt(this) };
     }
 
+    [MaxLength(36)]
     public string AppId { get; private set; }
 
     public Guid QlikCloudClientId { get; private set; }

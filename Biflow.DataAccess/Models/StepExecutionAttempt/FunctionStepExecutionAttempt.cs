@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace Biflow.DataAccess.Models;
 
@@ -17,5 +18,7 @@ public class FunctionStepExecutionAttempt : StepExecutionAttempt
     public FunctionStepExecutionAttempt(FunctionStepExecution execution) : base(execution) { }
 
     [Display(Name = "Function instance id")]
+    [MaxLength(250)]
+    [Unicode(false)]
     public string? FunctionInstanceId { get; set; }
 }

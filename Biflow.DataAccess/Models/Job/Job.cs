@@ -143,9 +143,11 @@ public class Job
     public ICollection<User> Users { get; set; } = null!;
 
     [Display(Name = "Created by")]
+    [MaxLength(250)]
     public string? CreatedBy { get; set; }
 
     [Display(Name = "Last modified by")]
+    [MaxLength(250)]
     public string? LastModifiedBy { get; set; }
 
     [Timestamp]

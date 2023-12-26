@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
@@ -13,7 +14,6 @@ public abstract class ParameterBase
 
     [Required]
     [MaxLength(128)]
-    [MinLength(1)]
     [Display(Name = "Name")]
     public string ParameterName { get; set; } = string.Empty;
 
@@ -62,6 +62,8 @@ public abstract class ParameterBase
     private object? _parameterValue = string.Empty;
 
     [Required]
+    [MaxLength(20)]
+    [Unicode(false)]
     public virtual ParameterValueType ParameterValueType
     {
         get => _parameterValueType;

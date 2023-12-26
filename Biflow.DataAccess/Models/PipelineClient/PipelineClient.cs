@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
@@ -13,8 +14,12 @@ public abstract class PipelineClient(PipelineClientType type)
     [JsonInclude]
     public Guid PipelineClientId { get; private set; }
 
-    public string? PipelineClientName { get; set; }
+    [MaxLength(250)]
+    [Required]
+    public string PipelineClientName { get; set; } = "";
 
+    [MaxLength(20)]
+    [Unicode(false)]
     public PipelineClientType PipelineClientType { get; } = type;
 
     [Required]

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
@@ -18,8 +19,11 @@ public class StepDataObject
     [JsonIgnore]
     public DataObject DataObject { get; set; } = null!;
 
+    [MaxLength(20)]
+    [Unicode(false)]
     public DataObjectReferenceType ReferenceType { get; set; }
 
+    [MaxLength(4000)]
     public List<string> DataAttributes { get; set; } = [];
 
     public bool IsSubsetOf(StepDataObject? other)

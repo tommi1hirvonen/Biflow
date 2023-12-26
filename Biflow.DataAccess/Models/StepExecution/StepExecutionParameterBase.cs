@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
@@ -37,6 +38,8 @@ public abstract class StepExecutionParameterBase : DynamicParameter, IHasExpress
 
     public Guid StepId { get; private set; }
 
+    [Unicode(false)]
+    [MaxLength(20)]
     public ParameterType ParameterType { get; private set; }
 
     [Column(TypeName = "sql_variant")]

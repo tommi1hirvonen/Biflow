@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
@@ -97,9 +98,13 @@ public abstract class Step : IComparable
 
     [Required]
     [Display(Name = "Step type")]
+    [Unicode(false)]
+    [MaxLength(20)]
     public StepType StepType { get; }
 
     [Required]
+    [Unicode(false)]
+    [MaxLength(20)]
     public DuplicateExecutionBehaviour DuplicateExecutionBehaviour { get; set; } = DuplicateExecutionBehaviour.Wait;
 
     [Required]
@@ -129,15 +134,19 @@ public abstract class Step : IComparable
     public EvaluationExpression ExecutionConditionExpression { get; set; } = new();
 
     [Display(Name = "Created by")]
+    [MaxLength(250)]
     public string? CreatedBy { get; set; }
 
     [Display(Name = "Last modified by")]
+    [MaxLength(250)]
     public string? LastModifiedBy { get; set; }
 
     [Timestamp]
     public byte[]? Timestamp { get; private set; }
 
     public IList<Dependency> Dependencies { get; set; } = null!;
+
+    public IList<Dependency> Depending { get; set; } = null!;
 
     [ValidateComplexType]
     public IList<StepDataObject> DataObjects { get; set; } = null!;

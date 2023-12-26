@@ -131,7 +131,7 @@
     private void AddParameter()
     {
         ArgumentNullException.ThrowIfNull(Step);
-        Step.StepParameters.Add(new(ParameterLevel.Package) { Step = Step });
+        Step.StepParameters.Add(new() { Step = Step });
     }
 
     private void SetJobParameter(bool inheritFromJob, PackageStepParameter param)
@@ -166,12 +166,13 @@
             Step.StepParameters.Clear();
             foreach (var parameter in parameters)
             {
-                Step.StepParameters.Add(new PackageStepParameter(parameter.ParameterLevel)
-                    {
-                        ParameterName = parameter.ParameterName,
-                        ParameterValueType = parameter.ParameterType,
-                        ParameterValue = parameter.DefaultValue
-                    });
+                Step.StepParameters.Add(new()
+                {
+                    ParameterLevel = parameter.ParameterLevel,
+                    ParameterName = parameter.ParameterName,
+                    ParameterValueType = parameter.ParameterType,
+                    ParameterValue = parameter.DefaultValue
+                });
             }
         }
         catch (Exception ex)

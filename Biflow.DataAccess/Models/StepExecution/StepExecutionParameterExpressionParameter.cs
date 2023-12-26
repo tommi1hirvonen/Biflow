@@ -30,7 +30,6 @@ public class StepExecutionParameterExpressionParameter : IExpressionParameter<Ex
     public Guid ParameterId { get; set; }
 
     [Required]
-    [MinLength(1)]
     [MaxLength(128)]
     public string ParameterName { get; set; } = "";
 

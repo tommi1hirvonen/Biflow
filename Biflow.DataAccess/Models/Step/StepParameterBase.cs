@@ -54,6 +54,8 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
     public Guid StepId { get; set; }
 
     [Required]
+    [MaxLength(20)]
+    [Unicode(false)]
     public ParameterType ParameterType { get; }
 
     public Guid? InheritFromJobParameterId { get; set; }

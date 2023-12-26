@@ -1,5 +1,6 @@
 ﻿using Azure.Core;
 using Azure.Identity;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
@@ -17,9 +18,12 @@ public class FunctionApp
 
     [Required]
     [Display(Name = "Function app name")]
+    [MaxLength(250)]
     public string? FunctionAppName { get; set; }
 
     [Display(Name = "Function app key")]
+    [MaxLength(1000)]
+    [Unicode(false)]
     [JsonSensitive]
     public string? FunctionAppKey
     {
@@ -36,10 +40,12 @@ public class FunctionApp
     public string? SubscriptionId { get; set; }
 
     [Required]
+    [MaxLength(250)]
     [Display(Name = "Resource group name")]
     public string? ResourceGroupName { get; set; }
 
     [Required]
+    [MaxLength(250)]
     [Display(Name = "Resource name")]
     public string? ResourceName { get; set; }
 

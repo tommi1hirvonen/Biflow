@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
@@ -13,9 +14,10 @@ public class Tag(string tagName) : ITag
 
     [Required]
     [MaxLength(250)]
-    [MinLength(1)]
     public string TagName { get; set; } = tagName;
 
+    [Unicode(false)]
+    [MaxLength(20)]
     public TagColor Color { get; set; }
 
     [JsonIgnore]

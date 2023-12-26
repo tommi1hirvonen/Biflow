@@ -15,5 +15,6 @@ public class EnvironmentVersion
 
     public required DateTimeOffset CreatedDateTime { get; init; }
 
+    [MaxLength(250)]
     public string? CreatedBy { get; init; }
 }
