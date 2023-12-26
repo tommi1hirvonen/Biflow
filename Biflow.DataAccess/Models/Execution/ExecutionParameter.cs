@@ -38,6 +38,8 @@ public class ExecutionParameter : DynamicParameter
 
     public ICollection<StepExecutionConditionParameter> ExecutionConditionParameters { get; set; } = null!;
 
+    public ICollection<SqlStepExecution> CapturingStepExecutions { get; set; } = null!;
+
     public override string DisplayValue =>
         UseExpression ? $"{ParameterValue} ({Expression.Expression})" : base.DisplayValue;
 

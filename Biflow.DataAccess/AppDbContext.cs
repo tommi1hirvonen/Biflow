@@ -137,6 +137,11 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             });
         });
 
+        modelBuilder.Entity<SqlStepExecution>()
+            .HasOne(x => x.ResultCaptureJobParameter)
+            .WithMany(x => x.CapturingStepExecutions)
+            .HasForeignKey(x => new { x.ExecutionId, x.ResultCaptureJobParameterId });
+
         modelBuilder.Entity<JobStepExecution>()
             .Property(p => p.TagFilters).HasConversion(
                 from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),

@@ -36,6 +36,8 @@ public class SqlStepExecution : StepExecution, IHasTimeout, IHasStepExecutionPar
     [Column(TypeName = "sql_variant")]
     public object? ResultCaptureJobParameterValue { get; set; }
 
+    public ExecutionParameter? ResultCaptureJobParameter { get; set; }
+
     [Column("TimeoutMinutes")]
     public double TimeoutMinutes { get; private set; }
 
