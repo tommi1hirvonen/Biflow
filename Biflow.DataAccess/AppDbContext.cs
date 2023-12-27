@@ -656,43 +656,40 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
     public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
         var user = _httpContextAccessor?.HttpContext?.User.Identity?.Name;
+        var now = DateTimeOffset.Now;
 
-        // If there are Jobs or Steps that have been edited, set the audit fields.
-        var editedJobsAndSteps = ChangeTracker.Entries()
-            .Where(entity => (entity.Entity is Job || entity.Entity is Step) && entity.State == EntityState.Modified)
-            .ToList();
-        editedJobsAndSteps.ForEach(entity =>
-        {
-            entity.Property("LastModifiedDateTime").CurrentValue = DateTimeOffset.Now;
-            entity.Property("LastModifiedBy").CurrentValue = user;
-        });
-
-        // If there are Jobs or Steps that have been added, set the audit fields.
-        var addedJobsAndSteps = ChangeTracker.Entries().Where(entity => (entity.Entity is Job || entity.Entity is Step) && entity.State == EntityState.Added).ToList();
-        addedJobsAndSteps.ForEach(entity =>
-        {
-            entity.Property("CreatedDateTime").CurrentValue = DateTimeOffset.Now;
-            entity.Property("LastModifiedDateTime").CurrentValue = DateTimeOffset.Now;
-            entity.Property("CreatedBy").CurrentValue = user;
-            entity.Property("LastModifiedBy").CurrentValue = user;
-        });
-
-        // Set the audit fields for new dependencies and schedules.
-        var addedDependenciesAndSchedules = ChangeTracker
+        var modified = ChangeTracker
             .Entries()
-            .Where(entity => (entity.Entity is Dependency || entity.Entity is Schedule) && entity.State == EntityState.Added)
-            .ToList();
+            .Where(e => e.State == EntityState.Modified)
+            .ToArray();
 
-        addedDependenciesAndSchedules.ForEach(entity =>
+        foreach (var entity in modified)
         {
-            entity.Property("CreatedDateTime").CurrentValue = DateTimeOffset.Now;
-            entity.Property("CreatedBy").CurrentValue = user;
-        });
+            SetCurrentValueIfPropertyExists(entity, "LastModifiedDateTime", now);
+            SetCurrentValueIfPropertyExists(entity, "LastModifiedBy", user);
+        }
 
-        // Set the audit fields for edited users.
-        var editedUsers = ChangeTracker.Entries().Where(entity => entity.Entity is User && entity.State == EntityState.Modified).ToList();
-        editedUsers.ForEach(user => user.Property("LastModifiedDateTime").CurrentValue = DateTimeOffset.Now);
+        var added = ChangeTracker
+            .Entries()
+            .Where(e => e.State == EntityState.Added)
+            .ToArray();
+
+        foreach (var entity in added)
+        {
+            SetCurrentValueIfPropertyExists(entity, "LastModifiedDateTime", now);
+            SetCurrentValueIfPropertyExists(entity, "LastModifiedBy", user);
+            SetCurrentValueIfPropertyExists(entity, "CreatedDateTime", now);
+            SetCurrentValueIfPropertyExists(entity, "CreatedBy", user);
+        }
 
         return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    private static void SetCurrentValueIfPropertyExists(EntityEntry entity, string propertyName, object? value)
+    {
+        if (entity.Properties.FirstOrDefault(p => p.Metadata.Name == propertyName) is PropertyEntry property)
+        {
+            property.CurrentValue = value;
+        }
     }
 }
