@@ -642,8 +642,15 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
         configurationBuilder.Properties<DataObjectReferenceType>().HaveConversion<EnumToStringConverter<DataObjectReferenceType>>().HaveMaxLength(50).AreUnicode(false);
         configurationBuilder.Properties<BlobStorageConnectionMethod>().HaveConversion<EnumToStringConverter<BlobStorageConnectionMethod>>().HaveMaxLength(50).AreUnicode(false);
 
+        // Default all foreign keys to no action.
+        // There are many potential cascading paths in the model. It is easier to define cascading paths explicitly.
         configurationBuilder.Conventions.Remove<CascadeDeleteConvention>();
         configurationBuilder.Conventions.Remove<SqlServerOnDeleteConvention>();
+
+        // The model contains relatively many navigation properties compared to the data amounts being processed.
+        // Therefore it is better to skip creating indexes for all foreign keys / navigation properties.
+        // Actually useful and needed indexes can be created explicitly.
+        configurationBuilder.Conventions.Remove<ForeignKeyIndexConvention>();
     }
 
     public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
