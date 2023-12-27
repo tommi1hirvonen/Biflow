@@ -151,6 +151,18 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
 
             e.HasIndex(p => p.Username, "UQ_User").IsUnique();
 
+            e.HasMany(u => u.Jobs)
+            .WithMany(j => j.Users)
+            .UsingEntity<Dictionary<string, object>>("JobAuthorization",
+            x => x.HasOne<Job>().WithMany().HasForeignKey("JobId").OnDelete(DeleteBehavior.Cascade),
+            x => x.HasOne<User>().WithMany().HasForeignKey("UserId").OnDelete(DeleteBehavior.Cascade));
+
+            e.HasMany(u => u.DataTables)
+            .WithMany(t => t.Users)
+            .UsingEntity<Dictionary<string, object>>("DataTableAuthorization",
+            x => x.HasOne<MasterDataTable>().WithMany().HasForeignKey("DataTableId").OnDelete(DeleteBehavior.Cascade),
+            x => x.HasOne<User>().WithMany().HasForeignKey("UserId").OnDelete(DeleteBehavior.Cascade));
+
             // Create shadow property to be used by Dapper/ADO.NET access in Ui.Core authentication.
             e.Property<string?>("PasswordHash")
                 .HasColumnName("PasswordHash")
@@ -168,15 +180,10 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
         modelBuilder.Entity<Job>(e =>
         {
             e.ToTable(t => t.HasTrigger("Trigger_Job"));
-            e.HasMany(t => t.Users)
-            .WithMany(s => s.Jobs)
-            .UsingEntity<Dictionary<string, object>>("JobAuthorization",
-            x => x.HasOne<User>().WithMany().HasForeignKey("UserId").OnDelete(DeleteBehavior.Cascade),
-            x => x.HasOne<Job>().WithMany().HasForeignKey("JobId").OnDelete(DeleteBehavior.Cascade));
-
+            
             e.HasOne(j => j.Category)
-                .WithMany(c => c.Jobs)
-                .OnDelete(DeleteBehavior.SetNull);
+            .WithMany(c => c.Jobs)
+            .OnDelete(DeleteBehavior.SetNull);
 
             if (_httpContextAccessor is not null)
             {
@@ -204,17 +211,21 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             {
                 ece.Property(p => p.Expression).HasColumnName("Expression");
             });
-            e.HasIndex(x => new { x.JobId, x.ParameterName }, "UQ_JobParameter").IsUnique();
-            e.HasOne(x => x.Job).WithMany(x => x.JobParameters).OnDelete(DeleteBehavior.ClientCascade);
+            e.HasIndex(x => new { x.JobId, x.ParameterName }, "UQ_JobParameter")
+            .IsUnique();
+            e.HasOne(x => x.Job)
+            .WithMany(x => x.JobParameters)
+            .OnDelete(DeleteBehavior.ClientCascade);
         });
 
-        modelBuilder.Entity<Schedule>()
-            .HasOne(schedule => schedule.Job)
+        modelBuilder.Entity<Schedule>(e =>
+        { 
+            e.HasOne(schedule => schedule.Job)
             .WithMany(job => job.Schedules)
             .OnDelete(DeleteBehavior.Cascade);
-        modelBuilder.Entity<Schedule>()
-            .HasIndex(x => new { x.JobId, x.CronExpression }, "UQ_Schedule")
+            e.HasIndex(x => new { x.JobId, x.CronExpression }, "UQ_Schedule")
             .IsUnique();
+        });
 
         #endregion
 
@@ -223,6 +234,7 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
         modelBuilder.Entity<Step>(e =>
         {
             e.ToTable(t => t.HasTrigger("Trigger_Step"));
+
             e.HasDiscriminator<StepType>("StepType")
             .HasValue<DatasetStep>(StepType.Dataset)
             .HasValue<ExeStep>(StepType.Exe)
@@ -239,10 +251,12 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             e.HasMany(s => s.StepExecutions)
             .WithOne(e => e.Step)
             .IsRequired(false);
+
             e.OwnsOne(s => s.ExecutionConditionExpression, ece =>
             {
                 ece.Property(p => p.Expression).HasColumnName("ExecutionConditionExpression");
             });
+
             e.HasOne(x => x.Job)
             .WithMany(x => x.Steps)
             .OnDelete(DeleteBehavior.ClientCascade);
@@ -252,6 +266,7 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             .HasOne(x => x.ResultCaptureJobParameter)
             .WithMany(x => x.CapturingSteps)
             .OnDelete(DeleteBehavior.SetNull);
+
         modelBuilder.Entity<JobStep>()
             .HasOne(step => step.JobToExecute)
             .WithMany(job => job.JobSteps)
@@ -263,9 +278,11 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             e.HasOne(dependency => dependency.Step)
             .WithMany(step => step.Dependencies)
             .OnDelete(DeleteBehavior.ClientCascade);
+
             e.HasOne(dependency => dependency.DependantOnStep)
             .WithMany(step => step.Depending)
             .OnDelete(DeleteBehavior.ClientCascade);
+            
             e.ToTable(t => t.HasCheckConstraint("CK_Dependency",
                 $"[{nameof(Dependency.StepId)}]<>[{nameof(Dependency.DependantOnStepId)}]"));
         });
@@ -278,9 +295,14 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
 
         modelBuilder.Entity<ExecutionConditionParameter>(e =>
         {
-            e.HasOne(x => x.Step).WithMany(x => x.ExecutionConditionParameters).OnDelete(DeleteBehavior.Cascade);
-            e.HasOne(x => x.JobParameter).WithMany(x => x.ExecutionConditionParameters).OnDelete(DeleteBehavior.SetNull);
-            e.HasIndex(x => new { x.StepId, x.ParameterName }, "UQ_StepConditionParameter").IsUnique();
+            e.HasOne(x => x.Step)
+            .WithMany(x => x.ExecutionConditionParameters)
+            .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.JobParameter)
+            .WithMany(x => x.ExecutionConditionParameters)
+            .OnDelete(DeleteBehavior.SetNull);
+            e.HasIndex(x => new { x.StepId, x.ParameterName }, "UQ_StepConditionParameter")
+            .IsUnique();
         });
 
         modelBuilder.Entity<StepParameterBase>(e =>
@@ -288,6 +310,7 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             e.HasOne(p => p.InheritFromJobParameter)
             .WithMany(p => p.InheritingStepParameters)
             .OnDelete(DeleteBehavior.ClientSetNull);
+
             e.HasDiscriminator<ParameterType>("ParameterType")
             .HasValue<SqlStepParameter>(ParameterType.Sql)
             .HasValue<PackageStepParameter>(ParameterType.Package)
@@ -296,34 +319,62 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             .HasValue<FunctionStepParameter>(ParameterType.Function)
             .HasValue<PipelineStepParameter>(ParameterType.Pipeline)
             .HasValue<EmailStepParameter>(ParameterType.Email);
+
             e.OwnsOne(s => s.Expression, ece =>
             {
                 ece.Property(p => p.Expression).HasColumnName("Expression");
             });
         });
 
-        modelBuilder.Entity<SqlStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters).OnDelete(DeleteBehavior.ClientCascade));
-        modelBuilder.Entity<PackageStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters).OnDelete(DeleteBehavior.ClientCascade));
-        modelBuilder.Entity<PackageStepParameter>().HasIndex(x => new { x.StepId, x.ParameterLevel, x.ParameterName }, "UQ_StepParameter").HasFilter(null).IsUnique();
-        modelBuilder.Entity<ExeStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters).OnDelete(DeleteBehavior.ClientCascade));
-        modelBuilder.Entity<FunctionStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters).OnDelete(DeleteBehavior.ClientCascade));
-        modelBuilder.Entity<PipelineStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters).OnDelete(DeleteBehavior.ClientCascade));
-        modelBuilder.Entity<EmailStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters).OnDelete(DeleteBehavior.ClientCascade));
+        modelBuilder.Entity<SqlStepParameter>()
+            .HasOne(p => p.Step)
+            .WithMany(p => p.StepParameters)
+            .OnDelete(DeleteBehavior.ClientCascade);
+        modelBuilder.Entity<PackageStepParameter>()
+            .HasOne(p => p.Step)
+            .WithMany(p => p.StepParameters)
+            .OnDelete(DeleteBehavior.ClientCascade);
+        modelBuilder.Entity<PackageStepParameter>()
+            .HasIndex(x => new { x.StepId, x.ParameterLevel, x.ParameterName }, "UQ_StepParameter")
+            .HasFilter(null)
+            .IsUnique();
+        modelBuilder.Entity<ExeStepParameter>()
+            .HasOne(p => p.Step)
+            .WithMany(p => p.StepParameters)
+            .OnDelete(DeleteBehavior.ClientCascade);
+        modelBuilder.Entity<FunctionStepParameter>()
+            .HasOne(p => p.Step)
+            .WithMany(p => p.StepParameters)
+            .OnDelete(DeleteBehavior.ClientCascade);
+        modelBuilder.Entity<PipelineStepParameter>()
+            .HasOne(p => p.Step)
+            .WithMany(p => p.StepParameters)
+            .OnDelete(DeleteBehavior.ClientCascade);
+        modelBuilder.Entity<EmailStepParameter>()
+            .HasOne(p => p.Step)
+            .WithMany(p => p.StepParameters)
+            .OnDelete(DeleteBehavior.ClientCascade);
         modelBuilder.Entity<JobStepParameter>(e =>
         {
-            e.HasOne(p => p.Step).WithMany(p => p.StepParameters).IsRequired().OnDelete(DeleteBehavior.ClientCascade);
-            e.HasOne(p => p.AssignToJobParameter).WithMany(p => p.AssigningStepParameters).OnDelete(DeleteBehavior.ClientCascade);
+            e.HasOne(p => p.Step)
+            .WithMany(p => p.StepParameters)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.ClientCascade);
+            e.HasOne(p => p.AssignToJobParameter)
+            .WithMany(p => p.AssigningStepParameters)
+            .OnDelete(DeleteBehavior.ClientCascade);
         });
 
         modelBuilder.Entity<StepParameterExpressionParameter>(e =>
         {
             e.HasOne(x => x.InheritFromJobParameter)
-                .WithMany(x => x.InheritingStepParameterExpressionParameters)
-                .OnDelete(DeleteBehavior.Cascade);
+            .WithMany(x => x.InheritingStepParameterExpressionParameters)
+            .OnDelete(DeleteBehavior.Cascade);
             e.HasOne(x => x.StepParameter)
-                .WithMany(x => x.ExpressionParameters)
-                .OnDelete(DeleteBehavior.Cascade);
-            e.HasIndex(x => new { x.StepParameterId, x.ParameterName }, "UQ_StepParameterExpressionParameter").IsUnique();
+            .WithMany(x => x.ExpressionParameters)
+            .OnDelete(DeleteBehavior.Cascade);
+            e.HasIndex(x => new { x.StepParameterId, x.ParameterName }, "UQ_StepParameterExpressionParameter")
+            .IsUnique();
         });
 
         #endregion
@@ -383,6 +434,7 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
         modelBuilder.Entity<StepExecution>(e =>
         {
             e.ToTable(t => t.HasTrigger("Trigger_ExecutionStep"));
+
             e.HasDiscriminator<StepType>("StepType")
             .HasValue<DatasetStepExecution>(StepType.Dataset)
             .HasValue<ExeStepExecution>(StepType.Exe)
@@ -395,6 +447,7 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             .HasValue<TabularStepExecution>(StepType.Tabular)
             .HasValue<EmailStepExecution>(StepType.Email)
             .HasValue<QlikStepExecution>(StepType.Qlik);
+
             e.OwnsOne(s => s.ExecutionConditionExpression, ece =>
             {
                 ece.Property(p => p.Expression).HasColumnName("ExecutionConditionExpression");
@@ -433,6 +486,7 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             .HasValue<TabularStepExecutionAttempt>(StepType.Tabular)
             .HasValue<EmailStepExecutionAttempt>(StepType.Email)
             .HasValue<QlikStepExecutionAttempt>(StepType.Qlik);
+
             e.Property(p => p.InfoMessages).HasConversion(
                 from => JsonSerializer.Serialize(from, IgnoreNullsOptions),
                 to => JsonSerializer.Deserialize<List<InfoMessage>>(to, IgnoreNullsOptions) ?? new(),
@@ -454,6 +508,7 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
                     (x, y) => x != null && y != null && x.SequenceEqual(y),
                     x => x.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
                     x => x.ToList()));
+
             e.HasOne(x => x.StepExecution)
             .WithMany(x => x.StepExecutionAttempts)
             .OnDelete(DeleteBehavior.Cascade);
@@ -473,14 +528,15 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
                 $"[{nameof(ExecutionDependency.StepId)}]<>[{nameof(ExecutionDependency.DependantOnStepId)}]"));
         });
 
-        modelBuilder.Entity<StepExecutionDataObject>()
-            .HasOne(x => x.DataObject)
+        modelBuilder.Entity<StepExecutionDataObject>(e =>
+        { 
+            e.HasOne(x => x.DataObject)
             .WithMany(x => x.StepExecutions)
             .OnDelete(DeleteBehavior.Cascade);
-        modelBuilder.Entity<StepExecutionDataObject>()
-            .HasOne(x => x.StepExecution)
+            e.HasOne(x => x.StepExecution)
             .WithMany(x => x.DataObjects)
             .OnDelete(DeleteBehavior.Cascade);
+        });
 
         modelBuilder.Entity<StepExecutionConditionParameter>(e =>
         {
@@ -500,6 +556,7 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             .WithMany(p => p.StepExecutionParameters)
             .HasForeignKey(p => new { p.ExecutionId, p.InheritFromExecutionParameterId })
             .OnDelete(DeleteBehavior.Cascade);
+
             e.HasDiscriminator<ParameterType>("ParameterType")
             .HasValue<SqlStepExecutionParameter>(ParameterType.Sql)
             .HasValue<PackageStepExecutionParameter>(ParameterType.Package)
@@ -508,19 +565,48 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             .HasValue<FunctionStepExecutionParameter>(ParameterType.Function)
             .HasValue<PipelineStepExecutionParameter>(ParameterType.Pipeline)
             .HasValue<EmailStepExecutionParameter>(ParameterType.Email);
+
             e.OwnsOne(s => s.Expression, ece =>
             {
                 ece.Property(p => p.Expression).HasColumnName("Expression");
             });
         });
 
-        modelBuilder.Entity<SqlStepExecutionParameter>(e => e.HasOne(p => p.StepExecution).WithMany(p => p.StepExecutionParameters).HasForeignKey("ExecutionId", "StepId").OnDelete(DeleteBehavior.Cascade));
-        modelBuilder.Entity<PackageStepExecutionParameter>(e => e.HasOne(p => p.StepExecution).WithMany(p => p.StepExecutionParameters).HasForeignKey("ExecutionId", "StepId").OnDelete(DeleteBehavior.Cascade));
-        modelBuilder.Entity<ExeStepExecutionParameter>(e => e.HasOne(p => p.StepExecution).WithMany(p => p.StepExecutionParameters).HasForeignKey("ExecutionId", "StepId").OnDelete(DeleteBehavior.Cascade));
-        modelBuilder.Entity<FunctionStepExecutionParameter>(e => e.HasOne(p => p.StepExecution).WithMany(p => p.StepExecutionParameters).HasForeignKey("ExecutionId", "StepId").OnDelete(DeleteBehavior.Cascade));
-        modelBuilder.Entity<PipelineStepExecutionParameter>(e => e.HasOne(p => p.StepExecution).WithMany(p => p.StepExecutionParameters).HasForeignKey("ExecutionId", "StepId").OnDelete(DeleteBehavior.Cascade));
-        modelBuilder.Entity<EmailStepExecutionParameter>(e => e.HasOne(p => p.StepExecution).WithMany(p => p.StepExecutionParameters).HasForeignKey("ExecutionId", "StepId").OnDelete(DeleteBehavior.Cascade));
-        modelBuilder.Entity<JobStepExecutionParameter>(e => e.HasOne(p => p.StepExecution).WithMany(p => p.StepExecutionParameters).HasForeignKey("ExecutionId", "StepId").OnDelete(DeleteBehavior.Cascade));
+        modelBuilder.Entity<SqlStepExecutionParameter>()
+            .HasOne(p => p.StepExecution)
+            .WithMany(p => p.StepExecutionParameters)
+            .HasForeignKey("ExecutionId", "StepId")
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<PackageStepExecutionParameter>()
+            .HasOne(p => p.StepExecution)
+            .WithMany(p => p.StepExecutionParameters)
+            .HasForeignKey("ExecutionId", "StepId")
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<ExeStepExecutionParameter>()
+            .HasOne(p => p.StepExecution)
+            .WithMany(p => p.StepExecutionParameters)
+            .HasForeignKey("ExecutionId", "StepId")
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<FunctionStepExecutionParameter>()
+            .HasOne(p => p.StepExecution)
+            .WithMany(p => p.StepExecutionParameters)
+            .HasForeignKey("ExecutionId", "StepId")
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<PipelineStepExecutionParameter>()
+            .HasOne(p => p.StepExecution)
+            .WithMany(p => p.StepExecutionParameters)
+            .HasForeignKey("ExecutionId", "StepId")
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<EmailStepExecutionParameter>()
+            .HasOne(p => p.StepExecution)
+            .WithMany(p => p.StepExecutionParameters)
+            .HasForeignKey("ExecutionId", "StepId")
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<JobStepExecutionParameter>()
+            .HasOne(p => p.StepExecution)
+            .WithMany(p => p.StepExecutionParameters)
+            .HasForeignKey("ExecutionId", "StepId")
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<StepExecutionParameterExpressionParameter>(e =>
         {
@@ -528,10 +614,12 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             .WithMany(x => x.ExpressionParameters)
             .HasForeignKey("ExecutionId", "StepParameterId")
             .OnDelete(DeleteBehavior.ClientCascade);
+
             e.HasOne(x => x.InheritFromExecutionParameter)
             .WithMany(x => x.StepExecutionParameterExpressionParameters)
             .HasForeignKey("ExecutionId", "InheritFromExecutionParameterId")
             .OnDelete(DeleteBehavior.Cascade);
+
             e.HasIndex(x => new { x.ExecutionId, x.StepParameterId, x.ParameterName }, "UQ_ExecutionStepParameterExpressionParameter")
             .IsUnique();
         });
@@ -611,12 +699,6 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             e.HasOne(t => t.Category)
             .WithMany(c => c.Tables)
             .OnDelete(DeleteBehavior.SetNull);
-
-            e.HasMany(t => t.Users)
-            .WithMany(u => u.DataTables)
-            .UsingEntity<Dictionary<string, object>>("DataTableAuthorization",
-            x => x.HasOne<User>().WithMany().HasForeignKey("UserId").OnDelete(DeleteBehavior.Cascade),
-            x => x.HasOne<MasterDataTable>().WithMany().HasForeignKey("DataTableId").OnDelete(DeleteBehavior.Cascade));
 
             if (_httpContextAccessor is not null)
             {
