@@ -196,6 +196,7 @@ public partial class StepsList : ComponentBase
             var stepToRemove = await context.Steps
                 .Include(s => s.Dependencies)
                 .Include(s => s.Depending)
+                .Include($"{nameof(IHasStepParameters.StepParameters)}")
                 .FirstOrDefaultAsync(s => s.StepId == step.StepId);
             if (stepToRemove is not null)
             {

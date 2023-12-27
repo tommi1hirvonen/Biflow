@@ -192,6 +192,7 @@ public partial class Jobs : ComponentBase
                 .ThenInclude(s => s.Dependencies)
                 .Include(j => j.Steps)
                 .ThenInclude(s => s.Depending)
+                .Include($"{nameof(Job.Steps)}.{nameof(IHasStepParameters.StepParameters)}")
                 .FirstOrDefaultAsync(j => j.JobId == job.JobId);
             if (jobToRemove is not null)
             {

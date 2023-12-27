@@ -376,7 +376,7 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
         {
             e.HasOne(p => p.InheritFromJobParameter)
             .WithMany(p => p.InheritingStepParameters)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.ClientSetNull);
             e.HasDiscriminator<ParameterType>("ParameterType")
             .HasValue<SqlStepParameter>(ParameterType.Sql)
             .HasValue<PackageStepParameter>(ParameterType.Package)
@@ -391,17 +391,17 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             });
         });
 
-        modelBuilder.Entity<SqlStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters).OnDelete(DeleteBehavior.Cascade));
-        modelBuilder.Entity<PackageStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters).OnDelete(DeleteBehavior.Cascade));
+        modelBuilder.Entity<SqlStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters).OnDelete(DeleteBehavior.ClientCascade));
+        modelBuilder.Entity<PackageStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters).OnDelete(DeleteBehavior.ClientCascade));
         modelBuilder.Entity<PackageStepParameter>().HasIndex(x => new { x.StepId, x.ParameterLevel, x.ParameterName }, "UQ_StepParameter").HasFilter(null).IsUnique();
-        modelBuilder.Entity<ExeStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters).OnDelete(DeleteBehavior.Cascade));
-        modelBuilder.Entity<FunctionStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters).OnDelete(DeleteBehavior.Cascade));
-        modelBuilder.Entity<PipelineStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters).OnDelete(DeleteBehavior.Cascade));
-        modelBuilder.Entity<EmailStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters).OnDelete(DeleteBehavior.Cascade));
+        modelBuilder.Entity<ExeStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters).OnDelete(DeleteBehavior.ClientCascade));
+        modelBuilder.Entity<FunctionStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters).OnDelete(DeleteBehavior.ClientCascade));
+        modelBuilder.Entity<PipelineStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters).OnDelete(DeleteBehavior.ClientCascade));
+        modelBuilder.Entity<EmailStepParameter>(e => e.HasOne(p => p.Step).WithMany(p => p.StepParameters).OnDelete(DeleteBehavior.ClientCascade));
         modelBuilder.Entity<JobStepParameter>(e =>
         {
-            e.HasOne(p => p.Step).WithMany(p => p.StepParameters).IsRequired().OnDelete(DeleteBehavior.Cascade);
-            e.HasOne(p => p.AssignToJobParameter).WithMany(p => p.AssigningStepParameters).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(p => p.Step).WithMany(p => p.StepParameters).IsRequired().OnDelete(DeleteBehavior.ClientCascade);
+            e.HasOne(p => p.AssignToJobParameter).WithMany(p => p.AssigningStepParameters).OnDelete(DeleteBehavior.ClientCascade);
         });
 
         modelBuilder.Entity<StepParameterExpressionParameter>(e =>
