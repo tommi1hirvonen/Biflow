@@ -281,7 +281,10 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             });
         });
 
-        modelBuilder.Entity<SqlStep>().HasOne(x => x.ResultCaptureJobParameter).WithMany(x => x.CapturingSteps).OnDelete(DeleteBehavior.SetNull);
+        modelBuilder.Entity<SqlStep>()
+            .HasOne(x => x.ResultCaptureJobParameter)
+            .WithMany(x => x.CapturingSteps)
+            .OnDelete(DeleteBehavior.SetNull);
         modelBuilder.Entity<JobStep>()
             .HasOne(step => step.JobToExecute)
             .WithMany(job => job.JobSteps)
@@ -341,6 +344,7 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
                 ece.Property(p => p.Expression).HasColumnName("Expression");
             });
             e.HasIndex(x => new { x.JobId, x.ParameterName }, "UQ_JobParameter").IsUnique();
+            e.HasOne(x => x.Job).WithMany(x => x.JobParameters).OnDelete(DeleteBehavior.ClientCascade);
         });
 
         modelBuilder.Entity<ExecutionConditionParameter>(e =>
@@ -352,7 +356,9 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
 
         modelBuilder.Entity<StepParameterBase>(e =>
         {
-            e.HasOne(p => p.InheritFromJobParameter).WithMany(p => p.InheritingStepParameters);
+            e.HasOne(p => p.InheritFromJobParameter)
+            .WithMany(p => p.InheritingStepParameters)
+            .OnDelete(DeleteBehavior.SetNull);
             e.HasDiscriminator<ParameterType>("ParameterType")
             .HasValue<SqlStepParameter>(ParameterType.Sql)
             .HasValue<PackageStepParameter>(ParameterType.Package)
@@ -377,7 +383,7 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
         modelBuilder.Entity<JobStepParameter>(e =>
         {
             e.HasOne(p => p.Step).WithMany(p => p.StepParameters).IsRequired().OnDelete(DeleteBehavior.Cascade);
-            e.HasOne(p => p.AssignToJobParameter).WithMany(p => p.AssigningStepParameters);
+            e.HasOne(p => p.AssignToJobParameter).WithMany(p => p.AssigningStepParameters).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<StepParameterExpressionParameter>(e =>
