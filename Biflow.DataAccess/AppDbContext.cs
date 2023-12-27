@@ -135,12 +135,16 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             {
                 ece.Property(p => p.Expression).HasColumnName("ExecutionConditionExpression");
             });
+            e.HasOne(x => x.Execution)
+            .WithMany(x => x.StepExecutions)
+            .OnDelete(DeleteBehavior.ClientCascade);
         });
 
         modelBuilder.Entity<SqlStepExecution>()
             .HasOne(x => x.ResultCaptureJobParameter)
             .WithMany(x => x.CapturingStepExecutions)
-            .HasForeignKey(x => new { x.ExecutionId, x.ResultCaptureJobParameterId });
+            .HasForeignKey(x => new { x.ExecutionId, x.ResultCaptureJobParameterId })
+            .OnDelete(DeleteBehavior.ClientCascade);
 
         modelBuilder.Entity<JobStepExecution>()
             .Property(p => p.TagFilters).HasConversion(
@@ -195,6 +199,10 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             .HasOne(x => x.DataObject)
             .WithMany(x => x.StepExecutions)
             .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<StepExecutionDataObject>()
+            .HasOne(x => x.StepExecution)
+            .WithMany(x => x.DataObjects)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<Dependency>(e =>
         {
@@ -212,10 +220,12 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
         {
             e.HasOne(d => d.StepExecution)
             .WithMany(e => e.ExecutionDependencies)
-            .HasForeignKey(d => new { d.ExecutionId, d.StepId });
+            .HasForeignKey(d => new { d.ExecutionId, d.StepId })
+            .OnDelete(DeleteBehavior.ClientCascade);
             e.HasOne(d => d.DependantOnStepExecution)
             .WithMany(e => e.DependantExecutions)
-            .HasForeignKey(d => new { d.ExecutionId, d.DependantOnStepId });
+            .HasForeignKey(d => new { d.ExecutionId, d.DependantOnStepId })
+            .OnDelete(DeleteBehavior.ClientCascade);
             e.ToTable(t => t.HasCheckConstraint("CK_ExecutionDependency",
                 $"[{nameof(ExecutionDependency.StepId)}]<>[{nameof(ExecutionDependency.DependantOnStepId)}]"));
         });
@@ -338,6 +348,9 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             {
                 ece.Property(p => p.Expression).HasColumnName("Expression");
             });
+            e.HasOne(x => x.Execution)
+            .WithMany(x => x.ExecutionParameters)
+            .OnDelete(DeleteBehavior.ClientCascade);
         });
 
         modelBuilder.Entity<JobParameter>(e =>
@@ -405,7 +418,8 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
         {
             e.HasOne(p => p.InheritFromExecutionParameter)
             .WithMany(p => p.StepExecutionParameters)
-            .HasForeignKey(p => new { p.ExecutionId, p.InheritFromExecutionParameterId });
+            .HasForeignKey(p => new { p.ExecutionId, p.InheritFromExecutionParameterId })
+            .OnDelete(DeleteBehavior.Cascade);
             e.HasDiscriminator<ParameterType>("ParameterType")
             .HasValue<SqlStepExecutionParameter>(ParameterType.Sql)
             .HasValue<PackageStepExecutionParameter>(ParameterType.Package)
@@ -425,7 +439,7 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             e.HasOne(x => x.StepParameter)
             .WithMany(x => x.ExpressionParameters)
             .HasForeignKey("ExecutionId", "StepParameterId")
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.ClientCascade);
             e.HasOne(x => x.InheritFromExecutionParameter)
             .WithMany(x => x.StepExecutionParameterExpressionParameters)
             .HasForeignKey("ExecutionId", "InheritFromExecutionParameterId")
@@ -450,7 +464,8 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             .OnDelete(DeleteBehavior.Cascade);
             e.HasOne(p => p.ExecutionParameter)
             .WithMany(e => e.ExecutionConditionParameters)
-            .HasForeignKey("ExecutionId", "ExecutionParameterId");
+            .HasForeignKey("ExecutionId", "ExecutionParameterId")
+            .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Subscription>(e =>

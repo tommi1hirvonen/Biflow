@@ -243,9 +243,19 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
         try
         {
             using var context = await DbFactory.CreateDbContextAsync();
-            await context.Executions
-                .Where(e => e.ExecutionId == ExecutionId)
-                .ExecuteDeleteAsync();
+            var execution = await context.Executions
+                .Include(e => e.ExecutionParameters)
+                .Include(e => e.StepExecutions)
+                .ThenInclude(e => e.ExecutionDependencies)
+                .Include(e => e.StepExecutions)
+                .ThenInclude(e => e.DependantExecutions)
+                .Include($"{nameof(Execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
+                .FirstOrDefaultAsync(e => e.ExecutionId == ExecutionId);
+            if (execution is not null)
+            {
+                context.Executions.Remove(execution);
+                await context.SaveChangesAsync();
+            }
             NavigationManager.NavigateTo("/executions");
             Messenger.AddInformation("Execution deleted successfully");
         }
