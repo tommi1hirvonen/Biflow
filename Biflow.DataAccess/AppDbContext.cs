@@ -11,16 +11,24 @@ using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess;
 
-public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? httpContextAccessor = null) : DbContext()
+public class AppDbContext : DbContext
 {
-    private readonly IHttpContextAccessor? _httpContextAccessor = httpContextAccessor;
-    private readonly string _connectionString = configuration.GetConnectionString("AppDbContext")
-            ?? throw new ApplicationException("Connection string not found");
+    private readonly IHttpContextAccessor? _httpContextAccessor;
+    private readonly string _connectionString;
 
     private static readonly JsonSerializerOptions IgnoreNullsOptions = new()
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
+
+    public AppDbContext(IConfiguration configuration, IHttpContextAccessor? httpContextAccessor = null)
+    {
+        _connectionString = configuration.GetConnectionString("AppDbContext")
+            ?? throw new ApplicationException("Connection string not found");
+        _httpContextAccessor = httpContextAccessor;
+
+        SavingChanges += OnSavingChanges;
+    }
 
     #region DbSets
     public DbSet<Job> Jobs => Set<Job>();
@@ -835,7 +843,7 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
         configurationBuilder.Conventions.Remove<ForeignKeyIndexConvention>();
     }
 
-    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    private void OnSavingChanges(object? sender, SavingChangesEventArgs e)
     {
         var user = _httpContextAccessor?.HttpContext?.User.Identity?.Name;
         var now = DateTimeOffset.Now;
@@ -863,8 +871,6 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             SetCurrentValueIfPropertyExists(entity, "CreatedDateTime", now);
             SetCurrentValueIfPropertyExists(entity, "CreatedBy", user);
         }
-
-        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
 
     private static void SetCurrentValueIfPropertyExists(EntityEntry entity, string propertyName, object? value)
