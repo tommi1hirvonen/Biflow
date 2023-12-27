@@ -279,6 +279,9 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             {
                 ece.Property(p => p.Expression).HasColumnName("ExecutionConditionExpression");
             });
+            e.HasOne(x => x.Job)
+            .WithMany(x => x.Steps)
+            .OnDelete(DeleteBehavior.ClientCascade);
         });
 
         modelBuilder.Entity<SqlStep>()
@@ -288,7 +291,8 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
         modelBuilder.Entity<JobStep>()
             .HasOne(step => step.JobToExecute)
             .WithMany(job => job.JobSteps)
-            .HasForeignKey(step => step.JobToExecuteId);
+            .HasForeignKey(step => step.JobToExecuteId)
+            .OnDelete(DeleteBehavior.ClientCascade);
 
         modelBuilder.Entity<StepDataObject>(e =>
         {

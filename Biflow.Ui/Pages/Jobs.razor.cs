@@ -184,9 +184,20 @@ public partial class Jobs : ComponentBase
         try
         {
             using var context = await DbFactory.CreateDbContextAsync();
-            await context.Jobs
-                .Where(j => j.JobId == job.JobId)
-                .ExecuteDeleteAsync();
+            var jobToRemove = await context.Jobs
+                .Include(j => j.JobParameters)
+                .ThenInclude(j => j.AssigningStepParameters)
+                .ThenInclude(p => p.Step)
+                .Include(j => j.Steps)
+                .ThenInclude(s => s.Dependencies)
+                .Include(j => j.Steps)
+                .ThenInclude(s => s.Depending)
+                .FirstOrDefaultAsync(j => j.JobId == job.JobId);
+            if (jobToRemove is not null)
+            {
+                context.Jobs.Remove(jobToRemove);
+                await context.SaveChangesAsync();
+            }
             await SchedulerService.DeleteJobAsync(job);
             jobs?.Remove(job);
         }

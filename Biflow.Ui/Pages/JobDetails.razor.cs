@@ -154,9 +154,22 @@ public partial class JobDetails : ComponentBase
                     }
                 }
             }
-            using var context2 = DbFactory.CreateDbContext();
-            context2.Jobs.Remove(job);
-            await context2.SaveChangesAsync();
+            using var context2 = await DbFactory.CreateDbContextAsync();
+            var jobToRemove = await context2.Jobs
+                .Include(j => j.JobParameters)
+                .ThenInclude(j => j.AssigningStepParameters)
+                .ThenInclude(p => p.Step)
+                .Include(j => j.Steps)
+                .ThenInclude(s => s.Dependencies)
+                .Include(j => j.Steps)
+                .ThenInclude(s => s.Depending)
+                .FirstOrDefaultAsync(j => j.JobId == job.JobId);
+            if (jobToRemove is not null)
+            {
+                context2.Jobs.Remove(jobToRemove);
+                await context2.SaveChangesAsync();
+            }
+
             await SchedulerService.DeleteJobAsync(job);
             NavigationManager.NavigateTo("jobs");
         }
