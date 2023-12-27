@@ -431,8 +431,16 @@
         try
         {
             using var context = DbFactory.CreateDbContext();
-            context.Steps.Remove(step);
-            await context.SaveChangesAsync();
+            var stepToRemove = await context.Steps
+                .Include(s => s.Dependencies)
+                .Include(s => s.Depending)
+                .FirstOrDefaultAsync(s => s.StepId == step.StepId);
+            if (stepToRemove is not null)
+            {
+                context.Steps.Remove(stepToRemove);
+                await context.SaveChangesAsync();
+            }
+
             Steps?.Remove(step);
 
             // Remove the deleted step from dependencies.

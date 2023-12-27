@@ -199,9 +199,11 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
         modelBuilder.Entity<Dependency>(e =>
         {
             e.HasOne(dependency => dependency.Step)
-            .WithMany(step => step.Dependencies);
+            .WithMany(step => step.Dependencies)
+            .OnDelete(DeleteBehavior.ClientCascade);
             e.HasOne(dependency => dependency.DependantOnStep)
-            .WithMany(step => step.Depending);
+            .WithMany(step => step.Depending)
+            .OnDelete(DeleteBehavior.ClientCascade);
             e.ToTable(t => t.HasCheckConstraint("CK_Dependency",
                 $"[{nameof(Dependency.StepId)}]<>[{nameof(Dependency.DependantOnStepId)}]"));
         });
