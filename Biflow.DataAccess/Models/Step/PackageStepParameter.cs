@@ -16,9 +16,6 @@ public class PackageStepParameter : StepParameterBase
         Step = step;
     }
 
-    [Required]
-    [MaxLength(20)]
-    [Unicode(false)]
     public ParameterLevel ParameterLevel { get; set; } = ParameterLevel.Package;
 
     [JsonIgnore]

@@ -83,8 +83,6 @@ public class Execution
     public DateTimeOffset? EndDateTime { get; set; }
 
     [Display(Name = "Status")]
-    [MaxLength(50)]
-    [Unicode(false)]
     public ExecutionStatus ExecutionStatus { get; set; }
 
     [Display(Name = "Dependency mode")]
@@ -120,8 +118,6 @@ public class Execution
     public bool Notify { get; internal set; }
 
     [Display(Name = "Notify caller")]
-    [MaxLength(20)]
-    [Unicode(false)]
     public AlertType? NotifyCaller { get; internal set; }
 
     [Display(Name = "Notify caller overtime")]

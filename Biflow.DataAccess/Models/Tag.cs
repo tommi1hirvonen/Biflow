@@ -16,8 +16,6 @@ public class Tag(string tagName) : ITag
     [MaxLength(250)]
     public string TagName { get; set; } = tagName;
 
-    [Unicode(false)]
-    [MaxLength(20)]
     public TagColor Color { get; set; }
 
     [JsonIgnore]

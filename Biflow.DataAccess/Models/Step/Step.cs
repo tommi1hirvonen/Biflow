@@ -96,15 +96,9 @@ public abstract class Step : IComparable
     [Display(Name = "Execution phase")]
     public int ExecutionPhase { get; set; }
 
-    [Required]
     [Display(Name = "Step type")]
-    [Unicode(false)]
-    [MaxLength(20)]
     public StepType StepType { get; }
 
-    [Required]
-    [Unicode(false)]
-    [MaxLength(20)]
     public DuplicateExecutionBehaviour DuplicateExecutionBehaviour { get; set; } = DuplicateExecutionBehaviour.Wait;
 
     [Required]

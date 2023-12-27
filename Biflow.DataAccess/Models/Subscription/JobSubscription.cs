@@ -11,8 +11,6 @@ public class JobSubscription(Guid userId, Guid jobId) : Subscription(userId, Sub
     /// null if regular subscription is not enabled
     /// </summary>
     [Column("AlertType")]
-    [MaxLength(20)]
-    [Unicode(false)]
     public AlertType? AlertType { get; set; }
 
     [Required]

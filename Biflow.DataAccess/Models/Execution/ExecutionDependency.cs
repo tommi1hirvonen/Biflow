@@ -26,8 +26,6 @@ public class ExecutionDependency
     public Guid? DependantOnStepId { get; private set; }
 
     [Display(Name = "Type")]
-    [MaxLength(20)]
-    [Unicode(false)]
     public DependencyType DependencyType { get; private set; }
 
     public StepExecution StepExecution { get; set; } = null!;

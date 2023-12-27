@@ -19,8 +19,6 @@ public class StepDataObject
     [JsonIgnore]
     public DataObject DataObject { get; set; } = null!;
 
-    [MaxLength(20)]
-    [Unicode(false)]
     public DataObjectReferenceType ReferenceType { get; set; }
 
     [MaxLength(4000)]

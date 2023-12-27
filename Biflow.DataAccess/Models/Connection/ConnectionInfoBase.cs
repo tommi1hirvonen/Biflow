@@ -15,10 +15,7 @@ public abstract class ConnectionInfoBase(ConnectionType connectionType) : ICompa
     [JsonInclude]
     public Guid ConnectionId { get; private set; }
 
-    [Required]
     [Display(Name = "Connection type")]
-    [MaxLength(20)]
-    [Unicode(false)]
     public ConnectionType ConnectionType { get; } = connectionType;
 
     [Required]

@@ -597,22 +597,22 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
-        configurationBuilder.Properties<ExecutionStatus>().HaveConversion<EnumToStringConverter<ExecutionStatus>>();
-        configurationBuilder.Properties<StepExecutionStatus>().HaveConversion<EnumToStringConverter<StepExecutionStatus>>();
-        configurationBuilder.Properties<AlertType>().HaveConversion<EnumToStringConverter<AlertType>>();
-        configurationBuilder.Properties<SubscriptionType>().HaveConversion<EnumToStringConverter<SubscriptionType>>();
-        configurationBuilder.Properties<StepType>().HaveConversion<EnumToStringConverter<StepType>>();
-        configurationBuilder.Properties<DuplicateExecutionBehaviour>().HaveConversion<EnumToStringConverter<DuplicateExecutionBehaviour>>();
-        configurationBuilder.Properties<ParameterValueType>().HaveConversion<EnumToStringConverter<ParameterValueType>>();
-        configurationBuilder.Properties<DependencyType>().HaveConversion<EnumToStringConverter<DependencyType>>();
-        configurationBuilder.Properties<TagColor>().HaveConversion<EnumToStringConverter<TagColor>>();
-        configurationBuilder.Properties<ParameterLevel>().HaveConversion<EnumToStringConverter<ParameterLevel>>();
-        configurationBuilder.Properties<ParameterType>().HaveConversion<EnumToStringConverter<ParameterType>>();
-        configurationBuilder.Properties<ConnectionType>().HaveConversion<EnumToStringConverter<ConnectionType>>();
-        configurationBuilder.Properties<PipelineClientType>().HaveConversion<EnumToStringConverter<PipelineClientType>>();
-        configurationBuilder.Properties<LookupDisplayType>().HaveConversion<EnumToStringConverter<LookupDisplayType>>();
-        configurationBuilder.Properties<DataObjectReferenceType>().HaveConversion<EnumToStringConverter<DataObjectReferenceType>>();
-        configurationBuilder.Properties<BlobStorageConnectionMethod>().HaveConversion<EnumToStringConverter<BlobStorageConnectionMethod>>();
+        configurationBuilder.Properties<ExecutionStatus>().HaveConversion<EnumToStringConverter<ExecutionStatus>>().HaveMaxLength(50).AreUnicode(false);
+        configurationBuilder.Properties<StepExecutionStatus>().HaveConversion<EnumToStringConverter<StepExecutionStatus>>().HaveMaxLength(50).AreUnicode(false);
+        configurationBuilder.Properties<AlertType>().HaveConversion<EnumToStringConverter<AlertType>>().HaveMaxLength(50).AreUnicode(false);
+        configurationBuilder.Properties<SubscriptionType>().HaveConversion<EnumToStringConverter<SubscriptionType>>().HaveMaxLength(50).AreUnicode(false);
+        configurationBuilder.Properties<StepType>().HaveConversion<EnumToStringConverter<StepType>>().HaveMaxLength(50).AreUnicode(false);
+        configurationBuilder.Properties<DuplicateExecutionBehaviour>().HaveConversion<EnumToStringConverter<DuplicateExecutionBehaviour>>().HaveMaxLength(50).AreUnicode(false);
+        configurationBuilder.Properties<ParameterValueType>().HaveConversion<EnumToStringConverter<ParameterValueType>>().HaveMaxLength(50).AreUnicode(false);
+        configurationBuilder.Properties<DependencyType>().HaveConversion<EnumToStringConverter<DependencyType>>().HaveMaxLength(50).AreUnicode(false);
+        configurationBuilder.Properties<TagColor>().HaveConversion<EnumToStringConverter<TagColor>>().HaveMaxLength(50).AreUnicode(false);
+        configurationBuilder.Properties<ParameterLevel>().HaveConversion<EnumToStringConverter<ParameterLevel>>().HaveMaxLength(50).AreUnicode(false);
+        configurationBuilder.Properties<ParameterType>().HaveConversion<EnumToStringConverter<ParameterType>>().HaveMaxLength(50).AreUnicode(false);
+        configurationBuilder.Properties<ConnectionType>().HaveConversion<EnumToStringConverter<ConnectionType>>().HaveMaxLength(50).AreUnicode(false);
+        configurationBuilder.Properties<PipelineClientType>().HaveConversion<EnumToStringConverter<PipelineClientType>>().HaveMaxLength(50).AreUnicode(false);
+        configurationBuilder.Properties<LookupDisplayType>().HaveConversion<EnumToStringConverter<LookupDisplayType>>().HaveMaxLength(50).AreUnicode(false);
+        configurationBuilder.Properties<DataObjectReferenceType>().HaveConversion<EnumToStringConverter<DataObjectReferenceType>>().HaveMaxLength(50).AreUnicode(false);
+        configurationBuilder.Properties<BlobStorageConnectionMethod>().HaveConversion<EnumToStringConverter<BlobStorageConnectionMethod>>().HaveMaxLength(50).AreUnicode(false);
 
         configurationBuilder.Conventions.Remove<CascadeDeleteConvention>();
         configurationBuilder.Conventions.Remove<SqlServerOnDeleteConvention>();

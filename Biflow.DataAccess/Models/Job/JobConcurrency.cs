@@ -21,8 +21,6 @@ public class JobConcurrency
 
     public Guid JobId { get; set; }
 
-    [Unicode(false)]
-    [MaxLength(20)]
     public StepType StepType { get; set; }
 
     [Required]

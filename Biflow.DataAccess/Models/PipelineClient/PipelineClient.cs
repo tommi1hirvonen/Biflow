@@ -18,8 +18,6 @@ public abstract class PipelineClient(PipelineClientType type)
     [Required]
     public string PipelineClientName { get; set; } = "";
 
-    [MaxLength(20)]
-    [Unicode(false)]
     public PipelineClientType PipelineClientType { get; } = type;
 
     [Required]

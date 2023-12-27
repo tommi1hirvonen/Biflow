@@ -42,12 +42,8 @@ public abstract class StepExecutionAttempt
 
     public DateTimeOffset? EndDateTime { get; set; }
 
-    [MaxLength(50)]
-    [Unicode(false)]
     public StepExecutionStatus ExecutionStatus { get; set; }
 
-    [MaxLength(20)]
-    [Unicode(false)]
     public StepType StepType { get; }
 
     [Display(Name = "Error message")]

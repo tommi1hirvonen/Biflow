@@ -33,8 +33,6 @@ public class Dependency
     public Step DependantOnStep { get; set; } = null!;
 
     [Display(Name = "Type")]
-    [MaxLength(20)]
-    [Unicode(false)]
     public DependencyType DependencyType { get; set; }
 
     [Required]

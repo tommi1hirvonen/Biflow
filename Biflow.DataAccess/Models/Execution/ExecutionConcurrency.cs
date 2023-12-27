@@ -19,8 +19,6 @@ public class ExecutionConcurrency
 
     public Guid ExecutionId { get; private set; }
 
-    [MaxLength(20)]
-    [Unicode(false)]
     public StepType StepType { get; private set; }
 
     [Required]

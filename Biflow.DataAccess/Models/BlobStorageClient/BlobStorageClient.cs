@@ -20,9 +20,6 @@ public class BlobStorageClient
     [MaxLength(250)]
     public string BlobStorageClientName { get; set; } = "";
 
-    [Required]
-    [Unicode(false)]
-    [MaxLength(20)]
     public BlobStorageConnectionMethod ConnectionMethod { get; set; }
 
     [MaxLength(4000)]

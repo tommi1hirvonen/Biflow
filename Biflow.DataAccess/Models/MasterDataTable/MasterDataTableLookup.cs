@@ -32,8 +32,6 @@ public class MasterDataTableLookup
     [MaxLength(128)]
     public string LookupDescriptionColumn { get; set; } = "";
 
-    [Unicode(false)]
-    [MaxLength(20)]
     public LookupDisplayType LookupDisplayType { get; set; }
 
     [JsonIgnore]

@@ -61,9 +61,6 @@ public abstract class ParameterBase
 
     private object? _parameterValue = string.Empty;
 
-    [Required]
-    [MaxLength(20)]
-    [Unicode(false)]
     public virtual ParameterValueType ParameterValueType
     {
         get => _parameterValueType;

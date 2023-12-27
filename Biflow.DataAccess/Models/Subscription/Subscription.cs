@@ -10,8 +10,6 @@ public abstract class Subscription(Guid userId, SubscriptionType subscriptionTyp
     [Key]
     public Guid SubscriptionId { get; private set; }
 
-    [MaxLength(20)]
-    [Unicode(false)]
     public SubscriptionType SubscriptionType { get; } = subscriptionType;
 
     [Required]
