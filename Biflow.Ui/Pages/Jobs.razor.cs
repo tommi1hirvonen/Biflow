@@ -91,13 +91,13 @@ public partial class Jobs : ComponentBase
         // Get each job's last execution.
         var lastExecutions = await context.Executions
             .AsNoTrackingWithIdentityResolution()
-            .Where(execution => jobs.Select(job => job.JobId).Contains(execution.JobId) && execution.StartDateTime != null)
+            .Where(execution => jobs.Select(job => job.JobId).Contains(execution.JobId) && execution.StartedOn != null)
             .Select(execution => execution.JobId)
             .Distinct()
             .Select(key => new
             {
                 Key = key,
-                Execution = context.Executions.Where(execution => execution.JobId == key).OrderByDescending(e => e.CreatedDateTime).First()
+                Execution = context.Executions.Where(execution => execution.JobId == key).OrderByDescending(e => e.CreatedOn).First()
             })
             .ToListAsync();
 

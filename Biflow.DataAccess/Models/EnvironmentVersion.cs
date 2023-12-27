@@ -13,7 +13,7 @@ public class EnvironmentVersion
 
     public required string Snapshot { get; init; }
 
-    public required DateTimeOffset CreatedDateTime { get; init; }
+    public required DateTimeOffset CreatedOn { get; init; }
 
     [MaxLength(250)]
     public string? CreatedBy { get; init; }

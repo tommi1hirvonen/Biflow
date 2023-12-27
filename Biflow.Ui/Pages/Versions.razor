@@ -59,7 +59,7 @@ else if (Page == "compare")
         using var context = await DbContextFactory.CreateDbContextAsync();
         versions = await context.EnvironmentVersions
             .OrderByDescending(v => v.VersionId)
-            .Select(v => new VersionProjection(v.VersionId, v.Description, v.CreatedDateTime, v.CreatedBy))
+            .Select(v => new VersionProjection(v.VersionId, v.Description, v.CreatedOn, v.CreatedBy))
             .ToListAsync();
     }
 }

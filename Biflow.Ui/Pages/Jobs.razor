@@ -207,7 +207,7 @@
                                     @if (lastExecution is not null)
                                     {
                                         <a class="text-body" href="javascript:void(0)" @onclick="() => GoToExecutionDetails(lastExecution.ExecutionId)">
-                                            @lastExecution.StartDateTime?.LocalDateTime
+                                            @lastExecution.StartedOn?.LocalDateTime
                                         </a>
                                     }
                                 </td>

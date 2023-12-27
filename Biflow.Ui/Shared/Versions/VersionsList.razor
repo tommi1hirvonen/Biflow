@@ -134,7 +134,7 @@
                 {
                     Snapshot = snapshot,
                     Description = description,
-                    CreatedDateTime = DateTimeOffset.Now,
+                    CreatedOn = DateTimeOffset.Now,
                     CreatedBy = HttpContext.HttpContext?.User.Identity?.Name
                 };
             using var context = await DbContextFactory.CreateDbContextAsync();
@@ -142,7 +142,7 @@
             await context.SaveChangesAsync();
             await createModal.LetAsync(x => x.HideAsync());
             description = null;
-            Versions?.Insert(0, new(version.VersionId, version.Description, version.CreatedDateTime, version.CreatedBy));
+            Versions?.Insert(0, new(version.VersionId, version.Description, version.CreatedOn, version.CreatedBy));
         }
         catch (Exception ex)
         {

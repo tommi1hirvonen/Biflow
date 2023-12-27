@@ -68,10 +68,10 @@
                             <sup>@item.ExecutionPhase</sup>
                         </td>
                         <td>
-                            @item.StartDateTime?.LocalDateTime
+                            @item.StartedOn?.LocalDateTime
                         </td>
                         <td>
-                            @item.EndDateTime?.LocalDateTime
+                            @item.EndedOn?.LocalDateTime
                         </td>
                         <td>
                             <text>@item.ExecutionInSeconds?.SecondsToReadableFormat()</text>

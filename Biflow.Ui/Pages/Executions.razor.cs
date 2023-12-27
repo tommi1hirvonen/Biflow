@@ -115,14 +115,14 @@ public partial class Executions : ComponentBase, IAsyncDisposable
         {
             var query = context.Executions
                 // Index optimized way of querying executions without having to scan the entire table.
-                .Where(e => e.CreatedDateTime <= ToDateTime && e.EndDateTime >= FromDateTime);
+                .Where(e => e.CreatedOn <= ToDateTime && e.EndedOn >= FromDateTime);
 
             if (DateTime.Now >= FromDateTime && DateTime.Now <= ToDateTime)
             {
                 query = query
                     .Concat(context.Executions
                         // Adds executions that were not started.
-                        .Where(e => e.CreatedDateTime >= FromDateTime && e.CreatedDateTime <= ToDateTime && e.EndDateTime == null && e.ExecutionStatus != ExecutionStatus.Running))
+                        .Where(e => e.CreatedOn >= FromDateTime && e.CreatedOn <= ToDateTime && e.EndedOn == null && e.ExecutionStatus != ExecutionStatus.Running))
                     .Concat(context.Executions
                         // Adds currently running executions if current time fits in the time window.
                         .Where(e => e.ExecutionStatus == ExecutionStatus.Running));
@@ -132,21 +132,21 @@ public partial class Executions : ComponentBase, IAsyncDisposable
                 query = query
                     .Concat(context.Executions
                         // Adds executions that were not started and executions that may still be running.
-                        .Where(e => e.CreatedDateTime >= FromDateTime && e.CreatedDateTime <= ToDateTime && e.EndDateTime == null));
+                        .Where(e => e.CreatedOn >= FromDateTime && e.CreatedOn <= ToDateTime && e.EndedOn == null));
             }
             executions = await query
                 .AsNoTracking()
                 .AsSingleQuery()
-                .OrderByDescending(e => e.CreatedDateTime)
-                .ThenByDescending(e => e.StartDateTime)
+                .OrderByDescending(e => e.CreatedOn)
+                .ThenByDescending(e => e.StartedOn)
                 .Select(e => new ExecutionProjection(
                     e.ExecutionId,
                     e.JobId,
                     e.Job!.JobName ?? e.JobName,
                     e.ScheduleId,
-                    e.CreatedDateTime,
-                    e.StartDateTime,
-                    e.EndDateTime,
+                    e.CreatedOn,
+                    e.StartedOn,
+                    e.EndedOn,
                     e.ExecutionStatus,
                     e.StepExecutions.Count()))
                 .ToArrayAsync();
@@ -154,16 +154,16 @@ public partial class Executions : ComponentBase, IAsyncDisposable
         else
         {
             var query = context.StepExecutionAttempts
-                .Where(e => e.StepExecution.Execution.CreatedDateTime <= ToDateTime && e.StepExecution.Execution.EndDateTime >= FromDateTime);
+                .Where(e => e.StepExecution.Execution.CreatedOn <= ToDateTime && e.StepExecution.Execution.EndedOn >= FromDateTime);
 
             if (DateTime.Now >= FromDateTime && DateTime.Now <= ToDateTime)
             {
                 query = query
                     // Adds executions that were not started.
                     .Union(context.StepExecutionAttempts
-                        .Where(e => e.StepExecution.Execution.CreatedDateTime >= FromDateTime
-                        && e.StepExecution.Execution.CreatedDateTime <= ToDateTime
-                        && e.EndDateTime == null
+                        .Where(e => e.StepExecution.Execution.CreatedOn >= FromDateTime
+                        && e.StepExecution.Execution.CreatedOn <= ToDateTime
+                        && e.EndedOn == null
                         && e.ExecutionStatus != StepExecutionStatus.Running))
                     // Adds currently running executions if current time fits in the time window.
                     .Union(context.StepExecutionAttempts
@@ -174,15 +174,15 @@ public partial class Executions : ComponentBase, IAsyncDisposable
                 query = query
                     // Adds executions that were not started and executions that may still be running.
                     .Union(context.StepExecutionAttempts
-                        .Where(e => e.StepExecution.Execution.CreatedDateTime >= FromDateTime
-                        && e.StepExecution.Execution.CreatedDateTime <= ToDateTime
-                        && e.EndDateTime == null));
+                        .Where(e => e.StepExecution.Execution.CreatedOn >= FromDateTime
+                        && e.StepExecution.Execution.CreatedOn <= ToDateTime
+                        && e.EndedOn == null));
             }
 #pragma warning disable IDE0305 // Simplify collection initialization
             stepExecutions = await query
                 .AsNoTracking()
-                .OrderByDescending(e => e.StepExecution.Execution.CreatedDateTime)
-                .ThenByDescending(e => e.StartDateTime)
+                .OrderByDescending(e => e.StepExecution.Execution.CreatedOn)
+                .ThenByDescending(e => e.StartedOn)
                 .ThenByDescending(e => e.StepExecution.ExecutionPhase)
                 .Select(e => new StepExecutionProjection(
                     e.StepExecution.ExecutionId,
@@ -191,8 +191,8 @@ public partial class Executions : ComponentBase, IAsyncDisposable
                     e.StepExecution.Step!.StepName ?? e.StepExecution.StepName,
                     e.StepType,
                     e.StepExecution.ExecutionPhase,
-                    e.StartDateTime,
-                    e.EndDateTime,
+                    e.StartedOn,
+                    e.EndedOn,
                     e.ExecutionStatus,
                     e.StepExecution.Execution.ExecutionStatus,
                     e.StepExecution.Execution.DependencyMode,

@@ -37,12 +37,12 @@ internal class JobExecutor(
             var process = Process.GetCurrentProcess();
             _execution.ExecutorProcessId = process.Id;
             _execution.ExecutionStatus = ExecutionStatus.Running;
-            _execution.StartDateTime = DateTimeOffset.Now;
+            _execution.StartedOn = DateTimeOffset.Now;
             using var context = _dbContextFactory.CreateDbContext();
             context.Attach(_execution);
             context.Entry(_execution).Property(e => e.ExecutorProcessId).IsModified = true;
             context.Entry(_execution).Property(e => e.ExecutionStatus).IsModified = true;
-            context.Entry(_execution).Property(e => e.StartDateTime).IsModified = true;
+            context.Entry(_execution).Property(e => e.StartedOn).IsModified = true;
             await context.SaveChangesAsync(cancellationToken);
         }
         catch (Exception ex)
@@ -176,10 +176,10 @@ internal class JobExecutor(
         {
             using var context = _dbContextFactory.CreateDbContext();
             _execution.ExecutionStatus = status;
-            _execution.EndDateTime = DateTimeOffset.Now;
+            _execution.EndedOn = DateTimeOffset.Now;
             context.Attach(_execution);
             context.Entry(_execution).Property(e => e.ExecutionStatus).IsModified = true;
-            context.Entry(_execution).Property(e => e.EndDateTime).IsModified = true;
+            context.Entry(_execution).Property(e => e.EndedOn).IsModified = true;
             await context.SaveChangesAsync(CancellationToken.None);
         }
         catch (Exception ex)
@@ -273,15 +273,15 @@ internal class JobExecutor(
         
         foreach (var attempt in _execution.StepExecutions.SelectMany(s => s.StepExecutionAttempts))
         {
-            attempt.StartDateTime = DateTimeOffset.Now;
-            attempt.EndDateTime = DateTimeOffset.Now;
+            attempt.StartedOn = DateTimeOffset.Now;
+            attempt.EndedOn = DateTimeOffset.Now;
             attempt.ExecutionStatus = StepExecutionStatus.Failed;
             attempt.ErrorMessages.Add(new(errorMessage, null));
             context.Attach(attempt).State = EntityState.Modified;
         }
 
-        _execution.StartDateTime = DateTimeOffset.Now;
-        _execution.EndDateTime = DateTimeOffset.Now;
+        _execution.StartedOn = DateTimeOffset.Now;
+        _execution.EndedOn = DateTimeOffset.Now;
         _execution.ExecutionStatus = ExecutionStatus.Failed;
         context.Attach(_execution).State = EntityState.Modified;
         // Do not cancel saving failed status.

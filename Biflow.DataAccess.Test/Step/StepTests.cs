@@ -15,9 +15,9 @@ public class StepTests(StepFixture stepFixture) : IClassFixture<StepFixture>
 
     [Fact] public void LastModifiedBy_Equals_Username() => Assert.Equal(Username, Step.LastModifiedBy);
 
-    [Fact] public void CreatedDateTime_NotEquals_Default() => Assert.NotEqual(default, Step.CreatedDateTime);
+    [Fact] public void CreatedDateTime_NotEquals_Default() => Assert.NotEqual(default, Step.CreatedOn);
 
-    [Fact] public void LastModifiedDateTime_NotEquals_Default() => Assert.NotEqual(default, Step.LastModifiedDateTime);
+    [Fact] public void LastModifiedDateTime_NotEquals_Default() => Assert.NotEqual(default, Step.LastModifiedOn);
 
     [Fact] public void Job_NotNull() => Assert.NotNull(Step.Job);
 

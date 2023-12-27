@@ -7,10 +7,10 @@ namespace Biflow.DataAccess.Models;
 [Table("Execution")]
 public class Execution
 {
-    public Execution(string jobName, DateTimeOffset createdDateTime, ExecutionStatus executionStatus)
+    public Execution(string jobName, DateTimeOffset createdOn, ExecutionStatus executionStatus)
     {
         _jobName = jobName;
-        CreatedDateTime = createdDateTime;
+        CreatedOn = createdOn;
         ExecutionStatus = executionStatus;
     }
 
@@ -36,7 +36,7 @@ public class Execution
         ExecutionId = Guid.NewGuid();
         JobId = job.JobId;
         _jobName = job.JobName;
-        CreatedDateTime = DateTimeOffset.Now;
+        CreatedOn = DateTimeOffset.Now;
         ExecutionStatus = ExecutionStatus.NotStarted;
         DependencyMode = job.UseDependencyMode;
         StopOnFirstError = job.StopOnFirstError;
@@ -72,15 +72,15 @@ public class Execution
 
     [Display(Name = "Created")]
     [DataType(DataType.DateTime)]
-    public DateTimeOffset CreatedDateTime { get; private set; }
+    public DateTimeOffset CreatedOn { get; private set; }
 
     [Display(Name = "Started")]
     [DataType(DataType.DateTime)]
-    public DateTimeOffset? StartDateTime { get; set; }
+    public DateTimeOffset? StartedOn { get; set; }
 
     [Display(Name = "Ended")]
     [DataType(DataType.DateTime)]
-    public DateTimeOffset? EndDateTime { get; set; }
+    public DateTimeOffset? EndedOn { get; set; }
 
     [Display(Name = "Status")]
     public ExecutionStatus ExecutionStatus { get; set; }
@@ -140,7 +140,7 @@ public class Execution
     public Schedule? Schedule { get; private set; }
 
     [NotMapped]
-    public double? ExecutionInSeconds => ((EndDateTime ?? DateTime.Now) - StartDateTime)?.TotalSeconds;
+    public double? ExecutionInSeconds => ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
 }
 
 

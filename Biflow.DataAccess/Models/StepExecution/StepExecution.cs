@@ -98,14 +98,14 @@ public abstract class StepExecution
     public double GetDurationInSeconds()
     {
         var lastExecution = StepExecutionAttempts
-            .OrderByDescending(e => e.StartDateTime)
+            .OrderByDescending(e => e.StartedOn)
             .First();
-        var endTime = lastExecution.EndDateTime ?? DateTimeOffset.Now;
+        var endTime = lastExecution.EndedOn ?? DateTimeOffset.Now;
 
         var firstExecution = StepExecutionAttempts
-            .OrderBy(e => e.StartDateTime)
+            .OrderBy(e => e.StartedOn)
             .First();
-        var startTime = firstExecution.StartDateTime ?? DateTimeOffset.Now;
+        var startTime = firstExecution.StartedOn ?? DateTimeOffset.Now;
 
         var duration = (endTime - startTime).TotalSeconds;
         return duration;

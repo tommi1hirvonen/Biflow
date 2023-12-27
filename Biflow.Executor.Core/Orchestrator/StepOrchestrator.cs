@@ -190,8 +190,8 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
     private async Task UpdateExecutionCancelledAsync(StepExecutionAttempt attempt, string username)
     {
         using var context = _dbContextFactory.CreateDbContext();
-        attempt.StartDateTime ??= DateTimeOffset.Now;
-        attempt.EndDateTime = DateTimeOffset.Now;
+        attempt.StartedOn ??= DateTimeOffset.Now;
+        attempt.EndedOn = DateTimeOffset.Now;
         attempt.StoppedBy = username;
         attempt.ExecutionStatus = StepExecutionStatus.Stopped;
         context.Attach(attempt).State = EntityState.Modified;
@@ -202,7 +202,7 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
     {
         using var context = _dbContextFactory.CreateDbContext();
         attempt.ExecutionStatus = status;
-        attempt.EndDateTime = DateTimeOffset.Now;
+        attempt.EndedOn = DateTimeOffset.Now;
         context.Attach(attempt).State = EntityState.Modified;
         await context.SaveChangesAsync();
     }
@@ -215,7 +215,7 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
             : StepExecutionStatus.Warning;
 
         attempt.ExecutionStatus = status;
-        attempt.EndDateTime = DateTimeOffset.Now;
+        attempt.EndedOn = DateTimeOffset.Now;
         context.Attach(attempt).State = EntityState.Modified;
         await context.SaveChangesAsync();
     }
@@ -226,8 +226,8 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
         foreach (var attempt in stepExecution.StepExecutionAttempts)
         {
             attempt.ExecutionStatus = StepExecutionStatus.Stopped;
-            attempt.StartDateTime = DateTimeOffset.Now;
-            attempt.EndDateTime = DateTimeOffset.Now;
+            attempt.StartedOn = DateTimeOffset.Now;
+            attempt.EndedOn = DateTimeOffset.Now;
             attempt.StoppedBy = username;
             context.Attach(attempt).State = EntityState.Modified;
         }
@@ -237,7 +237,7 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
     private async Task UpdateExecutionRunningAsync(StepExecutionAttempt attempt)
     {
         using var context = _dbContextFactory.CreateDbContext();
-        attempt.StartDateTime = DateTimeOffset.Now;
+        attempt.StartedOn = DateTimeOffset.Now;
         attempt.ExecutionStatus = StepExecutionStatus.Running;
         context.Attach(attempt).State = EntityState.Modified;
         await context.SaveChangesAsync();
@@ -249,8 +249,8 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
         foreach (var attempt in stepExecution.StepExecutionAttempts)
         {
             attempt.ExecutionStatus = StepExecutionStatus.Skipped;
-            attempt.StartDateTime = DateTimeOffset.Now;
-            attempt.EndDateTime = DateTimeOffset.Now;
+            attempt.StartedOn = DateTimeOffset.Now;
+            attempt.EndedOn = DateTimeOffset.Now;
             attempt.InfoMessages.Add(new(infoMessage));
             context.Attach(attempt).State = EntityState.Modified;
         }

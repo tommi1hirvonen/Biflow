@@ -57,8 +57,8 @@
                             @foreach (var execution in executions)
                             {
                                 <tr class="@(selectedStepExecution == execution ? "bg-body-tertiary" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(execution)">
-                                    <td>@execution.StartDateTime?.LocalDateTime</td>
-                                    <td>@execution.EndDateTime?.LocalDateTime</td>
+                                    <td>@execution.StartedOn?.LocalDateTime</td>
+                                    <td>@execution.EndedOn?.LocalDateTime</td>
                                     <td>@execution.GetDurationInReadableFormat()</td>
                                     <td><StepExecutionStatusBadge ExecutionStatus="@execution.ExecutionStatus" /></td>
                                 </tr>
@@ -131,14 +131,14 @@
             .ThenInclude(e => e.ExecutionConditionParameters)
             .ThenInclude(p => p.ExecutionParameter)
             .Where(e => e.StepId == stepId)
-            .OrderByDescending(execution => execution.StepExecution.Execution.CreatedDateTime)
-            .ThenByDescending(Execution => Execution.StartDateTime)
+            .OrderByDescending(execution => execution.StepExecution.Execution.CreatedOn)
+            .ThenByDescending(Execution => Execution.StartedOn)
             .Take(maxExecutions)
             .ToArrayAsync();
 
         var datapoints = executions
-            .Where(e => e.StartDateTime is not null)
-            .GroupBy(group => ((DateTimeOffset)group.StartDateTime!).Date)
+            .Where(e => e.StartedOn is not null)
+            .GroupBy(group => ((DateTimeOffset)group.StartedOn!).Date)
             .Select(select => new TimeSeriesDataPoint(DateOnly.FromDateTime(select.Key.Date), select.Average(total => (decimal)(total.ExecutionInSeconds ?? 0) / 60))) // Calculate avg. duration in minutes per day
             .ToArray();
         var series = new LineChartSeries[]

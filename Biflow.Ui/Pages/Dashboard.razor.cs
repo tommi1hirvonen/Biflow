@@ -37,7 +37,7 @@ public partial class Dashboard : ComponentBase
         // Get duration executions
         var executionsQuery = context.Executions
             .AsNoTrackingWithIdentityResolution()
-            .Where(e => e.EndDateTime != null && e.CreatedDateTime >= fromDate && e.CreatedDateTime < toDate);
+            .Where(e => e.EndedOn != null && e.CreatedOn >= fromDate && e.CreatedOn < toDate);
 
         if (!includeDeleted)
         {
@@ -52,13 +52,13 @@ public partial class Dashboard : ComponentBase
         // Group job executions by job names to day level and calculate each job's average duration as well as the number of executions.
         var executions = await executionsQuery
             .Select(e => new { Execution = e, e.Job!.JobName })
-            .OrderBy(e => e.Execution.CreatedDateTime)
+            .OrderBy(e => e.Execution.CreatedOn)
             .ToArrayAsync();
         var executions_ = executions
             .GroupBy(group => new
             {
                 JobName = group.JobName ?? group.Execution.JobName,
-                ((DateTimeOffset)group.Execution.CreatedDateTime.LocalDateTime).Date
+                ((DateTimeOffset)group.Execution.CreatedOn.LocalDateTime).Date
             })
             .Select(select => new TimeSeriesItem
             {
@@ -78,7 +78,7 @@ public partial class Dashboard : ComponentBase
             .AsNoTrackingWithIdentityResolution()
             .Include(e => e.StepExecutions)
             .ThenInclude(e => e.StepExecutionAttempts)
-            .Where(e => e.CreatedDateTime >= fromDate && e.CreatedDateTime < toDate);
+            .Where(e => e.CreatedOn >= fromDate && e.CreatedOn < toDate);
 
         if (!includeDeleted)
         {
@@ -122,7 +122,7 @@ public partial class Dashboard : ComponentBase
             .AsNoTrackingWithIdentityResolution()
             .Include(e => e.StepExecutionAttempts)
             .Include(e => e.Execution)
-            .Where(e => e.Execution.CreatedDateTime >= fromDate && e.Execution.CreatedDateTime < toDate);
+            .Where(e => e.Execution.CreatedOn >= fromDate && e.Execution.CreatedOn < toDate);
 
         if (!includeDeleted)
         {

@@ -169,8 +169,8 @@ internal class GlobalOrchestrator(
         using var context = _dbContextFactory.CreateDbContext();
         foreach (var attempt in stepExecution.StepExecutionAttempts)
         {
-            attempt.StartDateTime ??= DateTimeOffset.Now;
-            attempt.EndDateTime = DateTimeOffset.Now;
+            attempt.StartedOn ??= DateTimeOffset.Now;
+            attempt.EndedOn = DateTimeOffset.Now;
             attempt.StoppedBy = username;
             attempt.ExecutionStatus = StepExecutionStatus.Stopped;
             context.Attach(attempt).State = EntityState.Modified;
@@ -184,8 +184,8 @@ internal class GlobalOrchestrator(
         if (attempt is null) return;
         using var context = _dbContextFactory.CreateDbContext();
         attempt.ExecutionStatus = StepExecutionStatus.Failed;
-        attempt.StartDateTime ??= DateTimeOffset.Now;
-        attempt.EndDateTime = DateTimeOffset.Now;
+        attempt.StartedOn ??= DateTimeOffset.Now;
+        attempt.EndedOn = DateTimeOffset.Now;
         // Place the error message first on the list.
         var error = new ErrorMessage($"Unhandled error caught in global orchestrator:\n\n{ex.Message}", ex.ToString());
         attempt.ErrorMessages.Insert(0, error);
@@ -199,8 +199,8 @@ internal class GlobalOrchestrator(
         foreach (var attempt in step.StepExecutionAttempts)
         {
             attempt.ExecutionStatus = status;
-            attempt.StartDateTime = DateTimeOffset.Now;
-            attempt.EndDateTime = DateTimeOffset.Now;
+            attempt.StartedOn = DateTimeOffset.Now;
+            attempt.EndedOn = DateTimeOffset.Now;
             if (!string.IsNullOrEmpty(errorMessage))
                 attempt.ErrorMessages.Add(new(errorMessage, null));
             context.Attach(attempt).State = EntityState.Modified;

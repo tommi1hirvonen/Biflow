@@ -38,9 +38,9 @@ public abstract class StepExecutionAttempt
 
     public int RetryAttemptIndex { get; private set; }
 
-    public DateTimeOffset? StartDateTime { get; set; }
+    public DateTimeOffset? StartedOn { get; set; }
 
-    public DateTimeOffset? EndDateTime { get; set; }
+    public DateTimeOffset? EndedOn { get; set; }
 
     public StepExecutionStatus ExecutionStatus { get; set; }
 
@@ -65,7 +65,7 @@ public abstract class StepExecutionAttempt
     public string UniqueId => string.Concat(ExecutionId, StepId, RetryAttemptIndex);
 
     [NotMapped]
-    public double? ExecutionInSeconds => ((EndDateTime ?? DateTime.Now) - StartDateTime)?.TotalSeconds;
+    public double? ExecutionInSeconds => ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
 
     [NotMapped]
     public bool CanBeStopped =>

@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 namespace Biflow.DataAccess.Models;
 
 [Table("Job")]
-public class Job
+public class Job : IAuditable
 {
     public Job() { }
 
@@ -78,16 +78,6 @@ public class Job
     private string? _jobDescription;
 
     [Required]
-    [DataType(DataType.DateTime)]
-    [Display(Name = "Created")]
-    public DateTimeOffset CreatedDateTime { get; set; }
-
-    [Required]
-    [DataType(DataType.DateTime)]
-    [Display(Name = "Last modified")]
-    public DateTimeOffset LastModifiedDateTime { get; set; }
-
-    [Required]
     [Display(Name = "Use dependency mode")]
     public bool UseDependencyMode { get; set; }
 
@@ -142,9 +132,15 @@ public class Job
     [JsonIgnore]
     public ICollection<User> Users { get; set; } = null!;
 
+    [Display(Name = "Created")]
+    public DateTimeOffset CreatedOn { get; set; }
+
     [Display(Name = "Created by")]
     [MaxLength(250)]
     public string? CreatedBy { get; set; }
+
+    [Display(Name = "Last modified")]
+    public DateTimeOffset LastModifiedOn { get; set; }
 
     [Display(Name = "Last modified by")]
     [MaxLength(250)]

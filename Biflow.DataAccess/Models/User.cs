@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Biflow.DataAccess.Models;
 
 [Table("User")]
-public class User
+public class User : IAuditable
 {
     [Key]
     public Guid UserId { get; private set; }
@@ -28,11 +28,15 @@ public class User
 
     public bool AuthorizeAllDataTables { get; set; }
 
-    [Required]
-    public DateTimeOffset CreatedDateTime { get; set; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset CreatedOn { get; set; }
 
-    [Required]
-    public DateTimeOffset LastModifiedDateTime { get; set; }
+    [MaxLength(250)]
+    public string? CreatedBy { get; set; }
+
+    public DateTimeOffset LastModifiedOn { get; set; }
+
+    [MaxLength(250)]
+    public string? LastModifiedBy { get; set; }
 
     public ICollection<Subscription> Subscriptions { get; set; } = null!;
 

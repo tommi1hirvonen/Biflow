@@ -256,7 +256,7 @@
 
     private async Task ShowStepExecutionOffcanvas(StepExecution step)
     {
-        var attempt = step?.StepExecutionAttempts.OrderByDescending(s => s.StartDateTime).First();
+        var attempt = step?.StepExecutionAttempts.OrderByDescending(s => s.StartedOn).First();
         if (attempt is null)
         {
             return;

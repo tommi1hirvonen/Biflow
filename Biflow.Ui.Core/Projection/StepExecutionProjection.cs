@@ -12,8 +12,8 @@ public record StepExecutionProjection(
     string StepName,
     StepType StepType,
     int ExecutionPhase,
-    DateTimeOffset? StartDateTime,
-    DateTimeOffset? EndDateTime,
+    DateTimeOffset? StartedOn,
+    DateTimeOffset? EndedOn,
     StepExecutionStatus ExecutionStatus,
     ExecutionStatus ParentExecutionStatus,
     bool DependencyMode,
@@ -30,7 +30,7 @@ public record StepExecutionProjection(
 
     public override int GetHashCode() => base.GetHashCode();
 
-    public double? ExecutionInSeconds => ((EndDateTime ?? DateTime.Now) - StartDateTime)?.TotalSeconds;
+    public double? ExecutionInSeconds => ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
 
     public bool CanBeStopped =>
         ExecutionStatus == StepExecutionStatus.Running

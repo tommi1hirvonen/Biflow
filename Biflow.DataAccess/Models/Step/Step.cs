@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
@@ -17,7 +16,7 @@ namespace Biflow.DataAccess.Models;
 [JsonDerivedType(typeof(QlikStep), nameof(StepType.Qlik))]
 [JsonDerivedType(typeof(SqlStep), nameof(StepType.Sql))]
 [JsonDerivedType(typeof(TabularStep), nameof(StepType.Tabular))]
-public abstract class Step : IComparable
+public abstract class Step : IComparable, IAuditable
 {
     public Step(StepType stepType)
     {
@@ -39,8 +38,8 @@ public abstract class Step : IComparable
         ExecutionPhase = other.ExecutionPhase;
         StepType = other.StepType;
         DuplicateExecutionBehaviour = other.DuplicateExecutionBehaviour;
-        CreatedDateTime = DateTimeOffset.Now;
-        LastModifiedDateTime = DateTimeOffset.Now;
+        CreatedOn = DateTimeOffset.Now;
+        LastModifiedOn = DateTimeOffset.Now;
         IsEnabled = other.IsEnabled;
         RetryAttempts = other.RetryAttempts;
         RetryIntervalMinutes = other.RetryIntervalMinutes;
@@ -102,16 +101,6 @@ public abstract class Step : IComparable
     public DuplicateExecutionBehaviour DuplicateExecutionBehaviour { get; set; } = DuplicateExecutionBehaviour.Wait;
 
     [Required]
-    [DataType(DataType.DateTime)]
-    [Display(Name = "Created")]
-    public DateTimeOffset CreatedDateTime { get; set; }
-
-    [Required]
-    [DataType(DataType.DateTime)]
-    [Display(Name = "Last modified")]
-    public DateTimeOffset LastModifiedDateTime { get; set; }
-
-    [Required]
     [Display(Name = "Enabled")]
     public bool IsEnabled { get; set; } = true;
 
@@ -127,9 +116,13 @@ public abstract class Step : IComparable
 
     public EvaluationExpression ExecutionConditionExpression { get; set; } = new();
 
+    public DateTimeOffset CreatedOn { get; set; }
+
     [Display(Name = "Created by")]
     [MaxLength(250)]
     public string? CreatedBy { get; set; }
+
+    public DateTimeOffset LastModifiedOn { get; set; }
 
     [Display(Name = "Last modified by")]
     [MaxLength(250)]

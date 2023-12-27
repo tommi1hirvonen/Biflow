@@ -113,13 +113,13 @@
         <div class="col-auto">
             <dl class="mx-1">
                 <dt>Started</dt>
-                <dd>@execution?.StartDateTime?.LocalDateTime</dd>
+                <dd>@execution?.StartedOn?.LocalDateTime</dd>
             </dl>
         </div>
         <div class="col-auto">
             <dl class="mx-1">
                 <dt>Ended</dt>
-                <dd>@execution?.EndDateTime?.LocalDateTime</dd>
+                <dd>@execution?.EndedOn?.LocalDateTime</dd>
             </dl>
         </div>
         <div class="col-auto">
@@ -202,15 +202,15 @@
                     </tr>
                     <tr>
                         <td class="fw-bold">Created</td>
-                        <td>@execution.CreatedDateTime.LocalDateTime</td>
+                        <td>@execution.CreatedOn.LocalDateTime</td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Started</td>
-                        <td>@execution.StartDateTime?.LocalDateTime</td>
+                        <td>@execution.StartedOn?.LocalDateTime</td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Ended</td>
-                        <td>@execution.EndDateTime?.LocalDateTime</td>
+                        <td>@execution.EndedOn?.LocalDateTime</td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Duration</td>
@@ -493,11 +493,11 @@
                             _ => null
                         })
                         // asc => Show not started steps last. desc => Show not started steps first.
-                        .ThenBy(e => sortMode == SortMode.StartedAsc ? e.StartDateTime is null : e.StartDateTime is not null)
-                        .ThenBy(e => sortMode == SortMode.StartedAsc ? e.StartDateTime : null)
-                        .ThenByDescending(e => sortMode == SortMode.StartedDesc ? e.StartDateTime : null)
-                        .ThenBy(e => e.EndDateTime is null)
-                        .ThenBy(e => e.EndDateTime)
+                        .ThenBy(e => sortMode == SortMode.StartedAsc ? e.StartedOn is null : e.StartedOn is not null)
+                        .ThenBy(e => sortMode == SortMode.StartedAsc ? e.StartedOn : null)
+                        .ThenByDescending(e => sortMode == SortMode.StartedDesc ? e.StartedOn : null)
+                        .ThenBy(e => e.EndedOn is null)
+                        .ThenBy(e => e.EndedOn)
                         .ThenBy(e => e.ExecutionPhase)
                         .ThenBy(e => e.StepName)"
             DetailStepProvider="e => Executions?.FirstOrDefault(x => x.ExecutionId == e.ExecutionId && x.StepId == e.StepId && x.RetryAttemptIndex == e.RetryAttemptIndex)" />

@@ -38,7 +38,7 @@ public class Schedule
 
     [Required]
     [Display(Name = "Created")]
-    public DateTimeOffset CreatedDateTime { get; set; }
+    public DateTimeOffset CreatedOn { get; set; }
 
     [Display(Name = "Created by")]
     [MaxLength(250)]

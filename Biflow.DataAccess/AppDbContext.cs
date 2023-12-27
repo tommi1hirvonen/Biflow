@@ -407,9 +407,9 @@ public class AppDbContext : DbContext
                 from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
                 to => JsonSerializer.Deserialize<StepExecutionAttemptReference?>(to, null as JsonSerializerOptions));
 
-            e.HasIndex(x => new { x.CreatedDateTime, x.EndDateTime }, "IX_Execution_CreatedDateTime_EndDateTime");
+            e.HasIndex(x => new { x.CreatedOn, x.EndedOn }, "IX_Execution_CreatedOn_EndedOn");
             e.HasIndex(x => x.ExecutionStatus, "IX_Execution_ExecutionStatus");
-            e.HasIndex(x => new { x.JobId, x.CreatedDateTime }, "IX_Execution_JobId_CreatedDateTime");
+            e.HasIndex(x => new { x.JobId, x.CreatedOn }, "IX_Execution_JobId_CreatedOn");
             e.HasOne(x => x.Job).WithMany(x => x.Executions).IsRequired(false);
         });
 
@@ -848,36 +848,22 @@ public class AppDbContext : DbContext
         var user = _httpContextAccessor?.HttpContext?.User.Identity?.Name;
         var now = DateTimeOffset.Now;
 
-        var modified = ChangeTracker
-            .Entries()
-            .Where(e => e.State == EntityState.Modified)
-            .ToArray();
-
-        foreach (var entity in modified)
+        foreach (var entry in ChangeTracker.Entries())
         {
-            SetCurrentValueIfPropertyExists(entity, "LastModifiedDateTime", now);
-            SetCurrentValueIfPropertyExists(entity, "LastModifiedBy", user);
-        }
+            if (entry.State == EntityState.Added && entry.Entity is IAuditable added)
+            {
+                added.CreatedOn = now;
+                added.CreatedBy = user;
+                added.LastModifiedOn = now;
+                added.LastModifiedBy = user;
+                continue;
+            }
 
-        var added = ChangeTracker
-            .Entries()
-            .Where(e => e.State == EntityState.Added)
-            .ToArray();
-
-        foreach (var entity in added)
-        {
-            SetCurrentValueIfPropertyExists(entity, "LastModifiedDateTime", now);
-            SetCurrentValueIfPropertyExists(entity, "LastModifiedBy", user);
-            SetCurrentValueIfPropertyExists(entity, "CreatedDateTime", now);
-            SetCurrentValueIfPropertyExists(entity, "CreatedBy", user);
-        }
-    }
-
-    private static void SetCurrentValueIfPropertyExists(EntityEntry entity, string propertyName, object? value)
-    {
-        if (entity.Properties.FirstOrDefault(p => p.Metadata.Name == propertyName) is PropertyEntry property)
-        {
-            property.CurrentValue = value;
+            if (entry.State == EntityState.Modified && entry.Entity is IAuditable modified)
+            {
+                modified.LastModifiedOn = now;
+                modified.LastModifiedBy = user;
+            }
         }
     }
 }

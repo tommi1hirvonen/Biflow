@@ -76,8 +76,8 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             e.StepExecution.Step?.StepName ?? e.StepExecution.StepName,
             e.StepType,
             e.StepExecution.ExecutionPhase,
-            e.StartDateTime,
-            e.EndDateTime,
+            e.StartedOn,
+            e.EndedOn,
             e.ExecutionStatus,
             e.StepExecution.Execution.ExecutionStatus,
             e.StepExecution.Execution.DependencyMode,
@@ -218,13 +218,13 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
                 .Where(e => e.ExecutionId == ExecutionId)
                 .ExecuteUpdateAsync(update => update
                     .SetProperty(e => e.ExecutionStatus, status)
-                    .SetProperty(e => e.StartDateTime, e => e.StartDateTime ?? DateTimeOffset.Now)
-                    .SetProperty(e => e.EndDateTime, e => e.EndDateTime ?? DateTimeOffset.Now));
+                    .SetProperty(e => e.StartedOn, e => e.StartedOn ?? DateTimeOffset.Now)
+                    .SetProperty(e => e.EndedOn, e => e.EndedOn ?? DateTimeOffset.Now));
             if (execution is not null)
             {
                 execution.ExecutionStatus = status;
-                execution.StartDateTime ??= DateTimeOffset.Now;
-                execution.EndDateTime ??= DateTimeOffset.Now;
+                execution.StartedOn ??= DateTimeOffset.Now;
+                execution.EndedOn ??= DateTimeOffset.Now;
             }
             Messenger.AddInformation("Status updated successfully");
         }

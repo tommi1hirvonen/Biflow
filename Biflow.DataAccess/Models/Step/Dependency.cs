@@ -7,7 +7,7 @@ namespace Biflow.DataAccess.Models;
 
 [Table("Dependency")]
 [PrimaryKey("StepId", "DependantOnStepId")]
-public class Dependency
+public class Dependency : IAuditable
 {
     public Dependency()
     {
@@ -35,13 +35,17 @@ public class Dependency
     [Display(Name = "Type")]
     public DependencyType DependencyType { get; set; }
 
-    [Required]
     [Display(Name = "Created")]
-    public DateTimeOffset CreatedDateTime { get; set; }
+    public DateTimeOffset CreatedOn { get; set; }
 
     [Display(Name = "Created by")]
     [MaxLength(250)]
     public string? CreatedBy { get; set; }
+
+    public DateTimeOffset LastModifiedOn { get; set; }
+
+    [MaxLength(250)]
+    public string? LastModifiedBy { get; set; }
 
     [NotMapped]
     [JsonIgnore]
