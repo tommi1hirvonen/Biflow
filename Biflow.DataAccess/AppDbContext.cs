@@ -547,8 +547,9 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
 
         modelBuilder.Entity<MasterDataTableLookup>(e =>
         {
-            e.HasOne(l => l.Table).WithMany(t => t.Lookups);
-            e.HasOne(l => l.LookupTable).WithMany(t => t.DependentLookups);
+            // Use client cascade because of multiple cascade paths not supported by SQL Server.
+            e.HasOne(l => l.Table).WithMany(t => t.Lookups).OnDelete(DeleteBehavior.ClientCascade);
+            e.HasOne(l => l.LookupTable).WithMany(t => t.DependentLookups).OnDelete(DeleteBehavior.ClientCascade);
             e.HasIndex(x => new { x.TableId, x.ColumnName }, "UQ_DataTableLookup").IsUnique();
         });
 
