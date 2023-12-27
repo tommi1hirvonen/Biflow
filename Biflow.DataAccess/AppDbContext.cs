@@ -104,6 +104,7 @@ public class AppDbContext(IConfiguration configuration, IHttpContextAccessor? ht
             e.HasIndex(x => new { x.CreatedDateTime, x.EndDateTime }, "IX_Execution_CreatedDateTime_EndDateTime");
             e.HasIndex(x => x.ExecutionStatus, "IX_Execution_ExecutionStatus");
             e.HasIndex(x => new { x.JobId, x.CreatedDateTime }, "IX_Execution_JobId_CreatedDateTime");
+            e.HasOne(x => x.Job).WithMany(x => x.Executions).IsRequired(false);
         });
 
         modelBuilder.Entity<ExecutionConcurrency>()
