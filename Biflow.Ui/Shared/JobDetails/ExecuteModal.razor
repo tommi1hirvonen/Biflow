@@ -410,7 +410,7 @@
 </ExpressionEditOffcanvas>
 
 @code {
-    [Parameter] public EventCallback<Guid> OnExecutionStarted { get; set; }
+    [Parameter] public EventCallback<ExecutionStartResponse> OnExecutionStarted { get; set; }
 
     private readonly HashSet<StepType> stepTypeFilter = new();
     private readonly HashSet<ITag> executeTagsFilterSet = new();
@@ -451,8 +451,16 @@
             var execution = await builder.SaveExecutionAsync();
             if (execution is not null)
             {
-                await OnExecutionStarted.InvokeAsync(execution.ExecutionId);
-                await Executor.StartExecutionAsync(execution.ExecutionId);
+                try
+                {
+                    await Executor.StartExecutionAsync(execution.ExecutionId);
+                    await OnExecutionStarted.InvokeAsync(new(execution.ExecutionId, true));
+                }
+                catch
+                {
+                    await OnExecutionStarted.InvokeAsync(new(execution.ExecutionId, false));
+                    throw;   
+                }
             }
             builder = null;
             await modal.LetAsync(x => x.HideAsync());

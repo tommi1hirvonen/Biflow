@@ -58,7 +58,7 @@ public partial class StepsList : ComponentBase
     private ExecuteModal? executeModal;
     private AdvancedFiltersOffcanvas? advancedFiltersOffcanvas;
     private string stepNameFilter = string.Empty;
-    private Guid? lastStartedExecutionId;
+    private ExecutionStartResponse? lastStartedExecutionResponse;
     private bool showDetails = false;
     private bool initialStepModalShouldOpen = true;
     private StateFilter stateFilter = StateFilter.All;
@@ -296,9 +296,9 @@ public partial class StepsList : ComponentBase
         }
     }
 
-    private void OnExecutionStarted(Guid executionId)
+    private void OnExecutionStarted(ExecutionStartResponse response)
     {
-        lastStartedExecutionId = executionId;
+        lastStartedExecutionResponse = response;
     }
 
 }

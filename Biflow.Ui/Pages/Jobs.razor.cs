@@ -42,7 +42,7 @@ public partial class Jobs : ComponentBase
     private JobEditModal? jobEditModal;
     private ExecuteModal? executeModal;
     private string jobNameFilter = "";
-    private Guid? lastStartedExecutionId;
+    private ExecutionStartResponse? lastStartedExecutionResponse;
 
     protected override async Task OnInitializedAsync()
     {
@@ -264,9 +264,9 @@ public partial class Jobs : ComponentBase
         }
     }
 
-    private void OnExecutionStarted(Guid executionId)
+    private void OnExecutionStarted(ExecutionStartResponse response)
     {
-        lastStartedExecutionId = executionId;
+        lastStartedExecutionResponse = response;
     }
 
     private void ExpandAll()
