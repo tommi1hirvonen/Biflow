@@ -166,7 +166,7 @@ public class Row
     /// <param name="schema"></param>
     /// <param name="table"></param>
     /// <returns>null if there are no pending changes</returns>
-    internal (string Command, DynamicParameters Parameters, DataTableCommandType Type)? GetChangeSqlCommand()
+    internal RowChangeSqlCommand? GetChangeSqlCommand()
     {
         // Existing entity
         if (_initialValues is not null && !ToBeDeleted && IsUpdateable)
@@ -204,7 +204,7 @@ public class Row
                 }
             }
 
-            return (builder.ToString(), parameters, DataTableCommandType.Update);
+            return new(builder.ToString(), parameters, DataTableCommandType.Update);
         }
         else if (_initialValues is not null)
         {
@@ -223,7 +223,7 @@ public class Row
                 }
             }
 
-            return (builder.ToString(), parameters, DataTableCommandType.Delete);
+            return new(builder.ToString(), parameters, DataTableCommandType.Delete);
         }
         else if (!ToBeDeleted)
         {
@@ -247,7 +247,7 @@ public class Row
                 }
             }
             builder.Append(')');
-            return (builder.ToString(), parameters, DataTableCommandType.Insert);
+            return new(builder.ToString(), parameters, DataTableCommandType.Insert);
         }
 
         return null;
