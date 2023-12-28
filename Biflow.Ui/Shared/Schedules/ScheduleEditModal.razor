@@ -2,7 +2,7 @@
 
 @inject IHxMessengerService Messenger
 @inject IDbContextFactory<AppDbContext> DbContextFactory
-@inject ISchedulerService SchedulerService
+@inject IMediator Mediator
 @inject IJSRuntime JS
 
 <HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" Title="@(schedule.ScheduleId == Guid.Empty ? "New schedule" : "Edit schedule")">
@@ -171,28 +171,7 @@
         {
             try
             {
-                using var context = DbContextFactory.CreateDbContext();
-
-                var tags = await context.Tags.ToListAsync();
-                foreach (var tagName in this.tags)
-                {
-                    var tag = tags.FirstOrDefault<Tag>(t => t.TagName == tagName);
-                    if (tag is not null) schedule.Tags.Add(tag);
-                }
-
-                using var transaction = context.Database.BeginTransaction();
-                context.Schedules.Add(schedule);
-                await context.SaveChangesAsync();
-                try
-                {
-                    await SchedulerService.AddScheduleAsync(schedule);
-                    transaction.Commit();
-                }
-                catch (Exception)
-                {
-                    transaction.Rollback();
-                    throw;
-                }
+                await Mediator.Send(new CreateScheduleRequest(schedule, this.tags));
 
                 schedule.Job = Job is not null ? Job : Jobs?.FirstOrDefault(job => job.JobId == schedule.JobId)
                     ?? throw new InvalidOperationException("Job cannot be null");
@@ -211,35 +190,7 @@
         {
             try
             {
-                using var context = DbContextFactory.CreateDbContext();
-                context.Attach(schedule).State = EntityState.Modified;
-                var tags = await context.Tags.ToListAsync();
-
-                // Synchronize tags
-                foreach (var text in this.tags.Where(str => !schedule.Tags.Any(t => t.TagName == str)))
-                {
-                    // New tags
-                    var tag = tags.FirstOrDefault(t => t.TagName == text) ?? new Tag(text);
-                    schedule.Tags.Add(tag);
-                }
-                foreach (var tag in schedule.Tags.Where(t => !this.tags.Contains(t.TagName)).ToList() ?? Enumerable.Empty<Tag>())
-                {
-                    schedule.Tags.Remove(tag);
-                }
-
-                using var transaction = context.Database.BeginTransaction();
-                await context.SaveChangesAsync();
-                try
-                {
-                    await SchedulerService.UpdateScheduleAsync(schedule);
-                    transaction.Commit();
-                }
-                catch (Exception)
-                {
-                    transaction.Rollback();
-                    throw;
-                }
-
+                await Mediator.Send(new UpdateScheduleRequest(schedule, this.tags));
                 await OnSubmit.InvokeAsync(schedule);
                 await offcanvas.LetAsync(x => x.HideAsync());
                 this.tags.Clear();
