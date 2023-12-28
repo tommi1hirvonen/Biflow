@@ -13,7 +13,6 @@ namespace Biflow.Ui.Pages;
 public partial class JobDetails : ComponentBase
 {
     [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
-    [Inject] private ISchedulerService SchedulerService { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
@@ -157,7 +156,6 @@ public partial class JobDetails : ComponentBase
                 }
             }
             await Mediator.Send(new DeleteJobRequest(job.JobId));
-            await SchedulerService.DeleteJobAsync(job);
             NavigationManager.NavigateTo("jobs");
         }
         catch (Exception ex)

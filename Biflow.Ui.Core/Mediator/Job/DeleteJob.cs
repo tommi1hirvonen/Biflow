@@ -7,7 +7,10 @@ namespace Biflow.Ui.Core;
 
 public record DeleteJobRequest(Guid JobId) : IRequest;
 
-public class DeleteJobRequestHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<DeleteJobRequest>
+public class DeleteJobRequestHandler(
+    IDbContextFactory<AppDbContext> dbContextFactory,
+    ISchedulerService scheduler)
+    : IRequestHandler<DeleteJobRequest>
 {
     public async Task Handle(DeleteJobRequest request, CancellationToken cancellationToken)
     {
@@ -32,5 +35,6 @@ public class DeleteJobRequestHandler(IDbContextFactory<AppDbContext> dbContextFa
             context.Jobs.Remove(jobToRemove);
             await context.SaveChangesAsync(cancellationToken);
         }
+        await scheduler.DeleteJobAsync(request.JobId);
     }
 }

@@ -16,7 +16,6 @@ namespace Biflow.Ui.Pages;
 public partial class Jobs : ComponentBase
 {
     [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
-    [Inject] private ISchedulerService SchedulerService { get; set; } = null!;
     [Inject] private JobDuplicatorFactory JobDuplicatorFactory { get; set; } = null!;
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
     [Inject] private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
@@ -179,7 +178,6 @@ public partial class Jobs : ComponentBase
         try
         {
             await Mediator.Send(new DeleteJobRequest(job.JobId));
-            await SchedulerService.DeleteJobAsync(job);
             jobs?.Remove(job);
         }
         catch (Exception ex)

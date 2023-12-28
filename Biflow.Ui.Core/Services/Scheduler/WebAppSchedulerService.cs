@@ -17,7 +17,7 @@ public class WebAppSchedulerService(IConfiguration configuration, IHttpClientFac
         .GetSection("WebApp")
         .GetValue<string>("Url") ?? throw new ArgumentNullException(nameof(Url));
 
-    public async Task DeleteJobAsync(Job job)
+    public async Task DeleteJobAsync(Guid jobId)
     {
         var status = await GetStatusAsync();
         if (!status.TryPickT0(out Success _, out var _))
@@ -26,7 +26,7 @@ public class WebAppSchedulerService(IConfiguration configuration, IHttpClientFac
         }
 
         var endpoint = $"{Url}/jobs/remove";
-        var schedulerJob = new SchedulerJob(job.JobId);
+        var schedulerJob = new SchedulerJob(jobId);
         var json = JsonSerializer.Serialize(schedulerJob);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var response = await _httpClient.PostAsync(endpoint, content);
