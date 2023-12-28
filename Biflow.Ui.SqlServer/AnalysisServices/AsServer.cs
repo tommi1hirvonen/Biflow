@@ -1,3 +1,3 @@
-﻿namespace Biflow.Ui.Core;
+﻿namespace Biflow.Ui.SqlServer;
 
 public record AsServer(string Name, IEnumerable<AsModel> Models);

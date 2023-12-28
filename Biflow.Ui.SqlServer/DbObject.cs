@@ -1,4 +1,4 @@
-﻿namespace Biflow.Ui.Core;
+﻿namespace Biflow.Ui.SqlServer;
 
 public record DbObject(string Server, string Database, string Schema, string Object, string Type)
 {

@@ -4,7 +4,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Biflow.DataAccess.Models;
 
-namespace Biflow.Ui.Core;
+namespace Biflow.Ui.SqlServer;
 
 public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFactory)
 {

@@ -1,4 +1,4 @@
-﻿namespace Biflow.Ui.Core;
+﻿namespace Biflow.Ui.SqlServer;
 
 public class CatalogFolder(long folderId, string folderName)
 {

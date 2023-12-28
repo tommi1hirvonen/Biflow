@@ -1,4 +1,4 @@
-﻿namespace Biflow.Ui.Core;
+﻿namespace Biflow.Ui.SqlServer;
 
 internal class CatalogProjectDto(long projectId, string projectName)
 {

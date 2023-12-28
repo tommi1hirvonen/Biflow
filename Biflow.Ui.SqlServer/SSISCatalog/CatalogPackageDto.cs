@@ -1,4 +1,4 @@
-﻿namespace Biflow.Ui.Core;
+﻿namespace Biflow.Ui.SqlServer;
 
 internal class CatalogPackageDto(long packageId, string packageName)
 {

@@ -27,6 +27,7 @@
     <ProjectReference Include="..\Biflow.DataAccess\Biflow.DataAccess.csproj" />
     <ProjectReference Include="..\Biflow.Executor.Core\Biflow.Executor.Core.csproj" />
     <ProjectReference Include="..\Biflow.Scheduler.Core\Biflow.Scheduler.Core.csproj" />
+    <ProjectReference Include="..\Biflow.Ui.SqlServer\Biflow.Ui.SqlServer.csproj" />
   </ItemGroup>
 
 </Project>
