@@ -616,8 +616,3 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
     }
 
 }
-
-file static class Extensions
-{
-    public static string EncodeForLike(this string term) => term.Replace("[", "[[]").Replace("%", "[%]");
-}
