@@ -170,6 +170,7 @@ public static partial class Extensions
         services.AddSingleton<UserService>();
         services.AddSingleton<SqlServerHelperService>();
         services.AddDuplicatorServices();
+        services.AddMediatR(config => config.RegisterServicesFromAssemblyContaining<MediatREntryPoint>());
 
         return services;
     }

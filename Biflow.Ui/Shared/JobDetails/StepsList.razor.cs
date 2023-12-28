@@ -6,6 +6,7 @@ using Biflow.Ui.Shared.StepEditModal;
 using Biflow.Ui.Shared.StepsBatchEdit;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
+using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +19,7 @@ public partial class StepsList : ComponentBase
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
+    [Inject] private IMediator Mediator { get; set; } = null!;
     
     [CascadingParameter] public Job? Job { get; set; }
     
@@ -143,12 +145,7 @@ public partial class StepsList : ComponentBase
         }
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            foreach (var step in selectedSteps)
-            {
-                context.Steps.Remove(step);
-            }
-            await context.SaveChangesAsync();
+            await Mediator.Send(new DeleteStepsRequest(selectedSteps));
             foreach (var step in selectedSteps)
             {
                 Steps?.Remove(step);
@@ -192,18 +189,7 @@ public partial class StepsList : ComponentBase
         }
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            var stepToRemove = await context.Steps
-                .Include(s => s.Dependencies)
-                .Include(s => s.Depending)
-                .Include($"{nameof(IHasStepParameters.StepParameters)}")
-                .FirstOrDefaultAsync(s => s.StepId == step.StepId);
-            if (stepToRemove is not null)
-            {
-                context.Steps.Remove(stepToRemove);
-                await context.SaveChangesAsync();
-            }
-            
+            await Mediator.Send(new DeleteStepsRequest(step.StepId));
             Steps?.Remove(step);
             selectedSteps.Remove(step);
 

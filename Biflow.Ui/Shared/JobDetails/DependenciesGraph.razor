@@ -1,6 +1,7 @@
 ﻿@inject IHxMessengerService Messenger
 @inject IDbContextFactory<AppDbContext> DbFactory
 @inject IHxMessageBoxService Confirmer
+@inject IMediator Mediator
 
 @*CSS definitions for the dependency graph nodes and paths created in site.js through JSInterop.*@
 <style>
@@ -219,7 +220,7 @@
     [Parameter] public Guid? InitialStepId { get; set; }
 
     private readonly Dictionary<StepType, IStepEditModal?> stepEditModals = [];
-    
+
     private DependencyGraph<Step>? dependencyGraph;
     private StepHistoryOffcanvas? stepHistoryOffcanvas;
     private Step? stepFilter;
@@ -386,7 +387,7 @@
     private async Task OnStepSubmit(Step step)
     {
         ArgumentNullException.ThrowIfNull(Steps);
-        
+
         var index = Steps.FindIndex(s => s.StepId == step.StepId);
         if (index is int i and >= 0)
         {
@@ -430,20 +431,8 @@
 
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            var stepToRemove = await context.Steps
-                .Include(s => s.Dependencies)
-                .Include(s => s.Depending)
-                .Include($"{nameof(IHasStepParameters.StepParameters)}")
-                .FirstOrDefaultAsync(s => s.StepId == step.StepId);
-            if (stepToRemove is not null)
-            {
-                context.Steps.Remove(stepToRemove);
-                await context.SaveChangesAsync();
-            }
-
+            await Mediator.Send(new DeleteStepsRequest(step.StepId));
             Steps?.Remove(step);
-
             // Remove the deleted step from dependencies.
             foreach (var dependant in Steps?.Where(s => s.Dependencies.Any(d => d.DependantOnStepId == step.StepId)) ?? Enumerable.Empty<Step>())
             {
