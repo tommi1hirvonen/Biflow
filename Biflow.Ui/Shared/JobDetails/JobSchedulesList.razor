@@ -1,6 +1,7 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbFactory
 @inject ISchedulerService SchedulerService
 @inject IHxMessengerService Messenger
+@inject IMediator Mediator
 
 <style>
     .white-space-pre {
@@ -189,21 +190,7 @@
     {
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            using var transaction = context.Database.BeginTransaction();
-            context.Schedules.Remove(schedule);
-            await context.SaveChangesAsync();
-            try
-            {
-                await SchedulerService.RemoveScheduleAsync(schedule);
-                transaction.Commit();
-            }
-            catch (Exception)
-            {
-                transaction.Rollback();
-                throw;
-            }
-
+            await Mediator.Send(new DeleteScheduleRequest(schedule.ScheduleId));
             schedules?.Remove(schedule);
         }
         catch (Exception ex)

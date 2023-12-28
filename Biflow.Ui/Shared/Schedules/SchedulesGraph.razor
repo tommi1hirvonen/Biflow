@@ -3,6 +3,7 @@
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject ISchedulerService SchedulerService
 @inject IHxMessengerService Messenger
+@inject IMediator Mediator
 
 <div class="row justify-content-between gap-2 mt-3">
     <div class="col-auto">
@@ -215,21 +216,7 @@
     {
         try
         {
-            using var context = DbContextFactory.CreateDbContext();
-            using var transaction = context.Database.BeginTransaction();
-            context.Schedules.Remove(schedule);
-            await context.SaveChangesAsync();
-            try
-            {
-                await SchedulerService.RemoveScheduleAsync(schedule);
-                transaction.Commit();
-            }
-            catch (Exception)
-            {
-                transaction.Rollback();
-                throw;
-            }
-
+            await Mediator.Send(new DeleteScheduleRequest(schedule.ScheduleId));
             Schedules?.Remove(schedule);
             await OnSchedulesChanged.InvokeAsync();
         }
