@@ -25,6 +25,7 @@ public class DeleteJobRequestHandler(IDbContextFactory<AppDbContext> dbContextFa
             .Include($"{nameof(Job.Steps)}.{nameof(IHasStepParameters.StepParameters)}")
             .Include(j => j.JobSubscriptions)
             .Include(j => j.JobTagSubscriptions)
+            .Include(j => j.Schedules)
             .FirstOrDefaultAsync(j => j.JobId == request.JobId, cancellationToken);
         if (jobToRemove is not null)
         {
