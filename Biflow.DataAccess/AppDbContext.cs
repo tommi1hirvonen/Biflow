@@ -132,7 +132,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<PipelineClient>(e =>
         {
-            e.HasQueryFilter(x => x.DeletedOn == null);
+            e.HasQueryFilter(x => x.DeletedOn == null && x.AppRegistration.DeletedOn == null);
             e.HasDiscriminator<PipelineClientType>("PipelineClientType")
             .HasValue<DataFactory>(PipelineClientType.DataFactory)
             .HasValue<SynapseWorkspace>(PipelineClientType.Synapse);
@@ -147,7 +147,7 @@ public class AppDbContext : DbContext
         });
 
         modelBuilder.Entity<FunctionApp>()
-            .HasQueryFilter(x => x.DeletedOn == null);
+            .HasQueryFilter(x => x.DeletedOn == null && x.AppRegistration.DeletedOn == null);
 
         modelBuilder.Entity<QlikCloudClient>(e =>
         {
@@ -239,7 +239,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Schedule>(e =>
         {
-            e.HasQueryFilter(x => x.DeletedOn == null);
+            e.HasQueryFilter(x => x.DeletedOn == null && x.Job.DeletedOn == null);
 
             e.HasOne(schedule => schedule.Job)
             .WithMany(job => job.Schedules)
@@ -257,7 +257,7 @@ public class AppDbContext : DbContext
         {
             e.ToTable(t => t.HasTrigger("Trigger_Step"));
 
-            e.HasQueryFilter(x => x.DeletedOn == null);
+            e.HasQueryFilter(x => x.DeletedOn == null && x.Job.DeletedOn == null);
 
             e.HasDiscriminator<StepType>("StepType")
             .HasValue<DatasetStep>(StepType.Dataset)
