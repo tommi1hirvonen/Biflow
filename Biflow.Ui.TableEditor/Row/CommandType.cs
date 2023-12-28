@@ -1,6 +1,6 @@
 ﻿namespace Biflow.Ui.TableEditor;
 
-internal enum DataTableCommandType
+internal enum CommandType
 {
     Insert,
     Update,

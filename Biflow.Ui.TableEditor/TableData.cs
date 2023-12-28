@@ -61,9 +61,9 @@ public class TableData
                 await connection.ExecuteAsync(command, parameters, transaction);
             }
             await transaction.CommitAsync();
-            var inserted = changes.Where(c => c.CommandType == DataTableCommandType.Insert).Count();
-            var updated = changes.Where(c => c.CommandType == DataTableCommandType.Update).Count();
-            var deleted = changes.Where(c => c.CommandType == DataTableCommandType.Delete).Count();
+            var inserted = changes.Where(c => c.CommandType == CommandType.Insert).Count();
+            var updated = changes.Where(c => c.CommandType == CommandType.Update).Count();
+            var deleted = changes.Where(c => c.CommandType == CommandType.Delete).Count();
             return (inserted, updated, deleted);
         }
         catch (Exception)

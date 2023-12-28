@@ -204,7 +204,7 @@ public class Row
                 }
             }
 
-            return new(builder.ToString(), parameters, DataTableCommandType.Update);
+            return new(builder.ToString(), parameters, CommandType.Update);
         }
         else if (_initialValues is not null)
         {
@@ -223,7 +223,7 @@ public class Row
                 }
             }
 
-            return new(builder.ToString(), parameters, DataTableCommandType.Delete);
+            return new(builder.ToString(), parameters, CommandType.Delete);
         }
         else if (!ToBeDeleted)
         {
@@ -247,7 +247,7 @@ public class Row
                 }
             }
             builder.Append(')');
-            return new(builder.ToString(), parameters, DataTableCommandType.Insert);
+            return new(builder.ToString(), parameters, CommandType.Insert);
         }
 
         return null;
