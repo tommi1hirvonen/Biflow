@@ -17,10 +17,14 @@ public class DeleteJobRequestHandler(IDbContextFactory<AppDbContext> dbContextFa
             .ThenInclude(j => j.AssigningStepParameters)
             .ThenInclude(p => p.Step)
             .Include(j => j.Steps)
+            .ThenInclude(s => s.StepSubscriptions)
+            .Include(j => j.Steps)
             .ThenInclude(s => s.Dependencies)
             .Include(j => j.Steps)
             .ThenInclude(s => s.Depending)
             .Include($"{nameof(Job.Steps)}.{nameof(IHasStepParameters.StepParameters)}")
+            .Include(j => j.JobSubscriptions)
+            .Include(j => j.JobTagSubscriptions)
             .FirstOrDefaultAsync(j => j.JobId == request.JobId, cancellationToken);
         if (jobToRemove is not null)
         {
