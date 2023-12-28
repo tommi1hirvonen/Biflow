@@ -3,6 +3,7 @@ using Biflow.DataAccess.Models;
 using Biflow.Ui.Core;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
+using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 
@@ -16,6 +17,7 @@ public partial class JobDetails : ComponentBase
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
+    [Inject] private IMediator Mediator { get; set; } = null!;
 
     [Parameter] public string DetailsPage { get; set; } = "steps";
 
@@ -154,23 +156,7 @@ public partial class JobDetails : ComponentBase
                     }
                 }
             }
-            using var context2 = await DbFactory.CreateDbContextAsync();
-            var jobToRemove = await context2.Jobs
-                .Include(j => j.JobParameters)
-                .ThenInclude(j => j.AssigningStepParameters)
-                .ThenInclude(p => p.Step)
-                .Include(j => j.Steps)
-                .ThenInclude(s => s.Dependencies)
-                .Include(j => j.Steps)
-                .ThenInclude(s => s.Depending)
-                .Include($"{nameof(Job.Steps)}.{nameof(IHasStepParameters.StepParameters)}")
-                .FirstOrDefaultAsync(j => j.JobId == job.JobId);
-            if (jobToRemove is not null)
-            {
-                context2.Jobs.Remove(jobToRemove);
-                await context2.SaveChangesAsync();
-            }
-
+            await Mediator.Send(new DeleteJobRequest(job.JobId));
             await SchedulerService.DeleteJobAsync(job);
             NavigationManager.NavigateTo("jobs");
         }

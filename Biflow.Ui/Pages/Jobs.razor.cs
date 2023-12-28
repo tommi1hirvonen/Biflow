@@ -5,6 +5,7 @@ using Biflow.Ui.Shared;
 using Biflow.Ui.Shared.JobDetails;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
+using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -15,20 +16,14 @@ namespace Biflow.Ui.Pages;
 public partial class Jobs : ComponentBase
 {
     [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
-    
     [Inject] private ISchedulerService SchedulerService { get; set; } = null!;
-    
     [Inject] private JobDuplicatorFactory JobDuplicatorFactory { get; set; } = null!;
-        
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
-    
     [Inject] private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
-
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
-
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
-
     [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; } = null!;
+    [Inject] private IMediator Mediator { get; set; } = null!;
 
     [CascadingParameter] public UserState UserState { get; set; } = new();
 
@@ -183,22 +178,7 @@ public partial class Jobs : ComponentBase
         }
         try
         {
-            using var context = await DbFactory.CreateDbContextAsync();
-            var jobToRemove = await context.Jobs
-                .Include(j => j.JobParameters)
-                .ThenInclude(j => j.AssigningStepParameters)
-                .ThenInclude(p => p.Step)
-                .Include(j => j.Steps)
-                .ThenInclude(s => s.Dependencies)
-                .Include(j => j.Steps)
-                .ThenInclude(s => s.Depending)
-                .Include($"{nameof(Job.Steps)}.{nameof(IHasStepParameters.StepParameters)}")
-                .FirstOrDefaultAsync(j => j.JobId == job.JobId);
-            if (jobToRemove is not null)
-            {
-                context.Jobs.Remove(jobToRemove);
-                await context.SaveChangesAsync();
-            }
+            await Mediator.Send(new DeleteJobRequest(job.JobId));
             await SchedulerService.DeleteJobAsync(job);
             jobs?.Remove(job);
         }

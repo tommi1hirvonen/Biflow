@@ -14,7 +14,7 @@ internal class DeleteStepRequestHandler(IDbContextFactory<AppDbContext> dbContex
 {
     public async Task Handle(DeleteStepsRequest request, CancellationToken cancellationToken)
     {
-        using var context = dbContextFactory.CreateDbContext();
+        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var steps = await context.Steps
             .Include(s => s.Dependencies)
             .Include(s => s.Depending)
