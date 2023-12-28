@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 namespace Biflow.DataAccess.Models;
 
 [Table("QlikCloudClient")]
-public class QlikCloudClient
+public class QlikCloudClient : ISoftDeletable
 {
     [Key]
     [JsonInclude]
@@ -24,6 +24,8 @@ public class QlikCloudClient
     [MaxLength(4000)]
     [JsonSensitive]
     public required string ApiToken { get; set; }
+
+    public DateTimeOffset? DeletedOn { get; set; }
 
     [JsonIgnore]
     public ICollection<QlikStep> Steps { get; set; } = null!;

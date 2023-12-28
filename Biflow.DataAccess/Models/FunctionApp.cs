@@ -9,7 +9,7 @@ using System.Text.Json.Serialization;
 namespace Biflow.DataAccess.Models;
 
 [Table("FunctionApp")]
-public class FunctionApp
+public class FunctionApp : ISoftDeletable
 {
     [Required]
     [Display(Name = "Function app id")]
@@ -55,6 +55,8 @@ public class FunctionApp
 
     [JsonIgnore]
     public AppRegistration AppRegistration { get; set; } = null!;
+
+    public DateTimeOffset? DeletedOn { get; set; }
 
     [JsonIgnore]
     public IList<FunctionStep> Steps { get; set; } = null!;

@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
@@ -8,7 +7,7 @@ namespace Biflow.DataAccess.Models;
 [Table("Connection")]
 [JsonDerivedType(typeof(SqlConnectionInfo), nameof(ConnectionType.Sql))]
 [JsonDerivedType(typeof(AnalysisServicesConnectionInfo), nameof(ConnectionType.AnalysisServices))]
-public abstract class ConnectionInfoBase(ConnectionType connectionType) : IComparable
+public abstract class ConnectionInfoBase(ConnectionType connectionType) : IComparable, ISoftDeletable
 {
     [Key]
     [Display(Name = "Connection id")]
@@ -27,6 +26,8 @@ public abstract class ConnectionInfoBase(ConnectionType connectionType) : ICompa
     [Display(Name = "Connection string")]
     [JsonSensitive(WhenContains = "password")]
     public string ConnectionString { get; set; } = "";
+
+    public DateTimeOffset? DeletedOn { get; set; }
 
     public int CompareTo(object? obj) => obj switch
     {

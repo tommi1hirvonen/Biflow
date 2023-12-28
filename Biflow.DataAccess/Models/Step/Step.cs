@@ -16,7 +16,7 @@ namespace Biflow.DataAccess.Models;
 [JsonDerivedType(typeof(QlikStep), nameof(StepType.Qlik))]
 [JsonDerivedType(typeof(SqlStep), nameof(StepType.Sql))]
 [JsonDerivedType(typeof(TabularStep), nameof(StepType.Tabular))]
-public abstract class Step : IComparable, IAuditable
+public abstract class Step : IComparable, IAuditable, ISoftDeletable
 {
     public Step(StepType stepType)
     {
@@ -130,6 +130,8 @@ public abstract class Step : IComparable, IAuditable
 
     [Timestamp]
     public byte[]? Timestamp { get; private set; }
+
+    public DateTimeOffset? DeletedOn { get; set; }
 
     public IList<Dependency> Dependencies { get; set; } = null!;
 

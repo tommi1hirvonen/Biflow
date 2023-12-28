@@ -8,7 +8,7 @@ namespace Biflow.DataAccess.Models;
 [Table("PipelineClient")]
 [JsonDerivedType(typeof(DataFactory), nameof(PipelineClientType.DataFactory))]
 [JsonDerivedType(typeof(SynapseWorkspace), nameof(PipelineClientType.Synapse))]
-public abstract class PipelineClient(PipelineClientType type)
+public abstract class PipelineClient(PipelineClientType type) : ISoftDeletable
 {
     [Key]
     [JsonInclude]
@@ -26,6 +26,8 @@ public abstract class PipelineClient(PipelineClientType type)
 
     [JsonIgnore]
     public AppRegistration AppRegistration { get; set; } = null!;
+
+    public DateTimeOffset? DeletedOn { get; set; }
 
     [JsonIgnore]
     public IList<PipelineStep> Steps { get; set; } = null!;

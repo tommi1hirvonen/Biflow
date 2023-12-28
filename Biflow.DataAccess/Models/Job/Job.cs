@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 namespace Biflow.DataAccess.Models;
 
 [Table("Job")]
-public class Job : IAuditable
+public class Job : IAuditable, ISoftDeletable
 {
     public Job() { }
 
@@ -148,6 +148,8 @@ public class Job : IAuditable
 
     [Timestamp]
     public byte[]? Timestamp { get; private set; }
+
+    public DateTimeOffset? DeletedOn { get; set; }
 
     public Job Copy() => new(this);
 }
