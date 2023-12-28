@@ -1,7 +1,5 @@
 ﻿@using System.Globalization
 
-@inject IDbContextFactory<AppDbContext> DbContextFactory
-@inject ISchedulerService SchedulerService
 @inject IHxMessengerService Messenger
 @inject IMediator Mediator
 
@@ -230,22 +228,8 @@
     {
         try
         {
-            using var context = DbContextFactory.CreateDbContext();
-            using var transaction = context.Database.BeginTransaction();
-            context.Attach(schedule);
+            await Mediator.Send(new ToggleScheduleRequest(schedule.ScheduleId, !schedule.IsEnabled));
             schedule.IsEnabled = !schedule.IsEnabled;
-            await context.SaveChangesAsync();
-            try
-            {
-                await SchedulerService.ToggleScheduleEnabledAsync(schedule, false);
-                await transaction.CommitAsync();
-            }
-            catch (Exception)
-            {
-                await transaction.RollbackAsync();
-                schedule.IsEnabled = !schedule.IsEnabled;
-                throw;
-            }
             await OnSchedulesChanged.InvokeAsync();
         }
         catch (Exception ex)
