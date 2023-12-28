@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Respawn;
 using Xunit;
 
 namespace Biflow.DataAccess.Test;
@@ -67,12 +66,10 @@ public class DatabaseFixture : IAsyncLifetime
                 return;
             }
 
-            var respawner = await Respawner.CreateAsync(_connectionString);
-            await respawner.ResetAsync(_connectionString);
-
             // Initialize seed data
             var context = await DbContextFactory.CreateDbContextAsync();
-
+            await context.Database.EnsureDeletedAsync();
+            await context.Database.EnsureCreatedAsync();
 
             #region SETTINGS
             var sqlConnection = new SqlConnectionInfo
