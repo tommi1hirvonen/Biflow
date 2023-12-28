@@ -13,7 +13,7 @@ internal class SchedulesManager<TJob>(
     ISchedulerFactory schedulerFactory) : ISchedulesManager where TJob : ExecutionJobBase
 {
     private readonly ILogger _logger = logger;
-    private readonly IScheduler _scheduler = schedulerFactory.GetScheduler().Result;
+    private readonly IScheduler _scheduler = schedulerFactory.GetScheduler().GetAwaiter().GetResult();
     private readonly IDbContextFactory<SchedulerDbContext> _dbContextFactory = dbContextFactory;
 
     public async Task<IEnumerable<JobStatus>> GetStatusAsync(CancellationToken cancellationToken)
