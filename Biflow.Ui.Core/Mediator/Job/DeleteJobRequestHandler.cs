@@ -5,8 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Core;
 
-public record DeleteJobRequest(Guid JobId) : IRequest;
-
 public class DeleteJobRequestHandler(
     IDbContextFactory<AppDbContext> dbContextFactory,
     ISchedulerService scheduler)
@@ -15,6 +13,7 @@ public class DeleteJobRequestHandler(
     public async Task Handle(DeleteJobRequest request, CancellationToken cancellationToken)
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        using var transaction = context.Database.BeginTransaction();
         var jobToRemove = await context.Jobs
             .Include(j => j.JobParameters)
             .ThenInclude(j => j.AssigningStepParameters)
@@ -33,8 +32,17 @@ public class DeleteJobRequestHandler(
         if (jobToRemove is not null)
         {
             context.Jobs.Remove(jobToRemove);
-            await context.SaveChangesAsync(cancellationToken);
         }
-        await scheduler.DeleteJobAsync(request.JobId);
+        await context.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await scheduler.DeleteJobAsync(request.JobId);
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
     }
 }
