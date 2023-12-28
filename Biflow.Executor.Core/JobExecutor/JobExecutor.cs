@@ -25,8 +25,6 @@ internal class JobExecutor(
     private readonly JsonSerializerOptions _serializerOptions =
         new() { WriteIndented = true, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) };
 
-    private Job Job => _execution.Job ?? throw new ArgumentNullException(nameof(_execution.Job));
-
     public async Task RunAsync(Guid executionId, CancellationToken cancellationToken)
     {
         // CancellationToken is triggered when the executor service is being shut down
@@ -55,7 +53,7 @@ internal class JobExecutor(
         string? circularExecutions;
         try
         {
-            circularExecutions = await GetCircularJobExecutionsAsync(Job, cancellationToken);
+            circularExecutions = await GetCircularJobExecutionsAsync(_execution.JobId, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -205,7 +203,7 @@ internal class JobExecutor(
     /// <returns>
     /// JSON string of circular job dependencies or null if there were no circular dependencies.
     /// </returns>
-    private async Task<string?> GetCircularJobExecutionsAsync(Job job, CancellationToken cancellationToken)
+    private async Task<string?> GetCircularJobExecutionsAsync(Guid jobId, CancellationToken cancellationToken)
     {
         var dependencies = await ReadJobDependenciesAsync(cancellationToken);
         IEnumerable<IEnumerable<Job>> cycles = dependencies.FindCycles();
@@ -215,7 +213,7 @@ internal class JobExecutor(
         var json = JsonSerializer.Serialize(jobs, _serializerOptions);
 
         // There are no circular dependencies or this job is not among the cycles.
-        return !cycles.Any() || !cycles.Any(jobs => jobs.Any(j => j.JobId == job.JobId))
+        return !cycles.Any() || !cycles.Any(jobs => jobs.Any(j => j.JobId == jobId))
             ? null : json;
     }
 

@@ -426,7 +426,6 @@ public class AppDbContext : DbContext
             e.HasIndex(x => new { x.CreatedOn, x.EndedOn }, "IX_Execution_CreatedOn_EndedOn");
             e.HasIndex(x => x.ExecutionStatus, "IX_Execution_ExecutionStatus");
             e.HasIndex(x => new { x.JobId, x.CreatedOn }, "IX_Execution_JobId_CreatedOn");
-            e.HasOne(x => x.Job).WithMany(x => x.Executions).IsRequired(false);
         });
 
         modelBuilder.Entity<ExecutionDataObject>()

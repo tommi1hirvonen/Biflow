@@ -14,7 +14,6 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
         using var context = await _dbContextFactory.CreateDbContextAsync();
         var execution = await context.Executions
             .AsNoTrackingWithIdentityResolution()
-            .Include(e => e.Job)
             .Include(e => e.ExecutionParameters)
             .Include(e => e.ExecutionConcurrencies)
             .Include(e => e.StepExecutions)

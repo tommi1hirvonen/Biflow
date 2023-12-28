@@ -34,6 +34,8 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
     private readonly HashSet<(string StepName, StepType StepType)> stepFilter = [];
     private Guid prevExecutionId;
     private Execution? execution;
+    private Job? job;
+    private Schedule? schedule;
     private bool loading = false;
     private SortMode sortMode = SortMode.StartedAsc;
     private ExecutionParameterLineageOffcanvas? parameterLineageOffcanvas;
@@ -83,7 +85,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             e.StepExecution.Execution.DependencyMode,
             e.StepExecution.Execution.ScheduleId,
             e.StepExecution.Execution.JobId,
-            e.StepExecution.Execution.Job?.JobName ?? e.StepExecution.Execution.JobName,
+            job?.JobName ?? e.StepExecution.Execution.JobName,
             e.StepExecution.Step?.Tags.ToArray() ?? []));
 
     private Report ShowReport => Page switch
@@ -146,8 +148,6 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             using var context = DbFactory.CreateDbContext();
             execution = await context.Executions
                 .AsNoTrackingWithIdentityResolution()
-                .Include(e => e.Job)
-                .Include(e => e.Schedule)
                 .Include(e => e.ExecutionParameters)
                 .Include(e => e.StepExecutions)
                 .ThenInclude(e => e.StepExecutionAttempts)
@@ -162,6 +162,12 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
                 .ThenInclude(e => e.Step)
                 .ThenInclude(s => s!.Tags)
                 .FirstOrDefaultAsync(e => e.ExecutionId == ExecutionId);
+            job = execution is not null
+                ? await context.Jobs.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(j => j.JobId == execution.JobId)
+                : null;
+            schedule = execution?.ScheduleId is not null
+                ? await context.Schedules.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(s => s.ScheduleId == execution.ScheduleId)
+                : null;
             loading = false;
             if (AutoRefresh && (execution?.ExecutionStatus == ExecutionStatus.Running || execution?.ExecutionStatus == ExecutionStatus.NotStarted))
             {

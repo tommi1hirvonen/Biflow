@@ -9,7 +9,7 @@ public class Execution
 {
     public Execution(string jobName, DateTimeOffset createdOn, ExecutionStatus executionStatus)
     {
-        _jobName = jobName;
+        JobName = jobName;
         CreatedOn = createdOn;
         ExecutionStatus = executionStatus;
     }
@@ -35,7 +35,7 @@ public class Execution
     {
         ExecutionId = Guid.NewGuid();
         JobId = job.JobId;
-        _jobName = job.JobName;
+        JobName = job.JobName;
         CreatedOn = DateTimeOffset.Now;
         ExecutionStatus = ExecutionStatus.NotStarted;
         DependencyMode = job.UseDependencyMode;
@@ -59,16 +59,7 @@ public class Execution
 
     [Display(Name = "Job")]
     [MaxLength(250)]
-    public string JobName
-    {
-        get => Job?.JobName ?? _jobName;
-        private set
-        {
-            _jobName = value;
-        }
-    }
-
-    private string _jobName;
+    public string JobName { get; private set; }
 
     [Display(Name = "Created")]
     [DataType(DataType.DateTime)]
@@ -134,10 +125,6 @@ public class Execution
     public ICollection<ExecutionConcurrency> ExecutionConcurrencies { get; internal set; } = null!;
 
     public ICollection<ExecutionDataObject> DataObjects { get; private set; } = null!;
-
-    public Job? Job { get; private set; }
-
-    public Schedule? Schedule { get; private set; }
 
     [NotMapped]
     public double? ExecutionInSeconds => ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;

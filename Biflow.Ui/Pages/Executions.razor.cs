@@ -114,6 +114,8 @@ public partial class Executions : ComponentBase, IAsyncDisposable
         if (!showSteps)
         {
             var query = context.Executions
+                .AsNoTracking()
+                .AsSingleQuery()
                 // Index optimized way of querying executions without having to scan the entire table.
                 .Where(e => e.CreatedOn <= ToDateTime && e.EndedOn >= FromDateTime);
 
@@ -134,26 +136,27 @@ public partial class Executions : ComponentBase, IAsyncDisposable
                         // Adds executions that were not started and executions that may still be running.
                         .Where(e => e.CreatedOn >= FromDateTime && e.CreatedOn <= ToDateTime && e.EndedOn == null));
             }
-            executions = await query
-                .AsNoTracking()
-                .AsSingleQuery()
-                .OrderByDescending(e => e.CreatedOn)
-                .ThenByDescending(e => e.StartedOn)
-                .Select(e => new ExecutionProjection(
+            executions = await (
+                from e in query
+                join job in context.Jobs on e.JobId equals job.JobId into ej
+                from job in ej.DefaultIfEmpty() // Translates to left join in SQL
+                orderby e.CreatedOn descending, e.StartedOn descending
+                select new ExecutionProjection(
                     e.ExecutionId,
                     e.JobId,
-                    e.Job!.JobName ?? e.JobName,
+                    job.JobName ?? e.JobName,
                     e.ScheduleId,
                     e.CreatedOn,
                     e.StartedOn,
                     e.EndedOn,
                     e.ExecutionStatus,
-                    e.StepExecutions.Count()))
-                .ToArrayAsync();
+                    e.StepExecutions.Count()
+                )).ToArrayAsync();
         }
         else
         {
             var query = context.StepExecutionAttempts
+                .AsNoTracking()
                 .Where(e => e.StepExecution.Execution.CreatedOn <= ToDateTime && e.StepExecution.Execution.EndedOn >= FromDateTime);
 
             if (DateTime.Now >= FromDateTime && DateTime.Now <= ToDateTime)
@@ -178,13 +181,12 @@ public partial class Executions : ComponentBase, IAsyncDisposable
                         && e.StepExecution.Execution.CreatedOn <= ToDateTime
                         && e.EndedOn == null));
             }
-#pragma warning disable IDE0305 // Simplify collection initialization
-            stepExecutions = await query
-                .AsNoTracking()
-                .OrderByDescending(e => e.StepExecution.Execution.CreatedOn)
-                .ThenByDescending(e => e.StartedOn)
-                .ThenByDescending(e => e.StepExecution.ExecutionPhase)
-                .Select(e => new StepExecutionProjection(
+            stepExecutions = await (
+                from e in query
+                join job in context.Jobs on e.StepExecution.Execution.JobId equals job.JobId into ej
+                from job in ej.DefaultIfEmpty() // Translates to left join in SQL
+                orderby e.StepExecution.Execution.CreatedOn descending, e.StartedOn descending, e.StepExecution.ExecutionPhase descending
+                select new StepExecutionProjection(
                     e.StepExecution.ExecutionId,
                     e.StepExecution.StepId,
                     e.RetryAttemptIndex,
@@ -198,10 +200,9 @@ public partial class Executions : ComponentBase, IAsyncDisposable
                     e.StepExecution.Execution.DependencyMode,
                     e.StepExecution.Execution.ScheduleId,
                     e.StepExecution.Execution.JobId,
-                    e.StepExecution.Execution.Job!.JobName ?? e.StepExecution.Execution.JobName,
-                    e.StepExecution.Step.Tags.ToArray()))
-                .ToArrayAsync();
-#pragma warning restore IDE0305 // Simplify collection initialization
+                    job.JobName ?? e.StepExecution.Execution.JobName,
+                    e.StepExecution.Step.Tags.ToArray()
+                )).ToArrayAsync();
         }
 
         loading = false;

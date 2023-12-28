@@ -121,9 +121,6 @@ public class Job : IAuditable, ISoftDeletable
     public ICollection<Schedule> Schedules { get; set; } = null!;
 
     [JsonIgnore]
-    public ICollection<Execution> Executions { get; set; } = null!;
-
-    [JsonIgnore]
     public ICollection<JobSubscription> JobSubscriptions { get; set; } = null!;
 
     [JsonIgnore]
