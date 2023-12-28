@@ -2,7 +2,7 @@
 using Dapper;
 using System.Text;
 
-namespace Biflow.Ui.Core;
+namespace Biflow.Ui.TableEditor;
 
 internal class DataTableQueryBuilder(MasterDataTable table, int? top, FilterSet? filters)
 {

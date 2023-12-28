@@ -1,7 +1,7 @@
 ﻿using Dapper;
 using System.Text;
 
-namespace Biflow.Ui.Core;
+namespace Biflow.Ui.TableEditor;
 
 public class Row
 {
@@ -166,7 +166,7 @@ public class Row
     /// <param name="schema"></param>
     /// <param name="table"></param>
     /// <returns>null if there are no pending changes</returns>
-    public (string Command, DynamicParameters Parameters, DataTableCommandType Type)? GetChangeSqlCommand()
+    internal (string Command, DynamicParameters Parameters, DataTableCommandType Type)? GetChangeSqlCommand()
     {
         // Existing entity
         if (_initialValues is not null && !ToBeDeleted && IsUpdateable)

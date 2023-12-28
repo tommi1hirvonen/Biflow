@@ -2,7 +2,7 @@
 using ClosedXML.Excel;
 using System.Data;
 
-namespace Biflow.Ui.Core;
+namespace Biflow.Ui.TableEditor;
 
 public class UploadBuilder
 {
@@ -19,7 +19,7 @@ public class UploadBuilder
 
     public Upload BuildFromExcelStream(Stream stream)
     {
-        using var workbook = new XLWorkbook(stream, XLEventTracking.Disabled);
+        using var workbook = new XLWorkbook(stream);
         var rows = workbook
             .Worksheet(1)
             .Table(0)

@@ -1,4 +1,4 @@
-﻿namespace Biflow.Ui.Core;
+﻿namespace Biflow.Ui.TableEditor;
 
 public class ColumnValueIndexer<T>(IDictionary<string, object?> data)
 {

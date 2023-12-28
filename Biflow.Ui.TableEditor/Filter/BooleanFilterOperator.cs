@@ -1,4 +1,4 @@
-﻿namespace Biflow.Ui.Core;
+﻿namespace Biflow.Ui.TableEditor;
 
 public enum BooleanFilterOperator
 {

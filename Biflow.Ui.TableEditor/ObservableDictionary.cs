@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Biflow.Ui.Core;
+namespace Biflow.Ui.TableEditor;
 internal class ObservableDictionary<T, U> : IDictionary<T, U> where T : notnull
 {
     private readonly Dictionary<T, U> _dict;

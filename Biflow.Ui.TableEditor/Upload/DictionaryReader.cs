@@ -1,7 +1,7 @@
 ﻿using System.Data;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Biflow.Ui.Core;
+namespace Biflow.Ui.TableEditor;
 
 /// <summary>
 /// Utility class that provides IDataReader functionality for IEnumerables of IDictionaries.

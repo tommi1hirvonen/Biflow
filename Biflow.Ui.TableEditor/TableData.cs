@@ -4,7 +4,7 @@ using Dapper;
 using Microsoft.Data.SqlClient;
 using System.Runtime.InteropServices;
 
-namespace Biflow.Ui.Core;
+namespace Biflow.Ui.TableEditor;
 
 public class TableData
 {
@@ -99,7 +99,7 @@ public class TableData
 
     public Stream GetExcelExportStream()
     {
-        var workbook = new XLWorkbook(XLEventTracking.Disabled);
+        var workbook = new XLWorkbook();
         var sheet = workbook.Worksheets.Add("Sheet1");
 
         var exportColumns = _columns
@@ -120,7 +120,7 @@ public class TableData
             var colIndex = 1;
             foreach (var column in exportColumns)
             {
-                sheet.Cell(rowIndex, colIndex).Value = row.Values[column.Name];
+                sheet.Cell(rowIndex, colIndex).Value = XLCellValue.FromObject(row.Values[column.Name]);
                 colIndex++;
             }
             rowIndex++;

@@ -1,6 +1,6 @@
 ﻿using Biflow.DataAccess.Models;
 
-namespace Biflow.Ui.Core;
+namespace Biflow.Ui.TableEditor;
 
 public class Lookup(
     MasterDataTableLookup dataTableLookup,

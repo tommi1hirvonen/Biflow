@@ -3,7 +3,7 @@ using Dapper;
 using Microsoft.Data.SqlClient;
 using System.Data;
 
-namespace Biflow.Ui.Core;
+namespace Biflow.Ui.TableEditor;
 
 public class Upload
 {

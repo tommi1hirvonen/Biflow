@@ -1,16 +1,18 @@
-﻿namespace Biflow.Ui.Core;
+﻿namespace Biflow.Ui.TableEditor;
 
-public class StringFilter : IFilter
+public class ValueFilter<T, U>(U initialOperator) : IFilter
+    where T : struct
+    where U : notnull, Enum
 {
     public bool Enabled1 { get; set; }
 
-    public string TypedFilterValue1 { get; set; } = string.Empty;
+    public T TypedFilterValue1 { get; set; }
 
     public object FilterValue1 => TypedFilterValue1;
 
     public Enum Operator1 => TypedOperator1;
 
-    public TextFilterOperator TypedOperator1 { get; set; }
+    public U TypedOperator1 { get; set; } = initialOperator;
 
     public bool Enabled2 { get; set; }
 
@@ -19,11 +21,11 @@ public class StringFilter : IFilter
     /// </summary>
     public bool AndOr { get; set; } = true;
 
-    public string TypedFilterValue2 { get; set; } = string.Empty;
+    public T TypedFilterValue2 { get; set; }
 
     public object FilterValue2 => TypedFilterValue2;
 
     public Enum Operator2 => TypedOperator2;
 
-    public TextFilterOperator TypedOperator2 { get; set; }
+    public U TypedOperator2 { get; set; } = initialOperator;
 }

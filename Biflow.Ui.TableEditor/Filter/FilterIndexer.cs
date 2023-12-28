@@ -1,4 +1,4 @@
-﻿namespace Biflow.Ui.Core;
+﻿namespace Biflow.Ui.TableEditor;
 
 public class FilterIndexer<T>(Dictionary<string, IFilter> filters) where T : IFilter
 {

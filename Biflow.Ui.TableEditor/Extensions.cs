@@ -2,9 +2,9 @@
 using Dapper;
 using Microsoft.Data.SqlClient;
 
-namespace Biflow.Ui.Core;
+namespace Biflow.Ui.TableEditor;
 
-public static class TableEditorExtensions
+public static class Extensions
 {
     public static async Task<IEnumerable<string>> GetColumnNamesAsync(this MasterDataTable table)
     {
@@ -255,4 +255,10 @@ public static class TableEditorExtensions
     {
         return count.HasValue ? source.Take(count.Value) : source;
     }
+
+    internal static bool ContainsIgnoreCase(this string source, string? toCheck) => toCheck switch
+    {
+        not null => source.Contains(toCheck, StringComparison.OrdinalIgnoreCase),
+        _ => false
+    };
 }

@@ -29,6 +29,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.DataAccess.Test", "B
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Core.Test", "Biflow.Core.Test\Biflow.Core.Test.csproj", "{F9C8BF49-25F9-4D6C-AE34-78276A8D1507}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Biflow.Ui.TableEditor", "Biflow.Ui.TableEditor\Biflow.Ui.TableEditor.csproj", "{0809CD5F-F935-41A1-B5E5-7F1216CFB8BC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -87,6 +89,10 @@ Global
 		{F9C8BF49-25F9-4D6C-AE34-78276A8D1507}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F9C8BF49-25F9-4D6C-AE34-78276A8D1507}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F9C8BF49-25F9-4D6C-AE34-78276A8D1507}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0809CD5F-F935-41A1-B5E5-7F1216CFB8BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0809CD5F-F935-41A1-B5E5-7F1216CFB8BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0809CD5F-F935-41A1-B5E5-7F1216CFB8BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0809CD5F-F935-41A1-B5E5-7F1216CFB8BC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
