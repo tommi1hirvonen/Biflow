@@ -176,8 +176,4 @@ internal class SchedulesManager<TJob>(
         _logger.LogInformation("Added schedule id {ScheduleId} for job id {JobId} with Cron expression {CronExpression}, status {status} and ",
                 schedule.ScheduleId, schedule.JobId, schedule.CronExpression, schedule.IsEnabled);
     }
-
 }
-
-public class ScheduleNotFoundException(SchedulerSchedule schedule)
-    : Exception($"No matching schedule found for job id {schedule.JobId} and schedule id {schedule.ScheduleId}");
