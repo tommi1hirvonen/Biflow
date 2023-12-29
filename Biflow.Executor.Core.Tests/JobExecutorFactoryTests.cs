@@ -15,6 +15,6 @@ public class JobExecutorFactoryTests(DatabaseFixture fixture) : IClassFixture<Da
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
         var execution = await context.Executions.FirstAsync();
-        await _jobExecutorFactory.CreateAsync(execution.ExecutionId);
+        var jobExecutor = await _jobExecutorFactory.CreateAsync(execution.ExecutionId);
     }
 }

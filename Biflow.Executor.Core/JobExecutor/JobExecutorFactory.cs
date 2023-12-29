@@ -12,129 +12,95 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
     public async Task<IJobExecutor> CreateAsync(Guid executionId)
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
+        
+        // Use tracking queries and let EF match the entities from the two separate queries.
+        
         var execution = await context.Executions
-            .AsNoTrackingWithIdentityResolution()
             .Include(e => e.ExecutionParameters)
             .Include(e => e.ExecutionConcurrencies)
-            .Include(e => e.StepExecutions)
-            .ThenInclude(e => e.StepExecutionAttempts)
-            .Include(e => e.StepExecutions)
-            .ThenInclude(e => e.ExecutionDependencies)
-            .ThenInclude(e => e.DependantOnStepExecution)
-            .Include(e => e.StepExecutions)
-            .ThenInclude(e => e.DataObjects)
-            .ThenInclude(s => s.DataObject)
-            .Include(e => e.StepExecutions)
-            .ThenInclude(e => e.ExecutionConditionParameters)
-            .ThenInclude(e => e.ExecutionParameter)
-            .Include($"{nameof(Execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
-            .Include($"{nameof(Execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
             .FirstOrDefaultAsync(e => e.ExecutionId == executionId)
             ?? throw new ArgumentException($"No execution was found for id {executionId}");
 
-        Task[] mappingTasks = [
-            MapAppRegistrationsAsync(execution, context),
-            MapFunctionAppsAsync(execution, context),
-            MapQlikCloudClientsAsync(execution, context),
-            MapPipelineClientsAsync(execution, context),
-            MapConnectionsAsync(execution, context)
-            ];
+        var query1 = context.StepExecutions
+            .Where(e => e.ExecutionId == executionId)
+            .Include(e => e.StepExecutionAttempts)
+            .Include(e => e.ExecutionDependencies)
+            .ThenInclude(e => e.DependantOnStepExecution)
+            .Include(e => e.DataObjects)
+            .ThenInclude(s => s.DataObject)
+            .Include(e => e.ExecutionConditionParameters)
+            .ThenInclude(e => e.ExecutionParameter)
+            .Include($"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
+            .Include($"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}");
 
-        await Task.WhenAll(mappingTasks);
+        // Left join endpoint clients to step executions.
+        var query2 =
+            from step in query1
+            join sql in context.SqlConnections on ((SqlStepExecution)step).ConnectionId equals sql.ConnectionId into sql_
+            from sql in sql_.DefaultIfEmpty()
+            join package in context.SqlConnections on ((PackageStepExecution)step).ConnectionId equals package.ConnectionId into package_
+            from package in package_.DefaultIfEmpty()
+            join agent in context.SqlConnections on ((AgentJobStepExecution)step).ConnectionId equals agent.ConnectionId into agent_
+            from agent in agent_.DefaultIfEmpty()
+            join tabular in context.AnalysisServicesConnections on ((TabularStepExecution)step).ConnectionId equals tabular.ConnectionId into tabular_
+            from tabular in tabular_.DefaultIfEmpty()
+            join dataset in context.AppRegistrations on ((DatasetStepExecution)step).AppRegistrationId equals dataset.AppRegistrationId into dataset_
+            from dataset in dataset_.DefaultIfEmpty()
+            join function in context.FunctionApps on ((FunctionStepExecution)step).FunctionAppId equals function.FunctionAppId into function_
+            from function in function_.DefaultIfEmpty()
+            join pipeline in context.PipelineClients.Include(a => a.AppRegistration) on ((PipelineStepExecution)step).PipelineClientId equals pipeline.PipelineClientId into pipeline_
+            from pipeline in pipeline_.DefaultIfEmpty()
+            join qlik in context.QlikCloudClients on ((QlikStepExecution)step).QlikCloudClientId equals qlik.QlikCloudClientId into qlik_
+            from qlik in qlik_.DefaultIfEmpty()
+            select new
+            {
+                step,
+                sql,
+                package,
+                agent,
+                tabular,
+                dataset,
+                function,
+                pipeline,
+                qlik
+            };
+
+        var stepExecutions = await query2.ToArrayAsync();
+
+        // Map endpoint clients to step executions.
+        foreach (var step in stepExecutions)
+        {
+            switch (step.step)
+            {
+                case SqlStepExecution sql:
+                    sql.Connection = step.sql;
+                    break;
+                case PackageStepExecution package:
+                    package.Connection = step.package;
+                    break;
+                case AgentJobStepExecution agent:
+                    agent.Connection = step.agent;
+                    break;
+                case TabularStepExecution tabular:
+                    tabular.Connection = step.tabular;
+                    break;
+                case DatasetStepExecution dataset:
+                    dataset.AppRegistration = step.dataset;
+                    break;
+                case FunctionStepExecution function:
+                    function.FunctionApp = step.function;
+                    break;
+                case PipelineStepExecution pipeline:
+                    pipeline.PipelineClient = step.pipeline;
+                    break;
+                case QlikStepExecution qlik:
+                    qlik.QlikCloudClient = step.qlik;
+                    break;
+                default:
+                    break;
+            }
+        }
 
         return ActivatorUtilities.CreateInstance<JobExecutor>(_serviceProvider, execution);
-    }
-
-    private static async Task MapAppRegistrationsAsync(Execution execution, ExecutorDbContext context)
-    {
-        var steps = execution.StepExecutions.OfType<DatasetStepExecution>().ToArray();
-        if (steps.Length == 0)
-        {
-            return;
-        }
-        var ids = steps.Select(e => e.AppRegistrationId).Distinct().ToArray();
-        var items = await context.AppRegistrations.Where(x => ids.Contains(x.AppRegistrationId)).ToArrayAsync();
-        var matches = steps.Join(items, s => s.AppRegistrationId, x => x.AppRegistrationId, (s, x) => (s, x));
-        foreach (var (step, item) in matches)
-        {
-            step.AppRegistration = item;
-        }
-    }
-
-    private static async Task MapFunctionAppsAsync(Execution execution, ExecutorDbContext context)
-    {
-        var steps = execution.StepExecutions.OfType<FunctionStepExecution>().ToArray();
-        if (steps.Length == 0)
-        {
-            return;
-        }
-        var ids = steps.Select(e => e.FunctionAppId).Distinct().ToArray();
-        var items = await context.FunctionApps.Where(x => ids.Contains(x.FunctionAppId)).ToArrayAsync();
-        var matches = steps.Join(items, s => s.FunctionAppId, x => x.FunctionAppId, (s, x) => (s, x));
-        foreach (var (step, item) in matches)
-        {
-            step.FunctionApp = item;
-        }
-    }
-
-    private static async Task MapQlikCloudClientsAsync(Execution execution, ExecutorDbContext context)
-    {
-        var steps = execution.StepExecutions.OfType<QlikStepExecution>().ToArray();
-        if (steps.Length == 0)
-        {
-            return;
-        }
-        var ids = steps.Select(e => e.QlikCloudClientId).Distinct().ToArray();
-        var items = await context.QlikCloudClients.Where(x => ids.Contains(x.QlikCloudClientId)).ToArrayAsync();
-        var matches = steps.Join(items, s => s.QlikCloudClientId, x => x.QlikCloudClientId, (s, x) => (s, x));
-        foreach (var (step, item) in matches)
-        {
-            step.QlikCloudClient = item;
-        }
-    }
-
-    private static async Task MapPipelineClientsAsync(Execution execution, ExecutorDbContext context)
-    {
-        var steps = execution.StepExecutions.OfType<PipelineStepExecution>().ToArray();
-        if (steps.Length == 0)
-        {
-            return;
-        }
-        var ids = steps.Select(e => e.PipelineClientId).Distinct().ToArray();
-        var items = await context.PipelineClients
-            .Where(x => ids.Contains(x.PipelineClientId))
-            .Include(x => x.AppRegistration)
-            .ToArrayAsync();
-        var matches = steps.Join(items, s => s.PipelineClientId, x => x.PipelineClientId, (s, x) => (s, x));
-        foreach (var (step, item) in matches)
-        {
-            step.PipelineClient = item;
-        }
-    }
-
-    private static async Task MapConnectionsAsync(Execution execution, ExecutorDbContext context)
-    {
-        var steps = execution.StepExecutions.OfType<IHasConnection>().ToArray();
-        if (steps.Length == 0)
-        {
-            return;
-        }
-        var ids = steps.Select(e => e.ConnectionId).Distinct().ToArray();
-        var items = await context.Connections.Where(x => ids.Contains(x.ConnectionId)).ToArrayAsync();
-        var matches = steps.Join(items, s => s.ConnectionId, x => x.ConnectionId, (s, x) => (s, x));
-        foreach (var (step, item) in matches)
-        {
-            if (step is IHasConnection<SqlConnectionInfo> sqlStep && item is SqlConnectionInfo sqlConn)
-            {
-                sqlStep.Connection = sqlConn;
-                continue;
-            }
-            if (step is IHasConnection<AnalysisServicesConnectionInfo> asStep && item is AnalysisServicesConnectionInfo asConn)
-            {
-                asStep.Connection = asConn;
-                continue;
-            }
-            throw new ApplicationException($"Unhandled step and connection type pairing: step id {((StepExecution)step).StepId}, connection id {item.ConnectionId}");
-        }
     }
 }
