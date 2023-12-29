@@ -16,7 +16,7 @@ public class PipelineStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
         ArgumentNullException.ThrowIfNull(step.PipelineClientId);
 
         PipelineName = step.PipelineName;
-        PipelineClientId = (Guid)step.PipelineClientId;
+        PipelineClientId = step.PipelineClientId;
         TimeoutMinutes = step.TimeoutMinutes;
         StepExecutionParameters = step.StepParameters
             .Select(p => new PipelineStepExecutionParameter(p, this))
@@ -31,7 +31,8 @@ public class PipelineStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
     [Display(Name = "Pipeline client id")]
     public Guid PipelineClientId { get; private set; }
 
-    public PipelineClient PipelineClient { get; set; } = null!;
+    [NotMapped]
+    public PipelineClient? PipelineClient { get; set; }
 
     [Column("TimeoutMinutes")]
     public double TimeoutMinutes { get; private set; }

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
@@ -22,7 +23,8 @@ public class DatasetStepExecution : StepExecution
     [Display(Name = "App registration id")]
     public Guid AppRegistrationId { get; private set; }
 
-    public AppRegistration AppRegistration { get; set; } = null!;
+    [NotMapped]
+    public AppRegistration? AppRegistration { get; set; }
 
     [Display(Name = "Group id")]
     [MaxLength(36)]

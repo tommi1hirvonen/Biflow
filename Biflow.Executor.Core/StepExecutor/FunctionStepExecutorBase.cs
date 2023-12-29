@@ -14,6 +14,9 @@ internal abstract class FunctionStepExecutorBase(
 
     protected FunctionStepExecution Step { get; } = step;
 
+    protected FunctionApp FunctionApp { get; } = step.FunctionApp
+        ?? throw new ArgumentNullException(nameof(step.FunctionApp));
+
     protected async Task<HttpRequestMessage> BuildFunctionInvokeRequestAsync(FunctionStepExecutionAttempt attempt, CancellationToken cancellationToken)
     {
         string? functionKey = null;
@@ -37,7 +40,7 @@ internal abstract class FunctionStepExecutorBase(
 
         // Add function security code as a request header. If the function specific code was defined, use that.
         // Otherwise revert to the function app code if it was defined.
-        functionKey ??= Step.FunctionApp.FunctionAppKey;
+        functionKey ??= FunctionApp.FunctionAppKey;
         if (!string.IsNullOrEmpty(functionKey))
         {
             message.Headers.Add("x-functions-key", functionKey);

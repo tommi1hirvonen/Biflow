@@ -29,7 +29,8 @@ public class FunctionStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
     [Display(Name = "Function app id")]
     public Guid FunctionAppId { get; private set; }
 
-    public FunctionApp FunctionApp { get; set; } = null!;
+    [NotMapped]
+    public FunctionApp? FunctionApp { get; set; }
 
     [Display(Name = "Function url")]
     [Unicode(false)]

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class SqlStepExecution : StepExecution, IHasTimeout, IHasStepExecutionParameters<SqlStepExecutionParameter>
+public class SqlStepExecution: StepExecution, IHasTimeout, IHasStepExecutionParameters<SqlStepExecutionParameter>, IHasConnection<SqlConnectionInfo?>
 {
     public SqlStepExecution(string stepName, string sqlStatement) : base(stepName, StepType.Sql)
     {
@@ -25,7 +25,8 @@ public class SqlStepExecution : StepExecution, IHasTimeout, IHasStepExecutionPar
     [Column("ConnectionId")]
     public Guid ConnectionId { get; private set; }
 
-    public SqlConnectionInfo Connection { get; set; } = null!;
+    [NotMapped]
+    public SqlConnectionInfo? Connection { get; set; }
 
     [Display(Name = "SQL statement")]
     public string SqlStatement { get; private set; }

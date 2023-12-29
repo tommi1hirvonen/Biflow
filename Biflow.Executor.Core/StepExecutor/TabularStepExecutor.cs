@@ -1,14 +1,14 @@
 ﻿using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.Common;
 using Microsoft.AnalysisServices.Tabular;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
 internal class TabularStepExecutor(TabularStepExecution step) : IStepExecutor<TabularStepExecutionAttempt>
 {
     private readonly TabularStepExecution _step = step;
+    private readonly AnalysisServicesConnectionInfo _connection = step.Connection
+        ?? throw new ArgumentNullException(nameof(step.Connection));
 
     public TabularStepExecutionAttempt Clone(TabularStepExecutionAttempt other, int retryAttemptIndex) =>
         new(other, retryAttemptIndex);
@@ -23,7 +23,7 @@ internal class TabularStepExecutor(TabularStepExecution step) : IStepExecutor<Ta
         {
             var refreshTask = Task.Run(() =>
             {       
-                server.Connect(_step.Connection.ConnectionString);
+                server.Connect(_connection.ConnectionString);
 
                 var database = server.Databases[_step.TabularModelName];
                 var model = database.Model;

@@ -20,6 +20,8 @@ internal class PackageStepExecutor(
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
     private readonly PackageStepExecution _step = step;
+    private readonly SqlConnectionInfo _connection = step.Connection
+        ?? throw new ArgumentNullException(nameof(step.Connection));
 
     private const int MaxRefreshRetries = 3;
 
@@ -32,15 +34,15 @@ internal class PackageStepExecutor(
         cancellationToken.ThrowIfCancellationRequested();
 
         _step.ExecuteAsLogin = string.IsNullOrEmpty(_step.ExecuteAsLogin) ? null : _step.ExecuteAsLogin;
-        _step.Connection.ExecutePackagesAsLogin = string.IsNullOrEmpty(_step.Connection.ExecutePackagesAsLogin) ? null : _step.Connection.ExecutePackagesAsLogin;
-        _step.ExecuteAsLogin ??= _step.Connection.ExecutePackagesAsLogin;
+        _connection.ExecutePackagesAsLogin = string.IsNullOrEmpty(_connection.ExecutePackagesAsLogin) ? null : _connection.ExecutePackagesAsLogin;
+        _step.ExecuteAsLogin ??= _connection.ExecutePackagesAsLogin;
 
         // Start the package execution and capture the SSISDB operation id.
         long packageOperationId;
         try
         {
             _logger.LogInformation("{ExecutionId} {Step} Starting package execution", _step.ExecutionId, _step);
-            packageOperationId = await StartExecutionAsync(_step.Connection.ConnectionString);
+            packageOperationId = await StartExecutionAsync(_connection.ConnectionString);
         }
         catch (Exception ex)
         {
@@ -77,14 +79,14 @@ internal class PackageStepExecutor(
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
             while (!completed)
             {
-                (completed, success) = await GetStatusWithRetriesAsync(_step.Connection.ConnectionString, packageOperationId, linkedCts.Token);
+                (completed, success) = await GetStatusWithRetriesAsync(_connection.ConnectionString, packageOperationId, linkedCts.Token);
                 if (!completed)
                     await Task.Delay(_pollingIntervalMs, linkedCts.Token);
             }
         }
         catch (OperationCanceledException ex)
         {
-            await CancelAsync(attempt, _step.Connection.ConnectionString, packageOperationId);
+            await CancelAsync(attempt, _connection.ConnectionString, packageOperationId);
             if (timeoutCts.IsCancellationRequested)
             {
                 attempt.AddError(ex, "Step execution timed out");
@@ -105,7 +107,7 @@ internal class PackageStepExecutor(
         {
             try
             {
-                var errors = await GetErrorMessagesAsync(_step.Connection.ConnectionString, packageOperationId);
+                var errors = await GetErrorMessagesAsync(_connection.ConnectionString, packageOperationId);
                 foreach (var error in errors)
                 {
                     if (error is not null)

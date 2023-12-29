@@ -27,5 +27,6 @@ public class QlikStepExecution : StepExecution, IHasTimeout
     [Column("TimeoutMinutes")]
     public double TimeoutMinutes { get; private set; }
 
-    public QlikCloudClient QlikCloudClient { get; private set; } = null!;
+    [NotMapped]
+    public QlikCloudClient? QlikCloudClient { get; set; }
 }

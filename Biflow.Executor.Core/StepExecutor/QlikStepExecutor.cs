@@ -15,6 +15,7 @@ internal class QlikStepExecutor : IStepExecutor<QlikStepExecutionAttempt>
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
     private readonly HttpClient _httpClient;
     private readonly QlikStepExecution _step;
+    private readonly QlikCloudClient _client;
     private readonly int _pollingIntervalMs;
     private readonly JsonSerializerOptions _deserializerOptions = new() { PropertyNameCaseInsensitive = true };
 
@@ -25,11 +26,13 @@ internal class QlikStepExecutor : IStepExecutor<QlikStepExecutionAttempt>
         IHttpClientFactory httpClientFactory,
         QlikStepExecution stepExecution)
     {
+        ArgumentNullException.ThrowIfNull(stepExecution.QlikCloudClient);
         _logger = logger;
         _dbContextFactory = dbContextFactory;
         _step = stepExecution;
         _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
         _httpClient = httpClientFactory.CreateClient();
+        _client = stepExecution.QlikCloudClient;
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _step.QlikCloudClient.ApiToken);
     }
 
@@ -45,7 +48,7 @@ internal class QlikStepExecutor : IStepExecutor<QlikStepExecutionAttempt>
         Reload reload;
         try
         {
-            var postReloadUrl = $"{_step.QlikCloudClient.EnvironmentUrl}/api/v1/reloads";
+            var postReloadUrl = $"{_client.EnvironmentUrl}/api/v1/reloads";
             var message = new
             {
                 appId = _step.AppId,
@@ -91,7 +94,7 @@ internal class QlikStepExecutor : IStepExecutor<QlikStepExecutionAttempt>
             attempt.AddWarning(ex, $"Error updating app reload id {reload.Id}");
         }
 
-        var getReloadUrl = $"{_step.QlikCloudClient.EnvironmentUrl}/api/v1/reloads/{reload.Id}";
+        var getReloadUrl = $"{_client.EnvironmentUrl}/api/v1/reloads/{reload.Id}";
         while (true)
         {
             try
@@ -137,7 +140,7 @@ internal class QlikStepExecutor : IStepExecutor<QlikStepExecutionAttempt>
     {
         try
         {
-            var cancelUrl = $"{_step.QlikCloudClient.EnvironmentUrl}/api/v1/reloads/{reloadId}/actions/cancel";
+            var cancelUrl = $"{_client.EnvironmentUrl}/api/v1/reloads/{reloadId}/actions/cancel";
             var response = await _httpClient.PostAsync(cancelUrl, null);
             response.EnsureSuccessStatusCode();
         }

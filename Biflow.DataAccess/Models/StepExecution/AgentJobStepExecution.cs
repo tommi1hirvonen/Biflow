@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class AgentJobStepExecution : StepExecution, IHasTimeout
+public class AgentJobStepExecution : StepExecution, IHasTimeout, IHasConnection<SqlConnectionInfo?>
 {
     public AgentJobStepExecution(string stepName, string agentJobName) : base(stepName, StepType.AgentJob)
     {
@@ -30,8 +30,9 @@ public class AgentJobStepExecution : StepExecution, IHasTimeout
 
     [Column("ConnectionId")]
     [Required]
-    public Guid? ConnectionId { get; private set; }
+    public Guid ConnectionId { get; private set; }
 
-    public SqlConnectionInfo Connection { get; set; } = null!;
+    [NotMapped]
+    public SqlConnectionInfo? Connection { get; set; }
 
 }
