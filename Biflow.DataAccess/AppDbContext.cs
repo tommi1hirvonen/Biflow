@@ -272,10 +272,6 @@ public class AppDbContext : DbContext
             .HasValue<EmailStep>(StepType.Email)
             .HasValue<QlikStep>(StepType.Qlik);
 
-            e.HasMany(s => s.StepExecutions)
-            .WithOne(e => e.Step)
-            .IsRequired(false);
-
             e.OwnsOne(s => s.ExecutionConditionExpression, ece =>
             {
                 ece.Property(p => p.Expression).HasColumnName("ExecutionConditionExpression");

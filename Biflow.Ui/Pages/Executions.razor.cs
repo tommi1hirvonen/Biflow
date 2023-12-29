@@ -183,14 +183,16 @@ public partial class Executions : ComponentBase, IAsyncDisposable
             }
             stepExecutions = await (
                 from e in query
-                join job in context.Jobs on e.StepExecution.Execution.JobId equals job.JobId into ej
-                from job in ej.DefaultIfEmpty() // Translates to left join in SQL
+                join job in context.Jobs on e.StepExecution.Execution.JobId equals job.JobId into j
+                from job in j.DefaultIfEmpty()
+                join step in context.Steps on e.StepId equals step.StepId into s
+                from step in s.DefaultIfEmpty()
                 orderby e.StepExecution.Execution.CreatedOn descending, e.StartedOn descending, e.StepExecution.ExecutionPhase descending
                 select new StepExecutionProjection(
                     e.StepExecution.ExecutionId,
                     e.StepExecution.StepId,
                     e.RetryAttemptIndex,
-                    e.StepExecution.Step!.StepName ?? e.StepExecution.StepName,
+                    step.StepName ?? e.StepExecution.StepName,
                     e.StepType,
                     e.StepExecution.ExecutionPhase,
                     e.StartedOn,
@@ -201,7 +203,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
                     e.StepExecution.Execution.ScheduleId,
                     e.StepExecution.Execution.JobId,
                     job.JobName ?? e.StepExecution.Execution.JobName,
-                    e.StepExecution.Step.Tags.ToArray()
+                    step.Tags.ToArray()
                 )).ToArrayAsync();
         }
 

@@ -196,8 +196,11 @@
                     .ThenInclude(e => e.ExecutionConditionParameters)
                     .ThenInclude(e => e.ExecutionParameter)
                     .Include(e => e.StepExecution)
-                    .ThenInclude(e => e.Step)
                     .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId && e.StepId == execution.StepId && e.RetryAttemptIndex == execution.RetryAttemptIndex);
+                if (detailStep is not null)
+                {
+                    detailStep.StepExecution.Step = await context.Steps.FirstOrDefaultAsync(s => s.StepId == detailStep.StepId);
+                }
             }   
         }
         StateHasChanged();

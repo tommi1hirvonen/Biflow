@@ -146,9 +146,6 @@ public abstract class Step : IComparable, IAuditable, ISoftDeletable
     public IList<Tag> Tags { get; set; } = null!;
 
     [JsonIgnore]
-    public IList<StepExecution> StepExecutions { get; set; } = null!;
-
-    [JsonIgnore]
     public ICollection<StepSubscription> StepSubscriptions { get; set; } = null!;
 
     public int CompareTo(object? obj)

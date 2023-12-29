@@ -69,6 +69,8 @@ public abstract class StepExecution
 
     public Execution Execution { get; set; } = null!;
 
+    // TODO This should be removed since it can accidentally be used in EF Includes.
+    [NotMapped] // Do not map in EF model to avoid foreign key
     public Step? Step { get; set; }
 
     public ICollection<StepExecutionAttempt> StepExecutionAttempts { get; set; } = null!;

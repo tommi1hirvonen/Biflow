@@ -159,9 +159,21 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
                 .ThenInclude(e => e.ExecutionConditionParameters)
                 .ThenInclude(p => p.ExecutionParameter)
                 .Include(e => e.StepExecutions)
-                .ThenInclude(e => e.Step)
-                .ThenInclude(s => s!.Tags)
                 .FirstOrDefaultAsync(e => e.ExecutionId == ExecutionId);
+            if (execution is not null)
+            {
+                var stepIds = execution.StepExecutions.Select(s => s.StepId).ToArray();
+                var steps = await context.Steps
+                    .AsNoTrackingWithIdentityResolution()
+                    .Include(s => s.Tags)
+                    .Where(s => stepIds.Contains(s.StepId))
+                    .ToArrayAsync();
+                var matches = steps.Join(execution.StepExecutions, s => s.StepId, e => e.StepId, (s, e) => (s, e));
+                foreach (var (step, stepExecution) in matches)
+                {
+                    stepExecution.Step = step;
+                }
+            }
             job = execution is not null
                 ? await context.Jobs.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(j => j.JobId == execution.JobId)
                 : null;
