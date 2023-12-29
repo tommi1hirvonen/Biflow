@@ -263,7 +263,7 @@
         var stepSlims = await context.Steps
             .AsNoTrackingWithIdentityResolution()
             .IgnoreQueryFilters()
-            .Where(s => s.DeletedOn == null && (s.JobId == Job.JobId || context.Dependencies.Any(d => d.DependantOnStepId == s.StepId && d.Step.JobId == Job.JobId)))
+            .Where(s => s.JobId == Job.JobId || context.Dependencies.Any(d => d.DependantOnStepId == s.StepId && d.Step.JobId == Job.JobId))
             .Select(s => new StepProjection(s.StepId, s.JobId, s.StepName, s.StepType, s.ExecutionPhase, s.IsEnabled, Array.Empty<Tag>(), s.Dependencies.Select(d => d.DependantOnStepId).ToArray()))
             .ToListAsync();
 

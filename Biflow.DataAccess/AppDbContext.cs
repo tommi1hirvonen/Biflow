@@ -204,15 +204,13 @@ public class AppDbContext : DbContext
             if (_httpContextAccessor is not null)
             {
                 e.HasQueryFilter(j =>
-                    j.DeletedOn == null && (
-                        _httpContextAccessor.HttpContext == null ||
-                        // The user is either admin or editor or is granted authorization to the job.
-                        _httpContextAccessor.HttpContext.User.Identity != null && (
-                            _httpContextAccessor.HttpContext.User.IsInRole(Roles.Admin) ||
-                            _httpContextAccessor.HttpContext.User.IsInRole(Roles.Editor) ||
-                            Users.Any(u => u.Username == _httpContextAccessor.HttpContext.User.Identity.Name && u.AuthorizeAllJobs) ||
-                            j.Users.Any(u => u.Username == _httpContextAccessor.HttpContext.User.Identity.Name)
-                        )
+                    _httpContextAccessor.HttpContext == null ||
+                    // The user is either admin or editor or is granted authorization to the job.
+                    _httpContextAccessor.HttpContext.User.Identity != null && (
+                        _httpContextAccessor.HttpContext.User.IsInRole(Roles.Admin) ||
+                        _httpContextAccessor.HttpContext.User.IsInRole(Roles.Editor) ||
+                        Users.Any(u => u.Username == _httpContextAccessor.HttpContext.User.Identity.Name && u.AuthorizeAllJobs) ||
+                        j.Users.Any(u => u.Username == _httpContextAccessor.HttpContext.User.Identity.Name)
                     )
                 );
             }
@@ -239,13 +237,11 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Schedule>(e =>
         {
-            e.HasQueryFilter(x => x.DeletedOn == null && x.Job.DeletedOn == null);
-
             e.HasOne(schedule => schedule.Job)
             .WithMany(job => job.Schedules)
             .OnDelete(DeleteBehavior.Cascade);
             
-            e.HasIndex(x => new { x.JobId, x.CronExpression, x.DeletedOn }, "UQ_Schedule")
+            e.HasIndex(x => new { x.JobId, x.CronExpression }, "UQ_Schedule")
             .IsUnique();
         });
 
@@ -256,8 +252,6 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Step>(e =>
         {
             e.ToTable(t => t.HasTrigger("Trigger_Step"));
-
-            e.HasQueryFilter(x => x.DeletedOn == null && x.Job.DeletedOn == null);
 
             e.HasDiscriminator<StepType>("StepType")
             .HasValue<DatasetStep>(StepType.Dataset)

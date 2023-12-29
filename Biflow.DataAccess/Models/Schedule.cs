@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 namespace Biflow.DataAccess.Models;
 
 [Table("Schedule")]
-public class Schedule : ISoftDeletable
+public class Schedule
 {
     [Key]
     [JsonInclude]
@@ -45,6 +45,4 @@ public class Schedule : ISoftDeletable
     public string? CreatedBy { get; set; }
 
     public IList<Tag> Tags { get; set; } = null!;
-
-    public DateTimeOffset? DeletedOn { get; set; }
 }
