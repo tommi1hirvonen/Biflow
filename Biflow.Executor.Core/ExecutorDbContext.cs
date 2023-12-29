@@ -5,7 +5,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Biflow.Executor.Core;
 
-internal class ExecutorDbContext(IConfiguration configuration) : AppDbContext(configuration, httpContextAccessor: null)
+public class ExecutorDbContext(IConfiguration configuration) : AppDbContext(configuration, httpContextAccessor: null)
 {
     protected override void ConfigureSqlServer(SqlServerDbContextOptionsBuilder options)
     {
