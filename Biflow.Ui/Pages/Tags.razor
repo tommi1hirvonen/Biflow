@@ -3,6 +3,7 @@
 @attribute [Authorize(Roles = $"{Roles.Admin}, {Roles.Editor}")]
 
 @inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject IMediator Mediator
 @inject IHxMessengerService Messenger
 
 <style>
@@ -251,15 +252,21 @@
 
 @code {
     private readonly Tag templateTag = new(string.Empty);
-    
-    private IList<Tag>? tags;
+
+    private List<Tag>? tags;
     private HxModal? confirmDeleteModal;
     private HxModal? editModal;
     private HxModal? schedulesModal;
     private Tag? editTag;
     private Tag? schedulesModalTag;
 
-    private IEnumerable<Tag> UnusedTags => tags?.Where(t => !t.Steps.Any()) ?? Enumerable.Empty<Tag>();
+    private IEnumerable<Tag> UnusedTags => tags?
+        .Where(t => !t.Steps.Any())
+        .Where(t => !t.Schedules.Any())
+        .Where(t => !t.JobSteps.Any())
+        .Where(t => !t.TagSubscriptions.Any())
+        .Where(t => !t.JobTagSubscriptions.Any())
+        ?? [];
 
     protected override async Task OnInitializedAsync()
     {
@@ -270,6 +277,9 @@
             .ThenInclude(t => t.Job)
             .Include(t => t.Schedules)
             .ThenInclude(s => s.Job)
+            .Include(t => t.JobSteps)
+            .Include(t => t.TagSubscriptions)
+            .Include(t => t.JobTagSubscriptions)
             .OrderBy(t => t.TagName)
             .ToListAsync();
     }
@@ -287,13 +297,8 @@
 
     private async Task DeleteUnusedTagsAsync()
     {
-        using var context = DbContextFactory.CreateDbContext();
-        foreach (var tag in UnusedTags.ToList())
-        {
-            context.Tags.Remove(tag);
-            tags?.Remove(tag);
-        }
-        await context.SaveChangesAsync();
+        var response = await Mediator.Send(new DeleteUnusedTagsRequest());
+        tags?.RemoveAll(t => response.DeletedTags.Any(d => d.TagId == t.TagId));
         await confirmDeleteModal.LetAsync(x => x.HideAsync());
     }
 
@@ -301,10 +306,8 @@
     {
         try
         {
-            using var context = DbContextFactory.CreateDbContext();
             tag.TagName = templateTag.TagName;
-            context.Attach(tag).State = EntityState.Modified;
-            await context.SaveChangesAsync();
+            await Mediator.Send(new UpdateTagRequest(tag));
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -318,43 +321,24 @@
 
     private async Task DeleteTag(Tag tag)
     {
-        using var context = DbContextFactory.CreateDbContext();
-        context.Tags.Remove(tag);
-        await context.SaveChangesAsync();
+        await Mediator.Send(new DeleteTagRequest(tag.TagId));
         tags?.Remove(tag);
     }
 
     private async Task DeleteStepTag(Step step)
     {
-        if (editTag is null) return;
-
-        using var context = DbContextFactory.CreateDbContext();
-        var tag = await context.Tags
-            .Include(t => t.Steps)
-            .FirstOrDefaultAsync(t => t.TagId == editTag.TagId);
-
-        if (tag is null) return;
-
-        var stepToRemove = tag.Steps.FirstOrDefault(s => s.StepId == step.StepId);
-        if (stepToRemove is not null)
+        if (editTag is null) 
         {
-            tag.Steps.Remove(stepToRemove);
-            await context.SaveChangesAsync();
+            return;
         }
-
+        await Mediator.Send(new DeleteStepTagRequest(step.StepId, editTag.TagId));
         editTag.Steps.Remove(step);
     }
 
     private async Task SetTagColorAsync(Tag tag, TagColor color)
     {
         tag.Color = color;
-        using var context = DbContextFactory.CreateDbContext();
-        var tag_ = await context.Tags.FirstOrDefaultAsync(t => t.TagId == tag.TagId);
-        if (tag_ is not null)
-        {
-            tag_.Color = color;
-            await context.SaveChangesAsync();
-        }
+        await Mediator.Send(new UpdateTagRequest(tag));
     }
 
     private async Task ShowEditModalAsync(Tag tag)
