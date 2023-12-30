@@ -5,6 +5,7 @@ using Biflow.Ui.Core.Projection;
 using Biflow.Ui.Shared.Executions;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
+using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 using System.Timers;
@@ -20,6 +21,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
     [Inject] private IExecutorService ExecutorService { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
+    [Inject] private IMediator Mediator { get; set; } = null!;
 
     [Parameter] public Guid ExecutionId { get; set; }
 
@@ -231,18 +233,12 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
     {
         try
         {
-            using var context = await DbFactory.CreateDbContextAsync();
-            await context.Executions
-                .Where(e => e.ExecutionId == ExecutionId)
-                .ExecuteUpdateAsync(update => update
-                    .SetProperty(e => e.ExecutionStatus, status)
-                    .SetProperty(e => e.StartedOn, e => e.StartedOn ?? DateTimeOffset.Now)
-                    .SetProperty(e => e.EndedOn, e => e.EndedOn ?? DateTimeOffset.Now));
             if (execution is not null)
             {
                 execution.ExecutionStatus = status;
                 execution.StartedOn ??= DateTimeOffset.Now;
                 execution.EndedOn ??= DateTimeOffset.Now;
+                await Mediator.Send(new UpdateExecutionRequest(execution));
             }
             Messenger.AddInformation("Status updated successfully");
         }
@@ -260,20 +256,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
         }
         try
         {
-            using var context = await DbFactory.CreateDbContextAsync();
-            var execution = await context.Executions
-                .Include(e => e.ExecutionParameters)
-                .Include(e => e.StepExecutions)
-                .ThenInclude(e => e.ExecutionDependencies)
-                .Include(e => e.StepExecutions)
-                .ThenInclude(e => e.DependantExecutions)
-                .Include($"{nameof(Execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
-                .FirstOrDefaultAsync(e => e.ExecutionId == ExecutionId);
-            if (execution is not null)
-            {
-                context.Executions.Remove(execution);
-                await context.SaveChangesAsync();
-            }
+            await Mediator.Send(new DeleteExecutionRequest(ExecutionId));
             NavigationManager.NavigateTo("/executions");
             Messenger.AddInformation("Execution deleted successfully");
         }
