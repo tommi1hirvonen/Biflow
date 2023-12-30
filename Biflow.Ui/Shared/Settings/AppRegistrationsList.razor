@@ -1,6 +1,6 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbFactory
-@inject ITokenService TokenService
 @inject IHxMessengerService Messenger
+@inject IMediator Mediator
 
 <style>
     tr a {
@@ -260,10 +260,7 @@
     {
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            await context.AppRegistrations
-                .Where(x => x.AppRegistrationId == appRegistration.AppRegistrationId)
-                .ExecuteDeleteAsync();
+            await Mediator.Send(new DeleteAppRegistrationCommand(appRegistration.AppRegistrationId));
             appRegistrations?.Remove(appRegistration);
         }
         catch (Exception ex)
@@ -275,29 +272,23 @@
 
     private async Task OnAppRegistrationSubmit(AppRegistration appRegistration)
     {
-        using var context = DbFactory.CreateDbContext();
         if (appRegistration.AppRegistrationId == Guid.Empty)
         {
-            context.Add(appRegistration);
+            await Mediator.Send(new CreateAppRegistrationCommand(appRegistration));
             appRegistrations?.Add(appRegistration);
         }
         else
         {
+            await Mediator.Send(new UpdateAppRegistrationCommand(appRegistration));
             appRegistrations?.RemoveAll(a => a.AppRegistrationId == appRegistration.AppRegistrationId);
             appRegistrations?.Add(appRegistration);
-            context.Attach(appRegistration).State = EntityState.Modified;
         }
-        await context.SaveChangesAsync();
         StateHasChanged();
     }
 
     private async Task ClearTokens(AppRegistration appRegistration)
     {
-        using var context = DbFactory.CreateDbContext();
-        var tokens = await context.AccessTokens.Where(t => t.AppRegistrationId == appRegistration.AppRegistrationId).ToListAsync();
-        tokens.ForEach(t => context.Remove(t));
-        await context.SaveChangesAsync();
-        TokenService.Clear();
+        await Mediator.Send(new ClearAppRegistrationTokensCommand(appRegistration.AppRegistrationId));
     }
 
     private async Task ShowEditModalAsync(AppRegistration? appRegistration)
