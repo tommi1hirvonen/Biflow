@@ -1,7 +1,6 @@
-﻿@implements IDisposable
-
-@inject IDbContextFactory<AppDbContext> DbContextFactory
+﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHxMessengerService Messenger
+@inject IMediator Mediator
 
 @{
     var title = job.JobId == Guid.Empty ? "New job" : $"Edit {job.JobName}";
@@ -49,7 +48,6 @@
     [Parameter] public EventCallback<Job> OnJobSubmitted { get; set; }
 
     private HxOffcanvas? offcanvas;
-    private AppDbContext? editContext;
     private Job job = new();
     private IEnumerable<JobCategory>? categories;
 
@@ -57,17 +55,13 @@
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(editContext);
-            if (job.JobId == Guid.Empty)
-            {
-                editContext.Jobs.Add(job);
-            }
-            await editContext.SaveChangesAsync();
+            IRequest command = job.JobId == Guid.Empty
+                ? new CreateJobCommand(job)
+                : new UpdateJobCommand(job);
+            await Mediator.Send(command);
             await offcanvas.LetAsync(x => x.HideAsync());
             await OnJobSubmitted.InvokeAsync(job);
             job = new();
-            editContext.Dispose();
-            editContext = null;
         }
         catch (Exception ex)
         {
@@ -86,13 +80,13 @@
     {
         try
         {
-            editContext = await DbContextFactory.CreateDbContextAsync();
-            categories = await editContext.JobCategories
+            using var context = await DbContextFactory.CreateDbContextAsync();
+            categories = await context.JobCategories
                 .OrderBy(c => c.CategoryName)
                 .ToListAsync();
             if (job is not null)
             {
-                this.job = await editContext.Jobs
+                this.job = await context.Jobs
                     .Include(j => j.Category)
                     .FirstAsync(j => j.JobId == job.JobId);
             }
@@ -108,5 +102,4 @@
         }
     }
 
-    public void Dispose() => editContext?.Dispose();
 }
