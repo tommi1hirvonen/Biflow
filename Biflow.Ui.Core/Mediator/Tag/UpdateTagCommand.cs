@@ -3,4 +3,4 @@ using MediatR;
 
 namespace Biflow.Ui.Core;
 
-public record UpdateTagRequest(Tag Tag) : IRequest;
+public record UpdateTagCommand(Tag Tag) : IRequest;

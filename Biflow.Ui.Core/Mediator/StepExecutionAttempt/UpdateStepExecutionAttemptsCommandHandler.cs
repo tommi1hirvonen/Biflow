@@ -4,10 +4,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Core;
 
-internal class UpdateStepExecutionAttemptsRequestHandler(IDbContextFactory<AppDbContext> dbContextFactory)
-    : IRequestHandler<UpdateStepExecutionAttemptsRequest>
+internal class UpdateStepExecutionAttemptsCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+    : IRequestHandler<UpdateStepExecutionAttemptsCommand>
 {
-    public async Task Handle(UpdateStepExecutionAttemptsRequest request, CancellationToken cancellationToken)
+    public async Task Handle(UpdateStepExecutionAttemptsCommand request, CancellationToken cancellationToken)
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         foreach (var attempt in request.Attempts)

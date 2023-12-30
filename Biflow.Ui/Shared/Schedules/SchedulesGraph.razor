@@ -214,7 +214,7 @@
     {
         try
         {
-            await Mediator.Send(new DeleteScheduleRequest(schedule.ScheduleId));
+            await Mediator.Send(new DeleteScheduleCommand(schedule.ScheduleId));
             Schedules?.Remove(schedule);
             await OnSchedulesChanged.InvokeAsync();
         }
@@ -228,7 +228,7 @@
     {
         try
         {
-            await Mediator.Send(new ToggleScheduleRequest(schedule.ScheduleId, !schedule.IsEnabled));
+            await Mediator.Send(new ToggleScheduleCommand(schedule.ScheduleId, !schedule.IsEnabled));
             schedule.IsEnabled = !schedule.IsEnabled;
             await OnSchedulesChanged.InvokeAsync();
         }

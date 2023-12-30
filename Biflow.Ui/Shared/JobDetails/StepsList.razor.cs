@@ -145,7 +145,7 @@ public partial class StepsList : ComponentBase
         }
         try
         {
-            await Mediator.Send(new DeleteStepsRequest(selectedSteps));
+            await Mediator.Send(new DeleteStepsCommand(selectedSteps));
             foreach (var step in selectedSteps)
             {
                 Steps?.Remove(step);
@@ -189,7 +189,7 @@ public partial class StepsList : ComponentBase
         }
         try
         {
-            await Mediator.Send(new DeleteStepsRequest(step.StepId));
+            await Mediator.Send(new DeleteStepsCommand(step.StepId));
             Steps?.Remove(step);
             selectedSteps.Remove(step);
 

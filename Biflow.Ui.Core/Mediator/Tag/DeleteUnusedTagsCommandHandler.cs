@@ -4,9 +4,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Core;
 
-internal class DeleteUnusedTagsRequestHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<DeleteUnusedTagsRequest, DeleteUnusedTagsResponse>
+internal class DeleteUnusedTagsCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+    : IRequestHandler<DeleteUnusedTagsCommand, DeleteUnusedTagsResponse>
 {
-    public async Task<DeleteUnusedTagsResponse> Handle(DeleteUnusedTagsRequest request, CancellationToken cancellationToken)
+    public async Task<DeleteUnusedTagsResponse> Handle(DeleteUnusedTagsCommand request, CancellationToken cancellationToken)
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var tags = await context.Tags

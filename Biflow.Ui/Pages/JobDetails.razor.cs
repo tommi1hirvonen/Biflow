@@ -155,7 +155,7 @@ public partial class JobDetails : ComponentBase
                     }
                 }
             }
-            await Mediator.Send(new DeleteJobRequest(job.JobId));
+            await Mediator.Send(new DeleteJobCommand(job.JobId));
             NavigationManager.NavigateTo("jobs");
         }
         catch (Exception ex)

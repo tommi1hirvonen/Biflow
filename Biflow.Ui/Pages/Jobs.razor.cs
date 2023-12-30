@@ -177,7 +177,7 @@ public partial class Jobs : ComponentBase
         }
         try
         {
-            await Mediator.Send(new DeleteJobRequest(job.JobId));
+            await Mediator.Send(new DeleteJobCommand(job.JobId));
             jobs?.Remove(job);
         }
         catch (Exception ex)

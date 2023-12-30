@@ -3,4 +3,4 @@ using MediatR;
 
 namespace Biflow.Ui.Core;
 
-public record DeleteScheduleRequest(Guid ScheduleId) : IRequest;
+public record DeleteScheduleCommand(Guid ScheduleId) : IRequest;

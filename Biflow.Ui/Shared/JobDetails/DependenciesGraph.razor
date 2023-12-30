@@ -431,7 +431,7 @@
 
         try
         {
-            await Mediator.Send(new DeleteStepsRequest(step.StepId));
+            await Mediator.Send(new DeleteStepsCommand(step.StepId));
             Steps?.Remove(step);
             // Remove the deleted step from dependencies.
             foreach (var dependant in Steps?.Where(s => s.Dependencies.Any(d => d.DependantOnStepId == step.StepId)) ?? Enumerable.Empty<Step>())

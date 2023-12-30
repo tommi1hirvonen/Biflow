@@ -5,9 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Core;
 
-internal class DeleteExecutionRequestHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<DeleteExecutionRequest>
+internal class DeleteExecutionCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<DeleteExecutionCommand>
 {
-    public async Task Handle(DeleteExecutionRequest request, CancellationToken cancellationToken)
+    public async Task Handle(DeleteExecutionCommand request, CancellationToken cancellationToken)
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var execution = await context.Executions

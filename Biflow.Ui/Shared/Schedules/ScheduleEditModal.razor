@@ -171,7 +171,7 @@
         {
             try
             {
-                await Mediator.Send(new CreateScheduleRequest(schedule, this.tags));
+                await Mediator.Send(new CreateScheduleCommand(schedule, this.tags));
 
                 schedule.Job = Job is not null ? Job : Jobs?.FirstOrDefault(job => job.JobId == schedule.JobId)
                     ?? throw new InvalidOperationException("Job cannot be null");
@@ -190,7 +190,7 @@
         {
             try
             {
-                await Mediator.Send(new UpdateScheduleRequest(schedule, this.tags));
+                await Mediator.Send(new UpdateScheduleCommand(schedule, this.tags));
                 await OnSubmit.InvokeAsync(schedule);
                 await offcanvas.LetAsync(x => x.HideAsync());
                 this.tags.Clear();

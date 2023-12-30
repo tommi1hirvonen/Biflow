@@ -238,7 +238,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
                 execution.ExecutionStatus = status;
                 execution.StartedOn ??= DateTimeOffset.Now;
                 execution.EndedOn ??= DateTimeOffset.Now;
-                await Mediator.Send(new UpdateExecutionRequest(execution));
+                await Mediator.Send(new UpdateExecutionCommand(execution));
             }
             Messenger.AddInformation("Status updated successfully");
         }
@@ -256,7 +256,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
         }
         try
         {
-            await Mediator.Send(new DeleteExecutionRequest(ExecutionId));
+            await Mediator.Send(new DeleteExecutionCommand(ExecutionId));
             NavigationManager.NavigateTo("/executions");
             Messenger.AddInformation("Execution deleted successfully");
         }

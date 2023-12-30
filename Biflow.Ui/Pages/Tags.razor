@@ -297,7 +297,7 @@
 
     private async Task DeleteUnusedTagsAsync()
     {
-        var response = await Mediator.Send(new DeleteUnusedTagsRequest());
+        var response = await Mediator.Send(new DeleteUnusedTagsCommand());
         tags?.RemoveAll(t => response.DeletedTags.Any(d => d.TagId == t.TagId));
         await confirmDeleteModal.LetAsync(x => x.HideAsync());
     }
@@ -307,7 +307,7 @@
         try
         {
             tag.TagName = templateTag.TagName;
-            await Mediator.Send(new UpdateTagRequest(tag));
+            await Mediator.Send(new UpdateTagCommand(tag));
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -321,7 +321,7 @@
 
     private async Task DeleteTag(Tag tag)
     {
-        await Mediator.Send(new DeleteTagRequest(tag.TagId));
+        await Mediator.Send(new DeleteTagCommand(tag.TagId));
         tags?.Remove(tag);
     }
 
@@ -331,14 +331,14 @@
         {
             return;
         }
-        await Mediator.Send(new DeleteStepTagRequest(step.StepId, editTag.TagId));
+        await Mediator.Send(new DeleteStepTagCommand(step.StepId, editTag.TagId));
         editTag.Steps.Remove(step);
     }
 
     private async Task SetTagColorAsync(Tag tag, TagColor color)
     {
         tag.Color = color;
-        await Mediator.Send(new UpdateTagRequest(tag));
+        await Mediator.Send(new UpdateTagCommand(tag));
     }
 
     private async Task ShowEditModalAsync(Tag tag)

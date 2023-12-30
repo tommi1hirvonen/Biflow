@@ -3,4 +3,4 @@ using MediatR;
 
 namespace Biflow.Ui.Core;
 
-public record UpdateExecutionRequest(Execution Execution) : IRequest;
+public record UpdateExecutionCommand(Execution Execution) : IRequest;

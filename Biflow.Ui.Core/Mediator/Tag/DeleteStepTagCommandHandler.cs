@@ -5,9 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Core;
 
-internal class DeleteStepTagRequestHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<DeleteStepTagRequest>
+internal class DeleteStepTagCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<DeleteStepTagCommand>
 {
-    public async Task Handle(DeleteStepTagRequest request, CancellationToken cancellationToken)
+    public async Task Handle(DeleteStepTagCommand request, CancellationToken cancellationToken)
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var tag = await context.Tags

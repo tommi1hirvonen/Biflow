@@ -5,12 +5,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Core;
 
-internal class UpdateScheduleRequestHandler(
+internal class UpdateScheduleCommandHandler(
     IDbContextFactory<AppDbContext> dbContextFactory,
     ISchedulerService scheduler)
-    : IRequestHandler<UpdateScheduleRequest>
+    : IRequestHandler<UpdateScheduleCommand>
 {
-    public async Task Handle(UpdateScheduleRequest request, CancellationToken cancellationToken)
+    public async Task Handle(UpdateScheduleCommand request, CancellationToken cancellationToken)
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         context.Attach(request.Schedule).State = EntityState.Modified;

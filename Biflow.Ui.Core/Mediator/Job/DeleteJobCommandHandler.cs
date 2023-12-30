@@ -5,12 +5,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Core;
 
-public class DeleteJobRequestHandler(
+public class DeleteJobCommandHandler(
     IDbContextFactory<AppDbContext> dbContextFactory,
     ISchedulerService scheduler)
-    : IRequestHandler<DeleteJobRequest>
+    : IRequestHandler<DeleteJobCommand>
 {
-    public async Task Handle(DeleteJobRequest request, CancellationToken cancellationToken)
+    public async Task Handle(DeleteJobCommand request, CancellationToken cancellationToken)
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         using var transaction = context.Database.BeginTransaction();

@@ -4,12 +4,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Core;
 
-internal class CreateScheduleRequestHandler(
+internal class CreateScheduleCommandHandler(
     IDbContextFactory<AppDbContext> dbContextFactory,
     ISchedulerService scheduler)
-    : IRequestHandler<CreateScheduleRequest>
+    : IRequestHandler<CreateScheduleCommand>
 {
-    public async Task Handle(CreateScheduleRequest request, CancellationToken cancellationToken)
+    public async Task Handle(CreateScheduleCommand request, CancellationToken cancellationToken)
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
