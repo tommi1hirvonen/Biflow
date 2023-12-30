@@ -1,5 +1,6 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHxMessengerService Messenger
+@inject IMediator Mediator
 
 @{
     var title = category.CategoryId == Guid.Empty ? "New category" : $"Edit {category.CategoryName}";
@@ -49,16 +50,10 @@
     {
         try
         {
-            using var context = await DbContextFactory.CreateDbContextAsync();
-            if (category.CategoryId == Guid.Empty)
-            {
-                context.MasterDataTableCategories.Add(category);
-            }
-            else
-            {
-                context.Attach(category).State = EntityState.Modified;
-            }
-            await context.SaveChangesAsync();
+            IRequest command = category.CategoryId == Guid.Empty
+                ? new CreateDataTableCategoryCommand(category)
+                : new UpdateDataTableCategoryCommand(category);
+            await Mediator.Send(command);
             await OnCategorySubmitted.InvokeAsync(category);
             await modal.LetAsync(x => x.HideAsync());
         }

@@ -2,6 +2,7 @@
 
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHxMessengerService Messenger
+@inject IMediator Mediator
 
 <h4>Data Tables</h4>
 
@@ -270,11 +271,9 @@
     {
         try
         {
-            using var context = DbContextFactory.CreateDbContext();
-            context.MasterDataTableCategories.Remove(category);
-            await context.SaveChangesAsync();
+            await Mediator.Send(new DeleteDataTableCategoryCommand(category.CategoryId));
             Categories?.Remove(category);
-            foreach (var table in Tables?.Where(t => t.CategoryId == category.CategoryId) ?? Enumerable.Empty<MasterDataTable>())
+            foreach (var table in Tables?.Where(t => t.CategoryId == category.CategoryId) ?? [])
             {
                 table.CategoryId = null;
             }
