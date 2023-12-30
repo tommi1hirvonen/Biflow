@@ -234,7 +234,7 @@
         Tables?.Add(table);
         Tables?.Sort((t1, t2) => t1.DataTableName.CompareTo(t2.DataTableName));
 
-        foreach (var lookup in Tables?.SelectMany(t => t.Lookups) ?? Enumerable.Empty<MasterDataTableLookup>())
+        foreach (var lookup in Tables?.SelectMany(t => t.Lookups) ?? [])
         {
             if (lookup.LookupTableId == table.DataTableId)
             {
@@ -247,17 +247,7 @@
     {
         try
         {
-            using var context = DbContextFactory.CreateDbContext();
-            var tableToRemove = await context.MasterDataTables
-                .IgnoreQueryFilters()
-                .Include(t => t.Lookups)
-                .Include(t => t.DependentLookups)
-                .FirstOrDefaultAsync(t => t.DataTableId == table.DataTableId);
-            if (tableToRemove is not null)
-            {
-                context.MasterDataTables.Remove(tableToRemove);
-                await context.SaveChangesAsync();
-            }
+            await Mediator.Send(new DeleteDataTableCommand(table.DataTableId));
             Tables?.Remove(table);
         }
         catch (Exception ex)
@@ -297,7 +287,7 @@
 
     private void ExpandAll()
     {
-        foreach (var category in Categories ?? Enumerable.Empty<MasterDataTableCategory>())
+        foreach (var category in Categories ?? [])
         {
             var state = UserState.DataTableCategoryExpandStatuses.GetOrCreate(category.CategoryId);
             state.IsExpanded = true;
@@ -308,7 +298,7 @@
 
     private void CollapseAll()
     {
-        foreach (var category in Categories ?? Enumerable.Empty<MasterDataTableCategory>())
+        foreach (var category in Categories ?? [])
         {
             var state = UserState.DataTableCategoryExpandStatuses.GetOrCreate(category.CategoryId);
             state.IsExpanded = false;
