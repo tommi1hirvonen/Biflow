@@ -21,20 +21,39 @@ internal class SubscriptionsProvider(IDbContextFactory<ExecutorDbContext> dbCont
                     _dbContext.StepExecutions.Any(e => e.ExecutionId == _execution.ExecutionId && e.StepId == s.StepId))
         .ToArrayAsync();
 
-    public async Task<IEnumerable<TagSubscription>> GetTagSubscriptionsAsync() => await _dbContext.TagSubscriptions
-        .AsNoTracking()
-        .Include(s => s.User)
-        .Where(s => s.User.Email != null &&
-                    _dbContext.StepExecutions.Any(e => e.ExecutionId == _execution.ExecutionId && e.Step!.Tags.Any(t => t.TagId == s.TagId)))
-        .ToArrayAsync();
+    public async Task<IEnumerable<TagSubscription>> GetTagSubscriptionsAsync()
+    {
+        var subsQuery = _dbContext.TagSubscriptions
+            .AsNoTracking()
+            .Include(s => s.User);
+        var steps =
+            from exec in _dbContext.StepExecutions
+            join step in _dbContext.Steps on exec.StepId equals step.StepId into es
+            from step in es.DefaultIfEmpty()
+            where exec.ExecutionId == _execution.ExecutionId
+            select step;
+        var subscriptions = await subsQuery
+            .Where(sub => sub.User.Email != null && steps.Any(step => step.Tags.Any(tag => tag.TagId == sub.TagId)))
+            .ToArrayAsync();
+        return subscriptions;
+    }
 
-    public async Task<IEnumerable<JobTagSubscription>> GetJobTagSubscriptionsAsync() => await _dbContext.JobTagSubscriptions
-        .AsNoTracking()
-        .Include(s => s.User)
-        .Where(s => s.User.Email != null &&
-                    s.JobId == _execution.JobId &&
-                    _dbContext.StepExecutions.Any(e => e.ExecutionId == _execution.ExecutionId && e.Step!.Tags.Any(t => t.TagId == s.TagId)))
-        .ToArrayAsync();
+    public async Task<IEnumerable<JobTagSubscription>> GetJobTagSubscriptionsAsync()
+    {
+        var subsQuery = _dbContext.JobTagSubscriptions
+            .AsNoTracking()
+            .Include(s => s.User);
+        var steps =
+            from exec in _dbContext.StepExecutions
+            join step in _dbContext.Steps on exec.StepId equals step.StepId into es
+            from step in es.DefaultIfEmpty()
+            where exec.ExecutionId == _execution.ExecutionId
+            select step;
+        var subscriptions = await subsQuery
+            .Where(sub => sub.User.Email != null && sub.JobId == _execution.JobId && steps.Any(step => step.Tags.Any(tag => tag.TagId == sub.TagId)))
+            .ToArrayAsync();
+        return subscriptions;
+    }
 
     public async Task<User?> GetLauncherUserAsync() =>
         await _dbContext.Users.FirstOrDefaultAsync(u => u.Username == _execution.CreatedBy);
@@ -50,13 +69,4 @@ internal class SubscriptionsProvider(IDbContextFactory<ExecutorDbContext> dbCont
             .ToDictionary(key => key.Key, values => values.Select(x => x.StepId).ToArray().AsEnumerable());
         return tagSteps;
     }
-}
-public interface ISubscriptionsProvider
-{
-    public Task<IEnumerable<JobSubscription>> GetJobSubscriptionsAsync();
-    public Task<IEnumerable<JobTagSubscription>> GetJobTagSubscriptionsAsync();
-    public Task<User?> GetLauncherUserAsync();
-    public Task<IEnumerable<StepSubscription>> GetStepSubscriptionsAsync();
-    public Task<IDictionary<Guid, IEnumerable<Guid>>> GetTagStepsAsync();
-    public Task<IEnumerable<TagSubscription>> GetTagSubscriptionsAsync();
 }

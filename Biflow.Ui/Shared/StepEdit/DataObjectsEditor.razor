@@ -200,9 +200,9 @@
     </HxDropdownToggleButton>
     <HxDropdownMenu>
         @{
-            var appRegistrationId = Step is DatasetStep ds ? ds.AppRegistrationId : null;
-            var qlikClientId = Step is QlikStep qlik ? (Guid?)qlik.QlikCloudClientId : null;
-            var tabularConnectionId = Step is TabularStep tabular ? tabular.ConnectionId : null;
+            Guid? appRegistrationId = Step is DatasetStep ds ? ds.AppRegistrationId : null;
+            Guid? qlikClientId = Step is QlikStep qlik ? qlik.QlikCloudClientId : null;
+            Guid? tabularConnectionId = Step is TabularStep tabular ? tabular.ConnectionId : null;
         }
         <HxDropdownItem OnClick="() => appOffcanvas.LetAsync(x => x.ShowAsync(qlikClientId))">
             <CxIcon Icon="LucideIcon.FilePieChart" />
@@ -361,7 +361,7 @@
                 // thus creating a self reference.
                 if (references.Any(d => d.DataObject.UriEquals(dependency)))
                 {
-                    return;
+                    continue;
                 }
 
                 var dbObject = allObjects?.FirstOrDefault(o => o.UriEquals(dependency)) ??

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
@@ -37,6 +38,7 @@ public class StepParameterExpressionParameter : IAsyncEvaluable, IExpressionPara
 
     public Guid StepParameterId { get; set; }
 
+    [JsonIgnore]
     public StepParameterBase StepParameter { get; set; } = null!;
 
     [Key]
@@ -49,6 +51,7 @@ public class StepParameterExpressionParameter : IAsyncEvaluable, IExpressionPara
 
     public Guid InheritFromJobParameterId { get; set; }
 
+    [JsonIgnore]
     public JobParameter InheritFromJobParameter { get; set; } = null!;
 
     public async Task<object?> EvaluateAsync() => await InheritFromJobParameter.EvaluateAsync();

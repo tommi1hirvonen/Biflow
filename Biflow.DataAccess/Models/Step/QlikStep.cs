@@ -1,13 +1,15 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
 public class QlikStep : Step, IHasTimeout
 {
-    public QlikStep(Guid jobId, string appId) : base(StepType.Qlik, jobId)
+    [JsonConstructor]
+    public QlikStep() : base(StepType.Qlik)
     {
-        AppId = appId;
     }
 
     public QlikStep(QlikStep other, Job? targetJob) : base(other, targetJob)
@@ -18,11 +20,14 @@ public class QlikStep : Step, IHasTimeout
     }
 
     [Required]
-    public string AppId { get; set; }
+    [MaxLength(36)]
+    [Unicode(false)]
+    public string AppId { get; set; } = "";
 
     [Required]
     public Guid QlikCloudClientId { get; set; }
 
+    [JsonIgnore]
     public QlikCloudClient QlikCloudClient { get; set; } = null!;
 
     [Column("TimeoutMinutes")]

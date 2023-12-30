@@ -1,10 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
 [Table("Job")]
-public class Job
+public class Job : IAuditable
 {
     public Job() { }
 
@@ -38,7 +39,12 @@ public class Job
             // Map the dependent step's id from an old value to a new value using the dictionary.
             // In case no matching key is found, it is likely a cross-job dependency => use the id as is.
             var dependentOn = mapping.TryGetValue(dep.DependantOnStepId, out var map) ? map.Copy.StepId : dep.DependantOnStepId;
-            return new Dependency(copy.StepId, dependentOn) { DependencyType = dep.DependencyType };
+            return new Dependency
+            {
+                StepId = copy.StepId,
+                DependantOnStepId = dependentOn,
+                DependencyType = dep.DependencyType
+            };
         }
 
         Steps = mapping.Values
@@ -54,6 +60,7 @@ public class Job
     }
 
     [Key]
+    [JsonInclude]
     public Guid JobId { get; private set; }
 
     [Required]
@@ -69,16 +76,6 @@ public class Job
     }
 
     private string? _jobDescription;
-
-    [Required]
-    [DataType(DataType.DateTime)]
-    [Display(Name = "Created")]
-    public DateTimeOffset CreatedDateTime { get; set; }
-
-    [Required]
-    [DataType(DataType.DateTime)]
-    [Display(Name = "Last modified")]
-    public DateTimeOffset LastModifiedDateTime { get; set; }
 
     [Required]
     [Display(Name = "Use dependency mode")]
@@ -105,19 +102,8 @@ public class Job
     [Column("JobCategoryId")]
     public Guid? CategoryId { get; set; }
 
+    [JsonIgnore]
     public JobCategory? Category { get; set; }
-
-    public ICollection<Step> Steps { get; set; } = null!;
-    
-    public ICollection<JobStep> JobSteps { get; set; } = null!;
-    
-    public ICollection<Schedule> Schedules { get; set; } = null!;
-    
-    public ICollection<Execution> Executions { get; set; } = null!;
-    
-    public ICollection<JobSubscription> JobSubscriptions { get; set; } = null!;
-
-    public ICollection<JobTagSubscription> JobTagSubscriptions { get; set; } = null!;
 
     [ValidateComplexType]
     public IList<JobParameter> JobParameters { get; set; } = null!;
@@ -125,12 +111,36 @@ public class Job
     [ValidateComplexType]
     public ICollection<JobConcurrency> JobConcurrencies { get; set; } = null!;
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ICollection<Step> Steps { get; set; } = null!;
+
+    [JsonIgnore]
+    public ICollection<JobStep> JobSteps { get; set; } = null!;
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ICollection<Schedule> Schedules { get; set; } = null!;
+
+    [JsonIgnore]
+    public ICollection<JobSubscription> JobSubscriptions { get; set; } = null!;
+
+    [JsonIgnore]
+    public ICollection<JobTagSubscription> JobTagSubscriptions { get; set; } = null!;
+
+    [JsonIgnore]
     public ICollection<User> Users { get; set; } = null!;
 
+    [Display(Name = "Created")]
+    public DateTimeOffset CreatedOn { get; set; }
+
     [Display(Name = "Created by")]
+    [MaxLength(250)]
     public string? CreatedBy { get; set; }
 
+    [Display(Name = "Last modified")]
+    public DateTimeOffset LastModifiedOn { get; set; }
+
     [Display(Name = "Last modified by")]
+    [MaxLength(250)]
     public string? LastModifiedBy { get; set; }
 
     [Timestamp]

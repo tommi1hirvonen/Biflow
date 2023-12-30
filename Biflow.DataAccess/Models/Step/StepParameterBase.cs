@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
@@ -52,16 +53,17 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
     [Column("StepId")]
     public Guid StepId { get; set; }
 
-    [Required]
     public ParameterType ParameterType { get; }
 
     public Guid? InheritFromJobParameterId { get; set; }
 
+    [JsonIgnore]
     public JobParameter? InheritFromJobParameter { get; set; }
 
     [ValidateComplexType]
     public IList<StepParameterExpressionParameter> ExpressionParameters { get; set; } = new List<StepParameterExpressionParameter>();
 
+    [JsonIgnore]
     public abstract Step BaseStep { get; }
 
     public override async Task<object?> EvaluateAsync()
@@ -100,14 +102,17 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
         ExpressionParameters.Add(expressionParameter);
     }
 
+    [JsonIgnore]
     public override string DisplayValue => InheritFromJobParameter switch
     {
         not null => $"{InheritFromJobParameter.DisplayValue?.ToString() ?? "null"} (inherited from job parameter {InheritFromJobParameter.DisplayName})",
         _ => base.DisplayValue
     };
 
+    [JsonIgnore]
     public override string DisplayValueType => InheritFromJobParameter?.DisplayValueType ?? base.DisplayValueType;
 
     [NotMapped]
+    [JsonIgnore]
     public IEnumerable<JobParameter> JobParameters => BaseStep.Job.JobParameters;
 }

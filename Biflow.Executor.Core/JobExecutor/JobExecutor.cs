@@ -25,8 +25,6 @@ internal class JobExecutor(
     private readonly JsonSerializerOptions _serializerOptions =
         new() { WriteIndented = true, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) };
 
-    private Job Job => _execution.Job ?? throw new ArgumentNullException(nameof(_execution.Job));
-
     public async Task RunAsync(Guid executionId, CancellationToken cancellationToken)
     {
         // CancellationToken is triggered when the executor service is being shut down
@@ -37,12 +35,12 @@ internal class JobExecutor(
             var process = Process.GetCurrentProcess();
             _execution.ExecutorProcessId = process.Id;
             _execution.ExecutionStatus = ExecutionStatus.Running;
-            _execution.StartDateTime = DateTimeOffset.Now;
+            _execution.StartedOn = DateTimeOffset.Now;
             using var context = _dbContextFactory.CreateDbContext();
             context.Attach(_execution);
             context.Entry(_execution).Property(e => e.ExecutorProcessId).IsModified = true;
             context.Entry(_execution).Property(e => e.ExecutionStatus).IsModified = true;
-            context.Entry(_execution).Property(e => e.StartDateTime).IsModified = true;
+            context.Entry(_execution).Property(e => e.StartedOn).IsModified = true;
             await context.SaveChangesAsync(cancellationToken);
         }
         catch (Exception ex)
@@ -55,7 +53,7 @@ internal class JobExecutor(
         string? circularExecutions;
         try
         {
-            circularExecutions = await GetCircularJobExecutionsAsync(Job, cancellationToken);
+            circularExecutions = await GetCircularJobExecutionsAsync(_execution.JobId, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -176,10 +174,10 @@ internal class JobExecutor(
         {
             using var context = _dbContextFactory.CreateDbContext();
             _execution.ExecutionStatus = status;
-            _execution.EndDateTime = DateTimeOffset.Now;
+            _execution.EndedOn = DateTimeOffset.Now;
             context.Attach(_execution);
             context.Entry(_execution).Property(e => e.ExecutionStatus).IsModified = true;
-            context.Entry(_execution).Property(e => e.EndDateTime).IsModified = true;
+            context.Entry(_execution).Property(e => e.EndedOn).IsModified = true;
             await context.SaveChangesAsync(CancellationToken.None);
         }
         catch (Exception ex)
@@ -205,7 +203,7 @@ internal class JobExecutor(
     /// <returns>
     /// JSON string of circular job dependencies or null if there were no circular dependencies.
     /// </returns>
-    private async Task<string?> GetCircularJobExecutionsAsync(Job job, CancellationToken cancellationToken)
+    private async Task<string?> GetCircularJobExecutionsAsync(Guid jobId, CancellationToken cancellationToken)
     {
         var dependencies = await ReadJobDependenciesAsync(cancellationToken);
         IEnumerable<IEnumerable<Job>> cycles = dependencies.FindCycles();
@@ -215,7 +213,7 @@ internal class JobExecutor(
         var json = JsonSerializer.Serialize(jobs, _serializerOptions);
 
         // There are no circular dependencies or this job is not among the cycles.
-        return !cycles.Any() || !cycles.Any(jobs => jobs.Any(j => j.JobId == job.JobId))
+        return !cycles.Any() || !cycles.Any(jobs => jobs.Any(j => j.JobId == jobId))
             ? null : json;
     }
 
@@ -273,15 +271,15 @@ internal class JobExecutor(
         
         foreach (var attempt in _execution.StepExecutions.SelectMany(s => s.StepExecutionAttempts))
         {
-            attempt.StartDateTime = DateTimeOffset.Now;
-            attempt.EndDateTime = DateTimeOffset.Now;
+            attempt.StartedOn = DateTimeOffset.Now;
+            attempt.EndedOn = DateTimeOffset.Now;
             attempt.ExecutionStatus = StepExecutionStatus.Failed;
             attempt.ErrorMessages.Add(new(errorMessage, null));
             context.Attach(attempt).State = EntityState.Modified;
         }
 
-        _execution.StartDateTime = DateTimeOffset.Now;
-        _execution.EndDateTime = DateTimeOffset.Now;
+        _execution.StartedOn = DateTimeOffset.Now;
+        _execution.EndedOn = DateTimeOffset.Now;
         _execution.ExecutionStatus = ExecutionStatus.Failed;
         context.Attach(_execution).State = EntityState.Modified;
         // Do not cancel saving failed status.

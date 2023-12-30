@@ -12,12 +12,13 @@ public partial class TabularStepEditModal : StepEditModal<TabularStep>
     private AnalysisServicesObjectSelectOffcanvas? offcanvas;
 
     protected override TabularStep CreateNewStep(Job job) =>
-        new(job.JobId, string.Empty)
+        new()
         {
+            JobId = job.JobId,
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            ConnectionId = AsConnections?.FirstOrDefault()?.ConnectionId,
+            ConnectionId = AsConnections.First().ConnectionId,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
             DataObjects = new List<StepDataObject>(),

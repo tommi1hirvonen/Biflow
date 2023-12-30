@@ -1,11 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
 public class ExeStep : Step, IHasTimeout, IHasStepParameters<ExeStepParameter>
 {
-    public ExeStep(Guid jobId) : base(StepType.Exe, jobId) { }
+    [JsonConstructor]
+    public ExeStep() : base(StepType.Exe) { }
 
     private ExeStep(ExeStep other, Job? targetJob) : base(other, targetJob)
     {
@@ -27,6 +29,7 @@ public class ExeStep : Step, IHasTimeout, IHasStepParameters<ExeStepParameter>
 
     [Required]
     [Display(Name = "File path")]
+    [MaxLength(1000)]
     public string? ExeFileName { get; set; }
 
     [Display(Name = "Arguments")]
@@ -39,6 +42,7 @@ public class ExeStep : Step, IHasTimeout, IHasStepParameters<ExeStepParameter>
     private string? _exeArguments;
 
     [Display(Name = "Working directory")]
+    [MaxLength(1000)]
     public string? ExeWorkingDirectory
     {
         get => _exeWorkingDirectory;

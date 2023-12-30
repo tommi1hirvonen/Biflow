@@ -1,6 +1,6 @@
-﻿@inject IDbContextFactory<AppDbContext> DbFactory
-@inject IHxMessengerService Messenger
+﻿@inject IHxMessengerService Messenger
 @inject ISchedulerService SchedulerService
+@inject IMediator Mediator
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
     <div class="row mt-3">
@@ -206,22 +206,8 @@
         bool value = (bool)args.Value!;
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            using var transaction = context.Database.BeginTransaction();
-            context.Attach(schedule);
-            schedule.IsEnabled = !schedule.IsEnabled;
-            await context.SaveChangesAsync();
-            try
-            {
-                await SchedulerService.ToggleScheduleEnabledAsync(schedule, value);
-                await transaction.CommitAsync();
-            }
-            catch (Exception)
-            {
-                await transaction.RollbackAsync();
-                schedule.IsEnabled = !schedule.IsEnabled;
-                throw;
-            }
+            await Mediator.Send(new ToggleScheduleRequest(schedule.ScheduleId, value));
+            schedule.IsEnabled = value;
         }
         catch (Exception ex)
         {
@@ -240,21 +226,7 @@
     {
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            using var transaction = context.Database.BeginTransaction();
-            context.Schedules.Remove(schedule);
-            await context.SaveChangesAsync();
-            try
-            {
-                await SchedulerService.RemoveScheduleAsync(schedule);
-                transaction.Commit();
-            }
-            catch (Exception)
-            {
-                transaction.Rollback();
-                throw;
-            }
-
+            await Mediator.Send(new DeleteScheduleRequest(schedule.ScheduleId));
             Schedules?.Remove(schedule);
             await OnSchedulesChanged.InvokeAsync();
         }

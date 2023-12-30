@@ -51,6 +51,7 @@ public abstract class StepExecution
     public Guid StepId { get; private set; }
 
     [Display(Name = "Step")]
+    [MaxLength(250)]
     public string StepName { get; private set; }
 
     [Display(Name = "Step type")]
@@ -68,6 +69,8 @@ public abstract class StepExecution
 
     public Execution Execution { get; set; } = null!;
 
+    // TODO This should be removed since it can accidentally be used in EF Includes.
+    [NotMapped] // Do not map in EF model to avoid foreign key
     public Step? Step { get; set; }
 
     public ICollection<StepExecutionAttempt> StepExecutionAttempts { get; set; } = null!;
@@ -97,14 +100,14 @@ public abstract class StepExecution
     public double GetDurationInSeconds()
     {
         var lastExecution = StepExecutionAttempts
-            .OrderByDescending(e => e.StartDateTime)
+            .OrderByDescending(e => e.StartedOn)
             .First();
-        var endTime = lastExecution.EndDateTime ?? DateTimeOffset.Now;
+        var endTime = lastExecution.EndedOn ?? DateTimeOffset.Now;
 
         var firstExecution = StepExecutionAttempts
-            .OrderBy(e => e.StartDateTime)
+            .OrderBy(e => e.StartedOn)
             .First();
-        var startTime = firstExecution.StartDateTime ?? DateTimeOffset.Now;
+        var startTime = firstExecution.StartedOn ?? DateTimeOffset.Now;
 
         var duration = (endTime - startTime).TotalSeconds;
         return duration;

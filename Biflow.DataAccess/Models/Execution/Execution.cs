@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
@@ -6,10 +7,10 @@ namespace Biflow.DataAccess.Models;
 [Table("Execution")]
 public class Execution
 {
-    public Execution(string jobName, DateTimeOffset createdDateTime, ExecutionStatus executionStatus)
+    public Execution(string jobName, DateTimeOffset createdOn, ExecutionStatus executionStatus)
     {
-        _jobName = jobName;
-        CreatedDateTime = createdDateTime;
+        JobName = jobName;
+        CreatedOn = createdOn;
         ExecutionStatus = executionStatus;
     }
 
@@ -34,8 +35,8 @@ public class Execution
     {
         ExecutionId = Guid.NewGuid();
         JobId = job.JobId;
-        _jobName = job.JobName;
-        CreatedDateTime = DateTimeOffset.Now;
+        JobName = job.JobName;
+        CreatedOn = DateTimeOffset.Now;
         ExecutionStatus = ExecutionStatus.NotStarted;
         DependencyMode = job.UseDependencyMode;
         StopOnFirstError = job.StopOnFirstError;
@@ -54,31 +55,23 @@ public class Execution
     public Guid ExecutionId { get; private set; }
 
     [Display(Name = "Job id")]
-    public Guid? JobId { get; private set; }
+    public Guid JobId { get; private set; }
 
     [Display(Name = "Job")]
-    public string JobName
-    {
-        get => Job?.JobName ?? _jobName;
-        private set
-        {
-            _jobName = value;
-        }
-    }
-
-    private string _jobName;
+    [MaxLength(250)]
+    public string JobName { get; private set; }
 
     [Display(Name = "Created")]
     [DataType(DataType.DateTime)]
-    public DateTimeOffset CreatedDateTime { get; private set; }
+    public DateTimeOffset CreatedOn { get; private set; }
 
     [Display(Name = "Started")]
     [DataType(DataType.DateTime)]
-    public DateTimeOffset? StartDateTime { get; set; }
+    public DateTimeOffset? StartedOn { get; set; }
 
     [Display(Name = "Ended")]
     [DataType(DataType.DateTime)]
-    public DateTimeOffset? EndDateTime { get; set; }
+    public DateTimeOffset? EndedOn { get; set; }
 
     [Display(Name = "Status")]
     public ExecutionStatus ExecutionStatus { get; set; }
@@ -96,13 +89,17 @@ public class Execution
     public double OvertimeNotificationLimitMinutes { get; private set; }
 
     [Display(Name = "Created by")]
+    [MaxLength(250)]
     public string? CreatedBy { get; private set; }
 
     [Display(Name = "Schedule id")]
     public Guid? ScheduleId { get; private set; }
 
+    [MaxLength(250)]
     public string? ScheduleName { get; private set; }
 
+    [MaxLength(200)]
+    [Unicode(false)]
     public string? CronExpression { get; private set; }
 
     [Display(Name = "Executor PID")]
@@ -117,6 +114,8 @@ public class Execution
     [Display(Name = "Notify caller overtime")]
     public bool NotifyCallerOvertime { get; internal set; }
 
+    [Unicode(false)]
+    [MaxLength(200)]
     public StepExecutionAttemptReference? ParentExecution { get; private set; }
 
     public ICollection<StepExecution> StepExecutions { get; internal set; } = null!;
@@ -125,12 +124,10 @@ public class Execution
 
     public ICollection<ExecutionConcurrency> ExecutionConcurrencies { get; internal set; } = null!;
 
-    public Job? Job { get; private set; }
-
-    public Schedule? Schedule { get; private set; }
+    public ICollection<ExecutionDataObject> DataObjects { get; private set; } = null!;
 
     [NotMapped]
-    public double? ExecutionInSeconds => ((EndDateTime ?? DateTime.Now) - StartDateTime)?.TotalSeconds;
+    public double? ExecutionInSeconds => ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
 }
 
 

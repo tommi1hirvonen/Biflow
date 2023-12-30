@@ -15,9 +15,9 @@ public class JobTests(JobFixture fixture) : IClassFixture<JobFixture>
 
     [Fact] public void LastModifiedBy_Equals_Username() => Assert.Equal(_username, Job.LastModifiedBy);
 
-    [Fact] public void CreatedDateTime_NotEquals_Default() => Assert.NotEqual(default, Job.CreatedDateTime);
+    [Fact] public void CreatedDateTime_NotEquals_Default() => Assert.NotEqual(default, Job.CreatedOn);
 
-    [Fact] public void LastModifiedDateTime_NotEquals_Default() => Assert.NotEqual(default, Job.LastModifiedDateTime);
+    [Fact] public void LastModifiedDateTime_NotEquals_Default() => Assert.NotEqual(default, Job.LastModifiedOn);
 
     [Fact] public void Category_NotNull() => Assert.NotNull(Job.Category);
 }
@@ -37,6 +37,6 @@ public class JobFixture(DatabaseFixture fixture) : IAsyncLifetime
         using var context = await _dbContextFactory.CreateDbContextAsync();
         Job = await context.Jobs
             .Include(job => job.Category)
-            .FirstAsync(job => job.JobName == "Test job");
+            .FirstAsync(job => job.JobName == "Test job 1");
     }
 }

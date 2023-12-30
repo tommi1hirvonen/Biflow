@@ -1,5 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
@@ -7,16 +9,17 @@ public abstract class ParameterBase
 {
     [Required]
     [Display(Name = "Id")]
+    [JsonInclude]
     public Guid ParameterId { get; protected set; }
 
     [Required]
     [MaxLength(128)]
-    [MinLength(1)]
     [Display(Name = "Name")]
     public string ParameterName { get; set; } = string.Empty;
 
     [Display(Name = "Value")]
     [Column(TypeName = "sql_variant")]
+    [JsonIgnore]
     public virtual object? ParameterValue
     {
         get => _parameterValue;
@@ -58,7 +61,6 @@ public abstract class ParameterBase
 
     private object? _parameterValue = string.Empty;
 
-    [Required]
     public virtual ParameterValueType ParameterValueType
     {
         get => _parameterValueType;
@@ -85,6 +87,7 @@ public abstract class ParameterBase
     private ParameterValueType _parameterValueType = ParameterValueType.String;
 
     [NotMapped]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool ValueBoolean
     {
         get => _valueBoolean;
@@ -98,6 +101,7 @@ public abstract class ParameterBase
     private bool _valueBoolean;
 
     [NotMapped]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public DateTime? ValueDateTime
     {
         get => _valueDateTime;
@@ -111,6 +115,7 @@ public abstract class ParameterBase
     private DateTime? _valueDateTime;
 
     [NotMapped]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public decimal? ValueDecimal
     {
         get => _valueDecimal;
@@ -124,6 +129,7 @@ public abstract class ParameterBase
     private decimal? _valueDecimal;
 
     [NotMapped]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public double? ValueDouble
     {
         get => _valueDouble;
@@ -137,6 +143,7 @@ public abstract class ParameterBase
     private double? _valueDouble;
 
     [NotMapped]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public short? ValueInt16
     {
         get => _valueInt16;
@@ -150,6 +157,7 @@ public abstract class ParameterBase
     private short? _valueInt16;
 
     [NotMapped]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public int? ValueInt32
     {
         get => _valueInt32;
@@ -163,6 +171,7 @@ public abstract class ParameterBase
     private int? _valueInt32;
 
     [NotMapped]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public long? ValueInt64
     {
         get => _valueInt64;
@@ -176,6 +185,7 @@ public abstract class ParameterBase
     private long? _valueInt64;
 
     [NotMapped]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public float? ValueSingle
     {
         get => _valueSingle;
@@ -189,6 +199,7 @@ public abstract class ParameterBase
     private float? _valueSingle;
 
     [NotMapped]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string? ValueString
     {
         get => _valueString;
@@ -201,12 +212,16 @@ public abstract class ParameterBase
 
     private string? _valueString;
 
+    [JsonIgnore]
     public virtual string DisplayName => ParameterName;
 
+    [JsonIgnore]
     public virtual string DisplayValue => ParameterValue?.ToString() ?? "null";
 
+    [JsonIgnore]
     public virtual string DisplayValueType => ParameterValueType.ToString();
 
+    [JsonIgnore]
     public virtual string DisplaySummary => DisplayValue switch
     {
         { Length: <45 } => $"{DisplayName} ({DisplayValueType} = {DisplayValue})",

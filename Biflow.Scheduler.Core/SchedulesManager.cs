@@ -13,7 +13,7 @@ internal class SchedulesManager<TJob>(
     ISchedulerFactory schedulerFactory) : ISchedulesManager where TJob : ExecutionJobBase
 {
     private readonly ILogger _logger = logger;
-    private readonly IScheduler _scheduler = schedulerFactory.GetScheduler().Result;
+    private readonly IScheduler _scheduler = schedulerFactory.GetScheduler().GetAwaiter().GetResult();
     private readonly IDbContextFactory<SchedulerDbContext> _dbContextFactory = dbContextFactory;
 
     public async Task<IEnumerable<JobStatus>> GetStatusAsync(CancellationToken cancellationToken)
@@ -69,11 +69,17 @@ internal class SchedulesManager<TJob>(
         _logger.LogInformation("Loading schedules from database");
 
         List<Schedule> schedules;
-        using (var context = _dbContextFactory.CreateDbContext())
+        try
         {
+            using var context = _dbContextFactory.CreateDbContext();
             schedules = await context.Schedules
                 .AsNoTracking()
                 .ToListAsync(cancellationToken: cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error reading schedules from database");
+            throw;
         }
 
         // Clear the scheduler if there were any existing jobs or triggers.
@@ -83,7 +89,15 @@ internal class SchedulesManager<TJob>(
         var counter = 0;
         foreach (var schedule in schedules)
         {
-            await CreateAndAddScheduleAsync(SchedulerSchedule.From(schedule), cancellationToken);
+            try
+            {
+                await CreateAndAddScheduleAsync(SchedulerSchedule.From(schedule), cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding schedule to internal scheduler");
+                throw;
+            }
             counter++;
         }
 
@@ -176,8 +190,4 @@ internal class SchedulesManager<TJob>(
         _logger.LogInformation("Added schedule id {ScheduleId} for job id {JobId} with Cron expression {CronExpression}, status {status} and ",
                 schedule.ScheduleId, schedule.JobId, schedule.CronExpression, schedule.IsEnabled);
     }
-
 }
-
-public class ScheduleNotFoundException(SchedulerSchedule schedule)
-    : Exception($"No matching schedule found for job id {schedule.JobId} and schedule id {schedule.ScheduleId}");

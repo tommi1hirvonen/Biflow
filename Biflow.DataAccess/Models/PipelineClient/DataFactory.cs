@@ -9,10 +9,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class DataFactory : PipelineClient
+public class DataFactory() : PipelineClient(PipelineClientType.DataFactory)
 {
-    public DataFactory() : base(PipelineClientType.DataFactory) { }
-
     [Column("SubscriptionId")]
     [Required]
     [Display(Name = "Subscription id")]
@@ -23,11 +21,13 @@ public class DataFactory : PipelineClient
     [Column("ResourceGroupName")]
     [Required]
     [Display(Name = "Resource group name")]
+    [MaxLength(250)]
     public string? ResourceGroupName { get; set; }
 
     [Column("ResourceName")]
     [Required]
     [Display(Name = "Resource name")]
+    [MaxLength(250)]
     public string? ResourceName { get; set; }
 
     private const string ResourceUrl = "https://management.azure.com//.default";

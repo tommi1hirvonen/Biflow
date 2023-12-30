@@ -16,6 +16,8 @@ internal class DatasetStepExecutor(
     private readonly ITokenService _tokenService = tokenService;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
     private readonly DatasetStepExecution _step = step;
+    private readonly AppRegistration _appRegistration = step.AppRegistration
+        ?? throw new ArgumentNullException(nameof(step.AppRegistration));
 
     public DatasetStepExecutionAttempt Clone(DatasetStepExecutionAttempt other, int retryAttemptIndex) =>
         new(other, retryAttemptIndex);
@@ -29,7 +31,7 @@ internal class DatasetStepExecutor(
         // Start dataset refresh.
         try
         {
-            await _step.AppRegistration.RefreshDatasetAsync(_tokenService, _step.DatasetGroupId, _step.DatasetId, cancellationToken);
+            await _appRegistration.RefreshDatasetAsync(_tokenService, _step.DatasetGroupId, _step.DatasetId, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -49,7 +51,7 @@ internal class DatasetStepExecutor(
         {
             try
             {
-                var refresh = await _step.AppRegistration.GetDatasetRefreshStatus(_tokenService, _step.DatasetGroupId, _step.DatasetId, cancellationToken);
+                var refresh = await _appRegistration.GetDatasetRefreshStatus(_tokenService, _step.DatasetGroupId, _step.DatasetId, cancellationToken);
                 if (refresh?.Status == "Completed")
                 {
                     return Result.Success;

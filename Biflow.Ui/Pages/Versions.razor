@@ -1,0 +1,65 @@
+﻿@page "/versions/{Page?}/{InitialSourceVersionId:int?}"
+
+@attribute [Authorize(Roles = $"{Roles.Admin}")]
+
+@inject NavigationManager NavigationManager
+@inject IDbContextFactory<AppDbContext> DbContextFactory
+
+<PageTitle>Versions | Biflow</PageTitle>
+
+<h4>Versions</h4>
+
+<div class="row mt-3 mb-4">
+    <div class="col">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <NavLink class="nav-link" href="versions/list">
+                    <CxIcon Icon="FeatherIcon.List" />
+                    List
+                </NavLink>
+            </li>
+            <li class="nav-item" role="presentation">
+                <NavLink class="nav-link" href="versions/compare">
+                    <CxIcon Icon="LucideIcon.GitCompareArrows" />
+                    Compare
+                </NavLink>
+            </li>
+        </ul>
+    </div>
+</div>
+
+@if (Page == "list")
+{
+    <VersionsList Versions="versions" />   
+}
+else if (Page == "compare")
+{
+    <VersionsCompare Versions="versions" InitialSourceVersionId="InitialSourceVersionId" />
+}
+
+@code {
+    [Parameter] public string? Page { get; set; }
+
+    [Parameter] public int? InitialSourceVersionId { get; set; }
+
+    private IList<VersionProjection>? versions;
+
+    protected override void OnInitialized()
+    {
+        if (Page is not null)
+        {
+            return;
+        }
+
+        NavigationManager.NavigateTo("versions/list");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        versions = await context.EnvironmentVersions
+            .OrderByDescending(v => v.VersionId)
+            .Select(v => new VersionProjection(v.VersionId, v.Description, v.CreatedOn, v.CreatedBy))
+            .ToListAsync();
+    }
+}

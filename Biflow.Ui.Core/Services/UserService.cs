@@ -122,7 +122,7 @@ public class UserService(ISqlConnectionFactory sqlConnectionFactory)
         {
             await connection.ExecuteAsync(
                 """
-                INSERT INTO [app].[User] ([UserId],[Username],[PasswordHash],[Roles],[CreatedDateTime],[LastModifiedDateTime]) VALUES
+                INSERT INTO [app].[User] ([UserId],[Username],[PasswordHash],[Roles],[CreatedOn],[LastModifiedOn]) VALUES
                 (newid(), @Username, @PasswordHash, @Roles, getdate(), getdate())
                 """, new { Username = username, PasswordHash = hash, Roles = rolesJson });
         }
@@ -149,7 +149,7 @@ public class UserService(ISqlConnectionFactory sqlConnectionFactory)
         {
             await connection.ExecuteAsync(
                 """
-                INSERT INTO [app].[User] ([UserId],[Username],[Roles],[CreatedDateTime],[LastModifiedDateTime]) VALUES
+                INSERT INTO [app].[User] ([UserId],[Username],[Roles],[CreatedOn],[LastModifiedOn]) VALUES
                 (newid(), @Username, @Roles, getdate(), getdate())
                 """, new { Username = username, Roles = rolesJson });
         }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
@@ -27,16 +28,22 @@ public class JobParameter : DynamicParameter
     [Column("JobId")]
     public Guid JobId { get; set; }
 
+    [JsonIgnore]
     public Job Job { get; set; } = null!;
 
+    [JsonIgnore]
     public ICollection<StepParameterBase> InheritingStepParameters { get; set; } = null!;
 
+    [JsonIgnore]
     public ICollection<JobStepParameter> AssigningStepParameters { get; set; } = null!;
 
+    [JsonIgnore]
     public ICollection<StepParameterExpressionParameter> InheritingStepParameterExpressionParameters { get; set; } = null!;
 
+    [JsonIgnore]
     public ICollection<SqlStep> CapturingSteps { get; set; } = null!;
 
+    [JsonIgnore]
     public ICollection<ExecutionConditionParameter> ExecutionConditionParameters { get; set; } = null!;
 
     public override async Task<object?> EvaluateAsync()

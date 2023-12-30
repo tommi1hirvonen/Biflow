@@ -3,6 +3,7 @@ using Biflow.DataAccess.Models;
 using Biflow.Ui.Core;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
+using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,10 +13,10 @@ namespace Biflow.Ui.Pages;
 public partial class JobDetails : ComponentBase
 {
     [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
-    [Inject] private ISchedulerService SchedulerService { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
+    [Inject] private IMediator Mediator { get; set; } = null!;
 
     [Parameter] public string DetailsPage { get; set; } = "steps";
 
@@ -154,10 +155,7 @@ public partial class JobDetails : ComponentBase
                     }
                 }
             }
-            using var context2 = DbFactory.CreateDbContext();
-            context2.Jobs.Remove(job);
-            await context2.SaveChangesAsync();
-            await SchedulerService.DeleteJobAsync(job);
+            await Mediator.Send(new DeleteJobRequest(job.JobId));
             NavigationManager.NavigateTo("jobs");
         }
         catch (Exception ex)

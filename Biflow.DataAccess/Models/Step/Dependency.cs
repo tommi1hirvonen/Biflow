@@ -1,17 +1,16 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
 [Table("Dependency")]
 [PrimaryKey("StepId", "DependantOnStepId")]
-public class Dependency
+public class Dependency : IAuditable
 {
-    public Dependency(Guid stepId, Guid dependantOnStepId)
+    public Dependency()
     {
-        StepId = stepId;
-        DependantOnStepId = dependantOnStepId;
     }
 
     internal Dependency(Dependency other, Step step)
@@ -23,27 +22,36 @@ public class Dependency
         DependencyType = other.DependencyType;
     }
 
-    public Guid StepId { get; }
+    public Guid StepId { get; init; }
 
+    [JsonIgnore]
     public Step Step { get; set; } = null!;
 
-    public Guid DependantOnStepId { get; }
+    public Guid DependantOnStepId { get; init; }
 
+    [JsonIgnore]
     public Step DependantOnStep { get; set; } = null!;
 
     [Display(Name = "Type")]
     public DependencyType DependencyType { get; set; }
 
-    [Required]
     [Display(Name = "Created")]
-    public DateTimeOffset CreatedDateTime { get; set; }
+    public DateTimeOffset CreatedOn { get; set; }
 
     [Display(Name = "Created by")]
+    [MaxLength(250)]
     public string? CreatedBy { get; set; }
 
+    public DateTimeOffset LastModifiedOn { get; set; }
+
+    [MaxLength(250)]
+    public string? LastModifiedBy { get; set; }
+
     [NotMapped]
+    [JsonIgnore]
     public bool IsCandidateForRemoval { get; set; } = false;
 
     [NotMapped]
+    [JsonIgnore]
     public bool IsNewAddition { get; set; } = false;
 }

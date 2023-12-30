@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class SqlStepExecution : StepExecution, IHasTimeout, IHasStepExecutionParameters<SqlStepExecutionParameter>
+public class SqlStepExecution: StepExecution, IHasTimeout, IHasStepExecutionParameters<SqlStepExecutionParameter>, IHasConnection<SqlConnectionInfo?>
 {
     public SqlStepExecution(string stepName, string sqlStatement) : base(stepName, StepType.Sql)
     {
@@ -12,11 +12,8 @@ public class SqlStepExecution : StepExecution, IHasTimeout, IHasStepExecutionPar
 
     public SqlStepExecution(SqlStep step, Execution execution) : base(step, execution)
     {
-        ArgumentNullException.ThrowIfNull(step.SqlStatement);
-        ArgumentNullException.ThrowIfNull(step.ConnectionId);
-
         SqlStatement = step.SqlStatement;
-        ConnectionId = (Guid)step.ConnectionId;
+        ConnectionId = step.ConnectionId;
         ResultCaptureJobParameterId = step.ResultCaptureJobParameterId;
         TimeoutMinutes = step.TimeoutMinutes;
         StepExecutionParameters = step.StepParameters
@@ -28,7 +25,8 @@ public class SqlStepExecution : StepExecution, IHasTimeout, IHasStepExecutionPar
     [Column("ConnectionId")]
     public Guid ConnectionId { get; private set; }
 
-    public SqlConnectionInfo Connection { get; set; } = null!;
+    [NotMapped]
+    public SqlConnectionInfo? Connection { get; set; }
 
     [Display(Name = "SQL statement")]
     public string SqlStatement { get; private set; }
@@ -38,6 +36,8 @@ public class SqlStepExecution : StepExecution, IHasTimeout, IHasStepExecutionPar
 
     [Column(TypeName = "sql_variant")]
     public object? ResultCaptureJobParameterValue { get; set; }
+
+    public ExecutionParameter? ResultCaptureJobParameter { get; set; }
 
     [Column("TimeoutMinutes")]
     public double TimeoutMinutes { get; private set; }

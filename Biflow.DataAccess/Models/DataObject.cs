@@ -1,6 +1,7 @@
-﻿using System.ComponentModel;
+﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
 namespace Biflow.DataAccess.Models;
@@ -9,20 +10,28 @@ namespace Biflow.DataAccess.Models;
 public partial class DataObject : IDataObject
 {
     [Key]
+    [JsonInclude]
     public Guid ObjectId { get; private set; }
 
     [Required]
     [Ascii]
     [MaxLength(500)]
+    [Unicode(false)]
     public string ObjectUri { get; set; } = string.Empty;
 
     [Required]
     [Range(0, 100)]
     public int MaxConcurrentWrites { get; set; } = 1;
 
-    [NotMapped] public DataObjectMappingResult SourceMappingResult { get; set; } = new();
-    [NotMapped] public DataObjectMappingResult TargetMappingResult { get; set; } = new();
+    [NotMapped]
+    [JsonIgnore]
+    public DataObjectMappingResult SourceMappingResult { get; set; } = new();
+    
+    [NotMapped]
+    [JsonIgnore]
+    public DataObjectMappingResult TargetMappingResult { get; set; } = new();
 
+    [JsonIgnore]
     public IList<StepDataObject> Steps { get; set; } = null!;
 
     public bool UriEquals(IDataObject? other) =>
@@ -72,6 +81,7 @@ public partial class DataObject : IDataObject
         return false;
     }
 
+    [JsonIgnore]
     public bool IsValid => ObjectUri.All(char.IsAscii);
 
     public static string CreateTableUri(string server, string database, string schema, string table)

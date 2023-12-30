@@ -1,4 +1,6 @@
-﻿namespace Biflow.DataAccess.Models;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Biflow.DataAccess.Models;
 
 public class PipelineStepExecutionAttempt : StepExecutionAttempt
 {
@@ -14,5 +16,6 @@ public class PipelineStepExecutionAttempt : StepExecutionAttempt
 
     public PipelineStepExecutionAttempt(PipelineStepExecution execution) : base(execution) { }
 
+    [MaxLength(250)]
     public string? PipelineRunId { get; set; }
 }

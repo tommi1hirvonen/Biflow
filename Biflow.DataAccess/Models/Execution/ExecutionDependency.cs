@@ -23,7 +23,7 @@ public class ExecutionDependency
 
     public Guid StepId { get; private set; }
 
-    public Guid DependantOnStepId { get; private set; }
+    public Guid? DependantOnStepId { get; private set; }
 
     [Display(Name = "Type")]
     public DependencyType DependencyType { get; private set; }

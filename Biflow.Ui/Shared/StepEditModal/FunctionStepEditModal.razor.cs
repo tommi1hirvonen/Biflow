@@ -9,7 +9,7 @@ namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class FunctionStepEditModal : StepEditModal<FunctionStep>
 {
-    [Parameter] public IList<FunctionApp>? FunctionApps { get; set; }
+    [Parameter] public IList<FunctionApp> FunctionApps { get; set; } = [];
 
     internal override string FormId => "function_step_edit_form";
 
@@ -20,7 +20,7 @@ public partial class FunctionStepEditModal : StepEditModal<FunctionStep>
     private Task OpenFunctionSelectOffcanvas()
     {
         ArgumentNullException.ThrowIfNull(Step?.FunctionAppId);
-        return functionSelectOffcanvas.LetAsync(x => x.ShowAsync((Guid)Step.FunctionAppId));
+        return functionSelectOffcanvas.LetAsync(x => x.ShowAsync(Step.FunctionAppId));
     }
 
     private void OnFunctionSelected(string functionUrl)
@@ -70,12 +70,13 @@ public partial class FunctionStepEditModal : StepEditModal<FunctionStep>
         .FirstAsync(step => step.StepId == stepId);
 
     protected override FunctionStep CreateNewStep(Job job) =>
-        new(job.JobId)
+        new()
         {
+            JobId = job.JobId,
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            FunctionAppId = FunctionApps?.FirstOrDefault()?.FunctionAppId,
+            FunctionAppId = FunctionApps.First().FunctionAppId,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
             StepParameters = new List<FunctionStepParameter>(),

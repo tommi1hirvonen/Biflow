@@ -1,16 +1,16 @@
 ﻿namespace Biflow.DataAccess.Models;
 
 public interface IHasConnection<T> : IHasConnection
-    where T : ConnectionInfoBase
+    where T : ConnectionInfoBase?
 {
-    public new T Connection { get; }
+    public new T Connection { get; set; }
 
-    ConnectionInfoBase IHasConnection.Connection => Connection;
+    ConnectionInfoBase? IHasConnection.Connection => Connection;
 }
 
 public interface IHasConnection
 {
-    public Guid? ConnectionId { get; }
+    public Guid ConnectionId { get; }
 
-    public ConnectionInfoBase Connection { get; }
+    public ConnectionInfoBase? Connection { get; }
 }

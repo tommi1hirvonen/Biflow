@@ -88,13 +88,13 @@
                 var param = hasParams.StepExecutionParameters.FirstOrDefault(p => p.InheritFromExecutionParameterId == lineageParameter.ParameterId);
                 if (param is not null)
                 {
-                    var time = step.StepExecutionAttempts.MinBy(a => a.RetryAttemptIndex)?.StartDateTime;
+                    var time = step.StepExecutionAttempts.MinBy(a => a.RetryAttemptIndex)?.StartedOn;
                     items.Add(new(step, time, param.ParameterValue, false));
                 }
             }
             if (step is SqlStepExecution sql && sql.ResultCaptureJobParameterId == lineageParameter.ParameterId)
             {
-                var time = step.StepExecutionAttempts.MaxBy(a => a.RetryAttemptIndex)?.EndDateTime;
+                var time = step.StepExecutionAttempts.MaxBy(a => a.RetryAttemptIndex)?.EndedOn;
                 items.Add(new(step, time, sql.ResultCaptureJobParameterValue, true));
             }
         }

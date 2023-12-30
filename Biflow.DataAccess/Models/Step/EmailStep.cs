@@ -1,11 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
 public class EmailStep : Step, IHasStepParameters<EmailStepParameter>
 {
-    public EmailStep(Guid jobId) : base(StepType.Email, jobId) { }
+    [JsonConstructor]
+    public EmailStep() : base(StepType.Email) { }
 
     private EmailStep(EmailStep other, Job? targetJob) : base(other, targetJob)
     {

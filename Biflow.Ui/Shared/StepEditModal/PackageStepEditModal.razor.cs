@@ -2,6 +2,7 @@
 using Biflow.DataAccess.Models;
 using Biflow.Ui.Core;
 using Biflow.Ui.Shared.StepEdit;
+using Biflow.Ui.SqlServer;
 using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Shared.StepEditModal;
@@ -13,12 +14,13 @@ public partial class PackageStepEditModal : StepEditModal<PackageStep>
     private PackageSelectOffcanvas? packageSelectOffcanvas;
 
     protected override PackageStep CreateNewStep(Job job) =>
-        new(job.JobId)
+        new()
         {
+            JobId = job.JobId,
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            ConnectionId = Connections?.FirstOrDefault()?.ConnectionId,
+            ConnectionId = Connections.First().ConnectionId,
             StepParameters = new List<PackageStepParameter>(),
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),

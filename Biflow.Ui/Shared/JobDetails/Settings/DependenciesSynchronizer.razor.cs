@@ -53,10 +53,12 @@ public partial class DependenciesSynchronizer : ComponentBase
             var missingDependencies = dependencies.Where(s => !step.Dependencies.Any(d => s.StepId == d.DependantOnStepId));
             foreach (var missing in missingDependencies)
             {
-                var dependency = new Dependency(step.StepId, missing.StepId)
+                var dependency = new Dependency
                 {
+                    StepId = step.StepId,
                     Step = step,
-                    DependantOnStep = missing
+                    DependantOnStepId = missing.StepId,
+                    DependantOnStep = missing,
                 };
                 dependenciesToAdd.Add(dependency);
             }

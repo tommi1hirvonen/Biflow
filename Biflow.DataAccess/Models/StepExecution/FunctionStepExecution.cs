@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
@@ -13,10 +14,7 @@ public class FunctionStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
 
     public FunctionStepExecution(FunctionStep step, Execution execution) : base(step, execution)
     {
-        ArgumentNullException.ThrowIfNull(step.FunctionAppId);
-        ArgumentNullException.ThrowIfNull(step.FunctionUrl);
-
-        FunctionAppId = (Guid)step.FunctionAppId;
+        FunctionAppId = step.FunctionAppId;
         FunctionUrl = step.FunctionUrl;
         FunctionInput = step.FunctionInput;
         FunctionIsDurable = step.FunctionIsDurable;
@@ -31,9 +29,12 @@ public class FunctionStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
     [Display(Name = "Function app id")]
     public Guid FunctionAppId { get; private set; }
 
-    public FunctionApp FunctionApp { get; set; } = null!;
+    [NotMapped]
+    public FunctionApp? FunctionApp { get; set; }
 
     [Display(Name = "Function url")]
+    [Unicode(false)]
+    [MaxLength(1000)]
     public string FunctionUrl { get; private set; }
 
     [Display(Name = "Function input")]

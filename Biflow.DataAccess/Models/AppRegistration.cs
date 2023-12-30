@@ -1,10 +1,12 @@
 ﻿using Azure.Core;
 using Azure.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.PowerBI.Api;
 using Microsoft.PowerBI.Api.Models;
 using Microsoft.Rest;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
@@ -14,9 +16,11 @@ public class AppRegistration
     [Key]
     [Required]
     [Display(Name = "App registration id")]
+    [JsonInclude]
     public Guid AppRegistrationId { get; private set; }
 
     [Required]
+    [MaxLength(250)]
     [Display(Name = "Power BI Service name")]
     public string? AppRegistrationName { get; set; }
 
@@ -24,25 +28,37 @@ public class AppRegistration
     [Display(Name = "Tenant id")]
     [MaxLength(36)]
     [MinLength(36)]
+    [Unicode(false)]
     public string? TenantId { get; set; }
 
     [Required]
     [Display(Name = "Client id")]
     [MaxLength(36)]
     [MinLength(36)]
+    [Unicode(false)]
     public string? ClientId { get; set; }
 
     [Required]
     [Display(Name = "Client secret")]
+    [MaxLength(1000)]
+    [Unicode(false)]
+    [JsonSensitive]
     public string? ClientSecret { get; set; }
 
+    [JsonIgnore]
     public IList<DatasetStep> Steps { get; set; } = null!;
 
+    [JsonIgnore]
     public IList<PipelineClient> PipelineClients { get; set; } = null!;
 
+    [JsonIgnore]
     public IList<FunctionApp> FunctionApps { get; set; } = null!;
 
+    [JsonIgnore]
     public IList<BlobStorageClient> BlobStorageClients { get; set; } = null!;
+
+    [JsonIgnore]
+    public IList<AccessToken> AccessTokens { get; set; } = null!;
 
     private const string PowerBIResourceUrl = "https://analysis.windows.net/powerbi/api/.default";
     private const string AzureResourceUrl = "https://management.azure.com//.default";

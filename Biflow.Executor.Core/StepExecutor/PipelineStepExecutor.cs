@@ -20,6 +20,8 @@ internal class PipelineStepExecutor(
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
     private readonly PipelineStepExecution _step = step;
+    private readonly PipelineClient _pipelineClient = step.PipelineClient
+        ?? throw new ArgumentNullException(nameof(step.PipelineClient));
 
     private const int MaxRefreshRetries = 3;
 
@@ -49,7 +51,7 @@ internal class PipelineStepExecutor(
         string runId;
         try
         {
-            runId = await _step.PipelineClient.StartPipelineRunAsync(_tokenService, _step.PipelineName, parameters, cancellationToken);
+            runId = await _pipelineClient.StartPipelineRunAsync(_tokenService, _step.PipelineName, parameters, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -136,7 +138,7 @@ internal class PipelineStepExecutor(
                 _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting pipeline run status for run id {runId}", _step.ExecutionId, _step, runId));
 
         return await policy.ExecuteAsync((cancellationToken) =>
-            _step.PipelineClient.GetPipelineRunAsync(_tokenService, runId, cancellationToken), cancellationToken);
+            _pipelineClient.GetPipelineRunAsync(_tokenService, runId, cancellationToken), cancellationToken);
     }
 
     private async Task CancelAsync(PipelineStepExecutionAttempt attempt, string runId)
@@ -144,7 +146,7 @@ internal class PipelineStepExecutor(
         _logger.LogInformation("{ExecutionId} {Step} Stopping pipeline run id {PipelineRunId}", _step.ExecutionId, _step, runId);
         try
         {
-            await _step.PipelineClient.CancelPipelineRunAsync(_tokenService, runId);
+            await _pipelineClient.CancelPipelineRunAsync(_tokenService, runId);
         }
         catch (Exception ex)
         {

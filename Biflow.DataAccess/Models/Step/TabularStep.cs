@@ -1,14 +1,14 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
 public class TabularStep : Step, IHasConnection<AnalysisServicesConnectionInfo>, IHasTimeout
 {
-    public TabularStep(Guid jobId, string tabularModelName)
-        : base(StepType.Tabular, jobId)
+    [JsonConstructor]
+    public TabularStep() : base(StepType.Tabular)
     {
-        TabularModelName = tabularModelName;
     }
 
     private TabularStep(TabularStep other, Job? targetJob) : base(other, targetJob)
@@ -31,7 +31,7 @@ public class TabularStep : Step, IHasConnection<AnalysisServicesConnectionInfo>,
     [Required]
     [MinLength(1)]
     [MaxLength(128)]
-    public string TabularModelName { get; set; }
+    public string TabularModelName { get; set; } = "";
 
     [Display(Name = "Table name")]
     [MaxLength(128)]
@@ -43,8 +43,10 @@ public class TabularStep : Step, IHasConnection<AnalysisServicesConnectionInfo>,
 
     [Column("ConnectionId")]
     [Required]
-    public Guid? ConnectionId { get; set; }
+    [NotEmptyGuid]
+    public Guid ConnectionId { get; set; }
 
+    [JsonIgnore]
     public AnalysisServicesConnectionInfo Connection { get; set; } = null!;
 
     internal override TabularStep Copy(Job? targetJob = null) => new(this, targetJob);

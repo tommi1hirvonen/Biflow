@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
@@ -8,6 +9,7 @@ public class JobCategory
 {
     [Key]
     [Column("JobCategoryId")]
+    [JsonInclude]
     public Guid CategoryId { get; private set; }
 
     [Required]
@@ -16,5 +18,6 @@ public class JobCategory
     [Column("JobCategoryName")]
     public string CategoryName { get; set; } = "";
 
+    [JsonIgnore]
     public ICollection<Job> Jobs { get; set; } = null!;
 }

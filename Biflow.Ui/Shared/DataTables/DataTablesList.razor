@@ -247,9 +247,16 @@
         try
         {
             using var context = DbContextFactory.CreateDbContext();
-            await context.MasterDataTables
-                .Where(x => x.DataTableId == table.DataTableId)
-                .ExecuteDeleteAsync();
+            var tableToRemove = await context.MasterDataTables
+                .IgnoreQueryFilters()
+                .Include(t => t.Lookups)
+                .Include(t => t.DependentLookups)
+                .FirstOrDefaultAsync(t => t.DataTableId == table.DataTableId);
+            if (tableToRemove is not null)
+            {
+                context.MasterDataTables.Remove(tableToRemove);
+                await context.SaveChangesAsync();
+            }
             Tables?.Remove(table);
         }
         catch (Exception ex)

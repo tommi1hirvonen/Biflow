@@ -1,8 +1,10 @@
 ﻿using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Biflow.DataAccess.Models.Validation;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
@@ -11,20 +13,26 @@ namespace Biflow.DataAccess.Models;
 public class BlobStorageClient
 {
     [Key]
-    public Guid BlobStorageClientId { get; set; }
+    [JsonInclude]
+    public Guid BlobStorageClientId { get; private set; }
 
     [Required]
+    [MaxLength(250)]
     public string BlobStorageClientName { get; set; } = "";
 
-    [Required]
     public BlobStorageConnectionMethod ConnectionMethod { get; set; }
 
+    [MaxLength(4000)]
+    [JsonSensitive(WhenContains = "sig=")]
     public string? StorageAccountUrl { get; set; }
 
+    [MaxLength(4000)]
+    [JsonSensitive]
     public string? ConnectionString { get; set; }
 
     public Guid? AppRegistrationId { get; set; }
 
+    [JsonIgnore]
     public AppRegistration? AppRegistration { get; set; }
 
     public const string ResourceUrl = "https://storage.azure.com//.default";

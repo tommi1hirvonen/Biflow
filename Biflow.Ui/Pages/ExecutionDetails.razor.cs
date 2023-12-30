@@ -34,6 +34,8 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
     private readonly HashSet<(string StepName, StepType StepType)> stepFilter = [];
     private Guid prevExecutionId;
     private Execution? execution;
+    private Job? job;
+    private Schedule? schedule;
     private bool loading = false;
     private SortMode sortMode = SortMode.StartedAsc;
     private ExecutionParameterLineageOffcanvas? parameterLineageOffcanvas;
@@ -76,14 +78,14 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             e.StepExecution.Step?.StepName ?? e.StepExecution.StepName,
             e.StepType,
             e.StepExecution.ExecutionPhase,
-            e.StartDateTime,
-            e.EndDateTime,
+            e.StartedOn,
+            e.EndedOn,
             e.ExecutionStatus,
             e.StepExecution.Execution.ExecutionStatus,
             e.StepExecution.Execution.DependencyMode,
             e.StepExecution.Execution.ScheduleId,
             e.StepExecution.Execution.JobId,
-            e.StepExecution.Execution.Job?.JobName ?? e.StepExecution.Execution.JobName,
+            job?.JobName ?? e.StepExecution.Execution.JobName,
             e.StepExecution.Step?.Tags.ToArray() ?? []));
 
     private Report ShowReport => Page switch
@@ -146,8 +148,6 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             using var context = DbFactory.CreateDbContext();
             execution = await context.Executions
                 .AsNoTrackingWithIdentityResolution()
-                .Include(e => e.Job)
-                .Include(e => e.Schedule)
                 .Include(e => e.ExecutionParameters)
                 .Include(e => e.StepExecutions)
                 .ThenInclude(e => e.StepExecutionAttempts)
@@ -159,9 +159,27 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
                 .ThenInclude(e => e.ExecutionConditionParameters)
                 .ThenInclude(p => p.ExecutionParameter)
                 .Include(e => e.StepExecutions)
-                .ThenInclude(e => e.Step)
-                .ThenInclude(s => s!.Tags)
                 .FirstOrDefaultAsync(e => e.ExecutionId == ExecutionId);
+            if (execution is not null)
+            {
+                var stepIds = execution.StepExecutions.Select(s => s.StepId).ToArray();
+                var steps = await context.Steps
+                    .AsNoTrackingWithIdentityResolution()
+                    .Include(s => s.Tags)
+                    .Where(s => stepIds.Contains(s.StepId))
+                    .ToArrayAsync();
+                var matches = steps.Join(execution.StepExecutions, s => s.StepId, e => e.StepId, (s, e) => (s, e));
+                foreach (var (step, stepExecution) in matches)
+                {
+                    stepExecution.Step = step;
+                }
+            }
+            job = execution is not null
+                ? await context.Jobs.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(j => j.JobId == execution.JobId)
+                : null;
+            schedule = execution?.ScheduleId is not null
+                ? await context.Schedules.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(s => s.ScheduleId == execution.ScheduleId)
+                : null;
             loading = false;
             if (AutoRefresh && (execution?.ExecutionStatus == ExecutionStatus.Running || execution?.ExecutionStatus == ExecutionStatus.NotStarted))
             {
@@ -218,13 +236,13 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
                 .Where(e => e.ExecutionId == ExecutionId)
                 .ExecuteUpdateAsync(update => update
                     .SetProperty(e => e.ExecutionStatus, status)
-                    .SetProperty(e => e.StartDateTime, e => e.StartDateTime ?? DateTimeOffset.Now)
-                    .SetProperty(e => e.EndDateTime, e => e.EndDateTime ?? DateTimeOffset.Now));
+                    .SetProperty(e => e.StartedOn, e => e.StartedOn ?? DateTimeOffset.Now)
+                    .SetProperty(e => e.EndedOn, e => e.EndedOn ?? DateTimeOffset.Now));
             if (execution is not null)
             {
                 execution.ExecutionStatus = status;
-                execution.StartDateTime ??= DateTimeOffset.Now;
-                execution.EndDateTime ??= DateTimeOffset.Now;
+                execution.StartedOn ??= DateTimeOffset.Now;
+                execution.EndedOn ??= DateTimeOffset.Now;
             }
             Messenger.AddInformation("Status updated successfully");
         }
@@ -243,9 +261,19 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
         try
         {
             using var context = await DbFactory.CreateDbContextAsync();
-            await context.Executions
-                .Where(e => e.ExecutionId == ExecutionId)
-                .ExecuteDeleteAsync();
+            var execution = await context.Executions
+                .Include(e => e.ExecutionParameters)
+                .Include(e => e.StepExecutions)
+                .ThenInclude(e => e.ExecutionDependencies)
+                .Include(e => e.StepExecutions)
+                .ThenInclude(e => e.DependantExecutions)
+                .Include($"{nameof(Execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
+                .FirstOrDefaultAsync(e => e.ExecutionId == ExecutionId);
+            if (execution is not null)
+            {
+                context.Executions.Remove(execution);
+                await context.SaveChangesAsync();
+            }
             NavigationManager.NavigateTo("/executions");
             Messenger.AddInformation("Execution deleted successfully");
         }

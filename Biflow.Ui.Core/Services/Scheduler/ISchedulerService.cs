@@ -4,7 +4,7 @@ namespace Biflow.Ui.Core;
 
 public interface ISchedulerService
 {
-    public Task DeleteJobAsync(Job job);
+    public Task DeleteJobAsync(Guid jobId);
 
     public Task<SchedulerStatusResponse> GetStatusAsync();
 

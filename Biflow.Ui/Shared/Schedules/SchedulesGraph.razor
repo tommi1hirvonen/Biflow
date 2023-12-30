@@ -1,8 +1,7 @@
 ﻿@using System.Globalization
 
-@inject IDbContextFactory<AppDbContext> DbContextFactory
-@inject ISchedulerService SchedulerService
 @inject IHxMessengerService Messenger
+@inject IMediator Mediator
 
 <div class="row justify-content-between gap-2 mt-3">
     <div class="col-auto">
@@ -215,21 +214,7 @@
     {
         try
         {
-            using var context = DbContextFactory.CreateDbContext();
-            using var transaction = context.Database.BeginTransaction();
-            context.Schedules.Remove(schedule);
-            await context.SaveChangesAsync();
-            try
-            {
-                await SchedulerService.RemoveScheduleAsync(schedule);
-                transaction.Commit();
-            }
-            catch (Exception)
-            {
-                transaction.Rollback();
-                throw;
-            }
-
+            await Mediator.Send(new DeleteScheduleRequest(schedule.ScheduleId));
             Schedules?.Remove(schedule);
             await OnSchedulesChanged.InvokeAsync();
         }
@@ -243,22 +228,8 @@
     {
         try
         {
-            using var context = DbContextFactory.CreateDbContext();
-            using var transaction = context.Database.BeginTransaction();
-            context.Attach(schedule);
+            await Mediator.Send(new ToggleScheduleRequest(schedule.ScheduleId, !schedule.IsEnabled));
             schedule.IsEnabled = !schedule.IsEnabled;
-            await context.SaveChangesAsync();
-            try
-            {
-                await SchedulerService.ToggleScheduleEnabledAsync(schedule, false);
-                await transaction.CommitAsync();
-            }
-            catch (Exception)
-            {
-                await transaction.RollbackAsync();
-                schedule.IsEnabled = !schedule.IsEnabled;
-                throw;
-            }
             await OnSchedulesChanged.InvokeAsync();
         }
         catch (Exception ex)

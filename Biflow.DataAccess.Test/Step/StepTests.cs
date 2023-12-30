@@ -15,15 +15,13 @@ public class StepTests(StepFixture stepFixture) : IClassFixture<StepFixture>
 
     [Fact] public void LastModifiedBy_Equals_Username() => Assert.Equal(Username, Step.LastModifiedBy);
 
-    [Fact] public void CreatedDateTime_NotEquals_Default() => Assert.NotEqual(default, Step.CreatedDateTime);
+    [Fact] public void CreatedDateTime_NotEquals_Default() => Assert.NotEqual(default, Step.CreatedOn);
 
-    [Fact] public void LastModifiedDateTime_NotEquals_Default() => Assert.NotEqual(default, Step.LastModifiedDateTime);
+    [Fact] public void LastModifiedDateTime_NotEquals_Default() => Assert.NotEqual(default, Step.LastModifiedOn);
 
     [Fact] public void Job_NotNull() => Assert.NotNull(Step.Job);
 
-    [Fact] public void Sources_NotEmpty() => Assert.NotEmpty(Step.Sources);
-
-    [Fact] public void Targets_NotEmpty() => Assert.NotEmpty(Step.Targets);
+    [Fact] public void DataObjects_NotEmpty() => Assert.NotEmpty(Step.DataObjects);
 
     [Fact] public void Dependencies_NotEmpty() => Assert.NotEmpty(Step.Dependencies);
 
@@ -32,16 +30,16 @@ public class StepTests(StepFixture stepFixture) : IClassFixture<StepFixture>
     [Fact]
     public void GreaterExecutionPhase_ComparesTo_Greater()
     {
-        var phase20 = new SqlStep(Guid.Empty) { StepName = "Step 1", ExecutionPhase = 20 };
-        var phase10 = new SqlStep (Guid.Empty) { StepName = "Step 2", ExecutionPhase = 10 };
+        var phase20 = new SqlStep { StepName = "Step 1", ExecutionPhase = 20 };
+        var phase10 = new SqlStep { StepName = "Step 2", ExecutionPhase = 10 };
         Assert.True(phase20.CompareTo(phase10) > 0);
     }
 
     [Fact]
     public void SameExecutionPhase_DefaultsTo_NameComparison()
     {
-        var stepName1 = new SqlStep (Guid.Empty) { StepName = "Step 1", ExecutionPhase = 10 };
-        var stepName2 = new SqlStep (Guid.Empty) { StepName = "Step 2", ExecutionPhase = 10 };
+        var stepName1 = new SqlStep { StepName = "Step 1", ExecutionPhase = 10 };
+        var stepName2 = new SqlStep { StepName = "Step 2", ExecutionPhase = 10 };
         Assert.True(stepName2.CompareTo(stepName1) > 0);
     }
 }
@@ -64,8 +62,7 @@ public class StepFixture(DatabaseFixture fixture) : IAsyncLifetime
             .Include(step => step.Tags)
             .Include(step => step.Dependencies)
             .ThenInclude(dep => dep.DependantOnStep)
-            .Include(step => step.Sources)
-            .Include(step => step.Targets)
+            .Include(step => step.DataObjects)
             .FirstAsync(step => step.StepName == "Test step 4");
     }
 }

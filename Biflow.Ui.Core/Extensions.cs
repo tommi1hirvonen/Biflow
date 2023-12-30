@@ -3,6 +3,7 @@ using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Executor.Core;
 using Biflow.Scheduler.Core;
+using Biflow.Ui.SqlServer;
 using CronExpressionDescriptor;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -165,9 +166,11 @@ public static partial class Extensions
             throw new ArgumentException($"Error registering scheduler service. Incorrect scheduler type: {schedulerType}. Check appsettings.json.");
         }
 
+        services.AddSingleton<EnvironmentSnapshotBuilder>();
         services.AddSingleton<UserService>();
         services.AddSingleton<SqlServerHelperService>();
         services.AddDuplicatorServices();
+        services.AddMediatR(config => config.RegisterServicesFromAssemblyContaining<MediatREntryPoint>());
 
         return services;
     }
@@ -237,7 +240,7 @@ public static partial class Extensions
     {
         var allAttempts = attempt.StepExecution.Execution.StepExecutions
             .SelectMany(e => e.StepExecutionAttempts)
-            .Where(e => e.StartDateTime != null);
+            .Where(e => e.StartedOn != null);
 
         return attempt.GetGanttGraphDimensions(allAttempts);
     }
@@ -249,10 +252,10 @@ public static partial class Extensions
     /// <param name="allAttempts">List of all execution attempts shown on the Gantt graph</param>
     /// <returns>Offset (between 0 and 99) and width (between 1 and 100) of the element in the Gantt graph</returns>
     public static (double Offset, double Width) GetGanttGraphDimensions(this StepExecutionAttempt attempt, IEnumerable<StepExecutionAttempt> allAttempts)
-        => (attempt.StartDateTime, attempt.EndDateTime).GetGanttGraphDimensions(allAttempts.Select(a => (a.StartDateTime, a.EndDateTime)));
+        => (attempt.StartedOn, attempt.EndedOn).GetGanttGraphDimensions(allAttempts.Select(a => (a.StartedOn, a.EndedOn)));
 
     public static (double Offset, double Width) GetGanttGraphDimensions(this Execution execution, IEnumerable<Execution> allExecutions)
-        => (execution.StartDateTime, execution.EndDateTime).GetGanttGraphDimensions(allExecutions.Select(e => (e.StartDateTime, e.EndDateTime)));
+        => (execution.StartedOn, execution.EndedOn).GetGanttGraphDimensions(allExecutions.Select(e => (e.StartedOn, e.EndedOn)));
 
     /// <summary>
     /// Calculate Gantt graph dimensions for a tuple of DateTimeOffsets (start and end time). The start and end time are compared to the list of all tuples provided as an argument.

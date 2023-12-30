@@ -1,5 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
@@ -22,7 +24,6 @@ public class MasterDataTableLookup
     public Guid LookupTableId { get; set; }
 
     [Required]
-    [MinLength(1)]
     [MaxLength(128)]
     public string LookupValueColumn { get; set; } = "";
 
@@ -33,7 +34,9 @@ public class MasterDataTableLookup
 
     public LookupDisplayType LookupDisplayType { get; set; }
 
+    [JsonIgnore]
     public MasterDataTable Table { get; set; } = null!;
 
+    [JsonIgnore]
     public MasterDataTable LookupTable { get; set; } = null!;
 }

@@ -1,26 +1,32 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
 [Table("Schedule")]
-public class Schedule(Guid jobId)
+public class Schedule
 {
     [Key]
+    [JsonInclude]
     public Guid ScheduleId { get; private set; }
 
     [NotEmptyGuid]
-    public Guid JobId { get; set; } = jobId;
+    public Guid JobId { get; set; }
 
     [Required(AllowEmptyStrings = false)]
     [MaxLength(250)]
     public string ScheduleName { get; set; } = string.Empty;
 
+    [JsonIgnore]
     public Job Job { get; set; } = null!;
 
     [Required]
     [Display(Name = "Cron expression")]
     [CronExpression]
+    [MaxLength(200)]
+    [Unicode(false)]
     public string CronExpression { get; set; } = "";
 
 
@@ -32,9 +38,10 @@ public class Schedule(Guid jobId)
 
     [Required]
     [Display(Name = "Created")]
-    public DateTimeOffset CreatedDateTime { get; set; }
+    public DateTimeOffset CreatedOn { get; set; }
 
     [Display(Name = "Created by")]
+    [MaxLength(250)]
     public string? CreatedBy { get; set; }
 
     public IList<Tag> Tags { get; set; } = null!;

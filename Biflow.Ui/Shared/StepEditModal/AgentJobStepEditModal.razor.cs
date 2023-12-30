@@ -14,12 +14,13 @@ public partial class AgentJobStepEditModal : StepEditModal<AgentJobStep>
     internal override string FormId => "agent_job_step_edit_form";
 
     protected override AgentJobStep CreateNewStep(Job job) =>
-        new(job.JobId, string.Empty)
+        new()
         {
+            JobId = job.JobId,
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            ConnectionId = Connections?.FirstOrDefault()?.ConnectionId,
+            ConnectionId = Connections.First().ConnectionId,
             Dependencies = new List<Dependency>(),
             Tags = new List<Tag>(),
             DataObjects = new List<StepDataObject>(),

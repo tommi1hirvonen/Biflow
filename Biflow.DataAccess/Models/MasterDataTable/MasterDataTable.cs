@@ -1,5 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
@@ -7,24 +9,30 @@ namespace Biflow.DataAccess.Models;
 public class MasterDataTable
 {
     [Key]
+    [JsonInclude]
     public Guid DataTableId { get; private set; }
 
     [Required]
-    [MinLength(1)]
     [MaxLength(250)]
     public string DataTableName { get; set; } = string.Empty;
 
     public string? DataTableDescription { get; set; }
 
     [Required]
-    [MinLength(1)]
     [MaxLength(128)]
+    [Unicode(false)]
     public string TargetSchemaName { get; set; } = string.Empty;
 
     [Required]
-    [MinLength(1)]
     [MaxLength(128)]
+    [Unicode(false)]
     public string TargetTableName { get; set; } = string.Empty;
+
+    [Required]
+    public Guid ConnectionId { get; set; }
+
+    [Column("DataTableCategoryId")]
+    public Guid? CategoryId { get; set; }
 
     public bool AllowInsert { get; set; } = true;
 
@@ -34,30 +42,34 @@ public class MasterDataTable
 
     public bool AllowImport { get; set; } = true;
 
-    [Required]
-    public Guid ConnectionId { get; set; }
+    [MaxLength(8000)]
+    [Unicode(false)]
+    public List<string> LockedColumns { get; set; } = [];
 
-    public SqlConnectionInfo Connection { get; set; } = null!;
+    public bool LockedColumnsExcludeMode { get; set; } = false;
 
-    [Column("DataTableCategoryId")]
-    public Guid? CategoryId { get; set; }
+    [MaxLength(8000)]
+    [Unicode(false)]
+    public List<string> HiddenColumns { get; set; } = [];
 
+    [MaxLength(8000)]
+    [Unicode(false)]
+    public List<string> ColumnOrder { get; set; } = [];
+
+    [JsonIgnore]
     public MasterDataTableCategory? Category { get; set; }
 
+    [JsonIgnore]
+    public SqlConnectionInfo Connection { get; set; } = null!;
+
+    [JsonIgnore]
     public ICollection<User> Users { get; set; } = null!;
 
     [ValidateComplexType]
     public ICollection<MasterDataTableLookup> Lookups { get; set; } = null!;
 
+    [JsonIgnore]
     public ICollection<MasterDataTableLookup> DependentLookups { get; set; } = null!;
-
-    public List<string> LockedColumns { get; set; } = [];
-
-    public bool LockedColumnsExcludeMode { get; set; } = false;
-
-    public List<string> HiddenColumns { get; set; } = [];
-
-    public List<string> ColumnOrder { get; set; } = [];
 
     [Timestamp]
     public byte[]? Timestamp { get; set; }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
@@ -27,5 +28,6 @@ public class JobConcurrency
     [Range(0, 100)]
     public int MaxParallelSteps { get; set; }
 
+    [JsonIgnore]
     public Job Job { get; set; } = null!;
 }

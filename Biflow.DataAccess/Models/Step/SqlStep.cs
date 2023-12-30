@@ -1,11 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
 public class SqlStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout, IHasStepParameters<SqlStepParameter>
 {
-    public SqlStep(Guid jobId) : base(StepType.Sql, jobId) { }
+    [JsonConstructor]
+    public SqlStep() : base(StepType.Sql) { }
 
     private SqlStep(SqlStep other, Job? targetJob) : base(other, targetJob)
     {
@@ -46,17 +48,20 @@ public class SqlStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout, IHa
 
     [Display(Name = "SQL statement")]
     [Required]
-    public string? SqlStatement { get; set; }
+    public string SqlStatement { get; set; } = "";
 
     [Column("ConnectionId")]
     [Required]
-    public Guid? ConnectionId { get; set; }
+    [NotEmptyGuid]
+    public Guid ConnectionId { get; set; }
 
     [Display(Name = "Result capture job parameter")]
     public Guid? ResultCaptureJobParameterId { get; set; }
 
+    [JsonIgnore]
     public JobParameter? ResultCaptureJobParameter { get; set; }
 
+    [JsonIgnore]
     public SqlConnectionInfo Connection { get; set; } = null!;
 
     [ValidateComplexType]

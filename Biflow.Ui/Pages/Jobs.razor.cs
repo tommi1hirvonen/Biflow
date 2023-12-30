@@ -5,6 +5,7 @@ using Biflow.Ui.Shared;
 using Biflow.Ui.Shared.JobDetails;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
+using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -15,20 +16,13 @@ namespace Biflow.Ui.Pages;
 public partial class Jobs : ComponentBase
 {
     [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
-    
-    [Inject] private ISchedulerService SchedulerService { get; set; } = null!;
-    
     [Inject] private JobDuplicatorFactory JobDuplicatorFactory { get; set; } = null!;
-        
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
-    
     [Inject] private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
-
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
-
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
-
     [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; } = null!;
+    [Inject] private IMediator Mediator { get; set; } = null!;
 
     [CascadingParameter] public UserState UserState { get; set; } = new();
 
@@ -42,7 +36,7 @@ public partial class Jobs : ComponentBase
     private JobEditModal? jobEditModal;
     private ExecuteModal? executeModal;
     private string jobNameFilter = "";
-    private Guid? lastStartedExecutionId;
+    private ExecutionStartResponse? lastStartedExecutionResponse;
 
     protected override async Task OnInitializedAsync()
     {
@@ -91,17 +85,17 @@ public partial class Jobs : ComponentBase
         // Get each job's last execution.
         var lastExecutions = await context.Executions
             .AsNoTrackingWithIdentityResolution()
-            .Where(execution => jobs.Select(job => job.JobId).Contains(execution.JobId ?? Guid.Empty) && execution.StartDateTime != null)
+            .Where(execution => jobs.Select(job => job.JobId).Contains(execution.JobId) && execution.StartedOn != null)
             .Select(execution => execution.JobId)
             .Distinct()
             .Select(key => new
             {
                 Key = key,
-                Execution = context.Executions.Where(execution => execution.JobId == key).OrderByDescending(e => e.CreatedDateTime).First()
+                Execution = context.Executions.Where(execution => execution.JobId == key).OrderByDescending(e => e.CreatedOn).First()
             })
             .ToListAsync();
 
-        this.lastExecutions = lastExecutions.ToDictionary(e => e.Key ?? Guid.Empty, e => e.Execution);
+        this.lastExecutions = lastExecutions.ToDictionary(e => e.Key, e => e.Execution);
         StateHasChanged();
     }
 
@@ -183,11 +177,7 @@ public partial class Jobs : ComponentBase
         }
         try
         {
-            using var context = await DbFactory.CreateDbContextAsync();
-            await context.Jobs
-                .Where(j => j.JobId == job.JobId)
-                .ExecuteDeleteAsync();
-            await SchedulerService.DeleteJobAsync(job);
+            await Mediator.Send(new DeleteJobRequest(job.JobId));
             jobs?.Remove(job);
         }
         catch (Exception ex)
@@ -252,9 +242,9 @@ public partial class Jobs : ComponentBase
         }
     }
 
-    private void OnExecutionStarted(Guid executionId)
+    private void OnExecutionStarted(ExecutionStartResponse response)
     {
-        lastStartedExecutionId = executionId;
+        lastStartedExecutionResponse = response;
     }
 
     private void ExpandAll()

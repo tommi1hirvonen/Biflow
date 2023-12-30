@@ -118,10 +118,10 @@
                     {
                         <tr style="cursor: pointer;" @onclick="() => GoToExecutionDetails(item.ExecutionId)">
                             <td>
-                                @item.StartDateTime?.LocalDateTime
+                                @item.StartedOn?.LocalDateTime
                             </td>
                             <td>
-                                @item.EndDateTime?.LocalDateTime
+                                @item.EndedOn?.LocalDateTime
                             </td>
                             <td>
                                 <text>@item.ExecutionInSeconds?.SecondsToReadableFormat()</text>
@@ -195,16 +195,16 @@
             .AsNoTracking()
             .AsSingleQuery()
             .Where(e => e.JobId == JobId)
-            .OrderByDescending(e => e.CreatedDateTime)
+            .OrderByDescending(e => e.CreatedOn)
             .Take(MaxExecutions)
             .Select(e => new ExecutionProjection(
                 e.ExecutionId,
                 e.JobId,
                 e.JobName,
                 e.ScheduleId,
-                e.CreatedDateTime,
-                e.StartDateTime,
-                e.EndDateTime,
+                e.CreatedOn,
+                e.StartedOn,
+                e.EndedOn,
                 e.ExecutionStatus,
                 e.StepExecutions.Count()))
             .ToArrayAsync();
@@ -215,8 +215,8 @@
     private void CalculateChartDataset()
     {
         var dataPoints = FilteredExecutions
-            .Where(e => e.StartDateTime is not null)
-            .GroupBy(e => DateOnly.FromDateTime(e.CreatedDateTime.LocalDateTime))
+            .Where(e => e.StartedOn is not null)
+            .GroupBy(e => DateOnly.FromDateTime(e.CreatedOn.LocalDateTime))
             .Select(grouping => new TimeSeriesDataPoint(grouping.Key, grouping.Average(total => (decimal)(total.ExecutionInSeconds ?? 0) / 60)))
             .ToArray();
         var series = new LineChartSeries[]

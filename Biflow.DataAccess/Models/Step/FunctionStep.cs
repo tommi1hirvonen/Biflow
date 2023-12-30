@@ -1,11 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
 public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepParameter>
 {
-    public FunctionStep(Guid jobId) : base(StepType.Function, jobId) { }
+    [JsonConstructor]
+    public FunctionStep() : base(StepType.Function) { }
 
     private FunctionStep(FunctionStep other, Job? targetJob) : base(other, targetJob)
     {
@@ -28,12 +30,13 @@ public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepPa
     public double TimeoutMinutes { get; set; }
 
     [Required]
-    public Guid? FunctionAppId { get; set; }
+    [NotEmptyGuid]
+    public Guid FunctionAppId { get; set; }
 
     [Display(Name = "Function url")]
     [MaxLength(1000)]
     [Required]
-    public string? FunctionUrl { get; set; }
+    public string FunctionUrl { get; set; } = "";
 
     [Display(Name = "Function input")]
     public string? FunctionInput
@@ -48,8 +51,11 @@ public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepPa
     public bool FunctionIsDurable { get; set; }
 
     [Display(Name = "Function key")]
+    [MaxLength(1000)]
+    [JsonSensitive]
     public string? FunctionKey { get; set; }
 
+    [JsonIgnore]
     public FunctionApp FunctionApp { get; set; } = null!;
 
     [ValidateComplexType]

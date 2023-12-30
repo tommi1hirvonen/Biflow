@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
@@ -11,6 +12,8 @@ public class AccessToken(Guid appRegistrationId, string resourceUrl, string toke
 
     public AppRegistration AppRegistration { get; set; } = null!;
 
+    [Unicode(false)]
+    [MaxLength(1000)]
     public string ResourceUrl { get; set; } = resourceUrl;
 
     public string Token { get; set; } = token;

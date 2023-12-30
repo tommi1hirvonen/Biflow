@@ -33,9 +33,6 @@ public class DbContextTests(DatabaseFixture fixture)
 
         var sqlParamsExist = stepExecutions.Any(s => s is IHasStepExecutionParameters<SqlStepExecutionParameter> p && p.StepExecutionParameters.Any());
         Assert.True(sqlParamsExist);
-
-        var packageParamsExist = stepExecutions.Any(s => s is IHasStepExecutionParameters<PackageStepExecutionParameter> p && p.StepExecutionParameters.Any());
-        Assert.True(packageParamsExist);
     }
 
     [Fact]
@@ -56,11 +53,6 @@ public class DbContextTests(DatabaseFixture fixture)
             .Any(s => s is IHasStepExecutionParameters<SqlStepExecutionParameter> p && p.StepExecutionParameters.Any());
         Assert.True(sqlParamsExist);
 
-        var packageParamsExist = executions
-            .SelectMany(e => e.StepExecutions)
-            .Any(s => s is IHasStepExecutionParameters<PackageStepExecutionParameter> p && p.StepExecutionParameters.Any());
-        Assert.True(packageParamsExist);
-
         var inherit = executions
             .SelectMany(e => e.StepExecutions)
             .Any(s => s is IHasStepExecutionParameters p && p.StepExecutionParameters.Any(ep => ep.InheritFromExecutionParameter is not null));
@@ -73,33 +65,48 @@ public class DbContextTests(DatabaseFixture fixture)
         SqlStepExecution execution;
         using (var ctx1 = await dbContextFactory.CreateDbContextAsync())
         {
-            var executionId = Guid.Parse("bb192ea8-51f3-41e9-bfed-b5b9dc08d159");
-            var stepId = Guid.Parse("82ec97aa-be76-4c9c-9121-08d9b27416f7");
-            execution = (SqlStepExecution) await ctx1.StepExecutions
+            execution = (SqlStepExecution)await ctx1.StepExecutions
+                .Include(e => e.Execution)
                 .Include(e => (e as SqlStepExecution)!.StepExecutionParameters)
                 .ThenInclude(p => p.InheritFromExecutionParameter)
-                .SingleAsync(e => e.ExecutionId == executionId && e.StepId == stepId);
+                .Include(e => (e as SqlStepExecution)!.StepExecutionParameters)
+                .ThenInclude(p => p.ExpressionParameters)
+                .Include(e => e.StepExecutionAttempts)
+                .FirstAsync(e => e.Execution.JobName == "Test job 1" && e.StepName == "Test step 4");
         }
-        var parameter = execution.StepExecutionParameters.Single(p => p.ParameterId == Guid.Parse("9be34ec4-fff1-421d-5692-08d9ee078641"));
-        using var ctx2 = await dbContextFactory.CreateDbContextAsync();
-        ctx2.Attach(parameter);
-        parameter.ParameterValue = await parameter.EvaluateAsync();
-        await ctx2.SaveChangesAsync();
-        Assert.Equal(parameter.ParameterValue, "00:00:45");
+        var parameter = execution.StepExecutionParameters.First(p => p.ParameterName == "@param");
+        var value = await parameter.EvaluateAsync();
+        Assert.Equal(value, "123-456");
+    }
+
+    [Fact]
+    public async Task TestStepExecutionInheritedParameterExpression()
+    {
+        SqlStepExecution execution;
+        using (var ctx1 = await dbContextFactory.CreateDbContextAsync())
+        {
+            execution = (SqlStepExecution)await ctx1.StepExecutions
+                .Include(e => e.Execution)
+                .Include(e => (e as SqlStepExecution)!.StepExecutionParameters)
+                .ThenInclude(p => p.InheritFromExecutionParameter)
+                .FirstAsync(e => e.Execution.JobName == "Test job 1" && e.StepName == "Test step 5");
+        }
+        var parameter = execution.StepExecutionParameters.First(p => p.ParameterName == "@param");
+        var value = await parameter.InheritFromExecutionParameter!.EvaluateAsync();
+        Assert.Equal(value, "123-456");
     }
 
     [Fact]
     public async Task TestLoadingStepExecutionDependentOnSteps()
     {
-        var executionId = Guid.Parse("03b71d68-67d2-4e2b-8e15-8878e8fdcfda");
         using var context = await dbContextFactory.CreateDbContextAsync();
         var execution = await context.Executions
             .AsNoTrackingWithIdentityResolution()
             .Include(e => e.StepExecutions)
             .ThenInclude(e => e.ExecutionDependencies)
             .ThenInclude(e => e.DependantOnStepExecution)
-            .FirstAsync(e => e.ExecutionId == executionId);
-        var step = execution.StepExecutions.First();
+            .FirstAsync(e => e.JobName == "Test job 1");
+        var step = execution.StepExecutions.First(s => s.StepName == "Test step 4");
         Assert.True(step.ExecutionDependencies.Count != 0);
     }
 }

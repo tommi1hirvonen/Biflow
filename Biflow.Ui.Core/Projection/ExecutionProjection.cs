@@ -10,11 +10,11 @@ public record ExecutionProjection(
     Guid? JobId,
     string JobName,
     Guid? ScheduleId,
-    DateTimeOffset CreatedDateTime,
-    DateTimeOffset? StartDateTime,
-    DateTimeOffset? EndDateTime,
+    DateTimeOffset CreatedOn,
+    DateTimeOffset? StartedOn,
+    DateTimeOffset? EndedOn,
     ExecutionStatus ExecutionStatus,
     int StepExecutionCount)
 {
-    public double? ExecutionInSeconds => ((EndDateTime ?? DateTime.Now) - StartDateTime)?.TotalSeconds;
+    public double? ExecutionInSeconds => ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
 }

@@ -1,15 +1,26 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
 [Table("Step")]
-public abstract class Step : IComparable
+[JsonDerivedType(typeof(AgentJobStep), nameof(StepType.AgentJob))]
+[JsonDerivedType(typeof(DatasetStep), nameof(StepType.Dataset))]
+[JsonDerivedType(typeof(EmailStep), nameof(StepType.Email))]
+[JsonDerivedType(typeof(ExeStep), nameof(StepType.Exe))]
+[JsonDerivedType(typeof(FunctionStep), nameof(StepType.Function))]
+[JsonDerivedType(typeof(JobStep), nameof(StepType.Job))]
+[JsonDerivedType(typeof(PackageStep), nameof(StepType.Package))]
+[JsonDerivedType(typeof(PipelineStep), nameof(StepType.Pipeline))]
+[JsonDerivedType(typeof(QlikStep), nameof(StepType.Qlik))]
+[JsonDerivedType(typeof(SqlStep), nameof(StepType.Sql))]
+[JsonDerivedType(typeof(TabularStep), nameof(StepType.Tabular))]
+public abstract class Step : IComparable, IAuditable
 {
-    public Step(StepType stepType, Guid jobId)
+    public Step(StepType stepType)
     {
         StepType = stepType;
-        JobId = jobId;
     }
 
     /// <summary>
@@ -27,8 +38,8 @@ public abstract class Step : IComparable
         ExecutionPhase = other.ExecutionPhase;
         StepType = other.StepType;
         DuplicateExecutionBehaviour = other.DuplicateExecutionBehaviour;
-        CreatedDateTime = DateTimeOffset.Now;
-        LastModifiedDateTime = DateTimeOffset.Now;
+        CreatedOn = DateTimeOffset.Now;
+        LastModifiedOn = DateTimeOffset.Now;
         IsEnabled = other.IsEnabled;
         RetryAttempts = other.RetryAttempts;
         RetryIntervalMinutes = other.RetryIntervalMinutes;
@@ -55,11 +66,15 @@ public abstract class Step : IComparable
 
     [Key]
     [Required]
+    [JsonInclude]
     public Guid StepId { get; private set; }
 
     [Required]
-    public Guid JobId { get; private set; }
+    [NotEmptyGuid]
+    [JsonInclude]
+    public Guid JobId { get; init; }
 
+    [JsonIgnore]
     public Job Job { get; set; } = null!;
 
     [Required]
@@ -80,22 +95,10 @@ public abstract class Step : IComparable
     [Display(Name = "Execution phase")]
     public int ExecutionPhase { get; set; }
 
-    [Required]
     [Display(Name = "Step type")]
     public StepType StepType { get; }
 
-    [Required]
     public DuplicateExecutionBehaviour DuplicateExecutionBehaviour { get; set; } = DuplicateExecutionBehaviour.Wait;
-
-    [Required]
-    [DataType(DataType.DateTime)]
-    [Display(Name = "Created")]
-    public DateTimeOffset CreatedDateTime { get; set; }
-
-    [Required]
-    [DataType(DataType.DateTime)]
-    [Display(Name = "Last modified")]
-    public DateTimeOffset LastModifiedDateTime { get; set; }
 
     [Required]
     [Display(Name = "Enabled")]
@@ -113,16 +116,24 @@ public abstract class Step : IComparable
 
     public EvaluationExpression ExecutionConditionExpression { get; set; } = new();
 
+    public DateTimeOffset CreatedOn { get; set; }
+
     [Display(Name = "Created by")]
+    [MaxLength(250)]
     public string? CreatedBy { get; set; }
 
+    public DateTimeOffset LastModifiedOn { get; set; }
+
     [Display(Name = "Last modified by")]
+    [MaxLength(250)]
     public string? LastModifiedBy { get; set; }
 
     [Timestamp]
     public byte[]? Timestamp { get; private set; }
 
     public IList<Dependency> Dependencies { get; set; } = null!;
+
+    public IList<Dependency> Depending { get; set; } = null!;
 
     [ValidateComplexType]
     public IList<StepDataObject> DataObjects { get; set; } = null!;
@@ -132,8 +143,7 @@ public abstract class Step : IComparable
 
     public IList<Tag> Tags { get; set; } = null!;
 
-    public IList<StepExecution> StepExecutions { get; set; } = null!;
-
+    [JsonIgnore]
     public ICollection<StepSubscription> StepSubscriptions { get; set; } = null!;
 
     public int CompareTo(object? obj)

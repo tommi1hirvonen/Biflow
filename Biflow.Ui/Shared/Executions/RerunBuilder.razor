@@ -306,13 +306,12 @@ else if (builder is null)
         }
         try
         {
-            ArgumentNullException.ThrowIfNull(Execution.JobId);
             string user = HttpContextAccessor.HttpContext?.User?.Identity?.Name
                 ?? throw new ArgumentNullException(nameof(user), "User was null");
             var stepIds = Execution.StepExecutions
                 .Select(e => e.StepId)
                 .ToArray();
-            builder = await BuilderFactory.CreateAsync((Guid)Execution.JobId, user, context => step => stepIds.Contains(step.StepId));
+            builder = await BuilderFactory.CreateAsync(Execution.JobId, user, context => step => stepIds.Contains(step.StepId));
         }
         catch (Exception ex)
         {

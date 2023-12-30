@@ -30,18 +30,18 @@
         @if (Executions is not null)
         {
             var executions = Executions
-                .Where(e => e.StartDateTime is not null)
+                .Where(e => e.StartedOn is not null)
                 .GroupBy(e =>
                 {
                     var overlapsWithSelf = Executions
                         .Where(other => other.StepId == e.StepId && e.ExecutionId != other.ExecutionId)
-                        .Any(other => e.StartDateTime >= other.StartDateTime && e.StartDateTime <= (other.EndDateTime ?? DateTime.Now));
+                        .Any(other => e.StartedOn >= other.StartedOn && e.StartedOn <= (other.EndedOn ?? DateTime.Now));
                     return (e.StepId, e.StepName, e.StepType, overlapsWithSelf ? e.ExecutionId : Guid.Empty);
                 })
                 .OrderBy(g => SortMode == SortMode.DurationAsc ? g.Max(e => e.ExecutionInSeconds) : null)
                 .OrderByDescending(g => SortMode == SortMode.DurationDesc ? g.Max(e => e.ExecutionInSeconds) : null)
-                .ThenBy(g => SortMode == SortMode.StartedAsc ? g.Min(e => e.StartDateTime) : null)
-                .ThenByDescending(g => SortMode == SortMode.StartedDesc ? g.Min(e => e.StartDateTime) : null)
+                .ThenBy(g => SortMode == SortMode.StartedAsc ? g.Min(e => e.StartedOn) : null)
+                .ThenByDescending(g => SortMode == SortMode.StartedDesc ? g.Min(e => e.StartedOn) : null)
                 .ToList();
             <Virtualize Context="group" Items="executions" ItemSize="32.5714f">
                 <div class="row border-top">
@@ -60,8 +60,8 @@
                         }
                         @foreach (var execution in group)
                         {
-                            (var offset, var width) = (execution.StartDateTime, execution.EndDateTime)
-                                .GetGanttGraphDimensions(Executions.Select(e => (e.StartDateTime, e.EndDateTime)));
+                            (var offset, var width) = (execution.StartedOn, execution.EndedOn)
+                                .GetGanttGraphDimensions(Executions.Select(e => (e.StartedOn, e.EndedOn)));
                             <ContextMenuToggle ContainerHtmlTag="div"
                                                CssClass="@($"progress hover {(execution == selectedStepExecution ? "active" : null)} {execution.ExecutionStatus.ToString().ToLower()}")"
                                                title="@($"{execution.ExecutionStatus}, {execution.ExecutionInSeconds?.SecondsToReadableFormat()}")"
@@ -189,8 +189,11 @@
                     .ThenInclude(e => e.ExecutionConditionParameters)
                     .ThenInclude(e => e.ExecutionParameter)
                     .Include(e => e.StepExecution)
-                    .ThenInclude(e => e.Step)
                     .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId && e.StepId == execution.StepId && e.RetryAttemptIndex == execution.RetryAttemptIndex);
+                if (detailStep is not null)
+                {
+                    detailStep.StepExecution.Step = await context.Steps.FirstOrDefaultAsync(s => s.StepId == detailStep.StepId);
+                }
             }
         }
         StateHasChanged();
@@ -219,8 +222,8 @@
         }
     }
 
-    private DateTime MinTime => Executions?.Any() ?? false ? Executions.Min(e => e.StartDateTime?.LocalDateTime) ?? DateTime.Now : DateTime.Now;
-    private DateTime MaxTime => Executions?.Any() ?? false ? Executions.Max(e => e.EndDateTime?.LocalDateTime ?? DateTime.Now) : DateTime.Now;
+    private DateTime MinTime => Executions?.Any() ?? false ? Executions.Min(e => e.StartedOn?.LocalDateTime) ?? DateTime.Now : DateTime.Now;
+    private DateTime MaxTime => Executions?.Any() ?? false ? Executions.Max(e => e.EndedOn?.LocalDateTime ?? DateTime.Now) : DateTime.Now;
     private long MinTicks => MinTime.Ticks;
     private long MaxTicks => MaxTime.Ticks;
 

@@ -143,11 +143,11 @@
                     .Where(e => e.ExecutionId == attempt.ExecutionId && e.StepId == attempt.StepId && e.RetryAttemptIndex == attempt.RetryAttemptIndex)
                     .ExecuteUpdateAsync(update => update
                         .SetProperty(e => e.ExecutionStatus, status)
-                        .SetProperty(e => e.StartDateTime, e => e.StartDateTime ?? DateTimeOffset.Now)
-                        .SetProperty(e => e.EndDateTime, e => e.EndDateTime ?? DateTimeOffset.Now));
+                        .SetProperty(e => e.StartedOn, e => e.StartedOn ?? DateTimeOffset.Now)
+                        .SetProperty(e => e.EndedOn, e => e.EndedOn ?? DateTimeOffset.Now));
                 attempt.ExecutionStatus = status;
-                attempt.StartDateTime ??= DateTimeOffset.Now;
-                attempt.EndDateTime ??= DateTimeOffset.Now;
+                attempt.StartedOn ??= DateTimeOffset.Now;
+                attempt.EndedOn ??= DateTimeOffset.Now;
             }
             Messenger.AddInformation("Statuses updated successfully");
         }

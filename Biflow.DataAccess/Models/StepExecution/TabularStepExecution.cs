@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class TabularStepExecution : StepExecution, IHasTimeout
+public class TabularStepExecution : StepExecution, IHasTimeout, IHasConnection<AnalysisServicesConnectionInfo?>
 {
     public TabularStepExecution(string stepName, string tabularModelName)
         : base(stepName, StepType.Tabular)
@@ -25,17 +25,14 @@ public class TabularStepExecution : StepExecution, IHasTimeout
 
     [Display(Name = "Model name")]
     [Required]
-    [MinLength(1)]
     [MaxLength(128)]
     public string TabularModelName { get; private set; }
 
     [Display(Name = "Table name")]
-    [MinLength(1)]
     [MaxLength(128)]
     public string? TabularTableName { get; private set; }
 
     [Display(Name = "Partition name")]
-    [MinLength(1)]
     [MaxLength(128)]
     public string? TabularPartitionName { get; private set; }
 
@@ -44,8 +41,9 @@ public class TabularStepExecution : StepExecution, IHasTimeout
 
     [Column("ConnectionId")]
     [Required]
-    public Guid? ConnectionId { get; private set; }
+    public Guid ConnectionId { get; private set; }
 
-    public AnalysisServicesConnectionInfo Connection { get; set; } = null!;
+    [NotMapped]
+    public AnalysisServicesConnectionInfo? Connection { get; set; }
 
 }

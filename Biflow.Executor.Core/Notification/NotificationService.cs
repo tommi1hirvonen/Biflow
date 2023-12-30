@@ -57,8 +57,8 @@ internal class NotificationService(
             <tr>
                 <td>{e.StepExecution.StepName}</td>
                 <td>{e.StepType}</td>
-                <td>{e.StartDateTime}</td>
-                <td>{e.EndDateTime}</td>
+                <td>{e.StartedOn}</td>
+                <td>{e.EndedOn}</td>
                 <td>{e.GetDurationInReadableFormat()}</td>
                 <td>{e.ExecutionStatus}</td>
                 <td>{string.Join("\n\n", e.ErrorMessages.Select(m => m.Message))}</td>
@@ -98,11 +98,11 @@ internal class NotificationService(
                             </tr>
                             <tr>
                                 <td>Start time:</td>
-                                <td>{{execution.StartDateTime}}</td>
+                                <td>{{execution.StartedOn}}</td>
                             </tr>
                             <tr>
                                 <td>End time:</td>
-                                <td>{{execution.EndDateTime}}</td>
+                                <td>{{execution.EndedOn}}</td>
                             </tr>
                             <tr>
                                 <td>Duration:</td>
@@ -176,7 +176,7 @@ internal class NotificationService(
         try
         {
             var subject = $"\"{execution.JobName}\" execution is running long – Biflow notification";
-            var messageBody = $"Execution of job \"{execution.JobName}\" started at {execution.StartDateTime?.LocalDateTime}"
+            var messageBody = $"Execution of job \"{execution.JobName}\" started at {execution.StartedOn?.LocalDateTime}"
                 + $" has exceeded the overtime limit of {execution.OvertimeNotificationLimitMinutes} minutes set for this job.";
             await _messageDispatcher.SendMessageAsync(recipients, subject, messageBody, false);
             _logger.LogInformation("{ExecutionId} Long running execution notification email sent to: {recipients}", execution.ExecutionId, string.Join(", ", recipients));

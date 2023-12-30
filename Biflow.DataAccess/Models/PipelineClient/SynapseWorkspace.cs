@@ -1,18 +1,19 @@
 ﻿using Azure.Analytics.Synapse.Artifacts;
 using Azure.Analytics.Synapse.Artifacts.Models;
 using Azure.Identity;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using SynapsePipelineClient = Azure.Analytics.Synapse.Artifacts.PipelineClient;
 
 namespace Biflow.DataAccess.Models;
 
-public class SynapseWorkspace(string synapseWorkspaceUrl) : PipelineClient(PipelineClientType.Synapse)
+public class SynapseWorkspace() : PipelineClient(PipelineClientType.Synapse)
 {
     [Required]
-    [MinLength(1)]
     [MaxLength(500)]
-    public string SynapseWorkspaceUrl { get; set; } = synapseWorkspaceUrl;
+    [Unicode(false)]
+    public string SynapseWorkspaceUrl { get; set; } = "";
 
     [NotMapped]
     private Uri SynapseEndpoint => new(SynapseWorkspaceUrl);

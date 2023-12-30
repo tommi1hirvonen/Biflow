@@ -1,11 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
 public class PackageStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout, IHasStepParameters<PackageStepParameter>
 {
-    public PackageStep(Guid jobId) : base(StepType.Package, jobId) { }
+    [JsonConstructor]
+    public PackageStep() : base(StepType.Package) { }
 
     private PackageStep(PackageStep other, Job? targetJob) : base(other, targetJob)
     {
@@ -30,7 +32,8 @@ public class PackageStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout,
 
     [Column("ConnectionId")]
     [Required]
-    public Guid? ConnectionId { get; set; }
+    [NotEmptyGuid]
+    public Guid ConnectionId { get; set; }
 
     [MaxLength(128)]
     [Display(Name = "Folder name")]
@@ -52,6 +55,7 @@ public class PackageStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout,
     public bool ExecuteIn32BitMode { get; set; }
 
     [Display(Name = "Execute as login")]
+    [MaxLength(128)]
     public string? ExecuteAsLogin
     {
         get => _executeAsLogin;
@@ -60,6 +64,7 @@ public class PackageStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout,
 
     private string? _executeAsLogin;
 
+    [JsonIgnore]
     public SqlConnectionInfo Connection { get; set; } = null!;
 
     [ValidateComplexType]

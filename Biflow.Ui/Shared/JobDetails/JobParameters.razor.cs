@@ -44,6 +44,8 @@ public partial class JobParameters : ComponentBase, IDisposable
         context = DbContextFactory.CreateDbContext();
         editJob = await context.Jobs
             .Include(j => j.JobParameters)
+            .ThenInclude(j => j.InheritingStepParameters)
+            .Include(j => j.JobParameters)
             .ThenInclude(j => j.AssigningStepParameters)
             .ThenInclude(p => p.Step) // Assigning steps are from other jobs, which means they are not in the Steps List property
             .ThenInclude(s => s.Job)

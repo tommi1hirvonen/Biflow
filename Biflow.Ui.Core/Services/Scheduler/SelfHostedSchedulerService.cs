@@ -27,9 +27,9 @@ public class SelfHostedSchedulerService(ISchedulesManager schedulesManager) : IS
         await _schedulesManager.UpdateScheduleAsync(schedulerSchedule, CancellationToken.None);
     }
 
-    public async Task DeleteJobAsync(Job job)
+    public async Task DeleteJobAsync(Guid jobId)
     {
-        var schedulerJob = new SchedulerJob(job.JobId);
+        var schedulerJob = new SchedulerJob(jobId);
         await _schedulesManager.RemoveJobAsync(schedulerJob, CancellationToken.None);
     }
 

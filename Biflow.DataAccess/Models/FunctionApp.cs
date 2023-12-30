@@ -1,8 +1,10 @@
 ﻿using Azure.Core;
 using Azure.Identity;
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
@@ -11,13 +13,18 @@ public class FunctionApp
 {
     [Required]
     [Display(Name = "Function app id")]
+    [JsonInclude]
     public Guid FunctionAppId { get; private set; }
 
     [Required]
     [Display(Name = "Function app name")]
+    [MaxLength(250)]
     public string? FunctionAppName { get; set; }
 
     [Display(Name = "Function app key")]
+    [MaxLength(1000)]
+    [Unicode(false)]
+    [JsonSensitive]
     public string? FunctionAppKey
     {
         get => _functionAppKey;
@@ -33,10 +40,12 @@ public class FunctionApp
     public string? SubscriptionId { get; set; }
 
     [Required]
+    [MaxLength(250)]
     [Display(Name = "Resource group name")]
     public string? ResourceGroupName { get; set; }
 
     [Required]
+    [MaxLength(250)]
     [Display(Name = "Resource name")]
     public string? ResourceName { get; set; }
 
@@ -44,11 +53,15 @@ public class FunctionApp
     [Display(Name = "App registration")]
     public Guid? AppRegistrationId { get; set; }
 
+    [JsonIgnore]
     public AppRegistration AppRegistration { get; set; } = null!;
 
+    [JsonIgnore]
     public IList<FunctionStep> Steps { get; set; } = null!;
 
     private const string ResourceUrl = "https://management.azure.com//.default";
+
+    private static readonly JsonSerializerOptions SerializerOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
     public async Task<List<(string FunctionName, string FunctionUrl)>> GetFunctionsAsync(HttpClient client, ITokenService tokenService)
     {
@@ -91,8 +104,7 @@ public class FunctionApp
         message.Headers.Add("authorization", $"Bearer {accessToken}");
         var response = await client.SendAsync(message);
         var content = await response.Content.ReadAsStringAsync();
-        var options = new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-        var json = JsonSerializer.Deserialize<HostKeys>(content, options) ?? throw new InvalidOperationException("JSON object was null");
+        var json = JsonSerializer.Deserialize<HostKeys>(content, SerializerOptions) ?? throw new InvalidOperationException("JSON object was null");
         var list =
             new List<(string, string)> { ("masterKey", json.MasterKey) }
             .Concat(json.FunctionKeys.Select(f => (f.Key, f.Value)))

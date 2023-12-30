@@ -6,6 +6,7 @@ using Biflow.Ui.Shared.StepEditModal;
 using Biflow.Ui.Shared.StepsBatchEdit;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
+using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +19,7 @@ public partial class StepsList : ComponentBase
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
+    [Inject] private IMediator Mediator { get; set; } = null!;
     
     [CascadingParameter] public Job? Job { get; set; }
     
@@ -58,7 +60,7 @@ public partial class StepsList : ComponentBase
     private ExecuteModal? executeModal;
     private AdvancedFiltersOffcanvas? advancedFiltersOffcanvas;
     private string stepNameFilter = string.Empty;
-    private Guid? lastStartedExecutionId;
+    private ExecutionStartResponse? lastStartedExecutionResponse;
     private bool showDetails = false;
     private bool initialStepModalShouldOpen = true;
     private StateFilter stateFilter = StateFilter.All;
@@ -143,12 +145,7 @@ public partial class StepsList : ComponentBase
         }
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            foreach (var step in selectedSteps)
-            {
-                context.Steps.Remove(step);
-            }
-            await context.SaveChangesAsync();
+            await Mediator.Send(new DeleteStepsRequest(selectedSteps));
             foreach (var step in selectedSteps)
             {
                 Steps?.Remove(step);
@@ -192,9 +189,7 @@ public partial class StepsList : ComponentBase
         }
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            context.Steps.Remove(step);
-            await context.SaveChangesAsync();
+            await Mediator.Send(new DeleteStepsRequest(step.StepId));
             Steps?.Remove(step);
             selectedSteps.Remove(step);
 
@@ -287,9 +282,9 @@ public partial class StepsList : ComponentBase
         }
     }
 
-    private void OnExecutionStarted(Guid executionId)
+    private void OnExecutionStarted(ExecutionStartResponse response)
     {
-        lastStartedExecutionId = executionId;
+        lastStartedExecutionResponse = response;
     }
 
 }

@@ -1,13 +1,14 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
 public class AgentJobStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout
 {
-    public AgentJobStep(Guid jobId, string agentJobName) : base(StepType.AgentJob, jobId)
+    [JsonConstructor]
+    public AgentJobStep() : base(StepType.AgentJob)
     {
-        AgentJobName = agentJobName;
     }
 
     private AgentJobStep(AgentJobStep other, Job? targetJob) : base(other, targetJob)
@@ -28,12 +29,14 @@ public class AgentJobStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout
     [Required]
     [MinLength(1)]
     [MaxLength(128)]
-    public string AgentJobName { get; set; }
+    public string AgentJobName { get; set; } = "";
 
     [Column("ConnectionId")]
     [Required]
-    public Guid? ConnectionId { get; set; }
+    [NotEmptyGuid]
+    public Guid ConnectionId { get; set; }
 
+    [JsonIgnore]
     public SqlConnectionInfo Connection { get; set; } = null!;
 
     internal override AgentJobStep Copy(Job? targetJob = null) => new(this, targetJob);

@@ -1,4 +1,7 @@
-﻿namespace Biflow.DataAccess.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+
+namespace Biflow.DataAccess.Models;
 
 public class PackageStepExecutionParameter : StepExecutionParameterBase
 {
