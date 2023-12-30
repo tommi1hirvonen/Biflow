@@ -1,5 +1,6 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbFactory
 @inject IHxMessengerService Messenger
+@inject IMediator Mediator
 
 <style>
     tr a {
@@ -150,7 +151,7 @@
 
 @code {
     private readonly Dictionary<PipelineClientType, IPipelineClientEditModal?> clientEditModals = [];
-    
+
     private List<PipelineClient>? pipelineClients;
     private List<AppRegistration>? appRegistrations;
     private PipelineClient? stepsClient;
@@ -175,10 +176,7 @@
     {
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            await context.PipelineClients
-                .Where(x => x.PipelineClientId == client.PipelineClientId)
-                .ExecuteDeleteAsync();
+            await Mediator.Send(new DeletePipelineClientCommand(client.PipelineClientId));
             pipelineClients?.Remove(client);
         }
         catch (Exception ex)
@@ -190,19 +188,17 @@
 
     private async Task OnClientSubmit(PipelineClient client)
     {
-        using var context = DbFactory.CreateDbContext();
         if (client.PipelineClientId == Guid.Empty)
         {
-            context.Add(client);
+            await Mediator.Send(new CreatePipelineClientCommand(client));
             pipelineClients?.Add(client);
         }
         else
         {
+            await Mediator.Send(new UpdatePipelineClientCommand(client));
             pipelineClients?.RemoveAll(df => df.PipelineClientId == client.PipelineClientId);
             pipelineClients?.Add(client);
-            context.Attach(client).State = EntityState.Modified;
         }
-        await context.SaveChangesAsync();
         StateHasChanged();
     }
 
