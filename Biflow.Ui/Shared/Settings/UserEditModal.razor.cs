@@ -4,10 +4,10 @@ using Biflow.Ui.Core;
 using Biflow.Ui.Core.Validation;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
+using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.JSInterop;
 using System.Data;
 
@@ -17,6 +17,7 @@ public partial class UserEditModal : ComponentBase, IDisposable
 {
     [Inject] private AuthenticationMethodResolver AuthenticationResolver { get; set; } = null!;
     [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
+    [Inject] private IMediator Mediator { get; set; } = null!;
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
     [Inject] private IJSRuntime JS { get; set; } = null!;
 
@@ -131,31 +132,7 @@ public partial class UserEditModal : ComponentBase, IDisposable
 
             try
             {
-                var context = await DbFactory.CreateDbContextAsync();
-                var transaction = context.Database.BeginTransaction().GetDbTransaction();
-
-                try
-                {
-                    // Add user without password
-                    context.Users.Add(model.User);
-
-                    await context.SaveChangesAsync();
-
-                    if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn)
-                    {
-                        var connection = context.Database.GetDbConnection();
-                        // Update the password hash.
-                        await UserService.AdminUpdatePasswordAsync(model.User.Username, model.PasswordModel.Password, connection, transaction);
-                    }
-
-                    await transaction.CommitAsync();
-                }
-                catch
-                {
-                    await transaction.RollbackAsync();
-                    throw;
-                }
-
+                await Mediator.Send(new CreateUserCommand(model.User, model.PasswordModel));
                 await OnUserSubmit.InvokeAsync(model.User);
                 model = null;
                 await modal.LetAsync(x => x.HideAsync());
