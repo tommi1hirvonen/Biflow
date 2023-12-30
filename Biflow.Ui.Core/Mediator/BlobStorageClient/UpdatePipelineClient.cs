@@ -1,0 +1,19 @@
+﻿using Biflow.DataAccess;
+using Biflow.DataAccess.Models;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+
+namespace Biflow.Ui.Core;
+
+public record UpdateBlobStorageClientCommand(BlobStorageClient Client) : IRequest;
+
+internal class UpdateBlobStorageClientCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+    : IRequestHandler<UpdateBlobStorageClientCommand>
+{
+    public async Task Handle(UpdateBlobStorageClientCommand request, CancellationToken cancellationToken)
+    {
+        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        context.Attach(request.Client).State = EntityState.Modified;
+        await context.SaveChangesAsync(cancellationToken);
+    }
+}

@@ -1,5 +1,6 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHxMessengerService Messenger
+@inject IMediator Mediator
 
 <PageTitle>Blob Clients | Biflow</PageTitle>
 
@@ -87,10 +88,7 @@
     {
         try
         {
-            using var context = DbContextFactory.CreateDbContext();
-            await context.BlobStorageClients
-                .Where(x => x.BlobStorageClientId == client.BlobStorageClientId)
-                .ExecuteDeleteAsync();
+            await Mediator.Send(new DeleteBlobStorageClientCommand(client.BlobStorageClientId));
             blobClients?.Remove(client);
         }
         catch (Exception ex)
@@ -102,19 +100,17 @@
 
     private async Task OnBlobClientSubmitAsync(BlobStorageClient client)
     {
-        using var context = DbContextFactory.CreateDbContext();
         if (client.BlobStorageClientId == Guid.Empty)
         {
-            context.Add(client);
+            await Mediator.Send(new CreateBlobStorageClientCommand(client));
             blobClients?.Add(client);
         }
         else
         {
+            await Mediator.Send(new UpdateBlobStorageClientCommand(client));
             blobClients?.RemoveAll(b => b.BlobStorageClientId == client.BlobStorageClientId);
             blobClients?.Add(client);
-            context.Attach(client).State = EntityState.Modified;
         }
-        await context.SaveChangesAsync();
         StateHasChanged();
     }
 
