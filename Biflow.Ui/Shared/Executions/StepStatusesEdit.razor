@@ -1,4 +1,5 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject IMediator Mediator
 @inject IHxMessengerService Messenger
 
 @if (Execution is not null)
@@ -136,19 +137,13 @@
     {
         try
         {
-            using var context = await DbContextFactory.CreateDbContextAsync();
             foreach (var attempt in selectedAttempts)
             {
-                await context.StepExecutionAttempts
-                    .Where(e => e.ExecutionId == attempt.ExecutionId && e.StepId == attempt.StepId && e.RetryAttemptIndex == attempt.RetryAttemptIndex)
-                    .ExecuteUpdateAsync(update => update
-                        .SetProperty(e => e.ExecutionStatus, status)
-                        .SetProperty(e => e.StartedOn, e => e.StartedOn ?? DateTimeOffset.Now)
-                        .SetProperty(e => e.EndedOn, e => e.EndedOn ?? DateTimeOffset.Now));
                 attempt.ExecutionStatus = status;
                 attempt.StartedOn ??= DateTimeOffset.Now;
                 attempt.EndedOn ??= DateTimeOffset.Now;
             }
+            await Mediator.Send(new UpdateStepExecutionAttemptsRequest(selectedAttempts));
             Messenger.AddInformation("Statuses updated successfully");
         }
         catch (Exception ex)
