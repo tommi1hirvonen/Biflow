@@ -199,7 +199,12 @@ public static partial class Extensions
     /// <param name="currentItems">Current (old) items</param>
     /// <param name="newItems">New items</param>
     /// <param name="keyFunc">Delegate to get the key from item</param>
-    public static void MergeCollections<T, TKey>(this DbContext context, ICollection<T> currentItems, ICollection<T> newItems, Func<T, TKey> keyFunc)
+    public static void MergeCollections<T, TKey>(
+        this DbContext context,
+        ICollection<T> currentItems,
+        ICollection<T> newItems,
+        Func<T, TKey> keyFunc,
+        bool updateMatchingItemValues = true)
         where T : class
     {
         List<T> toRemove = [];
@@ -212,7 +217,7 @@ public static partial class Extensions
             {
                 toRemove.Add(item);
             }
-            else if (!ReferenceEquals(found, item))
+            else if (updateMatchingItemValues && !ReferenceEquals(found, item))
             {
                 context.Entry(item).CurrentValues.SetValues(found);
             }
