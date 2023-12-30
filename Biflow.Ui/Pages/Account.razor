@@ -149,12 +149,10 @@
 
     private async Task SubmitEmail()
     {
-        if (user is null) return;
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            context.Attach(user).State = EntityState.Modified;
-            await context.SaveChangesAsync();
+            ArgumentNullException.ThrowIfNull(user);
+            await Mediator.Send(new UpdateUserEmailCommand(user.UserId, user.Email));
             Messenger.AddInformation("Email updated successfully");
         }
         catch (Exception ex)
