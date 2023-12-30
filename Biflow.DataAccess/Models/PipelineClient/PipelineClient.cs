@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
@@ -8,7 +7,7 @@ namespace Biflow.DataAccess.Models;
 [Table("PipelineClient")]
 [JsonDerivedType(typeof(DataFactory), nameof(PipelineClientType.DataFactory))]
 [JsonDerivedType(typeof(SynapseWorkspace), nameof(PipelineClientType.Synapse))]
-public abstract class PipelineClient(PipelineClientType type) : ISoftDeletable
+public abstract class PipelineClient(PipelineClientType type)
 {
     [Key]
     [JsonInclude]
@@ -26,8 +25,6 @@ public abstract class PipelineClient(PipelineClientType type) : ISoftDeletable
 
     [JsonIgnore]
     public AppRegistration AppRegistration { get; set; } = null!;
-
-    public DateTimeOffset? DeletedOn { get; set; }
 
     [JsonIgnore]
     public IList<PipelineStep> Steps { get; set; } = null!;

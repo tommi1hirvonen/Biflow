@@ -117,9 +117,6 @@ public class AppDbContext : DbContext
             e.HasIndex(p => p.TagName, "UQ_TagName").IsUnique();
         });
 
-        modelBuilder.Entity<AppRegistration>()
-            .HasQueryFilter(x => x.DeletedOn == null);
-
         modelBuilder.Entity<AccessToken>()
             .HasOne(x => x.AppRegistration)
             .WithMany(x => x.AccessTokens)
@@ -132,7 +129,6 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<PipelineClient>(e =>
         {
-            e.HasQueryFilter(x => x.DeletedOn == null && x.AppRegistration.DeletedOn == null);
             e.HasDiscriminator<PipelineClientType>("PipelineClientType")
             .HasValue<DataFactory>(PipelineClientType.DataFactory)
             .HasValue<SynapseWorkspace>(PipelineClientType.Synapse);
@@ -140,18 +136,13 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<ConnectionInfoBase>(e =>
         {
-            e.HasQueryFilter(x => x.DeletedOn == null);
             e.HasDiscriminator<ConnectionType>("ConnectionType")
             .HasValue<SqlConnectionInfo>(ConnectionType.Sql)
             .HasValue<AnalysisServicesConnectionInfo>(ConnectionType.AnalysisServices);
         });
 
-        modelBuilder.Entity<FunctionApp>()
-            .HasQueryFilter(x => x.DeletedOn == null && x.AppRegistration.DeletedOn == null);
-
         modelBuilder.Entity<QlikCloudClient>(e =>
         {
-            e.HasQueryFilter(x => x.DeletedOn == null);
             e.HasMany(c => c.Steps)
             .WithOne(s => s.QlikCloudClient);
         });
@@ -869,12 +860,6 @@ public class AppDbContext : DbContext
                 modified.LastModifiedOn = now;
                 modified.LastModifiedBy = user;
                 continue;
-            }
-
-            if (entry.State == EntityState.Deleted && entry.Entity is ISoftDeletable deleted)
-            {
-                entry.State = EntityState.Modified;
-                deleted.DeletedOn = now;
             }
         }
     }

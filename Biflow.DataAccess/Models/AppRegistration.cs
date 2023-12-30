@@ -11,7 +11,7 @@ using System.Text.Json.Serialization;
 namespace Biflow.DataAccess.Models;
 
 [Table("AppRegistration")]
-public class AppRegistration : ISoftDeletable
+public class AppRegistration
 {
     [Key]
     [Required]
@@ -44,8 +44,6 @@ public class AppRegistration : ISoftDeletable
     [Unicode(false)]
     [JsonSensitive]
     public string? ClientSecret { get; set; }
-
-    public DateTimeOffset? DeletedOn { get; set; }
 
     [JsonIgnore]
     public IList<DatasetStep> Steps { get; set; } = null!;
