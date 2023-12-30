@@ -1,6 +1,5 @@
-﻿@implements IDisposable
-
-@inject IDbContextFactory<AppDbContext> DbContextFactory
+﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject IMediator Mediator
 @inject IHxMessengerService Messenger
 
 <HxModal @ref="offcanvas" Size="ModalSize.Large">
@@ -50,19 +49,16 @@
 
     private HxModal? offcanvas;
     private DataObject? editObject;
-    private AppDbContext? editContext;
 
     private async Task SubmitDataObjectAsync()
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(editContext);
-            await editContext.SaveChangesAsync();
+            ArgumentNullException.ThrowIfNull(editObject);
+            await Mediator.Send(new UpdateDataObjectCommand(editObject));
             await offcanvas.LetAsync(x => x.HideAsync());
             await OnDataObjectSubmitted.InvokeAsync(editObject);
             editObject = null;
-            editContext.Dispose();
-            editContext = null;
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -76,14 +72,12 @@
 
     public async Task ShowAsync(Guid dataObjectId)
     {
-        editContext = await DbContextFactory.CreateDbContextAsync();
-        editObject = await editContext.DataObjects
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        editObject = await context.DataObjects
             .Include(o => o.Steps)
             .ThenInclude(r => r.Step)
             .ThenInclude(s => s.Job)
             .FirstAsync(o => o.ObjectId == dataObjectId);
         await offcanvas.LetAsync(x => x.ShowAsync());
     }
-
-    public void Dispose() => editContext?.Dispose();
 }
