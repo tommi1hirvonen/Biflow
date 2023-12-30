@@ -170,11 +170,8 @@ public partial class JobDetails : ComponentBase
         {
             var enabled = (bool)args.Value!;
             ArgumentNullException.ThrowIfNull(job);
-            using var context = DbFactory.CreateDbContext();
+            await Mediator.Send(new ToggleJobCommand(job.JobId, enabled));
             job.IsEnabled = enabled;
-            await context.Jobs
-                .Where(j => j.JobId == job.JobId)
-                .ExecuteUpdateAsync(j => j.SetProperty(p => p.IsEnabled, job.IsEnabled));
             var message = job.IsEnabled ? "Job enabled successfully" : "Job disabled successfully";
             Messenger.AddInformation(message);
         }

@@ -118,10 +118,8 @@ public partial class Jobs : ComponentBase
         bool value = (bool)args.Value!;
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            context.Attach(job);
+            await Mediator.Send(new ToggleJobCommand(job.JobId, value);
             job.IsEnabled = value;
-            await context.SaveChangesAsync();
         }
         catch (Exception ex)
         {
