@@ -39,7 +39,7 @@ else
     <div class="row my-4">
         <div class="col">
             <div class="card shadow-sm">
-                <EditForm id="job_parameter_form" Model="editJob" OnValidSubmit="SubmitParameters">
+                <EditForm EditContext="editContext" id="job_parameter_form" OnValidSubmit="SubmitParameters">
                     <ObjectGraphDataAnnotationsValidator />
                     <ValidationSummary />
                     <FluentValidationValidator @ref="fluentJobValidator" Validator="JobValidator" />

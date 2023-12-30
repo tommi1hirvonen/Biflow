@@ -1,4 +1,5 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbFactory
+@inject IMediator Mediator
 @inject IHxMessengerService Messenger
 
 <style>
@@ -216,11 +217,7 @@
     {
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            var conn = await context.Connections.FirstAsync(c => c.ConnectionId == connection.ConnectionId);
-            await context.Connections
-                .Where(x => x.ConnectionId == connection.ConnectionId)
-                .ExecuteDeleteAsync();
+            await Mediator.Send(new DeleteConnectionCommand(connection.ConnectionId));
             connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
             showConnectionString.Remove(connection.ConnectionId);
         }
@@ -233,21 +230,19 @@
 
     private async Task OnConnectionSubmit(ConnectionInfoBase connection)
     {
-        using var context = DbFactory.CreateDbContext();
         if (connection.ConnectionId == Guid.Empty)
         {
-            context.Add(connection);
+            await Mediator.Send(new CreateConnectionCommand(connection));
             connections?.Add(connection);
             showConnectionString[connection.ConnectionId] = false;
         }
         else
         {
+            await Mediator.Send(new UpdateConnectionCommand(connection));
             connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
             connections?.Add(connection);
-            context.Attach(connection).State = EntityState.Modified;
         }
         connections?.Sort();
-        await context.SaveChangesAsync();
         StateHasChanged();
     }
 

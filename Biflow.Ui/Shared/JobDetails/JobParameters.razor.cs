@@ -4,13 +4,15 @@ using Biflow.Ui.Components;
 using Biflow.Ui.Core;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
+using MediatR;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Shared.JobDetails;
 
-public partial class JobParameters : ComponentBase, IDisposable
+public partial class JobParameters : ComponentBase
 {
     [Inject] private IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
     
@@ -20,12 +22,15 @@ public partial class JobParameters : ComponentBase, IDisposable
 
     [Inject] private JobValidator JobValidator { get; set; } = null!;
 
+    [Inject] private IMediator Mediator { get; set; } = null!;
+
     [CascadingParameter] public Job? Job { get; set; }
 
     [CascadingParameter] public List<Step>? Steps { get; set; }
 
+    private EditContext? editContext;
     private Job? editJob;
-    private AppDbContext? context;
+    private bool hasChanges = false;
     private bool loading = false;
     private FluentValidationValidator? fluentJobValidator;
     private ExpressionEditOffcanvas<JobParameter>? expressionEditOffcanvas;
@@ -40,8 +45,7 @@ public partial class JobParameters : ComponentBase, IDisposable
             return;
         }
         loading = true;
-        context?.Dispose();
-        context = DbContextFactory.CreateDbContext();
+        using var context = DbContextFactory.CreateDbContext();
         editJob = await context.Jobs
             .Include(j => j.JobParameters)
             .ThenInclude(j => j.InheritingStepParameters)
@@ -52,6 +56,8 @@ public partial class JobParameters : ComponentBase, IDisposable
             .FirstAsync(j => j.JobId == Job.JobId);
         editJob.JobParameters = editJob.JobParameters.OrderBy(p => p.ParameterName).ToList();
         loading = false;
+        editContext = new(editJob);
+        editContext.OnFieldChanged += (sender, args) => hasChanges = true;
     }
 
     private void AddParameter() => editJob?.JobParameters
@@ -59,7 +65,8 @@ public partial class JobParameters : ComponentBase, IDisposable
 
     private async Task SubmitParameters()
     {
-        foreach (var param in editJob?.JobParameters ?? Enumerable.Empty<JobParameter>())
+        ArgumentNullException.ThrowIfNull(editJob);
+        foreach (var param in editJob.JobParameters)
         {
             // Update the referencing job step parameter names to match the possibly changed new name.
             foreach (var referencingJobStepParam in param.AssigningStepParameters)
@@ -70,8 +77,8 @@ public partial class JobParameters : ComponentBase, IDisposable
 
         try
         {
-            ArgumentNullException.ThrowIfNull(context);
-            await context.SaveChangesAsync();
+            await Mediator.Send(new UpdateJobParametersCommand(editJob));
+            hasChanges = false;
             Messenger.AddInformation("Job parameters updated successfully");
         }
         catch (DbUpdateConcurrencyException)
@@ -103,7 +110,7 @@ public partial class JobParameters : ComponentBase, IDisposable
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
-        if (!this.context?.ChangeTracker.HasChanges() ?? true)
+        if (!hasChanges)
         {
             return;
         }
@@ -141,8 +148,6 @@ public partial class JobParameters : ComponentBase, IDisposable
     private IEnumerable<Step> GetExecutionConditionSteps(JobParameter parameter) => Steps
         ?.Where(s => s.ExecutionConditionParameters.Any(p => p.JobParameterId == parameter.ParameterId))
         ?? Enumerable.Empty<Step>();
-
-    public void Dispose() => context?.Dispose();
 
     private record ReferencingStepsModel(
         JobParameter Parameter,

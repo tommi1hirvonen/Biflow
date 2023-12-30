@@ -1,5 +1,6 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHxMessengerService Messenger
+@inject IMediator Mediator
 
 <PageTitle>Qlik Cloud Clients | Biflow</PageTitle>
 
@@ -142,10 +143,7 @@
     {
         try
         {
-            using var context = await DbContextFactory.CreateDbContextAsync();
-            await context.QlikCloudClients
-                .Where(x => x.QlikCloudClientId == client.QlikCloudClientId)
-                .ExecuteDeleteAsync();
+            await Mediator.Send(new DeleteQlikCloudClientCommand(client.QlikCloudClientId));
             clients?.Remove(client);
         }
         catch (Exception ex)
@@ -157,19 +155,17 @@
 
     private async Task OnClientSubmitAsync(QlikCloudClient client)
     {
-        using var context = await DbContextFactory.CreateDbContextAsync();
         if (client.QlikCloudClientId == Guid.Empty)
         {
-            context.Add(client);
+            await Mediator.Send(new CreateQlikCloudClientCommand(client));
             clients?.Add(client);
         }
         else
         {
+            await Mediator.Send(new UpdateQlikCloudClientCommand(client));
             clients?.RemoveAll(c => c.QlikCloudClientId == client.QlikCloudClientId);
             clients?.Add(client);
-            context.Update(client);
         }
-        await context.SaveChangesAsync();
         StateHasChanged();
     }
 

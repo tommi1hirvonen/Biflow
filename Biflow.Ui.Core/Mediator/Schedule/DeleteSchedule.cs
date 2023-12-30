@@ -4,12 +4,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Core;
 
-internal class DeleteScheduleRequestHandler(
+public record DeleteScheduleCommand(Guid ScheduleId) : IRequest;
+
+internal class DeleteScheduleCommandHandler(
     IDbContextFactory<AppDbContext> dbContextFactory,
     ISchedulerService scheduler)
-    : IRequestHandler<DeleteScheduleRequest>
+    : IRequestHandler<DeleteScheduleCommand>
 {
-    public async Task Handle(DeleteScheduleRequest request, CancellationToken cancellationToken)
+    public async Task Handle(DeleteScheduleCommand request, CancellationToken cancellationToken)
     {
         using var context = dbContextFactory.CreateDbContext();
         using var transaction = context.Database.BeginTransaction();

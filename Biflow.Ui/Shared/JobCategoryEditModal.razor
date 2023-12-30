@@ -1,4 +1,5 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject IMediator Mediator
 @inject IHxMessengerService Messenger
 
 @{
@@ -49,16 +50,10 @@
     {
         try
         {
-            using var context = await DbContextFactory.CreateDbContextAsync();
-            if (category.CategoryId == Guid.Empty)
-            {
-                context.JobCategories.Add(category);
-            }
-            else
-            {
-                context.Attach(category).State = EntityState.Modified;
-            }
-            await context.SaveChangesAsync();
+            IRequest command = category.CategoryId == Guid.Empty
+                ? new CreateJobCategoryCommand(category)
+                : new UpdateJobCategoryCommand(category);
+            await Mediator.Send(command);
             await OnCategorySubmitted.InvokeAsync(category);
             await offcanvas.LetAsync(x => x.HideAsync());
         }

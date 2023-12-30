@@ -206,7 +206,7 @@
         bool value = (bool)args.Value!;
         try
         {
-            await Mediator.Send(new ToggleScheduleRequest(schedule.ScheduleId, value));
+            await Mediator.Send(new ToggleScheduleCommand(schedule.ScheduleId, value));
             schedule.IsEnabled = value;
         }
         catch (Exception ex)
@@ -226,7 +226,7 @@
     {
         try
         {
-            await Mediator.Send(new DeleteScheduleRequest(schedule.ScheduleId));
+            await Mediator.Send(new DeleteScheduleCommand(schedule.ScheduleId));
             Schedules?.Remove(schedule);
             await OnSchedulesChanged.InvokeAsync();
         }

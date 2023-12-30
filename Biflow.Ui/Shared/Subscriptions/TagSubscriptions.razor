@@ -1,5 +1,5 @@
 ﻿@inject IHxMessengerService Messenger
-@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject IMediator Mediator
 
 <div class="row">
     <div class="col">
@@ -131,9 +131,7 @@
         {
             ArgumentNullException.ThrowIfNull(User);
             var subscription = new TagSubscription(User.UserId, tagId);
-            await using var context = await DbContextFactory.CreateDbContextAsync();
-            context.Subscriptions.Add(subscription);
-            await context.SaveChangesAsync();
+            await Mediator.Send(new CreateSubscriptionCommand(subscription));
             User.Subscriptions.Add(subscription);
             await OnSubscriptionCountChanged.InvokeAsync();
         }
@@ -148,10 +146,7 @@
         try
         {
             subscription.AlertType = alert;
-            await using var context = await DbContextFactory.CreateDbContextAsync();
-            await context.TagSubscriptions
-                .Where(s => s.SubscriptionId == subscription.SubscriptionId)
-                .ExecuteUpdateAsync(s => s.SetProperty(p => p.AlertType, alert));
+            await Mediator.Send(new UpdateSubscriptionCommand(subscription));
         }
         catch (Exception)
         {
@@ -164,10 +159,7 @@
         try
         {
             ArgumentNullException.ThrowIfNull(User);
-            await using var context = await DbContextFactory.CreateDbContextAsync();
-            await context.Subscriptions
-                .Where(s => s.SubscriptionId == subscription.SubscriptionId)
-                .ExecuteDeleteAsync();
+            await Mediator.Send(new DeleteSubscriptionCommand(subscription.SubscriptionId));
             User.Subscriptions.Remove(subscription);
             await OnSubscriptionCountChanged.InvokeAsync();
         }

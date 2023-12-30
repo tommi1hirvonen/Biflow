@@ -1,5 +1,6 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbFactory
 @inject IHxMessengerService Messenger
+@inject IMediator Mediator
 
 <style>
     tr a {
@@ -163,10 +164,7 @@
     {
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            await context.FunctionApps
-                .Where(x => x.FunctionAppId == functionApp.FunctionAppId)
-                .ExecuteDeleteAsync();
+            await Mediator.Send(new DeleteFunctionAppCommand(functionApp.FunctionAppId));
             functionApps?.Remove(functionApp);
         }
         catch (Exception ex)
@@ -178,19 +176,17 @@
 
     private async Task OnFunctionAppSubmit(FunctionApp functionApp)
     {
-        using var context = DbFactory.CreateDbContext();
         if (functionApp.FunctionAppId == Guid.Empty)
         {
-            context.Add(functionApp);
+            await Mediator.Send(new CreateFunctionAppCommand(functionApp));
             functionApps?.Add(functionApp);
         }
         else
         {
+            await Mediator.Send(new UpdateFunctionAppCommand(functionApp));
             functionApps?.RemoveAll(f => f.FunctionAppId == functionApp.FunctionAppId);
             functionApps?.Add(functionApp);
-            context.Attach(functionApp).State = EntityState.Modified;
         }
-        await context.SaveChangesAsync();
         StateHasChanged();
     }
 

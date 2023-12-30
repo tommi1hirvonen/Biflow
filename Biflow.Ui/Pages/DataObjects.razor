@@ -4,6 +4,7 @@
 
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHxMessengerService Messenger
+@inject IMediator Mediator
 
 <PageTitle>Data Objects | Biflow</PageTitle>
 
@@ -212,7 +213,7 @@
 </HxModal>
 
 @code {
-    private IList<DataObject>? objects;
+    private List<DataObject>? objects;
     private DataObjectEditOffcanvas? editOffcanvas;
     private HxModal? confirmDeleteModal;
     private HxModal? referencesModal;
@@ -252,32 +253,22 @@
 
     private async Task DeleteUnusedDatabaseObjectsAsync()
     {
-        using var context = DbContextFactory.CreateDbContext();
-        foreach (var obj in UnusedObjects.ToList())
-        {
-            context.DataObjects.Remove(obj);
-            objects?.Remove(obj);
-        }
-        await context.SaveChangesAsync();
+        var response = await Mediator.Send(new DeleteUnusedDataObjectsCommand());
+        objects?.RemoveAll(o => response.DeletedDataObjects.Any(r => r.ObjectId == o.ObjectId));
         await confirmDeleteModal.LetAsync(x => x.HideAsync());
     }
 
     private async Task DeleteDatabaseObject(DataObject obj)
     {
-        using var context = DbContextFactory.CreateDbContext();
-        context.DataObjects.Remove(obj);
-        await context.SaveChangesAsync();
+        await Mediator.Send(new DeleteDataObjectCommand(obj.ObjectId));
         objects?.Remove(obj);
     }
 
     private async Task DeleteReferenceAsync(StepDataObject reference)
     {
+        await Mediator.Send(new DeleteStepDataObjectCommand(reference));
         reference.DataObject.Steps.Remove(reference);
         reference.Step.DataObjects.Remove(reference);
-        using var context = DbContextFactory.CreateDbContext();
-        await context.StepDataObjects
-            .Where(x => x.StepId == reference.StepId && x.ObjectId == reference.ObjectId && x.ReferenceType == reference.ReferenceType)
-            .ExecuteDeleteAsync();
     }
 
     private void OnDataObjectSubmitted(DataObject dataObject)

@@ -1,15 +1,18 @@
 ﻿using Biflow.DataAccess;
+using Biflow.DataAccess.Models;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Core;
 
-internal class CreateScheduleRequestHandler(
+public record CreateScheduleCommand(Schedule Schedule, ICollection<string> Tags) : IRequest;
+
+internal class CreateScheduleCommandHandler(
     IDbContextFactory<AppDbContext> dbContextFactory,
     ISchedulerService scheduler)
-    : IRequestHandler<CreateScheduleRequest>
+    : IRequestHandler<CreateScheduleCommand>
 {
-    public async Task Handle(CreateScheduleRequest request, CancellationToken cancellationToken)
+    public async Task Handle(CreateScheduleCommand request, CancellationToken cancellationToken)
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 

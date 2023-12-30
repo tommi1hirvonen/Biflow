@@ -2,7 +2,7 @@
 
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IDbContextFactory<AppDbContext> DbFactory
-@inject UserService UserService
+@inject IMediator Mediator
 @inject IHxMessengerService Messenger
 @inject AuthenticationMethodResolver AuthenticationResolver
 
@@ -149,12 +149,10 @@
 
     private async Task SubmitEmail()
     {
-        if (user is null) return;
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            context.Attach(user).State = EntityState.Modified;
-            await context.SaveChangesAsync();
+            ArgumentNullException.ThrowIfNull(user);
+            await Mediator.Send(new UpdateUserEmailCommand(user.UserId, user.Email));
             Messenger.AddInformation("Email updated successfully");
         }
         catch (Exception ex)
@@ -179,7 +177,7 @@
 
         try
         {
-            await UserService.UpdatePasswordAsync(Username, passwordModel.OldPassword, passwordModel.Password);
+            await Mediator.Send(new UpdateUserPasswordCommand(Username, passwordModel.OldPassword, passwordModel.Password));
             Messenger.AddInformation("Success", "Password updated successfully");
             passwordModel = new();
         }

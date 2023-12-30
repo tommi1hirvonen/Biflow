@@ -4,19 +4,20 @@ using Biflow.Ui.Core;
 using Biflow.Ui.Core.Validation;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
+using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.JSInterop;
 using System.Data;
 
 namespace Biflow.Ui.Shared.Settings;
 
-public partial class UserEditModal : ComponentBase, IDisposable
+public partial class UserEditModal : ComponentBase
 {
     [Inject] private AuthenticationMethodResolver AuthenticationResolver { get; set; } = null!;
     [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
+    [Inject] private IMediator Mediator { get; set; } = null!;
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
     [Inject] private IJSRuntime JS { get; set; } = null!;
 
@@ -28,19 +29,10 @@ public partial class UserEditModal : ComponentBase, IDisposable
     private UserFormModel? model;
     private Guid previousUserId;
     private string currentUsername = "";
-    private AppDbContext context = null!;
     private UserFormModelValidator validator = new(Enumerable.Empty<string>());
     private AuthorizationPane currentPane = AuthorizationPane.Jobs;
 
     private bool IsNewUser => previousUserId == Guid.Empty;
-
-    private async Task ResetContext()
-    {
-        if (context is not null)
-            await context.DisposeAsync();
-
-        context = await DbFactory.CreateDbContextAsync();
-    }
 
     private void ToggleRole(string role)
     {
@@ -131,31 +123,7 @@ public partial class UserEditModal : ComponentBase, IDisposable
 
             try
             {
-                var context = await DbFactory.CreateDbContextAsync();
-                var transaction = context.Database.BeginTransaction().GetDbTransaction();
-
-                try
-                {
-                    // Add user without password
-                    context.Users.Add(model.User);
-
-                    await context.SaveChangesAsync();
-
-                    if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn)
-                    {
-                        var connection = context.Database.GetDbConnection();
-                        // Update the password hash.
-                        await UserService.AdminUpdatePasswordAsync(model.User.Username, model.PasswordModel.Password, connection, transaction);
-                    }
-
-                    await transaction.CommitAsync();
-                }
-                catch
-                {
-                    await transaction.RollbackAsync();
-                    throw;
-                }
-
+                await Mediator.Send(new CreateUserCommand(model.User, model.PasswordModel));
                 await OnUserSubmit.InvokeAsync(model.User);
                 model = null;
                 await modal.LetAsync(x => x.HideAsync());
@@ -171,8 +139,7 @@ public partial class UserEditModal : ComponentBase, IDisposable
             try
             {
                 ArgumentNullException.ThrowIfNull(model);
-                context.Attach(model.User).Property(u => u.Roles).IsModified = true;
-                await context.SaveChangesAsync();
+                await Mediator.Send(new UpdateUserCommand(model.User));
                 await OnUserSubmit.InvokeAsync(model.User);
                 await modal.LetAsync(x => x.HideAsync());
             }
@@ -188,9 +155,9 @@ public partial class UserEditModal : ComponentBase, IDisposable
         currentUsername = "";
         await modal.LetAsync(x => x.ShowAsync());
         previousUserId = userId ?? Guid.Empty;
+        using var context = DbFactory.CreateDbContext();
         if (userId is null)
         {
-            await ResetContext();
             var user = new User
             {
                 Username = "",
@@ -202,7 +169,7 @@ public partial class UserEditModal : ComponentBase, IDisposable
         }
         else
         {
-            await ResetContext();
+
             var user = await context.Users
                 .Include(u => u.Jobs)
                 .Include(u => u.DataTables)
@@ -235,8 +202,6 @@ public partial class UserEditModal : ComponentBase, IDisposable
             context.PreventNavigation();
         }
     }
-
-    public void Dispose() => context?.Dispose();
 
     private enum AuthorizationPane { Jobs, DataTables }
 }

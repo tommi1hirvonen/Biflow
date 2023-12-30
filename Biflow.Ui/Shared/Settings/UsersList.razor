@@ -1,5 +1,5 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbFactory
-@inject UserService UserService
+@inject IMediator Mediator
 @inject IHxMessengerService Messenger
 @inject AuthenticationMethodResolver AuthenticationResolver
 
@@ -127,11 +127,8 @@
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(users);
-            using var context = DbFactory.CreateDbContext();
-            context.Users.Remove(user);
-            await context.SaveChangesAsync();
-            users.Remove(user);
+            await Mediator.Send(new DeleteUserCommand(user.UserId));
+            users?.Remove(user);
         }
         catch (Exception)
         {
@@ -155,5 +152,4 @@
     {
         await userEditModal.LetAsync(x => x.ShowAsync(user?.UserId));
     }
-
 }

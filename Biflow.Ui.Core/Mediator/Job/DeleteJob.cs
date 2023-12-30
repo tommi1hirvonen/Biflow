@@ -1,16 +1,18 @@
-﻿using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
+﻿using Biflow.DataAccess.Models;
+using Biflow.DataAccess;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Core;
 
-public class DeleteJobRequestHandler(
+public record DeleteJobCommand(Guid JobId) : IRequest;
+
+internal class DeleteJobCommandHandler(
     IDbContextFactory<AppDbContext> dbContextFactory,
     ISchedulerService scheduler)
-    : IRequestHandler<DeleteJobRequest>
+    : IRequestHandler<DeleteJobCommand>
 {
-    public async Task Handle(DeleteJobRequest request, CancellationToken cancellationToken)
+    public async Task Handle(DeleteJobCommand request, CancellationToken cancellationToken)
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         using var transaction = context.Database.BeginTransaction();

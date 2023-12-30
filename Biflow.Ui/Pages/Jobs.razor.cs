@@ -118,10 +118,8 @@ public partial class Jobs : ComponentBase
         bool value = (bool)args.Value!;
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            context.Attach(job);
+            await Mediator.Send(new ToggleJobCommand(job.JobId, value));
             job.IsEnabled = value;
-            await context.SaveChangesAsync();
         }
         catch (Exception ex)
         {
@@ -177,7 +175,7 @@ public partial class Jobs : ComponentBase
         }
         try
         {
-            await Mediator.Send(new DeleteJobRequest(job.JobId));
+            await Mediator.Send(new DeleteJobCommand(job.JobId));
             jobs?.Remove(job);
         }
         catch (Exception ex)
@@ -226,11 +224,9 @@ public partial class Jobs : ComponentBase
         }
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            context.JobCategories.Remove(category);
-            await context.SaveChangesAsync();
+            await Mediator.Send(new DeleteJobCategoryCommand(category.CategoryId));
             categories?.Remove(category);
-            foreach (var job in jobs?.Where(t => t.CategoryId == category.CategoryId) ?? Enumerable.Empty<Job>())
+            foreach (var job in jobs?.Where(t => t.CategoryId == category.CategoryId) ?? [])
             {
                 job.CategoryId = null;
                 job.Category = null;

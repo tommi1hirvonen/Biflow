@@ -1,13 +1,18 @@
-using Biflow.DataAccess;
+﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Core;
 
-internal class DeleteStepsRequestHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<DeleteStepsRequest>
+public record DeleteStepsCommand(params Guid[] StepIds) : IRequest
 {
-    public async Task Handle(DeleteStepsRequest request, CancellationToken cancellationToken)
+    public DeleteStepsCommand(IEnumerable<Step> steps) : this(steps.Select(s => s.StepId).ToArray()) { }
+}
+
+internal class DeleteStepsCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<DeleteStepsCommand>
+{
+    public async Task Handle(DeleteStepsCommand request, CancellationToken cancellationToken)
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var steps = await context.Steps

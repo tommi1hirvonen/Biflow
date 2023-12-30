@@ -4,12 +4,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Core;
 
-internal class ToggleScheduleRequestHandler(
+public record ToggleScheduleCommand(Guid ScheduleId, bool IsEnabled) : IRequest;
+
+internal class ToggleScheduleCommandHandler(
     IDbContextFactory<AppDbContext> dbContextFactory,
     ISchedulerService scheduler)
-    : IRequestHandler<ToggleScheduleRequest>
+    : IRequestHandler<ToggleScheduleCommand>
 {
-    public async Task Handle(ToggleScheduleRequest request, CancellationToken cancellationToken)
+    public async Task Handle(ToggleScheduleCommand request, CancellationToken cancellationToken)
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         using var transaction = context.Database.BeginTransaction();

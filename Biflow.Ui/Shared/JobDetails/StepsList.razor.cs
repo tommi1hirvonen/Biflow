@@ -145,7 +145,7 @@ public partial class StepsList : ComponentBase
         }
         try
         {
-            await Mediator.Send(new DeleteStepsRequest(selectedSteps));
+            await Mediator.Send(new DeleteStepsCommand(selectedSteps));
             foreach (var step in selectedSteps)
             {
                 Steps?.Remove(step);
@@ -170,10 +170,8 @@ public partial class StepsList : ComponentBase
         bool value = (bool)args.Value!;
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            context.Attach(step);
+            await Mediator.Send(new ToggleStepsCommand(step.StepId, value));
             step.IsEnabled = value;
-            await context.SaveChangesAsync();
         }
         catch (Exception ex)
         {
@@ -189,7 +187,7 @@ public partial class StepsList : ComponentBase
         }
         try
         {
-            await Mediator.Send(new DeleteStepsRequest(step.StepId));
+            await Mediator.Send(new DeleteStepsCommand(step.StepId));
             Steps?.Remove(step);
             selectedSteps.Remove(step);
 
@@ -268,13 +266,11 @@ public partial class StepsList : ComponentBase
             .ToArray();
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            context.AttachRange(steps);
+            await Mediator.Send(new ToggleStepsCommand(steps, enabled));
             foreach (var step in steps)
             {
                 step.IsEnabled = enabled;
             }
-            await context.SaveChangesAsync();
         }
         catch (Exception ex)
         {

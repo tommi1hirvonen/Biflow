@@ -1,7 +1,9 @@
 ﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
+using Biflow.Ui.Core;
 using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
+using MediatR;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +17,8 @@ public partial class DependenciesSynchronizer : ComponentBase
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
 
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
+
+    [Inject] private IMediator Mediator { get; set; } = null!;
 
     [CascadingParameter] public Job? Job { get; set; }
 
@@ -99,16 +103,7 @@ public partial class DependenciesSynchronizer : ComponentBase
     private async Task AddDependencyAsync(Dependency dependency)
     {
         // Add dependency to database.
-        using var context = DbContextFactory.CreateDbContext();
-        var existing = await context.Dependencies
-            .FirstOrDefaultAsync(d => d.StepId == dependency.StepId && d.DependantOnStepId == dependency.DependantOnStepId);
-        if (existing is null)
-        {
-            dependency.Step = null!;
-            dependency.DependantOnStep = null!;
-            context.Dependencies.Add(dependency);
-            await context.SaveChangesAsync();
-        }
+        await Mediator.Send(new CreateDependencyCommand(dependency));
 
         // Add dependency to the step loaded into memory.
         var step = Steps?.FirstOrDefault(step => step.StepId == dependency.StepId);
@@ -126,14 +121,7 @@ public partial class DependenciesSynchronizer : ComponentBase
     private async Task RemoveDependencyAsync(Dependency dependency)
     {
         // Remove dependency from the database.
-        using var context = DbContextFactory.CreateDbContext();
-        var existing = await context.Dependencies
-            .FirstOrDefaultAsync(d => d.StepId == dependency.StepId && d.DependantOnStepId == dependency.DependantOnStepId);
-        if (existing is not null)
-        {
-            context.Dependencies.Remove(existing);
-            await context.SaveChangesAsync();
-        }
+        await Mediator.Send(new DeleteDependencyCommand(dependency.StepId, dependency.DependantOnStepId));
 
         // Remove dependency from step loaded into memory.
         var step = Steps?.FirstOrDefault(step => step.StepId == dependency.StepId);
