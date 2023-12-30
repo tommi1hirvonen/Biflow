@@ -226,11 +226,9 @@ public partial class Jobs : ComponentBase
         }
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            context.JobCategories.Remove(category);
-            await context.SaveChangesAsync();
+            await Mediator.Send(new DeleteJobCategoryCommand(category));
             categories?.Remove(category);
-            foreach (var job in jobs?.Where(t => t.CategoryId == category.CategoryId) ?? Enumerable.Empty<Job>())
+            foreach (var job in jobs?.Where(t => t.CategoryId == category.CategoryId) ?? [])
             {
                 job.CategoryId = null;
                 job.Category = null;
