@@ -12,7 +12,7 @@ internal class DeleteQlikCloudClientCommandHandler(IDbContextFactory<AppDbContex
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var client = await context.QlikCloudClients
-            .FirstOrDefaultAsync(c => c.QlikCloudClientId == request.QlikCloudClientId);
+            .FirstOrDefaultAsync(c => c.QlikCloudClientId == request.QlikCloudClientId, cancellationToken);
         if (client is not null)
         {
             context.QlikCloudClients.Remove(client);

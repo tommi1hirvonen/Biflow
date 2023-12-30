@@ -170,10 +170,8 @@ public partial class StepsList : ComponentBase
         bool value = (bool)args.Value!;
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            context.Attach(step);
+            await Mediator.Send(new ToggleStepsCommand(step.StepId, value));
             step.IsEnabled = value;
-            await context.SaveChangesAsync();
         }
         catch (Exception ex)
         {
@@ -268,13 +266,11 @@ public partial class StepsList : ComponentBase
             .ToArray();
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            context.AttachRange(steps);
+            await Mediator.Send(new ToggleStepsCommand(steps, enabled));
             foreach (var step in steps)
             {
                 step.IsEnabled = enabled;
             }
-            await context.SaveChangesAsync();
         }
         catch (Exception ex)
         {

@@ -409,10 +409,8 @@
     {
         try
         {
-            using var context = DbFactory.CreateDbContext();
-            context.Attach(step);
+            await Mediator.Send(new ToggleStepsCommand(step.StepId, value));
             step.IsEnabled = value;
-            await context.SaveChangesAsync();
             await LoadGraph();
         }
         catch (Exception ex)

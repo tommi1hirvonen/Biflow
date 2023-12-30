@@ -118,7 +118,7 @@ public partial class Jobs : ComponentBase
         bool value = (bool)args.Value!;
         try
         {
-            await Mediator.Send(new ToggleJobCommand(job.JobId, value);
+            await Mediator.Send(new ToggleJobCommand(job.JobId, value));
             job.IsEnabled = value;
         }
         catch (Exception ex)
