@@ -1,6 +1,5 @@
-﻿@implements IDisposable
-
-@inject IDbContextFactory<AppDbContext> DbContextFactory
+﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject IMediator Mediator
 @inject IHxMessengerService Messenger
 @inject JobValidator JobValidator
 
@@ -90,17 +89,16 @@
 @code {
     [CascadingParameter] Job? Job { get; set; }
 
-    private AppDbContext? context;
     private Job? editJob;
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Job is null || context is not null)
+        if (Job is null)
         {
             return;
         }
 
-        context = DbContextFactory.CreateDbContext();
+        using var context = DbContextFactory.CreateDbContext();
         editJob = await context.Jobs
             .Include(j => j.JobConcurrencies)
             .FirstAsync(j => j.JobId == Job.JobId);
@@ -111,8 +109,7 @@
         ArgumentNullException.ThrowIfNull(editJob);
         try
         {
-            ArgumentNullException.ThrowIfNull(context);
-            await context.SaveChangesAsync();
+            await Mediator.Send(new UpdateJobCommand(editJob));
             Messenger.AddInformation("Concurrency settings saved successfully");
         }
         catch (DbUpdateConcurrencyException)
@@ -125,10 +122,5 @@
             Messenger.AddError("Error saving concurrency settings", $"{ex.Message}\n{ex.InnerException?.Message}");
         }
 
-    }
-
-    public void Dispose()
-    {
-        context?.Dispose();
     }
 }

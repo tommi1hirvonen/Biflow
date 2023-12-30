@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Identity.Web;
@@ -186,6 +187,55 @@ public static partial class Extensions
         services.AddTransient<JobValidator>();
         services.AddTransient<DataTableValidator>();
         return services;
+    }
+
+    /// <summary>
+    /// Extensions to help instruct EF Core ChangeTracker which collection navigation items have changed
+    /// when doing a disconnected update.
+    /// </summary>
+    /// <typeparam name="T">Entity type</typeparam>
+    /// <typeparam name="TKey">Entity key type</typeparam>
+    /// <param name="context">DbContext instance whose ChangeTracker is used</param>
+    /// <param name="currentItems">Current (old) items</param>
+    /// <param name="newItems">New items</param>
+    /// <param name="keyFunc">Delegate to get the key from item</param>
+    public static void MergeCollections<T, TKey>(this DbContext context, ICollection<T> currentItems, ICollection<T> newItems, Func<T, TKey> keyFunc)
+        where T : class
+    {
+        List<T> toRemove = [];
+        foreach (var item in currentItems)
+        {
+            var currentKey = keyFunc(item);
+            ArgumentNullException.ThrowIfNull(currentKey);
+            var found = newItems.FirstOrDefault(x => currentKey.Equals(keyFunc(x)));
+            if (found is null)
+            {
+                toRemove.Add(item);
+            }
+            else if (!ReferenceEquals(found, item))
+            {
+                context.Entry(item).CurrentValues.SetValues(found);
+            }
+        }
+
+        foreach (var item in toRemove)
+        {
+            currentItems.Remove(item);
+            // The following call can be activated if the removed item
+            // should be completely deleted from the database.
+            // context.Set<T>().Remove(item);
+        }
+
+        foreach (var newItem in newItems)
+        {
+            var newKey = keyFunc(newItem);
+            ArgumentNullException.ThrowIfNull(newKey);
+            var found = currentItems.FirstOrDefault(x => newKey.Equals(keyFunc(x)));
+            if (found is null)
+            {
+                currentItems.Add(newItem);
+            }
+        }
     }
 
     /// <summary>

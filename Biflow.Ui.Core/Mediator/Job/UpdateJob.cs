@@ -12,7 +12,21 @@ internal class UpdateJobCommandHandler(IDbContextFactory<AppDbContext> dbContext
     public async Task Handle(UpdateJobCommand request, CancellationToken cancellationToken)
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        context.Jobs.Attach(request.Job).State = EntityState.Modified;
+        var query = context.Jobs.AsQueryable();
+        if (request.Job.JobConcurrencies is not null)
+        {
+            query = query.Include(c => c.JobConcurrencies);
+        }
+        var job = await query.FirstOrDefaultAsync(j => j.JobId == request.Job.JobId, cancellationToken);
+        if (job is null)
+        {
+            return;
+        }
+        context.Entry(job).CurrentValues.SetValues(request.Job);
+        if (request.Job.JobConcurrencies is not null)
+        {
+            context.MergeCollections(job.JobConcurrencies, request.Job.JobConcurrencies, c => c.StepType);
+        }
         await context.SaveChangesAsync(cancellationToken);
     }
 }
