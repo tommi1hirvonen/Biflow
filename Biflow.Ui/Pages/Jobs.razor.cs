@@ -226,7 +226,7 @@ public partial class Jobs : ComponentBase
         }
         try
         {
-            await Mediator.Send(new DeleteJobCategoryCommand(category));
+            await Mediator.Send(new DeleteJobCategoryCommand(category.CategoryId));
             categories?.Remove(category);
             foreach (var job in jobs?.Where(t => t.CategoryId == category.CategoryId) ?? [])
             {

@@ -1,11 +1,10 @@
 ﻿using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Core;
 
-public record DeleteJobCategoryCommand(JobCategory Category) : IRequest;
+public record DeleteJobCategoryCommand(Guid CategoryId) : IRequest;
 
 internal class DeleteJobCategoryCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<DeleteJobCategoryCommand>
@@ -13,7 +12,12 @@ internal class DeleteJobCategoryCommandHandler(IDbContextFactory<AppDbContext> d
     public async Task Handle(DeleteJobCategoryCommand request, CancellationToken cancellationToken)
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        context.JobCategories.Remove(request.Category);
-        await context.SaveChangesAsync(cancellationToken);
+        var category = await context.JobCategories
+            .FirstOrDefaultAsync(c => c.CategoryId == request.CategoryId, cancellationToken);
+        if (category is not null)
+        {
+            context.JobCategories.Remove(category);
+            await context.SaveChangesAsync(cancellationToken);
+        }
     }
 }
