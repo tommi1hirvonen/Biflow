@@ -1,6 +1,5 @@
-﻿@implements IDisposable
-
-@inject IDbContextFactory<AppDbContext> DbContextFactory
+﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject IMediator Mediator
 @inject IHxMessengerService Messenger
 
 @if (editJob is not null && categories is not null)
@@ -23,7 +22,7 @@
                 <div class="input-group-text">
                     <CxIcon Icon="FeatherIcon.Folder" />
                 </div>
-                <InputSelect class="form-select" style="max-width: 50rem;" @bind-Value="editJob.CategoryId" @bind-Value:after="SetCategory">
+                <InputSelect class="form-select" style="max-width: 50rem;" @bind-Value="editJob.CategoryId">
                     <option value="">No category</option>
                     @foreach (var cat in categories)
                     {
@@ -64,47 +63,37 @@
 
 
 @code {
-    [CascadingParameter] Job? Job { get; set; }
+        [CascadingParameter] Job? Job { get; set; }
 
-    [CascadingParameter(Name = "OnJobUpdated")] public Action<Job>? OnJobUpdated { get; set; }
+        [CascadingParameter(Name = "OnJobUpdated")] public Action<Job>? OnJobUpdated { get; set; }
 
-    private AppDbContext? context;
     private Job? editJob;
     private IEnumerable<JobCategory>? categories;
 
     protected override async void OnParametersSet()
     {
-        if (Job is null || Job.JobId == Guid.Empty || context is not null)
+        if (Job is null || Job.JobId == Guid.Empty)
         {
             return;
         }
 
-        context = await DbContextFactory.CreateDbContextAsync();
+        using var context = await DbContextFactory.CreateDbContextAsync();
         editJob = await context.Jobs
-            .Include(j => j.Category)
+            .AsNoTracking()
             .FirstAsync(j => j.JobId == Job.JobId);
         categories = await context.JobCategories
+            .AsNoTracking()
             .OrderBy(c => c.CategoryName)
             .ToListAsync();
         StateHasChanged();
-    }
-
-    private void SetCategory()
-    {
-        ArgumentNullException.ThrowIfNull(editJob);
-        ArgumentNullException.ThrowIfNull(categories);
-        editJob.Category = editJob.CategoryId is not null
-            ? categories.First(c => c.CategoryId == editJob.CategoryId)
-            : null;
     }
 
     private async Task UpdateJob()
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(context);
             ArgumentNullException.ThrowIfNull(editJob);
-            await context.SaveChangesAsync();
+            await Mediator.Send(new UpdateJobCommand(editJob));
             Messenger.AddInformation("Job settings saved successfully");
             OnJobUpdated?.Invoke(editJob);
         }
@@ -116,10 +105,5 @@
         {
             Messenger.AddError("Error updating job", ex.Message);
         }
-    }
-
-    public void Dispose()
-    {
-        context?.Dispose();
     }
 }
