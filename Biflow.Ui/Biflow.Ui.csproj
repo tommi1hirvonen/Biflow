@@ -54,10 +54,6 @@
     </EmbeddedResource>
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="wwwroot\fonts\Poppins\" />
-  </ItemGroup>
-
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
     <Exec Command="git rev-parse HEAD &gt; &quot;$(ProjectDir.TrimEnd('\'))\CurrentCommit.txt&quot;" />
   </Target>
