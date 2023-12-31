@@ -69,10 +69,6 @@ public abstract class StepExecution
 
     public Execution Execution { get; set; } = null!;
 
-    // TODO This should be removed since it can accidentally be used in EF Includes.
-    [NotMapped] // Do not map in EF model to avoid foreign key
-    public Step? Step { get; set; }
-
     public ICollection<StepExecutionAttempt> StepExecutionAttempts { get; set; } = null!;
 
     public ICollection<ExecutionDependency> ExecutionDependencies { get; set; } = null!;
@@ -82,6 +78,33 @@ public abstract class StepExecution
     public IList<StepExecutionConditionParameter> ExecutionConditionParameters { get; set; } = null!;
 
     public IList<StepExecutionDataObject> DataObjects { get; set; } = null!;
+
+    /// <summary>
+    /// Get the <see cref="Step"/> entity associated with this <see cref="StepExecution"/>.
+    /// The method <see cref="SetStep(Step?)"/> will need to have been called first for the <see cref="Step"/> to be available.
+    /// </summary>
+    /// <returns><see cref="Step"/> if it was previously set using <see cref="SetStep(Step?)"/> with a non-null object; <see langword="null"/> otherwise.</returns>
+    public Step? GetStep() => _step;
+
+    /// <summary>
+    /// Set the private <see cref="Step"/> object used for containing a possible step reference.
+    /// It can be later accessed using <see cref="GetStep"/>.
+    /// </summary>
+    /// <param name="step"><see cref="Step"/> reference to store.
+    /// The StepIds are compared and the value is set only if the ids match.</param>
+    public void SetStep(Step? step)
+    {
+        if (step?.StepId == StepId)
+        {
+            _step = step;
+        }
+    }
+
+    // Use a field excluded from the EF model to store the Step reference.
+    // This is to avoid generating a foreign key constraint on the ExecutionStep table caused by a navigation property.
+    // Make it private with public method access so that it is not used in EF Include method calls by accident.
+    [NotMapped]
+    private Step? _step;
 
     public override string ToString() =>
         $"{GetType().Name} {{ ExecutionId = \"{ExecutionId}\", StepId = \"{StepId}\", StepName = \"{StepName}\" }}";

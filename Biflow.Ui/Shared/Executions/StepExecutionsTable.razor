@@ -199,7 +199,8 @@
                     .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId && e.StepId == execution.StepId && e.RetryAttemptIndex == execution.RetryAttemptIndex);
                 if (detailStep is not null)
                 {
-                    detailStep.StepExecution.Step = await context.Steps.FirstOrDefaultAsync(s => s.StepId == detailStep.StepId);
+                    var step = await context.Steps.FirstOrDefaultAsync(s => s.StepId == detailStep.StepId);
+                    detailStep.StepExecution.SetStep(step);
                 }
             }   
         }

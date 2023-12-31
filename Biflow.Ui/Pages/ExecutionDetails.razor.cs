@@ -69,7 +69,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
     private IEnumerable<StepExecutionAttempt>? Executions => execution?.StepExecutions.SelectMany(e => e.StepExecutionAttempts);
 
     private IEnumerable<StepExecutionProjection>? FilteredExecutions => Executions
-        ?.Where(e => tagFilter.Count == 0 || e.StepExecution.Step?.Tags.Any(t => tagFilter.Contains(t.TagName)) == true)
+        ?.Where(e => tagFilter.Count == 0 || e.StepExecution.GetStep()?.Tags.Any(t => tagFilter.Contains(t.TagName)) == true)
         .Where(e => stepStatusFilter.Count == 0 || stepStatusFilter.Contains(e.ExecutionStatus))
         .Where(e => stepFilter.Count == 0 || stepFilter.Contains((e.StepExecution.StepName, e.StepExecution.StepType)))
         .Where(e => stepTypeFilter.Count == 0 || stepTypeFilter.Contains(e.StepExecution.StepType))
@@ -77,7 +77,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             e.StepExecution.ExecutionId,
             e.StepExecution.StepId,
             e.RetryAttemptIndex,
-            e.StepExecution.Step?.StepName ?? e.StepExecution.StepName,
+            e.StepExecution.GetStep()?.StepName ?? e.StepExecution.StepName,
             e.StepType,
             e.StepExecution.ExecutionPhase,
             e.StartedOn,
@@ -88,7 +88,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             e.StepExecution.Execution.ScheduleId,
             e.StepExecution.Execution.JobId,
             job?.JobName ?? e.StepExecution.Execution.JobName,
-            e.StepExecution.Step?.Tags.ToArray() ?? []));
+            e.StepExecution.GetStep()?.Tags.ToArray() ?? []));
 
     private Report ShowReport => Page switch
     {
@@ -173,7 +173,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
                 var matches = steps.Join(execution.StepExecutions, s => s.StepId, e => e.StepId, (s, e) => (s, e));
                 foreach (var (step, stepExecution) in matches)
                 {
-                    stepExecution.Step = step;
+                    stepExecution.SetStep(step);
                 }
             }
             job = execution is not null
