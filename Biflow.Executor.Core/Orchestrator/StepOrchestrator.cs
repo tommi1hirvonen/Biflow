@@ -101,7 +101,17 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
 
         if (stepExecution is TStep step && executionAttempt is TAttempt attempt)
         {
-            var executor = ActivatorUtilities.CreateInstance<TExecutor>(_serviceProvider, step);
+            TExecutor executor;
+            try
+            {
+                executor = ActivatorUtilities.CreateInstance<TExecutor>(_serviceProvider, step);
+            }
+            catch (Exception ex)
+            {
+                attempt.AddError(ex, $"Error initializing an instance of {typeof(TExecutor)}");
+                await UpdateExecutionFailedAsync(attempt, StepExecutionStatus.Failed);
+                return false;
+            }
             return await ExecuteRecursivelyWithRetriesAsync(executor, step, attempt, cts);
         }
 
