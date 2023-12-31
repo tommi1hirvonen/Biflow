@@ -19,7 +19,7 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
             .Include(e => e.ExecutionParameters)
             .Include(e => e.ExecutionConcurrencies)
             .FirstOrDefaultAsync(e => e.ExecutionId == executionId)
-            ?? throw new ArgumentException($"No execution was found for id {executionId}");
+            ?? throw new ExecutionNotFoundException(executionId);
 
         var query1 = context.StepExecutions
             .Where(e => e.ExecutionId == executionId)
@@ -103,4 +103,9 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
 
         return ActivatorUtilities.CreateInstance<JobExecutor>(_serviceProvider, execution);
     }
+}
+
+file class ExecutionNotFoundException(Guid executionId) : Exception($"No execution found for id {executionId}")
+{
+    public Guid ExecutionId { get; } = executionId;
 }
