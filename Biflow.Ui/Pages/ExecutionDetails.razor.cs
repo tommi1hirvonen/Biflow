@@ -148,34 +148,27 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             loading = true;
             await InvokeAsync(StateHasChanged);
             using var context = DbFactory.CreateDbContext();
-            execution = await context.Executions
-                .AsNoTrackingWithIdentityResolution()
-                .Include(e => e.ExecutionParameters)
-                .Include(e => e.StepExecutions)
-                .ThenInclude(e => e.StepExecutionAttempts)
-                .Include(e => e.StepExecutions)
-                .ThenInclude(e => e.ExecutionDependencies)
-                .Include($"{nameof(execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
-                .Include($"{nameof(execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
-                .Include(e => e.StepExecutions)
-                .ThenInclude(e => e.ExecutionConditionParameters)
-                .ThenInclude(p => p.ExecutionParameter)
-                .Include(e => e.StepExecutions)
-                .FirstOrDefaultAsync(e => e.ExecutionId == ExecutionId);
-            if (execution is not null)
-            {
-                var stepIds = execution.StepExecutions.Select(s => s.StepId).ToArray();
-                var steps = await context.Steps
+            var stepExecutions = await (
+                from exec in context.StepExecutions
                     .AsNoTrackingWithIdentityResolution()
-                    .Include(s => s.Tags)
-                    .Where(s => stepIds.Contains(s.StepId))
-                    .ToArrayAsync();
-                var matches = steps.Join(execution.StepExecutions, s => s.StepId, e => e.StepId, (s, e) => (s, e));
-                foreach (var (step, stepExecution) in matches)
-                {
-                    stepExecution.SetStep(step);
-                }
+                    .Where(e => e.ExecutionId == ExecutionId)
+                    .Include(e => e.Execution)
+                    .ThenInclude(e => e.ExecutionParameters)
+                    .Include(e => e.StepExecutionAttempts)
+                    .Include(e => e.ExecutionDependencies)
+                    .Include($"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
+                    .Include($"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
+                    .Include(e => e.ExecutionConditionParameters)
+                    .ThenInclude(p => p.ExecutionParameter)
+                join step in context.Steps.Include(s => s.Tags) on exec.StepId equals step.StepId into es
+                from step in es.DefaultIfEmpty()
+                select new { exec, step }
+                ).ToArrayAsync();
+            foreach (var item in stepExecutions)
+            {
+                item.exec.SetStep(item.step);
             }
+            execution = stepExecutions.FirstOrDefault()?.exec.Execution;
             job = execution is not null
                 ? await context.Jobs.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(j => j.JobId == execution.JobId)
                 : null;
