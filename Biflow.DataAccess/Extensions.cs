@@ -58,34 +58,57 @@ public static class Extensions
             .Include($"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
             .Include($"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}");
 
-        var sqlConnections = context.SqlConnections;
-        var asConnections = context.AnalysisServicesConnections;
-        var appRegistrations = context.AppRegistrations;
-        var functionApps = context.FunctionApps;
-        var pipelineClients = context.PipelineClients.Include(a => a.AppRegistration);
-        var qlikClients = context.QlikCloudClients;
-        var steps = context.Steps;
-
         // Left join endpoint clients to step executions.
+        // In case the respective include was disabled,
+        // use join conditions which SQL Server can see always evaluate to false.
+        // This way the left join is completely excluded from the actual query plan
+        // even if it is present in the SQL query => no performance penalty.
         var query2 =
             from stepExec in query1
-            join sql in sqlConnections on new { Id = includeEndpoint ? (object?)((SqlStepExecution)stepExec).ConnectionId : true } equals new { Id = includeStep ? (object?)sql.ConnectionId : false } into sql_
+            join sql in context.SqlConnections
+                on new { Id = includeEndpoint ? (object?)((SqlStepExecution)stepExec).ConnectionId : true }
+                equals new { Id = includeEndpoint ? (object?)sql.ConnectionId : false }
+                into sql_
             from sql in sql_.DefaultIfEmpty()
-            join package in sqlConnections on new { Id = includeEndpoint ? (object?)((PackageStepExecution)stepExec).ConnectionId : true } equals new { Id = includeStep ? (object?)package.ConnectionId : false } into package_
+            join package in context.SqlConnections
+                on new { Id = includeEndpoint ? (object?)((PackageStepExecution)stepExec).ConnectionId : true }
+                equals new { Id = includeEndpoint ? (object?)package.ConnectionId : false }
+                into package_
             from package in package_.DefaultIfEmpty()
-            join agent in sqlConnections on new { Id = includeEndpoint ? (object?)((AgentJobStepExecution)stepExec).ConnectionId : true } equals new { Id = includeStep ? (object?)agent.ConnectionId : false } into agent_
+            join agent in context.SqlConnections
+                on new { Id = includeEndpoint ? (object?)((AgentJobStepExecution)stepExec).ConnectionId : true }
+                equals new { Id = includeEndpoint ? (object?)agent.ConnectionId : false }
+                into agent_
             from agent in agent_.DefaultIfEmpty()
-            join tabular in asConnections on new { Id = includeEndpoint ? (object?)((TabularStepExecution)stepExec).ConnectionId : true } equals new { Id = includeStep ? (object?)tabular.ConnectionId : false } into tabular_
+            join tabular in context.AnalysisServicesConnections
+                on new { Id = includeEndpoint ? (object?)((TabularStepExecution)stepExec).ConnectionId : true }
+                equals new { Id = includeEndpoint ? (object?)tabular.ConnectionId : false }
+                into tabular_
             from tabular in tabular_.DefaultIfEmpty()
-            join dataset in appRegistrations on new { Id = includeEndpoint ? (object?)((DatasetStepExecution)stepExec).AppRegistrationId : true } equals new { Id = includeStep ? (object?)dataset.AppRegistrationId : false } into dataset_
+            join dataset in context.AppRegistrations
+                on new { Id = includeEndpoint ? (object?)((DatasetStepExecution)stepExec).AppRegistrationId : true }
+                equals new { Id = includeEndpoint ? (object?)dataset.AppRegistrationId : false }
+                into dataset_
             from dataset in dataset_.DefaultIfEmpty()
-            join function in functionApps on new { Id = includeEndpoint ? (object?)((FunctionStepExecution)stepExec).FunctionAppId : true } equals new { Id = includeStep ? (object?)function.FunctionAppId : false } into function_
+            join function in context.FunctionApps
+                on new { Id = includeEndpoint ? (object?)((FunctionStepExecution)stepExec).FunctionAppId : true }
+                equals new { Id = includeEndpoint ? (object?)function.FunctionAppId : false }
+                into function_
             from function in function_.DefaultIfEmpty()
-            join pipeline in pipelineClients on new { Id = includeEndpoint ? (object?)((PipelineStepExecution)stepExec).PipelineClientId : true } equals new { Id = includeStep ? (object?)pipeline.PipelineClientId : false } into pipeline_
+            join pipeline in context.PipelineClients.Include(a => a.AppRegistration)
+                on new { Id = includeEndpoint ? (object?)((PipelineStepExecution)stepExec).PipelineClientId : true }
+                equals new { Id = includeEndpoint ? (object?)pipeline.PipelineClientId : false }
+                into pipeline_
             from pipeline in pipeline_.DefaultIfEmpty()
-            join qlik in qlikClients on new { Id = includeEndpoint ? (object?)((QlikStepExecution)stepExec).QlikCloudClientId : true } equals new { Id = includeStep ? (object?)qlik.QlikCloudClientId : false } into qlik_
+            join qlik in context.QlikCloudClients
+                on new { Id = includeEndpoint ? (object?)((QlikStepExecution)stepExec).QlikCloudClientId : true }
+                equals new { Id = includeEndpoint ? (object?)qlik.QlikCloudClientId : false }
+                into qlik_
             from qlik in qlik_.DefaultIfEmpty()
-            join step in steps on new { Id = includeStep ? (object?)stepExec.StepId : true } equals new { Id = includeStep ? (object?)step.StepId : false } into step_
+            join step in context.Steps
+                on new { Id = includeStep ? (object?)stepExec.StepId : true }
+                equals new { Id = includeStep ? (object?)step.StepId : false }
+                into step_
             from step in step_.DefaultIfEmpty()
             select new StepExecutionProjection(
                 stepExec,
