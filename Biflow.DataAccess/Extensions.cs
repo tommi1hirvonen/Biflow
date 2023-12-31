@@ -26,13 +26,12 @@ public static class Extensions
     /// </summary>
     /// <param name="context"><see cref="AppDbContext"/> instance to query</param>
     /// <param name="executionId">id of the execution to get</param>
-    /// <param name="includeEndpoints">Include step execution endpoints (e.g. connections) so that calls such as <see cref="SqlStepExecution.GetConnection"/>
+    /// <param name="includeEndpoint">Include step execution endpoints (e.g. connections) so that calls such as <see cref="SqlStepExecution.GetConnection"/>
     /// return the current endpoint if it has not been deleted from the db</param>
     /// <param name="includeStep">Include step navigation so that calling <see cref="StepExecution.GetStep"/>
     /// returns the current step if it has not been deleted from the db</param>
-    /// <returns><see cref="Execution"/> with all navigation properties included (incl. step execution endpoint clients, e.g. connections)</returns>
-    /// <exception cref="ExecutionNotFoundException"><see cref="Execution"/> with the given execution id was not found</exception>
-    public static async Task<Execution> GetExecutionWithEntireGraphAsync(
+    /// <returns><see cref="Execution"/> with all navigation properties included (incl. step execution endpoint clients, e.g. connections). <see langword="null"/> if not found.</returns>
+    public static async Task<Execution?> GetExecutionWithEntireGraphAsync(
         this AppDbContext context,
         Guid executionId,
         bool includeEndpoint = false,
@@ -43,8 +42,12 @@ public static class Extensions
         var execution = await context.Executions
             .Include(e => e.ExecutionParameters)
             .Include(e => e.ExecutionConcurrencies)
-            .FirstOrDefaultAsync(e => e.ExecutionId == executionId)
-            ?? throw new ExecutionNotFoundException(executionId);
+            .FirstOrDefaultAsync(e => e.ExecutionId == executionId);
+
+        if (execution is null)
+        {
+            return null;
+        }
 
         var query1 = context.StepExecutions
             .Where(e => e.ExecutionId == executionId)
@@ -164,11 +167,6 @@ public static class Extensions
 
     internal static bool EqualsIgnoreCase(this string text, string? compareTo) =>
         string.Equals(text, compareTo, StringComparison.OrdinalIgnoreCase);
-}
-
-internal class ExecutionNotFoundException(Guid executionId) : Exception($"No execution found for id {executionId}")
-{
-    public Guid ExecutionId { get; } = executionId;
 }
 
 file record StepExecutionProjection(
