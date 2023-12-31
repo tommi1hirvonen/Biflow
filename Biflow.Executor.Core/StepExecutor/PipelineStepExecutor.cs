@@ -20,8 +20,8 @@ internal class PipelineStepExecutor(
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
     private readonly PipelineStepExecution _step = step;
-    private readonly PipelineClient _pipelineClient = step.PipelineClient
-        ?? throw new ArgumentNullException(nameof(step.PipelineClient));
+    private readonly PipelineClient _pipelineClient = step.GetClient()
+        ?? throw new ArgumentNullException(nameof(_pipelineClient));
 
     private const int MaxRefreshRetries = 3;
 

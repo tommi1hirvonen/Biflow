@@ -20,8 +20,8 @@ internal class PackageStepExecutor(
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
     private readonly PackageStepExecution _step = step;
-    private readonly SqlConnectionInfo _connection = step.Connection
-        ?? throw new ArgumentNullException(nameof(step.Connection));
+    private readonly SqlConnectionInfo _connection = step.GetConnection()
+        ?? throw new ArgumentNullException(nameof(_connection));
 
     private const int MaxRefreshRetries = 3;
 

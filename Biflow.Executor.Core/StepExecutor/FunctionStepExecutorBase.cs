@@ -14,8 +14,8 @@ internal abstract class FunctionStepExecutorBase(
 
     protected FunctionStepExecution Step { get; } = step;
 
-    protected FunctionApp FunctionApp { get; } = step.FunctionApp
-        ?? throw new ArgumentNullException(nameof(step.FunctionApp));
+    protected FunctionApp FunctionApp { get; } = step.GetApp()
+        ?? throw new ArgumentNullException(nameof(FunctionApp));
 
     protected async Task<HttpRequestMessage> BuildFunctionInvokeRequestAsync(FunctionStepExecutionAttempt attempt, CancellationToken cancellationToken)
     {

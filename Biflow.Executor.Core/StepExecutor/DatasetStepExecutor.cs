@@ -16,8 +16,8 @@ internal class DatasetStepExecutor(
     private readonly ITokenService _tokenService = tokenService;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
     private readonly DatasetStepExecution _step = step;
-    private readonly AppRegistration _appRegistration = step.AppRegistration
-        ?? throw new ArgumentNullException(nameof(step.AppRegistration));
+    private readonly AppRegistration _appRegistration = step.GetAppRegistration()
+        ?? throw new ArgumentNullException(nameof(_appRegistration));
 
     public DatasetStepExecutionAttempt Clone(DatasetStepExecutionAttempt other, int retryAttemptIndex) =>
         new(other, retryAttemptIndex);

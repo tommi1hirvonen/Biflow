@@ -26,14 +26,15 @@ internal class QlikStepExecutor : IStepExecutor<QlikStepExecutionAttempt>
         IHttpClientFactory httpClientFactory,
         QlikStepExecution stepExecution)
     {
-        ArgumentNullException.ThrowIfNull(stepExecution.QlikCloudClient);
+        var client = stepExecution.GetClient();
+        ArgumentNullException.ThrowIfNull(client);
         _logger = logger;
         _dbContextFactory = dbContextFactory;
         _step = stepExecution;
         _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
         _httpClient = httpClientFactory.CreateClient();
-        _client = stepExecution.QlikCloudClient;
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _step.QlikCloudClient.ApiToken);
+        _client = client;
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _client.ApiToken);
     }
 
     public QlikStepExecutionAttempt Clone(QlikStepExecutionAttempt other, int retryAttemptIndex) =>

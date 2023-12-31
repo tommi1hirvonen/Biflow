@@ -16,8 +16,8 @@ internal class AgentJobStepExecutor(IOptionsMonitor<ExecutionOptions> options, A
     private readonly JsonSerializerOptions _serializerOptions =
         new() { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
     private readonly AgentJobStepExecution _step = step;
-    private readonly SqlConnectionInfo _connection = step.Connection
-        ?? throw new ArgumentNullException(nameof(step.Connection));
+    private readonly SqlConnectionInfo _connection = step.GetConnection()
+        ?? throw new ArgumentNullException(nameof(_connection));
 
     public AgentJobStepExecutionAttempt Clone(AgentJobStepExecutionAttempt other, int retryAttemptIndex) =>
         new(other, retryAttemptIndex);
