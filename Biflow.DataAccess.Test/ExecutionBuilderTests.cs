@@ -53,7 +53,7 @@ public class ExecutionBuilderTests(DatabaseFixture fixture)
             .AsNoTracking()
             .FirstAsync(s => s.ScheduleName == "Test schedule 1");
 
-        var builder = await _executionBuilderFactory.CreateAsync(schedule.JobId, schedule.ScheduleId,
+        using var builder = await _executionBuilderFactory.CreateAsync(schedule.JobId, schedule.ScheduleId,
             context => step => step.IsEnabled,
             context => step =>
             // Schedule has no tag filters
@@ -75,7 +75,7 @@ public class ExecutionBuilderTests(DatabaseFixture fixture)
             .AsNoTracking()
             .FirstAsync(s => s.ScheduleName == "Test schedule 2");
 
-        var builder = await _executionBuilderFactory.CreateAsync(schedule.JobId, schedule.ScheduleId,
+        using var builder = await _executionBuilderFactory.CreateAsync(schedule.JobId, schedule.ScheduleId,
             context => step => step.IsEnabled,
             context => step =>
             // Schedule has no tag filters

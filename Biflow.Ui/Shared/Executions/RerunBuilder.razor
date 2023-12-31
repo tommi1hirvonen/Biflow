@@ -1,4 +1,7 @@
 ﻿@using System.Linq.Expressions;
+
+@implements IDisposable
+
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHxMessengerService Messenger
 @inject IHttpContextAccessor HttpContextAccessor
@@ -349,4 +352,6 @@ else if (builder is null)
         }
         startingExecution = false;
     }
+
+    public void Dispose() => builder?.Dispose();
 }

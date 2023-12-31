@@ -131,7 +131,7 @@ public partial class Jobs : ComponentBase
     {
         try
         {
-            var duplicator = await JobDuplicatorFactory.CreateAsync(job.JobId);
+            using var duplicator = await JobDuplicatorFactory.CreateAsync(job.JobId);
             duplicator.Job.JobName = $"{duplicator.Job.JobName} – Copy";
             var createdJob = await duplicator.SaveJobAsync();
             createdJob.Schedules = new List<Schedule>();

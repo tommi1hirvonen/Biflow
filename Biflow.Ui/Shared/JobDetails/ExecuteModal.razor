@@ -1,4 +1,6 @@
-﻿@inject IHxMessengerService Messenger
+﻿@implements IDisposable
+
+@inject IHxMessengerService Messenger
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IExecutionBuilderFactory<AppDbContext> BuilderFactory
 @inject IExecutorService Executor
@@ -462,6 +464,7 @@
                     throw;   
                 }
             }
+            builder?.Dispose();
             builder = null;
             await modal.LetAsync(x => x.HideAsync());
             StateHasChanged();
@@ -474,6 +477,7 @@
 
     private void OnClosed()
     {
+        builder?.Dispose();
         builder = null;
         executeFilterText = string.Empty;
         executeTagsFilterSet.Clear();
@@ -485,6 +489,7 @@
     public async Task ShowAsync(Guid jobId, IEnumerable<Step>? initiallySelectedSteps = null)
     {
         activeView = View.Steps;
+        builder?.Dispose();
         builder = null;
         await modal.LetAsync(x => x.ShowAsync());
         string user = HttpContextAccessor.HttpContext?.User?.Identity?.Name
@@ -503,4 +508,5 @@
         StateHasChanged();
     }
 
+    public void Dispose() => builder?.Dispose();
 }
