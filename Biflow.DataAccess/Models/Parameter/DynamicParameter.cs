@@ -4,7 +4,7 @@ namespace Biflow.DataAccess.Models;
 
 public abstract class DynamicParameter : ParameterBase, IAsyncEvaluable
 {
-    public bool UseExpression { get; set; }
+    public virtual bool UseExpression { get; set; }
 
     public EvaluationExpression Expression { get; set; } = new();
 

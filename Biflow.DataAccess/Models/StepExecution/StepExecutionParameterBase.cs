@@ -62,6 +62,14 @@ public abstract class StepExecutionParameterBase : DynamicParameter, IHasExpress
 
     public ExecutionParameter? InheritFromExecutionParameter { get; set; }
 
+    public override bool UseExpression
+    {
+        get => InheritFromExecutionParameterId is null && InheritFromExecutionParameter is null && _useExpression;
+        set => _useExpression = value;
+    }
+
+    private bool _useExpression;
+
     public IList<StepExecutionParameterExpressionParameter> ExpressionParameters { get; set; } = null!;
 
     public abstract StepExecution BaseStepExecution { get; }
