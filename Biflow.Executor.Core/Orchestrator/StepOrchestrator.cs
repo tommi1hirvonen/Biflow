@@ -202,6 +202,7 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
     {
         using var context = _dbContextFactory.CreateDbContext();
         attempt.ExecutionStatus = status;
+        attempt.StartedOn ??= DateTimeOffset.Now;
         attempt.EndedOn = DateTimeOffset.Now;
         context.Attach(attempt).State = EntityState.Modified;
         await context.SaveChangesAsync();
