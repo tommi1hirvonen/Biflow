@@ -131,18 +131,15 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
         {
             result = await stepExecutor.ExecuteAsync(executionAttempt, cts);
         }
+        catch (OperationCanceledException ex) when (cts.IsCancellationRequested)
+        {
+            executionAttempt.AddWarning(ex);
+            result = Result.Cancel;
+        }
         catch (Exception ex)
         {
-            if (ex is OperationCanceledException canceled && cts.IsCancellationRequested)
-            {
-                executionAttempt.AddWarning(canceled);
-                result = Result.Cancel;
-            }
-            else
-            {
-                executionAttempt.AddError(ex, "Unhandled error caught in base executor");
-                result = Result.Failure;
-            }
+            executionAttempt.AddError(ex, "Unhandled error caught in step orchestrator");
+            result = Result.Failure;
         }
 
         return await result.Match(
