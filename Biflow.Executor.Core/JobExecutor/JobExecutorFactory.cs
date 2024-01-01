@@ -104,8 +104,3 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
         return ActivatorUtilities.CreateInstance<JobExecutor>(_serviceProvider, execution);
     }
 }
-
-file class ExecutionNotFoundException(Guid executionId) : Exception($"No execution found for id {executionId}")
-{
-    public Guid ExecutionId { get; } = executionId;
-}
