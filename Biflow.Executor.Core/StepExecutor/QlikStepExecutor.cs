@@ -3,9 +3,6 @@ using Biflow.Executor.Core.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Text.Json;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
@@ -13,17 +10,14 @@ internal class QlikStepExecutor : IStepExecutor<QlikStepExecutionAttempt>
 {
     private readonly ILogger<QlikStepExecutor> _logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
-    private readonly HttpClient _httpClient;
     private readonly QlikStepExecution _step;
     private readonly QlikCloudClient _client;
     private readonly int _pollingIntervalMs;
-    private readonly JsonSerializerOptions _deserializerOptions = new() { PropertyNameCaseInsensitive = true };
 
     public QlikStepExecutor(
         ILogger<QlikStepExecutor> logger,
         IDbContextFactory<ExecutorDbContext> dbContextFactory,
         IOptionsMonitor<ExecutionOptions> options,
-        IHttpClientFactory httpClientFactory,
         QlikStepExecution stepExecution)
     {
         var client = stepExecution.GetClient();
@@ -32,9 +26,7 @@ internal class QlikStepExecutor : IStepExecutor<QlikStepExecutionAttempt>
         _dbContextFactory = dbContextFactory;
         _step = stepExecution;
         _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
-        _httpClient = httpClientFactory.CreateClient();
         _client = client;
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _client.ApiToken);
     }
 
     public QlikStepExecutionAttempt Clone(QlikStepExecutionAttempt other, int retryAttemptIndex) =>
@@ -46,21 +38,10 @@ internal class QlikStepExecutor : IStepExecutor<QlikStepExecutionAttempt>
         cancellationToken.ThrowIfCancellationRequested();
 
         // Start app reload.
-        Reload reload;
+        QlikAppReload reload;
         try
         {
-            var postReloadUrl = $"{_client.EnvironmentUrl}/api/v1/reloads";
-            var message = new
-            {
-                appId = _step.AppId,
-                partial = false
-            };
-            var response = await _httpClient.PostAsJsonAsync(postReloadUrl, message, cancellationToken);
-            response.EnsureSuccessStatusCode();
-            var responseBody = await response.Content.ReadAsStringAsync();
-            ArgumentNullException.ThrowIfNull(responseBody);
-            reload = JsonSerializer.Deserialize<Reload>(responseBody, _deserializerOptions)
-                ?? throw new ApplicationException("Reload response was null");
+            reload = await _client.ReloadAppAsync(_step.AppId, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -101,15 +82,13 @@ internal class QlikStepExecutor : IStepExecutor<QlikStepExecutionAttempt>
             try
             {
                 await Task.Delay(_pollingIntervalMs, linkedCts.Token);
-                reload = await _httpClient.GetFromJsonAsync<Reload>(getReloadUrl, linkedCts.Token)
-                    ?? throw new ApplicationException("Reload response was null");
-
-                if (reload is { Status: "SUCCEEDED" })
+                reload = await _client.GetReloadAsync(reload.Id, linkedCts.Token);
+                if (reload is { Status: QlikAppReloadStatus.Succeeded })
                 {
                     attempt.AddOutput(reload.Log);
                     return Result.Success;
                 }
-                else if (reload is { Status: "FAILED" or "CANCELED" or "EXCEEDED_LIMIT" })
+                else if (reload is { Status: QlikAppReloadStatus.Failed or QlikAppReloadStatus.Canceled or QlikAppReloadStatus.ExceededLimit })
                 {
                     attempt.AddOutput(reload.Log);
                     attempt.AddError($"Reload reported status {reload.Status}");
@@ -141,9 +120,7 @@ internal class QlikStepExecutor : IStepExecutor<QlikStepExecutionAttempt>
     {
         try
         {
-            var cancelUrl = $"{_client.EnvironmentUrl}/api/v1/reloads/{reloadId}/actions/cancel";
-            var response = await _httpClient.PostAsync(cancelUrl, null);
-            response.EnsureSuccessStatusCode();
+            await _client.CancelReloadAsync(reloadId);
         }
         catch (Exception ex)
         {
@@ -151,6 +128,4 @@ internal class QlikStepExecutor : IStepExecutor<QlikStepExecutionAttempt>
             attempt.AddWarning(ex, "Error canceling reload");
         }
     }
-
-    private record Reload(string Id, string Status, string? Log);
 }
