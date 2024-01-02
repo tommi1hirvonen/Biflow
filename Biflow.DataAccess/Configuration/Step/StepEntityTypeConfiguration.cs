@@ -8,8 +8,6 @@ internal class StepEntityTypeConfiguration : IEntityTypeConfiguration<Step>
 {
     public void Configure(EntityTypeBuilder<Step> builder)
     {
-        builder.ToTable(t => t.HasTrigger("Trigger_Step"));
-
         builder.HasDiscriminator<StepType>("StepType")
             .HasValue<DatasetStep>(StepType.Dataset)
             .HasValue<ExeStep>(StepType.Exe)

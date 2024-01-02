@@ -8,8 +8,6 @@ internal class JobEntityTypeConfiguration(AppDbContext context) : IEntityTypeCon
 {
     public void Configure(EntityTypeBuilder<Job> builder)
     {
-        builder.ToTable(t => t.HasTrigger("Trigger_Job"));
-
         builder.HasOne(j => j.Category)
         .WithMany(c => c.Jobs)
         .OnDelete(DeleteBehavior.SetNull);

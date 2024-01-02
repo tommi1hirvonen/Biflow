@@ -8,7 +8,6 @@ internal class JobParameterEntityTypeConfiguration : IEntityTypeConfiguration<Jo
 {
     public void Configure(EntityTypeBuilder<JobParameter> builder)
     {
-        builder.ToTable(t => t.HasTrigger("Trigger_JobParameter"));
         builder.OwnsOne(s => s.Expression, ece =>
         {
             ece.Property(p => p.Expression).HasColumnName("Expression");

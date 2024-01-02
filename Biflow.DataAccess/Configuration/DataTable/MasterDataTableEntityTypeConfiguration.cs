@@ -9,7 +9,6 @@ internal class MasterDataTableEntityTypeConfiguration(AppDbContext context)
 {
     public void Configure(EntityTypeBuilder<MasterDataTable> builder)
     {
-        builder.ToTable(t => t.HasTrigger("Trigger_DataTable"));
         builder.HasMany(t => t.Lookups).WithOne(l => l.Table);
         builder.HasOne(t => t.Category)
         .WithMany(c => c.Tables)
