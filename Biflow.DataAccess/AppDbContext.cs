@@ -97,77 +97,7 @@ public class AppDbContext : DbContext
     {
         modelBuilder.HasDefaultSchema("app");
 
-        //modelBuilder.ApplyConfigurationsFromAssembly(typeof(TagEntityTypeConfiguration).Assembly);
-
-        // Common entities
-        modelBuilder.ApplyConfiguration(new TagEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new AccessTokenEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new BlobStorageClientEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new PipelineClientEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new ConnectionInfoEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new QlikCloudClientEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new DataObjectEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new UserEntityTypeConfiguration());
-
-        // Job
-        modelBuilder.ApplyConfiguration(new JobCategoryEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new JobEntityTypeConfiguration(this));
-        modelBuilder.ApplyConfiguration(new JobConcurrencyEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new JobParameterEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new ScheduleEntityTypeConfiguration());
-
-        // Step
-        modelBuilder.ApplyConfiguration(new StepEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new DependencyEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new StepDataObjectEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new ExecutionConditionParameterEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new StepParameterEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new StepParameterExpressionParameterEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new SqlStepEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new JobStepEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new SqlStepParameterEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new PackageStepParameterEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new ExeStepParameterEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new FunctionStepParameterEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new PipelineStepParameterEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new EmailStepParameterEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new JobStepParameterEntityTypeConfiguration());
-
-        // Execution
-        modelBuilder.ApplyConfiguration(new ExecutionEntityTypeConfiguration(this));
-        modelBuilder.ApplyConfiguration(new ExecutionDataObjectEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new ExecutionConcurrencyEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new ExecutionParameterEntityTypeConfiguration());
-
-        // Step execution
-        modelBuilder.ApplyConfiguration(new StepExecutionEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new StepExecutionAttemptEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new ExecutionDependencyEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new StepExecutionDataObjectEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new StepExecutionConditionParameterEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new SqlStepExecutionEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new JobStepExecutionEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new StepExecutionParameterEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new SqlStepExecutionParameterEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new PackageStepExecutionParameterEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new ExeStepExecutionParameterEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new FunctionStepExecutionParameterEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new PipelineStepExecutionParameterEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new EmailStepExecutionParameterEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new JobStepExecutionParameterEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new StepExecutionParameterExpressionParameterEntityTypeConfiguration());
-
-        // Subscriptions
-        modelBuilder.ApplyConfiguration(new SubscriptionEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new JobSubscriptionEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new JobTagSubscriptionEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new StepSubscriptionEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new TagSubscriptionEntityTypeConfiguration());
-
-        // Data tables
-        modelBuilder.ApplyConfiguration(new MasterDataTableCategoryEntityTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new MasterDataTableEntityTypeConfiguration(this));
-        modelBuilder.ApplyConfiguration(new MasterDataTableLookupEntityTypeConfiguration());
+        modelBuilder.ApplyConfigurations(this);
 
         // Use reflection to set property access mode for parameter values.
         // This is important for the correct behaviour of parameter types when editing them in forms.
