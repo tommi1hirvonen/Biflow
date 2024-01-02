@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.Extensions.Configuration;
+using System.Security.Claims;
 
 namespace Biflow.DataAccess;
 
@@ -20,20 +21,17 @@ public class AppDbContext : DbContext
             ?? throw new ApplicationException("Connection string not found");
 
         Username = httpContextAccessor?.HttpContext?.User.Identity?.Name;
-        UserIsAdmin = httpContextAccessor?.HttpContext?.User.IsInRole(Roles.Admin) ?? false;
-        UserIsEditor = httpContextAccessor?.HttpContext?.User.IsInRole(Roles.Editor) ?? false;
-        UserIsDataTableMaintainer = httpContextAccessor?.HttpContext?.User.IsInRole(Roles.DataTableMaintainer) ?? false;
+        UserRoles = httpContextAccessor?.HttpContext?.User
+            .FindAll(ClaimTypes.Role)
+            .Select(r => r.Value)
+            .ToArray() ?? [];
 
         SavingChanges += OnSavingChanges;
     }
 
     internal string? Username { get; }
-    
-    internal bool UserIsAdmin { get; }
-    
-    internal bool UserIsEditor { get; }
 
-    internal bool UserIsDataTableMaintainer { get; }
+    internal string[] UserRoles { get; }
 
     #region DbSets
     public DbSet<Job> Jobs => Set<Job>();

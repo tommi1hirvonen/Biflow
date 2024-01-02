@@ -13,8 +13,8 @@ internal class ExecutionEntityTypeConfiguration(AppDbContext context) : IEntityT
         {
             // The user is either admin or editor or is granted authorization to the job.
             builder.HasQueryFilter(exec =>
-                context.UserIsAdmin ||
-                context.UserIsEditor ||
+                context.UserRoles.Contains(Roles.Admin) ||
+                context.UserRoles.Contains(Roles.Editor) ||
                 context.Users.Any(u => u.Username == context.Username && (u.AuthorizeAllJobs || u.Jobs.Any(j => j.JobId == exec.JobId))));
         }
         builder.Property(p => p.ParentExecution).HasConversion(
