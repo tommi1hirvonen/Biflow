@@ -339,7 +339,6 @@
                 {
                     foreach (var param in execution.ExecutionParameters.OrderBy(p => p.ParameterName))
                     {
-                        // TODO Consider adding an offcanvas to display the execution parameter's value change history through SQL step captures.
                         <tr>
                             <td>@param.DisplayName</td>
                             <td class="font-monospace">@param.DefaultValue</td>
