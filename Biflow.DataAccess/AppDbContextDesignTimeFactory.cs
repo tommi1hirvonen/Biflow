@@ -3,7 +3,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Biflow.DataAccess;
 
-internal class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
+internal class AppDbContextDesignTimeFactory : IDesignTimeDbContextFactory<AppDbContext>
 {
     public AppDbContext CreateDbContext(string[] args)
     {
