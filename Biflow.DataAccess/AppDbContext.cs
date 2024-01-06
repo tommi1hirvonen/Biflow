@@ -14,24 +14,22 @@ namespace Biflow.DataAccess;
 public class AppDbContext : DbContext
 {
     private readonly string _connectionString;
+    private readonly IHttpContextAccessor? _httpContextAccessor;
 
     public AppDbContext(IConfiguration configuration, IHttpContextAccessor? httpContextAccessor = null)
     {
         _connectionString = configuration.GetConnectionString("AppDbContext")
             ?? throw new ApplicationException("Connection string not found");
-
-        Username = httpContextAccessor?.HttpContext?.User.Identity?.Name;
-        UserRoles = httpContextAccessor?.HttpContext?.User
-            .FindAll(ClaimTypes.Role)
-            .Select(r => r.Value)
-            .ToArray() ?? [];
+        _httpContextAccessor = httpContextAccessor;
 
         SavingChanges += OnSavingChanges;
     }
 
-    internal string? Username { get; }
+    internal string? Username => _httpContextAccessor?.HttpContext?.User.Identity?.Name;
 
-    internal string[] UserRoles { get; }
+    internal IEnumerable<string>? UserRoles => _httpContextAccessor?.HttpContext?.User
+        .FindAll(ClaimTypes.Role)
+        .Select(r => r.Value);
 
     #region DbSets
     public DbSet<Job> Jobs => Set<Job>();

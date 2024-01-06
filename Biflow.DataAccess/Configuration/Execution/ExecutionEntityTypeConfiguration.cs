@@ -9,14 +9,13 @@ internal class ExecutionEntityTypeConfiguration(AppDbContext context) : IEntityT
 {
     public void Configure(EntityTypeBuilder<Execution> builder)
     {
-        if (context.Username is not null)
-        {
-            // The user is either admin or editor or is granted authorization to the job.
-            builder.HasQueryFilter(exec =>
-                context.UserRoles.Contains(Roles.Admin) ||
-                context.UserRoles.Contains(Roles.Editor) ||
-                context.Users.Any(u => u.Username == context.Username && (u.AuthorizeAllJobs || u.Jobs.Any(j => j.JobId == exec.JobId))));
-        }
+        // The user is either admin or editor or is granted authorization to the job.
+        builder.HasQueryFilter(exec =>
+            context.UserRoles == null ||
+            context.UserRoles.Contains(Roles.Admin) ||
+            context.UserRoles.Contains(Roles.Editor) ||
+            context.Users.Any(u => u.Username == context.Username && (u.AuthorizeAllJobs || u.Jobs.Any(j => j.JobId == exec.JobId))));
+
         builder.Property(p => p.ParentExecution).HasConversion(
             from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
             to => JsonSerializer.Deserialize<StepExecutionAttemptReference?>(to, null as JsonSerializerOptions));

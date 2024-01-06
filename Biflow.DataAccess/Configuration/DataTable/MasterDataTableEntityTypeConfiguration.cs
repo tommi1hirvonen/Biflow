@@ -14,15 +14,13 @@ internal class MasterDataTableEntityTypeConfiguration(AppDbContext context)
         .WithMany(c => c.Tables)
         .OnDelete(DeleteBehavior.SetNull);
         
-        if (context.Username is not null)
-        {
-            // The user is either admin or editor or is granted authorization to the data table.
-            builder.HasQueryFilter(t =>
-                context.UserRoles.Contains(Roles.Admin) ||
-                context.UserRoles.Contains(Roles.DataTableMaintainer) ||
-                context.Users.Any(u => u.Username == context.Username && u.AuthorizeAllDataTables) ||
-                t.Users.Any(u => u.Username == context.Username)
-            );
-        }
+        // The user is either admin or editor or is granted authorization to the data table.
+        builder.HasQueryFilter(t =>
+            context.UserRoles == null ||
+            context.UserRoles.Contains(Roles.Admin) ||
+            context.UserRoles.Contains(Roles.DataTableMaintainer) ||
+            context.Users.Any(u => u.Username == context.Username && u.AuthorizeAllDataTables) ||
+            t.Users.Any(u => u.Username == context.Username)
+        );
     }
 }
