@@ -1,5 +1,4 @@
-﻿using Biflow.Core;
-using Biflow.DataAccess;
+﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Executor.Core;
 using Biflow.Scheduler.Core;
@@ -124,7 +123,6 @@ public static partial class Extensions
     /// <exception cref="ArgumentException">Thrown if an incorrect configuration is detected</exception>
     public static IServiceCollection AddUiCoreServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddSqlConnectionFactory();
         services.AddDbContextFactory<AppDbContext>();
         services.AddExecutionBuilderFactory<AppDbContext>();
         services.AddHttpClient();
