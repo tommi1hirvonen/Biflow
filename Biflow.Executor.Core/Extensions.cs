@@ -1,5 +1,4 @@
-﻿using Biflow.Core;
-using Biflow.DataAccess;
+﻿using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.ConnectionTest;
 using Biflow.Executor.Core.JobExecutor;
@@ -18,7 +17,6 @@ public static class Extensions
 {
     public static IServiceCollection AddExecutorServices(this IServiceCollection services, IConfiguration executorConfiguration)
     {
-        services.AddSqlConnectionFactory();
         services.AddDbContextFactory<ExecutorDbContext>();
         services.AddExecutionBuilderFactory<ExecutorDbContext>();
         services.AddHttpClient();
