@@ -18,16 +18,16 @@ public partial class Jobs : ComponentBase
     [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
     [Inject] private JobDuplicatorFactory JobDuplicatorFactory { get; set; } = null!;
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
-    [Inject] private AuthenticationStateProvider AuthenticationStateProvider { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
-    [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; } = null!;
     [Inject] private IMediator Mediator { get; set; } = null!;
 
+    [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
     [CascadingParameter] public UserState UserState { get; set; } = new();
 
     private readonly HashSet<ExecutionStatus> statusFilter = [];
 
+    private bool userIsAdminOrEditor;
     private List<Job>? jobs;    
     private List<JobCategory>? categories;
     private Dictionary<Guid, Execution>? lastExecutions;
@@ -40,6 +40,10 @@ public partial class Jobs : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        ArgumentNullException.ThrowIfNull(AuthenticationState);
+        var authState = await AuthenticationState;
+        var user = authState.User;
+        userIsAdminOrEditor = user.IsInRole(Roles.Admin) || user.IsInRole(Roles.Editor);
         await LoadData();
     }
 
@@ -55,7 +59,8 @@ public partial class Jobs : ComponentBase
             .ToListAsync();
 
         // For admins and editors, show all available job categories.
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        ArgumentNullException.ThrowIfNull(AuthenticationState);
+        var authState = await AuthenticationState;
         if (authState.User.IsInRole(Roles.Admin) || authState.User.IsInRole(Roles.Editor))
         {
             categories = await context.JobCategories

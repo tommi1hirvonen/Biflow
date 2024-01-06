@@ -1,6 +1,5 @@
 ﻿@page "/subscriptions"
 
-@inject IHttpContextAccessor HttpContextAccessor
 @inject IDbContextFactory<AppDbContext> DbFactory
 
 <PageTitle>Subscriptions | Biflow</PageTitle>
@@ -10,6 +9,8 @@
 <UserSubscriptions User="user" Jobs="jobs" Steps="steps" Tags="tags" />
 
 @code {
+    [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
+
     [Parameter] public string? Page { get; set; }
 
     private User? user;
@@ -17,15 +18,17 @@
     private IEnumerable<Tag>? tags;
     private IEnumerable<StepProjection>? steps;
 
-    private string? Username => HttpContextAccessor.HttpContext?.User?.Identity?.Name;
-
     protected override async Task OnInitializedAsync()
     {
+        ArgumentNullException.ThrowIfNull(AuthenticationState);
+        var authState = await AuthenticationState;
+        var username = authState.User.Identity?.Name;
+
         using var context = await Task.Run(DbFactory.CreateDbContext);
         user = await context.Users
             .AsNoTrackingWithIdentityResolution()
             .Include(user => user.Subscriptions)
-            .FirstAsync(user => user.Username == Username);
+            .FirstAsync(user => user.Username == username);
         jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(job => job.JobName)

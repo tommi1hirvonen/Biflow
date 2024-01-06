@@ -1,6 +1,5 @@
 ﻿@inject IHxMessengerService Messenger
 @inject IHxMessageBoxService Confirmer
-@inject IHttpContextAccessor HttpContextAccessor
 @inject IExecutorService ExecutorService
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject NavigationManager NavigationManager
@@ -152,6 +151,9 @@
 <StepHistoryOffcanvas @ref="stepHistoryOffcanvas" />
 
 @code {
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthenticationState { get; set; }
+
     [Parameter]
     public IEnumerable<StepExecutionProjection>? Executions { get; set; }
 
@@ -215,8 +217,11 @@
         }
         try
         {
-            string username = HttpContextAccessor.HttpContext?.User?.Identity?.Name
-                ?? throw new ArgumentNullException(nameof(username), "Error getting username from HttpContext");
+            ArgumentNullException.ThrowIfNull(AuthenticationState);
+            var authState = await AuthenticationState;
+            var username = authState.User.Identity?.Name;
+            ArgumentNullException.ThrowIfNull(username);
+            
             await ExecutorService.StopExecutionAsync(executionId, stepId, username);
             Messenger.AddInformation("Stop request sent successfully to the executor service");
         }

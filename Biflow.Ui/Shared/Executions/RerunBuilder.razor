@@ -4,7 +4,6 @@
 
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHxMessengerService Messenger
-@inject IHttpContextAccessor HttpContextAccessor
 @inject IExecutionBuilderFactory<AppDbContext> BuilderFactory
 @inject IExecutorService Executor
 
@@ -259,6 +258,8 @@ else if (builder is null)
 </div>
 
 @code {
+    [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
+
     [Parameter] public Execution? Execution { get; set; }
 
     private readonly HashSet<StepType> stepTypeFilter = new();
@@ -309,12 +310,14 @@ else if (builder is null)
         }
         try
         {
-            string user = HttpContextAccessor.HttpContext?.User?.Identity?.Name
-                ?? throw new ArgumentNullException(nameof(user), "User was null");
+            ArgumentNullException.ThrowIfNull(AuthenticationState);
+            var authState = await AuthenticationState;
+            var username = authState.User.Identity?.Name;
+
             var stepIds = Execution.StepExecutions
                 .Select(e => e.StepId)
                 .ToArray();
-            builder = await BuilderFactory.CreateAsync(Execution.JobId, user, context => step => stepIds.Contains(step.StepId));
+            builder = await BuilderFactory.CreateAsync(Execution.JobId, username, context => step => stepIds.Contains(step.StepId));
         }
         catch (Exception ex)
         {

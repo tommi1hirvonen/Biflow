@@ -143,8 +143,6 @@
                     {
                         continue;
                     }
-                    var user = HttpContextAccessor.HttpContext?.User;
-                    var userIsAdminOrEditor = (user?.IsInRole(Roles.Admin) ?? false) || (user?.IsInRole(Roles.Editor) ?? false);
                     <ContextMenuToggle ContainerHtmlTag="tr" Disabled="category is null || !userIsAdminOrEditor" CssClass="list-group-header">
                         <ChildContent Context="menu">                       
                             <td colspan="4" class="align-middle fw-bold">

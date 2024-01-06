@@ -7,6 +7,7 @@ using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
 using MediatR;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
 using System.Timers;
 
@@ -17,11 +18,12 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
 {
     [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
-    [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; } = null!;
     [Inject] private IExecutorService ExecutorService { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
     [Inject] private IMediator Mediator { get; set; } = null!;
+
+    [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
 
     [Parameter] public Guid ExecutionId { get; set; }
 
@@ -205,8 +207,11 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
         stoppingExecutions.Add(ExecutionId);
         try
         {
-            string username = HttpContextAccessor.HttpContext?.User?.Identity?.Name
-                ?? throw new ArgumentNullException(nameof(username), "Username cannot be null");
+            ArgumentNullException.ThrowIfNull(AuthenticationState);
+            var authState = await AuthenticationState;
+            var username = authState.User.Identity?.Name;
+            ArgumentNullException.ThrowIfNull(username);
+
             await ExecutorService.StopExecutionAsync(execution.ExecutionId, username);
             Messenger.AddInformation("Stop request sent successfully to the executor service");
         }
