@@ -5,6 +5,7 @@ using Biflow.Executor.Core;
 using Biflow.Scheduler.Core;
 using Biflow.Ui.SqlServer;
 using CronExpressionDescriptor;
+using MediatR;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Negotiate;
@@ -103,19 +104,15 @@ public static partial class Extensions
         {
             var adminUsername = adminSection.GetValue<string>("Username");
             ArgumentNullException.ThrowIfNull(adminUsername);
-            var users = app.Services.GetRequiredService<UserService>();
-
+            var mediator = app.Services.GetRequiredService<IMediator>();
             var authentication = app.Configuration.GetValue<string>("Authentication");
+            string? adminPassword = null;
             if (authentication == "BuiltIn")
             {
-                var adminPassword = adminSection.GetValue<string>("Password");
+                adminPassword = adminSection.GetValue<string?>("Password");
                 ArgumentNullException.ThrowIfNull(adminPassword);
-                await users.EnsureAdminUserExistsAsync(adminUsername, adminPassword);
             }
-            else
-            {
-                await users.EnsureAdminUserExistsAsync(adminUsername);
-            }
+            await mediator.Send(new EnsureAdminUserCommand(adminUsername, adminPassword));
         }
     }
 
@@ -168,7 +165,6 @@ public static partial class Extensions
         }
 
         services.AddSingleton<EnvironmentSnapshotBuilder>();
-        services.AddSingleton<UserService>();
         services.AddSingleton<SqlServerHelperService>();
         services.AddDuplicatorServices();
         services.AddMediatR(config => config.RegisterServicesFromAssemblyContaining<MediatREntryPoint>());

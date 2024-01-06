@@ -1,11 +1,12 @@
-﻿namespace Biflow.Ui.Core;
+﻿using MediatR;
 
-internal class BuiltInAuthHandler(UserService users) : IAuthHandler
+namespace Biflow.Ui.Core;
+
+internal class BuiltInAuthHandler(IMediator mediator) : IAuthHandler
 {
-    private readonly UserService _users = users;
-
     public async Task<IEnumerable<string>> AuthenticateUserInternalAsync(string username, string password)
     {
-        return await _users.AuthenticateUserAsync(username, password);
+        var response = await mediator.Send(new UserAuthenticateQuery(username, password));
+        return response.Roles;
     }
 }

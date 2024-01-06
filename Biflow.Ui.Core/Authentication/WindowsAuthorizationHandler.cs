@@ -1,13 +1,14 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Caching.Memory;
 using System.Security.Claims;
 
 namespace Biflow.Ui.Core;
 
-internal class WindowsAuthorizationHandler(IMemoryCache memoryCache, UserService users) : AuthorizationHandler<UserExistsRequirement>
+internal class WindowsAuthorizationHandler(IMemoryCache memoryCache, IMediator mediator) : AuthorizationHandler<UserExistsRequirement>
 {
     private readonly IMemoryCache _memoryCache = memoryCache;
-    private readonly UserService _users = users;
+    private readonly IMediator _mediator = mediator;
 
     protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, UserExistsRequirement requirement)
     {
@@ -24,7 +25,7 @@ internal class WindowsAuthorizationHandler(IMemoryCache memoryCache, UserService
         var exists = await _memoryCache.GetOrCreateAsync($"{userName}_Exists", entry =>
         {
             entry.SlidingExpiration = TimeSpan.FromSeconds(5);
-            return UserExistsRequirement.UserExistsAsync(_users, userName);
+            return UserExistsRequirement.UserExistsAsync(_mediator, userName);
         });
         if (exists)
         {

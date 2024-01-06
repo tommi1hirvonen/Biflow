@@ -1,14 +1,15 @@
-﻿using Microsoft.AspNetCore.Authentication;
+﻿using MediatR;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.Extensions.Caching.Memory;
 using System.Security.Claims;
 
 namespace Biflow.Ui.Core;
 
-internal class ClaimsTransformer(IMemoryCache memoryCache, UserService users) : IClaimsTransformation
+internal class ClaimsTransformer(IMemoryCache memoryCache, IMediator mediator) : IClaimsTransformation
 {
     private readonly IMemoryCache _memoryCache = memoryCache;
-    private readonly UserService _users = users;
+    private readonly IMediator _mediator = mediator;
     private const string Issuer = "Biflow";
 
     public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal principal)
@@ -24,10 +25,11 @@ internal class ClaimsTransformer(IMemoryCache memoryCache, UserService users) : 
         }
         // Claims might be transformed multiple times when a user is authorized.
         // Utilize IMemoryCache to store the role for a short period of time.
-        var roles = await _memoryCache.GetOrCreateAsync($"{username}_Role", entry =>
+        var roles = await _memoryCache.GetOrCreateAsync($"{username}_Role", async entry =>
         {
             entry.SlidingExpiration = TimeSpan.FromSeconds(5);
-            return _users.GetUserRolesAsync(username);
+            var response = await _mediator.Send(new UserRolesQuery(username));
+            return response.Roles;
         });
         if (roles is null)
         {

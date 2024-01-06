@@ -1,13 +1,14 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using MediatR;
+using Microsoft.Extensions.Configuration;
 using System.DirectoryServices.Protocols;
 using System.Security.Authentication;
 
 namespace Biflow.Ui.Core;
 
-internal class LdapAuthHandler(IConfiguration configuration, UserService users) : IAuthHandler
+internal class LdapAuthHandler(IConfiguration configuration, IMediator mediator) : IAuthHandler
 {
     private readonly IConfiguration _configuration = configuration;
-    private readonly UserService _users = users;
+    private readonly IMediator _mediator = mediator;
     private readonly string[] _attributesToQuery = ["userPrincipalName"];
 
     public async Task<IEnumerable<string>> AuthenticateUserInternalAsync(string username, string password)
@@ -52,19 +53,19 @@ internal class LdapAuthHandler(IConfiguration configuration, UserService users) 
             SearchScope.Subtree,
             _attributesToQuery);
 
-        var response = (SearchResponse)connection.SendRequest(request);
-        var results = response.Entries.Cast<SearchResultEntry>();
+        var searchResponse = (SearchResponse)connection.SendRequest(request);
+        var results = searchResponse.Entries.Cast<SearchResultEntry>();
         if (!results.Any())
         {
             return Enumerable.Empty<string>();
         }
 
-        var roles = await _users.GetUserRolesAsync(username);
-        if (!roles.Any())
+        var rolesResponse = await _mediator.Send(new UserRolesQuery(username));
+        if (!rolesResponse.Roles.Any())
         {
             throw new AuthenticationException("User is not authorized to access this application");
         }
 
-        return roles;
+        return rolesResponse.Roles;
     }
 }
