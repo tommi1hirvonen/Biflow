@@ -12,49 +12,48 @@
 
 <PageTitle>Log in | Biflow</PageTitle>
 
-<div class="container">
-    <div class="row">
-        <div class="col-sm-10 col-md-7 col-xl-5 mx-auto pt-5">
-            <section>
-                <div class="card shadow">
-                    <h5 class="card-header">Log in</h5>
-                    <div class="card-body">
-                        <EditForm id="form-login" Model="LoginModel" method="post" class="form-horizontal" OnValidSubmit="LoginAsync" FormName="login">
-                            @if (!string.IsNullOrEmpty(errorMessage))
-                            {
-                                <span class="text-danger">@errorMessage</span>
-                            }
-                            <DataAnnotationsValidator />
-                            <div class="form-group mt-3">
-                                <div class="input-group">
-                                    <span class="input-group-text">
-                                        <CxIcon Icon="FeatherIcon.User" />
-                                    </span>
-                                    <InputText class="form-control" id="input-username" placeholder="Username" @bind-Value="LoginModel!.Username" />
-                                </div>
-                                <ValidationMessage For="() => LoginModel.Username" />
-                            </div>
-                            <div class="form-group mt-2">
-                                <div class="input-group">
-                                    <div class="input-group-text">
-                                        <CxIcon Icon="FeatherIcon.Key" />
-                                    </div>
-                                    <InputText type="password" class="form-control" placeholder="Password" @bind-Value="LoginModel!.Password" />
-                                </div>
-                                <ValidationMessage For="() => LoginModel.Password" />
-                            </div>
-                            <div class="d-grid mt-2 mb-3">
-                                <button type="submit" id="button-login" class="btn btn-primary">
-                                    <CxIcon Icon="FeatherIcon.LogIn" />
-                                    &nbsp;
-                                    Log in
-                                </button>
-                            </div>
-                        </EditForm>
+<div class="row pt-5 align-items-center">
+    <div class="col d-flex justify-content-center">
+        <div class="card shadow w-100" style="max-width: 35rem;">
+            <h5 class="card-header">Log in</h5>
+            <div class="card-body">
+                <EditForm id="form-login" Model="LoginModel" method="post" class="form-horizontal" OnValidSubmit="LoginAsync" FormName="login">
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <span class="text-danger">@errorMessage</span>
+                    }
+                    <DataAnnotationsValidator />
+                    <div class="form-group mt-3">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <CxIcon Icon="FeatherIcon.User" />
+                            </span>
+                            <InputText class="form-control" id="input-username" placeholder="Username" @bind-Value="LoginModel!.Username" />
+                        </div>
+                        <ValidationMessage For="() => LoginModel.Username" />
                     </div>
-                </div>
-            </section>
+                    <div class="form-group mt-2">
+                        <div class="input-group">
+                            <div class="input-group-text">
+                                <CxIcon Icon="FeatherIcon.Key" />
+                            </div>
+                            <InputText type="password" class="form-control" placeholder="Password" @bind-Value="LoginModel!.Password" />
+                        </div>
+                        <ValidationMessage For="() => LoginModel.Password" />
+                    </div>
+                    <div class="d-grid mt-2 mb-3">
+                        <button type="submit" id="button-login" class="btn btn-primary">
+                            <CxIcon Icon="FeatherIcon.LogIn" />
+                            &nbsp;
+                            Log in
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
         </div>
+    </div>
+    <div class="col-md mt-4 mt-md-0 d-flex justify-content-center border-start">
+        <img src="/images/vanamo.svg" style="max-height: 400px;" />
     </div>
 </div>
 
