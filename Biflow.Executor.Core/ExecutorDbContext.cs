@@ -6,7 +6,8 @@ using Microsoft.Extensions.Configuration;
 
 namespace Biflow.Executor.Core;
 
-public class ExecutorDbContext(IConfiguration configuration) : AppDbContext(configuration, httpContextAccessor: null)
+public class ExecutorDbContext(IConfiguration configuration, IHttpClientFactory httpClientFactory, ITokenService tokenService) 
+   : AppDbContext(configuration, httpClientFactory, tokenService, httpContextAccessor: null)
 {
     protected override void ConfigureSqlServer(SqlServerDbContextOptionsBuilder options)
     {

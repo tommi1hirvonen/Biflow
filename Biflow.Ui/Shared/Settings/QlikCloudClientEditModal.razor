@@ -1,5 +1,6 @@
 ﻿@inject IHxMessengerService Messenger
 @inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject IHttpClientFactory HttpClientFactory
 
 <HxModal @ref="modal" Size="ModalSize.Large" Title="@(client?.QlikCloudClientId == Guid.Empty ? "New Qlik Cloud client" : "Edit " + client?.QlikCloudClientName)">
     <BodyTemplate>
@@ -102,7 +103,7 @@
         }
         else
         {
-            client = new()
+            client = new(HttpClientFactory)
             {
                 QlikCloudClientName = "",
                 EnvironmentUrl = "",
