@@ -1,6 +1,5 @@
 ﻿@inject IHxMessengerService Messenger
 @inject IDbContextFactory<AppDbContext> DbContextFactory
-@inject ITokenService TokenService
 
 <HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" Title="Select dataset">
     <BodyTemplate>
@@ -191,7 +190,7 @@
             var appRegistration = await context.AppRegistrations
                 .AsNoTracking()
                 .FirstAsync(r => r.AppRegistrationId == appRegistrationId);
-            datasets = await appRegistration.GetAllDatasetsAsync(TokenService);
+            datasets = await appRegistration.GetAllDatasetsAsync();
             StateHasChanged();
         }
         catch (Exception ex)

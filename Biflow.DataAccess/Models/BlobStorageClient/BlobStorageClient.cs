@@ -10,8 +10,12 @@ namespace Biflow.DataAccess.Models;
 
 [Table("BlobStorageClient")]
 [BlobStorageClient]
-public class BlobStorageClient
+public class BlobStorageClient(ITokenService tokenService)
 {
+    private readonly ITokenService _tokenService = tokenService;
+
+    public BlobStorageClient(AppDbContext dbContext) : this(dbContext.TokenService) { }
+
     [Key]
     [JsonInclude]
     public Guid BlobStorageClientId { get; private set; }
@@ -37,12 +41,11 @@ public class BlobStorageClient
 
     public const string ResourceUrl = "https://storage.azure.com//.default";
 
-    public string GetStorageAccountName(ITokenService tokenService) =>
-        GetBlobServiceClient(tokenService).AccountName;
+    public string GetStorageAccountName() => GetBlobServiceClient().AccountName;
 
-    public async Task<IEnumerable<BlobContainerItem>> GetContainersAsync(ITokenService tokenService, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<BlobContainerItem>> GetContainersAsync(CancellationToken cancellationToken = default)
     {
-        var client = GetBlobServiceClient(tokenService);
+        var client = GetBlobServiceClient();
         var containers = await client
             .GetBlobContainersAsync(cancellationToken: cancellationToken)
             .ToListAsync(cancellationToken);
@@ -50,12 +53,11 @@ public class BlobStorageClient
     }
 
     public async Task<IEnumerable<BlobHierarchyItem>> GetItemsAsync(
-        ITokenService tokenService,
         BlobContainerItem container,
         string? prefix = null,
         CancellationToken cancellationToken = default)
     {
-        var blobServiceClient = GetBlobServiceClient(tokenService);
+        var blobServiceClient = GetBlobServiceClient();
         var containerClient = blobServiceClient.GetBlobContainerClient(container.Name);
         var items = await containerClient
             .GetBlobsByHierarchyAsync(delimiter: "/", prefix: prefix, cancellationToken: cancellationToken)
@@ -63,11 +65,11 @@ public class BlobStorageClient
         return items;
     }
 
-    private BlobServiceClient GetBlobServiceClient(ITokenService tokenService) => ConnectionMethod switch
+    private BlobServiceClient GetBlobServiceClient() => ConnectionMethod switch
     {
         BlobStorageConnectionMethod.Url => GetUrlBlobServiceClient(),
         BlobStorageConnectionMethod.ConnectionString => GetConnectionStringBlobServiceClient(),
-        BlobStorageConnectionMethod.AppRegistration => GetAppRegistrationBlobServiceClient(tokenService),
+        BlobStorageConnectionMethod.AppRegistration => GetAppRegistrationBlobServiceClient(),
         _ => throw new ArgumentException($"Unrecognized {nameof(ConnectionMethod)} value {ConnectionMethod}")
     };
 
@@ -84,11 +86,11 @@ public class BlobStorageClient
         return new BlobServiceClient(ConnectionString);
     }
 
-    private BlobServiceClient GetAppRegistrationBlobServiceClient(ITokenService tokenService)
+    private BlobServiceClient GetAppRegistrationBlobServiceClient()
     {
         ArgumentNullException.ThrowIfNull(AppRegistration);
         ArgumentNullException.ThrowIfNull(StorageAccountUrl);
-        var token = new AzureTokenCredential(tokenService, AppRegistration, ResourceUrl);
+        var token = new AzureTokenCredential(_tokenService, AppRegistration, ResourceUrl);
         var uri = new Uri(StorageAccountUrl);
         return new BlobServiceClient(uri, token);
     }

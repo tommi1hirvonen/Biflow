@@ -8,12 +8,10 @@ namespace Biflow.Executor.Core.StepExecutor;
 
 internal class DatasetStepExecutor(
     ILogger<DatasetStepExecutor> logger,
-    ITokenService tokenService,
     IOptionsMonitor<ExecutionOptions> options,
     DatasetStepExecution step) : IStepExecutor<DatasetStepExecutionAttempt>
 {
     private readonly ILogger<DatasetStepExecutor> _logger = logger;
-    private readonly ITokenService _tokenService = tokenService;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
     private readonly DatasetStepExecution _step = step;
     private readonly AppRegistration _appRegistration = step.GetAppRegistration()
@@ -31,7 +29,7 @@ internal class DatasetStepExecutor(
         // Start dataset refresh.
         try
         {
-            await _appRegistration.RefreshDatasetAsync(_tokenService, _step.DatasetGroupId, _step.DatasetId, cancellationToken);
+            await _appRegistration.RefreshDatasetAsync(_step.DatasetGroupId, _step.DatasetId, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -51,7 +49,7 @@ internal class DatasetStepExecutor(
         {
             try
             {
-                var (status, refresh) = await _appRegistration.GetDatasetRefreshStatusAsync(_tokenService, _step.DatasetGroupId, _step.DatasetId, cancellationToken);
+                var (status, refresh) = await _appRegistration.GetDatasetRefreshStatusAsync(_step.DatasetGroupId, _step.DatasetId, cancellationToken);
                 switch (status)
                 {
                     case DatasetRefreshStatus.Completed:

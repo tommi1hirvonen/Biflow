@@ -114,7 +114,7 @@
                 .AsNoTrackingWithIdentityResolution()
                 .Include(fa => fa.AppRegistration)
                 .FirstAsync(fa => fa.FunctionAppId == functionAppId);
-            functions = await functionApp.GetFunctionsAsync(HttpClientFactory.CreateClient(), TokenService);
+            functions = await functionApp.GetFunctionsAsync();
             StateHasChanged();
         }
         catch (Exception ex)

@@ -12,8 +12,6 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
 {
     [Parameter] public IList<PipelineClient> PipelineClients { get; set; } = [];
 
-    [Inject] private ITokenService TokenService { get; set; } = null!;
-
     internal override string FormId => "pipeline_step_edit_form";
 
     private PipelineSelectOffcanvas? pipelineSelectOffcanvas;
@@ -62,7 +60,7 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
                 .AsNoTrackingWithIdentityResolution()
                 .Include(c => c.AppRegistration)
                 .FirstAsync(c => c.PipelineClientId == Step.PipelineClientId);
-            var parameters = await client.GetPipelineParametersAsync(TokenService, Step.PipelineName);
+            var parameters = await client.GetPipelineParametersAsync(Step.PipelineName);
             if (!parameters.Any())
             {
                 Messenger.AddInformation($"No parameters for pipeline {Step.PipelineName}");

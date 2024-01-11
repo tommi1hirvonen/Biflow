@@ -3,6 +3,7 @@
 @inject IDbContextFactory<AppDbContext> DbFactory
 @inject IHxMessengerService Messenger
 @inject IJSRuntime JS
+@inject ITokenService TokenService
 
 <HxModal @ref="modal" Size="ModalSize.Large" OnClosed="() => connectionTestSuccess = null" Title="@(synapseWorkspace?.PipelineClientId == Guid.Empty ? "New Synapse workspace" : "Edit " + synapseWorkspace?.PipelineClientName)">
     <BodyTemplate>
@@ -130,7 +131,7 @@
         }
         else
         {
-            synapseWorkspace = new()
+            synapseWorkspace = new(TokenService)
             {
                 AppRegistrationId = AppRegistrations?.FirstOrDefault()?.AppRegistrationId,
                 Steps = new List<PipelineStep>()

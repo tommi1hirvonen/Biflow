@@ -85,7 +85,7 @@
                 .AsNoTrackingWithIdentityResolution()
                 .Include(c => c.AppRegistration)
                 .FirstAsync(c => c.PipelineClientId == pipelineClientId);
-            root = await client.GetPipelinesAsync(TokenService);
+            root = await client.GetPipelinesAsync();
             StateHasChanged();
         }
         catch (Exception ex)

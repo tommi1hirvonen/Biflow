@@ -101,7 +101,7 @@
         if (FunctionApp is null) return;
         try
         {
-            keys = await FunctionApp.GetHostKeysAsync(HttpClientFactory.CreateClient(), TokenService);
+            keys = await FunctionApp.GetHostKeysAsync();
             StateHasChanged();
         }
         catch (Exception ex)

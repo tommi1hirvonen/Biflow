@@ -9,8 +9,13 @@ using System.Text.Json.Serialization;
 namespace Biflow.DataAccess.Models;
 
 [Table("FunctionApp")]
-public class FunctionApp
+public class FunctionApp(ITokenService tokenService, IHttpClientFactory httpClientFactory)
 {
+    private readonly ITokenService _tokenService = tokenService;
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+
+    public FunctionApp(AppDbContext dbContext) : this(dbContext.TokenService, dbContext.HttpClientFactory) { }
+
     [Required]
     [Display(Name = "Function app id")]
     [JsonInclude]
@@ -63,9 +68,10 @@ public class FunctionApp
 
     private static readonly JsonSerializerOptions SerializerOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
-    public async Task<List<(string FunctionName, string FunctionUrl)>> GetFunctionsAsync(HttpClient client, ITokenService tokenService)
+    public async Task<List<(string FunctionName, string FunctionUrl)>> GetFunctionsAsync()
     {
-        var (accessToken, _) = await tokenService.GetTokenAsync(AppRegistration, ResourceUrl);
+        using var client = _httpClientFactory.CreateClient();
+        var (accessToken, _) = await _tokenService.GetTokenAsync(AppRegistration, ResourceUrl);
         var functionListUrl = $"https://management.azure.com/subscriptions/{SubscriptionId}/resourceGroups/{ResourceGroupName}/providers/Microsoft.Web/sites/{ResourceName}/functions?api-version=2015-08-01";
         var message = new HttpRequestMessage(HttpMethod.Get, functionListUrl);
         message.Headers.Add("authorization", $"Bearer {accessToken}");
@@ -96,9 +102,10 @@ public class FunctionApp
         return functions;
     }
 
-    public async Task<List<(string Type, string Key)>> GetHostKeysAsync(HttpClient client, ITokenService tokenService)
+    public async Task<List<(string Type, string Key)>> GetHostKeysAsync()
     {
-        var (accessToken, _) = await tokenService.GetTokenAsync(AppRegistration, ResourceUrl);
+        using var client = _httpClientFactory.CreateClient();
+        var (accessToken, _) = await _tokenService.GetTokenAsync(AppRegistration, ResourceUrl);
         var hostKeysUrl = $"https://management.azure.com/subscriptions/{SubscriptionId}/resourceGroups/{ResourceGroupName}/providers/Microsoft.Web/sites/{ResourceName}/host/default/listkeys?api-version=2019-08-01";
         var message = new HttpRequestMessage(HttpMethod.Post, hostKeysUrl);
         message.Headers.Add("authorization", $"Bearer {accessToken}");
@@ -114,8 +121,9 @@ public class FunctionApp
 
     private record HostKeys(string MasterKey, Dictionary<string, string> FunctionKeys);
 
-    public async Task TestConnection(HttpClient client)
+    public async Task TestConnection()
     {
+        using var client = _httpClientFactory.CreateClient();
         var credential = new ClientSecretCredential(AppRegistration.TenantId, AppRegistration.ClientId, AppRegistration.ClientSecret);
         var context = new TokenRequestContext([ResourceUrl]);
         var token = await credential.GetTokenAsync(context);

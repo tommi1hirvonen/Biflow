@@ -148,7 +148,7 @@
         testingConnection = true;
         try
         {
-            if (functionApp is not null) await functionApp.TestConnection(HttpClientFactory.CreateClient());
+            if (functionApp is not null) await functionApp.TestConnection();
             connectionTestSuccess = true;
         }
         catch (Exception ex)
@@ -176,7 +176,7 @@
         }
         else
         {
-            functionApp = new()
+            functionApp = new(TokenService, HttpClientFactory)
             {
                 AppRegistrationId = AppRegistrations?.FirstOrDefault()?.AppRegistrationId,
                 AppRegistration = AppRegistrations?.FirstOrDefault()!,

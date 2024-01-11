@@ -29,13 +29,13 @@ public abstract class PipelineClient(PipelineClientType type)
     [JsonIgnore]
     public IList<PipelineStep> Steps { get; set; } = null!;
 
-    public abstract Task<string> StartPipelineRunAsync(ITokenService tokenService, string pipelineName, IDictionary<string, object> parameters, CancellationToken cancellationToken);
+    public abstract Task<string> StartPipelineRunAsync(string pipelineName, IDictionary<string, object> parameters, CancellationToken cancellationToken);
 
-    public abstract Task<(string Status, string Message)> GetPipelineRunAsync(ITokenService tokenService, string runId, CancellationToken cancellationToken);
+    public abstract Task<(string Status, string Message)> GetPipelineRunAsync(string runId, CancellationToken cancellationToken);
 
-    public abstract Task CancelPipelineRunAsync(ITokenService tokenService, string runId);
+    public abstract Task CancelPipelineRunAsync(string runId);
 
-    public abstract Task<PipelineFolder> GetPipelinesAsync(ITokenService tokenService);
+    public abstract Task<PipelineFolder> GetPipelinesAsync();
 
-    public abstract Task<IEnumerable<(string Name, ParameterValueType Type, object? Default)>> GetPipelineParametersAsync(ITokenService tokenService, string pipelineName);
+    public abstract Task<IEnumerable<(string Name, ParameterValueType Type, object? Default)>> GetPipelineParametersAsync(string pipelineName);
 }

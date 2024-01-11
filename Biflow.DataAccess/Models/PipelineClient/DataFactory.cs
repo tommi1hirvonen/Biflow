@@ -9,8 +9,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class DataFactory() : PipelineClient(PipelineClientType.DataFactory)
+public class DataFactory(ITokenService tokenService) : PipelineClient(PipelineClientType.DataFactory)
 {
+    private readonly ITokenService _tokenService = tokenService;
+
+    public DataFactory(AppDbContext dbContext) : this(dbContext.TokenService) { }
+
     [Column("SubscriptionId")]
     [Required]
     [Display(Name = "Subscription id")]
@@ -32,37 +36,37 @@ public class DataFactory() : PipelineClient(PipelineClientType.DataFactory)
 
     private const string ResourceUrl = "https://management.azure.com//.default";
 
-    private async Task<DataFactoryManagementClient> GetClientAsync(ITokenService tokenService)
+    private async Task<DataFactoryManagementClient> GetClientAsync()
     {
-        var (accessToken, _) = await tokenService.GetTokenAsync(AppRegistration, ResourceUrl);
+        var (accessToken, _) = await _tokenService.GetTokenAsync(AppRegistration, ResourceUrl);
         var credentials = new TokenCredentials(accessToken);
         return new DataFactoryManagementClient(credentials) { SubscriptionId = SubscriptionId };
     }
 
-    public override async Task<string> StartPipelineRunAsync(ITokenService tokenService, string pipelineName, IDictionary<string, object> parameters, CancellationToken cancellationToken)
+    public override async Task<string> StartPipelineRunAsync(string pipelineName, IDictionary<string, object> parameters, CancellationToken cancellationToken)
     {
-        var client = await GetClientAsync(tokenService);
+        var client = await GetClientAsync();
         var createRunResponse = await client.Pipelines.CreateRunAsync(ResourceGroupName, ResourceName, pipelineName,
             parameters: parameters, cancellationToken: cancellationToken);
         return createRunResponse.RunId;
     }
 
-    public override async Task<(string Status, string Message)> GetPipelineRunAsync(ITokenService tokenService, string runId, CancellationToken cancellationToken)
+    public override async Task<(string Status, string Message)> GetPipelineRunAsync(string runId, CancellationToken cancellationToken)
     {
-        var client = await GetClientAsync(tokenService);
+        var client = await GetClientAsync();
         var run = await client.PipelineRuns.GetAsync(ResourceGroupName, ResourceName, runId, cancellationToken);
         return (run.Status, run.Message);
     }
 
-    public override async Task CancelPipelineRunAsync(ITokenService tokenService, string runId)
+    public override async Task CancelPipelineRunAsync(string runId)
     {
-        var client = await GetClientAsync(tokenService);
+        var client = await GetClientAsync();
         await client.PipelineRuns.CancelAsync(ResourceGroupName, ResourceName, runId, isRecursive: true);
     }
 
-    public override async Task<PipelineFolder> GetPipelinesAsync(ITokenService tokenService)
+    public override async Task<PipelineFolder> GetPipelinesAsync()
     {
-        var client = await GetClientAsync(tokenService);
+        var client = await GetClientAsync();
         var allPipelines = new List<IPage<PipelineResource>>();
 
         var pipelineResources = await client.Pipelines.ListByFactoryAsync(ResourceGroupName, ResourceName);
@@ -88,9 +92,9 @@ public class DataFactory() : PipelineClient(PipelineClientType.DataFactory)
         return folder;
     }
 
-    public override async Task<IEnumerable<(string Name, ParameterValueType Type, object? Default)>> GetPipelineParametersAsync(ITokenService tokenService, string pipelineName)
+    public override async Task<IEnumerable<(string Name, ParameterValueType Type, object? Default)>> GetPipelineParametersAsync(string pipelineName)
     {
-        var client = await GetClientAsync(tokenService);
+        var client = await GetClientAsync();
         var pipeline = await client.Pipelines.GetAsync(ResourceGroupName, ResourceName, pipelineName);
         return pipeline.Parameters?.Select(param =>
         {

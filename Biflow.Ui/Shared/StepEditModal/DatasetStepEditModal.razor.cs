@@ -2,15 +2,12 @@
 using Biflow.DataAccess.Models;
 using Biflow.Ui.Core;
 using Biflow.Ui.Shared.StepEdit;
-using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
 {
-    [Inject] private ITokenService TokenService { get; set; } = null!;
-
     internal override string FormId => "dataset_step_edit_form";
 
     private DatasetSelectOffcanvas? datasetSelectOffcanvas;
@@ -33,8 +30,8 @@ public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
             (datasetGroupName, datasetName) = appRegistration switch
             {
                 not null => (
-                    await appRegistration.GetGroupNameAsync(step.DatasetGroupId, TokenService),
-                    await appRegistration.GetDatasetNameAsync(step.DatasetGroupId, step.DatasetId, TokenService)
+                    await appRegistration.GetGroupNameAsync(step.DatasetGroupId),
+                    await appRegistration.GetDatasetNameAsync(step.DatasetGroupId, step.DatasetId)
                     ),
                 _ => ("", "")
             };

@@ -11,8 +11,12 @@ using System.Text.Json.Serialization;
 namespace Biflow.DataAccess.Models;
 
 [Table("AppRegistration")]
-public class AppRegistration
+public class AppRegistration(ITokenService tokenService)
 {
+    private readonly ITokenService _tokenService = tokenService;
+
+    public AppRegistration(AppDbContext dbContext) : this(dbContext.TokenService) { }
+
     [Key]
     [Required]
     [Display(Name = "App registration id")]
@@ -63,26 +67,25 @@ public class AppRegistration
     private const string PowerBIResourceUrl = "https://analysis.windows.net/powerbi/api/.default";
     private const string AzureResourceUrl = "https://management.azure.com//.default";
 
-    private async Task<PowerBIClient> GetClientAsync(ITokenService tokenService)
+    private async Task<PowerBIClient> GetClientAsync()
     {
-        var (accessToken, _) = await tokenService.GetTokenAsync(this, PowerBIResourceUrl);
+        var (accessToken, _) = await _tokenService.GetTokenAsync(this, PowerBIResourceUrl);
         var credentials = new TokenCredentials(accessToken);
         return new PowerBIClient(credentials);
     }
 
-    public async Task RefreshDatasetAsync(ITokenService tokenService, string groupId, string datasetId, CancellationToken cancellationToken)
+    public async Task RefreshDatasetAsync(string groupId, string datasetId, CancellationToken cancellationToken)
     {
-        var client = await GetClientAsync(tokenService);
+        var client = await GetClientAsync();
         await client.Datasets.RefreshDatasetInGroupAsync(Guid.Parse(groupId), datasetId, cancellationToken: cancellationToken);
     }
 
     public async Task<(DatasetRefreshStatus? Status, Refresh? Refresh)> GetDatasetRefreshStatusAsync(
-        ITokenService tokenService,
         string groupId,
         string datasetId,
         CancellationToken cancellationToken)
     {
-        var client = await GetClientAsync(tokenService);
+        var client = await GetClientAsync();
         var refreshes = await client.Datasets.GetRefreshHistoryInGroupAsync(Guid.Parse(groupId), datasetId, top: 1, cancellationToken);
         var refresh = refreshes.Value.FirstOrDefault();
         var status = refresh?.Status switch
@@ -98,9 +101,9 @@ public class AppRegistration
             : (null, null);
     }
 
-    public async Task<IEnumerable<DatasetGroup>> GetAllDatasetsAsync(ITokenService tokenService)
+    public async Task<IEnumerable<DatasetGroup>> GetAllDatasetsAsync()
     {
-        var client = await GetClientAsync(tokenService);
+        var client = await GetClientAsync();
         var groups = await client.Groups.GetGroupsAsync();
         var datasetGroups = new List<DatasetGroup>();
         foreach (var group in groups.Value)
@@ -115,18 +118,18 @@ public class AppRegistration
         return datasetGroups;
     }
 
-    public async Task<string> GetGroupNameAsync(string groupId, ITokenService tokenService, CancellationToken cancellationToken = default)
+    public async Task<string> GetGroupNameAsync(string groupId, CancellationToken cancellationToken = default)
     {
-        var client = await GetClientAsync(tokenService);
+        var client = await GetClientAsync();
         var filter = $"id eq '{groupId}'";
         var groups = await client.Groups.GetGroupsAsync(filter, top: 1, cancellationToken: cancellationToken);
         var group = groups.Value.First();
         return group.Name;
     }
 
-    public async Task<string> GetDatasetNameAsync(string groupId, string datasetId, ITokenService tokenService, CancellationToken cancellationToken = default)
+    public async Task<string> GetDatasetNameAsync(string groupId, string datasetId, CancellationToken cancellationToken = default)
     {
-        var client = await GetClientAsync(tokenService);
+        var client = await GetClientAsync();
         var dataset = await client.Datasets.GetDatasetInGroupAsync(Guid.Parse(groupId), datasetId, cancellationToken);
         return dataset.Name;
     }
