@@ -85,7 +85,7 @@
                                     <p>Authorization failed most likely because the authentication cookie expired. Please try logging out and logging in again.</p>
                                     <strong>@username</strong>
                                     <div class="d-grid mt-4 mb-3">
-                                        <a class="btn btn-primary" href="logout?returnUrl=/">
+                                        <a class="btn btn-primary" href="javascript:void()" @onclick="@(() => NavigationManager.NavigateTo("logout", forceLoad: true))">
                                             <CxIcon Icon="FeatherIcon.LogOut" />
                                             &nbsp;
                                             Log out

@@ -7,6 +7,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Biflow</title>
     <base href="/" />
+    @*
+        Load theme scripts first.
+        This makes sure the correct theme is instantly applied before interactive theme components are ready to be used.
+    *@
+    <script src="/js/theme.js"></script> 
     <link href="_content/Havit.Blazor.Components.Web.Bootstrap/defaults.css" rel="stylesheet" />
     <link href="_content/Biflow.Ui.Components/defaults.css" rel="stylesheet" />
     <link href="/css/bootstrap.custom.min.css" rel="stylesheet" />
@@ -52,8 +57,6 @@
     <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
 
     <script src="/js/site.js"></script>
-    @*In Blazor, themes are managed using ThemeManager*@
-    @* <script src="/js/theme.js"></script> *@
 
     @*Load Blazor scripts last to make sure any referenced JS functions have been loaded first.*@
     <script src="_framework/blazor.web.js"></script>
@@ -68,5 +71,5 @@
         HttpContext.Request.Path.StartsWithSegments("/login") ||
         HttpContext.Request.Path.StartsWithSegments("/logout")
         ? null
-        : RenderMode.InteractiveServer;
+        : new InteractiveServerRenderMode(prerender: false);
 }
