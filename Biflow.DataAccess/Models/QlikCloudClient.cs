@@ -33,7 +33,7 @@ public class QlikCloudClient
 
     public async Task TestConnectionAsync(CancellationToken cancellationToken = default)
     {
-        var url = $"{EnvironmentUrl}/api/v1/spaces?limit=1";
+        var url = "api/v1/spaces?limit=1";
         using var httpClient = CreateHttpClient(); // TODO Implement caching or use IHttpClientFactory
         var response = await httpClient.GetAsync(url, cancellationToken);
         response.EnsureSuccessStatusCode();
@@ -41,7 +41,7 @@ public class QlikCloudClient
 
     public async Task<QlikAppReload> ReloadAppAsync(string appId, CancellationToken cancellationToken = default)
     {
-        var postReloadUrl = $"{EnvironmentUrl}/api/v1/reloads";
+        var postReloadUrl = "api/v1/reloads";
         var message = new
         {
             appId,
@@ -59,7 +59,7 @@ public class QlikCloudClient
 
     public async Task<QlikAppReload> GetReloadAsync(string reloadId, CancellationToken cancellationToken = default)
     {
-        var getReloadUrl = $"{EnvironmentUrl}/api/v1/reloads/{reloadId}";
+        var getReloadUrl = $"api/v1/reloads/{reloadId}";
         using var httpClient = CreateHttpClient(); // TODO Implement caching or use IHttpClientFactory
         var reload = await httpClient.GetFromJsonAsync<ReloadResponse>(getReloadUrl, cancellationToken)
             ?? throw new ApplicationException("Reload response was null");
@@ -69,14 +69,14 @@ public class QlikCloudClient
     public async Task CancelReloadAsync(string reloadId, CancellationToken cancellationToken = default)
     {
         using var httpClient = CreateHttpClient(); // TODO Implement caching or use IHttpClientFactory
-        var cancelUrl = $"{EnvironmentUrl}/api/v1/reloads/{reloadId}/actions/cancel";
+        var cancelUrl = $"api/v1/reloads/{reloadId}/actions/cancel";
         var response = await httpClient.PostAsync(cancelUrl, null, cancellationToken);
         response.EnsureSuccessStatusCode();
     }
 
     public async Task<string> GetAppNameAsync(string appId, CancellationToken cancellationToken = default)
     {
-        var url = $"{EnvironmentUrl}/api/v1/apps/{appId}";
+        var url = $"api/v1/apps/{appId}";
         using var httpClient = CreateHttpClient(); // TODO Implement caching or use IHttpClientFactory
         var response = await httpClient.GetFromJsonAsync<GetAppResponse>(url, cancellationToken);
         ArgumentNullException.ThrowIfNull(response);
@@ -85,7 +85,7 @@ public class QlikCloudClient
 
     public async Task<IEnumerable<QlikSpace>> GetAppsAsync(CancellationToken cancellationToken = default)
     {
-        var url = $"{EnvironmentUrl}/api/v1/items?limit=100&resourceType=app";
+        var url = $"api/v1/items?limit=100&resourceType=app";
         using var httpClient = CreateHttpClient(); // TODO Implement caching or use IHttpClientFactory
         var items = new List<ItemData>();
         do
@@ -115,9 +115,9 @@ public class QlikCloudClient
         return result;
     }
 
-    private async Task<IEnumerable<SpaceData>> GetSpacesAsync(HttpClient httpClient, CancellationToken cancellationToken)
+    private static async Task<IEnumerable<SpaceData>> GetSpacesAsync(HttpClient httpClient, CancellationToken cancellationToken)
     {
-        var url = $"{EnvironmentUrl}/api/v1/spaces?limit=100";
+        var url = "api/v1/spaces?limit=100";
         var spaces = new List<SpaceData>();
         do
         {
@@ -134,6 +134,8 @@ public class QlikCloudClient
         // TODO Implement caching or use IHttpClientFactory
         var client = new HttpClient();
         client.DefaultRequestHeaders.Authorization = new("Bearer", ApiToken);
+        var url = EnvironmentUrl.EndsWith('/') ? EnvironmentUrl : $"{EnvironmentUrl}/";
+        client.BaseAddress = new Uri(url);
         return client;
     }
 
