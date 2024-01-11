@@ -128,7 +128,7 @@
         {
             if (identity is null || !identity.IsAuthenticated)
             {
-                NavigationManager.NavigateTo($"login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}");
+                NavigationManager.NavigateTo("login");
                 return;
             }
         }

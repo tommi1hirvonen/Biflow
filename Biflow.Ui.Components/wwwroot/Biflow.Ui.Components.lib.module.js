@@ -4,7 +4,7 @@ function eventArgsCreator(event) {
 
 // Blazor JavaScript initializer
 // https://learn.microsoft.com/en-us/aspnet/core/blazor/fundamentals/startup?view=aspnetcore-7.0#javascript-initializers
-export function afterStarted(blazor) {
+export function afterServerStarted(blazor) {
     // Register custom onsearch event type for text inputs with type="search".
     // Chrome and some other browsers add a clear icon ("X") at the end of the text input to clear the input.
     // This launches a non-standard event 'search'.

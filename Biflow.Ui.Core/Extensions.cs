@@ -58,6 +58,7 @@ public static partial class Extensions
         }
         else if (authentication == "Windows")
         {
+            services.AddMemoryCache();
             services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
             services.AddAuthorizationBuilder()
                 .SetFallbackPolicy(new AuthorizationPolicyBuilder().AddRequirements(new UserExistsRequirement()).Build());

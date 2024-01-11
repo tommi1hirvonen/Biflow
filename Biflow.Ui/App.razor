@@ -1,16 +1,72 @@
-﻿<CascadingAuthenticationState>
-    <Router AppAssembly="@typeof(Program).Assembly">
-        <Found Context="routeData">
-            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)">
-                <NotAuthorized>
-                    <Unauthorized />
-                </NotAuthorized>
-            </AuthorizeRouteView>
-        </Found>
-        <NotFound>
-            <LayoutView Layout="@typeof(MainLayout)">
-                <p>Sorry, there's nothing at this address.</p>
-            </LayoutView>
-        </NotFound>
-    </Router>
-</CascadingAuthenticationState>
+﻿@inject IHostEnvironment Env
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Biflow</title>
+    <base href="/" />
+    <link href="_content/Havit.Blazor.Components.Web.Bootstrap/defaults.css" rel="stylesheet" />
+    <link href="_content/Biflow.Ui.Components/defaults.css" rel="stylesheet" />
+    <link href="/css/bootstrap.custom.min.css" rel="stylesheet" />
+    <link href="BiflowUi.styles.css" rel="stylesheet" />
+    <HeadOutlet @rendermode="RenderModeForPage" />
+</head>
+<body class="bg-body">
+    <app>
+        <Routes @rendermode="RenderModeForPage" />
+    </app>
+
+    <div id="blazor-error-ui" class="alert alert-danger alert-dismissible">
+        @if (Env.IsDevelopment())
+        {
+            <text>
+                An unhandled exception has occurred. See browser dev tools for details.
+            </text>
+        }
+        else
+        {
+            <text>
+                An error has occurred. This app may no longer respond until reloaded.
+            </text>
+        }
+        <a href="" class="reload alert-link">Reload</a>
+        <button type="button" class="btn-close dismiss" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <script src="/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    @*Used to draw the dependencies between different steps.*@
+    <script src="/lib/d3/d3.min.js"></script>
+    <script src="/lib/dagre-d3/dagre-d3.min.js"></script>
+
+    @*Used to draw the dashboard page reports.*@
+    <script src="/lib/Chart.js/chart.min.js"></script>
+    <script src="/lib/moment.js/moment.min.js"></script>
+    <script src="/lib/chartjs-adapter-moment/chartjs-adapter-moment.min.js"></script>
+
+    @*Used by the BlazorMonaco component*@
+    <script src="_content/BlazorMonaco/jsInterop.js"></script>
+    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
+    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
+
+    <script src="/js/site.js"></script>
+    @*In Blazor, themes are managed using ThemeManager*@
+    @* <script src="/js/theme.js"></script> *@
+
+    @*Load Blazor scripts last to make sure any referenced JS functions have been loaded first.*@
+    <script src="_framework/blazor.web.js"></script>
+</body>
+</html>
+
+@code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = null!;
+
+    private IComponentRenderMode? RenderModeForPage =>
+        HttpContext.Request.Path.StartsWithSegments("/login") ||
+        HttpContext.Request.Path.StartsWithSegments("/logout")
+        ? null
+        : RenderMode.InteractiveServer;
+}
