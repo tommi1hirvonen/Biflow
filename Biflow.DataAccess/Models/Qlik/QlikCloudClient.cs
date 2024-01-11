@@ -52,18 +52,18 @@ public class QlikCloudClient
         response.EnsureSuccessStatusCode();
         var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
         ArgumentNullException.ThrowIfNull(responseBody);
-        var reload = JsonSerializer.Deserialize<ReloadResponse>(responseBody, DeserializerOptions)
+        var reload = JsonSerializer.Deserialize<QlikAppReload>(responseBody, DeserializerOptions)
             ?? throw new ApplicationException("Reload response was null");
-        return reload.ToTypedResponse();
+        return reload;
     }
 
     public async Task<QlikAppReload> GetReloadAsync(string reloadId, CancellationToken cancellationToken = default)
     {
         var getReloadUrl = $"api/v1/reloads/{reloadId}";
         using var httpClient = CreateHttpClient(); // TODO Implement caching or use IHttpClientFactory
-        var reload = await httpClient.GetFromJsonAsync<ReloadResponse>(getReloadUrl, cancellationToken)
+        var reload = await httpClient.GetFromJsonAsync<QlikAppReload>(getReloadUrl, cancellationToken)
             ?? throw new ApplicationException("Reload response was null");
-        return reload.ToTypedResponse();
+        return reload;
     }
 
     public async Task CancelReloadAsync(string reloadId, CancellationToken cancellationToken = default)
@@ -137,25 +137,6 @@ public class QlikCloudClient
         var url = EnvironmentUrl.EndsWith('/') ? EnvironmentUrl : $"{EnvironmentUrl}/";
         client.BaseAddress = new Uri(url);
         return client;
-    }
-
-    private record ReloadResponse(string Id, string Status, string? Log)
-    {
-        public QlikAppReload ToTypedResponse()
-        {
-            var status = Status switch
-            {
-                "QUEUED" => QlikAppReloadStatus.Queued,
-                "RELOADING" => QlikAppReloadStatus.Reloading,
-                "CANCELING" => QlikAppReloadStatus.Canceling,
-                "SUCCEEDED" => QlikAppReloadStatus.Succeeded,
-                "FAILED" => QlikAppReloadStatus.Failed,
-                "CANCELED" => QlikAppReloadStatus.Canceled,
-                "EXCEEDED_LIMIT" => QlikAppReloadStatus.ExceededLimit,
-                _ => throw new ApplicationException($"Unrecognized status {Status}")
-            };
-            return new(Id, status, Log);
-        }
     }
 
     private record GetAppResponse(GetAppResponseAttributes Attributes);
