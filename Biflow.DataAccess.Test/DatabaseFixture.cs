@@ -539,12 +539,12 @@ public class DatabaseFixture : IAsyncLifetime
             await context.SaveChangesAsync();
 
             #region EXECUTIONS
-            var executionBuilder1 = await ExecutionBuilderFactory.CreateAsync(job1.JobId, Username);
+            using var executionBuilder1 = await ExecutionBuilderFactory.CreateAsync(job1.JobId, Username);
             ArgumentNullException.ThrowIfNull(executionBuilder1);
             executionBuilder1.AddAll();
             await executionBuilder1.SaveExecutionAsync();
 
-            var executionBuilder2 = await ExecutionBuilderFactory.CreateAsync(job2.JobId, schedule1.ScheduleId, (ctx) => (step) => step.IsEnabled);
+            using var executionBuilder2 = await ExecutionBuilderFactory.CreateAsync(job2.JobId, schedule1.ScheduleId, (ctx) => (step) => step.IsEnabled);
             ArgumentNullException.ThrowIfNull(executionBuilder2);
             executionBuilder2.AddAll();
             await executionBuilder2.SaveExecutionAsync();

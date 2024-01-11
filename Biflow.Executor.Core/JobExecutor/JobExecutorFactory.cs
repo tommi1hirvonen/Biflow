@@ -19,7 +19,7 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
             .Include(e => e.ExecutionParameters)
             .Include(e => e.ExecutionConcurrencies)
             .FirstOrDefaultAsync(e => e.ExecutionId == executionId)
-            ?? throw new ArgumentException($"No execution was found for id {executionId}");
+            ?? throw new ExecutionNotFoundException(executionId);
 
         var query1 = context.StepExecutions
             .Where(e => e.ExecutionId == executionId)
@@ -73,28 +73,28 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
             switch (step.step)
             {
                 case SqlStepExecution sql:
-                    sql.Connection = step.sql;
+                    sql.SetConnection(step.sql);
                     break;
                 case PackageStepExecution package:
-                    package.Connection = step.package;
+                    package.SetConnection(step.package);
                     break;
                 case AgentJobStepExecution agent:
-                    agent.Connection = step.agent;
+                    agent.SetConnection(step.agent);
                     break;
                 case TabularStepExecution tabular:
-                    tabular.Connection = step.tabular;
+                    tabular.SetConnection(step.tabular);
                     break;
                 case DatasetStepExecution dataset:
-                    dataset.AppRegistration = step.dataset;
+                    dataset.SetAppRegistration(step.dataset);
                     break;
                 case FunctionStepExecution function:
-                    function.FunctionApp = step.function;
+                    function.SetApp(step.function);
                     break;
                 case PipelineStepExecution pipeline:
-                    pipeline.PipelineClient = step.pipeline;
+                    pipeline.SetClient(step.pipeline);
                     break;
                 case QlikStepExecution qlik:
-                    qlik.QlikCloudClient = step.qlik;
+                    qlik.SetClient(step.qlik);
                     break;
                 default:
                     break;

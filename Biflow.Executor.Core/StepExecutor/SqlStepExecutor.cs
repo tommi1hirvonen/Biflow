@@ -15,8 +15,8 @@ internal class SqlStepExecutor(
     private readonly ILogger<SqlStepExecutor> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
     private readonly SqlStepExecution _step = step;
-    private readonly SqlConnectionInfo _connection = step.Connection
-        ?? throw new ArgumentNullException(nameof(step.Connection));
+    private readonly SqlConnectionInfo _connection = step.GetConnection()
+        ?? throw new ArgumentNullException(nameof(_connection));
 
     public SqlStepExecutionAttempt Clone(SqlStepExecutionAttempt other, int retryAttemptIndex) =>
         new(other, retryAttemptIndex);

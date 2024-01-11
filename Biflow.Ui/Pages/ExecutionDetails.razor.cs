@@ -7,6 +7,7 @@ using Havit.Blazor.Components.Web;
 using Havit.Blazor.Components.Web.Bootstrap;
 using MediatR;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.EntityFrameworkCore;
 using System.Timers;
 
@@ -17,11 +18,12 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
 {
     [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
     [Inject] private IHxMessengerService Messenger { get; set; } = null!;
-    [Inject] private IHttpContextAccessor HttpContextAccessor { get; set; } = null!;
     [Inject] private IExecutorService ExecutorService { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
     [Inject] private IMediator Mediator { get; set; } = null!;
+
+    [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
 
     [Parameter] public Guid ExecutionId { get; set; }
 
@@ -69,7 +71,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
     private IEnumerable<StepExecutionAttempt>? Executions => execution?.StepExecutions.SelectMany(e => e.StepExecutionAttempts);
 
     private IEnumerable<StepExecutionProjection>? FilteredExecutions => Executions
-        ?.Where(e => tagFilter.Count == 0 || e.StepExecution.Step?.Tags.Any(t => tagFilter.Contains(t.TagName)) == true)
+        ?.Where(e => tagFilter.Count == 0 || e.StepExecution.GetStep()?.Tags.Any(t => tagFilter.Contains(t.TagName)) == true)
         .Where(e => stepStatusFilter.Count == 0 || stepStatusFilter.Contains(e.ExecutionStatus))
         .Where(e => stepFilter.Count == 0 || stepFilter.Contains((e.StepExecution.StepName, e.StepExecution.StepType)))
         .Where(e => stepTypeFilter.Count == 0 || stepTypeFilter.Contains(e.StepExecution.StepType))
@@ -77,7 +79,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             e.StepExecution.ExecutionId,
             e.StepExecution.StepId,
             e.RetryAttemptIndex,
-            e.StepExecution.Step?.StepName ?? e.StepExecution.StepName,
+            e.StepExecution.GetStep()?.StepName ?? e.StepExecution.StepName,
             e.StepType,
             e.StepExecution.ExecutionPhase,
             e.StartedOn,
@@ -88,7 +90,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             e.StepExecution.Execution.ScheduleId,
             e.StepExecution.Execution.JobId,
             job?.JobName ?? e.StepExecution.Execution.JobName,
-            e.StepExecution.Step?.Tags.ToArray() ?? []));
+            e.StepExecution.GetStep()?.Tags.ToArray() ?? []));
 
     private Report ShowReport => Page switch
     {
@@ -148,34 +150,27 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             loading = true;
             await InvokeAsync(StateHasChanged);
             using var context = DbFactory.CreateDbContext();
-            execution = await context.Executions
-                .AsNoTrackingWithIdentityResolution()
-                .Include(e => e.ExecutionParameters)
-                .Include(e => e.StepExecutions)
-                .ThenInclude(e => e.StepExecutionAttempts)
-                .Include(e => e.StepExecutions)
-                .ThenInclude(e => e.ExecutionDependencies)
-                .Include($"{nameof(execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
-                .Include($"{nameof(execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
-                .Include(e => e.StepExecutions)
-                .ThenInclude(e => e.ExecutionConditionParameters)
-                .ThenInclude(p => p.ExecutionParameter)
-                .Include(e => e.StepExecutions)
-                .FirstOrDefaultAsync(e => e.ExecutionId == ExecutionId);
-            if (execution is not null)
-            {
-                var stepIds = execution.StepExecutions.Select(s => s.StepId).ToArray();
-                var steps = await context.Steps
+            var stepExecutions = await (
+                from exec in context.StepExecutions
                     .AsNoTrackingWithIdentityResolution()
-                    .Include(s => s.Tags)
-                    .Where(s => stepIds.Contains(s.StepId))
-                    .ToArrayAsync();
-                var matches = steps.Join(execution.StepExecutions, s => s.StepId, e => e.StepId, (s, e) => (s, e));
-                foreach (var (step, stepExecution) in matches)
-                {
-                    stepExecution.Step = step;
-                }
+                    .Where(e => e.ExecutionId == ExecutionId)
+                    .Include(e => e.Execution)
+                    .ThenInclude(e => e.ExecutionParameters)
+                    .Include(e => e.StepExecutionAttempts)
+                    .Include(e => e.ExecutionDependencies)
+                    .Include($"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
+                    .Include($"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
+                    .Include(e => e.ExecutionConditionParameters)
+                    .ThenInclude(p => p.ExecutionParameter)
+                join step in context.Steps.Include(s => s.Tags) on exec.StepId equals step.StepId into es
+                from step in es.DefaultIfEmpty()
+                select new { exec, step }
+                ).ToArrayAsync();
+            foreach (var item in stepExecutions)
+            {
+                item.exec.SetStep(item.step);
             }
+            execution = stepExecutions.FirstOrDefault()?.exec.Execution;
             job = execution is not null
                 ? await context.Jobs.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(j => j.JobId == execution.JobId)
                 : null;
@@ -212,8 +207,11 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
         stoppingExecutions.Add(ExecutionId);
         try
         {
-            string username = HttpContextAccessor.HttpContext?.User?.Identity?.Name
-                ?? throw new ArgumentNullException(nameof(username), "Username cannot be null");
+            ArgumentNullException.ThrowIfNull(AuthenticationState);
+            var authState = await AuthenticationState;
+            var username = authState.User.Identity?.Name;
+            ArgumentNullException.ThrowIfNull(username);
+
             await ExecutorService.StopExecutionAsync(execution.ExecutionId, username);
             Messenger.AddInformation("Stop request sent successfully to the executor service");
         }

@@ -2,7 +2,6 @@
 
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject EnvironmentSnapshotBuilder SnapshotBuilder
-@inject IHttpContextAccessor HttpContext
 @inject IHxMessengerService Messenger
 @inject IJSRuntime JS
 @inject NavigationManager NavigationManager
@@ -117,6 +116,8 @@
 </HxModal>
 
 @code {
+    [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
+
     [Parameter] public IList<VersionProjection>? Versions { get; set; }
 
     private HxOffcanvas? detailsOffcanvas;
@@ -129,14 +130,17 @@
     {
         try
         {
+            ArgumentNullException.ThrowIfNull(AuthenticationState);
+            var authState = await AuthenticationState;
+            var username = authState.User.Identity?.Name;
             var snapshot = await SnapshotBuilder.CreateAsync();
             var version = new EnvironmentVersion
-                {
-                    Snapshot = snapshot,
-                    Description = description,
-                    CreatedOn = DateTimeOffset.Now,
-                    CreatedBy = HttpContext.HttpContext?.User.Identity?.Name
-                };
+            {
+                Snapshot = snapshot,
+                Description = description,
+                CreatedOn = DateTimeOffset.Now,
+                CreatedBy = username
+            };
             using var context = await DbContextFactory.CreateDbContextAsync();
             context.EnvironmentVersions.Add(version);
             await context.SaveChangesAsync();

@@ -1,12 +1,13 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using MediatR;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Biflow.Ui.Core;
 
 internal class UserExistsRequirement : IAuthorizationRequirement
 {
-    public static async Task<bool> UserExistsAsync(UserService users, string userName)
+    public static async Task<bool> UserExistsAsync(IMediator mediator, string username)
     {
-        var roles = await users.GetUserRolesAsync(userName);
-        return roles.Any();
+        var response = await mediator.Send(new UserRolesQuery(username));
+        return response.Roles.Any();
     }
 }

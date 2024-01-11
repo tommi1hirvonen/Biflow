@@ -101,7 +101,17 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
 
         if (stepExecution is TStep step && executionAttempt is TAttempt attempt)
         {
-            var executor = ActivatorUtilities.CreateInstance<TExecutor>(_serviceProvider, step);
+            TExecutor executor;
+            try
+            {
+                executor = ActivatorUtilities.CreateInstance<TExecutor>(_serviceProvider, step);
+            }
+            catch (Exception ex)
+            {
+                attempt.AddError(ex, $"Error initializing an instance of {typeof(TExecutor)}");
+                await UpdateExecutionFailedAsync(attempt, StepExecutionStatus.Failed);
+                return false;
+            }
             return await ExecuteRecursivelyWithRetriesAsync(executor, step, attempt, cts);
         }
 
@@ -121,18 +131,15 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
         {
             result = await stepExecutor.ExecuteAsync(executionAttempt, cts);
         }
+        catch (OperationCanceledException ex) when (cts.IsCancellationRequested)
+        {
+            executionAttempt.AddWarning(ex);
+            result = Result.Cancel;
+        }
         catch (Exception ex)
         {
-            if (ex is OperationCanceledException canceled && cts.IsCancellationRequested)
-            {
-                executionAttempt.AddWarning(canceled);
-                result = Result.Cancel;
-            }
-            else
-            {
-                executionAttempt.AddError(ex, "Unhandled error caught in base executor");
-                result = Result.Failure;
-            }
+            executionAttempt.AddError(ex, "Unhandled error caught in step orchestrator");
+            result = Result.Failure;
         }
 
         return await result.Match(
@@ -202,6 +209,7 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
     {
         using var context = _dbContextFactory.CreateDbContext();
         attempt.ExecutionStatus = status;
+        attempt.StartedOn ??= DateTimeOffset.Now;
         attempt.EndedOn = DateTimeOffset.Now;
         context.Attach(attempt).State = EntityState.Modified;
         await context.SaveChangesAsync();

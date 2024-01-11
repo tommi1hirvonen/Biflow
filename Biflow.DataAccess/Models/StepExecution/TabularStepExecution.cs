@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.DataAccess.Models;
 
-public class TabularStepExecution : StepExecution, IHasTimeout, IHasConnection<AnalysisServicesConnectionInfo?>
+public class TabularStepExecution : StepExecution, IHasTimeout
 {
     public TabularStepExecution(string stepName, string tabularModelName)
         : base(stepName, StepType.Tabular)
@@ -18,7 +18,6 @@ public class TabularStepExecution : StepExecution, IHasTimeout, IHasConnection<A
         TabularPartitionName = step.TabularPartitionName;
         TimeoutMinutes = step.TimeoutMinutes;
         ConnectionId = step.ConnectionId;
-        Connection = step.Connection;
 
         StepExecutionAttempts = new[] { new TabularStepExecutionAttempt(this) };
     }
@@ -43,7 +42,30 @@ public class TabularStepExecution : StepExecution, IHasTimeout, IHasConnection<A
     [Required]
     public Guid ConnectionId { get; private set; }
 
-    [NotMapped]
-    public AnalysisServicesConnectionInfo? Connection { get; set; }
+    /// <summary>
+    /// Get the <see cref="AnalysisServicesConnectionInfo"/> entity associated with this <see cref="StepExecution"/>.
+    /// The method <see cref="SetConnection(AnalysisServicesConnectionInfo?)"/> will need to have been called first for the <see cref="AnalysisServicesConnectionInfo"/> to be available.
+    /// </summary>
+    /// <returns><see cref="AnalysisServicesConnectionInfo"/> if it was previously set using <see cref="SetConnection(AnalysisServicesConnectionInfo?)"/> with a non-null object; <see langword="null"/> otherwise.</returns>
+    public AnalysisServicesConnectionInfo? GetConnection() => _connection;
 
+    /// <summary>
+    /// Set the private <see cref="AnalysisServicesConnectionInfo"/> object used for containing a possible connection reference.
+    /// It can be later accessed using <see cref="GetConnection"/>.
+    /// </summary>
+    /// <param name="connection"><see cref="AnalysisServicesConnectionInfo"/> reference to store.
+    /// The ConnectionIds are compared and the value is set only if the ids match.</param>
+    public void SetConnection(AnalysisServicesConnectionInfo? connection)
+    {
+        if (connection?.ConnectionId == ConnectionId)
+        {
+            _connection = connection;
+        }
+    }
+
+    // Use a field excluded from the EF model to store the connection reference.
+    // This is to avoid generating a foreign key constraint on the ExecutionStep table caused by a navigation property.
+    // Make it private with public method access so that it is not used in EF Include method calls by accident.
+    [NotMapped]
+    private AnalysisServicesConnectionInfo? _connection;
 }

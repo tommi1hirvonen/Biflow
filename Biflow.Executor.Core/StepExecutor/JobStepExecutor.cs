@@ -36,7 +36,7 @@ internal class JobStepExecutor(
                 { Count: > 0 } tags => tags.Select(t => t.TagId).ToArray(),
                 _ => null
             };
-            var builder = await _executionBuilderFactory.CreateAsync(_step.JobToExecuteId, createdBy: null, parent: executionAttempt,
+            using var builder = await _executionBuilderFactory.CreateAsync(_step.JobToExecuteId, createdBy: null, parent: executionAttempt,
                 context => step => step.IsEnabled,
                 context => step => tagIds == null || step.Tags.Any(t => tagIds.Contains(t.TagId)));
             ArgumentNullException.ThrowIfNull(builder);

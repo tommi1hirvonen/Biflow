@@ -6,7 +6,6 @@
 @inject NavigationManager NavigationManager
 @inject IConfiguration Configuration
 @inject AuthenticationMethodResolver AuthenticationResolver
-@inject IHttpContextAccessor HttpContextAccessor
 
 @*Toast container for HxMessenger service*@
 <style>
@@ -76,7 +75,7 @@
                                 @if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.Windows)
                                 {
                                     <p>Sorry, you are not authorized to access the site with this account.</p>
-                                    <strong>@HttpContextAccessor.HttpContext?.User?.Identity?.Name</strong>
+                                    <strong>@username</strong>
                                     <div class="d-grid mt-4 mb-3">
                                         <a class="btn btn-primary" href="MicrosoftIdentity/Account/SignOut">
                                             <CxIcon Icon="FeatherIcon.LogOut" />
@@ -88,9 +87,9 @@
                                 else if (AuthenticationResolver.AuthenticationMethod != AuthenticationMethod.Windows)
                                 {
                                     <p>Authorization failed most likely because the authentication cookie expired. Please try logging out and logging in again.</p>
-                                    <strong>@HttpContextAccessor.HttpContext?.User?.Identity?.Name</strong>
+                                    <strong>@username</strong>
                                     <div class="d-grid mt-4 mb-3">
-                                        <a class="btn btn-primary" href="logout?returnUrl=/">
+                                        <a class="btn btn-primary" href="javascript:void()" @onclick="@(() => NavigationManager.NavigateTo("logout", forceLoad: true))">
                                             <CxIcon Icon="FeatherIcon.LogOut" />
                                             &nbsp;
                                             Log out
@@ -108,10 +107,11 @@
 
 @code {
     [CascadingParameter]
-    protected Task<AuthenticationState>? AuthStat { get; set; }
+    protected Task<AuthenticationState>? AuthState { get; set; }
 
     private readonly UserState userState = new();
 
+    private string? username = null;
     private bool collapseSidebar = true;
     private string? schedulerServiceErrorMessage = null;
 
@@ -119,15 +119,20 @@
 
     protected override async Task OnInitializedAsync()
     {
-        if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn
-        || AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.Ldap)
+        if (AuthState is null)
         {
-            AuthenticationState authenticationState = await (AuthStat ?? throw new InvalidOperationException("Failed to get authentication state"));
-            ClaimsPrincipal user = authenticationState.User;
-            IIdentity identity = user.Identity ?? throw new InvalidOperationException("User identity was null");
-            if (!identity.IsAuthenticated)
+            throw new ApplicationException("Failed to get authentication state");
+        }
+
+        var state = await AuthState;
+        var identity = state.User.Identity;
+        username = identity?.Name;
+
+        if (AuthenticationResolver.AuthenticationMethod is AuthenticationMethod.BuiltIn or AuthenticationMethod.Ldap)
+        {
+            if (identity is null || !identity.IsAuthenticated)
             {
-                NavigationManager.NavigateTo($"login?returnUrl={Uri.EscapeDataString(NavigationManager.Uri)}");
+                NavigationManager.NavigateTo("login");
                 return;
             }
         }

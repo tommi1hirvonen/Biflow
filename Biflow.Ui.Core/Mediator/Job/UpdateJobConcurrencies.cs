@@ -20,6 +20,7 @@ internal class UpdateJobConcurrenciesCommandHandler(IDbContextFactory<AppDbConte
         {
             return;
         }
+        job.MaxParallelSteps = request.Job.MaxParallelSteps;
         context.MergeCollections(job.JobConcurrencies, request.Job.JobConcurrencies, c => c.StepType);
         await context.SaveChangesAsync(cancellationToken);
     }

@@ -16,8 +16,8 @@ internal class DatasetStepExecutor(
     private readonly ITokenService _tokenService = tokenService;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
     private readonly DatasetStepExecution _step = step;
-    private readonly AppRegistration _appRegistration = step.AppRegistration
-        ?? throw new ArgumentNullException(nameof(step.AppRegistration));
+    private readonly AppRegistration _appRegistration = step.GetAppRegistration()
+        ?? throw new ArgumentNullException(nameof(_appRegistration));
 
     public DatasetStepExecutionAttempt Clone(DatasetStepExecutionAttempt other, int retryAttemptIndex) =>
         new(other, retryAttemptIndex);
@@ -51,19 +51,17 @@ internal class DatasetStepExecutor(
         {
             try
             {
-                var refresh = await _appRegistration.GetDatasetRefreshStatus(_tokenService, _step.DatasetGroupId, _step.DatasetId, cancellationToken);
-                if (refresh?.Status == "Completed")
+                var (status, refresh) = await _appRegistration.GetDatasetRefreshStatusAsync(_tokenService, _step.DatasetGroupId, _step.DatasetId, cancellationToken);
+                switch (status)
                 {
-                    return Result.Success;
-                }
-                else if (refresh?.Status == "Failed" || refresh?.Status == "Disabled")
-                {
-                    attempt.AddError(refresh.ServiceExceptionJson);
-                    return Result.Failure;
-                }
-                else
-                {
-                    await Task.Delay(_pollingIntervalMs, cancellationToken);
+                    case DatasetRefreshStatus.Completed:
+                        return Result.Success;
+                    case DatasetRefreshStatus.Failed or DatasetRefreshStatus.Disabled:
+                        attempt.AddError(refresh?.ServiceExceptionJson);
+                        return Result.Failure;
+                    default:
+                        await Task.Delay(_pollingIntervalMs, cancellationToken);
+                        break;
                 }
             }
             catch (OperationCanceledException ex)

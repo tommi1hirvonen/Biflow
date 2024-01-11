@@ -339,7 +339,6 @@
                 {
                     foreach (var param in execution.ExecutionParameters.OrderBy(p => p.ParameterName))
                     {
-                        // TODO Consider adding an offcanvas to display the execution parameter's value change history through SQL step captures.
                         <tr>
                             <td>@param.DisplayName</td>
                             <td class="font-monospace">@param.DefaultValue</td>
@@ -369,7 +368,7 @@
                 <FilterDropdown TItem="(string StepName, StepType StepType)"
                             FilterSet="stepFilter"
                             Items="execution?.StepExecutions
-                                .Where(s => !tagFilter.Any() || s.Step?.Tags.Any(t => tagFilter.Contains(t.TagName)) == true) // Limit visible steps based on tag filter
+                                .Where(s => !tagFilter.Any() || s.GetStep()?.Tags.Any(t => tagFilter.Contains(t.TagName)) == true) // Limit visible steps based on tag filter
                                 .Where(s => !stepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
                                     stepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible steps based on step status filter
                                 .Where(s => !stepTypeFilter.Any() || stepTypeFilter.Contains(s.StepType)) // Limit visible steps based on step type filter
@@ -390,7 +389,7 @@
                 <FilterDropdown TItem="StepType"
                             FilterSet="stepTypeFilter"
                             Items="execution?.StepExecutions
-                                .Where(s => !tagFilter.Any() || s.Step?.Tags.Any(t => tagFilter.Contains(t.TagName)) == true) // Limit visible step types based on tag filter
+                                .Where(s => !tagFilter.Any() || s.GetStep()?.Tags.Any(t => tagFilter.Contains(t.TagName)) == true) // Limit visible step types based on tag filter
                                 .Where(s => !stepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
                                     stepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible step types based on step status filter
                                 .Where(s => !stepFilter.Any() || stepFilter.Contains((s.StepName, s.StepType))) // Limit visible step types based on step filter
@@ -410,7 +409,7 @@
                 <FilterDropdown TItem="StepExecutionStatus"
                             FilterSet="stepStatusFilter"
                             Items="execution?.StepExecutions
-                                .Where(s => !tagFilter.Any() || s.Step?.Tags.Any(t => tagFilter.Contains(t.TagName)) == true) // Limit visible step statuses based on tag filter
+                                .Where(s => !tagFilter.Any() || s.GetStep()?.Tags.Any(t => tagFilter.Contains(t.TagName)) == true) // Limit visible step statuses based on tag filter
                                 .Where(s => !stepFilter.Any() || stepFilter.Contains((s.StepName, s.StepType))) // Limit visible step statuses based on step filter
                                 .Where(s => !stepTypeFilter.Any() || stepTypeFilter.Contains(s.StepType)) // Limit visible step statuses based on step type filter
                                 .SelectMany(s => s.StepExecutionAttempts)
@@ -433,7 +432,7 @@
                                 .Where(s => !stepTypeFilter.Any() || stepTypeFilter.Contains(s.StepType)) // Limit visible tags based on step type filter
                                 .Where(s => !stepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
                                             stepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible tags based on step status filter
-                                .SelectMany(e => e.Step?.Tags.Select(t => t.TagName) ?? Enumerable.Empty<string>())
+                                .SelectMany(e => e.GetStep()?.Tags.Select(t => t.TagName) ?? Enumerable.Empty<string>())
                                 .Distinct()
                                 .OrderBy(s => s) ?? Enumerable.Empty<string>()"
                             OnChange="StateHasChanged">

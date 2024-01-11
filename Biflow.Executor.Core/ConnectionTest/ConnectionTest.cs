@@ -1,15 +1,13 @@
-﻿using Biflow.Core;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Executor.Core.ConnectionTest;
 
-internal class ConnectionTest(ISqlConnectionFactory sqlConnectionFactory) : IConnectionTest
+internal class ConnectionTest(IDbContextFactory<ExecutorDbContext> dbContextFactory) : IConnectionTest
 {
-    private readonly ISqlConnectionFactory _sqlConnectionFactory = sqlConnectionFactory;
-
     public async Task RunAsync()
     {
-
-        using var connection = _sqlConnectionFactory.Create();
-        await connection.OpenAsync();
+        using var context = await dbContextFactory.CreateDbContextAsync();
+        await context.Database.OpenConnectionAsync();
+        await context.Database.CloseConnectionAsync();
     }
 }

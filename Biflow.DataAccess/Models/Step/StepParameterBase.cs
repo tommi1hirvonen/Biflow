@@ -55,10 +55,36 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
 
     public ParameterType ParameterType { get; }
 
-    public Guid? InheritFromJobParameterId { get; set; }
+    public Guid? InheritFromJobParameterId
+    {
+        get => _inheritFromJobParameterId;
+        set
+        {
+            if (value is not null)
+            {
+                UseExpression = false;
+            }
+            _inheritFromJobParameterId = value;
+        }
+    }
+
+    private Guid? _inheritFromJobParameterId;
 
     [JsonIgnore]
-    public JobParameter? InheritFromJobParameter { get; set; }
+    public JobParameter? InheritFromJobParameter
+    {
+        get => _inheritFromJobParameter;
+        set
+        {
+            if (value is not null)
+            {
+                UseExpression = false;
+            }
+            _inheritFromJobParameter = value;
+        }
+    }
+
+    private JobParameter? _inheritFromJobParameter;
 
     [ValidateComplexType]
     public IList<StepParameterExpressionParameter> ExpressionParameters { get; set; } = new List<StepParameterExpressionParameter>();

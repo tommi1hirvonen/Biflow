@@ -15,10 +15,10 @@
                     <tr>
                         <td>Step id</td>
                         <td>
-                            @if (StepExecutionAttempt.StepExecution.Step is not null)
+                            @if (StepExecutionAttempt.StepExecution.GetStep() is Step step)
                             {
-                                <a href="jobs/@StepExecutionAttempt.StepExecution.Execution.JobId/steps/@StepExecutionAttempt.StepExecution.Step.StepId">
-                                    @StepExecutionAttempt.StepExecution.Step.StepId
+                                <a href="jobs/@StepExecutionAttempt.StepExecution.Execution.JobId/steps/@step.StepId">
+                                    @step.StepId
                                 </a>
                             }
                             else

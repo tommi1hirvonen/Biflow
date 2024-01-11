@@ -3,7 +3,6 @@
 @attribute [Authorize(Roles = $"{Roles.Admin}, {Roles.SettingsEditor}")]
 
 @inject IConfiguration Configuration
-@inject IHttpContextAccessor Context
 @inject NavigationManager NavigationManager
 
 <h4>Settings</h4>
@@ -127,16 +126,21 @@ else
 }
 
 @code {
+    [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
+
     [Parameter] public string? Page { get; set; }
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         if (Page is not null)
         {
             return;
         }
 
-        if (Context.HttpContext?.User.IsInRole(Roles.Admin) ?? false)
+        ArgumentNullException.ThrowIfNull(AuthenticationState);
+        var authState = await AuthenticationState;
+
+        if (authState.User.IsInRole(Roles.Admin))
         {
             NavigationManager.NavigateTo("settings/users");
             return;

@@ -109,4 +109,30 @@ public class DbContextTests(DatabaseFixture fixture)
         var step = execution.StepExecutions.First(s => s.StepName == "Test step 4");
         Assert.True(step.ExecutionDependencies.Count != 0);
     }
+
+    [Fact]
+    public async Task GetExecutionWithEntireGraphNotInclude()
+    {
+        using var context = await dbContextFactory.CreateDbContextAsync();
+        var executionId = await context.Executions
+            .Where(e => e.JobName == "Test job 1")
+            .Select(e => e.ExecutionId)
+            .FirstAsync();
+        var execution = await context.GetExecutionWithEntireGraphAsync(executionId, includeEndpoint: false, includeStep: false);
+        Assert.NotEmpty(execution.StepExecutions.OfType<SqlStepExecution>().Where(s => s.GetConnection() is null));
+        Assert.NotEmpty(execution.StepExecutions.Where(s => s.GetStep() is null));
+    }
+
+    [Fact]
+    public async Task GetExecutionWithEntireGraphInclude()
+    {
+        using var context = await dbContextFactory.CreateDbContextAsync();
+        var executionId = await context.Executions
+            .Where(e => e.JobName == "Test job 1")
+            .Select(e => e.ExecutionId)
+            .FirstAsync();
+        var execution = await context.GetExecutionWithEntireGraphAsync(executionId, includeEndpoint: true, includeStep: true);
+        Assert.NotEmpty(execution.StepExecutions.OfType<SqlStepExecution>().Where(s => s.GetConnection() is not null));
+        Assert.NotEmpty(execution.StepExecutions.Where(s => s.GetStep() is not null));
+    }
 }

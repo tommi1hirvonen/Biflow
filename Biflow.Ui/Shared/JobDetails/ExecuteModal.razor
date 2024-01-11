@@ -1,5 +1,6 @@
-﻿@inject IHxMessengerService Messenger
-@inject IHttpContextAccessor HttpContextAccessor
+﻿@implements IDisposable
+
+@inject IHxMessengerService Messenger
 @inject IExecutionBuilderFactory<AppDbContext> BuilderFactory
 @inject IExecutorService Executor
 
@@ -410,6 +411,8 @@
 </ExpressionEditOffcanvas>
 
 @code {
+    [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
+
     [Parameter] public EventCallback<ExecutionStartResponse> OnExecutionStarted { get; set; }
 
     private readonly HashSet<StepType> stepTypeFilter = new();
@@ -462,6 +465,7 @@
                     throw;   
                 }
             }
+            builder?.Dispose();
             builder = null;
             await modal.LetAsync(x => x.HideAsync());
             StateHasChanged();
@@ -474,6 +478,7 @@
 
     private void OnClosed()
     {
+        builder?.Dispose();
         builder = null;
         executeFilterText = string.Empty;
         executeTagsFilterSet.Clear();
@@ -485,11 +490,15 @@
     public async Task ShowAsync(Guid jobId, IEnumerable<Step>? initiallySelectedSteps = null)
     {
         activeView = View.Steps;
+        builder?.Dispose();
         builder = null;
         await modal.LetAsync(x => x.ShowAsync());
-        string user = HttpContextAccessor.HttpContext?.User?.Identity?.Name
-            ?? throw new ArgumentNullException(nameof(user), "User was null");
-        builder = await BuilderFactory.CreateAsync(jobId, user);
+
+        ArgumentNullException.ThrowIfNull(AuthenticationState);
+        var authState = await AuthenticationState;
+        var username = authState.User.Identity?.Name;
+
+        builder = await BuilderFactory.CreateAsync(jobId, username);
         if (builder is null)
         {
             Messenger.AddWarning("Job with the given id could not be found");
@@ -503,4 +512,5 @@
         StateHasChanged();
     }
 
+    public void Dispose() => builder?.Dispose();
 }

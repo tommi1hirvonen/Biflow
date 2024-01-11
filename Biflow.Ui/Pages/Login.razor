@@ -1,0 +1,122 @@
+﻿@layout LoginLayout
+
+@using System.Security.Authentication
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+
+@page "/login"
+
+@inject IAuthHandler AuthHandler
+@inject NavigationManager NavigationManager
+
+<PageTitle>Log in | Biflow</PageTitle>
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-10 col-md-7 col-xl-5 mx-auto pt-5">
+            <section>
+                <div class="card shadow">
+                    <h5 class="card-header">Log in</h5>
+                    <div class="card-body">
+                        <EditForm id="form-login" Model="LoginModel" method="post" class="form-horizontal" OnValidSubmit="LoginAsync" FormName="login">
+                            @if (!string.IsNullOrEmpty(errorMessage))
+                            {
+                                <span class="text-danger">@errorMessage</span>
+                            }
+                            <DataAnnotationsValidator />
+                            <div class="form-group mt-3">
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <CxIcon Icon="FeatherIcon.User" />
+                                    </span>
+                                    <InputText class="form-control" id="input-username" placeholder="Username" @bind-Value="LoginModel!.Username" />
+                                </div>
+                                <ValidationMessage For="() => LoginModel.Username" />
+                            </div>
+                            <div class="form-group mt-2">
+                                <div class="input-group">
+                                    <div class="input-group-text">
+                                        <CxIcon Icon="FeatherIcon.Key" />
+                                    </div>
+                                    <InputText type="password" class="form-control" placeholder="Password" @bind-Value="LoginModel!.Password" />
+                                </div>
+                                <ValidationMessage For="() => LoginModel.Password" />
+                            </div>
+                            <div class="d-grid mt-2 mb-3">
+                                <button type="submit" id="button-login" class="btn btn-primary">
+                                    <CxIcon Icon="FeatherIcon.LogIn" />
+                                    &nbsp;
+                                    Log in
+                                </button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+
+    window.onload = onLoad;
+
+    function onLoad() {
+        document.getElementById('input-username').focus();
+        var form = document.getElementById('form-login');
+        form.addEventListener('submit', function (event) {
+            document.getElementById('button-login').setAttribute('disabled', 'true');
+        });
+    }
+</script>
+
+@code {
+    [SupplyParameterFromForm]
+    private DataAccess.Models.Login LoginModel { get; set; } = new();
+
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = null!;
+
+    private string? errorMessage = null;
+
+    private async Task LoginAsync()
+    {
+        try
+        {
+            var roles = await AuthHandler.AuthenticateUserAsync(LoginModel.Username!, LoginModel.Password!);
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.Name, LoginModel.Username!)
+            };
+            var roleClaims = roles.Select(role => new Claim(ClaimTypes.Role, role));
+            claims.AddRange(roleClaims);
+            var claimIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var claimPrincipal = new ClaimsPrincipal(claimIdentity);
+            var authenticationProperties = new AuthenticationProperties()
+                {
+                    IsPersistent = false,
+                    ExpiresUtc = DateTime.UtcNow.AddMinutes(30)
+                };
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimPrincipal, authenticationProperties);
+        }
+        catch (InvalidCredentialException)
+        {
+            errorMessage = "Invalid username or password";
+            return;
+        }
+        catch (AuthenticationException ex)
+        {
+            errorMessage = ex.Message;
+            return;
+        }
+        catch
+        {
+            errorMessage = "Login error";
+            return;
+        }
+
+        NavigationManager.NavigateTo("/");
+    }
+
+}

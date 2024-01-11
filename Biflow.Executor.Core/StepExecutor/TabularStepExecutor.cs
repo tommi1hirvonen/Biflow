@@ -7,8 +7,8 @@ namespace Biflow.Executor.Core.StepExecutor;
 internal class TabularStepExecutor(TabularStepExecution step) : IStepExecutor<TabularStepExecutionAttempt>
 {
     private readonly TabularStepExecution _step = step;
-    private readonly AnalysisServicesConnectionInfo _connection = step.Connection
-        ?? throw new ArgumentNullException(nameof(step.Connection));
+    private readonly AnalysisServicesConnectionInfo _connection = step.GetConnection()
+        ?? throw new ArgumentNullException(nameof(_connection));
 
     public TabularStepExecutionAttempt Clone(TabularStepExecutionAttempt other, int retryAttemptIndex) =>
         new(other, retryAttemptIndex);

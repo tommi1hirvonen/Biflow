@@ -1,6 +1,5 @@
 ﻿@page "/account"
 
-@inject IHttpContextAccessor HttpContextAccessor
 @inject IDbContextFactory<AppDbContext> DbFactory
 @inject IMediator Mediator
 @inject IHxMessengerService Messenger
@@ -15,7 +14,7 @@
         <h5>Username:</h5>
     </div>
     <div class="col-auto">
-        <h5>@Username</h5>
+        <h5>@username</h5>
     </div>
 </div>
 <div class="row mt-2">
@@ -133,18 +132,22 @@
 
 
 @code {
+    [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    private string? username = null;
     private User? user;
     private PasswordModel passwordModel = new();
 
-    private string? Username => HttpContextAccessor.HttpContext?.User?.Identity?.Name;
-
     protected override async Task OnInitializedAsync()
     {
+        ArgumentNullException.ThrowIfNull(AuthenticationState);
+        var state = await AuthenticationState;
+        username = state.User.Identity?.Name;
         using var context = await Task.Run(DbFactory.CreateDbContext);
         user = await context.Users
             .AsNoTrackingWithIdentityResolution()
             .Include(user => user.Subscriptions)
-            .FirstAsync(user => user.Username == Username);
+            .FirstAsync(user => user.Username == username);
     }
 
     private async Task SubmitEmail()
@@ -163,9 +166,9 @@
 
     private async Task UpdatePassword()
     {
-        if (Username is null)
+        if (username is null)
         {
-            Messenger.AddError("Error", "Error getting username from HttpContext");
+            Messenger.AddError("Error", "Error getting username from authentication state");
             return;
         }
 
@@ -177,7 +180,7 @@
 
         try
         {
-            await Mediator.Send(new UpdateUserPasswordCommand(Username, passwordModel.OldPassword, passwordModel.Password));
+            await Mediator.Send(new UpdateUserPasswordCommand(username, passwordModel.OldPassword, passwordModel.Password));
             Messenger.AddInformation("Success", "Password updated successfully");
             passwordModel = new();
         }

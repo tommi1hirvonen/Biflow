@@ -76,11 +76,26 @@ public class AppRegistration
         await client.Datasets.RefreshDatasetInGroupAsync(Guid.Parse(groupId), datasetId, cancellationToken: cancellationToken);
     }
 
-    public async Task<Refresh?> GetDatasetRefreshStatus(ITokenService tokenService, string groupId, string datasetId, CancellationToken cancellationToken)
+    public async Task<(DatasetRefreshStatus? Status, Refresh? Refresh)> GetDatasetRefreshStatusAsync(
+        ITokenService tokenService,
+        string groupId,
+        string datasetId,
+        CancellationToken cancellationToken)
     {
         var client = await GetClientAsync(tokenService);
-        var refresh = await client.Datasets.GetRefreshHistoryInGroupAsync(Guid.Parse(groupId), datasetId, top: 1, cancellationToken);
-        return refresh.Value.FirstOrDefault();
+        var refreshes = await client.Datasets.GetRefreshHistoryInGroupAsync(Guid.Parse(groupId), datasetId, top: 1, cancellationToken);
+        var refresh = refreshes.Value.FirstOrDefault();
+        var status = refresh?.Status switch
+        {
+            "Unknown" => DatasetRefreshStatus.Unknown,
+            "Completed" => DatasetRefreshStatus.Completed,
+            "Failed" => DatasetRefreshStatus.Failed,
+            "Disabled" => DatasetRefreshStatus.Disabled,
+            _ => throw new ApplicationException($"Unrecognized refresh status {refresh?.Status}")
+        };
+        return refresh is not null
+            ? (status, refresh)
+            : (null, null);
     }
 
     public async Task<IEnumerable<DatasetGroup>> GetAllDatasetsAsync(ITokenService tokenService)
@@ -133,4 +148,24 @@ public class AppRegistration
         var client = new PowerBIClient(credentials);
         var _ = await client.Groups.GetGroupsAsync();
     }
+}
+
+public enum DatasetRefreshStatus
+{
+    /// <summary>
+    /// Completion state is unknown or a refresh is in progress
+    /// </summary>
+    Unknown,
+    /// <summary>
+    /// Refresh completed successfully
+    /// </summary>
+    Completed,
+    /// <summary>
+    /// Refresh was unsuccessful
+    /// </summary>
+    Failed,
+    /// <summary>
+    /// Refresh is disabled by a selective refresh
+    /// </summary>
+    Disabled
 }

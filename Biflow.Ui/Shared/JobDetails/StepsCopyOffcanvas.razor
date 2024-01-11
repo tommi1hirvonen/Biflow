@@ -86,7 +86,7 @@
         try
         {
             var stepIds = steps.Select(s => s.StepId).ToArray();
-            var duplicator = await factory.CreateAsync(stepIds, targetJobId);
+            using var duplicator = await factory.CreateAsync(stepIds, targetJobId);
             if (targetJobId == currentJob?.JobId)
             {
                 foreach (var step in duplicator.Steps)

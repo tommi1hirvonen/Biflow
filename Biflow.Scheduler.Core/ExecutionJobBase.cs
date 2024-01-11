@@ -49,7 +49,7 @@ public abstract class ExecutionJobBase(
             try
             {
 
-                var builder = await _executionBuilderFactory.CreateAsync(jobId, scheduleId,
+                using var builder = await _executionBuilderFactory.CreateAsync(jobId, scheduleId,
                     context => step => step.IsEnabled,
                     context => step =>
                     // Schedule has no tag filters
