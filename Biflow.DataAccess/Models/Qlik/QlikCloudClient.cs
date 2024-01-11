@@ -176,20 +176,3 @@ public class QlikCloudClient
 
     private record Link(string Href);
 }
-
-public record QlikSpace(string Id, string Name, IEnumerable<QlikApp> Apps);
-
-public record QlikApp(string Id, string Name);
-
-public record QlikAppReload(string Id, QlikAppReloadStatus Status, string? Log);
-
-public enum QlikAppReloadStatus
-{
-    Queued,
-    Reloading,
-    Canceling,
-    Succeeded,
-    Failed,
-    Canceled,
-    ExceededLimit,
-}
