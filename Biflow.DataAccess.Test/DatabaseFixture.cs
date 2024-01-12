@@ -13,6 +13,8 @@ public class DatabaseFixture : IAsyncLifetime
         "Data Source=localhost;Database=BiflowTest;Integrated Security=sspi;Encrypt=true;TrustServerCertificate=true;";
     private static readonly SemaphoreSlim _semaphore = new(1, 1);
     private static bool _databaseInitialized;
+    private readonly ITokenService _tokenService;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public string Username { get; } = "testuser";
 
@@ -37,6 +39,8 @@ public class DatabaseFixture : IAsyncLifetime
             .AddInMemoryCollection(settings)
             .Build();
         var services = new ServiceCollection()
+            .AddHttpClient()
+            .AddSingleton<ITokenService, TokenService<AppDbContext>>()
             .AddSingleton<IConfiguration>(configuration)
             .AddSingleton<IHttpContextAccessor>(httpContextAccessor)
             .AddDbContextFactory<AppDbContext>()
@@ -51,6 +55,8 @@ public class DatabaseFixture : IAsyncLifetime
         ExecutionBuilderFactory = executionBuilderFactory;
         JobDuplicatorFactory = jobDuplicatoryFactory;
         StepsDuplicatorFactory = stepsDuplicatoryFactory;
+        _tokenService = services.GetRequiredService<ITokenService>();
+        _httpClientFactory = services.GetRequiredService<IHttpClientFactory>();
     }
 
     public Task DisposeAsync() => Task.CompletedTask;
@@ -84,7 +90,7 @@ public class DatabaseFixture : IAsyncLifetime
                 ConnectionString = "Data Source=localhost;Password=asd"
             };
 
-            var appRegistration = new AppRegistration
+            var appRegistration = new AppRegistration(_tokenService)
             {
                 AppRegistrationName = "Test app registration",
                 ClientId = "some-client-id",
@@ -92,7 +98,7 @@ public class DatabaseFixture : IAsyncLifetime
                 TenantId = "some-tenant-id"
             };
 
-            var dataFactory = new DataFactory
+            var dataFactory = new DataFactory(_tokenService)
             {
                 AppRegistration = appRegistration,
                 PipelineClientName = "Test Data Factory",
@@ -101,14 +107,14 @@ public class DatabaseFixture : IAsyncLifetime
                 ResourceName = "some-resource-name"
             };
 
-            var synapseWorkspace = new SynapseWorkspace
+            var synapseWorkspace = new SynapseWorkspace(_tokenService)
             {
                 AppRegistration = appRegistration,
                 PipelineClientName = "Test Synapse",
                 SynapseWorkspaceUrl = "some-workspace-url"
             };
 
-            var functionApp = new FunctionApp
+            var functionApp = new FunctionApp(_tokenService, _httpClientFactory)
             {
                 AppRegistration = appRegistration,
                 FunctionAppName = "Test function app",
@@ -118,14 +124,14 @@ public class DatabaseFixture : IAsyncLifetime
                 FunctionAppKey = "somefunctionappkey"
             };
 
-            var qlikClient = new QlikCloudClient
+            var qlikClient = new QlikCloudClient(_httpClientFactory)
             {
                 QlikCloudClientName = "Test Qlik Cloud Client",
                 EnvironmentUrl = "https://test-qlik-url.com",
                 ApiToken = "some-api-token"
             };
 
-            var blobClient1 = new BlobStorageClient
+            var blobClient1 = new BlobStorageClient(_tokenService)
             {
                 AppRegistration = appRegistration,
                 BlobStorageClientName = "Test blob storage client",
@@ -133,14 +139,14 @@ public class DatabaseFixture : IAsyncLifetime
                 StorageAccountUrl = "https://some-storage-account-url.com/"
             };
 
-            var blobClient2 = new BlobStorageClient
+            var blobClient2 = new BlobStorageClient(_tokenService)
             {
                 BlobStorageClientName = "Test blob storage client 2",
                 ConnectionMethod = BlobStorageConnectionMethod.Url,
                 StorageAccountUrl = "https://some-storage-account-url.com?sig=asdasd"
             };
 
-            var blobClient3 = new BlobStorageClient
+            var blobClient3 = new BlobStorageClient(_tokenService)
             {
                 BlobStorageClientName = "Test blob storage client 3",
                 ConnectionMethod = BlobStorageConnectionMethod.ConnectionString,
