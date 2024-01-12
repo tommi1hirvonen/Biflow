@@ -16,6 +16,9 @@ public class BlobStorageClient(ITokenService tokenService)
 
     public BlobStorageClient(AppDbContext dbContext) : this(dbContext.TokenService) { }
 
+    [JsonConstructor]
+    private BlobStorageClient() : this((ITokenService)null!) { }
+
     [Key]
     [JsonInclude]
     public Guid BlobStorageClientId { get; private set; }

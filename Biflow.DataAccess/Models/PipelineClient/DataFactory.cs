@@ -6,6 +6,7 @@ using Microsoft.Rest;
 using Microsoft.Rest.Azure;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.DataAccess.Models;
 
@@ -14,6 +15,9 @@ public class DataFactory(ITokenService tokenService) : PipelineClient(PipelineCl
     private readonly ITokenService _tokenService = tokenService;
 
     public DataFactory(AppDbContext dbContext) : this(dbContext.TokenService) { }
+
+    [JsonConstructor]
+    private DataFactory() : this((ITokenService)null!) { }
 
     [Column("SubscriptionId")]
     [Required]

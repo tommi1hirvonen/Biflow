@@ -16,6 +16,9 @@ public class FunctionApp(ITokenService tokenService, IHttpClientFactory httpClie
 
     public FunctionApp(AppDbContext dbContext) : this(dbContext.TokenService, dbContext.HttpClientFactory) { }
 
+    [JsonConstructor]
+    private FunctionApp() : this(null!, null!) { }
+
     [Required]
     [Display(Name = "Function app id")]
     [JsonInclude]

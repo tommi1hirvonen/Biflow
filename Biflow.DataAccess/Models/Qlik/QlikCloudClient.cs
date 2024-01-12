@@ -16,6 +16,9 @@ public class QlikCloudClient(IHttpClientFactory httpClientFactory)
 
     public QlikCloudClient(AppDbContext dbContext) : this(dbContext.HttpClientFactory) { }
 
+    [JsonConstructor]
+    private QlikCloudClient() : this((IHttpClientFactory)null!) { }
+
     [Key]
     [JsonInclude]
     public Guid QlikCloudClientId { get; private set; }

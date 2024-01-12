@@ -4,6 +4,7 @@ using Azure.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 using SynapsePipelineClient = Azure.Analytics.Synapse.Artifacts.PipelineClient;
 
 namespace Biflow.DataAccess.Models;
@@ -13,6 +14,9 @@ public class SynapseWorkspace(ITokenService tokenService) : PipelineClient(Pipel
     private readonly ITokenService _tokenService = tokenService;
 
     public SynapseWorkspace(AppDbContext dbContext) : this(dbContext.TokenService) { }
+
+    [JsonConstructor]
+    private SynapseWorkspace() : this((ITokenService)null!) { }
 
     [Required]
     [MaxLength(500)]

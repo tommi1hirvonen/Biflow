@@ -17,6 +17,9 @@ public class AppRegistration(ITokenService tokenService)
 
     public AppRegistration(AppDbContext dbContext) : this(dbContext.TokenService) { }
 
+    [JsonConstructor]
+    private AppRegistration() : this((ITokenService)null!) { }
+
     [Key]
     [Required]
     [Display(Name = "App registration id")]
