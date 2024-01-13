@@ -1,4 +1,4 @@
-﻿using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Entities;
 using Biflow.Executor.Core.Common;
 
 namespace Biflow.Executor.Core.StepExecutor;

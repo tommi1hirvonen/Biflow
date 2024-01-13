@@ -1,9 +1,8 @@
-﻿using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Entities;
 using Biflow.Executor.Core.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
-using System.Text;
 
 namespace Biflow.Executor.Core.StepExecutor;
 

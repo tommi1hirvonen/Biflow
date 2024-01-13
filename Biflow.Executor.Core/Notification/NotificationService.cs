@@ -1,5 +1,5 @@
 ﻿using Biflow.Core;
-using Biflow.DataAccess.Models;
+using Biflow.Core.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.Notification;

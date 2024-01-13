@@ -1,5 +1,5 @@
-﻿using Biflow.Core.Entities.Steps.Execution;
-using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Entities;
+using Biflow.Core.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 

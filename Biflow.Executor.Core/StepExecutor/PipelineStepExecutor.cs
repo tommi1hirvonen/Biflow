@@ -1,4 +1,5 @@
-﻿using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Entities;
+using Biflow.Core.Interfaces;
 using Biflow.Executor.Core.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -11,13 +12,14 @@ internal class PipelineStepExecutor(
     ILogger<PipelineStepExecutor> logger,
     IOptionsMonitor<ExecutionOptions> options,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    ITokenService tokenService,
     PipelineStepExecution step) : IStepExecutor<PipelineStepExecutionAttempt>
 {
     private readonly ILogger<PipelineStepExecutor> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
     private readonly PipelineStepExecution _step = step;
-    private readonly PipelineClient _pipelineClient = step.GetClient()
+    private readonly IPipelineClient _pipelineClient = step.GetClient()?.CreatePipelineClient(tokenService)
         ?? throw new ArgumentNullException(nameof(_pipelineClient));
 
     private const int MaxRefreshRetries = 3;

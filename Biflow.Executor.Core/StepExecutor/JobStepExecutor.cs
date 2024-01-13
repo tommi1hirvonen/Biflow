@@ -1,5 +1,5 @@
-﻿using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Entities;
+using Biflow.DataAccess;
 using Biflow.Executor.Core.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;

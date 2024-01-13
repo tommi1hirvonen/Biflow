@@ -1,6 +1,6 @@
-﻿using Biflow.Core.Entities.Steps.Execution;
+﻿using Biflow.Core.Entities;
+using Biflow.Core.Interfaces;
 using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.ConnectionTest;
 using Biflow.Executor.Core.JobExecutor;
 using Biflow.Executor.Core.Notification;

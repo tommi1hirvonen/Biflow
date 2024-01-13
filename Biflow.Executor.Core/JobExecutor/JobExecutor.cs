@@ -1,4 +1,4 @@
-﻿using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Entities;
 using Biflow.Executor.Core.Notification;
 using Biflow.Executor.Core.Orchestrator;
 using Microsoft.EntityFrameworkCore;
