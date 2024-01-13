@@ -33,7 +33,13 @@ internal class StepExecutionAttemptEntityTypeConfiguration : IEntityTypeConfigur
             .HasValue<EmailStepExecutionAttempt>(StepType.Email)
             .HasValue<QlikStepExecutionAttempt>(StepType.Qlik);
 
-        builder.Property(p => p.InfoMessages).HasConversion(
+        builder.Ignore(x => x.InfoMessages);
+        builder.Ignore(x => x.WarningMessages);
+        builder.Ignore(x => x.ErrorMessages);
+
+        builder.Property<List<InfoMessage>>("_infoMessages")
+            .HasColumnName("InfoMessages")
+            .HasConversion(
             from => JsonSerializer.Serialize(from, IgnoreNullsOptions),
             to => JsonSerializer.Deserialize<List<InfoMessage>>(to, IgnoreNullsOptions) ?? new(),
             new ValueComparer<List<InfoMessage>>(
@@ -41,7 +47,9 @@ internal class StepExecutionAttemptEntityTypeConfiguration : IEntityTypeConfigur
                 x => x.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
                 x => x.ToList()));
 
-        builder.Property(p => p.WarningMessages).HasConversion(
+        builder.Property<List<WarningMessage>>("_warningMessages")
+            .HasColumnName("WarningMessages")
+            .HasConversion(
             from => JsonSerializer.Serialize(from, IgnoreNullsOptions),
             to => JsonSerializer.Deserialize<List<WarningMessage>>(to, IgnoreNullsOptions) ?? new(),
             new ValueComparer<List<WarningMessage>>(
@@ -49,7 +57,9 @@ internal class StepExecutionAttemptEntityTypeConfiguration : IEntityTypeConfigur
                 x => x.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
                 x => x.ToList()));
 
-        builder.Property(p => p.ErrorMessages).HasConversion(
+        builder.Property<List<ErrorMessage>>("_errorMessages")
+            .HasColumnName("ErrorMessages")
+            .HasConversion(
             from => JsonSerializer.Serialize(from, IgnoreNullsOptions),
             to => JsonSerializer.Deserialize<List<ErrorMessage>>(to, IgnoreNullsOptions) ?? new(),
             new ValueComparer<List<ErrorMessage>>(

@@ -216,7 +216,7 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
     private async Task UpdateExecutionSucceededAsync(StepExecutionAttempt attempt)
     {
         using var context = _dbContextFactory.CreateDbContext();
-        var status = attempt.WarningMessages.Count == 0
+        var status = !attempt.WarningMessages.Any()
             ? StepExecutionStatus.Succeeded
             : StepExecutionStatus.Warning;
 
@@ -257,7 +257,7 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
             attempt.ExecutionStatus = StepExecutionStatus.Skipped;
             attempt.StartedOn = DateTimeOffset.Now;
             attempt.EndedOn = DateTimeOffset.Now;
-            attempt.InfoMessages.Add(new(infoMessage));
+            attempt.AddOutput(infoMessage);
             context.Attach(attempt).State = EntityState.Modified;
         }
         await context.SaveChangesAsync();
