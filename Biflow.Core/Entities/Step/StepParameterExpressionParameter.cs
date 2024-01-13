@@ -1,11 +1,9 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
-[Table("StepParameterExpressionParameter")]
 public class StepParameterExpressionParameter : IAsyncEvaluable, IExpressionParameter<JobParameter>
 {
     public StepParameterExpressionParameter() { }
@@ -42,7 +40,6 @@ public class StepParameterExpressionParameter : IAsyncEvaluable, IExpressionPara
     [JsonIgnore]
     public StepParameterBase StepParameter { get; set; } = null!;
 
-    [Key]
     public Guid ParameterId { get; set; }
 
     [Required]

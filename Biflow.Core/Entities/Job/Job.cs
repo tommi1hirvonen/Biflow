@@ -1,11 +1,9 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
-[Table("Job")]
 public class Job : IAuditable
 {
     public Job() { }
@@ -60,7 +58,6 @@ public class Job : IAuditable
             .ToList();
     }
 
-    [Key]
     [JsonInclude]
     public Guid JobId { get; private set; }
 
@@ -100,7 +97,6 @@ public class Job : IAuditable
     [Display(Name = "Enabled")]
     public bool IsEnabled { get; set; } = true;
 
-    [Column("JobCategoryId")]
     public Guid? CategoryId { get; set; }
 
     [JsonIgnore]
@@ -144,7 +140,6 @@ public class Job : IAuditable
     [MaxLength(250)]
     public string? LastModifiedBy { get; set; }
 
-    [Timestamp]
     public byte[]? Timestamp { get; private set; }
 
     public Job Copy() => new(this);

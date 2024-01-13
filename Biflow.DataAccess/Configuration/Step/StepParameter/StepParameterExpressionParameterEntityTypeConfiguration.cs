@@ -4,6 +4,9 @@ internal class StepParameterExpressionParameterEntityTypeConfiguration : IEntity
 {
     public void Configure(EntityTypeBuilder<StepParameterExpressionParameter> builder)
     {
+        builder.ToTable("StepParameterExpressionParameter")
+            .HasKey(x => x.ParameterId);
+
         builder.HasOne(x => x.InheritFromJobParameter)
             .WithMany(x => x.InheritingStepParameterExpressionParameters)
             .OnDelete(DeleteBehavior.Cascade);

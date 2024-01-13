@@ -1,16 +1,13 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
-[Table("PipelineClient")]
 [JsonDerivedType(typeof(DataFactory), nameof(PipelineClientType.DataFactory))]
 [JsonDerivedType(typeof(SynapseWorkspace), nameof(PipelineClientType.Synapse))]
 public abstract class PipelineClient(PipelineClientType type)
 {
-    [Key]
     [JsonInclude]
     public Guid PipelineClientId { get; private set; }
 

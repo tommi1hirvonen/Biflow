@@ -1,19 +1,14 @@
-﻿using Azure.Storage.Blobs;
-using Azure.Storage.Blobs.Models;
-using Biflow.Core.Attributes;
+﻿using Biflow.Core.Attributes;
 using Biflow.Core.Attributes.Validation;
 using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
-[Table("BlobStorageClient")]
 [BlobStorageClient]
 public class BlobStorageClient
 { 
-    [Key]
     [JsonInclude]
     public Guid BlobStorageClientId { get; private set; }
 

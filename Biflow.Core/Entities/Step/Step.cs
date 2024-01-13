@@ -1,12 +1,10 @@
 ﻿using Biflow.Core.Attributes.Validation;
 using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
-[Table("Step")]
 [JsonDerivedType(typeof(AgentJobStep), nameof(StepType.AgentJob))]
 [JsonDerivedType(typeof(DatasetStep), nameof(StepType.Dataset))]
 [JsonDerivedType(typeof(EmailStep), nameof(StepType.Email))]
@@ -66,7 +64,6 @@ public abstract class Step : IComparable, IAuditable
             .ToList();
     }
 
-    [Key]
     [Required]
     [JsonInclude]
     public Guid StepId { get; private set; }
@@ -130,7 +127,6 @@ public abstract class Step : IComparable, IAuditable
     [MaxLength(250)]
     public string? LastModifiedBy { get; set; }
 
-    [Timestamp]
     public byte[]? Timestamp { get; private set; }
 
     public IList<Dependency> Dependencies { get; set; } = null!;

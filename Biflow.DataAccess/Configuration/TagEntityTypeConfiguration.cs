@@ -4,6 +4,9 @@ internal class TagEntityTypeConfiguration : IEntityTypeConfiguration<Tag>
 {
     public void Configure(EntityTypeBuilder<Tag> builder)
     {
+        builder.ToTable("Tag")
+            .HasKey(x => x.TagId);
+
         builder.HasMany(t => t.Steps)
             .WithMany(s => s.Tags)
             .UsingEntity<Dictionary<string, object>>("StepTag",

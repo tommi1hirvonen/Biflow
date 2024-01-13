@@ -4,6 +4,9 @@ internal class SubscriptionEntityTypeConfiguration : IEntityTypeConfiguration<Su
 {
     public void Configure(EntityTypeBuilder<Subscription> builder)
     {
+        builder.ToTable("Subscription")
+            .HasKey(x => x.SubscriptionId);
+
         builder.HasDiscriminator<SubscriptionType>("SubscriptionType")
             .HasValue<JobSubscription>(SubscriptionType.Job)
             .HasValue<JobTagSubscription>(SubscriptionType.JobTag)

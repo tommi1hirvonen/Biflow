@@ -5,12 +5,10 @@ using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
-[Table("Connection")]
 [JsonDerivedType(typeof(SqlConnectionInfo), nameof(ConnectionType.Sql))]
 [JsonDerivedType(typeof(AnalysisServicesConnectionInfo), nameof(ConnectionType.AnalysisServices))]
 public abstract class ConnectionInfoBase(ConnectionType connectionType) : IComparable
 {
-    [Key]
     [Display(Name = "Connection id")]
     [JsonInclude]
     public Guid ConnectionId { get; private set; }

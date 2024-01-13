@@ -4,6 +4,13 @@ internal class JobEntityTypeConfiguration(AppDbContext context) : IEntityTypeCon
 {
     public void Configure(EntityTypeBuilder<Job> builder)
     {
+        builder.ToTable("Job")
+            .HasKey(x => x.JobId);
+
+        builder.Property(x => x.Timestamp).IsConcurrencyToken();
+
+        builder.Property(x => x.CategoryId).HasColumnName("JobCategoryId");
+
         builder.HasOne(j => j.Category)
         .WithMany(c => c.Jobs)
         .OnDelete(DeleteBehavior.SetNull);

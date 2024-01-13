@@ -5,10 +5,8 @@ using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
-[Table("QlikCloudClient")]
 public class QlikCloudClient
 {
-    [Key]
     [JsonInclude]
     public Guid QlikCloudClientId { get; private set; }
 

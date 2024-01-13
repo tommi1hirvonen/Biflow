@@ -1,14 +1,11 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
-[Table("Tag")]
 public class Tag(string tagName) : ITag
 {
-    [Key]
     [JsonInclude]
     public Guid TagId { get; private set; }
 

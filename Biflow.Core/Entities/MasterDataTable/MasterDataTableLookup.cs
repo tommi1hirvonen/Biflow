@@ -1,17 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
-[Table("DataTableLookup")]
 public class MasterDataTableLookup
 {
-    [Key]
     public Guid LookupId { get; set; }
 
     [Required]
-    [Column("DataTableId")]
     public Guid TableId { get; set; }
 
     [Required]
@@ -19,7 +15,6 @@ public class MasterDataTableLookup
     public string ColumnName { get; set; } = "";
 
     [Required]
-    [Column("LookupDataTableId")]
     public Guid LookupTableId { get; set; }
 
     [Required]

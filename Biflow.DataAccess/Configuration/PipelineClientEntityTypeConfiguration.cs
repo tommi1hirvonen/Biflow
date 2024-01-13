@@ -4,6 +4,9 @@ internal class PipelineClientEntityTypeConfiguration : IEntityTypeConfiguration<
 {
     public void Configure(EntityTypeBuilder<PipelineClient> builder)
     {
+        builder.ToTable("PipelineClient")
+            .HasKey(x => x.PipelineClientId);
+
         builder.HasDiscriminator<PipelineClientType>("PipelineClientType")
             .HasValue<DataFactory>(PipelineClientType.DataFactory)
             .HasValue<SynapseWorkspace>(PipelineClientType.Synapse);

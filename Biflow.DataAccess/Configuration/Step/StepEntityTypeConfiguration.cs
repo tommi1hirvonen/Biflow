@@ -4,6 +4,11 @@ internal class StepEntityTypeConfiguration : IEntityTypeConfiguration<Step>
 {
     public void Configure(EntityTypeBuilder<Step> builder)
     {
+        builder.ToTable("Step")
+            .HasKey(x => x.StepId);
+
+        builder.Property(x => x.Timestamp).IsConcurrencyToken();
+
         builder.HasDiscriminator<StepType>("StepType")
             .HasValue<DatasetStep>(StepType.Dataset)
             .HasValue<ExeStep>(StepType.Exe)
