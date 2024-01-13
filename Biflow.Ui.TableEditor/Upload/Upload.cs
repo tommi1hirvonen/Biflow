@@ -1,7 +1,4 @@
-﻿using Biflow.Core.Entities;
-using Dapper;
-using Microsoft.Data.SqlClient;
-using System.Data;
+﻿using System.Data;
 
 namespace Biflow.Ui.TableEditor;
 

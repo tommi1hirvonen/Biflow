@@ -1,8 +1,4 @@
-﻿using Biflow.Core.Entities;
-using Dapper;
-using Microsoft.Data.SqlClient;
-
-namespace Biflow.Ui.TableEditor;
+﻿namespace Biflow.Ui.TableEditor;
 
 public static class Extensions
 {
