@@ -1,8 +1,8 @@
-﻿using Dapper;
+﻿using Biflow.Core.Entities;
 using Biflow.DataAccess;
+using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using Biflow.DataAccess.Models;
 
 namespace Biflow.Ui.SqlServer;
 
