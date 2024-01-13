@@ -1,6 +1,6 @@
-﻿using Biflow.Core.Entities.Steps.Execution;
+﻿using Biflow.Core.Entities;
+using Biflow.Core.Interfaces;
 using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
 using Biflow.Executor.Core;
 using Biflow.Scheduler.Core;
 using Biflow.Ui.SqlServer;

@@ -1,4 +1,4 @@
-﻿using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Entities;
 using Biflow.Scheduler.Core;
 using Microsoft.Extensions.Configuration;
 using System.Net.Http.Json;

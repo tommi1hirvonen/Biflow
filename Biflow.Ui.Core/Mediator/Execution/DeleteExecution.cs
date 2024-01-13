@@ -1,7 +1,8 @@
-﻿using Biflow.DataAccess;
+﻿using Biflow.Core.Entities;
+using Biflow.Core.Interfaces;
+using Biflow.DataAccess;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Biflow.Core.Entities.Steps.Execution;
 
 namespace Biflow.Ui.Core;
 

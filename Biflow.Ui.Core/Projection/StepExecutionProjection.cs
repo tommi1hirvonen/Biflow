@@ -1,4 +1,4 @@
-﻿using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Entities;
 
 namespace Biflow.Ui.Core.Projection;
 
@@ -36,5 +36,5 @@ public record StepExecutionProjection(
         ExecutionStatus == StepExecutionStatus.Running
         || ExecutionStatus == StepExecutionStatus.AwaitingRetry
         || ExecutionStatus == StepExecutionStatus.Queued
-        || ExecutionStatus == StepExecutionStatus.NotStarted && ParentExecutionStatus == DataAccess.Models.ExecutionStatus.Running;
+        || ExecutionStatus == StepExecutionStatus.NotStarted && ParentExecutionStatus == Biflow.Core.Entities.ExecutionStatus.Running;
 }

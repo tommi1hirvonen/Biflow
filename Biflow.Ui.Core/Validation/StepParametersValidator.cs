@@ -1,4 +1,4 @@
-﻿using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Interfaces;
 using FluentValidation;
 
 namespace Biflow.Ui.Core;

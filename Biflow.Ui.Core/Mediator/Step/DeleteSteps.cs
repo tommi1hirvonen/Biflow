@@ -1,5 +1,6 @@
-﻿using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Entities;
+using Biflow.Core.Interfaces;
+using Biflow.DataAccess;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 

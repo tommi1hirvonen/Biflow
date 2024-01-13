@@ -1,5 +1,5 @@
-﻿using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Entities;
+using Biflow.DataAccess;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using BC = BCrypt.Net.BCrypt;
