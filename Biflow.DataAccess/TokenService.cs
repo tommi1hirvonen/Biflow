@@ -1,7 +1,5 @@
 ﻿using Azure.Core;
 using Azure.Identity;
-using Biflow.DataAccess.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.DataAccess;
 
@@ -25,7 +23,7 @@ public class TokenService<TDbContext>(IDbContextFactory<TDbContext> dbContextFac
             }
             else
             {
-                Models.AccessToken resultToken;
+                Core.Entities.AccessToken resultToken;
 
                 using var context = _dbContextFactory.CreateDbContext();
                 var accessToken = await context.AccessTokens
@@ -47,7 +45,7 @@ public class TokenService<TDbContext>(IDbContextFactory<TDbContext> dbContextFac
                 else
                 {
                     (var token_, var expiresOn_) = await GetTokenFromApiAsync(appRegistration, resourceUrl);
-                    accessToken = new Models.AccessToken(appRegistration.AppRegistrationId, resourceUrl, token_, expiresOn_);
+                    accessToken = new Core.Entities.AccessToken(appRegistration.AppRegistrationId, resourceUrl, token_, expiresOn_);
                     context.Add(accessToken);
                     await context.SaveChangesAsync();
                     resultToken = accessToken;

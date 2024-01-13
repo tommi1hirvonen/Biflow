@@ -1,4 +1,5 @@
-﻿using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Entities;
+using Biflow.Core.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -13,6 +14,8 @@ public class DatabaseFixture : IAsyncLifetime
         "Data Source=localhost;Database=BiflowTest;Integrated Security=sspi;Encrypt=true;TrustServerCertificate=true;";
     private static readonly SemaphoreSlim _semaphore = new(1, 1);
     private static bool _databaseInitialized;
+    private readonly ITokenService _tokenService;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public string Username { get; } = "testuser";
 
@@ -37,6 +40,8 @@ public class DatabaseFixture : IAsyncLifetime
             .AddInMemoryCollection(settings)
             .Build();
         var services = new ServiceCollection()
+            .AddHttpClient()
+            .AddSingleton<ITokenService, TokenService<AppDbContext>>()
             .AddSingleton<IConfiguration>(configuration)
             .AddSingleton<IHttpContextAccessor>(httpContextAccessor)
             .AddDbContextFactory<AppDbContext>()
@@ -51,6 +56,8 @@ public class DatabaseFixture : IAsyncLifetime
         ExecutionBuilderFactory = executionBuilderFactory;
         JobDuplicatorFactory = jobDuplicatoryFactory;
         StepsDuplicatorFactory = stepsDuplicatoryFactory;
+        _tokenService = services.GetRequiredService<ITokenService>();
+        _httpClientFactory = services.GetRequiredService<IHttpClientFactory>();
     }
 
     public Task DisposeAsync() => Task.CompletedTask;

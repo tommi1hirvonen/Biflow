@@ -1,8 +1,4 @@
-﻿using Biflow.DataAccess;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
-
-namespace Biflow.Ui.Core;
+﻿namespace Biflow.Ui.Core;
 
 public record UserRolesQuery(string Username) : IRequest<UserRolesQueryResponse>;
 

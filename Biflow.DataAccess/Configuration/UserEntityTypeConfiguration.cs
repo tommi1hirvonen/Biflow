@@ -1,13 +1,15 @@
-﻿using Biflow.DataAccess.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-namespace Biflow.DataAccess.Configuration;
+﻿namespace Biflow.DataAccess.Configuration;
 
 internal class UserEntityTypeConfiguration : IEntityTypeConfiguration<User>
 {
     public void Configure(EntityTypeBuilder<User> builder)
     {
+        builder.ToTable("User")
+            .HasKey(x => x.UserId);
+
+        builder.Property(x => x.Email).IsUnicode(false);
+        builder.Property(x => x.Roles).IsUnicode(false);
+
         builder.HasMany(user => user.Subscriptions)
             .WithOne(subscription => subscription.User);
 

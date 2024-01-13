@@ -1,5 +1,4 @@
-﻿using Biflow.DataAccess.Models;
-using Biflow.Executor.Core.Common;
+﻿using Biflow.Executor.Core.Common;
 using Microsoft.AnalysisServices.Tabular;
 
 namespace Biflow.Executor.Core.StepExecutor;

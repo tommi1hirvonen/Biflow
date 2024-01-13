@@ -1,13 +1,19 @@
-﻿using Biflow.DataAccess.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-namespace Biflow.DataAccess.Configuration;
+﻿namespace Biflow.DataAccess.Configuration;
 
 internal class StepParameterEntityTypeConfiguration : IEntityTypeConfiguration<StepParameterBase>
 {
     public void Configure(EntityTypeBuilder<StepParameterBase> builder)
     {
+        builder.ToTable("StepParameter")
+            .HasKey(x => x.ParameterId);
+
+        builder.Property(x => x.StepId)
+            .HasColumnName("StepId");
+
+        builder.Property(x => x.ParameterValue).HasColumnType("sql_variant");
+
+        builder.Ignore(x => x.JobParameters);
+
         builder.HasOne(p => p.InheritFromJobParameter)
             .WithMany(p => p.InheritingStepParameters)
             .OnDelete(DeleteBehavior.ClientSetNull);

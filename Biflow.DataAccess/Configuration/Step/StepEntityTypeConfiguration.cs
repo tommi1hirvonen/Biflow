@@ -1,13 +1,14 @@
-﻿using Biflow.DataAccess.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-namespace Biflow.DataAccess.Configuration;
+﻿namespace Biflow.DataAccess.Configuration;
 
 internal class StepEntityTypeConfiguration : IEntityTypeConfiguration<Step>
 {
     public void Configure(EntityTypeBuilder<Step> builder)
     {
+        builder.ToTable("Step")
+            .HasKey(x => x.StepId);
+
+        builder.Property(x => x.Timestamp).IsRowVersion();
+
         builder.HasDiscriminator<StepType>("StepType")
             .HasValue<DatasetStep>(StepType.Dataset)
             .HasValue<ExeStep>(StepType.Exe)

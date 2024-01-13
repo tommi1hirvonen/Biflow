@@ -1,6 +1,4 @@
-﻿using Biflow.DataAccess.Models;
-
-namespace Biflow.Ui.Core;
+﻿namespace Biflow.Ui.Core;
 
 public readonly struct RoleTag(string role) : ITag
 {

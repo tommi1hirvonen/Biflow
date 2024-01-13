@@ -1,9 +1,4 @@
-﻿using Biflow.DataAccess.Models;
-using Biflow.Ui.Core;
-using Havit.Blazor.Components.Web.Bootstrap;
-using Microsoft.AspNetCore.Components;
-
-namespace Biflow.Ui.Shared.JobDetails;
+﻿namespace Biflow.Ui.Shared.JobDetails;
 
 public partial class AdvancedFiltersOffcanvas : ComponentBase
 {

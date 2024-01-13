@@ -1,6 +1,4 @@
-﻿using Biflow.DataAccess.Models;
-
-namespace Biflow.Ui.Core.Projection;
+﻿namespace Biflow.Ui.Core.Projection;
 
 /// <summary>
 /// Lightweight StepExecutionAttempt class replacement which can be used to only load selected attributes from the database using projection
@@ -36,5 +34,5 @@ public record StepExecutionProjection(
         ExecutionStatus == StepExecutionStatus.Running
         || ExecutionStatus == StepExecutionStatus.AwaitingRetry
         || ExecutionStatus == StepExecutionStatus.Queued
-        || ExecutionStatus == StepExecutionStatus.NotStarted && ParentExecutionStatus == DataAccess.Models.ExecutionStatus.Running;
+        || ExecutionStatus == StepExecutionStatus.NotStarted && ParentExecutionStatus == Biflow.Core.Entities.ExecutionStatus.Running;
 }

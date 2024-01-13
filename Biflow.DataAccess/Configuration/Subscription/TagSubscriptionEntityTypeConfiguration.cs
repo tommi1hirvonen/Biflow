@@ -1,13 +1,12 @@
-﻿using Biflow.DataAccess.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-namespace Biflow.DataAccess.Configuration;
+﻿namespace Biflow.DataAccess.Configuration;
 
 internal class TagSubscriptionEntityTypeConfiguration : IEntityTypeConfiguration<TagSubscription>
 {
     public void Configure(EntityTypeBuilder<TagSubscription> builder)
     {
+        builder.Property(x => x.AlertType).HasColumnName("AlertType");
+        builder.Property(x => x.TagId).HasColumnName("TagId");
+
         builder.HasOne(x => x.Tag)
             .WithMany(x => x.TagSubscriptions)
             .OnDelete(DeleteBehavior.Cascade);

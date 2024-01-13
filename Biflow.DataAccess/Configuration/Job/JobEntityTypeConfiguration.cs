@@ -1,13 +1,16 @@
-﻿using Biflow.DataAccess.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-namespace Biflow.DataAccess.Configuration;
+﻿namespace Biflow.DataAccess.Configuration;
 
 internal class JobEntityTypeConfiguration(AppDbContext context) : IEntityTypeConfiguration<Job>
 {
     public void Configure(EntityTypeBuilder<Job> builder)
     {
+        builder.ToTable("Job")
+            .HasKey(x => x.JobId);
+
+        builder.Property(x => x.Timestamp).IsRowVersion();
+
+        builder.Property(x => x.CategoryId).HasColumnName("JobCategoryId");
+
         builder.HasOne(j => j.Category)
         .WithMany(c => c.Jobs)
         .OnDelete(DeleteBehavior.SetNull);

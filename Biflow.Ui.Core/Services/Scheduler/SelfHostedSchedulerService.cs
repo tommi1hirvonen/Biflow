@@ -1,5 +1,4 @@
-﻿using Biflow.DataAccess.Models;
-using Biflow.Scheduler.Core;
+﻿using Biflow.Scheduler.Core;
 
 namespace Biflow.Ui.Core;
 

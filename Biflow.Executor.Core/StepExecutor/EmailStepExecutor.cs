@@ -1,5 +1,4 @@
-﻿using Biflow.DataAccess.Models;
-using Biflow.Executor.Core.Common;
+﻿using Biflow.Executor.Core.Common;
 using Biflow.Executor.Core.Notification;
 
 namespace Biflow.Executor.Core.StepExecutor;

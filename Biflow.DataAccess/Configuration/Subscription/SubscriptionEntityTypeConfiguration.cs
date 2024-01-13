@@ -1,13 +1,12 @@
-﻿using Biflow.DataAccess.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-namespace Biflow.DataAccess.Configuration;
+﻿namespace Biflow.DataAccess.Configuration;
 
 internal class SubscriptionEntityTypeConfiguration : IEntityTypeConfiguration<Subscription>
 {
     public void Configure(EntityTypeBuilder<Subscription> builder)
     {
+        builder.ToTable("Subscription")
+            .HasKey(x => x.SubscriptionId);
+
         builder.HasDiscriminator<SubscriptionType>("SubscriptionType")
             .HasValue<JobSubscription>(SubscriptionType.Job)
             .HasValue<JobTagSubscription>(SubscriptionType.JobTag)

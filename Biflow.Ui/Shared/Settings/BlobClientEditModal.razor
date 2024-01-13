@@ -198,7 +198,7 @@
         testingConnection = true;
         try
         {
-            if (client is not null) await client.GetContainersAsync(TokenService, CancellationToken.None);
+            if (client is not null) await client.CreateExplorer(TokenService).GetContainersAsync(CancellationToken.None);
             connectionTestSuccess = true;
         }
         catch (Exception ex)

@@ -1,14 +1,11 @@
-﻿using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
-using Biflow.Ui.Core;
-using Biflow.Ui.Shared.StepEdit;
-using Microsoft.AspNetCore.Components;
-using Microsoft.EntityFrameworkCore;
+﻿using Biflow.Ui.Shared.StepEdit;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class QlikStepEditModal : StepEditModal<QlikStep>
 {
+    [Inject] private IHttpClientFactory HttpClientFactory { get; set; } = null!;
+
     internal override string FormId => "qlik_step_edit_form";
 
     private AppSelectOffcanvas? appSelectOffcanvas;
@@ -53,8 +50,10 @@ public partial class QlikStepEditModal : StepEditModal<QlikStep>
         try
         {
             var client = QlikClients?.FirstOrDefault(c => c.QlikCloudClientId == step.QlikCloudClientId);
-            appName = client is not null && !string.IsNullOrEmpty(step.AppId)
-                ? await client.GetAppNameAsync(step.AppId)
+            ArgumentNullException.ThrowIfNull(client);
+            using var connectedClient = client.CreateConnectedClient(HttpClientFactory);
+            appName = !string.IsNullOrEmpty(step.AppId)
+                ? await connectedClient.GetAppNameAsync(step.AppId)
                 : "";
         }
         catch

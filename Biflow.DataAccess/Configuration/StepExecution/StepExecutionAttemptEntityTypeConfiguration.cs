@@ -1,7 +1,4 @@
-﻿using Biflow.DataAccess.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
+﻿using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -16,6 +13,13 @@ internal class StepExecutionAttemptEntityTypeConfiguration : IEntityTypeConfigur
 
     public void Configure(EntityTypeBuilder<StepExecutionAttempt> builder)
     {
+        builder.ToTable("ExecutionStepAttempt")
+            .HasKey(x => new { x.ExecutionId, x.StepId, x.RetryAttemptIndex });
+
+        builder.Ignore(x => x.UniqueId);
+        builder.Ignore(x => x.ExecutionInSeconds);
+        builder.Ignore(x => x.CanBeStopped);
+
         builder.HasDiscriminator<StepType>("StepType")
             .HasValue<DatasetStepExecutionAttempt>(StepType.Dataset)
             .HasValue<ExeStepExecutionAttempt>(StepType.Exe)

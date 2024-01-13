@@ -191,7 +191,8 @@
             var appRegistration = await context.AppRegistrations
                 .AsNoTracking()
                 .FirstAsync(r => r.AppRegistrationId == appRegistrationId);
-            datasets = await appRegistration.GetAllDatasetsAsync(TokenService);
+            var client = appRegistration.CreateDatasetClient(TokenService);
+            datasets = await client.GetAllDatasetsAsync();
             StateHasChanged();
         }
         catch (Exception ex)

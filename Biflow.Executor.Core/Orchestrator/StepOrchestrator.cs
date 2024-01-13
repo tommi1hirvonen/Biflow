@@ -1,7 +1,5 @@
-﻿using Biflow.DataAccess.Models;
-using Biflow.Executor.Core.Common;
+﻿using Biflow.Executor.Core.Common;
 using Biflow.Executor.Core.StepExecutor;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 

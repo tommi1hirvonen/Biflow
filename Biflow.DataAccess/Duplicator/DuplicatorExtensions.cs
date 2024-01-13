@@ -1,6 +1,4 @@
-﻿using Biflow.DataAccess.Models;
-
-namespace Biflow.DataAccess;
+﻿namespace Biflow.DataAccess;
 
 internal static class DuplicatorExtensions
 {

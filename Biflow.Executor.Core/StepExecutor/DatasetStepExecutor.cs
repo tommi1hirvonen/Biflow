@@ -1,6 +1,4 @@
-﻿using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
-using Biflow.Executor.Core.Common;
+﻿using Biflow.Executor.Core.Common;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -8,16 +6,15 @@ namespace Biflow.Executor.Core.StepExecutor;
 
 internal class DatasetStepExecutor(
     ILogger<DatasetStepExecutor> logger,
-    ITokenService tokenService,
     IOptionsMonitor<ExecutionOptions> options,
+    ITokenService tokenService,
     DatasetStepExecution step) : IStepExecutor<DatasetStepExecutionAttempt>
 {
     private readonly ILogger<DatasetStepExecutor> _logger = logger;
-    private readonly ITokenService _tokenService = tokenService;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
     private readonly DatasetStepExecution _step = step;
-    private readonly AppRegistration _appRegistration = step.GetAppRegistration()
-        ?? throw new ArgumentNullException(nameof(_appRegistration));
+    private readonly DatasetClient _datasetClient = step.GetAppRegistration()?.CreateDatasetClient(tokenService)
+        ?? throw new ArgumentNullException(nameof(_datasetClient));
 
     public DatasetStepExecutionAttempt Clone(DatasetStepExecutionAttempt other, int retryAttemptIndex) =>
         new(other, retryAttemptIndex);
@@ -31,7 +28,7 @@ internal class DatasetStepExecutor(
         // Start dataset refresh.
         try
         {
-            await _appRegistration.RefreshDatasetAsync(_tokenService, _step.DatasetGroupId, _step.DatasetId, cancellationToken);
+            await _datasetClient.RefreshDatasetAsync(_step.DatasetGroupId, _step.DatasetId, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -51,7 +48,7 @@ internal class DatasetStepExecutor(
         {
             try
             {
-                var (status, refresh) = await _appRegistration.GetDatasetRefreshStatusAsync(_tokenService, _step.DatasetGroupId, _step.DatasetId, cancellationToken);
+                var (status, refresh) = await _datasetClient.GetDatasetRefreshStatusAsync(_step.DatasetGroupId, _step.DatasetId, cancellationToken);
                 switch (status)
                 {
                     case DatasetRefreshStatus.Completed:

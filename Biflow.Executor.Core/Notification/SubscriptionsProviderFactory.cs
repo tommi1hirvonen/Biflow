@@ -1,7 +1,4 @@
-﻿using Biflow.DataAccess.Models;
-using Microsoft.EntityFrameworkCore;
-
-namespace Biflow.Executor.Core.Notification;
+﻿namespace Biflow.Executor.Core.Notification;
 
 internal class SubscriptionsProviderFactory(IDbContextFactory<ExecutorDbContext> dbContextFactory) : ISubscriptionsProviderFactory
 {

@@ -1,6 +1,4 @@
-﻿using Biflow.DataAccess.Models;
-
-namespace Biflow.Ui.Core.Projection;
+﻿namespace Biflow.Ui.Core.Projection;
 
 /// <summary>
 /// Lightweight Step class replacement which can be used to only load selected attributes from the database using projection

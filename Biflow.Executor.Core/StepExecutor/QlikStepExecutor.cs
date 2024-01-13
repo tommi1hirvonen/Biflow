@@ -1,33 +1,22 @@
-﻿using Biflow.DataAccess.Models;
-using Biflow.Executor.Core.Common;
-using Microsoft.EntityFrameworkCore;
+﻿using Biflow.Executor.Core.Common;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-internal class QlikStepExecutor : IStepExecutor<QlikStepExecutionAttempt>
+internal class QlikStepExecutor(
+    ILogger<QlikStepExecutor> logger,
+    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    IOptionsMonitor<ExecutionOptions> options,
+    IHttpClientFactory httpClientFactory,
+    QlikStepExecution stepExecution) : IStepExecutor<QlikStepExecutionAttempt>
 {
-    private readonly ILogger<QlikStepExecutor> _logger;
-    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
-    private readonly QlikStepExecution _step;
-    private readonly QlikCloudClient _client;
-    private readonly int _pollingIntervalMs;
-
-    public QlikStepExecutor(
-        ILogger<QlikStepExecutor> logger,
-        IDbContextFactory<ExecutorDbContext> dbContextFactory,
-        IOptionsMonitor<ExecutionOptions> options,
-        QlikStepExecution stepExecution)
-    {
-        var client = stepExecution.GetClient();
-        ArgumentNullException.ThrowIfNull(client);
-        _logger = logger;
-        _dbContextFactory = dbContextFactory;
-        _step = stepExecution;
-        _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
-        _client = client;
-    }
+    private readonly ILogger<QlikStepExecutor> _logger = logger;
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
+    private readonly QlikStepExecution _step = stepExecution;
+    private readonly QlikCloudConnectedClient _client = stepExecution.GetClient()?.CreateConnectedClient(httpClientFactory)
+        ?? throw new ArgumentNullException(nameof(_client));
+    private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
 
     public QlikStepExecutionAttempt Clone(QlikStepExecutionAttempt other, int retryAttemptIndex) =>
         new(other, retryAttemptIndex);
@@ -76,7 +65,6 @@ internal class QlikStepExecutor : IStepExecutor<QlikStepExecutionAttempt>
             attempt.AddWarning(ex, $"Error updating app reload id {reload.Id}");
         }
 
-        var getReloadUrl = $"{_client.EnvironmentUrl}/api/v1/reloads/{reload.Id}";
         while (true)
         {
             try

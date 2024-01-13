@@ -1,13 +1,12 @@
-﻿using Biflow.DataAccess.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-namespace Biflow.DataAccess.Configuration;
+﻿namespace Biflow.DataAccess.Configuration;
 
 internal class StepParameterExpressionParameterEntityTypeConfiguration : IEntityTypeConfiguration<StepParameterExpressionParameter>
 {
     public void Configure(EntityTypeBuilder<StepParameterExpressionParameter> builder)
     {
+        builder.ToTable("StepParameterExpressionParameter")
+            .HasKey(x => x.ParameterId);
+
         builder.HasOne(x => x.InheritFromJobParameter)
             .WithMany(x => x.InheritingStepParameterExpressionParameters)
             .OnDelete(DeleteBehavior.Cascade);

@@ -79,7 +79,7 @@
     [Parameter]
     public EventCallback<BlobSelectedResponse?> OnItemSelected { get; set; }
 
-    private BlobStorageClient? client;
+    private BlobStorageExplorer? client;
     private string? accountName;
     private IEnumerable<BlobContainerItem>? containers;
     private BlobContainerItem? container;
@@ -90,7 +90,7 @@
 
     public async Task SetClientAsync(BlobStorageClient client)
     {
-        this.client = client;
+        this.client = client.CreateExplorer(TokenService);
         prefix = null;
         containers = null;
         accountName = null;
@@ -99,8 +99,8 @@
         item = null;
         loading = true;
         StateHasChanged();
-        containers = await client.GetContainersAsync(TokenService);
-        accountName = client.GetStorageAccountName(TokenService);
+        containers = await this.client.GetContainersAsync();
+        accountName = this.client.StorageAccountName;
         loading = false;
     }
 
@@ -121,7 +121,7 @@
         await OnItemSelected.InvokeAsync(null);
         loading = true;
         StateHasChanged();
-        items = await client.GetItemsAsync(TokenService, container);
+        items = await client.GetItemsAsync(container);
         loading = false;
     }
 
@@ -136,7 +136,7 @@
         await OnItemSelected.InvokeAsync(new(accountName, container.Name, prefix));
         loading = true;
         StateHasChanged();
-        items = await client.GetItemsAsync(TokenService, container, prefix);
+        items = await client.GetItemsAsync(container, prefix);
         loading = false;
     }
 
@@ -150,7 +150,7 @@
         await OnItemSelected.InvokeAsync(new(accountName, container.Name, item.Prefix));
         loading = true;
         StateHasChanged();
-        items = await client.GetItemsAsync(TokenService, container, item.Prefix);
+        items = await client.GetItemsAsync(container, item.Prefix);
         loading = false;
     }
 

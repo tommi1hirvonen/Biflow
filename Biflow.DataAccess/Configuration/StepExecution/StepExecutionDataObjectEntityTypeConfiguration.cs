@@ -1,13 +1,12 @@
-﻿using Biflow.DataAccess.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-namespace Biflow.DataAccess.Configuration;
+﻿namespace Biflow.DataAccess.Configuration;
 
 internal class StepExecutionDataObjectEntityTypeConfiguration : IEntityTypeConfiguration<StepExecutionDataObject>
 {
     public void Configure(EntityTypeBuilder<StepExecutionDataObject> builder)
     {
+        builder.ToTable("ExecutionStepDataObject")
+            .HasKey(x => new { x.ExecutionId, x.StepId, x.ObjectId });
+
         builder.HasOne(x => x.DataObject)
             .WithMany(x => x.StepExecutions)
             .OnDelete(DeleteBehavior.Cascade);

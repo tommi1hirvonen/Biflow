@@ -1,6 +1,4 @@
-﻿using Biflow.Core;
-using Biflow.DataAccess.Models;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.Notification;
 

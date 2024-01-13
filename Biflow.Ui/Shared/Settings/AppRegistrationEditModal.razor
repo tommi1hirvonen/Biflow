@@ -1,6 +1,7 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbFactory
 @inject IHxMessengerService Messenger
 @inject IJSRuntime JS
+@inject ITokenService TokenService
 
 <HxModal @ref="modal" Size="ModalSize.Large" OnClosed="() => connectionTestSuccess = null" Title="@(appRegistration?.AppRegistrationId == Guid.Empty ? "New App registration" : "Edit " + appRegistration?.AppRegistrationName)">
     <BodyTemplate>

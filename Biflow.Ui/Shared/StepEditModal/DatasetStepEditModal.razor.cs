@@ -1,9 +1,4 @@
-﻿using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
-using Biflow.Ui.Core;
-using Biflow.Ui.Shared.StepEdit;
-using Microsoft.AspNetCore.Components;
-using Microsoft.EntityFrameworkCore;
+﻿using Biflow.Ui.Shared.StepEdit;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
@@ -29,12 +24,13 @@ public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
     {
         try
         {
-            var appRegistration = AppRegistrations?.FirstOrDefault(a => a.AppRegistrationId == step.AppRegistrationId);
+            var appRegistration = AppRegistrations.First(a => a.AppRegistrationId == step.AppRegistrationId);
+            var datasetClient = appRegistration.CreateDatasetClient(TokenService);
             (datasetGroupName, datasetName) = appRegistration switch
             {
                 not null => (
-                    await appRegistration.GetGroupNameAsync(step.DatasetGroupId, TokenService),
-                    await appRegistration.GetDatasetNameAsync(step.DatasetGroupId, step.DatasetId, TokenService)
+                    await datasetClient.GetGroupNameAsync(step.DatasetGroupId),
+                    await datasetClient.GetDatasetNameAsync(step.DatasetGroupId, step.DatasetId)
                     ),
                 _ => ("", "")
             };

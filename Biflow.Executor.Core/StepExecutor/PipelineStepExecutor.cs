@@ -1,7 +1,4 @@
-﻿using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
-using Biflow.Executor.Core.Common;
-using Microsoft.EntityFrameworkCore;
+﻿using Biflow.Executor.Core.Common;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Polly;
@@ -11,16 +8,15 @@ namespace Biflow.Executor.Core.StepExecutor;
 internal class PipelineStepExecutor(
     ILogger<PipelineStepExecutor> logger,
     IOptionsMonitor<ExecutionOptions> options,
-    ITokenService tokenService,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    ITokenService tokenService,
     PipelineStepExecution step) : IStepExecutor<PipelineStepExecutionAttempt>
 {
     private readonly ILogger<PipelineStepExecutor> _logger = logger;
-    private readonly ITokenService _tokenService = tokenService;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
     private readonly PipelineStepExecution _step = step;
-    private readonly PipelineClient _pipelineClient = step.GetClient()
+    private readonly IPipelineClient _pipelineClient = step.GetClient()?.CreatePipelineClient(tokenService)
         ?? throw new ArgumentNullException(nameof(_pipelineClient));
 
     private const int MaxRefreshRetries = 3;
@@ -51,7 +47,7 @@ internal class PipelineStepExecutor(
         string runId;
         try
         {
-            runId = await _pipelineClient.StartPipelineRunAsync(_tokenService, _step.PipelineName, parameters, cancellationToken);
+            runId = await _pipelineClient.StartPipelineRunAsync(_step.PipelineName, parameters, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -138,7 +134,7 @@ internal class PipelineStepExecutor(
                 _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting pipeline run status for run id {runId}", _step.ExecutionId, _step, runId));
 
         return await policy.ExecuteAsync((cancellationToken) =>
-            _pipelineClient.GetPipelineRunAsync(_tokenService, runId, cancellationToken), cancellationToken);
+            _pipelineClient.GetPipelineRunAsync(runId, cancellationToken), cancellationToken);
     }
 
     private async Task CancelAsync(PipelineStepExecutionAttempt attempt, string runId)
@@ -146,7 +142,7 @@ internal class PipelineStepExecutor(
         _logger.LogInformation("{ExecutionId} {Step} Stopping pipeline run id {PipelineRunId}", _step.ExecutionId, _step, runId);
         try
         {
-            await _pipelineClient.CancelPipelineRunAsync(_tokenService, runId);
+            await _pipelineClient.CancelPipelineRunAsync(runId);
         }
         catch (Exception ex)
         {

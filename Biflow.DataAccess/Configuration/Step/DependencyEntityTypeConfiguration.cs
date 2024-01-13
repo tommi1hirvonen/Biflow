@@ -1,13 +1,15 @@
-﻿using Biflow.DataAccess.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-namespace Biflow.DataAccess.Configuration;
+﻿namespace Biflow.DataAccess.Configuration;
 
 internal class DependencyEntityTypeConfiguration : IEntityTypeConfiguration<Dependency>
 {
     public void Configure(EntityTypeBuilder<Dependency> builder)
     {
+        builder.ToTable("Dependency")
+            .HasKey(x => new { x.StepId, x.DependantOnStepId });
+
+        builder.Ignore(x => x.IsCandidateForRemoval);
+        builder.Ignore(x => x.IsNewAddition);
+
         builder.HasOne(dependency => dependency.Step)
             .WithMany(step => step.Dependencies)
             .OnDelete(DeleteBehavior.ClientCascade);

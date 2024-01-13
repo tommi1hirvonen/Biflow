@@ -1,13 +1,17 @@
-﻿using Biflow.DataAccess.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-namespace Biflow.DataAccess.Configuration;
+﻿namespace Biflow.DataAccess.Configuration;
 
 internal class JobParameterEntityTypeConfiguration : IEntityTypeConfiguration<JobParameter>
 {
     public void Configure(EntityTypeBuilder<JobParameter> builder)
     {
+        builder.ToTable("JobParameter")
+            .HasKey(x => x.ParameterId);
+
+        builder.Property(x => x.JobId)
+            .HasColumnName("JobId");
+
+        builder.Property(x => x.ParameterValue).HasColumnType("sql_variant");
+
         builder.OwnsOne(s => s.Expression, ece =>
         {
             ece.Property(p => p.Expression).HasColumnName("Expression");

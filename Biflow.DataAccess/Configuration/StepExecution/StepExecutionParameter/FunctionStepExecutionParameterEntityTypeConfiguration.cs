@@ -1,8 +1,4 @@
-﻿using Biflow.DataAccess.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-namespace Biflow.DataAccess.Configuration;
+﻿namespace Biflow.DataAccess.Configuration;
 
 internal class FunctionStepExecutionParameterEntityTypeConfiguration : IEntityTypeConfiguration<FunctionStepExecutionParameter>
 {

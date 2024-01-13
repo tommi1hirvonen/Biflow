@@ -106,7 +106,7 @@
         filterText = string.Empty;
 
         await offcanvas.LetAsync(x => x.ShowAsync());
-        
+
         try
         {
             using var context = DbContextFactory.CreateDbContext();
@@ -114,7 +114,8 @@
                 .AsNoTrackingWithIdentityResolution()
                 .Include(fa => fa.AppRegistration)
                 .FirstAsync(fa => fa.FunctionAppId == functionAppId);
-            functions = await functionApp.GetFunctionsAsync(HttpClientFactory.CreateClient(), TokenService);
+            var client = functionApp.CreateClient(TokenService, HttpClientFactory);
+            functions = await client.GetFunctionsAsync();
             StateHasChanged();
         }
         catch (Exception ex)

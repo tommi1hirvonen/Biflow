@@ -1,6 +1,4 @@
-﻿using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
-using Biflow.Executor.Core.ConnectionTest;
+﻿using Biflow.Executor.Core.ConnectionTest;
 using Biflow.Executor.Core.JobExecutor;
 using Biflow.Executor.Core.Notification;
 using Biflow.Executor.Core.Orchestrator;

@@ -148,7 +148,7 @@
         testingConnection = true;
         try
         {
-            if (functionApp is not null) await functionApp.TestConnection(HttpClientFactory.CreateClient());
+            if (functionApp is not null) await functionApp.CreateClient(TokenService, HttpClientFactory).TestConnection();
             connectionTestSuccess = true;
         }
         catch (Exception ex)
@@ -161,6 +161,7 @@
 
     public async Task ShowAsync(Guid functionAppId)
     {
+        ArgumentNullException.ThrowIfNull(AppRegistrations);
         functionApp = null;
         connectionTestSuccess = null;
         await modal.LetAsync(x => x.ShowAsync());
@@ -178,7 +179,7 @@
         {
             functionApp = new()
             {
-                AppRegistrationId = AppRegistrations?.FirstOrDefault()?.AppRegistrationId,
+                AppRegistrationId = AppRegistrations.First().AppRegistrationId,
                 AppRegistration = AppRegistrations?.FirstOrDefault()!,
                 Steps = new List<FunctionStep>()
             };

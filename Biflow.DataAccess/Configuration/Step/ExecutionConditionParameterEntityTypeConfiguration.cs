@@ -1,13 +1,14 @@
-﻿using Biflow.DataAccess.Models;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-
-namespace Biflow.DataAccess.Configuration;
+﻿namespace Biflow.DataAccess.Configuration;
 
 internal class ExecutionConditionParameterEntityTypeConfiguration : IEntityTypeConfiguration<ExecutionConditionParameter>
 {
     public void Configure(EntityTypeBuilder<ExecutionConditionParameter> builder)
     {
+        builder.ToTable("StepConditionParameter")
+            .HasKey(x => x.ParameterId);
+
+        builder.Property(x => x.ParameterValue).HasColumnType("sql_variant");
+
         builder.HasOne(x => x.Step)
             .WithMany(x => x.ExecutionConditionParameters)
             .OnDelete(DeleteBehavior.Cascade);

@@ -1,7 +1,5 @@
-﻿using Biflow.DataAccess.Models;
-using Biflow.Executor.Core.Notification;
+﻿using Biflow.Executor.Core.Notification;
 using Biflow.Executor.Core.Orchestrator;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Text.Encodings.Web;

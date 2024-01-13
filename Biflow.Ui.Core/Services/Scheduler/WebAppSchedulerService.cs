@@ -1,5 +1,4 @@
-﻿using Biflow.DataAccess.Models;
-using Biflow.Scheduler.Core;
+﻿using Biflow.Scheduler.Core;
 using Microsoft.Extensions.Configuration;
 using System.Net.Http.Json;
 using System.Text;
