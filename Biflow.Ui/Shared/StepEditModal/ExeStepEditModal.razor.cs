@@ -1,7 +1,4 @@
-﻿using Biflow.DataAccess;
-using Microsoft.EntityFrameworkCore;
-
-namespace Biflow.Ui.Shared.StepEditModal;
+﻿namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class ExeStepEditModal : StepEditModal<ExeStep>
 {

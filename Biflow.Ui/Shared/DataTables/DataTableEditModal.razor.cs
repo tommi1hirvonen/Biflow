@@ -1,11 +1,5 @@
-﻿using Biflow.DataAccess;
-using Biflow.Ui.Core;
-using Biflow.Ui.TableEditor;
-using Havit.Blazor.Components.Web;
-using Havit.Blazor.Components.Web.Bootstrap;
-using Microsoft.AspNetCore.Components;
+﻿using Biflow.Ui.TableEditor;
 using Microsoft.AspNetCore.Components.Routing;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
 using System.Runtime.CompilerServices;
 

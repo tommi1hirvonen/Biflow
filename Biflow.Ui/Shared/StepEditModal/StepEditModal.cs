@@ -1,12 +1,4 @@
-﻿using Biflow.DataAccess;
-using Biflow.Ui.Core;
-using Biflow.Ui.Core.Projection;
-using Havit.Blazor.Components.Web;
-using Havit.Blazor.Components.Web.Bootstrap;
-using Microsoft.AspNetCore.Components;
-using Microsoft.EntityFrameworkCore;
-
-namespace Biflow.Ui.Shared.StepEditModal;
+﻿namespace Biflow.Ui.Shared.StepEditModal;
 
 public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable, IStepEditModal where TStep : Step
 {    

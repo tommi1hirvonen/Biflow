@@ -1,12 +1,4 @@
-﻿using Biflow.DataAccess;
-using Biflow.Ui.Core;
-using Havit.Blazor.Components.Web;
-using Havit.Blazor.Components.Web.Bootstrap;
-using MediatR;
-using Microsoft.AspNetCore.Components;
-using Microsoft.EntityFrameworkCore;
-
-namespace Biflow.Ui.Pages;
+﻿namespace Biflow.Ui.Pages;
 
 [Route("/jobs/{Id:guid}/{DetailsPage}/{InitialStepId:guid?}")]
 public partial class JobDetails : ComponentBase

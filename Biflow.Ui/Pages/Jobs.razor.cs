@@ -1,13 +1,5 @@
-﻿using Biflow.DataAccess;
-using Biflow.Ui.Core;
-using Biflow.Ui.Shared;
+﻿using Biflow.Ui.Shared;
 using Biflow.Ui.Shared.JobDetails;
-using Havit.Blazor.Components.Web;
-using Havit.Blazor.Components.Web.Bootstrap;
-using MediatR;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Pages;
 
