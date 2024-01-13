@@ -1,5 +1,4 @@
 ﻿using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
 using Biflow.Ui.Core;
 using Biflow.Ui.Shared.StepEdit;
 using Havit.Blazor.Components.Web.Bootstrap;
@@ -11,6 +10,8 @@ namespace Biflow.Ui.Shared.StepEditModal;
 public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
 {
     [Parameter] public IList<PipelineClient> PipelineClients { get; set; } = [];
+
+    [Inject] private ITokenService TokenService { get; set; } = null!;
 
     internal override string FormId => "pipeline_step_edit_form";
 
@@ -60,7 +61,8 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
                 .AsNoTrackingWithIdentityResolution()
                 .Include(c => c.AppRegistration)
                 .FirstAsync(c => c.PipelineClientId == Step.PipelineClientId);
-            var parameters = await client.GetPipelineParametersAsync(Step.PipelineName);
+            var pipelineClient = client.CreatePipelineClient(TokenService);
+            var parameters = await pipelineClient.GetPipelineParametersAsync(Step.PipelineName);
             if (!parameters.Any())
             {
                 Messenger.AddInformation($"No parameters for pipeline {Step.PipelineName}");

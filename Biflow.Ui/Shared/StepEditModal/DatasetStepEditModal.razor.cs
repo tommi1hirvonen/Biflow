@@ -1,14 +1,15 @@
-﻿using Biflow.Core.Entities.AppRegistrationAggregate;
-using Biflow.DataAccess;
-using Biflow.DataAccess.Models;
+﻿using Biflow.DataAccess;
 using Biflow.Ui.Core;
 using Biflow.Ui.Shared.StepEdit;
+using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
 {
+    [Inject] private ITokenService TokenService { get; set; } = null!;
+
     internal override string FormId => "dataset_step_edit_form";
 
     private DatasetSelectOffcanvas? datasetSelectOffcanvas;
@@ -27,12 +28,13 @@ public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
     {
         try
         {
-            var appRegistration = AppRegistrations?.FirstOrDefault(a => a.AppRegistrationId == step.AppRegistrationId);
+            var appRegistration = AppRegistrations.First(a => a.AppRegistrationId == step.AppRegistrationId);
+            var datasetClient = appRegistration.CreateDatasetClient(TokenService);
             (datasetGroupName, datasetName) = appRegistration switch
             {
                 not null => (
-                    await appRegistration.GetGroupNameAsync(step.DatasetGroupId),
-                    await appRegistration.GetDatasetNameAsync(step.DatasetGroupId, step.DatasetId)
+                    await datasetClient.GetGroupNameAsync(step.DatasetGroupId),
+                    await datasetClient.GetDatasetNameAsync(step.DatasetGroupId, step.DatasetId)
                     ),
                 _ => ("", "")
             };

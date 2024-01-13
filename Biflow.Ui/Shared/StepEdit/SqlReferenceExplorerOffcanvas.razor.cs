@@ -1,5 +1,4 @@
-﻿using Biflow.DataAccess.Models;
-using Biflow.Ui.Core;
+﻿using Biflow.Ui.Core;
 using Biflow.Ui.SqlServer;
 using Havit.Blazor.Components.Web.Bootstrap;
 using Microsoft.AspNetCore.Components;

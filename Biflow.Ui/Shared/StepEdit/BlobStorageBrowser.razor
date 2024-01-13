@@ -79,7 +79,7 @@
     [Parameter]
     public EventCallback<BlobSelectedResponse?> OnItemSelected { get; set; }
 
-    private BlobStorageClient? client;
+    private BlobStorageExplorer? client;
     private string? accountName;
     private IEnumerable<BlobContainerItem>? containers;
     private BlobContainerItem? container;
@@ -90,7 +90,7 @@
 
     public async Task SetClientAsync(BlobStorageClient client)
     {
-        this.client = client;
+        this.client = client.CreateExplorer(TokenService);
         prefix = null;
         containers = null;
         accountName = null;
@@ -99,8 +99,8 @@
         item = null;
         loading = true;
         StateHasChanged();
-        containers = await client.GetContainersAsync();
-        accountName = client.GetStorageAccountName();
+        containers = await this.client.GetContainersAsync();
+        accountName = this.client.StorageAccountName;
         loading = false;
     }
 

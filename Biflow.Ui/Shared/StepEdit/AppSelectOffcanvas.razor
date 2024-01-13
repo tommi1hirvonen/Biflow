@@ -1,4 +1,5 @@
 ﻿@inject IHxMessengerService Messenger
+@inject IHttpClientFactory HttpClientFactory
 
 <HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" Title="Select app" OnClosed="OnClosed">
     <BodyTemplate>
@@ -182,7 +183,8 @@
         {
             var client = QlikClients?.FirstOrDefault(c => c.QlikCloudClientId == clientId);
             ArgumentNullException.ThrowIfNull(client);
-            spaces = await client.GetAppsAsync();
+            using var connectedClient = client.CreateConnectedClient(HttpClientFactory);
+            spaces = await connectedClient.GetAppsAsync();
         }
         catch (Exception ex)
         {

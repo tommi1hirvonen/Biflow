@@ -103,7 +103,7 @@
         }
         else
         {
-            client = new(HttpClientFactory)
+            client = new()
             {
                 QlikCloudClientName = "",
                 EnvironmentUrl = "",
@@ -120,7 +120,8 @@
         testingConnection = true;
         try
         {
-            await client.TestConnectionAsync();
+            using var connectedClient = client.CreateConnectedClient(HttpClientFactory);
+            await connectedClient.TestConnectionAsync();
             connectionTestSuccess = true;
         }
         catch (Exception ex)
