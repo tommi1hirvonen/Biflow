@@ -1,6 +1,4 @@
-﻿using MediatR;
-
-namespace Biflow.Ui.Core;
+﻿namespace Biflow.Ui.Core;
 
 internal class BuiltInAuthHandler(IMediator mediator) : IAuthHandler
 {

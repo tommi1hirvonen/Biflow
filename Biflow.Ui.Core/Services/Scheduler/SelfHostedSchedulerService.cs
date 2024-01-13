@@ -1,5 +1,4 @@
-﻿using Biflow.Core.Entities;
-using Biflow.Scheduler.Core;
+﻿using Biflow.Scheduler.Core;
 
 namespace Biflow.Ui.Core;
 

@@ -1,6 +1,4 @@
-﻿using Biflow.Core.Entities;
-
-namespace Biflow.Ui.Core;
+﻿namespace Biflow.Ui.Core;
 
 public interface ISchedulerService
 {

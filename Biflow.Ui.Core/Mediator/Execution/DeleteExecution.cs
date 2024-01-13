@@ -1,10 +1,4 @@
-﻿using Biflow.Core.Entities;
-using Biflow.Core.Interfaces;
-using Biflow.DataAccess;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
-
-namespace Biflow.Ui.Core;
+﻿namespace Biflow.Ui.Core;
 
 public record DeleteExecutionCommand(Guid ExecutionId) : IRequest;
 

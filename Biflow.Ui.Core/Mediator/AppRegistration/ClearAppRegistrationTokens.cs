@@ -1,9 +1,4 @@
-﻿using Biflow.Core.Interfaces;
-using Biflow.DataAccess;
-using MediatR;
-using Microsoft.EntityFrameworkCore;
-
-namespace Biflow.Ui.Core;
+﻿namespace Biflow.Ui.Core;
 
 public record ClearAppRegistrationTokensCommand(Guid AppRegistrationId) : IRequest;
 

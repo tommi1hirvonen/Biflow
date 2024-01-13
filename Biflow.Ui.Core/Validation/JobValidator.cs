@@ -1,5 +1,4 @@
-﻿using Biflow.Core.Entities;
-using FluentValidation;
+﻿using FluentValidation;
 
 namespace Biflow.Ui.Core;
 
