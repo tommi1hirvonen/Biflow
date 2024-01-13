@@ -1,8 +1,6 @@
-﻿using Biflow.Core.Entities;
-using Biflow.Executor.Core.Common;
+﻿using Biflow.Executor.Core.Common;
 using Dapper;
 using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Text.Encodings.Web;
 using System.Text.Json;

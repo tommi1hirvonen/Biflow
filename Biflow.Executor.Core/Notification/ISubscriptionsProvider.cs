@@ -1,6 +1,4 @@
-﻿using Biflow.Core.Entities;
-
-namespace Biflow.Executor.Core.Notification;
+﻿namespace Biflow.Executor.Core.Notification;
 
 public interface ISubscriptionsProvider
 {

@@ -1,5 +1,4 @@
-﻿using Biflow.Core.Entities;
-using Biflow.Executor.Core.Common;
+﻿using Biflow.Executor.Core.Common;
 using Biflow.Executor.Core.Notification;
 
 namespace Biflow.Executor.Core.StepExecutor;

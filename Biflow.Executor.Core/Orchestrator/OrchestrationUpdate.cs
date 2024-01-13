@@ -1,5 +1,3 @@
-﻿using Biflow.Core.Entities;
-
-namespace Biflow.Executor.Core.Orchestrator;
+﻿namespace Biflow.Executor.Core.Orchestrator;
 
 internal record OrchestrationUpdate(StepExecution StepExecution, OrchestrationStatus Status);

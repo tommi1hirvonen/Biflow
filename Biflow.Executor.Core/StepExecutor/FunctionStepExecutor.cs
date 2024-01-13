@@ -1,6 +1,4 @@
-﻿using Biflow.Core.Entities;
-using Biflow.Executor.Core.Common;
-using Microsoft.EntityFrameworkCore;
+﻿using Biflow.Executor.Core.Common;
 using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.StepExecutor;

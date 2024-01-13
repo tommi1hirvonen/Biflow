@@ -1,6 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-
-namespace Biflow.Executor.Core.ConnectionTest;
+﻿namespace Biflow.Executor.Core.ConnectionTest;
 
 internal class ConnectionTest(IDbContextFactory<ExecutorDbContext> dbContextFactory) : IConnectionTest
 {
