@@ -1,4 +1,4 @@
-﻿using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -8,6 +8,9 @@ internal class ExecutionConditionParameterEntityTypeConfiguration : IEntityTypeC
 {
     public void Configure(EntityTypeBuilder<ExecutionConditionParameter> builder)
     {
+        builder.ToTable("StepConditionParameter")
+            .HasKey(x => x.ParameterId);
+
         builder.HasOne(x => x.Step)
             .WithMany(x => x.ExecutionConditionParameters)
             .OnDelete(DeleteBehavior.Cascade);

@@ -1,4 +1,4 @@
-﻿using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Entities;
 using System.Linq.Expressions;
 
 namespace Biflow.DataAccess;

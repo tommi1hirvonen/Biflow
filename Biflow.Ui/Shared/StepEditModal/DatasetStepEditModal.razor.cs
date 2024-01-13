@@ -1,4 +1,5 @@
-﻿using Biflow.DataAccess;
+﻿using Biflow.Core.Entities.AppRegistrationAggregate;
+using Biflow.DataAccess;
 using Biflow.DataAccess.Models;
 using Biflow.Ui.Core;
 using Biflow.Ui.Shared.StepEdit;

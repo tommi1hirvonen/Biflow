@@ -1,4 +1,4 @@
-﻿using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -8,6 +8,12 @@ internal class ScheduleEntityTypeConfiguration : IEntityTypeConfiguration<Schedu
 {
     public void Configure(EntityTypeBuilder<Schedule> builder)
     {
+        builder.ToTable("Schedule")
+            .HasKey(x => x.ScheduleId);
+
+        builder.Property(x => x.CronExpression)
+            .IsUnicode(false);
+
         builder.HasOne(schedule => schedule.Job)
             .WithMany(job => job.Schedules)
             .OnDelete(DeleteBehavior.Cascade);

@@ -1,4 +1,4 @@
-﻿using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -8,6 +8,15 @@ internal class StepExecutionParameterEntityTypeConfiguration : IEntityTypeConfig
 {
     public void Configure(EntityTypeBuilder<StepExecutionParameterBase> builder)
     {
+        builder.ToTable("ExecutionStepParameter")
+            .HasKey(x => new { x.ExecutionId, x.ParameterId });
+
+        builder.Property(x => x.ParameterValue)
+            .HasColumnType("sql_variant");
+
+        builder.Property(x => x.ExecutionParameterValue)
+            .HasColumnType("sql_variant");
+
         builder.HasOne(p => p.InheritFromExecutionParameter)
             .WithMany(p => p.StepExecutionParameters)
             .HasForeignKey(p => new { p.ExecutionId, p.InheritFromExecutionParameterId })

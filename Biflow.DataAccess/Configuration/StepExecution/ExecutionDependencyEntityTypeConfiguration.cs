@@ -1,4 +1,4 @@
-﻿using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -8,6 +8,9 @@ internal class ExecutionDependencyEntityTypeConfiguration : IEntityTypeConfigura
 {
     public void Configure(EntityTypeBuilder<ExecutionDependency> builder)
     {
+        builder.ToTable("ExecutionDependency")
+            .HasKey(x => new { x.ExecutionId, x.StepId, x.DependantOnStepId });
+
         builder.HasOne(d => d.StepExecution)
             .WithMany(e => e.ExecutionDependencies)
             .HasForeignKey(d => new { d.ExecutionId, d.StepId })

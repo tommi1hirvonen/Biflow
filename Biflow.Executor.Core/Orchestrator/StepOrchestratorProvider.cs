@@ -1,4 +1,5 @@
-﻿using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Entities.Steps.Execution;
+using Biflow.DataAccess.Models;
 using Biflow.Executor.Core.StepExecutor;
 
 namespace Biflow.Executor.Core.Orchestrator;

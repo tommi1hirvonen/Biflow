@@ -1,4 +1,4 @@
-﻿using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -8,6 +8,10 @@ internal class DataObjectEntityTypeConfiguration : IEntityTypeConfiguration<Data
 {
     public void Configure(EntityTypeBuilder<DataObject> builder)
     {
+        builder.ToTable("DataObject");
+
+        builder.Property(x => x.ObjectUri).IsUnicode(false);
+
         builder.HasIndex(p => p.ObjectUri, "UQ_DataObject")
             .IsUnique();
     }

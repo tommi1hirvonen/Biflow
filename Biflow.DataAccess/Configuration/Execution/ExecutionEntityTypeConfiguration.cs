@@ -1,4 +1,4 @@
-﻿using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System.Text.Json;
@@ -9,6 +9,11 @@ internal class ExecutionEntityTypeConfiguration(AppDbContext context) : IEntityT
 {
     public void Configure(EntityTypeBuilder<Execution> builder)
     {
+        builder.ToTable("Execution")
+            .HasKey(x => x.ExecutionId);
+
+        builder.Property(x => x.CronExpression).IsUnicode(false);
+
         // The user is either admin or editor or is granted authorization to the job.
         builder.HasQueryFilter(exec =>
             context.UserRoles == null ||
@@ -19,6 +24,9 @@ internal class ExecutionEntityTypeConfiguration(AppDbContext context) : IEntityT
         builder.Property(p => p.ParentExecution).HasConversion(
             from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
             to => JsonSerializer.Deserialize<StepExecutionAttemptReference?>(to, null as JsonSerializerOptions));
+
+        builder.Property(p => p.ParentExecution)
+            .IsUnicode(false);
 
         builder.HasIndex(x => new { x.CreatedOn, x.EndedOn }, "IX_Execution_CreatedOn_EndedOn");
         builder.HasIndex(x => x.ExecutionStatus, "IX_Execution_ExecutionStatus");

@@ -1,4 +1,4 @@
-﻿using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -8,6 +8,12 @@ internal class JobParameterEntityTypeConfiguration : IEntityTypeConfiguration<Jo
 {
     public void Configure(EntityTypeBuilder<JobParameter> builder)
     {
+        builder.ToTable("JobParameter")
+            .HasKey(x => x.ParameterId);
+
+        builder.Property(x => x.JobId)
+            .HasColumnName("JobId");
+
         builder.OwnsOne(s => s.Expression, ece =>
         {
             ece.Property(p => p.Expression).HasColumnName("Expression");

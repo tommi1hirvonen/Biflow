@@ -1,4 +1,5 @@
-﻿using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Entities;
+using Biflow.Core.Interfaces;
 
 namespace Biflow.DataAccess;
 

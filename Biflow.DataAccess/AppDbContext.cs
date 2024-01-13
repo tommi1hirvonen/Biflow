@@ -1,6 +1,7 @@
-﻿using Biflow.DataAccess.Configuration;
+﻿using Biflow.Core.Entities;
+using Biflow.Core.Interfaces;
+using Biflow.DataAccess.Configuration;
 using Biflow.DataAccess.Convention;
-using Biflow.DataAccess.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;

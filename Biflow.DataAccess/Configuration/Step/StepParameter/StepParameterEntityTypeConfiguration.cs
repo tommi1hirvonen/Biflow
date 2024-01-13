@@ -1,4 +1,4 @@
-﻿using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -8,6 +8,12 @@ internal class StepParameterEntityTypeConfiguration : IEntityTypeConfiguration<S
 {
     public void Configure(EntityTypeBuilder<StepParameterBase> builder)
     {
+        builder.ToTable("StepParameter")
+            .HasKey(x => x.ParameterId);
+
+        builder.Property(x => x.StepId)
+            .HasColumnName("StepId");
+
         builder.HasOne(p => p.InheritFromJobParameter)
             .WithMany(p => p.InheritingStepParameters)
             .OnDelete(DeleteBehavior.ClientSetNull);

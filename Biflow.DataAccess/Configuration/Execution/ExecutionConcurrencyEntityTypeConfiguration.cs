@@ -1,4 +1,4 @@
-﻿using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -8,6 +8,8 @@ internal class ExecutionConcurrencyEntityTypeConfiguration : IEntityTypeConfigur
 {
     public void Configure(EntityTypeBuilder<ExecutionConcurrency> builder)
     {
+        builder.ToTable("ExecutionConcurrency");
+        builder.HasKey(c => new { c.ExecutionId, c.StepType });
         builder.HasOne(x => x.Execution)
             .WithMany(x => x.ExecutionConcurrencies)
             .OnDelete(DeleteBehavior.Cascade);
