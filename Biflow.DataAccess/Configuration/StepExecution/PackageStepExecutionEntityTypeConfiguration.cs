@@ -6,5 +6,6 @@ internal class PackageStepExecutionEntityTypeConfiguration : IEntityTypeConfigur
     {
         builder.Property(x => x.TimeoutMinutes).HasColumnName("TimeoutMinutes");
         builder.Property(x => x.ConnectionId).HasColumnName("ConnectionId");
+        builder.Ignore(x => x.PackagePath);
     }
 }

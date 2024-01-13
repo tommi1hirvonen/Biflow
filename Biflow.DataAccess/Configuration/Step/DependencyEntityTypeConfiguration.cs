@@ -7,6 +7,9 @@ internal class DependencyEntityTypeConfiguration : IEntityTypeConfiguration<Depe
         builder.ToTable("Dependency")
             .HasKey(x => new { x.StepId, x.DependantOnStepId });
 
+        builder.Ignore(x => x.IsCandidateForRemoval);
+        builder.Ignore(x => x.IsNewAddition);
+
         builder.HasOne(dependency => dependency.Step)
             .WithMany(step => step.Dependencies)
             .OnDelete(DeleteBehavior.ClientCascade);

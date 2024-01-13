@@ -1,7 +1,6 @@
 ﻿using Biflow.Core.Attributes.Validation;
 using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 
@@ -21,11 +20,9 @@ public partial class DataObject : IDataObject
     [Range(0, 100)]
     public int MaxConcurrentWrites { get; set; } = 1;
 
-    [NotMapped]
     [JsonIgnore]
     public DataObjectMappingResult SourceMappingResult { get; set; } = new();
     
-    [NotMapped]
     [JsonIgnore]
     public DataObjectMappingResult TargetMappingResult { get; set; } = new();
 

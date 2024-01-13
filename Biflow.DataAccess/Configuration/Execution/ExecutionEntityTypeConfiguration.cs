@@ -22,6 +22,8 @@ internal class ExecutionEntityTypeConfiguration(AppDbContext context) : IEntityT
             from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
             to => JsonSerializer.Deserialize<StepExecutionAttemptReference?>(to, null as JsonSerializerOptions));
 
+        builder.Ignore(x => x.ExecutionInSeconds);
+
         builder.Property(p => p.ParentExecution)
             .IsUnicode(false);
 

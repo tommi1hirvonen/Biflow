@@ -1,6 +1,5 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
@@ -135,7 +134,6 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
     [JsonIgnore]
     public override string DisplayValueType => InheritFromJobParameter?.DisplayValueType ?? base.DisplayValueType;
 
-    [NotMapped]
     [JsonIgnore]
     public IEnumerable<JobParameter> JobParameters => BaseStep.Job.JobParameters;
 }

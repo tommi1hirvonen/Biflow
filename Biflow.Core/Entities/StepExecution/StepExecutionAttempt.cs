@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.Core.Entities;
 
@@ -58,13 +57,10 @@ public abstract class StepExecutionAttempt
 
     public StepExecution StepExecution { get; set; } = null!;
 
-    [NotMapped]
     public string UniqueId => string.Concat(ExecutionId, StepId, RetryAttemptIndex);
 
-    [NotMapped]
     public double? ExecutionInSeconds => ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
 
-    [NotMapped]
     public bool CanBeStopped =>
         ExecutionStatus == StepExecutionStatus.Running
         || ExecutionStatus == StepExecutionStatus.AwaitingRetry

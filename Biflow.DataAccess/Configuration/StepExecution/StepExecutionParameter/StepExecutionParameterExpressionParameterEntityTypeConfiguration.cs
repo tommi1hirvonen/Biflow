@@ -8,6 +8,9 @@ internal class StepExecutionParameterExpressionParameterEntityTypeConfiguration
         builder.ToTable("ExecutionStepParameterExpressionParameter")
             .HasKey(x => new { x.ExecutionId, x.ParameterId });
 
+        builder.Ignore(x => x.InheritFromJobParameter);
+        builder.Ignore(x => x.InheritFromJobParameterId);
+
         builder.HasOne(x => x.StepParameter)
             .WithMany(x => x.ExpressionParameters)
             .HasForeignKey("ExecutionId", "StepParameterId")

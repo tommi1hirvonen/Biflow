@@ -1,5 +1,4 @@
 ﻿using Biflow.Core.Interfaces;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.Core.Entities;
 
@@ -78,13 +77,10 @@ public abstract class StepExecutionParameterBase : DynamicParameter, IHasExpress
 
     public override string DisplayValueType => InheritFromExecutionParameter?.DisplayValueType ?? base.DisplayValueType;
 
-    [NotMapped]
     private bool Evaluated { get; set; }
 
-    [NotMapped]
     private object? EvaluationResult { get; set; }
 
-    [NotMapped]
     public IEnumerable<ExecutionParameter> JobParameters => BaseStepExecution.Execution.ExecutionParameters;
 
     public override async Task<object?> EvaluateAsync()

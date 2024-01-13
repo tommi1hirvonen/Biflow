@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-
-namespace Biflow.Core.Entities;
+﻿namespace Biflow.Core.Entities;
 
 public class ExecutionParameter : DynamicParameter
 {
@@ -39,10 +37,8 @@ public class ExecutionParameter : DynamicParameter
     public override string DisplayValue =>
         UseExpression ? $"{ParameterValue} ({Expression.Expression})" : base.DisplayValue;
 
-    [NotMapped]
     private bool Evaluated { get; set; }
 
-    [NotMapped]
     private object? EvaluationResult { get; set; }
 
     public override async Task<object?> EvaluateAsync()

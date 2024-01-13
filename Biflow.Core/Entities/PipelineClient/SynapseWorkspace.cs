@@ -1,7 +1,6 @@
 ﻿using Azure.Identity;
 using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using SynapsePipelineClient = Azure.Analytics.Synapse.Artifacts.PipelineClient;
 
 namespace Biflow.Core.Entities;
@@ -12,7 +11,6 @@ public class SynapseWorkspace() : PipelineClient(PipelineClientType.Synapse)
     [MaxLength(500)]
     public string SynapseWorkspaceUrl { get; set; } = "";
 
-    [NotMapped]
     internal Uri SynapseEndpoint => new(SynapseWorkspaceUrl);
 
     internal const string ResourceUrl = "https://dev.azuresynapse.net//.default";

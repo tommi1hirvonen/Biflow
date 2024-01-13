@@ -13,6 +13,10 @@ internal class StepExecutionParameterEntityTypeConfiguration : IEntityTypeConfig
         builder.Property(x => x.ExecutionParameterValue)
             .HasColumnType("sql_variant");
 
+        builder.Ignore("Evaluated");
+        builder.Ignore("EvaluationResult");
+        builder.Ignore(x => x.JobParameters);
+
         builder.HasOne(p => p.InheritFromExecutionParameter)
             .WithMany(p => p.StepExecutionParameters)
             .HasForeignKey(p => new { p.ExecutionId, p.InheritFromExecutionParameterId })

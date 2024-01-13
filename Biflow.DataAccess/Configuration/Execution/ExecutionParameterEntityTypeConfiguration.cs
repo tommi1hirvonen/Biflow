@@ -7,6 +7,9 @@ internal class ExecutionParameterEntityTypeConfiguration : IEntityTypeConfigurat
         builder.ToTable("ExecutionParameter")
             .HasKey(x => new { x.ExecutionId, x.ParameterId });
 
+        builder.Ignore("Evaluated");
+        builder.Ignore("EvaluationResult");
+
         builder.OwnsOne(s => s.Expression, ece =>
         {
             ece.Property(p => p.Expression).HasColumnName("Expression");

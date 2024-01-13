@@ -7,6 +7,8 @@ internal class ConnectionInfoEntityTypeConfiguration : IEntityTypeConfiguration<
         builder.ToTable("Connection")
             .HasKey(x => x.ConnectionId);
 
+        builder.Ignore(x => x.Steps);
+
         builder.HasDiscriminator<ConnectionType>("ConnectionType")
             .HasValue<SqlConnectionInfo>(ConnectionType.Sql)
             .HasValue<AnalysisServicesConnectionInfo>(ConnectionType.AnalysisServices);

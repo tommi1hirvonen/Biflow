@@ -65,6 +65,5 @@ public class TabularStepExecution : StepExecution, IHasTimeout
     // Use a field excluded from the EF model to store the connection reference.
     // This is to avoid generating a foreign key constraint on the ExecutionStep table caused by a navigation property.
     // Make it private with public method access so that it is not used in EF Include method calls by accident.
-    [NotMapped]
     private AnalysisServicesConnectionInfo? _connection;
 }

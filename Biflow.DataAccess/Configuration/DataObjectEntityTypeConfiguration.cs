@@ -8,6 +8,9 @@ internal class DataObjectEntityTypeConfiguration : IEntityTypeConfiguration<Data
 
         builder.Property(x => x.ObjectUri).IsUnicode(false);
 
+        builder.Ignore(x => x.TargetMappingResult);
+        builder.Ignore(x => x.SourceMappingResult);
+
         builder.HasIndex(p => p.ObjectUri, "UQ_DataObject")
             .IsUnique();
     }

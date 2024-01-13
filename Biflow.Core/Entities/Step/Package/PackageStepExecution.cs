@@ -1,6 +1,5 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.Core.Entities;
 
@@ -55,7 +54,6 @@ public class PackageStepExecution : StepExecution, IHasTimeout, IHasStepExecutio
 
     public double TimeoutMinutes { get; private set; }
 
-    [NotMapped]
     public string? PackagePath => PackageFolderName + "/" + PackageProjectName + "/" + PackageName;
 
     public IList<PackageStepExecutionParameter> StepExecutionParameters { get; set; } = null!;
@@ -84,6 +82,5 @@ public class PackageStepExecution : StepExecution, IHasTimeout, IHasStepExecutio
     // Use a field excluded from the EF model to store the connection reference.
     // This is to avoid generating a foreign key constraint on the ExecutionStep table caused by a navigation property.
     // Make it private with public method access so that it is not used in EF Include method calls by accident.
-    [NotMapped]
     private SqlConnectionInfo? _connection;
 }

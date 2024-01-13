@@ -1,6 +1,5 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.Core.Entities;
 
@@ -35,14 +34,12 @@ public class StepExecutionParameterExpressionParameter : IExpressionParameter<Ex
 
     public ExecutionParameter InheritFromExecutionParameter { get; set; } = null!;
 
-    [NotMapped]
     public ExecutionParameter InheritFromJobParameter
     {
         get => InheritFromExecutionParameter;
         set => InheritFromExecutionParameter = value;
     }
 
-    [NotMapped]
     public Guid InheritFromJobParameterId
     {
         get => InheritFromExecutionParameterId;

@@ -12,6 +12,8 @@ internal class StepParameterEntityTypeConfiguration : IEntityTypeConfiguration<S
 
         builder.Property(x => x.ParameterValue).HasColumnType("sql_variant");
 
+        builder.Ignore(x => x.JobParameters);
+
         builder.HasOne(p => p.InheritFromJobParameter)
             .WithMany(p => p.InheritingStepParameters)
             .OnDelete(DeleteBehavior.ClientSetNull);

@@ -1,6 +1,5 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
@@ -45,11 +44,9 @@ public class Dependency : IAuditable
     [MaxLength(250)]
     public string? LastModifiedBy { get; set; }
 
-    [NotMapped]
     [JsonIgnore]
     public bool IsCandidateForRemoval { get; set; } = false;
 
-    [NotMapped]
     [JsonIgnore]
     public bool IsNewAddition { get; set; } = false;
 }

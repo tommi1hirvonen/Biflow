@@ -1,6 +1,5 @@
 ﻿using Biflow.Core.Attributes;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
@@ -33,7 +32,6 @@ public abstract class ConnectionInfoBase(ConnectionType connectionType) : ICompa
         _ => throw new ArgumentException("Object does not inherit from ConnectionInfoBase")
     };
 
-    [NotMapped]
     [JsonIgnore]
     public abstract IEnumerable<Step> Steps { get; }
 

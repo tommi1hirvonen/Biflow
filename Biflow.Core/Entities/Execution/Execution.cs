@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.Core.Entities;
 
@@ -118,7 +117,6 @@ public class Execution
 
     public ICollection<ExecutionDataObject> DataObjects { get; private set; } = null!;
 
-    [NotMapped]
     public double? ExecutionInSeconds => ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
 }
 

@@ -16,6 +16,10 @@ internal class StepExecutionAttemptEntityTypeConfiguration : IEntityTypeConfigur
         builder.ToTable("ExecutionStepAttempt")
             .HasKey(x => new { x.ExecutionId, x.StepId, x.RetryAttemptIndex });
 
+        builder.Ignore(x => x.UniqueId);
+        builder.Ignore(x => x.ExecutionInSeconds);
+        builder.Ignore(x => x.CanBeStopped);
+
         builder.HasDiscriminator<StepType>("StepType")
             .HasValue<DatasetStepExecutionAttempt>(StepType.Dataset)
             .HasValue<ExeStepExecutionAttempt>(StepType.Exe)
