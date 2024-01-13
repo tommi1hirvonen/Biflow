@@ -1,6 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-
-namespace Biflow.DataAccess.Configuration;
+﻿namespace Biflow.DataAccess.Configuration;
 
 internal static class Extensions
 {

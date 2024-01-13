@@ -1,6 +1,4 @@
-﻿using Biflow.Core.Entities;
-
-namespace Biflow.DataAccess;
+﻿namespace Biflow.DataAccess;
 
 public class StepsDuplicator : IDisposable
 {

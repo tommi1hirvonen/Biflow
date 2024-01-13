@@ -1,7 +1,4 @@
-﻿using Biflow.Core.Entities;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using System.Text.Json;
+﻿using System.Text.Json;
 
 namespace Biflow.DataAccess.Configuration;
 

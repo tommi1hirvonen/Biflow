@@ -1,6 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-
-namespace Biflow.DataAccess;
+﻿namespace Biflow.DataAccess;
 
 public class StepsDuplicatorFactory(IDbContextFactory<AppDbContext> dbContextFactory)
 {

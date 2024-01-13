@@ -1,7 +1,4 @@
-﻿using Biflow.Core.Entities;
-using Microsoft.EntityFrameworkCore;
-
-namespace Biflow.DataAccess;
+﻿namespace Biflow.DataAccess;
 
 public class JobDuplicatorFactory(IDbContextFactory<AppDbContext> dbContextFactory)
 {

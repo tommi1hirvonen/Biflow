@@ -1,7 +1,4 @@
-﻿using Biflow.Core.Entities;
-using Biflow.Core.Interfaces;
-
-namespace Biflow.DataAccess;
+﻿namespace Biflow.DataAccess;
 
 internal static class DuplicatorExtensions
 {
