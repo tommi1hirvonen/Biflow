@@ -4,6 +4,9 @@ internal class StepSubscriptionEntityTypeConfiguration : IEntityTypeConfiguratio
 {
     public void Configure(EntityTypeBuilder<StepSubscription> builder)
     {
+        builder.Property(x => x.AlertType).HasColumnName("AlertType");
+        builder.Property(x => x.StepId).HasColumnName("StepId");
+
         builder.HasOne(x => x.Step)
             .WithMany(x => x.StepSubscriptions)
             .OnDelete(DeleteBehavior.Cascade);

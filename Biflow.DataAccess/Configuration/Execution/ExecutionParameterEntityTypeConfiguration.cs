@@ -12,6 +12,8 @@ internal class ExecutionParameterEntityTypeConfiguration : IEntityTypeConfigurat
             ece.Property(p => p.Expression).HasColumnName("Expression");
         });
 
+        builder.Property(x => x.ParameterValue).HasColumnType("sql_variant");
+
         builder.Property(x => x.DefaultValue)
             .HasColumnType("sql_variant");
 

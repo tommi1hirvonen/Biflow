@@ -6,7 +6,6 @@ namespace Biflow.Core.Entities;
 
 public class Schedule
 {
-    [Key]
     [JsonInclude]
     public Guid ScheduleId { get; private set; }
 

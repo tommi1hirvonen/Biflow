@@ -51,10 +51,8 @@ public class PackageStepExecution : StepExecution, IHasTimeout, IHasStepExecutio
     [Display(Name = "Execute as login")]
     public string? ExecuteAsLogin { get; set; }
 
-    [Column("ConnectionId")]
     public Guid ConnectionId { get; private set; }
 
-    [Column("TimeoutMinutes")]
     public double TimeoutMinutes { get; private set; }
 
     [NotMapped]

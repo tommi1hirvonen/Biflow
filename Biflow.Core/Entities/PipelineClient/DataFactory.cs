@@ -4,26 +4,22 @@ using Biflow.Core.Interfaces;
 using Microsoft.Azure.Management.DataFactory;
 using Microsoft.Rest;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.Core.Entities;
 
 public class DataFactory() : PipelineClient(PipelineClientType.DataFactory)
 { 
-    [Column("SubscriptionId")]
     [Required]
     [Display(Name = "Subscription id")]
     [MaxLength(36)]
     [MinLength(36)]
     public string? SubscriptionId { get; set; }
 
-    [Column("ResourceGroupName")]
     [Required]
     [Display(Name = "Resource group name")]
     [MaxLength(250)]
     public string? ResourceGroupName { get; set; }
 
-    [Column("ResourceName")]
     [Required]
     [Display(Name = "Resource name")]
     [MaxLength(250)]

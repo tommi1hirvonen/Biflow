@@ -58,6 +58,5 @@ public class MasterDataTable
     [JsonIgnore]
     public ICollection<MasterDataTableLookup> DependentLookups { get; set; } = null!;
 
-    [Timestamp]
     public byte[]? Timestamp { get; set; }
 }

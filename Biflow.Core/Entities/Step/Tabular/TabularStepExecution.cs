@@ -36,10 +36,8 @@ public class TabularStepExecution : StepExecution, IHasTimeout
     [MaxLength(128)]
     public string? TabularPartitionName { get; private set; }
 
-    [Column("TimeoutMinutes")]
     public double TimeoutMinutes { get; private set; }
 
-    [Column("ConnectionId")]
     [Required]
     public Guid ConnectionId { get; private set; }
 

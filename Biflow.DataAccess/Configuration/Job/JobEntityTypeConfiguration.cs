@@ -7,7 +7,7 @@ internal class JobEntityTypeConfiguration(AppDbContext context) : IEntityTypeCon
         builder.ToTable("Job")
             .HasKey(x => x.JobId);
 
-        builder.Property(x => x.Timestamp).IsConcurrencyToken();
+        builder.Property(x => x.Timestamp).IsRowVersion();
 
         builder.Property(x => x.CategoryId).HasColumnName("JobCategoryId");
 

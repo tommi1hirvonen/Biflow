@@ -1,7 +1,6 @@
 ﻿using Biflow.Core.Attributes.Validation;
 using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
@@ -23,7 +22,6 @@ public class TabularStep : Step, IHasConnection<AnalysisServicesConnectionInfo>,
         Connection = other.Connection;
     }
 
-    [Column("TimeoutMinutes")]
     [Required]
     [Display(Name = "Timeout (min)")]
     [Range(0, 2880)] // 48 hours
@@ -43,7 +41,6 @@ public class TabularStep : Step, IHasConnection<AnalysisServicesConnectionInfo>,
     [MaxLength(128)]
     public string? TabularPartitionName { get; set; }
 
-    [Column("ConnectionId")]
     [Required]
     [NotEmptyGuid]
     public Guid ConnectionId { get; set; }

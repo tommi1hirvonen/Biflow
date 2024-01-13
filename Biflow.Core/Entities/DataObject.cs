@@ -1,4 +1,5 @@
 ﻿using Biflow.Core.Attributes.Validation;
+using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
@@ -8,7 +9,6 @@ namespace Biflow.Core.Entities;
 
 public partial class DataObject : IDataObject
 {
-    [Key]
     [JsonInclude]
     public Guid ObjectId { get; private set; }
 
@@ -138,18 +138,4 @@ public partial class DataObject : IDataObject
 
     [GeneratedRegex(@"[^\u0000-\u007F]+", RegexOptions.IgnoreCase, "en-US")]
     private static partial Regex NonAsciiCharsRegex();
-}
-
-public class DataObjectMappingResult
-{
-    public bool IsNewAddition { get; set; } = false;
-
-    public bool IsUnreliableMapping { get; set; } = false;
-
-    public bool IsCandidateForRemoval { get; set; } = false;
-}
-
-public interface IDataObject
-{
-    public string ObjectUri { get; }
 }

@@ -39,7 +39,6 @@ public class FunctionStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
     [Display(Name = "Is durable")]
     public bool FunctionIsDurable { get; private set; }
 
-    [Column("TimeoutMinutes")]
     public double TimeoutMinutes { get; private set; }
 
     public IList<FunctionStepExecutionParameter> StepExecutionParameters { get; set; } = null!;

@@ -17,7 +17,6 @@ public abstract class ParameterBase
     public string ParameterName { get; set; } = string.Empty;
 
     [Display(Name = "Value")]
-    [Column(TypeName = "sql_variant")]
     [JsonIgnore]
     public virtual object? ParameterValue
     {

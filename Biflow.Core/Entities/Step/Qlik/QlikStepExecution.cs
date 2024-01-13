@@ -25,7 +25,6 @@ public class QlikStepExecution : StepExecution, IHasTimeout
 
     public Guid QlikCloudClientId { get; private set; }
 
-    [Column("TimeoutMinutes")]
     public double TimeoutMinutes { get; private set; }
 
     /// <summary>

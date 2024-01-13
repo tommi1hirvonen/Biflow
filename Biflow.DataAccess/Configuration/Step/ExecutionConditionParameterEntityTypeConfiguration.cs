@@ -7,6 +7,8 @@ internal class ExecutionConditionParameterEntityTypeConfiguration : IEntityTypeC
         builder.ToTable("StepConditionParameter")
             .HasKey(x => x.ParameterId);
 
+        builder.Property(x => x.ParameterValue).HasColumnType("sql_variant");
+
         builder.HasOne(x => x.Step)
             .WithMany(x => x.ExecutionConditionParameters)
             .OnDelete(DeleteBehavior.Cascade);

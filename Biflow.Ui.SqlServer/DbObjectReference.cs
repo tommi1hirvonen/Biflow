@@ -1,4 +1,5 @@
 ﻿using Biflow.Core.Entities;
+using Biflow.Core.Interfaces;
 
 namespace Biflow.Ui.SqlServer;
 

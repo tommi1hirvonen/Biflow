@@ -1,6 +1,5 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.Core.Entities;
 
@@ -41,7 +40,6 @@ public class ExeStepExecution : StepExecution, IHasTimeout, IHasStepExecutionPar
     [Display(Name = "Success exit code")]
     public int? ExeSuccessExitCode { get; private set; }
 
-    [Column("TimeoutMinutes")]
     public double TimeoutMinutes { get; private set; }
 
     public IList<ExeStepExecutionParameter> StepExecutionParameters { get; set; } = null!;

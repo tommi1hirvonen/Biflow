@@ -5,5 +5,6 @@ internal class QlikStepExecutionEntityTypeConfiguration : IEntityTypeConfigurati
     public void Configure(EntityTypeBuilder<QlikStepExecution> builder)
     {
         builder.Property(x => x.AppId).IsUnicode(false);
+        builder.Property(x => x.TimeoutMinutes).HasColumnName("TimeoutMinutes");
     }
 }

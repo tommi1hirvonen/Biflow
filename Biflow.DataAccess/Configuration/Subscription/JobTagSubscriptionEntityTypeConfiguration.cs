@@ -4,6 +4,10 @@ internal class JobTagSubscriptionEntityTypeConfiguration : IEntityTypeConfigurat
 {
     public void Configure(EntityTypeBuilder<JobTagSubscription> builder)
     {
+        builder.Property(x => x.AlertType).HasColumnName("AlertType");
+        builder.Property(x => x.JobId).HasColumnName("JobId");
+        builder.Property(x => x.TagId).HasColumnName("TagId");
+
         builder.HasOne(x => x.Job)
             .WithMany(x => x.JobTagSubscriptions)
             .OnDelete(DeleteBehavior.Cascade);

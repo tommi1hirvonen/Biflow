@@ -2,7 +2,6 @@
 using Biflow.Core.Attributes.Validation;
 using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
@@ -26,7 +25,6 @@ public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepPa
             .ToList();
     }
         
-    [Column("TimeoutMinutes")]
     [Required]
     [Display(Name = "Timeout (min)")]
     [Range(0, 2880)] // 48 hours

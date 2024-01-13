@@ -1,5 +1,4 @@
 ﻿using Biflow.Core.Interfaces;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.Core.Entities;
 
@@ -27,13 +26,10 @@ public class EmailStepExecution : StepExecution, IHasStepExecutionParameters<Ema
     /// <summary>
     /// Comma separated list of recipient email addresses
     /// </summary>
-    [Column("EmailRecipients")]
     public string Recipients { get; private set; }
 
-    [Column("EmailSubject")]
     public string Subject { get; private set; }
 
-    [Column("EmailBody")]
     public string Body { get; private set; }
 
     public IList<EmailStepExecutionParameter> StepExecutionParameters { get; set; } = null!;

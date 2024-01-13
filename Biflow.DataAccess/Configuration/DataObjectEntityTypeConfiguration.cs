@@ -4,7 +4,7 @@ internal class DataObjectEntityTypeConfiguration : IEntityTypeConfiguration<Data
 {
     public void Configure(EntityTypeBuilder<DataObject> builder)
     {
-        builder.ToTable("DataObject");
+        builder.ToTable("DataObject").HasKey(x => x.ObjectId);
 
         builder.Property(x => x.ObjectUri).IsUnicode(false);
 

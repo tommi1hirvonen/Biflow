@@ -23,7 +23,6 @@ public class SqlStepExecution : StepExecution, IHasTimeout, IHasStepExecutionPar
         StepExecutionAttempts = new[] { new SqlStepExecutionAttempt(this) };
     }
 
-    [Column("ConnectionId")]
     public Guid ConnectionId { get; private set; }
 
     [Display(Name = "SQL statement")]
@@ -32,12 +31,10 @@ public class SqlStepExecution : StepExecution, IHasTimeout, IHasStepExecutionPar
     [Display(Name = "Result capture job parameter")]
     public Guid? ResultCaptureJobParameterId { get; private set; }
 
-    [Column(TypeName = "sql_variant")]
     public object? ResultCaptureJobParameterValue { get; set; }
 
     public ExecutionParameter? ResultCaptureJobParameter { get; set; }
 
-    [Column("TimeoutMinutes")]
     public double TimeoutMinutes { get; private set; }
 
     public IList<SqlStepExecutionParameter> StepExecutionParameters { get; set; } = null!;

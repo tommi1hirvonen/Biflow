@@ -32,7 +32,6 @@ public class PipelineStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
     [Display(Name = "Pipeline client id")]
     public Guid PipelineClientId { get; private set; }
 
-    [Column("TimeoutMinutes")]
     public double TimeoutMinutes { get; private set; }
 
     public IList<PipelineStepExecutionParameter> StepExecutionParameters { get; set; } = null!;

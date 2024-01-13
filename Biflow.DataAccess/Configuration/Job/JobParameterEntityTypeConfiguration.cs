@@ -10,6 +10,8 @@ internal class JobParameterEntityTypeConfiguration : IEntityTypeConfiguration<Jo
         builder.Property(x => x.JobId)
             .HasColumnName("JobId");
 
+        builder.Property(x => x.ParameterValue).HasColumnType("sql_variant");
+
         builder.OwnsOne(s => s.Expression, ece =>
         {
             ece.Property(p => p.Expression).HasColumnName("Expression");

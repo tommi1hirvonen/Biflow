@@ -7,7 +7,7 @@ internal class StepEntityTypeConfiguration : IEntityTypeConfiguration<Step>
         builder.ToTable("Step")
             .HasKey(x => x.StepId);
 
-        builder.Property(x => x.Timestamp).IsConcurrencyToken();
+        builder.Property(x => x.Timestamp).IsRowVersion();
 
         builder.HasDiscriminator<StepType>("StepType")
             .HasValue<DatasetStep>(StepType.Dataset)

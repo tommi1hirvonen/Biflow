@@ -11,6 +11,8 @@ internal class MasterDataTableEntityTypeConfiguration(AppDbContext context)
         builder.Property(x => x.CategoryId)
             .HasColumnName("DataTableCategoryId");
 
+        builder.Property(x => x.Timestamp).IsRowVersion();
+
         builder.Property(x => x.TargetSchemaName)
             .IsUnicode(false);
         builder.Property(x => x.TargetTableName)
