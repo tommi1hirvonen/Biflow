@@ -1,4 +1,5 @@
-﻿using Biflow.DataAccess.Models;
+﻿using Biflow.Core.Entities;
+using Biflow.Core.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -90,7 +91,7 @@ public class DatabaseFixture : IAsyncLifetime
                 ConnectionString = "Data Source=localhost;Password=asd"
             };
 
-            var appRegistration = new AppRegistration(_tokenService)
+            var appRegistration = new AppRegistration
             {
                 AppRegistrationName = "Test app registration",
                 ClientId = "some-client-id",
@@ -98,7 +99,7 @@ public class DatabaseFixture : IAsyncLifetime
                 TenantId = "some-tenant-id"
             };
 
-            var dataFactory = new DataFactory(_tokenService)
+            var dataFactory = new DataFactory
             {
                 AppRegistration = appRegistration,
                 PipelineClientName = "Test Data Factory",
@@ -107,14 +108,14 @@ public class DatabaseFixture : IAsyncLifetime
                 ResourceName = "some-resource-name"
             };
 
-            var synapseWorkspace = new SynapseWorkspace(_tokenService)
+            var synapseWorkspace = new SynapseWorkspace
             {
                 AppRegistration = appRegistration,
                 PipelineClientName = "Test Synapse",
                 SynapseWorkspaceUrl = "some-workspace-url"
             };
 
-            var functionApp = new FunctionApp(_tokenService, _httpClientFactory)
+            var functionApp = new FunctionApp
             {
                 AppRegistration = appRegistration,
                 FunctionAppName = "Test function app",
@@ -124,14 +125,14 @@ public class DatabaseFixture : IAsyncLifetime
                 FunctionAppKey = "somefunctionappkey"
             };
 
-            var qlikClient = new QlikCloudClient(_httpClientFactory)
+            var qlikClient = new QlikCloudClient
             {
                 QlikCloudClientName = "Test Qlik Cloud Client",
                 EnvironmentUrl = "https://test-qlik-url.com",
                 ApiToken = "some-api-token"
             };
 
-            var blobClient1 = new BlobStorageClient(_tokenService)
+            var blobClient1 = new BlobStorageClient
             {
                 AppRegistration = appRegistration,
                 BlobStorageClientName = "Test blob storage client",
@@ -139,14 +140,14 @@ public class DatabaseFixture : IAsyncLifetime
                 StorageAccountUrl = "https://some-storage-account-url.com/"
             };
 
-            var blobClient2 = new BlobStorageClient(_tokenService)
+            var blobClient2 = new BlobStorageClient
             {
                 BlobStorageClientName = "Test blob storage client 2",
                 ConnectionMethod = BlobStorageConnectionMethod.Url,
                 StorageAccountUrl = "https://some-storage-account-url.com?sig=asdasd"
             };
 
-            var blobClient3 = new BlobStorageClient(_tokenService)
+            var blobClient3 = new BlobStorageClient
             {
                 BlobStorageClientName = "Test blob storage client 3",
                 ConnectionMethod = BlobStorageConnectionMethod.ConnectionString,

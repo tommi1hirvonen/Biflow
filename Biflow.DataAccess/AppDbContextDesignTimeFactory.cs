@@ -17,6 +17,6 @@ internal class AppDbContextDesignTimeFactory : IDesignTimeDbContextFactory<AppDb
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(settings)
             .Build();
-        return new AppDbContext(configuration, null!, null!);
+        return new AppDbContext(configuration);
     }
 }

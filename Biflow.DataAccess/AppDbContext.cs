@@ -15,29 +15,16 @@ namespace Biflow.DataAccess;
 public class AppDbContext : DbContext
 {
     private readonly string _connectionString;
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly ITokenService _tokenService;
     private readonly IHttpContextAccessor? _httpContextAccessor;
 
-    public AppDbContext(
-        IConfiguration configuration,
-        IHttpClientFactory httpClientFactory,
-        ITokenService tokenService,
-        IHttpContextAccessor? httpContextAccessor = null)
+    public AppDbContext(IConfiguration configuration, IHttpContextAccessor? httpContextAccessor = null)
     {
         _connectionString = configuration.GetConnectionString("AppDbContext")
             ?? throw new ApplicationException("Connection string not found");
         _httpContextAccessor = httpContextAccessor;
 
-        _httpClientFactory = httpClientFactory;
-        _tokenService = tokenService;
-
         SavingChanges += OnSavingChanges;
     }
-
-    internal IHttpClientFactory HttpClientFactory => _httpClientFactory;
-
-    internal ITokenService TokenService => _tokenService;
 
     internal string? Username => _httpContextAccessor?.HttpContext?.User.Identity?.Name;
 
