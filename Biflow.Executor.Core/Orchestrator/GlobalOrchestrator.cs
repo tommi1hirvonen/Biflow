@@ -198,10 +198,7 @@ internal class GlobalOrchestrator(
             attempt.ExecutionStatus = status;
             attempt.StartedOn = DateTimeOffset.Now;
             attempt.EndedOn = DateTimeOffset.Now;
-            if (!string.IsNullOrEmpty(errorMessage))
-            {
-                attempt.AddError(errorMessage);
-            }
+            attempt.AddError(errorMessage);
             context.Attach(attempt).State = EntityState.Modified;
         }
         await context.SaveChangesAsync();
