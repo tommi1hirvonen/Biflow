@@ -1,4 +1,5 @@
 ﻿using Biflow.Core.Attributes;
+using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -51,4 +52,7 @@ public class FunctionApp
 
     [JsonIgnore]
     public IList<FunctionStep> Steps { get; set; } = null!;
+
+    public FunctionAppClient CreateClient(ITokenService tokenService, IHttpClientFactory httpClientFactory) =>
+        new(this, tokenService, httpClientFactory);
 }
