@@ -129,7 +129,7 @@ public class DatabaseFixture : IAsyncLifetime
                 ValueInt32 = 10,
                 InheritFromJobParameter = jobParameter1
             };
-            step2.StepParameters = [step2Parameter];
+            step2.StepParameters.Add(step2Parameter);
 
             job1.Steps.AddRange([step1, step2]);
 
