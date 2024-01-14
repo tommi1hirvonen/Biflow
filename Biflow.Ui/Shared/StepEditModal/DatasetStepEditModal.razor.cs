@@ -69,11 +69,7 @@ public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            AppRegistrationId = AppRegistrations.First().AppRegistrationId,
-            Dependencies = new List<Dependency>(),
-            Tags = new List<Tag>(),
-            DataObjects = new List<StepDataObject>(),
-            ExecutionConditionParameters = new List<ExecutionConditionParameter>()
+            AppRegistrationId = AppRegistrations.First().AppRegistrationId
         };
     }
 }

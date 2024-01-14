@@ -37,11 +37,7 @@ public partial class QlikStepEditModal : StepEditModal<QlikStep>
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
             TimeoutMinutes = 0,
-            QlikCloudClientId = client.QlikCloudClientId,
-            Dependencies = new List<Dependency>(),
-            Tags = new List<Tag>(),
-            DataObjects = new List<StepDataObject>(),
-            ExecutionConditionParameters = new List<ExecutionConditionParameter>()
+            QlikCloudClientId = client.QlikCloudClientId
         };
     }
 

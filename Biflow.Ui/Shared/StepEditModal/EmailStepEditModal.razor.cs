@@ -26,10 +26,6 @@ public partial class EmailStepEditModal : StepEditModal<EmailStep>
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            Dependencies = new List<Dependency>(),
-            Tags = new List<Tag>(),
-            StepParameters = new List<EmailStepParameter>(),
-            DataObjects = new List<StepDataObject>(),
-            ExecutionConditionParameters = new List<ExecutionConditionParameter>()
+            StepParameters = new List<EmailStepParameter>()
         };
 }

@@ -120,7 +120,7 @@ public class DatabaseFixture : IAsyncLifetime
                 DependantOnStep = step1,
                 DependencyType = DependencyType.OnCompleted
             };
-            step2.Dependencies = [step2Dependency];
+            step2.Dependencies.Add(step2Dependency);
             var step2Parameter = new SqlStepParameter
             {
                 Step = step2,

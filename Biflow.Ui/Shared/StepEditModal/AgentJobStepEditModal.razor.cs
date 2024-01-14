@@ -16,11 +16,7 @@ public partial class AgentJobStepEditModal : StepEditModal<AgentJobStep>
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            ConnectionId = Connections.First().ConnectionId,
-            Dependencies = new List<Dependency>(),
-            Tags = new List<Tag>(),
-            DataObjects = new List<StepDataObject>(),
-            ExecutionConditionParameters = new List<ExecutionConditionParameter>()
+            ConnectionId = Connections.First().ConnectionId
         };
 
     protected override Task<AgentJobStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>

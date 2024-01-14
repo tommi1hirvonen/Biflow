@@ -20,11 +20,7 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
             PipelineClientId = PipelineClients.First().PipelineClientId,
-            StepParameters = new List<PipelineStepParameter>(),
-            Dependencies = new List<Dependency>(),
-            Tags = new List<Tag>(),
-            DataObjects = new List<StepDataObject>(),
-            ExecutionConditionParameters = new List<ExecutionConditionParameter>()
+            StepParameters = new List<PipelineStepParameter>()
         };
 
     protected override Task<PipelineStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>

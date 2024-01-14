@@ -174,7 +174,7 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
         }
     }
 
-    private async Task MapExistingDataObjectsAsync(IList<StepDataObject> dataObjects)
+    private async Task MapExistingDataObjectsAsync(ICollection<StepDataObject> dataObjects)
     {
         var allObjects = await GetDataObjectsAsync();
         var replace = dataObjects.Where(d => d.ObjectId == Guid.Empty && allObjects.Any(o => o.UriEquals(d.DataObject))).ToArray();

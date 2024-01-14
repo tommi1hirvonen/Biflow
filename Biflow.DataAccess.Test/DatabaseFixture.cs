@@ -234,7 +234,7 @@ public class DatabaseFixture : IAsyncLifetime
                 DependantOnStep = step1,
                 DependencyType = DependencyType.OnCompleted
             };
-            step2.Dependencies = [step2Dependency];
+            step2.Dependencies.Add(step2Dependency);
             var step2Parameter = new SqlStepParameter
             {
                 Step = step2,
@@ -278,7 +278,7 @@ public class DatabaseFixture : IAsyncLifetime
                 ParameterValueType = ParameterValueType.DateTime,
                 ParameterName = "dt"
             };
-            step4.ExecutionConditionParameters = [step4ExecConditionParam];
+            step4.ExecutionConditionParameters.Add(step4ExecConditionParam);
             var step4Dependency = new Dependency
             {
                 StepId = step4.StepId,
@@ -287,7 +287,7 @@ public class DatabaseFixture : IAsyncLifetime
                 DependantOnStep = step3,
                 DependencyType = DependencyType.OnSucceeded
             };
-            step4.Dependencies = [step4Dependency];
+            step4.Dependencies.Add(step4Dependency);
             var step4Parameter = new SqlStepParameter
             {
                 Step = step4,
@@ -330,7 +330,7 @@ public class DatabaseFixture : IAsyncLifetime
             var dataObjectLink_3_4 = new StepDataObject { DataObject = step3Target, Step = step4, ReferenceType = DataObjectReferenceType.Source };
             step3Target.Steps.AddRange([dataObjectLink_3_3, dataObjectLink_3_4]);
 
-            step3.DataObjects = [dataObjectLink_3_3];
+            step3.DataObjects.Add(dataObjectLink_3_3);
 
             var step4Target = new DataObject
             {
@@ -341,7 +341,7 @@ public class DatabaseFixture : IAsyncLifetime
             var dataObjectLink_4_4 = new StepDataObject { DataObject = step4Target, Step = step4, ReferenceType = DataObjectReferenceType.Target };
             step4Target.Steps.AddRange([dataObjectLink_4_4]);
 
-            step4.DataObjects = [dataObjectLink_4_4];
+            step4.DataObjects.Add(dataObjectLink_4_4);
 
             job1.Steps.AddRange([step1, step2, step3, step4, step_1_5]);
             #endregion

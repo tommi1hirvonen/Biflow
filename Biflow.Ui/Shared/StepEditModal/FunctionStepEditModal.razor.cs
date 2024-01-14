@@ -72,11 +72,7 @@ public partial class FunctionStepEditModal : StepEditModal<FunctionStep>
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
             FunctionAppId = FunctionApps.First().FunctionAppId,
-            Dependencies = new List<Dependency>(),
-            Tags = new List<Tag>(),
-            StepParameters = new List<FunctionStepParameter>(),
-            DataObjects = new List<StepDataObject>(),
-            ExecutionConditionParameters = new List<ExecutionConditionParameter>()
+            StepParameters = new List<FunctionStepParameter>()
         };
 
     private enum InputLanguage { Text, Json }

@@ -50,9 +50,7 @@ public class Job : IAuditable
             .Select(map =>
             {
                 // Map dependencies from ids to new ids.
-                map.Copy.Dependencies = map.Orig.Dependencies
-                    .Select(d => mapDependency(map.Copy, d))
-                    .ToList();
+                map.Copy.Dependencies.AddRange(map.Orig.Dependencies.Select(d => mapDependency(map.Copy, d)));
                 return map.Copy;
             })
             .ToList();

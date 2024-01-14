@@ -15,11 +15,7 @@ public partial class TabularStepEditModal : StepEditModal<TabularStep>
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            ConnectionId = AsConnections.First().ConnectionId,
-            Dependencies = new List<Dependency>(),
-            Tags = new List<Tag>(),
-            DataObjects = new List<StepDataObject>(),
-            ExecutionConditionParameters = new List<ExecutionConditionParameter>()
+            ConnectionId = AsConnections.First().ConnectionId
         };
 
     protected override Task<TabularStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>
