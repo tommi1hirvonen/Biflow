@@ -138,8 +138,7 @@ public class DatabaseFixture : IAsyncLifetime
                 JobId = job1.JobId,
                 Job = job1,
                 ScheduleName = "Test schedule 1",
-                CronExpression = "",
-                Tags = []
+                CronExpression = ""
             };
 
             var user1 = new User
@@ -177,7 +176,7 @@ public class DatabaseFixture : IAsyncLifetime
                 AlertType = AlertType.OnCompletion
             };
 
-            user1.Subscriptions = [sub1, sub2, sub3, sub4];
+            user1.Subscriptions.AddRange([sub1, sub2, sub3, sub4]);
 
             context.AddRange(job1, schedule1, user1);
             await context.SaveChangesAsync();

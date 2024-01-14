@@ -493,17 +493,16 @@ public class DatabaseFixture : IAsyncLifetime
                 JobId = job1.JobId,
                 Job = job1,
                 ScheduleName = "Test schedule 1",
-                CronExpression = "",
-                Tags = []
+                CronExpression = ""
             };
             var schedule2 = new Schedule
             {
                 JobId = job2.JobId,
                 Job = job2,
                 ScheduleName = "Test schedule 2",
-                CronExpression = "",
-                Tags = [tag1]
+                CronExpression = ""
             };
+            schedule2.Tags.Add(tag1);
             #endregion
 
             #region DATA TABLES

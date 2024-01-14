@@ -134,7 +134,7 @@
 
     [Parameter] public EventCallback<Schedule> OnSubmit { get; set; }
 
-    private Schedule schedule = new() { Tags = new List<Tag>() }; // assign placeholder
+    private Schedule schedule = new(); // assign placeholder
     private HxOffcanvas? offcanvas;
     private List<string> tags = new();
     private IEnumerable<Tag> allTags = Enumerable.Empty<Tag>();
@@ -219,8 +219,7 @@
             ArgumentNullException.ThrowIfNull(jobId);
             schedule = new()
             {
-                JobId = (Guid)jobId,
-                Tags = new List<Tag>()
+                JobId = (Guid)jobId
             };
         }
 

@@ -33,9 +33,9 @@ public class User : IAuditable
     [MaxLength(250)]
     public string? LastModifiedBy { get; set; }
 
-    public ICollection<Subscription> Subscriptions { get; set; } = null!;
+    public ICollection<Subscription> Subscriptions { get; } = new List<Subscription>();
 
-    public ICollection<Job> Jobs { get; set; } = null!;
+    public ICollection<Job> Jobs { get; } = new List<Job>();
 
-    public ICollection<MasterDataTable> DataTables { get; set; } = null!;
+    public ICollection<MasterDataTable> DataTables { get; } = new List<MasterDataTable>();
 }

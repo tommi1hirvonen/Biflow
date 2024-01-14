@@ -16,17 +16,17 @@ public class Tag(string tagName) : ITag
     public TagColor Color { get; set; }
 
     [JsonIgnore]
-    public IList<Step> Steps { get; set; } = null!;
+    public ICollection<Step> Steps { get; } = new List<Step>();
 
     [JsonIgnore]
-    public IList<JobStep> JobSteps { get; set; } = null!;
+    public IEnumerable<JobStep> JobSteps { get; } = new List<JobStep>();
 
     [JsonIgnore]
-    public IList<Schedule> Schedules { get; set; } = null!;
+    public IEnumerable<Schedule> Schedules { get; } = new List<Schedule>();
 
     [JsonIgnore]
-    public IList<TagSubscription> TagSubscriptions { get; set; } = null!;
+    public IEnumerable<TagSubscription> TagSubscriptions { get; } = new List<TagSubscription>();
 
     [JsonIgnore]
-    public IList<JobTagSubscription> JobTagSubscriptions { get; set; } = null!;
+    public IEnumerable<JobTagSubscription> JobTagSubscriptions { get; } = new List<JobTagSubscription>();
 }
