@@ -145,7 +145,7 @@
             users.Remove(existingUser);
         }
         users.Add(user);
-        users.Sort((u1, u2) => u1.Username.CompareTo(u2.Username));
+        users.SortBy(u => u.Username);
     }
 
     private async Task ShowEditModalAsync(User? user)

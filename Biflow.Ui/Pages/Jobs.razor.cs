@@ -193,7 +193,7 @@ public partial class Jobs : ComponentBase
             jobs?.Remove(remove);
         }
         jobs?.Add(job);
-        jobs?.Sort((j1, j2) => j1.JobName.CompareTo(j2.JobName));
+        jobs?.SortBy(x => x.JobName);
     }
 
     private void OnCategorySubmitted(JobCategory category)
@@ -204,7 +204,7 @@ public partial class Jobs : ComponentBase
             categories?.Remove(remove);
         }
         categories?.Add(category);
-        categories?.Sort((c1, c2) => c1.CategoryName.CompareTo(c2.CategoryName));
+        categories?.SortBy(x => x.CategoryName);
     }
 
     private async Task DeleteCategoryAsync(JobCategory category)
