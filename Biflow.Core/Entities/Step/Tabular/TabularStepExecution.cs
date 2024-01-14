@@ -19,7 +19,7 @@ public class TabularStepExecution : StepExecution, IHasTimeout
         TimeoutMinutes = step.TimeoutMinutes;
         ConnectionId = step.ConnectionId;
 
-        StepExecutionAttempts = new[] { new TabularStepExecutionAttempt(this) };
+        StepExecutionAttempts.Add(new TabularStepExecutionAttempt(this));
     }
 
     [Display(Name = "Model name")]

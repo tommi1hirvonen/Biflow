@@ -29,7 +29,7 @@ public class PackageStepExecution : StepExecution, IHasTimeout, IHasStepExecutio
         StepExecutionParameters = step.StepParameters
             .Select(p => new PackageStepExecutionParameter(p, this))
             .ToArray();
-        StepExecutionAttempts = new[] { new PackageStepExecutionAttempt(this) };
+        StepExecutionAttempts.Add(new PackageStepExecutionAttempt(this));
     }
 
     [MaxLength(128)]

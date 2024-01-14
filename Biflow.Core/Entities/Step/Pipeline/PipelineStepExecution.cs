@@ -21,7 +21,7 @@ public class PipelineStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
         StepExecutionParameters = step.StepParameters
             .Select(p => new PipelineStepExecutionParameter(p, this))
             .ToArray();
-        StepExecutionAttempts = new[] { new PipelineStepExecutionAttempt(this) };
+        StepExecutionAttempts.Add(new PipelineStepExecutionAttempt(this));
     }
 
     [Display(Name = "Pipeline name")]

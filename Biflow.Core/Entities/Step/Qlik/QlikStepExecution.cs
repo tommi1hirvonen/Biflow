@@ -16,7 +16,7 @@ public class QlikStepExecution : StepExecution, IHasTimeout
         AppId = step.AppId;
         QlikCloudClientId = step.QlikCloudClientId;
         TimeoutMinutes = step.TimeoutMinutes;
-        StepExecutionAttempts = new[] { new QlikStepExecutionAttempt(this) };
+        StepExecutionAttempts.Add(new QlikStepExecutionAttempt(this));
     }
 
     [MaxLength(36)]

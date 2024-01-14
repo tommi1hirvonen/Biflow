@@ -16,7 +16,7 @@ public class DatasetStepExecution : StepExecution
         DatasetGroupId = step.DatasetGroupId;
         DatasetId = step.DatasetId;
 
-        StepExecutionAttempts = new[] { new DatasetStepExecutionAttempt(this) };
+        StepExecutionAttempts.Add(new DatasetStepExecutionAttempt(this));
     }
 
     [Display(Name = "App registration id")]

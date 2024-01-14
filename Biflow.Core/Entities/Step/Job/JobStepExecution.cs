@@ -21,7 +21,7 @@ public class JobStepExecution : StepExecution, IHasStepExecutionParameters<JobSt
         StepExecutionParameters = step.StepParameters
             .Select(p => new JobStepExecutionParameter(p, this))
             .ToArray();
-        StepExecutionAttempts = new[] { new JobStepExecutionAttempt(this) };
+        StepExecutionAttempts.Add(new JobStepExecutionAttempt(this));
     }
 
     [Display(Name = "Job to execute")]

@@ -19,7 +19,7 @@ public class SqlStepExecution : StepExecution, IHasTimeout, IHasStepExecutionPar
         StepExecutionParameters = step.StepParameters
             .Select(p => new SqlStepExecutionParameter(p, this))
             .ToArray();
-        StepExecutionAttempts = new[] { new SqlStepExecutionAttempt(this) };
+        StepExecutionAttempts.Add(new SqlStepExecutionAttempt(this));
     }
 
     public Guid ConnectionId { get; private set; }

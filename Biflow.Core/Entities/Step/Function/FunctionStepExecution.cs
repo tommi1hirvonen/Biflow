@@ -22,7 +22,7 @@ public class FunctionStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
         StepExecutionParameters = step.StepParameters
             .Select(p => new FunctionStepExecutionParameter(p, this))
             .ToArray();
-        StepExecutionAttempts = new[] { new FunctionStepExecutionAttempt(this) };
+        StepExecutionAttempts.Add(new FunctionStepExecutionAttempt(this));
     }
 
     [Display(Name = "Function app id")]

@@ -20,7 +20,7 @@ public class EmailStepExecution : StepExecution, IHasStepExecutionParameters<Ema
         StepExecutionParameters = step.StepParameters
             .Select(p => new EmailStepExecutionParameter(p, this))
             .ToArray();
-        StepExecutionAttempts = new[] { new EmailStepExecutionAttempt(this) };
+        StepExecutionAttempts.Add(new EmailStepExecutionAttempt(this));
     }
 
     /// <summary>
