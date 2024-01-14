@@ -25,7 +25,7 @@ public abstract class PipelineClient(PipelineClientType type)
     public AppRegistration AppRegistration { get; set; } = null!;
 
     [JsonIgnore]
-    public IList<PipelineStep> Steps { get; set; } = null!;
+    public IEnumerable<PipelineStep> Steps { get; } = new List<PipelineStep>();
 
     public abstract IPipelineClient CreatePipelineClient(ITokenService tokenService);
 }

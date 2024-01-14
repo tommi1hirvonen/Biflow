@@ -328,7 +328,7 @@ public class DatabaseFixture : IAsyncLifetime
 
             var dataObjectLink_3_3 = new StepDataObject { DataObject = step3Target, Step = step3, ReferenceType = DataObjectReferenceType.Target };
             var dataObjectLink_3_4 = new StepDataObject { DataObject = step3Target, Step = step4, ReferenceType = DataObjectReferenceType.Source };
-            step3Target.Steps = [dataObjectLink_3_3, dataObjectLink_3_4];
+            step3Target.Steps.AddRange([dataObjectLink_3_3, dataObjectLink_3_4]);
 
             step3.DataObjects = [dataObjectLink_3_3];
 
@@ -339,7 +339,7 @@ public class DatabaseFixture : IAsyncLifetime
             };
 
             var dataObjectLink_4_4 = new StepDataObject { DataObject = step4Target, Step = step4, ReferenceType = DataObjectReferenceType.Target };
-            step4Target.Steps = [dataObjectLink_4_4];
+            step4Target.Steps.AddRange([dataObjectLink_4_4]);
 
             step4.DataObjects = [dataObjectLink_4_4];
 

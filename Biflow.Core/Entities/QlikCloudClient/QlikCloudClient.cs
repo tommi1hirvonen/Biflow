@@ -23,7 +23,7 @@ public class QlikCloudClient
     public required string ApiToken { get; set; }
 
     [JsonIgnore]
-    public ICollection<QlikStep> Steps { get; set; } = null!;
+    public IEnumerable<QlikStep> Steps { get; } = new List<QlikStep>();
 
     public QlikCloudConnectedClient CreateConnectedClient(IHttpClientFactory httpClientFactory) =>
         new(this, httpClientFactory);
