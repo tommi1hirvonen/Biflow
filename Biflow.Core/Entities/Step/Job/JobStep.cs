@@ -34,7 +34,7 @@ public class JobStep : Step, IHasStepParameters<JobStepParameter>
     [ValidateComplexType]
     public IList<JobStepParameter> StepParameters { get; } = new List<JobStepParameter>();
 
-    public IList<Tag> TagFilters { get; set; } = null!;
+    public ICollection<Tag> TagFilters { get; init; } = new List<Tag>();
 
     public override JobStep Copy(Job? targetJob = null) => new(this, targetJob);
 
