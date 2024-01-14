@@ -1,4 +1,5 @@
-﻿using Biflow.Core.Entities;
+﻿using Biflow.Core;
+using Biflow.Core.Entities;
 using Biflow.Core.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -200,9 +201,9 @@ public class DatabaseFixture : IAsyncLifetime
                     """
                 }
             };
-            job1.JobParameters = [jobParameter1, jobParameter2, jobParameter3, jobParameter4];
+            job1.JobParameters.AddRange([jobParameter1, jobParameter2, jobParameter3, jobParameter4]);
             var jobConcurrency = new JobConcurrency { Job = job1, StepType = StepType.Sql, MaxParallelSteps = 1 };
-            job1.JobConcurrencies = [jobConcurrency];
+            job1.JobConcurrencies.Add(jobConcurrency);
 
             var tag1 = new Tag("Test tag") { Color = TagColor.DarkGray };
             var tag2 = new Tag("Another tag") { Color = TagColor.Red };
@@ -342,7 +343,7 @@ public class DatabaseFixture : IAsyncLifetime
 
             step4.DataObjects = [dataObjectLink_4_4];
 
-            job1.Steps = [step1, step2, step3, step4, step_1_5];
+            job1.Steps.AddRange([step1, step2, step3, step4, step_1_5]);
             #endregion
 
             #region JOB 2
@@ -483,7 +484,7 @@ public class DatabaseFixture : IAsyncLifetime
                 PackageName = "TestPackage.dtsx"
             };
 
-            job2.Steps = [step5, step6, step7, step8, step9, step10, step11, step12, step13, step14, step15, step16, step17, step18];
+            job2.Steps.AddRange([step5, step6, step7, step8, step9, step10, step11, step12, step13, step14, step15, step16, step17, step18]);
             #endregion
 
             #region SCHEDULES

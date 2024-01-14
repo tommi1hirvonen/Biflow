@@ -67,8 +67,8 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
 
         foreach (var job in jobs)
         {
-            job.Steps = steps.Where(s => s.JobId == job.JobId).ToArray();
-            job.Schedules = schedules.Where(s => s.JobId == job.JobId).ToArray();
+            job.Steps.AddRange(steps.Where(s => s.JobId == job.JobId));
+            job.Schedules.AddRange(schedules.Where(s => s.JobId == job.JobId));
         }
 
         var tags = await context.Tags

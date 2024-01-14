@@ -1,4 +1,5 @@
-﻿using Biflow.Core.Entities;
+﻿using Biflow.Core;
+using Biflow.Core.Entities;
 using Biflow.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -86,9 +87,9 @@ public class DatabaseFixture : IAsyncLifetime
                 ParameterValueType = ParameterValueType.String,
                 ValueString = "Hello world"
             };
-            job1.JobParameters = [jobParameter1];
+            job1.JobParameters.Add(jobParameter1);
             var jobConcurrency = new JobConcurrency { Job = job1, StepType = StepType.Sql, MaxParallelSteps = 1 };
-            job1.JobConcurrencies = [jobConcurrency];
+            job1.JobConcurrencies.Add(jobConcurrency);
 
             var tag1 = new Tag("test-tag-1") { Color = TagColor.DarkGray };
             var tag2 = new Tag("test-tag-2") { Color = TagColor.LightGray };
@@ -130,7 +131,7 @@ public class DatabaseFixture : IAsyncLifetime
             };
             step2.StepParameters = [step2Parameter];
 
-            job1.Steps = [step1, step2];
+            job1.Steps.AddRange([step1, step2]);
 
             var schedule1 = new Schedule
             {

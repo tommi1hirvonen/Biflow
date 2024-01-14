@@ -1,4 +1,5 @@
-﻿using Biflow.Core.Entities;
+﻿using Biflow.Core;
+using Biflow.Core.Entities;
 using Biflow.Core.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
@@ -259,8 +260,8 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
 
         foreach (var job in Jobs)
         {
-            job.Steps = Steps.Where(s => s.JobId == job.JobId).ToArray();
-            job.Schedules = Schedules.Where(s => s.JobId == job.JobId).ToArray();
+            job.Steps.AddRange(Steps.Where(s => s.JobId == job.JobId));
+            job.Schedules.AddRange(Schedules.Where(s => s.JobId == job.JobId));
         }
 
         Tags = await context.Tags

@@ -14,5 +14,5 @@ public class JobCategory
     public string CategoryName { get; set; } = "";
 
     [JsonIgnore]
-    public ICollection<Job> Jobs { get; set; } = null!;
+    public IEnumerable<Job> Jobs { get; } = new List<Job>();
 }

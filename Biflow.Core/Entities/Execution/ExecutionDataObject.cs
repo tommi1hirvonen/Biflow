@@ -25,5 +25,5 @@ public class ExecutionDataObject
 
     public int MaxConcurrentWrites { get; private set; } = 1;
 
-    public IList<StepExecutionDataObject> StepExecutions { get; set; } = null!;
+    public IEnumerable<StepExecutionDataObject> StepExecutions { get; } = new List<StepExecutionDataObject>();
 }

@@ -40,19 +40,19 @@ public class AppRegistration
     public string? ClientSecret { get; set; }
 
     [JsonIgnore]
-    public IList<DatasetStep> Steps { get; set; } = null!;
+    public IEnumerable<DatasetStep> Steps { get; } = new List<DatasetStep>();
 
     [JsonIgnore]
-    public IList<PipelineClient> PipelineClients { get; set; } = null!;
+    public IEnumerable<PipelineClient> PipelineClients { get; } = new List<PipelineClient>();
 
     [JsonIgnore]
-    public IList<FunctionApp> FunctionApps { get; set; } = null!;
+    public IEnumerable<FunctionApp> FunctionApps { get; } = new List<FunctionApp>();
 
     [JsonIgnore]
-    public IList<BlobStorageClient> BlobStorageClients { get; set; } = null!;
+    public IEnumerable<BlobStorageClient> BlobStorageClients { get; } = new List<BlobStorageClient>();
 
     [JsonIgnore]
-    public IList<AccessToken> AccessTokens { get; set; } = null!;
+    public IEnumerable<AccessToken> AccessTokens { get; } = new List<AccessToken>();
 
     internal const string PowerBIResourceUrl = "https://analysis.windows.net/powerbi/api/.default";
     private const string AzureResourceUrl = "https://management.azure.com//.default";

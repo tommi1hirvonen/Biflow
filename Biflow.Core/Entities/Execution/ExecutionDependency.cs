@@ -24,7 +24,7 @@ public class ExecutionDependency
     [Display(Name = "Type")]
     public DependencyType DependencyType { get; private set; }
 
-    public StepExecution StepExecution { get; set; } = null!;
+    public StepExecution StepExecution { get; private set; } = null!;
 
-    public StepExecution? DependantOnStepExecution { get; set; }
+    public StepExecution? DependantOnStepExecution { get; private set; }
 }
