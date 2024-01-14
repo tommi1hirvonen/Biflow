@@ -54,7 +54,6 @@ public partial class DataTableEditModal : ComponentBase, IDisposable
             editTable = new()
             {
                 Connection = connections.First(),
-                Lookups = new List<MasterDataTableLookup>(),
                 ConnectionId = connections!.First().ConnectionId
             };
         }

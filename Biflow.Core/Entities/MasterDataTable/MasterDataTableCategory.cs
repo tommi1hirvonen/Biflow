@@ -13,5 +13,5 @@ public class MasterDataTableCategory
     public string CategoryName { get; set; } = "";
 
     [JsonIgnore]
-    public ICollection<MasterDataTable> Tables { get; set; } = null!;
+    public IEnumerable<MasterDataTable> Tables { get; } = new List<MasterDataTable>();
 }

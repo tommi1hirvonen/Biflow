@@ -540,7 +540,7 @@ public class DatabaseFixture : IAsyncLifetime
                 LookupDescriptionColumn = "Customer Group Name",
                 LookupDisplayType = LookupDisplayType.ValueAndDescription
             };
-            table2.Lookups = [lookup];
+            table2.Lookups.Add(lookup);
             #endregion
 
             context.AddRange(job1, job2, schedule1, schedule2, blobClient1, blobClient2, blobClient3, table1, table2);
