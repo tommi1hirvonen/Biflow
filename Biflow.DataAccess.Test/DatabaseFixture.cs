@@ -242,7 +242,7 @@ public class DatabaseFixture : IAsyncLifetime
                 ParameterValueType = ParameterValueType.Int32,
                 ValueInt32 = 10
             };
-            step2.StepParameters = [step2Parameter];
+            step2.StepParameters.Add(step2Parameter);
 
             var step3 = new SqlStep
             {
@@ -259,7 +259,7 @@ public class DatabaseFixture : IAsyncLifetime
                 ParameterValueType = ParameterValueType.String,
                 InheritFromJobParameter = jobParameter1
             };
-            step3.StepParameters = [step3Parameter];
+            step3.StepParameters.Add(step3Parameter);
 
             var step4 = new SqlStep
             {
@@ -301,7 +301,7 @@ public class DatabaseFixture : IAsyncLifetime
                     """
                 }
             };
-            step4.StepParameters = [step4Parameter];
+            step4.StepParameters.Add(step4Parameter);
 
             var step_1_5 = new SqlStep
             {
@@ -318,7 +318,7 @@ public class DatabaseFixture : IAsyncLifetime
                 ParameterValueType = ParameterValueType.String,
                 InheritFromJobParameter = jobParameter4
             };
-            step_1_5.StepParameters = [step_1_5_param];
+            step_1_5.StepParameters.Add(step_1_5_param);
 
             var step3Target = new DataObject
             {

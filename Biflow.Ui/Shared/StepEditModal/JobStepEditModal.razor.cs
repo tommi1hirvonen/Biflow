@@ -35,7 +35,6 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
             JobToExecuteId = null,
-            StepParameters = new List<JobStepParameter>(),
             TagFilters = new List<Tag>()
         };
 

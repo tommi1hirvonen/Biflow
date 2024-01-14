@@ -30,7 +30,7 @@ public class JobStepExecution : StepExecution, IHasStepExecutionParameters<JobSt
     [Display(Name = "Synchronized")]
     public bool JobExecuteSynchronized { get; private set; }
 
-    public IList<JobStepExecutionParameter> StepExecutionParameters { get; set; } = null!;
+    public IEnumerable<JobStepExecutionParameter> StepExecutionParameters { get; } = new List<JobStepExecutionParameter>();
 
     /// <summary>
     /// List of tag tuples that should be used to filter steps in executed job.

@@ -42,5 +42,5 @@ public class ExeStepExecution : StepExecution, IHasTimeout, IHasStepExecutionPar
 
     public double TimeoutMinutes { get; private set; }
 
-    public IList<ExeStepExecutionParameter> StepExecutionParameters { get; set; } = null!;
+    public IEnumerable<ExeStepExecutionParameter> StepExecutionParameters { get; } = new List<ExeStepExecutionParameter>();
 }

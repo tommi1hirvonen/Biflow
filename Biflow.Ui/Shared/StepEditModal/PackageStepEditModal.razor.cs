@@ -16,8 +16,7 @@ public partial class PackageStepEditModal : StepEditModal<PackageStep>
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            ConnectionId = Connections.First().ConnectionId,
-            StepParameters = new List<PackageStepParameter>()
+            ConnectionId = Connections.First().ConnectionId
         };
 
     protected override Task<PackageStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>

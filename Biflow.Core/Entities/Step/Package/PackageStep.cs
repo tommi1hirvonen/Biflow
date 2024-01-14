@@ -67,7 +67,7 @@ public class PackageStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout,
     public SqlConnectionInfo Connection { get; set; } = null!;
 
     [ValidateComplexType]
-    public IList<PackageStepParameter> StepParameters { get; set; } = null!;
+    public IList<PackageStepParameter> StepParameters { get; } = new List<PackageStepParameter>();
 
     public override StepExecution ToStepExecution(Execution execution) => new PackageStepExecution(this, execution);
 

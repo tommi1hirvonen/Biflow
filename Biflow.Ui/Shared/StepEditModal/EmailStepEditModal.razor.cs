@@ -25,7 +25,6 @@ public partial class EmailStepEditModal : StepEditModal<EmailStep>
             JobId = job.JobId,
             Job = job,
             RetryAttempts = 0,
-            RetryIntervalMinutes = 0,
-            StepParameters = new List<EmailStepParameter>()
+            RetryIntervalMinutes = 0
         };
 }

@@ -33,7 +33,7 @@ public class PipelineStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
 
     public double TimeoutMinutes { get; private set; }
 
-    public IList<PipelineStepExecutionParameter> StepExecutionParameters { get; set; } = null!;
+    public IEnumerable<PipelineStepExecutionParameter> StepExecutionParameters { get; } = new List<PipelineStepExecutionParameter>();
 
     /// <summary>
     /// Get the <see cref="PipelineClient"/> entity associated with this <see cref="StepExecution"/>.

@@ -36,7 +36,7 @@ public class SqlStepExecution : StepExecution, IHasTimeout, IHasStepExecutionPar
 
     public double TimeoutMinutes { get; private set; }
 
-    public IList<SqlStepExecutionParameter> StepExecutionParameters { get; set; } = null!;
+    public IEnumerable<SqlStepExecutionParameter> StepExecutionParameters { get; } = new List<SqlStepExecutionParameter>();
 
     /// <summary>
     /// Get the <see cref="SqlConnectionInfo"/> entity associated with this <see cref="StepExecution"/>.

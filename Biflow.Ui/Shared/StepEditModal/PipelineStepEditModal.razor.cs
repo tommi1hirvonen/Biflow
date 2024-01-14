@@ -19,8 +19,7 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            PipelineClientId = PipelineClients.First().PipelineClientId,
-            StepParameters = new List<PipelineStepParameter>()
+            PipelineClientId = PipelineClients.First().PipelineClientId
         };
 
     protected override Task<PipelineStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>

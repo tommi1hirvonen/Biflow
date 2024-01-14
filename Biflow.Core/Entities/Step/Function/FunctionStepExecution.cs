@@ -40,7 +40,7 @@ public class FunctionStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
 
     public double TimeoutMinutes { get; private set; }
 
-    public IList<FunctionStepExecutionParameter> StepExecutionParameters { get; set; } = null!;
+    public IEnumerable<FunctionStepExecutionParameter> StepExecutionParameters { get; } = new List<FunctionStepExecutionParameter>();
 
     /// <summary>
     /// Get the <see cref="FunctionApp"/> entity associated with this <see cref="StepExecution"/>.

@@ -56,7 +56,7 @@ public class PackageStepExecution : StepExecution, IHasTimeout, IHasStepExecutio
 
     public string? PackagePath => PackageFolderName + "/" + PackageProjectName + "/" + PackageName;
 
-    public IList<PackageStepExecutionParameter> StepExecutionParameters { get; set; } = null!;
+    public IEnumerable<PackageStepExecutionParameter> StepExecutionParameters { get; } = new List<PackageStepExecutionParameter>();
 
     /// <summary>
     /// Get the <see cref="SqlConnectionInfo"/> entity associated with this <see cref="StepExecution"/>.

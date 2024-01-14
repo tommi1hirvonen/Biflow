@@ -32,7 +32,7 @@ public class EmailStepExecution : StepExecution, IHasStepExecutionParameters<Ema
 
     public string Body { get; private set; }
 
-    public IList<EmailStepExecutionParameter> StepExecutionParameters { get; set; } = null!;
+    public IEnumerable<EmailStepExecutionParameter> StepExecutionParameters { get; } = new List<EmailStepExecutionParameter>();
 
     public List<string> GetRecipientsAsList() =>
         Recipients

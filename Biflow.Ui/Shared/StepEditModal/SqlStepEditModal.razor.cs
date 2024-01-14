@@ -46,8 +46,7 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            ConnectionId = Connections.First().ConnectionId,
-            StepParameters = new List<SqlStepParameter>()
+            ConnectionId = Connections.First().ConnectionId
         };
 
     private Task OpenStoredProcedureSelectModal() => storedProcedureSelectModal.LetAsync(x => x.ShowAsync());
