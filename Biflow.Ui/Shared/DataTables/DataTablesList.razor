@@ -232,7 +232,7 @@
             Tables?.Remove(toRemove);
         }
         Tables?.Add(table);
-        Tables?.Sort((t1, t2) => t1.DataTableName.CompareTo(t2.DataTableName));
+        Tables?.SortBy(x => x.DataTableName);
 
         foreach (var lookup in Tables?.SelectMany(t => t.Lookups) ?? [])
         {
@@ -282,7 +282,7 @@
             Categories?.Remove(remove);
         }
         Categories?.Add(category);
-        Categories?.Sort((c1, c2) => c1.CategoryName.CompareTo(c2.CategoryName));
+        Categories?.SortBy(x => x.CategoryName);
     }
 
     private void ExpandAll()

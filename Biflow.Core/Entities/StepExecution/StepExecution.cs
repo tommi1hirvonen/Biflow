@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.Core.Entities;
 
@@ -66,15 +65,15 @@ public abstract class StepExecution
 
     public Execution Execution { get; set; } = null!;
 
-    public ICollection<StepExecutionAttempt> StepExecutionAttempts { get; set; } = null!;
+    public ICollection<StepExecutionAttempt> StepExecutionAttempts { get; } = new List<StepExecutionAttempt>();
 
-    public ICollection<ExecutionDependency> ExecutionDependencies { get; set; } = null!;
+    public ICollection<ExecutionDependency> ExecutionDependencies { get; } = new List<ExecutionDependency>();
 
-    public ICollection<ExecutionDependency> DependantExecutions { get; set; } = null!;
+    public IEnumerable<ExecutionDependency> DependantExecutions { get; } = new List<ExecutionDependency>();
 
-    public IList<StepExecutionConditionParameter> ExecutionConditionParameters { get; set; } = null!;
+    public IEnumerable<StepExecutionConditionParameter> ExecutionConditionParameters { get; } = new List<StepExecutionConditionParameter>();
 
-    public IList<StepExecutionDataObject> DataObjects { get; set; } = null!;
+    public IEnumerable<StepExecutionDataObject> DataObjects { get; } = new List<StepExecutionDataObject>();
 
     /// <summary>
     /// Get the <see cref="Step"/> entity associated with this <see cref="StepExecution"/>.

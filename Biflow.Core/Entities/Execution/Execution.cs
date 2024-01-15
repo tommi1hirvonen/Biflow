@@ -109,13 +109,13 @@ public class Execution
     [MaxLength(200)]
     public StepExecutionAttemptReference? ParentExecution { get; private set; }
 
-    public ICollection<StepExecution> StepExecutions { get; private set; } = null!;
+    public ICollection<StepExecution> StepExecutions { get; } = new List<StepExecution>();
 
-    public ICollection<ExecutionParameter> ExecutionParameters { get; private set; } = null!;
+    public IEnumerable<ExecutionParameter> ExecutionParameters { get; } = new List<ExecutionParameter>();
 
-    public ICollection<ExecutionConcurrency> ExecutionConcurrencies { get; private set; } = null!;
+    public IEnumerable<ExecutionConcurrency> ExecutionConcurrencies { get; } = new List<ExecutionConcurrency>();
 
-    public ICollection<ExecutionDataObject> DataObjects { get; private set; } = null!;
+    public IEnumerable<ExecutionDataObject> DataObjects { get; } = new List<ExecutionDataObject>();
 
     public double? ExecutionInSeconds => ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
 }

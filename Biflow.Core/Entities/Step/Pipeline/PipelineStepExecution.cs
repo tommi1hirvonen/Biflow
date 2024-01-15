@@ -1,6 +1,5 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.Core.Entities;
 
@@ -22,7 +21,7 @@ public class PipelineStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
         StepExecutionParameters = step.StepParameters
             .Select(p => new PipelineStepExecutionParameter(p, this))
             .ToArray();
-        StepExecutionAttempts = new[] { new PipelineStepExecutionAttempt(this) };
+        StepExecutionAttempts.Add(new PipelineStepExecutionAttempt(this));
     }
 
     [Display(Name = "Pipeline name")]
@@ -34,7 +33,7 @@ public class PipelineStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
 
     public double TimeoutMinutes { get; private set; }
 
-    public IList<PipelineStepExecutionParameter> StepExecutionParameters { get; set; } = null!;
+    public IEnumerable<PipelineStepExecutionParameter> StepExecutionParameters { get; } = new List<PipelineStepExecutionParameter>();
 
     /// <summary>
     /// Get the <see cref="PipelineClient"/> entity associated with this <see cref="StepExecution"/>.

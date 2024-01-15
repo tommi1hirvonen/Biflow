@@ -22,5 +22,5 @@ public class ExecutionConcurrency
     [Range(0, 100)]
     public int MaxParallelSteps { get; private set; }
 
-    public Execution Execution { get; set; } = null!;
+    public Execution Execution { get; private set; } = null!;
 }

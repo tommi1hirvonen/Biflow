@@ -23,7 +23,7 @@ public class ExeStepExecution : StepExecution, IHasTimeout, IHasStepExecutionPar
         StepExecutionParameters = step.StepParameters
             .Select(p => new ExeStepExecutionParameter(p, this))
             .ToArray();
-        StepExecutionAttempts = new[] { new ExeStepExecutionAttempt(this) };
+        StepExecutionAttempts.Add(new ExeStepExecutionAttempt(this));
     }
 
     [Display(Name = "File path")]
@@ -42,5 +42,5 @@ public class ExeStepExecution : StepExecution, IHasTimeout, IHasStepExecutionPar
 
     public double TimeoutMinutes { get; private set; }
 
-    public IList<ExeStepExecutionParameter> StepExecutionParameters { get; set; } = null!;
+    public IEnumerable<ExeStepExecutionParameter> StepExecutionParameters { get; } = new List<ExeStepExecutionParameter>();
 }

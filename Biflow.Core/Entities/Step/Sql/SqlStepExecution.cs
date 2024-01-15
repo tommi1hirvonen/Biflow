@@ -1,6 +1,5 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Biflow.Core.Entities;
 
@@ -20,7 +19,7 @@ public class SqlStepExecution : StepExecution, IHasTimeout, IHasStepExecutionPar
         StepExecutionParameters = step.StepParameters
             .Select(p => new SqlStepExecutionParameter(p, this))
             .ToArray();
-        StepExecutionAttempts = new[] { new SqlStepExecutionAttempt(this) };
+        StepExecutionAttempts.Add(new SqlStepExecutionAttempt(this));
     }
 
     public Guid ConnectionId { get; private set; }
@@ -37,7 +36,7 @@ public class SqlStepExecution : StepExecution, IHasTimeout, IHasStepExecutionPar
 
     public double TimeoutMinutes { get; private set; }
 
-    public IList<SqlStepExecutionParameter> StepExecutionParameters { get; set; } = null!;
+    public IEnumerable<SqlStepExecutionParameter> StepExecutionParameters { get; } = new List<SqlStepExecutionParameter>();
 
     /// <summary>
     /// Get the <see cref="SqlConnectionInfo"/> entity associated with this <see cref="StepExecution"/>.

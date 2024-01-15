@@ -51,7 +51,7 @@ public class FunctionApp
     public AppRegistration AppRegistration { get; set; } = null!;
 
     [JsonIgnore]
-    public IList<FunctionStep> Steps { get; set; } = null!;
+    public IEnumerable<FunctionStep> Steps { get; } = new List<FunctionStep>();
 
     public FunctionAppClient CreateClient(ITokenService tokenService, IHttpClientFactory httpClientFactory) =>
         new(this, tokenService, httpClientFactory);

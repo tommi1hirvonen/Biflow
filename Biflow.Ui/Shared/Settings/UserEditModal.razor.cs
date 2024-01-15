@@ -153,9 +153,7 @@ public partial class UserEditModal : ComponentBase
             var user = new User
             {
                 Username = "",
-                Roles = [Roles.Viewer],
-                Jobs = new List<Job>(),
-                DataTables = new List<MasterDataTable>()
+                Roles = [Roles.Viewer]
             };
             model = new(user, new());
         }

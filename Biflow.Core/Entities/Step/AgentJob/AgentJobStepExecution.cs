@@ -16,7 +16,7 @@ public class AgentJobStepExecution : StepExecution, IHasTimeout
         TimeoutMinutes = step.TimeoutMinutes;
         ConnectionId = step.ConnectionId;
 
-        StepExecutionAttempts = new[] { new AgentJobStepExecutionAttempt(this) };
+        StepExecutionAttempts.Add(new AgentJobStepExecutionAttempt(this));
     }
 
     [Display(Name = "Agent job name")]

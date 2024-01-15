@@ -185,8 +185,7 @@ internal class GlobalOrchestrator(
         attempt.StartedOn ??= DateTimeOffset.Now;
         attempt.EndedOn = DateTimeOffset.Now;
         // Place the error message first on the list.
-        var error = new ErrorMessage($"Unhandled error caught in global orchestrator:\n\n{ex.Message}", ex.ToString());
-        attempt.ErrorMessages.Insert(0, error);
+        attempt.AddError(ex, $"Unhandled error caught in global orchestrator:\n\n{ex.Message}", insertFirst: true);
         context.Attach(attempt).State = EntityState.Modified;
         await context.SaveChangesAsync();
     }
@@ -199,8 +198,7 @@ internal class GlobalOrchestrator(
             attempt.ExecutionStatus = status;
             attempt.StartedOn = DateTimeOffset.Now;
             attempt.EndedOn = DateTimeOffset.Now;
-            if (!string.IsNullOrEmpty(errorMessage))
-                attempt.ErrorMessages.Add(new(errorMessage, null));
+            attempt.AddError(errorMessage);
             context.Attach(attempt).State = EntityState.Modified;
         }
         await context.SaveChangesAsync();

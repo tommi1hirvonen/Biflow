@@ -130,7 +130,6 @@ public partial class Jobs : ComponentBase
             using var duplicator = await JobDuplicatorFactory.CreateAsync(job.JobId);
             duplicator.Job.JobName = $"{duplicator.Job.JobName} – Copy";
             var createdJob = await duplicator.SaveJobAsync();
-            createdJob.Schedules = new List<Schedule>();
             jobs?.Add(createdJob);
             jobs = jobs?.OrderBy(job_ => job_.JobName).ToList();
         }
@@ -190,15 +189,11 @@ public partial class Jobs : ComponentBase
         var remove = jobs?.FirstOrDefault(j => j.JobId == job.JobId);
         if (remove is not null)
         {
-            job.Schedules = remove.Schedules;
+            job.Schedules.AddRange(remove.Schedules);
             jobs?.Remove(remove);
         }
-        else
-        {
-            job.Schedules = new List<Schedule>();
-        }
         jobs?.Add(job);
-        jobs?.Sort((j1, j2) => j1.JobName.CompareTo(j2.JobName));
+        jobs?.SortBy(x => x.JobName);
     }
 
     private void OnCategorySubmitted(JobCategory category)
@@ -209,7 +204,7 @@ public partial class Jobs : ComponentBase
             categories?.Remove(remove);
         }
         categories?.Add(category);
-        categories?.Sort((c1, c2) => c1.CategoryName.CompareTo(c2.CategoryName));
+        categories?.SortBy(x => x.CategoryName);
     }
 
     private async Task DeleteCategoryAsync(JobCategory category)

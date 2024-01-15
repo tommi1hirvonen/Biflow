@@ -87,7 +87,7 @@
         IHasExpressionParameters<TExpressionParameter, TJobParameter> parameter,
         TExpressionParameter expressionParameter)
     {
-        parameter.ExpressionParameters.Remove(expressionParameter);
+        parameter.RemoveExpressionParameter(expressionParameter);
         await ParametersValidator.LetAsync(x => x.ValidateAsync());
     }
 

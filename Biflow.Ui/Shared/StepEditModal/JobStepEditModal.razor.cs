@@ -34,13 +34,7 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            JobToExecuteId = null,
-            Dependencies = new List<Dependency>(),
-            Tags = new List<Tag>(),
-            DataObjects = new List<StepDataObject>(),
-            StepParameters = new List<JobStepParameter>(),
-            ExecutionConditionParameters = new List<ExecutionConditionParameter>(),
-            TagFilters = new List<Tag>()
+            JobToExecuteId = null
         };
 
     protected override async Task<JobStep> GetExistingStepAsync(AppDbContext context, Guid stepId)

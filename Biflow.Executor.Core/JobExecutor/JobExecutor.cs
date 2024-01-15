@@ -272,7 +272,7 @@ internal class JobExecutor(
             attempt.StartedOn = DateTimeOffset.Now;
             attempt.EndedOn = DateTimeOffset.Now;
             attempt.ExecutionStatus = StepExecutionStatus.Failed;
-            attempt.ErrorMessages.Add(new(errorMessage, null));
+            attempt.AddError(errorMessage);
             context.Attach(attempt).State = EntityState.Modified;
         }
 

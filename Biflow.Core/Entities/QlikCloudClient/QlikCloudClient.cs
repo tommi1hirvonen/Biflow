@@ -1,6 +1,5 @@
 ﻿using Biflow.Core.Attributes;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
@@ -24,7 +23,7 @@ public class QlikCloudClient
     public required string ApiToken { get; set; }
 
     [JsonIgnore]
-    public ICollection<QlikStep> Steps { get; set; } = null!;
+    public IEnumerable<QlikStep> Steps { get; } = new List<QlikStep>();
 
     public QlikCloudConnectedClient CreateConnectedClient(IHttpClientFactory httpClientFactory) =>
         new(this, httpClientFactory);

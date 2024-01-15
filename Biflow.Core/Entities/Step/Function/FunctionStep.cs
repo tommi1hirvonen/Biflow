@@ -60,7 +60,7 @@ public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepPa
     public FunctionApp FunctionApp { get; set; } = null!;
 
     [ValidateComplexType]
-    public IList<FunctionStepParameter> StepParameters { get; set; } = null!;
+    public IList<FunctionStepParameter> StepParameters { get; } = new List<FunctionStepParameter>();
 
     public override StepExecution ToStepExecution(Execution execution) => new FunctionStepExecution(this, execution);
 

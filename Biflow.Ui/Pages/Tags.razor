@@ -62,7 +62,7 @@
                             {
                                 var jobs = tag.Steps.Select(s => s.Job).Distinct().Count();
                                 var steps = tag.Steps.Count();
-                                var schedules = tag.Schedules.Count;
+                                var schedules = tag.Schedules.Count();
                                 <tr>
                                     <td class="align-middle">
                                         <TagBadge Tag="tag" />

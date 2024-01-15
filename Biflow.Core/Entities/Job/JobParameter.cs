@@ -27,19 +27,19 @@ public class JobParameter : DynamicParameter
     public Job Job { get; set; } = null!;
 
     [JsonIgnore]
-    public ICollection<StepParameterBase> InheritingStepParameters { get; set; } = null!;
+    public IEnumerable<StepParameterBase> InheritingStepParameters { get; } = new List<StepParameterBase>();
 
     [JsonIgnore]
-    public ICollection<JobStepParameter> AssigningStepParameters { get; set; } = null!;
+    public IEnumerable<JobStepParameter> AssigningStepParameters { get; } = new List<JobStepParameter>();
 
     [JsonIgnore]
-    public ICollection<StepParameterExpressionParameter> InheritingStepParameterExpressionParameters { get; set; } = null!;
+    public IEnumerable<StepParameterExpressionParameter> InheritingStepParameterExpressionParameters { get; } = new List<StepParameterExpressionParameter>();
 
     [JsonIgnore]
-    public ICollection<SqlStep> CapturingSteps { get; set; } = null!;
+    public IEnumerable<SqlStep> CapturingSteps { get; } = new List<SqlStep>();
 
     [JsonIgnore]
-    public ICollection<ExecutionConditionParameter> ExecutionConditionParameters { get; set; } = null!;
+    public IEnumerable<ExecutionConditionParameter> ExecutionConditionParameters { get; } = new List<ExecutionConditionParameter>();
 
     public override async Task<object?> EvaluateAsync()
     {

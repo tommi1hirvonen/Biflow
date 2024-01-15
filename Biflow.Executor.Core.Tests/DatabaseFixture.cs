@@ -1,4 +1,5 @@
-﻿using Biflow.Core.Entities;
+﻿using Biflow.Core;
+using Biflow.Core.Entities;
 using Biflow.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -86,9 +87,9 @@ public class DatabaseFixture : IAsyncLifetime
                 ParameterValueType = ParameterValueType.String,
                 ValueString = "Hello world"
             };
-            job1.JobParameters = [jobParameter1];
+            job1.JobParameters.Add(jobParameter1);
             var jobConcurrency = new JobConcurrency { Job = job1, StepType = StepType.Sql, MaxParallelSteps = 1 };
-            job1.JobConcurrencies = [jobConcurrency];
+            job1.JobConcurrencies.Add(jobConcurrency);
 
             var tag1 = new Tag("test-tag-1") { Color = TagColor.DarkGray };
             var tag2 = new Tag("test-tag-2") { Color = TagColor.LightGray };
@@ -119,7 +120,7 @@ public class DatabaseFixture : IAsyncLifetime
                 DependantOnStep = step1,
                 DependencyType = DependencyType.OnCompleted
             };
-            step2.Dependencies = [step2Dependency];
+            step2.Dependencies.Add(step2Dependency);
             var step2Parameter = new SqlStepParameter
             {
                 Step = step2,
@@ -128,17 +129,16 @@ public class DatabaseFixture : IAsyncLifetime
                 ValueInt32 = 10,
                 InheritFromJobParameter = jobParameter1
             };
-            step2.StepParameters = [step2Parameter];
+            step2.StepParameters.Add(step2Parameter);
 
-            job1.Steps = [step1, step2];
+            job1.Steps.AddRange([step1, step2]);
 
             var schedule1 = new Schedule
             {
                 JobId = job1.JobId,
                 Job = job1,
                 ScheduleName = "Test schedule 1",
-                CronExpression = "",
-                Tags = []
+                CronExpression = ""
             };
 
             var user1 = new User
@@ -176,7 +176,7 @@ public class DatabaseFixture : IAsyncLifetime
                 AlertType = AlertType.OnCompletion
             };
 
-            user1.Subscriptions = [sub1, sub2, sub3, sub4];
+            user1.Subscriptions.AddRange([sub1, sub2, sub3, sub4]);
 
             context.AddRange(job1, schedule1, user1);
             await context.SaveChangesAsync();

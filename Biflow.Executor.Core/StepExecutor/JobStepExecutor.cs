@@ -28,9 +28,9 @@ internal class JobStepExecutor(
         Guid jobExecutionId;
         try
         {
-            var tagIds = _step.TagFilters switch
+            var tagIds = _step.TagFilters.Any() switch
             {
-                { Count: > 0 } tags => tags.Select(t => t.TagId).ToArray(),
+                true => _step.TagFilters.Select(t => t.TagId).ToArray(),
                 _ => null
             };
             using var builder = await _executionBuilderFactory.CreateAsync(_step.JobToExecuteId, createdBy: null, parent: executionAttempt,

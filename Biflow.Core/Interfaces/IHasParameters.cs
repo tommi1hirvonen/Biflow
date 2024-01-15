@@ -4,5 +4,5 @@ namespace Biflow.Core.Interfaces;
 
 public interface IHasParameters
 {
-    public IList<ParameterBase> Parameters { get; }
+    public IEnumerable<ParameterBase> Parameters { get; }
 }

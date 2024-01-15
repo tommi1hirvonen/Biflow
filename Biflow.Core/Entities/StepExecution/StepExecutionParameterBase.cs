@@ -25,10 +25,12 @@ public abstract class StepExecutionParameterBase : DynamicParameter, IHasExpress
         InheritFromExecutionParameter = execution.Execution.ExecutionParameters.FirstOrDefault(p => p.ParameterId == parameter.InheritFromJobParameterId);
         UseExpression = parameter.UseExpression;
         Expression = parameter.Expression;
-        ExpressionParameters = parameter.ExpressionParameters
+        _expressionParameters = parameter.ExpressionParameters
             .Select(p => new StepExecutionParameterExpressionParameter(p, execution, this))
-            .ToArray();
+            .ToList();
     }
+
+    private readonly List<StepExecutionParameterExpressionParameter> _expressionParameters = [];
 
     public Guid ExecutionId { get; private set; }
 
@@ -64,7 +66,7 @@ public abstract class StepExecutionParameterBase : DynamicParameter, IHasExpress
 
     private bool _useExpression;
 
-    public IList<StepExecutionParameterExpressionParameter> ExpressionParameters { get; set; } = null!;
+    public IEnumerable<StepExecutionParameterExpressionParameter> ExpressionParameters => _expressionParameters;
 
     public abstract StepExecution BaseStepExecution { get; }
 
@@ -116,6 +118,8 @@ public abstract class StepExecutionParameterBase : DynamicParameter, IHasExpress
             InheritFromExecutionParameter = jobParameter,
             InheritFromExecutionParameterId = jobParameter.ParameterId
         };
-        ExpressionParameters.Add(expressionParameter);
+        _expressionParameters.Add(expressionParameter);
     }
+
+    public bool RemoveExpressionParameter(StepExecutionParameterExpressionParameter parameter) => _expressionParameters.Remove(parameter);
 }

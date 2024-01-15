@@ -50,9 +50,7 @@ public class Job : IAuditable
             .Select(map =>
             {
                 // Map dependencies from ids to new ids.
-                map.Copy.Dependencies = map.Orig.Dependencies
-                    .Select(d => mapDependency(map.Copy, d))
-                    .ToList();
+                map.Copy.Dependencies.AddRange(map.Orig.Dependencies.Select(d => mapDependency(map.Copy, d)));
                 return map.Copy;
             })
             .ToList();
@@ -103,28 +101,28 @@ public class Job : IAuditable
     public JobCategory? Category { get; set; }
 
     [ValidateComplexType]
-    public IList<JobParameter> JobParameters { get; set; } = null!;
+    public IList<JobParameter> JobParameters { get; } = new List<JobParameter>();
 
     [ValidateComplexType]
-    public ICollection<JobConcurrency> JobConcurrencies { get; set; } = null!;
+    public ICollection<JobConcurrency> JobConcurrencies { get; } = new List<JobConcurrency>();
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public ICollection<Step> Steps { get; set; } = null!;
+    public ICollection<Step> Steps { get; } = new List<Step>();
 
     [JsonIgnore]
-    public ICollection<JobStep> JobSteps { get; set; } = null!;
+    public IEnumerable<JobStep> JobSteps { get; } = new List<JobStep>();
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public ICollection<Schedule> Schedules { get; set; } = null!;
+    public ICollection<Schedule> Schedules { get; } = new List<Schedule>();
 
     [JsonIgnore]
-    public ICollection<JobSubscription> JobSubscriptions { get; set; } = null!;
+    public IEnumerable<JobSubscription> JobSubscriptions { get; } = new List<JobSubscription>();
 
     [JsonIgnore]
-    public ICollection<JobTagSubscription> JobTagSubscriptions { get; set; } = null!;
+    public IEnumerable<JobTagSubscription> JobTagSubscriptions { get; } = new List<JobTagSubscription>();
 
     [JsonIgnore]
-    public ICollection<User> Users { get; set; } = null!;
+    public IEnumerable<User> Users { get; } = new List<User>();
 
     [Display(Name = "Created")]
     public DateTimeOffset CreatedOn { get; set; }

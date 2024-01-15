@@ -40,5 +40,5 @@ public class Schedule
     [MaxLength(250)]
     public string? CreatedBy { get; set; }
 
-    public IList<Tag> Tags { get; set; } = null!;
+    public ICollection<Tag> Tags { get; } = new List<Tag>();
 }

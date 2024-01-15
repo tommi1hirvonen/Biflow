@@ -129,20 +129,20 @@ public abstract class Step : IComparable, IAuditable
 
     public byte[]? Timestamp { get; private set; }
 
-    public IList<Dependency> Dependencies { get; set; } = null!;
+    public ICollection<Dependency> Dependencies { get; } = new List<Dependency>();
 
-    public IList<Dependency> Depending { get; set; } = null!;
-
-    [ValidateComplexType]
-    public IList<StepDataObject> DataObjects { get; set; } = null!;
+    public IEnumerable<Dependency> Depending { get; } = new List<Dependency>();
 
     [ValidateComplexType]
-    public IList<ExecutionConditionParameter> ExecutionConditionParameters { get; set; } = null!;
+    public ICollection<StepDataObject> DataObjects { get; } = new List<StepDataObject>();
 
-    public IList<Tag> Tags { get; set; } = null!;
+    [ValidateComplexType]
+    public ICollection<ExecutionConditionParameter> ExecutionConditionParameters { get; } = new List<ExecutionConditionParameter>();
+
+    public ICollection<Tag> Tags { get; init; } = new List<Tag>();
 
     [JsonIgnore]
-    public ICollection<StepSubscription> StepSubscriptions { get; set; } = null!;
+    public IEnumerable<StepSubscription> StepSubscriptions { get; } = new List<StepSubscription>();
 
     public int CompareTo(object? obj)
     {

@@ -27,7 +27,7 @@ public partial class DataObject : IDataObject
     public DataObjectMappingResult TargetMappingResult { get; set; } = new();
 
     [JsonIgnore]
-    public IList<StepDataObject> Steps { get; set; } = null!;
+    public ICollection<StepDataObject> Steps { get; } = new List<StepDataObject>();
 
     public bool UriEquals(IDataObject? other) =>
         other is not null &&

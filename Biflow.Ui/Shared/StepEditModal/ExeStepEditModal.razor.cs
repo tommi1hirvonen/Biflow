@@ -10,12 +10,7 @@ public partial class ExeStepEditModal : StepEditModal<ExeStep>
             JobId = job.JobId,
             Job = job,
             RetryAttempts = 0,
-            RetryIntervalMinutes = 0,
-            Dependencies = new List<Dependency>(),
-            Tags = new List<Tag>(),
-            DataObjects = new List<StepDataObject>(),
-            ExecutionConditionParameters = new List<ExecutionConditionParameter>(),
-            StepParameters = new List<ExeStepParameter>()
+            RetryIntervalMinutes = 0
         };
 
     protected override Task<ExeStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>

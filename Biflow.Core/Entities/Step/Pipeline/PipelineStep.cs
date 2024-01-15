@@ -37,7 +37,7 @@ public class PipelineStep : Step, IHasTimeout, IHasStepParameters<PipelineStepPa
     public PipelineClient? PipelineClient { get; set; }
 
     [ValidateComplexType]
-    public IList<PipelineStepParameter> StepParameters { get; set; } = null!;
+    public IList<PipelineStepParameter> StepParameters { get; } = new List<PipelineStepParameter>();
 
     public override PipelineStep Copy(Job? targetJob = null) => new(this, targetJob);
 

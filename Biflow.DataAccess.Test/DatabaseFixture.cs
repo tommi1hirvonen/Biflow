@@ -1,4 +1,5 @@
-﻿using Biflow.Core.Entities;
+﻿using Biflow.Core;
+using Biflow.Core.Entities;
 using Biflow.Core.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -200,9 +201,9 @@ public class DatabaseFixture : IAsyncLifetime
                     """
                 }
             };
-            job1.JobParameters = [jobParameter1, jobParameter2, jobParameter3, jobParameter4];
+            job1.JobParameters.AddRange([jobParameter1, jobParameter2, jobParameter3, jobParameter4]);
             var jobConcurrency = new JobConcurrency { Job = job1, StepType = StepType.Sql, MaxParallelSteps = 1 };
-            job1.JobConcurrencies = [jobConcurrency];
+            job1.JobConcurrencies.Add(jobConcurrency);
 
             var tag1 = new Tag("Test tag") { Color = TagColor.DarkGray };
             var tag2 = new Tag("Another tag") { Color = TagColor.Red };
@@ -233,7 +234,7 @@ public class DatabaseFixture : IAsyncLifetime
                 DependantOnStep = step1,
                 DependencyType = DependencyType.OnCompleted
             };
-            step2.Dependencies = [step2Dependency];
+            step2.Dependencies.Add(step2Dependency);
             var step2Parameter = new SqlStepParameter
             {
                 Step = step2,
@@ -241,7 +242,7 @@ public class DatabaseFixture : IAsyncLifetime
                 ParameterValueType = ParameterValueType.Int32,
                 ValueInt32 = 10
             };
-            step2.StepParameters = [step2Parameter];
+            step2.StepParameters.Add(step2Parameter);
 
             var step3 = new SqlStep
             {
@@ -258,7 +259,7 @@ public class DatabaseFixture : IAsyncLifetime
                 ParameterValueType = ParameterValueType.String,
                 InheritFromJobParameter = jobParameter1
             };
-            step3.StepParameters = [step3Parameter];
+            step3.StepParameters.Add(step3Parameter);
 
             var step4 = new SqlStep
             {
@@ -277,7 +278,7 @@ public class DatabaseFixture : IAsyncLifetime
                 ParameterValueType = ParameterValueType.DateTime,
                 ParameterName = "dt"
             };
-            step4.ExecutionConditionParameters = [step4ExecConditionParam];
+            step4.ExecutionConditionParameters.Add(step4ExecConditionParam);
             var step4Dependency = new Dependency
             {
                 StepId = step4.StepId,
@@ -286,7 +287,7 @@ public class DatabaseFixture : IAsyncLifetime
                 DependantOnStep = step3,
                 DependencyType = DependencyType.OnSucceeded
             };
-            step4.Dependencies = [step4Dependency];
+            step4.Dependencies.Add(step4Dependency);
             var step4Parameter = new SqlStepParameter
             {
                 Step = step4,
@@ -300,7 +301,7 @@ public class DatabaseFixture : IAsyncLifetime
                     """
                 }
             };
-            step4.StepParameters = [step4Parameter];
+            step4.StepParameters.Add(step4Parameter);
 
             var step_1_5 = new SqlStep
             {
@@ -317,7 +318,7 @@ public class DatabaseFixture : IAsyncLifetime
                 ParameterValueType = ParameterValueType.String,
                 InheritFromJobParameter = jobParameter4
             };
-            step_1_5.StepParameters = [step_1_5_param];
+            step_1_5.StepParameters.Add(step_1_5_param);
 
             var step3Target = new DataObject
             {
@@ -327,9 +328,9 @@ public class DatabaseFixture : IAsyncLifetime
 
             var dataObjectLink_3_3 = new StepDataObject { DataObject = step3Target, Step = step3, ReferenceType = DataObjectReferenceType.Target };
             var dataObjectLink_3_4 = new StepDataObject { DataObject = step3Target, Step = step4, ReferenceType = DataObjectReferenceType.Source };
-            step3Target.Steps = [dataObjectLink_3_3, dataObjectLink_3_4];
+            step3Target.Steps.AddRange([dataObjectLink_3_3, dataObjectLink_3_4]);
 
-            step3.DataObjects = [dataObjectLink_3_3];
+            step3.DataObjects.Add(dataObjectLink_3_3);
 
             var step4Target = new DataObject
             {
@@ -338,11 +339,11 @@ public class DatabaseFixture : IAsyncLifetime
             };
 
             var dataObjectLink_4_4 = new StepDataObject { DataObject = step4Target, Step = step4, ReferenceType = DataObjectReferenceType.Target };
-            step4Target.Steps = [dataObjectLink_4_4];
+            step4Target.Steps.AddRange([dataObjectLink_4_4]);
 
-            step4.DataObjects = [dataObjectLink_4_4];
+            step4.DataObjects.Add(dataObjectLink_4_4);
 
-            job1.Steps = [step1, step2, step3, step4, step_1_5];
+            job1.Steps.AddRange([step1, step2, step3, step4, step_1_5]);
             #endregion
 
             #region JOB 2
@@ -483,7 +484,7 @@ public class DatabaseFixture : IAsyncLifetime
                 PackageName = "TestPackage.dtsx"
             };
 
-            job2.Steps = [step5, step6, step7, step8, step9, step10, step11, step12, step13, step14, step15, step16, step17, step18];
+            job2.Steps.AddRange([step5, step6, step7, step8, step9, step10, step11, step12, step13, step14, step15, step16, step17, step18]);
             #endregion
 
             #region SCHEDULES
@@ -492,17 +493,16 @@ public class DatabaseFixture : IAsyncLifetime
                 JobId = job1.JobId,
                 Job = job1,
                 ScheduleName = "Test schedule 1",
-                CronExpression = "",
-                Tags = []
+                CronExpression = ""
             };
             var schedule2 = new Schedule
             {
                 JobId = job2.JobId,
                 Job = job2,
                 ScheduleName = "Test schedule 2",
-                CronExpression = "",
-                Tags = [tag1]
+                CronExpression = ""
             };
+            schedule2.Tags.Add(tag1);
             #endregion
 
             #region DATA TABLES
@@ -539,7 +539,7 @@ public class DatabaseFixture : IAsyncLifetime
                 LookupDescriptionColumn = "Customer Group Name",
                 LookupDisplayType = LookupDisplayType.ValueAndDescription
             };
-            table2.Lookups = [lookup];
+            table2.Lookups.Add(lookup);
             #endregion
 
             context.AddRange(job1, job2, schedule1, schedule2, blobClient1, blobClient2, blobClient3, table1, table2);

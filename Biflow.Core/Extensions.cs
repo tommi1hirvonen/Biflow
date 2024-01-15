@@ -1,5 +1,7 @@
 ﻿using Biflow.Core.Attributes;
 using Biflow.Core.Entities;
+using System.Collections;
+using System;
 using System.Reflection;
 
 namespace Biflow.Core;
@@ -48,4 +50,24 @@ public static class Extensions
         var description = typeof(StepType).GetField(name)?.GetCustomAttributes<DescriptionAttribute>().FirstOrDefault();
         return description?.Text;
     }
+
+    public static void AddRange<T>(this ICollection<T> collection, IEnumerable<T> items)
+    {
+        if (collection is List<T> list)
+        {
+            list.AddRange(items);
+            return;
+        }
+
+        foreach (var item in items)
+        {
+            collection.Add(item);
+        }
+    }
+
+    public static void SortBy<T, U>(this IList<T> list, Func<T, U> propertyDelegate) where U : IComparable =>
+        list.Sort((one, other) => propertyDelegate(one).CompareTo(propertyDelegate(other)));
+
+    public static void Sort<T>(this IList<T> list, Comparison<T> comparison) =>
+        ArrayList.Adapter((IList)list).Sort(Comparer<T>.Create(comparison));
 }

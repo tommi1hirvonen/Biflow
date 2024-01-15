@@ -20,32 +20,31 @@ public class ExecutionParameter : DynamicParameter
         ParameterId = parameter.ParameterId;
     }
 
+    private bool _evaluated;
+    private object? _evaluationResult;
+
     public Guid ExecutionId { get; private set; }
 
     public object? DefaultValue { get; private set; }
 
-    public Execution Execution { get; set; } = null!;
+    public Execution Execution { get; private set; } = null!;
 
-    public ICollection<StepExecutionParameterBase> StepExecutionParameters { get; set; } = null!;
+    public IEnumerable<StepExecutionParameterBase> StepExecutionParameters { get; } = new List<StepExecutionParameterBase>();
 
-    public IList<StepExecutionParameterExpressionParameter> StepExecutionParameterExpressionParameters { get; set; } = null!;
+    public IEnumerable<StepExecutionParameterExpressionParameter> StepExecutionParameterExpressionParameters { get; } = new List<StepExecutionParameterExpressionParameter>();
 
-    public ICollection<StepExecutionConditionParameter> ExecutionConditionParameters { get; set; } = null!;
+    public IEnumerable<StepExecutionConditionParameter> ExecutionConditionParameters { get; } = new List<StepExecutionConditionParameter>();
 
-    public ICollection<SqlStepExecution> CapturingStepExecutions { get; set; } = null!;
+    public IEnumerable<SqlStepExecution> CapturingStepExecutions { get; } = new List<SqlStepExecution>();
 
     public override string DisplayValue =>
         UseExpression ? $"{ParameterValue} ({Expression.Expression})" : base.DisplayValue;
 
-    private bool Evaluated { get; set; }
-
-    private object? EvaluationResult { get; set; }
-
     public override async Task<object?> EvaluateAsync()
     {
-        if (UseExpression && Evaluated)
+        if (UseExpression && _evaluated)
         {
-            return EvaluationResult;
+            return _evaluationResult;
         }
         else if (UseExpression)
         {
@@ -55,8 +54,8 @@ public class ExecutionParameter : DynamicParameter
                 { ExpressionParameterNames.JobId, Execution.JobId }
             };
             var result = await Expression.EvaluateAsync(parameters);
-            EvaluationResult = result;
-            Evaluated = true;
+            _evaluationResult = result;
+            _evaluated = true;
             return result;
         }
 

@@ -20,7 +20,7 @@ public class EmailStepExecution : StepExecution, IHasStepExecutionParameters<Ema
         StepExecutionParameters = step.StepParameters
             .Select(p => new EmailStepExecutionParameter(p, this))
             .ToArray();
-        StepExecutionAttempts = new[] { new EmailStepExecutionAttempt(this) };
+        StepExecutionAttempts.Add(new EmailStepExecutionAttempt(this));
     }
 
     /// <summary>
@@ -32,7 +32,7 @@ public class EmailStepExecution : StepExecution, IHasStepExecutionParameters<Ema
 
     public string Body { get; private set; }
 
-    public IList<EmailStepExecutionParameter> StepExecutionParameters { get; set; } = null!;
+    public IEnumerable<EmailStepExecutionParameter> StepExecutionParameters { get; } = new List<EmailStepExecutionParameter>();
 
     public List<string> GetRecipientsAsList() =>
         Recipients

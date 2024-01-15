@@ -5,15 +5,15 @@ namespace Biflow.Core.Interfaces;
 public interface IHasStepExecutionParameters<TParameter> : IHasStepExecutionParameters
     where TParameter : StepExecutionParameterBase
 {
-    public new IList<TParameter> StepExecutionParameters { get; }
+    public new IEnumerable<TParameter> StepExecutionParameters { get; }
 
-    IList<StepExecutionParameterBase> IHasStepExecutionParameters.StepExecutionParameters =>
-        StepExecutionParameters.Cast<StepExecutionParameterBase>().ToList();
+    IEnumerable<StepExecutionParameterBase> IHasStepExecutionParameters.StepExecutionParameters =>
+        StepExecutionParameters.Cast<StepExecutionParameterBase>();
 }
 
 public interface IHasStepExecutionParameters : IHasParameters
 {
-    public IList<StepExecutionParameterBase> StepExecutionParameters { get; }
+    public IEnumerable<StepExecutionParameterBase> StepExecutionParameters { get; }
 
-    IList<ParameterBase> IHasParameters.Parameters => StepExecutionParameters.Cast<ParameterBase>().ToList();
+    IEnumerable<ParameterBase> IHasParameters.Parameters => StepExecutionParameters.Cast<ParameterBase>();
 }

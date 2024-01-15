@@ -1,6 +1,7 @@
 ﻿using Biflow.Ui.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Routing;
+using System.Collections;
 
 namespace Biflow.Ui.Shared.JobDetails;
 
@@ -46,14 +47,14 @@ public partial class JobParameters : ComponentBase
             .ThenInclude(p => p.Step) // Assigning steps are from other jobs, which means they are not in the Steps List property
             .ThenInclude(s => s.Job)
             .FirstAsync(j => j.JobId == Job.JobId);
-        editJob.JobParameters = editJob.JobParameters.OrderBy(p => p.ParameterName).ToList();
+        editJob.JobParameters.SortBy(x => x.ParameterName);
         loading = false;
         editContext = new(editJob);
         editContext.OnFieldChanged += (sender, args) => hasChanges = true;
     }
 
     private void AddParameter() => editJob?.JobParameters
-        .Insert(0, new JobParameter { ParameterValueType = ParameterValueType.String, AssigningStepParameters = new List<JobStepParameter>() });
+        .Insert(0, new JobParameter { ParameterValueType = ParameterValueType.String });
 
     private async Task SubmitParameters()
     {

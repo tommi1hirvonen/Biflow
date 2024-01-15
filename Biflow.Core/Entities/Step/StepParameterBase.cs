@@ -41,10 +41,12 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
             InheritFromJobParameter = other.InheritFromJobParameter;
         }
 
-        ExpressionParameters = other.ExpressionParameters
+        _expressionParameters = other.ExpressionParameters
             .Select(p => new StepParameterExpressionParameter(p, this, job))
             .ToList();
     }
+
+    private readonly List<StepParameterExpressionParameter> _expressionParameters = [];
 
     [Display(Name = "Step id")]
     public Guid StepId { get; set; }
@@ -83,7 +85,7 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
     private JobParameter? _inheritFromJobParameter;
 
     [ValidateComplexType]
-    public IList<StepParameterExpressionParameter> ExpressionParameters { get; set; } = new List<StepParameterExpressionParameter>();
+    public IEnumerable<StepParameterExpressionParameter> ExpressionParameters => _expressionParameters;
 
     [JsonIgnore]
     public abstract Step BaseStep { get; }
@@ -121,8 +123,10 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
             InheritFromJobParameter = jobParameter,
             InheritFromJobParameterId = jobParameter.ParameterId
         };
-        ExpressionParameters.Add(expressionParameter);
+        _expressionParameters.Add(expressionParameter);
     }
+
+    public bool RemoveExpressionParameter(StepParameterExpressionParameter parameter) => _expressionParameters.Remove(parameter);
 
     [JsonIgnore]
     public override string DisplayValue => InheritFromJobParameter switch
