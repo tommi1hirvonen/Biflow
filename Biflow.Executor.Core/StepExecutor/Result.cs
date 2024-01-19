@@ -5,11 +5,11 @@ namespace Biflow.Executor.Core.StepExecutor;
 [GenerateOneOf]
 internal partial class Result : OneOfBase<Success, Cancel, Failure>
 {
-    public static Result Success = new Success();
+    public static readonly Result Success = new Success();
 
-    public static Result Failure = new Failure();
+    public static readonly Result Failure = new Failure();
 
-    public static Result Cancel = new Cancel();
+    public static readonly Result Cancel = new Cancel();
 }
 
 internal readonly struct Success;
