@@ -3,7 +3,7 @@
 public record ToggleScheduleCommand(Guid ScheduleId, bool IsEnabled) : IRequest;
 
 internal class ToggleScheduleCommandHandler(
-    IDbContextFactory<AppDbContext> dbContextFactory,
+    IDbContextFactory<ServiceDbContext> dbContextFactory,
     ISchedulerService scheduler)
     : IRequestHandler<ToggleScheduleCommand>
 {

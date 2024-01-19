@@ -2,7 +2,7 @@
 
 public record UpdateDataTableCategoryCommand(MasterDataTableCategory Category) : IRequest;
 
-internal class UpdateDataTableCategoryCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+internal class UpdateDataTableCategoryCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
     : IRequestHandler<UpdateDataTableCategoryCommand>
 {
     public async Task Handle(UpdateDataTableCategoryCommand request, CancellationToken cancellationToken)

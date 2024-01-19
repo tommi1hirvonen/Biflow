@@ -2,7 +2,7 @@
 
 public record ToggleJobCommand(Guid JobId, bool IsEnabled) : IRequest;
 
-internal class ToggleJobCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+internal class ToggleJobCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
     : IRequestHandler<ToggleJobCommand>
 {
     public async Task Handle(ToggleJobCommand request, CancellationToken cancellationToken)

@@ -2,7 +2,7 @@
 
 public record DeleteDependencyCommand(Guid StepId, Guid DependentOnStepId) : IRequest;
 
-internal class DeleteDependencyCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+internal class DeleteDependencyCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
     : IRequestHandler<DeleteDependencyCommand>
 {
     public async Task Handle(DeleteDependencyCommand request, CancellationToken cancellationToken)

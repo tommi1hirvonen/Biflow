@@ -2,7 +2,7 @@
 
 public record UpdateUserEmailCommand(Guid UserId, string? Email) : IRequest;
 
-internal class UpdateUserEmailCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+internal class UpdateUserEmailCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
     : IRequestHandler<UpdateUserEmailCommand>
 {
     public async Task Handle(UpdateUserEmailCommand request, CancellationToken cancellationToken)

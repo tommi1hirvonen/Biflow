@@ -2,7 +2,7 @@
 
 public record DeleteFunctionAppCommand(Guid FunctionAppId) : IRequest;
 
-internal class DeleteFunctionAppCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+internal class DeleteFunctionAppCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
     : IRequestHandler<DeleteFunctionAppCommand>
 {
     public async Task Handle(DeleteFunctionAppCommand request, CancellationToken cancellationToken)

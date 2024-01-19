@@ -2,7 +2,7 @@
 
 public record CreateDataTableCategoryCommand(MasterDataTableCategory Category) : IRequest;
 
-internal class CreateDataTableCategoryCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+internal class CreateDataTableCategoryCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
     : IRequestHandler<CreateDataTableCategoryCommand>
 {
     public async Task Handle(CreateDataTableCategoryCommand request, CancellationToken cancellationToken)

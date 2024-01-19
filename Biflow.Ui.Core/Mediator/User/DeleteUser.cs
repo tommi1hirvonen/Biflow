@@ -2,7 +2,7 @@
 
 public record DeleteUserCommand(Guid UserId) : IRequest;
 
-internal class DeleteUserCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<DeleteUserCommand>
+internal class DeleteUserCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory) : IRequestHandler<DeleteUserCommand>
 {
     public async Task Handle(DeleteUserCommand request, CancellationToken cancellationToken)
     {

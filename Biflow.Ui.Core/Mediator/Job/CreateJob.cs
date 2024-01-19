@@ -2,7 +2,7 @@
 
 public record CreateJobCommand(Job Job) : IRequest;
 
-internal class CreateJobCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+internal class CreateJobCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
     : IRequestHandler<CreateJobCommand>
 {
     public async Task Handle(CreateJobCommand request, CancellationToken cancellationToken)

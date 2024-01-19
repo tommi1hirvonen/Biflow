@@ -5,7 +5,7 @@ namespace Biflow.Ui.Core;
 public record CreateUserCommand(User User, PasswordModel PasswordModel) : IRequest;
 
 internal class CreateUserCommandHandler(
-    IDbContextFactory<AppDbContext> dbContextFactory,
+    IDbContextFactory<ServiceDbContext> dbContextFactory,
     AuthenticationMethodResolver authenticationResolver)
     : IRequestHandler<CreateUserCommand>
 {

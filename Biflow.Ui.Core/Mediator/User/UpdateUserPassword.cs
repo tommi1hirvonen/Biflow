@@ -4,7 +4,7 @@ namespace Biflow.Ui.Core;
 
 public record UpdateUserPasswordCommand(string Username, string OldPassword, string NewPassword) : IRequest;
 
-internal class UpdateUserPasswordCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+internal class UpdateUserPasswordCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
     : IRequestHandler<UpdateUserPasswordCommand>
 {
     public async Task Handle(UpdateUserPasswordCommand request, CancellationToken cancellationToken)

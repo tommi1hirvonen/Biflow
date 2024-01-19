@@ -2,7 +2,7 @@
 
 public record DeleteJobCategoryCommand(Guid CategoryId) : IRequest;
 
-internal class DeleteJobCategoryCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+internal class DeleteJobCategoryCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
     : IRequestHandler<DeleteJobCategoryCommand>
 {
     public async Task Handle(DeleteJobCategoryCommand request, CancellationToken cancellationToken)

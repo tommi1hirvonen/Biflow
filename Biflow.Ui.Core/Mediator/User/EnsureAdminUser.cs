@@ -10,7 +10,7 @@ namespace Biflow.Ui.Core;
 /// <see langword="null"/> can be passed when using an authentication method other than built-in.</param>
 public record EnsureAdminUserCommand(string Username, string? Password = null) : IRequest;
 
-internal class EnsureAdminUserCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+internal class EnsureAdminUserCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
     : IRequestHandler<EnsureAdminUserCommand>
 {
     public async Task Handle(EnsureAdminUserCommand request, CancellationToken cancellationToken)

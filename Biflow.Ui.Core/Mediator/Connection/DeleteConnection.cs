@@ -2,7 +2,7 @@
 
 public record DeleteConnectionCommand(Guid ConnectionId) : IRequest;
 
-internal class DeleteConnectionCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<DeleteConnectionCommand>
+internal class DeleteConnectionCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory) : IRequestHandler<DeleteConnectionCommand>
 {
     public async Task Handle(DeleteConnectionCommand request, CancellationToken cancellationToken)
     {

@@ -1,6 +1,5 @@
 ﻿using Biflow.DataAccess.Configuration;
 using Biflow.DataAccess.Convention;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
@@ -12,20 +11,20 @@ namespace Biflow.DataAccess;
 public class AppDbContext : DbContext
 {
     private readonly string _connectionString;
-    private readonly IHttpContextAccessor? _httpContextAccessor;
+    private readonly IUserService? _userService;
 
-    public AppDbContext(IConfiguration configuration, IHttpContextAccessor? httpContextAccessor = null)
+    public AppDbContext(IConfiguration configuration, IUserService? userService = null)
     {
         _connectionString = configuration.GetConnectionString("AppDbContext")
             ?? throw new ApplicationException("Connection string not found");
-        _httpContextAccessor = httpContextAccessor;
+        _userService = userService;
 
         SavingChanges += OnSavingChanges;
     }
 
-    internal string? Username => _httpContextAccessor?.HttpContext?.User.Identity?.Name;
+    internal string? Username => _userService?.User.Identity?.Name;
 
-    internal IEnumerable<string>? UserRoles => _httpContextAccessor?.HttpContext?.User
+    internal IEnumerable<string>? UserRoles => _userService?.User
         .FindAll(ClaimTypes.Role)
         .Select(r => r.Value);
 

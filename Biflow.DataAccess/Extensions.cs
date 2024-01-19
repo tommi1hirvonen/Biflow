@@ -4,17 +4,21 @@ namespace Biflow.DataAccess;
 
 public static class Extensions
 {
-    public static IServiceCollection AddExecutionBuilderFactory<TDbContext>(this IServiceCollection services)
+    public static IServiceCollection AddExecutionBuilderFactory<TDbContext>(this IServiceCollection services, ServiceLifetime lifetime = default)
         where TDbContext : AppDbContext
     {
-        services.AddSingleton(typeof(IExecutionBuilderFactory<TDbContext>), typeof(ExecutionBuilderFactory<TDbContext>));
+        var service = ServiceDescriptor.Describe(
+            serviceType: typeof(IExecutionBuilderFactory<TDbContext>),
+            implementationType: typeof(ExecutionBuilderFactory<TDbContext>),
+            lifetime: lifetime);
+        services.Add(service);
         return services;
     }
 
     public static IServiceCollection AddDuplicatorServices(this IServiceCollection services)
     {
-        services.AddSingleton<StepsDuplicatorFactory>();
-        services.AddSingleton<JobDuplicatorFactory>();
+        services.AddScoped<StepsDuplicatorFactory>();
+        services.AddScoped<JobDuplicatorFactory>();
         return services;
     }
 

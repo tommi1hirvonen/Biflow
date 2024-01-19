@@ -2,7 +2,7 @@
 
 public record ClearAppRegistrationTokensCommand(Guid AppRegistrationId) : IRequest;
 
-internal class ClearAppRegistrationTokensCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory, ITokenService tokenService)
+internal class ClearAppRegistrationTokensCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory, ITokenService tokenService)
     : IRequestHandler<ClearAppRegistrationTokensCommand>
 {
     public async Task Handle(ClearAppRegistrationTokensCommand request, CancellationToken cancellationToken)

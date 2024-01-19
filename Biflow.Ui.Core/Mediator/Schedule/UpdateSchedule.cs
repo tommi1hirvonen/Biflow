@@ -3,7 +3,7 @@
 public record UpdateScheduleCommand(Schedule Schedule, ICollection<string> Tags) : IRequest;
 
 internal class UpdateScheduleCommandHandler(
-    IDbContextFactory<AppDbContext> dbContextFactory,
+    IDbContextFactory<ServiceDbContext> dbContextFactory,
     ISchedulerService scheduler)
     : IRequestHandler<UpdateScheduleCommand>
 {

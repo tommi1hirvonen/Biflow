@@ -2,7 +2,7 @@
 
 public record UpdateJobCategoryCommand(JobCategory Category) : IRequest;
 
-internal class UpdateJobCategoryCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+internal class UpdateJobCategoryCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
     : IRequestHandler<UpdateJobCategoryCommand>
 {
     public async Task Handle(UpdateJobCategoryCommand request, CancellationToken cancellationToken)

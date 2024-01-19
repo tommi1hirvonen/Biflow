@@ -2,7 +2,7 @@
 
 public record CreateBlobStorageClientCommand(BlobStorageClient Client) : IRequest;
 
-internal class CreateBlobStorageClientCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+internal class CreateBlobStorageClientCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
     : IRequestHandler<CreateBlobStorageClientCommand>
 {
     public async Task Handle(CreateBlobStorageClientCommand request, CancellationToken cancellationToken)

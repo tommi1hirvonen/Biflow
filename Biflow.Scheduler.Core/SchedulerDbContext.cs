@@ -6,7 +6,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace Biflow.Executor.Core;
 
-public class SchedulerDbContext(IConfiguration configuration) : AppDbContext(configuration, httpContextAccessor: null)
+public class SchedulerDbContext(IConfiguration configuration) : AppDbContext(configuration, userService: null)
 {
     protected override void ConfigureSqlServer(SqlServerDbContextOptionsBuilder options)
     {

@@ -3,7 +3,7 @@
 public record DeleteJobCommand(Guid JobId) : IRequest;
 
 internal class DeleteJobCommandHandler(
-    IDbContextFactory<AppDbContext> dbContextFactory,
+    IDbContextFactory<ServiceDbContext> dbContextFactory,
     ISchedulerService scheduler)
     : IRequestHandler<DeleteJobCommand>
 {

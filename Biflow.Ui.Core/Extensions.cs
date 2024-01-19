@@ -1,5 +1,6 @@
 ﻿using Biflow.Executor.Core;
 using Biflow.Scheduler.Core;
+using Biflow.Ui.Core.Authentication;
 using Biflow.Ui.SqlServer;
 using CronExpressionDescriptor;
 using Microsoft.AspNetCore.Authentication;
@@ -120,14 +121,16 @@ public static partial class Extensions
     /// <exception cref="ArgumentException">Thrown if an incorrect configuration is detected</exception>
     public static IServiceCollection AddUiCoreServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContextFactory<AppDbContext>();
-        services.AddExecutionBuilderFactory<AppDbContext>();
+        services.AddScoped<IUserService, UserService>();
+        services.AddDbContextFactory<AppDbContext>(lifetime: ServiceLifetime.Scoped);
+        services.AddDbContextFactory<ServiceDbContext>(lifetime: ServiceLifetime.Singleton);
+        services.AddExecutionBuilderFactory<AppDbContext>(ServiceLifetime.Scoped);
         services.AddHttpClient();
         services.AddHttpClient("DefaultCredentials")
             // Passes Windows credentials in on-premise installations to the scheduler API.
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { UseDefaultCredentials = true });
 
-        services.AddSingleton(typeof(ITokenService), typeof(TokenService<AppDbContext>));
+        services.AddSingleton(typeof(ITokenService), typeof(TokenService<ServiceDbContext>));
 
         var executorType = configuration.GetSection("Executor").GetValue<string>("Type");
         if (executorType == "WebApp")
@@ -159,8 +162,8 @@ public static partial class Extensions
             throw new ArgumentException($"Error registering scheduler service. Incorrect scheduler type: {schedulerType}. Check appsettings.json.");
         }
 
-        services.AddSingleton<EnvironmentSnapshotBuilder>();
-        services.AddSingleton<SqlServerHelperService>();
+        services.AddScoped<EnvironmentSnapshotBuilder>();
+        services.AddScoped<SqlServerHelperService>();
         services.AddDuplicatorServices();
         services.AddMediatR(config => config.RegisterServicesFromAssemblyContaining<MediatREntryPoint>());
 

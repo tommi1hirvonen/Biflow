@@ -2,7 +2,7 @@
 
 public record UpdateExecutionCommand(Execution Execution) : IRequest;
 
-internal class UpdateExecutionCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<UpdateExecutionCommand>
+internal class UpdateExecutionCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory) : IRequestHandler<UpdateExecutionCommand>
 {
     public async Task Handle(UpdateExecutionCommand request, CancellationToken cancellationToken)
     {

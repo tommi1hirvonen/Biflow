@@ -2,7 +2,7 @@
 
 public record DeleteDataTableCategoryCommand(Guid CategoryId) : IRequest;
 
-internal class DeleteDataTableCategoryCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+internal class DeleteDataTableCategoryCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
     : IRequestHandler<DeleteDataTableCategoryCommand>
 {
     public async Task Handle(DeleteDataTableCategoryCommand request, CancellationToken cancellationToken)

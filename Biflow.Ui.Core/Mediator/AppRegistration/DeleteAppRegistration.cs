@@ -2,7 +2,7 @@
 
 public record DeleteAppRegistrationCommand(Guid AppRegistrationId) : IRequest;
 
-internal class DeleteAppRegistrationCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+internal class DeleteAppRegistrationCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
     : IRequestHandler<DeleteAppRegistrationCommand>
 {
     public async Task Handle(DeleteAppRegistrationCommand request, CancellationToken cancellationToken)

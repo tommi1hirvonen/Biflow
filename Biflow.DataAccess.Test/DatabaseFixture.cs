@@ -1,7 +1,6 @@
 ﻿using Biflow.Core;
 using Biflow.Core.Entities;
 using Biflow.Core.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,7 +31,7 @@ public class DatabaseFixture : IAsyncLifetime
 
     public DatabaseFixture()
     {
-        var httpContextAccessor = new MockHttpContextAccessor(Username, Role);
+        var userService = new MockUserService(Username, Role);   
         var settings = new Dictionary<string, string?>
         {
             { "ConnectionStrings:AppDbContext", _connectionString }
@@ -44,7 +43,7 @@ public class DatabaseFixture : IAsyncLifetime
             .AddHttpClient()
             .AddSingleton<ITokenService, TokenService<AppDbContext>>()
             .AddSingleton<IConfiguration>(configuration)
-            .AddSingleton<IHttpContextAccessor>(httpContextAccessor)
+            .AddSingleton<IUserService>(userService)
             .AddDbContextFactory<AppDbContext>()
             .AddExecutionBuilderFactory<AppDbContext>()
             .AddDuplicatorServices()

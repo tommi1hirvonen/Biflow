@@ -2,7 +2,7 @@
 
 public record DeletePipelineClientCommand(Guid PipelineClientId) : IRequest;
 
-internal class DeletePipelineClientCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+internal class DeletePipelineClientCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
     : IRequestHandler<DeletePipelineClientCommand>
 {
     public async Task Handle(DeletePipelineClientCommand request, CancellationToken cancellationToken)

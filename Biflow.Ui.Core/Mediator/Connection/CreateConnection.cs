@@ -2,7 +2,7 @@
 
 public record CreateConnectionCommand(ConnectionInfoBase Connection) : IRequest;
 
-internal class CreateConnectionCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<CreateConnectionCommand>
+internal class CreateConnectionCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory) : IRequestHandler<CreateConnectionCommand>
 {
     public async Task Handle(CreateConnectionCommand request, CancellationToken cancellationToken)
     {

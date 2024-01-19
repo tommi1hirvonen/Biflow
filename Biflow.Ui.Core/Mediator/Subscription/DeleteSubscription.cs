@@ -2,7 +2,7 @@
 
 public record DeleteSubscriptionCommand(Guid SubscriptionId) : IRequest;
 
-internal class DeleteSubscriptionCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+internal class DeleteSubscriptionCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
     : IRequestHandler<DeleteSubscriptionCommand>
 {
     public async Task Handle(DeleteSubscriptionCommand request, CancellationToken cancellationToken)

@@ -2,7 +2,7 @@
 
 public record DeleteStepTagCommand(Guid StepId, Guid TagId) : IRequest;
 
-internal class DeleteStepTagCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<DeleteStepTagCommand>
+internal class DeleteStepTagCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory) : IRequestHandler<DeleteStepTagCommand>
 {
     public async Task Handle(DeleteStepTagCommand request, CancellationToken cancellationToken)
     {

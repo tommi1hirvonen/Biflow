@@ -4,7 +4,7 @@ public record UserRolesQuery(string Username) : IRequest<UserRolesQueryResponse>
 
 public record UserRolesQueryResponse(IEnumerable<string> Roles);
 
-internal class UserRolesQueryHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<UserRolesQuery, UserRolesQueryResponse>
+internal class UserRolesQueryHandler(IDbContextFactory<ServiceDbContext> dbContextFactory) : IRequestHandler<UserRolesQuery, UserRolesQueryResponse>
 {
     public async Task<UserRolesQueryResponse> Handle(UserRolesQuery request, CancellationToken cancellationToken)
     {

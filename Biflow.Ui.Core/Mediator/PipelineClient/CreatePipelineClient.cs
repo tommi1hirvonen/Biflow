@@ -2,7 +2,7 @@
 
 public record CreatePipelineClientCommand(PipelineClient Client) : IRequest;
 
-internal class CreatePipelineClientCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+internal class CreatePipelineClientCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
     : IRequestHandler<CreatePipelineClientCommand>
 {
     public async Task Handle(CreatePipelineClientCommand request, CancellationToken cancellationToken)

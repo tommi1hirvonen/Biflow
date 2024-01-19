@@ -1,5 +1,7 @@
 using Biflow.Ui;
 using Biflow.Ui.Components;
+using Microsoft.AspNetCore.Components.Server.Circuits;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.Identity.Web;
 using Serilog;
@@ -26,7 +28,8 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddMicrosoftIdentityConsentHandler();
 
-builder.Services.AddHttpContextAccessor();
+builder.Services.TryAddEnumerable(
+    ServiceDescriptor.Scoped<CircuitHandler, UserCircuitHandler>());
 
 builder.Services.AddScoped<ThemeService>();
 builder.Services.AddScoped<ContextMenuService>();

@@ -2,7 +2,7 @@
 
 public record UpdateJobConcurrenciesCommand(Job Job) : IRequest;
 
-internal class UpdateJobConcurrenciesCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+internal class UpdateJobConcurrenciesCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
     : IRequestHandler<UpdateJobConcurrenciesCommand>
 {
     public async Task Handle(UpdateJobConcurrenciesCommand request, CancellationToken cancellationToken)

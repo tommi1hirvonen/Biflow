@@ -6,7 +6,7 @@ public record UserAuthenticateQuery(string Username, string Password) : IRequest
 
 public record UserAuthenticateQueryResponse(IEnumerable<string> Roles);
 
-internal class UserAuthenticateQueryHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+internal class UserAuthenticateQueryHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
     : IRequestHandler<UserAuthenticateQuery, UserAuthenticateQueryResponse>
 {
     public async Task<UserAuthenticateQueryResponse> Handle(UserAuthenticateQuery request, CancellationToken cancellationToken)
