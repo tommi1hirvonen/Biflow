@@ -110,7 +110,7 @@ public static partial class Extensions
                 adminPassword = adminSection.GetValue<string?>("Password");
                 ArgumentNullException.ThrowIfNull(adminPassword);
             }
-            await mediator.Send(new EnsureAdminUserCommand(adminUsername, adminPassword));
+            await mediator.SendAsync(new EnsureAdminUserCommand(adminUsername, adminPassword));
         }
     }
 

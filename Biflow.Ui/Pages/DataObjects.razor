@@ -253,20 +253,20 @@
 
     private async Task DeleteUnusedDatabaseObjectsAsync()
     {
-        var response = await Mediator.Send(new DeleteUnusedDataObjectsCommand());
+        var response = await Mediator.SendAsync(new DeleteUnusedDataObjectsCommand());
         objects?.RemoveAll(o => response.DeletedDataObjects.Any(r => r.ObjectId == o.ObjectId));
         await confirmDeleteModal.LetAsync(x => x.HideAsync());
     }
 
     private async Task DeleteDatabaseObject(DataObject obj)
     {
-        await Mediator.Send(new DeleteDataObjectCommand(obj.ObjectId));
+        await Mediator.SendAsync(new DeleteDataObjectCommand(obj.ObjectId));
         objects?.Remove(obj);
     }
 
     private async Task DeleteReferenceAsync(StepDataObject reference)
     {
-        await Mediator.Send(new DeleteStepDataObjectCommand(reference));
+        await Mediator.SendAsync(new DeleteStepDataObjectCommand(reference));
         reference.DataObject.Steps.Remove(reference);
         reference.Step.DataObjects.Remove(reference);
     }

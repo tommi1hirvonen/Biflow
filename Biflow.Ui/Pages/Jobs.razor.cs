@@ -114,7 +114,7 @@ public partial class Jobs : ComponentBase
         bool value = (bool)args.Value!;
         try
         {
-            await Mediator.Send(new ToggleJobCommand(job.JobId, value));
+            await Mediator.SendAsync(new ToggleJobCommand(job.JobId, value));
             job.IsEnabled = value;
         }
         catch (Exception ex)
@@ -170,7 +170,7 @@ public partial class Jobs : ComponentBase
         }
         try
         {
-            await Mediator.Send(new DeleteJobCommand(job.JobId));
+            await Mediator.SendAsync(new DeleteJobCommand(job.JobId));
             jobs?.Remove(job);
         }
         catch (Exception ex)
@@ -215,7 +215,7 @@ public partial class Jobs : ComponentBase
         }
         try
         {
-            await Mediator.Send(new DeleteJobCategoryCommand(category.CategoryId));
+            await Mediator.SendAsync(new DeleteJobCategoryCommand(category.CategoryId));
             categories?.Remove(category);
             foreach (var job in jobs?.Where(t => t.CategoryId == category.CategoryId) ?? [])
             {

@@ -164,7 +164,7 @@
     {
         try
         {
-            await Mediator.Send(new DeleteFunctionAppCommand(functionApp.FunctionAppId));
+            await Mediator.SendAsync(new DeleteFunctionAppCommand(functionApp.FunctionAppId));
             functionApps?.Remove(functionApp);
         }
         catch (Exception ex)
@@ -178,12 +178,12 @@
     {
         if (functionApp.FunctionAppId == Guid.Empty)
         {
-            await Mediator.Send(new CreateFunctionAppCommand(functionApp));
+            await Mediator.SendAsync(new CreateFunctionAppCommand(functionApp));
             functionApps?.Add(functionApp);
         }
         else
         {
-            await Mediator.Send(new UpdateFunctionAppCommand(functionApp));
+            await Mediator.SendAsync(new UpdateFunctionAppCommand(functionApp));
             functionApps?.RemoveAll(f => f.FunctionAppId == functionApp.FunctionAppId);
             functionApps?.Add(functionApp);
         }

@@ -146,7 +146,7 @@ public partial class JobDetails : ComponentBase
                     }
                 }
             }
-            await Mediator.Send(new DeleteJobCommand(job.JobId));
+            await Mediator.SendAsync(new DeleteJobCommand(job.JobId));
             NavigationManager.NavigateTo("jobs");
         }
         catch (Exception ex)
@@ -161,7 +161,7 @@ public partial class JobDetails : ComponentBase
         {
             var enabled = (bool)args.Value!;
             ArgumentNullException.ThrowIfNull(job);
-            await Mediator.Send(new ToggleJobCommand(job.JobId, enabled));
+            await Mediator.SendAsync(new ToggleJobCommand(job.JobId, enabled));
             job.IsEnabled = enabled;
             var message = job.IsEnabled ? "Job enabled successfully" : "Job disabled successfully";
             Messenger.AddInformation(message);

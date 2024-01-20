@@ -260,7 +260,7 @@
     {
         try
         {
-            await Mediator.Send(new DeleteAppRegistrationCommand(appRegistration.AppRegistrationId));
+            await Mediator.SendAsync(new DeleteAppRegistrationCommand(appRegistration.AppRegistrationId));
             appRegistrations?.Remove(appRegistration);
         }
         catch (Exception ex)
@@ -274,12 +274,12 @@
     {
         if (appRegistration.AppRegistrationId == Guid.Empty)
         {
-            await Mediator.Send(new CreateAppRegistrationCommand(appRegistration));
+            await Mediator.SendAsync(new CreateAppRegistrationCommand(appRegistration));
             appRegistrations?.Add(appRegistration);
         }
         else
         {
-            await Mediator.Send(new UpdateAppRegistrationCommand(appRegistration));
+            await Mediator.SendAsync(new UpdateAppRegistrationCommand(appRegistration));
             appRegistrations?.RemoveAll(a => a.AppRegistrationId == appRegistration.AppRegistrationId);
             appRegistrations?.Add(appRegistration);
         }
@@ -288,7 +288,7 @@
 
     private async Task ClearTokens(AppRegistration appRegistration)
     {
-        await Mediator.Send(new ClearAppRegistrationTokensCommand(appRegistration.AppRegistrationId));
+        await Mediator.SendAsync(new ClearAppRegistrationTokensCommand(appRegistration.AppRegistrationId));
     }
 
     private async Task ShowEditModalAsync(AppRegistration? appRegistration)

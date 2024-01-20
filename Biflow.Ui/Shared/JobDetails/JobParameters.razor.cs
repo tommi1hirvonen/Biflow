@@ -70,7 +70,7 @@ public partial class JobParameters : ComponentBase
 
         try
         {
-            await Mediator.Send(new UpdateJobParametersCommand(editJob));
+            await Mediator.SendAsync(new UpdateJobParametersCommand(editJob));
             hasChanges = false;
             Messenger.AddInformation("Job parameters updated successfully");
         }

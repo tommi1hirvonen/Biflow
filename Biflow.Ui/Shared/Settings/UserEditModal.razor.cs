@@ -115,7 +115,7 @@ public partial class UserEditModal : ComponentBase
 
             try
             {
-                await Mediator.Send(new CreateUserCommand(model.User, model.PasswordModel));
+                await Mediator.SendAsync(new CreateUserCommand(model.User, model.PasswordModel));
                 await OnUserSubmit.InvokeAsync(model.User);
                 model = null;
                 await modal.LetAsync(x => x.HideAsync());
@@ -131,7 +131,7 @@ public partial class UserEditModal : ComponentBase
             try
             {
                 ArgumentNullException.ThrowIfNull(model);
-                await Mediator.Send(new UpdateUserCommand(model.User));
+                await Mediator.SendAsync(new UpdateUserCommand(model.User));
                 await OnUserSubmit.InvokeAsync(model.User);
                 await modal.LetAsync(x => x.HideAsync());
             }

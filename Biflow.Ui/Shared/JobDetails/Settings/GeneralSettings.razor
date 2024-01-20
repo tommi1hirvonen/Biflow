@@ -93,7 +93,7 @@
         try
         {
             ArgumentNullException.ThrowIfNull(editJob);
-            await Mediator.Send(new UpdateJobCommand(editJob));
+            await Mediator.SendAsync(new UpdateJobCommand(editJob));
             Messenger.AddInformation("Job settings saved successfully");
             OnJobUpdated?.Invoke(editJob);
         }

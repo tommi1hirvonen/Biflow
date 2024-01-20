@@ -247,7 +247,7 @@
     {
         try
         {
-            await Mediator.Send(new DeleteDataTableCommand(table.DataTableId));
+            await Mediator.SendAsync(new DeleteDataTableCommand(table.DataTableId));
             Tables?.Remove(table);
         }
         catch (Exception ex)
@@ -261,7 +261,7 @@
     {
         try
         {
-            await Mediator.Send(new DeleteDataTableCategoryCommand(category.CategoryId));
+            await Mediator.SendAsync(new DeleteDataTableCategoryCommand(category.CategoryId));
             Categories?.Remove(category);
             foreach (var table in Tables?.Where(t => t.CategoryId == category.CategoryId) ?? [])
             {

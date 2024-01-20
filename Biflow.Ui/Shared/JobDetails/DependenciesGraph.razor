@@ -409,7 +409,7 @@
     {
         try
         {
-            await Mediator.Send(new ToggleStepsCommand(step.StepId, value));
+            await Mediator.SendAsync(new ToggleStepsCommand(step.StepId, value));
             step.IsEnabled = value;
             await LoadGraph();
         }
@@ -429,7 +429,7 @@
 
         try
         {
-            await Mediator.Send(new DeleteStepsCommand(step.StepId));
+            await Mediator.SendAsync(new DeleteStepsCommand(step.StepId));
             Steps?.Remove(step);
             // Remove the deleted step from dependencies.
             foreach (var dependant in Steps?.Where(s => s.Dependencies.Any(d => d.DependantOnStepId == step.StepId)) ?? Enumerable.Empty<Step>())

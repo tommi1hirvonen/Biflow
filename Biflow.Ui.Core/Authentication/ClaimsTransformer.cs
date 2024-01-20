@@ -27,7 +27,7 @@ internal class ClaimsTransformer(IMemoryCache memoryCache, IMediator mediator) :
         var roles = await _memoryCache.GetOrCreateAsync($"{username}_Role", async entry =>
         {
             entry.SlidingExpiration = TimeSpan.FromSeconds(5);
-            var response = await _mediator.Send(new UserRolesQuery(username));
+            var response = await _mediator.SendAsync(new UserRolesQuery(username));
             return response.Roles;
         });
         if (roles is null)

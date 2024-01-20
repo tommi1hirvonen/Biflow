@@ -58,7 +58,7 @@
             IRequest command = job.JobId == Guid.Empty
                 ? new CreateJobCommand(job)
                 : new UpdateJobCommand(job);
-            await Mediator.Send(command);
+            await Mediator.SendAsync(command);
             await offcanvas.LetAsync(x => x.HideAsync());
             await OnJobSubmitted.InvokeAsync(job);
             job = new();

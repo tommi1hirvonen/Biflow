@@ -109,7 +109,7 @@
         ArgumentNullException.ThrowIfNull(editJob);
         try
         {
-            await Mediator.Send(new UpdateJobConcurrenciesCommand(editJob));
+            await Mediator.SendAsync(new UpdateJobConcurrenciesCommand(editJob));
             Messenger.AddInformation("Concurrency settings saved successfully");
         }
         catch (DbUpdateConcurrencyException)

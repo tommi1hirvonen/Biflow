@@ -88,7 +88,7 @@
     {
         try
         {
-            await Mediator.Send(new DeleteBlobStorageClientCommand(client.BlobStorageClientId));
+            await Mediator.SendAsync(new DeleteBlobStorageClientCommand(client.BlobStorageClientId));
             blobClients?.Remove(client);
         }
         catch (Exception ex)
@@ -102,12 +102,12 @@
     {
         if (client.BlobStorageClientId == Guid.Empty)
         {
-            await Mediator.Send(new CreateBlobStorageClientCommand(client));
+            await Mediator.SendAsync(new CreateBlobStorageClientCommand(client));
             blobClients?.Add(client);
         }
         else
         {
-            await Mediator.Send(new UpdateBlobStorageClientCommand(client));
+            await Mediator.SendAsync(new UpdateBlobStorageClientCommand(client));
             blobClients?.RemoveAll(b => b.BlobStorageClientId == client.BlobStorageClientId);
             blobClients?.Add(client);
         }

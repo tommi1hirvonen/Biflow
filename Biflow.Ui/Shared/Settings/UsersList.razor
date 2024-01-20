@@ -127,7 +127,7 @@
     {
         try
         {
-            await Mediator.Send(new DeleteUserCommand(user.UserId));
+            await Mediator.SendAsync(new DeleteUserCommand(user.UserId));
             users?.Remove(user);
         }
         catch (Exception)

@@ -59,7 +59,7 @@ internal class LdapAuthHandler(IConfiguration configuration, IMediator mediator)
             return Enumerable.Empty<string>();
         }
 
-        var rolesResponse = await _mediator.Send(new UserRolesQuery(username));
+        var rolesResponse = await _mediator.SendAsync(new UserRolesQuery(username));
         if (!rolesResponse.Roles.Any())
         {
             throw new AuthenticationException("User is not authorized to access this application");

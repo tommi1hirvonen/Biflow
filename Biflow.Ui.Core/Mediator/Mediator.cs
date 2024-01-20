@@ -6,14 +6,14 @@ internal class Mediator(IServiceProvider serviceProvider) : IMediator
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider;
 
-    public Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default)
+    public Task SendAsync<TRequest>(TRequest request, CancellationToken cancellationToken = default)
         where TRequest : IRequest
     {
         var handler = _serviceProvider.GetRequiredService<IRequestHandler<TRequest>>();
         return handler.Handle(request, cancellationToken);
     }
 
-    public Task<TResponse> Send<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
+    public Task<TResponse> SendAsync<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default)
     {
         // Create a generic MethodInfo to be used with the request handler from DI.
         var genericType = typeof(IRequestHandler<,>)
