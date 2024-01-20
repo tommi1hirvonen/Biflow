@@ -26,12 +26,18 @@ public class BlobStorageClient
     [JsonSensitive]
     public string? ConnectionString { get; set; }
 
-    public Guid? AppRegistrationId { get; set; }
+    public Guid? AppRegistrationId { get; private set; }
 
     [JsonIgnore]
-    public AppRegistration? AppRegistration { get; set; }
+    public AppRegistration? AppRegistration { get; private set; }
 
     public const string ResourceUrl = "https://storage.azure.com//.default";
+
+    public void SetAppRegistration(AppRegistration? appRegistration)
+    {
+        AppRegistration = appRegistration;
+        AppRegistrationId = appRegistration?.AppRegistrationId;
+    }
 
     public BlobStorageExplorer CreateExplorer(ITokenService tokenService) => new(this, tokenService);
 }

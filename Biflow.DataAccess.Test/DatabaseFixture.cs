@@ -134,11 +134,11 @@ public class DatabaseFixture : IAsyncLifetime
 
             var blobClient1 = new BlobStorageClient
             {
-                AppRegistration = appRegistration,
                 BlobStorageClientName = "Test blob storage client",
                 ConnectionMethod = BlobStorageConnectionMethod.AppRegistration,
                 StorageAccountUrl = "https://some-storage-account-url.com/"
             };
+            blobClient1.SetAppRegistration(appRegistration);
 
             var blobClient2 = new BlobStorageClient
             {
