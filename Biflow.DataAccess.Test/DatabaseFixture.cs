@@ -134,25 +134,21 @@ public class DatabaseFixture : IAsyncLifetime
 
             var blobClient1 = new BlobStorageClient
             {
-                BlobStorageClientName = "Test blob storage client",
-                ConnectionMethod = BlobStorageConnectionMethod.AppRegistration,
-                StorageAccountUrl = "https://some-storage-account-url.com/"
+                BlobStorageClientName = "Test blob storage client"
             };
-            blobClient1.SetAppRegistration(appRegistration);
+            blobClient1.UseAppRegistration(appRegistration, "https://some-storage-account-url.com/");
 
             var blobClient2 = new BlobStorageClient
             {
-                BlobStorageClientName = "Test blob storage client 2",
-                ConnectionMethod = BlobStorageConnectionMethod.Url,
-                StorageAccountUrl = "https://some-storage-account-url.com?sig=asdasd"
+                BlobStorageClientName = "Test blob storage client 2"
             };
+            blobClient2.UseUrl("https://some-storage-account-url.com?sig=asdasd");
 
             var blobClient3 = new BlobStorageClient
             {
-                BlobStorageClientName = "Test blob storage client 3",
-                ConnectionMethod = BlobStorageConnectionMethod.ConnectionString,
-                ConnectionString = "some-connection-string"
+                BlobStorageClientName = "Test blob storage client 3"
             };
+            blobClient3.UseConnectionString("some-connection-string");
             #endregion
 
             #region JOB 1

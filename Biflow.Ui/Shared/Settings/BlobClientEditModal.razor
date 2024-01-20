@@ -25,7 +25,7 @@
                                     <input class="form-check-input" type="radio" id="connection_method_radio_app_registration"
                                            checked=@(client.ConnectionMethod == BlobStorageConnectionMethod.AppRegistration)
                                            disabled=@(!AppRegistrations?.Any() ?? true)
-                                           @onchange="e => ChangeConnectionMethod(BlobStorageConnectionMethod.AppRegistration)">
+                                           @onchange="@(e => client.UseAppRegistration(AppRegistrations!.First(), client.StorageAccountUrl ?? ""))">
                                     <label class="form-check-label fw-normal" for="connection_method_radio_app_registration">
                                         App registration
                                         <HxPopover Trigger="PopoverTrigger.Hover" Content="Use an app registration to authenticate against the Blob Storage account. The account url also needs to be provided. It is most likely in the format https://<accountname>.blob.core.windows.net/">
@@ -36,7 +36,7 @@
                                 <div class="form-check mt-1">
                                     <input class="form-check-input" type="radio" id="connection_method_radio_connection_string"
                                            checked=@(client.ConnectionMethod == BlobStorageConnectionMethod.ConnectionString)
-                                           @onchange="e => ChangeConnectionMethod(BlobStorageConnectionMethod.ConnectionString)">
+                                           @onchange="@(e => client.UseConnectionString(client.ConnectionString ?? ""))">
                                     <label class="form-check-label fw-normal" for="connection_method_radio_connection_string">
                                         Connection string
                                         <HxPopover Trigger="PopoverTrigger.Hover" Content="Use a connection string to authenticate against the Blob Storage account. The connection string may contain either an account key or a SAS token.">
@@ -47,7 +47,7 @@
                                 <div class="form-check mt-1">
                                     <input class="form-check-input" type="radio" id="connection_method_radio_url"
                                            checked=@(client.ConnectionMethod == BlobStorageConnectionMethod.Url)
-                                           @onchange="e => ChangeConnectionMethod(BlobStorageConnectionMethod.Url)">
+                                           @onchange="@(e => client.UseUrl(client.StorageAccountUrl ?? ""))">
                                     <label class="form-check-label fw-normal" for="connection_method_radio_url">
                                         URL
                                         <HxPopover Trigger="PopoverTrigger.Hover" Content="Use a URL containing a SAS token to authenticate against the Blob Storage account.">
@@ -78,7 +78,7 @@
                             <div class="row mt-3">
                                 <div class="col-lg">
                                     <label class="form-label">Blob storage URL</label>
-                                    <InputText class="form-control" @bind-Value="client.StorageAccountUrl"></InputText>
+                                    <InputText class="form-control" @bind-Value:get="client.StorageAccountUrl" @bind-Value:set="UrlChanged"></InputText>
                                 </div>
                             </div>
                         }
@@ -88,7 +88,7 @@
                             <div class="row mt-3">
                                 <div class="col-lg">
                                     <label class="form-label">Connection string</label>
-                                    <InputText class="form-control" @bind-Value="client.ConnectionString"></InputText>
+                                    <InputText class="form-control" @bind-Value:get="client.ConnectionString" @bind-Value:set="ConnectionStringChanged"></InputText>
                                 </div>
                             </div>
                         }
@@ -146,40 +146,8 @@
         }
         else
         {
-            client = new()
-            {
-                ConnectionMethod = BlobStorageConnectionMethod.ConnectionString
-            };
+            client = new();
         }
-    }
-
-    private void ChangeConnectionMethod(BlobStorageConnectionMethod method)
-    {
-        if (client is null)
-        {
-            return;
-        }
-
-        client.ConnectionMethod = method;
-
-        if (method == BlobStorageConnectionMethod.AppRegistration)
-        {
-            var appRegistration = AppRegistrations?.FirstOrDefault();
-            client.ConnectionString = null;
-            client.SetAppRegistration(appRegistration);
-        }
-        else if (method == BlobStorageConnectionMethod.ConnectionString)
-        {
-            client.SetAppRegistration(null);
-            client.StorageAccountUrl = null;
-        }
-        else if (method == BlobStorageConnectionMethod.Url)
-        {
-            client.SetAppRegistration(null);
-            client.ConnectionString = null;
-        }
-
-        StateHasChanged();
     }
 
     private async Task SubmitClientAsync()
@@ -205,12 +173,22 @@
         testingConnection = false;
     }
 
+    private void ConnectionStringChanged(string? connectionString)
+    {
+        client?.UseConnectionString(connectionString ?? "");
+    }
+
+    private void UrlChanged(string? url)
+    {
+        client?.UseUrl(url ?? "");
+    }
+
     private void AppRegistrationChanged(Guid? id)
     {
         var appRegistration = AppRegistrations?.FirstOrDefault(a => a.AppRegistrationId == id);
         if (appRegistration is not null && client is not null)
         {
-            client.SetAppRegistration(appRegistration);
+            client.UseAppRegistration(appRegistration, client?.StorageAccountUrl ?? "");
         }
     }
 
