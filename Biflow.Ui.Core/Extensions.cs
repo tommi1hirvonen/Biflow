@@ -122,10 +122,19 @@ public static partial class Extensions
     /// <exception cref="ArgumentException">Thrown if an incorrect configuration is detected</exception>
     public static IServiceCollection AddUiCoreServices(this IServiceCollection services, IConfiguration configuration)
     {
+        // Add the UserService and AppDbContext factory as scoped.
+        // The current user is captured and stored in UserService,
+        // which in turn is used in AppDbContext to filter data in global query filters
+        // based on the user's access permissions.
         services.AddScoped<IUserService, UserService>();
         services.AddDbContextFactory<AppDbContext>(lifetime: ServiceLifetime.Scoped);
+
+        // Add a second DbContext factory with singleton lifetime.
+        // This is used in background services where the user session is not relevant.
         services.AddDbContextFactory<ServiceDbContext>(lifetime: ServiceLifetime.Singleton);
+
         services.AddExecutionBuilderFactory<AppDbContext>(ServiceLifetime.Scoped);
+        
         services.AddHttpClient();
         services.AddHttpClient("DefaultCredentials")
             // Passes Windows credentials in on-premise installations to the scheduler API.
@@ -167,6 +176,8 @@ public static partial class Extensions
         services.AddScoped<SqlServerHelperService>();
         services.AddDuplicatorServices();
 
+        // Add the mediator dispatcher as a scoped service.
+        // This allows the use of other scoped services (e.g. AppDbContext factory) in request handlers.
         services.AddScoped<IMediator, Mediator>();
 
         // Add request handlers
