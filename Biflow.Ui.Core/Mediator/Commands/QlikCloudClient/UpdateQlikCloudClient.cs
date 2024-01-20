@@ -2,7 +2,7 @@
 
 public record UpdateQlikCloudClientCommand(QlikCloudClient Client) : IRequest;
 
-internal class UpdateQlikCloudClientCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
+internal class UpdateQlikCloudClientCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<UpdateQlikCloudClientCommand>
 {
     public async Task Handle(UpdateQlikCloudClientCommand request, CancellationToken cancellationToken)

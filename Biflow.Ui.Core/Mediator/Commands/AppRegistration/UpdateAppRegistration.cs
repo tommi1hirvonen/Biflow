@@ -2,7 +2,7 @@
 
 public record UpdateAppRegistrationCommand(AppRegistration AppRegistration) : IRequest;
 
-internal class UpdateAppRegistrationCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
+internal class UpdateAppRegistrationCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<UpdateAppRegistrationCommand>
 {
     public async Task Handle(UpdateAppRegistrationCommand request, CancellationToken cancellationToken)

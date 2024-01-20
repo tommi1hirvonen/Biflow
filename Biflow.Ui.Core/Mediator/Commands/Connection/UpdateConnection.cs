@@ -2,7 +2,7 @@
 
 public record UpdateConnectionCommand(ConnectionInfoBase Connection) : IRequest;
 
-internal class UpdateConnectionCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory) : IRequestHandler<UpdateConnectionCommand>
+internal class UpdateConnectionCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<UpdateConnectionCommand>
 {
     public async Task Handle(UpdateConnectionCommand request, CancellationToken cancellationToken)
     {

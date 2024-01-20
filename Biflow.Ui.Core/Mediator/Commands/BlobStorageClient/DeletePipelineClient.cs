@@ -2,7 +2,7 @@
 
 public record DeleteBlobStorageClientCommand(Guid BlobStorageClientId) : IRequest;
 
-internal class DeleteBlobStorageClientCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
+internal class DeleteBlobStorageClientCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<DeleteBlobStorageClientCommand>
 {
     public async Task Handle(DeleteBlobStorageClientCommand request, CancellationToken cancellationToken)

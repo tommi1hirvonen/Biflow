@@ -2,7 +2,7 @@
 
 public record CreateQlikCloudClientCommand(QlikCloudClient Client) : IRequest;
 
-internal class CreateQlikCloudClientCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
+internal class CreateQlikCloudClientCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<CreateQlikCloudClientCommand>
 {
     public async Task Handle(CreateQlikCloudClientCommand request, CancellationToken cancellationToken)

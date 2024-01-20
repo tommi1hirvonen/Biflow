@@ -2,7 +2,7 @@
 
 public record DeleteQlikCloudClientCommand(Guid QlikCloudClientId) : IRequest;
 
-internal class DeleteQlikCloudClientCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory) : IRequestHandler<DeleteQlikCloudClientCommand>
+internal class DeleteQlikCloudClientCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<DeleteQlikCloudClientCommand>
 {
     public async Task Handle(DeleteQlikCloudClientCommand request, CancellationToken cancellationToken)
     {

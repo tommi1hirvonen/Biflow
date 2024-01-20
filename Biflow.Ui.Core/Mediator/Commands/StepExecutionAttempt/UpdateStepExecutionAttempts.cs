@@ -2,7 +2,7 @@
 
 public record UpdateStepExecutionAttemptsCommand(IEnumerable<StepExecutionAttempt> Attempts) : IRequest;
 
-internal class UpdateStepExecutionAttemptsCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
+internal class UpdateStepExecutionAttemptsCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<UpdateStepExecutionAttemptsCommand>
 {
     public async Task Handle(UpdateStepExecutionAttemptsCommand request, CancellationToken cancellationToken)

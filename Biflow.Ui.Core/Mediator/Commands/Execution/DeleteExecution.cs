@@ -2,7 +2,7 @@
 
 public record DeleteExecutionCommand(Guid ExecutionId) : IRequest;
 
-internal class DeleteExecutionCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory) : IRequestHandler<DeleteExecutionCommand>
+internal class DeleteExecutionCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<DeleteExecutionCommand>
 {
     public async Task Handle(DeleteExecutionCommand request, CancellationToken cancellationToken)
     {

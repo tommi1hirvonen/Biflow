@@ -2,7 +2,7 @@
 
 public record CreateDependencyCommand(Dependency Dependency) : IRequest;
 
-internal class CreateDependencyCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory) : IRequestHandler<CreateDependencyCommand>
+internal class CreateDependencyCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<CreateDependencyCommand>
 {
     public async Task Handle(CreateDependencyCommand request, CancellationToken cancellationToken)
     {

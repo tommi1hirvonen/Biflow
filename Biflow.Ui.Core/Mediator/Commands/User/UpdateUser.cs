@@ -2,7 +2,7 @@
 
 public record UpdateUserCommand(User User) : IRequest;
 
-internal class UpdateUserCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
+internal class UpdateUserCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<UpdateUserCommand>
 {
     public async Task Handle(UpdateUserCommand request, CancellationToken cancellationToken)

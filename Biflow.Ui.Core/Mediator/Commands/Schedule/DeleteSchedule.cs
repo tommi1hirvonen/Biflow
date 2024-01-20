@@ -3,7 +3,7 @@
 public record DeleteScheduleCommand(Guid ScheduleId) : IRequest;
 
 internal class DeleteScheduleCommandHandler(
-    IDbContextFactory<ServiceDbContext> dbContextFactory,
+    IDbContextFactory<AppDbContext> dbContextFactory,
     ISchedulerService scheduler)
     : IRequestHandler<DeleteScheduleCommand>
 {

@@ -2,7 +2,7 @@
 
 public record CreateSubscriptionCommand(Subscription Subscription) : IRequest;
 
-internal class CreateSubscriptionCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
+internal class CreateSubscriptionCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<CreateSubscriptionCommand>
 {
     public async Task Handle(CreateSubscriptionCommand request, CancellationToken cancellationToken)

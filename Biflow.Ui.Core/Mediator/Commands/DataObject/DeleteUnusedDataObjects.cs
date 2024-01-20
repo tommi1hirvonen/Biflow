@@ -4,7 +4,7 @@ public record DeleteUnusedDataObjectsCommand : IRequest<DeleteUnusedDataObjectsR
 
 public record DeleteUnusedDataObjectsResponse(IEnumerable<DataObject> DeletedDataObjects);
 
-internal class DeleteUnusedDataObjectsCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
+internal class DeleteUnusedDataObjectsCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<DeleteUnusedDataObjectsCommand, DeleteUnusedDataObjectsResponse>
 {
     public async Task<DeleteUnusedDataObjectsResponse> Handle(DeleteUnusedDataObjectsCommand request, CancellationToken cancellationToken)

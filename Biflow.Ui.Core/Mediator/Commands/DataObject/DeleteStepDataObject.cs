@@ -2,7 +2,7 @@
 
 public record DeleteStepDataObjectCommand(StepDataObject Reference) : IRequest;
 
-internal class DeleteStepDataObjectCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
+internal class DeleteStepDataObjectCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<DeleteStepDataObjectCommand>
 {
     public async Task Handle(DeleteStepDataObjectCommand request, CancellationToken cancellationToken)

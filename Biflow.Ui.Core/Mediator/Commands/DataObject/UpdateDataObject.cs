@@ -2,7 +2,7 @@
 
 public record UpdateDataObjectCommand(DataObject DataObject) : IRequest;
 
-internal class UpdateDataObjectCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
+internal class UpdateDataObjectCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<UpdateDataObjectCommand>
 {
     public async Task Handle(UpdateDataObjectCommand request, CancellationToken cancellationToken)

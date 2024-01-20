@@ -5,7 +5,7 @@ public record DeleteStepsCommand(params Guid[] StepIds) : IRequest
     public DeleteStepsCommand(IEnumerable<Step> steps) : this(steps.Select(s => s.StepId).ToArray()) { }
 }
 
-internal class DeleteStepsCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory) : IRequestHandler<DeleteStepsCommand>
+internal class DeleteStepsCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<DeleteStepsCommand>
 {
     public async Task Handle(DeleteStepsCommand request, CancellationToken cancellationToken)
     {

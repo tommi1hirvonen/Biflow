@@ -2,7 +2,7 @@
 
 public record DeleteTagCommand(Guid TagId) : IRequest;
 
-internal class DeleteTagCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory) : IRequestHandler<DeleteTagCommand>
+internal class DeleteTagCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<DeleteTagCommand>
 {
     public async Task Handle(DeleteTagCommand request, CancellationToken cancellationToken)
     {

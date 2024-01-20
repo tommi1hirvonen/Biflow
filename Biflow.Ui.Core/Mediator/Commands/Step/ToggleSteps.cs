@@ -9,7 +9,7 @@ public record ToggleStepsCommand(Guid[] StepIds, bool IsEnabled) : IRequest
         : this(steps.Select(s => s.StepId).Distinct().ToArray(), isEnabled) { }
 }
 
-internal class ToggleStepsCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
+internal class ToggleStepsCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<ToggleStepsCommand>
 {
     public async Task Handle(ToggleStepsCommand request, CancellationToken cancellationToken)

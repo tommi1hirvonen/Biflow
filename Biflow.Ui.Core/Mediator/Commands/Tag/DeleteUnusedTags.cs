@@ -4,7 +4,7 @@ public record DeleteUnusedTagsCommand : IRequest<DeleteUnusedTagsResponse>;
 
 public record DeleteUnusedTagsResponse(IEnumerable<Tag> DeletedTags);
 
-internal class DeleteUnusedTagsCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
+internal class DeleteUnusedTagsCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<DeleteUnusedTagsCommand, DeleteUnusedTagsResponse>
 {
     public async Task<DeleteUnusedTagsResponse> Handle(DeleteUnusedTagsCommand request, CancellationToken cancellationToken)

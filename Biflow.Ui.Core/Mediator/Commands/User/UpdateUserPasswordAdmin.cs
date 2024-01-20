@@ -9,7 +9,7 @@ namespace Biflow.Ui.Core;
 /// <param name="Password">New password</param>
 public record UpdateUserPasswordAdminCommand(string Username, string Password) : IRequest;
 
-internal class UpdateUserPasswordAdminCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
+internal class UpdateUserPasswordAdminCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<UpdateUserPasswordAdminCommand>
 {
     public async Task Handle(UpdateUserPasswordAdminCommand request, CancellationToken cancellationToken)

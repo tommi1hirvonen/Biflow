@@ -2,7 +2,7 @@
 
 public record CreateFunctionAppCommand(FunctionApp FunctionApp) : IRequest;
 
-internal class CreateFunctionAppCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
+internal class CreateFunctionAppCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<CreateFunctionAppCommand>
 {
     public async Task Handle(CreateFunctionAppCommand request, CancellationToken cancellationToken)

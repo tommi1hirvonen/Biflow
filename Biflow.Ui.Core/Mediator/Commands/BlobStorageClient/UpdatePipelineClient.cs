@@ -2,7 +2,7 @@
 
 public record UpdateBlobStorageClientCommand(BlobStorageClient Client) : IRequest;
 
-internal class UpdateBlobStorageClientCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
+internal class UpdateBlobStorageClientCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<UpdateBlobStorageClientCommand>
 {
     public async Task Handle(UpdateBlobStorageClientCommand request, CancellationToken cancellationToken)
