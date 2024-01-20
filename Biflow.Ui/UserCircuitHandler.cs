@@ -2,6 +2,13 @@
 
 namespace Biflow.Ui;
 
+/// <summary>
+/// Captures the current user from <see cref="AuthenticationStateProvider"/>
+/// and sets the user in <see cref="IUserService"/> for current user access in scoped services.
+/// This type is registered as a scoped service in DI.
+/// </summary>
+/// <param name="authenticationStateProvider"></param>
+/// <param name="userService"></param>
 internal sealed class UserCircuitHandler(
     AuthenticationStateProvider authenticationStateProvider,
     IUserService userService) : CircuitHandler, IDisposable

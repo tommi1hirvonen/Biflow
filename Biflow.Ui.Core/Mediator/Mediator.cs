@@ -2,6 +2,10 @@
 
 namespace Biflow.Ui.Core;
 
+/// <summary>
+/// Custom implementation of a dispatcher in the mediator pattern.
+/// This type is registered as a scoped service in DI.
+/// </summary>
 internal class Mediator(IServiceProvider serviceProvider) : IMediator
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider;
