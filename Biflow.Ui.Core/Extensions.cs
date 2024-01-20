@@ -49,7 +49,7 @@ public static partial class Extensions
         AuthenticationMethod method;
         if (authentication == "BuiltIn")
         {
-            services.AddSingleton<IAuthHandler, BuiltInAuthHandler>();
+            services.AddScoped<IAuthHandler, BuiltInAuthHandler>();
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
             method = AuthenticationMethod.BuiltIn;
         }
@@ -59,8 +59,8 @@ public static partial class Extensions
             services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
             services.AddAuthorizationBuilder()
                 .SetFallbackPolicy(new AuthorizationPolicyBuilder().AddRequirements(new UserExistsRequirement()).Build());
-            services.AddSingleton<IAuthorizationHandler, WindowsAuthorizationHandler>();
-            services.AddSingleton<IClaimsTransformation, ClaimsTransformer>();
+            services.AddScoped<IAuthorizationHandler, WindowsAuthorizationHandler>();
+            services.AddScoped<IClaimsTransformation, ClaimsTransformer>();
             method = AuthenticationMethod.Windows;
         }
         else if (authentication == "AzureAd")
@@ -72,12 +72,12 @@ public static partial class Extensions
             {
                 options.FallbackPolicy = options.DefaultPolicy;
             });
-            services.AddSingleton<IClaimsTransformation, ClaimsTransformer>();
+            services.AddScoped<IClaimsTransformation, ClaimsTransformer>();
             method = AuthenticationMethod.AzureAd;
         }
         else if (authentication == "Ldap")
         {
-            services.AddSingleton<IAuthHandler, LdapAuthHandler>();
+            services.AddScoped<IAuthHandler, LdapAuthHandler>();
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
             method = AuthenticationMethod.Ldap;
         }
@@ -101,7 +101,8 @@ public static partial class Extensions
         {
             var adminUsername = adminSection.GetValue<string>("Username");
             ArgumentNullException.ThrowIfNull(adminUsername);
-            var mediator = app.Services.GetRequiredService<IMediator>();
+            using var scope = app.Services.CreateScope();
+            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
             var authentication = app.Configuration.GetValue<string>("Authentication");
             string? adminPassword = null;
             if (authentication == "BuiltIn")
@@ -165,7 +166,21 @@ public static partial class Extensions
         services.AddScoped<EnvironmentSnapshotBuilder>();
         services.AddScoped<SqlServerHelperService>();
         services.AddDuplicatorServices();
-        services.AddMediatR(config => config.RegisterServicesFromAssemblyContaining<MediatREntryPoint>());
+
+        services.AddScoped<IMediator, Mediator>();
+
+        // Add request handlers
+        services.Scan(selector =>
+        {
+            selector.FromAssemblyOf<Mediator>()
+                .AddClasses(filter => filter.AssignableTo(typeof(IRequestHandler<>)))
+                .AsImplementedInterfaces()
+                .WithTransientLifetime();
+            selector.FromAssemblyOf<Mediator>()
+                .AddClasses(filter => filter.AssignableTo(typeof(IRequestHandler<,>)))
+                .AsImplementedInterfaces()
+                .WithTransientLifetime();
+        });
 
         return services;
     }
