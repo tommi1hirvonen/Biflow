@@ -180,7 +180,14 @@
 
     private void UrlChanged(string? url)
     {
-        client?.UseUrl(url ?? "");
+        if (client?.ConnectionMethod == BlobStorageConnectionMethod.AppRegistration && client.AppRegistration is not null)
+        {
+            client.UseAppRegistration(client.AppRegistration, url ?? "");
+        }
+        else
+        {
+            client?.UseUrl(url ?? "");    
+        }
     }
 
     private void AppRegistrationChanged(Guid? id)
