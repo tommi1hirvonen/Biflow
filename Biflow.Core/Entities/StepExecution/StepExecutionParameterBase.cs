@@ -1,4 +1,5 @@
-﻿using Biflow.Core.Interfaces;
+﻿using Biflow.Core.Constants;
+using Biflow.Core.Interfaces;
 
 namespace Biflow.Core.Entities;
 

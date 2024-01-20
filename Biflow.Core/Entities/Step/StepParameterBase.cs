@@ -1,4 +1,5 @@
-﻿using Biflow.Core.Interfaces;
+﻿using Biflow.Core.Constants;
+using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 

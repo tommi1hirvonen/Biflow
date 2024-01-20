@@ -1,4 +1,4 @@
-﻿namespace Biflow.Core.Entities;
+﻿namespace Biflow.Core.Constants;
 
 /// <summary>
 /// Static class to contain constant strings used as names for defining job and step expression parameters
