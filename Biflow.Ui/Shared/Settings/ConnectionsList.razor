@@ -64,8 +64,8 @@
                 {
                     var steps = connection switch
                     {
-                        SqlConnectionInfo sql => sql.SqlSteps.Count + sql.PackageSteps.Count + sql.AgentJobSteps.Count,
-                        AnalysisServicesConnectionInfo analysis => analysis.TabularSteps.Count,
+                        SqlConnectionInfo sql => sql.SqlSteps.Count() + sql.PackageSteps.Count() + sql.AgentJobSteps.Count(),
+                        AnalysisServicesConnectionInfo analysis => analysis.TabularSteps.Count(),
                         _ => 0
                     };
                     var jobs = connection switch
