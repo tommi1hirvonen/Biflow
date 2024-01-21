@@ -16,7 +16,10 @@ internal class SqlStepExecutor(
     protected override SqlStepExecutionAttempt Clone(SqlStepExecutionAttempt other, int retryAttemptIndex) =>
         new(other, retryAttemptIndex);
 
-    protected override async Task<Result> ExecuteAsync(SqlStepExecution step, SqlStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
+    protected override async Task<Result> ExecuteAsync(
+        SqlStepExecution step,
+        SqlStepExecutionAttempt attempt,
+        ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();

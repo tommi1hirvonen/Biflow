@@ -15,7 +15,10 @@ internal class EmailStepExecutor(
     protected override EmailStepExecutionAttempt Clone(EmailStepExecutionAttempt other, int retryAttemptIndex) =>
         new(other, retryAttemptIndex);
 
-    protected override async Task<Result> ExecuteAsync(EmailStepExecution step, EmailStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
+    protected override async Task<Result> ExecuteAsync(
+        EmailStepExecution step,
+        EmailStepExecutionAttempt attempt,
+        ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();

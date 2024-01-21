@@ -12,7 +12,10 @@ internal class TabularStepExecutor(
     protected override TabularStepExecutionAttempt Clone(TabularStepExecutionAttempt other, int retryAttemptIndex) =>
         new(other, retryAttemptIndex);
 
-    protected override async Task<Result> ExecuteAsync(TabularStepExecution step, TabularStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
+    protected override async Task<Result> ExecuteAsync(
+        TabularStepExecution step,
+        TabularStepExecutionAttempt attempt,
+        ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();

@@ -23,7 +23,10 @@ internal class PackageStepExecutor(
     protected override PackageStepExecutionAttempt Clone(PackageStepExecutionAttempt other, int retryAttemptIndex) =>
         new(other, retryAttemptIndex);
 
-    protected override async Task<Result> ExecuteAsync(PackageStepExecution step, PackageStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
+    protected override async Task<Result> ExecuteAsync(
+        PackageStepExecution step,
+        PackageStepExecutionAttempt attempt,
+        ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();

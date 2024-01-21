@@ -21,7 +21,10 @@ internal class AgentJobStepExecutor(
     protected override AgentJobStepExecutionAttempt Clone(AgentJobStepExecutionAttempt other, int retryAttemptIndex) =>
         new(other, retryAttemptIndex);
 
-    protected override async Task<Result> ExecuteAsync(AgentJobStepExecution step, AgentJobStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
+    protected override async Task<Result> ExecuteAsync(
+        AgentJobStepExecution step,
+        AgentJobStepExecutionAttempt attempt,
+        ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();

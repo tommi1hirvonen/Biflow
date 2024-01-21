@@ -305,8 +305,19 @@ internal class FunctionStepExecutor(
         }, cancellationToken);
     }
 
-    private record StartResponse(string Id, string StatusQueryGetUri, string SendEventPostUri, string TerminatePostUri, string PurgeHistoryDeleteUri);
+    private record StartResponse(
+        string Id,
+        string StatusQueryGetUri,
+        string SendEventPostUri,
+        string TerminatePostUri,
+        string PurgeHistoryDeleteUri);
 
-    private record StatusResponse(string Name, string InstanceId, string RuntimeStatus, JsonElement? Input, JsonElement? CustomStatus,
-        JsonElement? Output, DateTime CreatedTime, DateTime LastUpdatedTime);
+    private record StatusResponse(string Name,
+        string InstanceId,
+        string RuntimeStatus,
+        JsonElement? Input,
+        JsonElement? CustomStatus,
+        JsonElement? Output,
+        DateTime CreatedTime,
+        DateTime LastUpdatedTime);
 }
