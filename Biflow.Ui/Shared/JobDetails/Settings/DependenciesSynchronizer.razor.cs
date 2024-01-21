@@ -95,7 +95,7 @@ public partial class DependenciesSynchronizer : ComponentBase
     private async Task AddDependencyAsync(Dependency dependency)
     {
         // Add dependency to database.
-        await Mediator.Send(new CreateDependencyCommand(dependency));
+        await Mediator.SendAsync(new CreateDependencyCommand(dependency));
 
         // Add dependency to the step loaded into memory.
         var step = Steps?.FirstOrDefault(step => step.StepId == dependency.StepId);
@@ -113,7 +113,7 @@ public partial class DependenciesSynchronizer : ComponentBase
     private async Task RemoveDependencyAsync(Dependency dependency)
     {
         // Remove dependency from the database.
-        await Mediator.Send(new DeleteDependencyCommand(dependency.StepId, dependency.DependantOnStepId));
+        await Mediator.SendAsync(new DeleteDependencyCommand(dependency.StepId, dependency.DependantOnStepId));
 
         // Remove dependency from step loaded into memory.
         var step = Steps?.FirstOrDefault(step => step.StepId == dependency.StepId);

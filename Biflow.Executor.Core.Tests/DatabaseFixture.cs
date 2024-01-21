@@ -1,4 +1,5 @@
 ﻿using Biflow.Core;
+using Biflow.Core.Constants;
 using Biflow.Core.Entities;
 using Biflow.DataAccess;
 using Microsoft.EntityFrameworkCore;
@@ -145,10 +146,10 @@ public class DatabaseFixture : IAsyncLifetime
             {
                 Username = "admin",
                 Email = "",
-                Roles = [Roles.Admin],
                 AuthorizeAllDataTables = true,
                 AuthorizeAllJobs = true
             };
+            user1.SetIsAdmin();
 
             var sub1 = new JobSubscription(user1.UserId, job1.JobId)
             {

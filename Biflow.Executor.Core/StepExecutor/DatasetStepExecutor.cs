@@ -6,29 +6,33 @@ namespace Biflow.Executor.Core.StepExecutor;
 
 internal class DatasetStepExecutor(
     ILogger<DatasetStepExecutor> logger,
+    IDbContextFactory<ExecutorDbContext> dbContextFactory,
     IOptionsMonitor<ExecutionOptions> options,
-    ITokenService tokenService,
-    DatasetStepExecution step) : IStepExecutor<DatasetStepExecutionAttempt>
+    ITokenService tokenService)
+    : StepExecutor<DatasetStepExecution, DatasetStepExecutionAttempt>(logger, dbContextFactory)
 {
     private readonly ILogger<DatasetStepExecutor> _logger = logger;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
-    private readonly DatasetStepExecution _step = step;
-    private readonly DatasetClient _datasetClient = step.GetAppRegistration()?.CreateDatasetClient(tokenService)
-        ?? throw new ArgumentNullException(nameof(_datasetClient));
+    private readonly ITokenService _tokenService = tokenService;
 
-    public DatasetStepExecutionAttempt Clone(DatasetStepExecutionAttempt other, int retryAttemptIndex) =>
-        new(other, retryAttemptIndex);
+    protected override DatasetStepExecutionAttempt AddAttempt(DatasetStepExecution step, StepExecutionStatus withStatus) =>
+        step.AddAttempt(withStatus);
 
-    public async Task<Result> ExecuteAsync(DatasetStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
+    protected override async Task<Result> ExecuteAsync(
+        DatasetStepExecution step,
+        DatasetStepExecutionAttempt attempt,
+        ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
+        var client = step.GetAppRegistration()?.CreateDatasetClient(_tokenService);
+        ArgumentNullException.ThrowIfNull(client);
 
         // Start dataset refresh.
         try
         {
-            await _datasetClient.RefreshDatasetAsync(_step.DatasetGroupId, _step.DatasetId, cancellationToken);
+            await client.RefreshDatasetAsync(step.DatasetGroupId, step.DatasetId, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -48,7 +52,7 @@ internal class DatasetStepExecutor(
         {
             try
             {
-                var (status, refresh) = await _datasetClient.GetDatasetRefreshStatusAsync(_step.DatasetGroupId, _step.DatasetId, cancellationToken);
+                var (status, refresh) = await client.GetDatasetRefreshStatusAsync(step.DatasetGroupId, step.DatasetId, cancellationToken);
                 switch (status)
                 {
                     case DatasetRefreshStatus.Completed:

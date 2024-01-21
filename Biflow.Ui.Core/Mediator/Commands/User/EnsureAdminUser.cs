@@ -20,9 +20,9 @@ internal class EnsureAdminUserCommandHandler(IDbContextFactory<AppDbContext> dbC
         {
             Username = request.Username,
             CreatedOn = DateTimeOffset.Now,
-            LastModifiedOn = DateTimeOffset.Now,
-            Roles = [Roles.Admin]
+            LastModifiedOn = DateTimeOffset.Now
         };
+        user.SetIsAdmin();
 
         var passwordHash = string.IsNullOrEmpty(request.Password)
             ? null
@@ -31,7 +31,7 @@ internal class EnsureAdminUserCommandHandler(IDbContextFactory<AppDbContext> dbC
         var affectedRows = await context.Users
             .Where(u => u.Username == request.Username)
             .ExecuteUpdateAsync(updates => updates
-                .SetProperty(u => u.Roles, user.Roles)
+                .SetProperty(u => EF.Property<List<string>>(u, "_roles"), user.Roles)
                 .SetProperty(u => EF.Property<string?>(u, "PasswordHash"), passwordHash), cancellationToken);
         
         if (affectedRows == 0)

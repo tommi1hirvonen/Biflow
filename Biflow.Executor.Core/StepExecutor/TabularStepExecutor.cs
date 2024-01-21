@@ -1,38 +1,44 @@
 ﻿using Biflow.Executor.Core.Common;
 using Microsoft.AnalysisServices.Tabular;
+using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-internal class TabularStepExecutor(TabularStepExecution step) : IStepExecutor<TabularStepExecutionAttempt>
+internal class TabularStepExecutor(
+    ILogger<TabularStepExecutor> logger,
+    IDbContextFactory<ExecutorDbContext> dbContextFactory)
+    : StepExecutor<TabularStepExecution, TabularStepExecutionAttempt>(logger, dbContextFactory)
 {
-    private readonly TabularStepExecution _step = step;
-    private readonly AnalysisServicesConnectionInfo _connection = step.GetConnection()
-        ?? throw new ArgumentNullException(nameof(_connection));
+    protected override TabularStepExecutionAttempt AddAttempt(TabularStepExecution step, StepExecutionStatus withStatus) =>
+        step.AddAttempt(withStatus);
 
-    public TabularStepExecutionAttempt Clone(TabularStepExecutionAttempt other, int retryAttemptIndex) =>
-        new(other, retryAttemptIndex);
-
-    public async Task<Result> ExecuteAsync(TabularStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
+    protected override async Task<Result> ExecuteAsync(
+        TabularStepExecution step,
+        TabularStepExecutionAttempt attempt,
+        ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
+
+        var connection = step.GetConnection();
+        ArgumentNullException.ThrowIfNull(connection);
 
         using var server = new Server();
         try
         {
             var refreshTask = Task.Run(() =>
             {       
-                server.Connect(_connection.ConnectionString);
+                server.Connect(connection.ConnectionString);
 
-                var database = server.Databases[_step.TabularModelName];
+                var database = server.Databases[step.TabularModelName];
                 var model = database.Model;
 
-                if (!string.IsNullOrEmpty(_step.TabularTableName))
+                if (!string.IsNullOrEmpty(step.TabularTableName))
                 {
-                    var table = model.Tables[_step.TabularTableName];
-                    if (!string.IsNullOrEmpty(_step.TabularPartitionName))
+                    var table = model.Tables[step.TabularTableName];
+                    if (!string.IsNullOrEmpty(step.TabularPartitionName))
                     {
-                        var partition = table.Partitions[_step.TabularPartitionName];
+                        var partition = table.Partitions[step.TabularPartitionName];
                         partition.RequestRefresh(RefreshType.Full);
                     }
                     else
@@ -48,8 +54,8 @@ internal class TabularStepExecutor(TabularStepExecution step) : IStepExecutor<Ta
                 model.SaveChanges(); // This is a long running operation. RequestRefresh() returns immediately.
             });
             
-            var timeoutTask = _step.TimeoutMinutes > 0
-                ? Task.Delay(TimeSpan.FromMinutes(_step.TimeoutMinutes), cancellationToken)
+            var timeoutTask = step.TimeoutMinutes > 0
+                ? Task.Delay(TimeSpan.FromMinutes(step.TimeoutMinutes), cancellationToken)
                 : Task.Delay(-1, cancellationToken);
 
             await Task.WhenAny(refreshTask, timeoutTask);

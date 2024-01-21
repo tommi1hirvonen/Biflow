@@ -7,45 +7,47 @@ internal class JobStepExecutor(
     ILogger<JobStepExecutor> logger,
     IExecutionManager executionManager,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    IExecutionBuilderFactory<ExecutorDbContext> executionBuilderFactory,
-    JobStepExecution step) : IStepExecutor<JobStepExecutionAttempt>
+    IExecutionBuilderFactory<ExecutorDbContext> executionBuilderFactory)
+    : StepExecutor<JobStepExecution, JobStepExecutionAttempt>(logger, dbContextFactory)
 {
     private readonly ILogger<JobStepExecutor> _logger = logger;
     private readonly IExecutionBuilderFactory<ExecutorDbContext> _executionBuilderFactory = executionBuilderFactory;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
     private readonly IExecutionManager _executionManager = executionManager;
-    private readonly JobStepExecution _step = step;
 
-    public JobStepExecutionAttempt Clone(JobStepExecutionAttempt other, int retryAttemptIndex) =>
-        new(other, retryAttemptIndex);
+    protected override JobStepExecutionAttempt AddAttempt(JobStepExecution step, StepExecutionStatus withStatus) =>
+        step.AddAttempt(withStatus);
 
-    public async Task<Result> ExecuteAsync(JobStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
+    protected override async Task<Result> ExecuteAsync(
+        JobStepExecution step,
+        JobStepExecutionAttempt attempt,
+        ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
-        var executionAttempt = _step.StepExecutionAttempts.MaxBy(e => e.RetryAttemptIndex);
+        var executionAttempt = step.StepExecutionAttempts.MaxBy(e => e.RetryAttemptIndex);
         Guid jobExecutionId;
         try
         {
-            var tagIds = _step.TagFilters.Any() switch
+            var tagIds = step.TagFilters.Any() switch
             {
-                true => _step.TagFilters.Select(t => t.TagId).ToArray(),
+                true => step.TagFilters.Select(t => t.TagId).ToArray(),
                 _ => null
             };
-            using var builder = await _executionBuilderFactory.CreateAsync(_step.JobToExecuteId, createdBy: null, parent: executionAttempt,
+            using var builder = await _executionBuilderFactory.CreateAsync(step.JobToExecuteId, createdBy: null, parent: executionAttempt,
                 context => step => step.IsEnabled,
                 context => step => tagIds == null || step.Tags.Any(t => tagIds.Contains(t.TagId)));
             ArgumentNullException.ThrowIfNull(builder);
             builder.AddAll();
-            builder.Notify = _step.Execution.Notify;
-            builder.NotifyCaller = _step.Execution.NotifyCaller;
-            builder.NotifyCallerOvertime = _step.Execution.NotifyCallerOvertime;
+            builder.Notify = step.Execution.Notify;
+            builder.NotifyCaller = step.Execution.NotifyCaller;
+            builder.NotifyCallerOvertime = step.Execution.NotifyCallerOvertime;
 
             // Assign step parameter values to the initialized execution.
-            if (_step.StepExecutionParameters.Any())
+            if (step.StepExecutionParameters.Any())
             {
-                var parameters = _step.StepExecutionParameters
+                var parameters = step.StepExecutionParameters
                     .Cast<JobStepExecutionParameter>()
                     .Join(builder.Parameters,
                     stepParam => stepParam.AssignToJobParameterId,
@@ -70,7 +72,7 @@ internal class JobStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error initializing execution for job {jobId}", _step.ExecutionId, _step, _step.JobToExecuteId);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error initializing execution for job {jobId}", step.ExecutionId, step, step.JobToExecuteId);
             attempt.AddError(ex, "Error initializing job execution");
             return Result.Failure;
         }
@@ -85,7 +87,7 @@ internal class JobStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error logging child job execution id {executionId}", _step.ExecutionId, _step, jobExecutionId);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error logging child job execution id {executionId}", step.ExecutionId, step, jobExecutionId);
             attempt.AddWarning(ex, $"Error logging child job execution id {jobExecutionId}");
         }
             
@@ -95,12 +97,12 @@ internal class JobStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error starting executor process for execution {executionId}", _step.ExecutionId, _step, jobExecutionId);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error starting executor process for execution {executionId}", step.ExecutionId, step, jobExecutionId);
             attempt.AddError(ex, "Error starting executor process");
             return Result.Failure;
         }
 
-        if (_step.JobExecuteSynchronized)
+        if (step.JobExecuteSynchronized)
         {
             try
             {
@@ -140,7 +142,7 @@ internal class JobStepExecutor(
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{ExecutionId} {Step} Error getting sub-execution status for execution id {executionId}", _step.ExecutionId, _step, jobExecutionId);
+                _logger.LogError(ex, "{ExecutionId} {Step} Error getting sub-execution status for execution id {executionId}", step.ExecutionId, step, jobExecutionId);
                 attempt.AddError(ex, "Error getting sub-execution status");
                 return Result.Failure;
             }

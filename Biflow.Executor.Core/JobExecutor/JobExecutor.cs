@@ -31,14 +31,11 @@ internal class JobExecutor(
         try
         {
             var process = Process.GetCurrentProcess();
+            using var context = _dbContextFactory.CreateDbContext();
+            context.Attach(_execution);
             _execution.ExecutorProcessId = process.Id;
             _execution.ExecutionStatus = ExecutionStatus.Running;
             _execution.StartedOn = DateTimeOffset.Now;
-            using var context = _dbContextFactory.CreateDbContext();
-            context.Attach(_execution);
-            context.Entry(_execution).Property(e => e.ExecutorProcessId).IsModified = true;
-            context.Entry(_execution).Property(e => e.ExecutionStatus).IsModified = true;
-            context.Entry(_execution).Property(e => e.StartedOn).IsModified = true;
             await context.SaveChangesAsync(cancellationToken);
         }
         catch (Exception ex)
@@ -133,49 +130,13 @@ internal class JobExecutor(
             _logger.LogError(ex, "Error during job execution");
         }
 
-        // Get job execution status based on step execution statuses.
-        var allStepAttempts = _execution.StepExecutions.SelectMany(e => e.StepExecutionAttempts).ToList();
-        ExecutionStatus status;
-        if (allStepAttempts.All(step => step.ExecutionStatus == StepExecutionStatus.Succeeded
-            || step.ExecutionStatus == StepExecutionStatus.Skipped
-            || step.ExecutionStatus == StepExecutionStatus.DependenciesFailed))
-        {
-            status = ExecutionStatus.Succeeded;
-        }
-        else if (allStepAttempts.Any(step => step.ExecutionStatus == StepExecutionStatus.Failed))
-        {
-            status = ExecutionStatus.Failed;
-        }
-        else if (allStepAttempts.Any(step => step.ExecutionStatus == StepExecutionStatus.Retry
-            || step.ExecutionStatus == StepExecutionStatus.Duplicate
-            || step.ExecutionStatus == StepExecutionStatus.Warning))
-        {
-            status = ExecutionStatus.Warning;
-        }
-        else if (allStepAttempts.Any(step => step.ExecutionStatus == StepExecutionStatus.Stopped))
-        {
-            status = ExecutionStatus.Stopped;
-        }
-        else if (allStepAttempts.Any(step => step.ExecutionStatus == StepExecutionStatus.NotStarted
-            || step.ExecutionStatus == StepExecutionStatus.Queued
-            || step.ExecutionStatus == StepExecutionStatus.AwaitingRetry))
-        {
-            status = ExecutionStatus.Suspended;
-        }
-        else
-        {
-            status = ExecutionStatus.Failed;
-        }
-
         // Update job execution status.
         try
         {
             using var context = _dbContextFactory.CreateDbContext();
-            _execution.ExecutionStatus = status;
-            _execution.EndedOn = DateTimeOffset.Now;
             context.Attach(_execution);
-            context.Entry(_execution).Property(e => e.ExecutionStatus).IsModified = true;
-            context.Entry(_execution).Property(e => e.EndedOn).IsModified = true;
+            _execution.ExecutionStatus = _execution.GetCalculatedStatus();
+            _execution.EndedOn = DateTimeOffset.Now;
             await context.SaveChangesAsync(CancellationToken.None);
         }
         catch (Exception ex)
@@ -204,11 +165,8 @@ internal class JobExecutor(
     private async Task<string?> GetCircularJobExecutionsAsync(Guid jobId, CancellationToken cancellationToken)
     {
         var dependencies = await ReadJobDependenciesAsync(cancellationToken);
-        IEnumerable<IEnumerable<Job>> cycles = dependencies.FindCycles();
-        var jobs = cycles
-            .Select(c => c.Select(c_ => new { c_.JobId, c_.JobName }).ToArray())
-            .ToArray();
-        var json = JsonSerializer.Serialize(jobs, _serializerOptions);
+        IEnumerable<IEnumerable<JobProjection>> cycles = dependencies.FindCycles();
+        var json = JsonSerializer.Serialize(cycles, _serializerOptions);
 
         // There are no circular dependencies or this job is not among the cycles.
         return !cycles.Any() || !cycles.Any(jobs => jobs.Any(j => j.JobId == jobId))
@@ -219,45 +177,41 @@ internal class JobExecutor(
     {
         // Find circular step dependencies which are not allowed since they would block each other's executions.
         var dependencies = await ReadStepDependenciesAsync(cancellationToken);
-        IEnumerable<IEnumerable<Step>> cycles = dependencies.FindCycles();
-        var steps = cycles
-            .Select(c1 => c1.Select(c2 => new { c2.StepId, c2.StepName }).ToArray())
-            .ToArray();
-        var json = JsonSerializer.Serialize(steps, _serializerOptions);
+        IEnumerable<IEnumerable<StepProjection>> cycles = dependencies.FindCycles();
+        var json = JsonSerializer.Serialize(cycles, _serializerOptions);
         return !cycles.Any() ? null : json;
     }
 
-    private async Task<Dictionary<Job, Job[]>> ReadJobDependenciesAsync(CancellationToken cancellationToken)
+    private async Task<Dictionary<JobProjection, JobProjection[]>> ReadJobDependenciesAsync(CancellationToken cancellationToken)
     {
         using var context = _dbContextFactory.CreateDbContext();
-        var steps = await context.JobSteps
-            .AsNoTrackingWithIdentityResolution()
-            .Include(step => step.Job)
-            .Include(step => step.JobToExecute)
+        var jobs = await context.JobSteps
+            .AsNoTracking()
             .Select(step => new
             {
-                step.Job,
-                step.JobToExecute
+                Job = new JobProjection(step.Job.JobId, step.Job.JobName),
+                JobToExecute = new JobProjection(step.JobToExecute.JobId, step.JobToExecute.JobName)
             })
             .ToArrayAsync(cancellationToken);
-        var dependencies = steps
+        var dependencies = jobs
             .GroupBy(key => key.Job, element => element.JobToExecute)
             .ToDictionary(grouping => grouping.Key, grouping => grouping.ToArray());
         return dependencies;
     }
 
-    private async Task<Dictionary<Step, Step[]>> ReadStepDependenciesAsync(CancellationToken cancellationToken)
+    private async Task<Dictionary<StepProjection, StepProjection[]>> ReadStepDependenciesAsync(CancellationToken cancellationToken)
     {
         using var context = _dbContextFactory.CreateDbContext();
-        var steps = await context.Steps
-            .AsNoTrackingWithIdentityResolution()
-            .Where(step => step.JobId == _execution.JobId)
-            .Include(step => step.Dependencies)
-            .ThenInclude(d => d.DependantOnStep)
+        var steps = await context.Dependencies
+            .AsNoTracking()
+            .Where(d => d.Step.JobId == _execution.JobId)
+            .Select(d => new
+            {
+                Step = new StepProjection(d.Step.StepId, d.Step.StepName),
+                DependantOnStep = new StepProjection(d.DependantOnStep.StepId, d.DependantOnStep.StepName)
+            })
             .ToArrayAsync(cancellationToken);
         var dependencies = steps
-            .SelectMany(step => step.Dependencies)
-            .Select(d => new { d.Step, d.DependantOnStep})
             .GroupBy(key => key.Step, element => element.DependantOnStep)
             .ToDictionary(g => g.Key, g => g.ToArray());
         return dependencies;
@@ -269,19 +223,22 @@ internal class JobExecutor(
         
         foreach (var attempt in _execution.StepExecutions.SelectMany(s => s.StepExecutionAttempts))
         {
+            context.Attach(attempt);
             attempt.StartedOn = DateTimeOffset.Now;
             attempt.EndedOn = DateTimeOffset.Now;
             attempt.ExecutionStatus = StepExecutionStatus.Failed;
             attempt.AddError(errorMessage);
-            context.Attach(attempt).State = EntityState.Modified;
         }
 
+        context.Attach(_execution);
         _execution.StartedOn = DateTimeOffset.Now;
         _execution.EndedOn = DateTimeOffset.Now;
         _execution.ExecutionStatus = ExecutionStatus.Failed;
-        context.Attach(_execution).State = EntityState.Modified;
         // Do not cancel saving failed status.
         await context.SaveChangesAsync();
     }
 
+    private record JobProjection(Guid JobId, string JobName);
+
+    private record StepProjection(Guid StepId, string? StepName);
 }

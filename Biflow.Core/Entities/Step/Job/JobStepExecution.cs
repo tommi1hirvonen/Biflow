@@ -21,7 +21,7 @@ public class JobStepExecution : StepExecution, IHasStepExecutionParameters<JobSt
         StepExecutionParameters = step.StepParameters
             .Select(p => new JobStepExecutionParameter(p, this))
             .ToArray();
-        StepExecutionAttempts.Add(new JobStepExecutionAttempt(this));
+        AddAttempt(new JobStepExecutionAttempt(this));
     }
 
     private readonly List<TagFilter> _tagFilters = [];
@@ -38,6 +38,18 @@ public class JobStepExecution : StepExecution, IHasStepExecutionParameters<JobSt
     /// List of tag tuples that should be used to filter steps in executed job.
     /// </summary>
     public IEnumerable<TagFilter> TagFilters => _tagFilters;
+
+    public override JobStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
+    {
+        var previous = StepExecutionAttempts.MaxBy(x => x.RetryAttemptIndex);
+        ArgumentNullException.ThrowIfNull(previous);
+        var next = new JobStepExecutionAttempt((JobStepExecutionAttempt)previous, previous.RetryAttemptIndex + 1)
+        {
+            ExecutionStatus = withStatus
+        };
+        AddAttempt(next);
+        return next;
+    }
 
     public record TagFilter(Guid TagId, string TagName);
 }

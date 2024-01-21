@@ -1,4 +1,5 @@
 ﻿global using Biflow.Core;
+global using Biflow.Core.Constants;
 global using Biflow.Core.Entities;
 global using Biflow.Core.Interfaces;
 global using Biflow.DataAccess;
@@ -6,7 +7,6 @@ global using Biflow.Ui.Core;
 global using Biflow.Ui.Core.Projection;
 global using Havit.Blazor.Components.Web;
 global using Havit.Blazor.Components.Web.Bootstrap;
-global using MediatR;
 global using Microsoft.AspNetCore.Components;
 global using Microsoft.AspNetCore.Components.Authorization;
 global using Microsoft.EntityFrameworkCore;

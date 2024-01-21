@@ -1,21 +1,15 @@
 ﻿using Biflow.Executor.Core.Common;
-using Biflow.Executor.Core.StepExecutor;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+namespace Biflow.Executor.Core.StepExecutor;
 
-namespace Biflow.Executor.Core.Orchestrator;
-
-internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
-    ILogger<StepOrchestrator<TStep, TAttempt, TExecutor>> logger,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    IServiceProvider serviceProvider) : IStepOrchestrator
+internal abstract class StepExecutor<TStep, TAttempt>(
+    ILogger<StepExecutor<TStep, TAttempt>> logger,
+    IDbContextFactory<ExecutorDbContext> dbContextFactory) : IStepExecutor<TStep, TAttempt>
     where TStep : StepExecution
     where TAttempt : StepExecutionAttempt
-    where TExecutor : IStepExecutor<TAttempt>
 {
-    private readonly ILogger<StepOrchestrator<TStep, TAttempt, TExecutor>> _logger = logger;
+    private readonly ILogger<StepExecutor<TStep, TAttempt>> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
-    private readonly IServiceProvider _serviceProvider = serviceProvider;
 
     public async Task<bool> RunAsync(StepExecution stepExecution, ExtendedCancellationTokenSource cts)
     {
@@ -99,25 +93,19 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
 
         if (stepExecution is TStep step && executionAttempt is TAttempt attempt)
         {
-            TExecutor executor;
-            try
-            {
-                executor = ActivatorUtilities.CreateInstance<TExecutor>(_serviceProvider, step);
-            }
-            catch (Exception ex)
-            {
-                attempt.AddError(ex, $"Error initializing an instance of {typeof(TExecutor)}");
-                await UpdateExecutionFailedAsync(attempt, StepExecutionStatus.Failed);
-                return false;
-            }
-            return await ExecuteRecursivelyWithRetriesAsync(executor, step, attempt, cts);
+            return await ExecuteRecursivelyWithRetriesAsync(step, attempt, cts);
         }
 
-        throw new InvalidOperationException($"No matching step executor found for types {stepExecution.GetType()} and {executionAttempt.GetType()}");
+        throw new InvalidOperationException(
+            $"Provided types ({stepExecution.GetType()}, {executionAttempt.GetType()})" +
+            $"do not match the types of the executor ({typeof(TStep).Name}, {typeof(TAttempt).Name})");
     }
 
+    protected abstract Task<Result> ExecuteAsync(TStep step, TAttempt attempt, ExtendedCancellationTokenSource cts);
+
+    protected abstract TAttempt AddAttempt(TStep step, StepExecutionStatus withStatus);
+
     private async Task<bool> ExecuteRecursivelyWithRetriesAsync(
-        IStepExecutor<TAttempt> stepExecutor,
         TStep stepExecution,
         TAttempt executionAttempt,
         ExtendedCancellationTokenSource cts)
@@ -127,7 +115,7 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
         Result result;
         try
         {
-            result = await stepExecutor.ExecuteAsync(executionAttempt, cts);
+            result = await ExecuteAsync(stepExecution, executionAttempt, cts);
         }
         catch (OperationCanceledException ex) when (cts.IsCancellationRequested)
         {
@@ -147,7 +135,7 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
                 await UpdateExecutionSucceededAsync(executionAttempt);
                 return true;
             },
-            async (StepExecutor.Cancel cancel) =>
+            async (Cancel cancel) =>
             {
                 await UpdateExecutionCancelledAsync(executionAttempt, cts.Username);
                 return false;
@@ -167,9 +155,7 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
                 await UpdateExecutionFailedAsync(executionAttempt, StepExecutionStatus.Retry);
 
                 // Copy the execution attempt, increase counter and wait for the retry interval.
-                var nextExecution = stepExecutor.Clone(executionAttempt, executionAttempt.RetryAttemptIndex + 1);
-                nextExecution.ExecutionStatus = StepExecutionStatus.AwaitingRetry;
-                stepExecution.StepExecutionAttempts.Add(nextExecution);
+                var nextExecution = AddAttempt(stepExecution, StepExecutionStatus.AwaitingRetry);
                 using (var context = _dbContextFactory.CreateDbContext())
                 {
                     context.Attach(nextExecution).State = EntityState.Added;
@@ -188,10 +174,10 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
                     return false;
                 }
 
-                return await ExecuteRecursivelyWithRetriesAsync(stepExecutor, stepExecution, nextExecution, cts);
+                return await ExecuteRecursivelyWithRetriesAsync(stepExecution, nextExecution, cts);
             });
     }
-
+    
     private async Task UpdateExecutionCancelledAsync(StepExecutionAttempt attempt, string username)
     {
         using var context = _dbContextFactory.CreateDbContext();
@@ -199,7 +185,7 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
         attempt.EndedOn = DateTimeOffset.Now;
         attempt.StoppedBy = username;
         attempt.ExecutionStatus = StepExecutionStatus.Stopped;
-        context.Attach(attempt).State = EntityState.Modified;
+        context.Attach(attempt).State = EntityState.Modified; // Full update to account for added messages
         await context.SaveChangesAsync();
     }
 
@@ -209,7 +195,7 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
         attempt.ExecutionStatus = status;
         attempt.StartedOn ??= DateTimeOffset.Now;
         attempt.EndedOn = DateTimeOffset.Now;
-        context.Attach(attempt).State = EntityState.Modified;
+        context.Attach(attempt).State = EntityState.Modified; // Full update to account for added messages
         await context.SaveChangesAsync();
     }
 
@@ -222,7 +208,7 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
 
         attempt.ExecutionStatus = status;
         attempt.EndedOn = DateTimeOffset.Now;
-        context.Attach(attempt).State = EntityState.Modified;
+        context.Attach(attempt).State = EntityState.Modified; // Full update to account for added messages
         await context.SaveChangesAsync();
     }
 
@@ -231,11 +217,11 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
         using var context = _dbContextFactory.CreateDbContext();
         foreach (var attempt in stepExecution.StepExecutionAttempts)
         {
+            context.Attach(attempt);
             attempt.ExecutionStatus = StepExecutionStatus.Stopped;
             attempt.StartedOn = DateTimeOffset.Now;
             attempt.EndedOn = DateTimeOffset.Now;
             attempt.StoppedBy = username;
-            context.Attach(attempt).State = EntityState.Modified;
         }
         await context.SaveChangesAsync();
     }
@@ -243,9 +229,9 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
     private async Task UpdateExecutionRunningAsync(StepExecutionAttempt attempt)
     {
         using var context = _dbContextFactory.CreateDbContext();
+        context.Attach(attempt);
         attempt.StartedOn = DateTimeOffset.Now;
         attempt.ExecutionStatus = StepExecutionStatus.Running;
-        context.Attach(attempt).State = EntityState.Modified;
         await context.SaveChangesAsync();
     }
 
@@ -254,11 +240,11 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
         using var context = _dbContextFactory.CreateDbContext();
         foreach (var attempt in stepExecution.StepExecutionAttempts)
         {
+            context.Attach(attempt);
             attempt.ExecutionStatus = StepExecutionStatus.Skipped;
             attempt.StartedOn = DateTimeOffset.Now;
             attempt.EndedOn = DateTimeOffset.Now;
             attempt.AddOutput(infoMessage);
-            context.Attach(attempt).State = EntityState.Modified;
         }
         await context.SaveChangesAsync();
     }

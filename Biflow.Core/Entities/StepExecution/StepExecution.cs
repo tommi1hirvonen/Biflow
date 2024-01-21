@@ -40,6 +40,8 @@ public abstract class StepExecution
             .ToArray();
     }
 
+    private readonly List<StepExecutionAttempt> _stepExecutionAttempts = [];
+
     [Display(Name = "Execution id")]
     public Guid ExecutionId { get; private set; }
 
@@ -65,7 +67,7 @@ public abstract class StepExecution
 
     public Execution Execution { get; set; } = null!;
 
-    public ICollection<StepExecutionAttempt> StepExecutionAttempts { get; } = new List<StepExecutionAttempt>();
+    public IEnumerable<StepExecutionAttempt> StepExecutionAttempts => _stepExecutionAttempts;
 
     public ICollection<ExecutionDependency> ExecutionDependencies { get; } = new List<ExecutionDependency>();
 
@@ -74,6 +76,10 @@ public abstract class StepExecution
     public IEnumerable<StepExecutionConditionParameter> ExecutionConditionParameters { get; } = new List<StepExecutionConditionParameter>();
 
     public IEnumerable<StepExecutionDataObject> DataObjects { get; } = new List<StepExecutionDataObject>();
+
+    public abstract StepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default);
+
+    protected void AddAttempt(StepExecutionAttempt attempt) => _stepExecutionAttempts.Add(attempt);
 
     /// <summary>
     /// Get the <see cref="Step"/> entity associated with this <see cref="StepExecution"/>.

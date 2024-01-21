@@ -64,8 +64,8 @@
                 {
                     var steps = connection switch
                     {
-                        SqlConnectionInfo sql => sql.SqlSteps.Count + sql.PackageSteps.Count + sql.AgentJobSteps.Count,
-                        AnalysisServicesConnectionInfo analysis => analysis.TabularSteps.Count,
+                        SqlConnectionInfo sql => sql.SqlSteps.Count() + sql.PackageSteps.Count() + sql.AgentJobSteps.Count(),
+                        AnalysisServicesConnectionInfo analysis => analysis.TabularSteps.Count(),
                         _ => 0
                     };
                     var jobs = connection switch
@@ -217,7 +217,7 @@
     {
         try
         {
-            await Mediator.Send(new DeleteConnectionCommand(connection.ConnectionId));
+            await Mediator.SendAsync(new DeleteConnectionCommand(connection.ConnectionId));
             connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
             showConnectionString.Remove(connection.ConnectionId);
         }
@@ -232,13 +232,13 @@
     {
         if (connection.ConnectionId == Guid.Empty)
         {
-            await Mediator.Send(new CreateConnectionCommand(connection));
+            await Mediator.SendAsync(new CreateConnectionCommand(connection));
             connections?.Add(connection);
             showConnectionString[connection.ConnectionId] = false;
         }
         else
         {
-            await Mediator.Send(new UpdateConnectionCommand(connection));
+            await Mediator.SendAsync(new UpdateConnectionCommand(connection));
             connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
             connections?.Add(connection);
         }

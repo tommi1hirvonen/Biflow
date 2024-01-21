@@ -19,7 +19,7 @@ public class SqlStepExecution : StepExecution, IHasTimeout, IHasStepExecutionPar
         StepExecutionParameters = step.StepParameters
             .Select(p => new SqlStepExecutionParameter(p, this))
             .ToArray();
-        StepExecutionAttempts.Add(new SqlStepExecutionAttempt(this));
+        AddAttempt(new SqlStepExecutionAttempt(this));
     }
 
     public Guid ConnectionId { get; private set; }
@@ -37,6 +37,18 @@ public class SqlStepExecution : StepExecution, IHasTimeout, IHasStepExecutionPar
     public double TimeoutMinutes { get; private set; }
 
     public IEnumerable<SqlStepExecutionParameter> StepExecutionParameters { get; } = new List<SqlStepExecutionParameter>();
+
+    public override SqlStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
+    {
+        var previous = StepExecutionAttempts.MaxBy(x => x.RetryAttemptIndex);
+        ArgumentNullException.ThrowIfNull(previous);
+        var next = new SqlStepExecutionAttempt((SqlStepExecutionAttempt)previous, previous.RetryAttemptIndex + 1)
+        {
+            ExecutionStatus = withStatus
+        };
+        AddAttempt(next);
+        return next;
+    }
 
     /// <summary>
     /// Get the <see cref="SqlConnectionInfo"/> entity associated with this <see cref="StepExecution"/>.

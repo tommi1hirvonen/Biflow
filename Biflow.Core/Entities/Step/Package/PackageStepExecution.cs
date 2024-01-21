@@ -29,7 +29,7 @@ public class PackageStepExecution : StepExecution, IHasTimeout, IHasStepExecutio
         StepExecutionParameters = step.StepParameters
             .Select(p => new PackageStepExecutionParameter(p, this))
             .ToArray();
-        StepExecutionAttempts.Add(new PackageStepExecutionAttempt(this));
+        AddAttempt(new PackageStepExecutionAttempt(this));
     }
 
     [MaxLength(128)]
@@ -57,6 +57,18 @@ public class PackageStepExecution : StepExecution, IHasTimeout, IHasStepExecutio
     public string? PackagePath => PackageFolderName + "/" + PackageProjectName + "/" + PackageName;
 
     public IEnumerable<PackageStepExecutionParameter> StepExecutionParameters { get; } = new List<PackageStepExecutionParameter>();
+
+    public override PackageStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
+    {
+        var previous = StepExecutionAttempts.MaxBy(x => x.RetryAttemptIndex);
+        ArgumentNullException.ThrowIfNull(previous);
+        var next = new PackageStepExecutionAttempt((PackageStepExecutionAttempt)previous, previous.RetryAttemptIndex + 1)
+        {
+            ExecutionStatus = withStatus
+        };
+        AddAttempt(next);
+        return next;
+    }
 
     /// <summary>
     /// Get the <see cref="SqlConnectionInfo"/> entity associated with this <see cref="StepExecution"/>.

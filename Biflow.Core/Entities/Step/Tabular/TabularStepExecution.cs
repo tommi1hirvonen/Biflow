@@ -19,7 +19,7 @@ public class TabularStepExecution : StepExecution, IHasTimeout
         TimeoutMinutes = step.TimeoutMinutes;
         ConnectionId = step.ConnectionId;
 
-        StepExecutionAttempts.Add(new TabularStepExecutionAttempt(this));
+        AddAttempt(new TabularStepExecutionAttempt(this));
     }
 
     [Display(Name = "Model name")]
@@ -39,6 +39,18 @@ public class TabularStepExecution : StepExecution, IHasTimeout
 
     [Required]
     public Guid ConnectionId { get; private set; }
+
+    public override TabularStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
+    {
+        var previous = StepExecutionAttempts.MaxBy(x => x.RetryAttemptIndex);
+        ArgumentNullException.ThrowIfNull(previous);
+        var next = new TabularStepExecutionAttempt((TabularStepExecutionAttempt)previous, previous.RetryAttemptIndex + 1)
+        {
+            ExecutionStatus = withStatus
+        };
+        AddAttempt(next);
+        return next;
+    }
 
     /// <summary>
     /// Get the <see cref="AnalysisServicesConnectionInfo"/> entity associated with this <see cref="StepExecution"/>.

@@ -9,6 +9,10 @@ internal class CreateBlobStorageClientCommandHandler(IDbContextFactory<AppDbCont
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         context.BlobStorageClients.Add(request.Client);
+        if (request.Client.AppRegistration is not null)
+        {
+            context.Entry(request.Client.AppRegistration).State = EntityState.Unchanged;
+        }
         await context.SaveChangesAsync(cancellationToken);
     }
 }

@@ -143,7 +143,7 @@
     {
         try
         {
-            await Mediator.Send(new DeleteQlikCloudClientCommand(client.QlikCloudClientId));
+            await Mediator.SendAsync(new DeleteQlikCloudClientCommand(client.QlikCloudClientId));
             clients?.Remove(client);
         }
         catch (Exception ex)
@@ -157,12 +157,12 @@
     {
         if (client.QlikCloudClientId == Guid.Empty)
         {
-            await Mediator.Send(new CreateQlikCloudClientCommand(client));
+            await Mediator.SendAsync(new CreateQlikCloudClientCommand(client));
             clients?.Add(client);
         }
         else
         {
-            await Mediator.Send(new UpdateQlikCloudClientCommand(client));
+            await Mediator.SendAsync(new UpdateQlikCloudClientCommand(client));
             clients?.RemoveAll(c => c.QlikCloudClientId == client.QlikCloudClientId);
             clients?.Add(client);
         }

@@ -8,7 +8,10 @@ internal class UpdateFunctionAppCommandHandler(IDbContextFactory<AppDbContext> d
     public async Task Handle(UpdateFunctionAppCommand request, CancellationToken cancellationToken)
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        context.Attach(request.FunctionApp).State = EntityState.Modified;
+        var functionApp = await context.FunctionApps
+            .FirstOrDefaultAsync(f => f.FunctionAppId == request.FunctionApp.FunctionAppId, cancellationToken)
+            ?? throw new NotFoundException<FunctionApp>(request.FunctionApp.FunctionAppId);
+        context.Entry(functionApp).CurrentValues.SetValues(request.FunctionApp);
         await context.SaveChangesAsync(cancellationToken);
     }
 }

@@ -58,16 +58,13 @@
 </div>
 
 <script type="text/javascript">
-
-    window.onload = onLoad;
-
-    function onLoad() {
+    (() => {        
         document.getElementById('input-username').focus();
-        var form = document.getElementById('form-login');
-        form.addEventListener('submit', function (event) {
+        
+        document.getElementById('form-login').addEventListener('submit', function (event) {
             document.getElementById('button-login').setAttribute('disabled', 'true');
         });
-    }
+    })();
 </script>
 
 @code {

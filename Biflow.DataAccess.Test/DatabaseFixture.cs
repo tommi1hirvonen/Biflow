@@ -1,7 +1,6 @@
 ﻿using Biflow.Core;
 using Biflow.Core.Entities;
 using Biflow.Core.Interfaces;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,7 +31,7 @@ public class DatabaseFixture : IAsyncLifetime
 
     public DatabaseFixture()
     {
-        var httpContextAccessor = new MockHttpContextAccessor(Username, Role);
+        var userService = new MockUserService(Username, Role);   
         var settings = new Dictionary<string, string?>
         {
             { "ConnectionStrings:AppDbContext", _connectionString }
@@ -44,7 +43,7 @@ public class DatabaseFixture : IAsyncLifetime
             .AddHttpClient()
             .AddSingleton<ITokenService, TokenService<AppDbContext>>()
             .AddSingleton<IConfiguration>(configuration)
-            .AddSingleton<IHttpContextAccessor>(httpContextAccessor)
+            .AddSingleton<IUserService>(userService)
             .AddDbContextFactory<AppDbContext>()
             .AddExecutionBuilderFactory<AppDbContext>()
             .AddDuplicatorServices()
@@ -135,25 +134,21 @@ public class DatabaseFixture : IAsyncLifetime
 
             var blobClient1 = new BlobStorageClient
             {
-                AppRegistration = appRegistration,
-                BlobStorageClientName = "Test blob storage client",
-                ConnectionMethod = BlobStorageConnectionMethod.AppRegistration,
-                StorageAccountUrl = "https://some-storage-account-url.com/"
+                BlobStorageClientName = "Test blob storage client"
             };
+            blobClient1.UseAppRegistration(appRegistration, "https://some-storage-account-url.com/");
 
             var blobClient2 = new BlobStorageClient
             {
-                BlobStorageClientName = "Test blob storage client 2",
-                ConnectionMethod = BlobStorageConnectionMethod.Url,
-                StorageAccountUrl = "https://some-storage-account-url.com?sig=asdasd"
+                BlobStorageClientName = "Test blob storage client 2"
             };
+            blobClient2.UseUrl("https://some-storage-account-url.com?sig=asdasd");
 
             var blobClient3 = new BlobStorageClient
             {
-                BlobStorageClientName = "Test blob storage client 3",
-                ConnectionMethod = BlobStorageConnectionMethod.ConnectionString,
-                ConnectionString = "some-connection-string"
+                BlobStorageClientName = "Test blob storage client 3"
             };
+            blobClient3.UseConnectionString("some-connection-string");
             #endregion
 
             #region JOB 1

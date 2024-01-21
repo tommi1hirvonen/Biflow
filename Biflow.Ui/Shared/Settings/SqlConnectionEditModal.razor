@@ -126,12 +126,7 @@
         }
         else
         {
-            connection = new()
-            {
-                SqlSteps = new List<SqlStep>(),
-                PackageSteps = new List<PackageStep>(),
-                AgentJobSteps = new List<AgentJobStep>()
-            };
+            connection = new();
         }
         connectionTestSuccess = null;
         testingConnection = false;

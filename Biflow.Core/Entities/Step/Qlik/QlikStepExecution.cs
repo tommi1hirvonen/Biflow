@@ -16,7 +16,7 @@ public class QlikStepExecution : StepExecution, IHasTimeout
         AppId = step.AppId;
         QlikCloudClientId = step.QlikCloudClientId;
         TimeoutMinutes = step.TimeoutMinutes;
-        StepExecutionAttempts.Add(new QlikStepExecutionAttempt(this));
+        AddAttempt(new QlikStepExecutionAttempt(this));
     }
 
     [MaxLength(36)]
@@ -25,6 +25,18 @@ public class QlikStepExecution : StepExecution, IHasTimeout
     public Guid QlikCloudClientId { get; private set; }
 
     public double TimeoutMinutes { get; private set; }
+
+    public override QlikStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
+    {
+        var previous = StepExecutionAttempts.MaxBy(x => x.RetryAttemptIndex);
+        ArgumentNullException.ThrowIfNull(previous);
+        var next = new QlikStepExecutionAttempt((QlikStepExecutionAttempt)previous, previous.RetryAttemptIndex + 1)
+        {
+            ExecutionStatus = withStatus
+        };
+        AddAttempt(next);
+        return next;
+    }
 
     /// <summary>
     /// Get the <see cref="QlikCloudClient"/> entity associated with this <see cref="StepExecution"/>.

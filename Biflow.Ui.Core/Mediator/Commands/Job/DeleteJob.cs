@@ -25,6 +25,7 @@ internal class DeleteJobCommandHandler(
             .Include(j => j.JobSubscriptions)
             .Include(j => j.JobTagSubscriptions)
             .Include(j => j.Schedules)
+            .Include(j => j.JobSteps)
             .FirstOrDefaultAsync(j => j.JobId == request.JobId, cancellationToken);
         if (jobToRemove is not null)
         {

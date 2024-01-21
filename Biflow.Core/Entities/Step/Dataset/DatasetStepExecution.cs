@@ -16,7 +16,7 @@ public class DatasetStepExecution : StepExecution
         DatasetGroupId = step.DatasetGroupId;
         DatasetId = step.DatasetId;
 
-        StepExecutionAttempts.Add(new DatasetStepExecutionAttempt(this));
+        AddAttempt(new DatasetStepExecutionAttempt(this));
     }
 
     [Display(Name = "App registration id")]
@@ -29,6 +29,18 @@ public class DatasetStepExecution : StepExecution
     [Display(Name = "Dataset id")]
     [MaxLength(36)]
     public string DatasetId { get; private set; }
+
+    public override DatasetStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
+    {
+        var previous = StepExecutionAttempts.MaxBy(x => x.RetryAttemptIndex);
+        ArgumentNullException.ThrowIfNull(previous);
+        var next = new DatasetStepExecutionAttempt((DatasetStepExecutionAttempt)previous, previous.RetryAttemptIndex + 1)
+        {
+            ExecutionStatus = withStatus
+        };
+        AddAttempt(next);
+        return next;
+    }
 
     /// <summary>
     /// Get the <see cref="AppRegistration"/> entity associated with this <see cref="StepExecution"/>.

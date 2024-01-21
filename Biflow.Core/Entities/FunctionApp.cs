@@ -45,10 +45,20 @@ public class FunctionApp
 
     [Required]
     [Display(Name = "App registration")]
-    public Guid AppRegistrationId { get; set; }
+    public Guid AppRegistrationId { get; private set; }
 
     [JsonIgnore]
-    public AppRegistration AppRegistration { get; set; } = null!;
+    public AppRegistration AppRegistration
+    {
+        get => _appRegistration;
+        set
+        {
+            _appRegistration = value;
+            AppRegistrationId = value.AppRegistrationId;
+        }
+    }
+
+    private AppRegistration _appRegistration = null!;
 
     [JsonIgnore]
     public IEnumerable<FunctionStep> Steps { get; } = new List<FunctionStep>();

@@ -176,7 +176,7 @@
     {
         try
         {
-            await Mediator.Send(new DeletePipelineClientCommand(client.PipelineClientId));
+            await Mediator.SendAsync(new DeletePipelineClientCommand(client.PipelineClientId));
             pipelineClients?.Remove(client);
         }
         catch (Exception ex)
@@ -190,12 +190,12 @@
     {
         if (client.PipelineClientId == Guid.Empty)
         {
-            await Mediator.Send(new CreatePipelineClientCommand(client));
+            await Mediator.SendAsync(new CreatePipelineClientCommand(client));
             pipelineClients?.Add(client);
         }
         else
         {
-            await Mediator.Send(new UpdatePipelineClientCommand(client));
+            await Mediator.SendAsync(new UpdatePipelineClientCommand(client));
             pipelineClients?.RemoveAll(df => df.PipelineClientId == client.PipelineClientId);
             pipelineClients?.Add(client);
         }

@@ -16,7 +16,7 @@ public class AgentJobStepExecution : StepExecution, IHasTimeout
         TimeoutMinutes = step.TimeoutMinutes;
         ConnectionId = step.ConnectionId;
 
-        StepExecutionAttempts.Add(new AgentJobStepExecutionAttempt(this));
+        AddAttempt(new AgentJobStepExecutionAttempt(this));
     }
 
     [Display(Name = "Agent job name")]
@@ -29,6 +29,18 @@ public class AgentJobStepExecution : StepExecution, IHasTimeout
 
     [Required]
     public Guid ConnectionId { get; private set; }
+
+    public override AgentJobStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
+    {
+        var previous = StepExecutionAttempts.MaxBy(x => x.RetryAttemptIndex);
+        ArgumentNullException.ThrowIfNull(previous);
+        var next = new AgentJobStepExecutionAttempt((AgentJobStepExecutionAttempt)previous, previous.RetryAttemptIndex + 1)
+        {
+            ExecutionStatus = withStatus
+        };
+        AddAttempt(next);
+        return next;
+    }
 
     /// <summary>
     /// Get the <see cref="SqlConnectionInfo"/> entity associated with this <see cref="StepExecution"/>.

@@ -6,24 +6,26 @@ namespace Biflow.Executor.Core.StepExecutor;
 
 internal class ExeStepExecutor(
     ILogger<ExeStepExecutor> logger,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    ExeStepExecution step) : IStepExecutor<ExeStepExecutionAttempt>
+    IDbContextFactory<ExecutorDbContext> dbContextFactory)
+    : StepExecutor<ExeStepExecution, ExeStepExecutionAttempt>(logger, dbContextFactory)
 {
     private readonly ILogger<ExeStepExecutor> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
-    private readonly ExeStepExecution _step = step;
 
-    public ExeStepExecutionAttempt Clone(ExeStepExecutionAttempt other, int retryAttemptIndex) =>
-        new(other, retryAttemptIndex);
+    protected override ExeStepExecutionAttempt AddAttempt(ExeStepExecution step, StepExecutionStatus withStatus) =>
+        step.AddAttempt(withStatus);
 
-    public async Task<Result> ExecuteAsync(ExeStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
+    protected override async Task<Result> ExecuteAsync(
+        ExeStepExecution step,
+        ExeStepExecutionAttempt attempt,
+        ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
         var startInfo = new ProcessStartInfo()
         {
-            FileName = _step.ExeFileName,
+            FileName = step.ExeFileName,
             UseShellExecute = false,
             CreateNoWindow = true,
             WindowStyle = ProcessWindowStyle.Hidden,
@@ -31,15 +33,15 @@ internal class ExeStepExecutor(
             RedirectStandardOutput = true
         };
 
-        if (!string.IsNullOrWhiteSpace(_step.ExeArguments))
+        if (!string.IsNullOrWhiteSpace(step.ExeArguments))
         {
-            var parameters = _step.StepExecutionParameters.ToStringDictionary();
-            startInfo.Arguments = _step.ExeArguments.Replace(parameters);
+            var parameters = step.StepExecutionParameters.ToStringDictionary();
+            startInfo.Arguments = step.ExeArguments.Replace(parameters);
         }
 
-        if (!string.IsNullOrWhiteSpace(_step.ExeWorkingDirectory))
+        if (!string.IsNullOrWhiteSpace(step.ExeWorkingDirectory))
         {
-            startInfo.WorkingDirectory = _step.ExeWorkingDirectory;
+            startInfo.WorkingDirectory = step.ExeWorkingDirectory;
         }
 
         var process = new Process() { StartInfo = startInfo };
@@ -54,7 +56,7 @@ internal class ExeStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error starting process for file name {FileName}", _step.ExecutionId, _step, _step.ExeFileName);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error starting process for file name {FileName}", step.ExecutionId, step, step.ExeFileName);
             attempt.AddError(ex, "Error starting process");
             return Result.Failure;
         }
@@ -69,12 +71,12 @@ internal class ExeStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error logging child process id", _step.ExecutionId, _step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error logging child process id", step.ExecutionId, step);
             attempt.AddWarning(ex, "Error logging child process id");
         }
 
-        using var timeoutCts = _step.TimeoutMinutes > 0
-            ? new CancellationTokenSource(TimeSpan.FromMinutes(_step.TimeoutMinutes))
+        using var timeoutCts = step.TimeoutMinutes > 0
+            ? new CancellationTokenSource(TimeSpan.FromMinutes(step.TimeoutMinutes))
             : new CancellationTokenSource();
         
         try
@@ -84,7 +86,7 @@ internal class ExeStepExecutor(
             await process.WaitForExitAsync(linkedCts.Token);
 
             // If SuccessExitCode was defined, check the actual ExitCode. If SuccessExitCode is not defined, then report success in any case (not applicable).
-            if (_step.ExeSuccessExitCode is null || process.ExitCode == _step.ExeSuccessExitCode)
+            if (step.ExeSuccessExitCode is null || process.ExitCode == step.ExeSuccessExitCode)
             {
                 return Result.Success;
             }
@@ -103,7 +105,7 @@ internal class ExeStepExecutor(
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{ExecutionId} {Step} Error killing process after timeout", _step.ExecutionId, _step);
+                _logger.LogError(ex, "{ExecutionId} {Step} Error killing process after timeout", step.ExecutionId, step);
                 attempt.AddWarning(ex, "Error killing process after timeout");
             }
 
@@ -117,7 +119,7 @@ internal class ExeStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error while executing {FileName}", _step.ExecutionId, _step, _step.ExeFileName);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error while executing {FileName}", step.ExecutionId, step, step.ExeFileName);
             attempt.AddError(ex, "Error while executing exe");
             return Result.Failure;
         }

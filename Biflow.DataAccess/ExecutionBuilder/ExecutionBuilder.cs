@@ -13,11 +13,24 @@ public partial class ExecutionBuilder : IDisposable
         _context = context;
         _createExecution = createExecution;
         _execution = _createExecution();
-        _steps = _execution.DependencyMode switch
+
+        // Guard agains errors in TopologicalStepComparer when encountering cyclic dependencies.
+        if (_execution.DependencyMode)
         {
-            true => [.. steps.OrderBy(s => s, new TopologicalStepComparer(steps))],
-            false => [.. steps.OrderBy(s => s.ExecutionPhase)]
-        };
+            try
+            {
+                _steps = [.. steps.OrderBy(s => s, new TopologicalStepComparer(steps))];
+            }
+            catch
+            {
+                _steps = [.. steps.OrderBy(s => s.ExecutionPhase)];
+            }
+        }
+        else
+        {
+            _steps = [.. steps.OrderBy(s => s.ExecutionPhase)];
+        }
+
         _builderSteps = _steps
             .Select(s => new ExecutionBuilderStep(this, s))
             .ToArray();
@@ -34,12 +47,34 @@ public partial class ExecutionBuilder : IDisposable
     public IEnumerable<ExecutionBuilderStep> Steps =>
         _builderSteps.Where(s => !_execution.StepExecutions.Any(e => s.StepId == e.StepId));
 
-    public IEnumerable<ExecutionBuilderStepExecution> StepExecutions => (_execution.DependencyMode switch
+    public IEnumerable<ExecutionBuilderStepExecution> StepExecutions
     {
-        true => _execution.StepExecutions.OrderBy(e => e, new TopologicalStepExecutionComparer(_execution.StepExecutions)),
-        false => _execution.StepExecutions.OrderBy(e => e.ExecutionPhase)
-    })
-    .Select(e => new ExecutionBuilderStepExecution(this, e));
+        get
+        {
+            // Guard agains errors in TopologicalStepExecutionComparer when encountering cyclic dependencies.
+            IEnumerable<StepExecution> steps;
+            if (_execution.DependencyMode)
+            {
+                try
+                {
+                    steps = _execution.StepExecutions
+                        .OrderBy(e => e, new TopologicalStepExecutionComparer(_execution.StepExecutions));
+                }
+                catch
+                {
+                    steps = _execution.StepExecutions
+                        .OrderBy(e => e.ExecutionPhase);
+                }
+            }
+            else
+            {
+                steps = _execution.StepExecutions
+                    .OrderBy(e => e.ExecutionPhase);
+            }
+
+            return steps.Select(e => new ExecutionBuilderStepExecution(this, e));
+        }
+    }
 
     public IEnumerable<DynamicParameter> Parameters => _execution.ExecutionParameters;
 

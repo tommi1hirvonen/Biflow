@@ -1,4 +1,4 @@
-﻿namespace Biflow.Core.Entities;
+﻿namespace Biflow.Core.Constants;
 
 public static class Roles
 {

@@ -137,7 +137,7 @@ public partial class StepsList : ComponentBase
         }
         try
         {
-            await Mediator.Send(new DeleteStepsCommand(selectedSteps));
+            await Mediator.SendAsync(new DeleteStepsCommand(selectedSteps));
             foreach (var step in selectedSteps)
             {
                 Steps?.Remove(step);
@@ -162,7 +162,7 @@ public partial class StepsList : ComponentBase
         bool value = (bool)args.Value!;
         try
         {
-            await Mediator.Send(new ToggleStepsCommand(step.StepId, value));
+            await Mediator.SendAsync(new ToggleStepsCommand(step.StepId, value));
             step.IsEnabled = value;
         }
         catch (Exception ex)
@@ -179,7 +179,7 @@ public partial class StepsList : ComponentBase
         }
         try
         {
-            await Mediator.Send(new DeleteStepsCommand(step.StepId));
+            await Mediator.SendAsync(new DeleteStepsCommand(step.StepId));
             Steps?.Remove(step);
             selectedSteps.Remove(step);
 
@@ -258,7 +258,7 @@ public partial class StepsList : ComponentBase
             .ToArray();
         try
         {
-            await Mediator.Send(new ToggleStepsCommand(steps, enabled));
+            await Mediator.SendAsync(new ToggleStepsCommand(steps, enabled));
             foreach (var step in steps)
             {
                 step.IsEnabled = enabled;

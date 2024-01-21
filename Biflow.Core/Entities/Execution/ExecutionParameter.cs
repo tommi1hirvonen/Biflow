@@ -1,4 +1,6 @@
-﻿namespace Biflow.Core.Entities;
+﻿using Biflow.Core.Constants;
+
+namespace Biflow.Core.Entities;
 
 public class ExecutionParameter : DynamicParameter
 {

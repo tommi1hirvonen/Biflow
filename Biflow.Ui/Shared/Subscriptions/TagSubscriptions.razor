@@ -131,7 +131,7 @@
         {
             ArgumentNullException.ThrowIfNull(User);
             var subscription = new TagSubscription(User.UserId, tagId);
-            await Mediator.Send(new CreateSubscriptionCommand(subscription));
+            await Mediator.SendAsync(new CreateSubscriptionCommand(subscription));
             User.Subscriptions.Add(subscription);
             await OnSubscriptionCountChanged.InvokeAsync();
         }
@@ -146,7 +146,7 @@
         try
         {
             subscription.AlertType = alert;
-            await Mediator.Send(new UpdateSubscriptionCommand(subscription));
+            await Mediator.SendAsync(new UpdateSubscriptionCommand(subscription));
         }
         catch (Exception)
         {
@@ -159,7 +159,7 @@
         try
         {
             ArgumentNullException.ThrowIfNull(User);
-            await Mediator.Send(new DeleteSubscriptionCommand(subscription.SubscriptionId));
+            await Mediator.SendAsync(new DeleteSubscriptionCommand(subscription.SubscriptionId));
             User.Subscriptions.Remove(subscription);
             await OnSubscriptionCountChanged.InvokeAsync();
         }

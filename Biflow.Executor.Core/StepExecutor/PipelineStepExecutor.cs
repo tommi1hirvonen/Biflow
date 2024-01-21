@@ -9,37 +9,41 @@ internal class PipelineStepExecutor(
     ILogger<PipelineStepExecutor> logger,
     IOptionsMonitor<ExecutionOptions> options,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    ITokenService tokenService,
-    PipelineStepExecution step) : IStepExecutor<PipelineStepExecutionAttempt>
+    ITokenService tokenService)
+    : StepExecutor<PipelineStepExecution, PipelineStepExecutionAttempt>(logger, dbContextFactory)
 {
     private readonly ILogger<PipelineStepExecutor> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
-    private readonly PipelineStepExecution _step = step;
-    private readonly IPipelineClient _pipelineClient = step.GetClient()?.CreatePipelineClient(tokenService)
-        ?? throw new ArgumentNullException(nameof(_pipelineClient));
+    private readonly ITokenService _tokenService = tokenService;
 
     private const int MaxRefreshRetries = 3;
 
-    public PipelineStepExecutionAttempt Clone(PipelineStepExecutionAttempt other, int retryAttemptIndex) =>
-        new(other, retryAttemptIndex);
+    protected override PipelineStepExecutionAttempt AddAttempt(PipelineStepExecution step, StepExecutionStatus withStatus) =>
+        step.AddAttempt(withStatus);
 
-    public async Task<Result> ExecuteAsync(PipelineStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
+    protected override async Task<Result> ExecuteAsync(
+        PipelineStepExecution step,
+        PipelineStepExecutionAttempt attempt,
+        ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
+
+        var client = step.GetClient()?.CreatePipelineClient(_tokenService);
+        ArgumentNullException.ThrowIfNull(client);
 
         // Get possible parameters.
         IDictionary<string, object> parameters;
         try
         {
-            parameters = _step.StepExecutionParameters
+            parameters = step.StepExecutionParameters
                 .Where(p => p.ParameterValue is not null)
                 .ToDictionary(key => key.ParameterName, value => value.ParameterValue!);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error retrieving pipeline parameters", _step.ExecutionId, _step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error retrieving pipeline parameters", step.ExecutionId, step);
             attempt.AddError(ex, "Error reading pipeline parameters");
             return Result.Failure;
         }
@@ -47,20 +51,20 @@ internal class PipelineStepExecutor(
         string runId;
         try
         {
-            runId = await _pipelineClient.StartPipelineRunAsync(_step.PipelineName, parameters, cancellationToken);
+            runId = await client.StartPipelineRunAsync(step.PipelineName, parameters, cancellationToken);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error creating pipeline run for Pipeline Client id {PipelineClientId} and pipeline {PipelineName}",
-                _step.ExecutionId, _step, _step.PipelineClientId, _step.PipelineName);
+                step.ExecutionId, step, step.PipelineClientId, step.PipelineName);
             attempt.AddError(ex, "Error starting pipeline run");
             return Result.Failure;
         }
 
         // Initialize timeout cancellation token source already here
         // so that we can start the countdown immediately after the pipeline was started.
-        using var timeoutCts = _step.TimeoutMinutes > 0
-                    ? new CancellationTokenSource(TimeSpan.FromMinutes(_step.TimeoutMinutes))
+        using var timeoutCts = step.TimeoutMinutes > 0
+                    ? new CancellationTokenSource(TimeSpan.FromMinutes(step.TimeoutMinutes))
                     : new CancellationTokenSource();
 
         try
@@ -73,7 +77,7 @@ internal class PipelineStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating pipeline run id", _step.ExecutionId, _step);
+            _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating pipeline run id", step.ExecutionId, step);
             attempt.AddWarning(ex, $"Error updating pipeline run id {runId}");
         }
 
@@ -83,7 +87,7 @@ internal class PipelineStepExecutor(
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
             while (true)
             {
-                (status, message) = await GetPipelineRunWithRetriesAsync(runId, linkedCts.Token);
+                (status, message) = await GetPipelineRunWithRetriesAsync(client, step, runId, linkedCts.Token);
                 if (status == "InProgress" || status == "Queued")
                 {
                     await Task.Delay(_pollingIntervalMs, linkedCts.Token);
@@ -96,7 +100,7 @@ internal class PipelineStepExecutor(
         }
         catch (OperationCanceledException ex)
         {
-            await CancelAsync(attempt, runId);
+            await CancelAsync(client, step, attempt, runId);
             if (timeoutCts.IsCancellationRequested)
             {
                 attempt.AddError(ex, "Step execution timed out");
@@ -123,7 +127,11 @@ internal class PipelineStepExecutor(
         }
     }
 
-    private async Task<(string Status, string Message)> GetPipelineRunWithRetriesAsync(string runId, CancellationToken cancellationToken)
+    private async Task<(string Status, string Message)> GetPipelineRunWithRetriesAsync(
+        IPipelineClient client,
+        PipelineStepExecution step,
+        string runId,
+        CancellationToken cancellationToken)
     {
         var policy = Policy
             .Handle<Exception>()
@@ -131,22 +139,26 @@ internal class PipelineStepExecutor(
             retryCount: MaxRefreshRetries,
             sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_pollingIntervalMs),
             onRetry: (ex, waitDuration) =>
-                _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting pipeline run status for run id {runId}", _step.ExecutionId, _step, runId));
+                _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting pipeline run status for run id {runId}", step.ExecutionId, step, runId));
 
         return await policy.ExecuteAsync((cancellationToken) =>
-            _pipelineClient.GetPipelineRunAsync(runId, cancellationToken), cancellationToken);
+            client.GetPipelineRunAsync(runId, cancellationToken), cancellationToken);
     }
 
-    private async Task CancelAsync(PipelineStepExecutionAttempt attempt, string runId)
+    private async Task CancelAsync(
+        IPipelineClient client,
+        PipelineStepExecution step,
+        PipelineStepExecutionAttempt attempt,
+        string runId)
     {
-        _logger.LogInformation("{ExecutionId} {Step} Stopping pipeline run id {PipelineRunId}", _step.ExecutionId, _step, runId);
+        _logger.LogInformation("{ExecutionId} {Step} Stopping pipeline run id {PipelineRunId}", step.ExecutionId, step, runId);
         try
         {
-            await _pipelineClient.CancelPipelineRunAsync(runId);
+            await client.CancelPipelineRunAsync(runId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error stopping pipeline run {runId}", _step.ExecutionId, _step, runId);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error stopping pipeline run {runId}", step.ExecutionId, step, runId);
             attempt.AddWarning(ex, $"Error stopping pipeline run {runId}");
         }
     }

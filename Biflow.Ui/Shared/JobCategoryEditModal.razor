@@ -53,7 +53,7 @@
             IRequest command = category.CategoryId == Guid.Empty
                 ? new CreateJobCategoryCommand(category)
                 : new UpdateJobCategoryCommand(category);
-            await Mediator.Send(command);
+            await Mediator.SendAsync(command);
             await OnCategorySubmitted.InvokeAsync(category);
             await offcanvas.LetAsync(x => x.HideAsync());
         }

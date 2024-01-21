@@ -16,16 +16,16 @@ public class SqlConnectionInfo() : ConnectionInfoBase(ConnectionType.Sql)
     private string? _executePackagesAsLogin;
 
     [JsonIgnore]
-    public IList<SqlStep> SqlSteps { get; set; } = null!;
+    public IEnumerable<SqlStep> SqlSteps { get; } = new List<SqlStep>();
 
     [JsonIgnore]
-    public IList<PackageStep> PackageSteps { get; set; } = null!;
+    public IEnumerable<PackageStep> PackageSteps { get; } = new List<PackageStep>();
 
     [JsonIgnore]
-    public IList<AgentJobStep> AgentJobSteps { get; set; } = null!;
+    public IEnumerable<AgentJobStep> AgentJobSteps { get; } = new List<AgentJobStep>();
 
     [JsonIgnore]
-    public IList<MasterDataTable> DataTables { get; set; } = null!;
+    public IEnumerable<MasterDataTable> DataTables { get; } = new List<MasterDataTable>();
 
     [JsonIgnore]
     public override IEnumerable<Step> Steps =>

@@ -1,4 +1,5 @@
 ﻿using Biflow.Executor.Core.Common;
+using Biflow.Executor.Core.StepExecutor;
 using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.Orchestrator;
@@ -6,12 +7,12 @@ namespace Biflow.Executor.Core.Orchestrator;
 internal class GlobalOrchestrator(
     ILogger<GlobalOrchestrator> logger,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    IStepOrchestratorProvider stepOrchestratorProvider) : IGlobalOrchestrator, IStepReadyForProcessingListener
+    IStepExecutorProvider stepExecutorProvider) : IGlobalOrchestrator, IStepReadyForProcessingListener
 {
     private readonly object _lock = new();
     private readonly ILogger<GlobalOrchestrator> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
-    private readonly IStepOrchestratorProvider _stepOrchestratorProvider = stepOrchestratorProvider;
+    private readonly IStepExecutorProvider _stepExecutorProvider = stepExecutorProvider;
     private readonly List<IOrchestrationObserver> _observers = [];
     private readonly Dictionary<StepExecution, OrchestrationStatus> _stepStatuses = [];
 
@@ -116,15 +117,19 @@ internal class GlobalOrchestrator(
         try
         {
             await listener.OnPreExecuteAsync(cts);
-            var stepOrchestrator = _stepOrchestratorProvider.GetOrchestratorFor(stepExecution);
-            result = await stepOrchestrator.RunAsync(stepExecution, cts);
+            var stepExecutor = _stepExecutorProvider.GetExecutorFor(stepExecution, stepExecution.StepExecutionAttempts.First());
+            result = await stepExecutor.RunAsync(stepExecution, cts);
         }
         catch (OperationCanceledException)
         {
             // We should only arrive here if the step was canceled while it was Queued.
             // If the step was canceled once its execution had started,
             // then the step's executor should handle the cancellation and the result is returned normally from RunAsync().
-            await UpdateExecutionCancelledAsync(stepExecution, cts.Username);
+            try
+            {
+                await UpdateExecutionCancelledAsync(stepExecution, cts.Username);
+            }
+            catch { }
         }
         catch (Exception ex)
         {
@@ -167,11 +172,11 @@ internal class GlobalOrchestrator(
         using var context = _dbContextFactory.CreateDbContext();
         foreach (var attempt in stepExecution.StepExecutionAttempts)
         {
+            context.Attach(attempt);
             attempt.StartedOn ??= DateTimeOffset.Now;
             attempt.EndedOn = DateTimeOffset.Now;
             attempt.StoppedBy = username;
             attempt.ExecutionStatus = StepExecutionStatus.Stopped;
-            context.Attach(attempt).State = EntityState.Modified;
         }
         await context.SaveChangesAsync();
     }
@@ -179,7 +184,10 @@ internal class GlobalOrchestrator(
     private async Task UpdateExecutionFailedAsync(Exception ex, StepExecution stepExecution)
     {
         var attempt = stepExecution.StepExecutionAttempts.MaxBy(e => e.RetryAttemptIndex);
-        if (attempt is null) return;
+        if (attempt is null)
+        {
+            return;
+        }
         using var context = _dbContextFactory.CreateDbContext();
         attempt.ExecutionStatus = StepExecutionStatus.Failed;
         attempt.StartedOn ??= DateTimeOffset.Now;
@@ -195,11 +203,11 @@ internal class GlobalOrchestrator(
         using var context = _dbContextFactory.CreateDbContext();
         foreach (var attempt in step.StepExecutionAttempts)
         {
+            context.Attach(attempt);
             attempt.ExecutionStatus = status;
             attempt.StartedOn = DateTimeOffset.Now;
             attempt.EndedOn = DateTimeOffset.Now;
             attempt.AddError(errorMessage);
-            context.Attach(attempt).State = EntityState.Modified;
         }
         await context.SaveChangesAsync();
     }

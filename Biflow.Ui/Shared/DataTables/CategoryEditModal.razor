@@ -53,7 +53,7 @@
             IRequest command = category.CategoryId == Guid.Empty
                 ? new CreateDataTableCategoryCommand(category)
                 : new UpdateDataTableCategoryCommand(category);
-            await Mediator.Send(command);
+            await Mediator.SendAsync(command);
             await OnCategorySubmitted.InvokeAsync(category);
             await modal.LetAsync(x => x.HideAsync());
         }

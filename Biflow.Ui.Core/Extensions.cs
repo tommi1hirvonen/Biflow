@@ -1,5 +1,6 @@
 ﻿using Biflow.Executor.Core;
 using Biflow.Scheduler.Core;
+using Biflow.Ui.Core.Authentication;
 using Biflow.Ui.SqlServer;
 using CronExpressionDescriptor;
 using Microsoft.AspNetCore.Authentication;
@@ -48,7 +49,7 @@ public static partial class Extensions
         AuthenticationMethod method;
         if (authentication == "BuiltIn")
         {
-            services.AddSingleton<IAuthHandler, BuiltInAuthHandler>();
+            services.AddScoped<IAuthHandler, BuiltInAuthHandler>();
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
             method = AuthenticationMethod.BuiltIn;
         }
@@ -58,8 +59,8 @@ public static partial class Extensions
             services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
             services.AddAuthorizationBuilder()
                 .SetFallbackPolicy(new AuthorizationPolicyBuilder().AddRequirements(new UserExistsRequirement()).Build());
-            services.AddSingleton<IAuthorizationHandler, WindowsAuthorizationHandler>();
-            services.AddSingleton<IClaimsTransformation, ClaimsTransformer>();
+            services.AddScoped<IAuthorizationHandler, WindowsAuthorizationHandler>();
+            services.AddScoped<IClaimsTransformation, ClaimsTransformer>();
             method = AuthenticationMethod.Windows;
         }
         else if (authentication == "AzureAd")
@@ -71,12 +72,12 @@ public static partial class Extensions
             {
                 options.FallbackPolicy = options.DefaultPolicy;
             });
-            services.AddSingleton<IClaimsTransformation, ClaimsTransformer>();
+            services.AddScoped<IClaimsTransformation, ClaimsTransformer>();
             method = AuthenticationMethod.AzureAd;
         }
         else if (authentication == "Ldap")
         {
-            services.AddSingleton<IAuthHandler, LdapAuthHandler>();
+            services.AddScoped<IAuthHandler, LdapAuthHandler>();
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
             method = AuthenticationMethod.Ldap;
         }
@@ -100,7 +101,8 @@ public static partial class Extensions
         {
             var adminUsername = adminSection.GetValue<string>("Username");
             ArgumentNullException.ThrowIfNull(adminUsername);
-            var mediator = app.Services.GetRequiredService<IMediator>();
+            using var scope = app.Services.CreateScope();
+            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
             var authentication = app.Configuration.GetValue<string>("Authentication");
             string? adminPassword = null;
             if (authentication == "BuiltIn")
@@ -108,7 +110,7 @@ public static partial class Extensions
                 adminPassword = adminSection.GetValue<string?>("Password");
                 ArgumentNullException.ThrowIfNull(adminPassword);
             }
-            await mediator.Send(new EnsureAdminUserCommand(adminUsername, adminPassword));
+            await mediator.SendAsync(new EnsureAdminUserCommand(adminUsername, adminPassword));
         }
     }
 
@@ -120,14 +122,25 @@ public static partial class Extensions
     /// <exception cref="ArgumentException">Thrown if an incorrect configuration is detected</exception>
     public static IServiceCollection AddUiCoreServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContextFactory<AppDbContext>();
-        services.AddExecutionBuilderFactory<AppDbContext>();
+        // Add the UserService and AppDbContext factory as scoped.
+        // The current user is captured and stored in UserService,
+        // which in turn is used in AppDbContext to filter data in global query filters
+        // based on the user's access permissions.
+        services.AddScoped<IUserService, UserService>();
+        services.AddDbContextFactory<AppDbContext>(lifetime: ServiceLifetime.Scoped);
+
+        // Add a second DbContext factory with singleton lifetime.
+        // This is used in background services where the user session is not relevant.
+        services.AddDbContextFactory<ServiceDbContext>(lifetime: ServiceLifetime.Singleton);
+
+        services.AddExecutionBuilderFactory<AppDbContext>(ServiceLifetime.Scoped);
+        
         services.AddHttpClient();
         services.AddHttpClient("DefaultCredentials")
             // Passes Windows credentials in on-premise installations to the scheduler API.
             .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { UseDefaultCredentials = true });
 
-        services.AddSingleton(typeof(ITokenService), typeof(TokenService<AppDbContext>));
+        services.AddSingleton(typeof(ITokenService), typeof(TokenService<ServiceDbContext>));
 
         var executorType = configuration.GetSection("Executor").GetValue<string>("Type");
         if (executorType == "WebApp")
@@ -159,10 +172,26 @@ public static partial class Extensions
             throw new ArgumentException($"Error registering scheduler service. Incorrect scheduler type: {schedulerType}. Check appsettings.json.");
         }
 
-        services.AddSingleton<EnvironmentSnapshotBuilder>();
-        services.AddSingleton<SqlServerHelperService>();
+        services.AddScoped<EnvironmentSnapshotBuilder>();
+        services.AddScoped<SqlServerHelperService>();
         services.AddDuplicatorServices();
-        services.AddMediatR(config => config.RegisterServicesFromAssemblyContaining<MediatREntryPoint>());
+
+        // Add the mediator dispatcher as a scoped service.
+        // This allows the use of other scoped services (e.g. AppDbContext factory) in request handlers.
+        services.AddScoped<IMediator, Mediator>();
+
+        // Add request handlers
+        services.Scan(selector =>
+        {
+            selector.FromAssemblyOf<Mediator>()
+                .AddClasses(filter => filter.AssignableTo(typeof(IRequestHandler<>)))
+                .AsImplementedInterfaces()
+                .WithTransientLifetime();
+            selector.FromAssemblyOf<Mediator>()
+                .AddClasses(filter => filter.AssignableTo(typeof(IRequestHandler<,>)))
+                .AsImplementedInterfaces()
+                .WithTransientLifetime();
+        });
 
         return services;
     }

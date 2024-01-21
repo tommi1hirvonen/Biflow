@@ -2,10 +2,11 @@
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-internal interface IStepExecutor<TAttempt>
-    where TAttempt : StepExecutionAttempt
-{
-    public Task<Result> ExecuteAsync(TAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource);
+internal interface IStepExecutor<TStep, TAttempt> : IStepExecutor
+    where TStep : StepExecution
+    where TAttempt : StepExecutionAttempt;
 
-    public TAttempt Clone(TAttempt other, int retryAttemptIndex);
+internal interface IStepExecutor
+{
+    public Task<bool> RunAsync(StepExecution stepExecution, ExtendedCancellationTokenSource cts);
 }

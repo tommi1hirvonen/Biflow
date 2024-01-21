@@ -1,31 +1,36 @@
 ﻿using Biflow.Executor.Core.Common;
 using Dapper;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-internal class AgentJobStepExecutor(IOptionsMonitor<ExecutionOptions> options, AgentJobStepExecution step)
-    : IStepExecutor<AgentJobStepExecutionAttempt>
+internal class AgentJobStepExecutor(
+    ILogger<AgentJobStepExecutor> logger,
+    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    IOptionsMonitor<ExecutionOptions> options)
+    : StepExecutor<AgentJobStepExecution, AgentJobStepExecutionAttempt>(logger, dbContextFactory)
 {
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
     private readonly JsonSerializerOptions _serializerOptions =
         new() { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
-    private readonly AgentJobStepExecution _step = step;
-    private readonly SqlConnectionInfo _connection = step.GetConnection()
-        ?? throw new ArgumentNullException(nameof(_connection));
 
-    public AgentJobStepExecutionAttempt Clone(AgentJobStepExecutionAttempt other, int retryAttemptIndex) =>
-        new(other, retryAttemptIndex);
+    protected override AgentJobStepExecutionAttempt AddAttempt(AgentJobStepExecution step, StepExecutionStatus withStatus) =>
+        step.AddAttempt(withStatus);
 
-    public async Task<Result> ExecuteAsync(AgentJobStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
+    protected override async Task<Result> ExecuteAsync(
+        AgentJobStepExecution step,
+        AgentJobStepExecutionAttempt attempt,
+        ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
-        var connectionString = _connection.ConnectionString;
+        var connectionString = step.GetConnection()?.ConnectionString;
+        ArgumentNullException.ThrowIfNull(connectionString);
 
         // Start agent job execution
         try
@@ -33,7 +38,7 @@ internal class AgentJobStepExecutor(IOptionsMonitor<ExecutionOptions> options, A
             using var connection = new SqlConnection(connectionString);
             await connection.ExecuteAsync(
                 "EXEC msdb.dbo.sp_start_job @job_name = @AgentJobName",
-                new { _step.AgentJobName });
+                new { step.AgentJobName });
         }
         catch (Exception ex)
         {
@@ -41,8 +46,8 @@ internal class AgentJobStepExecutor(IOptionsMonitor<ExecutionOptions> options, A
             return Result.Failure;
         }
 
-        using var timeoutCts = _step.TimeoutMinutes > 0
-            ? new CancellationTokenSource(TimeSpan.FromMinutes(_step.TimeoutMinutes))
+        using var timeoutCts = step.TimeoutMinutes > 0
+            ? new CancellationTokenSource(TimeSpan.FromMinutes(step.TimeoutMinutes))
             : new CancellationTokenSource();
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
@@ -58,7 +63,7 @@ internal class AgentJobStepExecutor(IOptionsMonitor<ExecutionOptions> options, A
                 // Column [job_history_id] will contain the history id of the agent job outcome when it has completed.
                 var status = await connection.QueryAsync<dynamic>(
                     "EXEC msdb.dbo.sp_help_jobactivity @job_name = @AgentJobName",
-                    new { _step.AgentJobName });
+                    new { step.AgentJobName });
                 historyId = status.FirstOrDefault()?.job_history_id;
             }
         }
@@ -67,7 +72,7 @@ internal class AgentJobStepExecutor(IOptionsMonitor<ExecutionOptions> options, A
             using var connection = new SqlConnection(connectionString);
             await connection.ExecuteAsync(
                 "EXEC msdb.dbo.sp_stop_job @job_name = @AgentJobName",
-                new { _step.AgentJobName });
+                new { step.AgentJobName });
             if (timeoutCts.IsCancellationRequested)
             {
                 attempt.AddError(ex, "Step execution timed out");

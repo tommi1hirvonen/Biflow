@@ -22,7 +22,7 @@ public class FunctionStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
         StepExecutionParameters = step.StepParameters
             .Select(p => new FunctionStepExecutionParameter(p, this))
             .ToArray();
-        StepExecutionAttempts.Add(new FunctionStepExecutionAttempt(this));
+        AddAttempt(new FunctionStepExecutionAttempt(this));
     }
 
     [Display(Name = "Function app id")]
@@ -41,6 +41,18 @@ public class FunctionStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
     public double TimeoutMinutes { get; private set; }
 
     public IEnumerable<FunctionStepExecutionParameter> StepExecutionParameters { get; } = new List<FunctionStepExecutionParameter>();
+
+    public override FunctionStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
+    {
+        var previous = StepExecutionAttempts.MaxBy(x => x.RetryAttemptIndex);
+        ArgumentNullException.ThrowIfNull(previous);
+        var next = new FunctionStepExecutionAttempt((FunctionStepExecutionAttempt)previous, previous.RetryAttemptIndex + 1)
+        {
+            ExecutionStatus = withStatus
+        };
+        AddAttempt(next);
+        return next;
+    }
 
     /// <summary>
     /// Get the <see cref="FunctionApp"/> entity associated with this <see cref="StepExecution"/>.
