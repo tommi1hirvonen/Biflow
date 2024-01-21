@@ -117,17 +117,19 @@ internal class GlobalOrchestrator(
         try
         {
             await listener.OnPreExecuteAsync(cts);
-            var stepOrchestrator = _stepExecutorProvider.GetExecutorFor(stepExecution, stepExecution.StepExecutionAttempts.First());
-            result = await stepOrchestrator.RunAsync(stepExecution, cts);
+            var stepExecutor = _stepExecutorProvider.GetExecutorFor(stepExecution, stepExecution.StepExecutionAttempts.First());
+            result = await stepExecutor.RunAsync(stepExecution, cts);
         }
         catch (OperationCanceledException)
         {
             // We should only arrive here if the step was canceled while it was Queued.
             // If the step was canceled once its execution had started,
             // then the step's executor should handle the cancellation and the result is returned normally from RunAsync().
-
-            // TODO Add try-catch
-            await UpdateExecutionCancelledAsync(stepExecution, cts.Username);
+            try
+            {
+                await UpdateExecutionCancelledAsync(stepExecution, cts.Username);
+            }
+            catch { }
         }
         catch (Exception ex)
         {

@@ -135,7 +135,7 @@ internal abstract class StepExecutor<TStep, TAttempt>(
                 await UpdateExecutionSucceededAsync(executionAttempt);
                 return true;
             },
-            async (StepExecutor.Cancel cancel) =>
+            async (Cancel cancel) =>
             {
                 await UpdateExecutionCancelledAsync(executionAttempt, cts.Username);
                 return false;
