@@ -24,7 +24,7 @@
                         <div class="row mt-3">
                             <div class="col-lg-6">
                                 <label class="form-label">App registration</label>
-                                <InputSelect class="form-select" @bind-Value="functionApp.AppRegistrationId" @bind-Value:after="AppRegistrationChanged">
+                                <InputSelect class="form-select" @bind-Value:get="functionApp.AppRegistrationId" @bind-Value:set="AppRegistrationChanged">
                                     @foreach (var app in AppRegistrations ?? Enumerable.Empty<AppRegistration>())
                                     {
                                         <option value="@app.AppRegistrationId">@app.AppRegistrationName</option>
@@ -111,16 +111,12 @@
     private bool testingConnection = false;
     private FunctionAppKeySelectOffcanvas? keySelectOffcanvas;
 
-    private void AppRegistrationChanged()
+    private void AppRegistrationChanged(Guid id)
     {
-        var appRegistrationId = functionApp?.AppRegistrationId;
-        if (appRegistrationId is Guid id)
+        var appRegistration = AppRegistrations?.FirstOrDefault(a => a.AppRegistrationId == id);
+        if (appRegistration is not null && functionApp is not null)
         {
-            var appRegistration = AppRegistrations?.FirstOrDefault(a => a.AppRegistrationId == id);
-            if (appRegistration is not null && functionApp is not null)
-            {
-                functionApp.AppRegistration = appRegistration;
-            }
+            functionApp.AppRegistration = appRegistration;
         }
     }
 
@@ -137,7 +133,6 @@
 
     private async Task SubmitFunctionApp()
     {
-        if (functionApp is not null) functionApp.AppRegistration = null!;
         await OnFunctionAppSubmit.InvokeAsync(functionApp);
         await modal.LetAsync(x => x.HideAsync());
     }
@@ -177,10 +172,11 @@
         }
         else
         {
+            var appRegistration = AppRegistrations?.FirstOrDefault();
+            ArgumentNullException.ThrowIfNull(appRegistration);
             functionApp = new()
             {
-                AppRegistrationId = AppRegistrations.First().AppRegistrationId,
-                AppRegistration = AppRegistrations?.FirstOrDefault()!
+                AppRegistration = appRegistration
             };
         }
     }
