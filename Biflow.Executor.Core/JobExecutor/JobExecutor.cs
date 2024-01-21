@@ -165,11 +165,8 @@ internal class JobExecutor(
     private async Task<string?> GetCircularJobExecutionsAsync(Guid jobId, CancellationToken cancellationToken)
     {
         var dependencies = await ReadJobDependenciesAsync(cancellationToken);
-        IEnumerable<IEnumerable<Job>> cycles = dependencies.FindCycles();
-        var jobs = cycles
-            .Select(c => c.Select(c_ => new { c_.JobId, c_.JobName }).ToArray())
-            .ToArray();
-        var json = JsonSerializer.Serialize(jobs, _serializerOptions);
+        IEnumerable<IEnumerable<JobProjection>> cycles = dependencies.FindCycles();
+        var json = JsonSerializer.Serialize(cycles, _serializerOptions);
 
         // There are no circular dependencies or this job is not among the cycles.
         return !cycles.Any() || !cycles.Any(jobs => jobs.Any(j => j.JobId == jobId))
@@ -180,45 +177,41 @@ internal class JobExecutor(
     {
         // Find circular step dependencies which are not allowed since they would block each other's executions.
         var dependencies = await ReadStepDependenciesAsync(cancellationToken);
-        IEnumerable<IEnumerable<Step>> cycles = dependencies.FindCycles();
-        var steps = cycles
-            .Select(c1 => c1.Select(c2 => new { c2.StepId, c2.StepName }).ToArray())
-            .ToArray();
-        var json = JsonSerializer.Serialize(steps, _serializerOptions);
+        IEnumerable<IEnumerable<StepProjection>> cycles = dependencies.FindCycles();
+        var json = JsonSerializer.Serialize(cycles, _serializerOptions);
         return !cycles.Any() ? null : json;
     }
 
-    private async Task<Dictionary<Job, Job[]>> ReadJobDependenciesAsync(CancellationToken cancellationToken)
+    private async Task<Dictionary<JobProjection, JobProjection[]>> ReadJobDependenciesAsync(CancellationToken cancellationToken)
     {
         using var context = _dbContextFactory.CreateDbContext();
-        var steps = await context.JobSteps
-            .AsNoTrackingWithIdentityResolution()
-            .Include(step => step.Job)
-            .Include(step => step.JobToExecute)
+        var jobs = await context.JobSteps
+            .AsNoTracking()
             .Select(step => new
             {
-                step.Job,
-                step.JobToExecute
+                Job = new JobProjection(step.Job.JobId, step.Job.JobName),
+                JobToExecute = new JobProjection(step.JobToExecute.JobId, step.JobToExecute.JobName)
             })
             .ToArrayAsync(cancellationToken);
-        var dependencies = steps
+        var dependencies = jobs
             .GroupBy(key => key.Job, element => element.JobToExecute)
             .ToDictionary(grouping => grouping.Key, grouping => grouping.ToArray());
         return dependencies;
     }
 
-    private async Task<Dictionary<Step, Step[]>> ReadStepDependenciesAsync(CancellationToken cancellationToken)
+    private async Task<Dictionary<StepProjection, StepProjection[]>> ReadStepDependenciesAsync(CancellationToken cancellationToken)
     {
         using var context = _dbContextFactory.CreateDbContext();
-        var steps = await context.Steps
-            .AsNoTrackingWithIdentityResolution()
-            .Where(step => step.JobId == _execution.JobId)
-            .Include(step => step.Dependencies)
-            .ThenInclude(d => d.DependantOnStep)
+        var steps = await context.Dependencies
+            .AsNoTracking()
+            .Where(d => d.Step.JobId == _execution.JobId)
+            .Select(d => new
+            {
+                Step = new StepProjection(d.Step.StepId, d.Step.StepName),
+                DependantOnStep = new StepProjection(d.DependantOnStep.StepId, d.DependantOnStep.StepName)
+            })
             .ToArrayAsync(cancellationToken);
         var dependencies = steps
-            .SelectMany(step => step.Dependencies)
-            .Select(d => new { d.Step, d.DependantOnStep})
             .GroupBy(key => key.Step, element => element.DependantOnStep)
             .ToDictionary(g => g.Key, g => g.ToArray());
         return dependencies;
@@ -245,4 +238,7 @@ internal class JobExecutor(
         await context.SaveChangesAsync();
     }
 
+    private record JobProjection(Guid JobId, string JobName);
+
+    private record StepProjection(Guid StepId, string? StepName);
 }
