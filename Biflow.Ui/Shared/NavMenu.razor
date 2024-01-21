@@ -81,8 +81,7 @@
                 </NavLink>
             </li>
         </AuthorizeView>
-        @if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn
-            || AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.Ldap)
+        @if (AuthenticationResolver.AuthenticationMethod is AuthenticationMethod.BuiltIn or AuthenticationMethod.Ldap)
         {
             <li class="nav-item mt-3">
                 <a class="nav-link" href="javascript:void()" @onclick="@(() => NavigationManager.NavigateTo("logout", forceLoad: true))">
