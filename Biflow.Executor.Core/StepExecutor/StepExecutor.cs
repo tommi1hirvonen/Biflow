@@ -103,7 +103,7 @@ internal abstract class StepExecutor<TStep, TAttempt>(
 
     protected abstract Task<Result> ExecuteAsync(TStep step, TAttempt attempt, ExtendedCancellationTokenSource cts);
 
-    protected abstract TAttempt Clone(TAttempt other, int retryAttemptIndex);
+    protected abstract TAttempt AddAttempt(TStep step, StepExecutionStatus withStatus);
 
     private async Task<bool> ExecuteRecursivelyWithRetriesAsync(
         TStep stepExecution,
@@ -155,9 +155,7 @@ internal abstract class StepExecutor<TStep, TAttempt>(
                 await UpdateExecutionFailedAsync(executionAttempt, StepExecutionStatus.Retry);
 
                 // Copy the execution attempt, increase counter and wait for the retry interval.
-                var nextExecution = Clone(executionAttempt, executionAttempt.RetryAttemptIndex + 1);
-                nextExecution.ExecutionStatus = StepExecutionStatus.AwaitingRetry;
-                stepExecution.StepExecutionAttempts.Add(nextExecution);
+                var nextExecution = AddAttempt(stepExecution, StepExecutionStatus.AwaitingRetry);
                 using (var context = _dbContextFactory.CreateDbContext())
                 {
                     context.Attach(nextExecution).State = EntityState.Added;

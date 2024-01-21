@@ -14,8 +14,8 @@ internal class PackageStepExecutor(
     private readonly ILogger<PackageStepExecutor> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
 
-    protected override PackageStepExecutionAttempt Clone(PackageStepExecutionAttempt other, int retryAttemptIndex) =>
-        new(other, retryAttemptIndex);
+    protected override PackageStepExecutionAttempt AddAttempt(PackageStepExecution step, StepExecutionStatus withStatus) =>
+        step.AddAttempt(withStatus);
 
     protected override async Task<Result> ExecuteAsync(
         PackageStepExecution step,

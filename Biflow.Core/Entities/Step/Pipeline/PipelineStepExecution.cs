@@ -21,7 +21,7 @@ public class PipelineStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
         StepExecutionParameters = step.StepParameters
             .Select(p => new PipelineStepExecutionParameter(p, this))
             .ToArray();
-        StepExecutionAttempts.Add(new PipelineStepExecutionAttempt(this));
+        AddAttempt(new PipelineStepExecutionAttempt(this));
     }
 
     [Display(Name = "Pipeline name")]
@@ -34,6 +34,18 @@ public class PipelineStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
     public double TimeoutMinutes { get; private set; }
 
     public IEnumerable<PipelineStepExecutionParameter> StepExecutionParameters { get; } = new List<PipelineStepExecutionParameter>();
+
+    public override PipelineStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
+    {
+        var previous = StepExecutionAttempts.MaxBy(x => x.RetryAttemptIndex);
+        ArgumentNullException.ThrowIfNull(previous);
+        var next = new PipelineStepExecutionAttempt((PipelineStepExecutionAttempt)previous, previous.RetryAttemptIndex + 1)
+        {
+            ExecutionStatus = withStatus
+        };
+        AddAttempt(next);
+        return next;
+    }
 
     /// <summary>
     /// Get the <see cref="PipelineClient"/> entity associated with this <see cref="StepExecution"/>.

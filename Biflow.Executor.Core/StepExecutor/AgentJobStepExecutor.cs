@@ -18,8 +18,8 @@ internal class AgentJobStepExecutor(
     private readonly JsonSerializerOptions _serializerOptions =
         new() { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 
-    protected override AgentJobStepExecutionAttempt Clone(AgentJobStepExecutionAttempt other, int retryAttemptIndex) =>
-        new(other, retryAttemptIndex);
+    protected override AgentJobStepExecutionAttempt AddAttempt(AgentJobStepExecution step, StepExecutionStatus withStatus) =>
+        step.AddAttempt(withStatus);
 
     protected override async Task<Result> ExecuteAsync(
         AgentJobStepExecution step,

@@ -15,8 +15,8 @@ internal class JobStepExecutor(
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
     private readonly IExecutionManager _executionManager = executionManager;
 
-    protected override JobStepExecutionAttempt Clone(JobStepExecutionAttempt other, int retryAttemptIndex) =>
-        new(other, retryAttemptIndex);
+    protected override JobStepExecutionAttempt AddAttempt(JobStepExecution step, StepExecutionStatus withStatus) =>
+        step.AddAttempt(withStatus);
 
     protected override async Task<Result> ExecuteAsync(
         JobStepExecution step,

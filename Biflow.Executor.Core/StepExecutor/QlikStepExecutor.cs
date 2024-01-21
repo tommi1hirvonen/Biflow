@@ -16,8 +16,8 @@ internal class QlikStepExecutor(
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
 
-    protected override QlikStepExecutionAttempt Clone(QlikStepExecutionAttempt other, int retryAttemptIndex) =>
-        new(other, retryAttemptIndex);
+    protected override QlikStepExecutionAttempt AddAttempt(QlikStepExecution step, StepExecutionStatus withStatus) =>
+        step.AddAttempt(withStatus);
 
     protected override async Task<Result> ExecuteAsync(
         QlikStepExecution step,
