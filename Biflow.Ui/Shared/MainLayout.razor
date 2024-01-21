@@ -68,7 +68,7 @@
                         <div class="card shadow">
                             <h5 class="card-header">Unauthorized</h5>
                             <div class="card-body">
-                                @if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.Windows)
+                                    @if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.AzureAd)
                                 {
                                     <p>Sorry, you are not authorized to access the site with this account.</p>
                                     <strong>@username</strong>
