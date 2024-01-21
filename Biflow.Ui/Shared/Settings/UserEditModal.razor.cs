@@ -26,47 +26,6 @@ public partial class UserEditModal : ComponentBase
 
     private bool IsNewUser => previousUserId == Guid.Empty;
 
-    private void ToggleRole(string role)
-    {
-        ArgumentNullException.ThrowIfNull(model);
-        if (role == Roles.Admin)
-        {
-            model.User.Roles.Clear();
-            model.User.Roles.Add(role);
-        }
-        else if (role == Roles.Editor || role == Roles.Operator || role == Roles.Viewer)
-        {
-            model.User.Roles.RemoveAll(r => r == Roles.Admin || r == Roles.Editor || r == Roles.Viewer || r == Roles.Operator);
-            model.User.Roles.Add(role);
-        }
-        else if (role == Roles.DataTableMaintainer)
-        {
-            if (model.User.Roles.Contains(role))
-            {
-                model.User.Roles.RemoveAll(r => r == Roles.DataTableMaintainer);
-            }
-            else
-            {
-                model.User.Roles.Add(role);
-            }
-        }
-        else if (role == Roles.SettingsEditor)
-        {
-            if (model.User.Roles.Contains(role))
-            {
-                model.User.Roles.RemoveAll(r => r == Roles.SettingsEditor);
-            }
-            else
-            {
-                model.User.Roles.Add(role);
-            }
-        }
-        else
-        {
-            throw new ArgumentException($"Unrecognized role {role}", nameof(role));
-        }
-    }
-
     private void ToggleJobAuthorization(ChangeEventArgs args, Job job)
     {
         ArgumentNullException.ThrowIfNull(model);
@@ -152,14 +111,12 @@ public partial class UserEditModal : ComponentBase
         {
             var user = new User
             {
-                Username = "",
-                Roles = [Roles.Viewer]
+                Username = ""
             };
             model = new(user, new());
         }
         else
         {
-
             var user = await context.Users
                 .Include(u => u.Jobs)
                 .Include(u => u.DataTables)
@@ -181,7 +138,6 @@ public partial class UserEditModal : ComponentBase
             .Select(u => u.Username)
             .ToArrayAsync();
         validator = new(reservedUsernames);
-
     }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)

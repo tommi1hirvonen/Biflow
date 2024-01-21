@@ -8,10 +8,15 @@ internal class UserEntityTypeConfiguration : IEntityTypeConfiguration<User>
             .HasKey(x => x.UserId);
 
         builder.Property(x => x.Email).IsUnicode(false);
-        builder.Property(x => x.Roles).IsUnicode(false);
 
         builder.HasMany(user => user.Subscriptions)
             .WithOne(subscription => subscription.User);
+
+        builder.Ignore(x => x.Roles);
+        builder.Property("_roles")
+            .HasColumnName("Roles")
+            .HasMaxLength(500)
+            .IsUnicode(false);
 
         builder.HasIndex(p => p.Username, "UQ_User")
             .IsUnique();
