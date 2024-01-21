@@ -130,46 +130,12 @@ internal class JobExecutor(
             _logger.LogError(ex, "Error during job execution");
         }
 
-        // Get job execution status based on step execution statuses.
-        var allStepAttempts = _execution.StepExecutions.SelectMany(e => e.StepExecutionAttempts).ToList();
-        ExecutionStatus status;
-        if (allStepAttempts.All(step => step.ExecutionStatus == StepExecutionStatus.Succeeded
-            || step.ExecutionStatus == StepExecutionStatus.Skipped
-            || step.ExecutionStatus == StepExecutionStatus.DependenciesFailed))
-        {
-            status = ExecutionStatus.Succeeded;
-        }
-        else if (allStepAttempts.Any(step => step.ExecutionStatus == StepExecutionStatus.Failed))
-        {
-            status = ExecutionStatus.Failed;
-        }
-        else if (allStepAttempts.Any(step => step.ExecutionStatus == StepExecutionStatus.Retry
-            || step.ExecutionStatus == StepExecutionStatus.Duplicate
-            || step.ExecutionStatus == StepExecutionStatus.Warning))
-        {
-            status = ExecutionStatus.Warning;
-        }
-        else if (allStepAttempts.Any(step => step.ExecutionStatus == StepExecutionStatus.Stopped))
-        {
-            status = ExecutionStatus.Stopped;
-        }
-        else if (allStepAttempts.Any(step => step.ExecutionStatus == StepExecutionStatus.NotStarted
-            || step.ExecutionStatus == StepExecutionStatus.Queued
-            || step.ExecutionStatus == StepExecutionStatus.AwaitingRetry))
-        {
-            status = ExecutionStatus.Suspended;
-        }
-        else
-        {
-            status = ExecutionStatus.Failed;
-        }
-
         // Update job execution status.
         try
         {
             using var context = _dbContextFactory.CreateDbContext();
             context.Attach(_execution);
-            _execution.ExecutionStatus = status;
+            _execution.ExecutionStatus = _execution.GetCalculatedStatus();
             _execution.EndedOn = DateTimeOffset.Now;
             await context.SaveChangesAsync(CancellationToken.None);
         }

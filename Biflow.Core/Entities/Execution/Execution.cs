@@ -118,6 +118,43 @@ public class Execution
     public IEnumerable<ExecutionDataObject> DataObjects { get; } = new List<ExecutionDataObject>();
 
     public double? ExecutionInSeconds => ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
+
+    /// <summary>
+    /// Calculates and returns the execution's status based on its child step execution attempt statuses.
+    /// </summary>
+    /// <returns>The execution's calculated status</returns>
+    public ExecutionStatus GetCalculatedStatus()
+    {
+        var attempts = StepExecutions
+            .SelectMany(e => e.StepExecutionAttempts)
+            .ToArray();
+        ExecutionStatus status;
+        if (attempts.All(x => x.ExecutionStatus is StepExecutionStatus.Succeeded or StepExecutionStatus.Skipped or StepExecutionStatus.DependenciesFailed))
+        {
+            status = ExecutionStatus.Succeeded;
+        }
+        else if (attempts.Any(x => x.ExecutionStatus is StepExecutionStatus.Failed))
+        {
+            status = ExecutionStatus.Failed;
+        }
+        else if (attempts.Any(x => x.ExecutionStatus is StepExecutionStatus.Retry or StepExecutionStatus.Duplicate or StepExecutionStatus.Warning))
+        {
+            status = ExecutionStatus.Warning;
+        }
+        else if (attempts.Any(x => x.ExecutionStatus is StepExecutionStatus.Stopped))
+        {
+            status = ExecutionStatus.Stopped;
+        }
+        else if (attempts.Any(x => x.ExecutionStatus is StepExecutionStatus.NotStarted or StepExecutionStatus.Queued or StepExecutionStatus.AwaitingRetry))
+        {
+            status = ExecutionStatus.Suspended;
+        }
+        else
+        {
+            status = ExecutionStatus.Failed;
+        }
+        return status;
+    }
 }
 
 
