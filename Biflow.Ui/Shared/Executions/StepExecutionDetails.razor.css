@@ -1,6 +1,22 @@
-﻿table.table-step-execution-details tbody tr td:nth-child(1) {
-    font-weight: 600;
-    text-align: right!important;
-    padding-right: 1rem;
-    width: 25%!important;
+﻿dd {
+    padding-bottom: 0.3rem;
+    margin-bottom: 0.3rem;
+}
+
+@media (min-width: 576px) {
+    dt {
+        padding-bottom: 0.3rem;
+        margin-bottom: 0.3rem;
+        display: flex;
+        justify-content: flex-end;
+        flex: 0 0 auto;
+        width: 25%;
+        border-bottom: var(--bs-border-width) var(--bs-border-style) var(--bs-border-color) !important;
+    }
+
+    dd {
+        flex: 0 0 auto;
+        width: 75%;
+        border-bottom: var(--bs-border-width) var(--bs-border-style) var(--bs-border-color) !important;
+    }
 }
