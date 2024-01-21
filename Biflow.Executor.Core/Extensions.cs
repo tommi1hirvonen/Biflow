@@ -33,10 +33,9 @@ public static class Extensions
         // Register step executors
         services.AddSingleton<StepOrchestrator<AgentJobStepExecution, AgentJobStepExecutionAttempt, AgentJobStepExecutor>>();
         services.AddSingleton<StepOrchestrator<DatasetStepExecution, DatasetStepExecutionAttempt, DatasetStepExecutor>>();
-        services.AddSingleton<StepOrchestrator<FunctionStepExecution, FunctionStepExecutionAttempt, DurableFunctionStepExecutor>>();
+        services.AddSingleton<StepOrchestrator<FunctionStepExecution, FunctionStepExecutionAttempt, FunctionStepExecutor>>();
         services.AddSingleton<StepOrchestrator<EmailStepExecution, EmailStepExecutionAttempt, EmailStepExecutor>>();
         services.AddSingleton<StepOrchestrator<ExeStepExecution, ExeStepExecutionAttempt, ExeStepExecutor>>();
-        services.AddSingleton<StepOrchestrator<FunctionStepExecution, FunctionStepExecutionAttempt, FunctionStepExecutor>>();
         services.AddSingleton<StepOrchestrator<JobStepExecution, JobStepExecutionAttempt, JobStepExecutor>>();
         services.AddSingleton<StepOrchestrator<PackageStepExecution, PackageStepExecutionAttempt, PackageStepExecutor>>();
         services.AddSingleton<StepOrchestrator<PipelineStepExecution, PipelineStepExecutionAttempt, PipelineStepExecutor>>();

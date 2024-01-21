@@ -5,7 +5,6 @@ namespace Biflow.Executor.Core.Orchestrator;
 internal class StepOrchestratorProvider(
     StepOrchestrator<AgentJobStepExecution, AgentJobStepExecutionAttempt, AgentJobStepExecutor> agentJobOrchestrator,
     StepOrchestrator<DatasetStepExecution, DatasetStepExecutionAttempt, DatasetStepExecutor> datasetOrchestrator,
-    StepOrchestrator<FunctionStepExecution, FunctionStepExecutionAttempt, DurableFunctionStepExecutor> durableOrchestrator,
     StepOrchestrator<EmailStepExecution, EmailStepExecutionAttempt, EmailStepExecutor> emailOrchestrator,
     StepOrchestrator<ExeStepExecution, ExeStepExecutionAttempt, ExeStepExecutor> exeOrchestrator,
     StepOrchestrator<FunctionStepExecution, FunctionStepExecutionAttempt, FunctionStepExecutor> functionOrchestrator,
@@ -21,7 +20,6 @@ internal class StepOrchestratorProvider(
     {
         AgentJobStepExecution => agentJobOrchestrator,
         DatasetStepExecution => datasetOrchestrator,
-        FunctionStepExecution and { FunctionIsDurable: true } => durableOrchestrator,
         EmailStepExecution => emailOrchestrator,
         ExeStepExecution => exeOrchestrator,
         FunctionStepExecution => functionOrchestrator,
