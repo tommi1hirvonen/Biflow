@@ -172,11 +172,11 @@ internal class GlobalOrchestrator(
         using var context = _dbContextFactory.CreateDbContext();
         foreach (var attempt in stepExecution.StepExecutionAttempts)
         {
+            context.Attach(attempt);
             attempt.StartedOn ??= DateTimeOffset.Now;
             attempt.EndedOn = DateTimeOffset.Now;
             attempt.StoppedBy = username;
             attempt.ExecutionStatus = StepExecutionStatus.Stopped;
-            context.Attach(attempt).State = EntityState.Modified;
         }
         await context.SaveChangesAsync();
     }
@@ -184,7 +184,10 @@ internal class GlobalOrchestrator(
     private async Task UpdateExecutionFailedAsync(Exception ex, StepExecution stepExecution)
     {
         var attempt = stepExecution.StepExecutionAttempts.MaxBy(e => e.RetryAttemptIndex);
-        if (attempt is null) return;
+        if (attempt is null)
+        {
+            return;
+        }
         using var context = _dbContextFactory.CreateDbContext();
         attempt.ExecutionStatus = StepExecutionStatus.Failed;
         attempt.StartedOn ??= DateTimeOffset.Now;
@@ -200,11 +203,11 @@ internal class GlobalOrchestrator(
         using var context = _dbContextFactory.CreateDbContext();
         foreach (var attempt in step.StepExecutionAttempts)
         {
+            context.Attach(attempt);
             attempt.ExecutionStatus = status;
             attempt.StartedOn = DateTimeOffset.Now;
             attempt.EndedOn = DateTimeOffset.Now;
             attempt.AddError(errorMessage);
-            context.Attach(attempt).State = EntityState.Modified;
         }
         await context.SaveChangesAsync();
     }

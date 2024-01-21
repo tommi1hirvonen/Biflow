@@ -185,7 +185,7 @@ internal abstract class StepExecutor<TStep, TAttempt>(
         attempt.EndedOn = DateTimeOffset.Now;
         attempt.StoppedBy = username;
         attempt.ExecutionStatus = StepExecutionStatus.Stopped;
-        context.Attach(attempt).State = EntityState.Modified;
+        context.Attach(attempt).State = EntityState.Modified; // Full update to account for added messages
         await context.SaveChangesAsync();
     }
 
@@ -195,7 +195,7 @@ internal abstract class StepExecutor<TStep, TAttempt>(
         attempt.ExecutionStatus = status;
         attempt.StartedOn ??= DateTimeOffset.Now;
         attempt.EndedOn = DateTimeOffset.Now;
-        context.Attach(attempt).State = EntityState.Modified;
+        context.Attach(attempt).State = EntityState.Modified; // Full update to account for added messages
         await context.SaveChangesAsync();
     }
 
@@ -208,7 +208,7 @@ internal abstract class StepExecutor<TStep, TAttempt>(
 
         attempt.ExecutionStatus = status;
         attempt.EndedOn = DateTimeOffset.Now;
-        context.Attach(attempt).State = EntityState.Modified;
+        context.Attach(attempt).State = EntityState.Modified; // Full update to account for added messages
         await context.SaveChangesAsync();
     }
 
@@ -217,11 +217,11 @@ internal abstract class StepExecutor<TStep, TAttempt>(
         using var context = _dbContextFactory.CreateDbContext();
         foreach (var attempt in stepExecution.StepExecutionAttempts)
         {
+            context.Attach(attempt);
             attempt.ExecutionStatus = StepExecutionStatus.Stopped;
             attempt.StartedOn = DateTimeOffset.Now;
             attempt.EndedOn = DateTimeOffset.Now;
             attempt.StoppedBy = username;
-            context.Attach(attempt).State = EntityState.Modified;
         }
         await context.SaveChangesAsync();
     }
@@ -229,9 +229,9 @@ internal abstract class StepExecutor<TStep, TAttempt>(
     private async Task UpdateExecutionRunningAsync(StepExecutionAttempt attempt)
     {
         using var context = _dbContextFactory.CreateDbContext();
+        context.Attach(attempt);
         attempt.StartedOn = DateTimeOffset.Now;
         attempt.ExecutionStatus = StepExecutionStatus.Running;
-        context.Attach(attempt).State = EntityState.Modified;
         await context.SaveChangesAsync();
     }
 
@@ -240,11 +240,11 @@ internal abstract class StepExecutor<TStep, TAttempt>(
         using var context = _dbContextFactory.CreateDbContext();
         foreach (var attempt in stepExecution.StepExecutionAttempts)
         {
+            context.Attach(attempt);
             attempt.ExecutionStatus = StepExecutionStatus.Skipped;
             attempt.StartedOn = DateTimeOffset.Now;
             attempt.EndedOn = DateTimeOffset.Now;
             attempt.AddOutput(infoMessage);
-            context.Attach(attempt).State = EntityState.Modified;
         }
         await context.SaveChangesAsync();
     }
