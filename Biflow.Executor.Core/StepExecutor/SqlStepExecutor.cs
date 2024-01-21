@@ -7,52 +7,52 @@ namespace Biflow.Executor.Core.StepExecutor;
 
 internal class SqlStepExecutor(
     ILogger<SqlStepExecutor> logger,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    SqlStepExecution step) : IStepExecutor<SqlStepExecutionAttempt>
+    IDbContextFactory<ExecutorDbContext> dbContextFactory)
+    : StepExecutor<SqlStepExecution, SqlStepExecutionAttempt>(logger, dbContextFactory)
 {
     private readonly ILogger<SqlStepExecutor> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
-    private readonly SqlStepExecution _step = step;
-    private readonly SqlConnectionInfo _connection = step.GetConnection()
-        ?? throw new ArgumentNullException(nameof(_connection));
 
-    public SqlStepExecutionAttempt Clone(SqlStepExecutionAttempt other, int retryAttemptIndex) =>
+    protected override SqlStepExecutionAttempt Clone(SqlStepExecutionAttempt other, int retryAttemptIndex) =>
         new(other, retryAttemptIndex);
 
-    public async Task<Result> ExecuteAsync(SqlStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
+    protected override async Task<Result> ExecuteAsync(SqlStepExecution step, SqlStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
+        var connectionInfo = step.GetConnection();
+        ArgumentNullException.ThrowIfNull(connectionInfo);
+
         try
         {
-            _logger.LogInformation("{ExecutionId} {Step} Starting SQL execution", _step.ExecutionId, _step);
-            using var connection = new SqlConnection(_connection.ConnectionString);
+            _logger.LogInformation("{ExecutionId} {Step} Starting SQL execution", step.ExecutionId, step);
+            using var connection = new SqlConnection(connectionInfo.ConnectionString);
             connection.InfoMessage += (s, e) => attempt.AddOutput(e.Message);
 
-            var parameters = _step.StepExecutionParameters
+            var parameters = step.StepExecutionParameters
                 .ToDictionary(key => key.ParameterName, value => value.ParameterValue);
             var dynamicParams = new DynamicParameters(parameters);
 
             // command timeout = 0 => wait indefinitely
             var command = new CommandDefinition(
-                _step.SqlStatement,
-                commandTimeout: Convert.ToInt32(_step.TimeoutMinutes * 60),
+                step.SqlStatement,
+                commandTimeout: Convert.ToInt32(step.TimeoutMinutes * 60),
                 parameters: dynamicParams,
                 cancellationToken: cancellationToken);
 
             // Check whether the query result should be captured to a job parameter.
-            if (_step.ResultCaptureJobParameterId is not null)
+            if (step.ResultCaptureJobParameterId is not null)
             {
                 var result = await connection.ExecuteScalarAsync(command);
 
                 // Update the capture value.
                 using var context = _dbContextFactory.CreateDbContext();
-                context.Attach(_step);
-                _step.ResultCaptureJobParameterValue = result;
+                context.Attach(step);
+                step.ResultCaptureJobParameterValue = result;
                 
                 // Update the job execution parameter with the result value for following steps to use.
-                var param = _step.Execution.ExecutionParameters.FirstOrDefault(p => p.ParameterId == _step.ResultCaptureJobParameterId);
+                var param = step.Execution.ExecutionParameters.FirstOrDefault(p => p.ParameterId == step.ResultCaptureJobParameterId);
                 if (param is not null)
                 {
                     param.ParameterValue = result;
@@ -82,7 +82,7 @@ internal class SqlStepExecutor(
                 return Result.Cancel;
             }
 
-            _logger.LogWarning(ex, "{ExecutionId} {Step} SQL execution failed", _step.ExecutionId, _step);
+            _logger.LogWarning(ex, "{ExecutionId} {Step} SQL execution failed", step.ExecutionId, step);
 
             return Result.Failure;
         }

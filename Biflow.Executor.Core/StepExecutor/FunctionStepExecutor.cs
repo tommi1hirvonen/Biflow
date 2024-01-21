@@ -10,36 +10,39 @@ internal class FunctionStepExecutor(
     ILogger<FunctionStepExecutor> logger,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
     IOptionsMonitor<ExecutionOptions> options,
-    IHttpClientFactory httpClientFactory,
-    FunctionStepExecution step) : IStepExecutor<FunctionStepExecutionAttempt>
+    IHttpClientFactory httpClientFactory)
+    : StepExecutor<FunctionStepExecution, FunctionStepExecutionAttempt>(logger, dbContextFactory)
 {
     private readonly ILogger<FunctionStepExecutor> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
-    private readonly FunctionStepExecution _step = step;
-    private readonly FunctionApp _functionApp = step.GetApp()
-        ?? throw new ArgumentNullException(nameof(FunctionApp));
 
     private const int MaxRefreshRetries = 3;
 
     private static readonly JsonSerializerOptions CamelCaseOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
-    public FunctionStepExecutionAttempt Clone(FunctionStepExecutionAttempt other, int retryAttemptIndex) =>
+    protected override FunctionStepExecutionAttempt Clone(FunctionStepExecutionAttempt other, int retryAttemptIndex) =>
         new(other, retryAttemptIndex);
 
-    public Task<Result> ExecuteAsync(FunctionStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
+    protected override Task<Result> ExecuteAsync(
+        FunctionStepExecution step,
+        FunctionStepExecutionAttempt attempt,
+        ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
-        return _step switch
+        return step switch
         {
-            { FunctionIsDurable: true } => RunDurableFunctionAsync(attempt, cancellationTokenSource),
-            _ => RunHttpFunctionAsync(attempt, cancellationToken)
+            { FunctionIsDurable: true } => RunDurableFunctionAsync(step, attempt, cancellationTokenSource),
+            _ => RunHttpFunctionAsync(step, attempt, cancellationToken)
         };
     }
 
-    private async Task<Result> RunDurableFunctionAsync(FunctionStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
+    private async Task<Result> RunDurableFunctionAsync(
+        FunctionStepExecution step,
+        FunctionStepExecutionAttempt attempt,
+        ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         var client = _httpClientFactory.CreateClient();
@@ -48,7 +51,7 @@ internal class FunctionStepExecutor(
         string content;
         try
         {
-            var request = await BuildFunctionInvokeRequestAsync(attempt, cancellationToken);
+            var request = await BuildFunctionInvokeRequestAsync(step, attempt, cancellationToken);
 
             // Send the request to the function url. This will start the function, if the request was successful.
             // A durable function will return immediately and run asynchronously.
@@ -87,8 +90,8 @@ internal class FunctionStepExecutor(
 
         // Create timeout cancellation token source here
         // so that the timeout countdown starts right after the function was started.
-        using var timeoutCts = _step.TimeoutMinutes > 0
-                ? new CancellationTokenSource(TimeSpan.FromMinutes(_step.TimeoutMinutes))
+        using var timeoutCts = step.TimeoutMinutes > 0
+                ? new CancellationTokenSource(TimeSpan.FromMinutes(step.TimeoutMinutes))
                 : new CancellationTokenSource();
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
@@ -103,7 +106,7 @@ internal class FunctionStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating function instance id", _step.ExecutionId, _step);
+            _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating function instance id", step.ExecutionId, step);
             attempt.AddWarning(ex, $"Error updating function instance id {startResponse.Id}");
         }
 
@@ -112,7 +115,7 @@ internal class FunctionStepExecutor(
         {
             try
             {
-                status = await GetStatusWithRetriesAsync(client, startResponse.StatusQueryGetUri, linkedCts.Token);
+                status = await GetStatusWithRetriesAsync(client, step, startResponse.StatusQueryGetUri, linkedCts.Token);
                 if (status.RuntimeStatus == "Pending" || status.RuntimeStatus == "Running" || status.RuntimeStatus == "ContinuedAsNew")
                 {
                     await Task.Delay(_pollingIntervalMs, linkedCts.Token);
@@ -125,7 +128,7 @@ internal class FunctionStepExecutor(
             catch (OperationCanceledException ex)
             {
                 var reason = timeoutCts.IsCancellationRequested ? "StepTimedOut" : "StepWasCanceled";
-                await CancelAsync(attempt, client, startResponse.TerminatePostUri, reason);
+                await CancelAsync(step, attempt, client, startResponse.TerminatePostUri, reason);
                 if (timeoutCts.IsCancellationRequested)
                 {
                     attempt.AddError(ex, "Step execution timed out");
@@ -158,10 +161,13 @@ internal class FunctionStepExecutor(
         }
     }
 
-    private async Task<Result> RunHttpFunctionAsync(FunctionStepExecutionAttempt attempt, CancellationToken cancellationToken)
+    private async Task<Result> RunHttpFunctionAsync(
+        FunctionStepExecution step,
+        FunctionStepExecutionAttempt attempt,
+        CancellationToken cancellationToken)
     {
-        using var timeoutCts = _step.TimeoutMinutes > 0
-                    ? new CancellationTokenSource(TimeSpan.FromMinutes(_step.TimeoutMinutes))
+        using var timeoutCts = step.TimeoutMinutes > 0
+                    ? new CancellationTokenSource(TimeSpan.FromMinutes(step.TimeoutMinutes))
                     : new CancellationTokenSource();
 
         HttpResponseMessage response;
@@ -171,7 +177,7 @@ internal class FunctionStepExecutor(
             // The linked timeout token will cancel if the timeout expires or the step was canceled manually.
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
-            var request = await BuildFunctionInvokeRequestAsync(attempt, cancellationToken);
+            var request = await BuildFunctionInvokeRequestAsync(step, attempt, cancellationToken);
 
             // A regular httpTrigger function can run for several minutes. Use an HttpClient with no timeout for httpTrigger functions.
             var noTimeoutClient = _httpClientFactory.CreateClient("notimeout");
@@ -209,7 +215,10 @@ internal class FunctionStepExecutor(
         }
     }
 
-    private async Task<HttpRequestMessage> BuildFunctionInvokeRequestAsync(FunctionStepExecutionAttempt attempt, CancellationToken cancellationToken)
+    private async Task<HttpRequestMessage> BuildFunctionInvokeRequestAsync(
+        FunctionStepExecution step,
+        FunctionStepExecutionAttempt attempt,
+        CancellationToken cancellationToken)
     {
         string? functionKey = null;
         try
@@ -218,38 +227,46 @@ internal class FunctionStepExecutor(
             using var context = _dbContextFactory.CreateDbContext();
             functionKey = await context.FunctionSteps
                 .AsNoTracking()
-                .Where(step => step.StepId == _step.StepId)
+                .Where(step => step.StepId == step.StepId)
                 .Select(step => step.FunctionKey)
                 .FirstOrDefaultAsync(cancellationToken);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error reading FunctionKey from database", _step.ExecutionId, _step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error reading FunctionKey from database", step.ExecutionId, step);
             attempt.AddWarning(ex, "Error reading function key from database");
         }
 
-        var message = new HttpRequestMessage(HttpMethod.Post, _step.FunctionUrl);
+        var message = new HttpRequestMessage(HttpMethod.Post, step.FunctionUrl);
 
         // Add function security code as a request header. If the function specific code was defined, use that.
         // Otherwise revert to the function app code if it was defined.
-        functionKey ??= _functionApp.FunctionAppKey;
+        var functionApp = step.GetApp();
+        ArgumentNullException.ThrowIfNull(functionApp);
+
+        functionKey ??= functionApp.FunctionAppKey;
         if (!string.IsNullOrEmpty(functionKey))
         {
             message.Headers.Add("x-functions-key", functionKey);
         }
 
         // If the input for the function was defined, add it to the request content.
-        if (!string.IsNullOrEmpty(_step.FunctionInput))
+        if (!string.IsNullOrEmpty(step.FunctionInput))
         {
-            var parameters = _step.StepExecutionParameters.ToStringDictionary();
-            var input = _step.FunctionInput.Replace(parameters);
+            var parameters = step.StepExecutionParameters.ToStringDictionary();
+            var input = step.FunctionInput.Replace(parameters);
             message.Content = new StringContent(input);
         }
 
         return message;
     }
 
-    private async Task CancelAsync(FunctionStepExecutionAttempt attempt, HttpClient client, string terminateUrl, string reason)
+    private async Task CancelAsync(
+        FunctionStepExecution step, 
+        FunctionStepExecutionAttempt attempt,
+        HttpClient client,
+        string terminateUrl,
+        string reason)
     {
         try
         {
@@ -259,12 +276,16 @@ internal class FunctionStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error stopping function ", _step.ExecutionId, _step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error stopping function ", step.ExecutionId, step);
             attempt.AddWarning(ex, "Error stopping function");
         }
     }
 
-    private async Task<StatusResponse> GetStatusWithRetriesAsync(HttpClient client, string statusUrl, CancellationToken cancellationToken)
+    private async Task<StatusResponse> GetStatusWithRetriesAsync(
+        HttpClient client,
+        FunctionStepExecution step,
+        string statusUrl,
+        CancellationToken cancellationToken)
     {
         var policy = Policy
             .Handle<Exception>()
@@ -272,7 +293,7 @@ internal class FunctionStepExecutor(
             retryCount: MaxRefreshRetries,
             sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_pollingIntervalMs),
             onRetry: (ex, waitDuration) =>
-                _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting function instance status", _step.ExecutionId, _step));
+                _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting function instance status", step.ExecutionId, step));
 
         return await policy.ExecuteAsync(async (cancellationToken) =>
         {

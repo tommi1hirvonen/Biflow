@@ -1,4 +1,5 @@
 ﻿using Biflow.Executor.Core.Common;
+using Biflow.Executor.Core.StepExecutor;
 using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.Orchestrator;
@@ -6,12 +7,12 @@ namespace Biflow.Executor.Core.Orchestrator;
 internal class GlobalOrchestrator(
     ILogger<GlobalOrchestrator> logger,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    IStepOrchestratorProvider stepOrchestratorProvider) : IGlobalOrchestrator, IStepReadyForProcessingListener
+    IStepExecutorProvider stepExecutorProvider) : IGlobalOrchestrator, IStepReadyForProcessingListener
 {
     private readonly object _lock = new();
     private readonly ILogger<GlobalOrchestrator> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
-    private readonly IStepOrchestratorProvider _stepOrchestratorProvider = stepOrchestratorProvider;
+    private readonly IStepExecutorProvider _stepExecutorProvider = stepExecutorProvider;
     private readonly List<IOrchestrationObserver> _observers = [];
     private readonly Dictionary<StepExecution, OrchestrationStatus> _stepStatuses = [];
 
@@ -116,7 +117,7 @@ internal class GlobalOrchestrator(
         try
         {
             await listener.OnPreExecuteAsync(cts);
-            var stepOrchestrator = _stepOrchestratorProvider.GetOrchestratorFor(stepExecution);
+            var stepOrchestrator = _stepExecutorProvider.GetExecutorFor(stepExecution, stepExecution.StepExecutionAttempts.First());
             result = await stepOrchestrator.RunAsync(stepExecution, cts);
         }
         catch (OperationCanceledException)
@@ -124,6 +125,8 @@ internal class GlobalOrchestrator(
             // We should only arrive here if the step was canceled while it was Queued.
             // If the step was canceled once its execution had started,
             // then the step's executor should handle the cancellation and the result is returned normally from RunAsync().
+
+            // TODO Add try-catch
             await UpdateExecutionCancelledAsync(stepExecution, cts.Username);
         }
         catch (Exception ex)

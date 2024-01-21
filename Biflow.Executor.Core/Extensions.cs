@@ -29,21 +29,7 @@ public static class Extensions
         services.AddSingleton<ISubscribersResolver, SubscribersResolver>();
         services.AddSingleton<IMessageDispatcher, EmailDispatcher>();
         services.AddSingleton<INotificationService, NotificationService>();
-
-        // Register step executors
-        services.AddSingleton<StepOrchestrator<AgentJobStepExecution, AgentJobStepExecutionAttempt, AgentJobStepExecutor>>();
-        services.AddSingleton<StepOrchestrator<DatasetStepExecution, DatasetStepExecutionAttempt, DatasetStepExecutor>>();
-        services.AddSingleton<StepOrchestrator<FunctionStepExecution, FunctionStepExecutionAttempt, FunctionStepExecutor>>();
-        services.AddSingleton<StepOrchestrator<EmailStepExecution, EmailStepExecutionAttempt, EmailStepExecutor>>();
-        services.AddSingleton<StepOrchestrator<ExeStepExecution, ExeStepExecutionAttempt, ExeStepExecutor>>();
-        services.AddSingleton<StepOrchestrator<JobStepExecution, JobStepExecutionAttempt, JobStepExecutor>>();
-        services.AddSingleton<StepOrchestrator<PackageStepExecution, PackageStepExecutionAttempt, PackageStepExecutor>>();
-        services.AddSingleton<StepOrchestrator<PipelineStepExecution, PipelineStepExecutionAttempt, PipelineStepExecutor>>();
-        services.AddSingleton<StepOrchestrator<QlikStepExecution, QlikStepExecutionAttempt, QlikStepExecutor>>();
-        services.AddSingleton<StepOrchestrator<SqlStepExecution, SqlStepExecutionAttempt, SqlStepExecutor>>();
-        services.AddSingleton<StepOrchestrator<TabularStepExecution, TabularStepExecutionAttempt, TabularStepExecutor>>();
-        services.AddSingleton<IStepOrchestratorProvider, StepOrchestratorProvider>();
-
+        services.AddSingleton<IStepExecutorProvider, StepExecutorProvider>();
         services.AddSingleton<IGlobalOrchestrator, GlobalOrchestrator>();
         services.AddSingleton<IJobOrchestratorFactory, JobOrchestratorFactory>();
         services.AddSingleton<IEmailTest, EmailTest>();
@@ -53,6 +39,14 @@ public static class Extensions
         services.AddHostedService(services => services.GetRequiredService<IExecutionManager>());
         // Timeout for hosted services (e.g. ExecutionManager) to shut down gracefully when StopAsync() is called.
         services.Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromSeconds(20));
+
+        // Add step executors
+        services.Scan(selector =>
+            selector.FromAssemblyOf<IStepExecutor>()
+                .AddClasses(filter => filter.AssignableTo(typeof(IStepExecutor<,>)))
+                .AsImplementedInterfaces()
+                .WithSingletonLifetime());
+
         return services;
     }
 

@@ -8,29 +8,30 @@ internal class QlikStepExecutor(
     ILogger<QlikStepExecutor> logger,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
     IOptionsMonitor<ExecutionOptions> options,
-    IHttpClientFactory httpClientFactory,
-    QlikStepExecution stepExecution) : IStepExecutor<QlikStepExecutionAttempt>
+    IHttpClientFactory httpClientFactory)
+    : StepExecutor<QlikStepExecution, QlikStepExecutionAttempt>(logger, dbContextFactory)
 {
     private readonly ILogger<QlikStepExecutor> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
-    private readonly QlikStepExecution _step = stepExecution;
-    private readonly QlikCloudConnectedClient _client = stepExecution.GetClient()?.CreateConnectedClient(httpClientFactory)
-        ?? throw new ArgumentNullException(nameof(_client));
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
 
-    public QlikStepExecutionAttempt Clone(QlikStepExecutionAttempt other, int retryAttemptIndex) =>
+    protected override QlikStepExecutionAttempt Clone(QlikStepExecutionAttempt other, int retryAttemptIndex) =>
         new(other, retryAttemptIndex);
 
-    public async Task<Result> ExecuteAsync(QlikStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
+    protected override async Task<Result> ExecuteAsync(QlikStepExecution step, QlikStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
+
+        var client = step.GetClient()?.CreateConnectedClient(_httpClientFactory);
+        ArgumentNullException.ThrowIfNull(client);
 
         // Start app reload.
         QlikAppReload reload;
         try
         {
-            reload = await _client.ReloadAppAsync(_step.AppId, cancellationToken);
+            reload = await client.ReloadAppAsync(step.AppId, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -45,8 +46,8 @@ internal class QlikStepExecutor(
 
         // Create timeout cancellation token source here
         // so that the timeout countdown starts right after the app reload was started.
-        using var timeoutCts = _step.TimeoutMinutes > 0
-                ? new CancellationTokenSource(TimeSpan.FromMinutes(_step.TimeoutMinutes))
+        using var timeoutCts = step.TimeoutMinutes > 0
+                ? new CancellationTokenSource(TimeSpan.FromMinutes(step.TimeoutMinutes))
                 : new CancellationTokenSource();
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
@@ -61,7 +62,7 @@ internal class QlikStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating app reload id", _step.ExecutionId, _step);
+            _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating app reload id", step.ExecutionId, step);
             attempt.AddWarning(ex, $"Error updating app reload id {reload.Id}");
         }
 
@@ -70,7 +71,7 @@ internal class QlikStepExecutor(
             try
             {
                 await Task.Delay(_pollingIntervalMs, linkedCts.Token);
-                reload = await _client.GetReloadAsync(reload.Id, linkedCts.Token);
+                reload = await client.GetReloadAsync(reload.Id, linkedCts.Token);
                 if (reload is { Status: QlikAppReloadStatus.Succeeded })
                 {
                     attempt.AddOutput(reload.Log);
@@ -87,7 +88,7 @@ internal class QlikStepExecutor(
             catch (OperationCanceledException ex)
             {
                 var reason = timeoutCts.IsCancellationRequested ? "StepTimedOut" : "StepWasCanceled";
-                await CancelAsync(attempt, reload.Id);
+                await CancelAsync(client, step, attempt, reload.Id);
                 if (timeoutCts.IsCancellationRequested)
                 {
                     attempt.AddError(ex, "Step execution timed out");
@@ -104,15 +105,19 @@ internal class QlikStepExecutor(
         }
     }
 
-    private async Task CancelAsync(QlikStepExecutionAttempt attempt, string reloadId)
+    private async Task CancelAsync(
+        QlikCloudConnectedClient client,
+        QlikStepExecution step,
+        QlikStepExecutionAttempt attempt,
+        string reloadId)
     {
         try
         {
-            await _client.CancelReloadAsync(reloadId);
+            await client.CancelReloadAsync(reloadId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error canceling reload", _step.ExecutionId, _step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error canceling reload", step.ExecutionId, step);
             attempt.AddWarning(ex, "Error canceling reload");
         }
     }

@@ -1,21 +1,15 @@
 ﻿using Biflow.Executor.Core.Common;
-using Biflow.Executor.Core.StepExecutor;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+namespace Biflow.Executor.Core.StepExecutor;
 
-namespace Biflow.Executor.Core.Orchestrator;
-
-internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
-    ILogger<StepOrchestrator<TStep, TAttempt, TExecutor>> logger,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    IServiceProvider serviceProvider) : IStepOrchestrator
+internal abstract class StepExecutor<TStep, TAttempt>(
+    ILogger<StepExecutor<TStep, TAttempt>> logger,
+    IDbContextFactory<ExecutorDbContext> dbContextFactory) : IStepExecutor<TStep, TAttempt>
     where TStep : StepExecution
     where TAttempt : StepExecutionAttempt
-    where TExecutor : IStepExecutor<TAttempt>
 {
-    private readonly ILogger<StepOrchestrator<TStep, TAttempt, TExecutor>> _logger = logger;
+    private readonly ILogger<StepExecutor<TStep, TAttempt>> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
-    private readonly IServiceProvider _serviceProvider = serviceProvider;
 
     public async Task<bool> RunAsync(StepExecution stepExecution, ExtendedCancellationTokenSource cts)
     {
@@ -99,25 +93,19 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
 
         if (stepExecution is TStep step && executionAttempt is TAttempt attempt)
         {
-            TExecutor executor;
-            try
-            {
-                executor = ActivatorUtilities.CreateInstance<TExecutor>(_serviceProvider, step);
-            }
-            catch (Exception ex)
-            {
-                attempt.AddError(ex, $"Error initializing an instance of {typeof(TExecutor)}");
-                await UpdateExecutionFailedAsync(attempt, StepExecutionStatus.Failed);
-                return false;
-            }
-            return await ExecuteRecursivelyWithRetriesAsync(executor, step, attempt, cts);
+            return await ExecuteRecursivelyWithRetriesAsync(step, attempt, cts);
         }
 
-        throw new InvalidOperationException($"No matching step executor found for types {stepExecution.GetType()} and {executionAttempt.GetType()}");
+        throw new InvalidOperationException(
+            $"Provided types ({stepExecution.GetType()}, {executionAttempt.GetType()})" +
+            $"do not match the types of the executor ({typeof(TStep).Name}, {typeof(TAttempt).Name})");
     }
 
+    protected abstract Task<Result> ExecuteAsync(TStep step, TAttempt attempt, ExtendedCancellationTokenSource cts);
+
+    protected abstract TAttempt Clone(TAttempt other, int retryAttemptIndex);
+
     private async Task<bool> ExecuteRecursivelyWithRetriesAsync(
-        IStepExecutor<TAttempt> stepExecutor,
         TStep stepExecution,
         TAttempt executionAttempt,
         ExtendedCancellationTokenSource cts)
@@ -127,7 +115,7 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
         Result result;
         try
         {
-            result = await stepExecutor.ExecuteAsync(executionAttempt, cts);
+            result = await ExecuteAsync(stepExecution, executionAttempt, cts);
         }
         catch (OperationCanceledException ex) when (cts.IsCancellationRequested)
         {
@@ -167,7 +155,7 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
                 await UpdateExecutionFailedAsync(executionAttempt, StepExecutionStatus.Retry);
 
                 // Copy the execution attempt, increase counter and wait for the retry interval.
-                var nextExecution = stepExecutor.Clone(executionAttempt, executionAttempt.RetryAttemptIndex + 1);
+                var nextExecution = Clone(executionAttempt, executionAttempt.RetryAttemptIndex + 1);
                 nextExecution.ExecutionStatus = StepExecutionStatus.AwaitingRetry;
                 stepExecution.StepExecutionAttempts.Add(nextExecution);
                 using (var context = _dbContextFactory.CreateDbContext())
@@ -188,10 +176,10 @@ internal class StepOrchestrator<TStep, TAttempt, TExecutor>(
                     return false;
                 }
 
-                return await ExecuteRecursivelyWithRetriesAsync(stepExecutor, stepExecution, nextExecution, cts);
+                return await ExecuteRecursivelyWithRetriesAsync(stepExecution, nextExecution, cts);
             });
     }
-
+    
     private async Task UpdateExecutionCancelledAsync(StepExecutionAttempt attempt, string username)
     {
         using var context = _dbContextFactory.CreateDbContext();
