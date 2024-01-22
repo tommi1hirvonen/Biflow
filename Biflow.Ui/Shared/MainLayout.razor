@@ -6,6 +6,7 @@
 @inject NavigationManager NavigationManager
 @inject IConfiguration Configuration
 @inject AuthenticationMethodResolver AuthenticationResolver
+@inject ExecutorModeResolver ExecutorResolver
 
 @*Toast container for HxMessenger service*@
 <style>
@@ -47,6 +48,12 @@
             <div role="row">
                 <NavMenu ClassString="@SidebarClass" OnNavLinkClick="CollapseSidebar" />
                 <main class="main pt-3 flex-grow-1">
+                    @if (ExecutorResolver.ExecutorMode == ExecutorMode.SelfHosted)
+                    {
+                        <HxAlert Color="ThemeColor.Warning">
+                            Self-hosted executor should only be used for development/testing.
+                        </HxAlert>
+                    }
                     @if (schedulerServiceErrorMessage is not null)
                     {
                         <HxAlert Color="ThemeColor.Warning">
