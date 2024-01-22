@@ -143,14 +143,17 @@ public static partial class Extensions
         services.AddSingleton(typeof(ITokenService), typeof(TokenService<ServiceDbContext>));
 
         var executorType = configuration.GetSection("Executor").GetValue<string>("Type");
+        ExecutorMode executorMode;
         if (executorType == "WebApp")
         {
             services.AddSingleton<IExecutorService, WebAppExecutorService>();
+            executorMode = ExecutorMode.WebApp;
         }
         else if (executorType == "SelfHosted")
         {
             services.AddExecutorServices(configuration.GetSection("Executor").GetSection("SelfHosted"));
             services.AddSingleton<IExecutorService, SelfHostedExecutorService>();
+            executorMode = ExecutorMode.SelfHosted;
         }
         else
         {
@@ -172,6 +175,7 @@ public static partial class Extensions
             throw new ArgumentException($"Error registering scheduler service. Incorrect scheduler type: {schedulerType}. Check appsettings.json.");
         }
 
+        services.AddSingleton(new ExecutorModeResolver(executorMode));
         services.AddScoped<EnvironmentSnapshotBuilder>();
         services.AddScoped<SqlServerHelperService>();
         services.AddDuplicatorServices();
