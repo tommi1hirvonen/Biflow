@@ -2,22 +2,30 @@
 
 @namespace Biflow.Ui.Components
 
-<div @attributes=@InputAttributes class="toast show @CssClass @(hiding ? "fade-out" : null)" role="alert" aria-live="assertive" aria-atomic="true">
-    <div class="toast-header @TextColor">
-        <span class="me-2">
-            <CxIcon Icon="Icon" />
-        </span>
-        <strong class="me-auto">
-            @Title
-        </strong>
-        @if (AutoHideDelay is null)
-        {
-            <button type="button" class="btn-close" aria-label="Close" @onclick="HideAsync"></button>
-        }
-    </div>
-    <div class="toast-body">
+<div @attributes=@InputAttributes class="toast show @BgColor @BorderColor @CssClass @(hiding ? "fade-out" : null) @(Title is null ? "d-flex" : null)"
+     role="alert" aria-live="assertive" aria-atomic="true">
+    @if (Title is not null)
+    {
+        <div class="toast-header rounded-top @TextColor @BgColor @BorderColor">
+            <span class="me-2">
+                <CxIcon Icon="Icon" />
+            </span>
+            <strong class="me-auto">
+                @Title
+            </strong>
+            @if (AutoHideDelay is null)
+            {
+                <button type="button" class="btn-close" aria-label="Close" @onclick="HideAsync"></button>
+            }
+        </div>    
+    }
+    <div class="toast-body rounded @TextColor @BgColor">
         @ChildContent
     </div>
+    @if (Title is null && AutoHideDelay is null)
+    {
+        <button type="button" class="btn-close me-2 m-auto" aria-label="Close" @onclick="HideAsync"></button>
+    }
 </div>
 
 @code {
@@ -50,16 +58,32 @@
     {
         hiding = true;
         StateHasChanged();
-        await Task.Delay(500);
+        await Task.Delay(300);
         await OnToastHidden.InvokeAsync();
     }
 
     private string TextColor => Color switch
     {
-        ComponentColor.Success => "text-success",
-        ComponentColor.Warning => "text-warning",
-        ComponentColor.Danger => "text-danger",
-        _ => ""
+        ComponentColor.Success => "text-success-emphasis",
+        ComponentColor.Warning => "text-warning-emphasis",
+        ComponentColor.Danger => "text-danger-emphasis",
+        _ => "text-primary-emphasis"
+    };
+
+    private string BgColor => Color switch
+    {
+        ComponentColor.Success => "bg-success-subtle",
+        ComponentColor.Warning => "bg-warning-subtle",
+        ComponentColor.Danger => "bg-danger-subtle",
+        _ => "bg-primary-subtle"
+    };
+
+    private string BorderColor => Color switch
+    {
+        ComponentColor.Success => "border-success-subtle",
+        ComponentColor.Warning => "border-warning-subtle",
+        ComponentColor.Danger => "border-danger-subtle",
+        _ => "border-primary-subtle"
     };
 
     private IconBase Icon => Color switch
