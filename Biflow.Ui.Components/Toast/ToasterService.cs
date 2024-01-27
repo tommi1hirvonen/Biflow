@@ -14,8 +14,7 @@ public class ToasterService
         {
             Title = title,
             Text = message,
-            AutohideDelay = autoHideDelay,
-            Color = ComponentColor.Info
+            AutohideDelay = autoHideDelay
         };
         AddMessage(toastMessage);
     }
@@ -62,7 +61,19 @@ public class ToasterService
         AddMessage(toastMessage);
     }
 
-    private void AddMessage(ToastMessage message)
+    public void AddAction(string? title, ButtonColor buttonColor, string? buttonText, Action buttonAction)
+    {
+        var message = new ToastActionMessage
+        {
+            Title = title,
+            ButtonText = buttonText,
+            ButtonColor = buttonColor,
+            ButtonAction = buttonAction
+        };
+        AddMessage(message);
+    }
+
+    public void AddMessage(ToastMessage message)
     {
         OnMessage?.Invoke(message);
     }

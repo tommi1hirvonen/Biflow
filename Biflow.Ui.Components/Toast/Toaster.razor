@@ -1,3 +1,5 @@
+@using Microsoft.AspNetCore.Components.Web
+
 @namespace Biflow.Ui.Components
 
 @implements IDisposable
@@ -13,6 +15,23 @@
 			Title="@message.Title"
 			AutoHideDelay="message.AutohideDelay">
 			@message.Text
+			@if (message is ToastActionMessage action)
+			{
+				var btnColor = action.ButtonColor switch
+				{
+					ButtonColor.Primary => "btn-primary",
+					ButtonColor.Secondary => "btn-secondary",
+					ButtonColor.Success => "btn-success",
+					ButtonColor.Info => "btn-info",
+					ButtonColor.Warning => "btn-warning",
+					ButtonColor.Danger => "btn-danger",
+					ButtonColor.Light => "btn-light",
+					ButtonColor.Dark => "btn-dark",
+					ButtonColor.Link => "btn-link",
+					_ => "",
+				};
+				<button type="button" class="btn @btnColor btn-sm" @onclick="action.ButtonAction">@action.ButtonText</button>
+			}
 		</Toast>
 	}
 </div>

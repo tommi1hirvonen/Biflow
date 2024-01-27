@@ -1,6 +1,6 @@
 ﻿namespace Biflow.Ui.Components;
 
-public enum ComponentColor
+public enum ButtonColor
 {
     None,
     Primary,
@@ -10,5 +10,6 @@ public enum ComponentColor
     Warning,
     Danger,
     Light,
-    Dark
+    Dark,
+    Link
 }

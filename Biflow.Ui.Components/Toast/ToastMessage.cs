@@ -10,6 +10,6 @@ public class ToastMessage
 
     public string? Text { get; set; }
 
-    public ComponentColor Color { get; set; } = ComponentColor.Info;
+    public ComponentColor Color { get; set; }
 
 }

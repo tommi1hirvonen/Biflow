@@ -3,7 +3,7 @@
 @namespace Biflow.Ui.Components
 
 <div @attributes=@InputAttributes class="toast show @CssClass @(hiding ? "fade-out" : null)" role="alert" aria-live="assertive" aria-atomic="true">
-    <div class="toast-header @TextColor @BackgroundColor">
+    <div class="toast-header @TextColor">
         <span class="me-2">
             <CxIcon Icon="Icon" />
         </span>
@@ -56,19 +56,9 @@
 
     private string TextColor => Color switch
     {
-        ComponentColor.Info => "text-primary-emphasis",
-        ComponentColor.Success => "text-success-emphasis",
-        ComponentColor.Warning => "text-warning-emphasis",
-        ComponentColor.Danger => "text-danger-emphasis",
-        _ => ""
-    };
-
-    private string BackgroundColor => Color switch
-    {
-        ComponentColor.Info => "bg-primary bg-opacity-25",
-        ComponentColor.Success => "bg-success bg-opacity-25",
-        ComponentColor.Warning => "bg-warning bg-opacity-25",
-        ComponentColor.Danger => "bg-danger bg-opacity-25",
+        ComponentColor.Success => "text-success",
+        ComponentColor.Warning => "text-warning",
+        ComponentColor.Danger => "text-danger",
         _ => ""
     };
 
