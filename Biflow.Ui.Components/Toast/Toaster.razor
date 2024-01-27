@@ -1,0 +1,63 @@
+@namespace Biflow.Ui.Components
+
+@implements IDisposable
+
+@inject ToasterService ToasterService
+
+<div @attributes=@InputAttributes class="toast-container position-fixed bottom-0 end-0 mb-4 me-3 @CssClass">
+	@foreach (var message in messages)
+	{
+		<Toast @key="message.Key"
+			OnToastHidden="() => HandleToastHidden(message)"
+			Color="message.Color"
+			Title="@message.Title"
+			AutoHideDelay="message.AutohideDelay">
+			@message.Text
+		</Toast>
+	}
+</div>
+
+@code {
+	[Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object> InputAttributes { get; set; } = new();
+
+    [Parameter] public string? CssClass { get; set; }
+
+	private List<ToastMessage> messages = new List<ToastMessage>();
+
+    protected override void OnInitialized()
+    {
+        ToasterService.OnMessage += HandleMessage;
+		ToasterService.OnClear += HandleClear;
+	}
+
+    private void HandleMessage(ToastMessage message)
+	{
+		InvokeAsync(() =>
+		{
+			messages.Add(message);
+
+			StateHasChanged();
+		});
+	}
+
+	private void HandleClear()
+	{
+		InvokeAsync(() =>
+		{
+			messages.Clear();
+
+			StateHasChanged();
+		});
+	}
+
+	private void HandleToastHidden(ToastMessage message)
+	{
+		messages.Remove(message);
+	}
+
+	public void Dispose()
+	{
+		ToasterService.OnMessage -= HandleMessage;
+		ToasterService.OnClear -= HandleClear;
+	}
+}

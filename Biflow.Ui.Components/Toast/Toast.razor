@@ -1,0 +1,82 @@
+@using Microsoft.AspNetCore.Components.Web
+
+@namespace Biflow.Ui.Components
+
+<div @attributes=@InputAttributes class="toast show @CssClass @(hiding ? "fade-out" : null)" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="toast-header @TextColor @BackgroundColor">
+        <span class="me-2">
+            <CxIcon Icon="Icon" />
+        </span>
+        <strong class="me-auto">
+            @Title
+        </strong>
+        @if (AutoHideDelay is null)
+        {
+            <button type="button" class="btn-close" aria-label="Close" @onclick="HideAsync"></button>
+        }
+    </div>
+    <div class="toast-body">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object> InputAttributes { get; set; } = new();
+
+    [Parameter] public string? CssClass { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter] public string? Title { get; set; }
+
+    [Parameter] public ComponentColor Color { get; set; }
+
+    [Parameter] public int? AutoHideDelay { get; set; }
+
+    [Parameter] public EventCallback OnToastHidden { get; set; }
+
+    private bool hiding;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && AutoHideDelay is not null)
+        {
+            await Task.Delay((int)AutoHideDelay);
+            await HideAsync();
+        }
+    }
+
+    private async Task HideAsync()
+    {
+        hiding = true;
+        StateHasChanged();
+        await Task.Delay(500);
+        await OnToastHidden.InvokeAsync();
+    }
+
+    private string TextColor => Color switch
+    {
+        ComponentColor.Info => "text-primary-emphasis",
+        ComponentColor.Success => "text-success-emphasis",
+        ComponentColor.Warning => "text-warning-emphasis",
+        ComponentColor.Danger => "text-danger-emphasis",
+        _ => ""
+    };
+
+    private string BackgroundColor => Color switch
+    {
+        ComponentColor.Info => "bg-primary bg-opacity-25",
+        ComponentColor.Success => "bg-success bg-opacity-25",
+        ComponentColor.Warning => "bg-warning bg-opacity-25",
+        ComponentColor.Danger => "bg-danger bg-opacity-25",
+        _ => ""
+    };
+
+    private IconBase Icon => Color switch
+    {
+        ComponentColor.Success => FeatherIcon.CheckCircle,
+        ComponentColor.Warning => FeatherIcon.AlertTriangle,
+        ComponentColor.Danger => FeatherIcon.AlertOctagon,
+        _ => FeatherIcon.Info
+    };
+}
