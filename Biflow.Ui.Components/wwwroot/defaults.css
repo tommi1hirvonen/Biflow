@@ -5,6 +5,7 @@
   --bs-toast-border-color: var(--bs-success-border-subtle);
   --bs-toast-bg: var(--bs-success-bg-subtle);
   --bs-toast-color: var(--bs-success-text-emphasis);
+  --bs-link-color: var(--bs-success-text-emphasis);
 }
 
 .toast.toast-danger {
@@ -14,6 +15,7 @@
   --bs-toast-border-color: var(--bs-danger-border-subtle);
   --bs-toast-bg: var(--bs-danger-bg-subtle);
   --bs-toast-color: var(--bs-danger-text-emphasis);
+  --bs-link-color: var(--bs-danger-text-emphasis);
 }
 
 .toast.toast-warning {
@@ -23,6 +25,7 @@
   --bs-toast-border-color: var(--bs-warning-border-subtle);
   --bs-toast-bg: var(--bs-warning-bg-subtle);
   --bs-toast-color: var(--bs-warning-text-emphasis);
+  --bs-link-color: var(--bs-warning-text-emphasis);
 }
 
 .toast.toast-primary {
@@ -32,4 +35,5 @@
   --bs-toast-border-color: var(--bs-primary-border-subtle);
   --bs-toast-bg: var(--bs-primary-bg-subtle);
   --bs-toast-color: var(--bs-primary-text-emphasis);
+  --bs-link-color: var(--bs-primary-text-emphasis);
 }

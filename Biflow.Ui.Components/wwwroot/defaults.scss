@@ -12,5 +12,6 @@ $toast-colors:
         --bs-toast-border-color: var(--bs-#{$color}-border-subtle);
         --bs-toast-bg: var(--bs-#{$color}-bg-subtle);
         --bs-toast-color: var(--bs-#{$color}-text-emphasis);
+        --bs-link-color: var(--bs-#{$color}-text-emphasis);
     }
 }
