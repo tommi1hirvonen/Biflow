@@ -124,24 +124,22 @@ public partial class DataTableEditModal : ComponentBase, IDisposable
         });
     }
 
-    private async Task<InputTagsDataProviderResult> GetLockedColumnSuggestions(InputTagsDataProviderRequest request)
+    private Task<InputTagsDataProviderResult> GetLockedColumnSuggestions(InputTagsDataProviderRequest request)
     {
-        await Task.Delay(100); // small delay to make the tag input dropdown behave more consistently
-        return new InputTagsDataProviderResult
+        return Task.FromResult(new InputTagsDataProviderResult
         {
             Data = columns?.Where(c => c.ContainsIgnoreCase(request.UserInput) && (!editTable?.LockedColumns.Contains(c) ?? true))
                 ?? Enumerable.Empty<string>()
-        };
+        });
     }
 
-    private async Task<InputTagsDataProviderResult> GetHiddenColumnSuggestions(InputTagsDataProviderRequest request)
+    private Task<InputTagsDataProviderResult> GetHiddenColumnSuggestions(InputTagsDataProviderRequest request)
     {
-        await Task.Delay(100); // small delay to make the tag input dropdown behave more consistently
-        return new InputTagsDataProviderResult
+        return Task.FromResult(new InputTagsDataProviderResult
         {
             Data = columns?.Where(c => c.ContainsIgnoreCase(request.UserInput) && (!editTable?.HiddenColumns.Contains(c) ?? true))
                 ?? Enumerable.Empty<string>()
-        };
+        });
     }
 
     private Task<AutosuggestDataProviderResult<MasterDataTable>> GetLookupTableSuggestions(AutosuggestDataProviderRequest request)

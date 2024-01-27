@@ -15,7 +15,6 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
 
     private async Task<InputTagsDataProviderResult> GetTagFilterSuggestions(InputTagsDataProviderRequest request)
     {
-        await Task.Delay(50); // needed for the HxInputTags component to behave correctly (reopen dropdown after selecting one tag)
         await EnsureAllTagsInitialized();
         return new InputTagsDataProviderResult
         {
