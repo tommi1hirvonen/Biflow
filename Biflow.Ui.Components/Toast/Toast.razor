@@ -2,11 +2,11 @@
 
 @namespace Biflow.Ui.Components
 
-<div @attributes=@InputAttributes class="toast show @BgColor @BorderColor @CssClass @(hiding ? "fade-out" : null) @(Title is null ? "d-flex" : null)"
+<div @attributes=@InputAttributes class="toast @ToastClass show @CssClass @(hiding ? "fade-out" : null) @(Title is null ? "d-flex" : null)"
      role="alert" aria-live="assertive" aria-atomic="true">
     @if (Title is not null)
     {
-        <div class="toast-header rounded-top @TextColor @BgColor @BorderColor">
+        <div class="toast-header">
             <span class="me-2">
                 <CxIcon Icon="Icon" />
             </span>
@@ -19,7 +19,7 @@
             }
         </div>    
     }
-    <div class="toast-body rounded @TextColor @BgColor">
+    <div class="toast-body">
         @ChildContent
     </div>
     @if (Title is null && AutoHideDelay is null)
@@ -62,28 +62,12 @@
         await OnToastHidden.InvokeAsync();
     }
 
-    private string TextColor => Color switch
+    private string ToastClass => Color switch
     {
-        ComponentColor.Success => "text-success-emphasis",
-        ComponentColor.Warning => "text-warning-emphasis",
-        ComponentColor.Danger => "text-danger-emphasis",
-        _ => "text-primary-emphasis"
-    };
-
-    private string BgColor => Color switch
-    {
-        ComponentColor.Success => "bg-success-subtle",
-        ComponentColor.Warning => "bg-warning-subtle",
-        ComponentColor.Danger => "bg-danger-subtle",
-        _ => "bg-primary-subtle"
-    };
-
-    private string BorderColor => Color switch
-    {
-        ComponentColor.Success => "border-success-subtle",
-        ComponentColor.Warning => "border-warning-subtle",
-        ComponentColor.Danger => "border-danger-subtle",
-        _ => "border-primary-subtle"
+        ComponentColor.Success => "toast-success",
+        ComponentColor.Warning => "toast-warning",
+        ComponentColor.Danger => "toast-danger",
+        _ => "toast-primary"
     };
 
     private IconBase Icon => Color switch

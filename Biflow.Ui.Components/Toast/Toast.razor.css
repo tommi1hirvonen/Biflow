@@ -3,3 +3,39 @@
     opacity: 0;
     transition: visibility 0s 0.2s, opacity 0.2s linear;
 }
+
+.toast.toast-success {
+    --bs-toast-header-color: var(--bs-success-text-emphasis);
+    --bs-toast-header-bg: var(--bs-success-bg-subtle);
+    --bs-toast-header-border-color: var(--bs-success-border-subtle);
+    --bs-toast-border-color: var(--bs-success-border-subtle);
+    --bs-toast-bg: var(--bs-success-bg-subtle);
+    --bs-toast-color: var(--bs-success-text-emphasis);
+}
+
+.toast.toast-danger {
+    --bs-toast-header-color: var(--bs-danger-text-emphasis);
+    --bs-toast-header-bg: var(--bs-danger-bg-subtle);
+    --bs-toast-header-border-color: var(--bs-danger-border-subtle);
+    --bs-toast-border-color: var(--bs-danger-border-subtle);
+    --bs-toast-bg: var(--bs-danger-bg-subtle);
+    --bs-toast-color: var(--bs-danger-text-emphasis);
+}
+
+.toast.toast-warning {
+    --bs-toast-header-color: var(--bs-warning-text-emphasis);
+    --bs-toast-header-bg: var(--bs-warning-bg-subtle);
+    --bs-toast-header-border-color: var(--bs-warning-border-subtle);
+    --bs-toast-border-color: var(--bs-warning-border-subtle);
+    --bs-toast-bg: var(--bs-warning-bg-subtle);
+    --bs-toast-color: var(--bs-warning-text-emphasis);
+}
+
+.toast.toast-primary {
+    --bs-toast-header-color: var(--bs-primary-text-emphasis);
+    --bs-toast-header-bg: var(--bs-primary-bg-subtle);
+    --bs-toast-header-border-color: var(--bs-primary-border-subtle);
+    --bs-toast-border-color: var(--bs-primary-border-subtle);
+    --bs-toast-bg: var(--bs-primary-bg-subtle);
+    --bs-toast-color: var(--bs-primary-text-emphasis);
+}
