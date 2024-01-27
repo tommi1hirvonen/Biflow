@@ -33,6 +33,7 @@ builder.Services.TryAddEnumerable(
 
 builder.Services.AddScoped<ThemeService>();
 builder.Services.AddScoped<ContextMenuService>();
+builder.Services.AddScoped<ToasterService>();
 builder.Services.AddHxServices();
 builder.Services.AddHxMessenger();
 builder.Services.AddHxMessageBoxHost();

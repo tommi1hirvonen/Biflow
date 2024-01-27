@@ -52,7 +52,6 @@ public partial class StepsList : ComponentBase
     private ExecuteModal? executeModal;
     private AdvancedFiltersOffcanvas? advancedFiltersOffcanvas;
     private string stepNameFilter = string.Empty;
-    private ExecutionStartResponse? lastStartedExecutionResponse;
     private bool showDetails = false;
     private bool initialStepModalShouldOpen = true;
     private StateFilter stateFilter = StateFilter.All;
@@ -269,10 +268,4 @@ public partial class StepsList : ComponentBase
             Messenger.AddError("Error toggling steps", ex.Message);
         }
     }
-
-    private void OnExecutionStarted(ExecutionStartResponse response)
-    {
-        lastStartedExecutionResponse = response;
-    }
-
 }

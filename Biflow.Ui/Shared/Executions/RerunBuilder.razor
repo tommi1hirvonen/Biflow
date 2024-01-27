@@ -3,18 +3,10 @@
 @implements IDisposable
 
 @inject IDbContextFactory<AppDbContext> DbContextFactory
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 @inject IExecutionBuilderFactory<AppDbContext> BuilderFactory
 @inject IExecutorService Executor
-
-@if (lastStartedExecutionId is not null)
-{
-    <div class="alert alert-success show alert-dismissible col-xl-6" role="alert">
-        <CxIcon Icon="FeatherIcon.CheckCircle" />
-        Execution started successfully – <a href="executions/@lastStartedExecutionId/list" class="alert-link">view execution</a>
-        <button type="button" class="btn-close" @onclick="() => lastStartedExecutionId = null"></button>
-    </div>
-}
+@inject NavigationManager NavigationManager
 
 @if (loading)
 {
@@ -270,7 +262,6 @@ else if (builder is null)
     private HashSet<ITag> tagFilter = new();
     private bool loading = true;
     private bool startingExecution = false;
-    private Guid? lastStartedExecutionId;
     private StateFilter stateFilter = StateFilter.Enabled;
 
     private enum StateFilter { All, Enabled, Disabled }
@@ -321,7 +312,7 @@ else if (builder is null)
         }
         catch (Exception ex)
         {
-            Messenger.AddError(ex.Message);
+            Toaster.AddError(ex.Message);
         }
         loading = false;
     }
@@ -343,15 +334,23 @@ else if (builder is null)
             var execution = await builder.SaveExecutionAsync();
             if (execution is not null)
             {
-                lastStartedExecutionId = execution.ExecutionId;
                 await Executor.StartExecutionAsync(execution.ExecutionId);
+                var message = new ToastActionMessage
+                {
+                    Title = "Execution started successfully",
+                    Color = ComponentColor.Success,
+                    ButtonColor = ButtonColor.Link,
+                    ButtonText = "View execution",
+                    ButtonAction = () => NavigationManager.NavigateTo($"executions/{execution.ExecutionId}/list")
+                };
+                Toaster.AddMessage(message);
             }
             builder.Reset();
             StateHasChanged();
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error starting execution", ex.Message);
+            Toaster.AddError("Error starting execution", ex.Message);
         }
         startingExecution = false;
     }

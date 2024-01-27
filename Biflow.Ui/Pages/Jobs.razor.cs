@@ -27,7 +27,6 @@ public partial class Jobs : ComponentBase
     private JobEditModal? jobEditModal;
     private ExecuteModal? executeModal;
     private string jobNameFilter = "";
-    private ExecutionStartResponse? lastStartedExecutionResponse;
 
     protected override async Task OnInitializedAsync()
     {
@@ -227,11 +226,6 @@ public partial class Jobs : ComponentBase
         {
             Messenger.AddError("Error deleting category", ex.Message);
         }
-    }
-
-    private void OnExecutionStarted(ExecutionStartResponse response)
-    {
-        lastStartedExecutionResponse = response;
     }
 
     private void ExpandAll()
