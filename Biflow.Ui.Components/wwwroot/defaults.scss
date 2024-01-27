@@ -1,0 +1,16 @@
+$toast-colors:
+    "success",
+    "danger",
+    "warning",
+    "primary";
+
+@each $color in $toast-colors {
+    .toast.toast-#{$color} {
+        --bs-toast-header-color: var(--bs-#{$color}-text-emphasis);
+        --bs-toast-header-bg: var(--bs-#{$color}-bg-subtle);
+        --bs-toast-header-border-color: var(--bs-#{$color}-border-subtle);
+        --bs-toast-border-color: var(--bs-#{$color}-border-subtle);
+        --bs-toast-bg: var(--bs-#{$color}-bg-subtle);
+        --bs-toast-color: var(--bs-#{$color}-text-emphasis);
+    }
+}
