@@ -6,6 +6,11 @@ $toast-colors:
 
 .toast {
     --bs-toast-bg: var(--bs-body-bg) !important;
+
+    .feather {
+        width: 18px;
+        height: 18px;
+    }
 }
 
 .toast .toast-header {

@@ -1,6 +1,10 @@
 ﻿.toast {
   --bs-toast-bg: var(--bs-body-bg) !important;
 }
+.toast .feather {
+  width: 18px;
+  height: 18px;
+}
 
 .toast .toast-header {
   --bs-toast-header-bg: var(--bs-body-bg);

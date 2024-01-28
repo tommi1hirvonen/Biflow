@@ -10,7 +10,7 @@
             <span class="me-2">
                 <CxIcon Icon="Icon" />
             </span>
-            <strong class="me-auto">
+            <strong class="me-auto" style="margin-top: 1px;">
                 @Title
             </strong>
             @if (AutoHideDelay is null)
@@ -18,6 +18,12 @@
                 <button type="button" class="btn-close" aria-label="Close" @onclick="HideAsync"></button>
             }
         </div>    
+    }
+    @if (Title is null)
+    {
+        <span class="ms-2 my-auto">
+            <CxIcon Icon="Icon" />
+        </span>
     }
     <div class="toast-body">
         @ChildContent
