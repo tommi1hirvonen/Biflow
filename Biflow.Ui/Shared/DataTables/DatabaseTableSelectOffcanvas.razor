@@ -1,5 +1,5 @@
 ﻿@inject SqlServerHelperService SqlServerHelper
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 
 <HxOffcanvas @ref="offcanvas" Title="Select table" Size="OffcanvasSize.Large" OnClosed="OnClosed" ScrollingEnabled="true">
     <BodyTemplate>
@@ -112,7 +112,7 @@
             }
             catch (Exception ex)
             {
-                    Messenger.AddError("Error loading tables", ex.Message);
+                    Toaster.AddError("Error loading tables", ex.Message);
             }
         }
         await offcanvas.LetAsync(x => x.ShowAsync());

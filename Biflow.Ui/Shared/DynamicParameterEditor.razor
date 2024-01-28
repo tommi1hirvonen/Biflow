@@ -1,4 +1,4 @@
-﻿@inject IHxMessengerService Messenger
+﻿@inject ToasterService Toaster
 
 @typeparam TParameter where TParameter : DynamicParameter
 
@@ -50,11 +50,11 @@
         try
         {
             var result = await parameter.EvaluateAsync();
-            Messenger.AddInformation($"Evaluation result: {result}");
+            Toaster.AddInformation($"Evaluation result: {result}");
         }
         catch (Exception ex)
         {
-            Messenger.AddError(ex.Message);
+            Toaster.AddError(ex.Message);
         }
     }
 }

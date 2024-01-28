@@ -1,7 +1,7 @@
 ﻿@implements IPipelineClientEditModal
 
 @inject IDbContextFactory<AppDbContext> DbFactory
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 @inject IJSRuntime JS
 
 <HxModal @ref="modal" Size="ModalSize.Large" OnClosed="() => connectionTestSuccess = null" Title="@(synapseWorkspace?.PipelineClientId == Guid.Empty ? "New Synapse workspace" : "Edit " + synapseWorkspace?.PipelineClientName)">
@@ -104,7 +104,7 @@
         catch (Exception ex)
         {
             connectionTestSuccess = false;
-            Messenger.AddError("Connection test failed", ex.Message);
+            Toaster.AddError("Connection test failed", ex.Message);
         }
         testingConnection = false;
     }

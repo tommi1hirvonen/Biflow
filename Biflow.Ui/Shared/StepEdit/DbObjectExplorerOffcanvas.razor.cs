@@ -4,7 +4,7 @@ namespace Biflow.Ui.Shared.StepEdit;
 
 public partial class DbObjectExplorerOffcanvas : ComponentBase, IDisposable
 {
-    [Inject] public IHxMessengerService Messenger { get; set; } = null!;
+    [Inject] public ToasterService Toaster { get; set; } = null!;
 
     [Inject] public SqlServerHelperService SqlServerHelper { get; set; } = null!;
 
@@ -52,7 +52,7 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase, IDisposable
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error querying database objects", ex.Message);
+            Toaster.AddError("Error querying database objects", ex.Message);
         }
         finally
         {

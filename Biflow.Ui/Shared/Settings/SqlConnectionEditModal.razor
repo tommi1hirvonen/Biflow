@@ -1,7 +1,7 @@
 ﻿@implements IConnectionEditModal
 
 @inject IDbContextFactory<AppDbContext> DbFactory
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 @inject IJSRuntime JS
 
 <HxModal @ref="modal" Size="ModalSize.Large" OnClosed="() => connectionTestSuccess = null" Title="@(connection?.ConnectionId == Guid.Empty ? "New SQL connection" : "Edit " + connection?.ConnectionName)">
@@ -102,7 +102,7 @@
         catch (Exception ex)
         {
             connectionTestSuccess = false;
-            Messenger.AddError("Connection test failed", ex.Message);
+            Toaster.AddError("Connection test failed", ex.Message);
         }
         testingConnection = false;
     }

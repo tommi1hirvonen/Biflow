@@ -1,5 +1,5 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbFactory
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 @inject IHttpClientFactory HttpClientFactory
 @inject ITokenService TokenService
 @inject IJSRuntime JS
@@ -149,7 +149,7 @@
         catch (Exception ex)
         {
             connectionTestSuccess = false;
-            Messenger.AddError("Connection test failed", ex.Message);
+            Toaster.AddError("Connection test failed", ex.Message);
         }
         testingConnection = false;
     }

@@ -1,4 +1,4 @@
-﻿@inject IHxMessengerService Messenger
+﻿@inject ToasterService Toaster
 @inject ISchedulerService SchedulerService
 @inject IMediator Mediator
 
@@ -211,7 +211,7 @@
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error toggling schedule", ex.Message);
+            Toaster.AddError("Error toggling schedule", ex.Message);
         }
     }
 
@@ -232,7 +232,7 @@
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error deleting schedule", ex.Message);
+            Toaster.AddError("Error deleting schedule", ex.Message);
         }
     }
 
@@ -281,7 +281,7 @@
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error synchronizing", ex.Message);
+            Toaster.AddError("Error synchronizing", ex.Message);
         }
     }
 

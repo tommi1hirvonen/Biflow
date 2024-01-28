@@ -1,5 +1,5 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbFactory
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 
 <div>
     <div class="form-check">
@@ -56,11 +56,11 @@
                 .ExecuteUpdateAsync(j => j.SetProperty(p => p.UseDependencyMode, Job.UseDependencyMode));
             SortSteps?.Invoke();
             var message = Job.UseDependencyMode ? "Dependency mode toggled successfully" : "Execution phase mode toggled successfully";
-            Messenger.AddInformation(message);
+            Toaster.AddInformation(message);
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error toggling mode", ex.Message);
+            Toaster.AddError("Error toggling mode", ex.Message);
         }
     }
 
@@ -76,11 +76,11 @@
                 .Where(j => j.JobId == Job.JobId)
                 .ExecuteUpdateAsync(j => j.SetProperty(p => p.StopOnFirstError, Job.StopOnFirstError));
             var message = Job.StopOnFirstError ? "Stop on first error enabled successfully" : "Stop on first error disabled successfully";
-            Messenger.AddInformation(message);
+            Toaster.AddInformation(message);
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error toggling setting", ex.Message);
+            Toaster.AddError("Error toggling setting", ex.Message);
         }
     }
 }

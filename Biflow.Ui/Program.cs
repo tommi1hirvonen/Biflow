@@ -1,5 +1,4 @@
 using Biflow.Ui;
-using Biflow.Ui.Components;
 using Microsoft.AspNetCore.Components.Server.Circuits;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting.WindowsServices;
@@ -34,8 +33,8 @@ builder.Services.TryAddEnumerable(
 builder.Services.AddScoped<ThemeService>();
 builder.Services.AddScoped<ContextMenuService>();
 builder.Services.AddScoped<ToasterService>();
+
 builder.Services.AddHxServices();
-builder.Services.AddHxMessenger();
 builder.Services.AddHxMessageBoxHost();
 
 var app = builder.Build();

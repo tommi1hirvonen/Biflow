@@ -1,5 +1,5 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 @inject IMediator Mediator
 
 <PageTitle>Blob Clients | Biflow</PageTitle>
@@ -94,7 +94,7 @@
         catch (Exception ex)
         {
             var message = ex.InnerException?.Message ?? ex.Message;
-            Messenger.AddError("Error deleting blob storage client", message);
+            Toaster.AddError("Error deleting blob storage client", message);
         }
     }
 

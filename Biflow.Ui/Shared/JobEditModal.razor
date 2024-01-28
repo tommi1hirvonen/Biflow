@@ -1,5 +1,5 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 @inject IMediator Mediator
 
 @{
@@ -65,7 +65,7 @@
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error submitting job", ex.Message);
+            Toaster.AddError("Error submitting job", ex.Message);
         }
     }
 
@@ -92,7 +92,7 @@
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error loading job", ex.Message);
+            Toaster.AddError("Error loading job", ex.Message);
         }
     }
 

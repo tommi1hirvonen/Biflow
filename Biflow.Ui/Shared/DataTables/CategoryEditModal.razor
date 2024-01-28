@@ -1,5 +1,5 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 @inject IMediator Mediator
 
 @{
@@ -59,7 +59,7 @@
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error saving category", ex.Message);
+            Toaster.AddError("Error saving category", ex.Message);
         }
     }
 }

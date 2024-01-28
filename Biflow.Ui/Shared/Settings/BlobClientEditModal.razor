@@ -1,6 +1,6 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IJSRuntime JS
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 @inject ITokenService TokenService
 
 <HxModal @ref="modal" Size="ModalSize.Large" OnClosed="() => connectionTestSuccess = null" Title="@(client?.BlobStorageClientId == Guid.Empty ? "New blob client" : "Edit " + client?.BlobStorageClientName)">
@@ -168,7 +168,7 @@
         catch (Exception ex)
         {
             connectionTestSuccess = false;
-            Messenger.AddError("Connection test failed", ex.Message);
+            Toaster.AddError("Connection test failed", ex.Message);
         }
         testingConnection = false;
     }

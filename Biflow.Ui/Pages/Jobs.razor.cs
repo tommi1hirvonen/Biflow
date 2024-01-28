@@ -8,7 +8,7 @@ public partial class Jobs : ComponentBase
 {
     [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
     [Inject] private JobDuplicatorFactory JobDuplicatorFactory { get; set; } = null!;
-    [Inject] private IHxMessengerService Messenger { get; set; } = null!;
+    [Inject] private ToasterService Toaster { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
     [Inject] private IMediator Mediator { get; set; } = null!;
@@ -118,7 +118,7 @@ public partial class Jobs : ComponentBase
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error toggling job", ex.Message);
+            Toaster.AddError("Error toggling job", ex.Message);
         }
     }
 
@@ -134,7 +134,7 @@ public partial class Jobs : ComponentBase
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error copying job", ex.Message);
+            Toaster.AddError("Error copying job", ex.Message);
         }
     }
 
@@ -174,7 +174,7 @@ public partial class Jobs : ComponentBase
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error deleting job", ex.Message);
+            Toaster.AddError("Error deleting job", ex.Message);
         }
     }
 
@@ -224,7 +224,7 @@ public partial class Jobs : ComponentBase
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error deleting category", ex.Message);
+            Toaster.AddError("Error deleting category", ex.Message);
         }
     }
 

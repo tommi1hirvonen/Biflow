@@ -1,5 +1,5 @@
 ﻿@inject SqlServerHelperService SqlServerHelperService
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 
 <HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select Agent job">
     <BodyTemplate>
@@ -115,7 +115,7 @@
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error reading Agent jobs", ex.Message);
+            Toaster.AddError("Error reading Agent jobs", ex.Message);
         }
     }
 

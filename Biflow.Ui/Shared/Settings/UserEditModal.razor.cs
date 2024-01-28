@@ -10,7 +10,7 @@ public partial class UserEditModal : ComponentBase
     [Inject] private AuthenticationMethodResolver AuthenticationResolver { get; set; } = null!;
     [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
     [Inject] private IMediator Mediator { get; set; } = null!;
-    [Inject] private IHxMessengerService Messenger { get; set; } = null!;
+    [Inject] private ToasterService Toaster { get; set; } = null!;
     [Inject] private IJSRuntime JS { get; set; } = null!;
 
     [Parameter] public EventCallback<User> OnUserSubmit { get; set; }
@@ -68,7 +68,7 @@ public partial class UserEditModal : ComponentBase
             ArgumentNullException.ThrowIfNull(model.PasswordModel);
             if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn && !model.PasswordModel.Password.Equals(model.PasswordModel.ConfirmPassword))
             {
-                Messenger.AddError("The two passwords do not match");
+                Toaster.AddError("The two passwords do not match");
                 return;
             }
 
@@ -81,7 +81,7 @@ public partial class UserEditModal : ComponentBase
             }
             catch (Exception ex)
             {
-                Messenger.AddError("Error creating user", ex.Message);
+                Toaster.AddError("Error creating user", ex.Message);
             }
         }
         // Existing user
@@ -96,7 +96,7 @@ public partial class UserEditModal : ComponentBase
             }
             catch (Exception ex)
             {
-                Messenger.AddError("Error updating user", ex.Message);
+                Toaster.AddError("Error updating user", ex.Message);
             }
         }
     }

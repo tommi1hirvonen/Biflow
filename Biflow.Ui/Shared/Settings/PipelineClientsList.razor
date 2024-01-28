@@ -1,5 +1,5 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbFactory
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 @inject IMediator Mediator
 
 <style>
@@ -182,7 +182,7 @@
         catch (Exception ex)
         {
             var message = ex.InnerException?.Message ?? ex.Message;
-            Messenger.AddError("Error deleting pipeline client", message);
+            Toaster.AddError("Error deleting pipeline client", message);
         }
     }
 

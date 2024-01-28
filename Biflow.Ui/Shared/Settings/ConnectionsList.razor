@@ -1,6 +1,6 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbFactory
 @inject IMediator Mediator
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 
 <style>
     tr a {
@@ -224,7 +224,7 @@
         catch (Exception ex)
         {
             var message = ex.InnerException?.Message ?? ex.Message;
-            Messenger.AddError("Error deleting connection", message);
+            Toaster.AddError("Error deleting connection", message);
         }
     }
 

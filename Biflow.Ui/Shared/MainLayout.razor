@@ -8,7 +8,7 @@
 @inject AuthenticationMethodResolver AuthenticationResolver
 @inject ExecutorModeResolver ExecutorResolver
 
-@*Toast container for HxMessenger service*@
+@*Toast container for HxToaster service*@
 <style>
     .hx-toast-container {
         margin-top: 1.5rem!important;
@@ -22,7 +22,6 @@
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}, {Roles.Viewer}")">
     <Authorized>
-        <HxMessenger Position="ToastContainerPosition.BottomEnd" />
         <ContextMenu />
         <div id="hx_message_box_host_container">
             <HxMessageBoxHost />

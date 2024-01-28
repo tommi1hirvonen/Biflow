@@ -1,4 +1,4 @@
-﻿@inject IHxMessengerService Messenger
+﻿@inject ToasterService Toaster
 @inject IDbContextFactory<AppDbContext> DbFactory
 @inject IHxMessageBoxService Confirmer
 @inject IMediator Mediator
@@ -415,7 +415,7 @@
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error toggling step", ex.Message);
+            Toaster.AddError("Error toggling step", ex.Message);
         }
     }
 
@@ -443,7 +443,7 @@
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error deleting step", ex.Message);
+            Toaster.AddError("Error deleting step", ex.Message);
         }
     }
 

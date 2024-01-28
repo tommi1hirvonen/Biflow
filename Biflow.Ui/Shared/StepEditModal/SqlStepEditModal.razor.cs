@@ -59,7 +59,7 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
             var procedure = Step.SqlStatement.ParseStoredProcedureFromSqlStatement();
             if (procedure is null || procedure.Value.ProcedureName is null || Step.ConnectionId == Guid.Empty)
             {
-                Messenger.AddWarning("Stored procedure could not be parsed from SQL statement");
+                Toaster.AddWarning("Stored procedure could not be parsed from SQL statement");
                 return;
             }
             var schema = procedure.Value.Schema ?? "dbo";
@@ -67,7 +67,7 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
             var parameters = await SqlServerHelper.GetStoredProcedureParametersAsync(Step.ConnectionId, schema, name);
             if (!parameters.Any())
             {
-                Messenger.AddInformation($"No parameters for [{schema}].[{name}]");
+                Toaster.AddInformation($"No parameters for [{schema}].[{name}]");
                 return;
             }
             Step.StepParameters.Clear();
@@ -82,7 +82,7 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error importing parameters", ex.Message);
+            Toaster.AddError("Error importing parameters", ex.Message);
         }
     }
 

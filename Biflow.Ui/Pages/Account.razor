@@ -2,7 +2,7 @@
 
 @inject IDbContextFactory<AppDbContext> DbFactory
 @inject IMediator Mediator
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 @inject AuthenticationMethodResolver AuthenticationResolver
 
 <PageTitle>Account | Biflow</PageTitle>
@@ -156,11 +156,11 @@
         {
             ArgumentNullException.ThrowIfNull(user);
             await Mediator.SendAsync(new UpdateUserEmailCommand(user.UserId, user.Email));
-            Messenger.AddInformation("Email updated successfully");
+            Toaster.AddInformation("Email updated successfully");
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error saving email", ex.Message);
+            Toaster.AddError("Error saving email", ex.Message);
         }
     }
 
@@ -168,25 +168,25 @@
     {
         if (username is null)
         {
-            Messenger.AddError("Error", "Error getting username from authentication state");
+            Toaster.AddError("Error", "Error getting username from authentication state");
             return;
         }
 
         if (!passwordModel.Password.Equals(passwordModel.ConfirmPassword))
         {
-            Messenger.AddWarning("Warning", "The two passwords do not match");
+            Toaster.AddWarning("Warning", "The two passwords do not match");
             return;
         }
 
         try
         {
             await Mediator.SendAsync(new UpdateUserPasswordCommand(username, passwordModel.OldPassword, passwordModel.Password));
-            Messenger.AddInformation("Success", "Password updated successfully");
+            Toaster.AddInformation("Success", "Password updated successfully");
             passwordModel = new();
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error updating password", ex.Message);
+            Toaster.AddError("Error updating password", ex.Message);
         }
 
     }

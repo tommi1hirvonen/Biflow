@@ -1,5 +1,5 @@
 ﻿@inject SqlServerHelperService SqlServerHelper
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 
 @if (Step is not null)
 {
@@ -160,7 +160,7 @@
             var parameters = await SqlServerHelper.GetPackageParametersAsync((Guid)Step.ConnectionId, Step.PackageFolderName, Step.PackageProjectName, Step.PackageName, includeConnectionManagerParameters);
             if (!parameters.Any())
             {
-                Messenger.AddInformation($"No parameters for package");
+                Toaster.AddInformation($"No parameters for package");
                 return;
             }
             Step.StepParameters.Clear();
@@ -177,7 +177,7 @@
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error importing parameters", ex.Message);
+            Toaster.AddError("Error importing parameters", ex.Message);
         }
         finally
         {

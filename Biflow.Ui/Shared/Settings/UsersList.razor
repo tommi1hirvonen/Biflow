@@ -1,6 +1,6 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbFactory
 @inject IMediator Mediator
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 @inject AuthenticationMethodResolver AuthenticationResolver
 
 <PageTitle>Users | Biflow</PageTitle>
@@ -132,7 +132,7 @@
         }
         catch (Exception)
         {
-            Messenger.AddError("Error deleting user");
+            Toaster.AddError("Error deleting user");
         }
     }
 

@@ -1,4 +1,4 @@
-﻿@inject IHxMessengerService Messenger
+﻿@inject ToasterService Toaster
 @inject SqlServerHelperService SqlServerHelper
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 
@@ -305,13 +305,13 @@
 
         if (references.Any(o => o.ReferenceType == ReferenceType && o.DataObject.UriEquals(newObject)))
         {
-            Messenger.AddWarning($"Duplicate {listName} object");
+            Toaster.AddWarning($"Duplicate {listName} object");
             return;
         }
 
         if (!newObject.IsValid)
         {
-            Messenger.AddWarning("Only ASCII characters allowed");
+            Toaster.AddWarning("Only ASCII characters allowed");
             return;
         }
 
@@ -390,7 +390,7 @@
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error getting object dependencies", ex.Message);
+            Toaster.AddError("Error getting object dependencies", ex.Message);
         }
     }
 

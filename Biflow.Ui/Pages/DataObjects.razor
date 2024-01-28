@@ -3,7 +3,7 @@
 @attribute [Authorize(Roles = $"{Roles.Admin}, {Roles.Editor}")]
 
 @inject IDbContextFactory<AppDbContext> DbContextFactory
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 @inject IMediator Mediator
 
 <PageTitle>Data Objects | Biflow</PageTitle>
@@ -244,7 +244,7 @@
     {
         if (!UnusedObjects.Any())
         {
-            Messenger.AddInformation("No unused source or target objects");
+            Toaster.AddInformation("No unused source or target objects");
             return;
         }
 
