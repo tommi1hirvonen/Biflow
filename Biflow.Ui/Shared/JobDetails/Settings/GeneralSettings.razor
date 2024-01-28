@@ -94,7 +94,7 @@
         {
             ArgumentNullException.ThrowIfNull(editJob);
             await Mediator.SendAsync(new UpdateJobCommand(editJob));
-            Toaster.AddInformation("Job settings saved successfully");
+            Toaster.AddSuccess("Job settings saved successfully");
             OnJobUpdated?.Invoke(editJob);
         }
         catch (DbUpdateConcurrencyException)

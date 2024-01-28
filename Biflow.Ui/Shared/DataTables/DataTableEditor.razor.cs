@@ -155,7 +155,7 @@ public partial class DataTableEditor : ComponentBase
             {
                 message.Append("Deleted ").Append(deleted).Append(" record(s)").AppendLine();
             }
-            Toaster.AddInformation("Changes saved", message.ToString());
+            Toaster.AddSuccess("Changes saved", message.ToString());
             tableData = await Table.LetAsync(x => x.LoadDataAsync(TopRows, filterSet)) ?? tableData;
         }
         catch (Exception ex)

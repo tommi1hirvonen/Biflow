@@ -72,7 +72,7 @@ public partial class JobParameters : ComponentBase
         {
             await Mediator.SendAsync(new UpdateJobParametersCommand(editJob));
             hasChanges = false;
-            Toaster.AddInformation("Job parameters updated successfully");
+            Toaster.AddSuccess("Job parameters updated successfully");
         }
         catch (DbUpdateConcurrencyException)
         {

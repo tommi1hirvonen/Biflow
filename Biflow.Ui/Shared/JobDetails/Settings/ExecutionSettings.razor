@@ -56,7 +56,7 @@
                 .ExecuteUpdateAsync(j => j.SetProperty(p => p.UseDependencyMode, Job.UseDependencyMode));
             SortSteps?.Invoke();
             var message = Job.UseDependencyMode ? "Dependency mode toggled successfully" : "Execution phase mode toggled successfully";
-            Toaster.AddInformation(message);
+            Toaster.AddSuccess(message);
         }
         catch (Exception ex)
         {
@@ -76,7 +76,7 @@
                 .Where(j => j.JobId == Job.JobId)
                 .ExecuteUpdateAsync(j => j.SetProperty(p => p.StopOnFirstError, Job.StopOnFirstError));
             var message = Job.StopOnFirstError ? "Stop on first error enabled successfully" : "Stop on first error disabled successfully";
-            Toaster.AddInformation(message);
+            Toaster.AddSuccess(message);
         }
         catch (Exception ex)
         {

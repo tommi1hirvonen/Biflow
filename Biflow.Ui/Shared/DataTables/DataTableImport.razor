@@ -248,7 +248,7 @@
             {
                 message.Append("Deleted ").Append(deleted).Append(" record(s)").AppendLine();
             }
-            Toaster.AddInformation("Data updated successfully", message.ToString());
+            Toaster.AddSuccess("Data updated successfully", message.ToString());
         }
         catch (Exception ex)
         {

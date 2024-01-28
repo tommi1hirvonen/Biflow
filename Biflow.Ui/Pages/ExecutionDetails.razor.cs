@@ -203,7 +203,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             ArgumentNullException.ThrowIfNull(username);
 
             await ExecutorService.StopExecutionAsync(execution.ExecutionId, username);
-            Toaster.AddInformation("Stop request sent successfully to the executor service");
+            Toaster.AddSuccess("Stop request sent successfully to the executor service");
         }
         catch (TimeoutException)
         {
@@ -228,7 +228,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
                 execution.EndedOn ??= DateTimeOffset.Now;
                 await Mediator.SendAsync(new UpdateExecutionCommand(execution));
             }
-            Toaster.AddInformation("Status updated successfully");
+            Toaster.AddSuccess("Status updated successfully");
         }
         catch (Exception ex)
         {
@@ -246,7 +246,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
         {
             await Mediator.SendAsync(new DeleteExecutionCommand(ExecutionId));
             NavigationManager.NavigateTo("/executions");
-            Toaster.AddInformation("Execution deleted successfully");
+            Toaster.AddSuccess("Execution deleted successfully");
         }
         catch (Exception ex)
         {

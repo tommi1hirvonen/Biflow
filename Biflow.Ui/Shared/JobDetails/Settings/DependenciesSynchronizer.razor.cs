@@ -84,7 +84,7 @@ public partial class DependenciesSynchronizer : ComponentBase
             dependenciesToAdd = null;
             dependenciesToRemove = null;
             SortSteps?.Invoke();
-            Toaster.AddInformation("Changes saved successfully");
+            Toaster.AddSuccess("Changes saved successfully");
         }
         catch (Exception ex)
         {

@@ -110,7 +110,7 @@
         try
         {
             await Mediator.SendAsync(new UpdateJobConcurrenciesCommand(editJob));
-            Toaster.AddInformation("Concurrency settings saved successfully");
+            Toaster.AddSuccess("Concurrency settings saved successfully");
         }
         catch (DbUpdateConcurrencyException)
         {

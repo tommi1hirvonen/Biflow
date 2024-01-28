@@ -156,7 +156,7 @@
         {
             ArgumentNullException.ThrowIfNull(user);
             await Mediator.SendAsync(new UpdateUserEmailCommand(user.UserId, user.Email));
-            Toaster.AddInformation("Email updated successfully");
+            Toaster.AddSuccess("Email updated successfully");
         }
         catch (Exception ex)
         {
@@ -181,7 +181,7 @@
         try
         {
             await Mediator.SendAsync(new UpdateUserPasswordCommand(username, passwordModel.OldPassword, passwordModel.Password));
-            Toaster.AddInformation("Success", "Password updated successfully");
+            Toaster.AddSuccess("Success", "Password updated successfully");
             passwordModel = new();
         }
         catch (Exception ex)

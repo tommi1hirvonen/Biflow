@@ -95,7 +95,7 @@
                 }
             }
             var copies = await duplicator.SaveStepsAsync();
-            Toaster.AddInformation("Step(s) copied successfully");
+            Toaster.AddSuccess("Step(s) copied successfully");
             await OnStepsCopied.InvokeAsync(copies);
             await offcanvas.LetAsync(x => x.HideAsync());
         }

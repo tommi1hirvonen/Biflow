@@ -223,7 +223,7 @@
             ArgumentNullException.ThrowIfNull(username);
             
             await ExecutorService.StopExecutionAsync(executionId, stepId, username);
-            Toaster.AddInformation("Stop request sent successfully to the executor service");
+            Toaster.AddSuccess("Stop request sent successfully to the executor service");
         }
         catch (TimeoutException)
         {
