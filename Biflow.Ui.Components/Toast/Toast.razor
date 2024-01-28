@@ -2,6 +2,8 @@
 
 @namespace Biflow.Ui.Components
 
+@implements IDisposable
+
 <div @attributes=@InputAttributes class="toast @ToastClass show @CssClass @(hiding ? "fade-out" : null) @(Title is null ? "d-flex" : null)"
      role="alert" aria-live="assertive" aria-atomic="true">
     @if (Title is not null)
@@ -13,10 +15,7 @@
             <strong class="me-auto" style="margin-top: 1px;">
                 @Title
             </strong>
-            @if (AutoHideDelay is null)
-            {
-                <button type="button" class="btn-close" aria-label="Close" @onclick="HideAsync"></button>
-            }
+            <button type="button" class="btn-close" aria-label="Close" @onclick="HideAsync"></button>
         </div>    
     }
     @if (Title is null)
@@ -28,7 +27,7 @@
     <div class="toast-body">
         @ChildContent
     </div>
-    @if (Title is null && AutoHideDelay is null)
+    @if (Title is null)
     {
         <button type="button" class="btn-close me-2 m-auto" aria-label="Close" @onclick="HideAsync"></button>
     }
@@ -50,18 +49,31 @@
     [Parameter] public EventCallback OnToastHidden { get; set; }
 
     private bool hiding;
+    private CancellationTokenSource cts = new();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender && AutoHideDelay is not null)
         {
-            await Task.Delay((int)AutoHideDelay);
+            try
+            {
+                await Task.Delay((int)AutoHideDelay, cts.Token);
+            }
+            catch
+            {
+                return;   
+            }
             await HideAsync();
         }
     }
 
     private async Task HideAsync()
     {
+        if (hiding)
+        {
+            return;
+        }
+        cts.Cancel();
         hiding = true;
         StateHasChanged();
         await Task.Delay(300);
@@ -84,4 +96,6 @@
         ComponentColor.Danger => FeatherIcon.AlertOctagon,
         _ => FeatherIcon.Info
     };
+
+    public void Dispose() => cts.Dispose();
 }
