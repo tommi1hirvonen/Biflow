@@ -17,6 +17,7 @@
   --bs-toast-bg: var(--bs-success-bg-subtle) !important;
   --bs-toast-color: var(--bs-success-text-emphasis);
   --bs-link-color: var(--bs-success-text-emphasis);
+  --bs-link-hover-color: var(--bs-success-text-emphasis);
 }
 .toast.toast-success .toast-header {
   --bs-toast-header-bg: var(--bs-success-bg-subtle) !important;
@@ -29,6 +30,7 @@
   --bs-toast-bg: var(--bs-danger-bg-subtle) !important;
   --bs-toast-color: var(--bs-danger-text-emphasis);
   --bs-link-color: var(--bs-danger-text-emphasis);
+  --bs-link-hover-color: var(--bs-danger-text-emphasis);
 }
 .toast.toast-danger .toast-header {
   --bs-toast-header-bg: var(--bs-danger-bg-subtle) !important;
@@ -41,6 +43,7 @@
   --bs-toast-bg: var(--bs-warning-bg-subtle) !important;
   --bs-toast-color: var(--bs-warning-text-emphasis);
   --bs-link-color: var(--bs-warning-text-emphasis);
+  --bs-link-hover-color: var(--bs-warning-text-emphasis);
 }
 .toast.toast-warning .toast-header {
   --bs-toast-header-bg: var(--bs-warning-bg-subtle) !important;
@@ -53,6 +56,7 @@
   --bs-toast-bg: var(--bs-primary-bg-subtle) !important;
   --bs-toast-color: var(--bs-primary-text-emphasis);
   --bs-link-color: var(--bs-primary-text-emphasis);
+  --bs-link-hover-color: var(--bs-primary-text-emphasis);
 }
 .toast.toast-primary .toast-header {
   --bs-toast-header-bg: var(--bs-primary-bg-subtle) !important;
