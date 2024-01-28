@@ -64,10 +64,11 @@
 
     private string ToastClass => Color switch
     {
+        ComponentColor.Primary => "toast-primary",
         ComponentColor.Success => "toast-success",
         ComponentColor.Warning => "toast-warning",
         ComponentColor.Danger => "toast-danger",
-        _ => "toast-primary"
+        _ => ""
     };
 
     private IconBase Icon => Color switch

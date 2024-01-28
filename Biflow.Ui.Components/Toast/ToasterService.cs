@@ -61,13 +61,35 @@ public class ToasterService
         AddMessage(toastMessage);
     }
 
-    public void AddAction(string? title, ButtonColor buttonColor, string? buttonText, Action buttonAction)
+    public void AddInformationAction(string? title, string? buttonText, Action buttonAction) =>
+        AddInformationAction(title, null, buttonText, buttonAction);
+
+    public void AddInformationAction(string? title, string? text, string? buttonText, Action buttonAction)
     {
         var message = new ToastActionMessage
         {
             Title = title,
+            Text = text,
+            Color = ComponentColor.Info,
             ButtonText = buttonText,
-            ButtonColor = buttonColor,
+            ButtonColor = ButtonColor.Link,
+            ButtonAction = buttonAction
+        };
+        AddMessage(message);
+    }
+
+    public void AddSuccessAction(string? title, string? buttonText, Action buttonAction) =>
+        AddSuccessAction(title, null, buttonText, buttonAction);
+
+    public void AddSuccessAction(string? title, string? text, string? buttonText, Action buttonAction)
+    {
+        var message = new ToastActionMessage
+        {
+            Title = title,
+            Text = text,
+            Color = ComponentColor.Success,
+            ButtonText = buttonText,
+            ButtonColor = ButtonColor.Link,
             ButtonAction = buttonAction
         };
         AddMessage(message);

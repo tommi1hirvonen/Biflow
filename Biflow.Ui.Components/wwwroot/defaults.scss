@@ -4,14 +4,25 @@ $toast-colors:
     "warning",
     "primary";
 
+.toast {
+    --bs-toast-bg: var(--bs-body-bg) !important;
+}
+
+.toast .toast-header {
+    --bs-toast-header-bg: var(--bs-body-bg);
+}
+
 @each $color in $toast-colors {
     .toast.toast-#{$color} {
         --bs-toast-header-color: var(--bs-#{$color}-text-emphasis);
-        --bs-toast-header-bg: var(--bs-#{$color}-bg-subtle);
         --bs-toast-header-border-color: var(--bs-#{$color}-border-subtle);
         --bs-toast-border-color: var(--bs-#{$color}-border-subtle);
-        --bs-toast-bg: var(--bs-#{$color}-bg-subtle);
+        --bs-toast-bg: var(--bs-#{$color}-bg-subtle) !important;
         --bs-toast-color: var(--bs-#{$color}-text-emphasis);
         --bs-link-color: var(--bs-#{$color}-text-emphasis);
+
+        .toast-header {
+            --bs-toast-header-bg: var(--bs-#{$color}-bg-subtle) !important;
+        }
     }
 }

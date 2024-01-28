@@ -14,7 +14,14 @@
 			Color="message.Color"
 			Title="@message.Title"
 			AutoHideDelay="message.AutohideDelay">
-			@message.Text
+			@if (message.Text is not null)
+			{
+				<div class="row">
+					<div class="col">
+						@message.Text
+					</div>
+				</div>
+			}
 			@if (message is ToastActionMessage action)
 			{
 				var btnColor = action.ButtonColor switch
@@ -30,7 +37,11 @@
 					ButtonColor.Link => "btn-link",
 					_ => "",
 				};
-				<button type="button" class="btn @btnColor btn-sm" @onclick="action.ButtonAction">@action.ButtonText</button>
+				<div class="row">
+					<div class="col">
+						<button type="button" class="btn @btnColor btn-sm" @onclick="action.ButtonAction">@action.ButtonText</button>
+					</div>
+				</div>
 			}
 		</Toast>
 	}
