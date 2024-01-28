@@ -6,9 +6,11 @@ public class ToasterService
 
     public event Action? OnClear;
 
-    public void AddInformation(string? message, int? autoHideDelay = 3000) => AddInformation(null, message, autoHideDelay);
+    private const int DefaultAutoHideDelay = 4000;
 
-    public void AddInformation(string? title, string? message, int? autoHideDelay = 3000)
+    public void AddInformation(string? message, int? autoHideDelay = DefaultAutoHideDelay) => AddInformation(null, message, autoHideDelay);
+
+    public void AddInformation(string? title, string? message, int? autoHideDelay = DefaultAutoHideDelay)
     {
         var toastMessage = new ToastMessage
         {
@@ -20,9 +22,9 @@ public class ToasterService
         AddMessage(toastMessage);
     }
 
-    public void AddSuccess(string? message, int? autoHideDelay = 3000) => AddSuccess(null, message, autoHideDelay);
+    public void AddSuccess(string? message, int? autoHideDelay = DefaultAutoHideDelay) => AddSuccess(null, message, autoHideDelay);
 
-    public void AddSuccess(string? title, string? message, int? autoHideDelay = 3000)
+    public void AddSuccess(string? title, string? message, int? autoHideDelay = DefaultAutoHideDelay)
     {
         var toastMessage = new ToastMessage
         {
