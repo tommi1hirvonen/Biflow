@@ -19,9 +19,6 @@ internal class PipelineStepExecutor(
 
     private const int MaxRefreshRetries = 3;
 
-    protected override PipelineStepExecutionAttempt AddAttempt(PipelineStepExecution step, StepExecutionStatus withStatus) =>
-        step.AddAttempt(withStatus);
-
     protected override async Task<Result> ExecuteAsync(
         PipelineStepExecution step,
         PipelineStepExecutionAttempt attempt,

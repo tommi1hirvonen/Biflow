@@ -9,9 +9,6 @@ internal class TabularStepExecutor(
     IDbContextFactory<ExecutorDbContext> dbContextFactory)
     : StepExecutor<TabularStepExecution, TabularStepExecutionAttempt>(logger, dbContextFactory)
 {
-    protected override TabularStepExecutionAttempt AddAttempt(TabularStepExecution step, StepExecutionStatus withStatus) =>
-        step.AddAttempt(withStatus);
-
     protected override async Task<Result> ExecuteAsync(
         TabularStepExecution step,
         TabularStepExecutionAttempt attempt,

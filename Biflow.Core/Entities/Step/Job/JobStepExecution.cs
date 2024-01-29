@@ -3,7 +3,9 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Biflow.Core.Entities;
 
-public class JobStepExecution : StepExecution, IHasStepExecutionParameters<JobStepExecutionParameter>
+public class JobStepExecution : StepExecution,
+    IHasStepExecutionParameters<JobStepExecutionParameter>,
+    IHasStepExecutionAttempts<JobStepExecutionAttempt>
 {
     public JobStepExecution(string stepName) : base(stepName, StepType.Job)
     {

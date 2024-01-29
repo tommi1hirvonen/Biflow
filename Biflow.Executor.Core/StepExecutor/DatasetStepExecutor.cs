@@ -15,9 +15,6 @@ internal class DatasetStepExecutor(
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
     private readonly ITokenService _tokenService = tokenService;
 
-    protected override DatasetStepExecutionAttempt AddAttempt(DatasetStepExecution step, StepExecutionStatus withStatus) =>
-        step.AddAttempt(withStatus);
-
     protected override async Task<Result> ExecuteAsync(
         DatasetStepExecution step,
         DatasetStepExecutionAttempt attempt,

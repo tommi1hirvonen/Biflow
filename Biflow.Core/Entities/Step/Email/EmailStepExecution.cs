@@ -2,7 +2,9 @@
 
 namespace Biflow.Core.Entities;
 
-public class EmailStepExecution : StepExecution, IHasStepExecutionParameters<EmailStepExecutionParameter>
+public class EmailStepExecution : StepExecution,
+    IHasStepExecutionParameters<EmailStepExecutionParameter>,
+    IHasStepExecutionAttempts<EmailStepExecutionAttempt>
 {
     public EmailStepExecution(string stepName, string recipients, string subject, string body) : base(stepName, StepType.Email)
     {

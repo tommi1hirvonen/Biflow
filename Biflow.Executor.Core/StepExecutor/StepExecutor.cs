@@ -5,7 +5,7 @@ namespace Biflow.Executor.Core.StepExecutor;
 internal abstract class StepExecutor<TStep, TAttempt>(
     ILogger<StepExecutor<TStep, TAttempt>> logger,
     IDbContextFactory<ExecutorDbContext> dbContextFactory) : IStepExecutor<TStep, TAttempt>
-    where TStep : StepExecution
+    where TStep : StepExecution, IHasStepExecutionAttempts<TAttempt>
     where TAttempt : StepExecutionAttempt
 {
     private readonly ILogger<StepExecutor<TStep, TAttempt>> _logger = logger;
@@ -103,8 +103,6 @@ internal abstract class StepExecutor<TStep, TAttempt>(
 
     protected abstract Task<Result> ExecuteAsync(TStep step, TAttempt attempt, ExtendedCancellationTokenSource cts);
 
-    protected abstract TAttempt AddAttempt(TStep step, StepExecutionStatus withStatus);
-
     private async Task<bool> ExecuteRecursivelyWithRetriesAsync(
         TStep stepExecution,
         TAttempt executionAttempt,
@@ -154,8 +152,9 @@ internal abstract class StepExecutor<TStep, TAttempt>(
                 // There are attempts left => update execution with status Retry,
                 await UpdateExecutionFailedAsync(executionAttempt, StepExecutionStatus.Retry);
 
-                // Copy the execution attempt, increase counter and wait for the retry interval.
-                var nextExecution = AddAttempt(stepExecution, StepExecutionStatus.AwaitingRetry);
+                // Add a new attempt, capture the return value and wait for the retry interval.
+                var nextExecution = (stepExecution as IHasStepExecutionAttempts<TAttempt>)
+                    .AddAttempt(StepExecutionStatus.AwaitingRetry);
                 using (var context = _dbContextFactory.CreateDbContext())
                 {
                     context.Attach(nextExecution).State = EntityState.Added;

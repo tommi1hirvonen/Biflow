@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Biflow.Core.Entities;
 
-public class QlikStepExecution : StepExecution, IHasTimeout
+public class QlikStepExecution : StepExecution, IHasTimeout, IHasStepExecutionAttempts<QlikStepExecutionAttempt>
 {
     public QlikStepExecution(string stepName, string appId, Guid qlikCloudClientId) : base(stepName, StepType.Qlik)
     {

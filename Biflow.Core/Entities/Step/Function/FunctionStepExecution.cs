@@ -3,7 +3,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Biflow.Core.Entities;
 
-public class FunctionStepExecution : StepExecution, IHasTimeout, IHasStepExecutionParameters<FunctionStepExecutionParameter>
+public class FunctionStepExecution : StepExecution,
+    IHasTimeout,
+    IHasStepExecutionParameters<FunctionStepExecutionParameter>,
+    IHasStepExecutionAttempts<FunctionStepExecutionAttempt>
 {
     public FunctionStepExecution(string stepName, Guid functionAppId, string functionUrl) : base(stepName, StepType.Function)
     {

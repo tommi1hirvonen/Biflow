@@ -13,9 +13,6 @@ internal class SqlStepExecutor(
     private readonly ILogger<SqlStepExecutor> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
 
-    protected override SqlStepExecutionAttempt AddAttempt(SqlStepExecution step, StepExecutionStatus withStatus) =>
-        step.AddAttempt(withStatus);
-
     protected override async Task<Result> ExecuteAsync(
         SqlStepExecution step,
         SqlStepExecutionAttempt attempt,

@@ -22,9 +22,6 @@ internal class FunctionStepExecutor(
 
     private static readonly JsonSerializerOptions CamelCaseOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
-    protected override FunctionStepExecutionAttempt AddAttempt(FunctionStepExecution step, StepExecutionStatus withStatus) =>
-        step.AddAttempt(withStatus);
-
     protected override Task<Result> ExecuteAsync(
         FunctionStepExecution step,
         FunctionStepExecutionAttempt attempt,

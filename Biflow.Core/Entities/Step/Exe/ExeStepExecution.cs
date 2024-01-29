@@ -3,7 +3,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Biflow.Core.Entities;
 
-public class ExeStepExecution : StepExecution, IHasTimeout, IHasStepExecutionParameters<ExeStepExecutionParameter>
+public class ExeStepExecution : StepExecution,
+    IHasTimeout,
+    IHasStepExecutionParameters<ExeStepExecutionParameter>,
+    IHasStepExecutionAttempts<ExeStepExecutionAttempt>
 {
     public ExeStepExecution(string stepName, string exeFileName) : base(stepName, StepType.Exe)
     {
