@@ -1,4 +1,4 @@
-﻿@inject IHxMessengerService Messenger
+﻿@inject ToasterService Toaster
 @inject IMediator Mediator
 
 <div class="row">
@@ -216,7 +216,7 @@
         }
         catch
         {
-            Messenger.AddError("Error", "Error adding subscription");
+            Toaster.AddError("Error", "Error adding subscription");
         }
     }
 
@@ -229,7 +229,7 @@
         }
         catch (Exception)
         {
-            Messenger.AddError("Error", "Error toggling subscription");
+            Toaster.AddError("Error", "Error toggling subscription");
         }
     }
 
@@ -244,7 +244,7 @@
         }
         catch (Exception)
         {
-            Messenger.AddError("Error", "Error removing subscription");
+            Toaster.AddError("Error", "Error removing subscription");
         }
     }
 }

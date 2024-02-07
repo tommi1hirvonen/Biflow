@@ -1,4 +1,4 @@
-﻿@inject IHxMessengerService Messenger
+﻿@inject ToasterService Toaster
 @inject IHxMessageBoxService Confirmer
 @inject IExecutorService ExecutorService
 @inject IDbContextFactory<AppDbContext> DbContextFactory
@@ -223,15 +223,15 @@
             ArgumentNullException.ThrowIfNull(username);
             
             await ExecutorService.StopExecutionAsync(executionId, stepId, username);
-            Messenger.AddInformation("Stop request sent successfully to the executor service");
+            Toaster.AddSuccess("Stop request sent successfully to the executor service");
         }
         catch (TimeoutException)
         {
-            Messenger.AddError("Operation timed out", "The executor process may no longer be running");
+            Toaster.AddError("Operation timed out", "The executor process may no longer be running");
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error stopping execution", ex.Message);
+            Toaster.AddError("Error stopping execution", ex.Message);
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿@inject SqlServerHelperService SqlServerHelper
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 @inject IJSRuntime JS
 
 <HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Large" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true" Title="Explore SQL definitions">
@@ -113,7 +113,7 @@
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error querying references", ex.Message);
+            Toaster.AddError("Error querying references", ex.Message);
         }
         return new AutosuggestDataProviderResult<(string, string, string)?>
         {
@@ -154,7 +154,7 @@
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error getting object definition", ex.Message);
+            Toaster.AddError("Error getting object definition", ex.Message);
         }
     }
 
@@ -163,11 +163,11 @@
         try
         {
             await JS.InvokeVoidAsync("navigator.clipboard.writeText", objectDefinition);
-            Messenger.AddInformation("Code copied to clipboard");
+            Toaster.AddInformation("Code copied to clipboard");
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error copying to clipboard", ex.Message);
+            Toaster.AddError("Error copying to clipboard", ex.Message);
         }
     }
 

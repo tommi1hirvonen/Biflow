@@ -43,7 +43,7 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
         {
             if (string.IsNullOrWhiteSpace(Step?.PipelineName))
             {
-                Messenger.AddWarning("Pipeline name was empty");
+                Toaster.AddWarning("Pipeline name was empty");
                 return;
             }
             using var context = await DbContextFactory.CreateDbContextAsync();
@@ -55,7 +55,7 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
             var parameters = await pipelineClient.GetPipelineParametersAsync(Step.PipelineName);
             if (!parameters.Any())
             {
-                Messenger.AddInformation($"No parameters for pipeline {Step.PipelineName}");
+                Toaster.AddInformation($"No parameters for pipeline {Step.PipelineName}");
                 return;
             }
             Step.StepParameters.Clear();
@@ -71,7 +71,7 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error importing parameters", ex.Message);
+            Toaster.AddError("Error importing parameters", ex.Message);
         }
     }
 

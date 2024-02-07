@@ -8,7 +8,7 @@ namespace Biflow.Ui.Shared.DataTables;
 
 public partial class DataTableEditor : ComponentBase
 {
-    [Inject] private IHxMessengerService Messenger { get; set; } = null!;
+    [Inject] private ToasterService Toaster { get; set; } = null!;
     
     [Inject] private IHxMessageBoxService MessageBox { get; set; } = null!;
 
@@ -112,7 +112,7 @@ public partial class DataTableEditor : ComponentBase
 
         if (Table is null)
         {
-            Messenger.AddError("Error loading data", $"Selected table was null.");
+            Toaster.AddError("Error loading data", $"Selected table was null.");
             return;
         }
 
@@ -123,7 +123,7 @@ public partial class DataTableEditor : ComponentBase
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error loading data", ex.Message);
+            Toaster.AddError("Error loading data", ex.Message);
         }
     }
 
@@ -131,7 +131,7 @@ public partial class DataTableEditor : ComponentBase
     {
         if (tableData is null)
         {
-            Messenger.AddError("Error saving changes", $"Table editor dataset object was null.");
+            Toaster.AddError("Error saving changes", $"Table editor dataset object was null.");
             return;
         }
 
@@ -155,12 +155,12 @@ public partial class DataTableEditor : ComponentBase
             {
                 message.Append("Deleted ").Append(deleted).Append(" record(s)").AppendLine();
             }
-            Messenger.AddInformation("Changes saved", message.ToString());
+            Toaster.AddSuccess("Changes saved", message.ToString());
             tableData = await Table.LetAsync(x => x.LoadDataAsync(TopRows, filterSet)) ?? tableData;
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error saving changes", $"Error while committing changes to the database. No changes were made.{System.Environment.NewLine}{ex.Message}");
+            Toaster.AddError("Error saving changes", $"Error while committing changes to the database. No changes were made.{System.Environment.NewLine}{ex.Message}");
         }
     }
 
@@ -183,7 +183,7 @@ public partial class DataTableEditor : ComponentBase
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error exporting", ex.Message);
+            Toaster.AddError("Error exporting", ex.Message);
         }
         finally
         {

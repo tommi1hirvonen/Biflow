@@ -12,9 +12,6 @@ internal class EmailStepExecutor(
 {
     private readonly IMessageDispatcher _messageDispatcher = messageDispatcher;
 
-    protected override EmailStepExecutionAttempt AddAttempt(EmailStepExecution step, StepExecutionStatus withStatus) =>
-        step.AddAttempt(withStatus);
-
     protected override async Task<Result> ExecuteAsync(
         EmailStepExecution step,
         EmailStepExecutionAttempt attempt,

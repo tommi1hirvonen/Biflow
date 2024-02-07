@@ -1,6 +1,6 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IMediator Mediator
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 
 @if (Execution is not null)
 {
@@ -144,11 +144,11 @@
                 attempt.EndedOn ??= DateTimeOffset.Now;
             }
             await Mediator.SendAsync(new UpdateStepExecutionAttemptsCommand(selectedAttempts));
-            Messenger.AddInformation("Statuses updated successfully");
+            Toaster.AddSuccess("Statuses updated successfully");
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error updating statuses", ex.Message);
+            Toaster.AddError("Error updating statuses", ex.Message);
         }
     }
 }

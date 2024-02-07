@@ -1,7 +1,7 @@
 ﻿@page "/schedules/{Component?}"
 
 @inject IDbContextFactory<AppDbContext> DbFactory
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 @inject ISchedulerService SchedulerService
 
 <style>

@@ -7,7 +7,7 @@ namespace Biflow.Ui.Shared.DataTables;
 
 public partial class DataTableEditModal : ComponentBase, IDisposable
 {
-    [Inject] private IHxMessengerService Messenger { get; set; } = null!;
+    [Inject] private ToasterService Toaster { get; set; } = null!;
     [Inject] private IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
     [Inject] private IJSRuntime JS { get; set; } = null!;
     [Inject] private DataTableValidator DataTableValidator { get; set; } = null!;
@@ -102,7 +102,7 @@ public partial class DataTableEditModal : ComponentBase, IDisposable
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error selecting lookup table", ex.Message);
+            Toaster.AddError("Error selecting lookup table", ex.Message);
         }
     }
 
@@ -124,24 +124,22 @@ public partial class DataTableEditModal : ComponentBase, IDisposable
         });
     }
 
-    private async Task<InputTagsDataProviderResult> GetLockedColumnSuggestions(InputTagsDataProviderRequest request)
+    private Task<InputTagsDataProviderResult> GetLockedColumnSuggestions(InputTagsDataProviderRequest request)
     {
-        await Task.Delay(100); // small delay to make the tag input dropdown behave more consistently
-        return new InputTagsDataProviderResult
+        return Task.FromResult(new InputTagsDataProviderResult
         {
             Data = columns?.Where(c => c.ContainsIgnoreCase(request.UserInput) && (!editTable?.LockedColumns.Contains(c) ?? true))
                 ?? Enumerable.Empty<string>()
-        };
+        });
     }
 
-    private async Task<InputTagsDataProviderResult> GetHiddenColumnSuggestions(InputTagsDataProviderRequest request)
+    private Task<InputTagsDataProviderResult> GetHiddenColumnSuggestions(InputTagsDataProviderRequest request)
     {
-        await Task.Delay(100); // small delay to make the tag input dropdown behave more consistently
-        return new InputTagsDataProviderResult
+        return Task.FromResult(new InputTagsDataProviderResult
         {
             Data = columns?.Where(c => c.ContainsIgnoreCase(request.UserInput) && (!editTable?.HiddenColumns.Contains(c) ?? true))
                 ?? Enumerable.Empty<string>()
-        };
+        });
     }
 
     private Task<AutosuggestDataProviderResult<MasterDataTable>> GetLookupTableSuggestions(AutosuggestDataProviderRequest request)
@@ -171,7 +169,7 @@ public partial class DataTableEditModal : ComponentBase, IDisposable
 
         if (editTable.Lookups.Any(lookup => lookup.LookupTable.ConnectionId != editTable.ConnectionId))
         {
-            Messenger.AddError("Validation error", "All lookup tables must use the same connection as the main table.");
+            Toaster.AddError("Validation error", "All lookup tables must use the same connection as the main table.");
             return;
         }
 
@@ -192,11 +190,11 @@ public partial class DataTableEditModal : ComponentBase, IDisposable
         }
         catch (DbUpdateConcurrencyException)
         {
-            Messenger.AddError("Concurrency error", "The data table was modified outside of this session. Reload the page to view the most recent values.");
+            Toaster.AddError("Concurrency error", "The data table was modified outside of this session. Reload the page to view the most recent values.");
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error updating data table", ex.Message);
+            Toaster.AddError("Error updating data table", ex.Message);
         }
     }
 
@@ -215,7 +213,7 @@ public partial class DataTableEditModal : ComponentBase, IDisposable
         columns = await editTable.GetColumnNamesAsync();
         if (!columns.Any())
         {
-            Messenger.AddWarning($"No columns found for table [{editTable.TargetSchemaName}].[{editTable.TargetTableName}]");
+            Toaster.AddWarning($"No columns found for table [{editTable.TargetSchemaName}].[{editTable.TargetTableName}]");
             return;
         }
         editTable.ColumnOrder.Clear();

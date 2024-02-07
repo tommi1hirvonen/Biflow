@@ -4,7 +4,7 @@
 
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IMediator Mediator
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 
 <style>
     tr a {
@@ -288,7 +288,7 @@
     {
         if (!UnusedTags.Any())
         {
-            Messenger.AddInformation("No unused tags");
+            Toaster.AddInformation("No unused tags");
             return;
         }
 
@@ -311,11 +311,11 @@
         }
         catch (DbUpdateConcurrencyException)
         {
-            Messenger.AddError("Concurrency error", "The tag was modified outside of this session. Reload the page to view the most recent values.");
+            Toaster.AddError("Concurrency error", "The tag was modified outside of this session. Reload the page to view the most recent values.");
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error updating tag", ex.Message);
+            Toaster.AddError("Error updating tag", ex.Message);
         }
     }
 

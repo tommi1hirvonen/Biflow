@@ -1,4 +1,4 @@
-﻿@inject IHxMessengerService Messenger
+﻿@inject ToasterService Toaster
 
 @if (Step is not null)
 {
@@ -148,7 +148,7 @@
     {
         if (string.IsNullOrWhiteSpace(Step?.ExecutionConditionExpression.Expression))
         {
-            Messenger.AddWarning("Execution condition expression is empty");
+            Toaster.AddWarning("Execution condition expression is empty");
             return;
         }
 
@@ -157,16 +157,16 @@
             var result = await Step.EvaluateExecutionConditionAsync();
             if (result is bool b)
             {
-                Messenger.AddInformation($"Result: {b}");
+                Toaster.AddInformation($"Result: {b}");
             }
             else
             {
-                Messenger.AddWarning("Return type is not boolean", $"Result: {result}");
+                Toaster.AddWarning("Return type is not boolean", $"Result: {result}");
             }
         }
         catch (Exception ex)
         {
-            Messenger.AddError(ex.Message);
+            Toaster.AddError(ex.Message);
         }
     }
 

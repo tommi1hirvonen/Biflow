@@ -43,7 +43,7 @@ public partial class SqlReferenceExplorerOffcanvas : ComponentBase
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error querying references", ex.Message);
+            Toaster.AddError("Error querying references", ex.Message);
         }
 
     }

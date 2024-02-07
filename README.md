@@ -562,7 +562,7 @@ Navigate to the Biflow UI website. You should be able to log in using the accoun
 2. Go to the target Power BI Service Admin portal.
     - Tenant settings => Developer settings => Allow service principals to use Power BI APIs
     - Enable this setting and add the security group created in the previous step to the list of specific security groups allowed to access Power BI APIs.
-3. Give the service principal created in the App registrations section at least member access to the target workspaces in Power BI Service.
+3. Give the service principal created in the App registrations section at least contributor access to the target workspaces in Power BI Service.
 4. After these steps the Power BI connection can be tested on the App registration edit dialog.
 
 ### Azure Function App setup

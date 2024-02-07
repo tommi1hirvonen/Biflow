@@ -8,7 +8,7 @@ public partial class StepsList : ComponentBase
 {
     [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
     [Inject] private StepsDuplicatorFactory StepDuplicatorFactory { get; set; } = null!;
-    [Inject] private IHxMessengerService Messenger { get; set; } = null!;
+    [Inject] private ToasterService Toaster { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
     [Inject] private IMediator Mediator { get; set; } = null!;
@@ -52,7 +52,6 @@ public partial class StepsList : ComponentBase
     private ExecuteModal? executeModal;
     private AdvancedFiltersOffcanvas? advancedFiltersOffcanvas;
     private string stepNameFilter = string.Empty;
-    private ExecutionStartResponse? lastStartedExecutionResponse;
     private bool showDetails = false;
     private bool initialStepModalShouldOpen = true;
     private StateFilter stateFilter = StateFilter.All;
@@ -153,7 +152,7 @@ public partial class StepsList : ComponentBase
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error deleting step", ex.Message);
+            Toaster.AddError("Error deleting step", ex.Message);
         }
     }
 
@@ -167,7 +166,7 @@ public partial class StepsList : ComponentBase
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error toggling step", ex.Message);
+            Toaster.AddError("Error toggling step", ex.Message);
         }
     }
 
@@ -192,7 +191,7 @@ public partial class StepsList : ComponentBase
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error deleting step", ex.Message);
+            Toaster.AddError("Error deleting step", ex.Message);
         }
     }
 
@@ -266,13 +265,7 @@ public partial class StepsList : ComponentBase
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error toggling steps", ex.Message);
+            Toaster.AddError("Error toggling steps", ex.Message);
         }
     }
-
-    private void OnExecutionStarted(ExecutionStartResponse response)
-    {
-        lastStartedExecutionResponse = response;
-    }
-
 }

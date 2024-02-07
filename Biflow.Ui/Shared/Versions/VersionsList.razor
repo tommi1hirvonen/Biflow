@@ -2,7 +2,7 @@
 
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject EnvironmentSnapshotBuilder SnapshotBuilder
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 @inject IJSRuntime JS
 @inject NavigationManager NavigationManager
 
@@ -150,7 +150,7 @@
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error creating version", ex.Message);
+            Toaster.AddError("Error creating version", ex.Message);
         }
     }
 
@@ -176,7 +176,7 @@
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error exporting version", ex.Message);
+            Toaster.AddError("Error exporting version", ex.Message);
         }
     }
 }

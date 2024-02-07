@@ -1,6 +1,6 @@
 ﻿@using Quartz
 
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IMediator Mediator
 @inject IJSRuntime JS
@@ -145,17 +145,16 @@
         .OrderBy(c => c is null)
         .ThenBy(c => c?.CategoryName);
 
-    private async Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
+    private Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
     {
-        await Task.Delay(50); // needed for the HxInputTags component to behave correctly (reopen dropdown after selecting one tag)
-        return new InputTagsDataProviderResult
+        return Task.FromResult(new InputTagsDataProviderResult
         {
              Data = allTags
              .Select(t => t.TagName)
              .Where(t => t.ContainsIgnoreCase(request.UserInput))
              .Where(t => !tags.Any(tag => t == tag))
              .OrderBy(t => t)
-        };
+        });
     }
 
     protected override async Task OnInitializedAsync()
@@ -182,7 +181,7 @@
             }
             catch (Exception ex)
             {
-                Messenger.AddError("Error adding schedule", ex.Message);
+                Toaster.AddError("Error adding schedule", ex.Message);
             }
         }
         // Existing schedule
@@ -197,7 +196,7 @@
             }
             catch (Exception ex)
             {
-                Messenger.AddError("Error editing schedule", ex.Message);
+                Toaster.AddError("Error editing schedule", ex.Message);
             }
         }
     }

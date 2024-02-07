@@ -7,7 +7,7 @@ namespace Biflow.Ui.Pages;
 public partial class ExecutionDetails : ComponentBase, IDisposable
 {
     [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
-    [Inject] private IHxMessengerService Messenger { get; set; } = null!;
+    [Inject] private ToasterService Toaster { get; set; } = null!;
     [Inject] private IExecutorService ExecutorService { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
@@ -184,13 +184,13 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
     {
         if (Stopping)
         {
-            Messenger.AddInformation("Execution is already stopping");
+            Toaster.AddInformation("Execution is already stopping");
             return;
         }
 
         if (execution is null)
         {
-            Messenger.AddError("Execution was null");
+            Toaster.AddError("Execution was null");
             return;
         }
 
@@ -203,16 +203,16 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             ArgumentNullException.ThrowIfNull(username);
 
             await ExecutorService.StopExecutionAsync(execution.ExecutionId, username);
-            Messenger.AddInformation("Stop request sent successfully to the executor service");
+            Toaster.AddSuccess("Stop request sent successfully to the executor service");
         }
         catch (TimeoutException)
         {
-            Messenger.AddError("Operation timed out", "The executor process may no longer be running");
+            Toaster.AddError("Operation timed out", "The executor process may no longer be running");
             stoppingExecutions.RemoveAll(id => id == ExecutionId);
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error stopping execution", ex.Message);
+            Toaster.AddError("Error stopping execution", ex.Message);
             stoppingExecutions.RemoveAll(id => id == ExecutionId);
         }
     }
@@ -228,11 +228,11 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
                 execution.EndedOn ??= DateTimeOffset.Now;
                 await Mediator.SendAsync(new UpdateExecutionCommand(execution));
             }
-            Messenger.AddInformation("Status updated successfully");
+            Toaster.AddSuccess("Status updated successfully");
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error updating status", ex.Message);
+            Toaster.AddError("Error updating status", ex.Message);
         }
     }
 
@@ -246,11 +246,11 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
         {
             await Mediator.SendAsync(new DeleteExecutionCommand(ExecutionId));
             NavigationManager.NavigateTo("/executions");
-            Messenger.AddInformation("Execution deleted successfully");
+            Toaster.AddSuccess("Execution deleted successfully");
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error deleting execution", ex.Message);
+            Toaster.AddError("Error deleting execution", ex.Message);
         }
     }
 

@@ -1,6 +1,6 @@
 ﻿@typeparam TParameter where TParameter : DynamicParameter
 
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 
 <HxOffcanvas @ref="offcanvas" Backdrop="OffcanvasBackdrop.False" Title="@(parameter?.DisplayName ?? "")" OnClosed="OnClosed">
     <BodyTemplate>
@@ -80,11 +80,11 @@
         try
         {
             var result = await parameter.EvaluateAsync();
-            Messenger.AddInformation($"Evaluation result: {result}");
+            Toaster.AddInformation($"Evaluation result: {result}");
         }
         catch (Exception ex)
         {
-            Messenger.AddError(ex.Message);
+            Toaster.AddError(ex.Message);
         }
     }
 }

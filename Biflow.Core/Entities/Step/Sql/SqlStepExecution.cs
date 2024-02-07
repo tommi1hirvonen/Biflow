@@ -3,7 +3,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Biflow.Core.Entities;
 
-public class SqlStepExecution : StepExecution, IHasTimeout, IHasStepExecutionParameters<SqlStepExecutionParameter>
+public class SqlStepExecution : StepExecution,
+    IHasTimeout,
+    IHasStepExecutionParameters<SqlStepExecutionParameter>,
+    IHasStepExecutionAttempts<SqlStepExecutionAttempt>
 {
     public SqlStepExecution(string stepName, string sqlStatement) : base(stepName, StepType.Sql)
     {

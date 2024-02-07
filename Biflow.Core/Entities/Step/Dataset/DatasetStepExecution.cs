@@ -1,8 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Biflow.Core.Interfaces;
+using System.ComponentModel.DataAnnotations;
 
 namespace Biflow.Core.Entities;
 
-public class DatasetStepExecution : StepExecution
+public class DatasetStepExecution : StepExecution, IHasStepExecutionAttempts<DatasetStepExecutionAttempt>
 {
     public DatasetStepExecution(string stepName, string datasetGroupId, string datasetId) : base(stepName, StepType.Dataset)
     {

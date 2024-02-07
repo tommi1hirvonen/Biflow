@@ -3,7 +3,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Biflow.Core.Entities;
 
-public class PipelineStepExecution : StepExecution, IHasTimeout, IHasStepExecutionParameters<PipelineStepExecutionParameter>
+public class PipelineStepExecution : StepExecution,
+    IHasTimeout,
+    IHasStepExecutionParameters<PipelineStepExecutionParameter>,
+    IHasStepExecutionAttempts<PipelineStepExecutionAttempt>
 {
     public PipelineStepExecution(string stepName, string pipelineName) : base(stepName, StepType.Pipeline)
     {

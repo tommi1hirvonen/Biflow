@@ -12,9 +12,6 @@ internal class ExeStepExecutor(
     private readonly ILogger<ExeStepExecutor> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
 
-    protected override ExeStepExecutionAttempt AddAttempt(ExeStepExecution step, StepExecutionStatus withStatus) =>
-        step.AddAttempt(withStatus);
-
     protected override async Task<Result> ExecuteAsync(
         ExeStepExecution step,
         ExeStepExecutionAttempt attempt,

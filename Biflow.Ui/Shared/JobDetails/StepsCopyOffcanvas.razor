@@ -1,5 +1,5 @@
 ﻿@inject StepsDuplicatorFactory factory
-@inject IHxMessengerService messenger
+@inject ToasterService Toaster
 
 <HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Small" Title="Copy steps" Backdrop="OffcanvasBackdrop.False">
     <BodyTemplate>
@@ -95,13 +95,13 @@
                 }
             }
             var copies = await duplicator.SaveStepsAsync();
-            messenger.AddInformation("Step(s) copied successfully");
+            Toaster.AddSuccess("Step(s) copied successfully");
             await OnStepsCopied.InvokeAsync(copies);
             await offcanvas.LetAsync(x => x.HideAsync());
         }
         catch (Exception ex)
         {
-            messenger.AddError("Error copying steps", ex.Message);
+            Toaster.AddError("Error copying steps", ex.Message);
         }
     }
 }

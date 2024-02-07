@@ -1,6 +1,6 @@
 ﻿@using System.Globalization
 
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 @inject IMediator Mediator
 
 <div class="row justify-content-between gap-2 mt-3">
@@ -220,7 +220,7 @@
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error deleting schedule", ex.Message);
+            Toaster.AddError("Error deleting schedule", ex.Message);
         }
     }
 
@@ -234,7 +234,7 @@
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error toggling schedule", ex.Message);
+            Toaster.AddError("Error toggling schedule", ex.Message);
         }
     }
 }

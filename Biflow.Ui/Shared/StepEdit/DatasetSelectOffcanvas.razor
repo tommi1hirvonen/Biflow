@@ -1,4 +1,4 @@
-﻿@inject IHxMessengerService Messenger
+﻿@inject ToasterService Toaster
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject ITokenService TokenService
 
@@ -172,7 +172,7 @@
 
         if (this.appRegistrationId == Guid.Empty)
         {
-            Messenger.AddWarning("No app registrations found");
+            Toaster.AddWarning("No app registrations found");
             return;
         }
 
@@ -197,7 +197,7 @@
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error reading datasets", ex.Message);
+            Toaster.AddError("Error reading datasets", ex.Message);
         }
     }
 

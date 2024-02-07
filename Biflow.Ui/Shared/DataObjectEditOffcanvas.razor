@@ -1,6 +1,6 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IMediator Mediator
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 
 <HxModal @ref="offcanvas" Size="ModalSize.Large">
     <BodyTemplate>
@@ -62,11 +62,11 @@
         }
         catch (DbUpdateConcurrencyException)
         {
-            Messenger.AddError("Concurrency error", "The data object was modified outside of this session. Reload the page to view the most recent values.");
+            Toaster.AddError("Concurrency error", "The data object was modified outside of this session. Reload the page to view the most recent values.");
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error updating data object", ex.Message);
+            Toaster.AddError("Error updating data object", ex.Message);
         }
     }
 

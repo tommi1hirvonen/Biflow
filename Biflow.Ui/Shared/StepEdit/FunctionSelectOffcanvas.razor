@@ -1,4 +1,4 @@
-﻿@inject IHxMessengerService Messenger
+﻿@inject ToasterService Toaster
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHttpClientFactory HttpClientFactory
 @inject ITokenService TokenService
@@ -120,7 +120,7 @@
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error reading functions", ex.Message);
+            Toaster.AddError("Error reading functions", ex.Message);
         }
     }
 

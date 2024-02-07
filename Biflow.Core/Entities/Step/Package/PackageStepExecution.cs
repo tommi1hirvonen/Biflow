@@ -3,7 +3,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Biflow.Core.Entities;
 
-public class PackageStepExecution : StepExecution, IHasTimeout, IHasStepExecutionParameters<PackageStepExecutionParameter>
+public class PackageStepExecution : StepExecution,
+    IHasTimeout,
+    IHasStepExecutionParameters<PackageStepExecutionParameter>,
+    IHasStepExecutionAttempts<PackageStepExecutionAttempt>
 {
     public PackageStepExecution(string stepName, string packageFolderName, string packageProjectName, string packageName) : base(stepName, StepType.Package)
     {

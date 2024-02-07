@@ -5,7 +5,7 @@ public partial class JobDetails : ComponentBase
 {
     [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
-    [Inject] private IHxMessengerService Messenger { get; set; } = null!;
+    [Inject] private ToasterService Toaster { get; set; } = null!;
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
     [Inject] private IMediator Mediator { get; set; } = null!;
 
@@ -104,7 +104,7 @@ public partial class JobDetails : ComponentBase
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error sorting steps", ex.Message);
+            Toaster.AddError("Error sorting steps", ex.Message);
         }
     }
 
@@ -151,7 +151,7 @@ public partial class JobDetails : ComponentBase
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error deleting job", ex.Message);
+            Toaster.AddError("Error deleting job", ex.Message);
         }
     }
 
@@ -164,11 +164,11 @@ public partial class JobDetails : ComponentBase
             await Mediator.SendAsync(new ToggleJobCommand(job.JobId, enabled));
             job.IsEnabled = enabled;
             var message = job.IsEnabled ? "Job enabled successfully" : "Job disabled successfully";
-            Messenger.AddInformation(message);
+            Toaster.AddSuccess(message);
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error toggling job", ex.Message);
+            Toaster.AddError("Error toggling job", ex.Message);
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿@implements IPipelineClientEditModal
 
 @inject IDbContextFactory<AppDbContext> DbFactory
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 @inject IJSRuntime JS
 
 <HxModal @ref="modal" Size="ModalSize.Large" OnClosed="() => connectionTestSuccess = null" Title="@(dataFactory?.PipelineClientId == Guid.Empty ? "New Data Factory" : "Edit " + dataFactory?.PipelineClientName)">
@@ -115,7 +115,7 @@
         catch (Exception ex)
         {
             connectionTestSuccess = false;
-            Messenger.AddError("Connection test failed", ex.Message);
+            Toaster.AddError("Connection test failed", ex.Message);
         }
         testingConnection = false;
     }

@@ -9,7 +9,7 @@ public partial class JobParameters : ComponentBase
 {
     [Inject] private IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
     
-    [Inject] private IHxMessengerService Messenger { get; set; } = null!;
+    [Inject] private ToasterService Toaster { get; set; } = null!;
 
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
 
@@ -72,16 +72,16 @@ public partial class JobParameters : ComponentBase
         {
             await Mediator.SendAsync(new UpdateJobParametersCommand(editJob));
             hasChanges = false;
-            Messenger.AddInformation("Job parameters updated successfully");
+            Toaster.AddSuccess("Job parameters updated successfully");
         }
         catch (DbUpdateConcurrencyException)
         {
-            Messenger.AddError("Concurrency error",
+            Toaster.AddError("Concurrency error",
                 "The job has been modified outside of this session. Reload the page to view the most recent settings.");
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error saving parameters", $"{ex.Message}\n{ex.InnerException?.Message}");
+            Toaster.AddError("Error saving parameters", $"{ex.Message}\n{ex.InnerException?.Message}");
         }
 
     }

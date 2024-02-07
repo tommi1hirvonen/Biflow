@@ -6,8 +6,9 @@
 @inject NavigationManager NavigationManager
 @inject IConfiguration Configuration
 @inject AuthenticationMethodResolver AuthenticationResolver
+@inject ExecutorModeResolver ExecutorResolver
 
-@*Toast container for HxMessenger service*@
+@*Toast container for HxToaster service*@
 <style>
     .hx-toast-container {
         margin-top: 1.5rem!important;
@@ -21,11 +22,11 @@
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}, {Roles.Viewer}")">
     <Authorized>
-        <HxMessenger Position="ToastContainerPosition.BottomEnd" />
         <ContextMenu />
         <div id="hx_message_box_host_container">
             <HxMessageBoxHost />
         </div>
+        <Toaster />
         <SchedulerStatusResolver OnStatusMessageResolved="message => schedulerServiceErrorMessage = message" />
         <header>
             <nav class="navbar navbar-dark navbar-custom sticky-top flex-lg-nowrap navbar-expand-lg p-0 shadow bg-gradient-primary">
@@ -51,6 +52,12 @@
             <div role="row">
                 <NavMenu ClassString="@SidebarClass" OnNavLinkClick="CollapseSidebar" />
                 <main class="main pt-3 flex-grow-1">
+                    @if (ExecutorResolver.ExecutorMode == ExecutorMode.SelfHosted)
+                    {
+                        <HxAlert Color="ThemeColor.Warning">
+                            Self-hosted executor should only be used for development/testing.
+                        </HxAlert>
+                    }
                     @if (schedulerServiceErrorMessage is not null)
                     {
                         <HxAlert Color="ThemeColor.Warning">

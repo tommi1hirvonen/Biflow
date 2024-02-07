@@ -1,8 +1,9 @@
 ﻿@implements IDisposable
 
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 @inject IExecutionBuilderFactory<AppDbContext> BuilderFactory
 @inject IExecutorService Executor
+@inject NavigationManager NavigationManager
 
 <HxModal @ref="modal" Fullscreen="ModalFullscreen.Always" Scrollable="true" Title="Execute steps"
          BodyCssClass="pt-0"
@@ -413,8 +414,6 @@
 @code {
     [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
 
-    [Parameter] public EventCallback<ExecutionStartResponse> OnExecutionStarted { get; set; }
-
     private readonly HashSet<StepType> stepTypeFilter = new();
     private readonly HashSet<ITag> executeTagsFilterSet = new();
 
@@ -454,16 +453,16 @@
             var execution = await builder.SaveExecutionAsync();
             if (execution is not null)
             {
-                try
+                await Executor.StartExecutionAsync(execution.ExecutionId);
+                var message = new ToastActionMessage
                 {
-                    await Executor.StartExecutionAsync(execution.ExecutionId);
-                    await OnExecutionStarted.InvokeAsync(new(execution.ExecutionId, true));
-                }
-                catch
-                {
-                    await OnExecutionStarted.InvokeAsync(new(execution.ExecutionId, false));
-                    throw;   
-                }
+                    Title = "Execution started successfully",
+                    Color = ComponentColor.Success,
+                    ButtonColor = ButtonColor.Link,
+                    ButtonText = "View execution",
+                    ButtonAction = () => NavigationManager.NavigateTo($"executions/{execution.ExecutionId}/list")
+                };
+                Toaster.AddMessage(message);
             }
             builder?.Dispose();
             builder = null;
@@ -472,7 +471,7 @@
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error starting execution", ex.Message);
+            Toaster.AddError("Error starting execution", ex.Message);
         }
     }
 
@@ -501,7 +500,7 @@
         builder = await BuilderFactory.CreateAsync(jobId, username);
         if (builder is null)
         {
-            Messenger.AddWarning("Job with the given id could not be found");
+            Toaster.AddWarning("Job with the given id could not be found");
             return;
         }
         foreach (var selected in initiallySelectedSteps ?? Enumerable.Empty<Step>())

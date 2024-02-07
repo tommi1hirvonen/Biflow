@@ -2,7 +2,7 @@
 
 public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable, IStepEditModal where TStep : Step
 {    
-    [Inject] protected IHxMessengerService Messenger { get; set; } = null!;
+    [Inject] protected ToasterService Toaster { get; set; } = null!;
     [Inject] protected IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
 
     [CascadingParameter] public Job? Job { get; set; }
@@ -44,7 +44,6 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     internal async Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
     {
-        await Task.Delay(50); // needed for the HxInputTags component to behave correctly (reopen dropdown after selecting one tag)
         await EnsureAllTagsInitialized();
         return new InputTagsDataProviderResult
         {
@@ -125,7 +124,7 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
             ArgumentNullException.ThrowIfNull(context);
             if (Step is null)
             {
-                Messenger.AddError("Error submitting step", "Step was null");
+                Toaster.AddError("Error submitting step", "Step was null");
                 return;
             }
 
@@ -161,12 +160,12 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
         }
         catch (DbUpdateConcurrencyException)
         {
-            Messenger.AddError("Concurrency error",
+            Toaster.AddError("Concurrency error",
                 "The step has been modified outside of this session. Reload the page to view the most recent settings.");
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error adding/editing step", $"{ex.Message}\n{ex.InnerException?.Message}");
+            Toaster.AddError("Error adding/editing step", $"{ex.Message}\n{ex.InnerException?.Message}");
         }
         finally
         {

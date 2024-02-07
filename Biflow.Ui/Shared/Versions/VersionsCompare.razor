@@ -1,5 +1,5 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 @inject EnvironmentSnapshotBuilder SnapshotBuilder
 
 @if (Versions is not null)
@@ -95,7 +95,7 @@ else
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error generating comparison", ex.Message);
+            Toaster.AddError("Error generating comparison", ex.Message);
         }
         finally
         {

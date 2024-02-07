@@ -8,7 +8,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
 {
     [Inject] private IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
     [Inject] private IJSRuntime JS { get; set; } = null!;
-    [Inject] private IHxMessengerService Messenger { get; set; } = null!;
+    [Inject] private ToasterService Toaster { get; set; } = null!;
 
     private bool sessionStorageRetrieved = false;
     private bool showSteps = false;
@@ -68,7 +68,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
             }
             catch (Exception ex)
             {
-                Messenger.AddWarning("Error getting session storage values", ex.Message);
+                Toaster.AddWarning("Error getting session storage values", ex.Message);
             }
 
             sessionStorageRetrieved = true;
@@ -323,7 +323,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
         }
         catch (Exception ex)
         {
-            Messenger.AddWarning("Error saving session storage values", ex.Message);
+            Toaster.AddWarning("Error saving session storage values", ex.Message);
         }
     }
 

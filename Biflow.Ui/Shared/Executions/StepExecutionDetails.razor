@@ -1,422 +1,477 @@
 ﻿@if (StepExecutionAttempt is not null)
 {
-    <div class="row">
-        <div class="col">
-            <table class="table table-sm table-step-execution-details">
-                <tbody>
-                    <tr class="border-top">
-                        <td>Execution id</td>
-                        <td>
-                            <a href="executions/@StepExecutionAttempt.ExecutionId/list">
-                                @StepExecutionAttempt.ExecutionId
+    <dl class="row">
+        <dt>
+            Execution id
+        </dt>
+        <dd>
+            <a href="executions/@StepExecutionAttempt.ExecutionId/list">
+                @StepExecutionAttempt.ExecutionId
+            </a>
+        </dd>
+        <dt class="col-sm-3">
+            Step id
+        </dt>
+        <dd class="col-sm-9">
+            @if (StepExecutionAttempt.StepExecution.GetStep() is Step step)
+            {
+                <a href="jobs/@StepExecutionAttempt.StepExecution.Execution.JobId/steps/@step.StepId">
+                    @step.StepId
+                </a>
+            }
+            else
+            {
+                @StepExecutionAttempt.StepId
+            }
+        </dd>
+
+        @if (ShowExtraDetails)
+        {
+            <dt class="col-sm-3">
+                Started
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecutionAttempt.StartedOn?.LocalDateTime
+            </dd>
+            <dt class="col-sm-3">
+                Ended
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecutionAttempt.EndedOn?.LocalDateTime
+            </dd>
+            <dt class="col-sm-3">
+                Duration
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecutionAttempt.GetDurationInReadableFormat()
+            </dd>
+            <dt class="col-sm-3">
+                Status
+            </dt>
+            <dd class="col-sm-9">
+                <StepExecutionStatusBadge ExecutionStatus="@StepExecutionAttempt.ExecutionStatus" />
+            </dd>
+        }
+
+        @if (StepExecutionAttempt.ExecutionStatus == StepExecutionStatus.Stopped)
+        {
+            <dt class="col-sm-3">
+                Stopped by
+            </dt>
+            <dd class="col-sm-9">
+                @StepExecutionAttempt.StoppedBy
+            </dd>
+        }
+
+        <dt class="col-sm-3">
+            Retry attempts
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecutionAttempt.StepExecution.RetryAttempts
+        </dd>
+        <dt class="col-sm-3">
+            Retry interval (min)
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecutionAttempt.StepExecution.RetryIntervalMinutes
+        </dd>
+        <dt class="col-sm-3">
+            Retry attempt index
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecutionAttempt.RetryAttemptIndex
+        </dd>
+        <dt class="col-sm-3">
+            Duplicate execution behaviour
+        </dt>
+        <dd class="col-sm-9">
+            @StepExecutionAttempt.StepExecution.DuplicateExecutionBehaviour
+        </dd>
+        <dt class="col-sm-3">
+            Execution condition
+        </dt>
+        <dd class="col-sm-9">
+            <pre><code>@StepExecutionAttempt.StepExecution.ExecutionConditionExpression.Expression</code></pre>
+        </dd>
+        @if (StepExecutionAttempt.StepExecution is IHasTimeout timeout)
+        {
+            <dt class="col-sm-3">
+                Timeout (min)
+            </dt>
+            <dd class="col-sm-9">
+                @timeout.TimeoutMinutes
+            </dd>
+        }
+        @if (StepExecutionAttempt.StepExecution is SqlStepExecution sql)
+        {
+            <dt class="col-sm-3">
+                SQL statement
+            </dt>
+            <dd class="col-sm-9">
+                <pre><code>@sql.SqlStatement</code></pre>
+            </dd>
+            <dt class="col-sm-3">
+                Scalar result capture job parameter
+            </dt>
+            <dd class="col-sm-9">
+                @{
+                    var jobParam = sql.Execution.ExecutionParameters
+                        .FirstOrDefault(p => p?.ParameterId == sql.ResultCaptureJobParameterId);
+                }
+                @(jobParam is not null ? $"{jobParam.ParameterName} ({jobParam.ParameterValueType})" : null)
+            </dd>
+            <dt class="col-sm-3">
+                Capture value
+            </dt>
+            <dd class="col-sm-9">
+                <pre><code style="white-space: pre-wrap;">@sql.ResultCaptureJobParameterValue</code></pre>
+            </dd>
+        }
+        else if (StepExecutionAttempt.StepExecution is PackageStepExecution package)
+        {
+            <dt class="col-sm-3">
+                Package path
+            </dt>
+            <dd class="col-sm-9">
+                @package.PackagePath
+            </dd>
+            <dt class="col-sm-3">
+                32 bit mode
+            </dt>
+            <dd class="col-sm-9">
+                @package.ExecuteIn32BitMode
+            </dd>
+            <dt class="col-sm-3">
+                Execute as login
+            </dt>
+            <dd class="col-sm-9">
+                @package.ExecuteAsLogin
+            </dd>
+            <dt class="col-sm-3">
+                Operation id
+            </dt>
+            <dd class="col-sm-9">
+                @if (StepExecutionAttempt is PackageStepExecutionAttempt package__)
+                {
+                    @package__.PackageOperationId
+                }
+            </dd>
+        }
+        else if (StepExecutionAttempt.StepExecution is PipelineStepExecution pipeline)
+        {
+            <dt class="col-sm-3">
+                Pipeline name
+            </dt>
+            <dd class="col-sm-9">
+                @pipeline.PipelineName
+            </dd>
+            <dt class="col-sm-3">
+                Pipeline run id
+            </dt>
+            <dd class="col-sm-9">
+                @if (StepExecutionAttempt is PipelineStepExecutionAttempt pipeline__)
+                {
+                    @pipeline__.PipelineRunId
+                }
+            </dd>
+            <dt class="col-sm-3">
+                Pipeline client id
+            </dt>
+            <dd class="col-sm-9">
+                @pipeline.PipelineClientId
+            </dd>
+        }
+        else if (StepExecutionAttempt.StepExecution is ExeStepExecution exe)
+        {
+            <dt class="col-sm-3">
+                File path
+            </dt>
+            <dd class="col-sm-9">
+                @exe.ExeFileName
+            </dd>
+            <dt class="col-sm-3">
+                Arguments
+            </dt>
+            <dd class="col-sm-9">
+                @exe.ExeArguments
+            </dd>
+            <dt class="col-sm-3">
+                Working directory
+            </dt>
+            <dd class="col-sm-9">
+                @exe.ExeWorkingDirectory
+            </dd>
+            <dt class="col-sm-3">
+                Success exit code
+            </dt>
+            <dd class="col-sm-9">
+                @exe.ExeSuccessExitCode
+            </dd>
+            @if (StepExecutionAttempt is ExeStepExecutionAttempt exe_)
+            {
+                <dt class="col-sm-3">
+                    Process id
+                </dt>
+                <dd class="col-sm-9">
+                    @exe_.ExeProcessId
+                </dd>
+            }
+        }
+        else if (StepExecutionAttempt.StepExecution is DatasetStepExecution dataset)
+        {
+            <dt class="col-sm-3">
+                Group id
+            </dt>
+            <dd class="col-sm-9">
+                @dataset.DatasetGroupId
+            </dd>
+            <dt class="col-sm-3">
+                Dataset id
+            </dt>
+            <dd class="col-sm-9">
+                @dataset.DatasetId
+            </dd>
+            <dt class="col-sm-3">
+                Power BI Service id
+            </dt>
+            <dd class="col-sm-9">
+                @dataset.AppRegistrationId
+            </dd>
+        }
+        else if (StepExecutionAttempt.StepExecution is FunctionStepExecution function)
+        {
+            <dt class="col-sm-3">
+                Function url
+            </dt>
+            <dd class="col-sm-9">
+                @function.FunctionUrl
+            </dd>
+            <dt class="col-sm-3">
+                Function input
+            </dt>
+            <dd class="col-sm-9">
+                <pre><code>@function.FunctionInput</code></pre>
+            </dd>
+            <dt class="col-sm-3">
+                Is durable
+            </dt>
+            <dd class="col-sm-9">
+                @function.FunctionIsDurable
+            </dd>
+            <dt class="col-sm-3">
+                Function App id
+            </dt>
+            <dd class="col-sm-9">
+                @function.FunctionAppId
+            </dd>
+            @if (StepExecutionAttempt is FunctionStepExecutionAttempt function_)
+            {
+                <dt class="col-sm-3">
+                    Instance id
+                </dt>
+                <dd class="col-sm-9">
+                    @function_.FunctionInstanceId
+                </dd>
+            }
+        }
+        else if (StepExecutionAttempt.StepExecution is AgentJobStepExecution agent)
+        {
+            <dt class="col-sm-3">
+                Agent job name
+            </dt>
+            <dd class="col-sm-9">
+                @agent.AgentJobName
+            </dd>
+        }
+        else if (StepExecutionAttempt.StepExecution is TabularStepExecution tabular)
+        {
+            <dt class="col-sm-3">
+                Model name
+            </dt>
+            <dd class="col-sm-9">
+                @tabular.TabularModelName
+            </dd>
+            <dt class="col-sm-3">
+                Table name
+            </dt>
+            <dd class="col-sm-9">
+                @tabular.TabularTableName
+            </dd>
+            <dt class="col-sm-3">
+                Partition name
+            </dt>
+            <dd class="col-sm-9">
+                @tabular.TabularPartitionName
+            </dd>
+        }
+        else if (StepExecutionAttempt.StepExecution is EmailStepExecution email)
+        {
+            <dt class="col-sm-3">
+                Recipients
+            </dt>
+            <dd class="col-sm-9">
+                @email.Recipients
+            </dd>
+            <dt class="col-sm-3">
+                Subject
+            </dt>
+            <dd class="col-sm-9">
+                @email.Subject
+            </dd>
+            <dt class="col-sm-3">
+                Body
+            </dt>
+            <dd class="col-sm-9">
+                @email.Body
+            </dd>
+        }
+        else if (StepExecutionAttempt.StepExecution is JobStepExecution job)
+        {
+            <dt class="col-sm-3">
+                Synchronized
+            </dt>
+            <dd class="col-sm-9">
+                @job.JobExecuteSynchronized
+            </dd>
+            @if (StepExecutionAttempt is JobStepExecutionAttempt job_)
+            {
+                <dt class="col-sm-3">
+                    Child execution id
+                </dt>
+                <dd class="col-sm-9">
+                    <a href="executions/@job_.ChildJobExecutionId">
+                        @job_.ChildJobExecutionId
+                    </a>
+                </dd>
+            }
+        }
+        else if (StepExecutionAttempt.StepExecution is QlikStepExecution qlik)
+        {
+            <dt class="col-sm-3">
+                App id
+            </dt>
+            <dd class="col-sm-9">
+                @qlik.AppId
+            </dd>
+            <dt class="col-sm-3">
+                Qlik Cloud Client id
+            </dt>
+            <dd class="col-sm-9">
+                @qlik.QlikCloudClientId
+            </dd>
+            @if (StepExecutionAttempt is QlikStepExecutionAttempt qlik_)
+            {
+                <dt class="col-sm-3">
+                    Reload id
+                </dt>
+                <dd class="col-sm-9">
+                    @qlik_.ReloadId
+                </dd>
+            }
+        }
+        <dt class="col-sm-3">
+            Info messages / outputs
+        </dt>
+        <dd class="col-sm-9">
+            @foreach (var info in StepExecutionAttempt.InfoMessages)
+            {
+                <code class="text-body" style="white-space: pre-wrap; display: block;">
+                    @info.Message
+                </code>
+            }
+        </dd>
+        <dt class="col-sm-3">
+            Error messages
+        </dt>
+        <dd class="col-sm-9">
+            @foreach (var error in StepExecutionAttempt.ErrorMessages)
+            {
+                <code class="text-danger" style="white-space: pre-wrap; display: block;">
+                    @error.Message
+                </code>
+                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+                    @if (showErrorStackTrace && !string.IsNullOrWhiteSpace(error.Exception))
+                    {
+                        <br />
+                        <code class="text-body" style="white-space: pre-wrap; display: block;">@error.Exception</code>
+                    }
+                </AuthorizeView>
+            }
+            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+                @if (!showErrorStackTrace && StepExecutionAttempt.ErrorMessages.Any(e => !string.IsNullOrEmpty(e.Exception)))
+                {
+                    <div class="mt-2">
+                        <small>
+                            <a class="text-secondary" href="javascript:void(0);" @onclick="() => showErrorStackTrace = true">
+                                Stack trace available
                             </a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Step id</td>
-                        <td>
-                            @if (StepExecutionAttempt.StepExecution.GetStep() is Step step)
-                            {
-                                <a href="jobs/@StepExecutionAttempt.StepExecution.Execution.JobId/steps/@step.StepId">
-                                    @step.StepId
-                                </a>
-                            }
-                            else
-                            {
-                                @StepExecutionAttempt.StepId
-                            }
-                        </td>
-                    </tr>
-                    @if (ShowExtraDetails)
+                        </small>
+                    </div>
+                }
+            </AuthorizeView>
+        </dd>
+        <dt class="col-sm-3">
+            Warning messages
+        </dt>
+        <dd class="col-sm-9">
+            @foreach (var warning in StepExecutionAttempt.WarningMessages)
+            {
+                <code class="text-danger" style="white-space: pre-wrap; display: block;">
+                    @warning.Message
+                </code>
+                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+                    @if (showWarningStackTrace && !string.IsNullOrWhiteSpace(warning.Exception))
                     {
-                        <tr>
-                            <td>Started</td>
-                            <td>@StepExecutionAttempt.StartedOn?.LocalDateTime</td>
-                        </tr>
-                        <tr>
-                            <td>Ended</td>
-                            <td>@StepExecutionAttempt.EndedOn?.LocalDateTime</td>
-                        </tr>
-                        <tr>
-                            <td>Duration</td>
-                            <td>@StepExecutionAttempt.GetDurationInReadableFormat()</td>
-                        </tr>
-                        <tr>
-                            <td>Status</td>
-                            <td>
-                                <StepExecutionStatusBadge ExecutionStatus="@StepExecutionAttempt.ExecutionStatus" />
-                            </td>
-                        </tr>
+                        <br />
+                        <code class="text-body" style="white-space: pre-wrap; display: block;">@warning.Exception</code>
                     }
-                    @if (StepExecutionAttempt.ExecutionStatus == StepExecutionStatus.Stopped)
-                    {
-                        <tr>
-                            <td>Stopped by</td>
-                            <td>@StepExecutionAttempt.StoppedBy</td>
-                        </tr>
-                    }
-                    <tr>
-                        <td>Retry attempts</td>
-                        <td>@StepExecutionAttempt.StepExecution.RetryAttempts</td>
-                    </tr>
-                    <tr>
-                        <td>Retry interval (min)</td>
-                        <td>@StepExecutionAttempt.StepExecution.RetryIntervalMinutes</td>
-                    </tr>
-                    <tr>
-                        <td>Retry attempt index</td>
-                        <td>@StepExecutionAttempt.RetryAttemptIndex</td>
-                    </tr>
-                    <tr>
-                        <td>Duplicate execution behaviour</td>
-                        <td>@StepExecutionAttempt.StepExecution.DuplicateExecutionBehaviour</td>
-                    </tr>
-                    <tr>
-                        <td>Execution condition</td>
-                        <td><pre class="my-0"><code>@StepExecutionAttempt.StepExecution.ExecutionConditionExpression.Expression</code></pre></td>
-                    </tr>
-                    @if (StepExecutionAttempt.StepExecution is IHasTimeout timeout)
-                    {
-                        <tr>
-                            <td>Timeout (min)</td>
-                            <td>@timeout.TimeoutMinutes</td>
-                        </tr>
-                    }
-                    @if (StepExecutionAttempt.StepExecution is SqlStepExecution sql)
-                    {
-                        <tr>
-                            <td>SQL statement</td>
-                            <td><pre class="my-0"><code>@sql.SqlStatement</code></pre></td>
-                        </tr>
-                        <tr>
-                            <td>Scalar result capture job parameter</td>
-                            <td>
-                                @{
-                                    var jobParam = sql.Execution.ExecutionParameters
-                                    .FirstOrDefault(p => p?.ParameterId == sql.ResultCaptureJobParameterId);
-                                }
-                                @(jobParam is not null ? $"{jobParam.ParameterName} ({jobParam.ParameterValueType})" : null)
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Capture value</td>
-                            <td>
-                                <pre class="my-0"><code style="white-space: pre-wrap;">@sql.ResultCaptureJobParameterValue</code></pre>
-                            </td>
-                        </tr>
-                    }
-                    else if (StepExecutionAttempt.StepExecution is PackageStepExecution package)
-                    {
-                        <tr>
-                            <td>Package path</td>
-                            <td>@package.PackagePath</td>
-                        </tr>
-                        <tr>
-                            <td>32 bit mode</td>
-                            <td>@package.ExecuteIn32BitMode</td>
-                        </tr>
-                        <tr>
-                            <td>Execute as login</td>
-                            <td>@package.ExecuteAsLogin</td>
-                        </tr>
-                        <tr>
-                            <td>Operation id</td>
-                            <td>
-                                @if (StepExecutionAttempt is PackageStepExecutionAttempt package__)
-                                {
-                                    @package__.PackageOperationId
-                                }
-                            </td>
-                        </tr>
-                    }
-                    else if (StepExecutionAttempt.StepExecution is PipelineStepExecution pipeline)
-                    {
-                        <tr>
-                            <td>Pipeline name</td>
-                            <td>@pipeline.PipelineName</td>
-                        </tr>
-                        <tr>
-                            <td>Pipeline run id</td>
-                            <td>
-                                @if (StepExecutionAttempt is PipelineStepExecutionAttempt pipeline__)
-                                {
-                                    @pipeline__.PipelineRunId
-                                }
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Pipeline client id</td>
-                            <td>@pipeline.PipelineClientId</td>
-                        </tr>
-                    }
-                    else if (StepExecutionAttempt.StepExecution is ExeStepExecution exe)
-                    {
-                        <tr>
-                            <td>File path</td>
-                            <td>@exe.ExeFileName</td>
-                        </tr>
-                        <tr>
-                            <td>Arguments</td>
-                            <td>@exe.ExeArguments</td>
-                        </tr>
-                        <tr>
-                            <td>Working directory</td>
-                            <td>@exe.ExeWorkingDirectory</td>
-                        </tr>
-                        <tr>
-                            <td>Success exit code</td>
-                            <td>@exe.ExeSuccessExitCode</td>
-                        </tr>
-                        @if (StepExecutionAttempt is ExeStepExecutionAttempt exe_)
-                        {
-                            <tr>
-                                <td>Process id</td>
-                                <td>@exe_.ExeProcessId</td>
-                            </tr>
-                        }
-                    }
-                    else if (StepExecutionAttempt.StepExecution is DatasetStepExecution dataset)
-                    {
-                        <tr>
-                            <td>Group id</td>
-                            <td>@dataset.DatasetGroupId</td>
-                        </tr>
-                        <tr>
-                            <td>Dataset id</td>
-                            <td>@dataset.DatasetId</td>
-                        </tr>
-                        <tr>
-                            <td>Power BI Service id</td>
-                            <td>@dataset.AppRegistrationId</td>
-                        </tr>
-                    }
-                    else if (StepExecutionAttempt.StepExecution is FunctionStepExecution function)
-                    {
-                        <tr>
-                            <td>Function url</td>
-                            <td>@function.FunctionUrl</td>
-                        </tr>
-                        <tr>
-                            <td>Function input</td>
-                            <td><pre class="my-0"><code>@function.FunctionInput</code></pre></td>
-                        </tr>
-                        <tr>
-                            <td>Is durable</td>
-                            <td>@function.FunctionIsDurable</td>
-                        </tr>
-                        <tr>
-                            <td>Function App id</td>
-                            <td>@function.FunctionAppId</td>
-                        </tr>
-                        @if (StepExecutionAttempt is FunctionStepExecutionAttempt function_)
-                        {
-                            <tr>
-                                <td>Instance id</td>
-                                <td>@function_.FunctionInstanceId</td>
-                            </tr>
-                        }
-                    }
-                    else if (StepExecutionAttempt.StepExecution is AgentJobStepExecution agent)
-                    {
-                        <tr>
-                            <td>Agent job name</td>
-                            <td>@agent.AgentJobName</td>
-                        </tr>
-                    }
-                    else if (StepExecutionAttempt.StepExecution is TabularStepExecution tabular)
-                    {
-                        <tr>
-                            <td>Model name</td>
-                            <td>@tabular.TabularModelName</td>
-                        </tr>
-                        <tr>
-                            <td>Table name</td>
-                            <td>@tabular.TabularTableName</td>
-                        </tr>
-                        <tr>
-                            <td>Partition name</td>
-                            <td>@tabular.TabularPartitionName</td>
-                        </tr>
-                    }
-                    else if (StepExecutionAttempt.StepExecution is EmailStepExecution email)
-                    {
-                        <tr>
-                            <td>Recipients</td>
-                            <td>@email.Recipients</td>
-                        </tr>
-                        <tr>
-                            <td>Subject</td>
-                            <td>@email.Subject</td>
-                        </tr>
-                        <tr>
-                            <td>Body</td>
-                            <td>@email.Body</td>
-                        </tr>
-                    }
-                    else if (StepExecutionAttempt.StepExecution is JobStepExecution job)
-                    {
-                        <tr>
-                            <td>Synchronized</td>
-                            <td>@job.JobExecuteSynchronized</td>
-                        </tr>
-                        @if (StepExecutionAttempt is JobStepExecutionAttempt job_)
-                        {
-                            <tr>
-                                <td>Child execution id</td>
-                                <td>
-                                    <a href="executions/@job_.ChildJobExecutionId/list">
-                                        @job_.ChildJobExecutionId
-                                    </a>
-                                </td>
-                            </tr>
-                        }
-                    }
-                    else if (StepExecutionAttempt.StepExecution is QlikStepExecution qlik)
-                    {
-                        <tr>
-                            <td>App id</td>
-                            <td>@qlik.AppId</td>
-                        </tr>
-                        <tr>
-                            <td>Qlik Cloud Client id</td>
-                            <td>@qlik.QlikCloudClientId</td>
-                        </tr>
-                        @if (StepExecutionAttempt is QlikStepExecutionAttempt qlik_)
-                        {
-                            <tr>
-                                <td>Reload id</td>
-                                <td>@qlik_.ReloadId</td>
-                            </tr>
-                        }
-                    }
-                    <tr>
-                        <td>Info messages / outputs</td>
-                        <td>
-                            @foreach (var info in StepExecutionAttempt.InfoMessages)
-                            {
-                                <code class="text-body" style="white-space: pre-wrap; display: block;">
-                                    @info.Message
-                                </code>
-                            }
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Error messages</td>
-                        <td>
-                            @foreach (var error in StepExecutionAttempt.ErrorMessages)
-                            {
-                                <code class="text-danger" style="white-space: pre-wrap; display: block;">
-                                    @error.Message
-                                </code>
-                                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-                                    @if (showErrorStackTrace && !string.IsNullOrWhiteSpace(error.Exception))
-                                    {
-                                        <br />
-                                        <code class="text-body" style="white-space: pre-wrap; display: block;">@error.Exception</code>
-                                    }
-                                </AuthorizeView>
-                            }
-                            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-                                @if (!showErrorStackTrace && StepExecutionAttempt.ErrorMessages.Any(e => !string.IsNullOrEmpty(e.Exception)))
-                                {
-                                    <div class="mt-2">
-                                        <small>
-                                            <a class="text-secondary" href="javascript:void(0);" @onclick="() => showErrorStackTrace = true">
-                                                Stack trace available
-                                            </a>
-                                        </small>
-                                    </div>
-                                }
-                            </AuthorizeView>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Warning messages</td>
-                        <td>
-                            @foreach (var warning in StepExecutionAttempt.WarningMessages)
-                            {
-                                <code class="text-danger" style="white-space: pre-wrap; display: block;">
-                                    @warning.Message
-                                </code>
-                                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-                                    @if (showWarningStackTrace && !string.IsNullOrWhiteSpace(warning.Exception))
-                                    {
-                                        <br />
-                                        <code class="text-body" style="white-space: pre-wrap; display: block;">@warning.Exception</code>
-                                    }
-                                </AuthorizeView>
-                            }
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+                </AuthorizeView>
+            }
+        </dd>
+    </dl>
     <h6>Execution condition parameters</h6>
-    <div class="row">
-        <div class="col">
-            <table class="table table-sm">
-                <tbody class="border-top">
-                    @{
-                        var executionConditionParameters = StepExecutionAttempt.StepExecution.ExecutionConditionParameters
-                            ?? Enumerable.Empty<StepExecutionConditionParameter>();
-                    }
-                    @if (!executionConditionParameters.Any())
-                    {
-                        <tr><td class="small">No execution condition parameters</td></tr>
-                    }
-                    @foreach (var param in StepExecutionAttempt.StepExecution.ExecutionConditionParameters?.OrderBy(p => p.ParameterName) ?? Enumerable.Empty<StepExecutionConditionParameter>())
-                    {
-                        <tr>
-                            <td class="fw-bold w-25">@param.DisplayName</td>
-                            <td>@param.DisplayValue</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-        
-    </div>
+    <dl class="row">
+        @{
+            var executionConditionParameters = StepExecutionAttempt.StepExecution.ExecutionConditionParameters
+                ?? Enumerable.Empty<StepExecutionConditionParameter>();
+        }
+        @foreach (var param in executionConditionParameters.OrderBy(p => p.ParameterName))
+        {
+            <dt class="col-sm-3">
+                @param.DisplayName
+            </dt>
+            <dd class="col-sm-9">
+                @param.DisplayValue
+            </dd>
+        }
+    </dl>
     @if (StepExecutionAttempt.StepExecution is IHasStepExecutionParameters hasParams)
     {
         <h6>Parameters</h6>
-        <div class="row">
-            <div class="col">
-                <table class="table table-sm">
-                    <tbody class="border-top">
-                        @{
-                            var parameters = hasParams.StepExecutionParameters ?? Enumerable.Empty<StepExecutionParameterBase>();
-                        }
-                        @if (!parameters.Any())
-                        {
-                            <tr><td class="small">No parameters</td></tr>
-                        }
-                        @foreach (var param in parameters.OrderBy(p => p.ParameterName))
-                        {
-                            <tr>
-                                <td class="fw-bold w-25">
-                                    @param.DisplayName
-                                </td>
-                                <td>
-                                    @param.DisplayValue
-                                    @if (param.UseExpression && param.ExpressionParameters.Any())
-                                    {
-                                        var expressionParameters = param.ExpressionParameters.Select(p => $"<p><small>{p.ParameterName} = {p.InheritFromExecutionParameter.DisplayValue}</small></p>");
-                                        var content = string.Join("\n", expressionParameters);
-                                        <HxPopover Trigger="PopoverTrigger.Hover" Content="@content" Html>
-                                            <small class="text-decoration-underline ms-2">Expression parameters</small>
-                                        </HxPopover>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        <dl class="row">
+            @{
+                var parameters = hasParams.StepExecutionParameters ?? Enumerable.Empty<StepExecutionParameterBase>();
+            }
+            @foreach (var param in parameters.OrderBy(p => p.ParameterName))
+            {
+                <dt class="col-sm-3">
+                    @param.DisplayName
+                </dt>
+                <dd class="col-sm-9">
+                    @param.DisplayValue
+                    @if (param.UseExpression && param.ExpressionParameters.Any())
+                    {
+                        var expressionParameters = param.ExpressionParameters.Select(p => $"<p><small>{p.ParameterName} = {p.InheritFromExecutionParameter.DisplayValue}</small></p>");
+                        var content = string.Join("\n", expressionParameters);
+                        <HxPopover Trigger="PopoverTrigger.Hover" Content="@content" Html>
+                            <small class="text-decoration-underline ms-2">Expression parameters</small>
+                        </HxPopover>
+                    }
+                </dd>
+            }
+        </dl>
     }
 }
-
 
 @code {
     [Parameter]

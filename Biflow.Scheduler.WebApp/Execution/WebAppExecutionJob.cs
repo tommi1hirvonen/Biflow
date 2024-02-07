@@ -2,6 +2,9 @@
 using Biflow.Executor.Core;
 using Biflow.Scheduler.Core;
 using Microsoft.EntityFrameworkCore;
+using Polly;
+using Polly.Retry;
+using System.Net;
 
 namespace Biflow.Scheduler.WebApp;
 
@@ -23,6 +26,13 @@ public class WebAppExecutionJob(
         .GetSection("WebApp")
         .GetValue<string>("Url") ?? throw new ArgumentNullException(nameof(Url));
 
+    private static readonly AsyncRetryPolicy<HttpResponseMessage> RetryPolicy = Policy
+        // Executor status endpoint returns OK if the execution is running or NotFound if the execution is not running.
+        // Exceptions and other status codes can be considered incorrect results => retry.
+        .HandleResult<HttpResponseMessage>(response => response is not { StatusCode: HttpStatusCode.NotFound or HttpStatusCode.OK})
+        .Or<Exception>()
+        .WaitAndRetryAsync(3, retryCount => TimeSpan.FromMilliseconds(PollingIntervalMs));
+
     protected override async Task StartExecutorAsync(Guid executionId)
     {
         var response = await _httpClient.GetAsync($"{Url}/execution/start/{executionId}");
@@ -37,7 +47,7 @@ public class WebAppExecutionJob(
             do
             {
                 await Task.Delay(PollingIntervalMs);
-                response = await _httpClient.GetAsync($"{Url}/execution/status/{executionId}");
+                response = await RetryPolicy.ExecuteAsync(() => _httpClient.GetAsync($"{Url}/execution/status/{executionId}"));
             } while (response.IsSuccessStatusCode);
         }
         catch (Exception ex)

@@ -89,21 +89,6 @@
         </div>
     </div>
 
-    @if (lastStartedExecutionResponse is not null)
-    {
-        var alertClass = lastStartedExecutionResponse.StartedSuccessfully ? "alert-success" : "alert-danger";
-        var alertIcon = lastStartedExecutionResponse.StartedSuccessfully ? FeatherIcon.CheckCircle : FeatherIcon.XOctagon;
-        var alertMessage = lastStartedExecutionResponse.StartedSuccessfully
-            ? "Execution started successfully"
-            : "Error starting execution";
-
-        <div class="alert @alertClass mt-3 show alert-dismissible col-xl-6" role="alert">
-            <CxIcon Icon="alertIcon" />
-            @alertMessage – <a href="executions/@lastStartedExecutionResponse.ExecutionId/list" class="alert-link">view execution</a>
-            <button type="button" class="btn-close" @onclick="() => lastStartedExecutionResponse = null"></button>
-        </div>
-    }
-
     <div class="row">
         <div class="col-auto mt-3">
             <div class="input-group input-group-sm">
@@ -641,5 +626,5 @@
 <StepHistoryOffcanvas @ref="stepHistoryOffcanvas" />
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-    <ExecuteModal @ref="executeModal" OnExecutionStarted="OnExecutionStarted" />
+    <ExecuteModal @ref="executeModal" />
 </AuthorizeView>

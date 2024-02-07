@@ -126,16 +126,15 @@
 
     private async Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
     {
-        await Task.Delay(50); // needed for the HxInputTags component to behave correctly (reopen dropdown after selecting one tag)
         await EnsureAllTagsInitialized();
         return new InputTagsDataProviderResult
-            {
-                Data = allTags?
-                .Select(t => t.TagName)
-                .Where(t => t.ContainsIgnoreCase(request.UserInput))
-                .Where(t => !tags.Any(tag => t == tag))
-                .OrderBy(t => t) ?? Enumerable.Empty<string>()
-            };
+        {
+            Data = allTags?
+            .Select(t => t.TagName)
+            .Where(t => t.ContainsIgnoreCase(request.UserInput))
+            .Where(t => !tags.Any(tag => t == tag))
+            .OrderBy(t => t) ?? Enumerable.Empty<string>()
+        };
     }
 
     private async Task EnsureAllTagsInitialized()

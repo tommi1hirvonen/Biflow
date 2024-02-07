@@ -1,5 +1,5 @@
 ﻿@inject SqlServerHelperService SqlServerHelperService
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 
 <HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select stored procedure">
     <BodyTemplate>
@@ -129,7 +129,7 @@
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error reading procedures", ex.Message);
+            Toaster.AddError("Error reading procedures", ex.Message);
         }
     }
 

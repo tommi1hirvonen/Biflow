@@ -1,7 +1,7 @@
 ﻿@using System.Data;
 @using System.Text;
 @inject IDbContextFactory<AppDbContext> DbContextFactory
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 
 @if (table is null)
 {
@@ -213,7 +213,7 @@
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error reading Excel file", ex.Message);
+            Toaster.AddError("Error reading Excel file", ex.Message);
         }
         finally
         {
@@ -225,7 +225,7 @@
     {
         if (upload is null)
         {
-            Messenger.AddError("Upload object was null");
+            Toaster.AddError("Upload object was null");
             return;
         }
         try
@@ -248,11 +248,11 @@
             {
                 message.Append("Deleted ").Append(deleted).Append(" record(s)").AppendLine();
             }
-            Messenger.AddInformation("Data updated successfully", message.ToString());
+            Toaster.AddSuccess("Data updated successfully", message.ToString());
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error updating data", ex.Message);
+            Toaster.AddError("Error updating data", ex.Message);
         }
     }
 }

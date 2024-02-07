@@ -1,4 +1,4 @@
-﻿@inject IHxMessengerService Messenger
+﻿@inject ToasterService Toaster
 @inject IHttpClientFactory HttpClientFactory
 
 <HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" Title="Select app" OnClosed="OnClosed">
@@ -158,7 +158,7 @@
 
         if (this.clientId == Guid.Empty)
         {
-            Messenger.AddWarning("No Qlik clients found");
+            Toaster.AddWarning("No Qlik clients found");
             return;
         }
 
@@ -188,7 +188,7 @@
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error getting apps", ex.Message);
+            Toaster.AddError("Error getting apps", ex.Message);
         }
     }
 

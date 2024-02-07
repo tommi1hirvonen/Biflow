@@ -15,11 +15,11 @@ internal class AgentJobStepExecutor(
     : StepExecutor<AgentJobStepExecution, AgentJobStepExecutionAttempt>(logger, dbContextFactory)
 {
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
-    private readonly JsonSerializerOptions _serializerOptions =
-        new() { WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
-
-    protected override AgentJobStepExecutionAttempt AddAttempt(AgentJobStepExecution step, StepExecutionStatus withStatus) =>
-        step.AddAttempt(withStatus);
+    private readonly JsonSerializerOptions _serializerOptions = new()
+    {
+        WriteIndented = true,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+    };
 
     protected override async Task<Result> ExecuteAsync(
         AgentJobStepExecution step,

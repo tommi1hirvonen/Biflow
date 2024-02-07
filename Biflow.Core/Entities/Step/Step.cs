@@ -131,6 +131,7 @@ public abstract class Step : IComparable, IAuditable
 
     public ICollection<Dependency> Dependencies { get; } = new List<Dependency>();
 
+    [JsonIgnore]
     public IEnumerable<Dependency> Depending { get; } = new List<Dependency>();
 
     [ValidateComplexType]

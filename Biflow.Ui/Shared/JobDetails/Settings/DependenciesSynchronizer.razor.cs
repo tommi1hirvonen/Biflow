@@ -6,7 +6,7 @@ public partial class DependenciesSynchronizer : ComponentBase
 {
     [Inject] private IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
 
-    [Inject] private IHxMessengerService Messenger { get; set; } = null!;
+    [Inject] private ToasterService Toaster { get; set; } = null!;
 
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
 
@@ -84,11 +84,11 @@ public partial class DependenciesSynchronizer : ComponentBase
             dependenciesToAdd = null;
             dependenciesToRemove = null;
             SortSteps?.Invoke();
-            Messenger.AddInformation("Changes saved successfully");
+            Toaster.AddSuccess("Changes saved successfully");
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error saving changes", ex.Message);
+            Toaster.AddError("Error saving changes", ex.Message);
         }
     }
 

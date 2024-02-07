@@ -1,4 +1,4 @@
-﻿@inject IHxMessengerService Messenger
+﻿@inject ToasterService Toaster
 @inject SqlServerHelperService SqlServerHelperService
 
 <HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select Analysis Services object">
@@ -230,7 +230,7 @@
 
         if (this.connectionId == Guid.Empty)
         {
-            Messenger.AddWarning("No connections found");
+            Toaster.AddWarning("No connections found");
             return;
         }
 
@@ -250,7 +250,7 @@
         }
         catch (Exception ex)
         {
-            Messenger.AddError("Error reading Analysis Services objects", ex.Message);
+            Toaster.AddError("Error reading Analysis Services objects", ex.Message);
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
-@inject IHxMessengerService Messenger
+@inject ToasterService Toaster
 @inject IMediator Mediator
 
 <PageTitle>Qlik Cloud Clients | Biflow</PageTitle>
@@ -149,7 +149,7 @@
         catch (Exception ex)
         {
             var message = ex.InnerException?.Message ?? ex.Message;
-            Messenger.AddError("Error deleting Qlik Cloud client", message);
+            Toaster.AddError("Error deleting Qlik Cloud client", message);
         }
     }
 

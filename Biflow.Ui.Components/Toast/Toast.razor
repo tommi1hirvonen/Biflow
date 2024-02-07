@@ -1,0 +1,101 @@
+@using Microsoft.AspNetCore.Components.Web
+
+@namespace Biflow.Ui.Components
+
+@implements IDisposable
+
+<div @attributes=@InputAttributes class="toast @ToastClass show @CssClass @(hiding ? "fade-out" : null) @(Title is null ? "d-flex" : null)"
+     role="alert" aria-live="assertive" aria-atomic="true">
+    @if (Title is not null)
+    {
+        <div class="toast-header">
+            <span class="me-2">
+                <CxIcon Icon="Icon" />
+            </span>
+            <strong class="me-auto" style="margin-top: 1px;">
+                @Title
+            </strong>
+            <button type="button" class="btn-close" aria-label="Close" @onclick="HideAsync"></button>
+        </div>    
+    }
+    @if (Title is null)
+    {
+        <span class="ms-2 my-auto">
+            <CxIcon Icon="Icon" />
+        </span>
+    }
+    <div class="toast-body">
+        @ChildContent
+    </div>
+    @if (Title is null)
+    {
+        <button type="button" class="btn-close me-2 m-auto" aria-label="Close" @onclick="HideAsync"></button>
+    }
+</div>
+
+@code {
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object> InputAttributes { get; set; } = new();
+
+    [Parameter] public string? CssClass { get; set; }
+
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter] public string? Title { get; set; }
+
+    [Parameter] public ComponentColor Color { get; set; }
+
+    [Parameter] public int? AutoHideDelay { get; set; }
+
+    [Parameter] public EventCallback OnToastHidden { get; set; }
+
+    private bool hiding;
+    private CancellationTokenSource cts = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && AutoHideDelay is not null)
+        {
+            try
+            {
+                await Task.Delay((int)AutoHideDelay, cts.Token);
+            }
+            catch
+            {
+                return;   
+            }
+            await HideAsync();
+        }
+    }
+
+    private async Task HideAsync()
+    {
+        if (hiding)
+        {
+            return;
+        }
+        cts.Cancel();
+        hiding = true;
+        StateHasChanged();
+        await Task.Delay(300);
+        await OnToastHidden.InvokeAsync();
+    }
+
+    private string ToastClass => Color switch
+    {
+        ComponentColor.Primary => "toast-primary",
+        ComponentColor.Success => "toast-success",
+        ComponentColor.Warning => "toast-warning",
+        ComponentColor.Danger => "toast-danger",
+        _ => ""
+    };
+
+    private IconBase Icon => Color switch
+    {
+        ComponentColor.Success => FeatherIcon.CheckCircle,
+        ComponentColor.Warning => FeatherIcon.AlertTriangle,
+        ComponentColor.Danger => FeatherIcon.AlertOctagon,
+        _ => FeatherIcon.Info
+    };
+
+    public void Dispose() => cts.Dispose();
+}
