@@ -1,6 +1,7 @@
 ﻿using Biflow.Core.Entities;
 using Biflow.Executor.Core;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Quartz;
 using Quartz.Impl.Matchers;
@@ -10,11 +11,31 @@ namespace Biflow.Scheduler.Core;
 internal class SchedulesManager<TJob>(
     ILogger<SchedulesManager<TJob>> logger,
     IDbContextFactory<SchedulerDbContext> dbContextFactory,
-    ISchedulerFactory schedulerFactory) : ISchedulesManager where TJob : ExecutionJobBase
+    ISchedulerFactory schedulerFactory) : BackgroundService, ISchedulesManager
+    where TJob : ExecutionJobBase
 {
     private readonly ILogger _logger = logger;
     private readonly IScheduler _scheduler = schedulerFactory.GetScheduler().GetAwaiter().GetResult();
     private readonly IDbContextFactory<SchedulerDbContext> _dbContextFactory = dbContextFactory;
+    private readonly SemaphoreSlim _semaphore = new(1, 1);
+
+    public bool DatabaseReadError { get; private set; }
+
+    protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+    {
+        do
+        {
+            try
+            {
+                await ReadAllSchedulesAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error reading all schedules at startup");
+            }
+            await Task.Delay(TimeSpan.FromMinutes(15), cancellationToken);
+        } while (DatabaseReadError) ;
+    }
 
     public async Task<IEnumerable<JobStatus>> GetStatusAsync(CancellationToken cancellationToken)
     {
@@ -64,44 +85,60 @@ internal class SchedulesManager<TJob>(
         return jobStatuses;
     }
 
-    public async Task ReadAllSchedules(CancellationToken cancellationToken)
+    public async Task ReadAllSchedulesAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Loading schedules from database");
-
-        List<Schedule> schedules;
         try
         {
-            using var context = _dbContextFactory.CreateDbContext();
-            schedules = await context.Schedules
-                .AsNoTracking()
-                .ToListAsync(cancellationToken: cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error reading schedules from database");
-            throw;
-        }
+            await _semaphore.WaitAsync(cancellationToken);
 
-        // Clear the scheduler if there were any existing jobs or triggers.
-        await _scheduler.Clear(cancellationToken);
+            _logger.LogInformation("Loading schedules from database");
 
-        // Iterate the schedules and add them to the scheduler.
-        var counter = 0;
-        foreach (var schedule in schedules)
-        {
+            List<Schedule> schedules;
             try
             {
-                await CreateAndAddScheduleAsync(SchedulerSchedule.From(schedule), cancellationToken);
+                using var context = _dbContextFactory.CreateDbContext();
+                schedules = await context.Schedules
+                    .AsNoTracking()
+                    .ToListAsync(cancellationToken: cancellationToken);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error adding schedule to internal scheduler");
+                _logger.LogError(ex, "Error reading schedules from database");
                 throw;
             }
-            counter++;
-        }
 
-        _logger.LogInformation("{counter}/{Count} schedules loaded successfully", counter, schedules.Count);
+            // Clear the scheduler if there were any existing jobs or triggers.
+            await _scheduler.Clear(cancellationToken);
+
+            // Iterate the schedules and add them to the scheduler.
+            var counter = 0;
+            foreach (var schedule in schedules)
+            {
+                try
+                {
+                    await CreateAndAddScheduleAsync(SchedulerSchedule.From(schedule), cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error adding schedule to internal scheduler");
+                    throw;
+                }
+                counter++;
+            }
+
+            DatabaseReadError = false;
+
+            _logger.LogInformation("{counter}/{Count} schedules loaded successfully", counter, schedules.Count);
+        }
+        catch
+        {
+            DatabaseReadError = true;
+            throw;
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
     }
 
     public async Task ResumeScheduleAsync(SchedulerSchedule schedule, CancellationToken cancellationToken)

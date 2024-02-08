@@ -55,12 +55,6 @@ app.UseCookiePolicy();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-var schedulerType = app.Configuration.GetSection("Scheduler").GetValue<string>("Type");
-if (schedulerType == "SelfHosted")
-{
-    await app.ReadAllSchedulesAsync();
-}
-
 await app.EnsureAdminUserAsync();
 
 app.Run();

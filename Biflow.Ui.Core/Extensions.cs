@@ -22,21 +22,6 @@ namespace Biflow.Ui.Core;
 
 public static partial class Extensions
 {
-
-    /// <summary>
-    /// If the UI application uses the self-hosted scheduler service to launch executions, this method should be called right before app.Run().
-    /// Loads all schedules from the database to the in-memory scheduler service.
-    /// </summary>
-    /// <param name="app"></param>
-    /// <returns></returns>
-    public static async Task ReadAllSchedulesAsync(this WebApplication app)
-    {
-        // Read all schedules into the schedules manager.
-        using var scope = app.Services.CreateScope();
-        var scheduler = scope.ServiceProvider.GetRequiredService<ISchedulerService>();
-        await scheduler.SynchronizeAsync();
-    }
-
     /// <summary>
     /// Adds authentication services based on settings defined in configuration. Needs to be called after AddUiCoreServices().
     /// </summary>
