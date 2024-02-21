@@ -67,8 +67,6 @@ else if (executorType == "SelfHosted")
     builder.Services.AddSchedulerServices<SelfHostedExecutionJob>();
 }
 
-builder.Services.AddSingleton<StatusTracker>();
-
 var app = builder.Build();
 
 if (useWindowsAuth)
@@ -81,21 +79,6 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-}
-
-// Read all schedules into the schedules manager.
-using (var scope = app.Services.CreateScope())
-{
-    var schedulesManager = scope.ServiceProvider.GetRequiredService<ISchedulesManager>();
-    var statusTracker = scope.ServiceProvider.GetRequiredService<StatusTracker>();
-    try
-    {
-        await schedulesManager.ReadAllSchedules(CancellationToken.None);
-    }
-    catch (Exception)
-    {
-        statusTracker.DatabaseReadError = true;
-    }
 }
 
 if (executorType == "SelfHosted")

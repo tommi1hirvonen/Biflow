@@ -58,24 +58,15 @@ public static class Extensions
         }).WithName("Resume schedule");
 
 
-        app.MapGet("/schedules/synchronize", async (ISchedulesManager schedulesManager, StatusTracker statusTracker) =>
+        app.MapGet("/schedules/synchronize", async (ISchedulesManager schedulesManager) =>
         {
-            try
-            {
-                await schedulesManager.ReadAllSchedules(CancellationToken.None);
-                statusTracker.DatabaseReadError = false;
-            }
-            catch
-            {
-                statusTracker.DatabaseReadError = true;
-                throw;
-            }
+            await schedulesManager.ReadAllSchedulesAsync(CancellationToken.None);
         }).WithName("Synchronize");
 
 
-        app.MapGet("/status", async (StatusTracker statusTracker, ISchedulesManager schedulesManager, CancellationToken cancellationToken) =>
+        app.MapGet("/status", async (ISchedulesManager schedulesManager, CancellationToken cancellationToken) =>
         {
-            return statusTracker.DatabaseReadError
+            return schedulesManager.DatabaseReadError
                 ? throw new ApplicationException("Scheduler is running but has encountered a database read error.")
                 : Results.Ok(await schedulesManager.GetStatusAsync(cancellationToken));
         }).WithName("Status");

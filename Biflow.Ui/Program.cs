@@ -51,15 +51,9 @@ else
 app.UseStaticFiles();
 app.UseAntiforgery();
 app.UseCookiePolicy();
-
+app.MapControllers(); // Needed for MicrosoftIdentityUI
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
-
-var schedulerType = app.Configuration.GetSection("Scheduler").GetValue<string>("Type");
-if (schedulerType == "SelfHosted")
-{
-    await app.ReadAllSchedulesAsync();
-}
 
 await app.EnsureAdminUserAsync();
 

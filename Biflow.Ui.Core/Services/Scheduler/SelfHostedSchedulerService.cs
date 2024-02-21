@@ -6,8 +6,6 @@ public class SelfHostedSchedulerService(ISchedulesManager schedulesManager) : IS
 {
     private readonly ISchedulesManager _schedulesManager = schedulesManager;
 
-    private bool DatabaseReadError { get; set; } = false;
-
     public async Task AddScheduleAsync(Schedule schedule)
     {
         var schedulerSchedule = SchedulerSchedule.From(schedule);
@@ -35,25 +33,13 @@ public class SelfHostedSchedulerService(ISchedulesManager schedulesManager) : IS
     public async Task<SchedulerStatusResponse> GetStatusAsync()
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-        SchedulerStatusResponse response = DatabaseReadError
+        SchedulerStatusResponse response = _schedulesManager.DatabaseReadError
             ? new SchedulerError()
             : new Success(await _schedulesManager.GetStatusAsync(cts.Token));
         return response;
     }
 
-    public async Task SynchronizeAsync()
-    {
-        try
-        {
-            await _schedulesManager.ReadAllSchedules(CancellationToken.None);
-            DatabaseReadError = false;
-        }
-        catch
-        {
-            DatabaseReadError = true;
-            throw;
-        }
-    }
+    public Task SynchronizeAsync() => _schedulesManager.ReadAllSchedulesAsync(CancellationToken.None);
 
     public async Task ToggleScheduleEnabledAsync(Schedule schedule, bool enabled)
     {
