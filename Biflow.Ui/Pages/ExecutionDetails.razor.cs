@@ -21,7 +21,8 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
 
     [Parameter] public Guid? InitialStepId { get; set; }
 
-    private readonly System.Timers.Timer timer = new(5000) { AutoReset = false };
+    private const int TimerIntervalSeconds = 10;
+    private readonly System.Timers.Timer timer = new(TimeSpan.FromSeconds(TimerIntervalSeconds)) { AutoReset = false };
     private readonly HashSet<StepType> stepTypeFilter = [];
     private readonly HashSet<string> tagFilter = [];
     private readonly HashSet<StepExecutionStatus> stepStatusFilter = [];
