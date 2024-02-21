@@ -51,7 +51,7 @@ else
 app.UseStaticFiles();
 app.UseAntiforgery();
 app.UseCookiePolicy();
-
+app.MapControllers(); // Needed for MicrosoftIdentityUI
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

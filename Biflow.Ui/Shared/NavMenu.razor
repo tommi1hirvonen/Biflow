@@ -93,7 +93,7 @@
         else if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.AzureAd)
         {
             <li class="nav-item mt-3">
-                <a class="nav-link" href="MicrosoftIdentity/Account/SignOut">
+                <a class="nav-link" href="javascript:void()" @onclick="@(() => NavigationManager.NavigateTo("MicrosoftIdentity/Account/SignOut", forceLoad: true))">
                     <CxIcon Icon="FeatherIcon.LogOut" />
                     Log out
                 </a>
