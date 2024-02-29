@@ -56,7 +56,7 @@ public abstract class Step : IComparable, IAuditable
             })
             .ToList();
         Tags = other.Tags.ToList();
-        Dependencies = job is null // If step is being copied to the same job, duplicate dependencies.
+        Dependencies = job is null || other.JobId == job.JobId // If step is being copied to the same job, duplicate dependencies.
             ? other.Dependencies.Select(d => new Dependency(d, this)).ToList()
             : [];
         ExecutionConditionParameters = other.ExecutionConditionParameters
