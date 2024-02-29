@@ -23,6 +23,7 @@ builder.Services.AddUiCoreServices(builder.Configuration);
 builder.Services.AddUiCoreAuthentication(builder.Configuration);
 builder.Services.AddValidationServices();
 
+builder.Services.AddControllers(); // Needed for MicrosoftIdentityUI
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddMicrosoftIdentityConsentHandler();
