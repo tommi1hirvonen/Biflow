@@ -4,7 +4,7 @@ using Biflow.Ui.Shared.JobDetails;
 namespace Biflow.Ui.Pages;
 
 [Route("/jobs")]
-public partial class Jobs : ComponentBase
+public partial class Jobs : ComponentBase, IDisposable
 {
     [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
     [Inject] private JobDuplicatorFactory JobDuplicatorFactory { get; set; } = null!;
@@ -17,6 +17,7 @@ public partial class Jobs : ComponentBase
     [CascadingParameter] public UserState UserState { get; set; } = new();
 
     private readonly HashSet<ExecutionStatus> statusFilter = [];
+    private readonly CancellationTokenSource cts = new();
 
     private bool userIsAdminOrEditor;
     private List<Job>? jobs;    
@@ -46,7 +47,7 @@ public partial class Jobs : ComponentBase
             .Include(job => job.Schedules)
             .Include(job => job.Category)
             .OrderBy(job => job.JobName)
-            .ToListAsync();
+            .ToListAsync(cts.Token);
 
         // For admins and editors, show all available job categories.
         ArgumentNullException.ThrowIfNull(AuthenticationState);
@@ -56,7 +57,7 @@ public partial class Jobs : ComponentBase
             categories = await context.JobCategories
                 .AsNoTrackingWithIdentityResolution()
                 .OrderBy(c => c.CategoryName)
-                .ToListAsync();
+                .ToListAsync(cts.Token);
         }
         // For other users, only show categories for jobs they are authorized to see.
         else
@@ -68,7 +69,7 @@ public partial class Jobs : ComponentBase
                 .DistinctBy(c => c.CategoryId)
                 .ToList();
         }
-
+        
         StateHasChanged(); // Render/publish results so far (jobs),
         await LoadLastExecutions(context); // Load last execution status for jobs (possibly heavy operation).
         isLoading = false;
@@ -88,7 +89,7 @@ public partial class Jobs : ComponentBase
                 Key = key,
                 Execution = context.Executions.Where(execution => execution.JobId == key).OrderByDescending(e => e.CreatedOn).First()
             })
-            .ToListAsync();
+            .ToListAsync(cts.Token);
 
         this.lastExecutions = lastExecutions.ToDictionary(e => e.Key, e => e.Execution);
         StateHasChanged();
@@ -248,6 +249,12 @@ public partial class Jobs : ComponentBase
         }
         var noCategoryState = UserState.JobCategoryExpandStatuses.GetOrCreate(Guid.Empty);
         noCategoryState.IsExpanded = false;
+    }
+
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
     }
 
     private class ExpandStatus { public bool IsExpanded { get; set; } = true; }
