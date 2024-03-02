@@ -1,7 +1,7 @@
 ﻿namespace Biflow.Ui.Pages;
 
 [Route("/jobs/{Id:guid}/{DetailsPage}/{InitialStepId:guid?}")]
-public partial class JobDetails : ComponentBase
+public partial class JobDetails : ComponentBase, IDisposable
 {
     [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
@@ -14,6 +14,8 @@ public partial class JobDetails : ComponentBase
     [Parameter] public Guid Id { get; set; }
 
     [Parameter] public Guid? InitialStepId { get; set; }
+
+    private readonly CancellationTokenSource cts = new();
 
     private Job? job;
     private List<Job> jobs = [];
@@ -46,40 +48,40 @@ public partial class JobDetails : ComponentBase
         sqlConnections = await context.SqlConnections
             .AsNoTracking()
             .OrderBy(c => c.ConnectionName)
-            .ToListAsync();
+            .ToListAsync(cts.Token);
         asConnections = await context.AnalysisServicesConnections
             .AsNoTracking()
             .OrderBy(c => c.ConnectionName)
-            .ToListAsync();
+            .ToListAsync(cts.Token);
         pipelineClients = await context.PipelineClients
             .AsNoTracking()
             .OrderBy(df => df.PipelineClientName)
-            .ToListAsync();
+            .ToListAsync(cts.Token);
         appRegistrations = await context.AppRegistrations
             .AsNoTracking()
             .OrderBy(app => app.AppRegistrationName)
-            .ToListAsync();
+            .ToListAsync(cts.Token);
         functionApps = await context.FunctionApps
             .AsNoTracking()
             .OrderBy(app => app.FunctionAppName)
-            .ToListAsync();
+            .ToListAsync(cts.Token);
         qlikCloudClients = await context.QlikCloudClients
             .AsNoTracking()
             .OrderBy(c => c.QlikCloudClientName)
-            .ToListAsync();
+            .ToListAsync(cts.Token);
         job = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Include(job => job.Category)
-            .FirstAsync(job => job.JobId == Id);
+            .FirstAsync(job => job.JobId == Id, cts.Token);
         steps = await BuildStepsQueryWithIncludes(context)
             .Where(step => step.JobId == job.JobId)
             .AsNoTrackingWithIdentityResolution()
-            .ToListAsync();
+            .ToListAsync(cts.Token);
         jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Include(j => j.Category)
             .OrderBy(j => j.JobName)
-            .ToListAsync();
+            .ToListAsync(cts.Token);
         SortSteps();
     }
 
@@ -170,5 +172,11 @@ public partial class JobDetails : ComponentBase
         {
             Toaster.AddError("Error toggling job", ex.Message);
         }
+    }
+
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
     }
 }
