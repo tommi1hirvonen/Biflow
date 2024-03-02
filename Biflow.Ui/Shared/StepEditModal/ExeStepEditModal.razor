@@ -27,7 +27,7 @@
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.File" />
                     </div>
-                    <InputText class="form-control form-control-sm" @bind-Value="Step.ExeFileName"></InputText>
+                    <InputTextArea class="form-control form-control-sm" @bind-Value="Step.ExeFileName" rows="2"></InputTextArea>
                 </div>
             </div>
         </div>
@@ -41,7 +41,7 @@
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Command" />
                     </div>
-                    <InputText class="form-control form-control-sm" @bind-Value="Step.ExeArguments"></InputText>
+                    <InputTextArea class="form-control form-control-sm" @bind-Value="Step.ExeArguments" rows="2"></InputTextArea>
                 </div>
                 <div class="form-text">
                     Arguments can be set dynamically during step execution using step parameters.
