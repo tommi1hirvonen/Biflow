@@ -1,4 +1,6 @@
-﻿@inject IDbContextFactory<AppDbContext> DbFactory
+﻿@implements IDisposable
+
+@inject IDbContextFactory<AppDbContext> DbFactory
 @inject NavigationManager NavigationManager
 
 @if (!string.IsNullOrEmpty(JobName))
@@ -152,6 +154,8 @@
 
     [Parameter] public string? JobName { get; set; }
 
+    private readonly CancellationTokenSource cts = new();
+
     private IEnumerable<ExecutionProjection>? Executions { get; set; }
 
     private const int DefaultMaxExecutions = 50;
@@ -207,7 +211,7 @@
                 e.EndedOn,
                 e.ExecutionStatus,
                 e.StepExecutions.Count()))
-            .ToArrayAsync();
+            .ToArrayAsync(cts.Token);
         CalculateChartDataset();
         StateHasChanged();
     }
@@ -231,4 +235,9 @@
         NavigationManager.NavigateTo($"executions/{executionId}/list");
     }
 
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
+    }
 }
