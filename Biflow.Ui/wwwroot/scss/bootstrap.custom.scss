@@ -522,13 +522,19 @@ $dep-statuses: (
     }
 }
 
+$sidebar-width: 180;
+$sidebar-width-px: $sidebar-width * 1px;
+$main-padding: 15;
+$main-padding-px: $main-padding * 1px;
+$main-padding-left-px: ($sidebar-width + $main-padding) * 1px;
+
 // Sidebar
 .sidebar {
     position: fixed;
     top: 0;
     bottom: 0;
     left: 0;
-    width: 200px;
+    width: $sidebar-width-px;
     z-index: 100; /* Behind the navbar */
     padding: 55px 0 0; /* Height of navbar */
     background-color: var(--bs-body-bg);
@@ -544,8 +550,8 @@ $dep-statuses: (
 
 @media (min-width: 992px) {
     .main {
-        padding-right: 15px !important;
-        padding-left: 215px !important; // (sidebar width) + (padding right)
+        padding-right: $main-padding-px !important;
+        padding-left: $main-padding-left-px !important; // (sidebar width) + (padding right)
     }
 }
 
@@ -633,7 +639,7 @@ $dep-statuses: (
 
 @media (min-width: 992px) {
     .navbar-brand {
-        width: 200px;
+        width: $sidebar-width-px;
     }
 
     // Never collapse the sidebar for wide screens

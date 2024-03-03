@@ -21,6 +21,8 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
 
     [Parameter] public Guid? InitialStepId { get; set; }
 
+    private readonly CancellationTokenSource cts = new();
+
     private const int TimerIntervalSeconds = 10;
     private readonly System.Timers.Timer timer = new(TimeSpan.FromSeconds(TimerIntervalSeconds)) { AutoReset = false };
     private readonly HashSet<StepType> stepTypeFilter = [];
@@ -156,17 +158,17 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
                 join step in context.Steps.Include(s => s.Tags) on exec.StepId equals step.StepId into es
                 from step in es.DefaultIfEmpty()
                 select new { exec, step }
-                ).ToArrayAsync();
+                ).ToArrayAsync(cts.Token);
             foreach (var item in stepExecutions)
             {
                 item.exec.SetStep(item.step);
             }
             execution = stepExecutions.FirstOrDefault()?.exec.Execution;
             job = execution is not null
-                ? await context.Jobs.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(j => j.JobId == execution.JobId)
+                ? await context.Jobs.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(j => j.JobId == execution.JobId, cts.Token)
                 : null;
             schedule = execution?.ScheduleId is not null
-                ? await context.Schedules.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(s => s.ScheduleId == execution.ScheduleId)
+                ? await context.Schedules.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(s => s.ScheduleId == execution.ScheduleId, cts.Token)
                 : null;
             loading = false;
             if (AutoRefresh && (execution?.ExecutionStatus == ExecutionStatus.Running || execution?.ExecutionStatus == ExecutionStatus.NotStarted))
@@ -259,5 +261,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
     {
         timer.Stop();
         timer.Dispose();
+        cts.Cancel();
+        cts.Dispose();
     }
 }

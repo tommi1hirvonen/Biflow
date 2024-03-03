@@ -5,22 +5,22 @@
 <ThemeManager @ref="themeManager" />
 
 <HxDropdownButtonGroup CssClass="ms-auto">
-    <HxDropdownToggleButton Color="ThemeColor.None" CssClass="text-white" style="text-decoration: none;">
+    <HxDropdownToggleButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="m-1 text-white" style="text-decoration: none;">
         @if (ThemeService.IsAuto)
         {
-            <span>
+            <span class="me-1">
                 <CxIcon Icon="LucideIcon.Contrast" />
             </span>
         }
         else if (ThemeService.CurrentTheme == Theme.Dark)
         {
-            <span>
+            <span class="me-1">
                 <CxIcon Icon="FeatherIcon.Moon" />
             </span>
         }
         else
         {
-            <span>
+            <span class="me-1">
                 <CxIcon Icon="FeatherIcon.Sun" />
             </span>
         }

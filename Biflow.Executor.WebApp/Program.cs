@@ -1,4 +1,6 @@
 using Biflow.Executor.Core;
+using Microsoft.AspNetCore.Authentication.Negotiate;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using Serilog;
 
@@ -7,6 +9,27 @@ var builder = WebApplication.CreateBuilder(args);
 if (WindowsServiceHelpers.IsWindowsService())
 {
     builder.Host.UseWindowsService();
+}
+
+builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
+
+var windowsAuth = builder.Configuration.GetSection("Authorization").GetSection("Windows");
+var useWindowsAuth = windowsAuth.Exists();
+
+if (useWindowsAuth)
+{
+    builder.Services.AddAuthorization(options =>
+    {
+        // If a list of Windows users were defined, require authentication for all endpoints.
+        var allowedUsers = windowsAuth.GetSection("AllowedUsers").Get<string[]>();
+        if (allowedUsers is null)
+        {
+            throw new ArgumentNullException(nameof(allowedUsers),
+                "Property AllowedUsers must be defined if Windows Authorization is enabled");
+        }
+        options.FallbackPolicy = new AuthorizationPolicyBuilder().AddRequirements(new UserNamesRequirement(allowedUsers)).Build();
+    });
+    builder.Services.AddSingleton<IAuthorizationHandler, UserNamesHandler>();
 }
 
 if (builder.Configuration.GetSection("Serilog").Exists())

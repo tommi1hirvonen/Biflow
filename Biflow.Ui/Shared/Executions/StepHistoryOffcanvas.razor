@@ -1,6 +1,8 @@
-﻿@inject IDbContextFactory<AppDbContext> DbFactory
+﻿@implements IDisposable
 
-<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Large" Title="@StepName">
+@inject IDbContextFactory<AppDbContext> DbFactory
+
+<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Large" Title="@StepName" OnClosed="OnClosed">
     <BodyTemplate>
         <div class="row">
             <div class="col-auto d-inline-flex align-items-center">
@@ -83,6 +85,7 @@
 </HxOffcanvas>
 
 @code {
+    private CancellationTokenSource cts = new();
     private HxOffcanvas? offcanvas;
     private LineChartDataset? lineChartDataset;
     private IEnumerable<StepExecutionAttempt>? executions;
@@ -119,22 +122,29 @@
     private async Task ReloadAsync()
     {
         var context = await DbFactory.CreateDbContextAsync();
-        executions = await context.StepExecutionAttempts
-            .AsNoTrackingWithIdentityResolution()
-            .IgnoreQueryFilters()
-            .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
-            .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
-            .Include(attempt => attempt.StepExecution)
-            .ThenInclude(step => step.Execution)
-            .ThenInclude(e => e.ExecutionParameters)
-            .Include(e => e.StepExecution)
-            .ThenInclude(e => e.ExecutionConditionParameters)
-            .ThenInclude(p => p.ExecutionParameter)
-            .Where(e => e.StepId == stepId)
-            .OrderByDescending(execution => execution.StepExecution.Execution.CreatedOn)
-            .ThenByDescending(Execution => Execution.StartedOn)
-            .Take(maxExecutions)
-            .ToArrayAsync();
+        try
+        {
+            executions = await context.StepExecutionAttempts
+                .AsNoTrackingWithIdentityResolution()
+                .IgnoreQueryFilters()
+                .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
+                .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
+                .Include(attempt => attempt.StepExecution)
+                .ThenInclude(step => step.Execution)
+                .ThenInclude(e => e.ExecutionParameters)
+                .Include(e => e.StepExecution)
+                .ThenInclude(e => e.ExecutionConditionParameters)
+                .ThenInclude(p => p.ExecutionParameter)
+                .Where(e => e.StepId == stepId)
+                .OrderByDescending(execution => execution.StepExecution.Execution.CreatedOn)
+                .ThenByDescending(Execution => Execution.StartedOn)
+                .Take(maxExecutions)
+                .ToArrayAsync(cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
 
         var datapoints = executions
             .Where(e => e.StartedOn is not null)
@@ -146,5 +156,18 @@
             new LineChartSeries("Avg. duration", datapoints)
         };
         lineChartDataset = new LineChartDataset(series, "min", 0);
+    }
+
+    private void OnClosed()
+    {
+        cts.Cancel();
+        cts.Dispose();
+        cts = new();
+    }
+
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
     }
 }

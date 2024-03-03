@@ -1,5 +1,7 @@
 ﻿@page "/schedules/{Component?}"
 
+@implements IDisposable
+
 @inject IDbContextFactory<AppDbContext> DbFactory
 @inject ToasterService Toaster
 @inject ISchedulerService SchedulerService
@@ -75,7 +77,8 @@ else
     [Parameter] public string? Component { get; set; }
 
     private readonly HashSet<Job> jobFilter = new();
-    
+    private readonly CancellationTokenSource cts = new();
+
     private List<Job>? jobs;
     private List<Schedule>? schedules;
 
@@ -90,14 +93,19 @@ else
         jobs = await context.Jobs
             .Include(j => j.Category)
             .OrderBy(job => job.JobName)
-            .ToListAsync();
+            .ToListAsync(cts.Token);
         schedules = await context.Schedules
             .AsNoTrackingWithIdentityResolution()
             .Include(schedule => schedule.Job)
             .Include(schedule => schedule.Tags)
             .OrderBy(schedule => schedule.Job.JobName)
             .ThenBy(schedule => schedule.ScheduleName)
-            .ToListAsync();
+            .ToListAsync(cts.Token);
     }
 
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
+    }
 }

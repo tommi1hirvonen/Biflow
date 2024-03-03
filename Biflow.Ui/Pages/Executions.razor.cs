@@ -4,11 +4,13 @@ using System.Text.Json;
 namespace Biflow.Ui.Pages;
 
 [Route("/executions")]
-public partial class Executions : ComponentBase, IAsyncDisposable
+public partial class Executions : ComponentBase, IDisposable, IAsyncDisposable
 {
     [Inject] private IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
     [Inject] private IJSRuntime JS { get; set; } = null!;
     [Inject] private ToasterService Toaster { get; set; } = null!;
+
+    private readonly CancellationTokenSource cts = new();
 
     private bool sessionStorageRetrieved = false;
     private bool showSteps = false;
@@ -143,7 +145,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
                     e.EndedOn,
                     e.ExecutionStatus,
                     e.StepExecutions.Count()
-                )).ToArrayAsync();
+                )).ToArrayAsync(cts.Token);
         }
         else
         {
@@ -196,7 +198,7 @@ public partial class Executions : ComponentBase, IAsyncDisposable
                     e.StepExecution.Execution.JobId,
                     job.JobName ?? e.StepExecution.Execution.JobName,
                     step.Tags.ToArray()
-                )).ToArrayAsync();
+                )).ToArrayAsync(cts.Token);
         }
 
         loading = false;
@@ -313,6 +315,12 @@ public partial class Executions : ComponentBase, IAsyncDisposable
         stepFilter = sessionStorage?.StepNames ?? stepFilter;
         stepTypeFilter = sessionStorage?.StepTypes ?? stepTypeFilter;
         tagFilter = sessionStorage?.Tags ?? tagFilter;
+    }
+
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
     }
 
     public async ValueTask DisposeAsync()

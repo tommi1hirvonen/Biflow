@@ -35,9 +35,10 @@
                     &nbsp;&nbsp;
                     vanamo
                 </span>
-                <button class="navbar-toggler position-absolute d-lg-none" type="button" aria-label="Toggle navigation" @onclick="ToggleSidebar">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="my-1 mx-3 d-lg-none text-white" OnClick="ToggleSidebar">
+                    <CxIcon Icon="FeatherIcon.Menu" />
+                    Menu
+                </HxButton>
                 <ThemeDropdown />
                 <ul class="navbar-nav">
                     <li>
