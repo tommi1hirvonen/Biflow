@@ -23,7 +23,7 @@
                     Add category
                 </HxButton>
             </AuthorizeView>
-            <HxButton Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!isLoading" Spinner="isLoading" CssClass="mt-3">
+            <HxButton Color="ThemeColor.Primary" @onclick="LoadLastExecutionsAsync" Enabled="!isLoading" Spinner="isLoading" CssClass="mt-3">
                 <CxIcon Icon="FeatherIcon.RefreshCw" />
                 Refresh
             </HxButton>
@@ -41,12 +41,13 @@
 </div>
 
 <div class="row mt-3">
-    <div class="col-xxl-4 col-xl-5 col-md-6 col-sm-7">
+    <div class="col-xxl-5 col-xl-6 col-md-7 col-sm-8">
         <div class="input-group input-group-sm me-3">
             <div class="input-group-text">
                 <CxIcon Icon="FeatherIcon.Filter" />
             </div>
-            <input type="search" class="form-control" @bind-value="jobNameFilter" @bind-value:event="oninput" placeholder="Filter by name" />
+            <input type="search" class="form-control" @bind-value="jobNameFilter" @bind-value:event="oninput" placeholder="Filter by job name" />
+            <input type="search" class="form-control" @bind-value="stepNameFilter" @bind-value:event="oninput" placeholder="Filter by step name" />
         </div>
     </div>
         
@@ -120,7 +121,8 @@
                         : UserState.JobCategoryExpandStatuses.GetOrCreate(Guid.Empty);
                     var filteredJobs = jobs
                         .Where(j => j.CategoryId == category?.CategoryId)
-                        .Where(j => j.JobName.ContainsIgnoreCase(jobNameFilter));
+                        .Where(j => string.IsNullOrEmpty(jobNameFilter) || j.JobName.ContainsIgnoreCase(jobNameFilter))
+                        .Where(j => string.IsNullOrEmpty(stepNameFilter) || steps.Any(s => s.JobId == j.JobId && (s.StepName?.ContainsIgnoreCase(stepNameFilter) ?? false)));
 
                     var filtersApplied = jobNameFilter.Any() || statusFilter.Any();
                     /* Show all categories even if they do not have jobs in them. Show "No category" only if it has jobs */
