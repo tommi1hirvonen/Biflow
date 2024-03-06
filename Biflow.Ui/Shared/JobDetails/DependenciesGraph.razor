@@ -12,7 +12,7 @@
 
 <PageTitle>@Job?.JobName | Dependencies | Biflow</PageTitle>
 
-@if (Job?.UseDependencyMode == false)
+@if (Job?.ExecutionMode == ExecutionMode.ExecutionPhase)
 {
     <HxAlert Color="ThemeColor.Warning">
         Job is in execution phase mode. Dependencies will not be used during execution.

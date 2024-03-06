@@ -1,4 +1,4 @@
-﻿@if (Execution?.DependencyMode == false)
+﻿@if (Execution?.ExecutionMode == ExecutionMode.ExecutionPhase)
 {
     <HxAlert Color="ThemeColor.Warning" CssClass="mt-3">
         Job executed in execution phase mode. Dependencies have no effect.

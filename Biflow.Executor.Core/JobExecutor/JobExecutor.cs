@@ -86,6 +86,8 @@ internal class JobExecutor(
             return;
         }
 
+        // TODO: IN CASE OF HYBRID EXECUTION MODE, CHECK WHETHER ANY STEP IS DEPENDENT ON A STEP IN SAME JOB WITH HIGHER EXECUTION PHASE => ERROR
+
         // Update execution parameter values for parameters that use expressions.
         try
         {

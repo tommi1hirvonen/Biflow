@@ -156,7 +156,7 @@ public class DatabaseFixture : IAsyncLifetime
             {
                 JobName = "Test job 1",
                 JobDescription = "Test job 1",
-                UseDependencyMode = true,
+                ExecutionMode = ExecutionMode.Dependency,
                 StopOnFirstError = true,
                 MaxParallelSteps = 4,
                 OvertimeNotificationLimitMinutes = 120,
@@ -346,7 +346,7 @@ public class DatabaseFixture : IAsyncLifetime
             {
                 JobName = "Test job 2",
                 JobDescription = "Test job 2",
-                UseDependencyMode = false,
+                ExecutionMode = ExecutionMode.ExecutionPhase,
                 StopOnFirstError = true,
                 MaxParallelSteps = 5,
                 OvertimeNotificationLimitMinutes = 0,

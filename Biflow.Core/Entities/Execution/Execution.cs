@@ -35,7 +35,7 @@ public class Execution
         JobName = job.JobName;
         CreatedOn = DateTimeOffset.Now;
         ExecutionStatus = ExecutionStatus.NotStarted;
-        DependencyMode = job.UseDependencyMode;
+        ExecutionMode = job.ExecutionMode;
         StopOnFirstError = job.StopOnFirstError;
         MaxParallelSteps = job.MaxParallelSteps;
         OvertimeNotificationLimitMinutes = job.OvertimeNotificationLimitMinutes;
@@ -70,7 +70,7 @@ public class Execution
     public ExecutionStatus ExecutionStatus { get; set; }
 
     [Display(Name = "Dependency mode")]
-    public bool DependencyMode { get; private set; }
+    public ExecutionMode ExecutionMode { get; private set; }
 
     [Display(Name = "Stop on first error")]
     public bool StopOnFirstError { get; private set; }

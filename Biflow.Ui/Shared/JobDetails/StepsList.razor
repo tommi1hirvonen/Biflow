@@ -66,7 +66,7 @@
             @if (Job is not null)
             {
                 <div class="alert alert-secondary mb-0 py-2" role="alert">
-                    @if (Job.UseDependencyMode)
+                    @if (Job.ExecutionMode == ExecutionMode.Dependency)
                     {
                         <span>
                             Execution mode:
@@ -75,7 +75,16 @@
                             Dependency mode
                         </span>
                     }
-                    else
+                    else if (Job.ExecutionMode == ExecutionMode.Hybrid)
+                    {
+                        <span>
+                            Execution mode:
+                            &nbsp;
+                            <CxIcon Icon="LucideIcon.Workflow" />
+                            Hybrid mode
+                        </span>
+                    }
+                    else if (Job.ExecutionMode == ExecutionMode.ExecutionPhase)
                     {
                         <span>
                             Execution mode:
@@ -320,7 +329,7 @@
                                     </AuthorizeView>
                                 </div>
                                 <div class="col-xl-2 col-sm-4 col-6 d-inline-flex align-items-center justify-content-start">
-                                    <div class="justify-content-end @(Job.UseDependencyMode ? "text-body-tertiary" : "text-body")">
+                                    <div class="justify-content-end @(Job.ExecutionMode == ExecutionMode.Dependency ? "text-body-tertiary" : "text-body")">
                                         <CxIcon Icon="FeatherIcon.Layers" />
                                         <sup>@item.ExecutionPhase</sup>
                                     </div>

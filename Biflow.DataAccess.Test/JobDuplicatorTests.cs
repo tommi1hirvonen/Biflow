@@ -38,7 +38,7 @@ public class JobDuplicatorTests(DatabaseFixture fixture)
         Assert.NotEmpty(job1Copy.JobParameters);
 
         Assert.Equal(job1.CategoryId, job1Copy.CategoryId);
-        Assert.Equal(job1.UseDependencyMode, job1Copy.UseDependencyMode);
+        Assert.Equal(job1.ExecutionMode, job1Copy.ExecutionMode);
         Assert.Equal(job1.StopOnFirstError, job1Copy.StopOnFirstError);
         Assert.Equal(job1.MaxParallelSteps, job1Copy.MaxParallelSteps);
         Assert.Equal(job1.OvertimeNotificationLimitMinutes, job1Copy.OvertimeNotificationLimitMinutes);

@@ -227,9 +227,9 @@
             .Where(step => !Step?.Dependencies.Any(d => d.DependantOnStepId == step.StepId) ?? true) // Exclude steps which are already listed as dependencies
             ?? Enumerable.Empty<StepProjection>();
 
-    private IEnumerable<StepProjection> FilteredStepsOrdered => Step?.Job.UseDependencyMode switch
+    private IEnumerable<StepProjection> FilteredStepsOrdered => Step?.Job.ExecutionMode switch
     {
-        true => FilteredSteps.OrderBy(step => step,
+        ExecutionMode.Dependency => FilteredSteps.OrderBy(step => step,
             new TopologicalComparer<StepProjection, Guid>(
                 StepSlims.Values,
                 s => s?.StepId ?? Guid.Empty,

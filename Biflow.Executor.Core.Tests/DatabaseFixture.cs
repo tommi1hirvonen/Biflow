@@ -75,7 +75,7 @@ public class DatabaseFixture : IAsyncLifetime
             {
                 JobName = "Test job 1",
                 JobDescription = "Test job 1",
-                UseDependencyMode = true,
+                ExecutionMode = ExecutionMode.Dependency,
                 StopOnFirstError = true,
                 MaxParallelSteps = 4,
                 OvertimeNotificationLimitMinutes = 120,

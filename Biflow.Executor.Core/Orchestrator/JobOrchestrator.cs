@@ -57,9 +57,13 @@ internal class JobOrchestrator : IJobOrchestrator
             .Select(step =>
             {
                 var listener = new StepProcessingListener(this, step);
-                IOrchestrationObserver observer = step.Execution.DependencyMode
-                    ? new DependencyModeObserver(step, listener, _cancellationTokenSources[step])
-                    : new ExecutionPhaseModeObserver(step, listener, _cancellationTokenSources[step]);
+                IOrchestrationObserver observer = step.Execution.ExecutionMode switch
+                {
+                    ExecutionMode.ExecutionPhase => new ExecutionPhaseModeObserver(step, listener, _cancellationTokenSources[step]),
+                    ExecutionMode.Dependency => new DependencyModeObserver(step, listener, _cancellationTokenSources[step]),
+                    ExecutionMode.Hybrid => new HybridModeObserver(step, listener, _cancellationTokenSources[step]),
+                    _ => throw new ApplicationException()
+                };
                 return observer;
             })
             .ToList();

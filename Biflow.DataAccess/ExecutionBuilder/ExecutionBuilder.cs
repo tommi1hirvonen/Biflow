@@ -15,7 +15,7 @@ public partial class ExecutionBuilder : IDisposable
         _execution = _createExecution();
 
         // Guard agains errors in TopologicalStepComparer when encountering cyclic dependencies.
-        if (_execution.DependencyMode)
+        if (_execution.ExecutionMode == ExecutionMode.Dependency)
         {
             try
             {
@@ -36,7 +36,7 @@ public partial class ExecutionBuilder : IDisposable
             .ToArray();
     }
 
-    public bool DependencyMode => _execution.DependencyMode;
+    public ExecutionMode ExecutionMode => _execution.ExecutionMode;
 
     public bool Notify { get => _execution.Notify; set => _execution.Notify = value; }
 
@@ -53,7 +53,7 @@ public partial class ExecutionBuilder : IDisposable
         {
             // Guard agains errors in TopologicalStepExecutionComparer when encountering cyclic dependencies.
             IEnumerable<StepExecution> steps;
-            if (_execution.DependencyMode)
+            if (_execution.ExecutionMode == ExecutionMode.Dependency)
             {
                 try
                 {

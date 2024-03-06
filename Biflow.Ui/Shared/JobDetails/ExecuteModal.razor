@@ -151,11 +151,11 @@
                                                 &nbsp;
                                                 <HighlightableText Text="@step.StepName" PartToHighlight="@executeFilterText" />
                                             </td>
-                                            <td class="@(builder.DependencyMode == true ? "text-body-tertiary" : null)" @onclick="() => step.AddToExecution()">
+                                            <td class="@(builder.ExecutionMode == ExecutionMode.Dependency ? "text-body-tertiary" : null)" @onclick="() => step.AddToExecution()">
                                                 <CxIcon Icon="FeatherIcon.Layers" />
                                                 <sup>@step.ExecutionPhase</sup>
                                             </td>
-                                            @if (builder.DependencyMode == true)
+                                            @if (builder.ExecutionMode is ExecutionMode.Dependency)
                                             {
                                                 <td class="text-end pe-2">
                                                     @if (step.HasDependencies)
@@ -193,7 +193,7 @@
                                                 &nbsp;
                                                 @step.StepName
                                             </td>
-                                            <td class="@(builder.DependencyMode == true ? "text-body-tertiary" : null)">
+                                            <td class="@(builder.ExecutionMode == ExecutionMode.Dependency ? "text-body-tertiary" : null)">
                                                 <CxIcon Icon="FeatherIcon.Layers" />
                                                 <sup>@step.ExecutionPhase</sup>
                                             </td>
@@ -237,7 +237,7 @@
                                                 &nbsp;
                                                 @step.StepName
                                             </td>
-                                            <td class="text-end @(builder.DependencyMode == true ? "text-body-tertiary" : null)">
+                                            <td class="text-end @(builder.ExecutionMode == ExecutionMode.Dependency ? "text-body-tertiary" : null)">
                                                 @step.ExecutionPhase
                                                 &nbsp;
                                                 <CxIcon Icon="FeatherIcon.Layers" />

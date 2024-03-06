@@ -62,7 +62,7 @@
                             &nbsp;
                             @item.StepName
                         </td>
-                        <td class="@(item.DependencyMode ? "text-body-tertiary" : "text-body")" style="">
+                        <td class="@(item.ExecutionMode == ExecutionMode.Dependency ? "text-body-tertiary" : "text-body")" style="">
                             <CxIcon Icon="FeatherIcon.Layers" />
                             <sup>@item.ExecutionPhase</sup>
                         </td>

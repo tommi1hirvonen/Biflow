@@ -212,7 +212,7 @@ else if (builder is null)
                                 <td>
                                     <StepExecutionStatusBadge ExecutionStatus="status" />
                                 </td>
-                                <td class="@(builder?.DependencyMode == true ? "text-body-tertiary" : null)">
+                                <td class="@(builder?.ExecutionMode == ExecutionMode.Dependency ? "text-body-tertiary" : null)">
                                     <CxIcon Icon="FeatherIcon.Layers" />
                                     <sup>@step.ExecutionPhase</sup>
                                 </td>
@@ -236,7 +236,7 @@ else if (builder is null)
                                     &nbsp;
                                     @step.StepName
                                 </td>
-                                <td class="@(builder?.DependencyMode == true ? "text-body-tertiary" : null)">
+                                <td class="@(builder?.ExecutionMode == ExecutionMode.Dependency ? "text-body-tertiary" : null)">
                                     <CxIcon Icon="FeatherIcon.Layers" />
                                     <sup>@step.ExecutionPhase</sup>
                                 </td>

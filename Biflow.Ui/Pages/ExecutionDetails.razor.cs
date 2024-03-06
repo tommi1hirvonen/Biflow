@@ -79,7 +79,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             e.EndedOn,
             e.ExecutionStatus,
             e.StepExecution.Execution.ExecutionStatus,
-            e.StepExecution.Execution.DependencyMode,
+            e.StepExecution.Execution.ExecutionMode,
             e.StepExecution.Execution.ScheduleId,
             e.StepExecution.Execution.JobId,
             job?.JobName ?? e.StepExecution.Execution.JobName,
