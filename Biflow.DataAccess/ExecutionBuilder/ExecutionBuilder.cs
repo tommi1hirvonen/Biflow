@@ -89,16 +89,6 @@ public partial class ExecutionBuilder : IDisposable
         {
             return null;
         }
-        foreach (var step in _execution.StepExecutions)
-        {
-            var toDelete = step.ExecutionDependencies
-                .Where(d => !_execution.StepExecutions.Any(e => d.DependantOnStepId == e.StepId))
-                .ToArray();
-            foreach (var dependency in toDelete)
-            {
-                step.ExecutionDependencies.Remove(dependency);
-            }
-        }
         _context.Executions.Add(_execution);
         await _context.SaveChangesAsync();
         return _execution;
