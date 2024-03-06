@@ -152,7 +152,7 @@
                 }).ToArray();
             edges = Execution.StepExecutions
                 .SelectMany(step => step.ExecutionDependencies)
-                .Where(dep => dep.DependantOnStepExecution is not null)
+                .Where(dep => Execution.StepExecutions.Any(s => dep.DependantOnStepId == s.StepId))
                 .Select(dep => new DependencyGraphEdge(
                     Id: dep.StepId.ToString(),
                     DependsOnId: ((Guid)dep.DependantOnStepId!).ToString(),

@@ -105,7 +105,6 @@ public class DbContextTests(DatabaseFixture fixture)
             .AsNoTrackingWithIdentityResolution()
             .Include(e => e.StepExecutions)
             .ThenInclude(e => e.ExecutionDependencies)
-            .ThenInclude(e => e.DependantOnStepExecution)
             .FirstAsync(e => e.JobName == "Test job 1");
         var step = execution.StepExecutions.First(s => s.StepName == "Test step 4");
         Assert.True(step.ExecutionDependencies.Count != 0);

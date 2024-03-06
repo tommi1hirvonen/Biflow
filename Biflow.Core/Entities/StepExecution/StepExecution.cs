@@ -71,8 +71,6 @@ public abstract class StepExecution
 
     public ICollection<ExecutionDependency> ExecutionDependencies { get; } = new List<ExecutionDependency>();
 
-    public IEnumerable<ExecutionDependency> DependantExecutions { get; } = new List<ExecutionDependency>();
-
     public IEnumerable<StepExecutionConditionParameter> ExecutionConditionParameters { get; } = new List<StepExecutionConditionParameter>();
 
     public IEnumerable<StepExecutionDataObject> DataObjects { get; } = new List<StepExecutionDataObject>();

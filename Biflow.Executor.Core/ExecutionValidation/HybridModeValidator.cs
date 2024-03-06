@@ -55,7 +55,7 @@ internal class HybridModeValidator(
             .AsNoTracking()
             .Where(d => d.Step.JobId == jobId)
             // Dependencies exist where the step's execution phase is lower than the dependent step's execution phase.
-            .Where(d => d.Step.ExecutionPhase < d.DependantOnStep.ExecutionPhase)
+            .Where(d => d.Step.ExecutionPhase < d.DependantOnStep.ExecutionPhase && d.Step.JobId == d.DependantOnStep.JobId)
             .Select(d => new
             {
                 Step = new StepProjection(d.Step.StepId, d.Step.StepName),

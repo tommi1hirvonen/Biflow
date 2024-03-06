@@ -55,7 +55,6 @@ public static class Extensions
             .Where(e => e.ExecutionId == executionId)
             .Include(e => e.StepExecutionAttempts)
             .Include(e => e.ExecutionDependencies)
-            .ThenInclude(e => e.DependantOnStepExecution)
             .Include(e => e.DataObjects)
             .ThenInclude(s => s.DataObject)
             .Include(e => e.ExecutionConditionParameters)
