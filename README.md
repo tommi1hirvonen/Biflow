@@ -1,6 +1,6 @@
 #  Biflow
 
-Biflow is a powerful platform for easy business intelligence (BI) and data platform workflow orchestration built on top of the .NET stack. It integrates with several data related technologies such as
+Biflow is a powerful platform for easy business intelligence (BI) and data platform workflow orchestration built on top of the .NET stack. It includes an easy-to-use web user interface and integrates with several data related technologies such as
 - Microsoft SQL Server (including SSIS and SSAS)
 - Microsoft Azure
   - Azure SQL
@@ -59,8 +59,46 @@ Currently supported step types:
 - Job
     - Start another Biflow job as part of your workflow
 
+## Rationale
 
-## Requirements
+Why should I use Biflow? Can't I already orchestrate my data platform using one of the following tools?
+- SQL Server Agent
+- SSIS
+- Azure Data Factory
+- Airflow
+- etc.
+
+Yes, you can, and we'll get to that shortly. First though, it should be clarified that Biflow *is not an ETL tool*. It focuses on data orchestration, part of which is orchestrating ETL processes. When it comes to implementing the ETL processes themselves, using tools such as SSIS, ADF, Azure Functions and others is obviously the way to go. But tying all these different technologies together and bridging the gaps to create a single orchestration job, that's where Biflow comes in.
+
+Let's look at some common and simple orchestration methods implemented using the previosuly listed tools.
+
+#### SQL Server Agent
+
+In on-premise SQL Server data platforms, SQL Server Agent is often used to at least schedule and sometimes even to orchestrate ETL processes. You can easily run SSIS packages as well as stored procedures and the scheduling capabilities are relatively powerful. It is also extremely reliable. Where SQL Server Agent falls (massively) short is the orchestration part, which is understadable as it was never meant to be one.
+
+All steps in a job are executed sequentially and defining dependencies is almost nonexistent. Your options are to go to the next step, go back to a previous step or exit the job. SQL Server Agent was primarily meant to target administrative tasks (backups, index rebuilds etc.), where orchestration of a large number of steps was rarely the issue.
+
+#### SSIS & ADF
+
+The orchestration capabilities in SSIS and ADF are very similar. With SSIS, you often use the scheduling capabilities of SQL Server Agent and the triggers in ADF are also quite powerful. The way in which you can define dependencies between tasks in SSIS and activities in ADF is also similar and has largely inspired and affected how it works in Biflow too.
+
+The downside in both tools is the fact that dependency management between tasks *is not metadata based* but instead you define dependencies between tasks graphically. This works very well and is highly intuitive with simple jobs with a couple dozen tasks at most. However, when you need to manage dependencies across tens of tasks or even a hundred tasks, these tools are no longer optimal. In fact, in ADF, the maximum number of activities in a pipeline is currently 40. This significantly limits the dependency management between individual tasks when you need to split them in separate pipelines.
+
+#### Airflow
+
+Orchestration is one of the main purposes of Airflow. Shortcomings with the previous tools can be overcome by using Airflow, since you can integrate various technologies and build comples orchestration jobs or DAGs as they are called in Airflow. (Actually, jobs running in dependency mode in Biflow are DAGs too.) You define DAGs by writing Python, making the leveraging of metadata possible for managing dependencies between a large number of tasks. Extensibility is a major advantage of Airflow.
+
+But this flexibility with Airflow comes at a cost. Give a business oriented user access to Airflow and ask them to author a new DAG to orchestrate some ADF pipelines and reports that they might be familiar with. Writing Python to define DAGs and working with Airflow in general requires technical and technological know-how, making it very hard for business users to do anything other than launch predefined DAGs and monitor their execution.
+
+#### Conclusion
+
+Using metadata to define and manage dependencies between tasks makes it possible to author large and complex jobs so that all dependencies can be listed. There is no hard limit to the number of steps or dependencies you can have in a single job in Biflow. Having over a hundred steps in a single job is still very much manageable. This means that the execution of jobs can be optimized to a very high degree and steps towards the end of the job do not lose sight of what may have occurred in the earliest steps of the job. All steps can be executed immediately when they can or skipped if the dependency requirements are not met.
+
+Including an intuitive browser based graphical user interface makes it possible for even non-technical users to author orchestration jobs in Biflow. And even though dependencies are metadata based, they can be visualized to easily see and understand the dependencies of complex jobs. It is also easy to only include selected steps in a manual on-demand execution of jobs. Something that is significantly more involved in SSIS and ADF.
+
+The creation and development of Biflow has largely been informed by my own experiences working with data platforms full-time since 2016. The methods and features in Biflow are informed by the real-life frustrations I've faced using some of the tools mentioned here. Biflow supports orchestrating data platforms in a way that I see being useful, smart and optimal. That also means tight integration with the ETL and data platform technologies I use most often (see supported step types).
+
+## Technical requirements
 
 Some requirements apply depending on whether Biflow is configured to run either on-premise or in Azure but some requirements are common.
 

@@ -23,11 +23,13 @@ public partial class Jobs : ComponentBase, IDisposable
     private List<Job>? jobs;    
     private List<JobCategory>? categories;
     private Dictionary<Guid, Execution>? lastExecutions;
+    private List<StepProjection> steps = [];
     private bool isLoading = false;
     private JobCategoryEditModal? categoryEditModal;
     private JobEditModal? jobEditModal;
     private ExecuteModal? executeModal;
     private string jobNameFilter = "";
+    private string stepNameFilter = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -35,12 +37,22 @@ public partial class Jobs : ComponentBase, IDisposable
         var authState = await AuthenticationState;
         var user = authState.User;
         userIsAdminOrEditor = user.IsInRole(Roles.Admin) || user.IsInRole(Roles.Editor);
-        await LoadData();
+        await LoadDataAsync();
     }
 
-    private async Task LoadData()
+    private async Task LoadDataAsync()
     {
         isLoading = true;
+        await Task.WhenAll(
+            LoadJobsAsync(),
+            LoadLastExecutionsAsync(),
+            LoadStepsAsync());
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private async Task LoadJobsAsync()
+    {
         using var context = await Task.Run(DbFactory.CreateDbContext);
         jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
@@ -69,19 +81,16 @@ public partial class Jobs : ComponentBase, IDisposable
                 .DistinctBy(c => c.CategoryId)
                 .ToList();
         }
-        
-        StateHasChanged(); // Render/publish results so far (jobs),
-        await LoadLastExecutions(context); // Load last execution status for jobs (possibly heavy operation).
-        isLoading = false;
+        StateHasChanged();
     }
 
-    private async Task LoadLastExecutions(AppDbContext context)
+    private async Task LoadLastExecutionsAsync()
     {
-        ArgumentNullException.ThrowIfNull(jobs);
         // Get each job's last execution.
+        using var context = await Task.Run(DbFactory.CreateDbContext);
         var lastExecutions = await context.Executions
             .AsNoTrackingWithIdentityResolution()
-            .Where(execution => jobs.Select(job => job.JobId).Contains(execution.JobId) && execution.StartedOn != null)
+            .Where(execution => context.Jobs.Any(j => j.JobId == execution.JobId) && execution.StartedOn != null)
             .Select(execution => execution.JobId)
             .Distinct()
             .Select(key => new
@@ -90,9 +99,17 @@ public partial class Jobs : ComponentBase, IDisposable
                 Execution = context.Executions.Where(execution => execution.JobId == key).OrderByDescending(e => e.CreatedOn).First()
             })
             .ToListAsync(cts.Token);
-
         this.lastExecutions = lastExecutions.ToDictionary(e => e.Key, e => e.Execution);
         StateHasChanged();
+    }
+
+    private async Task LoadStepsAsync()
+    {
+        using var context = await Task.Run(DbFactory.CreateDbContext);
+        steps = await context.Steps
+            .AsNoTracking()
+            .Select(s => new StepProjection(s.JobId, s.StepName))
+            .ToListAsync(cts.Token);
     }
 
     // Helper method for Dictionary TryGet access
@@ -258,4 +275,6 @@ public partial class Jobs : ComponentBase, IDisposable
     }
 
     private class ExpandStatus { public bool IsExpanded { get; set; } = true; }
+
+    private record StepProjection(Guid JobId, string? StepName);
 }
