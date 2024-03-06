@@ -144,10 +144,10 @@
                                 var steps = Steps
                                     .Where(s => s.JobId == job.JobId)
                                     .ToArray();
-                                IComparer<StepProjection> comparer = job.UseDependencyMode switch
+                                IComparer<StepProjection> comparer = job.ExecutionMode switch
                                 {
-                                    true => new TopologicalStepProjectionComparer(steps),
-                                    false => Comparer<StepProjection>.Default
+                                    ExecutionMode.Dependency => new TopologicalStepProjectionComparer(steps),
+                                    _ => Comparer<StepProjection>.Default
                                 };
                                 var availableSteps = steps
                                     .Where(s => !Subscriptions.Any(sub => s.StepId == sub.StepId))

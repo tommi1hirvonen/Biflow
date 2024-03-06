@@ -82,10 +82,9 @@ else
     private List<Job>? jobs;
     private List<Schedule>? schedules;
 
-    private IEnumerable<Schedule> FilteredSchedules =>
+    private IEnumerable<Schedule>? FilteredSchedules =>
         schedules
-        ?.Where(s => !jobFilter.Any() || jobFilter.Any(f => f.JobId == s.JobId))
-        ?? Enumerable.Empty<Schedule>();
+        ?.Where(s => !jobFilter.Any() || jobFilter.Any(f => f.JobId == s.JobId));
 
     protected override async Task OnInitializedAsync()
     {

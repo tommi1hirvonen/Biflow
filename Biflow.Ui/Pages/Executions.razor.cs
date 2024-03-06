@@ -193,7 +193,7 @@ public partial class Executions : ComponentBase, IDisposable, IAsyncDisposable
                     e.EndedOn,
                     e.ExecutionStatus,
                     e.StepExecution.Execution.ExecutionStatus,
-                    e.StepExecution.Execution.DependencyMode,
+                    e.StepExecution.Execution.ExecutionMode,
                     e.StepExecution.Execution.ScheduleId,
                     e.StepExecution.Execution.JobId,
                     job.JobName ?? e.StepExecution.Execution.JobName,

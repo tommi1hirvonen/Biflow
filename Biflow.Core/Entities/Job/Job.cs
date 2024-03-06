@@ -13,7 +13,7 @@ public class Job : IAuditable
         JobId = Guid.NewGuid();
         JobName = other.JobName;
         JobDescription = other.JobDescription;
-        UseDependencyMode = other.UseDependencyMode;
+        ExecutionMode = other.ExecutionMode;
         StopOnFirstError = other.StopOnFirstError;
         MaxParallelSteps = other.MaxParallelSteps;
         OvertimeNotificationLimitMinutes = other.OvertimeNotificationLimitMinutes;
@@ -75,7 +75,7 @@ public class Job : IAuditable
 
     [Required]
     [Display(Name = "Use dependency mode")]
-    public bool UseDependencyMode { get; set; }
+    public ExecutionMode ExecutionMode { get; set; }
 
     [Required]
     [Display(Name = "Stop on first error")]

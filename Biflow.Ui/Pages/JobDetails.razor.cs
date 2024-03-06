@@ -93,7 +93,7 @@ public partial class JobDetails : ComponentBase, IDisposable
         }
         try
         {
-            if (job.UseDependencyMode)
+            if (job.ExecutionMode == ExecutionMode.Dependency)
             {
                 var comparer = new TopologicalStepComparer(steps);
                 steps.Sort(comparer);

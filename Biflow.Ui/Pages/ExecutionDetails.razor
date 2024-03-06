@@ -270,14 +270,21 @@
                     <tr>
                         <td class="fw-bold">Execution mode</td>
                         <td>
-                            @if (execution.DependencyMode)
+                            @if (execution.ExecutionMode == ExecutionMode.Dependency)
                             {
                                 <span>
                                     <CxIcon Icon="LucideIcon.Workflow" />
                                     Dependency mode
                                 </span>
                             }
-                            else
+                            else if (execution.ExecutionMode == ExecutionMode.Hybrid)
+                            {
+                                <span>
+                                    <CxIcon Icon="LucideIcon.Workflow" />
+                                    Hybrid mode
+                                </span>
+                            }
+                            else if (execution.ExecutionMode == ExecutionMode.ExecutionPhase)
                             {
                                 <span>
                                     <CxIcon Icon="FeatherIcon.Layers" />
@@ -286,7 +293,7 @@
                             }
                         </td>
                     </tr>
-                    @if (!execution.DependencyMode)
+                    @if (execution.ExecutionMode is ExecutionMode.ExecutionPhase or ExecutionMode.Hybrid)
                     {
                         <tr>
                             <td class="fw-bold">Stop on first error</td>

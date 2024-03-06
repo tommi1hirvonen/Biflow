@@ -49,7 +49,7 @@
         jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(job => job.JobName)
-            .Select(j => new JobProjection(j.JobId, j.JobName, j.UseDependencyMode, j.CategoryId, j.Category))
+            .Select(j => new JobProjection(j.JobId, j.JobName, j.ExecutionMode, j.CategoryId, j.Category))
             .ToArrayAsync();
         steps = await context.Steps
             .AsNoTrackingWithIdentityResolution()

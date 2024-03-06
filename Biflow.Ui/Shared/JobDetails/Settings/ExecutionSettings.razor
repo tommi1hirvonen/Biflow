@@ -4,8 +4,8 @@
 <div>
     <div class="form-check">
         <input type="radio" class="form-check-input" id="radio_execution_phase_mode"
-               checked="@(!Job?.UseDependencyMode ?? false ? "checked" : null)"
-               @onchange="() => ToggleDependencyMode(false)">
+               checked="@(Job?.ExecutionMode == ExecutionMode.ExecutionPhase ? "checked" : null)"
+               @onchange="() => ToggleDependencyMode(ExecutionMode.ExecutionPhase)">
         <label class="form-check-label" for="radio_execution_phase_mode">
             <span class="fw-bold">Execution phase mode</span>
             <br>
@@ -14,12 +14,22 @@
     </div>
     <div class="form-check mt-3">
         <input type="radio" class="form-check-input" id="radio_dependency_mode"
-               checked="@(Job?.UseDependencyMode ?? false ? "checked" : null)"
-               @onchange="() => ToggleDependencyMode(true)">
+               checked="@(Job?.ExecutionMode == ExecutionMode.Dependency ? "checked" : null)"
+               @onchange="() => ToggleDependencyMode(ExecutionMode.Dependency)">
         <label class="form-check-label" for="radio_dependency_mode">
             <span class="fw-bold">Dependency mode</span>
             <br>
             <span class="fw-normal">Steps are executed in order based on their dependencies. Steps that have no dependencies are started first. Steps that have no dependencies between them can be executed at the same time. Steps that have dependencies are executed when preceding steps have been completed and the dependency type criteria is met. The execution phase attribute of steps is used to denote the execution priority of otherwise equal steps (lower value = higher priority).</span>
+        </label>
+    </div>
+    <div class="form-check mt-3">
+        <input type="radio" class="form-check-input" id="radio_hybrid_mode"
+               checked="@(Job?.ExecutionMode == ExecutionMode.Hybrid ? "checked" : null)"
+               @onchange="() => ToggleDependencyMode(ExecutionMode.Hybrid)">
+        <label class="form-check-label" for="radio_hybrid_mode">
+            <span class="fw-bold">Hybrid mode</span>
+            <br>
+            <span class="fw-normal">Steps are executed in order based on their execution phase (same as execution phase mode). Additionally, step dependencies are also checked after execution phase conditions are met (dependency mode).</span>
         </label>
     </div>
 </div>
@@ -28,14 +38,14 @@
 <div class="form-check mt-4">
     <input type="checkbox" class="form-check-input" id="stop_on_first_error_toggle"
         checked="@(Job?.StopOnFirstError ?? false ? "checked" : null)"
-        disabled=@(Job?.UseDependencyMode ?? false)
+        disabled=@(Job?.ExecutionMode == ExecutionMode.Dependency)
         @onchange="ToggleStopOnFirstError">
     <label class="form-check-label" for="stop_on_first_error_toggle">
         <span class="fw-bold">Stop on first error</span>
         <br>
-        <span class="fw-normal">Stop the entire execution if a step fails. The steps that have been started will run to completion.</span>
+        <span class="fw-normal">Stop the entire execution if a step fails in a previous execution phase. The steps that have been started will run to completion.</span>
         <br>
-        <span class="fw-normal">Applicable only in execution phase mode.</span>
+        <span class="fw-normal">Applicable only in execution phase and hybrid modes.</span>
     </label>
 </div>
 
@@ -44,18 +54,24 @@
 
     [CascadingParameter(Name = "SortSteps")] public Action? SortSteps { get; set; }
 
-    private async Task ToggleDependencyMode(bool value)
+    private async Task ToggleDependencyMode(ExecutionMode value)
     {
         try
         {
             ArgumentNullException.ThrowIfNull(Job);
             using var context = DbFactory.CreateDbContext();
-            Job.UseDependencyMode = value;
+            Job.ExecutionMode = value;
             await context.Jobs
                 .Where(j => j.JobId == Job.JobId)
-                .ExecuteUpdateAsync(j => j.SetProperty(p => p.UseDependencyMode, Job.UseDependencyMode));
+                .ExecuteUpdateAsync(j => j.SetProperty(p => p.ExecutionMode, Job.ExecutionMode));
             SortSteps?.Invoke();
-            var message = Job.UseDependencyMode ? "Dependency mode toggled successfully" : "Execution phase mode toggled successfully";
+            var message = Job.ExecutionMode switch
+            {
+                ExecutionMode.ExecutionPhase => "Execution phase mode toggled successfully",
+                ExecutionMode.Hybrid => "Hybrid mode toggled successfully",
+                ExecutionMode.Dependency => "Dependency mode toggled successfully",
+                _ => $"Unrecognized execution mode {Job.ExecutionMode}"
+            };
             Toaster.AddSuccess(message);
         }
         catch (Exception ex)

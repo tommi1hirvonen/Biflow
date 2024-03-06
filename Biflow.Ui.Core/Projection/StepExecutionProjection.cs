@@ -14,7 +14,7 @@ public record StepExecutionProjection(
     DateTimeOffset? EndedOn,
     StepExecutionStatus ExecutionStatus,
     ExecutionStatus ParentExecutionStatus,
-    bool DependencyMode,
+    ExecutionMode ExecutionMode,
     Guid? ScheduleId,
     Guid? JobId,
     string JobName,
