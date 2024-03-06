@@ -1,4 +1,5 @@
 ﻿using Biflow.Executor.Core.ConnectionTest;
+using Biflow.Executor.Core.ExecutionValidation;
 using Biflow.Executor.Core.JobExecutor;
 using Biflow.Executor.Core.Notification;
 using Biflow.Executor.Core.Orchestrator;
@@ -25,6 +26,11 @@ public static class Extensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
         services.Configure<EmailOptions>(executorConfiguration);
+
+        services.AddSingleton<IExecutionValidator, CircularJobsValidator>();
+        services.AddSingleton<IExecutionValidator, CircularStepsValidator>();
+        services.AddSingleton<IExecutionValidator, HybridModeValidator>();
+
         services.AddSingleton<ISubscriptionsProviderFactory, SubscriptionsProviderFactory>();
         services.AddSingleton<ISubscribersResolver, SubscribersResolver>();
         services.AddSingleton<IMessageDispatcher, EmailDispatcher>();
