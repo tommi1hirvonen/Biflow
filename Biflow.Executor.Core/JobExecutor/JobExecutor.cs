@@ -86,7 +86,28 @@ internal class JobExecutor(
             return;
         }
 
-        // TODO: IN CASE OF HYBRID EXECUTION MODE, CHECK WHETHER ANY STEP IS DEPENDENT ON A STEP IN SAME JOB WITH HIGHER EXECUTION PHASE => ERROR
+        if (_execution.ExecutionMode == ExecutionMode.Hybrid)
+        {
+            string? illegalSteps;
+            try
+            {
+                illegalSteps = await ReadIllegalHybridModeStepsAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{executionId} Error checking for illegal hybrid mode steps", executionId);
+                await UpdateExecutionFailedAsync("Error checking for possible illegal hybrid mode steps");
+                return;
+            }
+            
+            if (!string.IsNullOrEmpty(illegalSteps))
+            {
+                var errorMessage = "Execution was cancelled because of steps causing infinite wait in hybrid mode:\n" + illegalSteps;
+                _logger.LogError("{executionId} Execution was cancelled because of illegal hybrid mode steps: {circularSteps}", executionId, illegalSteps);
+                await UpdateExecutionFailedAsync(errorMessage);
+                return;
+            }
+        }
 
         // Update execution parameter values for parameters that use expressions.
         try
@@ -217,6 +238,26 @@ internal class JobExecutor(
             .GroupBy(key => key.Step, element => element.DependantOnStep)
             .ToDictionary(g => g.Key, g => g.ToArray());
         return dependencies;
+    }
+
+    private async Task<string?> ReadIllegalHybridModeStepsAsync(CancellationToken cancellationToken)
+    {
+        // Checks for steps that cause infinite waiting in hybrid execution mode.
+        using var context = _dbContextFactory.CreateDbContext();
+        var steps = await context.Dependencies
+            .AsNoTracking()
+            .Where(d => d.Step.JobId == _execution.JobId)
+            // Dependencies exist where the step's execution phase is lower than the dependent step's execution phase.
+            .Where(d => d.Step.ExecutionPhase < d.DependantOnStep.ExecutionPhase)
+            .Select(d => new
+            {
+                Step = new StepProjection(d.Step.StepId, d.Step.StepName),
+                DependantOnStep = new StepProjection(d.DependantOnStep.StepId, d.DependantOnStep.StepName)
+            })
+            .ToListAsync(cancellationToken);
+        return steps.Count > 0
+            ? JsonSerializer.Serialize(steps, _serializerOptions)
+            : null;
     }
 
     private async Task UpdateExecutionFailedAsync(string errorMessage)
