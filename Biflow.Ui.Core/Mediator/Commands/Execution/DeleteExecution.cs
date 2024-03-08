@@ -12,7 +12,6 @@ internal class DeleteExecutionCommandHandler(IDbContextFactory<AppDbContext> dbC
                 .Include(e => e.StepExecutions)
                 .ThenInclude(e => e.ExecutionDependencies)
                 .Include(e => e.StepExecutions)
-                .ThenInclude(e => e.DependantExecutions)
                 .Include($"{nameof(Execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
                 .FirstOrDefaultAsync(e => e.ExecutionId == request.ExecutionId, cancellationToken);
         if (execution is not null)
