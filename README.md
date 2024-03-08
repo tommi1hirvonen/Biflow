@@ -7,20 +7,20 @@
     2. [Technical requirements](#12-technical-requirements)
     3. [Authentication providers](#13-authentication-providers)
     4. [Architecture options](#14-architecture-options)
-3. [Documentation](#3-documentation)
-    1. [Source code solution and project](#31-source-code-solution-and-projects)
-    2. [Execution statuses](#32-execution-statuses)
-        1. [Job execution statuses](#321-possible-job-execution-statuses)
-        2. [Step execution statuses](#322-possible-step-execution-statuses)
-        3. [Step execution lifecycle](#323-step-execution-lifecycle)
-    3. [User roles](#33-user-roles)
-    4. [Encryption](#34-encryption)
-4. [Installation](#4-installation)
-    1. [On-premise](#41-on-premise)
-    2. [Azure (monolithic)](#42-azure-monolithic)
-    3. [Azure (modular)](#43-azure-modular)
-    4. [First use and configuration](#44-first-use-and-configuration)
-5. [Operation and administrative tasks](#5-operation-and-administrative-tasks)
+2. [Documentation](#2-documentation)
+    1. [Source code solution and project](#21-source-code-solution-and-projects)
+    2. [Execution statuses](#22-execution-statuses)
+        1. [Job execution statuses](#221-possible-job-execution-statuses)
+        2. [Step execution statuses](#222-possible-step-execution-statuses)
+        3. [Step execution lifecycle](#223-step-execution-lifecycle)
+    3. [User roles](#23-user-roles)
+    4. [Encryption](#24-encryption)
+3. [Installation](#3-installation)
+    1. [On-premise](#31-on-premise)
+    2. [Azure (monolithic)](#32-azure-monolithic)
+    3. [Azure (modular)](#33-azure-modular)
+    4. [First use and configuration](#34-first-use-and-configuration)
+4. [Operation and administrative tasks](#4-operation-and-administrative-tasks)
 
 
 # 1. Introduction
@@ -190,9 +190,9 @@ The Azure (monolithic) architecture has all the necessary components and service
 
 The Azure (modular) approach closely resembles the on-premise architecture. From the two Azure architectures, this offers significantly more control over updates to different components of the application. All services deployed to Azure can still share the same Linux App Service for cost optimization. Note, that a lightweight Linux virtual machine might also be required for deployment and configuration tasks depending on your Azure networking setup.
 
-# 3. Documentation
+# 2. Documentation
 
-## 3.1. Source code solution and projects
+## 2.1. Source code solution and projects
 
 |Project|Description|
 |-|-|
@@ -208,9 +208,9 @@ The Azure (modular) approach closely resembles the on-premise architecture. From
 |Ui|Blazor Server UI application. Can be configured to host the executor and scheduler services internally.|
 |Utilities|Common utilities library project|
 
-## 3.2. Execution statuses
+## 2.2. Execution statuses
 
-### 3.2.1 Possible job execution statuses
+### 2.2.1 Possible job execution statuses
 
 |Status|Description|
 |-|-|
@@ -222,7 +222,7 @@ The Azure (modular) approach closely resembles the on-premise architecture. From
 |Stopped    |The execution was manually stopped.|
 |Suspended  |There were unstarted steps remaining in the execution when the execution was finished.|
 
-### 3.2.2 Possible step execution statuses
+### 2.2.2 Possible step execution statuses
 
 |Status|Description|
 |-|-|
@@ -239,13 +239,13 @@ The Azure (modular) approach closely resembles the on-premise architecture. From
 |AwaitingRetry|The step is currently waiting for the specified retry interval before it is executed again|
 |Stopped|A user has manually stopped the execution of the entire job or of this specific step.|
 
-### 3.2.3 Step execution lifecycle
+### 2.2.3 Step execution lifecycle
 
 The flowchart below describes the lifecycle and states of a step execution. During the `NotStarted`, `Queued`, `Running` and `AwaitingRetry` states it is possible for a user to cancel/stop the execution of a step. If a stop request is received, the step execution is canceled and the final step execution status will be `Stopped`. Remaining retries will not be attempted after the execution has been stopped. Note however, that if the step is stopped during the `NotStarted` state, the step is stopped and its status updated only after it reaches the `Queued` state.
 
 ![The lifecycle and states of a step execution](/Images/StepExecutionLifecycle.png)*The lifecycle and states of a step execution*
 
-## 3.3. User roles
+## 2.3. User roles
 
 ### Primary roles
 
@@ -291,7 +291,7 @@ Secondary roles can be assigned to non-admin users to extend their user rights.
 #### DataTableMaintainer
 - Allows users to maintain and edit all data tables
 
-## 3.4. Encryption
+## 2.4. Encryption
 
 Data saved and processed by Biflow is not encrypted by default on the database level. If you want to implement database level encryption of sensitive data, this can be achieved using the Always Encrypted feature of SQL Server and Azure SQL Database.
 
@@ -306,11 +306,11 @@ If you want to implement Always Encrypted, these columns are good candidates for
 
 If Always Encrypted is utilized, this should be reflected in the connection strings set in the application settings (AppDbContext). Always Encrypted is enabled with the following connection string property: `Column Encryption Setting=enabled`
 
-# 4. Installation
+# 3. Installation
 
 There are three different installation alternatives: on-premise, Azure (monolithic) and Azure (modular).
 
-## 4.1. On-premise
+## 3.1. On-premise
 
 ### System database
 
@@ -440,7 +440,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
     - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-8.0#configure-https-in-appsettingsjson
 7. Alternatively you can host the UI application using IIS (Internet Information Services).
 
-## 4.2. Azure (monolithic)
+## 3.2. Azure (monolithic)
 
 - Create a new App Service Plan (Linux)
     - Recommended pricing tier B2 or B3
@@ -468,7 +468,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
 - Using System Assigned Managed Identities for authentication to the system database is recommended to avoid having to save sensitive information inside connection strings.
 - Recommended: Apply desired access restrictions to the Web App to allow inbound traffic only from trusted IP addresses or networks.
 
-## 4.3. Azure (modular)
+## 3.3. Azure (modular)
 
 - Create the Azure App Service and UI Web App following the same steps as in the monolithic approach until the configuration stage.
 - Also create two additional Web Apps in the same App Service, one for the scheduler service and the other for the executor service.
@@ -562,7 +562,7 @@ sv)
 admin@biflow-vm:~$ curl -u "$username:$password" https://<executor_web_app_name>.scm.azurewebsites.net/api/logstream
 ```
 
-## 4.4. First use and configuration
+## 3.4. First use and configuration
 
 Some administrative tasks need to be done before the applications are ready for normal operation.
 
@@ -660,11 +660,11 @@ Navigate to the Biflow UI website. You should be able to log in using the accoun
 2. Add the application created in the App registrations section as a Contributor to the Azure Function App resource.
 3. In Biflow, navigate to Settings > Azure Function Apps and add a new Function App with the corresponding information. Note: It can take several minutes for the role changes in Azure to take effect.
 
-# 5. Operation and administrative tasks
+# 4. Operation and administrative tasks
 
 This section provides some useful information regarding normal operation and also administrative tasks.
 
-## 5.1. Executions
+## 4.1. Executions
 
 When job executions are started (either scheduled or manual), the executor service first runs a series of validations on the execution. The executor checks for:
 1. Circular job dependencies caused by job step references (i.e. steps starting another job's execution)
@@ -676,7 +676,7 @@ When job executions are started (either scheduled or manual), the executor servi
 
 If any of the checks fail, the entire execution and all its steps are marked as failed and aborted.
 
-## 5.2. Services
+## 4.2. Services
 
 When starting Biflow services, it is recommended to start them in the following order.
 1. Executor service
