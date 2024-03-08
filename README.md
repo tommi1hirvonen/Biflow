@@ -295,11 +295,11 @@ Data saved and processed by Biflow is not encrypted by default on the database l
 More information about Always Encrypted can be found in <a href="https://docs.microsoft.com/en-us/sql/relational-databases/security/encryption/always-encrypted-database-engine?view=sql-server-ver15">Microsoft’s documentation.</a>
 
 If you want to implement Always Encrypted, these columns are good candidates for encryption:
-- biflow.AccessToken.Token
-- biflow.AppRegistration.ClientSecret
-- biflow.Connection.ConnectionString
-- biflow.FunctionApp.FunctionAppKey
-- biflow.Step.FunctionKey
+- [app].[AccessToken].[Token]
+- [app].[AppRegistration].[ClientSecret]
+- [app].[Connection].[ConnectionString]
+- [app].[FunctionApp].[FunctionAppKey]
+- [app].[Step].[FunctionKey]
 
 If Always Encrypted is utilized, this should be reflected in the connection strings set in the application settings (AppDbContext). Always Encrypted is enabled with the following connection string property: `Column Encryption Setting=enabled`
 
