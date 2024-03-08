@@ -18,8 +18,8 @@
 4. [Installation](#4-installation)
     1. [On-premise](#41-on-premise)
     2. [Azure (monolithic)](#42-azure-monolithic)
-    3. [Azure (distributed)](#43-azure-distributed)
-    4. [First use](#44-first-use)
+    3. [Azure (modular)](#43-azure-modular)
+    4. [First use and configuration](#44-first-use-and-configuration)
 
 
 # 1. Introduction
@@ -173,19 +173,19 @@ Four methods of authentication are supported:
 
 ## 1.4. Architecture options
 
-There are three recommended ways to configure Biflow from an architecture point of view: on-premise, Azure (monolithic) and Azure (distributed). More details about the different architecture options and related setup are given also in the installation section.
+There are three recommended ways to configure Biflow from an architecture point of view: on-premise, Azure (monolithic) and Azure (modular). More details about the different architecture options and related setup are given also in the installation section.
 
 ### On-premise
 
-The on-premise option takes advantage of OS level features such as Windows Services (used for the scheduler/executor services). If an on-premise installation is possible, this is the option that allows for most control of the setup.
+The on-premise option takes advantage of OS level features such as Windows Services to host certain components of the app (the scheduler/executor services). Internet Information Services (IIS) can also be used to host e.g. the user interface app. This makes it easier to configure SSL certificates for accessing the user interface via HTTPS.
 
 ### Azure (monolithic)
 
 The Azure (monolithic) architecture has all the necessary components and services hosted inside one monolithic application. The application is running in an Azure App Service (Linux) as a Web App. This allows for efficient cost minimization through the use of lower tier App Service Plans (B2 and B3).
 
-### Azure (distributed)
+### Azure (modular)
 
-The Azure (distributed) approach closely resembles the on-premise architecture. From the two Azure architectures, this offers significantly more control over updates to different components of the application. All services deployed to Azure can still share the same Linux App Service for cost optimization. Note, that a lightweight Linux virtual machine might also be required for deployment and configuration tasks depending on your Azure networking setup.
+The Azure (modular) approach closely resembles the on-premise architecture. From the two Azure architectures, this offers significantly more control over updates to different components of the application. All services deployed to Azure can still share the same Linux App Service for cost optimization. Note, that a lightweight Linux virtual machine might also be required for deployment and configuration tasks depending on your Azure networking setup.
 
 # 3. Documentation
 
@@ -305,7 +305,7 @@ If Always Encrypted is utilized, this should be reflected in the connection stri
 
 # 4. Installation
 
-There are three different installation alternatives: on-premise, Azure (monolithic) and Azure (distributed).
+There are three different installation alternatives: on-premise, Azure (monolithic) and Azure (modular).
 
 ## 4.1. On-premise
 
@@ -463,7 +463,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
 - Using System Assigned Managed Identities for authentication to the system database is recommended to avoid having to save sensitive information inside connection strings.
 - Recommended: Apply desired access restrictions to the Web App to allow inbound traffic only from trusted IP addresses or networks.
 
-## 4.3. Azure (distributed)
+## 4.3. Azure (modular)
 
 - Create the Azure App Service and UI Web App following the same steps as in the monolithic approach until the configuration stage.
 - Also create two additional Web Apps in the same App Service, one for the scheduler service and the other for the executor service.
@@ -557,7 +557,7 @@ sv)
 admin@biflow-vm:~$ curl -u "$username:$password" https://<executor_web_app_name>.scm.azurewebsites.net/api/logstream
 ```
 
-## 4.4. First use
+## 4.4. First use and configuration
 
 Some administrative tasks need to be done before the applications are ready for normal operation.
 
