@@ -1,5 +1,29 @@
 #  Biflow
 
+### Contents
+
+1. [Introduction](#1-introduction)
+    1. [Rationale](#11-rationale)
+    2. [Technical requirements](#12-technical-requirements)
+    3. [Authentication providers](#13-authentication-providers)
+    4. [Architecture options](#14-architecture-options)
+3. [Documentation](#3-documentation)
+    1. [Source code solution and project](#31-source-code-solution-and-projects)
+    2. [Execution statuses](#32-execution-statuses)
+        1. [Job execution statuses](#321-possible-job-execution-statuses)
+        2. [Step execution statuses](#322-possible-step-execution-statuses)
+        3. [Step execution lifecycle](#323-step-execution-lifecycle)
+    3. [User roles](#33-user-roles)
+    4. [Encryption](#34-encryption)
+4. [Installation](#4-installation)
+    1. [On-premise](#41-on-premise)
+    2. [Azure (monolithic)](#42-azure-monolithic)
+    3. [Azure (distributed)](#43-azure-distributed)
+    4. [First use](#44-first-use)
+
+
+# 1. Introduction
+
 Biflow is a powerful platform for easy business intelligence (BI) and data platform workflow orchestration built on top of the .NET stack. It includes an easy-to-use web user interface and integrates with several data related technologies such as
 - Microsoft SQL Server (including SSIS and SSAS)
 - Microsoft Azure
@@ -59,7 +83,7 @@ Currently supported step types:
 - Job
     - Start another Biflow job as part of your workflow
 
-## Rationale
+## 1.1. Rationale
 
 Why should I use Biflow? Can't I already orchestrate my data platform using one of the following tools?
 - SQL Server Agent
@@ -98,7 +122,7 @@ Including an intuitive browser based graphical user interface makes it possible 
 
 The creation and development of Biflow has largely been informed by my own experiences working with data platforms full-time since 2016. The methods and features in Biflow are informed by the real-life frustrations I've faced using some of the tools mentioned here. Biflow supports orchestrating data platforms in a way that I see being useful, smart and optimal. That also means tight integration with the ETL and data platform technologies I use most often (see supported step types).
 
-## Technical requirements
+## 1.2. Technical requirements
 
 Some requirements apply depending on whether Biflow is configured to run either on-premise or in Azure but some requirements are common.
 
@@ -125,7 +149,7 @@ Some requirements apply depending on whether Biflow is configured to run either 
 - Azure App Service (Linux)
     - Minimum B2 or B3 level is recommended
 
-## Authentication
+## 1.3. Authentication providers
 
 Four methods of authentication are supported:
 - Built-in
@@ -147,7 +171,7 @@ Four methods of authentication are supported:
 
 **Note:** In all cases the list of authorized users and their access role is managed in the application.
 
-## Architecture
+## 1.4. Architecture options
 
 There are three recommended ways to configure Biflow from an architecture point of view: on-premise, Azure (monolithic) and Azure (distributed). More details about the different architecture options and related setup are given also in the installation section.
 
@@ -163,9 +187,9 @@ The Azure (monolithic) architecture has all the necessary components and service
 
 The Azure (distributed) approach closely resembles the on-premise architecture. From the two Azure architectures, this offers significantly more control over updates to different components of the application. All services deployed to Azure can still share the same Linux App Service for cost optimization. Note, that a lightweight Linux virtual machine might also be required for deployment and configuration tasks depending on your Azure networking setup.
 
-# Documentation
+# 3. Documentation
 
-## Source code solution and projects
+## 3.1. Source code solution and projects
 
 |Project|Description|
 |-|-|
@@ -181,9 +205,9 @@ The Azure (distributed) approach closely resembles the on-premise architecture. 
 |Ui|Blazor Server UI application. Can be configured to host the executor and scheduler services internally.|
 |Utilities|Common utilities library project|
 
-## Execution statuses
+## 3.2. Execution statuses
 
-### Possible job execution statuses
+### 3.2.1 Possible job execution statuses
 
 |Status|Description|
 |-|-|
@@ -195,7 +219,7 @@ The Azure (distributed) approach closely resembles the on-premise architecture. 
 |Stopped    |The execution was manually stopped.|
 |Suspended  |There were unstarted steps remaining in the execution when the execution was finished.|
 
-### Possible step execution statuses
+### 3.2.2 Possible step execution statuses
 
 |Status|Description|
 |-|-|
@@ -212,13 +236,13 @@ The Azure (distributed) approach closely resembles the on-premise architecture. 
 |AwaitingRetry|The step is currently waiting for the specified retry interval before it is executed again|
 |Stopped|A user has manually stopped the execution of the entire job or of this specific step.|
 
-<br>
+### 3.2.3 Step execution lifecycle
 
 The flowchart below describes the lifecycle and states of a step execution. During the `NotStarted`, `Queued`, `Running` and `AwaitingRetry` states it is possible for a user to cancel/stop the execution of a step. If a stop request is received, the step execution is canceled and the final step execution status will be `Stopped`. Remaining retries will not be attempted after the execution has been stopped. Note however, that if the step is stopped during the `NotStarted` state, the step is stopped and its status updated only after it reaches the `Queued` state.
 
 ![The lifecycle and states of a step execution](/Images/StepExecutionLifecycle.png)*The lifecycle and states of a step execution*
 
-## User Roles
+## 3.3. User roles
 
 - Viewer
     - Can view
@@ -242,7 +266,7 @@ The flowchart below describes the lifecycle and states of a step execution. Duri
         - Can manage other users' subscriptions
         - Can view stack traces of failed and cancelled steps (when available)
 
-## Encryption
+## 3.4. Encryption
 
 Data saved and processed by Biflow is not encrypted by default on the database level. If you want to implement database level encryption of sensitive data, this can be achieved using the Always Encrypted feature of SQL Server and Azure SQL Database.
 
@@ -257,11 +281,11 @@ If you want to implement Always Encrypted, these columns are good candidates for
 
 If Always Encrypted is utilized, this should be reflected in the connection strings set in the application settings (AppDbContext). Always Encrypted is enabled with the following connection string property: `Column Encryption Setting=enabled`
 
-# Installation
+# 4. Installation
 
 There are three different installation alternatives: on-premise, Azure (monolithic) and Azure (distributed).
 
-## On-premise
+## 4.1. On-premise
 
 ### System database
 
@@ -389,7 +413,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
     - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-8.0#configure-https-in-appsettingsjson
 7. Alternatively you can host the UI application using IIS (Internet Information Services).
 
-## Azure (monolithic)
+## 4.2. Azure (monolithic)
 
 - Create a new App Service Plan (Linux)
     - Recommended pricing tier B2 or B3
@@ -417,7 +441,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
 - Using System Assigned Managed Identities for authentication to the system database is recommended to avoid having to save sensitive information inside connection strings.
 - Recommended: Apply desired access restrictions to the Web App to allow inbound traffic only from trusted IP addresses or networks.
 
-## Azure (distributed)
+## 4.3. Azure (distributed)
 
 - Create the Azure App Service and UI Web App following the same steps as in the monolithic approach until the configuration stage.
 - Also create two additional Web Apps in the same App Service, one for the scheduler service and the other for the executor service.
@@ -511,7 +535,7 @@ sv)
 admin@biflow-vm:~$ curl -u "$username:$password" https://<executor_web_app_name>.scm.azurewebsites.net/api/logstream
 ```
 
-## First use
+## 4.4. First use
 
 Some administrative tasks need to be done before the applications are ready for normal operation.
 
