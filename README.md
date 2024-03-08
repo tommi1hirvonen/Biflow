@@ -244,27 +244,49 @@ The flowchart below describes the lifecycle and states of a step execution. Duri
 
 ## 3.3. User roles
 
-- Viewer
-    - Can view
-        - Job details
-        - Step details
-        - Schedules
-        - Executions
-    - Can subscribe for notifications
-- Operator
-    - In addition to the same rights as the Viewer role
-        - Can manage schedules
-        - Can execute jobs manually
-        - Can edit job parameters
+### Primary roles
 
-- Editor
-    - In addition to the same rights as the Operator role
-        - Can edit jobs and steps
-- Admin
-    - In addition to the same rights as the Editor role
-        - Can manage users and global settings
-        - Can manage other users' subscriptions
-        - Can view stack traces of failed and cancelled steps (when available)
+Users can have one and only one primary role assigned to them. Adding users without a primary role is not supported.
+
+#### Viewer
+
+Viewer users can
+- view
+    - job details
+    - step details
+    - schedules
+    - executions
+- subscribe to jobs and steps for execution notifications
+#### Operator
+In addition to the same rights as the viewer role, operators can
+- manage (create, edit & delete) schedules
+- execute jobs manually on demand
+- edit job parameters
+
+#### Editor
+In addition to the same rights as the operator role, editors can
+- manage (create, edit & delete) all jobs and steps
+- view stack traces of failed and cancelled steps (when available)
+
+#### Admin
+In addition to the same rights as the editor role, admins can
+- manage users and global settings
+- manage other users' subscriptions
+
+### Secondary roles
+
+Secondary roles can be assigned to non-admin users to extend their user rights.
+
+#### SettingsEditor
+- Allows users to manage endpoint settings
+    - SQL and tabular connections
+    - Data Factory instances
+    - Function Apps
+    - Qlik Cloud endpoints
+    - Storage account endpoints
+
+#### DataTableMaintainer
+- Allows users to maintain and edit all data tables
 
 ## 3.4. Encryption
 
