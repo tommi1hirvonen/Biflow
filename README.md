@@ -20,6 +20,7 @@
     2. [Azure (monolithic)](#42-azure-monolithic)
     3. [Azure (modular)](#43-azure-modular)
     4. [First use and configuration](#44-first-use-and-configuration)
+5. [Operation and administrative tasks](#5-operation-and-administrative-tasks)
 
 
 # 1. Introduction
@@ -654,3 +655,51 @@ Navigate to the Biflow UI website. You should be able to log in using the accoun
 1. Navigate to the Azure Function App resource and go to Access control (IAM).
 2. Add the application created in the App registrations section as a Contributor to the Azure Function App resource.
 3. In Biflow, navigate to Settings > Azure Function Apps and add a new Function App with the corresponding information. Note: It can take several minutes for the role changes in Azure to take effect.
+
+# 5. Operation and administrative tasks
+
+This section provides some useful information regarding normal operation and also administrative tasks.
+
+## 5.1. Executions
+
+When job executions are started (either scheduled or manual), the executor service first runs a series of validations on the execution. The executor checks for:
+1. Circular job dependencies caused by job step references (i.e. steps starting another job's execution)
+    - These can cause infinite execution loops and they are considered a user error (incorrect job & step definitions).
+2. Circular step dependencies
+    - These can cause infinite waits when step dependencies are being checked after the execution has started.
+3. Illegal hybrid mode steps
+    - In hybrid execution mode, steps in lower execution phases cannot depend on steps in higher execution phases, as this too would cause infinite wait.
+
+If any of the checks fail, the entire execution and all its steps are marked as failed and aborted.
+
+## 5.2. Services
+
+When starting Biflow services, it is recommended to start them in the following order.
+1. Executor service
+2. Scheduler service
+3. User interface service
+
+The executor service does not depend on the scheduler or the UI, so it should be started first. The scheduler depends on the executor service and should be started next. The UI depends on both the executor and scheduler services and should be started last.
+
+The scheduler service can operate even if the executor service is not running, but scheduled executions cannot be started until the executor service is running. The UI can also operate even if both services are down, but executions cannot be started manually and schedules cannot be managed.
+
+When shutting down services, the recommended order is reversed.
+1. User interface
+2. Scheduler
+3. Executor
+
+### Executor service
+
+The executor services does not run any major startup tasks. It does validate the executor settings (max parallel tasks, polling interval etc.) defined in `appsettings.json` or in app configurations in Azure. If the settings do not pass validation, the service will not start.
+
+When the executor service is shut down, it will immediately send cancel commands to all steps currently being managed. If all steps are successfully canceled in 20 seconds, the service will shut down gracefully. After 20 seconds the service will forcefully shut down and abandon any steps that may have been left running. This may leave some steps and execution logs in an undefined state. Usually though 20 seconds should be enough for a graceful shutdown, if the polling interval is not too long.
+
+### Scheduler service
+
+On startup, the scheduler service reads all schedules from the app database and adds them to the internal scheduler. Disabled schedules are added as paused. If reading the schedules fails, the service will reattempt every 15 minutes until schedules are read successfully. The app database should thus be available at least soon after the scheduler service is started.
+
+For various maintenance reasons (data platform service break, software updates etc.), all schedules may need to be disabled temporarily to prevent new executions from being started. This can achieved easily, efficiently and securely by shutting down the scheduler service. This guarantees that no new executions are started when the scheduler service is not running while also allowing the executor service to complete running executions.
+
+### User interface service
+
+The user interface service runs the admin user check on startup (see the AdminUser section of the user interface app settings).
