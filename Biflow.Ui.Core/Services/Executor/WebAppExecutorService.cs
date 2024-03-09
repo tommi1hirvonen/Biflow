@@ -24,6 +24,11 @@ public class WebAppExecutorService(IConfiguration configuration, IHttpClientFact
         var encodedUsername = HttpUtility.UrlEncode(username);
         var url = $"{Url}/execution/stop/{executionId}/{stepId}?username={encodedUsername}";
         var response = await _httpClient.GetAsync(url);
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            var message = await response.Content.ReadAsStringAsync();
+            throw new Exception(message);
+        }
         response.EnsureSuccessStatusCode();
     }
 
@@ -32,6 +37,11 @@ public class WebAppExecutorService(IConfiguration configuration, IHttpClientFact
         var encodedUsername = HttpUtility.UrlEncode(username);
         var url = $"{Url}/execution/stop/{executionId}?username={encodedUsername}";
         var response = await _httpClient.GetAsync(url);
+        if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            var message = await response.Content.ReadAsStringAsync();
+            throw new Exception(message);
+        }
         response.EnsureSuccessStatusCode();
     }
 }

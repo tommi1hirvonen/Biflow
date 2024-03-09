@@ -1,4 +1,5 @@
 ﻿using Biflow.Executor.Core.ConnectionTest;
+using Biflow.Executor.Core.Exceptions;
 using Biflow.Executor.Core.ExecutionValidation;
 using Biflow.Executor.Core.JobExecutor;
 using Biflow.Executor.Core.Notification;
@@ -60,19 +61,43 @@ public static class Extensions
     {
         app.MapGet("/execution/start/{executionId}", async (Guid executionId, IExecutionManager executionManager) =>
         {
-            await executionManager.StartExecutionAsync(executionId);
+            try
+            {
+                await executionManager.StartExecutionAsync(executionId);
+                return Results.Ok();
+            }
+            catch (DuplicateExecutionException ex)
+            {
+                return Results.Conflict(ex.Message);
+            }
         }).WithName("StartExecution");
 
 
         app.MapGet("/execution/stop/{executionId}", (Guid executionId, string username, IExecutionManager executionManager) =>
         {
-            executionManager.CancelExecution(executionId, username);
+            try
+            {
+                executionManager.CancelExecution(executionId, username);
+                return Results.Ok();
+            }
+            catch (ExecutionNotFoundException ex)
+            {
+                return Results.NotFound(ex.Message);
+            }
         }).WithName("StopExecution");
 
 
         app.MapGet("/execution/stop/{executionId}/{stepId}", (Guid executionId, Guid stepId, string username, IExecutionManager executionManager) =>
         {
-            executionManager.CancelExecution(executionId, username, stepId);
+            try
+            {
+                executionManager.CancelExecution(executionId, username, stepId);
+                return Results.Ok();
+            }
+            catch (ExecutionNotFoundException ex)
+            {
+                return Results.NotFound(ex.Message);
+            }
         }).WithName("StopExecutionStep");
 
 
