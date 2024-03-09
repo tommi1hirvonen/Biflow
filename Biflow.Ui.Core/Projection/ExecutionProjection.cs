@@ -8,6 +8,8 @@ public record ExecutionProjection(
     Guid? JobId,
     string JobName,
     Guid? ScheduleId,
+    string? ScheduleName,
+    string? CreatedBy,
     DateTimeOffset CreatedOn,
     DateTimeOffset? StartedOn,
     DateTimeOffset? EndedOn,

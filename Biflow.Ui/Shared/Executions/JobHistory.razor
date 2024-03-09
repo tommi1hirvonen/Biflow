@@ -66,6 +66,9 @@
             <thead>
                 <tr>
                     <th>
+                        Created by
+                    </th>
+                    <th>
                         Started
                     </th>
                     <th>
@@ -84,6 +87,7 @@
                 <tr>
                     <th></th>
                     <th></th>
+                    <th></th>
                     <th><text>@AverageDurationInSeconds.SecondsToReadableFormat()</text></th>
                     <th></th>
                     <th></th>
@@ -95,7 +99,7 @@
                 }
                 @if (this.executions is null)
                 {
-                    <tr><td colspan="7" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
+                    <tr><td colspan="6" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                 }
                 else if (!executions.Any())
                 {
@@ -119,6 +123,16 @@
                     @foreach (var item in FilteredExecutions)
                     {
                         <tr style="cursor: pointer;" @onclick="() => GoToExecutionDetails(item.ExecutionId)">
+                            <td class="small">
+                                @if (!string.IsNullOrEmpty(item.ScheduleName))
+                                {
+                                    <span>@item.ScheduleName</span>
+                                }
+                                else if (!string.IsNullOrEmpty(item.CreatedBy))
+                                {
+                                    <span>@item.CreatedBy</span>
+                                }
+                            </td>
                             <td>
                                 @item.StartedOn?.LocalDateTime
                             </td>
@@ -202,6 +216,8 @@
                 e.JobId,
                 e.JobName,
                 e.ScheduleId,
+                e.ScheduleName,
+                e.CreatedBy,
                 e.CreatedOn,
                 e.StartedOn,
                 e.EndedOn,
