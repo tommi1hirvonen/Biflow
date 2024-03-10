@@ -522,11 +522,14 @@ There are three different installation alternatives: on-premise, Azure (monolith
     - This VM is used to configure and deploy the application files to the Web App resources.
     - Attach the virtual machine to the default subnet of the virtual network created in the previous step.
     - Allow SSH traffic from your desired IP addresses or networks to the virtual machine.
-- Apply access restrictions to the UI app to allow inbound traffic only from trusted IP addresses or networks.
+- Apply access restrictions to the UI app to allow inbound traffic only from trusted IP addresses or networks (e.g. company VPN or local network).
 - Create a new subnet in the virtual network (e.g. biflow-subnet).
+    - If the default subnet has IPV4 range of 10.0.0.0/24, the new subnet may have a range of 10.0.1.0/24.
+    - Delegated to: Microsoft.Web/serverFarms
     - Configure the UI and scheduler applications' outbound traffic to route through the previously created virtual network subnet (biflow-subnet).
 - Configure private endpoints for the inbound traffic of the scheduler and executor applications.
     - Create the private endpoints in the default subnet of the virtual network.
+    - Disable public network access.
 - Add service endpoints for the following services to the virtual network (subnet biflow-vcfidw):
     - Microsoft.AzureActiveDirectory
     - Microsoft.Sql
