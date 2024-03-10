@@ -600,11 +600,9 @@ admin@biflow-vm:~$ curl https://<scheduler_web_app_name>.azurewebsites.net/statu
 The log streams for the UI application should be available from the Azure portal since network traffic to the app should be allowed from your location. The executor and scheduler applications' logs can be viewed from the VM using the following command templates. The commands shown here are for the executor application.
 
 ```
-admin@biflow-vm:~$ username=$(az webapp deployment list-publishing-credentials --name <executor_web_app_name> --resource-group <resource_group_name> --query publishingUserName -o t
-sv)
+admin@biflow-vm:~$ username=$(az webapp deployment list-publishing-credentials --name <executor_web_app_name> --resource-group <resource_group_name> --query publishingUserName -o tsv)
 
-admin@biflow-vm:~$ password=$(az webapp deployment list-publishing-credentials --name <executor_web_app_name> --resource-group <resource_group_name> --query publishingPassword -o t
-sv)
+admin@biflow-vm:~$ password=$(az webapp deployment list-publishing-credentials --name <executor_web_app_name> --resource-group <resource_group_name> --query publishingPassword -o tsv)
 
 admin@biflow-vm:~$ curl -u "$username:$password" https://<executor_web_app_name>.scm.azurewebsites.net/api/logstream
 ```
