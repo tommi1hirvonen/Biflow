@@ -18,6 +18,8 @@ if (builder.Configuration.GetSection("Serilog").Exists())
     builder.Logging.AddSerilog(logger, dispose: true);
 }
 
+builder.Services.AddApplicationInsightsTelemetry();
+
 // Adds all necessary core Biflow UI services.
 builder.Services.AddUiCoreServices(builder.Configuration);
 builder.Services.AddUiCoreAuthentication(builder.Configuration);

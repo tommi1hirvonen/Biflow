@@ -29,6 +29,8 @@ else
     builder = WebApplication.CreateBuilder(args);
 }
 
+builder.Services.AddApplicationInsightsTelemetry();
+
 builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
 
 var windowsAuth = builder.Configuration.GetSection("Authorization").GetSection("Windows");
