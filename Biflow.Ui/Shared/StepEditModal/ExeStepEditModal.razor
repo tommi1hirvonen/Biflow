@@ -78,6 +78,37 @@
             </div>
         </div>
 
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Run as</label>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <CxIcon Icon="FeatherIcon.User" />
+                    </div>
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.Domain" placeholder="Domain" style="max-width: 12rem;"></InputText>
+                    <div class="input-group-text">
+                        \
+                    </div>
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.Username" placeholder="Username"></InputText>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+            </div>
+            <div class="col-md-6">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <CxIcon Icon="FeatherIcon.Key" />
+                    </div>
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.Password" type="password" placeholder="Password"></InputText>
+                </div>
+            </div>
+        </div>
+
         <StepParametersEditor Step="Step" NewParameterDelegate="() => new() { Step = Step }" />
     }
 </StepEditModalTemplate>
