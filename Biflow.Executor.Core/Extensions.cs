@@ -60,7 +60,7 @@ public static class Extensions
 
     public static WebApplication MapExecutorEndpoints(this WebApplication app)
     {
-        app.MapGet("/execution/start/{executionId}", async (Guid executionId, IExecutionManager executionManager) =>
+        app.MapGet("/executions/start/{executionId}", async (Guid executionId, IExecutionManager executionManager) =>
         {
             try
             {
@@ -74,7 +74,7 @@ public static class Extensions
         }).WithName("StartExecution");
 
 
-        app.MapGet("/execution/stop/{executionId}", (Guid executionId, string username, IExecutionManager executionManager) =>
+        app.MapGet("/executions/stop/{executionId}", (Guid executionId, string username, IExecutionManager executionManager) =>
         {
             try
             {
@@ -88,7 +88,7 @@ public static class Extensions
         }).WithName("StopExecution");
 
 
-        app.MapGet("/execution/stop/{executionId}/{stepId}", (Guid executionId, Guid stepId, string username, IExecutionManager executionManager) =>
+        app.MapGet("/executions/stop/{executionId}/{stepId}", (Guid executionId, Guid stepId, string username, IExecutionManager executionManager) =>
         {
             try
             {
@@ -102,7 +102,7 @@ public static class Extensions
         }).WithName("StopExecutionStep");
 
 
-        app.MapGet("/execution/status/{executionId}", (Guid executionId, IExecutionManager executionManager) =>
+        app.MapGet("/executions/status/{executionId}", (Guid executionId, IExecutionManager executionManager) =>
         {
             return executionManager.IsExecutionRunning(executionId)
                 ? Results.Ok()
@@ -110,7 +110,7 @@ public static class Extensions
         }).WithName("ExecutionStatus");
 
 
-        app.MapGet("/execution/status", (bool? includeSteps, IExecutionManager executionManager) =>
+        app.MapGet("/executions/status", (bool? includeSteps, IExecutionManager executionManager) =>
         {
             var executions = executionManager.CurrentExecutions
                 .Select(e =>

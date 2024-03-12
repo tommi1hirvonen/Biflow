@@ -40,7 +40,7 @@ public static class Extensions
         }).WithName("Update schedule");
 
 
-        app.MapPost("/jobs/remove", async (SchedulerJob job, ISchedulesManager schedulesManager) =>
+        app.MapPost("/schedules/removejob", async (SchedulerJob job, ISchedulesManager schedulesManager) =>
         {
             await schedulesManager.RemoveJobAsync(job, CancellationToken.None);
         }).WithName("Remove job");
@@ -64,7 +64,7 @@ public static class Extensions
         }).WithName("Synchronize");
 
 
-        app.MapGet("/status", async (ISchedulesManager schedulesManager, CancellationToken cancellationToken) =>
+        app.MapGet("/schedules/status", async (ISchedulesManager schedulesManager, CancellationToken cancellationToken) =>
         {
             return schedulesManager.DatabaseReadError
                 ? throw new ApplicationException("Scheduler is running but has encountered a database read error.")
