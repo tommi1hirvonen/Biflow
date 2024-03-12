@@ -53,6 +53,12 @@ public class ExeStep : Step, IHasTimeout, IHasStepParameters<ExeStepParameter>
     [Display(Name = "Success exit code")]
     public int? ExeSuccessExitCode { get; set; }
 
+    public string? Domain { get; set; }
+
+    public string? Username { get; set; }
+
+    public string? Password { get; set; }
+
     [ValidateComplexType]
     public IList<ExeStepParameter> StepParameters { get; } = new List<ExeStepParameter>();
 

@@ -22,6 +22,9 @@ public class ExeStepExecution : StepExecution,
         ExeWorkingDirectory = step.ExeWorkingDirectory;
         ExeSuccessExitCode = step.ExeSuccessExitCode;
         TimeoutMinutes = step.TimeoutMinutes;
+        Domain = step.Domain;
+        Username = step.Username;
+        Password = step.Password;
 
         StepExecutionParameters = step.StepParameters
             .Select(p => new ExeStepExecutionParameter(p, this))
@@ -44,6 +47,12 @@ public class ExeStepExecution : StepExecution,
     public int? ExeSuccessExitCode { get; private set; }
 
     public double TimeoutMinutes { get; private set; }
+
+    public string? Domain { get; private set; }
+
+    public string? Username { get; private set; }
+
+    public string? Password { get; private set; }
 
     public IEnumerable<ExeStepExecutionParameter> StepExecutionParameters { get; } = new List<ExeStepExecutionParameter>();
 
