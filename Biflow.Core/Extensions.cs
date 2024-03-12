@@ -1,13 +1,14 @@
 ﻿using Biflow.Core.Attributes;
 using Biflow.Core.Entities;
 using System.Collections;
-using System;
 using System.Reflection;
 
 namespace Biflow.Core;
 
 public static class Extensions
 {
+    public static string? NullIfEmpty(this string? value) => string.IsNullOrEmpty(value) ? null : value;
+
     public static string? GetDurationInReadableFormat(this StepExecutionAttempt attempt) => attempt.ExecutionInSeconds?.SecondsToReadableFormat();
 
     public static string? GetDurationInReadableFormat(this Execution execution) => execution.ExecutionInSeconds?.SecondsToReadableFormat();
