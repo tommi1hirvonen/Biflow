@@ -2,6 +2,8 @@
 
 public interface IJobExecutor
 {
+    public Execution Execution { get; }
+
     public void Cancel(string username);
 
     public void Cancel(string username, Guid stepId);

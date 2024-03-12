@@ -13,4 +13,6 @@ public interface IExecutionManager : IHostedService
     public Task StartExecutionAsync(Guid executionId);
 
     public Task WaitForTaskCompleted(Guid executionId, CancellationToken cancellationToken);
+
+    public IEnumerable<Execution> CurrentExecutions { get; }
 }

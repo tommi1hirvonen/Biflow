@@ -4,6 +4,7 @@ using Biflow.Executor.Core.ExecutionValidation;
 using Biflow.Executor.Core.JobExecutor;
 using Biflow.Executor.Core.Notification;
 using Biflow.Executor.Core.Orchestrator;
+using Biflow.Executor.Core.Projections;
 using Biflow.Executor.Core.StepExecutor;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -107,6 +108,27 @@ public static class Extensions
                 ? Results.Ok()
                 : Results.NotFound();
         }).WithName("ExecutionStatus");
+
+
+        app.MapGet("/execution/status", (bool? includeSteps, IExecutionManager executionManager) =>
+        {
+            var executions = executionManager.CurrentExecutions
+                .Select(e =>
+                 {
+                     var steps = includeSteps == true
+                         ? e.StepExecutions.Select(s =>
+                         {
+                             var attempts = s.StepExecutionAttempts
+                                 .Select(a => new StepExecutionAttemptProjection(a.RetryAttemptIndex, a.StartedOn, a.EndedOn, a.ExecutionStatus))
+                                 .ToArray();
+                             return new StepExecutionProjection(s.StepId, s.StepName, s.StepType, s.ExecutionStatus, attempts);
+                         })
+                         .ToArray()
+                         : null;
+                     return new ExecutionProjection(e.ExecutionId, e.JobId, e.JobName, e.ExecutionMode, e.CreatedOn, e.StartedOn, e.ExecutionStatus, steps);
+                 }).ToArray();
+            return executions;
+        }).WithName("ExecutionsStatus");
 
 
         app.MapGet("/connection/test", async (IConnectionTest connectionTest) =>

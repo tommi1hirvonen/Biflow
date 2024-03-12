@@ -14,6 +14,8 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
     private readonly Dictionary<Guid, Task> _executionTasks = [];
     private readonly AsyncQueue<Func<CancellationToken, Task>> _backgroundTaskQueue = new();
 
+    public IEnumerable<Execution> CurrentExecutions => _jobExecutors.Values.Select(e => e.Execution);
+
     public async Task StartExecutionAsync(Guid executionId)
     {
         if (_jobExecutors.ContainsKey(executionId))
