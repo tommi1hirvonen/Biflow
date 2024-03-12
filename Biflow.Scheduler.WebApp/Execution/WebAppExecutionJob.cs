@@ -35,7 +35,7 @@ public class WebAppExecutionJob(
 
     protected override async Task StartExecutorAsync(Guid executionId)
     {
-        var response = await _httpClient.GetAsync($"{Url}/execution/start/{executionId}");
+        var response = await _httpClient.GetAsync($"{Url}/executions/start/{executionId}");
         response.EnsureSuccessStatusCode();
     }
 
@@ -47,7 +47,7 @@ public class WebAppExecutionJob(
             do
             {
                 await Task.Delay(PollingIntervalMs);
-                response = await RetryPolicy.ExecuteAsync(() => _httpClient.GetAsync($"{Url}/execution/status/{executionId}"));
+                response = await RetryPolicy.ExecuteAsync(() => _httpClient.GetAsync($"{Url}/executions/status/{executionId}"));
             } while (response.IsSuccessStatusCode);
         }
         catch (Exception ex)

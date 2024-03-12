@@ -1,12 +1,8 @@
 ﻿using Biflow.Executor.Core.ExecutionValidation;
 using Biflow.Executor.Core.Notification;
 using Biflow.Executor.Core.Orchestrator;
-using Biflow.Executor.Core.Projections;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
-using System.Text.Encodings.Web;
-using System.Text.Json;
-using System.Text.Unicode;
 
 namespace Biflow.Executor.Core.JobExecutor;
 
@@ -24,8 +20,8 @@ internal partial class JobExecutor(
     private readonly INotificationService _notificationService = notificationService;
     private readonly IJobOrchestrator _jobOrchestrator = jobOrchestratorFactory.Create(execution);
     private readonly Execution _execution = execution;
-    private readonly JsonSerializerOptions _serializerOptions =
-        new() { WriteIndented = true, Encoder = JavaScriptEncoder.Create(UnicodeRanges.All) };
+
+    public Execution Execution => _execution;
 
     public async Task RunAsync(Guid executionId, CancellationToken cancellationToken)
     {

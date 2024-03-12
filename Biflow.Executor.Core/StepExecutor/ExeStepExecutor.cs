@@ -41,7 +41,15 @@ internal class ExeStepExecutor(
             startInfo.WorkingDirectory = step.ExeWorkingDirectory;
         }
 
-        var process = new Process() { StartInfo = startInfo };
+        if (OperatingSystem.IsWindows() && !string.IsNullOrEmpty(step.Username))
+        {
+            startInfo.Domain = step.Domain.NullIfEmpty();
+            startInfo.UserName = step.Username;
+            startInfo.PasswordInClearText = step.Password.NullIfEmpty();
+            startInfo.LoadUserProfile = true;
+        }
+
+        using var process = new Process() { StartInfo = startInfo };
         process.OutputDataReceived += (s, e) => attempt.AddOutput(e.Data);
         process.ErrorDataReceived += (s, e) => attempt.AddError(e.Data);
 

@@ -24,7 +24,7 @@ public class WebAppSchedulerService(IConfiguration configuration, IHttpClientFac
             return;
         }
 
-        var endpoint = $"{Url}/jobs/remove";
+        var endpoint = $"{Url}/schedules/removejob";
         var schedulerJob = new SchedulerJob(jobId);
         var json = JsonSerializer.Serialize(schedulerJob);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -82,7 +82,7 @@ public class WebAppSchedulerService(IConfiguration configuration, IHttpClientFac
 
     public async Task<SchedulerStatusResponse> GetStatusAsync()
     {
-        var endpoint = $"{Url}/status";
+        var endpoint = $"{Url}/schedules/status";
         var response = await _httpClient.GetAsync(endpoint);
         if (response.IsSuccessStatusCode)
         {

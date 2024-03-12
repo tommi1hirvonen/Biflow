@@ -1,5 +1,33 @@
 #  Biflow
 
+### Contents
+
+1. [Introduction](#1-introduction)
+    1. [Rationale](#11-rationale)
+    2. [Technical requirements](#12-technical-requirements)
+    3. [Authentication providers](#13-authentication-providers)
+    4. [Architecture options](#14-architecture-options)
+2. [Terminology and features](#2-terminology-and-features)
+3. [Documentation](#3-documentation)
+    1. [Source code solution and projects](#31-source-code-solution-and-projects)
+    2. [Execution statuses](#32-execution-statuses)
+        1. [Job execution statuses](#321-possible-job-execution-statuses)
+        2. [Step execution statuses](#322-possible-step-execution-statuses)
+        3. [Step execution lifecycle](#323-step-execution-lifecycle)
+    3. [User roles](#33-user-roles)
+    4. [Encryption](#34-encryption)
+4. [Installation](#4-installation)
+    1. [On-premise](#41-on-premise)
+    2. [Azure (monolithic)](#42-azure-monolithic)
+    3. [Azure (modular)](#43-azure-modular)
+    4. [First use and configuration](#44-first-use-and-configuration)
+5. [Operation and administrative tasks](#5-operation-and-administrative-tasks)
+    1. [Executions](#51-executions)
+    2. [Services](#52-services)
+
+
+# 1. Introduction
+
 Biflow is a powerful platform for easy business intelligence (BI) and data platform workflow orchestration built on top of the .NET stack. It includes an easy-to-use web user interface and integrates with several data related technologies such as
 - Microsoft SQL Server (including SSIS and SSAS)
 - Microsoft Azure
@@ -59,7 +87,7 @@ Currently supported step types:
 - Job
     - Start another Biflow job as part of your workflow
 
-## Rationale
+## 1.1. Rationale
 
 Why should I use Biflow? Can't I already orchestrate my data platform using one of the following tools?
 - SQL Server Agent
@@ -98,7 +126,7 @@ Including an intuitive browser based graphical user interface makes it possible 
 
 The creation and development of Biflow has largely been informed by my own experiences working with data platforms full-time since 2016. The methods and features in Biflow are informed by the real-life frustrations I've faced using some of the tools mentioned here. Biflow supports orchestrating data platforms in a way that I see being useful, smart and optimal. That also means tight integration with the ETL and data platform technologies I use most often (see supported step types).
 
-## Technical requirements
+## 1.2. Technical requirements
 
 Some requirements apply depending on whether Biflow is configured to run either on-premise or in Azure but some requirements are common.
 
@@ -125,7 +153,7 @@ Some requirements apply depending on whether Biflow is configured to run either 
 - Azure App Service (Linux)
     - Minimum B2 or B3 level is recommended
 
-## Authentication
+## 1.3. Authentication providers
 
 Four methods of authentication are supported:
 - Built-in
@@ -147,25 +175,68 @@ Four methods of authentication are supported:
 
 **Note:** In all cases the list of authorized users and their access role is managed in the application.
 
-## Architecture
+## 1.4. Architecture options
 
-There are three recommended ways to configure Biflow from an architecture point of view: on-premise, Azure (monolithic) and Azure (distributed). More details about the different architecture options and related setup are given also in the installation section.
+There are three recommended ways to configure Biflow from an architecture point of view: on-premise, Azure (monolithic) and Azure (modular). More details about the different architecture options and related setup are given also in the installation section.
 
 ### On-premise
 
-The on-premise option takes advantage of OS level features such as Windows Services (used for the scheduler/executor services). If an on-premise installation is possible, this is the option that allows for most control of the setup.
+The on-premise option takes advantage of OS level features such as Windows Services to host certain components of the app (the scheduler/executor services). Internet Information Services (IIS) can also be used to host e.g. the user interface app. This makes it easier to configure SSL certificates for accessing the user interface via HTTPS.
 
 ### Azure (monolithic)
 
-The Azure (monolithic) architecture has all the necessary components and services hosted inside one monolithic application. The application is running in an Azure App Service (Linux) as a Web App. This allows for efficient cost minimization through the use of lower tier App Service Plans (B2 and B3).
+The Azure (monolithic) architecture has all the necessary components and services hosted inside one monolithic application. The application is running in an Azure App Service (Linux) as a Web App. This allows for efficient cost minimization through the use of lower tier App Service Plans (B1-B3).
 
-### Azure (distributed)
+**Note:** The single-app monolithic architecture is recommended only for development and testing purposes.
 
-The Azure (distributed) approach closely resembles the on-premise architecture. From the two Azure architectures, this offers significantly more control over updates to different components of the application. All services deployed to Azure can still share the same Linux App Service for cost optimization. Note, that a lightweight Linux virtual machine might also be required for deployment and configuration tasks depending on your Azure networking setup.
+### Azure (modular)
 
-# Documentation
+The Azure (modular) approach closely resembles the on-premise architecture. From the two Azure architectures, this offers significantly more control over updates to different components of the application. All services deployed to Azure can still share the same Linux App Service for cost optimization. Note, that a lightweight Linux virtual machine might also be required for deployment and configuration tasks depending on your Azure networking setup.
 
-## Source code solution and projects
+# 2. Terminology and features
+
+To better understand the documentation and some of the main features of Biflow, here is some important terminology.
+
+**Jobs** are workflows that define the **steps** that need to be taken to update some data. Jobs can contain any number of steps: ranging from a handful of steps to update a simple report to even hundreds of steps to fully load an entire Enterprise Data Warehouse.
+
+An **execution** is a copy (snapshot in time) of a job created when the job needs to be executed. When the execution is created, it becomes independent from the job it was based on – changes to a job do not affect executions that have already been created.
+
+The order in which steps are executed is determined by two factors: the job's **execution mode** and the **dependencies** between steps. There are three different execution modes to choose from.
+
+#### Execution phase mode
+
+Steps are executed in order based on their execution phase. Steps in the same execution phase can be started at the same time. Execution phases are started sequentially from the lowest value up. Step dependencies have no effect when using execution phase mode.
+
+#### Dependency mode
+
+Jobs using dependency mode are essentially Directed Acyclic Graphs (DAGs). Steps are executed in order based on their dependencies. Steps that have no dependencies are started first and steps that have no dependencies between them can be executed in parallel at the same time. Steps that have dependencies are executed when preceding steps have been completed and the dependency type criteria is met. The execution phase attribute of steps is used to denote the execution priority of otherwise equal steps (lower value = higher priority).
+
+#### Hybrid mode
+
+Steps are executed in order based on their execution phase (same as execution phase mode). Additionally, step dependencies are also checked after execution phase conditions are met (dependency mode).
+
+Steps can have any number of dependencies, even to steps in other jobs. There are three types of dependencies.
+- On completed (loose dependency) – the dependency must complete/finish
+- On succeeded (strict dependency) – the dependency must complete *successfully*
+- On failed – the depency must *fail*
+
+If the dependency conditions of a step are not met, the step will be skipped. The execution of a step can also be skipped if its **execution condition** evaluates to false. These are optional boolean expressions written in C# that are evaluated during execution to run additional dynamic checks (based on date and time, for example).
+
+Jobs and steps can have any number of **parameters** (variables) that can be used to share values between steps during execution. Job parameters can be defined dynamically with C# expressions or they can be set by SQL steps during execution by fetching values from a database. This allows the decoupling of individual ETL components. Instead, it is the orchestration framework that injects the needed parameter values. This pattern is also called Inversion of Control.
+
+Steps can be categorized by using **tags** – simple labels that can be effective when filtering steps based on a data source, business function etc.
+
+Jobs can have any number of **schedules**, which are triggers that invoke an execution of the job on a given time. Schedules use Cron expressions to define when a schedule should fire. A single Cron expression can be used to create a complex schedule, such as "every 2 hours between 10 am and 5 pm on days 1 to 7 of every month". Schedules can also define **tag filters** to limit which steps are to be included in that specific schedule's execution. This way we can avoid creating copies of jobs just to have a subset of its steps on a different schedule.
+
+Users can **subscribe** to email notifications of executions they are interested in. Subscriptions can be made on a job, step or tag or any combination of the three.
+
+Advanced features include defining the **sources** and **targets** for steps. These are **data objects** that the step either consumes or produces. They help to create a data lineage and are also useful when defining the dependencies of a step, since dependencies can be automatically inferred based on sources and targets. (A step producing a data object can be considered a dependency for a step consuming the same object.) Wide use of data objects can help manage the dependencies optimally even in a very large job.
+
+Outside of data orchestration, Biflow also supports **data tables**. These are simple control tables (or Master Data tables) that can be maintained via the web user interface by business users. Data tables point and write to SQL tables, allowing the use of primary keys, foreign keys, data types and various other constraints to ensure data quality directly on data input. Common use cases include maintaining some simple report specific data that would otherwise be read in from a flat file or Excel file. This also allows business users to maintain these Master Data in the same platform where they execute their data jobs. **Lookups** can be used to create foreign key references between data tables, making it possible for users to create and manage even hierarchical data.
+
+# 3. Documentation
+
+## 3.1. Source code solution and projects
 
 |Project|Description|
 |-|-|
@@ -181,9 +252,9 @@ The Azure (distributed) approach closely resembles the on-premise architecture. 
 |Ui|Blazor Server UI application. Can be configured to host the executor and scheduler services internally.|
 |Utilities|Common utilities library project|
 
-## Execution statuses
+## 3.2. Execution statuses
 
-### Possible job execution statuses
+### 3.2.1 Possible job execution statuses
 
 |Status|Description|
 |-|-|
@@ -195,7 +266,7 @@ The Azure (distributed) approach closely resembles the on-premise architecture. 
 |Stopped    |The execution was manually stopped.|
 |Suspended  |There were unstarted steps remaining in the execution when the execution was finished.|
 
-### Possible step execution statuses
+### 3.2.2 Possible step execution statuses
 
 |Status|Description|
 |-|-|
@@ -212,56 +283,78 @@ The Azure (distributed) approach closely resembles the on-premise architecture. 
 |AwaitingRetry|The step is currently waiting for the specified retry interval before it is executed again|
 |Stopped|A user has manually stopped the execution of the entire job or of this specific step.|
 
-<br>
+### 3.2.3 Step execution lifecycle
 
 The flowchart below describes the lifecycle and states of a step execution. During the `NotStarted`, `Queued`, `Running` and `AwaitingRetry` states it is possible for a user to cancel/stop the execution of a step. If a stop request is received, the step execution is canceled and the final step execution status will be `Stopped`. Remaining retries will not be attempted after the execution has been stopped. Note however, that if the step is stopped during the `NotStarted` state, the step is stopped and its status updated only after it reaches the `Queued` state.
 
 ![The lifecycle and states of a step execution](/Images/StepExecutionLifecycle.png)*The lifecycle and states of a step execution*
 
-## User Roles
+## 3.3. User roles
 
-- Viewer
-    - Can view
-        - Job details
-        - Step details
-        - Schedules
-        - Executions
-    - Can subscribe for notifications
-- Operator
-    - In addition to the same rights as the Viewer role
-        - Can manage schedules
-        - Can execute jobs manually
-        - Can edit job parameters
+### Primary roles
 
-- Editor
-    - In addition to the same rights as the Operator role
-        - Can edit jobs and steps
-- Admin
-    - In addition to the same rights as the Editor role
-        - Can manage users and global settings
-        - Can manage other users' subscriptions
-        - Can view stack traces of failed and cancelled steps (when available)
+Users can have one and only one primary role assigned to them. Adding users without a primary role is not supported.
 
-## Encryption
+#### Viewer
+
+Viewer users can
+- view
+    - job details
+    - step details
+    - schedules
+    - executions
+- subscribe to jobs and steps for execution notifications
+#### Operator
+In addition to the same rights as the viewer role, operators can
+- manage (create, edit & delete) schedules
+- execute jobs manually on demand
+- edit job parameters
+
+#### Editor
+In addition to the same rights as the operator role, editors can
+- manage (create, edit & delete) all jobs and steps
+- view stack traces of failed and cancelled steps (when available)
+
+#### Admin
+In addition to the same rights as the editor role, admins can
+- manage users and global settings
+- manage other users' subscriptions
+
+### Secondary roles
+
+Secondary roles can be assigned to non-admin users to extend their user rights.
+
+#### SettingsEditor
+- Allows users to manage endpoint settings
+    - SQL and tabular connections
+    - Data Factory instances
+    - Function Apps
+    - Qlik Cloud endpoints
+    - Storage account endpoints
+
+#### DataTableMaintainer
+- Allows users to maintain and edit all data tables
+
+## 3.4. Encryption
 
 Data saved and processed by Biflow is not encrypted by default on the database level. If you want to implement database level encryption of sensitive data, this can be achieved using the Always Encrypted feature of SQL Server and Azure SQL Database.
 
 More information about Always Encrypted can be found in <a href="https://docs.microsoft.com/en-us/sql/relational-databases/security/encryption/always-encrypted-database-engine?view=sql-server-ver15">Microsoft’s documentation.</a>
 
 If you want to implement Always Encrypted, these columns are good candidates for encryption:
-- biflow.AccessToken.Token
-- biflow.AppRegistration.ClientSecret
-- biflow.Connection.ConnectionString
-- biflow.FunctionApp.FunctionAppKey
-- biflow.Step.FunctionKey
+- [app].[AccessToken].[Token]
+- [app].[AppRegistration].[ClientSecret]
+- [app].[Connection].[ConnectionString]
+- [app].[FunctionApp].[FunctionAppKey]
+- [app].[Step].[FunctionKey]
 
 If Always Encrypted is utilized, this should be reflected in the connection strings set in the application settings (AppDbContext). Always Encrypted is enabled with the following connection string property: `Column Encryption Setting=enabled`
 
-# Installation
+# 4. Installation
 
-There are three different installation alternatives: on-premise, Azure (monolithic) and Azure (distributed).
+There are three different installation alternatives: on-premise, Azure (monolithic) and Azure (modular).
 
-## On-premise
+## 4.1. On-premise
 
 ### System database
 
@@ -314,6 +407,8 @@ There are three different installation alternatives: on-premise, Azure (monolith
 |Setting|Description|
 |-|-|
 |ConnectionStrings:AppDbContext|Connection string used to connect to the Biflow database based on steps taken in the database section of this guide. **Note:** The connection string must have `MultipleActiveResultSets=true` enabled.|
+|Executor:Type|`[ WebApp \| SelfHosted ]`|
+||Whether the executor service is installed as a web app or is running self-hosted inside the scheduler application. **Note:** The SelfHosted executor should only be used for development and testing.|
 |Executor:WebApp:Url|Url to the executor web app|
 |Authorization:Windows:AllowedUsers|Array of Windows users who are authorized to issue requests to the scheduler API, e.g. `[ "DOMAIN\\BiflowService", "DOMAIN\\AdminUser" ]`. If no authorization is required, remove the `Authorization` section. Only applies to on-premise Windows environments.|
 |Kestrel:Endpoints:Http:Url|The http url and port which the scheduler API should listen to, for example `http://localhost:5432`. If there are multiple installations/environments of the scheduler service on the same server, the scheduler applications should listen to different ports.|
@@ -369,11 +464,11 @@ There are three different installation alternatives: on-premise, Azure (monolith
 |Ldap:UseSsl|Boolean value: `true` to use SSL for the connection, `false` if not|
 |Ldap:UserStoreDistinguishedName|The DN (distinguished name) for the LDAP container which to query for users|
 |Executor:Type|`[ WebApp \| SelfHosted ]`|
-||Whether the executor service is installed as a web app or is running self-hosted inside the UI application|
+||Whether the executor service is installed as a web app or is running self-hosted inside the UI application. **Note:** The SelfHosted executor should only be used for development and testing.|
 |Executor:WebApp:Url|Needed only when `Executor:Type` is set to `WebApp`. Url to the executor web app API|
 |Executor:SelfHosted|This section needs to be defined only if `Executor:Type` is set to `SelfHosted`. Refer to the executor web application's settings section to set the values in this section.|
 |Scheduler:Type|`[ WebApp \| SelfHosted ]`|
-||Whether the scheduler service is installed as a web app or is running self-hosted inside the UI application. If `Executor:Type` is set to `SelfHosted` then this settings must also be set to `SelfHosted`|
+||Whether the scheduler service is installed as a web app or is running self-hosted inside the UI application. If `Executor:Type` is set to `SelfHosted` then this settings must also be set to `SelfHosted`.  **Note:** The SelfHosted scheduler should only be used for development and testing.|
 |Scheduler:WebApp:Url|Needed only when `Scheduler:Type` is set to `WebApp`. Url to the scheduler service web app API|
 |Kestrel:Endpoints:Https:Url|The https url and port which the UI application should listen to, for example https://localhost. If there are multiple installations on the same server, the UI applications should listen to different ports. Applies only to on-premise installations.|
 |Serilog:WriteTo:Args:path|Folder path where the application will write its log files. Applies only to on-premise installations. Default value is `C:\\Biflow\\BiflowUi\\log\\ui.log`|
@@ -389,7 +484,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
     - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-8.0#configure-https-in-appsettingsjson
 7. Alternatively you can host the UI application using IIS (Internet Information Services).
 
-## Azure (monolithic)
+## 4.2. Azure (monolithic)
 
 - Create a new App Service Plan (Linux)
     - Recommended pricing tier B2 or B3
@@ -417,7 +512,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
 - Using System Assigned Managed Identities for authentication to the system database is recommended to avoid having to save sensitive information inside connection strings.
 - Recommended: Apply desired access restrictions to the Web App to allow inbound traffic only from trusted IP addresses or networks.
 
-## Azure (distributed)
+## 4.3. Azure (modular)
 
 - Create the Azure App Service and UI Web App following the same steps as in the monolithic approach until the configuration stage.
 - Also create two additional Web Apps in the same App Service, one for the scheduler service and the other for the executor service.
@@ -427,11 +522,14 @@ There are three different installation alternatives: on-premise, Azure (monolith
     - This VM is used to configure and deploy the application files to the Web App resources.
     - Attach the virtual machine to the default subnet of the virtual network created in the previous step.
     - Allow SSH traffic from your desired IP addresses or networks to the virtual machine.
-- Apply access restrictions to the UI app to allow inbound traffic only from trusted IP addresses or networks.
+- Apply access restrictions to the UI app to allow inbound traffic only from trusted IP addresses or networks (e.g. company VPN or local network).
 - Create a new subnet in the virtual network (e.g. biflow-subnet).
+    - If the default subnet has IPV4 range of 10.0.0.0/24, the new subnet may have a range of 10.0.1.0/24.
+    - Delegated to: Microsoft.Web/serverFarms
     - Configure the UI and scheduler applications' outbound traffic to route through the previously created virtual network subnet (biflow-subnet).
 - Configure private endpoints for the inbound traffic of the scheduler and executor applications.
     - Create the private endpoints in the default subnet of the virtual network.
+    - Disable public network access.
 - Add service endpoints for the following services to the virtual network (subnet biflow-vcfidw):
     - Microsoft.AzureActiveDirectory
     - Microsoft.Sql
@@ -502,16 +600,14 @@ admin@biflow-vm:~$ curl https://<scheduler_web_app_name>.azurewebsites.net/statu
 The log streams for the UI application should be available from the Azure portal since network traffic to the app should be allowed from your location. The executor and scheduler applications' logs can be viewed from the VM using the following command templates. The commands shown here are for the executor application.
 
 ```
-admin@biflow-vm:~$ username=$(az webapp deployment list-publishing-credentials --name <executor_web_app_name> --resource-group <resource_group_name> --query publishingUserName -o t
-sv)
+admin@biflow-vm:~$ username=$(az webapp deployment list-publishing-credentials --name <executor_web_app_name> --resource-group <resource_group_name> --query publishingUserName -o tsv)
 
-admin@biflow-vm:~$ password=$(az webapp deployment list-publishing-credentials --name <executor_web_app_name> --resource-group <resource_group_name> --query publishingPassword -o t
-sv)
+admin@biflow-vm:~$ password=$(az webapp deployment list-publishing-credentials --name <executor_web_app_name> --resource-group <resource_group_name> --query publishingPassword -o tsv)
 
 admin@biflow-vm:~$ curl -u "$username:$password" https://<executor_web_app_name>.scm.azurewebsites.net/api/logstream
 ```
 
-## First use
+## 4.4. First use and configuration
 
 Some administrative tasks need to be done before the applications are ready for normal operation.
 
@@ -608,3 +704,51 @@ Navigate to the Biflow UI website. You should be able to log in using the accoun
 1. Navigate to the Azure Function App resource and go to Access control (IAM).
 2. Add the application created in the App registrations section as a Contributor to the Azure Function App resource.
 3. In Biflow, navigate to Settings > Azure Function Apps and add a new Function App with the corresponding information. Note: It can take several minutes for the role changes in Azure to take effect.
+
+# 5. Operation and administrative tasks
+
+This section provides some useful information regarding normal operation and also administrative tasks.
+
+## 5.1. Executions
+
+When job executions are started (either scheduled or manual), the executor service first runs a series of validations on the execution. The executor checks for:
+1. Circular job dependencies caused by job step references (i.e. steps starting another job's execution)
+    - These can cause infinite execution loops and they are considered a user error (incorrect job & step definitions).
+2. Circular step dependencies
+    - These can cause infinite waits when step dependencies are being checked after the execution has started.
+3. Illegal hybrid mode steps
+    - In hybrid execution mode, steps in lower execution phases cannot depend on steps in higher execution phases, as this too would cause infinite wait.
+
+If any of the checks fail, the entire execution and all its steps are marked as failed and aborted.
+
+## 5.2. Services
+
+When starting Biflow services, it is recommended to start them in the following order.
+1. Executor service
+2. Scheduler service
+3. User interface service
+
+The executor service does not depend on the scheduler or the UI, so it should be started first. The scheduler depends on the executor service and should be started next. The UI depends on both the executor and scheduler services and should be started last.
+
+The scheduler service can operate even if the executor service is not running, but scheduled executions cannot be started until the executor service is running. The UI can also operate even if both services are down, but executions cannot be started manually and schedules cannot be managed.
+
+When shutting down services, the recommended order is reversed.
+1. User interface
+2. Scheduler
+3. Executor
+
+### Executor service
+
+The executor services does not run any major startup tasks. It does validate the executor settings (max parallel tasks, polling interval etc.) defined in `appsettings.json` or in app configurations in Azure. If the settings do not pass validation, the service will not start.
+
+When the executor service is shut down, it will immediately send cancel commands to all steps currently being managed. If all steps are successfully canceled in 20 seconds, the service will shut down gracefully. After 20 seconds the service will forcefully shut down and abandon any steps that may have been left running. This may leave some steps and execution logs in an undefined state. Usually though 20 seconds should be enough for a graceful shutdown, if the polling interval is not too long.
+
+### Scheduler service
+
+On startup, the scheduler service reads all schedules from the app database and adds them to the internal scheduler. Disabled schedules are added as paused. If reading the schedules fails, the service will reattempt every 15 minutes until schedules are read successfully. The app database should thus be available at least soon after the scheduler service is started.
+
+For various maintenance reasons (data platform service break, software updates etc.), all schedules may need to be disabled temporarily to prevent new executions from being started. This can achieved easily, efficiently and securely by shutting down the scheduler service. This guarantees that no new executions are started when the scheduler service is not running while also allowing the executor service to complete running executions.
+
+### User interface service
+
+The user interface service runs the admin user check on startup (see the AdminUser section of the user interface app settings).

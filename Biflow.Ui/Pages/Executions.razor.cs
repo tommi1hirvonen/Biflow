@@ -140,6 +140,8 @@ public partial class Executions : ComponentBase, IDisposable, IAsyncDisposable
                     e.JobId,
                     job.JobName ?? e.JobName,
                     e.ScheduleId,
+                    e.ScheduleName,
+                    e.CreatedBy,
                     e.CreatedOn,
                     e.StartedOn,
                     e.EndedOn,

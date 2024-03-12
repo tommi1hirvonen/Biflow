@@ -1,8 +1,10 @@
 ﻿using Biflow.Executor.Core.ConnectionTest;
+using Biflow.Executor.Core.Exceptions;
 using Biflow.Executor.Core.ExecutionValidation;
 using Biflow.Executor.Core.JobExecutor;
 using Biflow.Executor.Core.Notification;
 using Biflow.Executor.Core.Orchestrator;
+using Biflow.Executor.Core.Projections;
 using Biflow.Executor.Core.StepExecutor;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -58,30 +60,75 @@ public static class Extensions
 
     public static WebApplication MapExecutorEndpoints(this WebApplication app)
     {
-        app.MapGet("/execution/start/{executionId}", async (Guid executionId, IExecutionManager executionManager) =>
+        app.MapGet("/executions/start/{executionId}", async (Guid executionId, IExecutionManager executionManager) =>
         {
-            await executionManager.StartExecutionAsync(executionId);
+            try
+            {
+                await executionManager.StartExecutionAsync(executionId);
+                return Results.Ok();
+            }
+            catch (DuplicateExecutionException ex)
+            {
+                return Results.Conflict(ex.Message);
+            }
         }).WithName("StartExecution");
 
 
-        app.MapGet("/execution/stop/{executionId}", (Guid executionId, string username, IExecutionManager executionManager) =>
+        app.MapGet("/executions/stop/{executionId}", (Guid executionId, string username, IExecutionManager executionManager) =>
         {
-            executionManager.CancelExecution(executionId, username);
+            try
+            {
+                executionManager.CancelExecution(executionId, username);
+                return Results.Ok();
+            }
+            catch (ExecutionNotFoundException ex)
+            {
+                return Results.NotFound(ex.Message);
+            }
         }).WithName("StopExecution");
 
 
-        app.MapGet("/execution/stop/{executionId}/{stepId}", (Guid executionId, Guid stepId, string username, IExecutionManager executionManager) =>
+        app.MapGet("/executions/stop/{executionId}/{stepId}", (Guid executionId, Guid stepId, string username, IExecutionManager executionManager) =>
         {
-            executionManager.CancelExecution(executionId, username, stepId);
+            try
+            {
+                executionManager.CancelExecution(executionId, username, stepId);
+                return Results.Ok();
+            }
+            catch (ExecutionNotFoundException ex)
+            {
+                return Results.NotFound(ex.Message);
+            }
         }).WithName("StopExecutionStep");
 
 
-        app.MapGet("/execution/status/{executionId}", (Guid executionId, IExecutionManager executionManager) =>
+        app.MapGet("/executions/status/{executionId}", (Guid executionId, IExecutionManager executionManager) =>
         {
             return executionManager.IsExecutionRunning(executionId)
                 ? Results.Ok()
                 : Results.NotFound();
         }).WithName("ExecutionStatus");
+
+
+        app.MapGet("/executions/status", (bool? includeSteps, IExecutionManager executionManager) =>
+        {
+            var executions = executionManager.CurrentExecutions
+                .Select(e =>
+                 {
+                     var steps = includeSteps == true
+                         ? e.StepExecutions.Select(s =>
+                         {
+                             var attempts = s.StepExecutionAttempts
+                                 .Select(a => new StepExecutionAttemptProjection(a.RetryAttemptIndex, a.StartedOn, a.EndedOn, a.ExecutionStatus))
+                                 .ToArray();
+                             return new StepExecutionProjection(s.StepId, s.StepName, s.StepType, s.ExecutionStatus, attempts);
+                         })
+                         .ToArray()
+                         : null;
+                     return new ExecutionProjection(e.ExecutionId, e.JobId, e.JobName, e.ExecutionMode, e.CreatedOn, e.StartedOn, e.ExecutionStatus, steps);
+                 }).ToArray();
+            return executions;
+        }).WithName("ExecutionsStatus");
 
 
         app.MapGet("/connection/test", async (IConnectionTest connectionTest) =>

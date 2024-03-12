@@ -1,22 +1,20 @@
 using Biflow.Ui;
 using Microsoft.AspNetCore.Components.Server.Circuits;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.Identity.Web;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-if (WindowsServiceHelpers.IsWindowsService())
-{
-    builder.Host.UseWindowsService();
-}
+builder.Services.AddWindowsService();
 
 if (builder.Configuration.GetSection("Serilog").Exists())
 {
     var logger = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration).CreateLogger();
     builder.Logging.AddSerilog(logger, dispose: true);
 }
+
+builder.Services.AddApplicationInsightsTelemetry();
 
 // Adds all necessary core Biflow UI services.
 builder.Services.AddUiCoreServices(builder.Configuration);

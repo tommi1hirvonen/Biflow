@@ -1,22 +1,23 @@
 using Biflow.Executor.Core;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Hosting.WindowsServices;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-if (WindowsServiceHelpers.IsWindowsService())
+builder.Services.AddWindowsService();
+
+if (builder.Configuration.GetSection("Serilog").Exists())
 {
-    builder.Host.UseWindowsService();
+    var logger = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration).CreateLogger();
+    builder.Logging.AddSerilog(logger, dispose: true);
 }
 
+builder.Services.AddApplicationInsightsTelemetry();
+
 builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
-
 var windowsAuth = builder.Configuration.GetSection("Authorization").GetSection("Windows");
-var useWindowsAuth = windowsAuth.Exists();
-
-if (useWindowsAuth)
+if (windowsAuth.Exists())
 {
     builder.Services.AddAuthorization(options =>
     {
@@ -32,12 +33,6 @@ if (useWindowsAuth)
     builder.Services.AddSingleton<IAuthorizationHandler, UserNamesHandler>();
 }
 
-if (builder.Configuration.GetSection("Serilog").Exists())
-{
-    var logger = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration).CreateLogger();
-    builder.Logging.AddSerilog(logger, dispose: true);
-}
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -45,7 +40,6 @@ builder.Services.AddExecutorServices(builder.Configuration);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

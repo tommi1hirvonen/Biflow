@@ -1,4 +1,5 @@
-﻿using Biflow.Executor.Core.JobExecutor;
+﻿using Biflow.Executor.Core.Exceptions;
+using Biflow.Executor.Core.JobExecutor;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -13,11 +14,13 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
     private readonly Dictionary<Guid, Task> _executionTasks = [];
     private readonly AsyncQueue<Func<CancellationToken, Task>> _backgroundTaskQueue = new();
 
+    public IEnumerable<Execution> CurrentExecutions => _jobExecutors.Values.Select(e => e.Execution);
+
     public async Task StartExecutionAsync(Guid executionId)
     {
         if (_jobExecutors.ContainsKey(executionId))
         {
-            throw new InvalidOperationException($"Execution with id {executionId} is already being managed.");
+            throw new DuplicateExecutionException(executionId);
         }
 
         var jobExecutor = await _jobExecutorFactory.CreateAsync(executionId);
@@ -28,7 +31,7 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
     {
         if (!_jobExecutors.TryGetValue(executionId, out var value))
         {
-            throw new InvalidOperationException($"No execution with id {executionId} is being managed.");
+            throw new ExecutionNotFoundException(executionId, $"No execution with id {executionId} is being managed.");
         }
 
         var executor = value;
@@ -39,7 +42,7 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
     {
         if (!_jobExecutors.TryGetValue(executionId, out var value))
         {
-            throw new InvalidOperationException($"No execution with id {executionId} is being managed.");
+            throw new ExecutionNotFoundException(executionId, $"No execution with id {executionId} is being managed.");
         }
 
         var executor = value;

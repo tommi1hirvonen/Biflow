@@ -3,38 +3,23 @@ using Biflow.Scheduler.Core;
 using Biflow.Scheduler.WebApp;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Hosting.WindowsServices;
 using Serilog;
 
-var useWindowsService = WindowsServiceHelpers.IsWindowsService();
+var builder = WebApplication.CreateBuilder(args);
 
-WebApplicationBuilder builder;
+builder.Services.AddWindowsService();
 
-// If hosted as a Windows service, configure specific logging and service lifetimes.
-if (useWindowsService)
+if (builder.Configuration.GetSection("Serilog").Exists())
 {
-    var options = new WebApplicationOptions
-    {
-        Args = args,
-        ContentRootPath = AppContext.BaseDirectory
-    };
-    builder = WebApplication.CreateBuilder(options);
-    builder.Host.UseWindowsService();
     var logger = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration).CreateLogger();
     builder.Logging.AddSerilog(logger, dispose: true);
 }
-// Otherwise use default WebApplicationBuiderl.
-else
-{
-    builder = WebApplication.CreateBuilder(args);
-}
+
+builder.Services.AddApplicationInsightsTelemetry();
 
 builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
-
 var windowsAuth = builder.Configuration.GetSection("Authorization").GetSection("Windows");
-var useWindowsAuth = windowsAuth.Exists();
-
-if (useWindowsAuth)
+if (windowsAuth.Exists())
 {
     builder.Services.AddAuthorization(options =>
     {
@@ -49,7 +34,6 @@ if (useWindowsAuth)
     });
     builder.Services.AddSingleton<IAuthorizationHandler, UserNamesHandler>();
 }
-
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -68,12 +52,6 @@ else if (executorType == "SelfHosted")
 }
 
 var app = builder.Build();
-
-if (useWindowsAuth)
-{
-    app.UseAuthentication();
-    app.UseAuthorization();
-}
 
 if (app.Environment.IsDevelopment())
 {
