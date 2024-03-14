@@ -1556,11 +1556,6 @@ namespace Biflow.DataAccess.Migrations
                 {
                     b.HasBaseType("Biflow.Core.Entities.Step");
 
-                    b.Property<string>("Domain")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .HasColumnName("ExeDomain");
-
                     b.Property<string>("ExeArguments")
                         .HasColumnType("nvarchar(max)");
 
@@ -1576,20 +1571,10 @@ namespace Biflow.DataAccess.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<string>("Password")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .HasColumnName("ExePassword");
-
                     b.Property<double>("TimeoutMinutes")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("float")
                         .HasColumnName("TimeoutMinutes");
-
-                    b.Property<string>("Username")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .HasColumnName("ExeUsername");
 
                     b.HasDiscriminator().HasValue("Exe");
                 });
@@ -1841,11 +1826,6 @@ namespace Biflow.DataAccess.Migrations
                 {
                     b.HasBaseType("Biflow.Core.Entities.StepExecution");
 
-                    b.Property<string>("Domain")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .HasColumnName("ExeDomain");
-
                     b.Property<string>("ExeArguments")
                         .HasColumnType("nvarchar(max)");
 
@@ -1861,20 +1841,10 @@ namespace Biflow.DataAccess.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<string>("Password")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .HasColumnName("ExePassword");
-
                     b.Property<double>("TimeoutMinutes")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("float")
                         .HasColumnName("TimeoutMinutes");
-
-                    b.Property<string>("Username")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .HasColumnName("ExeUsername");
 
                     b.HasDiscriminator().HasValue("Exe");
                 });
@@ -2478,7 +2448,7 @@ namespace Biflow.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.ClientCascade)
                         .IsRequired();
 
-                    b.OwnsOne("Biflow.Core.Entities.EvaluationExpression", "Expression", b1 =>
+                    b.OwnsOne("Biflow.Core.Entities.ExecutionParameter.Expression#Biflow.Core.Entities.EvaluationExpression", "Expression", b1 =>
                         {
                             b1.Property<Guid>("ExecutionParameterExecutionId")
                                 .HasColumnType("uniqueidentifier");
@@ -2543,7 +2513,7 @@ namespace Biflow.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.ClientCascade)
                         .IsRequired();
 
-                    b.OwnsOne("Biflow.Core.Entities.EvaluationExpression", "Expression", b1 =>
+                    b.OwnsOne("Biflow.Core.Entities.JobParameter.Expression#Biflow.Core.Entities.EvaluationExpression", "Expression", b1 =>
                         {
                             b1.Property<Guid>("JobParameterParameterId")
                                 .HasColumnType("uniqueidentifier");
@@ -2631,7 +2601,7 @@ namespace Biflow.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.ClientCascade)
                         .IsRequired();
 
-                    b.OwnsOne("Biflow.Core.Entities.EvaluationExpression", "ExecutionConditionExpression", b1 =>
+                    b.OwnsOne("Biflow.Core.Entities.Step.ExecutionConditionExpression#Biflow.Core.Entities.EvaluationExpression", "ExecutionConditionExpression", b1 =>
                         {
                             b1.Property<Guid>("StepId")
                                 .HasColumnType("uniqueidentifier");
@@ -2681,7 +2651,7 @@ namespace Biflow.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.ClientCascade)
                         .IsRequired();
 
-                    b.OwnsOne("Biflow.Core.Entities.EvaluationExpression", "ExecutionConditionExpression", b1 =>
+                    b.OwnsOne("Biflow.Core.Entities.StepExecution.ExecutionConditionExpression#Biflow.Core.Entities.EvaluationExpression", "ExecutionConditionExpression", b1 =>
                         {
                             b1.Property<Guid>("StepExecutionExecutionId")
                                 .HasColumnType("uniqueidentifier");
@@ -2762,7 +2732,7 @@ namespace Biflow.DataAccess.Migrations
                         .HasForeignKey("ExecutionId", "InheritFromExecutionParameterId")
                         .OnDelete(DeleteBehavior.Cascade);
 
-                    b.OwnsOne("Biflow.Core.Entities.EvaluationExpression", "Expression", b1 =>
+                    b.OwnsOne("Biflow.Core.Entities.StepExecutionParameterBase.Expression#Biflow.Core.Entities.EvaluationExpression", "Expression", b1 =>
                         {
                             b1.Property<Guid>("StepExecutionParameterBaseExecutionId")
                                 .HasColumnType("uniqueidentifier");
@@ -2813,7 +2783,7 @@ namespace Biflow.DataAccess.Migrations
                         .WithMany("InheritingStepParameters")
                         .HasForeignKey("InheritFromJobParameterId");
 
-                    b.OwnsOne("Biflow.Core.Entities.EvaluationExpression", "Expression", b1 =>
+                    b.OwnsOne("Biflow.Core.Entities.StepParameterBase.Expression#Biflow.Core.Entities.EvaluationExpression", "Expression", b1 =>
                         {
                             b1.Property<Guid>("StepParameterBaseParameterId")
                                 .HasColumnType("uniqueidentifier");
