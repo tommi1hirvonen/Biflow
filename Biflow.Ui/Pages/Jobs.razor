@@ -6,28 +6,28 @@
 <div class="row justify-content-between">
     <div class="col">
         <div class="btn-toolbar">
-            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-                <HxButton Color="ThemeColor.Success"
-                          CssClass="me-3 mt-3"
-                          OnClick="() => jobEditModal.LetAsync(x => x.ShowAsync())"
-                          Spinner="false"
-                          Enabled="jobs is not null">
-                    Add job
-                </HxButton>
+                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+                    <HxButton Color="ThemeColor.Success"
+                              CssClass="me-3 mt-3"
+                              OnClick="() => jobEditModal.LetAsync(x => x.ShowAsync())"
+                              Spinner="false"
+                              Enabled="jobs is not null">
+                        Add job
+                    </HxButton>
 
-                <HxButton Color="ThemeColor.Secondary"
-                          CssClass="me-3 mt-3"
-                          Enabled="categories is not null"
-                          OnClick="() => categoryEditModal.LetAsync(x => x.ShowAsync())"
-                          Spinner="false">
-                    Add category
+                    <HxButton Color="ThemeColor.Secondary"
+                              CssClass="me-3 mt-3"
+                              Enabled="categories is not null"
+                              OnClick="() => categoryEditModal.LetAsync(x => x.ShowAsync())"
+                              Spinner="false">
+                        Add category
+                    </HxButton>
+                </AuthorizeView>
+                <HxButton Color="ThemeColor.Primary" @onclick="LoadLastExecutionsAsync" Enabled="!isLoading" Spinner="isLoading" CssClass="mt-3">
+                    <CxIcon Icon="FeatherIcon.RefreshCw" />
+                    Refresh
                 </HxButton>
-            </AuthorizeView>
-            <HxButton Color="ThemeColor.Primary" @onclick="LoadLastExecutionsAsync" Enabled="!isLoading" Spinner="isLoading" CssClass="mt-3">
-                <CxIcon Icon="FeatherIcon.RefreshCw" />
-                Refresh
-            </HxButton>
-        </div>
+            </div>
     </div>
     <div class="col-auto text-end">
         <HxPopover Placement="PopoverPlacement.Left" Trigger="PopoverTrigger.Focus"
@@ -51,7 +51,7 @@
         </div>
     </div>
         
-    <div class="col-sm-5 mt-3 mt-sm-0">
+    <div class="col-xl-auto col-sm-4 mt-3 mt-sm-0">
         <HxButtonGroup Size="ButtonGroupSize.Small">
             <FilterDropdown TItem="ExecutionStatus"
                             FilterSet="statusFilter"
@@ -74,7 +74,28 @@
                 Clear
             </HxButton>
         </HxButtonGroup>
-    </div>  
+    </div>
+
+    <div class="col-xl-auto mt-xl-0 mt-3 d-flex align-items-center">
+        <div class="form-check form-check-inline">
+            <input type="radio" class="form-check-input" id="radio_all"
+                   checked=@(stateFilter == StateFilter.All)
+                   @onchange="() => stateFilter = StateFilter.All">
+            <label class="form-check-label" for="radio_all">All</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input type="radio" class="form-check-input" id="radio_enabled"
+                   checked=@(stateFilter == StateFilter.Enabled)
+                   @onchange="() => stateFilter = StateFilter.Enabled">
+            <label class="form-check-label" for="radio_enabled">Enabled</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input type="radio" class="form-check-input" id="radio_disabled"
+                   checked=@(stateFilter == StateFilter.Disabled)
+                   @onchange="() => stateFilter = StateFilter.Disabled">
+            <label class="form-check-label" for="radio_disabled">Disabled</label>
+        </div>
+    </div>
 </div>
 
 <div class="card shadow-sm mt-4 mb-4 table-responsive">
@@ -120,6 +141,7 @@
                         ? UserState.JobCategoryExpandStatuses.GetOrCreate(category.CategoryId)
                         : UserState.JobCategoryExpandStatuses.GetOrCreate(Guid.Empty);
                     var filteredJobs = jobs
+                        .Where(j => stateFilter switch { StateFilter.Enabled => j.IsEnabled, StateFilter.Disabled => !j.IsEnabled, _ => true })
                         .Where(j => j.CategoryId == category?.CategoryId)
                         .Where(j => string.IsNullOrEmpty(jobNameFilter) || j.JobName.ContainsIgnoreCase(jobNameFilter))
                         .Where(j => string.IsNullOrEmpty(stepNameFilter) || steps.Any(s => s.JobId == j.JobId && (s.StepName?.ContainsIgnoreCase(stepNameFilter) ?? false)));

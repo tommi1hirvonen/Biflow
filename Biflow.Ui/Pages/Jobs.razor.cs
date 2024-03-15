@@ -30,6 +30,9 @@ public partial class Jobs : ComponentBase, IDisposable
     private ExecuteModal? executeModal;
     private string jobNameFilter = "";
     private string stepNameFilter = "";
+    private StateFilter stateFilter = StateFilter.All;
+
+    private enum StateFilter { All, Enabled, Disabled }
 
     protected override async Task OnInitializedAsync()
     {
