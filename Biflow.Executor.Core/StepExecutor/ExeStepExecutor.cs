@@ -41,11 +41,12 @@ internal class ExeStepExecutor(
             startInfo.WorkingDirectory = step.ExeWorkingDirectory;
         }
 
-        if (OperatingSystem.IsWindows() && !string.IsNullOrEmpty(step.Username))
+        var cred = step.GetRunAsCredential();
+        if (OperatingSystem.IsWindows() && cred is not null)
         {
-            startInfo.Domain = step.Domain.NullIfEmpty();
-            startInfo.UserName = step.Username;
-            startInfo.PasswordInClearText = step.Password.NullIfEmpty();
+            startInfo.Domain = cred.Domain.NullIfEmpty();
+            startInfo.UserName = cred.Username;
+            startInfo.PasswordInClearText = cred.Password.NullIfEmpty();
             startInfo.LoadUserProfile = true;
         }
 
