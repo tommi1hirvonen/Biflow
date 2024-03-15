@@ -61,17 +61,44 @@
                 </div>
                 @if (FilteredSchedules is not null)
                 {
-                    var jobs = FilteredSchedules.GroupBy(key => key.Job).OrderBy(g => g.Key.JobName);
-                    foreach (var job in jobs)
-                    {
-                        if (!job.Key.IsEnabled)
+                    var jobs = FilteredSchedules
+                        .GroupBy(key => key.Job)
+                        .Where(g => g.Key.IsEnabled)
+                        .OrderBy(g => g.Key.JobName)
+                        .Select(g =>
                         {
-                            continue;
-                        }
+                            var schedules = g
+                                .Where(s => s.IsEnabled)
+                                .Select(s =>
+                                {
+                                    var nextFireTimes = s.NextFireTimes(Start)
+                                        .TakeWhile(t => t is not null && t < End)
+                                        .Cast<DateTime>()
+                                        .ToArray();
+                                    return (Schedule: s, NextFireTimes: nextFireTimes);
+                                })
+                                .Where(s => s.NextFireTimes.Length > 0)
+                                .ToArray();
+                            return (Job: g.Key, Schedules: schedules);
+                        })
+                        .Where(j => j.Schedules.Length > 0)
+                        .ToArray();
+                    if (jobs.Length == 0)
+                    {
+                        <div class="row border-top">
+                            <div class="col py-1">
+                                <small>
+                                    No active jobs and schedules for selected time range
+                                </small>
+                            </div>
+                        </div>
+                    }
+                    foreach (var (job, schedules) in jobs)
+                    {
                         <div class="row border-top">
                             <div class="col-xl-3 col-lg-4 col-5 text-end py-1">
                                 <small>
-                                    @job.Key.JobName
+                                    @job.JobName
                                 </small>
                             </div>
                             <div class="col-xl-9 col-lg-8 col-7 d-flex align-items-center" style="position: relative;">
@@ -84,13 +111,8 @@
                                 {
                                     <div class="d-flex align-items-center" style="height: 100%; border-left: 1px solid var(--bs-danger); position: absolute; left: @(currentTimePercentage.ToString("F10", CultureInfo.InvariantCulture))%;"></div>
                                 }
-                                @foreach (var schedule in job)
+                                @foreach (var (schedule, nextFireTimes) in schedules)
                                 {
-                                    if (!schedule.IsEnabled)
-                                    {
-                                        continue;
-                                    }
-                                    var nextFireTimes = schedule.NextFireTimes(Start).TakeWhile(t => t is not null && t < End).Cast<DateTime>();
                                     foreach (var dt in nextFireTimes)
                                     {
                                         var offset = GetOffset(dt);
