@@ -17,7 +17,7 @@
 </AuthorizeView>
 
 <div class="card shadow-sm pt-2 my-4">
-    <table class="table table-hover">
+    <table class="table table-hover table-sm">
         <thead>
             <tr>
                 <th>
@@ -52,7 +52,7 @@
             {
                 @foreach (var item in schedules.OrderBy(s => s.ScheduleName))
                 {
-                    <tr class="schedule-row @(item.IsEnabled ? null : "disabled")">
+                    <tr class="schedule-row small @(item.IsEnabled ? null : "disabled")">
                         <td class="align-middle">
                             @item.ScheduleName
                         </td>
@@ -68,21 +68,14 @@
                                 </AuthorizeView>
                             </div>
                         </td>
-                        <td>
-                            <div class="d-inline-flex">
-                                @item.CronExpression
-                                &nbsp;&nbsp;
-                                <HxTooltip Placement="TooltipPlacement.Auto"
-                                           Text="@item.GetScheduleDescription()">
-                                    <CxIcon Icon="FeatherIcon.Info" />
-                                </HxTooltip>
-                            </div>
+                        <td class="align-middle">
+                            <span>@item.CronExpression</span>
+                            <br />
+                            <span class="text-secondary small">@item.GetScheduleDescription()</span>
                         </td>
                         <td>
                             <div class="d-inline-flex @(!item.IsEnabled || (!Job?.IsEnabled ?? false) ? "text-body-tertiary" : null)">
                                 @item.NextFireTimes().FirstOrDefault()
-                                @(!item.IsEnabled ? "(Schedule disabled)" : null)
-                                @(!Job?.IsEnabled ?? false ? "(Job disabled)" : null)
                                 &nbsp;&nbsp;
                                 <HxTooltip Placement="TooltipPlacement.Auto"
                                            Text="@("Next execution(s) (first 15):\n" + string.Join("\n", item.NextFireTimes().Take(15)))"
@@ -90,6 +83,11 @@
                                     <CxIcon Icon="FeatherIcon.Info" />
                                 </HxTooltip>
                             </div>
+                            <br />
+                            <span class="text-body-tertiary small">
+                                @(!item.IsEnabled ? "(Schedule disabled)" : null)
+                                @(Job?.IsEnabled == false ? "(Job disabled)" : null)
+                            </span>
                         </td>
                         <td class="align-middle">
                             @if (!item.Tags.Any())
