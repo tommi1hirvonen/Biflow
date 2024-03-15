@@ -59,6 +59,7 @@ internal class ExecutionBuilderFactory<TDbContext>(IDbContextFactory<TDbContext>
             .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.ExpressionParameters)}")
             .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.InheritFromJobParameter)}")
             .Include(s => (s as JobStep)!.TagFilters)
+            .Include(s => (s as ExeStep)!.RunAsCredential)
             .Include(s => s.Dependencies)
             .Include(s => s.DataObjects)
             .ThenInclude(t => t.DataObject)

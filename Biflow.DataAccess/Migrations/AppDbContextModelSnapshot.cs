@@ -1873,6 +1873,11 @@ namespace Biflow.DataAccess.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("ExeRunAsCredentialId");
 
+                    b.Property<string>("RunAsUsername")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)")
+                        .HasColumnName("ExeRunAsUsername");
+
                     b.Property<double>("TimeoutMinutes")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("float")

@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Biflow.DataAccess.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240314054221_RunAsCredential")]
+    [Migration("20240314063527_RunAsCredential")]
     partial class RunAsCredential
     {
         /// <inheritdoc />
@@ -1875,6 +1875,11 @@ namespace Biflow.DataAccess.Migrations
                     b.Property<Guid?>("RunAsCredentialId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("ExeRunAsCredentialId");
+
+                    b.Property<string>("RunAsUsername")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)")
+                        .HasColumnName("ExeRunAsUsername");
 
                     b.Property<double>("TimeoutMinutes")
                         .ValueGeneratedOnUpdateSometimes()

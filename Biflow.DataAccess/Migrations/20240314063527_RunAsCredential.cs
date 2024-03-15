@@ -25,6 +25,14 @@ namespace Biflow.DataAccess.Migrations
                 type: "uniqueidentifier",
                 nullable: true);
 
+            migrationBuilder.AddColumn<string>(
+                name: "ExeRunAsUsername",
+                schema: "app",
+                table: "ExecutionStep",
+                type: "nvarchar(400)",
+                maxLength: 400,
+                nullable: true);
+
             migrationBuilder.CreateTable(
                 name: "Credential",
                 schema: "app",
@@ -69,6 +77,11 @@ namespace Biflow.DataAccess.Migrations
 
             migrationBuilder.DropColumn(
                 name: "ExeRunAsCredentialId",
+                schema: "app",
+                table: "ExecutionStep");
+
+            migrationBuilder.DropColumn(
+                name: "ExeRunAsUsername",
                 schema: "app",
                 table: "ExecutionStep");
         }
