@@ -26,6 +26,7 @@ public partial class JobDetails : ComponentBase, IDisposable
     private List<AppRegistration>? appRegistrations;
     private List<FunctionApp>? functionApps;
     private List<QlikCloudClient>? qlikCloudClients;
+    private List<Credential>? credentials;
     private bool descriptionOpen;
 
     public static IQueryable<Step> BuildStepsQueryWithIncludes(AppDbContext context)
@@ -68,6 +69,11 @@ public partial class JobDetails : ComponentBase, IDisposable
         qlikCloudClients = await context.QlikCloudClients
             .AsNoTracking()
             .OrderBy(c => c.QlikCloudClientName)
+            .ToListAsync(cts.Token);
+        credentials = await context.Credentials
+            .AsNoTracking()
+            .OrderBy(c => c.Domain)
+            .ThenBy(c => c.Username)
             .ToListAsync(cts.Token);
         job = await context.Jobs
             .AsNoTrackingWithIdentityResolution()

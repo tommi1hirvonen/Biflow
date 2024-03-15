@@ -205,12 +205,7 @@
                 Run as
             </dt>
             <dd class="col-sm-9">
-                @{
-                    var username = exe.Domain is { Length: > 0 } domain
-                        ? $@"{domain}\{exe.Username}"
-                        : exe.Username; 
-                }
-                @username
+                @exe.RunAsUsername
             </dd>
 
             <dt class="col-sm-3">

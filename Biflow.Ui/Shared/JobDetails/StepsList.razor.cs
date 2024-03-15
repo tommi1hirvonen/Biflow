@@ -33,6 +33,8 @@ public partial class StepsList : ComponentBase
 
     [Parameter] public List<QlikCloudClient>? QlikCloudClients { get; set; }
 
+    [Parameter] public List<Credential>? Credentials { get; set; }
+
     [Parameter] public Guid? InitialStepId { get; set; }
 
     private readonly HashSet<StepType> stepTypeFilter = [];

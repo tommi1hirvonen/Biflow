@@ -30,6 +30,12 @@
             </NavLink>
         </li>
         <li class="nav-item" role="presentation">
+            <NavLink class="nav-link" href="settings/credentials">
+                <CxIcon Icon="FeatherIcon.Key" />
+                Credentials
+            </NavLink>
+        </li>
+        <li class="nav-item" role="presentation">
             <NavLink class="nav-link" href="settings/appregistrations">
                 <CxIcon Icon="FeatherIcon.Globe" />
                 App registrations
@@ -118,6 +124,12 @@ else if (Page == "blobclients")
 {
     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
         <BlobClientsList />
+    </AuthorizeView>
+}
+else if (Page == "credentials")
+{
+    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
+        <CredentialsList />
     </AuthorizeView>
 }
 else

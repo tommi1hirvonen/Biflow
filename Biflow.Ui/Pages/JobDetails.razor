@@ -164,6 +164,7 @@
                                    AppRegistrations="appRegistrations"
                                    FunctionApps="functionApps"
                                    QlikCloudClients="qlikCloudClients"
+                                   Credentials="credentials"
                                    InitialStepId="@(DetailsPage == "steps" ? InitialStepId : null)" />
                     </div>
 
@@ -185,7 +186,8 @@
                                            AppRegistrations="appRegistrations"
                                            FunctionApps="functionApps"
                                            InitialStepId="InitialStepId"
-                                           QlikCloudClients="qlikCloudClients" />
+                                           QlikCloudClients="qlikCloudClients"
+                                           Credentials="credentials" />
                     }
                     else if (DetailsPage == "lineage")
                     {

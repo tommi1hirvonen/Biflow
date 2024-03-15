@@ -133,24 +133,28 @@
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <TabularStepEditModal @ref="stepEditModals[StepType.Tabular]"
         Connections="SqlConnections"
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <DatasetStepEditModal @ref="stepEditModals[StepType.Dataset]"
         Connections="SqlConnections"
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <ExeStepEditModal @ref="stepEditModals[StepType.Exe]"
         Connections="SqlConnections"
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <JobStepEditModal @ref="stepEditModals[StepType.Job]"
         Connections="SqlConnections"
@@ -163,6 +167,7 @@
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <PipelineStepEditModal @ref="stepEditModals[StepType.Pipeline]"
         Connections="SqlConnections"
@@ -170,6 +175,7 @@
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
         PipelineClients="PipelineClients"
+        Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <FunctionStepEditModal @ref="stepEditModals[StepType.Function]"
         Connections="SqlConnections"
@@ -177,24 +183,28 @@
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
         FunctionApps="FunctionApps"
+        Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <AgentJobStepEditModal @ref="stepEditModals[StepType.AgentJob]"
         Connections="SqlConnections"
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <EmailStepEditModal @ref="stepEditModals[StepType.Email]"
         Connections="SqlConnections"
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <QlikStepEditModal @ref="stepEditModals[StepType.Qlik]"
         Connections="SqlConnections"
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
 </AuthorizeView>
 
@@ -216,6 +226,8 @@
     [Parameter] public List<FunctionApp>? FunctionApps { get; set; }
 
     [Parameter] public List<QlikCloudClient>? QlikCloudClients { get; set; }
+
+    [Parameter] public List<Credential>? Credentials { get; set; }
 
     [Parameter] public Guid? InitialStepId { get; set; }
 

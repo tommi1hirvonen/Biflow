@@ -87,24 +87,13 @@
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.User" />
                     </div>
-                    <InputText class="form-control form-control-sm" @bind-Value="Step.Domain" placeholder="Domain" style="max-width: 12rem;"></InputText>
-                    <div class="input-group-text">
-                        \
-                    </div>
-                    <InputText class="form-control form-control-sm" @bind-Value="Step.Username" placeholder="Username"></InputText>
-                </div>
-            </div>
-        </div>
-
-        <div class="row mt-3">
-            <div class="col-md-4 d-md-flex justify-content-end">
-            </div>
-            <div class="col-md-6">
-                <div class="input-group input-group-sm">
-                    <div class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.Key" />
-                    </div>
-                    <InputText class="form-control form-control-sm" @bind-Value="Step.Password" type="password" placeholder="Password"></InputText>
+                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.RunAsCredentialId">
+                        <option value="">Executor service user</option>
+                        @foreach (var cred in Credentials)
+                        {
+                            <option value="@cred.CredentialId">@cred.DisplayName</option>
+                        }
+                    </InputSelect>
                 </div>
             </div>
         </div>
