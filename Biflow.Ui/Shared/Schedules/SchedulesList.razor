@@ -4,22 +4,46 @@
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
     <div class="row mt-3">
-        <div class="col">
-            <HxButton Color="ThemeColor.Success"
-                      @onclick="async () => await editModal.LetAsync(x => x.ShowAsync(Guid.Empty))"
-                      Enabled="Jobs is not null && Jobs?.Any() == true">
-                Add schedule
-            </HxButton>
-            <HxButton CssClass="ms-3" Color="ThemeColor.Primary" @onclick="SynchronizeSchedulerService">
-                <CxIcon Icon="FeatherIcon.RefreshCw" />
-                Synchronize
-            </HxButton>
-            <HxButton CssClass="ms-3 btn-auto" Color="ThemeColor.None" OnClick="ShowStatusOffcanvasAsync" Spinner="false" title="Show scheduler service status">
-                <CxIcon Icon="FeatherIcon.Info" />
-                Status
-            </HxButton>
+        <div class="col-auto">
+            <div class="row">
+                <div class="col-auto">
+                    <HxButton Color="ThemeColor.Success"
+                              @onclick="async () => await editModal.LetAsync(x => x.ShowAsync(Guid.Empty))"
+                              Enabled="Jobs is not null && Jobs?.Any() == true">
+                        Add schedule
+                    </HxButton>
+                    <HxButton CssClass="ms-3" Color="ThemeColor.Primary" @onclick="SynchronizeSchedulerService">
+                        <CxIcon Icon="FeatherIcon.RefreshCw" />
+                        Synchronize
+                    </HxButton>
+                    <HxButton CssClass="ms-3 btn-auto" Color="ThemeColor.None" OnClick="ShowStatusOffcanvasAsync" Spinner="false" title="Show scheduler service status">
+                        <CxIcon Icon="FeatherIcon.Info" />
+                        Status
+                    </HxButton>
+                </div>
+                <div class="col-xl-auto mt-xl-0 mt-3 d-flex align-items-center">
+                    <div class="form-check form-check-inline">
+                        <input type="radio" class="form-check-input" id="radio_all"
+                               checked=@(stateFilter == StateFilter.All)
+                               @onchange="() => stateFilter = StateFilter.All">
+                        <label class="form-check-label" for="radio_all">All</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input type="radio" class="form-check-input" id="radio_enabled"
+                               checked=@(stateFilter == StateFilter.Enabled)
+                               @onchange="() => stateFilter = StateFilter.Enabled">
+                        <label class="form-check-label" for="radio_enabled">Enabled</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input type="radio" class="form-check-input" id="radio_disabled"
+                               checked=@(stateFilter == StateFilter.Disabled)
+                               @onchange="() => stateFilter = StateFilter.Disabled">
+                        <label class="form-check-label" for="radio_disabled">Disabled</label>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="col text-end">
+        <div class="col-auto ms-auto">
             <HxButton Color="ThemeColor.None" CssClass="btn-auto" OnClick="async () => await helpModal.LetAsync(x => x.ShowAsync())">
                 <CxIcon Icon="FeatherIcon.HelpCircle" />
             </HxButton>
@@ -64,7 +88,11 @@
             }
             else
             {
-                var schedules = FilteredSchedules.OrderBy(s => s.Job.JobName).ThenBy(s => s.ScheduleName).ToArray();
+                var schedules = FilteredSchedules
+                    .Where(s => stateFilter switch { StateFilter.Enabled => s.IsEnabled, StateFilter.Disabled => !s.IsEnabled, _ => true })
+                    .OrderBy(s => s.Job.JobName)
+                    .ThenBy(s => s.ScheduleName)
+                    .ToArray();
                 <Virtualize TItem="Schedule" Items="schedules" Context="item" SpacerElement="tr" ItemSize="45" OverscanCount="20">
                     <tr class="schedule-row small @(item.IsEnabled ? null : "disabled")">
                         <td class="align-middle">
@@ -198,6 +226,9 @@
     private HxOffcanvas? statusOffcanvas;
     private CodeEditor? editor;
     private string? schedulerStatus = null;
+    private StateFilter stateFilter = StateFilter.All;
+
+    private enum StateFilter { All, Enabled, Disabled }
 
     private async Task ToggleEnabled(ChangeEventArgs args, Schedule schedule)
     {
