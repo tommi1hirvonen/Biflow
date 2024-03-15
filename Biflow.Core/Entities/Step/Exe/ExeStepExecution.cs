@@ -23,6 +23,7 @@ public class ExeStepExecution : StepExecution,
         ExeSuccessExitCode = step.ExeSuccessExitCode;
         TimeoutMinutes = step.TimeoutMinutes;
         RunAsCredentialId = step.RunAsCredentialId;
+        RunAsUsername = step.RunAsCredential?.DisplayName;
 
         StepExecutionParameters = step.StepParameters
             .Select(p => new ExeStepExecutionParameter(p, this))
@@ -47,6 +48,8 @@ public class ExeStepExecution : StepExecution,
     public double TimeoutMinutes { get; private set; }
 
     public Guid? RunAsCredentialId { get; private set; }
+
+    public string? RunAsUsername { get; private set; }
 
     public IEnumerable<ExeStepExecutionParameter> StepExecutionParameters { get; } = new List<ExeStepExecutionParameter>();
 
