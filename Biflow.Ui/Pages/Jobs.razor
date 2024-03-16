@@ -128,14 +128,11 @@
             }
             else
             {
-                foreach (var item in FilteredJobs.OrderBy(j => j.JobName))
-                {
-                    var lastExecution = GetLastExecution(item);
-                    if (statusFilter.Any() && (lastExecution is null || !statusFilter.Contains(lastExecution.ExecutionStatus)))
-                    {
-                        continue;
+                var items = FilteredJobs.OrderBy(j => j.Job.JobName).ToArray();
+                <Virtualize Items="items" Context="listItem" SpacerElement="tr" ItemSize="45" OverscanCount="0">
+                    @{
+                        var (item, lastExecution, nextStartTime) = listItem;
                     }
-                    var nextStartTime = GetNextStartTime(item);
                     <ContextMenuToggle ContainerHtmlTag="tr" CssClass="@($"job-row {(item.IsEnabled ? null : "disabled")}")">
                         <ChildContent Context="menu">
                             <td class="align-middle">
@@ -218,7 +215,7 @@
                             </AuthorizeView>
                         </MenuContent>
                     </ContextMenuToggle>
-                }
+                </Virtualize>
             }
         </tbody>
     </table>

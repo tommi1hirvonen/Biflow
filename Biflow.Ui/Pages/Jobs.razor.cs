@@ -19,7 +19,6 @@ public partial class Jobs : ComponentBase, IDisposable
     private readonly HashSet<ExecutionStatus> statusFilter = [];
     private readonly CancellationTokenSource cts = new();
 
-    private bool userIsAdminOrEditor;
     private List<Job>? jobs;    
     private List<JobCategory>? categories;
     private Dictionary<Guid, Execution>? lastExecutions;
@@ -32,20 +31,23 @@ public partial class Jobs : ComponentBase, IDisposable
     private string stepNameFilter = "";
     private StateFilter stateFilter = StateFilter.All;
 
-    private IEnumerable<Job> FilteredJobs => jobs?
+    private IEnumerable<ListItem> FilteredJobs => jobs?
         .Where(j => stateFilter switch { StateFilter.Enabled => j.IsEnabled, StateFilter.Disabled => !j.IsEnabled, _ => true })
         .Where(j => string.IsNullOrEmpty(jobNameFilter) || j.JobName.ContainsIgnoreCase(jobNameFilter))
         .Where(j => string.IsNullOrEmpty(stepNameFilter) || steps.Any(s => s.JobId == j.JobId && (s.StepName?.ContainsIgnoreCase(stepNameFilter) ?? false)))
+        .Select(j => new ListItem(j, lastExecutions?.GetValueOrDefault(j.JobId), GetNextStartTime(j)))
+        .Where(j => statusFilter.Count == 0 || j.LastExecution is not null && statusFilter.Contains(j.LastExecution.ExecutionStatus))
         ?? [];
 
     private enum StateFilter { All, Enabled, Disabled }
+
+    private record ListItem(Job Job, Execution? LastExecution, DateTime? NextExecution);
 
     protected override async Task OnInitializedAsync()
     {
         ArgumentNullException.ThrowIfNull(AuthenticationState);
         var authState = await AuthenticationState;
         var user = authState.User;
-        userIsAdminOrEditor = user.IsInRole(Roles.Admin) || user.IsInRole(Roles.Editor);
         await LoadDataAsync();
     }
 
@@ -119,14 +121,6 @@ public partial class Jobs : ComponentBase, IDisposable
             .AsNoTracking()
             .Select(s => new StepProjection(s.JobId, s.StepName))
             .ToListAsync(cts.Token);
-    }
-
-    // Helper method for Dictionary TryGet access
-    private Execution? GetLastExecution(Job job)
-    {
-        Execution? execution = null;
-        lastExecutions?.TryGetValue(job.JobId, out execution);
-        return execution;
     }
 
     private static DateTime? GetNextStartTime(Job job)
