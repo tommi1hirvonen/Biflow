@@ -1,4 +1,7 @@
-﻿namespace Biflow.Ui.Pages;
+﻿using Microsoft.JSInterop;
+using System.Text.Json;
+
+namespace Biflow.Ui.Pages;
 
 [Route("/jobs/{Id:guid}/{DetailsPage}/{InitialStepId:guid?}")]
 public partial class JobDetails : ComponentBase, IDisposable
@@ -8,6 +11,7 @@ public partial class JobDetails : ComponentBase, IDisposable
     [Inject] private ToasterService Toaster { get; set; } = null!;
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
     [Inject] private IMediator Mediator { get; set; } = null!;
+    [Inject] private IJSRuntime JS { get; set; } = null!;
 
     [Parameter] public string DetailsPage { get; set; } = "steps";
 
@@ -16,6 +20,7 @@ public partial class JobDetails : ComponentBase, IDisposable
     [Parameter] public Guid? InitialStepId { get; set; }
 
     private readonly CancellationTokenSource cts = new();
+    private static readonly JsonSerializerOptions jsonOptions = new JsonSerializerOptions { WriteIndented = true };
 
     private Job? job;
     private List<Job> jobs = [];
@@ -109,6 +114,13 @@ public partial class JobDetails : ComponentBase, IDisposable
                 steps.Sort();
             }
             StateHasChanged();
+        }
+        catch (CyclicDependencyException<Step> ex)
+        {
+            var cycles = ex.CyclicObjects.Select(c => c.Select(s => new { s.StepId, s.StepName, s.StepType }));
+            var message = JsonSerializer.Serialize(cycles, jsonOptions);
+            _ = JS.InvokeVoidAsync("console.log", message);
+            Toaster.AddError("Error sorting steps", "Cyclic dependencies detected. See browser console for detailed output.");
         }
         catch (Exception ex)
         {

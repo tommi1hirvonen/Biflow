@@ -276,7 +276,7 @@
             .AsNoTrackingWithIdentityResolution()
             .IgnoreQueryFilters()
             .Where(s => s.JobId == Job.JobId || context.Dependencies.Any(d => d.DependantOnStepId == s.StepId && d.Step.JobId == Job.JobId))
-            .Select(s => new StepProjection(s.StepId, s.JobId, s.StepName, s.StepType, s.ExecutionPhase, s.IsEnabled, Array.Empty<Tag>(), s.Dependencies.Select(d => d.DependantOnStepId).ToArray()))
+            .Select(s => new StepProjection(s.StepId, s.JobId, s.Job.JobName, s.StepName, s.StepType, s.ExecutionPhase, s.IsEnabled, Array.Empty<Tag>(), s.Dependencies.Select(d => d.DependantOnStepId).ToArray()))
             .ToListAsync();
 
         List<DependencyGraphNode> nodes;
@@ -287,7 +287,7 @@
                 Id: step.StepId.ToString(),
                 Name: step.StepName ?? "",
                 CssClass: $"{(step.IsEnabled ? "enabled" : "disabled")} {(step.JobId != Job.JobId ? "external" : "internal")}",
-                TooltipText: step.JobId == Job.JobId ? $"{step.StepType}" : $"{step.StepType}, external",
+                TooltipText: step.JobId == Job.JobId ? $"{step.StepType}" : $"{step.StepType}, {step.JobName}",
                 EnableOnClick: step.JobId == Job.JobId
             )).ToList();
             edges = Steps
