@@ -14,14 +14,6 @@
                               Enabled="jobs is not null">
                         Add job
                     </HxButton>
-
-                    <HxButton Color="ThemeColor.Secondary"
-                              CssClass="me-3 mt-3"
-                              Enabled="categories is not null"
-                              OnClick="() => categoryEditModal.LetAsync(x => x.ShowAsync())"
-                              Spinner="false">
-                        Add category
-                    </HxButton>
                 </AuthorizeView>
                 <HxButton Color="ThemeColor.Primary" @onclick="LoadLastExecutionsAsync" Enabled="!isLoading" Spinner="isLoading" CssClass="mt-3">
                     <CxIcon Icon="FeatherIcon.RefreshCw" />
@@ -267,8 +259,6 @@
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
     <JobEditModal @ref="jobEditModal" OnJobSubmitted="OnJobSubmitted" />
-
-    <JobCategoryEditModal @ref="categoryEditModal" OnCategorySubmitted="OnCategorySubmitted" />
 </AuthorizeView>
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">

@@ -20,11 +20,9 @@ public partial class Jobs : ComponentBase, IDisposable
     private readonly CancellationTokenSource cts = new();
 
     private List<Job>? jobs;    
-    private List<JobCategory>? categories;
     private Dictionary<Guid, Execution>? lastExecutions;
     private List<StepProjection> steps = [];
     private bool isLoading = false;
-    private JobCategoryEditModal? categoryEditModal;
     private JobEditModal? jobEditModal;
     private ExecuteModal? executeModal;
     private string jobNameFilter = "";
@@ -38,12 +36,9 @@ public partial class Jobs : ComponentBase, IDisposable
 
     private record ListItem(Job Job, Execution? LastExecution, DateTime? NextExecution);
 
-    protected override async Task OnInitializedAsync()
+    protected override Task OnInitializedAsync()
     {
-        ArgumentNullException.ThrowIfNull(AuthenticationState);
-        var authState = await AuthenticationState;
-        var user = authState.User;
-        await LoadDataAsync();
+        return LoadDataAsync();
     }
 
     private IEnumerable<ListItem> GetListItems()
@@ -88,27 +83,6 @@ public partial class Jobs : ComponentBase, IDisposable
             .Include(job => job.Category)
             .OrderBy(job => job.JobName)
             .ToListAsync(cts.Token);
-
-        // For admins and editors, show all available job categories.
-        ArgumentNullException.ThrowIfNull(AuthenticationState);
-        var authState = await AuthenticationState;
-        if (authState.User.IsInRole(Roles.Admin) || authState.User.IsInRole(Roles.Editor))
-        {
-            categories = await context.JobCategories
-                .AsNoTrackingWithIdentityResolution()
-                .OrderBy(c => c.CategoryName)
-                .ToListAsync(cts.Token);
-        }
-        // For other users, only show categories for jobs they are authorized to see.
-        else
-        {
-            categories = jobs
-                .Select(j => j.Category)
-                .Where(c => c is not null)
-                .Cast<JobCategory>()
-                .DistinctBy(c => c.CategoryId)
-                .ToList();
-        }
         StateHasChanged();
     }
 
@@ -231,39 +205,6 @@ public partial class Jobs : ComponentBase, IDisposable
         }
         jobs?.Add(job);
         jobs?.SortBy(x => x.JobName);
-    }
-
-    private void OnCategorySubmitted(JobCategory category)
-    {
-        var remove = categories?.FirstOrDefault(c => c.CategoryId == category.CategoryId);
-        if (remove is not null)
-        {
-            categories?.Remove(remove);
-        }
-        categories?.Add(category);
-        categories?.SortBy(x => x.CategoryName);
-    }
-
-    private async Task DeleteCategoryAsync(JobCategory category)
-    {
-        if(!await Confirmer.ConfirmAsync("Delete category", $"Are you sure you want to delete \"{category.CategoryName}\"?"))
-        {
-            return;
-        }
-        try
-        {
-            await Mediator.SendAsync(new DeleteJobCategoryCommand(category.CategoryId));
-            categories?.Remove(category);
-            foreach (var job in jobs?.Where(t => t.CategoryId == category.CategoryId) ?? [])
-            {
-                job.CategoryId = null;
-                job.Category = null;
-            }
-        }
-        catch (Exception ex)
-        {
-            Toaster.AddError("Error deleting category", ex.Message);
-        }
     }
 
     public void Dispose()

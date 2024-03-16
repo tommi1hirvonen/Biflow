@@ -19,18 +19,6 @@
                         <InputText @bind-Value="job.JobName" class="form-control" />
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col">
-                        <label class="form-label">Category</label>
-                        <InputSelect class="form-select" @bind-Value="job.CategoryId">
-                            <option value="">No category</option>
-                            @foreach (var cat in categories)
-                            {
-                                <option value="@cat.CategoryId">@cat.CategoryName</option>
-                            }
-                        </InputSelect>
-                    </div>
-                </div>
             </EditForm>
         }
     </BodyTemplate>
