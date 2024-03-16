@@ -6,7 +6,7 @@
 }
 
 <HxDropdownButtonGroup AutoClose="DropdownAutoClose.Outside">
-    <HxDropdownToggleButton Size="ButtonSize" Color="ThemeColor.None" CssClass="@cssClass" OnShown="OnShown" OnHidden="OnHidden">
+    <HxDropdownToggleButton Size="ButtonSize" Color="ThemeColor.None" CssClass="@cssClass" OnShown="OnDropdownShown" OnHidden="OnHidden">
         @TitleTemplate
     </HxDropdownToggleButton>
     <HxDropdownContent CssClass="p-3">
@@ -35,28 +35,35 @@
                         </div>
                     </div>
                 }
-                @foreach (var item in FilteredItems)
+                @*
+                    The number of items could be significant.
+                    For performance reasons, items can be rendered only when the dropdown is first opened.
+                *@
+                @if (!DelayItemsRender || renderItems)
                 {
-                    var id = IdSelector?.Invoke(item) ?? item?.ToString();
-                    <div class="row">
-                        <div class="col">
-                            <div class="form-check form-check-inline">
-                                <input type="checkbox" class="form-check-input" id="@($"{componentInstanceId}_{id}")"
-                                       checked=@FilterSet.Contains(item)
-                                       @onchange="args => Toggle((bool)args.Value!, item)">
-                                <label class="form-check-label fw-normal" for="@($"{componentInstanceId}_{id}")">
-                                    @if (ItemTemplate is not null)
-                                    {
-                                        @ItemTemplate(item)
-                                    }
-                                    else
-                                    {
-                                        @(TextSelector?.Invoke(item) ?? item?.ToString())
-                                    }
-                                </label>
+                    @foreach (var item in FilteredItems)
+                    {
+                        var id = IdSelector?.Invoke(item) ?? item?.ToString();
+                        <div class="row">
+                            <div class="col">
+                                <div class="form-check form-check-inline">
+                                    <input type="checkbox" class="form-check-input" id="@($"{componentInstanceId}_{id}")"
+                                           checked=@FilterSet.Contains(item)
+                                           @onchange="args => Toggle((bool)args.Value!, item)">
+                                    <label class="form-check-label fw-normal" for="@($"{componentInstanceId}_{id}")">
+                                        @if (ItemTemplate is not null)
+                                        {
+                                            @ItemTemplate(item)
+                                        }
+                                        else
+                                        {
+                                            @(TextSelector?.Invoke(item) ?? item?.ToString())
+                                        }
+                                    </label>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    }
                 }
             </div>
         </div>
@@ -104,7 +111,11 @@
     [Parameter]
     public ButtonSize ButtonSize { get; set; } = ButtonSize.Small;
 
+    [Parameter]
+    public bool DelayItemsRender { get; set; } = false;
+
     private readonly Guid componentInstanceId = Guid.NewGuid();
+    private bool renderItems = false;
     private string searchText { get; set; } = "";
 
     private IEnumerable<TItem> FilteredItems => Items?
@@ -112,6 +123,12 @@
                     || TextSelector?.Invoke(i).ContainsIgnoreCase(searchText) == true
                     || i?.ToString()?.ContainsIgnoreCase(searchText) == true)
         ?? Enumerable.Empty<TItem>();
+
+    private Task OnDropdownShown()
+    {
+        renderItems = true;
+        return OnShown.InvokeAsync();
+    }
 
     private void Toggle(bool selected, TItem item)
     {
