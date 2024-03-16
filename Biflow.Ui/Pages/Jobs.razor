@@ -102,10 +102,54 @@
     <table class="table mb-0">
         <thead>
             <tr>
-                <th>Job</th>
-                <th>Last execution</th>
-                <th>Status</th>
-                <th>Next execution</th>
+                <th class="align-middle">
+                    <span class="sortable" @onclick="() => sortMode = sortMode == SortMode.NameAsc ? SortMode.NameDesc : SortMode.NameAsc">
+                        Job
+                    </span>
+                    <span class="ms-2">
+                        @if (sortMode == SortMode.NameAsc)
+                        {
+                            <CxIcon Icon="FeatherIcon.ArrowUp" />
+                        }
+                        else if (sortMode == SortMode.NameDesc)
+                        {
+                            <CxIcon Icon="FeatherIcon.ArrowDown" />
+                        }
+                    </span>
+                </th>
+                <th>
+                    <span class="sortable" @onclick="() => sortMode = sortMode == SortMode.LastExecAsc ? SortMode.LastExecDesc : SortMode.LastExecAsc">
+                        Last execution
+                    </span>
+                    <span class="ms-2">
+                        @if (sortMode == SortMode.LastExecAsc)
+                        {
+                            <CxIcon Icon="FeatherIcon.ArrowUp" />
+                        }
+                        else if (sortMode == SortMode.LastExecDesc)
+                        {
+                            <CxIcon Icon="FeatherIcon.ArrowDown" />
+                        }
+                    </span>
+                </th>
+                <th>
+                    Status
+                </th>
+                <th>
+                    <span class="sortable" @onclick="() => sortMode = sortMode == SortMode.NextExecAsc ? SortMode.NextExecDesc : SortMode.NextExecAsc">
+                        Next execution
+                    </span>
+                    <span class="ms-2">
+                        @if (sortMode == SortMode.NextExecAsc)
+                        {
+                            <CxIcon Icon="FeatherIcon.ArrowUp" />
+                        }
+                        else if (sortMode == SortMode.NextExecDesc)
+                        {
+                            <CxIcon Icon="FeatherIcon.ArrowDown" />
+                        }
+                    </span>
+                </th>
                 <th></th>
             </tr>
         </thead>
@@ -128,7 +172,7 @@
             }
             else
             {
-                var items = FilteredJobs.OrderBy(j => j.Job.JobName).ToArray();
+                var items = GetListItems().ToArray();
                 <Virtualize Items="items" Context="listItem" SpacerElement="tr" ItemSize="45" OverscanCount="0">
                     @{
                         var (item, lastExecution, nextStartTime) = listItem;

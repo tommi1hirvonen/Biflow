@@ -30,16 +30,11 @@ public partial class Jobs : ComponentBase, IDisposable
     private string jobNameFilter = "";
     private string stepNameFilter = "";
     private StateFilter stateFilter = StateFilter.All;
-
-    private IEnumerable<ListItem> FilteredJobs => jobs?
-        .Where(j => stateFilter switch { StateFilter.Enabled => j.IsEnabled, StateFilter.Disabled => !j.IsEnabled, _ => true })
-        .Where(j => string.IsNullOrEmpty(jobNameFilter) || j.JobName.ContainsIgnoreCase(jobNameFilter))
-        .Where(j => string.IsNullOrEmpty(stepNameFilter) || steps.Any(s => s.JobId == j.JobId && (s.StepName?.ContainsIgnoreCase(stepNameFilter) ?? false)))
-        .Select(j => new ListItem(j, lastExecutions?.GetValueOrDefault(j.JobId), GetNextStartTime(j)))
-        .Where(j => statusFilter.Count == 0 || j.LastExecution is not null && statusFilter.Contains(j.LastExecution.ExecutionStatus))
-        ?? [];
+    private SortMode sortMode = SortMode.NameAsc;
 
     private enum StateFilter { All, Enabled, Disabled }
+
+    private enum SortMode { NameAsc, NameDesc, LastExecAsc, LastExecDesc, NextExecAsc, NextExecDesc }
 
     private record ListItem(Job Job, Execution? LastExecution, DateTime? NextExecution);
 
@@ -49,6 +44,28 @@ public partial class Jobs : ComponentBase, IDisposable
         var authState = await AuthenticationState;
         var user = authState.User;
         await LoadDataAsync();
+    }
+
+    private IEnumerable<ListItem> GetListItems()
+    {
+        var items = jobs?
+            .Where(j => stateFilter switch { StateFilter.Enabled => j.IsEnabled, StateFilter.Disabled => !j.IsEnabled, _ => true })
+            .Where(j => string.IsNullOrEmpty(jobNameFilter) || j.JobName.ContainsIgnoreCase(jobNameFilter))
+            .Where(j => string.IsNullOrEmpty(stepNameFilter) || steps.Any(s => s.JobId == j.JobId && (s.StepName?.ContainsIgnoreCase(stepNameFilter) ?? false)))
+            .Select(j => new ListItem(j, lastExecutions?.GetValueOrDefault(j.JobId), GetNextStartTime(j)))
+            .Where(j => statusFilter.Count == 0 || j.LastExecution is not null && statusFilter.Contains(j.LastExecution.ExecutionStatus))
+            ?? [];
+        items = sortMode switch
+        {
+            SortMode.NameAsc => items.OrderBy(i => i.Job.JobName),
+            SortMode.NameDesc => items.OrderByDescending(i => i.Job.JobName),
+            SortMode.LastExecAsc => items.OrderBy(i => i.LastExecution?.StartedOn is null).ThenBy(i => i.LastExecution?.StartedOn?.LocalDateTime),
+            SortMode.LastExecDesc => items.OrderBy(i => i.LastExecution?.StartedOn is null).ThenByDescending(i => i.LastExecution?.StartedOn?.LocalDateTime),
+            SortMode.NextExecAsc => items.OrderBy(i => i.NextExecution is null).ThenBy(i => i.NextExecution),
+            SortMode.NextExecDesc => items.OrderBy(i => i.NextExecution is null).ThenByDescending(i => i.NextExecution),
+            _ => items
+        };
+        return items;
     }
 
     private async Task LoadDataAsync()
