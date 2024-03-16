@@ -32,6 +32,12 @@ public partial class Jobs : ComponentBase, IDisposable
     private string stepNameFilter = "";
     private StateFilter stateFilter = StateFilter.All;
 
+    private IEnumerable<Job> FilteredJobs => jobs?
+        .Where(j => stateFilter switch { StateFilter.Enabled => j.IsEnabled, StateFilter.Disabled => !j.IsEnabled, _ => true })
+        .Where(j => string.IsNullOrEmpty(jobNameFilter) || j.JobName.ContainsIgnoreCase(jobNameFilter))
+        .Where(j => string.IsNullOrEmpty(stepNameFilter) || steps.Any(s => s.JobId == j.JobId && (s.StepName?.ContainsIgnoreCase(stepNameFilter) ?? false)))
+        ?? [];
+
     private enum StateFilter { All, Enabled, Disabled }
 
     protected override async Task OnInitializedAsync()
@@ -247,28 +253,6 @@ public partial class Jobs : ComponentBase, IDisposable
         {
             Toaster.AddError("Error deleting category", ex.Message);
         }
-    }
-
-    private void ExpandAll()
-    {
-        foreach (var category in categories ?? Enumerable.Empty<JobCategory>())
-        {
-            var state = UserState.JobCategoryExpandStatuses.GetOrCreate(category.CategoryId);
-            state.IsExpanded = true;
-        }
-        var noCategoryState = UserState.JobCategoryExpandStatuses.GetOrCreate(Guid.Empty);
-        noCategoryState.IsExpanded = true;
-    }
-
-    private void CollapseAll()
-    {
-        foreach (var category in categories ?? Enumerable.Empty<JobCategory>())
-        {
-            var state = UserState.JobCategoryExpandStatuses.GetOrCreate(category.CategoryId);
-            state.IsExpanded = false;
-        }
-        var noCategoryState = UserState.JobCategoryExpandStatuses.GetOrCreate(Guid.Empty);
-        noCategoryState.IsExpanded = false;
     }
 
     public void Dispose()

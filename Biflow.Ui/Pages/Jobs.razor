@@ -102,14 +102,7 @@
     <table class="table mb-0">
         <thead>
             <tr>
-                <th>
-                    <span title="Collapse all" @onclick="CollapseAll" style="cursor: pointer;">
-                        <CxIcon Icon="FeatherIcon.ChevronsUp" />
-                    </span>
-                    <span class="ms-1" title="Expand all" @onclick="ExpandAll" style="cursor: pointer;">
-                        <CxIcon Icon="FeatherIcon.ChevronsDown" />
-                    </span>
-                </th>
+                <th>Job</th>
                 <th>Last execution</th>
                 <th>Status</th>
                 <th>Next execution</th>
@@ -117,7 +110,7 @@
             </tr>
         </thead>
         <tbody>
-            @if (jobs is null || categories is null)
+            @if (jobs is null)
             {
                 <tr>
                     <td colspan="5" class="text-center">
@@ -125,7 +118,7 @@
                     </td>
                 </tr>
             }
-            else if (!jobs.Any() && !categories.Any())
+            else if (!jobs.Any())
             {
                 <tr>
                     <td colspan="5">
@@ -135,163 +128,96 @@
             }
             else
             {
-                foreach (var category in categories.Append(null))
+                foreach (var item in FilteredJobs.OrderBy(j => j.JobName))
                 {
-                    var state = category is not null
-                        ? UserState.JobCategoryExpandStatuses.GetOrCreate(category.CategoryId)
-                        : UserState.JobCategoryExpandStatuses.GetOrCreate(Guid.Empty);
-                    var filteredJobs = jobs
-                        .Where(j => stateFilter switch { StateFilter.Enabled => j.IsEnabled, StateFilter.Disabled => !j.IsEnabled, _ => true })
-                        .Where(j => j.CategoryId == category?.CategoryId)
-                        .Where(j => string.IsNullOrEmpty(jobNameFilter) || j.JobName.ContainsIgnoreCase(jobNameFilter))
-                        .Where(j => string.IsNullOrEmpty(stepNameFilter) || steps.Any(s => s.JobId == j.JobId && (s.StepName?.ContainsIgnoreCase(stepNameFilter) ?? false)));
-
-                    var filtersApplied = jobNameFilter.Any() || statusFilter.Any();
-                    /* Show all categories even if they do not have jobs in them. Show "No category" only if it has jobs */
-                    if ((category is null || filtersApplied) && !filteredJobs.Any())
+                    var lastExecution = GetLastExecution(item);
+                    if (statusFilter.Any() && (lastExecution is null || !statusFilter.Contains(lastExecution.ExecutionStatus)))
                     {
                         continue;
                     }
-                    <ContextMenuToggle ContainerHtmlTag="tr" Disabled="category is null || !userIsAdminOrEditor" CssClass="list-group-header">
-                        <ChildContent Context="menu">                       
-                            <td colspan="4" class="align-middle fw-bold">
-                                @if (state.IsExpanded)
+                    var nextStartTime = GetNextStartTime(item);
+                    <ContextMenuToggle ContainerHtmlTag="tr" CssClass="@($"job-row {(item.IsEnabled ? null : "disabled")}")">
+                        <ChildContent Context="menu">
+                            <td class="align-middle">
+                                <a class="text-body" href="@($"jobs/{item.JobId}/steps")">
+                                    <HighlightableText PartToHighlight="@jobNameFilter" Text="@item.JobName" />
+                                </a>
+                            </td>
+                            <td class="align-middle">
+                                @if (lastExecution is not null)
                                 {
-                                    <span title="Collapse" @onclick="() => state.IsExpanded = false" style="cursor: pointer;">
-                                        <CxIcon Icon="FeatherIcon.ChevronDown" />
-                                        @(category?.CategoryName ?? "No category")
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span title="Expand" @onclick="() => state.IsExpanded = true" style="cursor: pointer;">
-                                        <CxIcon Icon="FeatherIcon.ChevronRight" />
-                                        @(category?.CategoryName ?? "No category")
-                                    </span>
+                                    <a class="text-body" href="javascript:void(0)" @onclick="() => GoToExecutionDetails(lastExecution.ExecutionId)">
+                                        @lastExecution.StartedOn?.LocalDateTime
+                                    </a>
                                 }
                             </td>
-                            <td colspan="1" class="text-end">
-                                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" Spinner="false" CssClass="btn-auto" @onclick="e => menu.ShowContextMenuAsync(e)">
-                                        <CxIcon Icon="FeatherIcon.MoreHorizontal" />
-                                    </HxButton>
-                                </AuthorizeView>
+                            <td class="align-middle">
+                                @if (lastExecution is not null)
+                                {
+                                    <JobExecutionStatusBadge ExecutionStatus="lastExecution.ExecutionStatus" />
+                                }
+                            </td>
+                            <td class="align-middle @(!item.IsEnabled ? "text-body-tertiary" : null)">
+                                @if (nextStartTime is not null)
+                                {
+                                    @nextStartTime
+                                    @(!item.IsEnabled ? " (job disabled)" : null)
+                                }
+                            </td>
+                            <td>
+                                <div class="d-inline-flex align-items-center">
+                                    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="enabled_@item.JobId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
+                                            <label class="form-check-label" for="enabled_@item.JobId"></label>
+                                        </div>
+                                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" Spinner="false" CssClass="btn-auto" @onclick="e => menu.ShowContextMenuAsync(e)">
+                                            <CxIcon Icon="FeatherIcon.MoreHorizontal" />
+                                        </HxButton>
+                                    </AuthorizeView>
+                                    <AuthorizeView Roles="@($"{Roles.Operator}, {Roles.Viewer}")">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="enabled_@item.JobId" disabled checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
+                                            <label class="form-check-label" for="enabled_@item.JobId"></label>
+                                        </div>
+                                    </AuthorizeView>
+                                </div>
                             </td>
                         </ChildContent>
                         <MenuContent>
+                            <DropdownMenuHeader>
+                                @item.JobName
+                            </DropdownMenuHeader>
                             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-                                @if (category is not null)
-                                {
-                                    <DropdownMenuHeader>
-                                        @category.CategoryName
-                                    </DropdownMenuHeader>
-                                    <DropdownMenuItem @onclick="() => categoryEditModal.LetAsync(x => x.ShowAsync(category))">
-                                        <CxIcon Icon="FeatherIcon.Edit2" />
-                                        Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem @onclick="() => DeleteCategoryAsync(category)">
-                                        <CxIcon Icon="FeatherIcon.Trash2" />
-                                        Delete
-                                    </DropdownMenuItem>
-                                }
+                                <DropdownMenuItem @onclick="() => jobEditModal.LetAsync(x => x.ShowAsync(item))">
+                                    <CxIcon Icon="FeatherIcon.Edit2" />
+                                    Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem @onclick="() => DeleteJob(item)">
+                                    <CxIcon Icon="FeatherIcon.Trash2" />
+                                    Delete
+                                </DropdownMenuItem>
+                                <DropdownMenuItem @onclick="() => CopyJob(item)">
+                                    <CxIcon Icon="FeatherIcon.Copy" />
+                                    Copy
+                                </DropdownMenuItem>
+                            </AuthorizeView>
+                            <DropdownMenuItem @onclick="@(() => NavigationManager.NavigateTo($"jobs/{item.JobId}/history"))">
+                                <CxIcon Icon="LucideIcon.History" />
+                                History
+                            </DropdownMenuItem>
+                            <DropdownMenuItem @onclick="@(() => NavigationManager.NavigateTo($"jobs/{item.JobId}/schedules"))">
+                                <CxIcon Icon="FeatherIcon.Calendar" />
+                                Schedules
+                            </DropdownMenuItem>
+                            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+                                <DropdownMenuItem @onclick="() => executeModal.LetAsync(x => x.ShowAsync(item.JobId))">
+                                    <CxIcon Icon="FeatherIcon.Play" />
+                                    Execute
+                                </DropdownMenuItem>
                             </AuthorizeView>
                         </MenuContent>
                     </ContextMenuToggle>
-                    @if (!state.IsExpanded && !filtersApplied)
-                    {
-                        continue;
-                    }
-                    foreach (var item in filteredJobs)
-                    {
-                        var lastExecution = GetLastExecution(item);
-                        if (statusFilter.Any() && (lastExecution is null || !statusFilter.Contains(lastExecution.ExecutionStatus)))
-                        {
-                            continue;
-                        }
-                        var nextStartTime = GetNextStartTime(item);
-                        <ContextMenuToggle ContainerHtmlTag="tr" CssClass="@($"job-row {(item.IsEnabled ? null : "disabled")}")">
-                            <ChildContent Context="menu">
-                                <td class="align-middle">
-                                    <a class="text-body ms-sm-5" href="@($"jobs/{item.JobId}/steps")">
-                                        <HighlightableText PartToHighlight="@jobNameFilter" Text="@item.JobName" />
-                                    </a>
-                                </td>
-                                <td class="align-middle">
-                                    @if (lastExecution is not null)
-                                    {
-                                        <a class="text-body" href="javascript:void(0)" @onclick="() => GoToExecutionDetails(lastExecution.ExecutionId)">
-                                            @lastExecution.StartedOn?.LocalDateTime
-                                        </a>
-                                    }
-                                </td>
-                                <td class="align-middle">
-                                    @if (lastExecution is not null)
-                                    {
-                                        <JobExecutionStatusBadge ExecutionStatus="lastExecution.ExecutionStatus" />
-                                    }
-                                </td>
-                                <td class="align-middle @(!item.IsEnabled ? "text-body-tertiary" : null)">
-                                    @if (nextStartTime is not null)
-                                    {
-                                        @nextStartTime
-                                        @(!item.IsEnabled ? "(Job disabled)" : null)
-                                    }
-                                </td>
-                                <td class="text-end">
-                                    <div class="d-inline-flex align-items-center">
-                                        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-                                            <div class="form-check form-switch">
-                                                <input class="form-check-input" type="checkbox" id="enabled_@item.JobId" checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
-                                                <label class="form-check-label" for="enabled_@item.JobId"></label>
-                                            </div>
-                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" Spinner="false" CssClass="btn-auto" @onclick="e => menu.ShowContextMenuAsync(e)">
-                                                <CxIcon Icon="FeatherIcon.MoreHorizontal" />
-                                            </HxButton>
-                                        </AuthorizeView>
-                                        <AuthorizeView Roles="@($"{Roles.Operator}, {Roles.Viewer}")">
-                                            <div class="form-check form-switch">
-                                                <input class="form-check-input" type="checkbox" id="enabled_@item.JobId" disabled checked="@(item.IsEnabled ? "checked" : null)" @onchange="args => ToggleEnabled(args, item)">
-                                                <label class="form-check-label" for="enabled_@item.JobId"></label>
-                                            </div>
-                                        </AuthorizeView>
-                                    </div>
-                                </td>
-                            </ChildContent>
-                            <MenuContent>
-                                <DropdownMenuHeader>
-                                    @item.JobName
-                                </DropdownMenuHeader>
-                                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-                                    <DropdownMenuItem @onclick="() => jobEditModal.LetAsync(x => x.ShowAsync(item))">
-                                        <CxIcon Icon="FeatherIcon.Edit2" />
-                                        Edit
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem @onclick="() => DeleteJob(item)">
-                                        <CxIcon Icon="FeatherIcon.Trash2" />
-                                        Delete
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem @onclick="() => CopyJob(item)">
-                                        <CxIcon Icon="FeatherIcon.Copy" />
-                                        Copy
-                                    </DropdownMenuItem>
-                                </AuthorizeView>
-                                <DropdownMenuItem @onclick="@(() => NavigationManager.NavigateTo($"jobs/{item.JobId}/history"))">
-                                    <CxIcon Icon="LucideIcon.History" />
-                                    History
-                                </DropdownMenuItem>
-                                <DropdownMenuItem @onclick="@(() => NavigationManager.NavigateTo($"jobs/{item.JobId}/schedules"))">
-                                    <CxIcon Icon="FeatherIcon.Calendar" />
-                                    Schedules
-                                </DropdownMenuItem>
-                                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-                                    <DropdownMenuItem @onclick="() => executeModal.LetAsync(x => x.ShowAsync(item.JobId))">
-                                        <CxIcon Icon="FeatherIcon.Play" />
-                                        Execute
-                                    </DropdownMenuItem>
-                                </AuthorizeView>
-                            </MenuContent>
-                        </ContextMenuToggle>
-                    }
                 }
             }
         </tbody>
