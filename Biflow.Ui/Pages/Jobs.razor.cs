@@ -80,7 +80,6 @@ public partial class Jobs : ComponentBase, IDisposable
         jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Include(job => job.Schedules)
-            .Include(job => job.Category)
             .OrderBy(job => job.JobName)
             .ToListAsync(cts.Token);
         StateHasChanged();

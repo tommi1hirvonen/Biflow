@@ -6,13 +6,6 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
 
     private List<string> tagFilters = [];
 
-    private IEnumerable<JobCategory?> JobCategories => JobSlims?.Values
-        .Select(j => j.Category)
-        .Distinct()
-        .OrderBy(c => c is null)
-        .ThenBy(c => c?.CategoryName)
-        ?? Enumerable.Empty<JobCategory?>();
-
     private async Task<InputTagsDataProviderResult> GetTagFilterSuggestions(InputTagsDataProviderRequest request)
     {
         await EnsureAllTagsInitialized();

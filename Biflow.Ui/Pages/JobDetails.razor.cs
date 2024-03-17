@@ -82,7 +82,6 @@ public partial class JobDetails : ComponentBase, IDisposable
             .ToListAsync(cts.Token);
         job = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
-            .Include(job => job.Category)
             .FirstAsync(job => job.JobId == Id, cts.Token);
         steps = await BuildStepsQueryWithIncludes(context)
             .Where(step => step.JobId == job.JobId)
@@ -90,7 +89,6 @@ public partial class JobDetails : ComponentBase, IDisposable
             .ToListAsync(cts.Token);
         jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
-            .Include(j => j.Category)
             .OrderBy(j => j.JobName)
             .ToListAsync(cts.Token);
         SortSteps();

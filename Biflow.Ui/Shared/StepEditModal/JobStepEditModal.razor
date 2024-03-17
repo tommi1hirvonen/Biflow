@@ -14,16 +14,11 @@
                     </div>
                     <InputSelect class="form-select" @bind-Value="Step.JobToExecuteId" @bind-Value:after="SetJobToExecute">
                         <option value=""></option>
-                        @foreach (var category in JobCategories)
+                        @foreach (var job in JobSlims.Values.Where(j => j.JobId != Step.JobId).OrderBy(j => j.JobName))
                         {
-                            <optgroup label="@(category?.CategoryName ?? "No category")">
-                                @foreach (var job in JobSlims.Values.Where(j => j.CategoryId == category?.CategoryId && j.JobId != Step.JobId).OrderBy(j => j.JobName))
-                                {
-                                    <option value="@job.JobId">
-                                        @job.JobName
-                                    </option>
-                                }
-                            </optgroup>
+                            <option value="@job.JobId">
+                                @job.JobName
+                            </option>
                         }
                     </InputSelect>
                 </div>

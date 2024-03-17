@@ -26,16 +26,11 @@
                                 else
                                 {
                                     <option value="">Select job</option>
-                                    foreach (var category in JobCategories)
+                                    @foreach (var job in Jobs.OrderBy(j => j.JobName))
                                     {
-                                        <optgroup label="@(category?.CategoryName ?? "No category")">
-                                            @foreach (var job in Jobs.Where(j => j.CategoryId == category?.CategoryId).OrderBy(j => j.JobName))
-                                            {
-                                                <option value="@job.JobId">
-                                                    @job.JobName
-                                                </option>
-                                            }
-                                        </optgroup>
+                                        <option value="@job.JobId">
+                                            @job.JobName
+                                        </option>
                                     }
                                 }
                             </InputSelect>
@@ -138,12 +133,6 @@
     private HxOffcanvas? offcanvas;
     private List<string> tags = new();
     private IEnumerable<Tag> allTags = Enumerable.Empty<Tag>();
-
-    private IEnumerable<JobCategory?> JobCategories => Jobs
-        .Select(j => j.Category)
-        .Distinct()
-        .OrderBy(c => c is null)
-        .ThenBy(c => c?.CategoryName);
 
     private Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
     {

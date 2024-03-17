@@ -8,19 +8,16 @@
 
 <HxOffcanvas @ref="offcanvas" Title="@title">
     <BodyTemplate>
-        @if (categories is not null)
-        {
-            <EditForm Model="job" OnValidSubmit="OnSubmit" id="job_edit_form">
-                <DataAnnotationsValidator />
-                <ValidationSummary />
-                <div class="row">
-                    <div class="col">
-                        <label class="form-label">Name</label>
-                        <InputText @bind-Value="job.JobName" class="form-control" />
-                    </div>
+        <EditForm Model="job" OnValidSubmit="OnSubmit" id="job_edit_form">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <div class="row">
+                <div class="col">
+                    <label class="form-label">Name</label>
+                    <InputText @bind-Value="job.JobName" class="form-control" />
                 </div>
-            </EditForm>
-        }
+            </div>
+        </EditForm>
     </BodyTemplate>
     <FooterTemplate>
         <HxSubmit Color="ThemeColor.Success" FormId="job_edit_form">
@@ -37,7 +34,6 @@
 
     private HxOffcanvas? offcanvas;
     private Job job = new();
-    private IEnumerable<JobCategory>? categories;
 
     private async Task OnSubmit()
     {
@@ -62,10 +58,6 @@
         try
         {
             using var context = await DbContextFactory.CreateDbContextAsync();
-            categories = await context.JobCategories
-                .AsNoTracking()
-                .OrderBy(c => c.CategoryName)
-                .ToListAsync();
             if (job is not null)
             {
                 this.job = await context.Jobs

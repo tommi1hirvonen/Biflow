@@ -9,12 +9,6 @@ internal class JobEntityTypeConfiguration(AppDbContext context) : IEntityTypeCon
 
         builder.Property(x => x.Timestamp).IsRowVersion();
 
-        builder.Property(x => x.CategoryId).HasColumnName("JobCategoryId");
-
-        builder.HasOne(j => j.Category)
-        .WithMany(c => c.Jobs)
-        .OnDelete(DeleteBehavior.SetNull);
-
         // The user is either admin or editor or is granted authorization to the job.
         builder.HasQueryFilter(j =>
             context.UserRoles == null ||
