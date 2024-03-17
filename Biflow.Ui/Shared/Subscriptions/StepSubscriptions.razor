@@ -136,10 +136,16 @@
                     {
                         var jobs = Jobs
                             .Where(j => string.IsNullOrEmpty(jobSearchTerm) || j.JobName.ContainsIgnoreCase(jobSearchTerm))
-                            .OrderBy(j => j.JobName);
-                        @foreach (var job in jobs)
+                            .OrderBy(j => j.JobName)
+                            .Select(j =>
+                            {
+                                var expanded = jobExpandState.GetValueOrDefault(j.JobId);
+                                var availableSteps = GetAvailableSteps(j);
+                                return (j, expanded, availableSteps);
+                            })
+                            .Where(j => j.availableSteps.Length > 0);
+                        @foreach (var (job, expanded, availableSteps) in jobs)
                         {
-                            var expanded = jobExpandState.GetValueOrDefault(job.JobId);
                             <div class="list-group-item" style="cursor: pointer;" @onclick="() => jobExpandState[job.JobId] = !expanded">
                                 <h6>
                                     @if (expanded)
@@ -155,13 +161,6 @@
                             </div>
                             @if (expanded)
                             {
-                                var availableSteps = GetAvailableSteps(job);
-                                @if (!availableSteps.Any())
-                                {
-                                    <div class="ps-5 list-group-item text-muted">
-                                        No steps available
-                                    </div>
-                                }
                                 @foreach (var step in availableSteps)
                                 {
                                     <div class="ps-5 list-group-item list-group-item-action" @onclick="() => AddSubscriptionAsync(step.StepId)" style="cursor: pointer;">

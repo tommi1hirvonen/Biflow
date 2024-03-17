@@ -112,10 +112,22 @@
                     {
                         var jobs = Jobs
                             .Where(j => string.IsNullOrEmpty(jobSearchTerm) || j.JobName.ContainsIgnoreCase(jobSearchTerm))
-                            .OrderBy(j => j.JobName);
-                        @foreach (var job in jobs)
+                            .OrderBy(j => j.JobName)
+                            .Select(j =>
+                            {
+                                var expanded = jobExpandState.GetValueOrDefault(j.JobId);
+                                var tags = Steps
+                                    .Where(s => s.JobId == j.JobId)
+                                    .SelectMany(s => s.Tags)
+                                    .DistinctBy(t => t.TagId)
+                                    .Where(t => !Subscriptions.Any(sub => t.TagId == sub.TagId && sub.JobId == j.JobId))
+                                    .OrderBy(t => t.TagName)
+                                    .ToArray();
+                                return (j, expanded, tags);
+                            })
+                            .Where(j => j.tags.Length > 0);
+                        @foreach (var (job, expanded, tags) in jobs)
                         {
-                            var expanded = jobExpandState.GetValueOrDefault(job.JobId);
                             <div class="list-group-item" style="cursor: pointer;" @onclick="() => jobExpandState[job.JobId] = !expanded">
                                 <h6>
                                     @if (expanded)
@@ -131,13 +143,6 @@
                             </div>
                             @if (expanded)
                             {
-                                var tags = Steps
-                                    .Where(s => s.JobId == job.JobId)
-                                    .SelectMany(s => s.Tags)
-                                    .DistinctBy(t => t.TagId)
-                                    .Where(t => !Subscriptions.Any(sub => t.TagId == sub.TagId && sub.JobId == job.JobId))
-                                    .OrderBy(t => t.TagName)
-                                    .ToArray();
                                 <div class="ps-5 list-group-item d-flex flex-wrap">
                                     @if (!tags.Any())
                                     {
