@@ -103,6 +103,16 @@
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Search" />
                     </div>
+                    <input type="search" class="form-control form-control-sm" placeholder="Search jobs" @bind-value="jobSearchTerm" @bind-value:event="oninput" />
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col">
+                <div class="input-group">
+                    <div class="input-group-text">
+                        <CxIcon Icon="FeatherIcon.Search" />
+                    </div>
                     <input type="search" class="form-control form-control-sm" placeholder="Search steps" @bind-value="stepSearchTerm" @bind-value:event="oninput" />
                 </div>
             </div>
@@ -119,12 +129,15 @@
                 </FilterDropdown>
             </div>
         </div>
-        <div class="row mt-3" style="height: calc(100vh - 210px); overflow-y: scroll;">
+        <div class="row mt-3" style="height: calc(100vh - 260px); overflow-y: scroll;">
             <div class="col">
                 <div class="list-group">
                     @if (Steps is not null && Jobs is not null)
                     {
-                        @foreach (var job in Jobs.OrderBy(j => j.JobName))
+                        var jobs = Jobs
+                            .Where(j => string.IsNullOrEmpty(jobSearchTerm) || j.JobName.ContainsIgnoreCase(jobSearchTerm))
+                            .OrderBy(j => j.JobName);
+                        @foreach (var job in jobs)
                         {
                             var expanded = jobExpandState.GetValueOrDefault(job.JobId);
                             <div class="list-group-item" style="cursor: pointer;" @onclick="() => jobExpandState[job.JobId] = !expanded">
@@ -137,7 +150,7 @@
                                     {
                                         <CxIcon Icon="FeatherIcon.ChevronRight" />
                                     }
-                                    @job.JobName
+                                    <HighlightableText Text="@job.JobName" PartToHighlight="@jobSearchTerm" />
                                 </h6>
                             </div>
                             @if (expanded)
@@ -189,6 +202,7 @@
 
     private HxOffcanvas? selectStepOffcanvas;
     private string stepSearchTerm = "";
+    private string jobSearchTerm = "";
 
     private IEnumerable<StepSubscription> Subscriptions =>
         User?.Subscriptions.OfType<StepSubscription>() ?? Enumerable.Empty<StepSubscription>();
@@ -224,9 +238,9 @@
         }
 
         return steps
-            .Where(s => !Subscriptions.Any(sub => s.StepId == sub.StepId))
             .Where(s => string.IsNullOrEmpty(stepSearchTerm) || (s.StepName?.ContainsIgnoreCase(stepSearchTerm) ?? false))
             .Where(s => !stepTypeFilter.Any() || stepTypeFilter.Contains(s.StepType))
+            .Where(s => !Subscriptions.Any(sub => s.StepId == sub.StepId))
             .OrderBy(s => s, comparer)
             .ToArray();
     }

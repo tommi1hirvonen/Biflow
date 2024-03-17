@@ -97,11 +97,28 @@
     <BodyTemplate>
         <div class="row">
             <div class="col">
+                <div class="input-group">
+                    <div class="input-group-text">
+                        <CxIcon Icon="FeatherIcon.Search" />
+                    </div>
+                    <input type="search" class="form-control form-control-sm" placeholder="Search jobs" @bind-value="jobSearchTerm" @bind-value:event="oninput" />
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col">
                 <div class="list-group">
-                    @foreach (var job in Jobs?.Where(j => !Subscriptions.Any(s => j.JobId == s.JobId)).OrderBy(j => j.JobName) ?? Enumerable.Empty<JobProjection>())
+                    @{
+                        var jobs = Jobs?
+                            .Where(j => string.IsNullOrEmpty(jobSearchTerm) || j.JobName.ContainsIgnoreCase(jobSearchTerm))
+                            .Where(j => !Subscriptions.Any(s => j.JobId == s.JobId))
+                            .OrderBy(j => j.JobName)
+                            .AsEnumerable() ?? [];
+                    }
+                    @foreach (var job in jobs)
                     {
                         <div class="list-group-item list-group-item-action" @onclick="() => AddSubscriptionAsync(job.JobId)" style="cursor: pointer;">
-                            @job.JobName
+                            <HighlightableText Text="@job.JobName" PartToHighlight="@jobSearchTerm" />
                         </div>
                     }
                 </div>
@@ -126,6 +143,7 @@
     public EventCallback OnSubscriptionCountChanged { get; set; }
 
     private HxOffcanvas? selectJobOffcanvas;
+    private string jobSearchTerm = "";
 
     private IEnumerable<JobSubscription> Subscriptions =>
         User?.Subscriptions.OfType<JobSubscription>() ?? Enumerable.Empty<JobSubscription>();
