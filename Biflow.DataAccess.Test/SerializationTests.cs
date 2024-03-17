@@ -89,16 +89,6 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
     }
 
     [Fact]
-    public void Serialize_JobCategories()
-    {
-        var json = JsonSerializer.Serialize(fixture.JobCategories, Options);
-        var items = JsonSerializer.Deserialize<JobCategory[]>(json, Options);
-        Assert.NotNull(items);
-        Assert.NotEmpty(items);
-        Assert.All(items, x => Assert.NotEqual(x.CategoryId, Guid.Empty));
-    }
-
-    [Fact]
     public void Serialize_Steps()
     {
         var json = JsonSerializer.Serialize(fixture.Steps, Options);
@@ -164,7 +154,6 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
             QlikCloudClients = fixture.QlikCloudClients,
             BlobStorageClients = fixture.BlobStorageClients,
             Jobs = fixture.Jobs,
-            JobCategories = fixture.JobCategories,
             Tags = fixture.Tags,
             DataObjects = fixture.DataObjects,
             DataTables = fixture.DataTables,
@@ -188,7 +177,6 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
     public BlobStorageClient[] BlobStorageClients { get; private set; } = [];
     
     public Job[] Jobs { get; private set; } = [];
-    public JobCategory[] JobCategories { get; private set; } = [];
     public Step[] Steps { get; private set; } = [];
     public Schedule[] Schedules { get; private set; } = [];
 
@@ -229,11 +217,6 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
             .OrderBy(b => b.BlobStorageClientId)
             .ToArrayAsync();
 
-        
-        JobCategories = await context.JobCategories
-            .AsNoTracking()
-            .OrderBy(c => c.CategoryId)
-            .ToArrayAsync();
 
         Jobs = await context.Jobs
             .AsNoTracking()

@@ -18,8 +18,6 @@ public class JobTests(JobFixture fixture) : IClassFixture<JobFixture>
     [Fact] public void CreatedDateTime_NotEquals_Default() => Assert.NotEqual(default, Job.CreatedOn);
 
     [Fact] public void LastModifiedDateTime_NotEquals_Default() => Assert.NotEqual(default, Job.LastModifiedOn);
-
-    [Fact] public void Category_NotNull() => Assert.NotNull(Job.Category);
 }
 
 public class JobFixture(DatabaseFixture fixture) : IAsyncLifetime
@@ -35,8 +33,6 @@ public class JobFixture(DatabaseFixture fixture) : IAsyncLifetime
     public async Task InitializeAsync()
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
-        Job = await context.Jobs
-            .Include(job => job.Category)
-            .FirstAsync(job => job.JobName == "Test job 1");
+        Job = await context.Jobs.FirstAsync(job => job.JobName == "Test job 1");
     }
 }
