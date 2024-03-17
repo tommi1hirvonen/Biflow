@@ -66,11 +66,11 @@ public class AppDbContext : DbContext
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<MasterDataTable> MasterDataTables => Set<MasterDataTable>();
     public DbSet<MasterDataTableCategory> MasterDataTableCategories => Set<MasterDataTableCategory>();
-    public DbSet<JobCategory> JobCategories => Set<JobCategory>();
     public DbSet<QlikCloudClient> QlikCloudClients => Set<QlikCloudClient>();
     public DbSet<StepDataObject> StepDataObjects => Set<StepDataObject>();
     public DbSet<BlobStorageClient> BlobStorageClients => Set<BlobStorageClient>();
     public DbSet<EnvironmentVersion> EnvironmentVersions => Set<EnvironmentVersion>();
+    public DbSet<Credential> Credentials => Set<Credential>();
     #endregion
 
     protected virtual void ConfigureSqlServer(SqlServerDbContextOptionsBuilder options)

@@ -4,6 +4,7 @@ using Biflow.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Biflow.DataAccess.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240314063527_RunAsCredential")]
+    partial class RunAsCredential
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -520,6 +523,10 @@ namespace Biflow.DataAccess.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("CategoryId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("JobCategoryId");
+
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
@@ -568,6 +575,27 @@ namespace Biflow.DataAccess.Migrations
                     b.HasKey("JobId");
 
                     b.ToTable("Job", "app");
+                });
+
+            modelBuilder.Entity("Biflow.Core.Entities.JobCategory", b =>
+                {
+                    b.Property<Guid>("CategoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("JobCategoryId");
+
+                    b.Property<string>("CategoryName")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)")
+                        .HasColumnName("JobCategoryName");
+
+                    b.HasKey("CategoryId");
+
+                    b.HasIndex(new[] { "CategoryName" }, "UQ_JobCategory")
+                        .IsUnique();
+
+                    b.ToTable("JobCategory", "app");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.JobConcurrency", b =>
@@ -2496,6 +2524,16 @@ namespace Biflow.DataAccess.Migrations
                     b.Navigation("AppRegistration");
                 });
 
+            modelBuilder.Entity("Biflow.Core.Entities.Job", b =>
+                {
+                    b.HasOne("Biflow.Core.Entities.JobCategory", "Category")
+                        .WithMany("Jobs")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Category");
+                });
+
             modelBuilder.Entity("Biflow.Core.Entities.JobConcurrency", b =>
                 {
                     b.HasOne("Biflow.Core.Entities.Job", "Job")
@@ -3309,6 +3347,11 @@ namespace Biflow.DataAccess.Migrations
                     b.Navigation("Schedules");
 
                     b.Navigation("Steps");
+                });
+
+            modelBuilder.Entity("Biflow.Core.Entities.JobCategory", b =>
+                {
+                    b.Navigation("Jobs");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.JobParameter", b =>

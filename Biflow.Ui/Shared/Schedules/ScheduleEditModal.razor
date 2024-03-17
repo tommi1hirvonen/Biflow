@@ -14,34 +14,27 @@
                     <DataAnnotationsValidator />
                     <div>
                         <label class="form-label">Job</label>
-                        <div class="input-group">
-                            <div class="input-group-text">
-                                <CxIcon Icon="LucideIcon.ClipboardList" />
-                            </div>
-                            <InputSelect DisplayName="Job" class="form-select" @bind-Value="schedule.JobId" disabled=@(schedule.ScheduleId != Guid.Empty || Job is not null)>
-                                @if (Job is not null)
-                                {
-                                    <option value="@Job.JobId">@Job.JobName</option>
-                                }
-                                else
-                                {
-                                    <option value="">Select job</option>
-                                    foreach (var category in JobCategories)
-                                    {
-                                        <optgroup label="@(category?.CategoryName ?? "No category")">
-                                            @foreach (var job in Jobs.Where(j => j.CategoryId == category?.CategoryId).OrderBy(j => j.JobName))
-                                            {
-                                                <option value="@job.JobId">
-                                                    @job.JobName
-                                                </option>
-                                            }
-                                        </optgroup>
-                                    }
-                                }
-                            </InputSelect>
-                        </div>
+                        <HxAutosuggest Enabled="@(schedule.ScheduleId == Guid.Empty && Job is null)"
+                                       TItem="Job"
+                                       TValue="Guid"
+                                       DataProvider="GetSuggestionsAsync"
+                                       ItemFromValueResolver="jobId => Task.FromResult(Jobs.Append(Job).FirstOrDefault(j => j?.JobId == jobId))"
+                                       ValueSelector="job => job.JobId"
+                                       TextSelector="job => job.JobName"
+                                       @bind-Value="schedule.JobId"
+                                       Context="job"
+                                       MinimumLength="0"
+                                       Placeholder="Select job">
+                            <InputGroupStartTemplate>
+                                <div class="input-group-text">
+                                    <CxIcon Icon="LucideIcon.ClipboardList" />
+                                </div>
+                            </InputGroupStartTemplate>
+                            <ItemTemplate>
+                                <span class="small">@job.JobName</span>
+                            </ItemTemplate>
+                        </HxAutosuggest>
                     </div>
-                    <ValidationMessage For="() => schedule.JobId" />
                     <div class="mt-3">
                         <label class="form-label">Name</label>
                         <div class="input-group">
@@ -139,12 +132,6 @@
     private List<string> tags = new();
     private IEnumerable<Tag> allTags = Enumerable.Empty<Tag>();
 
-    private IEnumerable<JobCategory?> JobCategories => Jobs
-        .Select(j => j.Category)
-        .Distinct()
-        .OrderBy(c => c is null)
-        .ThenBy(c => c?.CategoryName);
-
     private Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
     {
         return Task.FromResult(new InputTagsDataProviderResult
@@ -214,7 +201,7 @@
         }
         else if (scheduleId == Guid.Empty)
         {
-            var jobId = Job?.JobId ?? Jobs.FirstOrDefault()?.JobId;
+            var jobId = Job?.JobId ?? Guid.Empty;
             ArgumentNullException.ThrowIfNull(jobId);
             schedule = new()
             {
@@ -228,6 +215,14 @@
                 .ToList();
 
         await offcanvas.LetAsync(x => x.ShowAsync());
+    }
+
+    private Task<AutosuggestDataProviderResult<Job>> GetSuggestionsAsync(AutosuggestDataProviderRequest request)
+    {
+        return Task.FromResult(new AutosuggestDataProviderResult<Job>
+        {
+            Data = Jobs.Where(j => j.JobName.ContainsIgnoreCase(request.UserInput)).OrderBy(j => j.JobName)
+        });
     }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)

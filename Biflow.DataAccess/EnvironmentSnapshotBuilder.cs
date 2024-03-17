@@ -37,11 +37,6 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
             .ToArrayAsync();
 
 
-        var jobCategories = await context.JobCategories
-            .AsNoTracking()
-            .OrderBy(c => c.CategoryId)
-            .ToArrayAsync();
-
         var jobs = await context.Jobs
             .AsNoTracking()
             .Include(j => j.JobParameters)
@@ -99,7 +94,6 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
             QlikCloudClients = qlikCloudClients,
             BlobStorageClients = blobStorageClients,
             Jobs = jobs,
-            JobCategories = jobCategories,
             Tags = tags,
             DataObjects = dataObjects,
             DataTables = dataTables,

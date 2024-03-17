@@ -8,25 +8,26 @@
                 <label class="form-label mb-lg-0">Job to execute</label>
             </div>
             <div class="col-md-6">
-                <div class="input-group">
-                    <div class="input-group-text">
-                        <CxIcon Icon="LucideIcon.ClipboardList" />
-                    </div>
-                    <InputSelect class="form-select" @bind-Value="Step.JobToExecuteId" @bind-Value:after="SetJobToExecute">
-                        <option value=""></option>
-                        @foreach (var category in JobCategories)
-                        {
-                            <optgroup label="@(category?.CategoryName ?? "No category")">
-                                @foreach (var job in JobSlims.Values.Where(j => j.CategoryId == category?.CategoryId && j.JobId != Step.JobId).OrderBy(j => j.JobName))
-                                {
-                                    <option value="@job.JobId">
-                                        @job.JobName
-                                    </option>
-                                }
-                            </optgroup>
-                        }
-                    </InputSelect>
-                </div>
+                <HxAutosuggest TItem="JobProjection"
+                               TValue="Guid?"
+                               DataProvider="GetSuggestionsAsync"
+                               ItemFromValueResolver="jobId => Task.FromResult(JobSlims.GetValueOrDefault(jobId ?? Guid.Empty))"
+                               ValueSelector="job => job.JobId"
+                               TextSelector="job => job.JobName"
+                               @bind-Value="Step.JobToExecuteId"
+                               @bind-Value:after="SetJobToExecute"
+                               Context="job"
+                               MinimumLength="0"
+                               Placeholder="Select job">
+                    <InputGroupStartTemplate>
+                        <div class="input-group-text">
+                            <CxIcon Icon="LucideIcon.ClipboardList" />
+                        </div>
+                    </InputGroupStartTemplate>
+                    <ItemTemplate>
+                        <span class="small">@job.JobName</span>
+                    </ItemTemplate>
+                </HxAutosuggest>
             </div>
         </div>
 

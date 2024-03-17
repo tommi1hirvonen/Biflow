@@ -9,17 +9,12 @@
                 <div class="col">
                     <label class="form-label">Target job</label>
                     <select class="form-select" @bind="targetJobId">
-                        @foreach (var category in JobCategories)
+                        @foreach (var job in Jobs.OrderBy(j => j.JobName))
                         {
-                            <optgroup label="@(category?.CategoryName ?? "No category")">
-                                @foreach (var job in Jobs.Where(j => j.CategoryId == category?.CategoryId).OrderBy(j => j.JobName))
-                                {
-                                    var jobName = job.JobId == currentJob?.JobId ? $"{job.JobName} (this)" : job.JobName;
-                                    <option value="@job.JobId">
-                                        @jobName
-                                    </option>
-                                }
-                            </optgroup>
+                            var jobName = job.JobId == currentJob?.JobId ? $"{job.JobName} (this)" : job.JobName;
+                            <option value="@job.JobId">
+                                @jobName
+                            </option>
                         }
                     </select>
                 </div>
@@ -66,12 +61,6 @@
     private Job? currentJob;
     private Guid targetJobId;
     private IEnumerable<Step> steps = Enumerable.Empty<Step>();
-
-    private IEnumerable<JobCategory?> JobCategories => Jobs
-        .Select(j => j.Category)
-        .Distinct()
-        .OrderBy(c => c is null)
-        .ThenBy(c => c?.CategoryName);
 
     public async Task ShowAsync(Job currentJob, IEnumerable<Step> steps)
     {

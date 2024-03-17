@@ -2,8 +2,6 @@
 
 public class UserState
 {
-    public Dictionary<Guid, ExpandStatus> JobCategoryExpandStatuses { get; } = [];
-
     public Dictionary<Guid, ExpandStatus> DataTableCategoryExpandStatuses { get; } = [];
 }
 

@@ -2,7 +2,7 @@
 @inject IMediator Mediator
 @inject ToasterService Toaster
 
-@if (editJob is not null && categories is not null)
+@if (editJob is not null)
 {
     <EditForm Model="editJob" OnValidSubmit="UpdateJob" Context="_context">
         <DataAnnotationsValidator />
@@ -14,21 +14,6 @@
                     <CxIcon Icon="FeatherIcon.Edit3" />
                 </div>
                 <InputText class="form-control" @bind-Value="editJob.JobName" autocomplete="off" style="max-width: 50rem;"></InputText>
-            </div>
-        </div>
-        <div>
-            <label class="form-label">Category</label>
-            <div class="input-group">
-                <div class="input-group-text">
-                    <CxIcon Icon="FeatherIcon.Folder" />
-                </div>
-                <InputSelect class="form-select" style="max-width: 50rem;" @bind-Value="editJob.CategoryId">
-                    <option value="">No category</option>
-                    @foreach (var cat in categories)
-                    {
-                        <option value="@cat.CategoryId">@cat.CategoryName</option>
-                    }
-                </InputSelect>
             </div>
         </div>
         <div>
@@ -61,14 +46,12 @@
     </EditForm>
 }
 
-
 @code {
-        [CascadingParameter] Job? Job { get; set; }
+    [CascadingParameter] Job? Job { get; set; }
 
-        [CascadingParameter(Name = "OnJobUpdated")] public Action<Job>? OnJobUpdated { get; set; }
+    [CascadingParameter(Name = "OnJobUpdated")] public Action<Job>? OnJobUpdated { get; set; }
 
     private Job? editJob;
-    private IEnumerable<JobCategory>? categories;
 
     protected override async void OnParametersSet()
     {
@@ -81,10 +64,6 @@
         editJob = await context.Jobs
             .AsNoTracking()
             .FirstAsync(j => j.JobId == Job.JobId);
-        categories = await context.JobCategories
-            .AsNoTracking()
-            .OrderBy(c => c.CategoryName)
-            .ToListAsync();
         StateHasChanged();
     }
 

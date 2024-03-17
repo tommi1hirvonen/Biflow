@@ -125,7 +125,6 @@ public partial class UserEditModal : ComponentBase
             model = new(user, null); // no password model for existing users
         }
         jobs = await context.Jobs
-            .Include(j => j.Category)
             .OrderBy(j => j.JobName)
             .ToListAsync();
         dataTables = await context.MasterDataTables

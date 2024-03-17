@@ -16,6 +16,7 @@ public class ExeStep : Step, IHasTimeout, IHasStepParameters<ExeStepParameter>
         ExeArguments = other.ExeArguments;
         ExeWorkingDirectory = other.ExeWorkingDirectory;
         ExeSuccessExitCode = other.ExeSuccessExitCode;
+        RunAsCredentialId = other.RunAsCredentialId;
         StepParameters = other.StepParameters
             .Select(p => new ExeStepParameter(p, this, targetJob))
             .ToList();
@@ -53,11 +54,9 @@ public class ExeStep : Step, IHasTimeout, IHasStepParameters<ExeStepParameter>
     [Display(Name = "Success exit code")]
     public int? ExeSuccessExitCode { get; set; }
 
-    public string? Domain { get; set; }
+    public Guid? RunAsCredentialId { get; set; }
 
-    public string? Username { get; set; }
-
-    public string? Password { get; set; }
+    public Credential? RunAsCredential { get; set; }
 
     [ValidateComplexType]
     public IList<ExeStepParameter> StepParameters { get; } = new List<ExeStepParameter>();

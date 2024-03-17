@@ -1,4 +1,6 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject ToasterService Toaster
+@inject IJSRuntime JS
 
 <div class="row">
     <div class="col">
@@ -42,7 +44,8 @@
                             IdSelector="x => x.JobId.ToString()"
                             TextSelector="x => x.JobName"
                             OnChange="StateHasChanged"
-                            IsSearchable>
+                            IsSearchable
+                            DelayItemsRender>
                 <TitleTemplate>
                     @if (jobsLoading && JobSlims is null)
                     {
@@ -90,7 +93,7 @@
             <table class="table table-sm table-hover">
                 <tbody>
                     @{
-                        var steps = FilteredStepsOrdered.ToList();
+                        var steps = GetOrderedSteps().ToList();
                         var multiJobAvailable = steps.Select(s => s.JobId).Distinct().Count() > 1;
                     }
                     @foreach (var step in steps)
@@ -144,9 +147,8 @@
                                     @step.StepName
                                     @if (externalDependencies)
                                     {
-                                        var job = JobSlims.GetValueOrDefault(step.JobId);
                                         <br />
-                                        <span class="small">@job?.JobName</span>
+                                        <span class="small">@step.JobName</span>
                                     }
                                 </td>
                                 <td class="align-middle text-center" title="@title">
@@ -195,8 +197,6 @@
     </div>
 </div>
 
-
-
 @code {
     [Parameter]
     public Step? Step { get; set; }
@@ -213,29 +213,51 @@
     private readonly HashSet<JobProjection> jobFilter = [];
     private readonly HashSet<Tag> tagFilter = [];
     private readonly HashSet<StepType> stepTypeFilter = [];
+    private static readonly JsonSerializerOptions jsonOptions = new JsonSerializerOptions { WriteIndented = true };
 
     private Step? previousStep;
     private string dependenciesFilterText = string.Empty;
     private bool jobsLoading = false;
 
-    private IEnumerable<StepProjection> FilteredSteps => StepSlims.Values
+    private IEnumerable<StepProjection> GetOrderedSteps()
+    {
+        // Filter steps and group them by job.
+        var jobs = StepSlims.Values
             .Where(step => !jobFilter.Any() || jobFilter.Any(j => step.JobId == j.JobId))
             .Where(step => step.StepId != Step?.StepId) // Exclude current step => step cannot depend on itself.
             .Where(step => step.StepName?.ContainsIgnoreCase(dependenciesFilterText) == true) // Filter based on search filter.
             .Where(step => !stepTypeFilter.Any() || stepTypeFilter.Contains(step.StepType)) // Filter based on step type
             .Where(step => tagFilter.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Filter based on tags
             .Where(step => !Step?.Dependencies.Any(d => d.DependantOnStepId == step.StepId) ?? true) // Exclude steps which are already listed as dependencies
-            ?? Enumerable.Empty<StepProjection>();
-
-    private IEnumerable<StepProjection> FilteredStepsOrdered => Step?.Job.ExecutionMode switch
-    {
-        ExecutionMode.Dependency => FilteredSteps.OrderBy(step => step,
-            new TopologicalComparer<StepProjection, Guid>(
-                StepSlims.Values,
-                s => s?.StepId ?? Guid.Empty,
-                s => s.Dependencies)),
-        _ => FilteredSteps.OrderBy(step => step) // use default comparer
-    };
+            .GroupBy(step => (step.JobId, step.JobName))
+            .OrderBy(g => g.Key.JobName)
+            .Select(g => (g.Key.JobId, Steps: g.ToArray()))
+            .ToArray();
+        // Sort each job's steps based on the job's execution mode (default or topological comparer).
+        return jobs.SelectMany(j =>
+        {
+            IComparer<StepProjection> comparer = Comparer<StepProjection>.Default;
+            var executionMode = JobSlims.GetValueOrDefault(j.JobId)?.ExecutionMode;
+            if (executionMode == ExecutionMode.Dependency)
+            {
+                try
+                {
+                    comparer = new TopologicalStepProjectionComparer(j.Steps);
+                }
+                catch (CyclicDependencyException ex)
+                {
+                    var message = JsonSerializer.Serialize(ex.CyclicObjects, jsonOptions);
+                    _ = JS.InvokeVoidAsync("console.log", message);
+                    Toaster.AddError("Error sorting steps", "Cyclic dependencies detected. See browser console for detailed output.");
+                }
+                catch (Exception ex)
+                {
+                    Toaster.AddError("Error sorting steps", ex.Message);
+                }
+            }
+            return j.Steps.OrderBy(s => s, comparer);
+        }).ToArray();
+    }
 
     protected override void OnParametersSet()
     {

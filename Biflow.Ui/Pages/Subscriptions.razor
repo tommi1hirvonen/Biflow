@@ -32,11 +32,11 @@
         jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(job => job.JobName)
-            .Select(j => new JobProjection(j.JobId, j.JobName, j.ExecutionMode, j.CategoryId, j.Category))
+            .Select(j => new JobProjection(j.JobId, j.JobName, j.ExecutionMode))
             .ToArrayAsync();
         steps = await context.Steps
             .AsNoTrackingWithIdentityResolution()
-            .Select(s => new StepProjection(s.StepId, s.JobId, s.StepName, s.StepType, s.ExecutionPhase, s.IsEnabled, s.Tags.ToArray(), s.Dependencies.Select(d => d.DependantOnStepId).ToArray()))
+            .Select(s => new StepProjection(s.StepId, s.JobId, s.Job.JobName, s.StepName, s.StepType, s.ExecutionPhase, s.IsEnabled, s.Tags.ToArray(), s.Dependencies.Select(d => d.DependantOnStepId).ToArray()))
             .ToArrayAsync();
         tags = await context.Tags
             .AsNoTrackingWithIdentityResolution()

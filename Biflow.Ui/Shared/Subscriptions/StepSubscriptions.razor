@@ -1,5 +1,6 @@
 ﻿@inject ToasterService Toaster
 @inject IMediator Mediator
+@inject IJSRuntime JS
 
 <div class="row">
     <div class="col">
@@ -102,6 +103,16 @@
                     <div class="input-group-text">
                         <CxIcon Icon="FeatherIcon.Search" />
                     </div>
+                    <input type="search" class="form-control form-control-sm" placeholder="Search jobs" @bind-value="jobSearchTerm" @bind-value:event="oninput" />
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col">
+                <div class="input-group">
+                    <div class="input-group-text">
+                        <CxIcon Icon="FeatherIcon.Search" />
+                    </div>
                     <input type="search" class="form-control form-control-sm" placeholder="Search steps" @bind-value="stepSearchTerm" @bind-value:event="oninput" />
                 </div>
             </div>
@@ -118,14 +129,23 @@
                 </FilterDropdown>
             </div>
         </div>
-        <div class="row mt-3" style="height: calc(100vh - 210px); overflow-y: scroll;">
+        <div class="row mt-3" style="height: calc(100vh - 260px); overflow-y: scroll;">
             <div class="col">
                 <div class="list-group">
                     @if (Steps is not null && Jobs is not null)
                     {
-                        @foreach (var job in Jobs.OrderBy(j => j.JobName))
+                        var jobs = Jobs
+                            .Where(j => string.IsNullOrEmpty(jobSearchTerm) || j.JobName.ContainsIgnoreCase(jobSearchTerm))
+                            .OrderBy(j => j.JobName)
+                            .Select(j =>
+                            {
+                                var expanded = jobExpandState.GetValueOrDefault(j.JobId);
+                                var availableSteps = GetAvailableSteps(j);
+                                return (j, expanded, availableSteps);
+                            })
+                            .Where(j => j.availableSteps.Length > 0);
+                        @foreach (var (job, expanded, availableSteps) in jobs)
                         {
-                            var expanded = jobExpandState.GetValueOrDefault(job.JobId);
                             <div class="list-group-item" style="cursor: pointer;" @onclick="() => jobExpandState[job.JobId] = !expanded">
                                 <h6>
                                     @if (expanded)
@@ -136,31 +156,11 @@
                                     {
                                         <CxIcon Icon="FeatherIcon.ChevronRight" />
                                     }
-                                    @job.JobName
+                                    <HighlightableText Text="@job.JobName" PartToHighlight="@jobSearchTerm" />
                                 </h6>
                             </div>
                             @if (expanded)
                             {
-                                var steps = Steps
-                                    .Where(s => s.JobId == job.JobId)
-                                    .ToArray();
-                                IComparer<StepProjection> comparer = job.ExecutionMode switch
-                                {
-                                    ExecutionMode.Dependency => new TopologicalStepProjectionComparer(steps),
-                                    _ => Comparer<StepProjection>.Default
-                                };
-                                var availableSteps = steps
-                                    .Where(s => !Subscriptions.Any(sub => s.StepId == sub.StepId))
-                                    .Where(s => string.IsNullOrEmpty(stepSearchTerm) || (s.StepName?.ContainsIgnoreCase(stepSearchTerm) ?? false))
-                                    .Where(s => !stepTypeFilter.Any() || stepTypeFilter.Contains(s.StepType))
-                                    .OrderBy(s => s, comparer)
-                                    .ToArray();
-                                @if (!availableSteps.Any())
-                                {
-                                    <div class="ps-5 list-group-item text-muted">
-                                        No steps available
-                                    </div>
-                                }
                                 @foreach (var step in availableSteps)
                                 {
                                     <div class="ps-5 list-group-item list-group-item-action" @onclick="() => AddSubscriptionAsync(step.StepId)" style="cursor: pointer;">
@@ -197,12 +197,52 @@
 
     private readonly HashSet<StepType> stepTypeFilter = [];
     private readonly Dictionary<Guid, bool> jobExpandState = [];
+    private static readonly JsonSerializerOptions jsonOptions = new JsonSerializerOptions { WriteIndented = true };
 
     private HxOffcanvas? selectStepOffcanvas;
     private string stepSearchTerm = "";
+    private string jobSearchTerm = "";
 
     private IEnumerable<StepSubscription> Subscriptions =>
         User?.Subscriptions.OfType<StepSubscription>() ?? Enumerable.Empty<StepSubscription>();
+
+    private StepProjection[] GetAvailableSteps(JobProjection job)
+    {
+        if (Steps is null)
+        {
+            return [];
+        }
+
+        var steps = Steps
+            .Where(s => s.JobId == job.JobId)
+            .ToArray();
+
+        IComparer<StepProjection> comparer = Comparer<StepProjection>.Default;
+        if (job.ExecutionMode == ExecutionMode.Dependency)
+        {
+            try
+            {
+                comparer = new TopologicalStepProjectionComparer(steps);
+            }
+            catch (CyclicDependencyException ex)
+            {
+                var message = JsonSerializer.Serialize(ex.CyclicObjects, jsonOptions);
+                JS.InvokeVoidAsync("console.log", message);
+                Toaster.AddError("Error sorting steps", "Cyclic dependencies detected. See browser console for detailed output.");
+            }
+            catch (Exception ex)
+            {
+                Toaster.AddError("Error sorting steps", ex.Message);
+            }
+        }
+
+        return steps
+            .Where(s => string.IsNullOrEmpty(stepSearchTerm) || (s.StepName?.ContainsIgnoreCase(stepSearchTerm) ?? false))
+            .Where(s => !stepTypeFilter.Any() || stepTypeFilter.Contains(s.StepType))
+            .Where(s => !Subscriptions.Any(sub => s.StepId == sub.StepId))
+            .OrderBy(s => s, comparer)
+            .ToArray();
+    }
 
     private async Task AddSubscriptionAsync(Guid stepId)
     {

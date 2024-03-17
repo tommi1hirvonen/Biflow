@@ -19,25 +19,48 @@ public partial class Jobs : ComponentBase, IDisposable
     private readonly HashSet<ExecutionStatus> statusFilter = [];
     private readonly CancellationTokenSource cts = new();
 
-    private bool userIsAdminOrEditor;
     private List<Job>? jobs;    
-    private List<JobCategory>? categories;
     private Dictionary<Guid, Execution>? lastExecutions;
     private List<StepProjection> steps = [];
     private bool isLoading = false;
-    private JobCategoryEditModal? categoryEditModal;
     private JobEditModal? jobEditModal;
     private ExecuteModal? executeModal;
     private string jobNameFilter = "";
     private string stepNameFilter = "";
+    private StateFilter stateFilter = StateFilter.All;
+    private SortMode sortMode = SortMode.NameAsc;
 
-    protected override async Task OnInitializedAsync()
+    private enum StateFilter { All, Enabled, Disabled }
+
+    private enum SortMode { NameAsc, NameDesc, LastExecAsc, LastExecDesc, NextExecAsc, NextExecDesc }
+
+    private record ListItem(Job Job, Execution? LastExecution, DateTime? NextExecution);
+
+    protected override Task OnInitializedAsync()
     {
-        ArgumentNullException.ThrowIfNull(AuthenticationState);
-        var authState = await AuthenticationState;
-        var user = authState.User;
-        userIsAdminOrEditor = user.IsInRole(Roles.Admin) || user.IsInRole(Roles.Editor);
-        await LoadDataAsync();
+        return LoadDataAsync();
+    }
+
+    private IEnumerable<ListItem> GetListItems()
+    {
+        var items = jobs?
+            .Where(j => stateFilter switch { StateFilter.Enabled => j.IsEnabled, StateFilter.Disabled => !j.IsEnabled, _ => true })
+            .Where(j => string.IsNullOrEmpty(jobNameFilter) || j.JobName.ContainsIgnoreCase(jobNameFilter))
+            .Where(j => string.IsNullOrEmpty(stepNameFilter) || steps.Any(s => s.JobId == j.JobId && (s.StepName?.ContainsIgnoreCase(stepNameFilter) ?? false)))
+            .Select(j => new ListItem(j, lastExecutions?.GetValueOrDefault(j.JobId), GetNextStartTime(j)))
+            .Where(j => statusFilter.Count == 0 || j.LastExecution is not null && statusFilter.Contains(j.LastExecution.ExecutionStatus))
+            ?? [];
+        items = sortMode switch
+        {
+            SortMode.NameAsc => items.OrderBy(i => i.Job.JobName),
+            SortMode.NameDesc => items.OrderByDescending(i => i.Job.JobName),
+            SortMode.LastExecAsc => items.OrderBy(i => i.LastExecution?.StartedOn is null).ThenBy(i => i.LastExecution?.StartedOn?.LocalDateTime),
+            SortMode.LastExecDesc => items.OrderBy(i => i.LastExecution?.StartedOn is null).ThenByDescending(i => i.LastExecution?.StartedOn?.LocalDateTime),
+            SortMode.NextExecAsc => items.OrderBy(i => i.NextExecution is null).ThenBy(i => i.NextExecution),
+            SortMode.NextExecDesc => items.OrderBy(i => i.NextExecution is null).ThenByDescending(i => i.NextExecution),
+            _ => items
+        };
+        return items;
     }
 
     private async Task LoadDataAsync()
@@ -57,30 +80,8 @@ public partial class Jobs : ComponentBase, IDisposable
         jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Include(job => job.Schedules)
-            .Include(job => job.Category)
             .OrderBy(job => job.JobName)
             .ToListAsync(cts.Token);
-
-        // For admins and editors, show all available job categories.
-        ArgumentNullException.ThrowIfNull(AuthenticationState);
-        var authState = await AuthenticationState;
-        if (authState.User.IsInRole(Roles.Admin) || authState.User.IsInRole(Roles.Editor))
-        {
-            categories = await context.JobCategories
-                .AsNoTrackingWithIdentityResolution()
-                .OrderBy(c => c.CategoryName)
-                .ToListAsync(cts.Token);
-        }
-        // For other users, only show categories for jobs they are authorized to see.
-        else
-        {
-            categories = jobs
-                .Select(j => j.Category)
-                .Where(c => c is not null)
-                .Cast<JobCategory>()
-                .DistinctBy(c => c.CategoryId)
-                .ToList();
-        }
         StateHasChanged();
     }
 
@@ -110,14 +111,6 @@ public partial class Jobs : ComponentBase, IDisposable
             .AsNoTracking()
             .Select(s => new StepProjection(s.JobId, s.StepName))
             .ToListAsync(cts.Token);
-    }
-
-    // Helper method for Dictionary TryGet access
-    private Execution? GetLastExecution(Job job)
-    {
-        Execution? execution = null;
-        lastExecutions?.TryGetValue(job.JobId, out execution);
-        return execution;
     }
 
     private static DateTime? GetNextStartTime(Job job)
@@ -211,61 +204,6 @@ public partial class Jobs : ComponentBase, IDisposable
         }
         jobs?.Add(job);
         jobs?.SortBy(x => x.JobName);
-    }
-
-    private void OnCategorySubmitted(JobCategory category)
-    {
-        var remove = categories?.FirstOrDefault(c => c.CategoryId == category.CategoryId);
-        if (remove is not null)
-        {
-            categories?.Remove(remove);
-        }
-        categories?.Add(category);
-        categories?.SortBy(x => x.CategoryName);
-    }
-
-    private async Task DeleteCategoryAsync(JobCategory category)
-    {
-        if(!await Confirmer.ConfirmAsync("Delete category", $"Are you sure you want to delete \"{category.CategoryName}\"?"))
-        {
-            return;
-        }
-        try
-        {
-            await Mediator.SendAsync(new DeleteJobCategoryCommand(category.CategoryId));
-            categories?.Remove(category);
-            foreach (var job in jobs?.Where(t => t.CategoryId == category.CategoryId) ?? [])
-            {
-                job.CategoryId = null;
-                job.Category = null;
-            }
-        }
-        catch (Exception ex)
-        {
-            Toaster.AddError("Error deleting category", ex.Message);
-        }
-    }
-
-    private void ExpandAll()
-    {
-        foreach (var category in categories ?? Enumerable.Empty<JobCategory>())
-        {
-            var state = UserState.JobCategoryExpandStatuses.GetOrCreate(category.CategoryId);
-            state.IsExpanded = true;
-        }
-        var noCategoryState = UserState.JobCategoryExpandStatuses.GetOrCreate(Guid.Empty);
-        noCategoryState.IsExpanded = true;
-    }
-
-    private void CollapseAll()
-    {
-        foreach (var category in categories ?? Enumerable.Empty<JobCategory>())
-        {
-            var state = UserState.JobCategoryExpandStatuses.GetOrCreate(category.CategoryId);
-            state.IsExpanded = false;
-        }
-        var noCategoryState = UserState.JobCategoryExpandStatuses.GetOrCreate(Guid.Empty);
-        noCategoryState.IsExpanded = false;
     }
 
     public void Dispose()

@@ -90,7 +90,6 @@ else
     {
         using var context = await Task.Run(DbFactory.CreateDbContext);
         jobs = await context.Jobs
-            .Include(j => j.Category)
             .OrderBy(job => job.JobName)
             .ToListAsync(cts.Token);
         schedules = await context.Schedules

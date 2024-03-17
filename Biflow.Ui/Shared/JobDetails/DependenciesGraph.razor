@@ -133,24 +133,28 @@
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <TabularStepEditModal @ref="stepEditModals[StepType.Tabular]"
         Connections="SqlConnections"
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <DatasetStepEditModal @ref="stepEditModals[StepType.Dataset]"
         Connections="SqlConnections"
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <ExeStepEditModal @ref="stepEditModals[StepType.Exe]"
         Connections="SqlConnections"
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <JobStepEditModal @ref="stepEditModals[StepType.Job]"
         Connections="SqlConnections"
@@ -163,6 +167,7 @@
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <PipelineStepEditModal @ref="stepEditModals[StepType.Pipeline]"
         Connections="SqlConnections"
@@ -170,6 +175,7 @@
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
         PipelineClients="PipelineClients"
+        Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <FunctionStepEditModal @ref="stepEditModals[StepType.Function]"
         Connections="SqlConnections"
@@ -177,24 +183,28 @@
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
         FunctionApps="FunctionApps"
+        Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <AgentJobStepEditModal @ref="stepEditModals[StepType.AgentJob]"
         Connections="SqlConnections"
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <EmailStepEditModal @ref="stepEditModals[StepType.Email]"
         Connections="SqlConnections"
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <QlikStepEditModal @ref="stepEditModals[StepType.Qlik]"
         Connections="SqlConnections"
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
 </AuthorizeView>
 
@@ -216,6 +226,8 @@
     [Parameter] public List<FunctionApp>? FunctionApps { get; set; }
 
     [Parameter] public List<QlikCloudClient>? QlikCloudClients { get; set; }
+
+    [Parameter] public List<Credential>? Credentials { get; set; }
 
     [Parameter] public Guid? InitialStepId { get; set; }
 
@@ -264,7 +276,7 @@
             .AsNoTrackingWithIdentityResolution()
             .IgnoreQueryFilters()
             .Where(s => s.JobId == Job.JobId || context.Dependencies.Any(d => d.DependantOnStepId == s.StepId && d.Step.JobId == Job.JobId))
-            .Select(s => new StepProjection(s.StepId, s.JobId, s.StepName, s.StepType, s.ExecutionPhase, s.IsEnabled, Array.Empty<Tag>(), s.Dependencies.Select(d => d.DependantOnStepId).ToArray()))
+            .Select(s => new StepProjection(s.StepId, s.JobId, s.Job.JobName, s.StepName, s.StepType, s.ExecutionPhase, s.IsEnabled, Array.Empty<Tag>(), s.Dependencies.Select(d => d.DependantOnStepId).ToArray()))
             .ToListAsync();
 
         List<DependencyGraphNode> nodes;
@@ -275,7 +287,7 @@
                 Id: step.StepId.ToString(),
                 Name: step.StepName ?? "",
                 CssClass: $"{(step.IsEnabled ? "enabled" : "disabled")} {(step.JobId != Job.JobId ? "external" : "internal")}",
-                TooltipText: step.JobId == Job.JobId ? $"{step.StepType}" : $"{step.StepType}, external",
+                TooltipText: step.JobId == Job.JobId ? $"{step.StepType}" : $"{step.StepType}, {step.JobName}",
                 EnableOnClick: step.JobId == Job.JobId
             )).ToList();
             edges = Steps

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Biflow.DataAccess.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20240312161514_ExeStepRunAs")]
-    partial class ExeStepRunAs
+    [Migration("20240317092739_RemoveJobCategory")]
+    partial class RemoveJobCategory
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -143,6 +143,30 @@ namespace Biflow.DataAccess.Migrations
                     b.HasDiscriminator<string>("ConnectionType");
 
                     b.UseTphMappingStrategy();
+                });
+
+            modelBuilder.Entity("Biflow.Core.Entities.Credential", b =>
+                {
+                    b.Property<Guid>("CredentialId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Domain")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Password")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("CredentialId");
+
+                    b.ToTable("Credential", "app");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.DataObject", b =>
@@ -499,10 +523,6 @@ namespace Biflow.DataAccess.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("CategoryId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("JobCategoryId");
-
                     b.Property<string>("CreatedBy")
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
@@ -551,27 +571,6 @@ namespace Biflow.DataAccess.Migrations
                     b.HasKey("JobId");
 
                     b.ToTable("Job", "app");
-                });
-
-            modelBuilder.Entity("Biflow.Core.Entities.JobCategory", b =>
-                {
-                    b.Property<Guid>("CategoryId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("JobCategoryId");
-
-                    b.Property<string>("CategoryName")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)")
-                        .HasColumnName("JobCategoryName");
-
-                    b.HasKey("CategoryId");
-
-                    b.HasIndex(new[] { "CategoryName" }, "UQ_JobCategory")
-                        .IsUnique();
-
-                    b.ToTable("JobCategory", "app");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.JobConcurrency", b =>
@@ -1559,11 +1558,6 @@ namespace Biflow.DataAccess.Migrations
                 {
                     b.HasBaseType("Biflow.Core.Entities.Step");
 
-                    b.Property<string>("Domain")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .HasColumnName("ExeDomain");
-
                     b.Property<string>("ExeArguments")
                         .HasColumnType("nvarchar(max)");
 
@@ -1579,20 +1573,14 @@ namespace Biflow.DataAccess.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<string>("Password")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .HasColumnName("ExePassword");
+                    b.Property<Guid?>("RunAsCredentialId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("ExeRunAsCredentialId");
 
                     b.Property<double>("TimeoutMinutes")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("float")
                         .HasColumnName("TimeoutMinutes");
-
-                    b.Property<string>("Username")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .HasColumnName("ExeUsername");
 
                     b.HasDiscriminator().HasValue("Exe");
                 });
@@ -1844,11 +1832,6 @@ namespace Biflow.DataAccess.Migrations
                 {
                     b.HasBaseType("Biflow.Core.Entities.StepExecution");
 
-                    b.Property<string>("Domain")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .HasColumnName("ExeDomain");
-
                     b.Property<string>("ExeArguments")
                         .HasColumnType("nvarchar(max)");
 
@@ -1864,20 +1847,19 @@ namespace Biflow.DataAccess.Migrations
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<string>("Password")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .HasColumnName("ExePassword");
+                    b.Property<Guid?>("RunAsCredentialId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("ExeRunAsCredentialId");
+
+                    b.Property<string>("RunAsUsername")
+                        .HasMaxLength(400)
+                        .HasColumnType("nvarchar(400)")
+                        .HasColumnName("ExeRunAsUsername");
 
                     b.Property<double>("TimeoutMinutes")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("float")
                         .HasColumnName("TimeoutMinutes");
-
-                    b.Property<string>("Username")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .HasColumnName("ExeUsername");
 
                     b.HasDiscriminator().HasValue("Exe");
                 });
@@ -2517,16 +2499,6 @@ namespace Biflow.DataAccess.Migrations
                     b.Navigation("AppRegistration");
                 });
 
-            modelBuilder.Entity("Biflow.Core.Entities.Job", b =>
-                {
-                    b.HasOne("Biflow.Core.Entities.JobCategory", "Category")
-                        .WithMany("Jobs")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Category");
-                });
-
             modelBuilder.Entity("Biflow.Core.Entities.JobConcurrency", b =>
                 {
                     b.HasOne("Biflow.Core.Entities.Job", "Job")
@@ -2964,6 +2936,15 @@ namespace Biflow.DataAccess.Migrations
                     b.Navigation("AppRegistration");
                 });
 
+            modelBuilder.Entity("Biflow.Core.Entities.ExeStep", b =>
+                {
+                    b.HasOne("Biflow.Core.Entities.Credential", "RunAsCredential")
+                        .WithMany()
+                        .HasForeignKey("RunAsCredentialId");
+
+                    b.Navigation("RunAsCredential");
+                });
+
             modelBuilder.Entity("Biflow.Core.Entities.FunctionStep", b =>
                 {
                     b.HasOne("Biflow.Core.Entities.FunctionApp", "FunctionApp")
@@ -3331,11 +3312,6 @@ namespace Biflow.DataAccess.Migrations
                     b.Navigation("Schedules");
 
                     b.Navigation("Steps");
-                });
-
-            modelBuilder.Entity("Biflow.Core.Entities.JobCategory", b =>
-                {
-                    b.Navigation("Jobs");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.JobParameter", b =>

@@ -50,6 +50,8 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
             from pipeline in pipeline_.DefaultIfEmpty()
             join qlik in context.QlikCloudClients on ((QlikStepExecution)step).QlikCloudClientId equals qlik.QlikCloudClientId into qlik_
             from qlik in qlik_.DefaultIfEmpty()
+            join exe in context.Credentials on ((ExeStepExecution)step).RunAsCredentialId equals exe.CredentialId into exe_
+            from exe in exe_.DefaultIfEmpty()
             select new
             {
                 step,
@@ -60,7 +62,8 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
                 dataset,
                 function,
                 pipeline,
-                qlik
+                qlik,
+                exe
             };
 
         var stepExecutions = await query2.ToArrayAsync();
@@ -93,6 +96,9 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
                     break;
                 case QlikStepExecution qlik:
                     qlik.SetClient(step.qlik);
+                    break;
+                case ExeStepExecution exe:
+                    exe.SetRunAsCredential(step.exe);
                     break;
                 default:
                     break;

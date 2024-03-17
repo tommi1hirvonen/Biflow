@@ -18,8 +18,6 @@ public class Job : IAuditable
         MaxParallelSteps = other.MaxParallelSteps;
         OvertimeNotificationLimitMinutes = other.OvertimeNotificationLimitMinutes;
         IsEnabled = other.IsEnabled;
-        Category = other.Category;
-        CategoryId = other.CategoryId;
         JobConcurrencies = other.JobConcurrencies
             .Select(c => new JobConcurrency(c, this))
             .ToList();
@@ -94,11 +92,6 @@ public class Job : IAuditable
     [Required]
     [Display(Name = "Enabled")]
     public bool IsEnabled { get; set; } = true;
-
-    public Guid? CategoryId { get; set; }
-
-    [JsonIgnore]
-    public JobCategory? Category { get; set; }
 
     [ValidateComplexType]
     public IList<JobParameter> JobParameters { get; } = new List<JobParameter>();

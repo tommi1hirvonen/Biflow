@@ -1,17 +1,12 @@
-﻿namespace Biflow.Ui.Shared.StepEditModal;
+﻿using Biflow.Ui.Pages;
+
+namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class JobStepEditModal : StepEditModal<JobStep>
 {
     internal override string FormId => "job_step_edit_form";
 
     private List<string> tagFilters = [];
-
-    private IEnumerable<JobCategory?> JobCategories => JobSlims?.Values
-        .Select(j => j.Category)
-        .Distinct()
-        .OrderBy(c => c is null)
-        .ThenBy(c => c?.CategoryName)
-        ?? Enumerable.Empty<JobCategory?>();
 
     private async Task<InputTagsDataProviderResult> GetTagFilterSuggestions(InputTagsDataProviderRequest request)
     {
@@ -74,6 +69,19 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
             step.TagFilters.Remove(tag);
         }
         return Task.CompletedTask;
+    }
+
+    private Task<AutosuggestDataProviderResult<JobProjection>> GetSuggestionsAsync(AutosuggestDataProviderRequest request)
+    {
+        return Task.FromResult(new AutosuggestDataProviderResult<JobProjection>
+        {
+            Data = JobSlims?.Values
+                .Where(j => j.JobId != Step?.JobId)
+                .Where(j => j.JobName.ContainsIgnoreCase(request.UserInput))
+                .OrderBy(j => j.JobName)
+                .AsEnumerable()
+                ?? []
+        });
     }
 
     private void SetJobToExecute()

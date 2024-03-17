@@ -6,6 +6,7 @@
 public record StepProjection(
     Guid StepId,
     Guid JobId,
+    string JobName,
     string? StepName,
     StepType StepType,
     int ExecutionPhase,

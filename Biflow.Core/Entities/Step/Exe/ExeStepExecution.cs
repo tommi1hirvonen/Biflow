@@ -22,9 +22,8 @@ public class ExeStepExecution : StepExecution,
         ExeWorkingDirectory = step.ExeWorkingDirectory;
         ExeSuccessExitCode = step.ExeSuccessExitCode;
         TimeoutMinutes = step.TimeoutMinutes;
-        Domain = step.Domain;
-        Username = step.Username;
-        Password = step.Password;
+        RunAsCredentialId = step.RunAsCredentialId;
+        RunAsUsername = step.RunAsCredential?.DisplayName;
 
         StepExecutionParameters = step.StepParameters
             .Select(p => new ExeStepExecutionParameter(p, this))
@@ -48,11 +47,9 @@ public class ExeStepExecution : StepExecution,
 
     public double TimeoutMinutes { get; private set; }
 
-    public string? Domain { get; private set; }
+    public Guid? RunAsCredentialId { get; private set; }
 
-    public string? Username { get; private set; }
-
-    public string? Password { get; private set; }
+    public string? RunAsUsername { get; private set; }
 
     public IEnumerable<ExeStepExecutionParameter> StepExecutionParameters { get; } = new List<ExeStepExecutionParameter>();
 
@@ -67,4 +64,30 @@ public class ExeStepExecution : StepExecution,
         AddAttempt(next);
         return next;
     }
+
+    /// <summary>
+    /// Get the <see cref="Credential"/> entity associated with this <see cref="StepExecution"/>.
+    /// The method <see cref="SetRunAsCredential(Credential?)"/> will need to have been called first for the <see cref="Credential"/> to be available.
+    /// </summary>
+    /// <returns><see cref="Credential"/> if it was previously set using <see cref="SetRunAsCredential(Credential?)"/> with a non-null object; <see langword="null"/> otherwise.</returns>
+    public Credential? GetRunAsCredential() => _runAsCredential;
+
+    /// <summary>
+    /// Set the private <see cref="Credential"/> object used for defining the possible run-as credential.
+    /// It can be later accessed using <see cref="GetRunAsCredential"/>.
+    /// </summary>
+    /// <param name="credential"><see cref="Credential"/> reference to store.
+    /// The CredentialIds are compared and the value is set only if the ids match.</param>
+    public void SetRunAsCredential(Credential? credential)
+    {
+        if (credential?.CredentialId == RunAsCredentialId)
+        {
+            _runAsCredential = credential;
+        }
+    }
+
+    // Use a field excluded from the EF model to store the credential reference.
+    // This is to avoid generating a foreign key constraint on the ExecutionStep table caused by a navigation property.
+    // Make it private with public method access so that it is not used in EF Include method calls by accident.
+    private Credential? _runAsCredential;
 }

@@ -18,6 +18,7 @@ public class TopologicalComparer<TItem, TKey> : IComparer<TItem>
     /// <param name="items">Items to compare</param>
     /// <param name="keySelector">Delegate to fetch a unique key for an item</param>
     /// <param name="dependenciesSelector">Delegate to fetch dependencies for an item</param>
+    /// <exception cref="CyclicDependencyException">If a cyclic dependency is detected and the DFS traversal cannot be completed</exception>
     public TopologicalComparer(IEnumerable<TItem> items, Func<TItem?, TKey> keySelector, Func<TItem, IEnumerable<TKey>> dependenciesSelector)
     {
         _keySelector = keySelector;
@@ -39,15 +40,18 @@ public class TopologicalComparer<TItem, TKey> : IComparer<TItem>
     /// </summary>
     /// <param name="steps">IEnumerable of items to be ordered</param>
     /// <returns>IEnumerable of TItem in topological order. InvalidOperationException will be thrown if cyclic dependencies are detected.</returns>
+    /// <exception cref="CyclicDependencyException">If a cyclic dependency is detected and the DFS traversal cannot be completed</exception>
     private IEnumerable<TItem> InTopologicalOrder(TItem[] items)
     {
         var stack = new Stack<TItem>();
+        var cycles = new List<List<TItem>>();
         var visited = new Dictionary<TKey, VisitState>();
         foreach (var item in items)
         {
-            if (!DepthFirstSearch(item, items, visited, stack))
+            DepthFirstSearch(item, items, [], visited, cycles, stack);
+            if (cycles.Count > 0)
             {
-                throw new InvalidOperationException("Cyclic dependencies detected");
+                throw new CyclicDependencyException<TItem>(cycles, "Cyclic dependencies detected");
             }
         }
         return stack.Reverse();
@@ -55,22 +59,42 @@ public class TopologicalComparer<TItem, TKey> : IComparer<TItem>
 
     private enum VisitState { NotVisited, Visiting, Visited }
 
-    private bool DepthFirstSearch(TItem current, TItem[] items, Dictionary<TKey, VisitState> visited, Stack<TItem> stack)
+    private void DepthFirstSearch(
+        TItem current,
+        TItem[] items,
+        List<TItem> parents,
+        Dictionary<TKey, VisitState> visited,
+        List<List<TItem>> cycles,
+        Stack<TItem> stack)
     {
-        var state = VisitState.NotVisited;
         var key = _keySelector(current);
-        visited.TryGetValue(key, out state);
-        if (state != VisitState.NotVisited)
+        var state = visited.GetValueOrDefault(key, VisitState.NotVisited);
+        if (state == VisitState.Visited)
         {
-            return state == VisitState.Visited; // returns false if already visiting => cycles
+            return;
         }
-        visited[key] = VisitState.Visiting;
-        var dependencies = items
-            .Where(item => _dependenciesSelector(current).Any(key => key.Equals(_keySelector(item))))
-            .ToArray();
-        var result = dependencies.Aggregate(true, (accumulator, item) => accumulator && DepthFirstSearch(item, items, visited, stack));
-        visited[key] = VisitState.Visited;
-        stack.Push(current);
-        return result;
+        else if (state == VisitState.Visiting)
+        {
+            var newCycles = parents
+                .Concat([current])
+                .SkipWhile(parent => !EqualityComparer<TKey>.Default.Equals(key, _keySelector(parent)))
+                .ToList();
+            cycles.Add(newCycles);
+        }
+        else
+        {
+            visited[key] = VisitState.Visiting;
+            parents.Add(current);
+            var dependencies = items
+                .Where(item => _dependenciesSelector(current).Any(key => key.Equals(_keySelector(item))))
+                .ToArray();
+            foreach (var dependency in dependencies)
+            {
+                DepthFirstSearch(dependency, items, parents, visited, cycles, stack);
+            }
+            parents.RemoveAt(parents.Count - 1);
+            visited[key] = VisitState.Visited;
+            stack.Push(current);
+        }
     }
 }

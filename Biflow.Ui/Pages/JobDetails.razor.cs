@@ -1,4 +1,7 @@
-﻿namespace Biflow.Ui.Pages;
+﻿using Microsoft.JSInterop;
+using System.Text.Json;
+
+namespace Biflow.Ui.Pages;
 
 [Route("/jobs/{Id:guid}/{DetailsPage}/{InitialStepId:guid?}")]
 public partial class JobDetails : ComponentBase, IDisposable
@@ -8,6 +11,7 @@ public partial class JobDetails : ComponentBase, IDisposable
     [Inject] private ToasterService Toaster { get; set; } = null!;
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
     [Inject] private IMediator Mediator { get; set; } = null!;
+    [Inject] private IJSRuntime JS { get; set; } = null!;
 
     [Parameter] public string DetailsPage { get; set; } = "steps";
 
@@ -16,6 +20,7 @@ public partial class JobDetails : ComponentBase, IDisposable
     [Parameter] public Guid? InitialStepId { get; set; }
 
     private readonly CancellationTokenSource cts = new();
+    private static readonly JsonSerializerOptions jsonOptions = new JsonSerializerOptions { WriteIndented = true };
 
     private Job? job;
     private List<Job> jobs = [];
@@ -26,6 +31,7 @@ public partial class JobDetails : ComponentBase, IDisposable
     private List<AppRegistration>? appRegistrations;
     private List<FunctionApp>? functionApps;
     private List<QlikCloudClient>? qlikCloudClients;
+    private List<Credential>? credentials;
     private bool descriptionOpen;
 
     public static IQueryable<Step> BuildStepsQueryWithIncludes(AppDbContext context)
@@ -69,9 +75,13 @@ public partial class JobDetails : ComponentBase, IDisposable
             .AsNoTracking()
             .OrderBy(c => c.QlikCloudClientName)
             .ToListAsync(cts.Token);
+        credentials = await context.Credentials
+            .AsNoTracking()
+            .OrderBy(c => c.Domain)
+            .ThenBy(c => c.Username)
+            .ToListAsync(cts.Token);
         job = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
-            .Include(job => job.Category)
             .FirstAsync(job => job.JobId == Id, cts.Token);
         steps = await BuildStepsQueryWithIncludes(context)
             .Where(step => step.JobId == job.JobId)
@@ -79,7 +89,6 @@ public partial class JobDetails : ComponentBase, IDisposable
             .ToListAsync(cts.Token);
         jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
-            .Include(j => j.Category)
             .OrderBy(j => j.JobName)
             .ToListAsync(cts.Token);
         SortSteps();
@@ -103,6 +112,13 @@ public partial class JobDetails : ComponentBase, IDisposable
                 steps.Sort();
             }
             StateHasChanged();
+        }
+        catch (CyclicDependencyException<Step> ex)
+        {
+            var cycles = ex.CyclicObjects.Select(c => c.Select(s => new { s.StepId, s.StepName, s.StepType }));
+            var message = JsonSerializer.Serialize(cycles, jsonOptions);
+            _ = JS.InvokeVoidAsync("console.log", message);
+            Toaster.AddError("Error sorting steps", "Cyclic dependencies detected. See browser console for detailed output.");
         }
         catch (Exception ex)
         {

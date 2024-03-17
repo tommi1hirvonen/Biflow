@@ -159,8 +159,7 @@ public class DatabaseFixture : IAsyncLifetime
                 ExecutionMode = ExecutionMode.Dependency,
                 StopOnFirstError = true,
                 MaxParallelSteps = 4,
-                OvertimeNotificationLimitMinutes = 120,
-                Category = new JobCategory { CategoryName = "Test category" }
+                OvertimeNotificationLimitMinutes = 120
             };
             var jobParameter1 = new JobParameter
             {
@@ -349,8 +348,7 @@ public class DatabaseFixture : IAsyncLifetime
                 ExecutionMode = ExecutionMode.ExecutionPhase,
                 StopOnFirstError = true,
                 MaxParallelSteps = 5,
-                OvertimeNotificationLimitMinutes = 0,
-                Category = null
+                OvertimeNotificationLimitMinutes = 0
             };
 
             var step5 = new JobStep
