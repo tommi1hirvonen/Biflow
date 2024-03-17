@@ -1,4 +1,6 @@
-﻿namespace Biflow.Ui.Shared.StepEditModal;
+﻿using Biflow.Ui.Pages;
+
+namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class JobStepEditModal : StepEditModal<JobStep>
 {
@@ -67,6 +69,19 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
             step.TagFilters.Remove(tag);
         }
         return Task.CompletedTask;
+    }
+
+    private Task<AutosuggestDataProviderResult<JobProjection>> GetSuggestionsAsync(AutosuggestDataProviderRequest request)
+    {
+        return Task.FromResult(new AutosuggestDataProviderResult<JobProjection>
+        {
+            Data = JobSlims?.Values
+                .Where(j => j.JobId != Step?.JobId)
+                .Where(j => j.JobName.ContainsIgnoreCase(request.UserInput))
+                .OrderBy(j => j.JobName)
+                .AsEnumerable()
+                ?? []
+        });
     }
 
     private void SetJobToExecute()

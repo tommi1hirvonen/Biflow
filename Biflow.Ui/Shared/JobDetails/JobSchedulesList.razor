@@ -73,7 +73,7 @@
                             <br />
                             <span class="text-secondary small">@item.GetScheduleDescription()</span>
                         </td>
-                        <td>
+                        <td class="align-middle">
                             <div class="d-inline-flex @(!item.IsEnabled || (!Job?.IsEnabled ?? false) ? "text-body-tertiary" : null)">
                                 @item.NextFireTimes().FirstOrDefault()
                                 &nbsp;&nbsp;
@@ -99,7 +99,7 @@
                                 <TagBadge Tag="tag" CssClass="m-1" />
                             }
                         </td>
-                        <td align="center">
+                        <td class="align-middle">
                             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                                 <HxButtonGroup Size="ButtonGroupSize.Small">
                                     <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto"
