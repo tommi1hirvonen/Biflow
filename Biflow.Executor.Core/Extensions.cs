@@ -60,6 +60,31 @@ public static class Extensions
 
     public static WebApplication MapExecutorEndpoints(this WebApplication app)
     {
+        app.MapPost("/executions/create", async (
+            ExecutionCreateRequest request,
+            IExecutionBuilderFactory<ExecutorDbContext> executionBuilderFactory,
+            IExecutionManager executionManager) =>
+        {
+            using var builder = await executionBuilderFactory.CreateAsync(request.JobId, createdBy: "API",
+                context => step => (request.StepIds == null && step.IsEnabled) || (request.StepIds != null && request.StepIds.Contains(step.StepId)));
+            if (builder is null)
+            {
+                return Results.NotFound("Job not found");
+            }
+            builder.AddAll();
+            var execution = await builder.SaveExecutionAsync();
+            if (execution is null)
+            {
+                return Results.Conflict("Execution contained no steps");
+            }
+            if (request.StartExecution == true)
+            {
+                await executionManager.StartExecutionAsync(execution.ExecutionId);
+            }
+            return Results.Json(new ExecutionCreateResponse(execution.ExecutionId), statusCode: 201);
+        }).WithName("CreateExecution");
+
+
         app.MapGet("/executions/start/{executionId}", async (Guid executionId, IExecutionManager executionManager) =>
         {
             try
@@ -193,3 +218,7 @@ public static class Extensions
         return source.Select(selector).Where(t => t is not null).Cast<T>();
     }
 }
+
+file record ExecutionCreateRequest(Guid JobId, Guid[]? StepIds, bool? StartExecution);
+
+file record ExecutionCreateResponse(Guid ExecutionId);
