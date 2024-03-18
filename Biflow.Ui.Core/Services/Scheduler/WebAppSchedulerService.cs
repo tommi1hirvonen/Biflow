@@ -6,15 +6,30 @@ using System.Text.Json;
 
 namespace Biflow.Ui.Core;
 
-public class WebAppSchedulerService(IConfiguration configuration, IHttpClientFactory httpClientFactory) : ISchedulerService
+public class WebAppSchedulerService : ISchedulerService
 {
-    private readonly IConfiguration _configuration = configuration;
-    private readonly HttpClient _httpClient = httpClientFactory.CreateClient("DefaultCredentials");
+    private readonly IConfiguration _configuration;
+    private readonly HttpClient _httpClient;
 
-    private string Url => _configuration
-        .GetSection("Scheduler")
-        .GetSection("WebApp")
-        .GetValue<string>("Url") ?? throw new ArgumentNullException(nameof(Url));
+    public WebAppSchedulerService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
+    {
+        _configuration = configuration;
+        _httpClient = httpClientFactory.CreateClient();
+
+        var section = _configuration
+            .GetSection("Scheduler")
+            .GetSection("WebApp");
+
+        var apiKey = section.GetValue<string>("ApiKey");
+        if (apiKey is not null)
+        {
+            _httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
+        }
+
+        var baseUrl = section.GetValue<string>("Url");
+        ArgumentNullException.ThrowIfNull(baseUrl);
+        _httpClient.BaseAddress = new Uri(baseUrl);
+    }
 
     public async Task DeleteJobAsync(Guid jobId)
     {
@@ -24,7 +39,7 @@ public class WebAppSchedulerService(IConfiguration configuration, IHttpClientFac
             return;
         }
 
-        var endpoint = $"{Url}/schedules/removejob";
+        var endpoint = $"/schedules/removejob";
         var schedulerJob = new SchedulerJob(jobId);
         var json = JsonSerializer.Serialize(schedulerJob);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -40,7 +55,7 @@ public class WebAppSchedulerService(IConfiguration configuration, IHttpClientFac
             return;
         }
 
-        var endpoint = $"{Url}/schedules/add";
+        var endpoint = $"/schedules/add";
         var schedulerSchedule = SchedulerSchedule.From(schedule);
         var json = JsonSerializer.Serialize(schedulerSchedule);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -56,7 +71,7 @@ public class WebAppSchedulerService(IConfiguration configuration, IHttpClientFac
             return;
         }
 
-        var endpoint = $"{Url}/schedules/remove";
+        var endpoint = $"/schedules/remove";
         var schedulerSchedule = SchedulerSchedule.From(schedule);
         var json = JsonSerializer.Serialize(schedulerSchedule);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -72,7 +87,7 @@ public class WebAppSchedulerService(IConfiguration configuration, IHttpClientFac
             return;
         }
 
-        var endpoint = $"{Url}/schedules/update";
+        var endpoint = $"/schedules/update";
         var schedulerSchedule = SchedulerSchedule.From(schedule);
         var json = JsonSerializer.Serialize(schedulerSchedule);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -82,7 +97,7 @@ public class WebAppSchedulerService(IConfiguration configuration, IHttpClientFac
 
     public async Task<SchedulerStatusResponse> GetStatusAsync()
     {
-        var endpoint = $"{Url}/schedules/status";
+        var endpoint = $"/schedules/status";
         var response = await _httpClient.GetAsync(endpoint);
         if (response.IsSuccessStatusCode)
         {
@@ -102,7 +117,7 @@ public class WebAppSchedulerService(IConfiguration configuration, IHttpClientFac
 
     public async Task SynchronizeAsync()
     {
-        var endpoint = $"{Url}/schedules/synchronize";
+        var endpoint = $"/schedules/synchronize";
         var response = await _httpClient.GetAsync(endpoint);
         response.EnsureSuccessStatusCode();
     }
@@ -118,7 +133,11 @@ public class WebAppSchedulerService(IConfiguration configuration, IHttpClientFac
         var schedulerSchedule = SchedulerSchedule.From(schedule);
         var json = JsonSerializer.Serialize(schedulerSchedule);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
-        var endpoint = enabled switch { true => $"{Url}/schedules/resume", false => $"{Url}/schedules/pause" };
+        var endpoint = enabled switch
+        {
+            true => $"/schedules/resume",
+            false => $"/schedules/pause"
+        };
         var response = await _httpClient.PostAsync(endpoint, content);
         response.EnsureSuccessStatusCode();
     }

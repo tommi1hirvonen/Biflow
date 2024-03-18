@@ -1,6 +1,6 @@
 using Biflow.Executor.Core;
-using Microsoft.AspNetCore.Authentication.Negotiate;
-using Microsoft.AspNetCore.Authorization;
+using Biflow.Executor.Core.Authentication;
+using Microsoft.OpenApi.Models;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,29 +14,39 @@ if (builder.Configuration.GetSection("Serilog").Exists())
 }
 
 builder.Services.AddApplicationInsightsTelemetry();
-
-builder.Services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
-var windowsAuth = builder.Configuration.GetSection("Authorization").GetSection("Windows");
-if (windowsAuth.Exists())
-{
-    builder.Services.AddAuthorization(options =>
-    {
-        // If a list of Windows users were defined, require authentication for all endpoints.
-        var allowedUsers = windowsAuth.GetSection("AllowedUsers").Get<string[]>();
-        if (allowedUsers is null)
-        {
-            throw new ArgumentNullException(nameof(allowedUsers),
-                "Property AllowedUsers must be defined if Windows Authorization is enabled");
-        }
-        options.FallbackPolicy = new AuthorizationPolicyBuilder().AddRequirements(new UserNamesRequirement(allowedUsers)).Build();
-    });
-    builder.Services.AddSingleton<IAuthorizationHandler, UserNamesHandler>();
-}
-
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
+builder.Services.AddSwaggerGen(s =>
+{
+    s.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+    {
+        Description = "The API to authenticate with the API",
+        Type = SecuritySchemeType.ApiKey,
+        Name = "x-api-key",
+        In = ParameterLocation.Header,
+        Scheme = "ApiKeyScheme"
+    });
+    var scheme = new OpenApiSecurityScheme
+    {
+        Reference = new OpenApiReference
+        {
+            Type = ReferenceType.SecurityScheme,
+            Id = "ApiKey"
+        },
+        In = ParameterLocation.Header
+    };
+    var requirement = new OpenApiSecurityRequirement { { scheme, [] } };
+    s.AddSecurityRequirement(requirement);
+});
 builder.Services.AddExecutorServices(builder.Configuration);
+
+var useApiKeyAuth = builder.Configuration
+    .GetSection(AuthConstants.Authentication)
+    .GetValue<string>(AuthConstants.ApiKey) is not null;
+
+if (useApiKeyAuth)
+{
+    builder.Services.AddAuthorization();
+}
 
 var app = builder.Build();
 
@@ -44,6 +54,12 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+
+if (useApiKeyAuth)
+{
+    app.UseMiddleware<ApiKeyAuthMiddleware>();
+    app.UseAuthorization();
 }
 
 app.MapExecutorEndpoints();

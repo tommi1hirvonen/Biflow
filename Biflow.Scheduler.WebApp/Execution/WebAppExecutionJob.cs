@@ -8,23 +8,41 @@ using System.Net;
 
 namespace Biflow.Scheduler.WebApp;
 
-public class WebAppExecutionJob(
-    IConfiguration configuration,
-    ILogger<WebAppExecutionJob> logger,
-    IDbContextFactory<SchedulerDbContext> dbContextFactory,
-    IExecutionBuilderFactory<SchedulerDbContext> executionBuilderFactory,
-    IHttpClientFactory httpClientFactory) : ExecutionJobBase(logger, dbContextFactory, executionBuilderFactory)
+public class WebAppExecutionJob : ExecutionJobBase
 {
-    private readonly IConfiguration _configuration = configuration;
-    private readonly HttpClient _httpClient = httpClientFactory.CreateClient();
-    private readonly ILogger<WebAppExecutionJob> _logger = logger;
+    private readonly IConfiguration _configuration;
+    private readonly HttpClient _httpClient;
+    private readonly ILogger<WebAppExecutionJob> _logger;
 
     private const int PollingIntervalMs = 5000;
 
-    private string Url => _configuration
-        .GetSection("Executor")
-        .GetSection("WebApp")
-        .GetValue<string>("Url") ?? throw new ArgumentNullException(nameof(Url));
+    public WebAppExecutionJob(
+        IConfiguration configuration,
+        ILogger<WebAppExecutionJob> logger,
+        IDbContextFactory<SchedulerDbContext> dbContextFactory,
+        IExecutionBuilderFactory<SchedulerDbContext> executionBuilderFactory,
+        IHttpClientFactory httpClientFactory) : base(logger, dbContextFactory, executionBuilderFactory)
+    {
+        _configuration = configuration;
+        _logger = logger;
+        _httpClient = httpClientFactory.CreateClient();
+        
+        var apiKey = _configuration
+            .GetSection("Executor")
+            .GetSection("WebApp")
+            .GetValue<string>("ApiKey");
+        if (apiKey is not null)
+        {
+            _httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
+        }
+
+        var baseUrl = _configuration
+            .GetSection("Executor")
+            .GetSection("WebApp")
+            .GetValue<string>("Url");
+        ArgumentNullException.ThrowIfNull(baseUrl);
+        _httpClient.BaseAddress = new Uri(baseUrl);
+    }
 
     private static readonly AsyncRetryPolicy<HttpResponseMessage> RetryPolicy = Policy
         // Executor status endpoint returns OK if the execution is running or NotFound if the execution is not running.
@@ -35,7 +53,7 @@ public class WebAppExecutionJob(
 
     protected override async Task StartExecutorAsync(Guid executionId)
     {
-        var response = await _httpClient.GetAsync($"{Url}/executions/start/{executionId}");
+        var response = await _httpClient.GetAsync($"/executions/start/{executionId}");
         response.EnsureSuccessStatusCode();
     }
 
@@ -47,7 +65,7 @@ public class WebAppExecutionJob(
             do
             {
                 await Task.Delay(PollingIntervalMs);
-                response = await RetryPolicy.ExecuteAsync(() => _httpClient.GetAsync($"{Url}/executions/status/{executionId}"));
+                response = await RetryPolicy.ExecuteAsync(() => _httpClient.GetAsync($"/executions/status/{executionId}"));
             } while (response.IsSuccessStatusCode);
         }
         catch (Exception ex)
