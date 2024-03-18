@@ -6,13 +6,14 @@ using Microsoft.Extensions.Logging;
 namespace Biflow.Executor.Core;
 
 internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFactory jobExecutorFactory)
-    : BackgroundService, IExecutionManager
+    : BackgroundService, IExecutionManager, IDisposable
 {
     private readonly ILogger<ExecutionManager> _logger = logger;
     private readonly IJobExecutorFactory _jobExecutorFactory = jobExecutorFactory;
     private readonly Dictionary<Guid, IJobExecutor> _jobExecutors = [];
     private readonly Dictionary<Guid, Task> _executionTasks = [];
-    private readonly AsyncQueue<Func<CancellationToken, Task>> _backgroundTaskQueue = new();
+    private readonly AsyncQueue<Func<Task>> _backgroundTaskQueue = new();
+    private readonly CancellationTokenSource _shutdownCts = new();
 
     public IEnumerable<Execution> CurrentExecutions => _jobExecutors.Values.Select(e => e.Execution);
 
@@ -24,7 +25,10 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
         }
 
         var jobExecutor = await _jobExecutorFactory.CreateAsync(executionId);
-        _backgroundTaskQueue.Enqueue((cancellationToken) => RunExecution(executionId, jobExecutor, cancellationToken));
+        _jobExecutors[executionId] = jobExecutor;
+        var task = jobExecutor.RunAsync(executionId, _shutdownCts.Token);
+        _executionTasks[executionId] = task;
+        _backgroundTaskQueue.Enqueue(() => MonitorExecutionTaskAsync(task, executionId));
     }
 
     public void CancelExecution(Guid executionId, string username)
@@ -59,28 +63,26 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
         }
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override async Task ExecuteAsync(CancellationToken shutdownToken)
     {
         try
         {
-            await foreach (var taskDelegate in _backgroundTaskQueue.WithCancellation(stoppingToken))
+            await foreach (var taskDelegate in _backgroundTaskQueue.WithCancellation(shutdownToken))
             {
-                _ = taskDelegate(stoppingToken);
+                _ = taskDelegate();
             }
         }
         finally
         {
+            _shutdownCts.Cancel();
             await Task.WhenAll(_executionTasks.Values);
         }
     }
 
-    private async Task RunExecution(Guid executionId, IJobExecutor jobExecutor, CancellationToken cancellationToken)
+    private async Task MonitorExecutionTaskAsync(Task task, Guid executionId)
     {
         try
         {
-            _jobExecutors[executionId] = jobExecutor;
-            var task = jobExecutor.RunAsync(executionId, cancellationToken);
-            _executionTasks[executionId] = task;
             await task;
         }
         catch (OperationCanceledException ex)
@@ -96,5 +98,11 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
             _jobExecutors.Remove(executionId);
             _executionTasks.Remove(executionId);
         }
+    }
+
+    public override void Dispose()
+    {
+        base.Dispose();
+        _shutdownCts.Dispose();
     }
 }
