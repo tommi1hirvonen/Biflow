@@ -71,6 +71,7 @@ public class AppDbContext : DbContext
     public DbSet<BlobStorageClient> BlobStorageClients => Set<BlobStorageClient>();
     public DbSet<EnvironmentVersion> EnvironmentVersions => Set<EnvironmentVersion>();
     public DbSet<Credential> Credentials => Set<Credential>();
+    public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
     #endregion
 
     protected virtual void ConfigureSqlServer(SqlServerDbContextOptionsBuilder options)
