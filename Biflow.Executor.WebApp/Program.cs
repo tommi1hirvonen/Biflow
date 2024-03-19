@@ -1,5 +1,5 @@
 using Biflow.Executor.Core;
-using Biflow.Executor.Core.Authentication;
+using Biflow.Executor.WebApp.Authentication;
 using Microsoft.OpenApi.Models;
 using Serilog;
 

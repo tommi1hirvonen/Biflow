@@ -1,12 +1,16 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
+﻿using Biflow.Executor.Core;
+using Microsoft.EntityFrameworkCore;
 
-namespace Biflow.Executor.Core.Authentication;
+namespace Biflow.Executor.WebApp.Authentication;
 
-public class ApiKeyAuthMiddleware(RequestDelegate next, IConfiguration configuration)
+public class ApiKeyAuthMiddleware(
+    RequestDelegate next,
+    IConfiguration configuration,
+    IDbContextFactory<ExecutorDbContext> dbContextFactory)
 {
     private readonly RequestDelegate _next = next;
     private readonly IConfiguration _configuration = configuration;
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
 
     public async Task InvokeAsync(HttpContext context)
     {

@@ -1,4 +1,4 @@
-﻿namespace Biflow.Executor.Core.Authentication;
+﻿namespace Biflow.Executor.WebApp.Authentication;
 
 public static class AuthConstants
 {

@@ -1,7 +1,7 @@
 using Biflow.Executor.Core;
-using Biflow.Executor.Core.Authentication;
 using Biflow.Scheduler.Core;
 using Biflow.Scheduler.WebApp;
+using Biflow.Scheduler.WebApp.Authentication;
 using Microsoft.OpenApi.Models;
 using Serilog;
 
