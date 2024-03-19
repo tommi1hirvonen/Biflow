@@ -1,4 +1,4 @@
-export function drawDependencyGraph(dotNetObject, graphContainer, svgId, nodesJson, edgesJson) {
+export function drawDependencyGraph(dotNetObject, graphContainer, svgId, nodesJson, edgesJson, rankdir) {
 
     var nodes = JSON.parse(nodesJson);
     var edges = JSON.parse(edgesJson);
@@ -23,7 +23,7 @@ export function drawDependencyGraph(dotNetObject, graphContainer, svgId, nodesJs
     g.setGraph({
         nodesep: 70,
         ranksep: 50,
-        rankdir: "LR",
+        rankdir: rankdir, // Direction for rank nodes. Can be TB, BT, LR, or RL, where T = top, B = bottom, L = left, and R = right.
         marginx: 20,
         marginy: 20
     });
