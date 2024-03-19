@@ -45,6 +45,7 @@ var useApiKeyAuth = builder.Configuration
 
 if (useApiKeyAuth)
 {
+    builder.Services.AddMemoryCache();
     builder.Services.AddAuthorization();
 }
 
