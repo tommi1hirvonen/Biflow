@@ -1,4 +1,5 @@
-﻿using Biflow.Executor.Core.ConnectionTest;
+﻿using Biflow.Executor.Core.Authentication;
+using Biflow.Executor.Core.ConnectionTest;
 using Biflow.Executor.Core.Exceptions;
 using Biflow.Executor.Core.ExecutionValidation;
 using Biflow.Executor.Core.JobExecutor;
@@ -22,6 +23,7 @@ public static class Extensions
         services.AddExecutionBuilderFactory<ExecutorDbContext>();
         services.AddHttpClient();
         services.AddHttpClient("notimeout", client => client.Timeout = Timeout.InfiniteTimeSpan);
+        services.AddMemoryCache();
         services.AddSingleton(typeof(ITokenService), typeof(TokenService<ExecutorDbContext>));
         services.AddOptions<ExecutionOptions>()
             .Bind(executorConfiguration)
@@ -60,7 +62,13 @@ public static class Extensions
 
     public static WebApplication MapExecutorEndpoints(this WebApplication app)
     {
-        app.MapPost("/executions/create", async (
+        var executions = app
+            .MapGroup("/executions")
+            .WithName("Executions")
+            .AddEndpointFilter<ApiKeyEndpointFilter>();
+
+
+        executions.MapPost("/create", async (
             ExecutionCreateRequest request,
             IExecutionBuilderFactory<ExecutorDbContext> executionBuilderFactory,
             IExecutionManager executionManager) =>
@@ -85,7 +93,7 @@ public static class Extensions
         }).WithName("CreateExecution");
 
 
-        app.MapGet("/executions/start/{executionId}", async (Guid executionId, IExecutionManager executionManager) =>
+        executions.MapGet("/start/{executionId}", async (Guid executionId, IExecutionManager executionManager) =>
         {
             try
             {
@@ -99,7 +107,7 @@ public static class Extensions
         }).WithName("StartExecution");
 
 
-        app.MapGet("/executions/stop/{executionId}", (Guid executionId, string username, IExecutionManager executionManager) =>
+        executions.MapGet("/stop/{executionId}", (Guid executionId, string username, IExecutionManager executionManager) =>
         {
             try
             {
@@ -113,7 +121,7 @@ public static class Extensions
         }).WithName("StopExecution");
 
 
-        app.MapGet("/executions/stop/{executionId}/{stepId}", (Guid executionId, Guid stepId, string username, IExecutionManager executionManager) =>
+        executions.MapGet("/stop/{executionId}/{stepId}", (Guid executionId, Guid stepId, string username, IExecutionManager executionManager) =>
         {
             try
             {
@@ -127,7 +135,7 @@ public static class Extensions
         }).WithName("StopExecutionStep");
 
 
-        app.MapGet("/executions/status/{executionId}", (Guid executionId, IExecutionManager executionManager) =>
+        executions.MapGet("/status/{executionId}", (Guid executionId, IExecutionManager executionManager) =>
         {
             return executionManager.IsExecutionRunning(executionId)
                 ? Results.Ok()
@@ -135,7 +143,7 @@ public static class Extensions
         }).WithName("ExecutionStatus");
 
 
-        app.MapGet("/executions/status", (bool? includeSteps, IExecutionManager executionManager) =>
+        executions.MapGet("/status", (bool? includeSteps, IExecutionManager executionManager) =>
         {
             var executions = executionManager.CurrentExecutions
                 .Select(e =>
@@ -159,14 +167,18 @@ public static class Extensions
         app.MapGet("/connection/test", async (IConnectionTest connectionTest) =>
         {
             await connectionTest.RunAsync();
-        }).WithName("TestConnection");
+        })
+        .WithName("TestConnection")
+        .AddEndpointFilter<ServiceApiKeyEndpointFilter>();
 
 
         app.MapPost("/email/test", async (string address, IEmailTest emailTest) =>
         {
             await emailTest.RunAsync(address);
             return Results.Ok("Email test succeeded. Check that the email was received successfully.");
-        }).WithName("TestEmail");
+        })
+        .WithName("TestEmail")
+        .AddEndpointFilter<ServiceApiKeyEndpointFilter>();
 
         return app;
     }

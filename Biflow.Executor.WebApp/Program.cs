@@ -1,5 +1,4 @@
 using Biflow.Executor.Core;
-using Biflow.Executor.WebApp.Authentication;
 using Microsoft.OpenApi.Models;
 using Serilog;
 
@@ -39,28 +38,12 @@ builder.Services.AddSwaggerGen(s =>
 });
 builder.Services.AddExecutorServices(builder.Configuration);
 
-var useApiKeyAuth = builder.Configuration
-    .GetSection(AuthConstants.Authentication)
-    .GetValue<string>(AuthConstants.ApiKey) is not null;
-
-if (useApiKeyAuth)
-{
-    builder.Services.AddMemoryCache();
-    builder.Services.AddAuthorization();
-}
-
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-}
-
-if (useApiKeyAuth)
-{
-    app.UseMiddleware<ApiKeyAuthMiddleware>();
-    app.UseAuthorization();
 }
 
 app.MapExecutorEndpoints();

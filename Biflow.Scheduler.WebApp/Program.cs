@@ -1,7 +1,6 @@
 using Biflow.Executor.Core;
 using Biflow.Scheduler.Core;
 using Biflow.Scheduler.WebApp;
-using Biflow.Scheduler.WebApp.Authentication;
 using Microsoft.OpenApi.Models;
 using Serilog;
 
@@ -52,27 +51,12 @@ else if (executorType == "SelfHosted")
     builder.Services.AddSchedulerServices<SelfHostedExecutionJob>();
 }
 
-var useApiKeyAuth = builder.Configuration
-    .GetSection(AuthConstants.Authentication)
-    .GetValue<string>(AuthConstants.ApiKey) is not null;
-
-if (useApiKeyAuth)
-{
-    builder.Services.AddAuthorization();
-}
-
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-}
-
-if (useApiKeyAuth)
-{
-    app.UseMiddleware<ApiKeyAuthMiddleware>();
-    app.UseAuthorization();
 }
 
 if (executorType == "SelfHosted")
