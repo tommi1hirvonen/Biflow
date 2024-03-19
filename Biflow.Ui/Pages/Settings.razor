@@ -21,6 +21,12 @@
                 Subscriptions
             </NavLink>
         </li>
+        <li class="nav-item" role="presentation">
+            <NavLink class="nav-link" href="settings/apikeys">
+                <CxIcon Icon="LucideIcon.GlobeLock" />
+                API keys
+            </NavLink>
+        </li>
     </AuthorizeView>
     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
         <li class="nav-item" role="presentation">
@@ -84,6 +90,17 @@ else if (Page == "subscriptions")
     <AuthorizeView Roles="@(Roles.Admin)">
         <Authorized>
             <AllSubscriptions />
+        </Authorized>
+        <NotAuthorized>
+            <Unauthorized />
+        </NotAuthorized>
+    </AuthorizeView>
+}
+else if (Page == "apikeys")
+{
+    <AuthorizeView Roles="@Roles.Admin">
+        <Authorized>
+            <ApiKeysList />
         </Authorized>
         <NotAuthorized>
             <Unauthorized />

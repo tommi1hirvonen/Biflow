@@ -1,0 +1,184 @@
+﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject ToasterService Toaster
+@inject IMediator Mediator
+
+<PageTitle>API keys | Biflow</PageTitle>
+
+<HxButton Color="ThemeColor.Success"
+          @onclick="() => ShowEditModal(null)"
+          Enabled="keys is not null">
+    Generate key
+</HxButton>
+
+<div class="card shadow-sm pt-2 my-4">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>
+                    Name
+                </th>
+                <th>
+                    Valid from
+                </th>
+                <th>
+                    Valid to
+                </th>
+                <th>
+                    Created by
+                </th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (keys is null)
+            {
+                <tr><td colspan="5" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
+            }
+            else if (keys.Count == 0)
+            {
+                <tr><td colspan="5">No API keys</td></tr>
+            }
+            else
+            {
+                @foreach (var key in keys.OrderBy(k => k.Name))
+                {
+                    <tr>
+                        <td class="align-middle">
+                            @key.Name
+                        </td>
+                        <td class="align-middle">
+                            @key.ValidFrom
+                        </td>
+                        <td class="align-middle">
+                            @key.ValidTo
+                        </td>
+                        <td class="align-middle small">
+                            @key.CreatedBy
+                            <br />
+                            @key.CreatedOn
+                        </td>
+                        <td class="align-middle">
+                            @if (key.IsRevoked)
+                            {
+                                <span class="badge d-inline-flex align-items-center py-1 px-2 bg-secondary-subtle border border-secondary-subtle text-secondary-emphasis" title="API key revoked">
+                                    revoked
+                                </span>
+                            }
+                            else if (key.ValidTo < DateTimeOffset.Now)
+                            {
+                                <span class="badge d-inline-flex align-items-center py-1 px-2 bg-danger-subtle border border-danger-subtle text-danger-emphasis" title="API key expired">
+                                    expired
+                                </span>
+                            }
+                            else if (key.ValidFrom > DateTimeOffset.Now)
+                            {
+                                <span class="badge d-inline-flex align-items-center py-1 px-2 bg-light-subtle border border-light-subtle text-light-emphasis" title="API key not yet valid">
+                                    pending
+                                </span>
+                            }
+                            else if (key.ValidTo.Subtract(DateTimeOffset.Now).Days is int days and <= 30)
+                            {
+                                <span class="badge d-inline-flex align-items-center py-1 px-2 bg-warning-subtle border border-warning-subtle text-warning-emphasis" title="API key expires in @days days">
+                                    expiring
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge d-inline-flex align-items-center py-1 px-2 bg-success-subtle border border-success-subtle text-success-emphasis" title="API key is valid">
+                                    valid
+                                </span>
+                            }
+                        </td>
+                        <td class="align-middle">
+                            <HxButtonGroup Size="ButtonGroupSize.Small">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="() => ShowEditModal(key)">
+                                    <CxIcon Icon="FeatherIcon.Edit2" />
+                                </HxButton>
+                                <HxDropdownButtonGroup>
+                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" Enabled="!key.IsRevoked" aria-label="revoke" title="Revoke API key">
+                                        <CxIcon Icon="FeatherIcon.XCircle" />
+                                    </HxDropdownToggleButton>
+                                    <HxDropdownMenu>
+                                        <HxDropdownHeader>Revoke?</HxDropdownHeader>
+                                        <HxDropdownItem @onclick="() => RevokeApiKeyAsync(key)">Confirm</HxDropdownItem>
+                                    </HxDropdownMenu>
+                                </HxDropdownButtonGroup>
+                                <HxDropdownButtonGroup>
+                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="delete" title="Delete API key">
+                                        <CxIcon Icon="FeatherIcon.Trash2" />
+                                    </HxDropdownToggleButton>
+                                    <HxDropdownMenu>
+                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                        <HxDropdownItem @onclick="() => DeleteApiKeyAsync(key)">Confirm</HxDropdownItem>
+                                    </HxDropdownMenu>
+                                </HxDropdownButtonGroup>
+                            </HxButtonGroup>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<ApiKeyEditModal @ref="keyEditModal" OnApiKeySubmit="OnApiKeySubmitAsync" />
+
+@code {
+    private List<ApiKey>? keys;
+    private ApiKeyEditModal? keyEditModal;
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        keys = await context.ApiKeys
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    private async Task DeleteApiKeyAsync(ApiKey key)
+    {
+        try
+        {
+            await Mediator.SendAsync(new DeleteApiKeyCommand(key.Id));
+            keys?.Remove(key);
+        }
+        catch (Exception ex)
+        {
+            var message = ex.InnerException?.Message ?? ex.Message;
+            Toaster.AddError("Error deleting API key", message);
+        }
+    }
+
+    private async Task RevokeApiKeyAsync(ApiKey key)
+    {
+        try
+        {
+            key.IsRevoked = true;
+            await Mediator.SendAsync(new UpdateApiKeyCommand(key));
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error revoking API key", ex.Message);
+        }
+    }
+
+    private async Task OnApiKeySubmitAsync(ApiKey key)
+    {
+        if (key.Id == Guid.Empty)
+        {
+            await Mediator.SendAsync(new CreateApiKeyCommand(key));
+            keys?.Add(key);
+        }
+        else
+        {
+            await Mediator.SendAsync(new UpdateApiKeyCommand(key));
+            keys?.RemoveAll(k => k.Id == key.Id);
+            keys?.Add(key);
+        }
+        StateHasChanged();
+    }
+
+    private async Task ShowEditModal(ApiKey? key) =>
+        await keyEditModal.LetAsync(x => x.ShowAsync(key?.Id ?? Guid.Empty));
+}

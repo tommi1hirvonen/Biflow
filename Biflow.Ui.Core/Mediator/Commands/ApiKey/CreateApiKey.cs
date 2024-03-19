@@ -1,0 +1,14 @@
+﻿namespace Biflow.Ui.Core;
+
+public record CreateApiKeyCommand(ApiKey ApiKey) : IRequest;
+
+internal class CreateApiKeyCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+    : IRequestHandler<CreateApiKeyCommand>
+{
+    public async Task Handle(CreateApiKeyCommand request, CancellationToken cancellationToken)
+    {
+        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        context.ApiKeys.Add(request.ApiKey);
+        await context.SaveChangesAsync(cancellationToken);
+    }
+}
