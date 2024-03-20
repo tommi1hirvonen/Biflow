@@ -49,13 +49,21 @@
         }
     }
 
-    public async Task DrawAsync(IEnumerable<DependencyGraphNode> nodes, IEnumerable<DependencyGraphEdge> edges)
+    public async Task DrawAsync(IEnumerable<DependencyGraphNode> nodes, IEnumerable<DependencyGraphEdge> edges, DependencyGraphDirection direction = default)
     {
         ArgumentNullException.ThrowIfNull(jsObject);
         ArgumentNullException.ThrowIfNull(dotNetObject);
         var nodesJson = JsonSerializer.Serialize(nodes);
         var edgesJson = JsonSerializer.Serialize(edges);
-        await jsObject.InvokeVoidAsync("drawDependencyGraph", dotNetObject, graphContainer, svgId, nodesJson, edgesJson);
+        var rankdir = direction switch
+        {
+            DependencyGraphDirection.LeftToRight => "LR",
+            DependencyGraphDirection.RightToLeft => "RL",
+            DependencyGraphDirection.TopToBottom => "TB",
+            DependencyGraphDirection.BottomToTop => "BT",
+            _ => "LR"
+        };
+        await jsObject.InvokeVoidAsync("drawDependencyGraph", dotNetObject, graphContainer, svgId, nodesJson, edgesJson, rankdir);
     }
 
     [JSInvokable]
