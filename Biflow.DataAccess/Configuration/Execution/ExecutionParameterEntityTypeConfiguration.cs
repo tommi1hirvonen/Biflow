@@ -22,6 +22,6 @@ internal class ExecutionParameterEntityTypeConfiguration : IEntityTypeConfigurat
 
         builder.HasOne(x => x.Execution)
             .WithMany(x => x.ExecutionParameters)
-            .OnDelete(DeleteBehavior.ClientCascade);
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
