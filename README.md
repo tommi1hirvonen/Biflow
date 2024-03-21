@@ -343,8 +343,10 @@ More information about Always Encrypted can be found in <a href="https://docs.mi
 
 If you want to implement Always Encrypted, these columns are good candidates for encryption:
 - [app].[AccessToken].[Token]
+- [app].[ApiKey].[Value]
 - [app].[AppRegistration].[ClientSecret]
 - [app].[Connection].[ConnectionString]
+- [app].[Credential].[Password]
 - [app].[FunctionApp].[FunctionAppKey]
 - [app].[Step].[FunctionKey]
 
