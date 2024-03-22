@@ -114,9 +114,9 @@
     private readonly HashSet<StepExecutionStatus?> statusFilter =
     [
         StepExecutionStatus.NotStarted,
-        StepExecutionStatus.Queued,
-        StepExecutionStatus.Running,
-        StepExecutionStatus.AwaitingRetry
+    StepExecutionStatus.Queued,
+    StepExecutionStatus.Running,
+    StepExecutionStatus.AwaitingRetry
     ];
 
     private IEnumerable<StepExecution> AvailableSteps => Execution
@@ -144,12 +144,35 @@
     {
         try
         {
+            ArgumentNullException.ThrowIfNull(Execution);
             ArgumentNullException.ThrowIfNull(AuthenticationState);
             var authState = await AuthenticationState;
             var username = authState.User.Identity?.Name;
             ArgumentNullException.ThrowIfNull(username);
 
-            foreach (var step in selectedSteps)
+            IEnumerable<StepExecution> steps;
+            if (Execution.ExecutionMode == ExecutionMode.Dependency)
+            {
+                // When executing in dependency mode, start cancellation from the last steps to be executed.
+                // This way we should see as few DependenciesFailed statuses after cancellation as possible.
+                // The executor may be quick to mark depending steps as failed if we start canceling steps in ascending order.
+                try
+                {
+                    var comparer = new TopologicalStepExecutionComparer(Execution.StepExecutions);
+                    steps = selectedSteps.OrderByDescending(s => s, comparer);
+                }
+                catch (Exception ex)
+                {
+                    steps = selectedSteps.OrderByDescending(s => s.ExecutionPhase);
+                    Toaster.AddWarning("Error sorting steps", $"Steps could not be sorted for optimal cancellation: {ex.Message}");
+                }
+            }
+            else
+            {
+                steps = selectedSteps.OrderByDescending(s => s.ExecutionPhase);
+            }
+
+            foreach (var step in steps)
             {
                 await Executor.StopExecutionAsync(step.ExecutionId, step.StepId, username);
             }
