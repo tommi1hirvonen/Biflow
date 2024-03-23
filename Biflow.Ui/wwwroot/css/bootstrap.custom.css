@@ -12915,7 +12915,7 @@ form {
   top: 0;
   bottom: 0;
   left: 0;
-  width: 195px;
+  width: 200px;
   z-index: 100; /* Behind the navbar */
   padding: 55px 0 0; /* Height of navbar */
   background-color: var(--bs-body-bg);
@@ -12930,7 +12930,7 @@ form {
 @media (min-width: 992px) {
   .main {
     padding-right: 15px !important;
-    padding-left: 210px !important;
+    padding-left: 215px !important;
   }
 }
 .sidebar-sticky {
@@ -13011,7 +13011,7 @@ form {
 
 @media (min-width: 992px) {
   .navbar-brand {
-    width: 195px;
+    width: 200px;
   }
   .sidebar.collapse {
     display: block;
