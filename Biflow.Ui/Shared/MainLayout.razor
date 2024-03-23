@@ -51,13 +51,13 @@
                 <main class="main pt-3 flex-grow-1">
                     @if (ExecutorResolver.ExecutorMode == ExecutorMode.SelfHosted)
                     {
-                        <HxAlert Color="ThemeColor.Warning">
+                        <HxAlert Color="ThemeColor.Warning" Dismissible>
                             Self-hosted executor should only be used for development/testing.
                         </HxAlert>
                     }
                     @if (schedulerServiceErrorMessage is not null)
                     {
-                        <HxAlert Color="ThemeColor.Warning">
+                        <HxAlert Color="ThemeColor.Warning" Dismissible>
                             @schedulerServiceErrorMessage
                         </HxAlert>
                     }
