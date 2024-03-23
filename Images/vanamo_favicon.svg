@@ -28,9 +28,9 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
      showgrid="true"
-     inkscape:zoom="0.18462928"
-     inkscape:cx="-720.36245"
-     inkscape:cy="357.47309"
+     inkscape:zoom="0.09231464"
+     inkscape:cx="1570.7151"
+     inkscape:cy="671.61612"
      inkscape:window-width="2880"
      inkscape:window-height="1676"
      inkscape:window-x="-12"
@@ -49,44 +49,52 @@
      id="defs2">
     <linearGradient
        inkscape:collect="always"
-       id="linearGradient3952">
+       id="linearGradient877">
       <stop
-         style="stop-color:#6a71de;stop-opacity:1;"
+         style="stop-color:#83afe4;stop-opacity:1;"
          offset="0"
-         id="stop3948" />
+         id="stop873" />
       <stop
          style="stop-color:#8f75da;stop-opacity:1;"
          offset="1"
-         id="stop3950" />
+         id="stop875" />
     </linearGradient>
     <linearGradient
        inkscape:collect="always"
-       xlink:href="#linearGradient3952"
-       id="linearGradient3954"
-       x1="26.458332"
-       y1="26.458332"
-       x2="238.125"
-       y2="238.125"
+       xlink:href="#linearGradient877"
+       id="linearGradient12050"
+       x1="-112.95291"
+       y1="-34.654572"
+       x2="-150.24962"
+       y2="17.560827"
        gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient877"
+       id="linearGradient13518"
+       gradientUnits="userSpaceOnUse"
+       x1="-112.95291"
+       y1="-34.654572"
+       x2="-150.24962"
+       y2="17.560827" />
   </defs>
   <g
      inkscape:label="Taso 1"
      inkscape:groupmode="layer"
      id="layer1">
-    <path
-       style="fill:url(#linearGradient3954);fill-opacity:1;stroke:none;stroke-width:25.1354;stroke-linecap:round;paint-order:fill markers stroke"
-       d="m 79.374999,0 c 0,0 79.375001,0 105.833331,0 79.375,0 79.375,79.374999 79.375,79.374999 0,0 0,79.375001 0,105.833331 0,79.375 -79.375,79.375 -79.375,79.375 H 79.374999 C 0,264.58333 0,185.20833 0,185.20833 V 79.374999 C 0,0 79.374999,0 79.374999,0"
-       id="path346"
-       sodipodi:nodetypes="cscscscsc" />
     <a
        id="a1298-8"
        transform="matrix(2.6762041,0,0,2.6762041,-42.77241,-53.465797)"
-       style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:7.7749;stroke-linecap:round;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1">
+       style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:7.7749;stroke-linecap:round;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1" />
+    <a
+       id="a1298-84-6"
+       transform="matrix(-2.83098,-1.3201076,-1.3201076,2.83098,-254.07224,-6.8765597)"
+       style="fill:url(#linearGradient12050);fill-opacity:1;stroke:#8bbbff;stroke-width:2.64583;stroke-dasharray:none;stroke-opacity:1">
       <path
-         style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:7.78516;stroke-linecap:round;stroke-linejoin:miter;stroke-dasharray:none;stroke-opacity:1"
-         d="m 101.91864,93.938172 c 0,0 7.36483,-55.37348 -36.089779,-55.470889 -43.04516,-0.09649 -35.86099,55.277907 -35.86099,55.277907 21.624946,0 21.624941,-21.624947 21.624941,-21.624947 0,0 2.402776,21.624947 14.416634,21.624947 12.013859,0 14.416626,-21.624947 14.416626,-21.624947 0,0 5e-6,21.624947 21.492568,21.817929 z"
-         id="path1295-3"
-         sodipodi:nodetypes="csscscc" />
+         style="fill:url(#linearGradient13518);fill-opacity:1;stroke:#8bbbff;stroke-width:2.64583;stroke-dasharray:none;stroke-opacity:1"
+         d="m -107.8655,32.376051 c 0,0 -2.8827,-18.860342 -0.96951,-35.4843327 1.65969,-14.4213273 10.202274,-31.2430353 -7.77653,-39.4935323 -18.20454,-8.35409 -25.42858,8.849114 -35.38638,19.366337 -11.50494,12.151281 -27.80577,22.0662046 -27.80577,22.0662046 21.58146,10.0635983 31.80664,-5.6037967 31.80664,-5.6037967 0,0 -7.82724,16.7855721 4.16246,22.3764591 11.98969,5.590887 19.81693,-11.1946845 19.81693,-11.1946845 0,0 -5.20735,17.7727675 16.15216,27.9673455 z"
+         id="path1295-0-8"
+         sodipodi:nodetypes="csssscscc" />
     </a>
   </g>
 </svg>
