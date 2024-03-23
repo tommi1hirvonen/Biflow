@@ -7,66 +7,78 @@
 
 <h4>Settings</h4>
 
-<ul class="nav nav-tabs mt-3 mb-4" role="tablist">
+<div class="mt-3 mb-4">
     <AuthorizeView Roles="@(Roles.Admin)">
-        <li class="nav-item" role="presentation">
-            <NavLink class="nav-link" href="settings/users" Match="NavLinkMatch.All">
-                <CxIcon Icon="FeatherIcon.Users" />
-                Users
-            </NavLink>
-        </li>
-        <li class="nav-item" role="presentation">
-            <NavLink class="nav-link" href="settings/subscriptions">
-                <CxIcon Icon="FeatherIcon.Mail" />
-                Subscriptions
-            </NavLink>
-        </li>
+        <ul class="nav nav-tabs border-bottom-0" role="tablist">
+    
+                <li class="nav-item" role="presentation">
+                    <NavLink class="nav-link" href="settings/users" Match="NavLinkMatch.All">
+                        <CxIcon Icon="FeatherIcon.Users" />
+                        Users
+                    </NavLink>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <NavLink class="nav-link" href="settings/subscriptions">
+                        <CxIcon Icon="FeatherIcon.Mail" />
+                        Subscriptions
+                    </NavLink>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <NavLink class="nav-link" href="settings/apikeys">
+                        <CxIcon Icon="LucideIcon.GlobeLock" />
+                        API keys
+                    </NavLink>
+                </li>
+    
+        </ul>
     </AuthorizeView>
     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
-        <li class="nav-item" role="presentation">
-            <NavLink class="nav-link" href="settings/connections">
-                <CxIcon Icon="FeatherIcon.Database" />
-                Connections
-            </NavLink>
-        </li>
-        <li class="nav-item" role="presentation">
-            <NavLink class="nav-link" href="settings/credentials">
-                <CxIcon Icon="FeatherIcon.Key" />
-                Credentials
-            </NavLink>
-        </li>
-        <li class="nav-item" role="presentation">
-            <NavLink class="nav-link" href="settings/appregistrations">
-                <CxIcon Icon="FeatherIcon.Globe" />
-                App registrations
-            </NavLink>
-        </li>
-        <li class="nav-item" role="presentation">
-            <NavLink class="nav-link" href="settings/pipelineclients">
-                <CxIcon Icon="FeatherIcon.Pipeline" />
-                Pipeline clients
-            </NavLink>
-        </li>
-        <li class="nav-item" role="presentation">
-            <NavLink class="nav-link" href="settings/functionapps">
-                <CxIcon Icon="FeatherIcon.Zap" />
-                Function Apps
-            </NavLink>
-        </li>
-        <li class="nav-item" role="presentation">
-            <NavLink class="nav-link" href="settings/qlikcloudclients">
-                <CxIcon Icon="LucideIcon.ScatterChart" />
-                Qlik Cloud Clients
-            </NavLink>
-        </li>
-        <li class="nav-item" role="presentation">
-            <NavLink class="nav-link" href="settings/blobclients">
-                <CxIcon Icon="LucideIcon.Container" />
-                Blob Storage Clients
-            </NavLink>
-        </li>
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <NavLink class="nav-link" href="settings/connections">
+                    <CxIcon Icon="FeatherIcon.Database" />
+                    Connections
+                </NavLink>
+            </li>
+            <li class="nav-item" role="presentation">
+                <NavLink class="nav-link" href="settings/credentials">
+                    <CxIcon Icon="FeatherIcon.Key" />
+                    Credentials
+                </NavLink>
+            </li>
+            <li class="nav-item" role="presentation">
+                <NavLink class="nav-link" href="settings/appregistrations">
+                    <CxIcon Icon="FeatherIcon.Globe" />
+                    App registrations
+                </NavLink>
+            </li>
+            <li class="nav-item" role="presentation">
+                <NavLink class="nav-link" href="settings/pipelineclients">
+                    <CxIcon Icon="FeatherIcon.Pipeline" />
+                    Pipeline clients
+                </NavLink>
+            </li>
+            <li class="nav-item" role="presentation">
+                <NavLink class="nav-link" href="settings/functionapps">
+                    <CxIcon Icon="FeatherIcon.Zap" />
+                    Function Apps
+                </NavLink>
+            </li>
+            <li class="nav-item" role="presentation">
+                <NavLink class="nav-link" href="settings/qlikcloudclients">
+                    <CxIcon Icon="LucideIcon.ScatterChart" />
+                    Qlik Cloud Clients
+                </NavLink>
+            </li>
+            <li class="nav-item" role="presentation">
+                <NavLink class="nav-link" href="settings/blobclients">
+                    <CxIcon Icon="LucideIcon.Container" />
+                    Blob Storage Clients
+                </NavLink>
+            </li>
+        </ul>
     </AuthorizeView>
-</ul>
+</div>
 
 @if (Page == "users")
 {
@@ -84,6 +96,17 @@ else if (Page == "subscriptions")
     <AuthorizeView Roles="@(Roles.Admin)">
         <Authorized>
             <AllSubscriptions />
+        </Authorized>
+        <NotAuthorized>
+            <Unauthorized />
+        </NotAuthorized>
+    </AuthorizeView>
+}
+else if (Page == "apikeys")
+{
+    <AuthorizeView Roles="@Roles.Admin">
+        <Authorized>
+            <ApiKeysList />
         </Authorized>
         <NotAuthorized>
             <Unauthorized />

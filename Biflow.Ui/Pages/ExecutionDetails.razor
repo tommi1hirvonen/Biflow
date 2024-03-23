@@ -101,10 +101,11 @@
                         <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None"
                                                 CssClass="@(Stopping ? "btn-auto disabled text-danger" : "btn-auto text-danger")">
                             <CxIcon Icon="FeatherIcon.XOctagon" />
-                            Stop
+                            Stop...
                         </HxDropdownToggleButton>
                         <HxDropdownMenu>
-                            <HxDropdownItem @onclick="StopJobExecutionAsync" Enabled="!Stopping">Confirm</HxDropdownItem>
+                            <HxDropdownItem @onclick="@(() => NavigationManager.NavigateTo($"executions/{ExecutionId}/cancel"))">Select steps</HxDropdownItem>
+                            <HxDropdownItem @onclick="StopJobExecutionAsync" Enabled="!Stopping">All steps</HxDropdownItem>
                         </HxDropdownMenu>
                     </HxDropdownButtonGroup>
                 </div>
@@ -235,7 +236,7 @@
                             {
                                 var json = JsonSerializer.Serialize(parent);
                                 // Replace execution id in json with a link to the parent execution's details.
-                                var jsonWithLink = json.Replace(parent.ExecutionId.ToString(), $"<a href=\"executions/{parent.ExecutionId}\">{parent.ExecutionId}</a>");
+                                var jsonWithLink = json.Replace(parent.ExecutionId.ToString(), $"<a href=\"executions/{parent.ExecutionId}/list\">{parent.ExecutionId}</a>");
                                 <small>
                                     @((MarkupString)jsonWithLink)
                                 </small>
@@ -534,6 +535,12 @@ else if (ShowReport == Report.Statuses)
 {
     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
         <StepStatusesEdit Execution="execution" />
+    </AuthorizeView>
+}
+else if (ShowReport == Report.Cancel)
+{
+    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+        <StepsCancel Execution="execution" />
     </AuthorizeView>
 }
 else if (ShowReport == Report.History && execution is not null)

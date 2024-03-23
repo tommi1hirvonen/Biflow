@@ -10,31 +10,6 @@
     </div>
 </div>
 
-<div class="row mt-3">
-    <div class="col">
-        <CxIcon Icon="FeatherIcon.Tag" />
-        <span class="me-3">Tags</span>
-        @{
-            var tags = StepSlims.Values
-                .SelectMany(step => step.Tags)
-                .DistinctBy(t => t.TagName)
-                .OrderBy(t => t.TagName) ?? Enumerable.Empty<Tag>();
-        }
-        @if (!tags.Any())
-        {
-            <small class="text-secondary me-2">No tags</small>
-        }
-        @foreach (var tag in tags)
-        {
-            <TagBadge Tag="tag"
-                          Style="cursor: pointer;"
-                          CssClass="mx-1"
-                          Selected="tagFilter.Contains(tag)"
-                          OnClick="() => { if (tagFilter.Contains(tag)) tagFilter.Remove(tag); else tagFilter.Add(tag); }" />
-        }
-    </div>
-</div>
-
 <div class="row mt-3 align-items-center">
     <div class="col-auto">
         <HxButtonGroup>
@@ -76,20 +51,33 @@
                     @item.ToString()
                 </ItemTemplate>
             </FilterDropdown>
+
+            <FilterDropdown TItem="Tag"
+                            FilterSet="tagFilter"
+                            Items="StepSlims.Values.SelectMany(step => step.Tags).DistinctBy(t => t.TagName).OrderBy(t => t.TagName)"
+                            OnChange="StateHasChanged">
+                <TitleTemplate>
+                    <CxIcon Icon="FeatherIcon.Tag" />
+                    Tags
+                </TitleTemplate>
+                <ItemTemplate Context="tag">
+                    <TagBadge Tag="tag" />
+                </ItemTemplate>
+            </FilterDropdown>
         </HxButtonGroup>
     </div>
     <div class="input-group input-group-sm col">
         <div class="input-group-text rounded-left">
             <CxIcon Icon="FeatherIcon.Search" />
         </div>
-        <input type="search" class="form-control" @bind-value="dependenciesFilterText" @bind-value:event="oninput" placeholder="Search" autocomplete="off" />
+        <input type="search" style="max-width: 25rem;" class="form-control" @bind-value="dependenciesFilterText" @bind-value:event="oninput" placeholder="Search" autocomplete="off" />
     </div>    
 </div>
 
 <div class="row mt-3">
     <div class="col-5">
         <h6>Available steps</h6>
-        <div style="overflow-y: scroll; height: calc(100vh - 485px);">
+        <div style="overflow-y: scroll; height: calc(100vh - 415px);">
             <table class="table table-sm table-hover">
                 <tbody>
                     @{
@@ -118,7 +106,7 @@
 
     <div class="col-7">
         <h6>Step depends on</h6>
-        <div style="overflow-y: scroll; height: calc(100vh - 485px);">
+        <div style="overflow-y: scroll; height: calc(100vh - 415px);">
             <table class="table table-sm table-hover">
                 <tbody>
                     @if (Step is null)

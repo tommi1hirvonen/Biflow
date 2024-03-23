@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 
-namespace Biflow.Executor.Core;
+namespace Biflow.Scheduler.Core;
 
 public class SchedulerDbContext(IConfiguration configuration) : AppDbContext(configuration, userService: null)
 {

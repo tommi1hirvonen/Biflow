@@ -46,6 +46,7 @@ public class AppDbContext : DbContext
     public DbSet<Execution> Executions => Set<Execution>();
     public DbSet<StepExecution> StepExecutions => Set<StepExecution>();
     public DbSet<StepExecutionAttempt> StepExecutionAttempts => Set<StepExecutionAttempt>();
+    public DbSet<StepExecutionParameterExpressionParameter> StepExecutionParameterExpressionParameters => Set<StepExecutionParameterExpressionParameter>();
     public DbSet<Dependency> Dependencies => Set<Dependency>();
     public DbSet<Schedule> Schedules => Set<Schedule>();
     public DbSet<Subscription> Subscriptions => Set<Subscription>();
@@ -71,6 +72,7 @@ public class AppDbContext : DbContext
     public DbSet<BlobStorageClient> BlobStorageClients => Set<BlobStorageClient>();
     public DbSet<EnvironmentVersion> EnvironmentVersions => Set<EnvironmentVersion>();
     public DbSet<Credential> Credentials => Set<Credential>();
+    public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
     #endregion
 
     protected virtual void ConfigureSqlServer(SqlServerDbContextOptionsBuilder options)

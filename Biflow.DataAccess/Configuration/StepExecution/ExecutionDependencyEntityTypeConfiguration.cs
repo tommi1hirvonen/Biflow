@@ -10,7 +10,7 @@ internal class ExecutionDependencyEntityTypeConfiguration : IEntityTypeConfigura
         builder.HasOne(d => d.StepExecution)
             .WithMany(e => e.ExecutionDependencies)
             .HasForeignKey(d => new { d.ExecutionId, d.StepId })
-            .OnDelete(DeleteBehavior.ClientCascade);
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.Property(p => p.DependantOnStepId)
             .HasColumnName("DependantOnStepId");

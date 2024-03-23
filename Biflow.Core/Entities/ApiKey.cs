@@ -1,0 +1,39 @@
+﻿using Biflow.Core.Interfaces;
+using System.ComponentModel.DataAnnotations;
+using System.Security.Cryptography;
+
+namespace Biflow.Core.Entities;
+
+public class ApiKey : IAuditable
+{
+    public Guid Id { get; private set; }
+
+    [Required]
+    [MaxLength(250)]
+    public string Name { get; set; } = "";
+
+    public string Value { get; private set; } = GenerateApiKey();
+
+    public DateTimeOffset ValidFrom { get; set; }
+
+    public DateTimeOffset ValidTo { get; set; }
+
+    public bool IsRevoked { get; set; } = false;
+
+    public DateTimeOffset CreatedOn { get; set; }
+
+    public string? CreatedBy { get; set; }
+
+    public DateTimeOffset LastModifiedOn { get; set; }
+
+    public string? LastModifiedBy { get; set; }
+
+    private static string GenerateApiKey()
+    {
+        Span<byte> buffer = stackalloc byte[64];
+        RandomNumberGenerator.Fill(buffer);
+        return Convert.ToBase64String(buffer)
+            .Replace("/", "")
+            .Replace("+", "");
+    }
+}

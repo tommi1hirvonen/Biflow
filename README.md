@@ -343,8 +343,10 @@ More information about Always Encrypted can be found in <a href="https://docs.mi
 
 If you want to implement Always Encrypted, these columns are good candidates for encryption:
 - [app].[AccessToken].[Token]
+- [app].[ApiKey].[Value]
 - [app].[AppRegistration].[ClientSecret]
 - [app].[Connection].[ConnectionString]
+- [app].[Credential].[Password]
 - [app].[FunctionApp].[FunctionAppKey]
 - [app].[Step].[FunctionKey]
 
@@ -526,7 +528,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
 - Create a new subnet in the virtual network (e.g. biflow-subnet).
     - If the default subnet has IPV4 range of 10.0.0.0/24, the new subnet may have a range of 10.0.1.0/24.
     - Delegated to: Microsoft.Web/serverFarms
-    - Configure the UI and scheduler applications' outbound traffic to route through the previously created virtual network subnet (biflow-subnet).
+    - Configure the UI, executor and scheduler applications' outbound traffic to route through the previously created virtual network subnet (biflow-subnet). This network can then be used to allow traffic to your Azure SQL Database hosting the application database.
 - Configure private endpoints for the inbound traffic of the scheduler and executor applications.
     - Create the private endpoints in the default subnet of the virtual network.
     - Disable public network access.

@@ -149,6 +149,20 @@ public class DatabaseFixture : IAsyncLifetime
                 BlobStorageClientName = "Test blob storage client 3"
             };
             blobClient3.UseConnectionString("some-connection-string");
+
+            var credential = new Credential
+            {
+                Domain = ".",
+                Username = "TestUser",
+                Password = "Strong_Password!9000#"
+            };
+
+            var apiKey = new ApiKey
+            {
+                Name = "Test API key",
+                ValidFrom = DateTimeOffset.Now,
+                ValidTo = DateTimeOffset.Now.AddYears(2)
+            };
             #endregion
 
             #region JOB 1
@@ -477,7 +491,16 @@ public class DatabaseFixture : IAsyncLifetime
                 PackageName = "TestPackage.dtsx"
             };
 
-            job2.Steps.AddRange([step5, step6, step7, step8, step9, step10, step11, step12, step13, step14, step15, step16, step17, step18]);
+            var step19 = new ExeStep
+            {
+                StepName = "Test step 19",
+                ExeFileName = "dotnet",
+                ExeArguments = "--version",
+                ExeSuccessExitCode = 0,
+                RunAsCredential = credential
+            };
+
+            job2.Steps.AddRange([step5, step6, step7, step8, step9, step10, step11, step12, step13, step14, step15, step16, step17, step18, step19]);
             #endregion
 
             #region SCHEDULES
@@ -535,7 +558,7 @@ public class DatabaseFixture : IAsyncLifetime
             table2.Lookups.Add(lookup);
             #endregion
 
-            context.AddRange(job1, job2, schedule1, schedule2, blobClient1, blobClient2, blobClient3, table1, table2);
+            context.AddRange(job1, job2, schedule1, schedule2, blobClient1, blobClient2, blobClient3, table1, table2, apiKey);
             await context.SaveChangesAsync();
 
             #region EXECUTIONS

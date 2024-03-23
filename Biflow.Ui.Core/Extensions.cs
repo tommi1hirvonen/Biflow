@@ -121,9 +121,6 @@ public static partial class Extensions
         services.AddExecutionBuilderFactory<AppDbContext>(ServiceLifetime.Scoped);
         
         services.AddHttpClient();
-        services.AddHttpClient("DefaultCredentials")
-            // Passes Windows credentials in on-premise installations to the scheduler API.
-            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { UseDefaultCredentials = true });
 
         services.AddSingleton(typeof(ITokenService), typeof(TokenService<ServiceDbContext>));
 

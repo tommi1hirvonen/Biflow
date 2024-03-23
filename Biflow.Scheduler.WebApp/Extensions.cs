@@ -1,4 +1,5 @@
-﻿using Biflow.Scheduler.Core;
+﻿using Biflow.Executor.Core.Authentication;
+using Biflow.Scheduler.Core;
 
 namespace Biflow.Scheduler.WebApp;
 
@@ -6,13 +7,19 @@ public static class Extensions
 {
     public static WebApplication MapSchedulerEnpoints(this WebApplication app)
     {
-        app.MapPost("/schedules/add", async (SchedulerSchedule schedule, ISchedulesManager schedulesManager) =>
+        var schedules = app
+            .MapGroup("/schedules")
+            .WithName("Schedules")
+            .AddEndpointFilter<ServiceApiKeyEndpointFilter>();
+
+
+        schedules.MapPost("/add", async (SchedulerSchedule schedule, ISchedulesManager schedulesManager) =>
         {
             await schedulesManager.AddScheduleAsync(schedule, CancellationToken.None);
         }).WithName("Add schedule");
 
 
-        app.MapPost("/schedules/remove", async (SchedulerSchedule schedule, ISchedulesManager schedulesManager) =>
+        schedules.MapPost("/remove", async (SchedulerSchedule schedule, ISchedulesManager schedulesManager) =>
         {
             try
             {
@@ -26,7 +33,7 @@ public static class Extensions
         }).WithName("Remove schedule");
 
 
-        app.MapPost("/schedules/update", async (SchedulerSchedule schedule, ISchedulesManager schedulesManager) =>
+        schedules.MapPost("/update", async (SchedulerSchedule schedule, ISchedulesManager schedulesManager) =>
         {
             try
             {
@@ -40,31 +47,31 @@ public static class Extensions
         }).WithName("Update schedule");
 
 
-        app.MapPost("/schedules/removejob", async (SchedulerJob job, ISchedulesManager schedulesManager) =>
+        schedules.MapPost("/removejob", async (SchedulerJob job, ISchedulesManager schedulesManager) =>
         {
             await schedulesManager.RemoveJobAsync(job, CancellationToken.None);
         }).WithName("Remove job");
 
 
-        app.MapPost("schedules/pause", async (SchedulerSchedule schedule, ISchedulesManager schedulesManager) =>
+        schedules.MapPost("/pause", async (SchedulerSchedule schedule, ISchedulesManager schedulesManager) =>
         {
             await schedulesManager.PauseScheduleAsync(schedule, CancellationToken.None);
         }).WithName("Pause schedule");
 
 
-        app.MapPost("/schedules/resume", async (SchedulerSchedule schedule, ISchedulesManager schedulesManager) =>
+        schedules.MapPost("/resume", async (SchedulerSchedule schedule, ISchedulesManager schedulesManager) =>
         {
             await schedulesManager.ResumeScheduleAsync(schedule, CancellationToken.None);
         }).WithName("Resume schedule");
 
 
-        app.MapGet("/schedules/synchronize", async (ISchedulesManager schedulesManager) =>
+        schedules.MapGet("/synchronize", async (ISchedulesManager schedulesManager) =>
         {
             await schedulesManager.ReadAllSchedulesAsync(CancellationToken.None);
         }).WithName("Synchronize");
 
 
-        app.MapGet("/schedules/status", async (ISchedulesManager schedulesManager, CancellationToken cancellationToken) =>
+        schedules.MapGet("/status", async (ISchedulesManager schedulesManager, CancellationToken cancellationToken) =>
         {
             return schedulesManager.DatabaseReadError
                 ? throw new ApplicationException("Scheduler is running but has encountered a database read error.")

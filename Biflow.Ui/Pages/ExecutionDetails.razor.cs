@@ -94,10 +94,11 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
         "rerun" => Report.Rerun,
         "history" => Report.History,
         "statuses" => Report.Statuses,
+        "cancel" => Report.Cancel,
         _ => Report.List
     };
 
-    private enum Report { List, Gantt, Graph, ExecutionDetails, Parameters, Rerun, History, Statuses }
+    private enum Report { List, Gantt, Graph, ExecutionDetails, Parameters, Rerun, History, Statuses, Cancel }
 
     protected override void OnInitialized()
     {
@@ -185,6 +186,11 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
 
     private async Task StopJobExecutionAsync()
     {
+        if (!await Confirmer.ConfirmAsync("Stop execution", $"Are you sure you want to stop all running steps in this execution?"))
+        {
+            return;
+        }
+
         if (Stopping)
         {
             Toaster.AddInformation("Execution is already stopping");
