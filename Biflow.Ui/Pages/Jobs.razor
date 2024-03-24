@@ -97,7 +97,7 @@
             <div class="input-group-text">
                 Items per page
             </div>
-            <InputSelect class="form-select form-select-sm" @bind-Value="pageSize">
+            <InputSelect class="form-select form-select-sm" @bind-Value="paginator.PageSize">
                 <option>10</option>
                 <option>25</option>
                 <option>50</option>
@@ -106,23 +106,23 @@
             </InputSelect>
         </div>
         <div class="input-group input-group-sm w-auto">
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => currentPage = 1">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => paginator.SetPage(1)">
                 <CxIcon Icon="FeatherIcon.ChevronsLeft" />
             </HxButton>
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="PreviousPage">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="paginator.PreviousPage">
                 <CxIcon Icon="FeatherIcon.ChevronLeft" />
             </HxButton>
             <div class="input-group-text">
                 Page
             </div>
-            <InputNumber class="form-control form-control-sm text-center" @bind-Value:get="currentPage" @bind-Value:set="SetPage" style="max-width: 4rem;" />
+            <InputNumber class="form-control form-control-sm text-center" @bind-Value:get="paginator.CurrentPage" @bind-Value:set="paginator.SetPage" style="max-width: 4rem;" />
             <div class="input-group-text">
-                / @PageCount
+                / @paginator.PageCount
             </div>
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="NextPage">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="paginator.NextPage">
                 <CxIcon Icon="FeatherIcon.ChevronRight" />
             </HxButton>
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="LastPage">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="paginator.LastPage">
                 <CxIcon Icon="FeatherIcon.ChevronsRight" />
             </HxButton>
         </div>
@@ -203,7 +203,7 @@
             }
             else
             {
-                @foreach (var listItem in GetListItems())
+                @foreach (var listItem in paginator.PageItems)
                 {
                     var (item, lastExecution, nextStartTime) = listItem;
                     <ContextMenuToggle ContainerHtmlTag="tr" CssClass="@($"job-row {(item.IsEnabled ? null : "disabled")}")">

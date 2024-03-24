@@ -18,6 +18,7 @@ public partial class Jobs : ComponentBase, IDisposable
 
     private readonly HashSet<ExecutionStatus> statusFilter = [];
     private readonly CancellationTokenSource cts = new();
+    private readonly Paginator<ListItem> paginator = new();
 
     private List<Job>? jobs;    
     private Dictionary<Guid, Execution>? lastExecutions;
@@ -29,24 +30,12 @@ public partial class Jobs : ComponentBase, IDisposable
     private string stepNameFilter = "";
     private StateFilter stateFilter = StateFilter.All;
     private SortMode sortMode = SortMode.NameAsc;
-    private int pageSize = 25;
-    private int currentPage = 1;
-    private ListItem[] listItems = [];
 
     private enum StateFilter { All, Enabled, Disabled }
 
     private enum SortMode { NameAsc, NameDesc, LastExecAsc, LastExecDesc, NextExecAsc, NextExecDesc }
 
     private record ListItem(Job Job, Execution? LastExecution, DateTime? NextExecution);
-
-    private int PageCount
-    {
-        get
-        {
-            var pages = (int)Math.Ceiling(listItems.Length / (double)pageSize);
-            return pages == 0 ? 1 : pages;
-        }
-    }
 
     protected override Task OnInitializedAsync()
     {
@@ -72,59 +61,7 @@ public partial class Jobs : ComponentBase, IDisposable
             SortMode.NextExecDesc => items.OrderBy(i => i.NextExecution is null).ThenByDescending(i => i.NextExecution),
             _ => items
         };
-        listItems = items.ToArray();
-        var pages = PageCount;
-        if (currentPage > pages)
-        {
-            currentPage = pages;
-        }
-    }
-
-    private IEnumerable<ListItem> GetListItems()
-    {
-        IEnumerable<ListItem> items = sortMode switch
-        {
-            SortMode.NameAsc => listItems.OrderBy(i => i.Job.JobName),
-            SortMode.NameDesc => listItems.OrderByDescending(i => i.Job.JobName),
-            SortMode.LastExecAsc => listItems.OrderBy(i => i.LastExecution?.StartedOn is null).ThenBy(i => i.LastExecution?.StartedOn?.LocalDateTime),
-            SortMode.LastExecDesc => listItems.OrderBy(i => i.LastExecution?.StartedOn is null).ThenByDescending(i => i.LastExecution?.StartedOn?.LocalDateTime),
-            SortMode.NextExecAsc => listItems.OrderBy(i => i.NextExecution is null).ThenBy(i => i.NextExecution),
-            SortMode.NextExecDesc => listItems.OrderBy(i => i.NextExecution is null).ThenByDescending(i => i.NextExecution),
-            _ => listItems
-        };
-        return items
-            .Skip(pageSize * (currentPage - 1))
-            .Take(pageSize);
-    }
-
-    private void SetPage(int page)
-    {
-        if (page > 0 && page <= PageCount)
-        {
-            currentPage = page;
-        }
-    }
-
-    private void PreviousPage()
-    {
-        if (currentPage == 1)
-        {
-            return;
-        }
-        currentPage--;
-    }
-
-    private void NextPage()
-    {
-        if (currentPage < PageCount)
-        {
-            currentPage++;
-        }
-    }
-
-    private void LastPage()
-    {
-        currentPage = PageCount;
+        paginator.Items = items.ToArray();
     }
 
     private async Task LoadDataAsync()
