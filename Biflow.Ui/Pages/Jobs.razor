@@ -38,8 +38,8 @@
             <div class="input-group-text">
                 <CxIcon Icon="FeatherIcon.Filter" />
             </div>
-            <DebounceTextInput type="search" class="form-control" @bind-Value="UserState.Jobs.JobNameFilter" @bind-Value:after="UpdateListItems" placeholder="Filter by job name" />
-            <DebounceTextInput type="search" class="form-control" @bind-Value="UserState.Jobs.StepNameFilter" @bind-Value:after="UpdateListItems" placeholder="Filter by step name" />
+            <DebounceTextInput type="search" class="form-control" @bind-Value="UserState.Jobs.JobNameFilter" placeholder="Filter by job name" />
+            <DebounceTextInput type="search" class="form-control" @bind-Value="UserState.Jobs.StepNameFilter" placeholder="Filter by step name" />
         </div>
     </div>
         
@@ -48,7 +48,7 @@
             <FilterDropdown TItem="ExecutionStatus"
                             FilterSet="UserState.Jobs.StatusFilter"
                             Items="lastExecutions?.Values.Select(e => e.ExecutionStatus).Concat(UserState.Jobs.StatusFilter).Distinct().OrderBy(s => s).AsEnumerable() ?? []"
-                            OnChange="() => { UpdateListItems(); StateHasChanged(); }">
+                            OnChange="StateHasChanged">
                 <TitleTemplate>
                     <CxIcon Icon="FeatherIcon.Info" />
                     Status
@@ -63,7 +63,6 @@
                     UserState.Jobs.JobNameFilter = string.Empty;
                     UserState.Jobs.StepNameFilter = string.Empty;
                     UserState.Jobs.StateFilter = StateFilter.All;
-                    UpdateListItems();
                 }">
                 <CxIcon Icon="FeatherIcon.X" />
                 Clear
@@ -94,7 +93,7 @@
 </div>
 
 <Paginator @ref="paginator"
-           Items="listItems"
+           Items="GetListItems()"
            Context="pageItems"
            InitialPageSize="UserState.Jobs.PageSize"
            InitialPage="UserState.Jobs.CurrentPage"

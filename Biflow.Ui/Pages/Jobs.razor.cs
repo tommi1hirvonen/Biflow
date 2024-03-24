@@ -25,7 +25,6 @@ public partial class Jobs : ComponentBase, IDisposable
     private JobEditModal? jobEditModal;
     private ExecuteModal? executeModal;
     private Paginator<ListItem>? paginator;
-    private ListItem[] listItems = [];
 
     private record ListItem(Job Job, Execution? LastExecution, DateTime? NextExecution);
 
@@ -34,7 +33,7 @@ public partial class Jobs : ComponentBase, IDisposable
         return LoadDataAsync();
     }
 
-    private void UpdateListItems()
+    private IEnumerable<ListItem> GetListItems()
     {
         var jobNameFilter = UserState.Jobs.JobNameFilter;
         var stepNameFilter = UserState.Jobs.StepNameFilter;
@@ -49,7 +48,7 @@ public partial class Jobs : ComponentBase, IDisposable
             .Select(j => new ListItem(j, lastExecutions?.GetValueOrDefault(j.JobId), GetNextStartTime(j)))
             .Where(j => statusFilter.Count == 0 || j.LastExecution is not null && statusFilter.Contains(j.LastExecution.ExecutionStatus))
             ?? [];
-        items = sortMode switch
+        return sortMode switch
         {
             JobSortMode.NameAsc => items.OrderBy(i => i.Job.JobName),
             JobSortMode.NameDesc => items.OrderByDescending(i => i.Job.JobName),
@@ -59,7 +58,6 @@ public partial class Jobs : ComponentBase, IDisposable
             JobSortMode.NextExecDesc => items.OrderBy(i => i.NextExecution is null).ThenByDescending(i => i.NextExecution),
             _ => items
         };
-        listItems = items.ToArray();
     }
 
     private async Task LoadDataAsync()
@@ -81,7 +79,6 @@ public partial class Jobs : ComponentBase, IDisposable
             .Include(job => job.Schedules)
             .OrderBy(job => job.JobName)
             .ToListAsync(cts.Token);
-        UpdateListItems();
         StateHasChanged();
     }
 
@@ -101,7 +98,6 @@ public partial class Jobs : ComponentBase, IDisposable
             })
             .ToListAsync(cts.Token);
         this.lastExecutions = lastExecutions.ToDictionary(e => e.Key, e => e.Execution);
-        UpdateListItems();
         StateHasChanged();
     }
 
@@ -127,7 +123,6 @@ public partial class Jobs : ComponentBase, IDisposable
         {
             await Mediator.SendAsync(new ToggleJobCommand(job.JobId, value));
             job.IsEnabled = value;
-            UpdateListItems();
         }
         catch (Exception ex)
         {
@@ -144,7 +139,6 @@ public partial class Jobs : ComponentBase, IDisposable
             var createdJob = await duplicator.SaveJobAsync();
             jobs?.Add(createdJob);
             jobs = jobs?.OrderBy(job_ => job_.JobName).ToList();
-            UpdateListItems();
         }
         catch (Exception ex)
         {
@@ -185,7 +179,6 @@ public partial class Jobs : ComponentBase, IDisposable
         {
             await Mediator.SendAsync(new DeleteJobCommand(job.JobId));
             jobs?.Remove(job);
-            UpdateListItems();
         }
         catch (Exception ex)
         {
@@ -208,7 +201,6 @@ public partial class Jobs : ComponentBase, IDisposable
         }
         jobs?.Add(job);
         jobs?.SortBy(x => x.JobName);
-        UpdateListItems();
     }
 
     public void Dispose()
