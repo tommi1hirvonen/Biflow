@@ -38,8 +38,8 @@
             <div class="input-group-text">
                 <CxIcon Icon="FeatherIcon.Filter" />
             </div>
-            <input type="search" class="form-control" @bind-value="jobNameFilter" @bind-value:event="oninput" placeholder="Filter by job name" />
-            <input type="search" class="form-control" @bind-value="stepNameFilter" @bind-value:event="oninput" placeholder="Filter by step name" />
+            <DebounceTextInput type="search" class="form-control" @bind-Value="jobNameFilter" @bind-Value:after="UpdateListItems" placeholder="Filter by job name" />
+            <DebounceTextInput type="search" class="form-control" @bind-Value="stepNameFilter" @bind-Value:after="UpdateListItems" placeholder="Filter by step name" />
         </div>
     </div>
         
@@ -48,7 +48,7 @@
             <FilterDropdown TItem="ExecutionStatus"
                             FilterSet="statusFilter"
                             Items="lastExecutions?.Values.Select(e => e.ExecutionStatus).Distinct().OrderBy(s => s) ?? Enumerable.Empty<ExecutionStatus>()"
-                            OnChange="StateHasChanged">
+                            OnChange="() => { UpdateListItems(); StateHasChanged(); }">
                 <TitleTemplate>
                     <CxIcon Icon="FeatherIcon.Info" />
                     Status
@@ -61,6 +61,7 @@
                 {
                     statusFilter.Clear();
                     jobNameFilter = string.Empty;
+                    UpdateListItems();
                 }">
                 <CxIcon Icon="FeatherIcon.X" />
                 Clear
@@ -90,7 +91,45 @@
     </div>
 </div>
 
-<div class="card shadow-sm mt-4 mb-4 table-responsive">
+<div class="row sticky-top mt-1 py-2 bg-body">
+    <div class="col d-flex justify-content-end">
+        <div class="input-group input-group-sm w-auto me-3">
+            <div class="input-group-text">
+                Items per page
+            </div>
+            <InputSelect class="form-select form-select-sm" @bind-Value="pageSize">
+                <option>10</option>
+                <option>25</option>
+                <option>50</option>
+                <option>100</option>
+                <option>1000</option>
+            </InputSelect>
+        </div>
+        <div class="input-group input-group-sm w-auto">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => currentPage = 1">
+                <CxIcon Icon="FeatherIcon.ChevronsLeft" />
+            </HxButton>
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="PreviousPage">
+                <CxIcon Icon="FeatherIcon.ChevronLeft" />
+            </HxButton>
+            <div class="input-group-text">
+                Page
+            </div>
+            <InputNumber class="form-control form-control-sm text-center" @bind-Value:get="currentPage" @bind-Value:set="SetPage" style="max-width: 4rem;" />
+            <div class="input-group-text">
+                / @PageCount
+            </div>
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="NextPage">
+                <CxIcon Icon="FeatherIcon.ChevronRight" />
+            </HxButton>
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="LastPage">
+                <CxIcon Icon="FeatherIcon.ChevronsRight" />
+            </HxButton>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4 table-responsive">
     <table class="table mb-0">
         <thead>
             <tr>
@@ -164,11 +203,9 @@
             }
             else
             {
-                var items = GetListItems().ToArray();
-                <Virtualize Items="items" Context="listItem" SpacerElement="tr" ItemSize="45" OverscanCount="0">
-                    @{
-                        var (item, lastExecution, nextStartTime) = listItem;
-                    }
+                @foreach (var listItem in GetListItems())
+                {
+                    var (item, lastExecution, nextStartTime) = listItem;
                     <ContextMenuToggle ContainerHtmlTag="tr" CssClass="@($"job-row {(item.IsEnabled ? null : "disabled")}")">
                         <ChildContent Context="menu">
                             <td class="align-middle">
@@ -251,7 +288,7 @@
                             </AuthorizeView>
                         </MenuContent>
                     </ContextMenuToggle>
-                </Virtualize>
+                }
             }
         </tbody>
     </table>
