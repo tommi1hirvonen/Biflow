@@ -55,8 +55,19 @@
                         <div class="row">
                             <div class="col">
                                 <HighlightableText Text="@user.Username" PartToHighlight="@usernameFilter" />
+                                <br/>
+                                <span class="small text-muted">@@: </span>
+                                @if (string.IsNullOrEmpty(user.Email))
+                                {
+                                    
+                                    <span class="small text-muted">&nbsp; -</span>
+                                }
+                                else
+                                {
+                                    <span class="small text-muted">@user.Email</span>
+                                }
                             </div>
-                            <div class="col-auto">
+                            <div class="col-auto d-flex align-items-center">
                                 <HxButtonGroup>
                                     <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="edit" @onclick="async () => await ShowEditModalAsync(user)" title="Edit user">
                                         <CxIcon Icon="FeatherIcon.Edit2" />
@@ -80,10 +91,7 @@
                                     </HxDropdownButtonGroup>
                                 </HxButtonGroup>
                             </div>
-                            <div class="col">
-                                @user.Email
-                            </div>
-                            <div class="col">
+                            <div class="col d-flex align-items-center">
                                 @foreach (var role in user.Roles.OrderBy(r => r))
                                 {
                                     var tag = new RoleTag(role);
@@ -91,7 +99,9 @@
                                 }
                             </div>
                             <div class="col">
-                                Created on @user.CreatedOn.LocalDateTime
+                                <span>Created on</span>
+                                <br/>
+                                <span>@user.CreatedOn.LocalDateTime</span>
                             </div>
                         </div>
                     </li>

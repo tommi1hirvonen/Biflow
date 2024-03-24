@@ -19,6 +19,14 @@
         timer.AutoReset = false;
     }
 
+    protected override void OnParametersSet()
+    {
+        if (CurrentValueAsString is not null && CurrentValueAsString != inputText)
+        {
+            inputText = CurrentValueAsString;
+        }
+    }
+
     private void OnSearchEvent()
     {
         if (string.IsNullOrEmpty(inputText))
