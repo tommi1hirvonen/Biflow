@@ -24,20 +24,20 @@
                 <div class="col-xl-auto mt-xl-0 mt-3 d-flex align-items-center">
                     <div class="form-check form-check-inline">
                         <input type="radio" class="form-check-input" id="radio_all"
-                               checked=@(stateFilter == StateFilter.All)
-                               @onchange="() => stateFilter = StateFilter.All">
+                               checked=@(UserState.Schedules.StateFilter == StateFilter.All)
+                               @onchange="() => UserState.Schedules.StateFilter = StateFilter.All">
                         <label class="form-check-label" for="radio_all">All</label>
                     </div>
                     <div class="form-check form-check-inline">
                         <input type="radio" class="form-check-input" id="radio_enabled"
-                               checked=@(stateFilter == StateFilter.Enabled)
-                               @onchange="() => stateFilter = StateFilter.Enabled">
+                               checked=@(UserState.Schedules.StateFilter == StateFilter.Enabled)
+                               @onchange="() => UserState.Schedules.StateFilter = StateFilter.Enabled">
                         <label class="form-check-label" for="radio_enabled">Enabled</label>
                     </div>
                     <div class="form-check form-check-inline">
                         <input type="radio" class="form-check-input" id="radio_disabled"
-                               checked=@(stateFilter == StateFilter.Disabled)
-                               @onchange="() => stateFilter = StateFilter.Disabled">
+                               checked=@(UserState.Schedules.StateFilter == StateFilter.Disabled)
+                               @onchange="() => UserState.Schedules.StateFilter = StateFilter.Disabled">
                         <label class="form-check-label" for="radio_disabled">Disabled</label>
                     </div>
                 </div>
@@ -53,14 +53,21 @@
 
 @{
     var schedules = FilteredSchedules
-        ?.Where(s => stateFilter switch { StateFilter.Enabled => s.IsEnabled, StateFilter.Disabled => !s.IsEnabled, _ => true })
+        ?.Where(s => UserState.Schedules.StateFilter switch { StateFilter.Enabled => s.IsEnabled, StateFilter.Disabled => !s.IsEnabled, _ => true })
         .OrderBy(s => s.Job.JobName)
         .ThenBy(s => s.ScheduleName)
         .AsEnumerable()
         ?? [];
 }
 
-<Paginator TItem="Schedule" @ref="paginator" Items="schedules" Context="items">
+<Paginator TItem="Schedule"
+           @ref="paginator"
+           Items="schedules"
+           Context="items"
+           InitialPageSize="UserState.Schedules.PageSize"
+           InitialPage="UserState.Schedules.CurrentPage"
+           OnPageChanged="page => UserState.Schedules.CurrentPage = page"
+           OnPageSizeChanged="size => UserState.Schedules.PageSize = size">
     
     <div class="row sticky-top mt-1 py-2 bg-body" style="z-index: 999;">
         <div class="col d-flex justify-content-end">
@@ -226,6 +233,8 @@
 </HxOffcanvas>
 
 @code {
+    [CascadingParameter] public UserState UserState { get; set; } = null!;
+
     [Parameter] public List<Schedule>? Schedules { get; set; }
 
     [Parameter] public List<Job>? Jobs { get; set; }
@@ -241,10 +250,8 @@
     private HxOffcanvas? statusOffcanvas;
     private CodeEditor? editor;
     private string? schedulerStatus = null;
-    private StateFilter stateFilter = StateFilter.All;
     private Paginator<Schedule>? paginator;
 
-    private enum StateFilter { All, Enabled, Disabled }
 
     private async Task ToggleEnabled(ChangeEventArgs args, Schedule schedule)
     {

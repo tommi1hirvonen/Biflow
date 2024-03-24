@@ -43,11 +43,22 @@
     </div>
 </div>
 
+@{
+    var filterJobs = jobs?
+        .Where(j => schedules?.Any(s => s.JobId == j.JobId) ?? false)
+        .Select(j => (j.JobId, j.JobName))
+        .Concat(UserState.Schedules.JobFilter)
+        .Distinct()
+        .OrderBy(j => j.JobName)
+        .AsEnumerable()
+        ?? [];
+}
+
 <div class="row">
     <div class="col">
-        <FilterDropdown TItem="Job"
-                        FilterSet="jobFilter"
-                        Items="jobs?.Where(j => schedules?.Any(s => s.JobId == j.JobId) ?? false) ?? Enumerable.Empty<Job>()"
+        <FilterDropdown TItem="(Guid JobId, string JobName)"
+                        FilterSet="UserState.Schedules.JobFilter"
+                        Items="filterJobs"
                         IdSelector="j => j.JobId.ToString()"
                         TextSelector="j => j.JobName"
                         IsSearchable
@@ -75,9 +86,10 @@ else
 }
 
 @code {
+    [CascadingParameter] public UserState UserState { get; set; } = null!;
+
     [Parameter] public string? Component { get; set; }
 
-    private readonly HashSet<Job> jobFilter = new();
     private readonly CancellationTokenSource cts = new();
 
     private List<Job>? jobs;
@@ -85,7 +97,7 @@ else
 
     private IEnumerable<Schedule>? FilteredSchedules =>
         schedules
-        ?.Where(s => !jobFilter.Any() || jobFilter.Any(f => f.JobId == s.JobId));
+        ?.Where(s => !UserState.Schedules.JobFilter.Any() || UserState.Schedules.JobFilter.Any(f => f.JobId == s.JobId));
 
     protected override async Task OnInitializedAsync()
     {
