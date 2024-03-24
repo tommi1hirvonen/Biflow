@@ -18,7 +18,6 @@ public partial class Jobs : ComponentBase, IDisposable
 
     private readonly HashSet<ExecutionStatus> statusFilter = [];
     private readonly CancellationTokenSource cts = new();
-    private readonly Paginator<ListItem> paginator = new();
 
     private List<Job>? jobs;    
     private Dictionary<Guid, Execution>? lastExecutions;
@@ -30,6 +29,8 @@ public partial class Jobs : ComponentBase, IDisposable
     private string stepNameFilter = "";
     private StateFilter stateFilter = StateFilter.All;
     private SortMode sortMode = SortMode.NameAsc;
+    private Paginator<ListItem>? paginator;
+    private ListItem[] listItems = [];
 
     private enum StateFilter { All, Enabled, Disabled }
 
@@ -61,7 +62,7 @@ public partial class Jobs : ComponentBase, IDisposable
             SortMode.NextExecDesc => items.OrderBy(i => i.NextExecution is null).ThenByDescending(i => i.NextExecution),
             _ => items
         };
-        paginator.Items = items.ToArray();
+        listItems = items.ToArray();
     }
 
     private async Task LoadDataAsync()
