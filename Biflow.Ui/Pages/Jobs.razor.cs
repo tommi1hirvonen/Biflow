@@ -16,7 +16,6 @@ public partial class Jobs : ComponentBase, IDisposable
     [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
     [CascadingParameter] public UserState UserState { get; set; } = new();
 
-    private readonly HashSet<ExecutionStatus> statusFilter = [];
     private readonly CancellationTokenSource cts = new();
 
     private List<Job>? jobs;    
@@ -25,16 +24,8 @@ public partial class Jobs : ComponentBase, IDisposable
     private bool isLoading = false;
     private JobEditModal? jobEditModal;
     private ExecuteModal? executeModal;
-    private string jobNameFilter = "";
-    private string stepNameFilter = "";
-    private StateFilter stateFilter = StateFilter.All;
-    private SortMode sortMode = SortMode.NameAsc;
     private Paginator<ListItem>? paginator;
     private ListItem[] listItems = [];
-
-    private enum StateFilter { All, Enabled, Disabled }
-
-    private enum SortMode { NameAsc, NameDesc, LastExecAsc, LastExecDesc, NextExecAsc, NextExecDesc }
 
     private record ListItem(Job Job, Execution? LastExecution, DateTime? NextExecution);
 
@@ -45,6 +36,12 @@ public partial class Jobs : ComponentBase, IDisposable
 
     private void UpdateListItems()
     {
+        var jobNameFilter = UserState.Jobs.JobNameFilter;
+        var stepNameFilter = UserState.Jobs.StepNameFilter;
+        var stateFilter = UserState.Jobs.StateFilter;
+        var sortMode = UserState.Jobs.SortMode;
+        var statusFilter = UserState.Jobs.StatusFilter;
+
         var items = jobs?
             .Where(j => stateFilter switch { StateFilter.Enabled => j.IsEnabled, StateFilter.Disabled => !j.IsEnabled, _ => true })
             .Where(j => string.IsNullOrEmpty(jobNameFilter) || j.JobName.ContainsIgnoreCase(jobNameFilter))
@@ -54,12 +51,12 @@ public partial class Jobs : ComponentBase, IDisposable
             ?? [];
         items = sortMode switch
         {
-            SortMode.NameAsc => items.OrderBy(i => i.Job.JobName),
-            SortMode.NameDesc => items.OrderByDescending(i => i.Job.JobName),
-            SortMode.LastExecAsc => items.OrderBy(i => i.LastExecution?.StartedOn is null).ThenBy(i => i.LastExecution?.StartedOn?.LocalDateTime),
-            SortMode.LastExecDesc => items.OrderBy(i => i.LastExecution?.StartedOn is null).ThenByDescending(i => i.LastExecution?.StartedOn?.LocalDateTime),
-            SortMode.NextExecAsc => items.OrderBy(i => i.NextExecution is null).ThenBy(i => i.NextExecution),
-            SortMode.NextExecDesc => items.OrderBy(i => i.NextExecution is null).ThenByDescending(i => i.NextExecution),
+            JobSortMode.NameAsc => items.OrderBy(i => i.Job.JobName),
+            JobSortMode.NameDesc => items.OrderByDescending(i => i.Job.JobName),
+            JobSortMode.LastExecAsc => items.OrderBy(i => i.LastExecution?.StartedOn is null).ThenBy(i => i.LastExecution?.StartedOn?.LocalDateTime),
+            JobSortMode.LastExecDesc => items.OrderBy(i => i.LastExecution?.StartedOn is null).ThenByDescending(i => i.LastExecution?.StartedOn?.LocalDateTime),
+            JobSortMode.NextExecAsc => items.OrderBy(i => i.NextExecution is null).ThenBy(i => i.NextExecution),
+            JobSortMode.NextExecDesc => items.OrderBy(i => i.NextExecution is null).ThenByDescending(i => i.NextExecution),
             _ => items
         };
         listItems = items.ToArray();
