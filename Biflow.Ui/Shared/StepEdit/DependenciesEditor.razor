@@ -55,6 +55,8 @@
             <FilterDropdown TItem="StepTag"
                             FilterSet="tagFilter"
                             Items="StepSlims.Values.SelectMany(step => step.Tags).DistinctBy(t => t.TagName).OrderBy(t => t.TagName)"
+                            IdSelector="t => t.TagId.ToString()"
+                            TextSelector="t => t.TagName"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
                     <CxIcon Icon="FeatherIcon.Tag" />
@@ -215,7 +217,7 @@
             .Where(step => step.StepId != Step?.StepId) // Exclude current step => step cannot depend on itself.
             .Where(step => step.StepName?.ContainsIgnoreCase(dependenciesFilterText) == true) // Filter based on search filter.
             .Where(step => !stepTypeFilter.Any() || stepTypeFilter.Contains(step.StepType)) // Filter based on step type
-            .Where(step => tagFilter.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Filter based on tags
+            .Where(step => tagFilter.Count == 0 || tagFilter.Any(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Filter based on tags
             .Where(step => !Step?.Dependencies.Any(d => d.DependantOnStepId == step.StepId) ?? true) // Exclude steps which are already listed as dependencies
             .GroupBy(step => (step.JobId, step.JobName))
             .OrderBy(g => g.Key.JobName)
