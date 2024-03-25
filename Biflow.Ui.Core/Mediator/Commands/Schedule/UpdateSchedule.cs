@@ -11,7 +11,7 @@ internal class UpdateScheduleCommandHandler(
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         context.Attach(request.Schedule).State = EntityState.Modified;
-        var tags = await context.Tags
+        var tags = await context.StepTags
             .Where(t => request.Tags.Contains(t.TagName))
             .ToListAsync(cancellationToken);
 

@@ -10,14 +10,14 @@ internal class DeleteUnusedTagsCommandHandler(IDbContextFactory<AppDbContext> db
     public async Task<DeleteUnusedTagsResponse> Handle(DeleteUnusedTagsCommand request, CancellationToken cancellationToken)
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        var tags = await context.Tags
+        var tags = await context.StepTags
             .Where(t => !t.Steps.Any())
             .Where(t => !t.Schedules.Any())
             .Where(t => !t.JobSteps.Any())
             .Where(t => !t.TagSubscriptions.Any())
             .Where(t => !t.JobTagSubscriptions.Any())
             .ToArrayAsync(cancellationToken);
-        context.Tags.RemoveRange(tags);
+        context.StepTags.RemoveRange(tags);
         await context.SaveChangesAsync(cancellationToken);
         return new(tags);
     }

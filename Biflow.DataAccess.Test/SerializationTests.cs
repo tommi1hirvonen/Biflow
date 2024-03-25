@@ -247,7 +247,7 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
             job.Schedules.AddRange(Schedules.Where(s => s.JobId == job.JobId));
         }
 
-        Tags = await context.Tags
+        Tags = await context.StepTags
             .AsNoTracking()
             .OrderBy(t => t.TagId)
             .ToArrayAsync();

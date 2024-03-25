@@ -271,7 +271,7 @@
     protected override async Task OnInitializedAsync()
     {
         using var context = await Task.Run(DbContextFactory.CreateDbContext);
-        tags = await context.Tags
+        tags = await context.StepTags
             .AsNoTrackingWithIdentityResolution()
             .Include(t => t.Steps)
             .ThenInclude(t => t.Job)

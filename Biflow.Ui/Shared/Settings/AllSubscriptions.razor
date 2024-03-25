@@ -55,7 +55,7 @@
             .AsNoTrackingWithIdentityResolution()
             .Select(s => new StepProjection(s.StepId, s.JobId, s.Job.JobName, s.StepName, s.StepType, s.ExecutionPhase, s.IsEnabled, s.Tags.ToArray(), s.Dependencies.Select(d => d.DependantOnStepId).ToArray()))
             .ToArrayAsync();
-        tags = await context.Tags
+        tags = await context.StepTags
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(t => t.TagName)
             .ToArrayAsync();

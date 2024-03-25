@@ -140,7 +140,7 @@
     private async Task EnsureAllTagsInitialized()
     {
         ArgumentNullException.ThrowIfNull(context);
-        allTags ??= (await context.Tags.ToListAsync()).ToHashSet();
+        allTags ??= (await context.StepTags.ToListAsync()).ToHashSet();
     }
 
     private async Task SubmitStepsAsync()

@@ -60,7 +60,7 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
     protected async Task EnsureAllTagsInitialized()
     {
         ArgumentNullException.ThrowIfNull(context);
-        AllTags ??= await context.Tags.ToListAsync();
+        AllTags ??= await context.StepTags.ToListAsync();
     }
 
     protected virtual Task OnModalShownAsync(TStep step) => Task.CompletedTask;
