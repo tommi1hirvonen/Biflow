@@ -57,9 +57,32 @@
                     <JobExecutionStatusBadge ExecutionStatus="item" />
                 </ItemTemplate>
             </FilterDropdown>
+            @{
+                var tags = jobs?
+                    .SelectMany(j => j.Tags)
+                    .Select(t => new TagFilter(t.TagId, t.TagName, t.Color))
+                    .Concat(UserState.Jobs.TagFilter)
+                    .Distinct()
+                    .OrderBy(t => t.TagName)
+                    .AsEnumerable() ?? [];
+            }
+            <FilterDropdown TItem="TagFilter"
+                            FilterSet="UserState.Jobs.TagFilter"
+                            Items="tags"
+                            IdSelector="t => t.TagId.ToString()"
+                            OnChange="StateHasChanged">
+                <TitleTemplate>
+                    <CxIcon Icon="FeatherIcon.Tag" />
+                    Tag
+                </TitleTemplate>
+                <ItemTemplate Context="item">
+                    <TagBadge Tag="item" />
+                </ItemTemplate>
+            </FilterDropdown>
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() =>
                 {
                     UserState.Jobs.StatusFilter.Clear();
+                    UserState.Jobs.TagFilter.Clear();
                     UserState.Jobs.JobNameFilter = string.Empty;
                     UserState.Jobs.StepNameFilter = string.Empty;
                     UserState.Jobs.StateFilter = StateFilter.All;

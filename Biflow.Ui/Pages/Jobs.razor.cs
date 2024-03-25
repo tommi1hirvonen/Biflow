@@ -40,6 +40,7 @@ public partial class Jobs : ComponentBase, IDisposable
         var stateFilter = UserState.Jobs.StateFilter;
         var sortMode = UserState.Jobs.SortMode;
         var statusFilter = UserState.Jobs.StatusFilter;
+        var tagFilter = UserState.Jobs.TagFilter;
 
         var items = jobs?
             .Where(j => stateFilter switch { StateFilter.Enabled => j.IsEnabled, StateFilter.Disabled => !j.IsEnabled, _ => true })
@@ -47,6 +48,7 @@ public partial class Jobs : ComponentBase, IDisposable
             .Where(j => string.IsNullOrEmpty(stepNameFilter) || steps.Any(s => s.JobId == j.JobId && (s.StepName?.ContainsIgnoreCase(stepNameFilter) ?? false)))
             .Select(j => new ListItem(j, lastExecutions?.GetValueOrDefault(j.JobId), GetNextStartTime(j)))
             .Where(j => statusFilter.Count == 0 || j.LastExecution is not null && statusFilter.Contains(j.LastExecution.ExecutionStatus))
+            .Where(j => tagFilter.Count == 0 || j.Job.Tags.Any(t1 => tagFilter.Any(t2 => t1.TagId == t2.TagId)))
             ?? [];
         return sortMode switch
         {

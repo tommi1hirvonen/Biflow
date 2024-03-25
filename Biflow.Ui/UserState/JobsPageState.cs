@@ -8,6 +8,8 @@ public class JobsPageState
 
     public HashSet<ExecutionStatus> StatusFilter = [];
 
+    public HashSet<TagFilter> TagFilter = [];
+
     public StateFilter StateFilter { get; set; } = StateFilter.All;
 
     public JobSortMode SortMode { get; set; } = JobSortMode.NameAsc;
