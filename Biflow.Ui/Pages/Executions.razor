@@ -141,6 +141,38 @@
                     Job
                 </TitleTemplate>
             </FilterDropdown>
+            @{
+                IEnumerable<string>? jobTags = showSteps switch
+                {
+                    true => stepExecutions?
+                        .Where(e => startTypeFilter == StartType.All ||
+                        startTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
+                        startTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible tags based on start type filter
+                        .Where(e => !jobFilter.Any() || jobFilter.Contains(e.JobName)) // Limit visible tags based on job filter
+                        .Where(e => !stepFilter.Any() || stepFilter.Contains((e.StepName, e.StepType))) // Limit visible tags based on step filter
+                        .Where(e => !stepTypeFilter.Any() || stepTypeFilter.Contains(e.StepType)) // Limit visible tags based on step type filter
+                        //.Where(e => !TagFilter.Any() || e.Tags.Any(t => TagFilter.Contains(t.TagName)) == true) // Limit visible jobs based on tag filter
+                        .Where(e => !stepStatusFilter.Any() || stepStatusFilter.Contains(e.ExecutionStatus)) // Limit visible tags based on step status filter
+                        .SelectMany(e => e.JobTags.Select(t => t.TagName)),
+                    false => executions?
+                        .Where(e => startTypeFilter == StartType.All ||
+                        startTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
+                        startTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible jobs based on start type filter
+                        .Where(e => !jobFilter.Any() || jobFilter.Contains(e.JobName)) // Limit visible tags based on job filter
+                        .Where(e => !jobStatusFilter.Any() || jobStatusFilter.Contains(e.ExecutionStatus)) // Limit visible jobs based on job status filter
+                        .SelectMany(e => e.Tags.Select(t => t.TagName))
+                };
+                jobTags = jobTags?.Distinct().Order() ?? Enumerable.Empty<string>();
+            }
+            <FilterDropdown TItem="string"
+                            FilterSet="jobTagFilter"
+                            Items="jobTags"
+                            OnChange="StateHasChanged">
+                <TitleTemplate>
+                        <CxIcon Icon="FeatherIcon.Tag" />
+                        Job tag
+                    </TitleTemplate>
+            </FilterDropdown>
 
             @if (showSteps)
             {
@@ -240,7 +272,7 @@
                     </ItemTemplate>
                 </FilterDropdown>
                 <FilterDropdown TItem="string"
-                                FilterSet="tagFilter"
+                                FilterSet="stepTagFilter"
                                 Items="stepExecutions?
                                    .Where(e => startTypeFilter == StartType.All ||
                                     startTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
@@ -249,20 +281,20 @@
                                    .Where(s => !stepFilter.Any() || stepFilter.Contains((s.StepName, s.StepType))) // Limit visible tags based on step filter
                                    .Where(s => !stepTypeFilter.Any() || stepTypeFilter.Contains(s.StepType)) // Limit visible tags based on step type filter
                                    .Where(s => !stepStatusFilter.Any() || stepStatusFilter.Contains(s.ExecutionStatus)) // Limit visible tags based on step status filter
-                                   .SelectMany(e => e.Tags.Select(t => t.TagName) ?? Enumerable.Empty<string>())
+                                   .SelectMany(e => e.StepTags.Select(t => t.TagName) ?? Enumerable.Empty<string>())
                                    .Distinct()
                                    .OrderBy(s => s) ?? Enumerable.Empty<string>()"
                                 OnChange="StateHasChanged">
                     <TitleTemplate>
                         <CxIcon Icon="FeatherIcon.Tag" />
-                        Tag
+                        Step tag
                     </TitleTemplate>
                 </FilterDropdown>
 
             }
 
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
-                      @onclick="() => { jobStatusFilter.Clear(); stepStatusFilter.Clear(); jobFilter.Clear(); stepFilter.Clear(); stepTypeFilter.Clear(); tagFilter.Clear(); }">
+                      @onclick="() => { jobStatusFilter.Clear(); stepStatusFilter.Clear(); jobFilter.Clear(); stepFilter.Clear(); stepTypeFilter.Clear(); stepTagFilter.Clear(); }">
                 <CxIcon Icon="FeatherIcon.X" />
                 Reset
             </HxButton>

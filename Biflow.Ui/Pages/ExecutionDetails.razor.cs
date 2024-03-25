@@ -83,7 +83,8 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             e.StepExecution.Execution.ScheduleId,
             e.StepExecution.Execution.JobId,
             job?.JobName ?? e.StepExecution.Execution.JobName,
-            e.StepExecution.GetStep()?.Tags.ToArray() ?? []));
+            e.StepExecution.GetStep()?.Tags.ToArray() ?? [],
+            []));
 
     private Report ShowReport => Page switch
     {

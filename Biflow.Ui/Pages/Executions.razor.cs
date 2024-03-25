@@ -9,6 +9,7 @@ public partial class Executions : ComponentBase, IDisposable, IAsyncDisposable
     [Inject] private IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
     [Inject] private IJSRuntime JS { get; set; } = null!;
     [Inject] private ToasterService Toaster { get; set; } = null!;
+    [Inject] private IMediator Mediator { get; set; } = null!;
 
     private readonly CancellationTokenSource cts = new();
 
@@ -24,7 +25,8 @@ public partial class Executions : ComponentBase, IDisposable, IAsyncDisposable
     private HashSet<string> jobFilter = [];
     private HashSet<(string StepName, StepType StepType)> stepFilter = [];
     private HashSet<StepType> stepTypeFilter = [];
-    private HashSet<string> tagFilter = [];
+    private HashSet<string> jobTagFilter = [];
+    private HashSet<string> stepTagFilter = [];
     private StartType startTypeFilter = StartType.All;
 
     private static readonly JsonSerializerOptions SerializerOptions = new() { IncludeFields = true };
@@ -46,6 +48,7 @@ public partial class Executions : ComponentBase, IDisposable, IAsyncDisposable
     private IEnumerable<ExecutionProjection>? FilteredExecutions => executions?
         .Where(e => jobStatusFilter.Count == 0 || jobStatusFilter.Contains(e.ExecutionStatus))
         .Where(e => jobFilter.Count == 0 || jobFilter.Contains(e.JobName))
+        .Where(e => jobTagFilter.Count == 0 || e.Tags.Any(t => jobTagFilter.Contains(t.TagName)) == true)
         .Where(e => startTypeFilter == StartType.All ||
         startTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
         startTypeFilter == StartType.Manual && e.ScheduleId is null);
@@ -54,7 +57,8 @@ public partial class Executions : ComponentBase, IDisposable, IAsyncDisposable
         .Where(e => startTypeFilter == StartType.All ||
         startTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
         startTypeFilter == StartType.Manual && e.ScheduleId is null)
-        .Where(e => tagFilter.Count == 0 || e.Tags.Any(t => tagFilter.Contains(t.TagName)) == true)
+        .Where(e => stepTagFilter.Count == 0 || e.StepTags.Any(t => stepTagFilter.Contains(t.TagName)) == true)
+        .Where(e => jobTagFilter.Count == 0 || e.JobTags.Any(t => jobTagFilter.Contains(t.TagName)) == true)
         .Where(e => stepStatusFilter.Count == 0 || stepStatusFilter.Contains(e.ExecutionStatus))
         .Where(e => jobFilter.Count == 0 || jobFilter.Contains(e.JobName))
         .Where(e => stepFilter.Count == 0 || stepFilter.Contains((e.StepName, e.StepType)))
@@ -103,104 +107,17 @@ public partial class Executions : ComponentBase, IDisposable, IAsyncDisposable
             (FromDateTime, ToDateTime) = GetPreset(preset);
         }
 
-        using var context = await Task.Run(DbContextFactory.CreateDbContext);
-
         if (!showSteps)
         {
-            var query = context.Executions
-                .AsNoTracking()
-                .AsSingleQuery()
-                // Index optimized way of querying executions without having to scan the entire table.
-                .Where(e => e.CreatedOn <= ToDateTime && e.EndedOn >= FromDateTime);
-
-            if (DateTime.Now >= FromDateTime && DateTime.Now <= ToDateTime)
-            {
-                query = query
-                    .Concat(context.Executions
-                        // Adds executions that were not started.
-                        .Where(e => e.CreatedOn >= FromDateTime && e.CreatedOn <= ToDateTime && e.EndedOn == null && e.ExecutionStatus != ExecutionStatus.Running))
-                    .Concat(context.Executions
-                        // Adds currently running executions if current time fits in the time window.
-                        .Where(e => e.ExecutionStatus == ExecutionStatus.Running));
-            }
-            else
-            {
-                query = query
-                    .Concat(context.Executions
-                        // Adds executions that were not started and executions that may still be running.
-                        .Where(e => e.CreatedOn >= FromDateTime && e.CreatedOn <= ToDateTime && e.EndedOn == null));
-            }
-            executions = await (
-                from e in query
-                join job in context.Jobs on e.JobId equals job.JobId into ej
-                from job in ej.DefaultIfEmpty() // Translates to left join in SQL
-                orderby e.CreatedOn descending, e.StartedOn descending
-                select new ExecutionProjection(
-                    e.ExecutionId,
-                    e.JobId,
-                    job.JobName ?? e.JobName,
-                    e.ScheduleId,
-                    e.ScheduleName,
-                    e.CreatedBy,
-                    e.CreatedOn,
-                    e.StartedOn,
-                    e.EndedOn,
-                    e.ExecutionStatus,
-                    e.StepExecutions.Count()
-                )).ToArrayAsync(cts.Token);
+            var request = new ExecutionsMonitoringQuery(FromDateTime, ToDateTime);
+            var response = await Mediator.SendAsync(request, cts.Token);
+            executions = response.Executions;
         }
         else
         {
-            var query = context.StepExecutionAttempts
-                .AsNoTracking()
-                .Where(e => e.StepExecution.Execution.CreatedOn <= ToDateTime && e.StepExecution.Execution.EndedOn >= FromDateTime);
-
-            if (DateTime.Now >= FromDateTime && DateTime.Now <= ToDateTime)
-            {
-                query = query
-                    // Adds executions that were not started.
-                    .Union(context.StepExecutionAttempts
-                        .Where(e => e.StepExecution.Execution.CreatedOn >= FromDateTime
-                        && e.StepExecution.Execution.CreatedOn <= ToDateTime
-                        && e.EndedOn == null
-                        && e.ExecutionStatus != StepExecutionStatus.Running))
-                    // Adds currently running executions if current time fits in the time window.
-                    .Union(context.StepExecutionAttempts
-                        .Where(e => e.ExecutionStatus == StepExecutionStatus.Running));
-            }
-            else
-            {
-                query = query
-                    // Adds executions that were not started and executions that may still be running.
-                    .Union(context.StepExecutionAttempts
-                        .Where(e => e.StepExecution.Execution.CreatedOn >= FromDateTime
-                        && e.StepExecution.Execution.CreatedOn <= ToDateTime
-                        && e.EndedOn == null));
-            }
-            stepExecutions = await (
-                from e in query
-                join job in context.Jobs on e.StepExecution.Execution.JobId equals job.JobId into j
-                from job in j.DefaultIfEmpty()
-                join step in context.Steps on e.StepId equals step.StepId into s
-                from step in s.DefaultIfEmpty()
-                orderby e.StepExecution.Execution.CreatedOn descending, e.StartedOn descending, e.StepExecution.ExecutionPhase descending
-                select new StepExecutionProjection(
-                    e.StepExecution.ExecutionId,
-                    e.StepExecution.StepId,
-                    e.RetryAttemptIndex,
-                    step.StepName ?? e.StepExecution.StepName,
-                    e.StepType,
-                    e.StepExecution.ExecutionPhase,
-                    e.StartedOn,
-                    e.EndedOn,
-                    e.ExecutionStatus,
-                    e.StepExecution.Execution.ExecutionStatus,
-                    e.StepExecution.Execution.ExecutionMode,
-                    e.StepExecution.Execution.ScheduleId,
-                    e.StepExecution.Execution.JobId,
-                    job.JobName ?? e.StepExecution.Execution.JobName,
-                    step.Tags.ToArray()
-                )).ToArrayAsync(cts.Token);
+            var request = new StepExecutionsMonitoringQuery(FromDateTime, ToDateTime);
+            var response = await Mediator.SendAsync(request, cts.Token);
+            stepExecutions = response.Executions;
         }
 
         loading = false;
@@ -273,7 +190,8 @@ public partial class Executions : ComponentBase, IDisposable, IAsyncDisposable
         HashSet<string> JobNames,
         HashSet<(string StepName, StepType StepType)> StepNames,
         HashSet<StepType> StepTypes,
-        HashSet<string> Tags
+        HashSet<string> StepTags,
+        HashSet<string> JobTags
     );
 
     private async Task SetSessionStorageValues()
@@ -290,7 +208,8 @@ public partial class Executions : ComponentBase, IDisposable, IAsyncDisposable
             JobNames: jobFilter,
             StepNames: stepFilter,
             StepTypes: stepTypeFilter,
-            Tags: tagFilter
+            StepTags: stepTagFilter,
+            JobTags: jobTagFilter
         );
         var text = JsonSerializer.Serialize(sessionStorage, SerializerOptions);
         await JS.InvokeVoidAsync("sessionStorage.setItem", "ExecutionsSessionStorage", text);
@@ -316,7 +235,8 @@ public partial class Executions : ComponentBase, IDisposable, IAsyncDisposable
         jobFilter = sessionStorage?.JobNames ?? jobFilter;
         stepFilter = sessionStorage?.StepNames ?? stepFilter;
         stepTypeFilter = sessionStorage?.StepTypes ?? stepTypeFilter;
-        tagFilter = sessionStorage?.Tags ?? tagFilter;
+        stepTagFilter = sessionStorage?.StepTags ?? stepTagFilter;
+        jobTagFilter = sessionStorage?.JobTags ?? jobTagFilter;
     }
 
     public void Dispose()

@@ -222,7 +222,8 @@
                 e.StartedOn,
                 e.EndedOn,
                 e.ExecutionStatus,
-                e.StepExecutions.Count()))
+                e.StepExecutions.Count(),
+                Array.Empty<JobTag>()))
             .ToArrayAsync(cts.Token);
         CalculateChartDataset();
         StateHasChanged();
