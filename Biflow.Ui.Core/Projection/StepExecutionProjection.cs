@@ -10,6 +10,7 @@ public record StepExecutionProjection(
     string StepName,
     StepType StepType,
     int ExecutionPhase,
+    DateTimeOffset CreatedOn,
     DateTimeOffset? StartedOn,
     DateTimeOffset? EndedOn,
     StepExecutionStatus ExecutionStatus,

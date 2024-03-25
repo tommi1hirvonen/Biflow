@@ -75,6 +75,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             e.StepExecution.GetStep()?.StepName ?? e.StepExecution.StepName,
             e.StepType,
             e.StepExecution.ExecutionPhase,
+            e.StepExecution.Execution.CreatedOn,
             e.StartedOn,
             e.EndedOn,
             e.ExecutionStatus,
