@@ -1,99 +1,57 @@
-﻿using Microsoft.JSInterop;
-using System.Text.Json;
-
-namespace Biflow.Ui.Pages;
+﻿namespace Biflow.Ui.Pages;
 
 [Route("/executions")]
-public partial class Executions : ComponentBase, IDisposable, IAsyncDisposable
+public partial class Executions : ComponentBase, IDisposable
 {
-    [Inject] private IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
-    [Inject] private IJSRuntime JS { get; set; } = null!;
-    [Inject] private ToasterService Toaster { get; set; } = null!;
     [Inject] private IMediator Mediator { get; set; } = null!;
 
-    private readonly CancellationTokenSource cts = new();
+    [CascadingParameter] UserState UserState { get; set; } = null!;
 
-    private bool sessionStorageRetrieved = false;
-    private bool showSteps = false;
-    private bool showGraph = false;
+    private readonly CancellationTokenSource cts = new();
+    
     private bool loading = false;
-    private Preset? activePreset = Preset.OneHour;
     private IEnumerable<ExecutionProjection>? executions;
     private IEnumerable<StepExecutionProjection>? stepExecutions;
-    private HashSet<ExecutionStatus> jobStatusFilter = [];
-    private HashSet<StepExecutionStatus> stepStatusFilter = [];
-    private HashSet<string> jobFilter = [];
-    private HashSet<(string StepName, StepType StepType)> stepFilter = [];
-    private HashSet<StepType> stepTypeFilter = [];
-    private HashSet<string> jobTagFilter = [];
-    private HashSet<string> stepTagFilter = [];
-    private StartType startTypeFilter = StartType.All;
-
-    private static readonly JsonSerializerOptions SerializerOptions = new() { IncludeFields = true };
-
-    private DateTime FromDateTime
-    {
-        get => _fromDateTime;
-        set => _fromDateTime = value > ToDateTime ? ToDateTime : value;
-    }
-    private DateTime _fromDateTime = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddHours(-1);
-
-    private DateTime ToDateTime
-    {
-        get => _toDateTime;
-        set => _toDateTime = value < FromDateTime ? FromDateTime : value;
-    }
-    private DateTime _toDateTime = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddMinutes(1);
 
     private IEnumerable<ExecutionProjection>? FilteredExecutions => executions?
-        .Where(e => jobStatusFilter.Count == 0 || jobStatusFilter.Contains(e.ExecutionStatus))
-        .Where(e => jobFilter.Count == 0 || jobFilter.Contains(e.JobName))
-        .Where(e => jobTagFilter.Count == 0 || e.Tags.Any(t => jobTagFilter.Contains(t.TagName)) == true)
-        .Where(e => startTypeFilter == StartType.All ||
-        startTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
-        startTypeFilter == StartType.Manual && e.ScheduleId is null);
+        .Where(e => UserState.Executions.JobStatusFilter.Count == 0 || UserState.Executions.JobStatusFilter.Contains(e.ExecutionStatus))
+        .Where(e => UserState.Executions.JobFilter.Count == 0 || UserState.Executions.JobFilter.Contains(e.JobName))
+        .Where(e => UserState.Executions.JobTagFilter.Count == 0 || e.Tags.Any(t => UserState.Executions.JobTagFilter.Contains(t.TagName)) == true)
+        .Where(e => UserState.Executions.StartTypeFilter == StartType.All ||
+        UserState.Executions.StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
+        UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null);
 
     private IEnumerable<StepExecutionProjection>? FilteredStepExecutions => stepExecutions?
-        .Where(e => startTypeFilter == StartType.All ||
-        startTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
-        startTypeFilter == StartType.Manual && e.ScheduleId is null)
-        .Where(e => stepTagFilter.Count == 0 || e.StepTags.Any(t => stepTagFilter.Contains(t.TagName)) == true)
-        .Where(e => jobTagFilter.Count == 0 || e.JobTags.Any(t => jobTagFilter.Contains(t.TagName)) == true)
-        .Where(e => stepStatusFilter.Count == 0 || stepStatusFilter.Contains(e.ExecutionStatus))
-        .Where(e => jobFilter.Count == 0 || jobFilter.Contains(e.JobName))
-        .Where(e => stepFilter.Count == 0 || stepFilter.Contains((e.StepName, e.StepType)))
-        .Where(e => stepTypeFilter.Count == 0 || stepTypeFilter.Contains(e.StepType));
+        .Where(e => UserState.Executions.StartTypeFilter == StartType.All ||
+        UserState.Executions.StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
+        UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null)
+        .Where(e => UserState.Executions.StepTagFilter.Count == 0 || e.StepTags.Any(t => UserState.Executions.StepTagFilter.Contains(t.TagName)) == true)
+        .Where(e => UserState.Executions.JobTagFilter.Count == 0 || e.JobTags.Any(t => UserState.Executions.JobTagFilter.Contains(t.TagName)) == true)
+        .Where(e => UserState.Executions.StepStatusFilter.Count == 0 || UserState.Executions.StepStatusFilter.Contains(e.ExecutionStatus))
+        .Where(e => UserState.Executions.JobFilter.Count == 0 || UserState.Executions.JobFilter.Contains(e.JobName))
+        .Where(e => UserState.Executions.StepFilter.Count == 0 || UserState.Executions.StepFilter.Contains((e.StepName, e.StepType)))
+        .Where(e => UserState.Executions.StepTypeFilter.Count == 0 || UserState.Executions.StepTypeFilter.Contains(e.StepType));
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
-        if (firstRender)
+        if (UserState.Executions.Preset is Preset preset)
         {
-            try
-            {
-                await GetSessionStorageValues();
-            }
-            catch (Exception ex)
-            {
-                Toaster.AddWarning("Error getting session storage values", ex.Message);
-            }
-
-            sessionStorageRetrieved = true;
-            StateHasChanged();
-            await LoadDataAsync();
+            (UserState.Executions.FromDateTime, UserState.Executions.ToDateTime) = GetPreset(preset);
         }
+        await LoadDataAsync();
     }
 
     private async Task ShowExecutionsAsync()
     {
         executions = null;
-        showSteps = false;
+        UserState.Executions.ShowSteps = false;
         await LoadDataAsync();
     }
 
     private async Task ShowStepExecutionsAsync()
     {
         executions = null;
-        showSteps = true;
+        UserState.Executions.ShowSteps = true;
         await LoadDataAsync();
     }
 
@@ -102,20 +60,20 @@ public partial class Executions : ComponentBase, IDisposable, IAsyncDisposable
         loading = true;
         StateHasChanged();
 
-        if (activePreset is Preset preset)
+        if (UserState.Executions.Preset is Preset preset)
         {
-            (FromDateTime, ToDateTime) = GetPreset(preset);
+            (UserState.Executions.FromDateTime, UserState.Executions.ToDateTime) = GetPreset(preset);
         }
 
-        if (!showSteps)
+        if (!UserState.Executions.ShowSteps)
         {
-            var request = new ExecutionsMonitoringQuery(FromDateTime, ToDateTime);
+            var request = new ExecutionsMonitoringQuery(UserState.Executions.FromDateTime, UserState.Executions.ToDateTime);
             var response = await Mediator.SendAsync(request, cts.Token);
             executions = response.Executions;
         }
         else
         {
-            var request = new StepExecutionsMonitoringQuery(FromDateTime, ToDateTime);
+            var request = new StepExecutionsMonitoringQuery(UserState.Executions.FromDateTime, UserState.Executions.ToDateTime);
             var response = await Mediator.SendAsync(request, cts.Token);
             stepExecutions = response.Executions;
         }
@@ -126,8 +84,8 @@ public partial class Executions : ComponentBase, IDisposable, IAsyncDisposable
 
     private async Task ApplyPresetAsync(Preset preset)
     {
-        (FromDateTime, ToDateTime) = GetPreset(preset);
-        activePreset = preset;
+        (UserState.Executions.FromDateTime, UserState.Executions.ToDateTime) = GetPreset(preset);
+        UserState.Executions.Preset = preset;
         await LoadDataAsync();
     }
 
@@ -162,8 +120,19 @@ public partial class Executions : ComponentBase, IDisposable, IAsyncDisposable
             Preset.PreviousDay => GetPresetBetween(yesterday, endYesterday),
             Preset.PreviousWeek => GetPresetBetween(startPrevWeek, endPrevWeek),
             Preset.PreviousMonth => GetPresetBetween(startPrevMonth, endPrevMonth),
-            _ => (FromDateTime, ToDateTime)
+            _ => (UserState.Executions.FromDateTime, UserState.Executions.ToDateTime)
         };
+    }
+
+    private void ClearFilters()
+    {
+        UserState.Executions.JobStatusFilter.Clear();
+        UserState.Executions.StepStatusFilter.Clear();
+        UserState.Executions.JobFilter.Clear();
+        UserState.Executions.JobTagFilter.Clear();
+        UserState.Executions.StepFilter.Clear();
+        UserState.Executions.StepTypeFilter.Clear();
+        UserState.Executions.StepTagFilter.Clear();
     }
 
     private static (DateTime From, DateTime To) GetPresetLast(int hours)
@@ -178,100 +147,9 @@ public partial class Executions : ComponentBase, IDisposable, IAsyncDisposable
         return (from.Trim(TimeSpan.TicksPerMinute), to.Trim(TimeSpan.TicksPerMinute));
     }
 
-    private record SessionStorage(
-        Preset? Preset,
-        DateTime FromDateTime,
-        DateTime ToDateTime,
-        bool ShowSteps,
-        bool ShowGraph,
-        StartType StartType,
-        HashSet<ExecutionStatus> JobStatuses,
-        HashSet<StepExecutionStatus> StepStatuses,
-        HashSet<string> JobNames,
-        HashSet<(string StepName, StepType StepType)> StepNames,
-        HashSet<StepType> StepTypes,
-        HashSet<string> StepTags,
-        HashSet<string> JobTags
-    );
-
-    private async Task SetSessionStorageValues()
-    {
-        var sessionStorage = new SessionStorage(
-            Preset: activePreset,
-            FromDateTime: FromDateTime,
-            ToDateTime: ToDateTime,
-            ShowSteps: showSteps,
-            ShowGraph: showGraph,
-            StartType: startTypeFilter,
-            JobStatuses: jobStatusFilter,
-            StepStatuses: stepStatusFilter,
-            JobNames: jobFilter,
-            StepNames: stepFilter,
-            StepTypes: stepTypeFilter,
-            StepTags: stepTagFilter,
-            JobTags: jobTagFilter
-        );
-        var text = JsonSerializer.Serialize(sessionStorage, SerializerOptions);
-        await JS.InvokeVoidAsync("sessionStorage.setItem", "ExecutionsSessionStorage", text);
-    }
-
-    private async Task GetSessionStorageValues()
-    {
-        var text = await JS.InvokeAsync<string>("sessionStorage.getItem", "ExecutionsSessionStorage");
-        if (text is null) return;
-        var sessionStorage = JsonSerializer.Deserialize<SessionStorage>(text, SerializerOptions);
-        activePreset = sessionStorage?.Preset;
-        (FromDateTime, ToDateTime) = sessionStorage switch
-        {
-            not null and { Preset: Preset preset } => GetPreset(preset),
-            not null => (sessionStorage.FromDateTime, sessionStorage.ToDateTime),
-            null => (FromDateTime, ToDateTime)
-        };
-        showSteps = sessionStorage?.ShowSteps ?? showSteps;
-        showGraph = sessionStorage?.ShowGraph ?? showGraph;
-        startTypeFilter = sessionStorage?.StartType ?? startTypeFilter;
-        jobStatusFilter = sessionStorage?.JobStatuses ?? jobStatusFilter;
-        stepStatusFilter = sessionStorage?.StepStatuses ?? stepStatusFilter;
-        jobFilter = sessionStorage?.JobNames ?? jobFilter;
-        stepFilter = sessionStorage?.StepNames ?? stepFilter;
-        stepTypeFilter = sessionStorage?.StepTypes ?? stepTypeFilter;
-        stepTagFilter = sessionStorage?.StepTags ?? stepTagFilter;
-        jobTagFilter = sessionStorage?.JobTags ?? jobTagFilter;
-    }
-
     public void Dispose()
     {
         cts.Cancel();
         cts.Dispose();
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        try
-        {
-            await SetSessionStorageValues();
-        }
-        catch (Exception ex)
-        {
-            Toaster.AddWarning("Error saving session storage values", ex.Message);
-        }
-    }
-
-    private enum Preset
-    {
-        OneHour,
-        ThreeHours,
-        TwelveHours,
-        TwentyFourHours,
-        ThreeDays,
-        SevenDays,
-        FourteenDays,
-        ThirtyDays,
-        ThisDay,
-        ThisWeek,
-        ThisMonth,
-        PreviousDay,
-        PreviousWeek,
-        PreviousMonth
     }
 }
