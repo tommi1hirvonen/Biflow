@@ -1,13 +1,13 @@
 ﻿namespace Biflow.Ui.Core;
 
-public record DeleteUnusedTagsCommand : IRequest<DeleteUnusedTagsResponse>;
+public record DeleteUnusedStepTagsCommand : IRequest<DeleteUnusedStepTagsResponse>;
 
-public record DeleteUnusedTagsResponse(IEnumerable<StepTag> DeletedTags);
+public record DeleteUnusedStepTagsResponse(IEnumerable<StepTag> DeletedTags);
 
-internal class DeleteUnusedTagsCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
-    : IRequestHandler<DeleteUnusedTagsCommand, DeleteUnusedTagsResponse>
+internal class DeleteUnusedStepTagsCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+    : IRequestHandler<DeleteUnusedStepTagsCommand, DeleteUnusedStepTagsResponse>
 {
-    public async Task<DeleteUnusedTagsResponse> Handle(DeleteUnusedTagsCommand request, CancellationToken cancellationToken)
+    public async Task<DeleteUnusedStepTagsResponse> Handle(DeleteUnusedStepTagsCommand request, CancellationToken cancellationToken)
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var tags = await context.StepTags

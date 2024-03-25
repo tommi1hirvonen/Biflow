@@ -1,10 +1,8 @@
-﻿@page "/tags"
+﻿@page "/tags/{Page?}"
 
 @attribute [Authorize(Roles = $"{Roles.Admin}, {Roles.Editor}")]
 
-@inject IDbContextFactory<AppDbContext> DbContextFactory
-@inject IMediator Mediator
-@inject ToasterService Toaster
+@inject NavigationManager NavigationManager
 
 <style>
     tr a {
@@ -20,336 +18,40 @@
 
 <h4>Tags</h4>
 
-<div class="row mt-3">
-    <div class="col">
-        <button class="btn btn-secondary" @onclick="OpenConfirmDeleteModalAsync">
-            <CxIcon Icon="FeatherIcon.Trash2" />
-            Delete unused
-        </button>
-    </div>
+<div class="mt-3 mb-4">
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <NavLink class="nav-link" href="tags/step" Match="NavLinkMatch.All">
+                Step tags
+            </NavLink>
+        </li>
+        <li class="nav-item" role="presentation">
+            <NavLink class="nav-link" href="tags/job" Match="NavLinkMatch.All">
+                Job tags
+            </NavLink>
+        </li>
+    </ul>
 </div>
 
-<div class="row my-4">
-    <div class="col">
-        <div class="card shadow-sm">
-            <div class="card-body px-0">
-                <table class="table table-sm table-hover">
-                    <thead>
-                        <tr>
-                            <th>Tag</th>
-                            <th></th>
-                            <th></th>
-                            <th></th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (tags is null)
-                        {
-                            <tr>
-                                <td colspan="5" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td>
-                            </tr>
-                        }
-                        else if (!tags.Any())
-                        {
-                            <tr>
-                                <td colspan="5" class="px-3">No tags</td>
-                            </tr>
-                        }
-                        else
-                        {
-                            foreach (var tag in tags)
-                            {
-                                var jobs = tag.Steps.Select(s => s.Job).Distinct().Count();
-                                var steps = tag.Steps.Count();
-                                var schedules = tag.Schedules.Count();
-                                <tr>
-                                    <td class="align-middle">
-                                        <TagBadge Tag="tag" />
-                                    </td>
-                                    <td>
-                                        <div class="btn-group">
-                                            @*Dropdown to edit the tag's name*@
-                                            <HxDropdownButtonGroup>
-                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => templateTag.TagName = tag.TagName">
-                                                    <CxIcon Icon="FeatherIcon.Edit3" />
-                                                </HxDropdownToggleButton>
-                                                <HxDropdownContent CssClass="p-4">
-                                                    <EditForm Model="templateTag" OnValidSubmit="async () => await UpdateTagNameAsync(tag)" Context="_context" style="min-width: 20rem;">
-                                                        <DataAnnotationsValidator />
-                                                        <ValidationSummary />
-                                                        <div>
-                                                            <label class="form-label">New name</label>
-                                                            <InputText class="form-control form-control-sm" @bind-Value="templateTag.TagName" autocomplete="off"></InputText>
-                                                        </div>
-                                                        <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Success" CssClass="mt-3">Save</HxSubmit>
-                                                    </EditForm>
-                                                </HxDropdownContent>
-                                            </HxDropdownButtonGroup>
-                                            <HxDropdownButtonGroup>
-                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                                    <CxIcon Icon="FeatherIcon.Trash2" />
-                                                </HxDropdownToggleButton>
-                                                <HxDropdownMenu>
-                                                    <HxDropdownHeader>Delete?</HxDropdownHeader>
-                                                    <HxDropdownItem @onclick="async () => await DeleteTag(tag)">Confirm</HxDropdownItem>
-                                                </HxDropdownMenu>
-                                            </HxDropdownButtonGroup>
-                                            <HxDropdownButtonGroup>
-                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                                    @tag.Color
-                                                </HxDropdownToggleButton>
-                                                <HxDropdownMenu>
-                                                    <HxDropdownHeader>Tag color</HxDropdownHeader>
-                                                    @foreach (var color in Enum.GetValues<TagColor>())
-                                                    {
-                                                        <HxDropdownItem OnClick="async () => await SetTagColorAsync(tag, color)">@color</HxDropdownItem>
-                                                    }
-                                                </HxDropdownMenu>
-                                            </HxDropdownButtonGroup>
-                                        </div>
-                                    </td>
-                                    <td class="align-middle">
-                                        @(jobs > 0 ? $"{jobs} job(s)" : null)
-                                    </td>
-                                    
-                                    <td class="align-middle">
-                                        <a class="text-body" href="javascript:void(0)" @onclick="async () => await ShowEditModalAsync(tag)">
-                                            @(steps > 0 ? $"{steps} step(s)" : null)
-                                        </a>
-                                    </td>
-
-                                    <td class="align-middle">
-                                        <a class="text-body" href="javascript:void(0)" @onclick="async () => await ShowSchedulesModalAsync(tag)">
-                                            @(schedules > 0 ? $"{schedules} schedule(s)" : null)
-                                        </a>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<HxModal @ref="confirmDeleteModal" Size="ModalSize.Regular" Title="Delete tags">
-    <BodyTemplate>
-        <div class="row">
-            <div class="col">
-                Delete these unused tags?
-            </div>
-        </div>
-        <div class="row mt-3">
-            <div class="col">
-                @foreach (var tag in UnusedTags)
-                {
-                    <TagBadge Tag="tag" CssClass="m-1" />
-                }
-            </div>
-        </div>
-    </BodyTemplate>
-    <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await confirmDeleteModal.LetAsync(x => x.HideAsync())">Cancel</button>
-        <button class="btn btn-danger" @onclick="DeleteUnusedTagsAsync">Delete</button>
-    </FooterTemplate>
-</HxModal>
-
-<HxModal @ref="editModal" Size="ModalSize.Large" Title="@($"Edit tag {editTag?.TagName}")" Scrollable="true">
-    <BodyTemplate>
-        <div class="row">
-            <div class="col">
-                <table class="table table-sm table-hover">
-                    <thead>
-                        <tr>
-                            <th>Job</th>
-                            <th>Step</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var step in editTag?.Steps
-                            .OrderBy(s => s.Job.JobName)
-                            .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
-                        {
-                            <tr>
-                                <td class="align-middle">
-                                    @step.Job.JobName
-                                </td>
-                                <td class="align-middle">
-                                    <StepTypeIcon StepType="step.StepType" />
-                                    &nbsp;
-                                    @step.StepName
-                                </td>
-                                <td class="align-middle">
-                                    <div class="btn-group">
-                                        <button class="btn btn-sm btn-auto" @onclick="async () => await DeleteStepTag(step)">
-                                            <CxIcon Icon="FeatherIcon.Delete" />
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </BodyTemplate>
-    <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await editModal.LetAsync(x => x.HideAsync())">Close</button>
-    </FooterTemplate>
-</HxModal>
-
-<HxModal @ref="schedulesModal" Size="ModalSize.ExtraLarge" Title="@($"Schedules using {schedulesModalTag?.TagName}")">
-    <BodyTemplate>
-        <div class="row">
-            <div class="col">
-                <table class="table table-sm table-hover">
-                    <thead>
-                        <tr>
-                            <th>Job</th>
-                            <th>Schedule name</th>
-                            <th>Cron expression</th>
-                            <th>Next execution</th>
-                            <th>Enabled</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var schedule in schedulesModalTag?.Schedules
-                           .OrderBy(s => s.Job.JobName) ?? Enumerable.Empty<Schedule>())
-                        {
-                            <tr>
-                                <td>
-                                    @schedule.Job.JobName
-                                </td>
-                                <td>
-                                    @schedule.ScheduleName
-                                </td>
-                                <td>
-                                    @schedule.CronExpression
-                                </td>
-                                <td>
-                                    @schedule.NextFireTimes().FirstOrDefault()
-                                </td>
-                                <td>
-                                    <div class="form-check form-switch">
-                                        <input type="checkbox" class="form-check-input" disabled checked=@schedule.IsEnabled>
-                                        <label class="form-check-label" for="@schedule.ScheduleId"></label>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </BodyTemplate>
-    <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await schedulesModal.LetAsync(x => x.HideAsync())">Close</button>
-    </FooterTemplate>
-</HxModal>
+@if (Page == "step")
+{
+    <StepTags />
+}
+else if (Page == "job")
+{
+    <JobTags />
+}
 
 @code {
-    private readonly StepTag templateTag = new(string.Empty);
+    [Parameter] public string? Page { get; set; }
 
-    private List<StepTag>? tags;
-    private HxModal? confirmDeleteModal;
-    private HxModal? editModal;
-    private HxModal? schedulesModal;
-    private StepTag? editTag;
-    private StepTag? schedulesModalTag;
-
-    private IEnumerable<StepTag> UnusedTags => tags?
-        .Where(t => !t.Steps.Any())
-        .Where(t => !t.Schedules.Any())
-        .Where(t => !t.JobSteps.Any())
-        .Where(t => !t.TagSubscriptions.Any())
-        .Where(t => !t.JobTagSubscriptions.Any())
-        ?? [];
-
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        using var context = await Task.Run(DbContextFactory.CreateDbContext);
-        tags = await context.StepTags
-            .AsNoTrackingWithIdentityResolution()
-            .Include(t => t.Steps)
-            .ThenInclude(t => t.Job)
-            .Include(t => t.Schedules)
-            .ThenInclude(s => s.Job)
-            .Include(t => t.JobSteps)
-            .Include(t => t.TagSubscriptions)
-            .Include(t => t.JobTagSubscriptions)
-            .OrderBy(t => t.TagName)
-            .ToListAsync();
-    }
-
-    private async Task OpenConfirmDeleteModalAsync()
-    {
-        if (!UnusedTags.Any())
-        {
-            Toaster.AddInformation("No unused tags");
-            return;
-        }
-
-        await confirmDeleteModal.LetAsync(x => x.ShowAsync());
-    }
-
-    private async Task DeleteUnusedTagsAsync()
-    {
-        var response = await Mediator.SendAsync(new DeleteUnusedTagsCommand());
-        tags?.RemoveAll(t => response.DeletedTags.Any(d => d.TagId == t.TagId));
-        await confirmDeleteModal.LetAsync(x => x.HideAsync());
-    }
-
-    private async Task UpdateTagNameAsync(StepTag tag)
-    {
-        try
-        {
-            tag.TagName = templateTag.TagName;
-            await Mediator.SendAsync(new UpdateTagCommand(tag));
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            Toaster.AddError("Concurrency error", "The tag was modified outside of this session. Reload the page to view the most recent values.");
-        }
-        catch (Exception ex)
-        {
-            Toaster.AddError("Error updating tag", ex.Message);
-        }
-    }
-
-    private async Task DeleteTag(StepTag tag)
-    {
-        await Mediator.SendAsync(new DeleteTagCommand(tag.TagId));
-        tags?.Remove(tag);
-    }
-
-    private async Task DeleteStepTag(Step step)
-    {
-        if (editTag is null) 
+        if (Page is not null)
         {
             return;
         }
-        await Mediator.SendAsync(new DeleteStepTagCommand(step.StepId, editTag.TagId));
-        editTag.Steps.Remove(step);
-    }
 
-    private async Task SetTagColorAsync(StepTag tag, TagColor color)
-    {
-        tag.Color = color;
-        await Mediator.SendAsync(new UpdateTagCommand(tag));
-    }
-
-    private async Task ShowEditModalAsync(StepTag tag)
-    {
-        editTag = tag;
-        await editModal.LetAsync(x => x.ShowAsync());
-    }
-
-    private async Task ShowSchedulesModalAsync(StepTag tag)
-    {
-        schedulesModalTag = tag;
-        await schedulesModal.LetAsync(x => x.ShowAsync());
+        NavigationManager.NavigateTo("tags/step");
     }
 }

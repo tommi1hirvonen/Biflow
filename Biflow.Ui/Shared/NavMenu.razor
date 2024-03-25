@@ -35,7 +35,7 @@
         </li>
         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
             <li class="nav-item">
-                <NavLink class="nav-link" href="tags" @onclick="NavLinkClick">
+                <NavLink class="nav-link" href="tags" @onclick="NavLinkClick" Match="NavLinkMatch.Prefix">
                     <CxIcon Icon="FeatherIcon.Tag" />
                     Tags
                 </NavLink>

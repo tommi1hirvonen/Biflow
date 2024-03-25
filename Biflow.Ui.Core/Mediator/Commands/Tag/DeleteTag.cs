@@ -10,7 +10,7 @@ internal class DeleteTagCommandHandler(IDbContextFactory<AppDbContext> dbContext
         var tagToRemove = await context.StepTags.FirstOrDefaultAsync(t => t.TagId == request.TagId, cancellationToken);
         if (tagToRemove is not null)
         {
-            context.StepTags.Remove(tagToRemove);
+            context.Tags.Remove(tagToRemove);
             await context.SaveChangesAsync(cancellationToken);
         }
     }

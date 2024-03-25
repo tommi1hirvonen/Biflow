@@ -1,6 +1,6 @@
 ﻿namespace Biflow.Ui.Core;
 
-public record UpdateTagCommand(StepTag Tag) : IRequest;
+public record UpdateTagCommand(Tag Tag) : IRequest;
 
 internal class UpdateTagCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<UpdateTagCommand>
 {
