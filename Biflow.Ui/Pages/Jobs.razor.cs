@@ -76,6 +76,7 @@ public partial class Jobs : ComponentBase, IDisposable
         using var context = await Task.Run(DbFactory.CreateDbContext);
         jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
+            .Include(job => job.Tags)
             .Include(job => job.Schedules)
             .OrderBy(job => job.JobName)
             .ToListAsync(cts.Token);

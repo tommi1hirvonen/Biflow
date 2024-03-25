@@ -17,6 +17,17 @@
                     <InputText @bind-Value="job.JobName" class="form-control" />
                 </div>
             </div>
+
+            <div class="row mt-3">
+                <div class="col">
+                    <label class="form-label">Tags</label>
+                    <HxInputTags @bind-Value="tags"
+                                 DataProvider="GetTagSuggestions"
+                                 SuggestMinimumLength="0"
+                                 SuggestDelay="0"
+                                 TagBadgeSettings="new BadgeSettings() { Color = ThemeColor.Secondary }" />
+                </div>
+            </div>
         </EditForm>
     </BodyTemplate>
     <FooterTemplate>
@@ -34,11 +45,25 @@
 
     private HxOffcanvas? offcanvas;
     private Job job = new();
+    private IEnumerable<JobTag> allTags = [];
+    private List<string> tags = [];
 
     private async Task OnSubmit()
     {
         try
         {
+            // Synchronize tags
+            foreach (var text in tags.Where(str => !job.Tags.Any(t => t.TagName == str)))
+            {
+                // New tags
+                var tag = allTags.FirstOrDefault(t => t.TagName == text) ?? new JobTag(text);
+                job.Tags.Add(tag);
+            }
+            foreach (var tag in job.Tags.Where(t => !tags.Contains(t.TagName)).ToList() ?? [])
+            {
+                job.Tags.Remove(tag);
+            }
+
             IRequest command = job.JobId == Guid.Empty
                 ? new CreateJobCommand(job)
                 : new UpdateJobCommand(job);
@@ -58,15 +83,23 @@
         try
         {
             using var context = await DbContextFactory.CreateDbContextAsync();
+            allTags = await context.JobTags.ToArrayAsync();
             if (job is not null)
             {
                 this.job = await context.Jobs
-                    .AsNoTracking()
+                    .AsNoTrackingWithIdentityResolution()
+                    .Include(j => j.Tags)
                     .FirstAsync(j => j.JobId == job.JobId);
+                tags = this.job.Tags
+                    .Select(t => t.TagName)
+                    .Distinct()
+                    .Order()
+                    .ToList();
             }
             else
             {
                 this.job = new();
+                tags = [];
             }
             await offcanvas.LetAsync(x => x.ShowAsync());
         }
@@ -74,6 +107,20 @@
         {
             Toaster.AddError("Error loading job", ex.Message);
         }
+    }
+
+    private Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
+    {
+        return Task.FromResult(new InputTagsDataProviderResult
+        {
+            Data = allTags
+                .Select(t => t.TagName)
+                .Where(t => t.ContainsIgnoreCase(request.UserInput))
+                .Where(t => !tags.Any(tag => t == tag))
+                .OrderBy(t => t)
+                .AsEnumerable()
+                ?? []
+        });
     }
 
 }

@@ -88,7 +88,9 @@
                                         </div>
                                     </td>
                                     <td class="align-middle">
-                                        @(jobs > 0 ? $"{jobs} job(s)" : null)
+                                        <a class="text-body" href="javascript:void(0)" @onclick="async () => await ShowEditModalAsync(tag)">
+                                            @(jobs > 0 ? $"{jobs} job(s)" : null)
+                                        </a>
                                     </td>
                                 </tr>
                             }
