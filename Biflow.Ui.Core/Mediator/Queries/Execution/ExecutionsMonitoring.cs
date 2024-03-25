@@ -71,7 +71,7 @@ internal class ExecutionsQueryHandler(IDbContextFactory<AppDbContext> dbContextF
                 e.EndedOn,
                 e.ExecutionStatus,
                 e.StepExecutions.Count(),
-                job.Tags.ToArray()
+                job.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color)).ToArray()
             )).ToArrayAsync(cancellationToken);
     }
 }

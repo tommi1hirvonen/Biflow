@@ -34,7 +34,7 @@ public class ExecutionsPageState
     
     public HashSet<StepType> StepTypeFilter { get; } = [];
     
-    public HashSet<string> StepTagFilter { get; } = [];
+    public HashSet<TagProjection> StepTagFilter { get; } = [];
     
-    public HashSet<string> JobTagFilter { get; } = [];
+    public HashSet<TagProjection> JobTagFilter { get; } = [];
 }

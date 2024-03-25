@@ -26,7 +26,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
     private const int TimerIntervalSeconds = 10;
     private readonly System.Timers.Timer timer = new(TimeSpan.FromSeconds(TimerIntervalSeconds)) { AutoReset = false };
     private readonly HashSet<StepType> stepTypeFilter = [];
-    private readonly HashSet<string> tagFilter = [];
+    private readonly HashSet<TagProjection> tagFilter = [];
     private readonly HashSet<StepExecutionStatus> stepStatusFilter = [];
     private readonly HashSet<(string StepName, StepType StepType)> stepFilter = [];
     private Guid prevExecutionId;
@@ -64,7 +64,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
     private IEnumerable<StepExecutionAttempt>? Executions => execution?.StepExecutions.SelectMany(e => e.StepExecutionAttempts);
 
     private IEnumerable<StepExecutionProjection>? FilteredExecutions => Executions
-        ?.Where(e => tagFilter.Count == 0 || e.StepExecution.GetStep()?.Tags.Any(t => tagFilter.Contains(t.TagName)) == true)
+        ?.Where(e => tagFilter.Count == 0 || e.StepExecution.GetStep()?.Tags.Any(t1 => tagFilter.Any(t2 => t1.TagId == t2.TagId)) == true)
         .Where(e => stepStatusFilter.Count == 0 || stepStatusFilter.Contains(e.ExecutionStatus))
         .Where(e => stepFilter.Count == 0 || stepFilter.Contains((e.StepExecution.StepName, e.StepExecution.StepType)))
         .Where(e => stepTypeFilter.Count == 0 || stepTypeFilter.Contains(e.StepExecution.StepType))
@@ -83,7 +83,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             e.StepExecution.Execution.ScheduleId,
             e.StepExecution.Execution.JobId,
             job?.JobName ?? e.StepExecution.Execution.JobName,
-            e.StepExecution.GetStep()?.Tags.ToArray() ?? [],
+            e.StepExecution.GetStep()?.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color)).ToArray() ?? [],
             []));
 
     private Report ShowReport => Page switch

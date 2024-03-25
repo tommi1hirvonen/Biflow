@@ -16,7 +16,7 @@ public partial class Executions : ComponentBase, IDisposable
     private IEnumerable<ExecutionProjection>? FilteredExecutions => executions?
         .Where(e => UserState.Executions.JobStatusFilter.Count == 0 || UserState.Executions.JobStatusFilter.Contains(e.ExecutionStatus))
         .Where(e => UserState.Executions.JobFilter.Count == 0 || UserState.Executions.JobFilter.Contains(e.JobName))
-        .Where(e => UserState.Executions.JobTagFilter.Count == 0 || e.Tags.Any(t => UserState.Executions.JobTagFilter.Contains(t.TagName)) == true)
+        .Where(e => UserState.Executions.JobTagFilter.Count == 0 || e.Tags.Any(t => UserState.Executions.JobTagFilter.Contains(t)))
         .Where(e => UserState.Executions.StartTypeFilter == StartType.All ||
         UserState.Executions.StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
         UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null);
@@ -25,8 +25,8 @@ public partial class Executions : ComponentBase, IDisposable
         .Where(e => UserState.Executions.StartTypeFilter == StartType.All ||
         UserState.Executions.StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
         UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null)
-        .Where(e => UserState.Executions.StepTagFilter.Count == 0 || e.StepTags.Any(t => UserState.Executions.StepTagFilter.Contains(t.TagName)) == true)
-        .Where(e => UserState.Executions.JobTagFilter.Count == 0 || e.JobTags.Any(t => UserState.Executions.JobTagFilter.Contains(t.TagName)) == true)
+        .Where(e => UserState.Executions.StepTagFilter.Count == 0 || e.StepTags.Any(t => UserState.Executions.StepTagFilter.Contains(t)))
+        .Where(e => UserState.Executions.JobTagFilter.Count == 0 || e.JobTags.Any(t => UserState.Executions.JobTagFilter.Contains(t)))
         .Where(e => UserState.Executions.StepStatusFilter.Count == 0 || UserState.Executions.StepStatusFilter.Contains(e.ExecutionStatus))
         .Where(e => UserState.Executions.JobFilter.Count == 0 || UserState.Executions.JobFilter.Contains(e.JobName))
         .Where(e => UserState.Executions.StepFilter.Count == 0 || UserState.Executions.StepFilter.Contains((e.StepName, e.StepType)))

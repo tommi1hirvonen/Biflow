@@ -18,8 +18,8 @@ public record StepExecutionProjection(
     Guid? ScheduleId,
     Guid? JobId,
     string JobName,
-    StepTag[] StepTags,
-    JobTag[] JobTags)
+    TagProjection[] StepTags,
+    TagProjection[] JobTags)
 {
     public virtual bool Equals(StepExecutionProjection? other) =>
         other is not null &&

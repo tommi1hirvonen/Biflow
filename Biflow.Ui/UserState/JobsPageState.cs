@@ -8,7 +8,7 @@ public class JobsPageState
 
     public HashSet<ExecutionStatus> StatusFilter = [];
 
-    public HashSet<TagFilter> TagFilter = [];
+    public HashSet<TagProjection> TagFilter = [];
 
     public StateFilter StateFilter { get; set; } = StateFilter.All;
 

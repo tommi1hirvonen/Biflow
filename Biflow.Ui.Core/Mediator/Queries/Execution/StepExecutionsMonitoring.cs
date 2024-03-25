@@ -62,8 +62,8 @@ internal class StepExecutionsQueryHandler(IDbContextFactory<AppDbContext> dbCont
                 e.StepExecution.Execution.ScheduleId,
                 e.StepExecution.Execution.JobId,
                 job.JobName ?? e.StepExecution.Execution.JobName,
-                step.Tags.ToArray(),
-                job.Tags.ToArray()
+                step.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color)).ToArray(),
+                job.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color)).ToArray()
             )).ToArrayAsync(cancellationToken);
         return new StepExecutionsMonitoringQueryResponse(executions);
     }

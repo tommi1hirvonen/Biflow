@@ -223,7 +223,7 @@
                 e.EndedOn,
                 e.ExecutionStatus,
                 e.StepExecutions.Count(),
-                Array.Empty<JobTag>()))
+                Array.Empty<TagProjection>()))
             .ToArrayAsync(cts.Token);
         CalculateChartDataset();
         StateHasChanged();

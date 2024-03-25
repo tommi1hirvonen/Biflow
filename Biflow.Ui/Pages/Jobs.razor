@@ -60,13 +60,13 @@
             @{
                 var tags = jobs?
                     .SelectMany(j => j.Tags)
-                    .Select(t => new TagFilter(t.TagId, t.TagName, t.Color))
+                    .Select(t => new TagProjection(t.TagId, t.TagName, t.Color))
                     .Concat(UserState.Jobs.TagFilter)
                     .Distinct()
                     .OrderBy(t => t.TagName)
                     .AsEnumerable() ?? [];
             }
-            <FilterDropdown TItem="TagFilter"
+            <FilterDropdown TItem="TagProjection"
                             FilterSet="UserState.Jobs.TagFilter"
                             Items="tags"
                             IdSelector="t => t.TagId.ToString()"
