@@ -18,6 +18,7 @@ public class Job : IAuditable
         MaxParallelSteps = other.MaxParallelSteps;
         OvertimeNotificationLimitMinutes = other.OvertimeNotificationLimitMinutes;
         IsEnabled = other.IsEnabled;
+        Tags = other.Tags.ToList();
         JobConcurrencies = other.JobConcurrencies
             .Select(c => new JobConcurrency(c, this))
             .ToList();
@@ -116,6 +117,8 @@ public class Job : IAuditable
 
     [JsonIgnore]
     public IEnumerable<User> Users { get; } = new List<User>();
+
+    public ICollection<JobTag> Tags { get; init; } = new List<JobTag>();
 
     [Display(Name = "Created")]
     public DateTimeOffset CreatedOn { get; set; }

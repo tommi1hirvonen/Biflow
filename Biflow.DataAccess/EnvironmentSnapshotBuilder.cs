@@ -41,6 +41,7 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
             .AsNoTracking()
             .Include(j => j.JobParameters)
             .Include(j => j.JobConcurrencies)
+            .Include(j => j.Tags)
             .OrderBy(j => j.JobId)
             .ToArrayAsync();
         var steps = await context.Steps

@@ -9,7 +9,8 @@ public class JobDuplicatorFactory(IDbContextFactory<AppDbContext> dbContextFacto
         var context = await _dbContextFactory.CreateDbContextAsync();
         IQueryable<Job> query = context.Jobs
             .Include(j => j.JobParameters)
-            .Include(j => j.JobConcurrencies);
+            .Include(j => j.JobConcurrencies)
+            .Include(j => j.Tags);
         foreach (var include in DuplicatorExtensions.StepNavigationPaths.Skip(1))
         {
             query = query.Include($"{nameof(Job.Steps)}.{include}");

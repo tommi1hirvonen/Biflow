@@ -41,5 +41,6 @@ public class JobDuplicatorTests(DatabaseFixture fixture)
         Assert.Equal(job1.StopOnFirstError, job1Copy.StopOnFirstError);
         Assert.Equal(job1.MaxParallelSteps, job1Copy.MaxParallelSteps);
         Assert.Equal(job1.OvertimeNotificationLimitMinutes, job1Copy.OvertimeNotificationLimitMinutes);
+        Assert.Equal(job1.Tags.Count, job1Copy.Tags.Count);
     }
 }
