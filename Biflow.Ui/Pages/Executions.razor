@@ -119,6 +119,7 @@
                         .Where(e => !UserState.Executions.StepFilter.Any() || UserState.Executions.StepFilter.Contains((e.StepName, e.StepType))) // Limit visible jobs based on step filter
                         .Where(e => !UserState.Executions.StepTypeFilter.Any() || UserState.Executions.StepTypeFilter.Contains(e.StepType)) // Limit visible jobs based on step type filter
                         .Where(e => !UserState.Executions.JobTagFilter.Any() || e.JobTags.Any(t => UserState.Executions.JobTagFilter.Contains(t.TagName))) // Limit visible jobs based on tag filter
+                        .Where(e => !UserState.Executions.StepTagFilter.Any() || e.StepTags.Any(t => UserState.Executions.StepTagFilter.Contains(t.TagName)))
                         .Where(e => !UserState.Executions.StepStatusFilter.Any() || UserState.Executions.StepStatusFilter.Contains(e.ExecutionStatus)) // Limit visible jobs based on step status filter
                         .Select(e => e.JobName),
                     false => executions?
@@ -150,7 +151,7 @@
                         .Where(e => !UserState.Executions.JobFilter.Any() || UserState.Executions.JobFilter.Contains(e.JobName)) // Limit visible tags based on job filter
                         .Where(e => !UserState.Executions.StepFilter.Any() || UserState.Executions.StepFilter.Contains((e.StepName, e.StepType))) // Limit visible tags based on step filter
                         .Where(e => !UserState.Executions.StepTypeFilter.Any() || UserState.Executions.StepTypeFilter.Contains(e.StepType)) // Limit visible tags based on step type filter
-                        //.Where(e => !TagFilter.Any() || e.Tags.Any(t => TagFilter.Contains(t.TagName)) == true) // Limit visible jobs based on tag filter
+                        .Where(e => !UserState.Executions.StepTagFilter.Any() || e.StepTags.Any(t => UserState.Executions.StepTagFilter.Contains(t.TagName))) // Limit visible jobs based on tag filter
                         .Where(e => !UserState.Executions.StepStatusFilter.Any() || UserState.Executions.StepStatusFilter.Contains(e.ExecutionStatus)) // Limit visible tags based on step status filter
                         .SelectMany(e => e.JobTags.Select(t => t.TagName)),
                     false => executions?
@@ -183,7 +184,7 @@
                                     UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible steps based on start type filter
                                    .Where(e => !UserState.Executions.JobFilter.Any() || UserState.Executions.JobFilter.Contains(e.JobName)) // Limit visible steps based on job filter
                                    .Where(e => !UserState.Executions.JobTagFilter.Any() || e.JobTags.Any(t => UserState.Executions.JobTagFilter.Contains(t.TagName))) // Limit visible jobs based on tag filter
-                                   //.Where(s => !TagFilter.Any() || s.Tags.Any(t => TagFilter.Contains(t.TagName)) == true) // Limit visible steps based on tag filter
+                                   .Where(e => !UserState.Executions.StepTagFilter.Any() || e.StepTags.Any(t => UserState.Executions.StepTagFilter.Contains(t.TagName)))
                                    .Where(s => !UserState.Executions.StepStatusFilter.Any() || UserState.Executions.StepStatusFilter.Contains(s.ExecutionStatus)) // Limit visible steps based on step status filter
                                    .Where(s => !UserState.Executions.StepTypeFilter.Any() || UserState.Executions.StepTypeFilter.Contains(s.StepType)) // Limit visible steps based on step type filter
                                    .Select(s => (s.StepName, s.StepType))
@@ -208,7 +209,7 @@
                                     UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible step types based on start type filter
                                    .Where(e => !UserState.Executions.JobFilter.Any() || UserState.Executions.JobFilter.Contains(e.JobName)) // Limit visible step types based on job filter
                                    .Where(e => !UserState.Executions.JobTagFilter.Any() || e.JobTags.Any(t => UserState.Executions.JobTagFilter.Contains(t.TagName))) // Limit visible jobs based on tag filter
-                                   //.Where(s => !TagFilter.Any() || s.Tags.Any(t => TagFilter.Contains(t.TagName)) == true) // Limit visible step types based on tag filter
+                                   .Where(e => !UserState.Executions.StepTagFilter.Any() || e.StepTags.Any(t => UserState.Executions.StepTagFilter.Contains(t.TagName)))
                                    .Where(s => !UserState.Executions.StepStatusFilter.Any() || UserState.Executions.StepStatusFilter.Contains(s.ExecutionStatus)) // Limit visible step types based on step status filter
                                    .Where(s => !UserState.Executions.StepFilter.Any() || UserState.Executions.StepFilter.Contains((s.StepName, s.StepType))) // Limit visible step types based on step filter
                                    .Select(s => s.StepType)
@@ -259,7 +260,7 @@
                                     UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible step statuses based on start type filter
                                    .Where(e => !UserState.Executions.JobFilter.Any() || UserState.Executions.JobFilter.Contains(e.JobName)) // Limit visible step statuses based on job filter
                                    .Where(e => !UserState.Executions.JobTagFilter.Any() || e.JobTags.Any(t => UserState.Executions.JobTagFilter.Contains(t.TagName))) // Limit visible jobs based on tag filter
-                                   //.Where(s => !TagFilter.Any() || s.Tags.Any(t => TagFilter.Contains(t.TagName)) == true) // Limit visible step statuses based on tag filter
+                                   .Where(e => !UserState.Executions.StepTagFilter.Any() || e.StepTags.Any(t => UserState.Executions.StepTagFilter.Contains(t.TagName)))
                                    .Where(s => !UserState.Executions.StepFilter.Any() || UserState.Executions.StepFilter.Contains((s.StepName, s.StepType))) // Limit visible step statuses based on step filter
                                    .Where(s => !UserState.Executions.StepTypeFilter.Any() || UserState.Executions.StepTypeFilter.Contains(s.StepType)) // Limit visible step statuses based on step type filter
                                    .Select(e => e.ExecutionStatus)
