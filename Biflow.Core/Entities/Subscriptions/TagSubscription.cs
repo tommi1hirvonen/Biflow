@@ -9,5 +9,5 @@ public class TagSubscription(Guid userId, Guid tagId) : Subscription(userId, Sub
     [Required]
     public Guid TagId { get; set; } = tagId;
 
-    public Tag Tag { get; set; } = null!;
+    public StepTag Tag { get; set; } = null!;
 }

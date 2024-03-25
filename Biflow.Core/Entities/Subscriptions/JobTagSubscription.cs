@@ -14,5 +14,5 @@ public class JobTagSubscription(Guid userId, Guid jobId, Guid tagId) : Subscript
 
     public Job Job { get; set; } = null!;
 
-    public Tag Tag { get; set; } = null!;
+    public StepTag Tag { get; set; } = null!;
 }

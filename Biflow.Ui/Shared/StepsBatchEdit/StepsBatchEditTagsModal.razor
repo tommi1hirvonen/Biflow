@@ -68,7 +68,7 @@
     private HxModal? modal;
     private bool saving = false;
     private AppDbContext? context;
-    protected HashSet<Tag>? allTags;
+    protected HashSet<StepTag>? allTags;
     private List<string> tags = [];
     private List<Step>? steps;
     private EditMode editMode = EditMode.Add;
@@ -156,7 +156,7 @@
                 .ToArray();
             foreach (var (step, tagName) in stepTagsToAdd)
             {
-                var tag = allTags?.FirstOrDefault(t => t.TagName == tagName) ?? new Tag(tagName);
+                var tag = allTags?.FirstOrDefault(t => t.TagName == tagName) ?? new StepTag(tagName);
                 allTags?.Add(tag); // In case of new tag, add it to the list.
                 step.Tags.Add(tag);
             }

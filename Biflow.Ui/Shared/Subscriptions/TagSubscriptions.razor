@@ -90,7 +90,7 @@
                         ?.Where(t => !Subscriptions.Any(s => t.TagId == s.TagId))
                         .OrderBy(t => t.TagName)
                         .ToArray()
-                        ?? Array.Empty<Tag>();
+                        ?? Array.Empty<StepTag>();
                 }
                 @if (!tags.Any())
                 {
@@ -115,7 +115,7 @@
     public User? User { get; set; }
 
     [Parameter]
-    public IEnumerable<Tag>? Tags { get; set; }
+    public IEnumerable<StepTag>? Tags { get; set; }
 
     [Parameter]
     public EventCallback OnSubscriptionCountChanged { get; set; }

@@ -1,8 +1,8 @@
 ﻿namespace Biflow.DataAccess.Configuration;
 
-internal class TagEntityTypeConfiguration : IEntityTypeConfiguration<Tag>
+internal class TagEntityTypeConfiguration : IEntityTypeConfiguration<StepTag>
 {
-    public void Configure(EntityTypeBuilder<Tag> builder)
+    public void Configure(EntityTypeBuilder<StepTag> builder)
     {
         builder.ToTable("Tag")
             .HasKey(x => x.TagId);
@@ -11,19 +11,19 @@ internal class TagEntityTypeConfiguration : IEntityTypeConfiguration<Tag>
             .WithMany(s => s.Tags)
             .UsingEntity<Dictionary<string, object>>("StepTag",
             x => x.HasOne<Step>().WithMany().HasForeignKey("StepId").OnDelete(DeleteBehavior.Cascade),
-            x => x.HasOne<Tag>().WithMany().HasForeignKey("TagId").OnDelete(DeleteBehavior.Cascade));
+            x => x.HasOne<StepTag>().WithMany().HasForeignKey("TagId").OnDelete(DeleteBehavior.Cascade));
 
         builder.HasMany(t => t.JobSteps)
             .WithMany(s => s.TagFilters)
             .UsingEntity<Dictionary<string, object>>("JobStepTagFilter",
             x => x.HasOne<JobStep>().WithMany().HasForeignKey("StepId").OnDelete(DeleteBehavior.Cascade),
-            x => x.HasOne<Tag>().WithMany().HasForeignKey("TagId").OnDelete(DeleteBehavior.Cascade));
+            x => x.HasOne<StepTag>().WithMany().HasForeignKey("TagId").OnDelete(DeleteBehavior.Cascade));
 
         builder.HasMany(t => t.Schedules)
             .WithMany(s => s.Tags)
             .UsingEntity<Dictionary<string, object>>("ScheduleTag",
             x => x.HasOne<Schedule>().WithMany().HasForeignKey("ScheduleId").OnDelete(DeleteBehavior.Cascade),
-            x => x.HasOne<Tag>().WithMany().HasForeignKey("TagId").OnDelete(DeleteBehavior.Cascade));
+            x => x.HasOne<StepTag>().WithMany().HasForeignKey("TagId").OnDelete(DeleteBehavior.Cascade));
 
         builder.HasIndex(p => p.TagName, "UQ_TagName").IsUnique();
     }

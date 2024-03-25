@@ -52,7 +52,7 @@
                 </ItemTemplate>
             </FilterDropdown>
 
-            <FilterDropdown TItem="Tag"
+            <FilterDropdown TItem="StepTag"
                             FilterSet="tagFilter"
                             Items="StepSlims.Values.SelectMany(step => step.Tags).DistinctBy(t => t.TagName).OrderBy(t => t.TagName)"
                             OnChange="StateHasChanged">
@@ -199,7 +199,7 @@
     public Dictionary<Guid, JobProjection> JobSlims { get; set; } = [];
 
     private readonly HashSet<JobProjection> jobFilter = [];
-    private readonly HashSet<Tag> tagFilter = [];
+    private readonly HashSet<StepTag> tagFilter = [];
     private readonly HashSet<StepType> stepTypeFilter = [];
     private static readonly JsonSerializerOptions jsonOptions = new JsonSerializerOptions { WriteIndented = true };
 

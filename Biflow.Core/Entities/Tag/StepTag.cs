@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
-public class Tag(string tagName) : ITag
+public class StepTag(string tagName) : ITag
 {
     [JsonInclude]
     public Guid TagId { get; private set; }

@@ -2,7 +2,7 @@
 
 public record DeleteUnusedTagsCommand : IRequest<DeleteUnusedTagsResponse>;
 
-public record DeleteUnusedTagsResponse(IEnumerable<Tag> DeletedTags);
+public record DeleteUnusedTagsResponse(IEnumerable<StepTag> DeletedTags);
 
 internal class DeleteUnusedTagsCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<DeleteUnusedTagsCommand, DeleteUnusedTagsResponse>

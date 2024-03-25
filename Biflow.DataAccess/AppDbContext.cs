@@ -64,7 +64,7 @@ public class AppDbContext : DbContext
     public DbSet<ConnectionInfoBase> Connections => Set<ConnectionInfoBase>();
     public DbSet<SqlConnectionInfo> SqlConnections => Set<SqlConnectionInfo>();
     public DbSet<AnalysisServicesConnectionInfo> AnalysisServicesConnections => Set<AnalysisServicesConnectionInfo>();
-    public DbSet<Tag> Tags => Set<Tag>();
+    public DbSet<StepTag> Tags => Set<StepTag>();
     public DbSet<MasterDataTable> MasterDataTables => Set<MasterDataTable>();
     public DbSet<MasterDataTableCategory> MasterDataTableCategories => Set<MasterDataTableCategory>();
     public DbSet<QlikCloudClient> QlikCloudClients => Set<QlikCloudClient>();

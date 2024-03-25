@@ -213,8 +213,8 @@ public class DatabaseFixture : IAsyncLifetime
             var jobConcurrency = new JobConcurrency { Job = job1, StepType = StepType.Sql, MaxParallelSteps = 1 };
             job1.JobConcurrencies.Add(jobConcurrency);
 
-            var tag1 = new Tag("Test tag") { Color = TagColor.DarkGray };
-            var tag2 = new Tag("Another tag") { Color = TagColor.Red };
+            var tag1 = new StepTag("Test tag") { Color = TagColor.DarkGray };
+            var tag2 = new StepTag("Another tag") { Color = TagColor.Red };
 
             var step1 = new SqlStep
             {

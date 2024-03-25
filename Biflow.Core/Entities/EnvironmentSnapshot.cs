@@ -20,7 +20,7 @@ public class EnvironmentSnapshot
     };
 
     public required Job[] Jobs { get; init; }
-    public required Tag[] Tags { get; init; }
+    public required StepTag[] Tags { get; init; }
     public required DataObject[] DataObjects { get; init; }
 
     public required ConnectionInfoBase[] Connections { get; init; }

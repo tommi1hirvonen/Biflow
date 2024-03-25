@@ -39,7 +39,7 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     internal bool Saving { get; set; } = false;
 
-    protected IEnumerable<Tag>? AllTags { get; private set; }
+    protected IEnumerable<StepTag>? AllTags { get; private set; }
 
     private AppDbContext? context;
     private IEnumerable<DataObject>? dataObjects;
@@ -136,10 +136,10 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
             foreach (var text in Tags.Where(str => !Step.Tags.Any(t => t.TagName == str)))
             {
                 // New tags
-                var tag = AllTags?.FirstOrDefault(t => t.TagName == text) ?? new Tag(text);
+                var tag = AllTags?.FirstOrDefault(t => t.TagName == text) ?? new StepTag(text);
                 Step.Tags.Add(tag);
             }
-            foreach (var tag in Step.Tags.Where(t => !Tags.Contains(t.TagName)).ToList() ?? Enumerable.Empty<Tag>())
+            foreach (var tag in Step.Tags.Where(t => !Tags.Contains(t.TagName)).ToList() ?? Enumerable.Empty<StepTag>())
             {
                 Step.Tags.Remove(tag);
             }

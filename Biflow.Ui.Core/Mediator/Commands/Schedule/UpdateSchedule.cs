@@ -19,7 +19,7 @@ internal class UpdateScheduleCommandHandler(
         foreach (var name in request.Tags.Where(str => !request.Schedule.Tags.Any(t => t.TagName == str)))
         {
             // New tags
-            var tag = tags.FirstOrDefault(t => t.TagName == name) ?? new Tag(name);
+            var tag = tags.FirstOrDefault(t => t.TagName == name) ?? new StepTag(name);
             request.Schedule.Tags.Add(tag);
         }
         foreach (var tag in request.Schedule.Tags.Where(t => !request.Tags.Contains(t.TagName)).ToArray())

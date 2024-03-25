@@ -140,7 +140,7 @@ public abstract class Step : IComparable, IAuditable
     [ValidateComplexType]
     public ICollection<ExecutionConditionParameter> ExecutionConditionParameters { get; } = new List<ExecutionConditionParameter>();
 
-    public ICollection<Tag> Tags { get; init; } = new List<Tag>();
+    public ICollection<StepTag> Tags { get; init; } = new List<StepTag>();
 
     [JsonIgnore]
     public IEnumerable<StepSubscription> StepSubscriptions { get; } = new List<StepSubscription>();

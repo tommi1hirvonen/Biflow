@@ -251,16 +251,16 @@
 </HxModal>
 
 @code {
-    private readonly Tag templateTag = new(string.Empty);
+    private readonly StepTag templateTag = new(string.Empty);
 
-    private List<Tag>? tags;
+    private List<StepTag>? tags;
     private HxModal? confirmDeleteModal;
     private HxModal? editModal;
     private HxModal? schedulesModal;
-    private Tag? editTag;
-    private Tag? schedulesModalTag;
+    private StepTag? editTag;
+    private StepTag? schedulesModalTag;
 
-    private IEnumerable<Tag> UnusedTags => tags?
+    private IEnumerable<StepTag> UnusedTags => tags?
         .Where(t => !t.Steps.Any())
         .Where(t => !t.Schedules.Any())
         .Where(t => !t.JobSteps.Any())
@@ -302,7 +302,7 @@
         await confirmDeleteModal.LetAsync(x => x.HideAsync());
     }
 
-    private async Task UpdateTagNameAsync(Tag tag)
+    private async Task UpdateTagNameAsync(StepTag tag)
     {
         try
         {
@@ -319,7 +319,7 @@
         }
     }
 
-    private async Task DeleteTag(Tag tag)
+    private async Task DeleteTag(StepTag tag)
     {
         await Mediator.SendAsync(new DeleteTagCommand(tag.TagId));
         tags?.Remove(tag);
@@ -335,19 +335,19 @@
         editTag.Steps.Remove(step);
     }
 
-    private async Task SetTagColorAsync(Tag tag, TagColor color)
+    private async Task SetTagColorAsync(StepTag tag, TagColor color)
     {
         tag.Color = color;
         await Mediator.SendAsync(new UpdateTagCommand(tag));
     }
 
-    private async Task ShowEditModalAsync(Tag tag)
+    private async Task ShowEditModalAsync(StepTag tag)
     {
         editTag = tag;
         await editModal.LetAsync(x => x.ShowAsync());
     }
 
-    private async Task ShowSchedulesModalAsync(Tag tag)
+    private async Task ShowSchedulesModalAsync(StepTag tag)
     {
         schedulesModalTag = tag;
         await schedulesModal.LetAsync(x => x.ShowAsync());
