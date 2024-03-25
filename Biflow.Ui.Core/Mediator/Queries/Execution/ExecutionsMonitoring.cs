@@ -42,7 +42,11 @@ internal class ExecutionsQueryHandler(IDbContextFactory<AppDbContext> dbContextF
 
         // Combine and flatten query results.
         var executions = await Task.WhenAll(tasks);
-        var flatten = executions.SelectMany(e => e).ToArray();
+        var flatten = executions
+            .SelectMany(e => e)
+            .OrderByDescending(e => e.CreatedOn)
+            .ThenByDescending(e => e.StartedOn)
+            .ToArray();
         return new ExecutionsMonitoringQueryResponse(flatten);
     }
 
@@ -58,7 +62,6 @@ internal class ExecutionsQueryHandler(IDbContextFactory<AppDbContext> dbContextF
             from e in query
             join job in context.Jobs on e.JobId equals job.JobId into ej
             from job in ej.DefaultIfEmpty() // Translates to left join in SQL
-            orderby e.CreatedOn descending, e.StartedOn descending
             select new ExecutionProjection(
                 e.ExecutionId,
                 e.JobId,
