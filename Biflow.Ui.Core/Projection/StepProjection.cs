@@ -11,7 +11,7 @@ public record StepProjection(
     StepType StepType,
     int ExecutionPhase,
     bool IsEnabled,
-    Tag[] Tags,
+    StepTag[] Tags,
     Guid[] Dependencies) : IComparable
 {
     public virtual bool Equals(StepProjection? other) =>

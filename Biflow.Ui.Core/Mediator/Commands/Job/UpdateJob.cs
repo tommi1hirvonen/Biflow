@@ -7,13 +7,44 @@ internal class UpdateJobCommandHandler(IDbContextFactory<AppDbContext> dbContext
     public async Task Handle(UpdateJobCommand request, CancellationToken cancellationToken)
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-
-        var job = await context.Jobs.FirstOrDefaultAsync(j => j.JobId == request.Job.JobId, cancellationToken);
-        if (job is null)
+        
+        var tagIds = request.Job.Tags
+            .Select(t => t.TagId)
+            .ToArray();        
+        var tagsFromDb = await context.JobTags
+            .Where(t => tagIds.Contains(t.TagId))
+            .ToArrayAsync(cancellationToken);
+        var jobFromDb = await context.Jobs
+            .Include(j => j.Tags)
+            .FirstOrDefaultAsync(j => j.JobId == request.Job.JobId, cancellationToken);
+        
+        if (jobFromDb is null)
         {
             return;
         }
-        context.Entry(job).CurrentValues.SetValues(request.Job);
+        
+        context.Entry(jobFromDb).CurrentValues.SetValues(request.Job);
+
+        // Synchronize tags
+
+        var tagsToAdd = request.Job.Tags
+            .Where(t1 => !jobFromDb.Tags.Any(t2 => t2.TagId == t1.TagId))
+            .Select(t => (t.TagId, t.TagName));
+        foreach (var (id, name) in tagsToAdd)
+        {
+            // New tag
+            var tag = tagsFromDb.FirstOrDefault(t => t.TagId == id) ?? new JobTag(name);
+            jobFromDb.Tags.Add(tag);
+        }
+
+        var tagsToRemove = jobFromDb.Tags
+            .Where(t => !tagIds.Contains(t.TagId))
+            .ToArray(); // materialize since items may be removed from the sequence
+        foreach (var tag in tagsToRemove)
+        {
+            jobFromDb.Tags.Remove(tag);
+        }
+
         await context.SaveChangesAsync(cancellationToken);
     }
 }

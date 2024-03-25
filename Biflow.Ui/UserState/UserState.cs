@@ -6,5 +6,7 @@ public class UserState
 
     public SchedulesPageState Schedules { get; } = new();
 
+    public ExecutionsPageState Executions { get; } = new();
+
     public Dictionary<Guid, ExpandStatus> DataTableCategoryExpandStatuses { get; } = [];
 }

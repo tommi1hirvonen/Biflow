@@ -10,6 +10,7 @@ public record StepExecutionProjection(
     string StepName,
     StepType StepType,
     int ExecutionPhase,
+    DateTimeOffset CreatedOn,
     DateTimeOffset? StartedOn,
     DateTimeOffset? EndedOn,
     StepExecutionStatus ExecutionStatus,
@@ -18,7 +19,8 @@ public record StepExecutionProjection(
     Guid? ScheduleId,
     Guid? JobId,
     string JobName,
-    Tag[] Tags)
+    TagProjection[] StepTags,
+    TagProjection[] JobTags)
 {
     public virtual bool Equals(StepExecutionProjection? other) =>
         other is not null &&

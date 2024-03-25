@@ -61,7 +61,7 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
         foreach (var text in tagFilters.Where(str => !step.TagFilters.Any(t => t.TagName == str)))
         {
             // New tags
-            var tag = AllTags?.FirstOrDefault(t => t.TagName == text) ?? new Tag(text);
+            var tag = AllTags?.FirstOrDefault(t => t.TagName == text) ?? new StepTag(text);
             step.TagFilters.Add(tag);
         }
         foreach (var tag in step.TagFilters.Where(t => !tagFilters.Contains(t.TagName)).ToList() ?? [])

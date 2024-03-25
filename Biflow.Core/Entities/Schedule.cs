@@ -40,5 +40,5 @@ public class Schedule
     [MaxLength(250)]
     public string? CreatedBy { get; set; }
 
-    public ICollection<Tag> Tags { get; } = new List<Tag>();
+    public ICollection<StepTag> Tags { get; } = new List<StepTag>();
 }

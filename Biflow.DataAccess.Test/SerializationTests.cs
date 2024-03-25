@@ -105,7 +105,7 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
     public void Serialize_Tags()
     {
         var json = JsonSerializer.Serialize(fixture.Tags, Options);
-        var items = JsonSerializer.Deserialize<Tag[]>(json, Options);
+        var items = JsonSerializer.Deserialize<StepTag[]>(json, Options);
         Assert.NotNull(items);
         Assert.NotEmpty(items);
         Assert.All(items, x => Assert.NotEqual(x.TagId, Guid.Empty));
@@ -180,7 +180,7 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
     public Step[] Steps { get; private set; } = [];
     public Schedule[] Schedules { get; private set; } = [];
 
-    public Tag[] Tags { get; private set; } = [];
+    public StepTag[] Tags { get; private set; } = [];
     public DataObject[] DataObjects {  get; private set; } = [];
 
     public MasterDataTable[] DataTables { get; private set; } = [];
@@ -247,7 +247,7 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
             job.Schedules.AddRange(Schedules.Where(s => s.JobId == job.JobId));
         }
 
-        Tags = await context.Tags
+        Tags = await context.StepTags
             .AsNoTracking()
             .OrderBy(t => t.TagId)
             .ToArrayAsync();

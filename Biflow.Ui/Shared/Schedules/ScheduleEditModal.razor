@@ -130,7 +130,7 @@
     private Schedule schedule = new(); // assign placeholder
     private HxOffcanvas? offcanvas;
     private List<string> tags = new();
-    private IEnumerable<Tag> allTags = Enumerable.Empty<Tag>();
+    private IEnumerable<StepTag> allTags = Enumerable.Empty<StepTag>();
 
     private Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
     {
@@ -147,7 +147,7 @@
     protected override async Task OnInitializedAsync()
     {
         using var context = DbContextFactory.CreateDbContext();
-        allTags = await context.Tags.ToListAsync();
+        allTags = await context.StepTags.ToListAsync();
     }
 
     private async Task SubmitSchedule()

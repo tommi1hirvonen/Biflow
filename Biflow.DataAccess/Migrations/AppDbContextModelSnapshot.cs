@@ -1348,12 +1348,22 @@ namespace Biflow.DataAccess.Migrations
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
 
+                    b.Property<string>("TagType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)");
+
                     b.HasKey("TagId");
 
-                    b.HasIndex(new[] { "TagName" }, "UQ_TagName")
+                    b.HasIndex(new[] { "TagName", "TagType" }, "UQ_TagName")
                         .IsUnique();
 
                     b.ToTable("Tag", "app");
+
+                    b.HasDiscriminator<string>("TagType");
+
+                    b.UseTphMappingStrategy();
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.User", b =>
@@ -1448,6 +1458,19 @@ namespace Biflow.DataAccess.Migrations
                     b.HasKey("StepId", "TagId");
 
                     b.ToTable("JobStepTagFilter", "app");
+                });
+
+            modelBuilder.Entity("JobTag", b =>
+                {
+                    b.Property<Guid>("JobId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TagId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("JobId", "TagId");
+
+                    b.ToTable("JobTag", "app");
                 });
 
             modelBuilder.Entity("ScheduleTag", b =>
@@ -2406,6 +2429,20 @@ namespace Biflow.DataAccess.Migrations
                     b.HasDiscriminator().HasValue("Tag");
                 });
 
+            modelBuilder.Entity("Biflow.Core.Entities.JobTag", b =>
+                {
+                    b.HasBaseType("Biflow.Core.Entities.Tag");
+
+                    b.HasDiscriminator().HasValue("Job");
+                });
+
+            modelBuilder.Entity("Biflow.Core.Entities.StepTag", b =>
+                {
+                    b.HasBaseType("Biflow.Core.Entities.Tag");
+
+                    b.HasDiscriminator().HasValue("Step");
+                });
+
             modelBuilder.Entity("Biflow.Core.Entities.AccessToken", b =>
                 {
                     b.HasOne("Biflow.Core.Entities.AppRegistration", "AppRegistration")
@@ -2921,7 +2958,22 @@ namespace Biflow.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Biflow.Core.Entities.Tag", null)
+                    b.HasOne("Biflow.Core.Entities.StepTag", null)
+                        .WithMany()
+                        .HasForeignKey("TagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JobTag", b =>
+                {
+                    b.HasOne("Biflow.Core.Entities.Job", null)
+                        .WithMany()
+                        .HasForeignKey("JobId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Biflow.Core.Entities.JobTag", null)
                         .WithMany()
                         .HasForeignKey("TagId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -2936,7 +2988,7 @@ namespace Biflow.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Biflow.Core.Entities.Tag", null)
+                    b.HasOne("Biflow.Core.Entities.StepTag", null)
                         .WithMany()
                         .HasForeignKey("TagId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -2951,7 +3003,7 @@ namespace Biflow.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Biflow.Core.Entities.Tag", null)
+                    b.HasOne("Biflow.Core.Entities.StepTag", null)
                         .WithMany()
                         .HasForeignKey("TagId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -3256,7 +3308,7 @@ namespace Biflow.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Biflow.Core.Entities.Tag", "Tag")
+                    b.HasOne("Biflow.Core.Entities.StepTag", "Tag")
                         .WithMany("JobTagSubscriptions")
                         .HasForeignKey("TagId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -3280,7 +3332,7 @@ namespace Biflow.DataAccess.Migrations
 
             modelBuilder.Entity("Biflow.Core.Entities.TagSubscription", b =>
                 {
-                    b.HasOne("Biflow.Core.Entities.Tag", "Tag")
+                    b.HasOne("Biflow.Core.Entities.StepTag", "Tag")
                         .WithMany("TagSubscriptions")
                         .HasForeignKey("TagId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -3425,13 +3477,6 @@ namespace Biflow.DataAccess.Migrations
                     b.Navigation("ExpressionParameters");
                 });
 
-            modelBuilder.Entity("Biflow.Core.Entities.Tag", b =>
-                {
-                    b.Navigation("JobTagSubscriptions");
-
-                    b.Navigation("TagSubscriptions");
-                });
-
             modelBuilder.Entity("Biflow.Core.Entities.User", b =>
                 {
                     b.Navigation("Subscriptions");
@@ -3521,6 +3566,13 @@ namespace Biflow.DataAccess.Migrations
             modelBuilder.Entity("Biflow.Core.Entities.SqlStepExecution", b =>
                 {
                     b.Navigation("StepExecutionParameters");
+                });
+
+            modelBuilder.Entity("Biflow.Core.Entities.StepTag", b =>
+                {
+                    b.Navigation("JobTagSubscriptions");
+
+                    b.Navigation("TagSubscriptions");
                 });
 #pragma warning restore 612, 618
         }

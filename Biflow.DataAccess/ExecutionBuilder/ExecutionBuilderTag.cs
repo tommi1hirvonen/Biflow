@@ -2,9 +2,9 @@
 
 public class ExecutionBuilderTag : ITag
 {
-    private readonly Tag _tag;
+    private readonly StepTag _tag;
 
-    internal ExecutionBuilderTag(Tag tag)
+    internal ExecutionBuilderTag(StepTag tag)
     {
         _tag = tag;
     }

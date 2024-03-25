@@ -13,7 +13,7 @@ internal class CreateScheduleCommandHandler(
 
         // Synchronize tags
         request.Schedule.Tags.Clear();
-        var tags = await context.Tags
+        var tags = await context.StepTags
             .Where(t => request.Tags.Contains(t.TagName))
             .ToListAsync(cancellationToken);
         foreach (var tagName in request.Tags)

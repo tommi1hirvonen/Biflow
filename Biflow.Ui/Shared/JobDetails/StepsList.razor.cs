@@ -40,7 +40,7 @@ public partial class StepsList : ComponentBase
     private readonly HashSet<StepType> stepTypeFilter = [];
     private readonly Dictionary<StepType, IStepEditModal?> stepEditModals = [];
     private readonly HashSet<ConnectionInfoBase> connectionFilter = [];
-    private readonly HashSet<Tag> tagsFilterSet = [];
+    private readonly HashSet<StepTag> tagsFilterSet = [];
 
     private HashSet<Step> selectedSteps = [];
     private StepsBatchEditTagsModal? batchEditTagsModal;
@@ -69,11 +69,11 @@ public partial class StepsList : ComponentBase
         .Where(step => advancedFiltersOffcanvas?.EvaluatePredicates(step) ?? true)
         ?? Enumerable.Empty<Step>();
 
-    private IEnumerable<Tag> Tags => Steps?
+    private IEnumerable<StepTag> Tags => Steps?
         .SelectMany(step => step.Tags)
         .DistinctBy(t => t.TagName)
         .OrderBy(t => t.TagName)
-        ?? Enumerable.Empty<Tag>();
+        ?? Enumerable.Empty<StepTag>();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

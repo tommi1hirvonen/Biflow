@@ -1,20 +1,9 @@
-﻿using Biflow.Core.Interfaces;
-using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
-public class Tag(string tagName) : ITag
+public class StepTag(string tagName) : Tag(TagType.Step, tagName)
 {
-    [JsonInclude]
-    public Guid TagId { get; private set; }
-
-    [Required]
-    [MaxLength(250)]
-    public string TagName { get; set; } = tagName;
-
-    public TagColor Color { get; set; }
-
     [JsonIgnore]
     public ICollection<Step> Steps { get; } = new List<Step>();
 

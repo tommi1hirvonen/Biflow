@@ -166,6 +166,8 @@ public class DatabaseFixture : IAsyncLifetime
             #endregion
 
             #region JOB 1
+            var jobTag1 = new JobTag("test-tag");
+            var jobTag2 = new JobTag("second-tag");
             var job1 = new Job
             {
                 JobName = "Test job 1",
@@ -173,7 +175,8 @@ public class DatabaseFixture : IAsyncLifetime
                 ExecutionMode = ExecutionMode.Dependency,
                 StopOnFirstError = true,
                 MaxParallelSteps = 4,
-                OvertimeNotificationLimitMinutes = 120
+                OvertimeNotificationLimitMinutes = 120,
+                Tags = [jobTag1, jobTag2]
             };
             var jobParameter1 = new JobParameter
             {
@@ -213,8 +216,8 @@ public class DatabaseFixture : IAsyncLifetime
             var jobConcurrency = new JobConcurrency { Job = job1, StepType = StepType.Sql, MaxParallelSteps = 1 };
             job1.JobConcurrencies.Add(jobConcurrency);
 
-            var tag1 = new Tag("Test tag") { Color = TagColor.DarkGray };
-            var tag2 = new Tag("Another tag") { Color = TagColor.Red };
+            var tag1 = new StepTag("Test tag") { Color = TagColor.DarkGray };
+            var tag2 = new StepTag("Another tag") { Color = TagColor.Red };
 
             var step1 = new SqlStep
             {
