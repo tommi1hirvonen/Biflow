@@ -23,6 +23,9 @@
                             FilterSet="roleFilter"
                             Items="users?.SelectMany(u => u.Roles).Distinct().OrderBy(n => n)"
                             OnChange="StateHasChanged">
+                <ItemTemplate Context="item">
+                    <TagBadge Tag="new RoleTag(item)" />
+                </ItemTemplate>
                 <TitleTemplate>
                     Roles
                 </TitleTemplate>
