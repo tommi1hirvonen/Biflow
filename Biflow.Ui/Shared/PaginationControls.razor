@@ -1,6 +1,4 @@
-﻿@typeparam TItem
-
-@if (Paginator is not null) 
+﻿@if (Paginator is not null) 
 {
     <div class="input-group input-group-sm w-auto me-3">
         <div class="input-group-text">
@@ -8,7 +6,7 @@
         </div>
         <InputSelect class="form-select form-select-sm" @bind-Value:get="Paginator.PageSize" @bind-Value:set="Paginator.SetPageSize">
             <option>10</option>
-            <option>25</option>
+            <option>20</option>
             <option>50</option>
             <option>100</option>
             <option>1000</option>
@@ -38,5 +36,5 @@
 }
 
 @code {
-    [Parameter] public Paginator<TItem>? Paginator { get; set; }
+    [Parameter] public IPaginator? Paginator { get; set; }
 }

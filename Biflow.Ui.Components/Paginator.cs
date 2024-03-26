@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Components.Rendering;
 
 namespace Biflow.Ui.Components;
 
-public class Paginator<TItem> : ComponentBase
+public class Paginator<TItem> : ComponentBase, IPaginator
 {
     [Parameter] public RenderFragment<IEnumerable<TItem>>? ChildContent { get; set; }
 
