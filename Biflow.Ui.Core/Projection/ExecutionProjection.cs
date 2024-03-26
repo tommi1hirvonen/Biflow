@@ -5,7 +5,7 @@
 /// </summary>
 public record ExecutionProjection(
     Guid ExecutionId,
-    Guid? JobId,
+    Guid JobId,
     string JobName,
     Guid? ScheduleId,
     string? ScheduleName,

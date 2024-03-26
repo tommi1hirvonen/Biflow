@@ -1,5 +1,4 @@
 ﻿using Biflow.Ui.Core.Projection;
-using System.Linq.Expressions;
 
 namespace Biflow.Ui.Core;
 
@@ -13,61 +12,44 @@ internal class StepExecutionsQueryHandler(IDbContextFactory<AppDbContext> dbCont
 {
     public async Task<StepExecutionsMonitoringQueryResponse> Handle(StepExecutionsMonitoringQuery request, CancellationToken cancellationToken)
     {
-        // Generate list of query predicates.
-        // The predicates are logically designed so that they do not produce duplicates
+        using var context = dbContextFactory.CreateDbContext();
+        var from = request.FromDateTime;
+        var to = request.ToDateTime;
 
-        var predicates = Enumerable.Empty<Expression<Func<StepExecutionAttempt, bool>>>()
-            .Append(e => e.StepExecution.Execution.CreatedOn <= request.ToDateTime && e.StepExecution.Execution.EndedOn >= request.FromDateTime);
+        var query = context.StepExecutionAttempts
+        .AsNoTracking()
+                .Where(e => e.StepExecution.Execution.CreatedOn <= to && e.StepExecution.Execution.EndedOn >= from);
 
-        if (DateTime.Now >= request.FromDateTime && DateTime.Now <= request.ToDateTime)
+        if (DateTime.Now >= from && DateTime.Now <= to)
         {
-            predicates = predicates
+            query = query
                 // Adds executions that were not started.
-                .Append(e => e.StepExecution.Execution.CreatedOn >= request.FromDateTime
-                    && e.StepExecution.Execution.CreatedOn <= request.ToDateTime
-                    && e.EndedOn == null
-                    && e.ExecutionStatus != StepExecutionStatus.Running)
+                .Union(context.StepExecutionAttempts
+                    .Where(e => e.StepExecution.Execution.CreatedOn >= from
+                            && e.StepExecution.Execution.CreatedOn <= to
+                            && e.EndedOn == null
+                            && e.ExecutionStatus != StepExecutionStatus.Running))
                 // Adds currently running executions if current time fits in the time window.
-                .Append(e => e.ExecutionStatus == StepExecutionStatus.Running);
+                .Union(context.StepExecutionAttempts
+                    .Where(e => e.ExecutionStatus == StepExecutionStatus.Running));
         }
         else
         {
-            predicates = predicates
+            query = query
                 // Adds executions that were not started and executions that may still be running.
-                .Append(e => e.StepExecution.Execution.CreatedOn >= request.FromDateTime
-                    && e.StepExecution.Execution.CreatedOn <= request.ToDateTime
-                    && e.EndedOn == null);
+                .Union(context.StepExecutionAttempts
+                    .Where(e => e.StepExecution.Execution.CreatedOn >= from
+                            && e.StepExecution.Execution.CreatedOn <= to
+                            && e.EndedOn == null));
         }
 
-        // Map the query predicates to each become its own query to fetch executions.
-        var tasks = predicates.Select(p => GetExecutionsAsync(p, cancellationToken));
-
-        // Combine and flatten query results.
-        var executions = await Task.WhenAll(tasks);
-        var flatten = executions
-            .SelectMany(e => e)
-            .OrderByDescending(e => e.CreatedOn)
-            .ThenByDescending(e => e.StartedOn)
-            .ThenByDescending(e => e.ExecutionPhase)
-            .ToArray();
-
-        return new StepExecutionsMonitoringQueryResponse(flatten);
-    }
-
-    private async Task<StepExecutionProjection[]> GetExecutionsAsync(
-        Expression<Func<StepExecutionAttempt, bool>> predicate, CancellationToken cancellationToken)
-    {
-        using var context = dbContextFactory.CreateDbContext();
-        var query = context.StepExecutionAttempts
-            .AsNoTracking()
-            .AsSingleQuery()
-            .Where(predicate);
-        return await (
+        var executions = await (
             from e in query
             join job in context.Jobs on e.StepExecution.Execution.JobId equals job.JobId into j
             from job in j.DefaultIfEmpty()
             join step in context.Steps on e.StepId equals step.StepId into s
             from step in s.DefaultIfEmpty()
+            orderby e.StepExecution.Execution.CreatedOn descending, e.StartedOn descending, e.StepExecution.ExecutionPhase descending
             select new StepExecutionProjection(
                 e.StepExecution.ExecutionId,
                 e.StepExecution.StepId,
@@ -87,5 +69,7 @@ internal class StepExecutionsQueryHandler(IDbContextFactory<AppDbContext> dbCont
                 step.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color)).ToArray(),
                 job.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color)).ToArray()
             )).ToArrayAsync(cancellationToken);
+
+        return new StepExecutionsMonitoringQueryResponse(executions);
     }
 }
