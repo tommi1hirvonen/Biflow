@@ -135,6 +135,7 @@ public partial class Executions : ComponentBase, IDisposable
         UserState.Executions.StepFilter.Clear();
         UserState.Executions.StepTypeFilter.Clear();
         UserState.Executions.StepTagFilter.Clear();
+        UserState.Executions.StartTypeFilter = StartType.All;
     }
 
     private static (DateTime From, DateTime To) GetPresetLast(int hours)
