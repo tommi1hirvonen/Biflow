@@ -37,7 +37,8 @@
         }
         else
         {
-            <Virtualize TItem="ExecutionProjection" Context="item" OverscanCount="20" SpacerElement="tr" Items="Executions.ToList()" ItemSize="34.2321f">
+            foreach (var item in Executions)
+            {
                 <tr style="cursor: pointer;" @onclick="() => GoToExecutionDetails(item.ExecutionId)">
                     <td>
                         @item.JobName
@@ -68,7 +69,7 @@
                         <JobExecutionStatusBadge ExecutionStatus="@item.ExecutionStatus" />
                     </td>
                 </tr>
-            </Virtualize>
+            }
         }
     </tbody>
 </table>

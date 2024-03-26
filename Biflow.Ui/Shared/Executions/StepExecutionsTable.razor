@@ -44,7 +44,8 @@
         }
         else
         {
-            <Virtualize TItem="StepExecutionProjection" Context="item" SpacerElement="tr" Items="Executions.ToList()" OverscanCount="20" ItemSize="34.2321f">
+            foreach (var item in Executions)
+            {
                 <ContextMenuToggle ContainerHtmlTag="tr"
                                    CssClass="@(selectedStepExecution == item ? "bg-body-tertiary" : null)"
                                    CssClassDelegate="@(open => open ? "bg-body-tertiary" : null)"
@@ -143,7 +144,7 @@
                         </tr>
                     }
                 }
-            </Virtualize>
+            }
         }
     </tbody>
 </table>

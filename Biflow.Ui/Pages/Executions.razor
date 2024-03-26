@@ -337,21 +337,65 @@
     </div>
 </div>
 
-<div class="card shadow-sm pt-2 mt-3 my-3 table-responsive">
-    @if (!UserState.Executions.ShowSteps && !UserState.Executions.ShowGraph)
+@if (!UserState.Executions.ShowGraph)
+{
+    if (!UserState.Executions.ShowSteps)
     {
-        <JobExecutionsTable Executions="FilteredExecutions" />
-    }
-    else if (!UserState.Executions.ShowSteps)
-    {
-        <JobExecutionsGraph Executions="FilteredExecutions" />
-    }
-    else if (!UserState.Executions.ShowGraph)
-    {
-        <StepExecutionsTable Executions="FilteredStepExecutions" />
+        <Paginator @ref="executionPaginator"
+                   TItem="ExecutionProjection"
+                   Items="FilteredExecutions"
+                   Context="executions"
+                   InitialPageSize="UserState.Executions.PageSize"
+                   InitialPage="UserState.Executions.ExecutionsCurrentPage"
+                   OnPageChanged="page => UserState.Executions.ExecutionsCurrentPage = page"
+                   OnPageSizeChanged="size => UserState.Executions.PageSize = size">
+
+            <div class="row sticky-top mt-1 py-2 bg-body" style="z-index: 999;">
+                <div class="col d-flex justify-content-end">
+                    <PaginationControls Paginator="executionPaginator" />
+                </div>
+            </div>
+
+            <div class="card shadow-sm pt-2 mt-3 my-3 table-responsive">
+                <JobExecutionsTable Executions="executions" />
+            </div>
+
+        </Paginator>
     }
     else
     {
-        <StepExecutionsGraph Executions="FilteredStepExecutions" />
+        <Paginator @ref="stepExecutionPaginator"
+                   TItem="StepExecutionProjection"
+                   Items="FilteredStepExecutions"
+                   Context="stepExecutions"
+                   InitialPageSize="UserState.Executions.PageSize"
+                   InitialPage="UserState.Executions.StepExecutionsCurrentPage"
+                   OnPageChanged="page => UserState.Executions.StepExecutionsCurrentPage = page"
+                   OnPageSizeChanged="size => UserState.Executions.PageSize = size">
+
+            <div class="row sticky-top mt-1 py-2 bg-body" style="z-index: 999;">
+                <div class="col d-flex justify-content-end">
+                    <PaginationControls Paginator="stepExecutionPaginator" />
+                </div>
+            </div>
+
+            <div class="card shadow-sm pt-2 mt-3 my-3 table-responsive">
+                <StepExecutionsTable Executions="stepExecutions" />
+            </div>
+
+        </Paginator>
     }
-</div>
+}
+else
+{
+    <div class="card shadow-sm pt-2 mt-3 my-3 table-responsive">
+        @if (!UserState.Executions.ShowSteps)
+        {
+            <JobExecutionsGraph Executions="FilteredExecutions" />
+        }
+        else
+        {
+            <StepExecutionsGraph Executions="FilteredStepExecutions" />
+        }
+    </div>
+}

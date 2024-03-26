@@ -37,4 +37,10 @@ public class ExecutionsPageState
     public HashSet<TagProjection> StepTagFilter { get; } = [];
     
     public HashSet<TagProjection> JobTagFilter { get; } = [];
+
+    public int PageSize { get; set; } = 20;
+
+    public int ExecutionsCurrentPage { get; set; } = 1;
+
+    public int StepExecutionsCurrentPage { get; set;  } = 1;
 }

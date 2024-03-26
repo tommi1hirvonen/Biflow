@@ -12,6 +12,8 @@ public partial class Executions : ComponentBase, IDisposable
     private bool loading = false;
     private IEnumerable<ExecutionProjection>? executions;
     private IEnumerable<StepExecutionProjection>? stepExecutions;
+    private Paginator<ExecutionProjection>? executionPaginator;
+    private Paginator<StepExecutionProjection>? stepExecutionPaginator;
 
     private IEnumerable<ExecutionProjection>? FilteredExecutions => executions?
         .Where(e => UserState.Executions.JobStatusFilter.Count == 0 || UserState.Executions.JobStatusFilter.Contains(e.ExecutionStatus))
