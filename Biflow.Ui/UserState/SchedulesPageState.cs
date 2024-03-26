@@ -6,7 +6,7 @@ public class SchedulesPageState
 
     public StateFilter StateFilter { get; set; } = StateFilter.All;
 
-    public int PageSize { get; set; } = 25;
+    public int PageSize { get; set; } = 20;
 
     public int CurrentPage { get; set; } = 1;
 }

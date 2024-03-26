@@ -14,7 +14,7 @@ public class JobsPageState
 
     public JobSortMode SortMode { get; set; } = JobSortMode.NameAsc;
 
-    public int PageSize { get; set; } = 25;
+    public int PageSize { get; set; } = 20;
 
     public int CurrentPage { get; set; } = 1;
 }

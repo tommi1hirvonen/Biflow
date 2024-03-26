@@ -12,6 +12,8 @@ public partial class Executions : ComponentBase, IDisposable
     private bool loading = false;
     private IEnumerable<ExecutionProjection>? executions;
     private IEnumerable<StepExecutionProjection>? stepExecutions;
+    private Paginator<ExecutionProjection>? executionPaginator;
+    private Paginator<StepExecutionProjection>? stepExecutionPaginator;
 
     private IEnumerable<ExecutionProjection>? FilteredExecutions => executions?
         .Where(e => UserState.Executions.JobStatusFilter.Count == 0 || UserState.Executions.JobStatusFilter.Contains(e.ExecutionStatus))
@@ -133,6 +135,7 @@ public partial class Executions : ComponentBase, IDisposable
         UserState.Executions.StepFilter.Clear();
         UserState.Executions.StepTypeFilter.Clear();
         UserState.Executions.StepTagFilter.Clear();
+        UserState.Executions.StartTypeFilter = StartType.All;
     }
 
     private static (DateTime From, DateTime To) GetPresetLast(int hours)

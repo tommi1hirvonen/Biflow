@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Components.Rendering;
 
 namespace Biflow.Ui.Components;
 
-public class Paginator<TItem> : ComponentBase
+public class Paginator<TItem> : ComponentBase, IPaginator
 {
-    [Parameter] public RenderFragment<IEnumerable<TItem>>? ChildContent { get; set; }
+    [Parameter] public RenderFragment<IEnumerable<TItem>?>? ChildContent { get; set; }
 
-    [Parameter] public IEnumerable<TItem> Items { get; set; } = [];
+    [Parameter] public IEnumerable<TItem>? Items { get; set; }
 
     [Parameter] public EventCallback<int> OnPageSizeChanged { get; set; }
 
@@ -21,7 +21,7 @@ public class Paginator<TItem> : ComponentBase
 
     public int CurrentPage { get; private set; } = 1;
 
-    public IEnumerable<TItem> PageItems => Items
+    public IEnumerable<TItem>? PageItems => Items?
         .Skip(PageSize * (CurrentPage - 1))
         .Take(PageSize);
 
@@ -29,9 +29,10 @@ public class Paginator<TItem> : ComponentBase
     {
         get
         {
-            var count = Items.TryGetNonEnumeratedCount(out var c)
+            var items = Items ?? [];
+            var count = items.TryGetNonEnumeratedCount(out var c)
                 ? c
-                : Items.Count();
+                : items.Count();
             var pages = (int)Math.Ceiling(count / (double)PageSize);
             return pages == 0 ? 1 : pages;
         }
@@ -51,7 +52,7 @@ public class Paginator<TItem> : ComponentBase
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Items.Any())
+        if (Items is not null && Items.Any())
         {
             itemsSet = true;
         }
