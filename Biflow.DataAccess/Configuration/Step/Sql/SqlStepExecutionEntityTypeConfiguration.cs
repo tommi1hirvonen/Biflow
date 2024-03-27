@@ -1,4 +1,6 @@
-﻿namespace Biflow.DataAccess.Configuration;
+﻿using System.Text.Json;
+
+namespace Biflow.DataAccess.Configuration;
 
 internal class SqlStepExecutionEntityTypeConfiguration : IEntityTypeConfiguration<SqlStepExecution>
 {
@@ -6,7 +8,10 @@ internal class SqlStepExecutionEntityTypeConfiguration : IEntityTypeConfiguratio
     {
         builder.Property(x => x.TimeoutMinutes).HasColumnName("TimeoutMinutes");
         builder.Property(x => x.ConnectionId).HasColumnName("ConnectionId");
-        builder.Property(x => x.ResultCaptureJobParameterValue).HasColumnType("sql_variant");
+
+        builder.Property(p => p.ResultCaptureJobParameterValue).HasConversion(
+            from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
+            to => JsonSerializer.Deserialize<ParameterValue?>(to, null as JsonSerializerOptions) ?? new());
 
         builder.HasOne(x => x.ResultCaptureJobParameter)
             .WithMany(x => x.CapturingStepExecutions)

@@ -2,8 +2,8 @@
 
 public class PackageStepExecutionParameter : StepExecutionParameterBase
 {
-    public PackageStepExecutionParameter(string parameterName, object parameterValue, ParameterValueType parameterValueType)
-        : base(parameterName, parameterValue, ParameterType.Package, parameterValueType)
+    public PackageStepExecutionParameter(string parameterName, ParameterValue parameterValue)
+        : base(parameterName, parameterValue, ParameterType.Package)
     {
 
     }

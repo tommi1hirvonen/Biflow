@@ -2,8 +2,8 @@
 
 public class FunctionStepExecutionParameter : StepExecutionParameterBase
 {
-    public FunctionStepExecutionParameter(string parameterName, object parameterValue, ParameterValueType parameterValueType)
-        : base(parameterName, parameterValue, ParameterType.Function, parameterValueType)
+    public FunctionStepExecutionParameter(string parameterName, ParameterValue parameterValue)
+        : base(parameterName, parameterValue, ParameterType.Function)
     {
 
     }

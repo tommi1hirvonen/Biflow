@@ -182,28 +182,36 @@ public class DatabaseFixture : IAsyncLifetime
             {
                 Job = job1,
                 ParameterName = "JobParameter1",
-                ParameterValueType = ParameterValueType.String,
-                ValueString = "Hello world"
+                ParameterValue = new ParameterValue
+                {
+                    ValueType = ParameterValueType.String,
+                    ValueString = "Hello world"
+                }
             };
             var jobParameter2 = new JobParameter
             {
                 Job = job1,
                 ParameterName = "JobParameter2",
-                ParameterValueType = ParameterValueType.DateTime,
-                ValueDateTime = DateTime.Now
+                ParameterValue = new ParameterValue
+                {
+                    ValueType = ParameterValueType.DateTime,
+                    ValueDateTime = DateTime.Now
+                }
             };
             var jobParameter3 = new JobParameter
             {
                 Job = job1,
                 ParameterName = "JobParameter3",
-                ParameterValueType = ParameterValueType.Double,
-                ValueDouble = 123.456
+                ParameterValue = new ParameterValue
+                {
+                    ValueType = ParameterValueType.Double,
+                    ValueDouble = 123.456
+                }
             };
             var jobParameter4 = new JobParameter
             {
                 Job = job1,
                 ParameterName = "JobParameter4",
-                ParameterValueType = ParameterValueType.String,
                 UseExpression = true,
                 Expression = new()
                 {
@@ -250,8 +258,11 @@ public class DatabaseFixture : IAsyncLifetime
             {
                 Step = step2,
                 ParameterName = "@param",
-                ParameterValueType = ParameterValueType.Int32,
-                ValueInt32 = 10
+                ParameterValue = new ParameterValue
+                {
+                    ValueType = ParameterValueType.Int32,
+                    ValueInt32 = 10
+                }
             };
             step2.StepParameters.Add(step2Parameter);
 
@@ -267,7 +278,6 @@ public class DatabaseFixture : IAsyncLifetime
             {
                 Step = step3,
                 ParameterName = "@param",
-                ParameterValueType = ParameterValueType.String,
                 InheritFromJobParameter = jobParameter1
             };
             step3.StepParameters.Add(step3Parameter);
@@ -286,7 +296,6 @@ public class DatabaseFixture : IAsyncLifetime
             {
                 Step = step4,
                 JobParameter = jobParameter2,
-                ParameterValueType = ParameterValueType.DateTime,
                 ParameterName = "dt"
             };
             step4.ExecutionConditionParameters.Add(step4ExecConditionParam);
@@ -303,7 +312,6 @@ public class DatabaseFixture : IAsyncLifetime
             {
                 Step = step4,
                 ParameterName = "@param",
-                ParameterValueType = ParameterValueType.String,
                 UseExpression = true,
                 Expression = new()
                 {
@@ -326,7 +334,6 @@ public class DatabaseFixture : IAsyncLifetime
             {
                 Step = step_1_5,
                 ParameterName = "@param",
-                ParameterValueType = ParameterValueType.String,
                 InheritFromJobParameter = jobParameter4
             };
             step_1_5.StepParameters.Add(step_1_5_param);

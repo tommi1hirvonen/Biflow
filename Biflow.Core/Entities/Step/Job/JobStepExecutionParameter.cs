@@ -2,8 +2,8 @@
 
 public class JobStepExecutionParameter : StepExecutionParameterBase
 {
-    public JobStepExecutionParameter(string parameterName, object parameterValue, ParameterValueType parameterValueType)
-        : base(parameterName, parameterValue, ParameterType.Job, parameterValueType)
+    public JobStepExecutionParameter(string parameterName, ParameterValue parameterValue)
+        : base(parameterName, parameterValue, ParameterType.Job)
     {
 
     }

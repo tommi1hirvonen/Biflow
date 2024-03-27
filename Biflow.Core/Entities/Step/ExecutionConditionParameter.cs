@@ -15,7 +15,6 @@ public class ExecutionConditionParameter : ParameterBase, IAsyncEvaluable
         Step = step;
         ParameterName = other.ParameterName;
         ParameterValue = other.ParameterValue;
-        ParameterValueType = other.ParameterValueType;
 
         // The target job is set, the JobParameter is not null and the target job has a parameter with a matching name.
         if (job is not null && other.JobParameter is not null && job.JobParameters.FirstOrDefault(p => p.ParameterName == other.JobParameter.ParameterName) is JobParameter parameter)

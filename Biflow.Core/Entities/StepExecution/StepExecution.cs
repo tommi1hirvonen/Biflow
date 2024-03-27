@@ -114,7 +114,7 @@ public abstract class StepExecution
 
     public async Task<bool> EvaluateExecutionConditionAsync()
     {
-        var parameters = ExecutionConditionParameters.ToDictionary(key => key.ParameterName, value => value.ParameterValue);
+        var parameters = ExecutionConditionParameters.ToDictionary(key => key.ParameterName, value => value.ParameterValue.Value);
         var result = await ExecutionConditionExpression.EvaluateBooleanAsync(parameters);
         return result;
     }
