@@ -65,7 +65,7 @@ internal partial class JobExecutor(
             foreach (var parameter in _execution.ExecutionParameters.Where(p => p.UseExpression))
             {
                 context.Attach(parameter);
-                parameter.ParameterValue = await parameter.EvaluateAsync();
+                parameter.ParameterValue.Value = await parameter.EvaluateAsync();
             }
             await context.SaveChangesAsync(cancellationToken);
         }

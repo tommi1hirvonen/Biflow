@@ -210,7 +210,7 @@ internal class PackageStepExecutor(
         foreach (var param in step.StepExecutionParameters.Cast<PackageStepExecutionParameter>())
         {
             dynamicParams.Add($"ParameterName{param.ParameterName}{param.ParameterLevel}", param.ParameterName);
-            dynamicParams.Add($"ParameterValue{param.ParameterName}{param.ParameterLevel}", param.ParameterValue);
+            dynamicParams.Add($"ParameterValue{param.ParameterName}{param.ParameterLevel}", param.ParameterValue.Value);
         }
 
         using var sqlConnection = new SqlConnection(connectionString);

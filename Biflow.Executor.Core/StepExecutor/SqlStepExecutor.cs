@@ -31,7 +31,7 @@ internal class SqlStepExecutor(
             connection.InfoMessage += (s, e) => attempt.AddOutput(e.Message);
 
             var parameters = step.StepExecutionParameters
-                .ToDictionary(key => key.ParameterName, value => value.ParameterValue);
+                .ToDictionary(key => key.ParameterName, value => value.ParameterValue.Value);
             var dynamicParams = new DynamicParameters(parameters);
 
             // command timeout = 0 => wait indefinitely
@@ -49,13 +49,13 @@ internal class SqlStepExecutor(
                 // Update the capture value.
                 using var context = _dbContextFactory.CreateDbContext();
                 context.Attach(step);
-                step.ResultCaptureJobParameterValue = result;
+                step.ResultCaptureJobParameterValue.Value = result;
                 
                 // Update the job execution parameter with the result value for following steps to use.
                 var param = step.Execution.ExecutionParameters.FirstOrDefault(p => p.ParameterId == step.ResultCaptureJobParameterId);
                 if (param is not null)
                 {
-                    param.ParameterValue = result;
+                    param.ParameterValue.Value = result;
                 }
 
                 await context.SaveChangesAsync();
