@@ -48,9 +48,9 @@ internal class SqlStepExecutor(
 
                 // Update the capture value.
                 using var context = _dbContextFactory.CreateDbContext();
-                context.Attach(step);
                 step.ResultCaptureJobParameterValue.Value = result;
-                
+                context.Attach(step).Property(p => p.ResultCaptureJobParameterValue).IsModified = true;
+
                 // Update the job execution parameter with the result value for following steps to use.
                 var param = step.Execution.ExecutionParameters.FirstOrDefault(p => p.ParameterId == step.ResultCaptureJobParameterId);
                 if (param is not null)
