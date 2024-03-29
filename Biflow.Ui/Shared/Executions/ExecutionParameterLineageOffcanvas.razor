@@ -14,7 +14,7 @@
                             </div>
                             <div class="row">
                                 <div class="col font-monospace">
-                                    @lineageParameter.DefaultValue
+                                    @lineageParameter.DefaultValue.Value
                                 </div>
                             </div>
                         </li>
@@ -53,7 +53,7 @@
                             </div>
                             <div class="row">
                                 <div class="col font-monospace">
-                                    @lineageParameter.ParameterValue
+                                    @lineageParameter.ParameterValue.Value
                                 </div>
                             </div>
                         </li>
@@ -89,13 +89,13 @@
                 if (param is not null)
                 {
                     var time = step.StepExecutionAttempts.MinBy(a => a.RetryAttemptIndex)?.StartedOn;
-                    items.Add(new(step, time, param.ParameterValue, false));
+                    items.Add(new(step, time, param.ParameterValue.Value, false));
                 }
             }
             if (step is SqlStepExecution sql && sql.ResultCaptureJobParameterId == lineageParameter.ParameterId)
             {
                 var time = step.StepExecutionAttempts.MaxBy(a => a.RetryAttemptIndex)?.EndedOn;
-                items.Add(new(step, time, sql.ResultCaptureJobParameterValue, true));
+                items.Add(new(step, time, sql.ResultCaptureJobParameterValue.Value, true));
             }
         }
         lineageItems = items.OrderBy(i => i.Timestamp).ToArray();
