@@ -118,7 +118,7 @@
                     var jobParam = sql.Execution.ExecutionParameters
                         .FirstOrDefault(p => p?.ParameterId == sql.ResultCaptureJobParameterId);
                 }
-                @(jobParam is not null ? $"{jobParam.ParameterName} ({jobParam.ParameterValueType})" : null)
+                @(jobParam is not null ? $"{jobParam.ParameterName} ({jobParam.ParameterValue.ValueType})" : null)
             </dd>
             <dt class="col-sm-3">
                 Capture value

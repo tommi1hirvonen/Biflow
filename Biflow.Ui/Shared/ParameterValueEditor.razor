@@ -1,34 +1,34 @@
-﻿@switch (Parameter?.ParameterValueType)
+﻿@switch (Parameter?.ParameterValue.ValueType)
 {
     case ParameterValueType.Boolean:
-        <InputSelectBoolean class="form-select form-select-sm" @bind-Value="Parameter.ValueBoolean">
+        <InputSelectBoolean class="form-select form-select-sm" @bind-Value="Parameter.ParameterValue.ValueBoolean">
             <option value="true">True</option>
             <option value="false">False</option>
         </InputSelectBoolean>
         break;
     case ParameterValueType.DateTime:
-        <input class="form-control form-control-sm" @bind="Parameter.ValueDateTime" @bind:format="yyyy-MM-ddTHH:mm:ss" type="datetime-local">
+        <input class="form-control form-control-sm" @bind="Parameter.ParameterValue.ValueDateTime" @bind:format="yyyy-MM-ddTHH:mm:ss" type="datetime-local">
         break;
     case ParameterValueType.Decimal:
-        <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ValueDecimal" placeholder="null"></InputNumber>
+        <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ParameterValue.ValueDecimal" placeholder="null"></InputNumber>
         break;
     case ParameterValueType.Double:
-        <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ValueDouble" placeholder="null"></InputNumber>
+        <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ParameterValue.ValueDouble" placeholder="null"></InputNumber>
         break;
     case ParameterValueType.Int16:
-        <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ValueInt16" placeholder="null"></InputNumber>
+        <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ParameterValue.ValueInt16" placeholder="null"></InputNumber>
         break;
     case ParameterValueType.Int32:
-        <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ValueInt32" placeholder="null"></InputNumber>
+        <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ParameterValue.ValueInt32" placeholder="null"></InputNumber>
         break;
     case ParameterValueType.Int64:
-        <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ValueInt64" placeholder="null"></InputNumber>
+        <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ParameterValue.ValueInt64" placeholder="null"></InputNumber>
         break;
     case ParameterValueType.Single:
-        <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ValueSingle" placeholder="null"></InputNumber>
+        <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ParameterValue.ValueSingle" placeholder="null"></InputNumber>
         break;
     case ParameterValueType.String:
-        <InputText class="form-control form-control-sm" @bind-Value="Parameter.ValueString" placeholder="null" />
+        <InputText class="form-control form-control-sm" @bind-Value="Parameter.ParameterValue.ValueString" placeholder="null" />
         break;
 }
 

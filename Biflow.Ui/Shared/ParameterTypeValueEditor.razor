@@ -5,7 +5,7 @@
             <div class="input-group-text">
                 Type
             </div>
-            <InputSelect class="form-select form-select-sm" @bind-Value="Parameter.ParameterValueType" style="max-width: 8rem;">
+            <InputSelect class="form-select form-select-sm" @bind-Value="Parameter.ParameterValue.ValueType" style="max-width: 8rem;">
                 @foreach (var type in Enum.GetValues(typeof(ParameterValueType)))
                     {
                     <option>@type</option>

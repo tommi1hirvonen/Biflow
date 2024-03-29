@@ -170,8 +170,11 @@
                 {
                     ParameterLevel = parameter.ParameterLevel,
                     ParameterName = parameter.ParameterName,
-                    ParameterValueType = parameter.ParameterType,
-                    ParameterValue = parameter.DefaultValue
+                    ParameterValue = new Biflow.Core.Entities.ParameterValue
+                    {
+                        ValueType = parameter.ParameterType,
+                        Value = parameter.DefaultValue
+                    }
                 });
             }
         }

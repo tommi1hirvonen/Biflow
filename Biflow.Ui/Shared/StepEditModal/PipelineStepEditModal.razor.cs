@@ -64,8 +64,11 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
                 Step.StepParameters.Add(new PipelineStepParameter
                 {
                     ParameterName = param.Name,
-                    ParameterValueType = param.Type,
-                    ParameterValue = param.Default
+                    ParameterValue = new Biflow.Core.Entities.ParameterValue
+                    {
+                        ValueType = param.Type,
+                        Value = param.Default
+                    }
                 });
             }
         }

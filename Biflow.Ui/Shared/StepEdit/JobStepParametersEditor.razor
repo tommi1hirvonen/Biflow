@@ -39,7 +39,7 @@ else if (Step is not null && targetJob is not null)
                 var availableJobParams = GetAvailableJobParameters(param);
                 <tr>
                     <td>
-                        @targetParam.ParameterName<sup>@targetParam.ParameterValueType</sup>
+                        @targetParam.ParameterName<sup>@targetParam.ParameterValue.ValueType</sup>
                     </td>
                     <td class="align-middle">
                         <div class="form-check">
@@ -100,7 +100,7 @@ else if (Step is not null && targetJob is not null)
             @foreach (var param in AvailableTargetParameters)
             {
                 <HxDropdownItem OnClick="() => AddParameter(param)">
-                    @param.ParameterName<sup>@param.ParameterValueType</sup>
+                    @param.ParameterName<sup>@param.ParameterValue.ValueType</sup>
                 </HxDropdownItem>
             }
         </HxDropdownMenu>
@@ -170,7 +170,6 @@ else if (Step is not null)
         }
         var parameter = new JobStepParameter(targetParam.ParameterId)
         {
-            ParameterValueType = targetParam.ParameterValueType,
             ParameterName = targetParam.ParameterName,
             ParameterValue = targetParam.ParameterValue,
             Step = Step
@@ -188,14 +187,14 @@ else if (Step is not null)
         var targetParamId = Guid.Parse(idString);
         var targetParam = AvailableTargetParameters.First(j => j.ParameterId == targetParamId);
         parameter.AssignToJobParameterId = targetParam.ParameterId;
-        parameter.ParameterValueType = targetParam.ParameterValueType;
+        parameter.ParameterValue.ValueType = targetParam.ParameterValue.ValueType;
         parameter.ParameterName = targetParam.ParameterName;
     }
 
     private Task OnParameterEdit(StepParameterBase parameter) => expressionEditOffcanvas.LetAsync(x => x.ShowAsync(parameter));
 
     private IEnumerable<JobParameter> GetAvailableJobParameters(StepParameterBase param) => JobParameters
-        .Where(p => p.ParameterValueType == param.ParameterValueType || p.UseExpression)
+        .Where(p => p.ParameterValue.ValueType == param.ParameterValue.ValueType || p.UseExpression)
         .OrderBy(p => p.ParameterName);
 
     private void SetInheritFromJobParameter(bool inheritFromJob, StepParameterBase param)

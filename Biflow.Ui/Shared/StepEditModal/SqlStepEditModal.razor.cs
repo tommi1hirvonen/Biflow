@@ -76,7 +76,10 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
                 Step.StepParameters.Add(new SqlStepParameter
                 {
                     ParameterName = parameter.ParameterName,
-                    ParameterValueType = parameter.ParameterType
+                    ParameterValue = new Biflow.Core.Entities.ParameterValue
+                    {
+                        ValueType = parameter.ParameterType
+                    }
                 });
             }
         }
