@@ -4,7 +4,7 @@ namespace Biflow.Core.Entities;
 
 public struct ParameterValue
 {
-    public ParameterValue(object? value)
+    public ParameterValue(object? value, ParameterValueType? type = null)
     {
         switch (value)
         {
@@ -43,6 +43,9 @@ public struct ParameterValue
             case string b:
                 ValueString = b;
                 ValueType = ParameterValueType.String;
+                break;
+            default:
+                ValueType = type ?? ParameterValueType.Empty;
                 break;
         }
     }
@@ -116,17 +119,17 @@ public struct ParameterValue
 
     public static ParameterValue DefaultValue(ParameterValueType type) => type switch
     {
-        ParameterValueType.Empty => new (),
-        ParameterValueType.Boolean => new (false),
-        ParameterValueType.DateTime => new (DateTime.Now),
-        ParameterValueType.Decimal => new (0.0m),
-        ParameterValueType.Double => new (0.0d),
-        ParameterValueType.Int16 => new ((short)0),
-        ParameterValueType.Int32 => new (0),
-        ParameterValueType.Int64 => new (0L),
-        ParameterValueType.Single => new (0f),
-        ParameterValueType.String => new (""),
-        _ => new ()
+        ParameterValueType.Empty => new(),
+        ParameterValueType.Boolean => new(false),
+        ParameterValueType.DateTime => new(DateTime.MinValue),
+        ParameterValueType.Decimal => new(0.0m),
+        ParameterValueType.Double => new(0.0d),
+        ParameterValueType.Int16 => new((short)0),
+        ParameterValueType.Int32 => new(0),
+        ParameterValueType.Int64 => new(0L),
+        ParameterValueType.Single => new(0f),
+        ParameterValueType.String => new(""),
+        _ => new()
     };
 
     public static bool TryCreate(ParameterValueType type, object? value, out ParameterValue result)
