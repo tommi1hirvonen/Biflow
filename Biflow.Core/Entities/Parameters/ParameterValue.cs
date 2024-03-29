@@ -65,7 +65,7 @@ public class ParameterValue
     }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public virtual ParameterValueType ValueType { get; set; } = ParameterValueType.String;
+    public ParameterValueType ValueType { get; set; } = ParameterValueType.String;
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool ValueBoolean { get; set; }
