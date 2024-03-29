@@ -2,6 +2,7 @@
 
 public enum ParameterValueType
 {
+    Empty,
     Boolean,
     DateTime,
     Decimal,

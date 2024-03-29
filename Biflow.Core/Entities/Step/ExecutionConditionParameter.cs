@@ -42,10 +42,36 @@ public class ExecutionConditionParameter : ParameterBase, IAsyncEvaluable
     [JsonIgnore]
     public Step Step { get; set; } = null!;
 
-    public Guid? JobParameterId { get; set; }
+    public Guid? JobParameterId
+    {
+        get => _jobParameterId;
+        set
+        {
+            _jobParameterId = value;
+            if (_jobParameterId is not null)
+            {
+                ParameterValue = new();
+            }
+        }
+    }
+
+    private Guid? _jobParameterId;
 
     [JsonIgnore]
-    public JobParameter? JobParameter { get; set; }
+    public JobParameter? JobParameter
+    {
+        get => _jobParameter;
+        set
+        {
+            _jobParameter = value;
+            if (_jobParameter is not null)
+            {
+                ParameterValue = new();
+            }
+        }
+    }
+
+    private JobParameter? _jobParameter;
 
     public async Task<object?> EvaluateAsync()
     {

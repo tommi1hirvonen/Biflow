@@ -30,6 +30,9 @@
     case ParameterValueType.String:
         <InputText class="form-control form-control-sm" @bind-Value="Parameter.ParameterValue.ValueString" placeholder="null" />
         break;
+    case ParameterValueType.Empty:
+        <input type="text" class="form-control form-control-sm" disabled placeholder="null" />
+        break;
 }
 
 @code {

@@ -5,7 +5,20 @@ namespace Biflow.Core.Entities;
 
 public abstract class DynamicParameter : ParameterBase, IAsyncEvaluable
 {
-    public virtual bool UseExpression { get; set; }
+    public virtual bool UseExpression
+    {
+        get => _useExpression;
+        set
+        {
+            _useExpression = value;
+            if (_useExpression)
+            {
+                ParameterValue = new();
+            }
+        }
+    }
+
+    private bool _useExpression;
 
     public EvaluationExpression Expression { get; set; } = new();
 

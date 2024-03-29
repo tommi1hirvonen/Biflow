@@ -9,6 +9,7 @@ public class ParameterValue
     {
         get => ValueType switch
         {
+            ParameterValueType.Empty => null,
             ParameterValueType.Boolean => ValueBoolean,
             ParameterValueType.DateTime => ValueDateTime,
             ParameterValueType.Decimal => ValueDecimal,
@@ -18,7 +19,7 @@ public class ParameterValue
             ParameterValueType.Int64 => ValueInt64,
             ParameterValueType.Single => ValueSingle,
             ParameterValueType.String => ValueString,
-            _ => string.Empty
+            _ => null
         };
         set
         {
@@ -65,7 +66,7 @@ public class ParameterValue
     }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public ParameterValueType ValueType { get; set; } = ParameterValueType.String;
+    public ParameterValueType ValueType { get; set; } = ParameterValueType.Empty;
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public bool ValueBoolean { get; set; }

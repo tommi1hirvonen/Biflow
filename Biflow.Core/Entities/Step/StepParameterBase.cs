@@ -61,6 +61,7 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
             if (value is not null)
             {
                 UseExpression = false;
+                ParameterValue = new();
             }
             _inheritFromJobParameterId = value;
         }
@@ -77,6 +78,7 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
             if (value is not null)
             {
                 UseExpression = false;
+                ParameterValue = new();
             }
             _inheritFromJobParameter = value;
         }
