@@ -56,6 +56,7 @@ internal class SqlStepExecutor(
                 if (param is not null)
                 {
                     param.ParameterValue.Value = result;
+                    context.Attach(param).Property(p => p.ParameterValue).IsModified = true;
                 }
 
                 await context.SaveChangesAsync();
