@@ -179,20 +179,6 @@ else if (Step is not null)
         Step.StepParameters.Add(parameter);
     }
 
-    private void OnTargetParameterChanged(ChangeEventArgs args, JobStepParameter parameter)
-    {
-        var idString = args.Value?.ToString();
-        if (idString is null || targetJob is null)
-        {
-            return;
-        }
-        var targetParamId = Guid.Parse(idString);
-        var targetParam = AvailableTargetParameters.First(j => j.ParameterId == targetParamId);
-        parameter.AssignToJobParameterId = targetParam.ParameterId;
-        parameter.ParameterValue.ValueType = targetParam.ParameterValue.ValueType;
-        parameter.ParameterName = targetParam.ParameterName;
-    }
-
     private Task OnParameterEdit(StepParameterBase parameter) => expressionEditOffcanvas.LetAsync(x => x.ShowAsync(parameter));
 
     private IEnumerable<JobParameter> GetAvailableJobParameters(StepParameterBase param) => JobParameters

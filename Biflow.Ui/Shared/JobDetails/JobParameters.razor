@@ -81,8 +81,8 @@ else
                                                    @bind-Value:after="() => fluentJobValidator.LetAsync(x => x.ValidateAsync())" />
                                     </td>
                                     <DynamicParameterEditor Parameter="param"
-                                                                   TParameter="JobParameter"
-                                                                   OnParameterEdit="p => expressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))">
+                                                            TParameter="JobParameter"
+                                                            OnParameterEdit="p => expressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))">
                                         <StaticEditTemplate>
                                             <ParameterTypeValueEditor Parameter="param" />
                                         </StaticEditTemplate>

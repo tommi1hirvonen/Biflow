@@ -64,8 +64,8 @@ internal partial class JobExecutor(
             using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             foreach (var parameter in _execution.ExecutionParameters.Where(p => p.UseExpression))
             {
-                parameter.ParameterValue.Value = await parameter.EvaluateAsync();
-                context.Attach(parameter).Property(p => p.ParameterValue).IsModified = true;
+                context.Attach(parameter);
+                parameter.ParameterValue = new(await parameter.EvaluateAsync());
             }
             await context.SaveChangesAsync(cancellationToken);
         }

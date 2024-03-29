@@ -62,24 +62,21 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
                 Toaster.AddWarning("Stored procedure could not be parsed from SQL statement");
                 return;
             }
-            var schema = procedure.Value.Schema ?? "dbo";
-            var name = procedure.Value.ProcedureName;
-            var parameters = await SqlServerHelper.GetStoredProcedureParametersAsync(Step.ConnectionId, schema, name);
+            var procSchema = procedure.Value.Schema ?? "dbo";
+            var procName = procedure.Value.ProcedureName;
+            var parameters = await SqlServerHelper.GetStoredProcedureParametersAsync(Step.ConnectionId, procSchema, procName);
             if (!parameters.Any())
             {
-                Toaster.AddInformation($"No parameters for [{schema}].[{name}]");
+                Toaster.AddInformation($"No parameters for [{procSchema}].[{procName}]");
                 return;
             }
             Step.StepParameters.Clear();
-            foreach (var parameter in parameters)
+            foreach (var (paramName, paramValue) in parameters)
             {
                 Step.StepParameters.Add(new SqlStepParameter
                 {
-                    ParameterName = parameter.ParameterName,
-                    ParameterValue = new Biflow.Core.Entities.ParameterValue
-                    {
-                        ValueType = parameter.ParameterType
-                    }
+                    ParameterName = paramName,
+                    ParameterValue = paramValue
                 });
             }
         }

@@ -15,7 +15,7 @@ public abstract class ParameterBase
     [Display(Name = "Name")]
     public string ParameterName { get; set; } = string.Empty;
 
-    public virtual ParameterValue ParameterValue { get; set; } = new() { ValueType = ParameterValueType.String };
+    public virtual ParameterValue ParameterValue { get; set; } = new("");
 
     [JsonIgnore]
     public virtual string DisplayName => ParameterName;

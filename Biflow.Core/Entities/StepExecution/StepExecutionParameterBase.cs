@@ -45,7 +45,7 @@ public abstract class StepExecutionParameterBase : DynamicParameter, IHasExpress
 
     public Guid? InheritFromExecutionParameterId { get; private set; }
 
-    public ParameterValue ExecutionParameterValue { get; private set; } = new();
+    public ParameterValue ExecutionParameterValue { get; set; } = new();
 
     public ExecutionParameter? InheritFromExecutionParameter { get; set; }
 

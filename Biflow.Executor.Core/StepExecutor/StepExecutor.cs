@@ -34,14 +34,14 @@ internal abstract class StepExecutor<TStep, TAttempt>(
                 // Update the historized ExecutionParameterValue with the ExecutionParameter's value.
                 foreach (var param in hasParameters.StepExecutionParameters.Where(p => p.InheritFromExecutionParameter is not null))
                 {
-                    param.ExecutionParameterValue.Value = param.InheritFromExecutionParameter?.ParameterValue.Value;
-                    context.Attach(param).Property(p => p.ExecutionParameterValue).IsModified = true;
+                    context.Attach(param);
+                    param.ExecutionParameterValue = param.InheritFromExecutionParameter?.ParameterValue ?? param.ExecutionParameterValue;
                 }
                 // Also evaluate expressions and save the result to the step parameter's value property.
                 foreach (var param in hasParameters.StepExecutionParameters.Where(p => p.UseExpression))
                 {
-                    param.ParameterValue.Value = await param.EvaluateAsync();
-                    context.Attach(param).Property(p => p.ParameterValue).IsModified = true;
+                    context.Attach(param);
+                    param.ParameterValue = new(await param.EvaluateAsync());
                 }
                 await context.SaveChangesAsync();
             }
@@ -60,8 +60,8 @@ internal abstract class StepExecutor<TStep, TAttempt>(
             using var context = _dbContextFactory.CreateDbContext();
             foreach (var param in stepExecution.ExecutionConditionParameters.Where(p => p.ExecutionParameter is not null))
             {
-                param.ExecutionParameterValue.Value = param.ExecutionParameter?.ParameterValue.Value;
-                context.Attach(param).Property(p => p.ExecutionParameterValue).IsModified = true;
+                context.Attach(param);
+                param.ExecutionParameterValue = param.ExecutionParameter?.ParameterValue ?? param.ExecutionParameterValue;
             }
             await context.SaveChangesAsync();
         }

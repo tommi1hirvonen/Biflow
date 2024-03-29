@@ -59,16 +59,12 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
                 return;
             }
             Step.StepParameters.Clear();
-            foreach (var param in parameters)
+            foreach (var (name, value) in parameters)
             {
                 Step.StepParameters.Add(new PipelineStepParameter
                 {
-                    ParameterName = param.Name,
-                    ParameterValue = new Biflow.Core.Entities.ParameterValue
-                    {
-                        ValueType = param.Type,
-                        Value = param.Default
-                    }
+                    ParameterName = name,
+                    ParameterValue = value
                 });
             }
         }

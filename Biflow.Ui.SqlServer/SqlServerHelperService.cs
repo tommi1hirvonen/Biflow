@@ -160,20 +160,21 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
                 ProjectName = project,
                 PackageName = package,
                 IncludeCMParams = includeConnectionManagerParameters
-        });
+            });
         return rows.Select(param =>
         {
             var level = Enum.Parse<ParameterLevel>(param.Level);
-            if (!Enum.TryParse(param.Type, out ParameterValueType datatype))
+            if (!Enum.TryParse(param.Type, out ParameterValueType type))
             {
-                datatype = param.Level switch
+                type = param.Type switch
                 {
                     "UInt32" => ParameterValueType.Int32,
                     "UInt64" => ParameterValueType.Int64,
                     _ => ParameterValueType.String
                 };
             }
-            return new PackageParameter(level, param.Name, datatype, param.Default);
+            _ = ParameterValue.TryCreate(type, param.Default, out var value);
+            return new PackageParameter(level, param.Name, value);
         }).ToArray();
     }
 
@@ -218,7 +219,7 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
         return procedures.Values.ToArray();
     }
 
-    public async Task<IEnumerable<(string ParameterName, ParameterValueType ParameterType)>> GetStoredProcedureParametersAsync(Guid connectionId, string schema, string procedure)
+    public async Task<IEnumerable<(string ParameterName, ParameterValue Value)>> GetStoredProcedureParametersAsync(Guid connectionId, string schema, string procedure)
     {
         var connectionString = await GetSqlConnectionStringAsync(connectionId);
         ArgumentNullException.ThrowIfNull(connectionString);
@@ -244,7 +245,7 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
 
         return rows.Select(param =>
         {
-            var datatype = param.Type switch
+            var type = param.Type switch
             {
                 string a when a.Contains("char") => ParameterValueType.String,
                 "tinyint" or "smallint" => ParameterValueType.Int16,
@@ -257,7 +258,8 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
                 "bit" => ParameterValueType.Boolean,
                 _ => ParameterValueType.String
             };
-            return (param.Name, datatype);
+            var value = ParameterValue.DefaultValue(type);
+            return (param.Name, value);
         }).ToArray();
     }
 

@@ -1,40 +1,88 @@
 ﻿@switch (Parameter?.ParameterValue.ValueType)
 {
     case ParameterValueType.Boolean:
-        <InputSelectBoolean class="form-select form-select-sm" @bind-Value="Parameter.ParameterValue.ValueBoolean">
+        <InputSelectBoolean class="form-select form-select-sm"
+                            @bind-Value:get="ValueBoolean"
+                            @bind-Value:set="v => SetValue(v)">
             <option value="true">True</option>
             <option value="false">False</option>
         </InputSelectBoolean>
         break;
     case ParameterValueType.DateTime:
-        <input class="form-control form-control-sm" @bind="Parameter.ParameterValue.ValueDateTime" @bind:format="yyyy-MM-ddTHH:mm:ss" type="datetime-local">
+        <InputDate class="form-control form-control-sm"
+                   Type="InputDateType.DateTimeLocal"
+                   @bind-Value:get="ValueDateTime"
+                   @bind-Value:set="v => SetValue(v)" />
         break;
     case ParameterValueType.Decimal:
-        <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ParameterValue.ValueDecimal" placeholder="null"></InputNumber>
+        <InputNumber class="form-control form-control-sm"
+                     @bind-Value:get="ValueDecimal"
+                     @bind-Value:set="v => SetValue(v)"
+                     placeholder="null" />
         break;
     case ParameterValueType.Double:
-        <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ParameterValue.ValueDouble" placeholder="null"></InputNumber>
+        <InputNumber class="form-control form-control-sm"
+                     @bind-Value:get="ValueDouble"
+                     @bind-Value:set="v => SetValue(v)"
+                     placeholder="null" />
         break;
     case ParameterValueType.Int16:
-        <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ParameterValue.ValueInt16" placeholder="null"></InputNumber>
+        <InputNumber class="form-control form-control-sm"
+                     @bind-Value:get="ValueInt16"
+                     @bind-Value:set="v => SetValue(v)"
+                     placeholder="null" />
         break;
     case ParameterValueType.Int32:
-        <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ParameterValue.ValueInt32" placeholder="null"></InputNumber>
+        <InputNumber class="form-control form-control-sm"
+                     @bind-Value:get="ValueInt32"
+                     @bind-Value:set="v => SetValue(v)"
+                     placeholder="null" />
         break;
     case ParameterValueType.Int64:
-        <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ParameterValue.ValueInt64" placeholder="null"></InputNumber>
+        <InputNumber class="form-control form-control-sm"
+                     @bind-Value:get="ValueInt64"
+                     @bind-Value:set="v => SetValue(v)"
+                     placeholder="null" />
         break;
     case ParameterValueType.Single:
-        <InputNumber class="form-control form-control-sm" @bind-Value="Parameter.ParameterValue.ValueSingle" placeholder="null"></InputNumber>
+        <InputNumber class="form-control form-control-sm"
+                     @bind-Value:get="ValueFloat"
+                     @bind-Value:set="v => SetValue(v)"
+                     placeholder="null" />
         break;
     case ParameterValueType.String:
-        <InputText class="form-control form-control-sm" @bind-Value="Parameter.ParameterValue.ValueString" placeholder="null" />
+        <InputText class="form-control form-control-sm"
+                   @bind-Value:get="ValueString"
+                   @bind-Value:set="v => SetValue(v)"
+                   placeholder="null" />
         break;
     case ParameterValueType.Empty:
-        <input type="text" class="form-control form-control-sm" disabled placeholder="null" />
+        <input type="text"
+               class="form-control form-control-sm"
+               disabled
+               placeholder="null" />
         break;
 }
 
 @code {
     [Parameter] public ParameterBase? Parameter { get; set; }
+
+    private bool ValueBoolean => Parameter?.ParameterValue.GetValueOrDefault<bool>() ?? false;
+    private DateTime? ValueDateTime => Parameter?.ParameterValue.GetValueOrDefault<DateTime?>();
+    private decimal? ValueDecimal => Parameter?.ParameterValue.GetValueOrDefault<decimal>() ?? 0;
+    private double? ValueDouble => Parameter?.ParameterValue.GetValueOrDefault<double>() ?? 0;
+    private short? ValueInt16 => Parameter?.ParameterValue.GetValueOrDefault<short>() ?? 0;
+    private int? ValueInt32 => Parameter?.ParameterValue.GetValueOrDefault<int>() ?? 0;
+    private long? ValueInt64 => Parameter?.ParameterValue.GetValueOrDefault<long>() ?? 0;
+    private float? ValueFloat => Parameter?.ParameterValue.GetValueOrDefault<float>() ?? 0;
+    private string? ValueString => Parameter?.ParameterValue.GetValueOrDefault<string>() ?? "";
+
+    private void SetValue(object? value)
+    {
+        if (Parameter is null)
+        {
+            return;
+        }
+        Parameter.ParameterValue = new(value);
+    }
 }

@@ -2,4 +2,4 @@
 
 namespace Biflow.Ui.SqlServer;
 
-public record PackageParameter(ParameterLevel ParameterLevel, string ParameterName, ParameterValueType ParameterType, object? DefaultValue);
+public record PackageParameter(ParameterLevel ParameterLevel, string ParameterName, ParameterValue Value);
