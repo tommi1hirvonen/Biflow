@@ -53,7 +53,9 @@ else if (Step is not null && targetJob is not null)
                     @if (param.InheritFromJobParameterId is not null)
                     {
                         <td colspan="2">
-                            <InputSelect class="form-select form-select-sm" @bind-Value="param.InheritFromJobParameterId">
+                            <InputSelect class="form-select form-select-sm"
+                                         @bind-Value:get="param.InheritFromJobParameterId"
+                                         @bind-Value:set="id => SetInheritFromJobParameter(true, param, id)">
                                 @foreach (var jobParam in availableJobParams)
                                 {
                                     <option value="@jobParam.ParameterId">
@@ -197,9 +199,14 @@ else if (Step is not null)
         .Where(p => p.ParameterValue.ValueType == param.ParameterValue.ValueType || p.UseExpression)
         .OrderBy(p => p.ParameterName);
 
-    private void SetInheritFromJobParameter(bool inheritFromJob, StepParameterBase param)
+    private void SetInheritFromJobParameter(bool inheritFromJob, StepParameterBase param, Guid? jobParameterId = null)
     {
-        if (inheritFromJob)
+        if (inheritFromJob && jobParameterId is Guid id)
+        {
+            param.InheritFromJobParameterId = GetAvailableJobParameters(param).FirstOrDefault(p => p.ParameterId == id)?.ParameterId;
+            param.InheritFromJobParameter = GetAvailableJobParameters(param).FirstOrDefault(p => p.ParameterId == id);
+        }
+        else if (inheritFromJob)
         {
             param.InheritFromJobParameterId = GetAvailableJobParameters(param).FirstOrDefault()?.ParameterId;
             param.InheritFromJobParameter = GetAvailableJobParameters(param).FirstOrDefault();
