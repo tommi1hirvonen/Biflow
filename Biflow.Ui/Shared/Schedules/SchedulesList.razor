@@ -1,4 +1,5 @@
 ﻿@inject ToasterService Toaster
+@inject IHxMessageBoxService Confirmer
 @inject ISchedulerService SchedulerService
 @inject IMediator Mediator
 
@@ -58,6 +59,13 @@
         .ThenBy(s => s.ScheduleName)
         .AsEnumerable()
         ?? [];
+    var count = FilteredSchedules?.Count() ?? 0;
+    var selectedText = selectedSchedules.Count switch
+    {
+        1 => $"{selectedSchedules.Count} selected schedule",
+        > 1 => $"{selectedSchedules.Count} selected schedules",
+        _ => ""
+    };
 }
 
 <Paginator TItem="Schedule"
@@ -69,8 +77,43 @@
            OnPageChanged="page => UserState.Schedules.CurrentPage = page"
            OnPageSizeChanged="size => UserState.Schedules.PageSize = size">
     
-    <div class="row sticky-top mt-1 py-2 bg-body" style="z-index: 999;">
-        <div class="col d-flex justify-content-end">
+    <div class="row justify-content-end sticky-top mt-1 py-2 bg-body" style="z-index: 999;">
+        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+            @if (selectedSchedules.Count > 0)
+            {
+                <div class="col text-center">
+                    <HxButtonGroup Size="ButtonGroupSize.Small">
+                        <HxDropdownButtonGroup>
+                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                                <CxIcon Icon="FeatherIcon.ToggleRight" />
+                                Enable
+                            </HxDropdownToggleButton>
+                            <HxDropdownMenu>
+                                <HxDropdownItem @onclick="() => ToggleSelectedEnabled(true)">
+                                    Confirm
+                                </HxDropdownItem>
+                            </HxDropdownMenu>
+                        </HxDropdownButtonGroup>
+                        <HxDropdownButtonGroup>
+                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                                <CxIcon Icon="FeatherIcon.ToggleLeft" />
+                                Disable
+                            </HxDropdownToggleButton>
+                            <HxDropdownMenu>
+                                <HxDropdownItem @onclick="() => ToggleSelectedEnabled(false)">
+                                    Confirm
+                                </HxDropdownItem>
+                            </HxDropdownMenu>
+                        </HxDropdownButtonGroup>
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="DeleteSelectedSchedulesAsync">
+                            <CxIcon Icon="FeatherIcon.Trash2" />
+                            Delete...
+                        </HxButton>
+                    </HxButtonGroup>
+                </div>
+            }
+        </AuthorizeView>
+        <div class="col-auto d-flex">
             <PaginationControls Paginator="paginator" />
         </div>
     </div>
@@ -80,7 +123,14 @@
             <thead>
                 <tr>
                     <th>
-                        
+                        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+                            <div class="col text-muted d-flex align-items-center">
+                                <TriStateCheckbox Checked="@(selectedSchedules.Count > 0 && FilteredSchedules?.Any() == true && count > 0)"
+                                                  Indeterminate="@(selectedSchedules.Any() && selectedSchedules.Count != count)"
+                                                  CheckedChanged="ToggleAllSchedulesSelected" />
+                                <div class="text-muted small fw-normal">@selectedText</div>
+                            </div>
+                        </AuthorizeView>
                     </th>
                     <th>
                         Enabled
@@ -111,9 +161,17 @@
                 {
                     @foreach (var item in items)
                     {
-                        <tr class="schedule-row small @(item.IsEnabled ? null : "disabled")">
+                        <tr class="schedule-row @(item.IsEnabled ? null : "disabled")">
                             <td class="align-middle">
-                                <span class="fw-semibold">
+                                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+                                    <div class="form-check form-check-inline me-0">
+                                        <input type="checkbox" class="form-check-input" id="select_schedule_@item.ScheduleId"
+                                               checked=@selectedSchedules.Contains(item)
+                                               @onchange="args => { if (selectedSchedules.Contains(item)) selectedSchedules.Remove(item); else selectedSchedules.Add(item); }">
+                                        <label class="form-check-label" for="select_schedule_@item.ScheduleId"></label>
+                                    </div>
+                                </AuthorizeView>
+                                <span class="fw-semibold small">
                                     <HighlightableText Text="@item.ScheduleName" PartToHighlight="@UserState.Schedules.ScheduleFilter" />
                                 </span>
                                 <br />
@@ -133,12 +191,12 @@
                                     </AuthorizeView>
                                 </div>
                             </td>
-                            <td class="align-middle">
+                            <td class="align-middle small">
                                 <span>@item.CronExpression</span>
                                 <br />
                                 <span class="text-secondary small">@item.GetScheduleDescription()</span>
                             </td>
-                            <td class="align-middle">
+                            <td class="align-middle small">
                                 <div class="d-inline-flex @(!item.IsEnabled || !item.Job.IsEnabled ? "text-body-tertiary" : null)">
                                     @item.NextFireTimes().FirstOrDefault()
                                     &nbsp;&nbsp;
@@ -154,7 +212,7 @@
                                     @(!item.Job.IsEnabled ? "(Job disabled)" : null)
                                 </span>
                             </td>
-                            <td class="align-middle">
+                            <td class="align-middle small">
                                 @if (!item.Tags.Any())
                                 {
                                     <span class="text-secondary ms-2">No tag filters</span>
@@ -249,7 +307,7 @@
     private CodeEditor? editor;
     private string? schedulerStatus = null;
     private Paginator<Schedule>? paginator;
-
+    private HashSet<Schedule> selectedSchedules = [];
 
     private async Task ToggleEnabled(ChangeEventArgs args, Schedule schedule)
     {
@@ -258,6 +316,23 @@
         {
             await Mediator.SendAsync(new ToggleScheduleCommand(schedule.ScheduleId, value));
             schedule.IsEnabled = value;
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error toggling schedule", ex.Message);
+        }
+    }
+
+    private async Task ToggleSelectedEnabled(bool value)
+    {
+        try
+        {
+            foreach (var schedule in selectedSchedules)
+            {
+                await Mediator.SendAsync(new ToggleScheduleCommand(schedule.ScheduleId, value));
+                schedule.IsEnabled = value;
+            }
+
         }
         catch (Exception ex)
         {
@@ -283,6 +358,41 @@
         catch (Exception ex)
         {
             Toaster.AddError("Error deleting schedule", ex.Message);
+        }
+    }
+
+    private async Task DeleteSelectedSchedulesAsync()
+    {
+        if (!await Confirmer.ConfirmAsync("Delete selected schedules", $"Delete {selectedSchedules.Count} schedule(s)?"))
+        {
+            return;
+        }
+        try
+        {
+            foreach (var schedule in selectedSchedules)
+            {
+                await Mediator.SendAsync(new DeleteScheduleCommand(schedule.ScheduleId));
+                Schedules?.Remove(schedule);
+                await OnSchedulesChanged.InvokeAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error deleting schedules", ex.Message);
+        }
+        selectedSchedules.Clear();
+    }
+
+    private void ToggleAllSchedulesSelected(bool value)
+    {
+        if (value)
+        {
+            var schedulesToAdd = FilteredSchedules?.Where(s => !selectedSchedules.Contains(s)) ?? [];
+            foreach (var s in schedulesToAdd) selectedSchedules.Add(s);
+        }
+        else
+        {
+            selectedSchedules.Clear();
         }
     }
 
