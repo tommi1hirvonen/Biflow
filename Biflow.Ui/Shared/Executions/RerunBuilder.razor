@@ -193,11 +193,11 @@ else if (builder is null)
     </div>
 </div>
 
-<div class="card shadow-sm mt-3 pt-1 mb-4">
+<div class="card shadow-sm mt-3 pt-1 mb-3">
     <div class="row g-0">
         <div class="col">
             <h6 class="mx-2">Available steps</h6>
-            <div style="overflow-y: scroll; height: calc(100vh - 310px);">
+            <div style="overflow-y: scroll; height: calc(100vh - 340px);">
                 <table class="table table-hover table-sm">
                     <tbody>
                         @foreach (var step in StepsAvailableToExecute)
@@ -225,7 +225,7 @@ else if (builder is null)
 
         <div class="col">
             <h6 class="mx-2">Selected steps</h6>
-            <div style="overflow-y: scroll; height: calc(100vh - 310px);">
+            <div style="overflow-y: scroll; height: calc(100vh - 340px);">
                 <table class="table table-hover table-sm">
                     <tbody>
                         @foreach (var step in builder?.StepExecutions ?? Enumerable.Empty<ExecutionBuilderStepExecution>())
