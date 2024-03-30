@@ -7,6 +7,7 @@ using Serilog;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddWindowsService();
+builder.Services.AddSystemd();
 
 if (builder.Configuration.GetSection("Serilog").Exists())
 {
