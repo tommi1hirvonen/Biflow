@@ -113,7 +113,9 @@
                     {
                         <tr class="schedule-row small @(item.IsEnabled ? null : "disabled")">
                             <td class="align-middle">
-                                <span class="fw-semibold">@item.ScheduleName</span>
+                                <span class="fw-semibold">
+                                    <HighlightableText Text="@item.ScheduleName" PartToHighlight="@UserState.Schedules.ScheduleFilter" />
+                                </span>
                                 <br />
                                 <a class="text-body small" href="@($"jobs/{item.JobId}/schedules")">
                                     @item.Job.JobName

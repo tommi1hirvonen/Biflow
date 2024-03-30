@@ -55,7 +55,7 @@
 }
 
 <div class="row">
-    <div class="col">
+    <div class="col-auto">
         <FilterDropdown TItem="(Guid JobId, string JobName)"
                         FilterSet="UserState.Schedules.JobFilter"
                         Items="filterJobs"
@@ -69,6 +69,19 @@
                 Job
             </TitleTemplate>
         </FilterDropdown>
+    </div>
+    <div class="col">
+        <div class="input-group input-group-sm">
+            <div class="input-group-text">
+                <CxIcon Icon="FeatherIcon.Search" />
+            </div>
+            <input type="search"
+                   class="form-control form-control-sm"
+                   placeholder="Search schedules"
+                   style="max-width: 20rem;"
+                   @bind-value="UserState.Schedules.ScheduleFilter"
+                   @bind-value:event="oninput" />
+        </div>
     </div>
 </div>
 
@@ -97,7 +110,8 @@ else
 
     private IEnumerable<Schedule>? FilteredSchedules =>
         schedules
-        ?.Where(s => !UserState.Schedules.JobFilter.Any() || UserState.Schedules.JobFilter.Any(f => f.JobId == s.JobId));
+        ?.Where(s => !UserState.Schedules.JobFilter.Any() || UserState.Schedules.JobFilter.Any(f => f.JobId == s.JobId))
+        .Where(s => string.IsNullOrEmpty(UserState.Schedules.ScheduleFilter) || s.ScheduleName.ContainsIgnoreCase(UserState.Schedules.ScheduleFilter));
 
     protected override async Task OnInitializedAsync()
     {
