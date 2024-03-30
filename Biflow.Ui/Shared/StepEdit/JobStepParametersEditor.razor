@@ -39,7 +39,7 @@ else if (Step is not null && targetJob is not null)
                 var availableJobParams = GetAvailableJobParameters(param);
                 <tr>
                     <td>
-                        @targetParam.ParameterName<sup>@targetParam.ParameterValueType</sup>
+                        @targetParam.ParameterName<sup>@targetParam.ParameterValue.ValueType</sup>
                     </td>
                     <td class="align-middle">
                         <div class="form-check">
@@ -53,7 +53,9 @@ else if (Step is not null && targetJob is not null)
                     @if (param.InheritFromJobParameterId is not null)
                     {
                         <td colspan="2">
-                            <InputSelect class="form-select form-select-sm" @bind-Value="param.InheritFromJobParameterId">
+                            <InputSelect class="form-select form-select-sm"
+                                         @bind-Value:get="param.InheritFromJobParameterId"
+                                         @bind-Value:set="id => SetInheritFromJobParameter(true, param, id)">
                                 @foreach (var jobParam in availableJobParams)
                                 {
                                     <option value="@jobParam.ParameterId">
@@ -100,7 +102,7 @@ else if (Step is not null && targetJob is not null)
             @foreach (var param in AvailableTargetParameters)
             {
                 <HxDropdownItem OnClick="() => AddParameter(param)">
-                    @param.ParameterName<sup>@param.ParameterValueType</sup>
+                    @param.ParameterName<sup>@param.ParameterValue.ValueType</sup>
                 </HxDropdownItem>
             }
         </HxDropdownMenu>
@@ -170,7 +172,6 @@ else if (Step is not null)
         }
         var parameter = new JobStepParameter(targetParam.ParameterId)
         {
-            ParameterValueType = targetParam.ParameterValueType,
             ParameterName = targetParam.ParameterName,
             ParameterValue = targetParam.ParameterValue,
             Step = Step
@@ -178,29 +179,20 @@ else if (Step is not null)
         Step.StepParameters.Add(parameter);
     }
 
-    private void OnTargetParameterChanged(ChangeEventArgs args, JobStepParameter parameter)
-    {
-        var idString = args.Value?.ToString();
-        if (idString is null || targetJob is null)
-        {
-            return;
-        }
-        var targetParamId = Guid.Parse(idString);
-        var targetParam = AvailableTargetParameters.First(j => j.ParameterId == targetParamId);
-        parameter.AssignToJobParameterId = targetParam.ParameterId;
-        parameter.ParameterValueType = targetParam.ParameterValueType;
-        parameter.ParameterName = targetParam.ParameterName;
-    }
-
     private Task OnParameterEdit(StepParameterBase parameter) => expressionEditOffcanvas.LetAsync(x => x.ShowAsync(parameter));
 
     private IEnumerable<JobParameter> GetAvailableJobParameters(StepParameterBase param) => JobParameters
-        .Where(p => p.ParameterValueType == param.ParameterValueType || p.UseExpression)
+        .Where(p => p.ParameterValue.ValueType == param.ParameterValue.ValueType || p.UseExpression)
         .OrderBy(p => p.ParameterName);
 
-    private void SetInheritFromJobParameter(bool inheritFromJob, StepParameterBase param)
+    private void SetInheritFromJobParameter(bool inheritFromJob, StepParameterBase param, Guid? jobParameterId = null)
     {
-        if (inheritFromJob)
+        if (inheritFromJob && jobParameterId is Guid id)
+        {
+            param.InheritFromJobParameterId = GetAvailableJobParameters(param).FirstOrDefault(p => p.ParameterId == id)?.ParameterId;
+            param.InheritFromJobParameter = GetAvailableJobParameters(param).FirstOrDefault(p => p.ParameterId == id);
+        }
+        else if (inheritFromJob)
         {
             param.InheritFromJobParameterId = GetAvailableJobParameters(param).FirstOrDefault()?.ParameterId;
             param.InheritFromJobParameter = GetAvailableJobParameters(param).FirstOrDefault();

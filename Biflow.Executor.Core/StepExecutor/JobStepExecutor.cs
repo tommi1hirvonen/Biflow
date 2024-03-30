@@ -52,7 +52,6 @@ internal class JobStepExecutor(
                     (stepParam, jobParam) => (stepParam, jobParam));
                 foreach (var (stepParam, jobParam) in parameters)
                 {
-                    jobParam.ParameterValueType = stepParam.ParameterValueType;
                     jobParam.ParameterValue = stepParam.ParameterValue;
                     // Override UseExpression since the parameter is set with a value that may have been evaluated in this execution.
                     jobParam.UseExpression = false;

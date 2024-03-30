@@ -64,7 +64,7 @@ internal class DataFactoryClient(DataFactory dataFactory, ITokenService tokenSer
         return folder;
     }
 
-    public async Task<IEnumerable<(string Name, ParameterValueType Type, object? Default)>> GetPipelineParametersAsync(string pipelineName)
+    public async Task<IEnumerable<(string Name, ParameterValue Value)>> GetPipelineParametersAsync(string pipelineName)
     {
         var client = await GetClientAsync();
         var pipeline = await client.Pipelines.GetAsync(dataFactory.ResourceGroupName, dataFactory.ResourceName, pipelineName);
@@ -77,7 +77,8 @@ internal class DataFactoryClient(DataFactory dataFactory, ITokenService tokenSer
                 "float" => ParameterValueType.Double,
                 _ => ParameterValueType.String
             };
-            return (param.Key, datatype, (object?)param.Value.DefaultValue);
+            _ = ParameterValue.TryCreate(datatype, param.Value.DefaultValue, out var value);
+            return (param.Key, value);
         }) ?? [];
     }
 }

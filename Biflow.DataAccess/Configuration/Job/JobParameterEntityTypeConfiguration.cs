@@ -1,4 +1,6 @@
-﻿namespace Biflow.DataAccess.Configuration;
+﻿using System.Text.Json;
+
+namespace Biflow.DataAccess.Configuration;
 
 internal class JobParameterEntityTypeConfiguration : IEntityTypeConfiguration<JobParameter>
 {
@@ -10,7 +12,9 @@ internal class JobParameterEntityTypeConfiguration : IEntityTypeConfiguration<Jo
         builder.Property(x => x.JobId)
             .HasColumnName("JobId");
 
-        builder.Property(x => x.ParameterValue).HasColumnType("sql_variant");
+        builder.Property(p => p.ParameterValue).HasConversion(
+            from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
+            to => JsonSerializer.Deserialize<ParameterValue?>(to, null as JsonSerializerOptions) ?? new());
 
         builder.OwnsOne(s => s.Expression, ece =>
         {

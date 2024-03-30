@@ -33,7 +33,7 @@ public class SqlStepExecution : StepExecution,
     [Display(Name = "Result capture job parameter")]
     public Guid? ResultCaptureJobParameterId { get; private set; }
 
-    public object? ResultCaptureJobParameterValue { get; set; }
+    public ParameterValue ResultCaptureJobParameterValue { get; set; } = new();
 
     public ExecutionParameter? ResultCaptureJobParameter { get; set; }
 

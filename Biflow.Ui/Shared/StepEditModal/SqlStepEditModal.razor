@@ -78,7 +78,7 @@
                     @foreach (var jobParam in Step.Job.JobParameters.OrderBy(p => p.ParameterName) ?? Enumerable.Empty<JobParameter>())
                     {
                         <option value="@jobParam.ParameterId">
-                            @jobParam.ParameterName (@jobParam.ParameterValueType = @jobParam.ParameterValue)
+                            @jobParam.ParameterName (@jobParam.ParameterValue.ValueType = @jobParam.ParameterValue.Value)
                         </option>
                     }
                 </InputSelect>

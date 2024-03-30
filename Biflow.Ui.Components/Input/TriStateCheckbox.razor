@@ -7,10 +7,10 @@
 
 @inject IJSRuntime jsRuntime
 
-<div class="form-check form-check-inline">
+<div class="form-check form-check-inline @CssClass">
     <input @ref="_inputElement"
            type="checkbox"
-           class="form-check-input"
+           class="form-check-input @InputCssClass"
            id="@_elementId"
            checked=@Checked
            @onchange="OnChange">
@@ -23,6 +23,10 @@
     [Parameter] public bool? Indeterminate { get; set; }
 
     [Parameter] public bool Checked { get; set; }
+
+    [Parameter] public string? CssClass { get; set; }
+
+    [Parameter] public string? InputCssClass { get; set; }
 
     [Parameter] public EventCallback<bool> CheckedChanged { get; set; }
 

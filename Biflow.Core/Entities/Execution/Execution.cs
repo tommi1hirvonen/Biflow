@@ -156,6 +156,3 @@ public class Execution
         return status;
     }
 }
-
-
-public readonly record struct StepExecutionAttemptReference(Guid ExecutionId, Guid StepId, int RetryAttemptIndex);

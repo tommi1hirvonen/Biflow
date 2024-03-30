@@ -44,7 +44,7 @@ internal class SynapseWorkspaceClient(SynapseWorkspace synapse, ITokenService to
         return folder;
     }
 
-    public async Task<IEnumerable<(string Name, ParameterValueType Type, object? Default)>> GetPipelineParametersAsync(string pipelineName)
+    public async Task<IEnumerable<(string Name, ParameterValue Value)>> GetPipelineParametersAsync(string pipelineName)
     {
         var token = new AzureTokenCredential(tokenService, synapse.AppRegistration, SynapseWorkspace.ResourceUrl);
         var client = new SynapsePipelineClient(synapse.SynapseEndpoint, token);
@@ -58,7 +58,8 @@ internal class SynapseWorkspaceClient(SynapseWorkspace synapse, ITokenService to
                 "float" => ParameterValueType.Double,
                 _ => ParameterValueType.String
             };
-            return (param.Key, datatype, (object?)param.Value.DefaultValue);
+            _ = ParameterValue.TryCreate(datatype, param.Value.DefaultValue, out var value);
+            return (param.Key, value);
         });
     }
 

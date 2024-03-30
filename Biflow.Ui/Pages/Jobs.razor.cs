@@ -25,6 +25,7 @@ public partial class Jobs : ComponentBase, IDisposable
     private JobEditModal? jobEditModal;
     private ExecuteModal? executeModal;
     private Paginator<ListItem>? paginator;
+    private HashSet<Job> selectedJobs = [];
 
     private record ListItem(Job Job, Execution? LastExecution, DateTime? NextExecution);
 
@@ -133,6 +134,23 @@ public partial class Jobs : ComponentBase, IDisposable
         }
     }
 
+    private async Task ToggleSelectedEnabled(bool value)
+    {
+        try
+        {
+            foreach (var job in selectedJobs)
+            {
+                await Mediator.SendAsync(new ToggleJobCommand(job.JobId, value));
+                job.IsEnabled = value;
+            }
+
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error toggling job", ex.Message);
+        }
+    }
+
     private async Task CopyJob(Job job)
     {
         try
@@ -186,6 +204,64 @@ public partial class Jobs : ComponentBase, IDisposable
         catch (Exception ex)
         {
             Toaster.AddError("Error deleting job", ex.Message);
+        }
+    }
+
+    private async Task DeleteSelectedJobsAsync()
+    {
+        if (!await Confirmer.ConfirmAsync("Delete selected jobs", $"Delete {selectedJobs.Count} job(s)?"))
+        {
+            return;
+        }
+        var jobIds = selectedJobs.Select(j => j.JobId).ToArray();
+        using (var context = await DbFactory.CreateDbContextAsync())
+        {
+            var executingSteps = await context.JobSteps
+                .Where(s => s.JobToExecuteId != null && jobIds.Contains((Guid)s.JobToExecuteId))
+                .Include(s => s.Job)
+                .OrderBy(s => s.Job.JobName)
+                .ThenBy(s => s.StepName)
+                .ToListAsync();
+            if (executingSteps.Count != 0)
+            {
+                var steps = string.Join("\n", executingSteps.Select(s => $"– {s.Job.JobName} – {s.StepName}"));
+                var message = $"""
+                    Selected jobs have one or more referencing steps that execute them:
+                    {steps}
+                    Removing the jobs will also remove these steps. Delete anyway?
+                    """;
+                var confirmResult = await Confirmer.ConfirmAsync("", message);
+                if (!confirmResult)
+                {
+                    return;
+                }
+            }
+        }
+        try
+        {
+            foreach (var job in selectedJobs)
+            {
+                await Mediator.SendAsync(new DeleteJobCommand(job.JobId));
+                jobs?.Remove(job);
+            }
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error deleting jobs", ex.Message);
+        }
+        selectedJobs.Clear();
+    }
+
+    private void ToggleJobsSelected(IEnumerable<Job> jobs, bool value)
+    {
+        if (value)
+        {
+            var jobsToAdd = jobs.Where(j => !selectedJobs.Contains(j)) ?? [];
+            foreach (var j in jobsToAdd) selectedJobs.Add(j);
+        }
+        else
+        {
+            selectedJobs.Clear();
         }
     }
 

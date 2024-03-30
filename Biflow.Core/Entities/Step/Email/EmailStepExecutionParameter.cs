@@ -2,8 +2,8 @@
 
 public class EmailStepExecutionParameter : StepExecutionParameterBase
 {
-    public EmailStepExecutionParameter(string parameterName, object parameterValue, ParameterValueType parameterValueType)
-        : base(parameterName, parameterValue, ParameterType.Email, parameterValueType)
+    public EmailStepExecutionParameter(string parameterName, ParameterValue parameterValue)
+        : base(parameterName, parameterValue, ParameterType.Email)
     {
 
     }

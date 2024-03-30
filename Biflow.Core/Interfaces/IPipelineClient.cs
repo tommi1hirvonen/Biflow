@@ -12,5 +12,5 @@ public interface IPipelineClient
 
     public Task<PipelineFolder> GetPipelinesAsync();
 
-    public Task<IEnumerable<(string Name, ParameterValueType Type, object? Default)>> GetPipelineParametersAsync(string pipelineName);
+    public Task<IEnumerable<(string Name, ParameterValue Value)>> GetPipelineParametersAsync(string pipelineName);
 }

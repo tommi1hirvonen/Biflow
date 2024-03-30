@@ -2,8 +2,8 @@
 
 public class PipelineStepExecutionParameter : StepExecutionParameterBase
 {
-    public PipelineStepExecutionParameter(string parameterName, object parameterValue, ParameterValueType parameterValueType)
-        : base(parameterName, parameterValue, ParameterType.Pipeline, parameterValueType)
+    public PipelineStepExecutionParameter(string parameterName, ParameterValue parameterValue)
+        : base(parameterName, parameterValue, ParameterType.Pipeline)
     {
 
     }

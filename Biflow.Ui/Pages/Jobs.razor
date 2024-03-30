@@ -115,16 +115,62 @@
     </div>
 </div>
 
+@{
+    var listItems = GetListItems().ToArray();
+    var count = listItems.Count();
+    var selectedText = selectedJobs.Count switch
+    {
+        1 => $"{selectedJobs.Count} selected job",
+        > 1 => $"{selectedJobs.Count} selected jobs",
+        _ => ""
+    };
+}
+
 <Paginator @ref="paginator"
-           Items="GetListItems()"
+           Items="listItems"
            Context="pageItems"
            InitialPageSize="UserState.Jobs.PageSize"
            InitialPage="UserState.Jobs.CurrentPage"
            OnPageChanged="page => UserState.Jobs.CurrentPage = page"
            OnPageSizeChanged="size => UserState.Jobs.PageSize = size">
 
-    <div class="row sticky-top mt-1 py-2 bg-body" style="z-index: 999;">
-        <div class="col d-flex justify-content-end">
+    <div class="row justify-content-end sticky-top mt-1 py-2 bg-body" style="z-index: 999;">
+        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+            @if (selectedJobs.Count > 0)
+            {
+                <div class="col text-center">
+                    <HxButtonGroup Size="ButtonGroupSize.Small">
+                        <HxDropdownButtonGroup>
+                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                                <CxIcon Icon="FeatherIcon.ToggleRight" />
+                                Enable
+                            </HxDropdownToggleButton>
+                            <HxDropdownMenu>
+                                <HxDropdownItem @onclick="() => ToggleSelectedEnabled(true)">
+                                    Confirm
+                                </HxDropdownItem>
+                            </HxDropdownMenu>
+                        </HxDropdownButtonGroup>
+                        <HxDropdownButtonGroup>
+                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                                <CxIcon Icon="FeatherIcon.ToggleLeft" />
+                                Disable
+                            </HxDropdownToggleButton>
+                            <HxDropdownMenu>
+                                <HxDropdownItem @onclick="() => ToggleSelectedEnabled(false)">
+                                    Confirm
+                                </HxDropdownItem>
+                            </HxDropdownMenu>
+                        </HxDropdownButtonGroup>
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="DeleteSelectedJobsAsync">
+                            <CxIcon Icon="FeatherIcon.Trash2" />
+                            Delete...
+                        </HxButton>
+                    </HxButtonGroup>
+                </div>
+            }
+        </AuthorizeView>
+        <div class="col-auto d-flex">
             <PaginationControls Paginator="paginator" />
         </div>
     </div>
@@ -133,7 +179,17 @@
         <table class="table mb-0">
             <thead>
                 <tr>
-                    <th class="align-middle">
+                    <th class="align-middle d-flex align-items-center">
+                        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+                            <TriStateCheckbox CssClass="me-0"
+                                              Checked="@(selectedJobs.Count > 0 && listItems.Any() == true && count > 0)"
+                                              Indeterminate="@(selectedJobs.Any() && selectedJobs.Count != count)"
+                                              CheckedChanged="value => ToggleJobsSelected(listItems.Select(i => i.Job), value)" />
+                        </AuthorizeView>
+                        @if (!string.IsNullOrEmpty(selectedText))
+                        {
+                            <div class="text-muted small fw-normal me-3">@selectedText</div>
+                        }
                         <span class="sortable" @onclick="() => UserState.Jobs.SortMode = UserState.Jobs.SortMode == JobSortMode.NameAsc ? JobSortMode.NameDesc : JobSortMode.NameAsc">
                             Job
                         </span>
@@ -210,9 +266,19 @@
                             <ChildContent Context="menu">
                                 <td class="align-middle">
                                     <div class="row">
-                                        <a class="text-body" href="@($"jobs/{item.JobId}/steps")">
-                                            <HighlightableText PartToHighlight="@UserState.Jobs.JobNameFilter" Text="@item.JobName" />
-                                        </a>
+                                        <div class="col">
+                                            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+                                                <div class="form-check form-check-inline me-0">
+                                                    <input type="checkbox" class="form-check-input" id="select_job_@item.JobId"
+                                                           checked=@selectedJobs.Contains(item)
+                                                           @onchange="args => { if (selectedJobs.Contains(item)) selectedJobs.Remove(item); else selectedJobs.Add(item); }">
+                                                    <label class="form-check-label" for="select_job_@item.JobId"></label>
+                                                </div>
+                                            </AuthorizeView>
+                                            <a class="text-body" href="@($"jobs/{item.JobId}/steps")">
+                                                <HighlightableText PartToHighlight="@UserState.Jobs.JobNameFilter" Text="@item.JobName" />
+                                            </a>
+                                        </div>
                                     </div>
                                     <div class="row">
                                         <div class="col">

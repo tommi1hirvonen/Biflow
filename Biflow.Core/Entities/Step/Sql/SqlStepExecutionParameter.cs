@@ -2,8 +2,8 @@
 
 public class SqlStepExecutionParameter : StepExecutionParameterBase
 {
-    public SqlStepExecutionParameter(string parameterName, object parameterValue, ParameterValueType parameterValueType)
-        : base(parameterName, parameterValue, ParameterType.Sql, parameterValueType)
+    public SqlStepExecutionParameter(string parameterName, ParameterValue parameterValue)
+        : base(parameterName, parameterValue, ParameterType.Sql)
     {
 
     }

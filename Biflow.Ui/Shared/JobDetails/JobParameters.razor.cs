@@ -54,7 +54,7 @@ public partial class JobParameters : ComponentBase
     }
 
     private void AddParameter() => editJob?.JobParameters
-        .Insert(0, new JobParameter { ParameterValueType = ParameterValueType.String });
+        .Insert(0, new JobParameter());
 
     private async Task SubmitParameters()
     {

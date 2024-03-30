@@ -1,4 +1,6 @@
-﻿namespace Biflow.DataAccess.Configuration;
+﻿using System.Text.Json;
+
+namespace Biflow.DataAccess.Configuration;
 
 internal class ExecutionParameterEntityTypeConfiguration : IEntityTypeConfiguration<ExecutionParameter>
 {
@@ -15,10 +17,13 @@ internal class ExecutionParameterEntityTypeConfiguration : IEntityTypeConfigurat
             ece.Property(p => p.Expression).HasColumnName("Expression");
         });
 
-        builder.Property(x => x.ParameterValue).HasColumnType("sql_variant");
+        builder.Property(p => p.ParameterValue).HasConversion(
+            from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
+            to => JsonSerializer.Deserialize<ParameterValue?>(to, null as JsonSerializerOptions) ?? new());
 
-        builder.Property(x => x.DefaultValue)
-            .HasColumnType("sql_variant");
+        builder.Property(p => p.DefaultValue).HasConversion(
+            from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
+            to => JsonSerializer.Deserialize<ParameterValue?>(to, null as JsonSerializerOptions) ?? new());
 
         builder.HasOne(x => x.Execution)
             .WithMany(x => x.ExecutionParameters)

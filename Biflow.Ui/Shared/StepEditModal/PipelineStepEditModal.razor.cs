@@ -59,13 +59,12 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
                 return;
             }
             Step.StepParameters.Clear();
-            foreach (var param in parameters)
+            foreach (var (name, value) in parameters)
             {
                 Step.StepParameters.Add(new PipelineStepParameter
                 {
-                    ParameterName = param.Name,
-                    ParameterValueType = param.Type,
-                    ParameterValue = param.Default
+                    ParameterName = name,
+                    ParameterValue = value
                 });
             }
         }

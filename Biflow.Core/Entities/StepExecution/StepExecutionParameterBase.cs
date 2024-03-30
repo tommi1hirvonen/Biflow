@@ -5,11 +5,10 @@ namespace Biflow.Core.Entities;
 
 public abstract class StepExecutionParameterBase : DynamicParameter, IHasExpressionParameters<StepExecutionParameterExpressionParameter, ExecutionParameter>
 {
-    public StepExecutionParameterBase(string parameterName, object parameterValue, ParameterType parameterType, ParameterValueType parameterValueType)
+    public StepExecutionParameterBase(string parameterName, ParameterValue parameterValue, ParameterType parameterType)
     {
         ParameterName = parameterName;
         ParameterValue = parameterValue;
-        ParameterValueType = parameterValueType;
         ParameterType = parameterType;
     }
 
@@ -21,7 +20,6 @@ public abstract class StepExecutionParameterBase : DynamicParameter, IHasExpress
         ParameterType = parameter.ParameterType;
         ParameterName = parameter.ParameterName;
         ParameterValue = parameter.ParameterValue;
-        ParameterValueType = parameter.ParameterValueType;
         InheritFromExecutionParameterId = parameter.InheritFromJobParameterId;
         InheritFromExecutionParameter = execution.Execution.ExecutionParameters.FirstOrDefault(p => p.ParameterId == parameter.InheritFromJobParameterId);
         UseExpression = parameter.UseExpression;
@@ -39,23 +37,15 @@ public abstract class StepExecutionParameterBase : DynamicParameter, IHasExpress
 
     public ParameterType ParameterType { get; private set; }
 
-    public override object? ParameterValue
+    public override ParameterValue ParameterValue
     {
         get => InheritFromExecutionParameter is not null ? ExecutionParameterValue : base.ParameterValue;
         set => base.ParameterValue = value;
     }
 
-    public override ParameterValueType ParameterValueType
-    {
-        get => InheritFromExecutionParameter?.ParameterValueType ?? _parameterValueType;
-        set => _parameterValueType = value;
-    }
-
-    private ParameterValueType _parameterValueType = ParameterValueType.String;
-
     public Guid? InheritFromExecutionParameterId { get; private set; }
 
-    public object? ExecutionParameterValue { get; set; }
+    public ParameterValue ExecutionParameterValue { get; set; } = new();
 
     public ExecutionParameter? InheritFromExecutionParameter { get; set; }
 
@@ -73,8 +63,8 @@ public abstract class StepExecutionParameterBase : DynamicParameter, IHasExpress
 
     public override string DisplayValue => (InheritFromExecutionParameter, UseExpression) switch
     {
-        (not null, _) => $"{ParameterValue} (inherited from execution parameter {InheritFromExecutionParameter.DisplayName})",
-        (_, true) => $"{ParameterValue} ({Expression.Expression})",
+        (not null, _) => $"{ParameterValue.Value} (inherited from execution parameter {InheritFromExecutionParameter.DisplayName})",
+        (_, true) => $"{ParameterValue.Value} ({Expression.Expression})",
         _ => base.DisplayValue
     };
 
@@ -95,7 +85,7 @@ public abstract class StepExecutionParameterBase : DynamicParameter, IHasExpress
         else if (UseExpression)
         {
             var parameters = ExpressionParameters
-                .ToDictionary(key => key.ParameterName, value => value.InheritFromExecutionParameter.ParameterValue);
+                .ToDictionary(key => key.ParameterName, value => value.InheritFromExecutionParameter.ParameterValue.Value);
             parameters[ExpressionParameterNames.ExecutionId] = ExecutionId;
             parameters[ExpressionParameterNames.JobId] = BaseStepExecution.Execution.JobId;
             parameters[ExpressionParameterNames.StepId] = StepId;
@@ -106,7 +96,7 @@ public abstract class StepExecutionParameterBase : DynamicParameter, IHasExpress
             return result;
         }
 
-        return ParameterValue;
+        return ParameterValue.Value;
     }
 
     public void AddExpressionParameter(ExecutionParameter jobParameter)

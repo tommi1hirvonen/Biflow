@@ -15,7 +15,6 @@ public class JobParameter : DynamicParameter
         Job = job ?? other.Job;
         ParameterName = other.ParameterName;
         ParameterValue = other.ParameterValue;
-        ParameterValueType = other.ParameterValueType;
         UseExpression = other.UseExpression;
         Expression = new() { Expression = other.Expression.Expression };
         job?.JobParameters?.Add(this);
@@ -53,6 +52,6 @@ public class JobParameter : DynamicParameter
             return await Expression.EvaluateAsync(parameters);
         }
 
-        return ParameterValue;
+        return ParameterValue.Value;
     }
 }

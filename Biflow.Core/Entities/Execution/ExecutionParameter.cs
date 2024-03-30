@@ -4,16 +4,15 @@ namespace Biflow.Core.Entities;
 
 public class ExecutionParameter : DynamicParameter
 {
-    public ExecutionParameter(string parameterName, object? parameterValue, ParameterValueType parameterValueType)
+    public ExecutionParameter(string parameterName, ParameterValue parameterValue)
     {
         ParameterName = parameterName;
         ParameterValue = parameterValue;
         DefaultValue = parameterValue;
-        ParameterValueType = parameterValueType;
     }
 
     public ExecutionParameter(JobParameter parameter, Execution execution)
-        : this(parameter.ParameterName, parameter.ParameterValue, parameter.ParameterValueType)
+        : this(parameter.ParameterName, parameter.ParameterValue)
     {
         ExecutionId = execution.ExecutionId;
         Execution = execution;
@@ -27,7 +26,7 @@ public class ExecutionParameter : DynamicParameter
 
     public Guid ExecutionId { get; private set; }
 
-    public object? DefaultValue { get; private set; }
+    public ParameterValue DefaultValue { get; private set; } = new();
 
     public Execution Execution { get; private set; } = null!;
 
@@ -40,7 +39,7 @@ public class ExecutionParameter : DynamicParameter
     public IEnumerable<SqlStepExecution> CapturingStepExecutions { get; } = new List<SqlStepExecution>();
 
     public override string DisplayValue =>
-        UseExpression ? $"{ParameterValue} ({Expression.Expression})" : base.DisplayValue;
+        UseExpression ? $"{ParameterValue.Value} ({Expression.Expression})" : base.DisplayValue;
 
     public override async Task<object?> EvaluateAsync()
     {
@@ -61,6 +60,6 @@ public class ExecutionParameter : DynamicParameter
             return result;
         }
 
-        return ParameterValue;
+        return ParameterValue.Value;
     }
 }

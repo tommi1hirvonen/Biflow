@@ -2,11 +2,10 @@
 
 public class StepExecutionConditionParameter : ParameterBase
 {
-    public StepExecutionConditionParameter(string parameterName, object parameterValue, ParameterValueType parameterValueType)
+    public StepExecutionConditionParameter(string parameterName, ParameterValue parameterValue)
     {
         ParameterName = parameterName;
         _parameterValue = parameterValue;
-        ParameterValueType = parameterValueType;
     }
 
     public StepExecutionConditionParameter(ExecutionConditionParameter parameter, StepExecution execution)
@@ -16,7 +15,6 @@ public class StepExecutionConditionParameter : ParameterBase
         ParameterName = parameter.ParameterName;
         ParameterId = parameter.ParameterId;
         ParameterValue = parameter.ParameterValue;
-        ParameterValueType = parameter.ParameterValueType;
         ExecutionParameterId = parameter.JobParameterId;
         ExecutionParameter = execution.Execution.ExecutionParameters.FirstOrDefault(p => p.ParameterId == parameter.JobParameterId);
         StepExecution = execution;
@@ -26,25 +24,17 @@ public class StepExecutionConditionParameter : ParameterBase
 
     public Guid StepId { get; set; }
 
-    public override object? ParameterValue
+    public override ParameterValue ParameterValue
     {
         get => ExecutionParameter is not null ? ExecutionParameterValue : _parameterValue;
         set => _parameterValue = value;
     }
 
-    private object? _parameterValue;
-
-    public override ParameterValueType ParameterValueType
-    {
-        get => ExecutionParameter?.ParameterValueType ?? _parameterValueType;
-        set => _parameterValueType = value;
-    }
-
-    private ParameterValueType _parameterValueType = ParameterValueType.String;
+    private ParameterValue _parameterValue = new();
 
     public Guid? ExecutionParameterId { get; set; }
 
-    public object? ExecutionParameterValue { get; set; }
+    public ParameterValue ExecutionParameterValue { get; set; } = new();
 
     public ExecutionParameter? ExecutionParameter { get; set; }
 

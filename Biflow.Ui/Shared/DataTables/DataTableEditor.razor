@@ -22,18 +22,17 @@
         <HxButtonToolbar>
             <HxButtonGroup Size="ButtonGroupSize.Small">
 
-                <HxButton Color="ThemeColor.Secondary" Size="ButtonSize.Small"
+                <HxButton Color="ThemeColor.None" Size="ButtonSize.Small"
                           Enabled="filterSet is not null"
-                          CssClass="@(filterSet?.Filters.Values.Any(v => v.Enabled1) ?? false ? "fw-bold" : null)"
+                          CssClass="@(filterSet?.Filters.Values.Any(v => v.Enabled1) ?? false ? "fw-bold btn-auto" : "btn-auto")"
                           OnClick="async () => await filterSetOffcanvas.LetAsync(x => x.ShowAsync())">
                     <CxIcon Icon="FeatherIcon.Filter" />
-                    Filters
+                    Query filters
                 </HxButton>
 
                 <FilterDropdown FilterSet="columnSelections"
                                 Items="tableData?.Columns.Select(c => c.Name) ?? Enumerable.Empty<string>()"
-                                OnChange="StateHasChanged"
-                                TitleCssClass="btn-secondary">
+                                OnChange="StateHasChanged">
                     <TitleTemplate>
                         <CxIcon Icon="FeatherIcon.Columns" />
                         Columns
@@ -41,7 +40,7 @@
                 </FilterDropdown>
 
                 <HxDropdownButtonGroup>
-                    <HxDropdownToggleButton Spinner="exporting" Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="!exporting">
+                    <HxDropdownToggleButton Spinner="exporting" Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" Enabled="!exporting">
                         <CxIcon Icon="FeatherIcon.Download" />
                         Export
                     </HxDropdownToggleButton>
@@ -62,12 +61,12 @@
                     var isNotEditable = !tableData?.IsEditable ?? true;
                     var importDisabled = isNotEditable || !Table.AllowImport;
                 }
-                <a class="btn btn-sm btn-secondary @(importDisabled ? "disabled" : null)" href="/datatables/import/@Table.DataTableId">
+                <a class="btn btn-sm btn-auto @(importDisabled ? "disabled" : null)" href="/datatables/import/@Table.DataTableId">
                     <CxIcon Icon="FeatherIcon.Upload" />
                     Import
                 </a>
 
-                <HxButton Color="ThemeColor.Secondary" Size="ButtonSize.Small"
+                <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small"
                           Enabled="!string.IsNullOrEmpty(Table.DataTableDescription)"
                           OnClick="async () => await tableInfoOffcanvas.LetAsync(x => x.ShowAsync())">
                     <CxIcon Icon="FeatherIcon.Info" />

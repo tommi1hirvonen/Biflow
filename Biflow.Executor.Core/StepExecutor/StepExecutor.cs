@@ -35,13 +35,13 @@ internal abstract class StepExecutor<TStep, TAttempt>(
                 foreach (var param in hasParameters.StepExecutionParameters.Where(p => p.InheritFromExecutionParameter is not null))
                 {
                     context.Attach(param);
-                    param.ExecutionParameterValue = param.InheritFromExecutionParameter?.ParameterValue;
+                    param.ExecutionParameterValue = param.InheritFromExecutionParameter?.ParameterValue ?? param.ExecutionParameterValue;
                 }
                 // Also evaluate expressions and save the result to the step parameter's value property.
                 foreach (var param in hasParameters.StepExecutionParameters.Where(p => p.UseExpression))
                 {
                     context.Attach(param);
-                    param.ParameterValue = await param.EvaluateAsync();
+                    param.ParameterValue = new(await param.EvaluateAsync());
                 }
                 await context.SaveChangesAsync();
             }
@@ -61,7 +61,7 @@ internal abstract class StepExecutor<TStep, TAttempt>(
             foreach (var param in stepExecution.ExecutionConditionParameters.Where(p => p.ExecutionParameter is not null))
             {
                 context.Attach(param);
-                param.ExecutionParameterValue = param.ExecutionParameter?.ParameterValue;
+                param.ExecutionParameterValue = param.ExecutionParameter?.ParameterValue ?? param.ExecutionParameterValue;
             }
             await context.SaveChangesAsync();
         }

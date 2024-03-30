@@ -17,7 +17,6 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
         ParameterId = Guid.NewGuid();
         ParameterName = other.ParameterName;
         ParameterValue = other.ParameterValue;
-        ParameterValueType = other.ParameterValueType;
         UseExpression = other.UseExpression;
         Expression = new() { Expression = other.Expression.Expression };
         ParameterType = other.ParameterType;
@@ -62,6 +61,7 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
             if (value is not null)
             {
                 UseExpression = false;
+                ParameterValue = new();
             }
             _inheritFromJobParameterId = value;
         }
@@ -78,6 +78,7 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
             if (value is not null)
             {
                 UseExpression = false;
+                ParameterValue = new();
             }
             _inheritFromJobParameter = value;
         }
@@ -112,7 +113,7 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
             return await Expression.EvaluateAsync(parameters);
         }
 
-        return ParameterValue;
+        return ParameterValue.Value;
     }
 
     public void AddExpressionParameter(JobParameter jobParameter)

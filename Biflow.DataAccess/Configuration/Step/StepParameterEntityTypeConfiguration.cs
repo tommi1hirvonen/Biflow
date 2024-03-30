@@ -1,4 +1,6 @@
-﻿namespace Biflow.DataAccess.Configuration;
+﻿using System.Text.Json;
+
+namespace Biflow.DataAccess.Configuration;
 
 internal class StepParameterEntityTypeConfiguration : IEntityTypeConfiguration<StepParameterBase>
 {
@@ -10,7 +12,9 @@ internal class StepParameterEntityTypeConfiguration : IEntityTypeConfiguration<S
         builder.Property(x => x.StepId)
             .HasColumnName("StepId");
 
-        builder.Property(x => x.ParameterValue).HasColumnType("sql_variant");
+        builder.Property(p => p.ParameterValue).HasConversion(
+            from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
+            to => JsonSerializer.Deserialize<ParameterValue?>(to, null as JsonSerializerOptions) ?? new());
 
         builder.Ignore(x => x.JobParameters);
 

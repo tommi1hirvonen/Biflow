@@ -52,13 +52,15 @@
                     @if (param.InheritFromJobParameterId is not null)
                     {
                         <td colspan="2">
-                            <InputSelect class="form-select form-select-sm" @bind-Value="param.InheritFromJobParameterId">
+                            <InputSelect class="form-select form-select-sm"
+                                         @bind-Value:get="param.InheritFromJobParameterId"
+                                         @bind-Value:set="id => SetJobParameter(true, param, id)">
                                 @foreach (var jobParam in JobParameters.OrderBy(p => p.ParameterName))
-                                            {
+                                {
                                     <option value="@jobParam.ParameterId">
                                         @jobParam.DisplaySummary
                                     </option>
-                                            }
+                                }
                             </InputSelect>
                         </td>
                     }
@@ -134,9 +136,14 @@
         Step.StepParameters.Add(new() { Step = Step });
     }
 
-    private void SetJobParameter(bool inheritFromJob, PackageStepParameter param)
+    private void SetJobParameter(bool inheritFromJob, PackageStepParameter param, Guid? jobParameterId = null)
     {
-        if (inheritFromJob)
+        if (inheritFromJob && jobParameterId is Guid id)
+        {
+            param.InheritFromJobParameterId = JobParameters.FirstOrDefault(p => p.ParameterId == id)?.ParameterId;
+            param.InheritFromJobParameter = JobParameters.FirstOrDefault(p => p.ParameterId == id);
+        }
+        else if (inheritFromJob)
         {
             param.InheritFromJobParameterId = JobParameters.FirstOrDefault()?.ParameterId;
             param.InheritFromJobParameter = JobParameters.FirstOrDefault();
@@ -170,8 +177,7 @@
                 {
                     ParameterLevel = parameter.ParameterLevel,
                     ParameterName = parameter.ParameterName,
-                    ParameterValueType = parameter.ParameterType,
-                    ParameterValue = parameter.DefaultValue
+                    ParameterValue = parameter.Value
                 });
             }
         }

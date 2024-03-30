@@ -5,11 +5,14 @@
             <div class="input-group-text">
                 Type
             </div>
-            <InputSelect class="form-select form-select-sm" @bind-Value="Parameter.ParameterValueType" style="max-width: 8rem;">
+            <InputSelect class="form-select form-select-sm" style="max-width: 8rem;"
+                    @bind-Value:set="SetType"
+                    @bind-Value:get="ValueType"
+                         >
                 @foreach (var type in Enum.GetValues(typeof(ParameterValueType)))
-                    {
+                {
                     <option>@type</option>
-                    }
+                }
             </InputSelect>
             <div class="input-group-text">
                 Value
@@ -21,4 +24,15 @@
 
 @code {
     [Parameter] public ParameterBase? Parameter { get; set; }
+
+    private ParameterValueType ValueType => Parameter?.ParameterValue.ValueType ?? ParameterValueType.Empty;
+
+    private void SetType(ParameterValueType type)
+    {
+        if (Parameter is null)
+        {
+            return;
+        }
+        Parameter.ParameterValue = Biflow.Core.Entities.ParameterValue.DefaultValue(type);
+    }
 }

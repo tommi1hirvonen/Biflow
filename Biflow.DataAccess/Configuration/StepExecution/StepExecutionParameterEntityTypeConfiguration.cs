@@ -1,4 +1,6 @@
-﻿namespace Biflow.DataAccess.Configuration;
+﻿using System.Text.Json;
+
+namespace Biflow.DataAccess.Configuration;
 
 internal class StepExecutionParameterEntityTypeConfiguration : IEntityTypeConfiguration<StepExecutionParameterBase>
 {
@@ -7,11 +9,13 @@ internal class StepExecutionParameterEntityTypeConfiguration : IEntityTypeConfig
         builder.ToTable("ExecutionStepParameter")
             .HasKey(x => new { x.ExecutionId, x.ParameterId });
 
-        builder.Property(x => x.ParameterValue)
-            .HasColumnType("sql_variant");
+        builder.Property(p => p.ParameterValue).HasConversion(
+            from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
+            to => JsonSerializer.Deserialize<ParameterValue?>(to, null as JsonSerializerOptions) ?? new());
 
-        builder.Property(x => x.ExecutionParameterValue)
-            .HasColumnType("sql_variant");
+        builder.Property(p => p.ExecutionParameterValue).HasConversion(
+            from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
+            to => JsonSerializer.Deserialize<ParameterValue?>(to, null as JsonSerializerOptions) ?? new());
 
         builder.Ignore("Evaluated");
         builder.Ignore("EvaluationResult");

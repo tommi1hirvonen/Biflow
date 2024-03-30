@@ -216,10 +216,10 @@ public static class Extensions
     /// <returns>Dictionary where the parameter name is the key and the parameter value is the value</returns>
     internal static Dictionary<string, string?> ToStringDictionary(this IEnumerable<StepExecutionParameterBase> parameters)
     {
-        return parameters.Select(p => p.ParameterValue switch
+        return parameters.Select(p => p.ParameterValue.Value switch
         {
             DateTime dt => (Name: p.ParameterName, Value: dt.ToString("o")),
-            _ => (Name: p.ParameterName, Value: p.ParameterValue?.ToString())
+            _ => (Name: p.ParameterName, Value: p.ParameterValue.Value?.ToString())
         })
         .ToDictionary(key => key.Name, value => value.Value);
     }
