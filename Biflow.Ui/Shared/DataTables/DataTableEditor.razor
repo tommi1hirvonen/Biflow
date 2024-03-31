@@ -234,13 +234,7 @@
 
                                                 else if (datatype == typeof(short) && lookupValues is not null)
                                                 {
-                                                    <select @bind="row.ShortIndexer[column]" class="form-select form-select-sm" disabled=@isLocked>
-                                                        <option value="">null</option>
-                                                        @foreach (var lookup in lookupValues)
-                                                        {
-                                                            <option value="@lookup.Value">@lookup.DisplayValue</option>
-                                                        }
-                                                    </select>
+                                                    <LookupAutosuggest TValue="short?" LookupValues="lookupValues" @bind-Value="row.ShortIndexer[column]" />
                                                 }
                                                 else if (datatype == typeof(short))
                                                 {
@@ -249,13 +243,7 @@
 
                                                 else if (datatype == typeof(int) && lookupValues is not null)
                                                 {
-                                                    <select @bind="row.IntIndexer[column]" disabled=@isLocked class="form-select form-select-sm">
-                                                        <option value="">null</option>
-                                                        @foreach (var lookup in lookupValues)
-                                                        {
-                                                            <option value="@lookup.Value">@lookup.DisplayValue</option>
-                                                        }
-                                                    </select>
+                                                    <LookupAutosuggest TValue="int?" LookupValues="lookupValues" @bind-Value="row.IntIndexer[column]" />
                                                 }
                                                 else if (datatype == typeof(int))
                                                 {
@@ -264,13 +252,7 @@
 
                                                 else if (datatype == typeof(long) && lookupValues is not null)
                                                 {
-                                                    <select @bind="row.LongIndexer[column]" disabled=@isLocked class="form-select form-select-sm">
-                                                        <option value="">null</option>
-                                                        @foreach (var lookup in lookupValues)
-                                                        {
-                                                            <option value="@lookup.Value">@lookup.DisplayValue</option>
-                                                        }
-                                                    </select>
+                                                    <LookupAutosuggest TValue="long?" LookupValues="lookupValues" @bind-Value="row.LongIndexer[column]" />
                                                 }
                                                 else if (datatype == typeof(long))
                                                 {
@@ -279,13 +261,7 @@
 
                                                 else if (datatype == typeof(decimal) && lookupValues is not null)
                                                 {
-                                                    <select @bind="row.DecimalIndexer[column]" disabled=@isLocked class="form-select form-select-sm">
-                                                        <option value="">null</option>
-                                                        @foreach (var lookup in lookupValues)
-                                                        {
-                                                            <option value="@lookup.Value">@lookup.DisplayValue</option>
-                                                        }
-                                                    </select>
+                                                    <LookupAutosuggest TValue="decimal?" LookupValues="lookupValues" @bind-Value="row.DecimalIndexer[column]" />
                                                 }
                                                 else if (datatype == typeof(decimal))
                                                 {
@@ -322,13 +298,7 @@
 
                                                 else if (datatype == typeof(DateTime) && lookupValues is not null)
                                                 {
-                                                    <select @bind="row.DateTimeIndexer[column]" disabled=@isLocked class="form-select form-select-sm">
-                                                        <option value="">null</option>
-                                                        @foreach (var lookup in lookupValues)
-                                                        {
-                                                            <option value="@lookup.Value">@lookup.DisplayValue</option>
-                                                        }
-                                                    </select>
+                                                    <LookupAutosuggest TValue="DateTime?" LookupValues="lookupValues" @bind-Value="row.DateTimeIndexer[column]" />
                                                 }
                                                 else if (datatype == typeof(DateTime))
                                                 {
