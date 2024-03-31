@@ -303,13 +303,7 @@
 
                                                 else if (datatype == typeof(string) && lookupValues is not null)
                                                 {
-                                                    <select @bind="row.StringIndexer[column]" disabled=@isLocked class="form-select form-select-sm">
-                                                        <option value="">null</option>
-                                                        @foreach (var lookup in lookupValues)
-                                                        {
-                                                            <option value="@lookup.Value">@lookup.DisplayValue</option>
-                                                        }
-                                                    </select>
+                                                    <LookupAutosuggest TValue="string" LookupValues="lookupValues" @bind-Value="row.StringIndexer[column]" />
                                                 }
                                                 else if (datatype == typeof(string))
                                                 {
