@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.JSInterop;
 using System.Text;
 using System.Text.RegularExpressions;
+using static Microsoft.EntityFrameworkCore.SqlServer.Query.Internal.SqlServerOpenJsonExpression;
 
 namespace Biflow.Ui.Shared.DataTables;
 
@@ -21,6 +22,7 @@ public partial class DataTableEditor : ComponentBase
 
     private TableData? tableData;
     private FilterSet? filterSet;
+    private Dictionary<Column, HashSet<object?>>? quickFilters;
     private FilterSetOffcanvas? filterSetOffcanvas;
     private HxOffcanvas? tableInfoOffcanvas;
     private bool editModeEnabled = true;
@@ -51,30 +53,40 @@ public partial class DataTableEditor : ComponentBase
 
     private Row[]? GetOrderedRowRecords()
     {
-        var rows = tableData?.Rows.OrderBy(r => !r.StickToTop);
+        if (tableData is null || quickFilters is null)
+        {
+            return null;
+        }
+        var rows = tableData.Rows
+            .Where(r =>  quickFilters.All(f => f.Value.Count == 0 || f.Value.Contains(LookupValueOrValue(r, f.Key))))
+            .OrderBy(r => !r.StickToTop);
         foreach (var orderBy in orderBy)
         {
-            var column = tableData?.Columns.FirstOrDefault(c => c.Name == orderBy.Column);
-            var lookup = column?.Lookup;
-
-            // Helper function to retrieve lookup display value if it exists and the value itself when it does not.
-            object? lookupValueOrValue(Row r)
-            {
-                var value = r.Values[orderBy.Column];
-                var lookupValue = lookup?.Values.FirstOrDefault(v => v.Value?.Equals(value) == true);
-                return lookupValue?.DisplayValue ?? value;
-            };
-
+            var column = tableData.Columns.First(c => c.Name == orderBy.Column);
             if (orderBy.Descending)
             {
-                rows = rows?.ThenByDescending(lookupValueOrValue);
+                rows = rows.ThenByDescending(row => LookupValueOrValue(row, column));
             }
             else
             {
-                rows = rows?.ThenBy(lookupValueOrValue);
+                rows = rows.ThenBy(row => LookupValueOrValue(row, column));
             }
         }
-        return rows?.ToArray();
+        return [.. rows];
+    }
+
+    private IEnumerable<object?> GetColumnValues(Column column) => tableData?.Rows
+        .Select(row => LookupValueOrValue(row, column))
+        .Distinct()
+        .Order()
+        .AsEnumerable() ?? [];
+
+    // Helper function to retrieve lookup display value if it exists and the value itself when it does not.
+    private static object? LookupValueOrValue(Row r, Column c)
+    {
+        var value = r.Values[c.Name];
+        var lookupValue = c.Lookup?.Values.FirstOrDefault(v => v.Value?.Equals(value) == true);
+        return lookupValue?.DisplayValue ?? value;
     }
 
     private void ToggleOrderBy(string column)
@@ -120,6 +132,7 @@ public partial class DataTableEditor : ComponentBase
         {
             tableData = await Table.LoadDataAsync(TopRows, filterSet);
             filterSet ??= tableData.EmptyFilterSet;
+            quickFilters ??= tableData.Columns.ToDictionary(c => c, _ => new HashSet<object?>());
         }
         catch (Exception ex)
         {

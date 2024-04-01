@@ -159,7 +159,7 @@
                 {
                     <small class="text-secondary px-3">Table is not editable</small>
                 }
-                @if (tableData is not null && rows is not null)
+                @if (tableData is not null && rows is not null && quickFilters is not null)
                 {
                     var columns = tableData.Columns
                         .Where(c => IsColumnSelected(c.Name) && !c.IsHidden)
@@ -175,33 +175,43 @@
                                 @foreach (var column in columns)
                                 {
                                     var orderBy = this.orderBy.FirstOrDefault(o => o.Column == column.Name);
-                                    <th @onclick="() => ToggleOrderBy(column.Name)" title="@column.DbDatatypeDescription">
-                                        <span style="cursor: pointer;">@column.Name</span>
-                                        @if (column.IsPrimaryKey)
-                                        {
-                                            <span class="ms-2" title="Primary key column">
-                                                <CxIcon Icon="FeatherIcon.Key" />
-                                            </span>
-                                        }
-                                        @if (column.IsComputed)
-                                        {
-                                            <span class="ms-2" title="Computed column">
-                                                <CxIcon Icon="LucideIcon.Calculator" />
-                                            </span>
-                                        }
-                                        @if (orderBy.Column is not null)
-                                        {
-                                            <span class="ms-2"> 
-                                                @if (orderBy.Descending)
+                                    <th class="fw-normal" title="@column.DbDatatypeDescription">
+                                        <div class="row">
+                                            <div class="col d-flex">
+                                                <FilterDropdown TItem="object" FilterSet="quickFilters[column]" OnChange="StateHasChanged" Items="GetColumnValues(column)" style="position: static;">
+                                                    <ToggleElementTemplate>
+                                                        <CxIcon Icon="FeatherIcon.Filter" />
+                                                    </ToggleElementTemplate>
+                                                </FilterDropdown>
+                                                <span class="fw-bold ms-2" style="cursor: pointer;" @onclick="() => ToggleOrderBy(column.Name)">@column.Name</span>
+                                                @if (column.IsPrimaryKey)
                                                 {
-                                                    <CxIcon Icon="FeatherIcon.ArrowUp" />
+                                                    <span class="ms-2" title="Primary key column">
+                                                        <CxIcon Icon="FeatherIcon.Key" />
+                                                    </span>
                                                 }
-                                                else
+                                                @if (column.IsComputed)
                                                 {
-                                                    <CxIcon Icon="FeatherIcon.ArrowDown" />
+                                                    <span class="ms-2" title="Computed column">
+                                                        <CxIcon Icon="LucideIcon.Calculator" />
+                                                    </span>
                                                 }
-                                            </span>
-                                        }
+                                                @if (orderBy.Column is not null)
+                                                {
+                                                    <span class="ms-2">
+                                                        @if (orderBy.Descending)
+                                                        {
+                                                            <CxIcon Icon="FeatherIcon.ArrowUp" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <CxIcon Icon="FeatherIcon.ArrowDown" />
+                                                        }
+                                                    </span>
+                                                }
+                                            </div>
+                                        </div>
+                                        
                                     </th>
                                 }
                                 @if (tableData.IsEditable && editModeEnabled)

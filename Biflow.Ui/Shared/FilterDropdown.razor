@@ -1,18 +1,24 @@
 ﻿@typeparam TItem
 
-@{
-    var badgeClass = FilterSet.Any() ? "bg-primary" : "bg-secondary";
-    var itemsCount = Items?.Count() ?? 0;
-    var badgeText = FilterSet.Any() ? $"{FilterSet.Count} / {itemsCount}" : itemsCount.ToString();
-}
-
-<HxDropdownButtonGroup AutoClose="DropdownAutoClose.Outside">
-    <HxDropdownToggleButton Size="ButtonSize" Color="ThemeColor.None" CssClass="@TitleCssClass" OnShown="OnDropdownShown" OnHidden="OnHidden">
-        @TitleTemplate
-        <span class="badge rounded-pill mx-1 @badgeClass">
-            @badgeText
-        </span>
-    </HxDropdownToggleButton>
+<HxDropdownButtonGroup AutoClose="DropdownAutoClose.Outside" CssClass="@CssClass" @attributes="Attributes">
+    @if (ToggleElementTemplate is not null)
+    {
+        <HxDropdownToggleElement CssClass="@TitleCssClass" OnShown="OnDropdownShown" OnHidden="OnHidden">
+            @ToggleElementTemplate
+        </HxDropdownToggleElement>
+    }
+    else
+    {
+        var badgeClass = FilterSet.Any() ? "bg-primary" : "bg-secondary";
+        var itemsCount = Items?.Count() ?? 0;
+        var badgeText = FilterSet.Any() ? $"{FilterSet.Count} / {itemsCount}" : itemsCount.ToString();
+        <HxDropdownToggleButton Size="ButtonSize" Color="ThemeColor.None" CssClass="@TitleCssClass" OnShown="OnDropdownShown" OnHidden="OnHidden">
+            @TitleTemplate
+            <span class="badge rounded-pill mx-1 @badgeClass">
+                @badgeText
+            </span>
+        </HxDropdownToggleButton>
+    }
     <HxDropdownContent CssClass="p-3">
         <div class="row" style="min-width: 15rem; max-width: 25rem; max-height: 380px; overflow-y: auto; white-space: nowrap;">
             <div class="col">
@@ -75,9 +81,14 @@
 </HxDropdownButtonGroup>
 
 @code {
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? Attributes { get; set; }
+
     [Parameter]
     public RenderFragment TitleTemplate { get; set; } = @<p></p>
     ;
+
+    [Parameter]
+    public RenderFragment? ToggleElementTemplate { get; set; }
 
     [Parameter]
     public ISet<TItem> FilterSet { get; set; } = new HashSet<TItem>();
@@ -117,6 +128,9 @@
 
     [Parameter]
     public bool DelayItemsRender { get; set; } = false;
+
+    [Parameter]
+    public string? CssClass { get; set; }
 
     private readonly Guid componentInstanceId = Guid.NewGuid();
     private bool renderItems = false;
