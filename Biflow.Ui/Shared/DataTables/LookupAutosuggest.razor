@@ -27,7 +27,7 @@
 
     private Task<LookupValue?> ResolveItemFromValueAsync(TValue value)
     {
-        return Task.FromResult(LookupValues.FirstOrDefault(v => v.Value?.Equals(v.Value) == true));
+        return Task.FromResult(LookupValues.FirstOrDefault(v => v.Value?.Equals(value) == true));
     }
 
     private Task<AutosuggestDataProviderResult<LookupValue>> GetSuggestionsAsync(AutosuggestDataProviderRequest request)
