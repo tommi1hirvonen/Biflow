@@ -78,7 +78,7 @@ public partial class DataTableEditor : ComponentBase
     private IEnumerable<object?> GetColumnValues(Column column) => tableData?.Rows
         .Select(row => LookupValueOrValue(row, column))
         .Distinct()
-        .Order()
+        .OrderBy(row => row?.ToString())
         .AsEnumerable() ?? [];
 
     // Helper function to retrieve lookup display value if it exists and the value itself when it does not.
