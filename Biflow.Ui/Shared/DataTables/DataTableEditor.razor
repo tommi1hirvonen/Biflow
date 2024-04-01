@@ -159,7 +159,7 @@
                 {
                     <small class="text-secondary px-3">Table is not editable</small>
                 }
-                @if (tableData is not null && rows is not null && quickFilters is not null)
+                @if (tableData is not null && rows is not null)
                 {
                     var columns = tableData.Columns
                         .Where(c => IsColumnSelected(c.Name) && !c.IsHidden)
@@ -175,15 +175,11 @@
                                 @foreach (var column in columns)
                                 {
                                     var orderBy = this.orderBy.FirstOrDefault(o => o.Column == column.Name);
+                                    var filterSet = quickFilters.GetOrCreate(column);
                                     <th class="fw-normal" title="@column.DbDatatypeDescription">
                                         <div class="row">
                                             <div class="col d-flex">
-                                                <FilterDropdown TItem="object" FilterSet="quickFilters[column]" OnChange="StateHasChanged" Items="GetColumnValues(column)" style="position: static;">
-                                                    <ToggleElementTemplate>
-                                                        <CxIcon Icon="FeatherIcon.Filter" />
-                                                    </ToggleElementTemplate>
-                                                </FilterDropdown>
-                                                <span class="fw-bold ms-2" style="cursor: pointer;" @onclick="() => ToggleOrderBy(column.Name)">@column.Name</span>
+                                                <span class="fw-bold" style="cursor: pointer;" @onclick="() => ToggleOrderBy(column.Name)">@column.Name</span>
                                                 @if (column.IsPrimaryKey)
                                                 {
                                                     <span class="ms-2" title="Primary key column">
@@ -209,6 +205,26 @@
                                                         }
                                                     </span>
                                                 }
+                                                <div class="btn-group btn-group-sm ms-auto position-static">
+                                                    @if (filterSet.Count > 0)
+                                                    {
+                                                        <button class="btn btn-sm btn-auto" @onclick="filterSet.Clear" title="Clear filter">
+                                                            <CxIcon Icon="LucideIcon.FilterX" />
+                                                        </button>
+                                                    }
+                                                    <FilterDropdown TItem="object"
+                                                                    FilterSet="filterSet"
+                                                                    OnChange="StateHasChanged"
+                                                                    Items="GetColumnValues(column)"
+                                                                    title="Show filter"
+                                                                    ShowPill="false"
+                                                                    IsSearchable
+                                                                    CssClass="position-static">
+                                                        <TitleTemplate>
+                                                            <CxIcon Icon="FeatherIcon.Filter" />
+                                                        </TitleTemplate>
+                                                    </FilterDropdown>
+                                                </div>
                                             </div>
                                         </div>
                                         

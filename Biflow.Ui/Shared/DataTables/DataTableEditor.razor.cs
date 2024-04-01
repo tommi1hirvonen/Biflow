@@ -19,10 +19,10 @@ public partial class DataTableEditor : ComponentBase
 
     private readonly List<(string Column, bool Descending)> orderBy = [];
     private readonly HashSet<string> columnSelections = [];
+    private readonly Dictionary<Column, HashSet<object?>> quickFilters = [];
 
     private TableData? tableData;
     private FilterSet? filterSet;
-    private Dictionary<Column, HashSet<object?>>? quickFilters;
     private FilterSetOffcanvas? filterSetOffcanvas;
     private HxOffcanvas? tableInfoOffcanvas;
     private bool editModeEnabled = true;
@@ -132,7 +132,6 @@ public partial class DataTableEditor : ComponentBase
         {
             tableData = await Table.LoadDataAsync(TopRows, filterSet);
             filterSet ??= tableData.EmptyFilterSet;
-            quickFilters ??= tableData.Columns.ToDictionary(c => c, _ => new HashSet<object?>());
         }
         catch (Exception ex)
         {

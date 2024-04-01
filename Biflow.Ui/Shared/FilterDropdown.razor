@@ -14,9 +14,12 @@
         var badgeText = FilterSet.Any() ? $"{FilterSet.Count} / {itemsCount}" : itemsCount.ToString();
         <HxDropdownToggleButton Size="ButtonSize" Color="ThemeColor.None" CssClass="@TitleCssClass" OnShown="OnDropdownShown" OnHidden="OnHidden">
             @TitleTemplate
-            <span class="badge rounded-pill mx-1 @badgeClass">
-                @badgeText
-            </span>
+            @if (ShowPill)
+            {
+                <span class="badge rounded-pill mx-1 @badgeClass">
+                    @badgeText
+                </span>
+            }
         </HxDropdownToggleButton>
     }
     <HxDropdownContent CssClass="p-3">
@@ -131,6 +134,9 @@
 
     [Parameter]
     public string? CssClass { get; set; }
+
+    [Parameter]
+    public bool ShowPill { get; set; } = true;
 
     private readonly Guid componentInstanceId = Guid.NewGuid();
     private bool renderItems = false;
