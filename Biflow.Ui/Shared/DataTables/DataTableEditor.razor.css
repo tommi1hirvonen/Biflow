@@ -1,8 +1,4 @@
-﻿th {
-    cursor: pointer;
-}
-
-th:hover {
+﻿th:hover {
     text-decoration: underline;
 }
 

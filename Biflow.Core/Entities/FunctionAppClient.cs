@@ -61,6 +61,10 @@ public class FunctionAppClient(FunctionApp app, ITokenService tokenService, IHtt
         message.Headers.Add("authorization", $"Bearer {accessToken}");
         var response = await client.SendAsync(message);
         var content = await response.Content.ReadAsStringAsync();
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new ApplicationException(content);
+        }
         var json = JsonSerializer.Deserialize<HostKeys>(content, SerializerOptions) ?? throw new InvalidOperationException("JSON object was null");
         var list =
             new List<(string, string)> { ("masterKey", json.MasterKey) }

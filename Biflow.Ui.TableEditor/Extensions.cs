@@ -141,7 +141,7 @@ public static class Extensions
                     LookupDisplayType.ValueAndDescription => string.Join(' ', value.Value, value.Description),
                     _ => value.Description
                 };
-                return (value.Value, displayValue);
+                return new LookupValue(value.Value, displayValue);
             });
 
             return (lookup.ColumnName, new Lookup(lookup, lookupDisplayValueDatatype, data));
