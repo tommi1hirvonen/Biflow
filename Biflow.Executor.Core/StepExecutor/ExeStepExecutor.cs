@@ -139,18 +139,18 @@ internal class ExeStepExecutor(
             // Handle super long messages here.
             if (outputBuilder.ToString() is { Length: > 0 } output)
             {
-                attempt.AddOutput(output[..Math.Min(1_000_000, output.Length)], insertFirst: true);
-                if (output.Length > 1_000_000)
+                attempt.AddOutput(output[..Math.Min(500_000, output.Length)], insertFirst: true);
+                if (output.Length > 500_000)
                 {
-                    attempt.AddOutput("Output has been truncated to first 1 million characters.", insertFirst: true);
+                    attempt.AddOutput("Output has been truncated to first 500 000 characters.", insertFirst: true);
                 }
             }
             if (errorBuilder.ToString() is { Length: > 0 } error)
             {
-                attempt.AddError(null, error[..Math.Min(1_000_000, error.Length)], insertFirst: true);
-                if (error.Length > 1_000_000)
+                attempt.AddError(null, error[..Math.Min(500_000, error.Length)], insertFirst: true);
+                if (error.Length > 500_000)
                 {
-                    attempt.AddError(null, "Error message has been truncated to first 1 million characters.", insertFirst: true);
+                    attempt.AddError(null, "Error message has been truncated to first 500 000 characters.", insertFirst: true);
                 }
             }
         }
