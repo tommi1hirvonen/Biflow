@@ -46,29 +46,60 @@
 @{
     var filterJobs = jobs?
         .Where(j => schedules?.Any(s => s.JobId == j.JobId) ?? false)
+        .Where(j => UserState.Schedules.TagFilter.Count == 0 || j.Tags.Any(t1 => UserState.Schedules.TagFilter.Any(t2 => t1.TagId == t2.TagId)))
         .Select(j => (j.JobId, j.JobName))
         .Concat(UserState.Schedules.JobFilter)
         .Distinct()
         .OrderBy(j => j.JobName)
         .AsEnumerable()
         ?? [];
+    var filterTags = jobs?
+        .Where(j => schedules?.Any(s => s.JobId == j.JobId) ?? false)
+        .Where(j => UserState.Schedules.JobFilter.Count == 0 || UserState.Schedules.JobFilter.Any(f => f.JobId == j.JobId))
+        .SelectMany(j => j.Tags)
+        .Select(t => new TagProjection(t.TagId, t.TagName, t.Color))
+        .Concat(UserState.Jobs.TagFilter)
+        .Distinct()
+        .OrderBy(t => t.TagName)
+        .AsEnumerable() ?? [];
 }
 
 <div class="row">
+    <div class="col-auto d-flex align-items-center">
+        <CxIcon Icon="FeatherIcon.Filter" />
+        &nbsp;
+        Filters
+    </div>
     <div class="col-auto">
-        <FilterDropdown TItem="(Guid JobId, string JobName)"
-                        FilterSet="UserState.Schedules.JobFilter"
-                        Items="filterJobs"
-                        IdSelector="j => j.JobId.ToString()"
-                        TextSelector="j => j.JobName"
-                        IsSearchable
-                        DelayItemsRender
-                        OnChange="StateHasChanged">
-            <TitleTemplate>
-                <CxIcon Icon="FeatherIcon.Filter" />
-                Job
-            </TitleTemplate>
-        </FilterDropdown>
+        <HxButtonGroup Size="ButtonGroupSize.Small">
+            <FilterDropdown TItem="(Guid JobId, string JobName)"
+                            FilterSet="UserState.Schedules.JobFilter"
+                            Items="filterJobs"
+                            IdSelector="j => j.JobId.ToString()"
+                            TextSelector="j => j.JobName"
+                            IsSearchable
+                            DelayItemsRender
+                            OnChange="StateHasChanged">
+                <TitleTemplate>
+                    <CxIcon Icon="LucideIcon.ClipboardList" />
+                    Job
+                </TitleTemplate>
+            </FilterDropdown>
+            <FilterDropdown TItem="TagProjection"
+                            FilterSet="UserState.Schedules.TagFilter"
+                            Items="filterTags"
+                            IdSelector="t => t.TagId.ToString()"
+                            TextSelector="t => t.TagName"
+                            OnChange="StateHasChanged">
+                <TitleTemplate>
+                    <CxIcon Icon="FeatherIcon.Tag" />
+                    Job tag
+                </TitleTemplate>
+                <ItemTemplate Context="item">
+                    <TagBadge Tag="item" />
+                </ItemTemplate>
+            </FilterDropdown>
+        </HxButtonGroup>
     </div>
     <div class="col">
         <div class="input-group input-group-sm">
@@ -109,19 +140,22 @@ else
     private List<Schedule>? schedules;
 
     private IEnumerable<Schedule>? FilteredSchedules =>
-        schedules
-        ?.Where(s => !UserState.Schedules.JobFilter.Any() || UserState.Schedules.JobFilter.Any(f => f.JobId == s.JobId))
+        schedules?
+        .Where(s => !UserState.Schedules.JobFilter.Any() || UserState.Schedules.JobFilter.Any(f => f.JobId == s.JobId))
+        .Where(s => !UserState.Schedules.TagFilter.Any() || UserState.Schedules.TagFilter.Any(f => s.Job.Tags.Any(t => t.TagId == f.TagId)))
         .Where(s => string.IsNullOrEmpty(UserState.Schedules.ScheduleFilter) || s.ScheduleName.ContainsIgnoreCase(UserState.Schedules.ScheduleFilter));
 
     protected override async Task OnInitializedAsync()
     {
         using var context = await Task.Run(DbFactory.CreateDbContext);
         jobs = await context.Jobs
+            .Include(j => j.Tags)
             .OrderBy(job => job.JobName)
             .ToListAsync(cts.Token);
         schedules = await context.Schedules
             .AsNoTrackingWithIdentityResolution()
             .Include(schedule => schedule.Job)
+            .ThenInclude(j => j.Tags)
             .Include(schedule => schedule.Tags)
             .OrderBy(schedule => schedule.Job.JobName)
             .ThenBy(schedule => schedule.ScheduleName)

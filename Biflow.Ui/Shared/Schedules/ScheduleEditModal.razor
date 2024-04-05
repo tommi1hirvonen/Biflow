@@ -197,6 +197,7 @@
                 .AsNoTracking()
                 .Include(s => s.Tags)
                 .Include(s => s.Job)
+                .ThenInclude(j => j.Tags)
                 .FirstAsync(s => s.ScheduleId == scheduleId);
         }
         else if (scheduleId == Guid.Empty)
