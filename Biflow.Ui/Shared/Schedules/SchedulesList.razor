@@ -373,7 +373,6 @@
             {
                 await Mediator.SendAsync(new DeleteScheduleCommand(schedule.ScheduleId));
                 Schedules?.Remove(schedule);
-                await OnSchedulesChanged.InvokeAsync();
             }
         }
         catch (Exception ex)
@@ -381,6 +380,7 @@
             Toaster.AddError("Error deleting schedules", ex.Message);
         }
         selectedSchedules.Clear();
+        await OnSchedulesChanged.InvokeAsync();
     }
 
     private void ToggleAllSchedulesSelected(bool value)
