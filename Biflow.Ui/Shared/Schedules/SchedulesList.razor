@@ -163,21 +163,27 @@
                     {
                         <tr class="schedule-row @(item.IsEnabled ? null : "disabled")">
                             <td class="align-middle">
-                                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-                                    <div class="form-check form-check-inline me-0">
-                                        <input type="checkbox" class="form-check-input" id="select_schedule_@item.ScheduleId"
-                                               checked=@selectedSchedules.Contains(item)
-                                               @onchange="args => { if (selectedSchedules.Contains(item)) selectedSchedules.Remove(item); else selectedSchedules.Add(item); }">
-                                        <label class="form-check-label" for="select_schedule_@item.ScheduleId"></label>
+                                <div class="row g-1">
+                                    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+                                        <div class="col-auto align-items-center d-flex">
+                                            <div class="form-check form-check me-0">
+                                                <input type="checkbox" class="form-check-input" id="select_schedule_@item.ScheduleId"
+                                                       checked=@selectedSchedules.Contains(item)
+                                                       @onchange="args => { if (selectedSchedules.Contains(item)) selectedSchedules.Remove(item); else selectedSchedules.Add(item); }">
+                                                <label class="form-check-label" for="select_schedule_@item.ScheduleId"></label>
+                                            </div>
+                                        </div>
+                                    </AuthorizeView>
+                                    <div class="col">
+                                        <span class="fw-semibold small">
+                                            <HighlightableText Text="@item.ScheduleName" PartToHighlight="@UserState.Schedules.ScheduleFilter" />
+                                        </span>
+                                        <br />
+                                        <a class="text-body small" href="@($"jobs/{item.JobId}/schedules")">
+                                            @item.Job.JobName
+                                        </a>
                                     </div>
-                                </AuthorizeView>
-                                <span class="fw-semibold small">
-                                    <HighlightableText Text="@item.ScheduleName" PartToHighlight="@UserState.Schedules.ScheduleFilter" />
-                                </span>
-                                <br />
-                                <a class="text-body small" href="@($"jobs/{item.JobId}/schedules")">
-                                    @item.Job.JobName
-                                </a>
+                                </div>
                             </td>
                             <td class="align-middle">
                                 <div class="form-check form-switch">
