@@ -434,6 +434,33 @@ public static partial class Extensions
         }
     }
 
+    /// <summary>
+    /// Checks whether a schedule will trigger between the provided datetime range.
+    /// </summary>
+    /// <param name="schedule"><see cref="Schedule">Schedule</see> object to check</param>
+    /// <param name="after">Lower bound of the time range. <see langword="null"/> if no lower bound.</param>
+    /// <param name="before">Upper bound of the time range. <see langword="null"/> if no upper bound.</param>
+    /// <returns><see langword="true"/> if the schedule triggers between the given range, <see langword="fals"/> if not.</returns>
+    public static bool TriggersBetween(this Schedule schedule, DateTime? after, DateTime? before)
+    {
+        if (!CronExpression.IsValidExpression(schedule.CronExpression))
+        {
+            return false;
+        }
+        if (after is null && before is null)
+        {
+            return true;
+        }
+        var cron = new CronExpression(schedule.CronExpression);
+        return (after, before) switch
+        {
+            (DateTime a, DateTime b) => cron.GetTimeAfter(a) is DateTimeOffset dto && dto <= b,
+            (DateTime a, _) => cron.GetTimeAfter(a) is not null,
+            (_, DateTime b) => cron.GetTimeAfter(DateTimeOffset.MinValue) <= b,
+            _ => true
+        };
+    }
+
     public static string FormatPercentage(this decimal value, int decimalPlaces)
     {
         return decimal.Round(value, decimalPlaces).ToString() + "%";

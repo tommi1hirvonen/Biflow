@@ -13,4 +13,40 @@ public class SchedulesPageState
     public int PageSize { get; set; } = 20;
 
     public int CurrentPage { get; set; } = 1;
+
+    public DateTime? TriggersAfter
+    {
+        get => triggersAfter;
+        set
+        {
+            triggersAfter = value;
+            if (triggersBefore < value)
+            {
+                triggersBefore = value;
+            }
+        }
+    }
+
+    private DateTime? triggersAfter;
+
+    public DateTime? TriggersBefore
+    {
+        get => triggersBefore;
+        set
+        {
+            triggersBefore = value;
+            if (triggersAfter > value)
+            {
+                triggersAfter = value;
+            }
+        }
+    }
+
+    private DateTime? triggersBefore;
+
+    public void SetTriggersInNext(TimeSpan timeSpan)
+    {
+        TriggersAfter = DateTime.Now;
+        TriggersBefore = DateTime.Now.Add(timeSpan);
+    }
 }

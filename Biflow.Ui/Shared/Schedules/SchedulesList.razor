@@ -3,6 +3,82 @@
 @inject ISchedulerService SchedulerService
 @inject IMediator Mediator
 
+@{
+    var triggerText = (UserState.Schedules.TriggersAfter, UserState.Schedules.TriggersBefore) switch
+    {
+        (DateTime a, DateTime b) => $"between {a} and {b}",
+        (DateTime a, _) => $"after {a}",
+        (_, DateTime b) => $"before {b}",
+        _ => "any time"
+    };
+}
+
+<div class="row mt-3">
+    <div class="col-auto">
+        <HxButtonGroup Size="ButtonGroupSize.Small">
+            <HxDropdownButtonGroup>
+                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" AutoClose="DropdownAutoClose.Outside">
+                    Triggers: <span class="fw-normal">@triggerText</span>
+                </HxDropdownToggleButton>
+                <HxDropdownContent CssClass="p-3" style="min-width: 15rem;">
+                    <div class="row">
+                        <div class="col">
+                            <label class="form-label">After</label>
+                            <div class="input-group">
+                                <input @bind="UserState.Schedules.TriggersAfter"
+                                       @bind:format="yyyy-MM-ddTHH:mm:ss"
+                                       class="form-control form-control-sm"
+                                       type="datetime-local">
+                                <button class="btn btn-sm btn-auto" @onclick="() => UserState.Schedules.TriggersAfter = null" title="Clear">
+                                    <CxIcon Icon="FeatherIcon.X" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col">
+                            <label class="form-label">Before</label>
+                            <div class="input-group">
+                                <input @bind="UserState.Schedules.TriggersBefore"
+                                       @bind:format="yyyy-MM-ddTHH:mm:ss"
+                                       class="form-control form-control-sm"
+                                       type="datetime-local">
+                                <button class="btn btn-sm btn-auto" @onclick="() => UserState.Schedules.TriggersBefore = null" title="Clear">
+                                    <CxIcon Icon="FeatherIcon.X" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </HxDropdownContent>
+            </HxDropdownButtonGroup>
+            <HxDropdownButtonGroup>
+                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                    Presets
+                </HxDropdownToggleButton>
+                <HxDropdownMenu>
+                    <HxDropdownItem OnClick="() => UserState.Schedules.SetTriggersInNext(TimeSpan.FromHours(1))">
+                        Next 1h
+                    </HxDropdownItem>
+                    <HxDropdownItem OnClick="() => UserState.Schedules.SetTriggersInNext(TimeSpan.FromHours(3))">
+                        Next 3h
+                    </HxDropdownItem>
+                    <HxDropdownItem OnClick="() => UserState.Schedules.SetTriggersInNext(TimeSpan.FromHours(12))">
+                        Next 12h
+                    </HxDropdownItem>
+                    <HxDropdownItem OnClick="() => UserState.Schedules.SetTriggersInNext(TimeSpan.FromHours(24))">
+                        Next 24h
+                    </HxDropdownItem>
+                </HxDropdownMenu>
+            </HxDropdownButtonGroup>
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
+                      OnClick="() => { UserState.Schedules.TriggersAfter = null; UserState.Schedules.TriggersBefore = null; }"
+                      title="Clear">
+                <CxIcon Icon="FeatherIcon.X" />
+            </HxButton>
+        </HxButtonGroup>
+    </div>
+</div>
+
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
     <div class="row mt-3">
         <div class="col-auto">
@@ -55,6 +131,7 @@
 @{
     var schedules = FilteredSchedules
         ?.Where(s => UserState.Schedules.StateFilter switch { StateFilter.Enabled => s.IsEnabled, StateFilter.Disabled => !s.IsEnabled, _ => true })
+        .Where(s => s.TriggersBetween(UserState.Schedules.TriggersAfter, UserState.Schedules.TriggersBefore))
         .OrderBy(s => s.Job.JobName)
         .ThenBy(s => s.ScheduleName)
         .AsEnumerable()
