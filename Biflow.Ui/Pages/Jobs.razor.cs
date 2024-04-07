@@ -1,5 +1,6 @@
 ﻿using Biflow.Ui.Shared;
 using Biflow.Ui.Shared.JobDetails;
+using Biflow.Ui.Shared.JobsBatchEdit;
 
 namespace Biflow.Ui.Pages;
 
@@ -24,6 +25,7 @@ public partial class Jobs : ComponentBase, IDisposable
     private bool isLoading = false;
     private JobEditModal? jobEditModal;
     private ExecuteModal? executeModal;
+    private JobsBatchEditTagsModal? jobsBatchEditTagsModal;
     private Paginator<ListItem>? paginator;
     private HashSet<Job> selectedJobs = [];
 
@@ -149,6 +151,24 @@ public partial class Jobs : ComponentBase, IDisposable
         {
             Toaster.AddError("Error toggling job", ex.Message);
         }
+    }
+
+    private void OnJobsSubmit(IEnumerable<Job> jobs)
+    {
+        foreach (var job in jobs.ToArray())
+        {
+            var index = this.jobs?.FindIndex(j => j.JobId == job.JobId);
+            if (index is int i and >= 0)
+            {
+                this.jobs?.RemoveAt(i);
+                this.jobs?.Insert(i, job);
+            }
+            else
+            {
+                this.jobs?.Add(job);
+            }
+        }
+        selectedJobs = jobs.ToHashSet();
     }
 
     private async Task CopyJob(Job job)

@@ -154,11 +154,11 @@
            OnPageChanged="page => UserState.Schedules.CurrentPage = page"
            OnPageSizeChanged="size => UserState.Schedules.PageSize = size">
     
-    <div class="row justify-content-end sticky-top mt-1 py-2 bg-body" style="z-index: 999;">
-        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-            @if (selectedSchedules.Count > 0)
-            {
-                <div class="col text-center">
+    <div class="row justify-content-xl-between sticky-top mt-1 py-2 bg-body" style="z-index: 999;">
+        <div class="col">
+            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+                @if (selectedSchedules.Count > 0)
+                {
                     <HxButtonGroup Size="ButtonGroupSize.Small">
                         <HxDropdownButtonGroup>
                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
@@ -187,10 +187,10 @@
                             Delete...
                         </HxButton>
                     </HxButtonGroup>
-                </div>
-            }
-        </AuthorizeView>
-        <div class="col-auto d-flex">
+                }
+            </AuthorizeView>
+        </div>
+        <div class="col-xl-auto mt-xl-0 mt-3 d-flex justify-content-end">
             <PaginationControls Paginator="paginator" />
         </div>
     </div>
