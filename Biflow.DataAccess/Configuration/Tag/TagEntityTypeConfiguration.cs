@@ -9,7 +9,8 @@ internal class TagEntityTypeConfiguration : IEntityTypeConfiguration<Tag>
 
         builder.HasDiscriminator<TagType>("TagType")
             .HasValue<StepTag>(TagType.Step)
-            .HasValue<JobTag>(TagType.Job);
+            .HasValue<JobTag>(TagType.Job)
+            .HasValue<ScheduleTag>(TagType.Schedule);
 
         builder.HasIndex(p => new { p.TagName, p.TagType }, "UQ_TagName").IsUnique();
     }

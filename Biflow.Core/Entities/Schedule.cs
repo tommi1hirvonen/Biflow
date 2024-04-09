@@ -41,4 +41,6 @@ public class Schedule
     public string? CreatedBy { get; set; }
 
     public ICollection<StepTag> TagFilter { get; } = new List<StepTag>();
+
+    public ICollection<ScheduleTag> Tags { get; init; } = new List<ScheduleTag>();
 }

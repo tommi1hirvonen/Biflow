@@ -513,6 +513,8 @@ public class DatabaseFixture : IAsyncLifetime
                 CronExpression = ""
             };
             schedule2.TagFilter.Add(tag1);
+            var scheduleTag = new ScheduleTag("schedule-tag");
+            schedule2.Tags.Add(scheduleTag);
             #endregion
 
             #region DATA TABLES
