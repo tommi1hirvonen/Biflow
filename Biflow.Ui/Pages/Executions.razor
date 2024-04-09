@@ -119,6 +119,7 @@
                         .Where(e => !UserState.Executions.StepFilter.Any() || UserState.Executions.StepFilter.Contains((e.StepName, e.StepType))) // Limit visible jobs based on step filter
                         .Where(e => !UserState.Executions.StepTypeFilter.Any() || UserState.Executions.StepTypeFilter.Contains(e.StepType)) // Limit visible jobs based on step type filter
                         .Where(e => !UserState.Executions.JobTagFilter.Any() || e.JobTags.Any(t => UserState.Executions.JobTagFilter.Contains(t))) // Limit visible jobs based on tag filter
+                        .Where(e => !UserState.Executions.ScheduleFilter.Any() || UserState.Executions.ScheduleFilter.Any(s => s.ScheduleId == e.ScheduleId))
                         .Where(e => !UserState.Executions.StepTagFilter.Any() || e.StepTags.Any(t => UserState.Executions.StepTagFilter.Contains(t)))
                         .Where(e => !UserState.Executions.StepStatusFilter.Any() || UserState.Executions.StepStatusFilter.Contains(e.ExecutionStatus)) // Limit visible jobs based on step status filter
                         .Select(e => e.JobName),
@@ -128,9 +129,10 @@
                         UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible jobs based on start type filter
                         .Where(e => !UserState.Executions.JobStatusFilter.Any() || UserState.Executions.JobStatusFilter.Contains(e.ExecutionStatus)) // Limit visible jobs based on job status filter
                         .Where(e => !UserState.Executions.JobTagFilter.Any() || e.Tags.Any(t => UserState.Executions.JobTagFilter.Contains(t))) // Limit visible jobs based on tag filter
+                        .Where(e => !UserState.Executions.ScheduleFilter.Any() || UserState.Executions.ScheduleFilter.Any(s => s.ScheduleId == e.ScheduleId))
                         .Select(e => e.JobName)
                 };
-                jobNames = jobNames?.Distinct().OrderBy(j => j) ?? Enumerable.Empty<string>();
+                jobNames = jobNames?.Distinct().OrderBy(j => j).AsEnumerable() ?? [];
             }
             <FilterDropdown TItem="string"
                             FilterSet="UserState.Executions.JobFilter"
@@ -153,6 +155,7 @@
                         .Where(e => !UserState.Executions.StepTypeFilter.Any() || UserState.Executions.StepTypeFilter.Contains(e.StepType)) // Limit visible tags based on step type filter
                         .Where(e => !UserState.Executions.StepTagFilter.Any() || e.StepTags.Any(t => UserState.Executions.StepTagFilter.Contains(t))) // Limit visible jobs based on tag filter
                         .Where(e => !UserState.Executions.StepStatusFilter.Any() || UserState.Executions.StepStatusFilter.Contains(e.ExecutionStatus)) // Limit visible tags based on step status filter
+                        .Where(e => !UserState.Executions.ScheduleFilter.Any() || UserState.Executions.ScheduleFilter.Any(s => s.ScheduleId == e.ScheduleId))
                         .SelectMany(e => e.JobTags),
                     false => executions?
                         .Where(e => UserState.Executions.StartTypeFilter == StartType.All ||
@@ -160,9 +163,10 @@
                         UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible jobs based on start type filter
                         .Where(e => !UserState.Executions.JobFilter.Any() || UserState.Executions.JobFilter.Contains(e.JobName)) // Limit visible tags based on job filter
                         .Where(e => !UserState.Executions.JobStatusFilter.Any() || UserState.Executions.JobStatusFilter.Contains(e.ExecutionStatus)) // Limit visible jobs based on job status filter
+                        .Where(e => !UserState.Executions.ScheduleFilter.Any() || UserState.Executions.ScheduleFilter.Any(s => s.ScheduleId == e.ScheduleId))
                         .SelectMany(e => e.Tags)
                 };
-                jobTags = jobTags?.Distinct().OrderBy(t => t.TagName) ?? Enumerable.Empty<TagProjection>();
+                jobTags = jobTags?.Distinct().OrderBy(t => t.TagName).AsEnumerable() ?? [];
             }
             <FilterDropdown TItem="TagProjection"
                             FilterSet="UserState.Executions.JobTagFilter"
@@ -178,6 +182,44 @@
                         Job tag
                     </TitleTemplate>
             </FilterDropdown>
+            @{
+                IEnumerable<ScheduleProjection>? schedules = UserState.Executions.ShowSteps switch
+                {
+                    true => stepExecutions?
+                        .Where(e => UserState.Executions.StartTypeFilter == StartType.All ||
+                        UserState.Executions.StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
+                        UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null) 
+                        .Where(e => !UserState.Executions.JobTagFilter.Any() || e.JobTags.Any(t => UserState.Executions.JobTagFilter.Contains(t)))
+                        .Where(e => !UserState.Executions.JobFilter.Any() || UserState.Executions.JobFilter.Contains(e.JobName))
+                        .Where(e => !UserState.Executions.StepFilter.Any() || UserState.Executions.StepFilter.Contains((e.StepName, e.StepType)))
+                        .Where(e => !UserState.Executions.StepTypeFilter.Any() || UserState.Executions.StepTypeFilter.Contains(e.StepType)) 
+                        .Where(e => !UserState.Executions.StepTagFilter.Any() || e.StepTags.Any(t => UserState.Executions.StepTagFilter.Contains(t))) 
+                        .Where(e => !UserState.Executions.StepStatusFilter.Any() || UserState.Executions.StepStatusFilter.Contains(e.ExecutionStatus))
+                        .Where(e => e.ScheduleId is not null)
+                        .Select(e => new ScheduleProjection((Guid)e.ScheduleId!, e.ScheduleName)),
+                    false => executions?
+                        .Where(e => UserState.Executions.StartTypeFilter == StartType.All ||
+                        UserState.Executions.StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
+                        UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null)
+                        .Where(e => !UserState.Executions.JobFilter.Any() || UserState.Executions.JobFilter.Contains(e.JobName))
+                        .Where(e => !UserState.Executions.JobStatusFilter.Any() || UserState.Executions.JobStatusFilter.Contains(e.ExecutionStatus))
+                        .Where(e => !UserState.Executions.JobTagFilter.Any() || e.Tags.Any(t => UserState.Executions.JobTagFilter.Contains(t)))
+                        .Where(e => e.ScheduleId is not null)
+                        .Select(e => new ScheduleProjection((Guid)e.ScheduleId!, e.ScheduleName))
+                };
+                schedules = schedules?.Distinct().OrderBy(s => s.ScheduleName).AsEnumerable() ?? [];
+            }
+            <FilterDropdown TItem="ScheduleProjection"
+                            FilterSet="UserState.Executions.ScheduleFilter"
+                            Items="schedules"
+                            IdSelector="s => s.ScheduleId.ToString()"
+                            TextSelector="s => s.ScheduleName"
+                            OnChange="StateHasChanged">
+                <TitleTemplate>
+                    <CxIcon Icon="FeatherIcon.Calendar" />
+                    Schedule
+                </TitleTemplate>
+            </FilterDropdown>
 
             @if (UserState.Executions.ShowSteps)
             {
@@ -189,12 +231,14 @@
                                     UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible steps based on start type filter
                                    .Where(e => !UserState.Executions.JobFilter.Any() || UserState.Executions.JobFilter.Contains(e.JobName)) // Limit visible steps based on job filter
                                    .Where(e => !UserState.Executions.JobTagFilter.Any() || e.JobTags.Any(t => UserState.Executions.JobTagFilter.Contains(t))) // Limit visible jobs based on tag filter
+                                   .Where(e => !UserState.Executions.ScheduleFilter.Any() || UserState.Executions.ScheduleFilter.Any(s => s.ScheduleId == e.ScheduleId))
                                    .Where(e => !UserState.Executions.StepTagFilter.Any() || e.StepTags.Any(t => UserState.Executions.StepTagFilter.Contains(t)))
                                    .Where(s => !UserState.Executions.StepStatusFilter.Any() || UserState.Executions.StepStatusFilter.Contains(s.ExecutionStatus)) // Limit visible steps based on step status filter
                                    .Where(s => !UserState.Executions.StepTypeFilter.Any() || UserState.Executions.StepTypeFilter.Contains(s.StepType)) // Limit visible steps based on step type filter
                                    .Select(s => (s.StepName, s.StepType))
                                    .Distinct()
-                                   .OrderBy(j => j) ?? Enumerable.Empty<(string, StepType)>()"
+                                   .OrderBy(j => j)
+                                   .AsEnumerable() ?? []"
                                 OnChange="StateHasChanged"
                                 IsSearchable="true">
                     <TitleTemplate>
@@ -214,12 +258,14 @@
                                     UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible step types based on start type filter
                                    .Where(e => !UserState.Executions.JobFilter.Any() || UserState.Executions.JobFilter.Contains(e.JobName)) // Limit visible step types based on job filter
                                    .Where(e => !UserState.Executions.JobTagFilter.Any() || e.JobTags.Any(t => UserState.Executions.JobTagFilter.Contains(t))) // Limit visible jobs based on tag filter
+                                   .Where(e => !UserState.Executions.ScheduleFilter.Any() || UserState.Executions.ScheduleFilter.Any(s => s.ScheduleId == e.ScheduleId))
                                    .Where(e => !UserState.Executions.StepTagFilter.Any() || e.StepTags.Any(t => UserState.Executions.StepTagFilter.Contains(t)))
                                    .Where(s => !UserState.Executions.StepStatusFilter.Any() || UserState.Executions.StepStatusFilter.Contains(s.ExecutionStatus)) // Limit visible step types based on step status filter
                                    .Where(s => !UserState.Executions.StepFilter.Any() || UserState.Executions.StepFilter.Contains((s.StepName, s.StepType))) // Limit visible step types based on step filter
                                    .Select(s => s.StepType)
                                    .Distinct()
-                                   .OrderBy(j => j) ?? Enumerable.Empty<StepType>()"
+                                   .OrderBy(j => j)
+                                   .AsEnumerable() ?? []"
                                 OnChange="StateHasChanged">
                     <TitleTemplate>
                         <CxIcon Icon="FeatherIcon.Tool" />
@@ -242,9 +288,11 @@
                                     UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible job statuses based on start type filter
                                    .Where(e => !UserState.Executions.JobFilter.Any() || UserState.Executions.JobFilter.Contains(e.JobName)) // Limit visible job statuses based on job filter
                                    .Where(e => !UserState.Executions.JobTagFilter.Any() || e.Tags.Any(t => UserState.Executions.JobTagFilter.Contains(t))) // Limit visible jobs based on tag filter
+                                   .Where(e => !UserState.Executions.ScheduleFilter.Any() || UserState.Executions.ScheduleFilter.Any(s => s.ScheduleId == e.ScheduleId))
                                    .Select(e => e.ExecutionStatus)
                                    .Distinct()
-                                   .OrderBy(s => s) ?? Enumerable.Empty<ExecutionStatus>()"
+                                   .OrderBy(s => s)
+                                   .AsEnumerable() ?? []"
                                 OnChange="StateHasChanged">
                     <TitleTemplate>
                         <CxIcon Icon="FeatherIcon.AlertCircle" />
@@ -265,12 +313,14 @@
                                     UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible step statuses based on start type filter
                                    .Where(e => !UserState.Executions.JobFilter.Any() || UserState.Executions.JobFilter.Contains(e.JobName)) // Limit visible step statuses based on job filter
                                    .Where(e => !UserState.Executions.JobTagFilter.Any() || e.JobTags.Any(t => UserState.Executions.JobTagFilter.Contains(t))) // Limit visible jobs based on tag filter
+                                   .Where(e => !UserState.Executions.ScheduleFilter.Any() || UserState.Executions.ScheduleFilter.Any(s => s.ScheduleId == e.ScheduleId))
                                    .Where(e => !UserState.Executions.StepTagFilter.Any() || e.StepTags.Any(t => UserState.Executions.StepTagFilter.Contains(t)))
                                    .Where(s => !UserState.Executions.StepFilter.Any() || UserState.Executions.StepFilter.Contains((s.StepName, s.StepType))) // Limit visible step statuses based on step filter
                                    .Where(s => !UserState.Executions.StepTypeFilter.Any() || UserState.Executions.StepTypeFilter.Contains(s.StepType)) // Limit visible step statuses based on step type filter
                                    .Select(e => e.ExecutionStatus)
                                    .Distinct()
-                                   .OrderBy(s => s) ?? Enumerable.Empty<StepExecutionStatus>()"
+                                   .OrderBy(s => s)
+                                   .AsEnumerable() ?? []"
                                 OnChange="StateHasChanged">
                     <TitleTemplate>
                         <CxIcon Icon="FeatherIcon.AlertCircle" />
@@ -288,12 +338,14 @@
                                     UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible tags based on start type filter
                                    .Where(e => !UserState.Executions.JobFilter.Any() || UserState.Executions.JobFilter.Contains(e.JobName)) // Limit visible tags based on job filter
                                    .Where(e => !UserState.Executions.JobTagFilter.Any() || e.JobTags.Any(t => UserState.Executions.JobTagFilter.Contains(t))) // Limit visible jobs based on tag filter
+                                   .Where(e => !UserState.Executions.ScheduleFilter.Any() || UserState.Executions.ScheduleFilter.Any(s => s.ScheduleId == e.ScheduleId))
                                    .Where(s => !UserState.Executions.StepFilter.Any() || UserState.Executions.StepFilter.Contains((s.StepName, s.StepType))) // Limit visible tags based on step filter
                                    .Where(s => !UserState.Executions.StepTypeFilter.Any() || UserState.Executions.StepTypeFilter.Contains(s.StepType)) // Limit visible tags based on step type filter
                                    .Where(s => !UserState.Executions.StepStatusFilter.Any() || UserState.Executions.StepStatusFilter.Contains(s.ExecutionStatus)) // Limit visible tags based on step status filter
                                    .SelectMany(e => e.StepTags)
                                    .Distinct()
-                                   .OrderBy(t => t.TagName) ?? Enumerable.Empty<TagProjection>()"
+                                   .OrderBy(t => t.TagName)
+                                   .AsEnumerable() ?? []"
                                 IdSelector="t => t.TagId.ToString()"
                                 TextSelector="t => t.TagName"
                                 OnChange="StateHasChanged">

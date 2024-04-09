@@ -31,6 +31,8 @@ public class ExecutionsPageState
     public HashSet<string> JobFilter { get; } = [];
     
     public HashSet<(string StepName, StepType StepType)> StepFilter { get; } = [];
+
+    public HashSet<ScheduleProjection> ScheduleFilter { get; } = [];
     
     public HashSet<StepType> StepTypeFilter { get; } = [];
     

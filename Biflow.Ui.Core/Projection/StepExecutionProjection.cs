@@ -17,6 +17,7 @@ public record StepExecutionProjection(
     ExecutionStatus ParentExecutionStatus,
     ExecutionMode ExecutionMode,
     Guid? ScheduleId,
+    string? ScheduleName,
     Guid? JobId,
     string JobName,
     TagProjection[] StepTags,

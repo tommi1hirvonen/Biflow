@@ -19,6 +19,7 @@ public partial class Executions : ComponentBase, IDisposable
         .Where(e => UserState.Executions.JobStatusFilter.Count == 0 || UserState.Executions.JobStatusFilter.Contains(e.ExecutionStatus))
         .Where(e => UserState.Executions.JobFilter.Count == 0 || UserState.Executions.JobFilter.Contains(e.JobName))
         .Where(e => UserState.Executions.JobTagFilter.Count == 0 || e.Tags.Any(t => UserState.Executions.JobTagFilter.Contains(t)))
+        .Where(e => UserState.Executions.ScheduleFilter.Count == 0 || UserState.Executions.ScheduleFilter.Any(f => f.ScheduleId == e.ScheduleId))
         .Where(e => UserState.Executions.StartTypeFilter == StartType.All ||
         UserState.Executions.StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
         UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null);
@@ -32,7 +33,8 @@ public partial class Executions : ComponentBase, IDisposable
         .Where(e => UserState.Executions.StepStatusFilter.Count == 0 || UserState.Executions.StepStatusFilter.Contains(e.ExecutionStatus))
         .Where(e => UserState.Executions.JobFilter.Count == 0 || UserState.Executions.JobFilter.Contains(e.JobName))
         .Where(e => UserState.Executions.StepFilter.Count == 0 || UserState.Executions.StepFilter.Contains((e.StepName, e.StepType)))
-        .Where(e => UserState.Executions.StepTypeFilter.Count == 0 || UserState.Executions.StepTypeFilter.Contains(e.StepType));
+        .Where(e => UserState.Executions.StepTypeFilter.Count == 0 || UserState.Executions.StepTypeFilter.Contains(e.StepType))
+        .Where(e => UserState.Executions.ScheduleFilter.Count == 0 || UserState.Executions.ScheduleFilter.Any(f => f.ScheduleId == e.ScheduleId));
 
     protected override async Task OnInitializedAsync()
     {
@@ -135,6 +137,7 @@ public partial class Executions : ComponentBase, IDisposable
         UserState.Executions.StepFilter.Clear();
         UserState.Executions.StepTypeFilter.Clear();
         UserState.Executions.StepTagFilter.Clear();
+        UserState.Executions.ScheduleFilter.Clear();
         UserState.Executions.StartTypeFilter = StartType.All;
     }
 
