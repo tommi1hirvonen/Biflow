@@ -252,13 +252,26 @@
                                         </div>
                                     </AuthorizeView>
                                     <div class="col">
-                                        <span class="fw-semibold small">
-                                            <HighlightableText Text="@item.ScheduleName" PartToHighlight="@UserState.Schedules.ScheduleFilter" />
-                                        </span>
-                                        <br />
-                                        <a class="text-body small" href="@($"jobs/{item.JobId}/schedules")">
-                                            @item.Job.JobName
-                                        </a>
+                                        <div class="row">
+                                            <div class="col fw-semibold small">
+                                                <HighlightableText Text="@item.ScheduleName" PartToHighlight="@UserState.Schedules.ScheduleFilter" />
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col">
+                                                <a class="text-body small" href="@($"jobs/{item.JobId}/schedules")">
+                                                    @item.Job.JobName
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col">
+                                                @foreach (var tag in item.Tags.OrderBy(t => t.TagName))
+                                                {
+                                                    <TagBadge Tag="tag" CssClass="m-1" />
+                                                }
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </td>

@@ -1,6 +1,9 @@
 ﻿namespace Biflow.Ui.Core;
 
-public record UpdateScheduleCommand(Schedule Schedule, ICollection<string> Tags) : IRequest;
+public record UpdateScheduleCommand(
+    Schedule Schedule,
+    ICollection<string> TagFilter,
+    ICollection<string> Tags) : IRequest;
 
 internal class UpdateScheduleCommandHandler(
     IDbContextFactory<AppDbContext> dbContextFactory,
@@ -11,20 +14,34 @@ internal class UpdateScheduleCommandHandler(
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         context.Attach(request.Schedule).State = EntityState.Modified;
-        var tags = await context.StepTags
-            .Where(t => request.Tags.Contains(t.TagName))
-            .ToListAsync(cancellationToken);
 
-        // Synchronize tags
-        foreach (var name in request.Tags.Where(str => !request.Schedule.TagFilter.Any(t => t.TagName == str)))
+        // Synchronize step tags
+        var stepTags = await context.StepTags
+            .Where(t => request.TagFilter.Contains(t.TagName))
+            .ToListAsync(cancellationToken);
+        foreach (var name in request.TagFilter.Where(str => !request.Schedule.TagFilter.Any(t => t.TagName == str)))
         {
             // New tags
-            var tag = tags.FirstOrDefault(t => t.TagName == name) ?? new StepTag(name);
+            var tag = stepTags.FirstOrDefault(t => t.TagName == name) ?? new StepTag(name);
             request.Schedule.TagFilter.Add(tag);
         }
-        foreach (var tag in request.Schedule.TagFilter.Where(t => !request.Tags.Contains(t.TagName)).ToArray())
+        foreach (var tag in request.Schedule.TagFilter.Where(t => !request.TagFilter.Contains(t.TagName)).ToArray())
         {
             request.Schedule.TagFilter.Remove(tag);
+        }
+
+        // Synchronize schedule tags
+        var scheduleTags = await context.ScheduleTags
+            .Where(t => request.Tags.Contains(t.TagName))
+            .ToListAsync(cancellationToken);
+        foreach (var name in request.Tags.Where(str => !request.Schedule.Tags.Any(t => t.TagName == str)))
+        {
+            var tag = scheduleTags.FirstOrDefault(t => t.TagName == name) ?? new ScheduleTag(name);
+            request.Schedule.Tags.Add(tag);
+        }
+        foreach (var tag in request.Schedule.Tags.Where(t => !request.Tags.Contains(t.TagName)).ToArray())
+        {
+            request.Schedule.Tags.Remove(tag);
         }
 
         using var transaction = context.Database.BeginTransaction();
