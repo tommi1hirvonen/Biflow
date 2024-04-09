@@ -51,4 +51,15 @@ public class SchedulesPageState
         TriggersAfter = DateTime.Now;
         TriggersBefore = DateTime.Now.Add(timeSpan);
     }
+
+    public void Clear()
+    {
+        JobFilter.Clear();
+        JobTagFilter.Clear();
+        ScheduleTagFilter.Clear();
+        ScheduleFilter = "";
+        StateFilter = StateFilter.All;
+        triggersAfter = null;
+        triggersBefore = null;
+    }
 }
