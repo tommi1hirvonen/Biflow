@@ -4,7 +4,9 @@ public class SchedulesPageState
 {
     public HashSet<(Guid JobId, string JobName)> JobFilter { get; } = [];
 
-    public HashSet<TagProjection> TagFilter = [];
+    public HashSet<TagProjection> JobTagFilter { get; } = [];
+
+    public HashSet<TagProjection> ScheduleTagFilter { get; } = [];
 
     public string ScheduleFilter { get; set; } = "";
 

@@ -183,12 +183,6 @@
             try
             {
                 await Mediator.SendAsync(new CreateScheduleCommand(schedule, stepTags, scheduleTags));
-
-                schedule.Job = Job is not null
-                    ? Job
-                    : Jobs?.FirstOrDefault(job => job.JobId == schedule.JobId)
-                    ?? throw new InvalidOperationException("Job cannot be null");
-
                 await OnSubmit.InvokeAsync(schedule);
                 await offcanvas.LetAsync(x => x.HideAsync());
                 stepTags.Clear();
@@ -226,8 +220,6 @@
                 .AsNoTracking()
                 .Include(s => s.TagFilter)
                 .Include(s => s.Tags)
-                .Include(s => s.Job)
-                .ThenInclude(j => j.Tags)
                 .FirstAsync(s => s.ScheduleId == scheduleId);
         }
         else if (scheduleId == Guid.Empty)

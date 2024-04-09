@@ -44,21 +44,31 @@
 </div>
 
 @{
-    var filterJobs = jobs?
-        .Where(j => schedules?.Any(s => s.JobId == j.JobId) ?? false)
-        .Where(j => UserState.Schedules.TagFilter.Count == 0 || j.Tags.Any(t1 => UserState.Schedules.TagFilter.Any(t2 => t1.TagId == t2.TagId)))
+    var filterJobs = schedules?
+        .Where(s => UserState.Schedules.ScheduleTagFilter.Count == 0 || s.Tags.Any(t1 => UserState.Schedules.ScheduleTagFilter.Any(t2 => t1.TagId == t2.TagId)))
+        .Select(s => s.Job)
+        .Where(j => UserState.Schedules.JobTagFilter.Count == 0 || j.Tags.Any(t1 => UserState.Schedules.JobTagFilter.Any(t2 => t1.TagId == t2.TagId)))
         .Select(j => (j.JobId, j.JobName))
         .Concat(UserState.Schedules.JobFilter)
         .Distinct()
         .OrderBy(j => j.JobName)
         .AsEnumerable()
         ?? [];
-    var filterTags = jobs?
-        .Where(j => schedules?.Any(s => s.JobId == j.JobId) ?? false)
+    var filterJobTags = schedules?
+        .Where(s => UserState.Schedules.ScheduleTagFilter.Count == 0 || s.Tags.Any(t1 => UserState.Schedules.ScheduleTagFilter.Any(t2 => t1.TagId == t2.TagId)))
+        .Select(s => s.Job)
         .Where(j => UserState.Schedules.JobFilter.Count == 0 || UserState.Schedules.JobFilter.Any(f => f.JobId == j.JobId))
         .SelectMany(j => j.Tags)
         .Select(t => new TagProjection(t.TagId, t.TagName, t.Color))
         .Concat(UserState.Jobs.TagFilter)
+        .Distinct()
+        .OrderBy(t => t.TagName)
+        .AsEnumerable() ?? [];
+    var filterScheduleTags = schedules?
+        .Where(s => UserState.Schedules.JobTagFilter.Count == 0 || s.Job.Tags.Any(t1 => UserState.Schedules.JobTagFilter.Any(t2 => t1.TagId == t2.TagId)))
+        .Where(s => UserState.Schedules.JobFilter.Count == 0 || UserState.Schedules.JobFilter.Any(f => f.JobId == s.JobId))
+        .SelectMany(s => s.Tags)
+        .Select(t => new TagProjection(t.TagId, t.TagName, t.Color))
         .Distinct()
         .OrderBy(t => t.TagName)
         .AsEnumerable() ?? [];
@@ -86,14 +96,28 @@
                 </TitleTemplate>
             </FilterDropdown>
             <FilterDropdown TItem="TagProjection"
-                            FilterSet="UserState.Schedules.TagFilter"
-                            Items="filterTags"
+                            FilterSet="UserState.Schedules.JobTagFilter"
+                            Items="filterJobTags"
                             IdSelector="t => t.TagId.ToString()"
                             TextSelector="t => t.TagName"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
                     <CxIcon Icon="FeatherIcon.Tag" />
                     Job tag
+                </TitleTemplate>
+                <ItemTemplate Context="item">
+                    <TagBadge Tag="item" />
+                </ItemTemplate>
+            </FilterDropdown>
+            <FilterDropdown TItem="TagProjection"
+                            FilterSet="UserState.Schedules.ScheduleTagFilter"
+                            Items="filterScheduleTags"
+                            IdSelector="t => t.TagId.ToString()"
+                            TextSelector="t => t.TagName"
+                            OnChange="StateHasChanged">
+                <TitleTemplate>
+                    <CxIcon Icon="FeatherIcon.Tag" />
+                    Schedule tag
                 </TitleTemplate>
                 <ItemTemplate Context="item">
                     <TagBadge Tag="item" />
@@ -142,7 +166,8 @@ else
     private IEnumerable<Schedule>? FilteredSchedules =>
         schedules?
         .Where(s => !UserState.Schedules.JobFilter.Any() || UserState.Schedules.JobFilter.Any(f => f.JobId == s.JobId))
-        .Where(s => !UserState.Schedules.TagFilter.Any() || UserState.Schedules.TagFilter.Any(f => s.Job.Tags.Any(t => t.TagId == f.TagId)))
+        .Where(s => !UserState.Schedules.JobTagFilter.Any() || UserState.Schedules.JobTagFilter.Any(f => s.Job.Tags.Any(t => t.TagId == f.TagId)))
+        .Where(s => !UserState.Schedules.ScheduleTagFilter.Any() || UserState.Schedules.ScheduleTagFilter.Any(f => s.Tags.Any(t => t.TagId == f.TagId)))
         .Where(s => string.IsNullOrEmpty(UserState.Schedules.ScheduleFilter) || s.ScheduleName.ContainsIgnoreCase(UserState.Schedules.ScheduleFilter));
 
     protected override async Task OnInitializedAsync()
@@ -153,7 +178,6 @@ else
             .OrderBy(job => job.JobName)
             .ToListAsync(cts.Token);
         schedules = await context.Schedules
-            .AsNoTrackingWithIdentityResolution()
             .Include(schedule => schedule.Job)
             .ThenInclude(j => j.Tags)
             .Include(schedule => schedule.Tags)

@@ -438,8 +438,18 @@
 
     private async Task OnScheduleSubmitAsync(Schedule schedule)
     {
-        Schedules?.RemoveAll(s => s.ScheduleId == schedule.ScheduleId);
-        Schedules?.Add(schedule);
+        ArgumentNullException.ThrowIfNull(Jobs);
+        ArgumentNullException.ThrowIfNull(Schedules);
+
+        var job = Jobs.First(j => j.JobId == schedule.JobId);
+        if (job.Schedules.FirstOrDefault(s => s.ScheduleId == schedule.ScheduleId) is Schedule s)
+        {
+            job.Schedules.Remove(s);
+        }
+        job.Schedules.Add(schedule);
+        schedule.Job = job;
+        Schedules.RemoveAll(s => s.ScheduleId == schedule.ScheduleId);
+        Schedules.Add(schedule);
         await OnSchedulesChanged.InvokeAsync();
     }
 
