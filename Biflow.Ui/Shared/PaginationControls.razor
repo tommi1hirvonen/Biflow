@@ -1,39 +1,45 @@
 ﻿@if (Paginator is not null) 
 {
-    <div class="input-group input-group-sm w-auto me-3">
-        <div class="input-group-text">
-            Items per page
+    var startIndex = (Paginator.CurrentPage - 1) * Paginator.PageSize + 1;
+    var endIndex = startIndex + Paginator.CurrentItemCount - 1;
+    <div class="d-flex align-items-center">
+        <span class="small text-muted">Items @startIndex-@endIndex | Total @Paginator.TotalItemCount item(s)</span>
+        <div class="input-group input-group-sm w-auto mx-3">
+            <div class="input-group-text">
+                Items per page
+            </div>
+            <InputSelect class="form-select form-select-sm" @bind-Value:get="Paginator.PageSize" @bind-Value:set="Paginator.SetPageSize">
+                <option>10</option>
+                <option>20</option>
+                <option>50</option>
+                <option>100</option>
+                <option>1000</option>
+                <option>10000</option>
+            </InputSelect>
         </div>
-        <InputSelect class="form-select form-select-sm" @bind-Value:get="Paginator.PageSize" @bind-Value:set="Paginator.SetPageSize">
-            <option>10</option>
-            <option>20</option>
-            <option>50</option>
-            <option>100</option>
-            <option>1000</option>
-            <option>10000</option>
-        </InputSelect>
+        <div class="input-group input-group-sm w-auto">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => Paginator.SetPage(1)">
+                <CxIcon Icon="FeatherIcon.ChevronsLeft" />
+            </HxButton>
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="Paginator.PreviousPage">
+                <CxIcon Icon="FeatherIcon.ChevronLeft" />
+            </HxButton>
+            <div class="input-group-text">
+                Page
+            </div>
+            <InputNumber class="form-control form-control-sm text-center" @bind-Value:get="Paginator.CurrentPage" @bind-Value:set="Paginator.SetPage" style="max-width: 4rem;" />
+            <div class="input-group-text">
+                / @Paginator.PageCount
+            </div>
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="Paginator.NextPage">
+                <CxIcon Icon="FeatherIcon.ChevronRight" />
+            </HxButton>
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="Paginator.LastPage">
+                <CxIcon Icon="FeatherIcon.ChevronsRight" />
+            </HxButton>
+        </div>
     </div>
-    <div class="input-group input-group-sm w-auto">
-        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => Paginator.SetPage(1)">
-            <CxIcon Icon="FeatherIcon.ChevronsLeft" />
-        </HxButton>
-        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="Paginator.PreviousPage">
-            <CxIcon Icon="FeatherIcon.ChevronLeft" />
-        </HxButton>
-        <div class="input-group-text">
-            Page
-        </div>
-        <InputNumber class="form-control form-control-sm text-center" @bind-Value:get="Paginator.CurrentPage" @bind-Value:set="Paginator.SetPage" style="max-width: 4rem;" />
-        <div class="input-group-text">
-            / @Paginator.PageCount
-        </div>
-        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="Paginator.NextPage">
-            <CxIcon Icon="FeatherIcon.ChevronRight" />
-        </HxButton>
-        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="Paginator.LastPage">
-            <CxIcon Icon="FeatherIcon.ChevronsRight" />
-        </HxButton>
-    </div>
+    
 }
 
 @code {

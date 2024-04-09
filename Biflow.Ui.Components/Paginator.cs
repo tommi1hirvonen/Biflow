@@ -21,6 +21,20 @@ public class Paginator<TItem> : ComponentBase, IPaginator
 
     public int CurrentPage { get; private set; } = 1;
 
+    public int CurrentItemCount => PageItems?.Count() ?? 0;
+
+    public int TotalItemCount
+    {
+        get
+        {
+            var items = Items ?? [];
+            var count = items.TryGetNonEnumeratedCount(out var c)
+                ? c
+                : items.Count();
+            return count;
+        }
+    }
+
     public IEnumerable<TItem>? PageItems => Items?
         .Skip(PageSize * (CurrentPage - 1))
         .Take(PageSize);
