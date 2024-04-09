@@ -17,7 +17,7 @@ internal class StepTagEntityTypeConfiguration : IEntityTypeConfiguration<StepTag
             x => x.HasOne<StepTag>().WithMany().HasForeignKey("TagId").HasPrincipalKey(y => y.TagId).OnDelete(DeleteBehavior.Cascade));
 
         builder.HasMany(t => t.Schedules)
-            .WithMany(s => s.Tags)
+            .WithMany(s => s.TagFilter)
             .UsingEntity<Dictionary<string, object>>("ScheduleTag",
             x => x.HasOne<Schedule>().WithMany().HasForeignKey("ScheduleId").HasPrincipalKey(y => y.ScheduleId).OnDelete(DeleteBehavior.Cascade),
             x => x.HasOne<StepTag>().WithMany().HasForeignKey("TagId").HasPrincipalKey(y => y.TagId).OnDelete(DeleteBehavior.Cascade));

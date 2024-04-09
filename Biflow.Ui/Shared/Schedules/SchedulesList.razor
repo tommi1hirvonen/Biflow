@@ -296,11 +296,11 @@
                                 </span>
                             </td>
                             <td class="align-middle small">
-                                @if (!item.Tags.Any())
+                                @if (!item.TagFilter.Any())
                                 {
                                     <span class="text-secondary ms-2">No tag filters</span>
                                 }
-                                @foreach (var tag in item.Tags.OrderBy(t => t.TagName))
+                                @foreach (var tag in item.TagFilter.OrderBy(t => t.TagName))
                                 {
                                     <TagBadge Tag="tag" CssClass="m-1" />
                                 }

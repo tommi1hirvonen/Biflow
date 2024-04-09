@@ -528,7 +528,7 @@ public class DatabaseFixture : IAsyncLifetime
                 ScheduleName = "Test schedule 2",
                 CronExpression = ""
             };
-            schedule2.Tags.Add(tag1);
+            schedule2.TagFilter.Add(tag1);
             #endregion
 
             #region DATA TABLES

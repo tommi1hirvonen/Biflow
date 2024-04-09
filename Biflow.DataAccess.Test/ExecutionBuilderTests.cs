@@ -57,9 +57,9 @@ public class ExecutionBuilderTests(DatabaseFixture fixture)
             context => step => step.IsEnabled,
             context => step =>
             // Schedule has no tag filters
-            !context.Schedules.Any(sch => sch.ScheduleId == schedule.ScheduleId && sch.Tags.Any()) ||
+            !context.Schedules.Any(sch => sch.ScheduleId == schedule.ScheduleId && sch.TagFilter.Any()) ||
             // There's at least one match between the step's tags and the schedule's tags
-            step.Tags.Any(t1 => context.Schedules.Any(sch => sch.ScheduleId == schedule.ScheduleId && sch.Tags.Any(t2 => t1.TagId == t2.TagId))));
+            step.Tags.Any(t1 => context.Schedules.Any(sch => sch.ScheduleId == schedule.ScheduleId && sch.TagFilter.Any(t2 => t1.TagId == t2.TagId))));
         Assert.NotNull(builder);
         builder.AddAll();
         var execution = await builder.SaveExecutionAsync();
@@ -79,9 +79,9 @@ public class ExecutionBuilderTests(DatabaseFixture fixture)
             context => step => step.IsEnabled,
             context => step =>
             // Schedule has no tag filters
-            !context.Schedules.Any(sch => sch.ScheduleId == schedule.ScheduleId && sch.Tags.Any()) ||
+            !context.Schedules.Any(sch => sch.ScheduleId == schedule.ScheduleId && sch.TagFilter.Any()) ||
             // There's at least one match between the step's tags and the schedule's tags
-            step.Tags.Any(t1 => context.Schedules.Any(sch => sch.ScheduleId == schedule.ScheduleId && sch.Tags.Any(t2 => t1.TagId == t2.TagId))));
+            step.Tags.Any(t1 => context.Schedules.Any(sch => sch.ScheduleId == schedule.ScheduleId && sch.TagFilter.Any(t2 => t1.TagId == t2.TagId))));
         Assert.NotNull(builder);
         builder.AddAll();
         var execution = await builder.SaveExecutionAsync();

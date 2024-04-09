@@ -52,9 +52,9 @@ public abstract class ExecutionJobBase(
                     context => step => step.IsEnabled,
                     context => step =>
                     // Schedule has no tag filters
-                    !context.Schedules.Any(sch => sch.ScheduleId == scheduleId && sch.Tags.Any()) ||
+                    !context.Schedules.Any(sch => sch.ScheduleId == scheduleId && sch.TagFilter.Any()) ||
                     // There's at least one match between the step's tags and the schedule's tags
-                    step.Tags.Any(t1 => context.Schedules.Any(sch => sch.ScheduleId == scheduleId && sch.Tags.Any(t2 => t1.TagId == t2.TagId))));
+                    step.Tags.Any(t1 => context.Schedules.Any(sch => sch.ScheduleId == scheduleId && sch.TagFilter.Any(t2 => t1.TagId == t2.TagId))));
                 ArgumentNullException.ThrowIfNull(builder);
                 builder.AddAll();
                 builder.Notify = true;

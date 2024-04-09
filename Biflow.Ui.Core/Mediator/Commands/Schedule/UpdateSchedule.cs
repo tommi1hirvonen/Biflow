@@ -16,15 +16,15 @@ internal class UpdateScheduleCommandHandler(
             .ToListAsync(cancellationToken);
 
         // Synchronize tags
-        foreach (var name in request.Tags.Where(str => !request.Schedule.Tags.Any(t => t.TagName == str)))
+        foreach (var name in request.Tags.Where(str => !request.Schedule.TagFilter.Any(t => t.TagName == str)))
         {
             // New tags
             var tag = tags.FirstOrDefault(t => t.TagName == name) ?? new StepTag(name);
-            request.Schedule.Tags.Add(tag);
+            request.Schedule.TagFilter.Add(tag);
         }
-        foreach (var tag in request.Schedule.Tags.Where(t => !request.Tags.Contains(t.TagName)).ToArray())
+        foreach (var tag in request.Schedule.TagFilter.Where(t => !request.Tags.Contains(t.TagName)).ToArray())
         {
-            request.Schedule.Tags.Remove(tag);
+            request.Schedule.TagFilter.Remove(tag);
         }
 
         using var transaction = context.Database.BeginTransaction();

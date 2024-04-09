@@ -195,7 +195,7 @@
             using var context = DbContextFactory.CreateDbContext();
             schedule = await context.Schedules
                 .AsNoTracking()
-                .Include(s => s.Tags)
+                .Include(s => s.TagFilter)
                 .Include(s => s.Job)
                 .ThenInclude(j => j.Tags)
                 .FirstAsync(s => s.ScheduleId == scheduleId);
@@ -210,7 +210,7 @@
             };
         }
 
-        tags = schedule.Tags
+        tags = schedule.TagFilter
                 .Select(t => t.TagName)
                 .OrderBy(t => t)
                 .ToList();

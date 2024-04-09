@@ -156,7 +156,7 @@ else
             .AsNoTrackingWithIdentityResolution()
             .Include(schedule => schedule.Job)
             .ThenInclude(j => j.Tags)
-            .Include(schedule => schedule.Tags)
+            .Include(schedule => schedule.TagFilter)
             .OrderBy(schedule => schedule.Job.JobName)
             .ThenBy(schedule => schedule.ScheduleName)
             .ToListAsync(cts.Token);

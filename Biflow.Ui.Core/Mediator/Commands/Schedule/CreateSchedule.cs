@@ -12,7 +12,7 @@ internal class CreateScheduleCommandHandler(
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         // Synchronize tags
-        request.Schedule.Tags.Clear();
+        request.Schedule.TagFilter.Clear();
         var tags = await context.StepTags
             .Where(t => request.Tags.Contains(t.TagName))
             .ToListAsync(cancellationToken);
@@ -21,14 +21,14 @@ internal class CreateScheduleCommandHandler(
             var tag = tags.FirstOrDefault(t => t.TagName == tagName);
             if (tag is not null)
             {
-                request.Schedule.Tags.Add(tag);
+                request.Schedule.TagFilter.Add(tag);
             }
         }
 
         using var transaction = context.Database.BeginTransaction();
         try
         {
-            ArgumentNullException.ThrowIfNull(request.Schedule.Tags);
+            ArgumentNullException.ThrowIfNull(request.Schedule.TagFilter);
             context.Schedules.Add(request.Schedule);
             await context.SaveChangesAsync(cancellationToken);
             await scheduler.AddScheduleAsync(request.Schedule);
