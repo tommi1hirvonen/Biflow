@@ -1,7 +1,26 @@
-﻿namespace Biflow.Ui.StateManagement;
+﻿using Mono.TextTemplating;
+using static Havit.Blazor.Components.Web.Bootstrap.HxListLayout;
+
+namespace Biflow.Ui.StateManagement;
 
 public class SchedulesPageState
 {
+    public SchedulesPageState()
+    {
+        JobPredicate = s => JobFilter.Count == 0 || JobFilter.Any(f => f.JobId == s.JobId);
+        JobTagPredicate = s => JobTagFilter.Count == 0 || JobTagFilter.Any(f => s.Job.Tags.Any(t => t.TagId == f.TagId));
+        ScheduleTagPredicate = s => ScheduleTagFilter.Count == 0 || ScheduleTagFilter.Any(f => s.Tags.Any(t => t.TagId == f.TagId));
+        ScheduleNamePredicate = s => string.IsNullOrEmpty(ScheduleFilter) || s.ScheduleName.ContainsIgnoreCase(ScheduleFilter);
+
+        Predicates =
+        [
+            JobPredicate,
+            JobTagPredicate,
+            ScheduleTagPredicate,
+            ScheduleNamePredicate
+        ];
+}
+
     public HashSet<(Guid JobId, string JobName)> JobFilter { get; } = [];
 
     public HashSet<TagProjection> JobTagFilter { get; } = [];
@@ -45,6 +64,16 @@ public class SchedulesPageState
     }
 
     private DateTime? triggersBefore;
+
+    public Func<Schedule, bool> JobPredicate { get; }
+    
+    public Func<Schedule, bool> JobTagPredicate { get; }
+    
+    public Func<Schedule, bool> ScheduleTagPredicate { get; }
+    
+    public Func<Schedule, bool> ScheduleNamePredicate { get; }
+
+    public IEnumerable<Func<Schedule, bool>> Predicates { get; }
 
     public void SetTriggersInNext(TimeSpan timeSpan)
     {
