@@ -15,7 +15,7 @@ public record ExecutionProjection(
     DateTimeOffset? EndedOn,
     ExecutionStatus ExecutionStatus,
     int StepExecutionCount,
-    TagProjection[] Tags)
+    TagProjection[] JobTags) : IExecutionProjection
 {
     public double? ExecutionInSeconds => ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
 }

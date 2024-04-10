@@ -2,6 +2,43 @@
 
 public class ExecutionsPageState
 {
+    public ExecutionsPageState()
+    {
+        JobStatusPredicate = e => JobStatusFilter.Count == 0 || JobStatusFilter.Contains(e.ExecutionStatus);
+        JobPredicate = e => JobFilter.Count == 0 || JobFilter.Contains(e.JobName);
+        JobTagPredicate = e=> JobTagFilter.Count == 0 || e.JobTags.Any(t => JobTagFilter.Contains(t));
+        SchedulePredicate = e => ScheduleFilter.Count == 0 || ScheduleFilter.Any(f => f.ScheduleId == e.ScheduleId);
+        StartTypePredicate = e => StartTypeFilter == StartType.All ||
+                                  StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
+                                  StartTypeFilter == StartType.Manual && e.ScheduleId is null;
+
+        ExecutionPredicates =
+        [
+            JobStatusPredicate,
+            JobPredicate,
+            JobTagPredicate,
+            SchedulePredicate,
+            StartTypePredicate
+        ];
+
+        StepPredicate = e => StepFilter.Count == 0 || StepFilter.Contains((e.StepName, e.StepType));
+        StepStatusPredicate = e => StepStatusFilter.Count == 0 || StepStatusFilter.Contains(e.StepExecutionStatus);
+        StepTypePredicate = e => StepTypeFilter.Count == 0 || StepTypeFilter.Contains(e.StepType);
+        StepTagPredicate = e => StepTagFilter.Count == 0 || e.StepTags.Any(t => StepTagFilter.Contains(t));
+
+        StepExecutionPredicates =
+        [
+            JobPredicate,
+            JobTagPredicate,
+            SchedulePredicate,
+            StartTypePredicate,
+            StepPredicate,
+            StepStatusPredicate,
+            StepTypePredicate,
+            StepTagPredicate
+        ];
+    }
+
     public bool ShowSteps { get; set; } = false;
     
     public bool ShowGraph { get; set; } = false;
@@ -45,4 +82,39 @@ public class ExecutionsPageState
     public int ExecutionsCurrentPage { get; set; } = 1;
 
     public int StepExecutionsCurrentPage { get; set;  } = 1;
+
+    public Predicate<IExecutionProjection> JobStatusPredicate { get; }
+
+    public Predicate<IExecutionProjection> JobPredicate { get; }
+
+    public Predicate<IExecutionProjection> JobTagPredicate { get; }
+
+    public Predicate<IExecutionProjection> SchedulePredicate { get; }
+
+    public Predicate<IExecutionProjection> StartTypePredicate { get; }
+
+    public IEnumerable<Predicate<IExecutionProjection>> ExecutionPredicates { get; }
+
+    public Predicate<StepExecutionProjection> StepPredicate { get; }
+
+    public Predicate<StepExecutionProjection> StepTagPredicate { get; }
+
+    public Predicate<StepExecutionProjection> StepStatusPredicate { get; }
+
+    public Predicate<StepExecutionProjection> StepTypePredicate { get; }
+
+    public IEnumerable<Predicate<StepExecutionProjection>> StepExecutionPredicates { get; }
+
+    public void Clear()
+    {
+        JobStatusFilter.Clear();
+        StepStatusFilter.Clear();
+        JobFilter.Clear();
+        JobTagFilter.Clear();
+        StepFilter.Clear();
+        StepTypeFilter.Clear();
+        StepTagFilter.Clear();
+        ScheduleFilter.Clear();
+        StartTypeFilter = StartType.All;
+    }
 }
