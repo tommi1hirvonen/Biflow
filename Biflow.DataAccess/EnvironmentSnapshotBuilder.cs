@@ -57,7 +57,7 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
             .ToArrayAsync();
         var schedules = await context.Schedules
             .AsNoTracking()
-            .Include(s => s.Tags)
+            .Include(s => s.TagFilter)
             .OrderBy(s => s.JobId).ThenBy(s => s.ScheduleId)
         .ToArrayAsync();
 

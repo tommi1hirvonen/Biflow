@@ -134,11 +134,11 @@
            OnPageChanged="page => UserState.Jobs.CurrentPage = page"
            OnPageSizeChanged="size => UserState.Jobs.PageSize = size">
 
-    <div class="row justify-content-end sticky-top mt-1 py-2 bg-body" style="z-index: 999;">
-        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-            @if (selectedJobs.Count > 0)
-            {
-                <div class="col text-center">
+    <div class="row justify-content-xl-between sticky-top mt-1 py-2 bg-body" style="z-index: 999;">
+         <div class="col">
+            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+                @if (selectedJobs.Count > 0)
+                {
                     <HxButtonGroup Size="ButtonGroupSize.Small">
                         <HxDropdownButtonGroup>
                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
@@ -162,15 +162,19 @@
                                 </HxDropdownItem>
                             </HxDropdownMenu>
                         </HxDropdownButtonGroup>
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" Spinner="false" @onclick="() => jobsBatchEditTagsModal.LetAsync(x => x.ShowAsync())">
+                            <CxIcon Icon="FeatherIcon.Tag" />
+                            Edit tags
+                        </HxButton>
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="DeleteSelectedJobsAsync">
                             <CxIcon Icon="FeatherIcon.Trash2" />
                             Delete...
                         </HxButton>
                     </HxButtonGroup>
-                </div>
-            }
-        </AuthorizeView>
-        <div class="col-auto d-flex">
+                }
+            </AuthorizeView>
+        </div>
+        <div class="col-xl-auto mt-xl-0 mt-3 d-flex justify-content-end">
             <PaginationControls Paginator="paginator" />
         </div>
     </div>
@@ -378,4 +382,10 @@
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
     <ExecuteModal @ref="executeModal" />
+</AuthorizeView>
+
+<AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+    <JobsBatchEditTagsModal @ref="jobsBatchEditTagsModal"
+                            OnJobsSubmit="OnJobsSubmit"
+                            SelectedJobs="selectedJobs" />
 </AuthorizeView>

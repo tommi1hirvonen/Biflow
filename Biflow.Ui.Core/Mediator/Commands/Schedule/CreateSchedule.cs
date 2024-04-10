@@ -1,6 +1,9 @@
 ﻿namespace Biflow.Ui.Core;
 
-public record CreateScheduleCommand(Schedule Schedule, ICollection<string> Tags) : IRequest;
+public record CreateScheduleCommand(
+    Schedule Schedule,
+    ICollection<string> TagFilter,
+    ICollection<string> Tags) : IRequest;
 
 internal class CreateScheduleCommandHandler(
     IDbContextFactory<AppDbContext> dbContextFactory,
@@ -11,24 +14,35 @@ internal class CreateScheduleCommandHandler(
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        // Synchronize tags
+        // Synchronize step tags
+        request.Schedule.TagFilter.Clear();
+        var stepTags = await context.StepTags
+            .Where(t => request.TagFilter.Contains(t.TagName))
+            .ToListAsync(cancellationToken);
+        foreach (var tagName in request.TagFilter)
+        {
+            var tag = stepTags.FirstOrDefault(t => t.TagName == tagName);
+            if (tag is not null)
+            {
+                request.Schedule.TagFilter.Add(tag);
+            }
+        }
+
+        // Synchronize schedule tags
         request.Schedule.Tags.Clear();
-        var tags = await context.StepTags
+        var scheduleTags = await context.ScheduleTags
             .Where(t => request.Tags.Contains(t.TagName))
             .ToListAsync(cancellationToken);
         foreach (var tagName in request.Tags)
         {
-            var tag = tags.FirstOrDefault(t => t.TagName == tagName);
-            if (tag is not null)
-            {
-                request.Schedule.Tags.Add(tag);
-            }
+            var tag = scheduleTags.FirstOrDefault(t => t.TagName == tagName) ?? new(tagName);
+            request.Schedule.Tags.Add(tag);
         }
 
         using var transaction = context.Database.BeginTransaction();
         try
         {
-            ArgumentNullException.ThrowIfNull(request.Schedule.Tags);
+            ArgumentNullException.ThrowIfNull(request.Schedule.TagFilter);
             context.Schedules.Add(request.Schedule);
             await context.SaveChangesAsync(cancellationToken);
             await scheduler.AddScheduleAsync(request.Schedule);

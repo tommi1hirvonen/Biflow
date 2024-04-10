@@ -117,12 +117,19 @@ public abstract class StepExecutionAttempt
         }
     }
 
-    public void AddOutput(string? message)
+    public void AddOutput(string? message, bool insertFirst = false)
     {
         if (!string.IsNullOrEmpty(message))
         {
             var info = new InfoMessage(message);
-            _infoMessages.Add(info);
+            if (insertFirst)
+            {
+                _infoMessages.Insert(0, info);
+            }
+            else
+            {
+                _infoMessages.Add(info);
+            }
         }
     }
 }

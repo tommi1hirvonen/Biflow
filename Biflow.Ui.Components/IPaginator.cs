@@ -10,6 +10,10 @@ public interface IPaginator
 
     public int PageCount { get; }
 
+    public int CurrentItemCount { get; }
+
+    public int TotalItemCount { get; }
+
     public Task SetPage(int page);
 
     public Task PreviousPage();

@@ -7,6 +7,8 @@ public partial class Executions : ComponentBase, IDisposable
 
     [CascadingParameter] UserState UserState { get; set; } = null!;
 
+    private ExecutionsPageState State => UserState.Executions;
+
     private readonly CancellationTokenSource cts = new();
     
     private bool loading = false;
@@ -16,29 +18,16 @@ public partial class Executions : ComponentBase, IDisposable
     private Paginator<StepExecutionProjection>? stepExecutionPaginator;
 
     private IEnumerable<ExecutionProjection>? FilteredExecutions => executions?
-        .Where(e => UserState.Executions.JobStatusFilter.Count == 0 || UserState.Executions.JobStatusFilter.Contains(e.ExecutionStatus))
-        .Where(e => UserState.Executions.JobFilter.Count == 0 || UserState.Executions.JobFilter.Contains(e.JobName))
-        .Where(e => UserState.Executions.JobTagFilter.Count == 0 || e.Tags.Any(t => UserState.Executions.JobTagFilter.Contains(t)))
-        .Where(e => UserState.Executions.StartTypeFilter == StartType.All ||
-        UserState.Executions.StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
-        UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null);
+        .Where(e => State.ExecutionPredicates.All(p => p(e)));
 
     private IEnumerable<StepExecutionProjection>? FilteredStepExecutions => stepExecutions?
-        .Where(e => UserState.Executions.StartTypeFilter == StartType.All ||
-        UserState.Executions.StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
-        UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null)
-        .Where(e => UserState.Executions.StepTagFilter.Count == 0 || e.StepTags.Any(t => UserState.Executions.StepTagFilter.Contains(t)))
-        .Where(e => UserState.Executions.JobTagFilter.Count == 0 || e.JobTags.Any(t => UserState.Executions.JobTagFilter.Contains(t)))
-        .Where(e => UserState.Executions.StepStatusFilter.Count == 0 || UserState.Executions.StepStatusFilter.Contains(e.ExecutionStatus))
-        .Where(e => UserState.Executions.JobFilter.Count == 0 || UserState.Executions.JobFilter.Contains(e.JobName))
-        .Where(e => UserState.Executions.StepFilter.Count == 0 || UserState.Executions.StepFilter.Contains((e.StepName, e.StepType)))
-        .Where(e => UserState.Executions.StepTypeFilter.Count == 0 || UserState.Executions.StepTypeFilter.Contains(e.StepType));
+        .Where(e => State.StepExecutionPredicates.All(p => p(e)));
 
     protected override async Task OnInitializedAsync()
     {
-        if (UserState.Executions.Preset is Preset preset)
+        if (State.Preset is Preset preset)
         {
-            (UserState.Executions.FromDateTime, UserState.Executions.ToDateTime) = GetPreset(preset);
+            (State.FromDateTime, State.ToDateTime) = GetPreset(preset);
         }
         await LoadDataAsync();
     }
@@ -46,14 +35,14 @@ public partial class Executions : ComponentBase, IDisposable
     private async Task ShowExecutionsAsync()
     {
         executions = null;
-        UserState.Executions.ShowSteps = false;
+        State.ShowSteps = false;
         await LoadDataAsync();
     }
 
     private async Task ShowStepExecutionsAsync()
     {
         executions = null;
-        UserState.Executions.ShowSteps = true;
+        State.ShowSteps = true;
         await LoadDataAsync();
     }
 
@@ -62,20 +51,20 @@ public partial class Executions : ComponentBase, IDisposable
         loading = true;
         StateHasChanged();
 
-        if (UserState.Executions.Preset is Preset preset)
+        if (State.Preset is Preset preset)
         {
-            (UserState.Executions.FromDateTime, UserState.Executions.ToDateTime) = GetPreset(preset);
+            (State.FromDateTime, State.ToDateTime) = GetPreset(preset);
         }
 
-        if (!UserState.Executions.ShowSteps)
+        if (!State.ShowSteps)
         {
-            var request = new ExecutionsMonitoringQuery(UserState.Executions.FromDateTime, UserState.Executions.ToDateTime);
+            var request = new ExecutionsMonitoringQuery(State.FromDateTime, State.ToDateTime);
             var response = await Mediator.SendAsync(request, cts.Token);
             executions = response.Executions;
         }
         else
         {
-            var request = new StepExecutionsMonitoringQuery(UserState.Executions.FromDateTime, UserState.Executions.ToDateTime);
+            var request = new StepExecutionsMonitoringQuery(State.FromDateTime, State.ToDateTime);
             var response = await Mediator.SendAsync(request, cts.Token);
             stepExecutions = response.Executions;
         }
@@ -86,8 +75,8 @@ public partial class Executions : ComponentBase, IDisposable
 
     private async Task ApplyPresetAsync(Preset preset)
     {
-        (UserState.Executions.FromDateTime, UserState.Executions.ToDateTime) = GetPreset(preset);
-        UserState.Executions.Preset = preset;
+        (State.FromDateTime, State.ToDateTime) = GetPreset(preset);
+        State.Preset = preset;
         await LoadDataAsync();
     }
 
@@ -122,20 +111,8 @@ public partial class Executions : ComponentBase, IDisposable
             Preset.PreviousDay => GetPresetBetween(yesterday, endYesterday),
             Preset.PreviousWeek => GetPresetBetween(startPrevWeek, endPrevWeek),
             Preset.PreviousMonth => GetPresetBetween(startPrevMonth, endPrevMonth),
-            _ => (UserState.Executions.FromDateTime, UserState.Executions.ToDateTime)
+            _ => (State.FromDateTime, State.ToDateTime)
         };
-    }
-
-    private void ClearFilters()
-    {
-        UserState.Executions.JobStatusFilter.Clear();
-        UserState.Executions.StepStatusFilter.Clear();
-        UserState.Executions.JobFilter.Clear();
-        UserState.Executions.JobTagFilter.Clear();
-        UserState.Executions.StepFilter.Clear();
-        UserState.Executions.StepTypeFilter.Clear();
-        UserState.Executions.StepTagFilter.Clear();
-        UserState.Executions.StartTypeFilter = StartType.All;
     }
 
     private static (DateTime From, DateTime To) GetPresetLast(int hours)

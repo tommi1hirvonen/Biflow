@@ -67,6 +67,7 @@ public class AppDbContext : DbContext
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<StepTag> StepTags => Set<StepTag>();
     public DbSet<JobTag> JobTags => Set<JobTag>();
+    public DbSet<ScheduleTag> ScheduleTags => Set<ScheduleTag>();
     public DbSet<MasterDataTable> MasterDataTables => Set<MasterDataTable>();
     public DbSet<MasterDataTableCategory> MasterDataTableCategories => Set<MasterDataTableCategory>();
     public DbSet<QlikCloudClient> QlikCloudClients => Set<QlikCloudClient>();

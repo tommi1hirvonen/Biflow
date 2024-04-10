@@ -10,30 +10,30 @@
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                 @onclick="ShowExecutionsAsync"
                 Spinner="false"
-                CssClass="@(!UserState.Executions.ShowSteps ? "active" : null)">
+                CssClass="@(!State.ShowSteps ? "active" : null)">
                     <CxIcon Icon="LucideIcon.ClipboardList" />
                     Jobs
                 </HxButton>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                 @onclick="ShowStepExecutionsAsync"
                 Spinner="false"
-                CssClass="@(UserState.Executions.ShowSteps ? "active" : null)">
+                CssClass="@(State.ShowSteps ? "active" : null)">
                     <CxIcon Icon="LucideIcon.ListChecks" />
                     Steps
                 </HxButton>
             </HxButtonGroup>
             <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="ms-3">
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                @onclick="() => UserState.Executions.ShowGraph = false"
+                @onclick="() => State.ShowGraph = false"
                 Spinner="false"
-                CssClass="@(!UserState.Executions.ShowGraph ? "active" : null)">
+                CssClass="@(!State.ShowGraph ? "active" : null)">
                     <CxIcon Icon="FeatherIcon.List" />
                     List
                 </HxButton>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                @onclick="() => UserState.Executions.ShowGraph = true"
+                @onclick="() => State.ShowGraph = true"
                 Spinner="false"
-                CssClass="@(UserState.Executions.ShowGraph ? "active" : null)">
+                CssClass="@(State.ShowGraph ? "active" : null)">
                     <CxIcon Icon="LucideIcon.BarChartHorizontal" />
                     Gantt
                 </HxButton>
@@ -45,24 +45,24 @@
                 </HxDropdownToggleButton>
                 <HxDropdownMenu>
                     <HxDropdownHeader>Last</HxDropdownHeader>
-                    <HxDropdownItem CssClass="@(UserState.Executions.Preset == Preset.OneHour ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.OneHour)">1 h</HxDropdownItem>
-                    <HxDropdownItem CssClass="@(UserState.Executions.Preset == Preset.ThreeHours ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.ThreeHours)">3 h</HxDropdownItem>
-                    <HxDropdownItem CssClass="@(UserState.Executions.Preset == Preset.TwelveHours ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.TwelveHours)">12 h</HxDropdownItem>
-                    <HxDropdownItem CssClass="@(UserState.Executions.Preset == Preset.TwentyFourHours ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.TwentyFourHours)">24 h</HxDropdownItem>
-                    <HxDropdownItem CssClass="@(UserState.Executions.Preset == Preset.ThreeDays ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.ThreeDays)">3 d</HxDropdownItem>
-                    <HxDropdownItem CssClass="@(UserState.Executions.Preset == Preset.SevenDays ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.SevenDays)">7 d</HxDropdownItem>
-                    <HxDropdownItem CssClass="@(UserState.Executions.Preset == Preset.FourteenDays ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.FourteenDays)">14 d</HxDropdownItem>
-                    <HxDropdownItem CssClass="@(UserState.Executions.Preset == Preset.ThirtyDays ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.ThirtyDays)">30 d</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(State.Preset == Preset.OneHour ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.OneHour)">1 h</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(State.Preset == Preset.ThreeHours ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.ThreeHours)">3 h</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(State.Preset == Preset.TwelveHours ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.TwelveHours)">12 h</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(State.Preset == Preset.TwentyFourHours ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.TwentyFourHours)">24 h</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(State.Preset == Preset.ThreeDays ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.ThreeDays)">3 d</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(State.Preset == Preset.SevenDays ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.SevenDays)">7 d</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(State.Preset == Preset.FourteenDays ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.FourteenDays)">14 d</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(State.Preset == Preset.ThirtyDays ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.ThirtyDays)">30 d</HxDropdownItem>
                     <HxDropdownDivider></HxDropdownDivider>
                     <HxDropdownHeader>This</HxDropdownHeader>
-                    <HxDropdownItem CssClass="@(UserState.Executions.Preset == Preset.ThisDay ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.ThisDay)">Day</HxDropdownItem>
-                    <HxDropdownItem CssClass="@(UserState.Executions.Preset == Preset.ThisWeek ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.ThisWeek)">Week</HxDropdownItem>
-                    <HxDropdownItem CssClass="@(UserState.Executions.Preset == Preset.ThisMonth ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.ThisMonth)">Month</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(State.Preset == Preset.ThisDay ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.ThisDay)">Day</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(State.Preset == Preset.ThisWeek ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.ThisWeek)">Week</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(State.Preset == Preset.ThisMonth ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.ThisMonth)">Month</HxDropdownItem>
                     <HxDropdownDivider></HxDropdownDivider>
                     <HxDropdownHeader>Previous</HxDropdownHeader>
-                    <HxDropdownItem CssClass="@(UserState.Executions.Preset == Preset.PreviousDay ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.PreviousDay)">Day</HxDropdownItem>
-                    <HxDropdownItem CssClass="@(UserState.Executions.Preset == Preset.PreviousWeek ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.PreviousWeek)">Week</HxDropdownItem>
-                    <HxDropdownItem CssClass="@(UserState.Executions.Preset == Preset.PreviousMonth ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.PreviousMonth)">Month</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(State.Preset == Preset.PreviousDay ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.PreviousDay)">Day</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(State.Preset == Preset.PreviousWeek ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.PreviousWeek)">Week</HxDropdownItem>
+                    <HxDropdownItem CssClass="@(State.Preset == Preset.PreviousMonth ? "active" : null)" @onclick="() => ApplyPresetAsync(Preset.PreviousMonth)">Month</HxDropdownItem>
                 </HxDropdownMenu>
             </HxDropdownButtonGroup>
 
@@ -82,9 +82,9 @@
                 <div class="input-group-text">
                     <CxIcon Icon="FeatherIcon.Calendar" />
                 </div>
-                <input @bind="UserState.Executions.FromDateTime"
+                <input @bind="State.FromDateTime"
                        @bind:format="yyyy-MM-ddTHH:mm:ss"
-                       @bind:after="() => UserState.Executions.Preset = null"
+                       @bind:after="() => State.Preset = null"
                        class="form-control form-control-sm"
                        type="datetime-local">
             </div>
@@ -93,9 +93,9 @@
                 <div class="input-group-text">
                     <CxIcon Icon="FeatherIcon.Calendar" />
                 </div>
-                <input @bind="UserState.Executions.ToDateTime"
+                <input @bind="State.ToDateTime"
                        @bind:format="yyyy-MM-ddTHH:mm:ss"
-                       @bind:after="() => UserState.Executions.Preset = null"
+                       @bind:after="() => State.Preset = null"
                        class="form-control form-control-sm"
                        type="datetime-local">
             </div>
@@ -110,30 +110,19 @@
 
         <HxButtonGroup Size="ButtonGroupSize.Small">
             @{
-                IEnumerable<string>? jobNames = UserState.Executions.ShowSteps switch
+                IEnumerable<string>? jobNames = State.ShowSteps switch
                 {
                     true => stepExecutions?
-                        .Where(e => UserState.Executions.StartTypeFilter == StartType.All ||
-                        UserState.Executions.StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
-                        UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible jobs based on start type filter
-                        .Where(e => !UserState.Executions.StepFilter.Any() || UserState.Executions.StepFilter.Contains((e.StepName, e.StepType))) // Limit visible jobs based on step filter
-                        .Where(e => !UserState.Executions.StepTypeFilter.Any() || UserState.Executions.StepTypeFilter.Contains(e.StepType)) // Limit visible jobs based on step type filter
-                        .Where(e => !UserState.Executions.JobTagFilter.Any() || e.JobTags.Any(t => UserState.Executions.JobTagFilter.Contains(t))) // Limit visible jobs based on tag filter
-                        .Where(e => !UserState.Executions.StepTagFilter.Any() || e.StepTags.Any(t => UserState.Executions.StepTagFilter.Contains(t)))
-                        .Where(e => !UserState.Executions.StepStatusFilter.Any() || UserState.Executions.StepStatusFilter.Contains(e.ExecutionStatus)) // Limit visible jobs based on step status filter
+                        .Where(e => State.StepExecutionPredicates.Where(p => p != State.JobPredicate).All(p => p(e)))
                         .Select(e => e.JobName),
                     false => executions?
-                        .Where(e => UserState.Executions.StartTypeFilter == StartType.All ||
-                        UserState.Executions.StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
-                        UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible jobs based on start type filter
-                        .Where(e => !UserState.Executions.JobStatusFilter.Any() || UserState.Executions.JobStatusFilter.Contains(e.ExecutionStatus)) // Limit visible jobs based on job status filter
-                        .Where(e => !UserState.Executions.JobTagFilter.Any() || e.Tags.Any(t => UserState.Executions.JobTagFilter.Contains(t))) // Limit visible jobs based on tag filter
+                        .Where(e => State.ExecutionPredicates.Where(p => p != State.JobPredicate).All(p => p(e)))
                         .Select(e => e.JobName)
                 };
-                jobNames = jobNames?.Distinct().OrderBy(j => j) ?? Enumerable.Empty<string>();
+                jobNames = jobNames?.Distinct().OrderBy(j => j).AsEnumerable() ?? [];
             }
             <FilterDropdown TItem="string"
-                            FilterSet="UserState.Executions.JobFilter"
+                            FilterSet="State.JobFilter"
                             Items="jobNames"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
@@ -142,30 +131,19 @@
                 </TitleTemplate>
             </FilterDropdown>
             @{
-                IEnumerable<TagProjection>? jobTags = UserState.Executions.ShowSteps switch
+                IEnumerable<TagProjection>? jobTags = State.ShowSteps switch
                 {
                     true => stepExecutions?
-                        .Where(e => UserState.Executions.StartTypeFilter == StartType.All ||
-                        UserState.Executions.StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
-                        UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible tags based on start type filter
-                        .Where(e => !UserState.Executions.JobFilter.Any() || UserState.Executions.JobFilter.Contains(e.JobName)) // Limit visible tags based on job filter
-                        .Where(e => !UserState.Executions.StepFilter.Any() || UserState.Executions.StepFilter.Contains((e.StepName, e.StepType))) // Limit visible tags based on step filter
-                        .Where(e => !UserState.Executions.StepTypeFilter.Any() || UserState.Executions.StepTypeFilter.Contains(e.StepType)) // Limit visible tags based on step type filter
-                        .Where(e => !UserState.Executions.StepTagFilter.Any() || e.StepTags.Any(t => UserState.Executions.StepTagFilter.Contains(t))) // Limit visible jobs based on tag filter
-                        .Where(e => !UserState.Executions.StepStatusFilter.Any() || UserState.Executions.StepStatusFilter.Contains(e.ExecutionStatus)) // Limit visible tags based on step status filter
+                        .Where(e => State.StepExecutionPredicates.Where(p => p != State.JobTagPredicate).All(p => p(e)))
                         .SelectMany(e => e.JobTags),
                     false => executions?
-                        .Where(e => UserState.Executions.StartTypeFilter == StartType.All ||
-                        UserState.Executions.StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
-                        UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible jobs based on start type filter
-                        .Where(e => !UserState.Executions.JobFilter.Any() || UserState.Executions.JobFilter.Contains(e.JobName)) // Limit visible tags based on job filter
-                        .Where(e => !UserState.Executions.JobStatusFilter.Any() || UserState.Executions.JobStatusFilter.Contains(e.ExecutionStatus)) // Limit visible jobs based on job status filter
-                        .SelectMany(e => e.Tags)
+                        .Where(e => State.ExecutionPredicates.Where(p => p != State.JobTagPredicate).All(p => p(e)))
+                        .SelectMany(e => e.JobTags)
                 };
-                jobTags = jobTags?.Distinct().OrderBy(t => t.TagName) ?? Enumerable.Empty<TagProjection>();
+                jobTags = jobTags?.Distinct().OrderBy(t => t.TagName).AsEnumerable() ?? [];
             }
             <FilterDropdown TItem="TagProjection"
-                            FilterSet="UserState.Executions.JobTagFilter"
+                            FilterSet="State.JobTagFilter"
                             Items="jobTags"
                             IdSelector="t => t.TagId.ToString()"
                             TextSelector="t => t.TagName"
@@ -178,23 +156,42 @@
                         Job tag
                     </TitleTemplate>
             </FilterDropdown>
+            @{
+                IEnumerable<ScheduleProjection>? schedules = State.ShowSteps switch
+                {
+                    true => stepExecutions?
+                        .Where(e => State.StepExecutionPredicates.Where(p => p != State.SchedulePredicate).All(p => p(e)))
+                        .Where(e => e.ScheduleId is not null)
+                        .Select(e => new ScheduleProjection((Guid)e.ScheduleId!, e.ScheduleName)),
+                    false => executions?
+                        .Where(e => State.ExecutionPredicates.Where(p => p != State.SchedulePredicate).All(p => p(e)))
+                        .Where(e => e.ScheduleId is not null)
+                        .Select(e => new ScheduleProjection((Guid)e.ScheduleId!, e.ScheduleName))
+                };
+                schedules = schedules?.Distinct().OrderBy(s => s.ScheduleName).AsEnumerable() ?? [];
+            }
+            <FilterDropdown TItem="ScheduleProjection"
+                            FilterSet="State.ScheduleFilter"
+                            Items="schedules"
+                            IdSelector="s => s.ScheduleId.ToString()"
+                            TextSelector="s => s.ScheduleName"
+                            OnChange="StateHasChanged">
+                <TitleTemplate>
+                    <CxIcon Icon="FeatherIcon.Calendar" />
+                    Schedule
+                </TitleTemplate>
+            </FilterDropdown>
 
-            @if (UserState.Executions.ShowSteps)
+            @if (State.ShowSteps)
             {
                 <FilterDropdown TItem="(string StepName, StepType StepType)"
-                                FilterSet="UserState.Executions.StepFilter"
+                                FilterSet="State.StepFilter"
                                 Items="stepExecutions?
-                                   .Where(e => UserState.Executions.StartTypeFilter == StartType.All ||
-                                    UserState.Executions.StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
-                                    UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible steps based on start type filter
-                                   .Where(e => !UserState.Executions.JobFilter.Any() || UserState.Executions.JobFilter.Contains(e.JobName)) // Limit visible steps based on job filter
-                                   .Where(e => !UserState.Executions.JobTagFilter.Any() || e.JobTags.Any(t => UserState.Executions.JobTagFilter.Contains(t))) // Limit visible jobs based on tag filter
-                                   .Where(e => !UserState.Executions.StepTagFilter.Any() || e.StepTags.Any(t => UserState.Executions.StepTagFilter.Contains(t)))
-                                   .Where(s => !UserState.Executions.StepStatusFilter.Any() || UserState.Executions.StepStatusFilter.Contains(s.ExecutionStatus)) // Limit visible steps based on step status filter
-                                   .Where(s => !UserState.Executions.StepTypeFilter.Any() || UserState.Executions.StepTypeFilter.Contains(s.StepType)) // Limit visible steps based on step type filter
+                                   .Where(e => State.StepExecutionPredicates.Where(p => p != State.StepPredicate).All(p => p(e)))
                                    .Select(s => (s.StepName, s.StepType))
                                    .Distinct()
-                                   .OrderBy(j => j) ?? Enumerable.Empty<(string, StepType)>()"
+                                   .OrderBy(j => j)
+                                   .AsEnumerable() ?? []"
                                 OnChange="StateHasChanged"
                                 IsSearchable="true">
                     <TitleTemplate>
@@ -207,19 +204,13 @@
                     </ItemTemplate>
                 </FilterDropdown>
                 <FilterDropdown TItem="StepType"
-                                FilterSet="UserState.Executions.StepTypeFilter"
+                                FilterSet="State.StepTypeFilter"
                                 Items="stepExecutions?
-                                   .Where(e => UserState.Executions.StartTypeFilter == StartType.All ||
-                                    UserState.Executions.StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
-                                    UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible step types based on start type filter
-                                   .Where(e => !UserState.Executions.JobFilter.Any() || UserState.Executions.JobFilter.Contains(e.JobName)) // Limit visible step types based on job filter
-                                   .Where(e => !UserState.Executions.JobTagFilter.Any() || e.JobTags.Any(t => UserState.Executions.JobTagFilter.Contains(t))) // Limit visible jobs based on tag filter
-                                   .Where(e => !UserState.Executions.StepTagFilter.Any() || e.StepTags.Any(t => UserState.Executions.StepTagFilter.Contains(t)))
-                                   .Where(s => !UserState.Executions.StepStatusFilter.Any() || UserState.Executions.StepStatusFilter.Contains(s.ExecutionStatus)) // Limit visible step types based on step status filter
-                                   .Where(s => !UserState.Executions.StepFilter.Any() || UserState.Executions.StepFilter.Contains((s.StepName, s.StepType))) // Limit visible step types based on step filter
+                                   .Where(e => State.StepExecutionPredicates.Where(p => p != State.StepTypePredicate).All(p => p(e)))
                                    .Select(s => s.StepType)
                                    .Distinct()
-                                   .OrderBy(j => j) ?? Enumerable.Empty<StepType>()"
+                                   .OrderBy(j => j)
+                                   .AsEnumerable() ?? []"
                                 OnChange="StateHasChanged">
                     <TitleTemplate>
                         <CxIcon Icon="FeatherIcon.Tool" />
@@ -232,19 +223,16 @@
                 </FilterDropdown>
             }
 
-            @if (!UserState.Executions.ShowSteps)
+            @if (!State.ShowSteps)
             {
                 <FilterDropdown TItem="ExecutionStatus"
-                                FilterSet="UserState.Executions.JobStatusFilter"
+                                FilterSet="State.JobStatusFilter"
                                 Items="executions?
-                                   .Where(e => UserState.Executions.StartTypeFilter == StartType.All ||
-                                    UserState.Executions.StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
-                                    UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible job statuses based on start type filter
-                                   .Where(e => !UserState.Executions.JobFilter.Any() || UserState.Executions.JobFilter.Contains(e.JobName)) // Limit visible job statuses based on job filter
-                                   .Where(e => !UserState.Executions.JobTagFilter.Any() || e.Tags.Any(t => UserState.Executions.JobTagFilter.Contains(t))) // Limit visible jobs based on tag filter
+                                   .Where(e => State.ExecutionPredicates.Where(p => p != State.JobStatusPredicate).All(p => p(e)))
                                    .Select(e => e.ExecutionStatus)
                                    .Distinct()
-                                   .OrderBy(s => s) ?? Enumerable.Empty<ExecutionStatus>()"
+                                   .OrderBy(s => s)
+                                   .AsEnumerable() ?? []"
                                 OnChange="StateHasChanged">
                     <TitleTemplate>
                         <CxIcon Icon="FeatherIcon.AlertCircle" />
@@ -258,19 +246,13 @@
             else
             {
                 <FilterDropdown TItem="StepExecutionStatus"
-                                FilterSet="UserState.Executions.StepStatusFilter"
+                                FilterSet="State.StepStatusFilter"
                                 Items="stepExecutions?
-                                   .Where(e => UserState.Executions.StartTypeFilter == StartType.All ||
-                                    UserState.Executions.StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
-                                    UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible step statuses based on start type filter
-                                   .Where(e => !UserState.Executions.JobFilter.Any() || UserState.Executions.JobFilter.Contains(e.JobName)) // Limit visible step statuses based on job filter
-                                   .Where(e => !UserState.Executions.JobTagFilter.Any() || e.JobTags.Any(t => UserState.Executions.JobTagFilter.Contains(t))) // Limit visible jobs based on tag filter
-                                   .Where(e => !UserState.Executions.StepTagFilter.Any() || e.StepTags.Any(t => UserState.Executions.StepTagFilter.Contains(t)))
-                                   .Where(s => !UserState.Executions.StepFilter.Any() || UserState.Executions.StepFilter.Contains((s.StepName, s.StepType))) // Limit visible step statuses based on step filter
-                                   .Where(s => !UserState.Executions.StepTypeFilter.Any() || UserState.Executions.StepTypeFilter.Contains(s.StepType)) // Limit visible step statuses based on step type filter
-                                   .Select(e => e.ExecutionStatus)
+                                   .Where(e => State.StepExecutionPredicates.Where(p => p != State.StepStatusPredicate).All(p => p(e)))
+                                   .Select(e => e.StepExecutionStatus)
                                    .Distinct()
-                                   .OrderBy(s => s) ?? Enumerable.Empty<StepExecutionStatus>()"
+                                   .OrderBy(s => s)
+                                   .AsEnumerable() ?? []"
                                 OnChange="StateHasChanged">
                     <TitleTemplate>
                         <CxIcon Icon="FeatherIcon.AlertCircle" />
@@ -281,19 +263,13 @@
                     </ItemTemplate>
                 </FilterDropdown>
                 <FilterDropdown TItem="TagProjection"
-                                FilterSet="UserState.Executions.StepTagFilter"
+                                FilterSet="State.StepTagFilter"
                                 Items="stepExecutions?
-                                   .Where(e => UserState.Executions.StartTypeFilter == StartType.All ||
-                                    UserState.Executions.StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
-                                    UserState.Executions.StartTypeFilter == StartType.Manual && e.ScheduleId is null) // Limit visible tags based on start type filter
-                                   .Where(e => !UserState.Executions.JobFilter.Any() || UserState.Executions.JobFilter.Contains(e.JobName)) // Limit visible tags based on job filter
-                                   .Where(e => !UserState.Executions.JobTagFilter.Any() || e.JobTags.Any(t => UserState.Executions.JobTagFilter.Contains(t))) // Limit visible jobs based on tag filter
-                                   .Where(s => !UserState.Executions.StepFilter.Any() || UserState.Executions.StepFilter.Contains((s.StepName, s.StepType))) // Limit visible tags based on step filter
-                                   .Where(s => !UserState.Executions.StepTypeFilter.Any() || UserState.Executions.StepTypeFilter.Contains(s.StepType)) // Limit visible tags based on step type filter
-                                   .Where(s => !UserState.Executions.StepStatusFilter.Any() || UserState.Executions.StepStatusFilter.Contains(s.ExecutionStatus)) // Limit visible tags based on step status filter
+                                   .Where(e => State.StepExecutionPredicates.Where(p => p != State.StepTagPredicate).All(p => p(e)))
                                    .SelectMany(e => e.StepTags)
                                    .Distinct()
-                                   .OrderBy(t => t.TagName) ?? Enumerable.Empty<TagProjection>()"
+                                   .OrderBy(t => t.TagName)
+                                   .AsEnumerable() ?? []"
                                 IdSelector="t => t.TagId.ToString()"
                                 TextSelector="t => t.TagName"
                                 OnChange="StateHasChanged">
@@ -309,7 +285,7 @@
             }
 
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
-                @onclick="ClearFilters">
+                @onclick="State.Clear">
                 <CxIcon Icon="FeatherIcon.X" />
                 Reset
             </HxButton>
@@ -318,37 +294,37 @@
     <div class="col-xl-auto mt-3 mt-xl-0 d-flex align-items-center">
         <div class="form-check form-check-inline">
             <input type="radio" class="form-check-input" id="radio_all"
-                   checked=@(UserState.Executions.StartTypeFilter == StartType.All)
-                   @onchange="() => UserState.Executions.StartTypeFilter = StartType.All">
+                   checked=@(State.StartTypeFilter == StartType.All)
+                   @onchange="() => State.StartTypeFilter = StartType.All">
             <label class="form-check-label" for="radio_all">All</label>
         </div>
         <div class="form-check form-check-inline">
             <input type="radio" class="form-check-input" id="radio_scheduled"
-                   checked=@(UserState.Executions.StartTypeFilter == StartType.Scheduled)
-                   @onchange="() => UserState.Executions.StartTypeFilter = StartType.Scheduled">
+                   checked=@(State.StartTypeFilter == StartType.Scheduled)
+                   @onchange="() => State.StartTypeFilter = StartType.Scheduled">
             <label class="form-check-label" for="radio_scheduled">Scheduled</label>
         </div>
         <div class="form-check form-check-inline">
             <input type="radio" class="form-check-input" id="radio_manual"
-                   checked=@(UserState.Executions.StartTypeFilter == StartType.Manual)
-                   @onchange="() => UserState.Executions.StartTypeFilter = StartType.Manual">
+                   checked=@(State.StartTypeFilter == StartType.Manual)
+                   @onchange="() => State.StartTypeFilter = StartType.Manual">
             <label class="form-check-label" for="radio_manual">Manual</label>
         </div>
     </div>
 </div>
 
-@if (!UserState.Executions.ShowGraph)
+@if (!State.ShowGraph)
 {
-    if (!UserState.Executions.ShowSteps)
+    if (!State.ShowSteps)
     {
         <Paginator @ref="executionPaginator"
                    TItem="ExecutionProjection"
                    Items="FilteredExecutions"
                    Context="executions"
-                   InitialPageSize="UserState.Executions.PageSize"
-                   InitialPage="UserState.Executions.ExecutionsCurrentPage"
-                   OnPageChanged="page => UserState.Executions.ExecutionsCurrentPage = page"
-                   OnPageSizeChanged="size => UserState.Executions.PageSize = size">
+                   InitialPageSize="State.PageSize"
+                   InitialPage="State.ExecutionsCurrentPage"
+                   OnPageChanged="page => State.ExecutionsCurrentPage = page"
+                   OnPageSizeChanged="size => State.PageSize = size">
 
             <div class="row sticky-top mt-1 py-2 bg-body" style="z-index: 999;">
                 <div class="col d-flex justify-content-end">
@@ -368,10 +344,10 @@
                    TItem="StepExecutionProjection"
                    Items="FilteredStepExecutions"
                    Context="stepExecutions"
-                   InitialPageSize="UserState.Executions.PageSize"
-                   InitialPage="UserState.Executions.StepExecutionsCurrentPage"
-                   OnPageChanged="page => UserState.Executions.StepExecutionsCurrentPage = page"
-                   OnPageSizeChanged="size => UserState.Executions.PageSize = size">
+                   InitialPageSize="State.PageSize"
+                   InitialPage="State.StepExecutionsCurrentPage"
+                   OnPageChanged="page => State.StepExecutionsCurrentPage = page"
+                   OnPageSizeChanged="size => State.PageSize = size">
 
             <div class="row sticky-top mt-1 py-2 bg-body" style="z-index: 999;">
                 <div class="col d-flex justify-content-end">
@@ -389,7 +365,7 @@
 else
 {
     <div class="card shadow-sm pt-2 mt-3 my-3 table-responsive">
-        @if (!UserState.Executions.ShowSteps)
+        @if (!State.ShowSteps)
         {
             <JobExecutionsGraph Executions="FilteredExecutions" />
         }

@@ -13,14 +13,15 @@ public record StepExecutionProjection(
     DateTimeOffset CreatedOn,
     DateTimeOffset? StartedOn,
     DateTimeOffset? EndedOn,
-    StepExecutionStatus ExecutionStatus,
-    ExecutionStatus ParentExecutionStatus,
+    StepExecutionStatus StepExecutionStatus,
+    ExecutionStatus ExecutionStatus,
     ExecutionMode ExecutionMode,
     Guid? ScheduleId,
+    string? ScheduleName,
     Guid? JobId,
     string JobName,
     TagProjection[] StepTags,
-    TagProjection[] JobTags)
+    TagProjection[] JobTags) : IExecutionProjection
 {
     public virtual bool Equals(StepExecutionProjection? other) =>
         other is not null &&
@@ -33,8 +34,8 @@ public record StepExecutionProjection(
     public double? ExecutionInSeconds => ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
 
     public bool CanBeStopped =>
-        ExecutionStatus == StepExecutionStatus.Running
-        || ExecutionStatus == StepExecutionStatus.AwaitingRetry
-        || ExecutionStatus == StepExecutionStatus.Queued
-        || ExecutionStatus == StepExecutionStatus.NotStarted && ParentExecutionStatus == Biflow.Core.Entities.ExecutionStatus.Running;
+        StepExecutionStatus == StepExecutionStatus.Running
+        || StepExecutionStatus == StepExecutionStatus.AwaitingRetry
+        || StepExecutionStatus == StepExecutionStatus.Queued
+        || StepExecutionStatus == StepExecutionStatus.NotStarted && ExecutionStatus == ExecutionStatus.Running;
 }

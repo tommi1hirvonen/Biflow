@@ -3,5 +3,6 @@
 public enum TagType
 {
     Step,
-    Job
+    Job,
+    Schedule
 }

@@ -30,6 +30,11 @@
                 Job tags
             </NavLink>
         </li>
+        <li class="nav-item" role="presentation">
+            <NavLink class="nav-link" href="tags/schedule" Match="NavLinkMatch.All">
+                Schedule tags
+            </NavLink>
+        </li>
     </ul>
 </div>
 
@@ -40,6 +45,10 @@
 else if (Page == "job")
 {
     <JobTags />
+}
+else if (Page == "schedule")
+{
+    <ScheduleTags />
 }
 
 @code {

@@ -41,7 +41,7 @@
             jsObject = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/BarChart.js");
             await AfterFirstRender.InvokeAsync();
         }
-        if (shouldRender)
+        if (jsObject is not null && shouldRender)
         {
             shouldRender = false;
             await DrawAsync();

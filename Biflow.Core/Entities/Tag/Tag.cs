@@ -6,6 +6,7 @@ namespace Biflow.Core.Entities;
 
 [JsonDerivedType(typeof(StepTag), nameof(TagType.Step))]
 [JsonDerivedType(typeof(JobTag), nameof(TagType.Job))]
+[JsonDerivedType(typeof(ScheduleTag), nameof(TagType.Schedule))]
 public abstract class Tag(TagType tagType, string tagName) : ITag
 {
     [JsonInclude]

@@ -87,6 +87,7 @@ internal class StepExecutionsParallelQueryHandler(IDbContextFactory<AppDbContext
                 e.StepExecution.Execution.ExecutionStatus,
                 e.StepExecution.Execution.ExecutionMode,
                 e.StepExecution.Execution.ScheduleId,
+                e.StepExecution.Execution.ScheduleName,
                 e.StepExecution.Execution.JobId,
                 job.JobName ?? e.StepExecution.Execution.JobName,
                 step.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color)).ToArray(),

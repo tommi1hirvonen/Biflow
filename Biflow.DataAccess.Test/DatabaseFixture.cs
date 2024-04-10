@@ -182,31 +182,19 @@ public class DatabaseFixture : IAsyncLifetime
             {
                 Job = job1,
                 ParameterName = "JobParameter1",
-                ParameterValue = new ParameterValue
-                {
-                    ValueType = ParameterValueType.String,
-                    ValueString = "Hello world"
-                }
+                ParameterValue = new ParameterValue("Hello world")
             };
             var jobParameter2 = new JobParameter
             {
                 Job = job1,
                 ParameterName = "JobParameter2",
-                ParameterValue = new ParameterValue
-                {
-                    ValueType = ParameterValueType.DateTime,
-                    ValueDateTime = DateTime.Now
-                }
+                ParameterValue = new ParameterValue(DateTime.Now)
             };
             var jobParameter3 = new JobParameter
             {
                 Job = job1,
                 ParameterName = "JobParameter3",
-                ParameterValue = new ParameterValue
-                {
-                    ValueType = ParameterValueType.Double,
-                    ValueDouble = 123.456
-                }
+                ParameterValue = new ParameterValue(123.456)
             };
             var jobParameter4 = new JobParameter
             {
@@ -258,11 +246,7 @@ public class DatabaseFixture : IAsyncLifetime
             {
                 Step = step2,
                 ParameterName = "@param",
-                ParameterValue = new ParameterValue
-                {
-                    ValueType = ParameterValueType.Int32,
-                    ValueInt32 = 10
-                }
+                ParameterValue = new ParameterValue(10)
             };
             step2.StepParameters.Add(step2Parameter);
 
@@ -528,7 +512,9 @@ public class DatabaseFixture : IAsyncLifetime
                 ScheduleName = "Test schedule 2",
                 CronExpression = ""
             };
-            schedule2.Tags.Add(tag1);
+            schedule2.TagFilter.Add(tag1);
+            var scheduleTag = new ScheduleTag("schedule-tag");
+            schedule2.Tags.Add(scheduleTag);
             #endregion
 
             #region DATA TABLES

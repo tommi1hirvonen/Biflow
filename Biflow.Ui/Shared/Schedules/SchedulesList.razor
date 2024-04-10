@@ -3,6 +3,82 @@
 @inject ISchedulerService SchedulerService
 @inject IMediator Mediator
 
+@{
+    var triggerText = (UserState.Schedules.TriggersAfter, UserState.Schedules.TriggersBefore) switch
+    {
+        (DateTime a, DateTime b) => $"between {a} and {b}",
+        (DateTime a, _) => $"after {a}",
+        (_, DateTime b) => $"before {b}",
+        _ => "any time"
+    };
+}
+
+<div class="row mt-3">
+    <div class="col-auto">
+        <HxButtonGroup Size="ButtonGroupSize.Small">
+            <HxDropdownButtonGroup>
+                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" AutoClose="DropdownAutoClose.Outside">
+                    Triggers: <span class="fw-normal">@triggerText</span>
+                </HxDropdownToggleButton>
+                <HxDropdownContent CssClass="p-3" style="min-width: 15rem;">
+                    <div class="row">
+                        <div class="col">
+                            <label class="form-label">After</label>
+                            <div class="input-group">
+                                <input @bind="UserState.Schedules.TriggersAfter"
+                                       @bind:format="yyyy-MM-ddTHH:mm:ss"
+                                       class="form-control form-control-sm"
+                                       type="datetime-local">
+                                <button class="btn btn-sm btn-auto" @onclick="() => UserState.Schedules.TriggersAfter = null" title="Clear">
+                                    <CxIcon Icon="FeatherIcon.X" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col">
+                            <label class="form-label">Before</label>
+                            <div class="input-group">
+                                <input @bind="UserState.Schedules.TriggersBefore"
+                                       @bind:format="yyyy-MM-ddTHH:mm:ss"
+                                       class="form-control form-control-sm"
+                                       type="datetime-local">
+                                <button class="btn btn-sm btn-auto" @onclick="() => UserState.Schedules.TriggersBefore = null" title="Clear">
+                                    <CxIcon Icon="FeatherIcon.X" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </HxDropdownContent>
+            </HxDropdownButtonGroup>
+            <HxDropdownButtonGroup>
+                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                    Presets
+                </HxDropdownToggleButton>
+                <HxDropdownMenu>
+                    <HxDropdownItem OnClick="() => UserState.Schedules.SetTriggersInNext(TimeSpan.FromHours(1))">
+                        Next 1h
+                    </HxDropdownItem>
+                    <HxDropdownItem OnClick="() => UserState.Schedules.SetTriggersInNext(TimeSpan.FromHours(3))">
+                        Next 3h
+                    </HxDropdownItem>
+                    <HxDropdownItem OnClick="() => UserState.Schedules.SetTriggersInNext(TimeSpan.FromHours(12))">
+                        Next 12h
+                    </HxDropdownItem>
+                    <HxDropdownItem OnClick="() => UserState.Schedules.SetTriggersInNext(TimeSpan.FromHours(24))">
+                        Next 24h
+                    </HxDropdownItem>
+                </HxDropdownMenu>
+            </HxDropdownButtonGroup>
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
+                      OnClick="() => { UserState.Schedules.TriggersAfter = null; UserState.Schedules.TriggersBefore = null; }"
+                      title="Clear">
+                <CxIcon Icon="FeatherIcon.X" />
+            </HxButton>
+        </HxButtonGroup>
+    </div>
+</div>
+
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
     <div class="row mt-3">
         <div class="col-auto">
@@ -55,6 +131,7 @@
 @{
     var schedules = FilteredSchedules
         ?.Where(s => UserState.Schedules.StateFilter switch { StateFilter.Enabled => s.IsEnabled, StateFilter.Disabled => !s.IsEnabled, _ => true })
+        .Where(s => s.TriggersBetween(UserState.Schedules.TriggersAfter, UserState.Schedules.TriggersBefore))
         .OrderBy(s => s.Job.JobName)
         .ThenBy(s => s.ScheduleName)
         .AsEnumerable()
@@ -77,11 +154,11 @@
            OnPageChanged="page => UserState.Schedules.CurrentPage = page"
            OnPageSizeChanged="size => UserState.Schedules.PageSize = size">
     
-    <div class="row justify-content-end sticky-top mt-1 py-2 bg-body" style="z-index: 999;">
-        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-            @if (selectedSchedules.Count > 0)
-            {
-                <div class="col text-center">
+    <div class="row justify-content-xl-between sticky-top mt-1 py-2 bg-body" style="z-index: 999;">
+        <div class="col">
+            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+                @if (selectedSchedules.Count > 0)
+                {
                     <HxButtonGroup Size="ButtonGroupSize.Small">
                         <HxDropdownButtonGroup>
                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
@@ -110,10 +187,10 @@
                             Delete...
                         </HxButton>
                     </HxButtonGroup>
-                </div>
-            }
-        </AuthorizeView>
-        <div class="col-auto d-flex">
+                }
+            </AuthorizeView>
+        </div>
+        <div class="col-xl-auto mt-xl-0 mt-3 d-flex justify-content-end">
             <PaginationControls Paginator="paginator" />
         </div>
     </div>
@@ -163,21 +240,40 @@
                     {
                         <tr class="schedule-row @(item.IsEnabled ? null : "disabled")">
                             <td class="align-middle">
-                                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-                                    <div class="form-check form-check-inline me-0">
-                                        <input type="checkbox" class="form-check-input" id="select_schedule_@item.ScheduleId"
-                                               checked=@selectedSchedules.Contains(item)
-                                               @onchange="args => { if (selectedSchedules.Contains(item)) selectedSchedules.Remove(item); else selectedSchedules.Add(item); }">
-                                        <label class="form-check-label" for="select_schedule_@item.ScheduleId"></label>
+                                <div class="row g-1">
+                                    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+                                        <div class="col-auto align-items-center d-flex">
+                                            <div class="form-check form-check me-0">
+                                                <input type="checkbox" class="form-check-input" id="select_schedule_@item.ScheduleId"
+                                                       checked=@selectedSchedules.Contains(item)
+                                                       @onchange="args => { if (selectedSchedules.Contains(item)) selectedSchedules.Remove(item); else selectedSchedules.Add(item); }">
+                                                <label class="form-check-label" for="select_schedule_@item.ScheduleId"></label>
+                                            </div>
+                                        </div>
+                                    </AuthorizeView>
+                                    <div class="col">
+                                        <div class="row">
+                                            <div class="col fw-semibold small">
+                                                <HighlightableText Text="@item.ScheduleName" PartToHighlight="@UserState.Schedules.ScheduleFilter" />
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col">
+                                                <a class="text-body small" href="@($"jobs/{item.JobId}/schedules")">
+                                                    @item.Job.JobName
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col">
+                                                @foreach (var tag in item.Tags.OrderBy(t => t.TagName))
+                                                {
+                                                    <TagBadge Tag="tag" CssClass="m-1" />
+                                                }
+                                            </div>
+                                        </div>
                                     </div>
-                                </AuthorizeView>
-                                <span class="fw-semibold small">
-                                    <HighlightableText Text="@item.ScheduleName" PartToHighlight="@UserState.Schedules.ScheduleFilter" />
-                                </span>
-                                <br />
-                                <a class="text-body small" href="@($"jobs/{item.JobId}/schedules")">
-                                    @item.Job.JobName
-                                </a>
+                                </div>
                             </td>
                             <td class="align-middle">
                                 <div class="form-check form-switch">
@@ -213,11 +309,11 @@
                                 </span>
                             </td>
                             <td class="align-middle small">
-                                @if (!item.Tags.Any())
+                                @if (!item.TagFilter.Any())
                                 {
                                     <span class="text-secondary ms-2">No tag filters</span>
                                 }
-                                @foreach (var tag in item.Tags.OrderBy(t => t.TagName))
+                                @foreach (var tag in item.TagFilter.OrderBy(t => t.TagName))
                                 {
                                     <TagBadge Tag="tag" CssClass="m-1" />
                                 }
@@ -342,8 +438,18 @@
 
     private async Task OnScheduleSubmitAsync(Schedule schedule)
     {
-        Schedules?.RemoveAll(s => s.ScheduleId == schedule.ScheduleId);
-        Schedules?.Add(schedule);
+        ArgumentNullException.ThrowIfNull(Jobs);
+        ArgumentNullException.ThrowIfNull(Schedules);
+
+        var job = Jobs.First(j => j.JobId == schedule.JobId);
+        if (job.Schedules.FirstOrDefault(s => s.ScheduleId == schedule.ScheduleId) is Schedule s)
+        {
+            job.Schedules.Remove(s);
+        }
+        job.Schedules.Add(schedule);
+        schedule.Job = job;
+        Schedules.RemoveAll(s => s.ScheduleId == schedule.ScheduleId);
+        Schedules.Add(schedule);
         await OnSchedulesChanged.InvokeAsync();
     }
 
@@ -373,7 +479,6 @@
             {
                 await Mediator.SendAsync(new DeleteScheduleCommand(schedule.ScheduleId));
                 Schedules?.Remove(schedule);
-                await OnSchedulesChanged.InvokeAsync();
             }
         }
         catch (Exception ex)
@@ -381,6 +486,7 @@
             Toaster.AddError("Error deleting schedules", ex.Message);
         }
         selectedSchedules.Clear();
+        await OnSchedulesChanged.InvokeAsync();
     }
 
     private void ToggleAllSchedulesSelected(bool value)

@@ -17,7 +17,7 @@
                         <HxAutosuggest Enabled="@(schedule.ScheduleId == Guid.Empty && Job is null)"
                                        TItem="Job"
                                        TValue="Guid"
-                                       DataProvider="GetSuggestionsAsync"
+                                       DataProvider="GetJobSuggestionsAsync"
                                        ItemFromValueResolver="jobId => Task.FromResult(Jobs.Append(Job).FirstOrDefault(j => j?.JobId == jobId))"
                                        ValueSelector="job => job.JobId"
                                        TextSelector="job => job.JobName"
@@ -45,6 +45,16 @@
                         </div>
                     </div>
                     <ValidationMessage For="() => schedule.ScheduleName" />
+                    <div class="row mt-3">
+                        <div class="col">
+                            <label class="form-label">Tags</label>
+                            <HxInputTags @bind-Value="scheduleTags"
+                                         DataProvider="GetScheduleTagSuggestions"
+                                         SuggestMinimumLength="0"
+                                         SuggestDelay="0"
+                                         TagBadgeSettings="new BadgeSettings() { Color = ThemeColor.Secondary }" />
+                        </div>
+                    </div>
                     <div class="mt-3">
                         <label class="form-label">
                             Cron expression
@@ -85,8 +95,8 @@
                     }
                     <div class="row mt-3">
                         <label class="form-label">Tag filters</label>
-                        <HxInputTags @bind-Value="tags"
-                                     DataProvider="GetTagSuggestions"
+                        <HxInputTags @bind-Value="stepTags"
+                                     DataProvider="GetStepTagSuggestions"
                                      AllowCustomTags="false"
                                      SuggestMinimumLength="0"
                                      SuggestDelay="0"
@@ -123,31 +133,46 @@
     // Optional - new schedules will be locked to this job if provided
     [Parameter] public Job? Job { get; set; }
 
-    [Parameter] public IEnumerable<Job> Jobs { get; set; } = Enumerable.Empty<Job>();
+    [Parameter] public IEnumerable<Job> Jobs { get; set; } = [];
 
     [Parameter] public EventCallback<Schedule> OnSubmit { get; set; }
 
     private Schedule schedule = new(); // assign placeholder
     private HxOffcanvas? offcanvas;
-    private List<string> tags = new();
-    private IEnumerable<StepTag> allTags = Enumerable.Empty<StepTag>();
+    private List<string> stepTags = [];
+    private List<string> scheduleTags = [];
+    private IEnumerable<StepTag> allStepTags = [];
+    private IEnumerable<ScheduleTag> allScheduleTags = [];
 
-    private Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
+    private Task<InputTagsDataProviderResult> GetStepTagSuggestions(InputTagsDataProviderRequest request)
     {
         return Task.FromResult(new InputTagsDataProviderResult
         {
-             Data = allTags
-             .Select(t => t.TagName)
-             .Where(t => t.ContainsIgnoreCase(request.UserInput))
-             .Where(t => !tags.Any(tag => t == tag))
-             .OrderBy(t => t)
+             Data = allStepTags
+                 .Select(t => t.TagName)
+                 .Where(t => t.ContainsIgnoreCase(request.UserInput))
+                 .Where(t => !stepTags.Any(tag => t == tag))
+                 .Order()
+        });
+    }
+
+    private Task<InputTagsDataProviderResult> GetScheduleTagSuggestions(InputTagsDataProviderRequest request)
+    {
+        return Task.FromResult(new InputTagsDataProviderResult
+        {
+            Data = allScheduleTags
+                .Select(t => t.TagName)
+                .Where(t => t.ContainsIgnoreCase(request.UserInput))
+                .Where(t => !scheduleTags.Any(tag => t == tag))
+                .Order()
         });
     }
 
     protected override async Task OnInitializedAsync()
     {
         using var context = DbContextFactory.CreateDbContext();
-        allTags = await context.StepTags.ToListAsync();
+        allStepTags = await context.StepTags.ToListAsync();
+        allScheduleTags = await context.ScheduleTags.ToListAsync();
     }
 
     private async Task SubmitSchedule()
@@ -157,14 +182,11 @@
         {
             try
             {
-                await Mediator.SendAsync(new CreateScheduleCommand(schedule, this.tags));
-
-                schedule.Job = Job is not null ? Job : Jobs?.FirstOrDefault(job => job.JobId == schedule.JobId)
-                    ?? throw new InvalidOperationException("Job cannot be null");
-
+                await Mediator.SendAsync(new CreateScheduleCommand(schedule, stepTags, scheduleTags));
                 await OnSubmit.InvokeAsync(schedule);
                 await offcanvas.LetAsync(x => x.HideAsync());
-                this.tags.Clear();
+                stepTags.Clear();
+                scheduleTags.Clear();
             }
             catch (Exception ex)
             {
@@ -176,10 +198,11 @@
         {
             try
             {
-                await Mediator.SendAsync(new UpdateScheduleCommand(schedule, this.tags));
+                await Mediator.SendAsync(new UpdateScheduleCommand(schedule, stepTags, scheduleTags));
                 await OnSubmit.InvokeAsync(schedule);
                 await offcanvas.LetAsync(x => x.HideAsync());
-                this.tags.Clear();
+                stepTags.Clear();
+                scheduleTags.Clear();
             }
             catch (Exception ex)
             {
@@ -195,8 +218,8 @@
             using var context = DbContextFactory.CreateDbContext();
             schedule = await context.Schedules
                 .AsNoTracking()
+                .Include(s => s.TagFilter)
                 .Include(s => s.Tags)
-                .Include(s => s.Job)
                 .FirstAsync(s => s.ScheduleId == scheduleId);
         }
         else if (scheduleId == Guid.Empty)
@@ -209,19 +232,25 @@
             };
         }
 
-        tags = schedule.Tags
-                .Select(t => t.TagName)
-                .OrderBy(t => t)
-                .ToList();
+        scheduleTags = schedule.Tags
+            .Select(t => t.TagName)
+            .Order()
+            .ToList();
+        stepTags = schedule.TagFilter
+            .Select(t => t.TagName)
+            .Order()
+            .ToList();
 
         await offcanvas.LetAsync(x => x.ShowAsync());
     }
 
-    private Task<AutosuggestDataProviderResult<Job>> GetSuggestionsAsync(AutosuggestDataProviderRequest request)
+    private Task<AutosuggestDataProviderResult<Job>> GetJobSuggestionsAsync(AutosuggestDataProviderRequest request)
     {
         return Task.FromResult(new AutosuggestDataProviderResult<Job>
         {
-            Data = Jobs.Where(j => j.JobName.ContainsIgnoreCase(request.UserInput)).OrderBy(j => j.JobName)
+            Data = Jobs
+                .Where(j => j.JobName.ContainsIgnoreCase(request.UserInput))
+                .OrderBy(j => j.JobName)
         });
     }
 

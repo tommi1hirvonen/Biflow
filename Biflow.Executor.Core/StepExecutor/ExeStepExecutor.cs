@@ -1,6 +1,7 @@
 ﻿using Biflow.Executor.Core.Common;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using System.Text;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
@@ -50,9 +51,12 @@ internal class ExeStepExecutor(
             startInfo.LoadUserProfile = true;
         }
 
+        var outputBuilder = new StringBuilder();
+        var errorBuilder = new StringBuilder();
+
         using var process = new Process() { StartInfo = startInfo };
-        process.OutputDataReceived += (s, e) => attempt.AddOutput(e.Data);
-        process.ErrorDataReceived += (s, e) => attempt.AddError(e.Data);
+        process.OutputDataReceived += (s, e) => outputBuilder.AppendLine(e.Data);
+        process.ErrorDataReceived += (s, e) => errorBuilder.AppendLine(e.Data);
 
         try
         {
@@ -128,6 +132,27 @@ internal class ExeStepExecutor(
             _logger.LogError(ex, "{ExecutionId} {Step} Error while executing {FileName}", step.ExecutionId, step, step.ExeFileName);
             attempt.AddError(ex, "Error while executing exe");
             return Result.Failure;
+        }
+        finally
+        {
+            // Executable output and error messages can be significantly long.
+            // Handle super long messages here.
+            if (outputBuilder.ToString() is { Length: > 0 } output)
+            {
+                attempt.AddOutput(output[..Math.Min(500_000, output.Length)], insertFirst: true);
+                if (output.Length > 500_000)
+                {
+                    attempt.AddOutput("Output has been truncated to first 500 000 characters.", insertFirst: true);
+                }
+            }
+            if (errorBuilder.ToString() is { Length: > 0 } error)
+            {
+                attempt.AddError(null, error[..Math.Min(500_000, error.Length)], insertFirst: true);
+                if (error.Length > 500_000)
+                {
+                    attempt.AddError(null, "Error message has been truncated to first 500 000 characters.", insertFirst: true);
+                }
+            }
         }
     }
 }
