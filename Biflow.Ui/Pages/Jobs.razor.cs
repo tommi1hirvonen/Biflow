@@ -29,7 +29,7 @@ public partial class Jobs : ComponentBase, IDisposable
     private Paginator<ListItem>? paginator;
     private HashSet<Job> selectedJobs = [];
 
-    private record ListItem(Job Job, Execution? LastExecution, DateTime? NextExecution);
+    private record ListItem(Job Job, Execution? LastExecution, Schedule? NextSchedule, DateTime? NextExecution);
 
     protected override Task OnInitializedAsync()
     {
@@ -49,7 +49,12 @@ public partial class Jobs : ComponentBase, IDisposable
             .Where(j => stateFilter switch { StateFilter.Enabled => j.IsEnabled, StateFilter.Disabled => !j.IsEnabled, _ => true })
             .Where(j => string.IsNullOrEmpty(jobNameFilter) || j.JobName.ContainsIgnoreCase(jobNameFilter))
             .Where(j => string.IsNullOrEmpty(stepNameFilter) || steps.Any(s => s.JobId == j.JobId && (s.StepName?.ContainsIgnoreCase(stepNameFilter) ?? false)))
-            .Select(j => new ListItem(j, lastExecutions?.GetValueOrDefault(j.JobId), GetNextStartTime(j)))
+            .Select(j =>
+            {
+                var schedule = GetNextSchedule(j);
+                var nextExecution = schedule?.NextFireTimes().FirstOrDefault();
+                return new ListItem(j, lastExecutions?.GetValueOrDefault(j.JobId), schedule, nextExecution);
+            })
             .Where(j => statusFilter.Count == 0 || j.LastExecution is not null && statusFilter.Contains(j.LastExecution.ExecutionStatus))
             .Where(j => tagFilter.Count == 0 || j.Job.Tags.Any(t1 => tagFilter.Any(t2 => t1.TagId == t2.TagId)))
             ?? [];
@@ -116,10 +121,13 @@ public partial class Jobs : ComponentBase, IDisposable
             .ToListAsync(cts.Token);
     }
 
-    private static DateTime? GetNextStartTime(Job job)
+    private static Schedule? GetNextSchedule(Job job)
     {
-        var dateTimes = job.Schedules.Where(s => s.IsEnabled).Select(s => s.NextFireTimes().FirstOrDefault());
-        return dateTimes.Any() ? dateTimes.Min() : null;
+        var schedule = job.Schedules
+            .Where(s => s.IsEnabled)
+            .Select(s => new { Schedule = s, NextFireTime = s.NextFireTimes().FirstOrDefault() })
+            .MinBy(s => s.NextFireTime);
+        return schedule?.Schedule;
     }
 
     private async Task ToggleEnabled(ChangeEventArgs args, Job job)
