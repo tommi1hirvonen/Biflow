@@ -1,5 +1,5 @@
 ﻿using Biflow.Executor.Core.Common;
-using Biflow.Executor.Core.OrchestrationObserver;
+using Biflow.Executor.Core.OrchestrationTracker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -58,13 +58,15 @@ internal class JobOrchestrator : IJobOrchestrator
             .Select(step =>
             {
                 var listener = new StepProcessingListener(this, step);
-                IOrchestrationObserver observer = step.Execution.ExecutionMode switch
+                var duplicateTracker = new DuplicateExecutionTracker(step);
+                IEnumerable<IOrchestrationTracker> trackers = step.Execution.ExecutionMode switch
                 {
-                    ExecutionMode.ExecutionPhase => new ExecutionPhaseModeObserver(step, listener, _cancellationTokenSources[step]),
-                    ExecutionMode.Dependency => new DependencyModeObserver(step, listener, _cancellationTokenSources[step]),
-                    ExecutionMode.Hybrid => new HybridModeObserver(step, listener, _cancellationTokenSources[step]),
+                    ExecutionMode.ExecutionPhase => [duplicateTracker, new ExecutionPhaseTracker(step)],
+                    ExecutionMode.Dependency => [duplicateTracker, new DependencyTracker(step)],
+                    ExecutionMode.Hybrid => [duplicateTracker, new ExecutionPhaseTracker(step), new DependencyTracker(step)],
                     _ => throw new ApplicationException()
                 };
+                var observer = new OrchestrationObserver(step, listener, trackers, _cancellationTokenSources[step]);
                 return observer;
             })
             .ToList();
