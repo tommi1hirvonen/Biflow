@@ -238,6 +238,7 @@ public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
         Schedules = await context.Schedules
             .AsNoTracking()
             .Include(s => s.TagFilter)
+            .Include(s => s.Tags)
             .OrderBy(s => s.JobId).ThenBy(s => s.ScheduleId)
             .ToArrayAsync();
 
