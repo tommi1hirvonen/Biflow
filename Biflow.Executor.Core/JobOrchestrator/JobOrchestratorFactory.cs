@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-namespace Biflow.Executor.Core.Orchestrator;
+namespace Biflow.Executor.Core.JobOrchestrator;
 
 internal class JobOrchestratorFactory(IServiceProvider serviceProvider) : IJobOrchestratorFactory
 {
