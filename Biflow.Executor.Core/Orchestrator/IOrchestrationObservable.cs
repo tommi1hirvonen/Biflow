@@ -1,4 +1,6 @@
-﻿namespace Biflow.Executor.Core.Orchestrator;
+﻿using Biflow.Executor.Core.OrchestrationObserver;
+
+namespace Biflow.Executor.Core.Orchestrator;
 
 internal interface IOrchestrationObservable
 {

@@ -1,6 +1,7 @@
 ﻿using Biflow.Executor.Core.Common;
+using Biflow.Executor.Core.Orchestrator;
 
-namespace Biflow.Executor.Core.Orchestrator;
+namespace Biflow.Executor.Core.OrchestrationObserver;
 
 internal class HybridModeObserver(
     StepExecution stepExecution,
