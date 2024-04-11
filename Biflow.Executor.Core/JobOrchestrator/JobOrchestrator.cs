@@ -44,6 +44,8 @@ internal class JobOrchestrator : IJobOrchestrator
 
         // Create a Dictionary with max concurrent steps for each target.
         // This allows only a predefined number of steps to write to the same target concurrently.
+        // This handles situations where the same job execution might start immediately writing to the
+        // same data object with two different steps (not handled by TargetTracker).
         var targets = _execution.StepExecutions
             .SelectMany(e => e.DataObjects)
             .Where(d => d.ReferenceType == DataObjectReferenceType.Target)
@@ -60,11 +62,12 @@ internal class JobOrchestrator : IJobOrchestrator
             {
                 var listener = new StepProcessingListener(this, step);
                 var duplicateTracker = new DuplicateExecutionTracker(step);
+                var targetTracker = new TargetTracker(step); // Handles target data object synchronization across job executions.
                 IEnumerable<IOrchestrationTracker> trackers = step.Execution.ExecutionMode switch
                 {
-                    ExecutionMode.ExecutionPhase => [duplicateTracker, new ExecutionPhaseTracker(step)],
-                    ExecutionMode.Dependency => [duplicateTracker, new DependencyTracker(step)],
-                    ExecutionMode.Hybrid => [duplicateTracker, new ExecutionPhaseTracker(step), new DependencyTracker(step)],
+                    ExecutionMode.ExecutionPhase => [duplicateTracker, new ExecutionPhaseTracker(step), targetTracker],
+                    ExecutionMode.Dependency => [duplicateTracker, new DependencyTracker(step), targetTracker],
+                    ExecutionMode.Hybrid => [duplicateTracker, new ExecutionPhaseTracker(step), new DependencyTracker(step), targetTracker],
                     _ => throw new ApplicationException()
                 };
                 var observer = new OrchestrationObserver(step, listener, trackers, _cancellationTokenSources[step]);

@@ -4,7 +4,7 @@ namespace Biflow.Executor.Core.OrchestrationTracker;
 
 internal interface IOrchestrationTracker
 {
-    public void HandleUpdate(OrchestrationUpdate update);
+    public void HandleUpdate(OrchestrationUpdate value);
 
     public StepAction? GetStepAction();
 }
