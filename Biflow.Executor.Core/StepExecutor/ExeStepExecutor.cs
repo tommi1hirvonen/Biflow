@@ -21,7 +21,7 @@ internal class ExeStepExecutor(
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
-        var startInfo = new ProcessStartInfo()
+        var startInfo = new ProcessStartInfo
         {
             FileName = step.ExeFileName,
             UseShellExecute = false,
@@ -45,6 +45,9 @@ internal class ExeStepExecutor(
         var cred = step.GetRunAsCredential();
         if (OperatingSystem.IsWindows() && cred is not null)
         {
+            // A new process launched with the Process class runs in the same
+            // window station and desktop as the launching process => grant permissions.
+            WindowsExtensions.GrantAccessToWindowStationAndDesktop(cred.Domain, cred.Username);
             startInfo.Domain = cred.Domain.NullIfEmpty();
             startInfo.UserName = cred.Username;
             startInfo.PasswordInClearText = cred.Password.NullIfEmpty();
@@ -54,7 +57,7 @@ internal class ExeStepExecutor(
         var outputBuilder = new StringBuilder();
         var errorBuilder = new StringBuilder();
 
-        using var process = new Process() { StartInfo = startInfo };
+        using var process = new Process { StartInfo = startInfo };
         process.OutputDataReceived += (s, e) => outputBuilder.AppendLine(e.Data);
         process.ErrorDataReceived += (s, e) => errorBuilder.AppendLine(e.Data);
 
@@ -88,7 +91,7 @@ internal class ExeStepExecutor(
         using var timeoutCts = step.TimeoutMinutes > 0
             ? new CancellationTokenSource(TimeSpan.FromMinutes(step.TimeoutMinutes))
             : new CancellationTokenSource();
-        
+
         try
         {
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
