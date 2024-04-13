@@ -34,13 +34,13 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
         // Left join endpoint clients to step executions.
         var query2 =
             from step in query1
-            join sql in context.SqlConnections on ((SqlStepExecution)step).ConnectionId equals sql.ConnectionId into sql_
+            join sql in context.SqlConnections.Include(c => c.Credential) on ((SqlStepExecution)step).ConnectionId equals sql.ConnectionId into sql_
             from sql in sql_.DefaultIfEmpty()
-            join package in context.SqlConnections on ((PackageStepExecution)step).ConnectionId equals package.ConnectionId into package_
+            join package in context.SqlConnections.Include(c => c.Credential) on ((PackageStepExecution)step).ConnectionId equals package.ConnectionId into package_
             from package in package_.DefaultIfEmpty()
-            join agent in context.SqlConnections on ((AgentJobStepExecution)step).ConnectionId equals agent.ConnectionId into agent_
+            join agent in context.SqlConnections.Include(c => c.Credential) on ((AgentJobStepExecution)step).ConnectionId equals agent.ConnectionId into agent_
             from agent in agent_.DefaultIfEmpty()
-            join tabular in context.AnalysisServicesConnections on ((TabularStepExecution)step).ConnectionId equals tabular.ConnectionId into tabular_
+            join tabular in context.AnalysisServicesConnections.Include(c => c.Credential) on ((TabularStepExecution)step).ConnectionId equals tabular.ConnectionId into tabular_
             from tabular in tabular_.DefaultIfEmpty()
             join dataset in context.AppRegistrations on ((DatasetStepExecution)step).AppRegistrationId equals dataset.AppRegistrationId into dataset_
             from dataset in dataset_.DefaultIfEmpty()

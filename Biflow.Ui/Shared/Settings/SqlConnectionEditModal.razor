@@ -34,6 +34,23 @@
                             <div class="form-text">MARS must be enabled in the connection string (MultipleActiveResultSets=true)</div>
                         </div>
 
+                        <div class=" row mt-3">
+                            <div class="col">
+                                <label class="form-label">Impersonation</label>
+                                <InputSelect class="form-select"
+                                             @bind-Value="connection.CredentialId"
+                                             @bind-Value:after="SetCredential">
+                                    <option value="">No impersonation</option>
+                                    @foreach (var credential in Credentials)
+                                    {
+                                        <option value="@credential.CredentialId">
+                                            @credential.DisplayName
+                                        </option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
+
                         <dib class="row mt-3">
                             <label class="form-label">Execute SSIS packages as login (blank = no impersonation)</label>
                             <div class="input-group">
@@ -76,6 +93,9 @@
 
 @code {
     [Parameter]
+    public IEnumerable<Credential> Credentials { get; set; } = [];
+
+    [Parameter]
     public EventCallback<ConnectionInfoBase> OnConnectionSubmit { get; set; }
 
     private SqlConnectionInfo? connection;
@@ -85,18 +105,20 @@
 
     private async Task SubmitConnection()
     {
+        ArgumentNullException.ThrowIfNull(connection);
+        connection.Credential = null;
         await OnConnectionSubmit.InvokeAsync(connection);
         await modal.LetAsync(x => x.HideAsync());
     }
 
     private async Task TestConnection()
     {
+        ArgumentNullException.ThrowIfNull(connection);
         connectionTestSuccess = null;
         testingConnection = true;
         try
         {
-            using var connection = new SqlConnection(this.connection?.ConnectionString);
-            await connection.OpenAsync();
+            await connection.TestConnectionAsync();
             connectionTestSuccess = true;
         }
         catch (Exception ex)
@@ -123,6 +145,7 @@
                 .Include(c => c.AgentJobSteps)
                 .ThenInclude(step => step.Job)
                 .FirstAsync(c => c.ConnectionId == connectionId);
+            SetCredential();
         }
         else
         {
@@ -130,6 +153,16 @@
         }
         connectionTestSuccess = null;
         testingConnection = false;
+    }
+
+    private void SetCredential()
+    {
+        if (connection is null)
+        {
+            return;
+        }
+        var credential = Credentials.FirstOrDefault(c => c.CredentialId == connection.CredentialId);
+        connection.Credential = credential;
     }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)

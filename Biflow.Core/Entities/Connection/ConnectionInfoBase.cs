@@ -35,4 +35,9 @@ public abstract class ConnectionInfoBase(ConnectionType connectionType) : ICompa
     [JsonIgnore]
     public abstract IEnumerable<Step> Steps { get; }
 
+    public Guid? CredentialId { get; set; }
+
+    public Credential? Credential { get; set; }
+
+    public abstract Task TestConnectionAsync(CancellationToken cancellationToken = default);
 }

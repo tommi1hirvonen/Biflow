@@ -145,9 +145,11 @@
 </div>
 
 <AnalysisServicesConnectionEditModal @ref="connectionEditModals[ConnectionType.AnalysisServices]"
+                                     Credentials="credentials"
                                      OnConnectionSubmit="OnConnectionSubmit" />
 
 <SqlConnectionEditModal @ref="connectionEditModals[ConnectionType.Sql]"
+                        Credentials="credentials"
                         OnConnectionSubmit="OnConnectionSubmit" />
 
 <HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsConnection?.ConnectionName}")">
@@ -190,6 +192,7 @@
 @code {
     private readonly Dictionary<ConnectionType, IConnectionEditModal?> connectionEditModals = [];
 
+    private List<Credential> credentials = [];
     private List<ConnectionInfoBase>? connections;
     private Dictionary<Guid, bool> showConnectionString = [];
     private ConnectionInfoBase? stepsConnection;
@@ -198,6 +201,11 @@
     protected override async Task OnInitializedAsync()
     {
         using var context = await Task.Run<AppDbContext>(DbFactory.CreateDbContext);
+        credentials = await context.Credentials
+            .AsNoTracking()
+            .OrderBy(c => c.Domain)
+            .ThenBy(c => c.Username)
+            .ToListAsync();
         connections = await context.Connections
             .AsNoTrackingWithIdentityResolution()
             .Include(c => (c as SqlConnectionInfo)!.SqlSteps)
