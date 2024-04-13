@@ -16,7 +16,7 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
         var connection = await GetSqlConnectionAsync(connectionId);
         using var sqlConnection = new SqlConnection(connection.ConnectionString);
         var folders = new Dictionary<long, CatalogFolder>();
-        var rows = await connection.Credential.RunImpersonatedOrAsCurrentUserIfNullAsync(
+        var rows = await connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.QueryAsync<CatalogFolder, CatalogProjectDto?, CatalogPackageDto?, CatalogParameter?, CatalogFolder>("""
                 SELECT
                     FolderId = [f].[folder_id],
@@ -104,7 +104,7 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
     {
         var connection = await GetSqlConnectionAsync(connectionId);
         using var sqlConnection = new SqlConnection(connection.ConnectionString);
-        return await connection.Credential.RunImpersonatedOrAsCurrentUserIfNullAsync(async () =>
+        return await connection.RunImpersonatedOrAsCurrentUserAsync(async () =>
         {
             var count = await sqlConnection.ExecuteScalarAsync<int>("""
                 SELECT COUNT(*)
@@ -202,7 +202,7 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
                 ParameterId
             """;
         var procedures = new Dictionary<int, StoredProcedure>();
-        var data = await connection.Credential.RunImpersonatedOrAsCurrentUserIfNullAsync(
+        var data = await connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.QueryAsync<StoredProcedure, StoredProcedureParameter?, StoredProcedure>(
                 sql,
                 (proc, param) =>
@@ -226,7 +226,7 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
     {
         var connection = await GetSqlConnectionAsync(connectionId);
         using var sqlConnection = new SqlConnection(connection.ConnectionString);
-        return await connection.Credential.RunImpersonatedOrAsCurrentUserIfNullAsync(async () =>
+        return await connection.RunImpersonatedOrAsCurrentUserAsync(async () =>
         {
             var objectId = await sqlConnection.ExecuteScalarAsync<long?>("""
                 select top 1 object_id
@@ -272,7 +272,7 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
     {
         var connection = await GetSqlConnectionAsync(connectionId);
         using var sqlConnection = new SqlConnection(connection.ConnectionString);
-        var rows = await connection.Credential.RunImpersonatedOrAsCurrentUserIfNullAsync(
+        var rows = await connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.QueryAsync<dynamic>("EXEC msdb.dbo.sp_help_job"));
         var agentJobs = rows.Select(r => ((string)r.name, ((short)r.enabled) > 0)).ToArray();
         return agentJobs;
@@ -282,7 +282,7 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
     {
         var connection = await GetSqlConnectionAsync(connectionId);
         using var sqlConnection = new SqlConnection(connection.ConnectionString);
-        var results = await connection.Credential.RunImpersonatedOrAsCurrentUserIfNullAsync(
+        var results = await connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.QueryAsync<(string, string, string)?>("""
                 select
                     SchemaName = c.name,
@@ -302,7 +302,7 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
     {
         var connection = await GetSqlConnectionAsync(connectionId);
         using var sqlConnection = new SqlConnection(connection.ConnectionString);
-        var definition = await connection.Credential.RunImpersonatedOrAsCurrentUserIfNullAsync(
+        var definition = await connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.ExecuteScalarAsync<string>(
                 "SELECT OBJECT_DEFINITION(OBJECT_ID(@ObjectName))",
                 new { ObjectName = objectName}));
@@ -342,7 +342,7 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
 
         var connection = await GetSqlConnectionAsync(connectionId);
         using var sqlConnection = new SqlConnection(connection.ConnectionString);
-        var rows = await connection.Credential.RunImpersonatedOrAsCurrentUserIfNullAsync(
+        var rows = await connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.QueryAsync<SqlReference>($"""
                 select distinct
                     ReferencingSchema = c.name,
@@ -385,7 +385,7 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
 
         schema ??= "[dbo]";
         var objectName = $"{schema}.[{name}]";
-        var rows = await connection.Credential.RunImpersonatedOrAsCurrentUserIfNullAsync(
+        var rows = await connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.QueryAsync<(string, string, string, string, bool)>("""
                 ;with cte as (
                    select
@@ -449,7 +449,7 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
 
         schema ??= "[dbo]";
         var objectName = $"{schema}.[{name}]";
-        var rows = await connection.Credential.RunImpersonatedOrAsCurrentUserIfNullAsync(
+        var rows = await connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.QueryAsync<(string, string, string, string, bool)>("""
                 ;with cte as (
                     select
@@ -534,7 +534,7 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
                 )
             order by b.name, a.name
             """, new { schema, name }, cancellationToken: cancellationToken);
-        var rows = await connection.Credential.RunImpersonatedOrAsCurrentUserIfNullAsync(
+        var rows = await connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.QueryAsync<(string, string, string, string, string)>(command));
         return rows
             .Select(r => new DbObject(r.Item1, r.Item2, r.Item3, r.Item4, r.Item5))
@@ -556,7 +556,7 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
             order by [schema_name], [table_name]
             """,
             cancellationToken: cancellationToken);
-        var rows = await connection.Credential.RunImpersonatedOrAsCurrentUserIfNullAsync(
+        var rows = await connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.QueryAsync<(string, string, bool)>(command));
         return rows
             .Select(r => new DbTable(r.Item1, r.Item2, r.Item3))
@@ -566,7 +566,7 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
     public async Task<AsServer> GetAnalysisServicesModelsAsync(Guid connectionId)
     {
         var connection = await GetAsConnectionAsync(connectionId);
-        return await connection.Credential.RunImpersonatedOrAsCurrentUserIfNullAsync(() =>
+        return await connection.RunImpersonatedOrAsCurrentUserAsync(() =>
         {
             return Task.Run(() =>
             {

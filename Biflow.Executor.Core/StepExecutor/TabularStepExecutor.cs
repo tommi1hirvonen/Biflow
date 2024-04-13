@@ -20,8 +20,6 @@ internal class TabularStepExecutor(
         var connection = step.GetConnection();
         ArgumentNullException.ThrowIfNull(connection);
 
-        var credential = connection.Credential;
-
         using var server = new Server();
         try
         {
@@ -53,7 +51,7 @@ internal class TabularStepExecutor(
                 model.SaveChanges(); // This is a long running operation. RequestRefresh() returns immediately.
             });
 
-            var refreshTask = credential.RunImpersonatedOrAsCurrentUserIfNullAsync(refreshDelegate);
+            var refreshTask = connection.RunImpersonatedOrAsCurrentUserAsync(refreshDelegate);
 
             var timeoutTask = step.TimeoutMinutes > 0
                 ? Task.Delay(TimeSpan.FromMinutes(step.TimeoutMinutes), cancellationToken)
@@ -73,8 +71,8 @@ internal class TabularStepExecutor(
         catch (OperationCanceledException ex)
         {
             // Cancel the SaveChanges operation.
-            Task cancelDelegate() => Task.Run(server.CancelCommand);
-            await credential.RunImpersonatedOrAsCurrentUserIfNullAsync(cancelDelegate);
+            await connection.RunImpersonatedOrAsCurrentUserAsync(
+                () => Task.Run(server.CancelCommand));
             if (cancellationTokenSource.IsCancellationRequested)
             {
                 attempt.AddWarning(ex);

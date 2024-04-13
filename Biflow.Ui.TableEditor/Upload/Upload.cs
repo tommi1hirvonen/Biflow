@@ -28,7 +28,7 @@ public class Upload
     public async Task<(int Inserted, int Updated, int Deleted)> SaveUploadToDbAsync(UploadType uploadType)
     {
         using var connection = new SqlConnection(_table.Connection.ConnectionString);
-        return await _table.Connection.Credential.RunImpersonatedOrAsCurrentUserIfNullAsync(async () =>
+        return await _table.Connection.RunImpersonatedOrAsCurrentUserAsync(async () =>
         {
             await connection.OpenAsync();
 

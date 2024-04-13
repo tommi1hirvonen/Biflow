@@ -220,7 +220,7 @@ internal class PackageStepExecutor(
 
         using var sqlConnection = new SqlConnection(connection.ConnectionString);
         var cmd = new CommandDefinition(commandString, dynamicParams, cancellationToken: cancellationToken);
-        var packageOperationId = await connection.Credential.RunImpersonatedOrAsCurrentUserIfNullAsync(
+        var packageOperationId = await connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.ExecuteScalarAsync<long>(cmd));
         return packageOperationId;
     }
@@ -251,7 +251,7 @@ internal class PackageStepExecutor(
 
         using var sqlConnection = new SqlConnection(connection.ConnectionString);
         var cmd = new CommandDefinition(commandString, dynamicParams, commandTimeout: 0, cancellationToken: cancellationToken);
-        await connection.Credential.RunImpersonatedOrAsCurrentUserIfNullAsync(
+        await connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.ExecuteAsync(cmd));
     }
 
@@ -268,7 +268,7 @@ internal class PackageStepExecutor(
             """,
             new { OperationId = packageOperationId },
             cancellationToken: cancellationToken);
-        var status = await connection.Credential.RunImpersonatedOrAsCurrentUserIfNullAsync(
+        var status = await connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.ExecuteScalarAsync<int>(command));
         // created (1), running (2), canceled (3), failed (4), pending (5), ended unexpectedly (6), succeeded (7), stopping (8), completed (9)
         return status == 7;
@@ -287,7 +287,7 @@ internal class PackageStepExecutor(
             """, // message_type = 120 => error message
             new { OperationId = packageOperationId },
             cancellationToken: cancellationToken);
-        var messages = await connection.Credential.RunImpersonatedOrAsCurrentUserIfNullAsync(
+        var messages = await connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.QueryAsync<string?>(cmd));
         return messages.ToArray();
     }

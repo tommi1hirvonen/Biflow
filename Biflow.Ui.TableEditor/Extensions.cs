@@ -7,7 +7,7 @@ public static class Extensions
     public static async Task<IEnumerable<string>> GetColumnNamesAsync(this MasterDataTable table)
     {
         using var connection = new SqlConnection(table.Connection.ConnectionString);
-        return await table.Connection.Credential.RunImpersonatedOrAsCurrentUserIfNullAsync(async () =>
+        return await table.Connection.RunImpersonatedOrAsCurrentUserAsync(async () =>
         {
             await connection.OpenAsync();
             var columns = await connection.QueryAsync<string>("""
@@ -32,7 +32,7 @@ public static class Extensions
         }
 
         using var connection = new SqlConnection(table.Connection.ConnectionString);
-        return await table.Connection.Credential.RunImpersonatedOrAsCurrentUserIfNullAsync(async () =>
+        return await table.Connection.RunImpersonatedOrAsCurrentUserAsync(async () =>
         {
             await connection.OpenAsync();
 
@@ -56,7 +56,7 @@ public static class Extensions
     internal static async Task<IEnumerable<Column>> GetColumnsAsync(this MasterDataTable table, bool includeLookups = true)
     {
         using var connection = new SqlConnection(table.Connection.ConnectionString);
-        return await table.Connection.Credential.RunImpersonatedOrAsCurrentUserIfNullAsync(async () =>
+        return await table.Connection.RunImpersonatedOrAsCurrentUserAsync(async () =>
         {
             await connection.OpenAsync();
             return await table.GetColumnsAsync(connection, includeLookups);

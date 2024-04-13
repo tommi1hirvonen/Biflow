@@ -48,7 +48,7 @@ public class TableData
         }
 
         using var connection = new SqlConnection(MasterDataTable.Connection.ConnectionString);
-        return await MasterDataTable.Connection.Credential.RunImpersonatedOrAsCurrentUserIfNullAsync(async () =>
+        return await MasterDataTable.connection.RunImpersonatedOrAsCurrentUserAsync(async () =>
         {
             await connection.OpenAsync();
             using var transaction = await connection.BeginTransactionAsync();
