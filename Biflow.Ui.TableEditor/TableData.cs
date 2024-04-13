@@ -1,4 +1,5 @@
-﻿using ClosedXML.Excel;
+﻿using Biflow.Core;
+using ClosedXML.Excel;
 using System.Runtime.InteropServices;
 
 namespace Biflow.Ui.TableEditor;
@@ -47,27 +48,28 @@ public class TableData
         }
 
         using var connection = new SqlConnection(MasterDataTable.Connection.ConnectionString);
-        await connection.OpenAsync();
-
-        using var transaction = await connection.BeginTransactionAsync();
-
-        try
+        return await MasterDataTable.Connection.Credential.RunImpersonatedOrAsCurrentUserIfNullAsync(async () =>
         {
-            foreach (var (command, parameters, type) in changes)
+            await connection.OpenAsync();
+            using var transaction = await connection.BeginTransactionAsync();
+            try
             {
-                await connection.ExecuteAsync(command, parameters, transaction);
+                foreach (var (command, parameters, type) in changes)
+                {
+                    await connection.ExecuteAsync(command, parameters, transaction);
+                }
+                await transaction.CommitAsync();
+                var inserted = changes.Where(c => c.CommandType == CommandType.Insert).Count();
+                var updated = changes.Where(c => c.CommandType == CommandType.Update).Count();
+                var deleted = changes.Where(c => c.CommandType == CommandType.Delete).Count();
+                return (inserted, updated, deleted);
             }
-            await transaction.CommitAsync();
-            var inserted = changes.Where(c => c.CommandType == CommandType.Insert).Count();
-            var updated = changes.Where(c => c.CommandType == CommandType.Update).Count();
-            var deleted = changes.Where(c => c.CommandType == CommandType.Delete).Count();
-            return (inserted, updated, deleted);
-        }
-        catch (Exception)
-        {
-            await transaction.RollbackAsync();
-            throw;
-        }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        });
     }
 
     public void AddRow(Row? other = null)

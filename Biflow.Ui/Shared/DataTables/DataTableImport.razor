@@ -175,6 +175,7 @@
         table = await context.MasterDataTables
             .Include(t => t.Category)
             .Include(t => t.Connection)
+            .ThenInclude(c => c.Credential)
             .FirstAsync(t => t.DataTableId == TableId);
 
         // Protect users against an incorrect upload type selection by filtering them

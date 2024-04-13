@@ -1,4 +1,5 @@
-﻿using System.Data;
+﻿using Biflow.Core;
+using System.Data;
 
 namespace Biflow.Ui.TableEditor;
 
@@ -27,67 +28,70 @@ public class Upload
     public async Task<(int Inserted, int Updated, int Deleted)> SaveUploadToDbAsync(UploadType uploadType)
     {
         using var connection = new SqlConnection(_table.Connection.ConnectionString);
-        await connection.OpenAsync();
+        return await _table.Connection.Credential.RunImpersonatedOrAsCurrentUserIfNullAsync(async () =>
+        {
+            await connection.OpenAsync();
 
-        var uploadedColumns = _columns
-            .Where(c => !c.IsComputed)
-            .Where(c => !c.IsLocked || c.IsPrimaryKey)
-            .Where(c => !c.IsHidden || c.IsPrimaryKey)
-            .ToArray();
-        var columnDefinitions = uploadedColumns.Select(c => $"{c.Name.QuoteName()} {c.DbCreateDatatype}");
-        var command = $"""
+            var uploadedColumns = _columns
+                .Where(c => !c.IsComputed)
+                .Where(c => !c.IsLocked || c.IsPrimaryKey)
+                .Where(c => !c.IsHidden || c.IsPrimaryKey)
+                .ToArray();
+            var columnDefinitions = uploadedColumns.Select(c => $"{c.Name.QuoteName()} {c.DbCreateDatatype}");
+            var command = $"""
             CREATE TABLE #temp (
             {string.Join(",\n", columnDefinitions)}
             )
             """;
-        await connection.ExecuteAsync(command);
-        
-        var copy = new SqlBulkCopy(connection)
-        {
-            DestinationTableName = "#temp"
-        };
-        foreach (var column in uploadedColumns)
-        {
-            var mapping = new SqlBulkCopyColumnMapping(column.Name, column.Name);
-            copy.ColumnMappings.Add(mapping);
-        }
-        var reader = new DictionaryReader(uploadedColumns.Select(c => c.Name), Data);
-        await copy.WriteToServerAsync(reader);
+            await connection.ExecuteAsync(command);
 
-        var (inserted, updated, deleted) = (0, 0, 0);
-        var transaction = await connection.BeginTransactionAsync();
-        try
-        {
-            switch (uploadType)
+            var copy = new SqlBulkCopy(connection)
             {
-                case UploadType.Upsert:
-                    updated = await ExecuteUpdateAsync(connection, transaction);
-                    inserted = await ExecuteInsertAsync(connection, transaction);
-                    break;
-                case UploadType.InsertNew:
-                    inserted = await ExecuteInsertAsync(connection, transaction);
-                    break;
-                case UploadType.UpdateExisting:
-                    updated = await ExecuteUpdateAsync(connection, transaction);
-                    break;
-                case UploadType.Full:
-                    await connection.ExecuteAsync($"TRUNCATE TABLE {QuotedSchemaAndTable}", transaction: transaction);
-                    inserted = await ExecuteInsertAsync(connection, transaction);
-                    break;
-                case UploadType.DeleteMissing:
-                    deleted = await ExecuteDeleteAsync(connection, transaction);
-                    break;
-                default:
-                    throw new NotSupportedException($"Unsupported UploadType {uploadType}");
+                DestinationTableName = "#temp"
+            };
+            foreach (var column in uploadedColumns)
+            {
+                var mapping = new SqlBulkCopyColumnMapping(column.Name, column.Name);
+                copy.ColumnMappings.Add(mapping);
             }
-            await transaction.CommitAsync();
-        }
-        catch
-        {
-            await transaction.RollbackAsync();
-            throw;
-        }
-        return (inserted, updated, deleted);
+            var reader = new DictionaryReader(uploadedColumns.Select(c => c.Name), Data);
+            await copy.WriteToServerAsync(reader);
+
+            var (inserted, updated, deleted) = (0, 0, 0);
+            var transaction = await connection.BeginTransactionAsync();
+            try
+            {
+                switch (uploadType)
+                {
+                    case UploadType.Upsert:
+                        updated = await ExecuteUpdateAsync(connection, transaction);
+                        inserted = await ExecuteInsertAsync(connection, transaction);
+                        break;
+                    case UploadType.InsertNew:
+                        inserted = await ExecuteInsertAsync(connection, transaction);
+                        break;
+                    case UploadType.UpdateExisting:
+                        updated = await ExecuteUpdateAsync(connection, transaction);
+                        break;
+                    case UploadType.Full:
+                        await connection.ExecuteAsync($"TRUNCATE TABLE {QuotedSchemaAndTable}", transaction: transaction);
+                        inserted = await ExecuteInsertAsync(connection, transaction);
+                        break;
+                    case UploadType.DeleteMissing:
+                        deleted = await ExecuteDeleteAsync(connection, transaction);
+                        break;
+                    default:
+                        throw new NotSupportedException($"Unsupported UploadType {uploadType}");
+                }
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+            return (inserted, updated, deleted);
+        });
     }
 
     private async Task<int> ExecuteInsertAsync(SqlConnection connection, IDbTransaction transaction)
