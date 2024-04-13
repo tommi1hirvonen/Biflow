@@ -39,6 +39,16 @@ public partial class Credential
         return WindowsIdentity.RunImpersonatedAsync(token, func);
     }
 
+    [SupportedOSPlatform("windows")]
+    public Task<T> RunImpersonatedAsync<T>(Func<Task<T>> func)
+    {
+        if (!TryGetTokenHandle(out var token))
+        {
+            throw new ApplicationException("Could not get impersonation access token handle.");
+        }
+        return WindowsIdentity.RunImpersonatedAsync(token, func);
+    }
+
     [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Only used when running on Windows")]
     private bool TryGetTokenHandle([NotNullWhen(true)] out SafeAccessTokenHandle? token)
     {

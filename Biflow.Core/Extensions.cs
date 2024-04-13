@@ -66,6 +66,16 @@ public static class Extensions
         }
     }
 
+    public static Task RunImpersonatedOrAsCurrentUserIfNullAsync(this Credential? credential, Func<Task> func) =>
+        credential is not null && OperatingSystem.IsWindows()
+            ? credential.RunImpersonatedAsync(func)
+            : func();
+
+    public static Task<T> RunImpersonatedOrAsCurrentUserIfNullAsync<T>(this Credential? credential, Func<Task<T>> func) =>
+        credential is not null && OperatingSystem.IsWindows()
+            ? credential.RunImpersonatedAsync(func)
+            : func();
+
     public static void SortBy<T, U>(this IList<T> list, Func<T, U> propertyDelegate) where U : IComparable =>
         list.Sort((one, other) => propertyDelegate(one).CompareTo(propertyDelegate(other)));
 

@@ -24,6 +24,12 @@ internal class SqlStepExecutor(
         var connectionInfo = step.GetConnection();
         ArgumentNullException.ThrowIfNull(connectionInfo);
 
+        var credential = connectionInfo.Credential;
+        if (credential is not null && !OperatingSystem.IsWindows())
+        {
+            attempt.AddWarning("Connection has impersonation enabled but the OS platform does not support it. Impersonation will be skipped.");
+        }
+
         try
         {
             _logger.LogInformation("{ExecutionId} {Step} Starting SQL execution", step.ExecutionId, step);
@@ -44,7 +50,8 @@ internal class SqlStepExecutor(
             // Check whether the query result should be captured to a job parameter.
             if (step.ResultCaptureJobParameterId is not null)
             {
-                var result = await connection.ExecuteScalarAsync(command);
+                var result = await credential.RunImpersonatedOrAsCurrentUserIfNullAsync(
+                    () => connection.ExecuteScalarAsync(command));
 
                 // Update the capture value.
                 using var context = _dbContextFactory.CreateDbContext();
@@ -63,7 +70,8 @@ internal class SqlStepExecutor(
             }
             else
             {
-                await connection.ExecuteAsync(command);
+                await credential.RunImpersonatedOrAsCurrentUserIfNullAsync(
+                    () => connection.ExecuteAsync(command));
             }
         }
         catch (SqlException ex)
