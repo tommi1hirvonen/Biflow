@@ -53,6 +53,10 @@ internal class ExeStepExecutor(
             startInfo.PasswordInClearText = cred.Password.NullIfEmpty();
             startInfo.LoadUserProfile = true;
         }
+        else if (cred is not null)
+        {
+            attempt.AddWarning("Running executables with impersonation is only supported on Windows.");
+        }
 
         var outputBuilder = new StringBuilder();
         var errorBuilder = new StringBuilder();
