@@ -20,9 +20,7 @@
     <table class="table table-hover table-sm">
         <thead>
             <tr>
-                <th>
-                    Schedule name
-                </th>
+                <th></th>
                 <th>
                     Enabled
                 </th>
@@ -54,7 +52,19 @@
                 {
                     <tr class="schedule-row small @(item.IsEnabled ? null : "disabled")">
                         <td class="align-middle">
-                            @item.ScheduleName
+                            <div class="row">
+                                <div class="col">
+                                    @item.ScheduleName
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    @foreach (var tag in item.Tags.OrderBy(t => t.TagName))
+                                    {
+                                        <TagBadge Tag="tag" CssClass="m-1" />
+                                    }
+                                </div>
+                            </div>
                         </td>
                         <td class="align-middle">
                             <div class="form-check form-switch">
@@ -142,6 +152,7 @@
             using var context = DbFactory.CreateDbContext();
             schedules = await context.Schedules
                 .AsNoTrackingWithIdentityResolution()
+                .Include(schedule => schedule.Tags)
                 .Include(schedule => schedule.TagFilter)
                 .Where(schedule => schedule.JobId == Job.JobId)
                 .OrderBy(schedule => schedule.ScheduleName)
