@@ -107,7 +107,7 @@ public class Execution
     [Display(Name = "Notify caller overtime")]
     public bool NotifyCallerOvertime { get; set; }
 
-    public double TimeoutMinutes { get; private set; }
+    public double TimeoutMinutes { get; set; }
 
     [MaxLength(200)]
     public StepExecutionAttemptReference? ParentExecution { get; private set; }

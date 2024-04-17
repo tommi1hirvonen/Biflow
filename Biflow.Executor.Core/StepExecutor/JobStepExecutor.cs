@@ -41,6 +41,12 @@ internal class JobStepExecutor(
             builder.NotifyCaller = step.Execution.NotifyCaller;
             builder.NotifyCallerOvertime = step.Execution.NotifyCallerOvertime;
 
+            // If the step has timeout defined, overwrite the execution timeout setting.
+            if (step.TimeoutMinutes > 0)
+            {
+                builder.TimeoutMinutes = step.TimeoutMinutes;
+            }
+
             // Assign step parameter values to the initialized execution.
             if (step.StepExecutionParameters.Any())
             {

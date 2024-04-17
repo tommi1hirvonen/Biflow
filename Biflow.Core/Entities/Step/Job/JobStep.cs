@@ -4,13 +4,14 @@ using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
-public class JobStep : Step, IHasStepParameters<JobStepParameter>
+public class JobStep : Step, IHasStepParameters<JobStepParameter>, IHasTimeout
 {
     [JsonConstructor]
     public JobStep() : base(StepType.Job) { }
 
     private JobStep(JobStep other, Job? targetJob) : base(other, targetJob)
     {
+        TimeoutMinutes = other.TimeoutMinutes;
         JobToExecuteId = other.JobToExecuteId;
         JobToExecute = other.JobToExecute;
         JobExecuteSynchronized = other.JobExecuteSynchronized;
@@ -19,6 +20,11 @@ public class JobStep : Step, IHasStepParameters<JobStepParameter>
             .Select(p => new JobStepParameter(p, this, targetJob))
             .ToList();
     }
+
+    [Required]
+    [Display(Name = "Timeout (min)")]
+    [Range(0, 2880)] // 48 hours
+    public double TimeoutMinutes { get; set; }
 
     [Display(Name = "Job to execute")]
     [Required]
