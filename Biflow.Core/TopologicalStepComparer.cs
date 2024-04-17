@@ -9,4 +9,5 @@ namespace Biflow.Core;
 public class TopologicalStepComparer(IEnumerable<Step> steps) : TopologicalComparer<Step, Guid>(
         steps,
         step => step?.StepId ?? Guid.Empty,
-        step => step.Dependencies.Select(d => d.DependantOnStepId));
+        step => step.Dependencies.Select(d => d.DependantOnStepId),
+        Comparer<Step>.Create((x, y) => x.ExecutionPhase.CompareTo(y.ExecutionPhase)));

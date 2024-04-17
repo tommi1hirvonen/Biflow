@@ -67,13 +67,14 @@ public partial class StepsList : ComponentBase
         .Where(step => stepTypeFilter.Count == 0 || stepTypeFilter.Contains(step.StepType))
         .Where(step => connectionFilter.Count == 0 || step is IHasConnection conn && connectionFilter.Any(f => f.ConnectionId == conn.ConnectionId))
         .Where(step => advancedFiltersOffcanvas?.EvaluatePredicates(step) ?? true)
-        ?? Enumerable.Empty<Step>();
+        ?? [];
 
     private IEnumerable<StepTag> Tags => Steps?
         .SelectMany(step => step.Tags)
         .DistinctBy(t => t.TagName)
         .OrderBy(t => t.TagName)
-        ?? Enumerable.Empty<StepTag>();
+        .AsEnumerable()
+        ?? [];
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
