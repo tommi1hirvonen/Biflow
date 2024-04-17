@@ -41,6 +41,7 @@ else
             .AsNoTrackingWithIdentityResolution()
             .Include(t => t.Category)
             .Include(t => t.Connection)
+            .ThenInclude(c => c.Credential)
             .Include(t => t.Lookups)
             .OrderBy(t => t.DataTableName)
             .ToListAsync();
@@ -57,6 +58,7 @@ else
             .AsNoTrackingWithIdentityResolution()
             .IgnoreQueryFilters()
             .Include(t => t.Connection)
+            .ThenInclude(c => c.Credential)
             .Where(t => lookupTableIds.Contains(t.DataTableId))
             .ToListAsync();
 
@@ -94,6 +96,7 @@ else
         }
         connections = await context.SqlConnections
             .AsNoTrackingWithIdentityResolution()
+            .Include(c => c.Credential)
             .OrderBy(c => c.ConnectionName)
             .ToListAsync();
     }

@@ -104,15 +104,15 @@
     {
         if (this.connectionId != connectionId)
         {
-                tables = null;
+            tables = null;
             this.connectionId = connectionId;
             try
             {
-                    tables = await SqlServerHelper.GetDatabaseTablesAsync(this.connectionId);
+                tables = await SqlServerHelper.GetDatabaseTablesAsync(this.connectionId);
             }
             catch (Exception ex)
             {
-                    Toaster.AddError("Error loading tables", ex.Message);
+                Toaster.AddError("Error loading tables", ex.Message);
             }
         }
         await offcanvas.LetAsync(x => x.ShowAsync());

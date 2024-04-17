@@ -94,21 +94,7 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("app");
-
         modelBuilder.ApplyConfigurations(this);
-
-        // Use reflection to set property access mode for parameter values.
-        // This is important for the correct behaviour of parameter types when editing them in forms.
-        var parameterBaseType = typeof(ParameterBase);
-        var parameterTypes = parameterBaseType.Assembly
-            .GetTypes()
-            .Where(t => t.IsSubclassOf(parameterBaseType) && !t.IsAbstract);
-        foreach (var type in parameterTypes)
-        {
-            modelBuilder.Entity(type)
-                .Property(nameof(ParameterBase.ParameterValue))
-                .UsePropertyAccessMode(PropertyAccessMode.Property);
-        }
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

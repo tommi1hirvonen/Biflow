@@ -11,6 +11,7 @@ public class TopologicalComparer<TItem, TKey> : IComparer<TItem>
     private readonly TKey[] _topologicalList;
     private readonly Func<TItem?, TKey> _keySelector;
     private readonly Func<TItem, IEnumerable<TKey>> _dependenciesSelector;
+    private readonly IComparer<TItem>? _whenEqualComparer;
 
     /// <summary>
     /// 
@@ -19,11 +20,17 @@ public class TopologicalComparer<TItem, TKey> : IComparer<TItem>
     /// <param name="keySelector">Delegate to fetch a unique key for an item</param>
     /// <param name="dependenciesSelector">Delegate to fetch dependencies for an item</param>
     /// <exception cref="CyclicDependencyException">If a cyclic dependency is detected and the DFS traversal cannot be completed</exception>
-    public TopologicalComparer(IEnumerable<TItem> items, Func<TItem?, TKey> keySelector, Func<TItem, IEnumerable<TKey>> dependenciesSelector)
+    public TopologicalComparer(
+        IEnumerable<TItem> items,
+        Func<TItem?, TKey> keySelector,
+        Func<TItem, IEnumerable<TKey>> dependenciesSelector,
+        IComparer<TItem>? whenEqualComparer = null)
     {
         _keySelector = keySelector;
         _dependenciesSelector = dependenciesSelector;
-        _topologicalList = InTopologicalOrder(items.ToArray())
+        _whenEqualComparer = whenEqualComparer;
+        var itemsWithDependencies = items.Where(i => dependenciesSelector(i).Any()).ToArray();
+        _topologicalList = InTopologicalOrder(itemsWithDependencies)
             .Select(keySelector)
             .ToArray();
     }
@@ -32,6 +39,10 @@ public class TopologicalComparer<TItem, TKey> : IComparer<TItem>
     {
         int xPos = Array.IndexOf(_topologicalList, _keySelector(x));
         int yPos = Array.IndexOf(_topologicalList, _keySelector(y));
+        if (xPos == yPos && _whenEqualComparer is not null)
+        {
+            return _whenEqualComparer.Compare(x, y);
+        }
         return xPos.CompareTo(yPos);
     }
 

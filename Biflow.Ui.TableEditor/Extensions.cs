@@ -1,12 +1,16 @@
-﻿namespace Biflow.Ui.TableEditor;
+﻿using Biflow.Core;
+
+namespace Biflow.Ui.TableEditor;
 
 public static class Extensions
 {
     public static async Task<IEnumerable<string>> GetColumnNamesAsync(this MasterDataTable table)
     {
         using var connection = new SqlConnection(table.Connection.ConnectionString);
-        await connection.OpenAsync();
-        var columns = await connection.QueryAsync<string>("""
+        return await table.Connection.RunImpersonatedOrAsCurrentUserAsync(async () =>
+        {
+            await connection.OpenAsync();
+            var columns = await connection.QueryAsync<string>("""
             select b.[name]
             from sys.tables as a
                 inner join sys.columns as b on a.object_id = b.object_id
@@ -14,9 +18,10 @@ public static class Extensions
             where a.[name] = @TableName and d.[name] = @SchemaName
             order by b.[column_id]
             """,
-            new { TableName = table.TargetTableName, SchemaName = table.TargetSchemaName }
-        );
-        return columns;
+                new { TableName = table.TargetTableName, SchemaName = table.TargetSchemaName }
+            );
+            return columns;
+        });
     }
 
     public static async Task<TableData> LoadDataAsync(this MasterDataTable table, int? top = null, FilterSet? filters = null)
@@ -27,32 +32,38 @@ public static class Extensions
         }
 
         using var connection = new SqlConnection(table.Connection.ConnectionString);
-        await connection.OpenAsync();
+        return await table.Connection.RunImpersonatedOrAsCurrentUserAsync(async () =>
+        {
+            await connection.OpenAsync();
 
-        var columns = (await table.GetColumnsAsync(connection)).ToArray();
+            var columns = (await table.GetColumnsAsync(connection)).ToArray();
 
-        var (query, parameters) = new DataTableQueryBuilder(
-            table: table,
-            top: top is not null ? top + 1 : null,
-            filters: filters)
-            .Build();
-        var rows = await connection.QueryAsync(query, parameters);
-        var initialValues = rows
-            .TakeIfNotNull(top)
-            .Cast<IDictionary<string, object?>>();
+            var (query, parameters) = new DataTableQueryBuilder(
+                table: table,
+                top: top is not null ? top + 1 : null,
+                filters: filters)
+                .Build();
+            var rows = await connection.QueryAsync(query, parameters);
+            var initialValues = rows
+                .TakeIfNotNull(top)
+                .Cast<IDictionary<string, object?>>();
 
-        var hasMoreRows = top is not null && rows.Count() > top; // Actual type of rows is List, so Count() is safe to do. O(1) operation
-        return new TableData(table, columns, initialValues, hasMoreRows);
+            var hasMoreRows = top is not null && rows.Count() > top; // Actual type of rows is List, so Count() is safe to do. O(1) operation
+            return new TableData(table, columns, initialValues, hasMoreRows);
+        });  
     }
 
     internal static async Task<IEnumerable<Column>> GetColumnsAsync(this MasterDataTable table, bool includeLookups = true)
     {
         using var connection = new SqlConnection(table.Connection.ConnectionString);
-        await connection.OpenAsync();
-        return await table.GetColumnsAsync(connection, includeLookups);
+        return await table.Connection.RunImpersonatedOrAsCurrentUserAsync(async () =>
+        {
+            await connection.OpenAsync();
+            return await table.GetColumnsAsync(connection, includeLookups);
+        });
     }
 
-    internal static async Task<IEnumerable<Column>> GetColumnsAsync(this MasterDataTable table, SqlConnection connection, bool includeLookups = true)
+    private static async Task<IEnumerable<Column>> GetColumnsAsync(this MasterDataTable table, SqlConnection connection, bool includeLookups = true)
     {
         var primaryKeyColumns = (await table.GetPrimaryKeyAsync(connection)).ToHashSet();
         var identityColumn = await table.GetIdentityColumnOrNullAsync(connection);

@@ -44,6 +44,7 @@ public partial class DataTableEditModal : ComponentBase, IDisposable
             .ToListAsync();
         tables = await editContext.MasterDataTables
             .Include(t => t.Connection)
+            .ThenInclude(c => c.Credential)
             .Include(t => t.Category)
             .OrderBy(t => t.Category!.CategoryName)
             .ThenBy(t => t.DataTableName)
@@ -61,6 +62,7 @@ public partial class DataTableEditModal : ComponentBase, IDisposable
         {
             editTable = await editContext.MasterDataTables
                 .Include(t => t.Connection)
+                .ThenInclude(c => c.Credential)
                 .Include(t => t.Lookups)
                 .ThenInclude(l => l.LookupTable)
                 .FirstAsync(t => t.DataTableId == table.DataTableId);
@@ -120,7 +122,7 @@ public partial class DataTableEditModal : ComponentBase, IDisposable
     {
         return Task.FromResult(new AutosuggestDataProviderResult<string>
         {
-            Data = columns?.Where(c => c.ContainsIgnoreCase(request.UserInput)) ?? Enumerable.Empty<string>()
+            Data = columns?.Where(c => c.ContainsIgnoreCase(request.UserInput)) ?? []
         });
     }
 
@@ -129,7 +131,7 @@ public partial class DataTableEditModal : ComponentBase, IDisposable
         return Task.FromResult(new InputTagsDataProviderResult
         {
             Data = columns?.Where(c => c.ContainsIgnoreCase(request.UserInput) && (!editTable?.LockedColumns.Contains(c) ?? true))
-                ?? Enumerable.Empty<string>()
+                ?? []
         });
     }
 
@@ -138,7 +140,7 @@ public partial class DataTableEditModal : ComponentBase, IDisposable
         return Task.FromResult(new InputTagsDataProviderResult
         {
             Data = columns?.Where(c => c.ContainsIgnoreCase(request.UserInput) && (!editTable?.HiddenColumns.Contains(c) ?? true))
-                ?? Enumerable.Empty<string>()
+                ?? []
         });
     }
 
@@ -148,7 +150,7 @@ public partial class DataTableEditModal : ComponentBase, IDisposable
         {
             Data = tables
                 ?.Where(t => t.DataTableName.ContainsIgnoreCase(request.UserInput) || (t.Category?.CategoryName.ContainsIgnoreCase(request.UserInput) ?? false))
-                ?? Enumerable.Empty<MasterDataTable>()
+                ?? []
         });
     }
 
@@ -156,7 +158,7 @@ public partial class DataTableEditModal : ComponentBase, IDisposable
     {
         return Task.FromResult(new AutosuggestDataProviderResult<string>
         {
-            Data = lookupColumns.GetValueOrDefault(lookup)?.Where(c => c.ContainsIgnoreCase(request.UserInput)) ?? Enumerable.Empty<string>()
+            Data = lookupColumns.GetValueOrDefault(lookup)?.Where(c => c.ContainsIgnoreCase(request.UserInput)) ?? []
         });
     }
 

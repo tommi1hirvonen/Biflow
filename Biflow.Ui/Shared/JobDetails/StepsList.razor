@@ -57,7 +57,7 @@
                               Enabled="Steps is not null && Job is not null && Jobs is not null"
                               @onclick="() => Job.LetAsync(j => executeModal.LetAsync(m => m.ShowAsync(j.JobId, selectedSteps)))">
                         <CxIcon Icon="FeatherIcon.Play" />
-                        Execute
+                        Execute...
                     </HxButton>
                 </AuthorizeView>
             </div>
@@ -228,12 +228,12 @@
                                             <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" title="Delete selected steps"
                                                       @onclick="DeleteSelectedSteps">
                                                 <CxIcon Icon="FeatherIcon.Trash2" />
-                                                Delete
+                                                Delete...
                                             </HxButton>
                                             <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" title="Copy selected steps"
                                                       @onclick="() => stepsCopyOffcanvas.LetAsync(x => x.ShowAsync(Job, selectedSteps))">
                                                 <CxIcon Icon="FeatherIcon.Copy" />
-                                                Copy
+                                                Copy...
                                             </HxButton>
                                             <HxDropdownButtonGroup>
                                                 <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
@@ -476,13 +476,9 @@
                                     <CxIcon Icon="FeatherIcon.Edit2" />
                                     Edit
                                 </DropdownMenuItem>
-                                <DropdownMenuItem @onclick="() => DeleteStep(item)">
-                                    <CxIcon Icon="FeatherIcon.Trash2" />
-                                    Delete
-                                </DropdownMenuItem>
                                 <DropdownMenuItem @onclick="() => stepsCopyOffcanvas.LetAsync(x => x.ShowAsync(Job, [item]))">
                                     <CxIcon Icon="FeatherIcon.Copy" />
-                                    Copy
+                                    Copy...
                                 </DropdownMenuItem>
                             </AuthorizeView>
                             <DropdownMenuItem @onclick="() => stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
@@ -500,6 +496,12 @@
                                 <CxIcon Icon="FeatherIcon.Info" />
                                 Details
                             </DropdownMenuItem>
+                            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+                                <DropdownMenuItem @onclick="() => DeleteStep(item)">
+                                    <CxIcon Icon="FeatherIcon.Trash2" />
+                                    Delete...
+                                </DropdownMenuItem>
+                            </AuthorizeView>
                         </MenuContent>
                     </ContextMenuToggle>
                 }

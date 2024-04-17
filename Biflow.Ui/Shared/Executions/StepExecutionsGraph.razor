@@ -62,8 +62,8 @@
                             (var offset, var width) = (execution.StartedOn, execution.EndedOn)
                                 .GetGanttGraphDimensions(Executions.Select(e => (e.StartedOn, e.EndedOn)));
                             <ContextMenuToggle ContainerHtmlTag="div"
-                                               CssClass="@($"progress hover {(execution == selectedStepExecution ? "active" : null)} {execution.ExecutionStatus.ToString().ToLower()}")"
-                                               title="@($"{execution.ExecutionStatus}, {execution.ExecutionInSeconds?.SecondsToReadableFormat()}")"
+                                               CssClass="@($"progress hover {(execution == selectedStepExecution ? "active" : null)} {execution.StepExecutionStatus.ToString().ToLower()}")"
+                                               title="@($"{execution.StepExecutionStatus}, {execution.ExecutionInSeconds?.SecondsToReadableFormat()}")"
                                                style="@($"cursor: pointer; position: absolute; width: {width.ToString("F10", CultureInfo.InvariantCulture)}%; left: {offset.ToString("F10", CultureInfo.InvariantCulture)}%;")"
                                                @onclick="() => ToggleSelectedStepExecutionAsync(execution)">
                                 <ChildContent>

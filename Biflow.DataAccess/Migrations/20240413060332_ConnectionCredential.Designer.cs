@@ -4,6 +4,7 @@ using Biflow.DataAccess;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Biflow.DataAccess.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240413060332_ConnectionCredential")]
+    partial class ConnectionCredential
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -379,9 +382,6 @@ namespace Biflow.DataAccess.Migrations
                     b.Property<bool>("StopOnFirstError")
                         .HasColumnType("bit");
 
-                    b.Property<double>("TimeoutMinutes")
-                        .HasColumnType("float");
-
                     b.HasKey("ExecutionId");
 
                     b.HasIndex(new[] { "CreatedOn", "EndedOn" }, "IX_Execution_CreatedOn_EndedOn");
@@ -601,9 +601,6 @@ namespace Biflow.DataAccess.Migrations
 
                     b.Property<bool>("StopOnFirstError")
                         .HasColumnType("bit");
-
-                    b.Property<double>("TimeoutMinutes")
-                        .HasColumnType("float");
 
                     b.Property<byte[]>("Timestamp")
                         .IsConcurrencyToken()

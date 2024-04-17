@@ -3,6 +3,21 @@
 <StepEditModalTemplate Modal="this" TStep="JobStep">
     @if (Step is not null && JobSlims is not null)
     {
+        <div class="row">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Timeout (min)</label>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <CxIcon Icon="FeatherIcon.XOctagon" />
+                    </div>
+                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 5rem;"></InputNumber>
+                </div>
+                <span class="form-text">0 = use sub-job's default timeout</span>
+            </div>
+        </div>
+
         <div class="row mt-3">
             <div class="col-md-4 d-md-flex justify-content-end pt-md-1">
                 <label class="form-label mb-lg-0">Job to execute</label>

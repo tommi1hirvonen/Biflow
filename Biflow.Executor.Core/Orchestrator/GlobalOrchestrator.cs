@@ -24,9 +24,9 @@ internal class GlobalOrchestrator(
             // Acquire lock for editing the step statuses and until all observers have subscribed.
             lock (_lock)
             {
-                foreach (var stepExecution in observers.Select(o => o.StepExecution))
+                foreach (var observer in observers)
                 {
-                    _stepStatuses[stepExecution] = OrchestrationStatus.NotStarted;
+                    _stepStatuses[observer.StepExecution] = OrchestrationStatus.NotStarted;
                 }
                 var statuses = _stepStatuses.Select(s => new OrchestrationUpdate(s.Key, s.Value)).ToArray();
                 foreach (var observer in observers)

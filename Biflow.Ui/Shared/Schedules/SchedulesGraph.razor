@@ -2,6 +2,7 @@
 
 @inject ToasterService Toaster
 @inject IMediator Mediator
+@inject IHxMessageBoxService Confirmer
 
 <div class="row justify-content-between gap-2 mt-3">
     <div class="col-auto">
@@ -130,7 +131,7 @@
                                                 </HxDropdownItem>
                                                 <HxDropdownItem OnClick="() => DeleteScheduleAsync(schedule)">
                                                     <CxIcon Icon="FeatherIcon.Trash2" />
-                                                    Delete schedule
+                                                    Delete schedule...
                                                 </HxDropdownItem>
                                             </HxDropdownMenu>
                                         </HxDropdown>
@@ -169,7 +170,7 @@
                 _start = value;
             }
             catch (ArgumentOutOfRangeException) { }
-        
+
         }
     }
 
@@ -234,6 +235,10 @@
 
     private async Task DeleteScheduleAsync(Schedule schedule)
     {
+        if (!await Confirmer.ConfirmAsync("Delete schedule", $"Delete schedule {schedule.ScheduleName}?"))
+        {
+            return;
+        }
         try
         {
             await Mediator.SendAsync(new DeleteScheduleCommand(schedule.ScheduleId));

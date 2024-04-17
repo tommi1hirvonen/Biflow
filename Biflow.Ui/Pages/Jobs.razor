@@ -265,7 +265,7 @@
                 {
                     @foreach (var listItem in pageItems)
                     {
-                        var (item, lastExecution, nextStartTime) = listItem;
+                        var (item, lastExecution, schedule, nextStartTime) = listItem;
                         <ContextMenuToggle ContainerHtmlTag="tr" CssClass="@($"job-row {(item.IsEnabled ? null : "disabled")}")">
                             <ChildContent Context="menu">
                                 <td class="align-middle">
@@ -297,7 +297,14 @@
                                 <td class="align-middle">
                                     @if (lastExecution is not null)
                                     {
-                                        <a class="text-body" href="javascript:void(0)" @onclick="() => GoToExecutionDetails(lastExecution.ExecutionId)">
+                                        var title = lastExecution switch
+                                        {
+                                            { ScheduleName: not null and { Length: > 0 } } => $"Scheduled by: {lastExecution.ScheduleName}",
+                                            { CreatedBy: not null and { Length: > 0 } } => $"Created by: {lastExecution.CreatedBy}",
+                                            _ => null
+                                        };
+                                        var createdBy = lastExecution.ScheduleName ?? lastExecution.CreatedBy;
+                                        <a class="text-body" href="javascript:void(0)" @onclick="() => GoToExecutionDetails(lastExecution.ExecutionId)" title="@title">
                                             @lastExecution.StartedOn?.LocalDateTime
                                         </a>
                                     }
@@ -311,8 +318,10 @@
                                 <td class="align-middle @(!item.IsEnabled ? "text-body-tertiary" : null)">
                                     @if (nextStartTime is not null)
                                     {
-                                        @nextStartTime
-                                        @(!item.IsEnabled ? " (job disabled)" : null)
+                                        <span title="Schedule: @schedule?.ScheduleName">
+                                            @nextStartTime
+                                            @(!item.IsEnabled ? " (job disabled)" : null)
+                                        </span>
                                     }
                                 </td>
                                 <td class="align-middle">
@@ -344,10 +353,6 @@
                                         <CxIcon Icon="FeatherIcon.Edit2" />
                                         Edit
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem @onclick="() => DeleteJob(item)">
-                                        <CxIcon Icon="FeatherIcon.Trash2" />
-                                        Delete
-                                    </DropdownMenuItem>
                                     <DropdownMenuItem @onclick="() => CopyJob(item)">
                                         <CxIcon Icon="FeatherIcon.Copy" />
                                         Copy
@@ -364,7 +369,13 @@
                                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                                     <DropdownMenuItem @onclick="() => executeModal.LetAsync(x => x.ShowAsync(item.JobId))">
                                         <CxIcon Icon="FeatherIcon.Play" />
-                                        Execute
+                                        Execute...
+                                    </DropdownMenuItem>
+                                </AuthorizeView>
+                                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+                                    <DropdownMenuItem @onclick="() => DeleteJob(item)">
+                                        <CxIcon Icon="FeatherIcon.Trash2" />
+                                        Delete...
                                     </DropdownMenuItem>
                                 </AuthorizeView>
                             </MenuContent>

@@ -1,4 +1,4 @@
-﻿namespace Biflow.Executor.Core.Orchestrator;
+﻿namespace Biflow.Executor.Core.JobOrchestrator;
 
 internal interface IJobOrchestrator
 {

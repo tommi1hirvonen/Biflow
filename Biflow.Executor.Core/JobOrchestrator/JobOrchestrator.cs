@@ -1,8 +1,10 @@
 ﻿using Biflow.Executor.Core.Common;
+using Biflow.Executor.Core.OrchestrationTracker;
+using Biflow.Executor.Core.Orchestrator;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace Biflow.Executor.Core.Orchestrator;
+namespace Biflow.Executor.Core.JobOrchestrator;
 
 internal class JobOrchestrator : IJobOrchestrator
 {
@@ -42,6 +44,8 @@ internal class JobOrchestrator : IJobOrchestrator
 
         // Create a Dictionary with max concurrent steps for each target.
         // This allows only a predefined number of steps to write to the same target concurrently.
+        // This handles situations where the same job execution might start immediately writing to the
+        // same data object with two different steps (not handled by TargetTracker).
         var targets = _execution.StepExecutions
             .SelectMany(e => e.DataObjects)
             .Where(d => d.ReferenceType == DataObjectReferenceType.Target)
@@ -57,27 +61,51 @@ internal class JobOrchestrator : IJobOrchestrator
             .Select(step =>
             {
                 var listener = new StepProcessingListener(this, step);
-                IOrchestrationObserver observer = step.Execution.ExecutionMode switch
+                var duplicateTracker = new DuplicateExecutionTracker(step);
+                var targetTracker = new TargetTracker(step); // Handles target data object synchronization across job executions.
+                IEnumerable<IOrchestrationTracker> trackers = step.Execution.ExecutionMode switch
                 {
-                    ExecutionMode.ExecutionPhase => new ExecutionPhaseModeObserver(step, listener, _cancellationTokenSources[step]),
-                    ExecutionMode.Dependency => new DependencyModeObserver(step, listener, _cancellationTokenSources[step]),
-                    ExecutionMode.Hybrid => new HybridModeObserver(step, listener, _cancellationTokenSources[step]),
+                    ExecutionMode.ExecutionPhase => [duplicateTracker, new ExecutionPhaseTracker(step), targetTracker],
+                    ExecutionMode.Dependency => [duplicateTracker, new DependencyTracker(step), targetTracker],
+                    ExecutionMode.Hybrid => [duplicateTracker, new ExecutionPhaseTracker(step), new DependencyTracker(step), targetTracker],
                     _ => throw new ApplicationException()
                 };
+                var observer = new OrchestrationObserver(step, listener, trackers, _cancellationTokenSources[step]);
                 return observer;
             })
             .ToList();
         var orchestrationTask = _globalOrchestrator.RegisterStepsAndObservers(observers);
+        
         // CancellationToken is triggered when the executor service is being shut down
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+        if (_execution.TimeoutMinutes > 0)
+        {
+            cts.CancelAfter(TimeSpan.FromMinutes(_execution.TimeoutMinutes));
+        }
+        
         var waitTask = Task.Delay(-1, cts.Token);
         await Task.WhenAny(orchestrationTask, waitTask);
+        
         // If shutdown was requested before the orchestration task finished
         if (cancellationToken.IsCancellationRequested)
         {
             CancelExecution("Executor service shutdown");
         }
-        cts.Cancel(); // Cancel
+        else if (cts.IsCancellationRequested)
+        {
+            CancelExecution("Job timeout limit reached");
+        }
+
+        if (!cts.IsCancellationRequested)
+        {
+            try
+            {
+                cts.Cancel(); // Cancel
+            }
+            catch { }
+        }
+
         await orchestrationTask; // Wait for orchestration tasks to finish
     }
 

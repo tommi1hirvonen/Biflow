@@ -38,6 +38,7 @@ public class Execution
         ExecutionMode = job.ExecutionMode;
         StopOnFirstError = job.StopOnFirstError;
         MaxParallelSteps = job.MaxParallelSteps;
+        TimeoutMinutes = job.TimeoutMinutes;
         OvertimeNotificationLimitMinutes = job.OvertimeNotificationLimitMinutes;
         StepExecutions = new List<StepExecution>();
         ExecutionConcurrencies = job.JobConcurrencies
@@ -105,6 +106,8 @@ public class Execution
 
     [Display(Name = "Notify caller overtime")]
     public bool NotifyCallerOvertime { get; set; }
+
+    public double TimeoutMinutes { get; set; }
 
     [MaxLength(200)]
     public StepExecutionAttemptReference? ParentExecution { get; private set; }

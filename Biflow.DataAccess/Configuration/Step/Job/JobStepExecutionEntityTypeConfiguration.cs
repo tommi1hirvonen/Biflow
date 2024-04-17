@@ -8,8 +8,8 @@ internal class JobStepExecutionEntityTypeConfiguration : IEntityTypeConfiguratio
 {
     public void Configure(EntityTypeBuilder<JobStepExecution> builder)
     {
+        builder.Property(x => x.TimeoutMinutes).HasColumnName("TimeoutMinutes");
         builder.Ignore(x => x.TagFilters);
-
         builder.Property<List<TagFilter>>("_tagFilters")
             .HasColumnName("TagFilters")
             .HasConversion(

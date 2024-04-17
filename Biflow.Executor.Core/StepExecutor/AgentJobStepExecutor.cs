@@ -29,16 +29,24 @@ internal class AgentJobStepExecutor(
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
-        var connectionString = step.GetConnection()?.ConnectionString;
-        ArgumentNullException.ThrowIfNull(connectionString);
+        var connection = step.GetConnection();
+        ArgumentNullException.ThrowIfNull(connection);
+
+        if (connection.Credential is not null && !OperatingSystem.IsWindows())
+        {
+            attempt.AddWarning("Connection has impersonation enabled but the OS platform does not support it. Impersonation will be skipped.");
+        }
+
+        var connectionString = connection.ConnectionString;
 
         // Start agent job execution
         try
         {
-            using var connection = new SqlConnection(connectionString);
-            await connection.ExecuteAsync(
-                "EXEC msdb.dbo.sp_start_job @job_name = @AgentJobName",
-                new { step.AgentJobName });
+            using var sqlConnection = new SqlConnection(connectionString);
+            await connection.RunImpersonatedOrAsCurrentUserAsync(
+                () => sqlConnection.ExecuteAsync(
+                    "EXEC msdb.dbo.sp_start_job @job_name = @AgentJobName",
+                    new { step.AgentJobName }));
         }
         catch (Exception ex)
         {
@@ -58,21 +66,23 @@ internal class AgentJobStepExecutor(
             while (historyId is null)
             {
                 await Task.Delay(_pollingIntervalMs, linkedCts.Token);
-                using var connection = new SqlConnection(connectionString);
+                using var sqlConnection = new SqlConnection(connectionString);
                 // [sp_help_jobactivity] returns one row describing the agent job's status.
                 // Column [job_history_id] will contain the history id of the agent job outcome when it has completed.
-                var status = await connection.QueryAsync<dynamic>(
-                    "EXEC msdb.dbo.sp_help_jobactivity @job_name = @AgentJobName",
-                    new { step.AgentJobName });
+                var status = await connection.RunImpersonatedOrAsCurrentUserAsync(
+                    () => sqlConnection.QueryAsync<dynamic>(
+                        "EXEC msdb.dbo.sp_help_jobactivity @job_name = @AgentJobName",
+                        new { step.AgentJobName }));
                 historyId = status.FirstOrDefault()?.job_history_id;
             }
         }
         catch (OperationCanceledException ex)
         {
-            using var connection = new SqlConnection(connectionString);
-            await connection.ExecuteAsync(
-                "EXEC msdb.dbo.sp_stop_job @job_name = @AgentJobName",
-                new { step.AgentJobName });
+            using var sqlConnection = new SqlConnection(connectionString);
+            await connection.RunImpersonatedOrAsCurrentUserAsync(
+                () => sqlConnection.ExecuteAsync(
+                    "EXEC msdb.dbo.sp_stop_job @job_name = @AgentJobName",
+                    new { step.AgentJobName }));
             if (timeoutCts.IsCancellationRequested)
             {
                 attempt.AddError(ex, "Step execution timed out");
@@ -89,15 +99,17 @@ internal class AgentJobStepExecutor(
 
         try
         {
-            using var connection = new SqlConnection(connectionString);
+            using var sqlConnection = new SqlConnection(connectionString);
 
             // Get the agent job outcome status using the history id.
-            var status = await connection.ExecuteScalarAsync<int>(
-                "SELECT run_status FROM msdb.dbo.sysjobhistory WHERE instance_id = @InstanceId",
-                new { InstanceId = historyId });
+            var status = await connection.RunImpersonatedOrAsCurrentUserAsync(
+                () => sqlConnection.ExecuteScalarAsync<int>(
+                    "SELECT run_status FROM msdb.dbo.sysjobhistory WHERE instance_id = @InstanceId",
+                    new { InstanceId = historyId }));
 
             // Get data for all steps belonging to this agent job execution (including the job outcome).
-            var messageRows = await connection.QueryAsync<dynamic>("""
+            var messageRows = await connection.RunImpersonatedOrAsCurrentUserAsync(
+                () => sqlConnection.QueryAsync<dynamic>("""
                     SELECT
                         a.instance_id,
                         a.step_id,
@@ -116,7 +128,7 @@ internal class AgentJobStepExecutor(
                         a.run_time >= b.run_time
                     ORDER BY a.instance_id
                     """,
-                new { InstanceId = historyId });
+                    new { InstanceId = historyId }));
 
             var messageString = JsonSerializer.Serialize(messageRows, _serializerOptions);
             string? jobOutcome = messageRows.LastOrDefault()?.message;

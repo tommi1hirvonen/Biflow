@@ -158,12 +158,6 @@
                     </span>
                 }
             </li>
-            <li>
-                <span class="dropdown-item" role="button" @onclick="() => DeleteStep(step)">
-                    <CxIcon Icon="FeatherIcon.Trash2" />
-                    Delete
-                </span>
-            </li>
         </AuthorizeView>
         <li>
             <span class="dropdown-item" role="button" @onclick="() => stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
@@ -171,6 +165,14 @@
                 History
             </span>
         </li>
+        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+            <li>
+                <span class="dropdown-item" role="button" @onclick="() => DeleteStep(step)">
+                    <CxIcon Icon="FeatherIcon.Trash2" />
+                    Delete...
+                </span>
+            </li>
+        </AuthorizeView>
     </ContextMenuTemplate>
 </DependencyGraph>
 

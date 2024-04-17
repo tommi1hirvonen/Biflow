@@ -23,8 +23,8 @@ internal class TabularStepExecutor(
         using var server = new Server();
         try
         {
-            var refreshTask = Task.Run(() =>
-            {       
+            Task refreshDelegate() => Task.Run(() =>
+            {
                 server.Connect(connection.ConnectionString);
 
                 var database = server.Databases[step.TabularModelName];
@@ -47,10 +47,12 @@ internal class TabularStepExecutor(
                 {
                     model.RequestRefresh(RefreshType.Full);
                 }
-                
+
                 model.SaveChanges(); // This is a long running operation. RequestRefresh() returns immediately.
             });
-            
+
+            var refreshTask = connection.RunImpersonatedOrAsCurrentUserAsync(refreshDelegate);
+
             var timeoutTask = step.TimeoutMinutes > 0
                 ? Task.Delay(TimeSpan.FromMinutes(step.TimeoutMinutes), cancellationToken)
                 : Task.Delay(-1, cancellationToken);
@@ -62,10 +64,15 @@ internal class TabularStepExecutor(
                 // The timeout task completed before the refresh task => step timed out.
                 throw new OperationCanceledException();
             }
+
+            // Refresh task finished, await it to get possible error.
+            await refreshTask;
         }
         catch (OperationCanceledException ex)
         {
-            await Task.Run(server.CancelCommand); // Cancel the SaveChanges operation.
+            // Cancel the SaveChanges operation.
+            await connection.RunImpersonatedOrAsCurrentUserAsync(
+                () => Task.Run(server.CancelCommand));
             if (cancellationTokenSource.IsCancellationRequested)
             {
                 attempt.AddWarning(ex);

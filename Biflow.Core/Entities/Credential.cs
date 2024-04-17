@@ -1,9 +1,14 @@
 ﻿using Biflow.Core.Attributes;
+using Microsoft.Win32.SafeHandles;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
+using System.Security.Principal;
 
 namespace Biflow.Core.Entities;
 
-public class Credential
+public partial class Credential
 {
     public Guid CredentialId { get; private set; }
 
@@ -20,4 +25,54 @@ public class Credential
     public string DisplayName => Domain is { Length: > 0 } domain
         ? $@"{domain}\{Username}"
         : Username;
+
+    private const int LOGON32_PROVIDER_DEFAULT = 0;
+    private const int LOGON32_LOGON_INTERACTIVE = 2;
+
+    [SupportedOSPlatform("windows")]
+    public Task RunImpersonatedAsync(Func<Task> func)
+    {
+        if (!TryGetTokenHandle(out var token))
+        {
+            throw new ApplicationException("Could not get impersonation access token handle.");
+        }
+        return WindowsIdentity.RunImpersonatedAsync(token, func);
+    }
+
+    [SupportedOSPlatform("windows")]
+    public Task<T> RunImpersonatedAsync<T>(Func<Task<T>> func)
+    {
+        if (!TryGetTokenHandle(out var token))
+        {
+            throw new ApplicationException("Could not get impersonation access token handle.");
+        }
+        return WindowsIdentity.RunImpersonatedAsync(token, func);
+    }
+
+    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Only used when running on Windows")]
+    private bool TryGetTokenHandle([NotNullWhen(true)] out SafeAccessTokenHandle? token)
+    {
+        var domain = Domain;
+        if (domain is null or { Length: 0 })
+        {
+            domain = ".";
+        }
+        if (LogonUserW(Username, domain, Password, LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT, out var handle))
+        {
+            token = new SafeAccessTokenHandle(handle);
+            return true;
+        }
+        token = null;
+        return false;
+    }
+
+    [LibraryImport("advapi32.dll", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool LogonUserW(
+        string lpszUsername,
+        string? lpszDomain,
+        string? lpszPassword,
+        int dwLogonType,
+        int dwLogonProvider,
+        out nint phToken);
 }

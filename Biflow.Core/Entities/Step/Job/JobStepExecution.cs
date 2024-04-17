@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 namespace Biflow.Core.Entities;
 
 public class JobStepExecution : StepExecution,
+    IHasTimeout,
     IHasStepExecutionParameters<JobStepExecutionParameter>,
     IHasStepExecutionAttempts<JobStepExecutionAttempt>
 {
@@ -15,6 +16,7 @@ public class JobStepExecution : StepExecution,
     {
         ArgumentNullException.ThrowIfNull(step.JobToExecuteId);
 
+        TimeoutMinutes = step.TimeoutMinutes;
         JobToExecuteId = (Guid)step.JobToExecuteId;
         JobExecuteSynchronized = step.JobExecuteSynchronized;
         _tagFilters = step.TagFilters
@@ -27,6 +29,8 @@ public class JobStepExecution : StepExecution,
     }
 
     private readonly List<TagFilter> _tagFilters = [];
+
+    public double TimeoutMinutes { get; private set; }
 
     [Display(Name = "Job to execute")]
     public Guid JobToExecuteId { get; private set; }

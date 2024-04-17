@@ -16,6 +16,7 @@ public class Job : IAuditable
         ExecutionMode = other.ExecutionMode;
         StopOnFirstError = other.StopOnFirstError;
         MaxParallelSteps = other.MaxParallelSteps;
+        TimeoutMinutes = other.TimeoutMinutes;
         OvertimeNotificationLimitMinutes = other.OvertimeNotificationLimitMinutes;
         IsEnabled = other.IsEnabled;
         Tags = other.Tags.ToList();
@@ -89,6 +90,11 @@ public class Job : IAuditable
     [Display(Name = "Overtime notification limit (min, 0 = indefinite)")]
     [Range(0, 10000)]
     public double OvertimeNotificationLimitMinutes { get; set; }
+
+    [Required]
+    [Display(Name = "Timeout (min)")]
+    [Range(0, 2880)] // 48 hours
+    public double TimeoutMinutes { get; set; }
 
     [Required]
     [Display(Name = "Enabled")]

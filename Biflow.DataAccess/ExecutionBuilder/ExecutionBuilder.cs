@@ -44,6 +44,8 @@ public partial class ExecutionBuilder : IDisposable
 
     public bool NotifyCallerOvertime { get => _execution.NotifyCallerOvertime; set => _execution.NotifyCallerOvertime = value; }
 
+    public double TimeoutMinutes { get => _execution.TimeoutMinutes; set => _execution.TimeoutMinutes = value; }
+
     public IEnumerable<ExecutionBuilderStep> Steps =>
         _builderSteps.Where(s => !_execution.StepExecutions.Any(e => s.StepId == e.StepId));
 
