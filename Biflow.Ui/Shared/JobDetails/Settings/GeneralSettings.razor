@@ -34,6 +34,16 @@
             </div>
         </div>
         <div>
+            <label class="form-label">Timeout (min, 0 = indefinite)</label>
+            <div class="input-group">
+                <div class="input-group-text">
+                    <CxIcon Icon="FeatherIcon.XOctagon" />
+                </div>
+                <InputNumber class="form-control form-control-sm" style="max-width: 10rem;" @bind-Value="editJob.TimeoutMinutes"></InputNumber>
+            </div>
+            <div class="form-text">If the job's execution exceeds the timeout limit, the execution will be stopped in its entirety.</div>
+        </div>
+        <div>
             <label class="form-label">Overtime notification limit (min, 0 = indefinite)</label>
             <div class="input-group">
                 <div class="input-group-text">

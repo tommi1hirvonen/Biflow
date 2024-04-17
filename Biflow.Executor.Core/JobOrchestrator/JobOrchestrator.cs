@@ -75,16 +75,37 @@ internal class JobOrchestrator : IJobOrchestrator
             })
             .ToList();
         var orchestrationTask = _globalOrchestrator.RegisterStepsAndObservers(observers);
+        
         // CancellationToken is triggered when the executor service is being shut down
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+        if (_execution.TimeoutMinutes > 0)
+        {
+            cts.CancelAfter(TimeSpan.FromMinutes(_execution.TimeoutMinutes));
+        }
+        
         var waitTask = Task.Delay(-1, cts.Token);
         await Task.WhenAny(orchestrationTask, waitTask);
+        
         // If shutdown was requested before the orchestration task finished
         if (cancellationToken.IsCancellationRequested)
         {
             CancelExecution("Executor service shutdown");
         }
-        cts.Cancel(); // Cancel
+        else if (cts.IsCancellationRequested)
+        {
+            CancelExecution("Job timeout limit reached");
+        }
+
+        if (!cts.IsCancellationRequested)
+        {
+            try
+            {
+                cts.Cancel(); // Cancel
+            }
+            catch { }
+        }
+
         await orchestrationTask; // Wait for orchestration tasks to finish
     }
 
