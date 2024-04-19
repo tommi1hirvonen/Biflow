@@ -18,7 +18,7 @@ internal class StepExecutionsQueryHandler(IDbContextFactory<AppDbContext> dbCont
 
         var query = context.StepExecutionAttempts
         .AsNoTracking()
-                .Where(e => e.StepExecution.Execution.CreatedOn <= to && e.StepExecution.Execution.EndedOn >= from);
+                .Where(e => e.StepExecution.Execution.CreatedOn <= to && e.EndedOn >= from);
 
         if (DateTime.Now >= from && DateTime.Now <= to)
         {
