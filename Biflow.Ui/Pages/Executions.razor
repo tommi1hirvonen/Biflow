@@ -124,6 +124,7 @@
             <FilterDropdown TItem="string"
                             FilterSet="State.JobFilter"
                             Items="jobNames"
+                            IsSearchable
                             OnChange="StateHasChanged">
                 <TitleTemplate>
                     <CxIcon Icon="LucideIcon.ClipboardList" />
@@ -147,6 +148,7 @@
                             Items="jobTags"
                             IdSelector="t => t.TagId.ToString()"
                             TextSelector="t => t.TagName"
+                            IsSearchable
                             OnChange="StateHasChanged">
                 <ItemTemplate Context="item">
                     <TagBadge Tag="item" />
@@ -173,6 +175,7 @@
             <FilterDropdown TItem="ScheduleProjection"
                             FilterSet="State.ScheduleFilter"
                             Items="schedules"
+                            IsSearchable
                             IdSelector="s => s.ScheduleId.ToString()"
                             TextSelector="s => s.ScheduleName"
                             OnChange="StateHasChanged">
@@ -193,7 +196,7 @@
                                    .OrderBy(j => j)
                                    .AsEnumerable() ?? []"
                                 OnChange="StateHasChanged"
-                                IsSearchable="true">
+                                IsSearchable>
                     <TitleTemplate>
                         <CxIcon Icon="LucideIcon.ListChecks" />
                         Step
@@ -272,6 +275,7 @@
                                    .AsEnumerable() ?? []"
                                 IdSelector="t => t.TagId.ToString()"
                                 TextSelector="t => t.TagName"
+                                IsSearchable
                                 OnChange="StateHasChanged">
                     <ItemTemplate Context="item">
                         <TagBadge Tag="item" />
