@@ -13,7 +13,6 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
     private readonly IJobExecutorFactory _jobExecutorFactory = jobExecutorFactory;
     private readonly Dictionary<Guid, IJobExecutor> _jobExecutors = [];
     private readonly Dictionary<Guid, Task> _executionTasks = [];
-    private readonly AsyncQueue<Func<Task>> _backgroundTaskQueue = new();
     private readonly CancellationTokenSource _shutdownCts = new();
 
     public IEnumerable<Execution> CurrentExecutions
@@ -54,7 +53,7 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
             _executionTasks[executionId] = task;
         }
 
-        _backgroundTaskQueue.Enqueue(() => MonitorExecutionTaskAsync(task, executionId));
+        _ = MonitorExecutionTaskAsync(task, executionId);
     }
 
     public void CancelExecution(Guid executionId, string username)
@@ -108,15 +107,17 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
     {
         try
         {
-            await foreach (var taskDelegate in _backgroundTaskQueue.WithCancellation(shutdownToken))
-            {
-                _ = taskDelegate();
-            }
+            await Task.Delay(-1, shutdownToken);
         }
         finally
         {
             _shutdownCts.Cancel();
-            await Task.WhenAll(_executionTasks.Values);
+            Task[] tasks;
+            lock (_lock)
+            {
+                tasks = [.. _executionTasks.Values];
+            }
+            await Task.WhenAll(tasks);
         }
     }
 
