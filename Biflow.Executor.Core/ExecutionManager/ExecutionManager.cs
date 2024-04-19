@@ -20,6 +20,11 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
 
     public async Task StartExecutionAsync(Guid executionId)
     {
+        if (_shutdownCts.IsCancellationRequested)
+        {
+            throw new ApplicationException("Cannot start new executions when service shutdown is requested.");
+        }
+
         lock (_lock)
         {
             if (_jobExecutors.ContainsKey(executionId))
