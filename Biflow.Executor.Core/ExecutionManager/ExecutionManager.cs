@@ -47,7 +47,7 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
             _jobExecutors[executionId] = jobExecutor;
         }
 
-        var task = jobExecutor.RunAsync(executionId, _shutdownCts.Token);
+        var task = jobExecutor.RunAsync(_shutdownCts.Token);
         lock (_lock)
         {
             _executionTasks[executionId] = task;
