@@ -28,6 +28,8 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
 
     public async Task StartExecutionAsync(Guid executionId)
     {
+        // Check for shutdown and duplicate key before proceeding
+        // to creating the job executor which is a heavy operation.
         if (_shutdownCts.IsCancellationRequested)
         {
             throw new ApplicationException("Cannot start new executions when service shutdown is requested.");
@@ -42,24 +44,25 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
         }
 
         var jobExecutor = await _jobExecutorFactory.CreateAsync(executionId);
+
         lock (_lock)
         {
-            // Check for duplicate key again because the dictionary
-            // might have changed after the previous lock was released.
+            // Check for shutdown and duplicate key again because the dictionary
+            // or token might have changed after the executor was created and the previous lock was released.
+            if (_shutdownCts.IsCancellationRequested)
+            {
+                throw new ApplicationException("Cannot start new executions when service shutdown is requested.");
+            }
             if (_jobExecutors.ContainsKey(executionId))
             {
                 throw new DuplicateExecutionException(executionId);
             }
+
             _jobExecutors[executionId] = jobExecutor;
-        }
-
-        var task = jobExecutor.RunAsync(_shutdownCts.Token);
-        lock (_lock)
-        {
+            var task = jobExecutor.RunAsync(_shutdownCts.Token);
             _executionTasks[executionId] = task;
+            _ = MonitorExecutionTaskAsync(task, executionId);
         }
-
-        _ = MonitorExecutionTaskAsync(task, executionId);
     }
 
     public void CancelExecution(Guid executionId, string username)
@@ -117,10 +120,10 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
         }
         finally
         {
-            _shutdownCts.Cancel();
             Task[] tasks;
             lock (_lock)
             {
+                _shutdownCts.Cancel();
                 tasks = [.. _executionTasks.Values];
             }
             await Task.WhenAll(tasks);
