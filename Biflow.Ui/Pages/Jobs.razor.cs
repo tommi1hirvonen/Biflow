@@ -1,6 +1,8 @@
 ﻿using Biflow.Ui.Shared;
 using Biflow.Ui.Shared.JobDetails;
 using Biflow.Ui.Shared.JobsBatchEdit;
+using Microsoft.JSInterop;
+using System.Text.Json;
 
 namespace Biflow.Ui.Pages;
 
@@ -13,10 +15,12 @@ public partial class Jobs : ComponentBase, IDisposable
     [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
     [Inject] private IMediator Mediator { get; set; } = null!;
+    [Inject] private IJSRuntime JS { get; set; } = null!;
 
     [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
     [CascadingParameter] public UserState UserState { get; set; } = new();
 
+    private static readonly JsonSerializerOptions jsonOptions = new() { WriteIndented = true };
     private readonly CancellationTokenSource cts = new();
 
     private List<Job>? jobs;    
@@ -293,6 +297,31 @@ public partial class Jobs : ComponentBase, IDisposable
         }
     }
 
+    private async Task ValidateAllStepDependenciesAsync()
+    {
+        try
+        {
+            using var context = DbFactory.CreateDbContext();
+            var steps = await context.Steps
+                .Select(s => new ValidationStep(s.Job.JobName, s.StepId, s.StepName, s.Dependencies.Select(d => d.DependantOnStepId).ToArray()))
+                .ToListAsync();
+            var comparer = new TopologicalComparer<ValidationStep, Guid>(steps, s => s?.StepId ?? Guid.Empty, s => s.Dependencies);
+            steps.Sort(comparer);
+            Toaster.AddSuccess("Validation successful");
+        }
+        catch (CyclicDependencyException<ValidationStep> ex)
+        {
+            var cycles = ex.CyclicObjects.Select(c => c.Select(s => new { s.JobName, s.StepName }));
+            var message = JsonSerializer.Serialize(cycles, jsonOptions);
+            _ = JS.InvokeVoidAsync("console.log", message).AsTask();
+            Toaster.AddError("Cyclic dependencies detected", "See browser console for detailed output.");
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error validating dependencies", ex.Message);
+        }
+    }
+
     private void GoToExecutionDetails(Guid executionId)
     {
         NavigationManager.NavigateTo($"executions/{executionId}/list");
@@ -319,4 +348,6 @@ public partial class Jobs : ComponentBase, IDisposable
     private class ExpandStatus { public bool IsExpanded { get; set; } = true; }
 
     private record StepProjection(Guid JobId, string? StepName);
+
+    private record ValidationStep(string JobName, Guid StepId, string? StepName, Guid[] Dependencies);
 }

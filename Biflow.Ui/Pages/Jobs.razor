@@ -21,11 +21,18 @@
                 </HxButton>
             </div>
     </div>
-    <div class="col-auto text-end">
+    <div class="col-auto text-end d-flex align-items-end">
+        <HxPopover Placement="PopoverPlacement.Left" Trigger="PopoverTrigger.Hover" Content="Validate all steps for potential cyclic dependencies, also accounting for cross-job dependencies between steps.">
+            <HxButton Color="ThemeColor.None" CssClass="btn-auto me-3" Size="ButtonSize.Small" OnClick="ValidateAllStepDependenciesAsync">
+                <CxIcon Icon="FeatherIcon.Check" />
+                Validate dependencies
+            </HxButton>
+        </HxPopover>
+        
         <HxPopover Placement="PopoverPlacement.Left" Trigger="PopoverTrigger.Focus"
                    Content="@("<p>Jobs are collections of steps that can be orchestrated to run in a specific order.</p><p>Jobs can have multiple schedules that trigger the job and its steps to be executed. Authorized users can edit these schedules or execute jobs manually.</p>")"
                    Html>
-            <HxButton Color="ThemeColor.None" CssClass="btn-auto mt-3">
+            <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto mt-3">
                 <CxIcon Icon="FeatherIcon.HelpCircle" />
             </HxButton>
         </HxPopover>

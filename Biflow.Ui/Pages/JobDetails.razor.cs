@@ -117,7 +117,7 @@ public partial class JobDetails : ComponentBase, IDisposable
         {
             var cycles = ex.CyclicObjects.Select(c => c.Select(s => new { s.StepId, s.StepName, s.StepType }));
             var message = JsonSerializer.Serialize(cycles, jsonOptions);
-            _ = JS.InvokeVoidAsync("console.log", message);
+            _ = JS.InvokeVoidAsync("console.log", message).AsTask();
             Toaster.AddError("Error sorting steps", "Cyclic dependencies detected. See browser console for detailed output.");
         }
         catch (Exception ex)
