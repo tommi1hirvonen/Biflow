@@ -44,6 +44,12 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
         var jobExecutor = await _jobExecutorFactory.CreateAsync(executionId);
         lock (_lock)
         {
+            // Check for duplicate key again because the dictionary
+            // might have changed after the previous lock was released.
+            if (_jobExecutors.ContainsKey(executionId))
+            {
+                throw new DuplicateExecutionException(executionId);
+            }
             _jobExecutors[executionId] = jobExecutor;
         }
 
