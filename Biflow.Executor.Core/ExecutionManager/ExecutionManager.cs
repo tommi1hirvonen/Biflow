@@ -23,7 +23,7 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
             lock (_lock)
             {
                 return _jobExecutors.Values.Select(e => e.Execution).ToArray();
-        }
+            }
         }
     }
 
@@ -59,29 +59,27 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
 
     public void CancelExecution(Guid executionId, string username)
     {
-        IJobExecutor? value;
+        IJobExecutor? executor;
         lock (_lock)
         {
-            if (!_jobExecutors.TryGetValue(executionId, out value))
+            if (!_jobExecutors.TryGetValue(executionId, out executor))
             {
                 throw new ExecutionNotFoundException(executionId, $"No execution with id {executionId} is being managed.");
             }
         }
-        var executor = value;
         executor.Cancel(username);
     }
 
     public void CancelExecution(Guid executionId, string username, Guid stepId)
     {
-        IJobExecutor? value;
+        IJobExecutor? executor;
         lock (_lock)
         {
-            if (!_jobExecutors.TryGetValue(executionId, out value))
+            if (!_jobExecutors.TryGetValue(executionId, out executor))
             {
                 throw new ExecutionNotFoundException(executionId, $"No execution with id {executionId} is being managed.");
             }
         }
-        var executor = value;
         executor.Cancel(username, stepId);
     }
 
