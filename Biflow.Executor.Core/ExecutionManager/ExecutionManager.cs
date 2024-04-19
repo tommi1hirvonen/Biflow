@@ -8,6 +8,7 @@ namespace Biflow.Executor.Core;
 internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFactory jobExecutorFactory)
     : BackgroundService, IExecutionManager, IDisposable
 {
+    private readonly object _lock = new();
     private readonly ILogger<ExecutionManager> _logger = logger;
     private readonly IJobExecutorFactory _jobExecutorFactory = jobExecutorFactory;
     private readonly Dictionary<Guid, IJobExecutor> _jobExecutors = [];
@@ -19,48 +20,76 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
 
     public async Task StartExecutionAsync(Guid executionId)
     {
-        if (_jobExecutors.ContainsKey(executionId))
+        lock (_lock)
         {
-            throw new DuplicateExecutionException(executionId);
+            if (_jobExecutors.ContainsKey(executionId))
+            {
+                throw new DuplicateExecutionException(executionId);
+            }
         }
 
         var jobExecutor = await _jobExecutorFactory.CreateAsync(executionId);
-        _jobExecutors[executionId] = jobExecutor;
+        lock (_lock)
+        {
+            _jobExecutors[executionId] = jobExecutor;
+        }
+
         var task = jobExecutor.RunAsync(executionId, _shutdownCts.Token);
-        _executionTasks[executionId] = task;
+        lock (_lock)
+        {
+            _executionTasks[executionId] = task;
+        }
+
         _backgroundTaskQueue.Enqueue(() => MonitorExecutionTaskAsync(task, executionId));
     }
 
     public void CancelExecution(Guid executionId, string username)
     {
-        if (!_jobExecutors.TryGetValue(executionId, out var value))
+        IJobExecutor? value;
+        lock (_lock)
         {
-            throw new ExecutionNotFoundException(executionId, $"No execution with id {executionId} is being managed.");
+            if (!_jobExecutors.TryGetValue(executionId, out value))
+            {
+                throw new ExecutionNotFoundException(executionId, $"No execution with id {executionId} is being managed.");
+            }
         }
-
         var executor = value;
         executor.Cancel(username);
     }
 
     public void CancelExecution(Guid executionId, string username, Guid stepId)
     {
-        if (!_jobExecutors.TryGetValue(executionId, out var value))
+        IJobExecutor? value;
+        lock (_lock)
         {
-            throw new ExecutionNotFoundException(executionId, $"No execution with id {executionId} is being managed.");
+            if (!_jobExecutors.TryGetValue(executionId, out value))
+            {
+                throw new ExecutionNotFoundException(executionId, $"No execution with id {executionId} is being managed.");
+            }
         }
-
         var executor = value;
         executor.Cancel(username, stepId);
     }
 
-    public bool IsExecutionRunning(Guid executionId) => _jobExecutors.ContainsKey(executionId);
+    public bool IsExecutionRunning(Guid executionId)
+    {
+        lock (_lock)
+        {
+            return _jobExecutors.ContainsKey(executionId);
+        }
+    }
 
     public async Task WaitForTaskCompleted(Guid executionId, CancellationToken cancellationToken)
     {
-        if (_executionTasks.TryGetValue(executionId, out var task))
+        Task? task;
+        lock (_lock)
         {
-            await task.WaitAsync(cancellationToken);
+            if (!_executionTasks.TryGetValue(executionId, out task))
+            {
+                return;
+            }
         }
+        await task.WaitAsync(cancellationToken);
     }
 
     protected override async Task ExecuteAsync(CancellationToken shutdownToken)
@@ -95,8 +124,11 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
         }
         finally
         {
-            _jobExecutors.Remove(executionId);
-            _executionTasks.Remove(executionId);
+            lock (_lock)
+            {
+                _jobExecutors.Remove(executionId);
+                _executionTasks.Remove(executionId);
+            }
         }
     }
 
