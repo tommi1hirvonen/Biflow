@@ -26,7 +26,7 @@ internal class GlobalOrchestrator(
             {
                 foreach (var observer in observers)
                 {
-                    _stepStatuses[observer.StepExecution] = OrchestrationStatus.NotStarted;
+                    UpdateStatus(observer.StepExecution, OrchestrationStatus.NotStarted);
                 }
                 var statuses = _stepStatuses.Select(s => new OrchestrationUpdate(s.Key, s.Value)).ToArray();
                 foreach (var observer in observers)
