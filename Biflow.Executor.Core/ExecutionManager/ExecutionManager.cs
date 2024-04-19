@@ -16,7 +16,16 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
     private readonly AsyncQueue<Func<Task>> _backgroundTaskQueue = new();
     private readonly CancellationTokenSource _shutdownCts = new();
 
-    public IEnumerable<Execution> CurrentExecutions => _jobExecutors.Values.Select(e => e.Execution);
+    public IEnumerable<Execution> CurrentExecutions
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _jobExecutors.Values.Select(e => e.Execution).ToArray();
+        }
+        }
+    }
 
     public async Task StartExecutionAsync(Guid executionId)
     {
