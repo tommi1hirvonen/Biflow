@@ -94,11 +94,11 @@ public static class Extensions
         }).WithName("CreateExecution");
 
 
-        executions.MapGet("/start/{executionId}", async (Guid executionId, IExecutionManager executionManager) =>
+        executions.MapGet("/start/{executionId}", async (Guid executionId, IExecutionManager executionManager, CancellationToken cancellationToken) =>
         {
             try
             {
-                await executionManager.StartExecutionAsync(executionId);
+                await executionManager.StartExecutionAsync(executionId, cancellationToken);
                 return Results.Ok();
             }
             catch (DuplicateExecutionException ex)

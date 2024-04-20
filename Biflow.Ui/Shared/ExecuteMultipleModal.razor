@@ -254,9 +254,7 @@
             return null;
         }
 
-        cancellationToken.ThrowIfCancellationRequested();
-
-        await Executor.StartExecutionAsync(execution.ExecutionId);
+        await Executor.StartExecutionAsync(execution.ExecutionId, cancellationToken);
         return execution;
     }
 

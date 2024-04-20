@@ -26,7 +26,7 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
         }
     }
 
-    public async Task StartExecutionAsync(Guid executionId)
+    public async Task StartExecutionAsync(Guid executionId, CancellationToken cancellationToken = default)
     {
         // Check for shutdown and duplicate key before proceeding
         // to creating the job executor which is a heavy operation.
@@ -43,7 +43,7 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
             }
         }
 
-        var jobExecutor = await _jobExecutorFactory.CreateAsync(executionId);
+        var jobExecutor = await _jobExecutorFactory.CreateAsync(executionId, cancellationToken);
 
         lock (_lock)
         {

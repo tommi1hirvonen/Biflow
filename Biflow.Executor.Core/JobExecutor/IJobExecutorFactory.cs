@@ -2,5 +2,5 @@
 
 public interface IJobExecutorFactory
 {
-    public Task<IJobExecutor> CreateAsync(Guid executionId);
+    public Task<IJobExecutor> CreateAsync(Guid executionId, CancellationToken cancellationToken = default);
 }

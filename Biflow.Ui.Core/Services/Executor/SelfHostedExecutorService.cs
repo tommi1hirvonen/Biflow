@@ -6,7 +6,7 @@ public class SelfHostedExecutorService(IExecutionManager executionManager) : IEx
 {
     private readonly IExecutionManager _executionManager = executionManager;
 
-    public async Task StartExecutionAsync(Guid executionId)
+    public async Task StartExecutionAsync(Guid executionId, CancellationToken cancellationToken = default)
     {
         await _executionManager.StartExecutionAsync(executionId);
     }

@@ -8,16 +8,16 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
     private readonly IServiceProvider _serviceProvider = serviceProvider;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
 
-    public async Task<IJobExecutor> CreateAsync(Guid executionId)
+    public async Task<IJobExecutor> CreateAsync(Guid executionId, CancellationToken cancellationToken = default)
     {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
+        using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         
         // Use tracking queries and let EF match the entities from the two separate queries.
         
         var execution = await context.Executions
             .Include(e => e.ExecutionParameters)
             .Include(e => e.ExecutionConcurrencies)
-            .FirstOrDefaultAsync(e => e.ExecutionId == executionId)
+            .FirstOrDefaultAsync(e => e.ExecutionId == executionId, cancellationToken)
             ?? throw new ExecutionNotFoundException(executionId);
 
         var query1 = context.StepExecutions
@@ -66,7 +66,7 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
                 exe
             };
 
-        var stepExecutions = await query2.ToArrayAsync();
+        var stepExecutions = await query2.ToArrayAsync(cancellationToken);
 
         // Map endpoint clients to step executions.
         foreach (var step in stepExecutions)

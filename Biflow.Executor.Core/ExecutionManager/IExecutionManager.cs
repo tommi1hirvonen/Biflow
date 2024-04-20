@@ -10,7 +10,7 @@ public interface IExecutionManager : IHostedService
 
     public bool IsExecutionRunning(Guid executionId);
 
-    public Task StartExecutionAsync(Guid executionId);
+    public Task StartExecutionAsync(Guid executionId, CancellationToken cancellationToken = default);
 
     public Task WaitForTaskCompleted(Guid executionId, CancellationToken cancellationToken);
 
