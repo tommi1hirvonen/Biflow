@@ -32,6 +32,7 @@ public partial class Jobs : ComponentBase, IDisposable
     private JobsBatchEditTagsModal? jobsBatchEditTagsModal;
     private Paginator<ListItem>? paginator;
     private HashSet<Job> selectedJobs = [];
+    private ExecuteMultipleModal? executeMultipleModal;
 
     private record ListItem(Job Job, Execution? LastExecution, Schedule? NextSchedule, DateTime? NextExecution);
 
@@ -320,6 +321,16 @@ public partial class Jobs : ComponentBase, IDisposable
         {
             Toaster.AddError("Error validating dependencies", ex.Message);
         }
+    }
+
+    private async Task RunSelectedJobsAsync()
+    {
+        if (!await Confirmer.ConfirmAsync("Run jobs", $"Are you sure you want run all enabled steps for the selected {selectedJobs.Count} job(s)?"))
+        {
+            return;
+        }
+
+        
     }
 
     private void GoToExecutionDetails(Guid executionId)

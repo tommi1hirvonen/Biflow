@@ -147,6 +147,13 @@
                 @if (selectedJobs.Count > 0)
                 {
                     <HxButtonGroup Size="ButtonGroupSize.Small">
+                        <HxButton Size="ButtonSize.Small"
+                                  Color="ThemeColor.None"
+                                  CssClass="btn-auto"
+                                  OnClick="() => executeMultipleModal.LetAsync(x => x.ShowAsync(selectedJobs))">
+                            <CxIcon Icon="FeatherIcon.Play" />
+                            Execute...
+                        </HxButton>
                         <HxDropdownButtonGroup>
                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
                                 <CxIcon Icon="FeatherIcon.ToggleRight" />
@@ -400,6 +407,8 @@
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
     <ExecuteModal @ref="executeModal" />
+
+    <ExecuteMultipleModal @ref="executeMultipleModal" />
 </AuthorizeView>
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
