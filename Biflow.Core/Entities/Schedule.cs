@@ -1,10 +1,11 @@
 ﻿using Biflow.Core.Attributes.Validation;
+using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
-public class Schedule
+public class Schedule : IAuditable
 {
     [JsonInclude]
     public Guid ScheduleId { get; private set; }
@@ -39,6 +40,13 @@ public class Schedule
     [Display(Name = "Created by")]
     [MaxLength(250)]
     public string? CreatedBy { get; set; }
+
+    [Display(Name = "Last modified")]
+    public DateTimeOffset LastModifiedOn { get; set; }
+
+    [Display(Name = "Last modified by")]
+    [MaxLength(250)]
+    public string? LastModifiedBy { get; set; }
 
     public ICollection<StepTag> TagFilter { get; } = new List<StepTag>();
 
