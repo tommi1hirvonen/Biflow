@@ -308,7 +308,7 @@ else if (builder is null)
             var stepIds = Execution.StepExecutions
                 .Select(e => e.StepId)
                 .ToArray();
-            builder = await BuilderFactory.CreateAsync(Execution.JobId, username, context => step => stepIds.Contains(step.StepId));
+            builder = await BuilderFactory.CreateAsync(Execution.JobId, username, [context => step => stepIds.Contains(step.StepId)]);
         }
         catch (Exception ex)
         {

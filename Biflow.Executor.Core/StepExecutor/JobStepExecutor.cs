@@ -33,8 +33,10 @@ internal class JobStepExecutor(
                 _ => null
             };
             using var builder = await _executionBuilderFactory.CreateAsync(step.JobToExecuteId, createdBy: null, parent: executionAttempt,
-                context => step => step.IsEnabled,
-                context => step => tagIds == null || step.Tags.Any(t => tagIds.Contains(t.TagId)));
+                [
+                    context => step => step.IsEnabled,
+                    context => step => tagIds == null || step.Tags.Any(t => tagIds.Contains(t.TagId))
+                ]);
             ArgumentNullException.ThrowIfNull(builder);
             builder.AddAll();
             builder.Notify = step.Execution.Notify;

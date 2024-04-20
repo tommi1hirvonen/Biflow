@@ -75,7 +75,7 @@ public static class Extensions
             IExecutionManager executionManager) =>
         {
             using var builder = await executionBuilderFactory.CreateAsync(request.JobId, createdBy: "API",
-                context => step => (request.StepIds == null && step.IsEnabled) || (request.StepIds != null && request.StepIds.Contains(step.StepId)));
+                [context => step => (request.StepIds == null && step.IsEnabled) || (request.StepIds != null && request.StepIds.Contains(step.StepId))]);
             if (builder is null)
             {
                 return Results.NotFound("Job not found");

@@ -236,23 +236,19 @@
 
     private async Task<Execution?> CreateAndStartExecution(Guid jobId, CancellationToken cancellationToken)
     {
-        cancellationToken.ThrowIfCancellationRequested();
-
         ArgumentNullException.ThrowIfNull(AuthenticationState);
         var authState = await AuthenticationState;
         var username = authState.User.Identity?.Name;
 
-        var executionBuilder = await BuilderFactory.CreateAsync(jobId, username, context => step => step.IsEnabled);
+        var executionBuilder = await BuilderFactory.CreateAsync(jobId, username, [context => step => step.IsEnabled], cancellationToken);
         ArgumentNullException.ThrowIfNull(executionBuilder);
-
-        cancellationToken.ThrowIfCancellationRequested();
 
         executionBuilder.AddAll();
         executionBuilder.Notify = notify;
         executionBuilder.NotifyCaller = notifyCaller;
         executionBuilder.NotifyCallerOvertime = notifyCallerOvertime;
 
-        var execution = await executionBuilder.SaveExecutionAsync();
+        var execution = await executionBuilder.SaveExecutionAsync(cancellationToken);
         if (execution is null)
         {
             return null;

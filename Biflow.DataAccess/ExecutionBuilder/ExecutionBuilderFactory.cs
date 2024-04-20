@@ -2,16 +2,25 @@
 
 namespace Biflow.DataAccess;
 
-internal class ExecutionBuilderFactory<TDbContext>(IDbContextFactory<TDbContext> dbContextFactory) : IExecutionBuilderFactory<TDbContext> where TDbContext : AppDbContext
+internal class ExecutionBuilderFactory<TDbContext>(IDbContextFactory<TDbContext> dbContextFactory)
+    : IExecutionBuilderFactory<TDbContext> where TDbContext : AppDbContext
 {
     private readonly IDbContextFactory<TDbContext> _dbContextFactory = dbContextFactory;
 
-    public Task<ExecutionBuilder?> CreateAsync(Guid jobId, string? createdBy, params Func<TDbContext, Expression<Func<Step, bool>>>[] predicates) =>
-        CreateAsync(jobId, createdBy, null, predicates);
+    public Task<ExecutionBuilder?> CreateAsync(
+        Guid jobId,
+        string? createdBy,
+        IEnumerable<Func<TDbContext, Expression<Func<Step, bool>>>>? predicates = null,
+        CancellationToken cancellationToken = default) => CreateAsync(jobId, createdBy, null, predicates, cancellationToken);
 
-    public async Task<ExecutionBuilder?> CreateAsync(Guid jobId, string? createdBy, StepExecutionAttempt? parent, params Func<TDbContext, Expression<Func<Step, bool>>>[] predicates)
+    public async Task<ExecutionBuilder?> CreateAsync(
+        Guid jobId,
+        string? createdBy,
+        StepExecutionAttempt? parent,
+        IEnumerable<Func<TDbContext, Expression<Func<Step, bool>>>>? predicates = null,
+        CancellationToken cancellationToken = default)
     {
-        var data = await GetBuilderDataAsync(jobId, predicates);
+        var data = await GetBuilderDataAsync(jobId, predicates, cancellationToken);
         if (data is null)
         {
             return null;
@@ -21,9 +30,13 @@ internal class ExecutionBuilderFactory<TDbContext>(IDbContextFactory<TDbContext>
         return new ExecutionBuilder(context, createExecution, steps);
     }
 
-    public async Task<ExecutionBuilder?> CreateAsync(Guid jobId, Guid scheduleId, params Func<TDbContext, Expression<Func<Step, bool>>>[] predicates)
+    public async Task<ExecutionBuilder?> CreateAsync(
+        Guid jobId,
+        Guid scheduleId,
+        IEnumerable<Func<TDbContext, Expression<Func<Step, bool>>>>? predicates = null,
+        CancellationToken cancellationToken = default)
     {
-        var data = await GetBuilderDataAsync(jobId, predicates);
+        var data = await GetBuilderDataAsync(jobId, predicates, cancellationToken);
         if (data is null)
         {
             return null;
@@ -31,19 +44,22 @@ internal class ExecutionBuilderFactory<TDbContext>(IDbContextFactory<TDbContext>
         var (context, job, steps) = data;
         var schedule = await context.Schedules
             .AsNoTracking()
-            .FirstOrDefaultAsync(s => s.ScheduleId == scheduleId);
+            .FirstOrDefaultAsync(s => s.ScheduleId == scheduleId, cancellationToken);
         Execution createExecution() => new(job, schedule);
         return new ExecutionBuilder(context, createExecution, steps);
     }
 
-    private async Task<BuilderData?> GetBuilderDataAsync(Guid jobId, Func<TDbContext, Expression<Func<Step, bool>>>[] predicates)
+    private async Task<BuilderData?> GetBuilderDataAsync(
+        Guid jobId,
+        IEnumerable<Func<TDbContext, Expression<Func<Step, bool>>>>? predicates,
+        CancellationToken cancellationToken)
     {
-        var context = await _dbContextFactory.CreateDbContextAsync();
+        var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         var job = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Include(j => j.JobParameters)
             .Include(j => j.JobConcurrencies)
-            .FirstOrDefaultAsync(j => j.JobId == jobId);
+            .FirstOrDefaultAsync(j => j.JobId == jobId, cancellationToken);
         if (job is null)
         {
             return null;
@@ -51,7 +67,7 @@ internal class ExecutionBuilderFactory<TDbContext>(IDbContextFactory<TDbContext>
         var stepsQuery = context.Steps
             .AsNoTrackingWithIdentityResolution()
             .Where(s => s.JobId == job.JobId);
-        foreach (var predicate in predicates)
+        foreach (var predicate in predicates ?? [])
         {
             stepsQuery = stepsQuery.Where(predicate(context));
         }
@@ -65,7 +81,7 @@ internal class ExecutionBuilderFactory<TDbContext>(IDbContextFactory<TDbContext>
             .ThenInclude(t => t.DataObject)
             .Include(s => s.Tags)
             .Include(s => s.ExecutionConditionParameters)
-            .ToArrayAsync();
+            .ToArrayAsync(cancellationToken);
         return new(context, job, steps);
     }
 
