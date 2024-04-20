@@ -78,15 +78,13 @@ public class DatabaseFixture : IAsyncLifetime
                 ExecutionMode = ExecutionMode.Dependency,
                 StopOnFirstError = true,
                 MaxParallelSteps = 4,
-                OvertimeNotificationLimitMinutes = 120,
-                Category = new JobCategory { CategoryName = "Test category" }
+                OvertimeNotificationLimitMinutes = 120
             };
             var jobParameter1 = new JobParameter
             {
                 Job = job1,
                 ParameterName = "JobParameter1",
-                ParameterValueType = ParameterValueType.String,
-                ValueString = "Hello world"
+                ParameterValue = new("Hello world")
             };
             job1.JobParameters.Add(jobParameter1);
             var jobConcurrency = new JobConcurrency { Job = job1, StepType = StepType.Sql, MaxParallelSteps = 1 };
@@ -126,8 +124,7 @@ public class DatabaseFixture : IAsyncLifetime
             {
                 Step = step2,
                 ParameterName = "@param",
-                ParameterValueType = ParameterValueType.String,
-                ValueInt32 = 10,
+                ParameterValue = new(10),
                 InheritFromJobParameter = jobParameter1
             };
             step2.StepParameters.Add(step2Parameter);
