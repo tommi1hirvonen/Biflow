@@ -1,0 +1,19 @@
+﻿<div class="position-fixed d-flex justify-content-center" style="z-index: 1051; top: 2rem; left: 50%; transform: translateX(-50%);">
+    <div class="card shadow">
+        @if (!string.IsNullOrEmpty(Header))
+        {
+            <h6 class="card-header">
+                @Header
+            </h6>
+        }
+        <div class="card-body">
+            @ChildContent
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter] public string? Header { get; set; }
+}

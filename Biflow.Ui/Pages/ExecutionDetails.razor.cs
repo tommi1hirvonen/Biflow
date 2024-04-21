@@ -31,6 +31,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
     private readonly HashSet<(string StepName, StepType StepType)> stepFilter = [];
     private Guid prevExecutionId;
     private Execution? execution;
+    private IEnumerable<StepExecutionProjection>? stepProjections = null;
     private Job? job;
     private Schedule? schedule;
     private bool loading = false;
@@ -61,32 +62,11 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
 
     private bool Stopping => stoppingExecutions.Any(id => id == ExecutionId);
 
-    private IEnumerable<StepExecutionAttempt>? Executions => execution?.StepExecutions.SelectMany(e => e.StepExecutionAttempts);
-
-    private IEnumerable<StepExecutionProjection>? FilteredExecutions => Executions
-        ?.Where(e => tagFilter.Count == 0 || e.StepExecution.GetStep()?.Tags.Any(t1 => tagFilter.Any(t2 => t1.TagId == t2.TagId)) == true)
-        .Where(e => stepStatusFilter.Count == 0 || stepStatusFilter.Contains(e.ExecutionStatus))
-        .Where(e => stepFilter.Count == 0 || stepFilter.Contains((e.StepExecution.StepName, e.StepExecution.StepType)))
-        .Where(e => stepTypeFilter.Count == 0 || stepTypeFilter.Contains(e.StepExecution.StepType))
-        .Select(e => new StepExecutionProjection(
-            e.StepExecution.ExecutionId,
-            e.StepExecution.StepId,
-            e.RetryAttemptIndex,
-            e.StepExecution.GetStep()?.StepName ?? e.StepExecution.StepName,
-            e.StepType,
-            e.StepExecution.ExecutionPhase,
-            e.StepExecution.Execution.CreatedOn,
-            e.StartedOn,
-            e.EndedOn,
-            e.ExecutionStatus,
-            e.StepExecution.Execution.ExecutionStatus,
-            e.StepExecution.Execution.ExecutionMode,
-            e.StepExecution.Execution.ScheduleId,
-            e.StepExecution.Execution.ScheduleName,
-            e.StepExecution.Execution.JobId,
-            job?.JobName ?? e.StepExecution.Execution.JobName,
-            e.StepExecution.GetStep()?.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color)).ToArray() ?? [],
-            []));
+    private IEnumerable<StepExecutionProjection>? FilteredExecutions => stepProjections
+        ?.Where(e => tagFilter.Count == 0 || e.StepTags.Any(t1 => tagFilter.Any(t2 => t1.TagId == t2.TagId)) == true)
+        .Where(e => stepStatusFilter.Count == 0 || stepStatusFilter.Contains(e.StepExecutionStatus))
+        .Where(e => stepFilter.Count == 0 || stepFilter.Contains((e.StepName, e.StepType)))
+        .Where(e => stepTypeFilter.Count == 0 || stepTypeFilter.Contains(e.StepType));
 
     private Report ShowReport => Page switch
     {
@@ -96,12 +76,10 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
         "parameters" => Report.Parameters,
         "rerun" => Report.Rerun,
         "history" => Report.History,
-        "statuses" => Report.Statuses,
-        "cancel" => Report.Cancel,
         _ => Report.List
     };
 
-    private enum Report { List, Gantt, Graph, ExecutionDetails, Parameters, Rerun, History, Statuses, Cancel }
+    private enum Report { List, Gantt, Graph, ExecutionDetails, Parameters, Rerun, History }
 
     protected override void OnInitialized()
     {
@@ -174,6 +152,31 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             schedule = execution?.ScheduleId is not null
                 ? await context.Schedules.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(s => s.ScheduleId == execution.ScheduleId, cts.Token)
                 : null;
+
+            stepProjections = execution?.StepExecutions
+                .SelectMany(e => e.StepExecutionAttempts)
+                .Select(e => new StepExecutionProjection(
+                    e.StepExecution.ExecutionId,
+                    e.StepExecution.StepId,
+                    e.RetryAttemptIndex,
+                    e.StepExecution.GetStep()?.StepName ?? e.StepExecution.StepName,
+                    e.StepType,
+                    e.StepExecution.ExecutionPhase,
+                    e.StepExecution.Execution.CreatedOn,
+                    e.StartedOn,
+                    e.EndedOn,
+                    e.ExecutionStatus,
+                    e.StepExecution.Execution.ExecutionStatus,
+                    e.StepExecution.Execution.ExecutionMode,
+                    e.StepExecution.Execution.ScheduleId,
+                    e.StepExecution.Execution.ScheduleName,
+                    e.StepExecution.Execution.JobId,
+                    job?.JobName ?? e.StepExecution.Execution.JobName,
+                    e.StepExecution.ExecutionDependencies.Select(d => d.DependantOnStepId).ToArray(),
+                    e.StepExecution.GetStep()?.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color)).ToArray() ?? [],
+                    []))
+                .ToArray();
+
             loading = false;
             if (AutoRefresh && (execution?.ExecutionStatus == ExecutionStatus.Running || execution?.ExecutionStatus == ExecutionStatus.NotStarted))
             {

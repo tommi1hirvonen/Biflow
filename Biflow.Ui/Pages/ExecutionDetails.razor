@@ -98,15 +98,12 @@
             {
                 <div class="col-auto align-self-center">
                     <HxDropdownButtonGroup>
-                        <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None"
-                                                CssClass="@(Stopping ? "btn-auto disabled text-danger" : "btn-auto text-danger")">
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None"
+                                  CssClass="@(Stopping ? "btn-auto disabled text-danger" : "btn-auto text-danger")"
+                                  OnClick="StopJobExecutionAsync">
                             <CxIcon Icon="FeatherIcon.XOctagon" />
-                            Stop...
-                        </HxDropdownToggleButton>
-                        <HxDropdownMenu>
-                            <HxDropdownItem @onclick="@(() => NavigationManager.NavigateTo($"executions/{ExecutionId}/cancel"))">Select steps</HxDropdownItem>
-                            <HxDropdownItem @onclick="StopJobExecutionAsync" Enabled="!Stopping">All steps</HxDropdownItem>
-                        </HxDropdownMenu>
+                            Stop all...
+                        </HxButton>
                     </HxDropdownButtonGroup>
                 </div>
             }
@@ -161,9 +158,6 @@
                             }
                         </HxDropdownMenu>
                     </HxDropdownButtonGroup>
-                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="@(() => NavigationManager.NavigateTo($"executions/{ExecutionId}/statuses"))">
-                        Update step statuses...
-                    </HxButton>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger" OnClick="DeleteExecutionAsync">
                         Delete...
                     </HxButton>
@@ -496,8 +490,16 @@
     </div>
 }
 
+@{
+    var detailStepProvider = (StepExecutionProjection e) =>
+        execution?.StepExecutions
+            .SelectMany(e => e.StepExecutionAttempts)
+            ?.FirstOrDefault(x => x.ExecutionId == e.ExecutionId && x.StepId == e.StepId && x.RetryAttemptIndex == e.RetryAttemptIndex);
+}
+
 @if (ShowReport == Report.List)
 {
+    
     <div class="card shadow-sm mt-3 pt-2 table-responsive mb-4">
         <StepExecutionsTable
             ShowDetailed="false"
@@ -516,9 +518,9 @@
                         .ThenBy(e => e.EndedOn)
                         .ThenBy(e => e.ExecutionPhase)
                         .ThenBy(e => e.StepName)"
-            DetailStepProvider="e => Executions?.FirstOrDefault(x => x.ExecutionId == e.ExecutionId && x.StepId == e.StepId && x.RetryAttemptIndex == e.RetryAttemptIndex)" />
+            DetailStepProvider="detailStepProvider"
+            OnStepsUpdated="LoadData" />
     </div>
-    
 }
 else if (ShowReport == Report.Gantt)
 {
@@ -526,9 +528,8 @@ else if (ShowReport == Report.Gantt)
         <StepExecutionsGraph
             Executions="FilteredExecutions"
             SortMode="sortMode"
-            DetailStepProvider="e => Executions?.FirstOrDefault(x => x.ExecutionId == e.ExecutionId && x.StepId == e.StepId && x.RetryAttemptIndex == e.RetryAttemptIndex)" />
+            DetailStepProvider="detailStepProvider" />
     </div>
-    
 }
 else if (ShowReport == Report.Graph)
 {
@@ -538,18 +539,6 @@ else if (ShowReport == Report.Rerun)
 {
     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
             <RerunBuilder Execution="execution" />
-    </AuthorizeView>
-}
-else if (ShowReport == Report.Statuses)
-{
-    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-        <StepStatusesEdit Execution="execution" />
-    </AuthorizeView>
-}
-else if (ShowReport == Report.Cancel)
-{
-    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-        <StepsCancel Execution="execution" />
     </AuthorizeView>
 }
 else if (ShowReport == Report.History && execution is not null)

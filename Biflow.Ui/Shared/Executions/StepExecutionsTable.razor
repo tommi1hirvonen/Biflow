@@ -3,6 +3,49 @@
 @inject IExecutorService ExecutorService
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject NavigationManager NavigationManager
+@inject IMediator Mediator
+@inject IJSRuntime JS
+
+@{
+    var count = Executions?.Count() ?? 0;
+    var selectedText = selectedSteps.Count switch
+    {
+        1 => $"{selectedSteps.Count} selected step",
+        > 1 => $"{selectedSteps.Count} selected steps",
+        _ => ""
+    };
+}
+
+<AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+    @if (selectedSteps.Count > 0)
+    {
+        <HoverBox Header="@selectedText">
+            <HxButtonGroup Size="ButtonGroupSize.Small">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger" OnClick="StopSelectedStepsAsync">
+                    <CxIcon Icon="FeatherIcon.XOctagon" />
+                    Stop...
+                </HxButton>
+                <HxDropdownButtonGroup>
+                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                        Mark status as...
+                    </HxDropdownToggleButton>
+                    <HxDropdownMenu>
+                        @foreach (var status in Enum.GetValues<StepExecutionStatus>())
+                        {
+                            <HxDropdownItem OnClick="() => UpdateExecutionStatusAsync(status)">
+                                <StepExecutionStatusBadge ExecutionStatus="status" />
+                            </HxDropdownItem>
+                        }
+                    </HxDropdownMenu>
+                </HxDropdownButtonGroup>
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="selectedSteps.Clear">
+                    <CxIcon Icon="FeatherIcon.X" />
+                    Cancel
+                </HxButton>
+            </HxButtonGroup>
+        </HoverBox>
+    }
+</AuthorizeView>
 
 <table class="table table-sm table-hover">
     <thead>
@@ -10,10 +53,33 @@
             @if (ShowDetailed)
             {
                 <th>
+                    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+                        <TriStateCheckbox CssClass="me-0"
+                                          Checked="@(selectedSteps.Count > 0 && count > 0)"
+                                          Indeterminate="@(selectedSteps.Any() && selectedSteps.Count != count)"
+                                          CheckedChanged="value => ToggleStepsSelected(value)" />
+                    </AuthorizeView>
+                    @if (!string.IsNullOrEmpty(selectedText))
+                    {
+                        <div class="text-muted small fw-normal d-inline me-3">@selectedText</div>
+                    }
                     Job
                 </th>
             }
             <th>
+                @if (!ShowDetailed)
+                {
+                    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+                        <TriStateCheckbox CssClass="me-0"
+                                          Checked="@(selectedSteps.Count > 0 && count > 0)"
+                                          Indeterminate="@(selectedSteps.Any() && selectedSteps.Count != count)"
+                                          CheckedChanged="value => ToggleStepsSelected(value)" />
+                    </AuthorizeView>
+                    @if (!string.IsNullOrEmpty(selectedText))
+                    {
+                        <div class="text-muted small fw-normal d-inline me-3">@selectedText</div>
+                    }
+                }
                 Step
             </th>
             <th>
@@ -46,6 +112,8 @@
         {
             foreach (var item in Executions)
             {
+                var id = new StepExecutionId(item.ExecutionId, item.StepId, item.RetryAttemptIndex);
+                var checkBoxId = $"select_step_{item.StepId}_{item.RetryAttemptIndex}";
                 <ContextMenuToggle ContainerHtmlTag="tr"
                                    CssClass="@(selectedStepExecution == item ? "bg-body-tertiary" : null)"
                                    CssClassDelegate="@(open => open ? "bg-body-tertiary" : null)"
@@ -55,10 +123,31 @@
                         @if (ShowDetailed)
                         {
                             <td>
+                                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")" Context="auth">
+                                    <div class="form-check form-check-inline me-0">
+                                        <input type="checkbox" class="form-check-input" id="@checkBoxId"
+                                               checked=@selectedSteps.Contains(id)
+                                               @onclick:stopPropagation="true"
+                                               @onchange="args => ToggleStepSelected(item)">
+                                        <label class="form-check-label" for="@checkBoxId"></label>
+                                    </div>
+                                </AuthorizeView>
                                 @item.JobName
                             </td>
                         }
                         <td>
+                            @if (!ShowDetailed)
+                            {
+                                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")" Context="auth">
+                                    <div class="form-check form-check-inline me-0">
+                                        <input type="checkbox" class="form-check-input" id="@checkBoxId"
+                                               checked=@selectedSteps.Contains(id)
+                                               @onclick:stopPropagation="true"
+                                               @onchange="args => ToggleStepSelected(item)">
+                                        <label class="form-check-label" for="@checkBoxId"></label>
+                                    </div>
+                                </AuthorizeView>
+                            }
                             <StepTypeIcon StepType="item.StepType" />
                             &nbsp;
                             @item.StepName
@@ -164,9 +253,15 @@
     [Parameter]
     public Func<StepExecutionProjection, StepExecutionAttempt?>? DetailStepProvider { get; set; }
 
+    [Parameter]
+    public EventCallback OnStepsUpdated { get; set; }
+
     private StepExecutionProjection? selectedStepExecution;
     private StepHistoryOffcanvas? stepHistoryOffcanvas;
     private StepExecutionAttempt? detailStep;
+    private HashSet<StepExecutionId> selectedSteps = [];
+
+    private record StepExecutionId(Guid ExecutionId, Guid StepId, int RetryAttemptIndex);
 
     private async Task ToggleSelectedStepExecutionAsync(StepExecutionProjection execution)
     {
@@ -222,7 +317,7 @@
             var authState = await AuthenticationState;
             var username = authState.User.Identity?.Name;
             ArgumentNullException.ThrowIfNull(username);
-            
+
             await ExecutorService.StopExecutionAsync(executionId, stepId, username);
             Toaster.AddSuccess("Stop request sent successfully to the executor service");
         }
@@ -233,6 +328,152 @@
         catch (Exception ex)
         {
             Toaster.AddError("Error stopping execution", ex.Message);
+        }
+    }
+
+    private void ToggleStepSelected(StepExecutionProjection step)
+    {
+        var id = new StepExecutionId(step.ExecutionId, step.StepId, step.RetryAttemptIndex);
+        if (selectedSteps.Contains(id))
+        {
+            selectedSteps.Remove(id);
+        }
+        else
+        {
+            selectedSteps.Add(id);
+        }
+    }
+
+    private void ToggleStepsSelected(bool value)
+    {
+        if (value)
+        {
+            var stepsToAdd = Executions?
+                .Select(s => new StepExecutionId(s.ExecutionId, s.StepId, s.RetryAttemptIndex))
+                .Where(s => !selectedSteps.Contains(s))
+                ?? [];
+            foreach (var s in stepsToAdd) selectedSteps.Add(s);
+        }
+        else
+        {
+            selectedSteps.Clear();
+        }
+    }
+
+    private async Task StopSelectedStepsAsync()
+    {
+        if (!await Confirmer.ConfirmAsync($"Stop selected {selectedSteps.Count} step(s)?"))
+        {
+            return;
+        }
+
+        try
+        {
+            ArgumentNullException.ThrowIfNull(Executions);
+            ArgumentNullException.ThrowIfNull(AuthenticationState);
+            var authState = await AuthenticationState;
+            var username = authState.User.Identity?.Name;
+            ArgumentNullException.ThrowIfNull(username);
+
+            var executions = selectedSteps
+                .Select(s =>
+                {
+                    var step = Executions.First(e => e.ExecutionId == s.ExecutionId && e.StepId == s.StepId);
+                    return (step.ExecutionId, step.ExecutionMode, step.StepId, step.ExecutionPhase, step.Dependencies);
+                })
+                .GroupBy(e => (e.ExecutionId, e.ExecutionMode), e => (e.ExecutionId, e.StepId, e.ExecutionPhase, e.Dependencies));
+
+            var successCount = 0;
+            var errorMessages = new List<string>();
+            foreach (var group in executions)
+            {
+                var execution = group.Key;
+                var steps = group.AsEnumerable();
+                if (execution.ExecutionMode == ExecutionMode.Dependency)
+                {
+                    // When executing in dependency mode, start cancellation from the last steps to be executed.
+                    // This way we should see as few DependenciesFailed statuses after cancellation as possible.
+                    // The executor may be quick to mark depending steps as failed if we start canceling steps in ascending order.
+                    try
+                    {
+                        var comparer = new TopologicalComparer<(Guid, Guid StepId, int, Guid[] Dependencies), Guid>(
+                            steps, s => s.StepId, s => s.Dependencies);
+                        steps = steps.OrderByDescending(s => s, comparer);
+                    }
+                    catch (Exception ex)
+                    {
+                        steps = steps.OrderByDescending(s => s.ExecutionPhase);
+                        Toaster.AddWarning("Error sorting steps", $"Steps could not be sorted for optimal cancellation: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    steps = steps.OrderByDescending(s => s.ExecutionPhase);
+                }
+
+                foreach (var step in steps)
+                {
+                    try
+                    {
+                        await ExecutorService.StopExecutionAsync(step.ExecutionId, step.StepId, username);
+                        successCount++;
+                    }
+                    catch (Exception ex)
+                    {
+                        errorMessages.Add(ex.Message);
+                    }
+                }
+            }
+
+            var distinctErrors = errorMessages.Distinct().ToArray();
+            foreach (var error in distinctErrors)
+            {
+                await JS.InvokeVoidAsync("console.error", error);
+            }
+
+            var errorMessage = distinctErrors.Length == 1
+                ? distinctErrors[0]
+                : "See browser console for detailed errors";
+
+            if (successCount > 0 && distinctErrors.Length > 0)
+            {
+                Toaster.AddWarning("Error canceling some steps", errorMessage);
+            }
+            else if (distinctErrors.Length > 0)
+            {
+                Toaster.AddError("Error canceling steps", errorMessage);
+            }
+            else
+            {
+                Toaster.AddSuccess("Cancellations requested successfully");
+            }
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error canceling steps", ex.Message);
+        }
+    }
+
+    private async Task UpdateExecutionStatusAsync(StepExecutionStatus status)
+    {
+        if (!await Confirmer.ConfirmAsync($"Update selected {selectedSteps.Count} step(s) to status {status}?"))
+        {
+            return;
+        }
+
+        try
+        {
+            foreach (var step in selectedSteps)
+            {
+                var command = new UpdateStepExecutionAttemptStatusCommand(step.ExecutionId, step.StepId, step.RetryAttemptIndex, status);
+                await Mediator.SendAsync(command);
+            }
+            Toaster.AddSuccess("Statuses updated successfully");
+            await OnStepsUpdated.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error updating statuses", ex.Message);
         }
     }
 }
