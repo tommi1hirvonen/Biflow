@@ -143,7 +143,7 @@
 
     <div class="row justify-content-xl-between sticky-top mt-1 py-2 bg-body" style="z-index: 999;">
          <div class="col">
-            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")" Context="auth1">
                 @if (selectedJobs.Count > 0)
                 {
                     <HxButtonGroup Size="ButtonGroupSize.Small">
@@ -154,36 +154,38 @@
                             <CxIcon Icon="FeatherIcon.Play" />
                             Execute...
                         </HxButton>
-                        <HxDropdownButtonGroup>
-                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                <CxIcon Icon="FeatherIcon.ToggleRight" />
-                                Enable
-                            </HxDropdownToggleButton>
-                            <HxDropdownMenu>
-                                <HxDropdownItem @onclick="() => ToggleSelectedEnabled(true)">
-                                    Confirm
-                                </HxDropdownItem>
-                            </HxDropdownMenu>
-                        </HxDropdownButtonGroup>
-                        <HxDropdownButtonGroup>
-                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                <CxIcon Icon="FeatherIcon.ToggleLeft" />
-                                Disable
-                            </HxDropdownToggleButton>
-                            <HxDropdownMenu>
-                                <HxDropdownItem @onclick="() => ToggleSelectedEnabled(false)">
-                                    Confirm
-                                </HxDropdownItem>
-                            </HxDropdownMenu>
-                        </HxDropdownButtonGroup>
-                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" Spinner="false" @onclick="() => jobsBatchEditTagsModal.LetAsync(x => x.ShowAsync())">
-                            <CxIcon Icon="FeatherIcon.Tag" />
-                            Edit tags
-                        </HxButton>
-                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="DeleteSelectedJobsAsync">
-                            <CxIcon Icon="FeatherIcon.Trash2" />
-                            Delete...
-                        </HxButton>
+                        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")" Context="auth2">
+                            <HxDropdownButtonGroup>
+                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                                    <CxIcon Icon="FeatherIcon.ToggleRight" />
+                                    Enable
+                                </HxDropdownToggleButton>
+                                <HxDropdownMenu>
+                                    <HxDropdownItem @onclick="() => ToggleSelectedEnabled(true)">
+                                        Confirm
+                                    </HxDropdownItem>
+                                </HxDropdownMenu>
+                            </HxDropdownButtonGroup>
+                            <HxDropdownButtonGroup>
+                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                                    <CxIcon Icon="FeatherIcon.ToggleLeft" />
+                                    Disable
+                                </HxDropdownToggleButton>
+                                <HxDropdownMenu>
+                                    <HxDropdownItem @onclick="() => ToggleSelectedEnabled(false)">
+                                        Confirm
+                                    </HxDropdownItem>
+                                </HxDropdownMenu>
+                            </HxDropdownButtonGroup>
+                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" Spinner="false" @onclick="() => jobsBatchEditTagsModal.LetAsync(x => x.ShowAsync())">
+                                <CxIcon Icon="FeatherIcon.Tag" />
+                                Edit tags
+                            </HxButton>
+                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="DeleteSelectedJobsAsync">
+                                <CxIcon Icon="FeatherIcon.Trash2" />
+                                Delete...
+                            </HxButton>
+                        </AuthorizeView>
                     </HxButtonGroup>
                 }
             </AuthorizeView>
@@ -285,7 +287,7 @@
                                 <td class="align-middle">
                                     <div class="row">
                                         <div class="col">
-                                            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+                                            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                                                 <div class="form-check form-check-inline me-0">
                                                     <input type="checkbox" class="form-check-input" id="select_job_@item.JobId"
                                                            checked=@selectedJobs.Contains(item)
