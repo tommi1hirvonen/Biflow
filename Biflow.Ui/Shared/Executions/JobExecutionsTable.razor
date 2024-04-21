@@ -1,9 +1,65 @@
 ﻿@inject NavigationManager NavigationManager
+@inject ToasterService Toaster
+@inject IExecutorService ExecutorService
+@inject IHxMessageBoxService Confirmer
+@inject IJSRuntime JS
+@inject IMediator Mediator
+
+@{
+    var count = Executions?.Count() ?? 0;
+    var selectedText = selectedExecutions.Count switch
+    {
+        1 => $"{selectedExecutions.Count} selected execution",
+        > 1 => $"{selectedExecutions.Count} selected executions",
+        _ => ""
+    };
+}
+
+<AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+    @if (selectedExecutions.Count > 0)
+    {
+        <HoverBox Header="@selectedText">
+            <HxButtonGroup Size="ButtonGroupSize.Small">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger" OnClick="StopSelectedExecutionsAsync">
+                    <CxIcon Icon="FeatherIcon.XOctagon" />
+                    Stop...
+                </HxButton>
+                <HxDropdownButtonGroup>
+                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                        Mark status as...
+                    </HxDropdownToggleButton>
+                    <HxDropdownMenu>
+                        @foreach (var status in Enum.GetValues<ExecutionStatus>())
+                        {
+                            <HxDropdownItem OnClick="() => UpdateExecutionStatusAsync(status)">
+                                <JobExecutionStatusBadge ExecutionStatus="status" />
+                            </HxDropdownItem>
+                        }
+                    </HxDropdownMenu>
+                </HxDropdownButtonGroup>
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="selectedExecutions.Clear">
+                    <CxIcon Icon="FeatherIcon.X" />
+                    Cancel
+                </HxButton>
+            </HxButtonGroup>
+        </HoverBox>
+    }
+</AuthorizeView>
 
 <table class="table table-sm table-hover">
     <thead>
         <tr>
             <th>
+                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+                    <TriStateCheckbox CssClass="me-0"
+                                      Checked="@(selectedExecutions.Count > 0 && count > 0)"
+                                      Indeterminate="@(selectedExecutions.Any() && selectedExecutions.Count != count)"
+                                      CheckedChanged="value => ToggleExecutionsSelected(value)" />
+                </AuthorizeView>
+                @if (!string.IsNullOrEmpty(selectedText))
+                {
+                    <div class="text-muted small fw-normal d-inline me-3">@selectedText</div>
+                }
                 Job
             </th>
             <th>
@@ -39,8 +95,18 @@
         {
             foreach (var item in Executions)
             {
+                var checkBoxId = $"select_execution_{item.ExecutionId}";
                 <tr style="cursor: pointer;" @onclick="() => GoToExecutionDetails(item.ExecutionId)">
                     <td>
+                        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")" Context="auth">
+                            <div class="form-check form-check-inline me-0">
+                                <input type="checkbox" class="form-check-input" id="@checkBoxId"
+                                       checked=@selectedExecutions.Contains(item.ExecutionId)
+                                       @onclick:stopPropagation="true"
+                                       @onchange="args => ToggleExecutionSelected(item)">
+                                <label class="form-check-label" for="@checkBoxId"></label>
+                            </div>
+                        </AuthorizeView>
                         @item.JobName
                     </td>
                     <td class="small">
@@ -75,7 +141,128 @@
 </table>
 
 @code {
-    [Parameter] public IEnumerable<ExecutionProjection>? Executions { get; set; }
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    [Parameter]
+    public IEnumerable<ExecutionProjection>? Executions { get; set; }
+
+    [Parameter]
+    public EventCallback OnExecutionsUpdated { get; set; }
+
+    private HashSet<Guid> selectedExecutions = [];
+
+    private void ToggleExecutionSelected(ExecutionProjection execution)
+    {
+        if (selectedExecutions.Contains(execution.ExecutionId))
+        {
+            selectedExecutions.Remove(execution.ExecutionId);
+        }
+        else
+        {
+            selectedExecutions.Add(execution.ExecutionId);
+        }
+    }
+
+    private void ToggleExecutionsSelected(bool value)
+    {
+        if (value)
+        {
+            var toAdd = Executions?
+                .Where(e => !selectedExecutions.Contains(e.ExecutionId))
+                .Select(e => e.ExecutionId)
+                ?? [];
+            foreach (var e in toAdd) selectedExecutions.Add(e);
+        }
+        else
+        {
+            selectedExecutions.Clear();
+        }
+    }
+
+    private async Task StopSelectedExecutionsAsync()
+    {
+        if (!await Confirmer.ConfirmAsync("Stop executions", $"Are you sure you want to stop all running steps in the selected {selectedExecutions.Count} execution(s)?"))
+        {
+            return;
+        }
+
+        try
+        {
+            ArgumentNullException.ThrowIfNull(AuthenticationState);
+            var authState = await AuthenticationState;
+            var username = authState.User.Identity?.Name;
+            ArgumentNullException.ThrowIfNull(username);
+
+            var successCount = 0;
+            var errorMessages = new List<string>();
+
+            foreach (var executionId in selectedExecutions)
+            {
+                try
+                {
+                    await ExecutorService.StopExecutionAsync(executionId, username);
+                    successCount++;
+                }
+                catch (TimeoutException ex)
+                {
+                    errorMessages.Add(ex.Message);
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    errorMessages.Add(ex.Message);
+                }
+            }
+
+            var distinctErrors = errorMessages.Distinct().ToArray();
+            foreach (var error in distinctErrors)
+            {
+                await JS.InvokeVoidAsync("console.error", error);
+            }
+
+            var errorMessage = distinctErrors.Length == 1
+                ? distinctErrors[0]
+                : "See browser console for detailed errors";
+
+            if (successCount > 0 && distinctErrors.Length > 0)
+            {
+                Toaster.AddWarning("Error canceling some executions", errorMessage);
+            }
+            else if (distinctErrors.Length > 0)
+            {
+                Toaster.AddError("Error canceling executions", errorMessage);
+            }
+            else
+            {
+                Toaster.AddSuccess("Cancellations requested successfully");
+            }
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error stopping executions", ex.Message);
+        }
+    }
+
+    private async Task UpdateExecutionStatusAsync(ExecutionStatus status)
+    {
+        if (!await Confirmer.ConfirmAsync($"Update selected {selectedExecutions.Count} execution(s) to status {status}?"))
+        {
+            return;
+        }
+
+        try
+        {
+            var command = new UpdateExecutionStatusCommand([.. selectedExecutions], status);
+            await Mediator.SendAsync(command);
+            Toaster.AddSuccess("Statuses updated successfully");
+            await OnExecutionsUpdated.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error updating statuses", ex.Message);
+        }
+    }
 
     private void GoToExecutionDetails(Guid executionId)
     {
