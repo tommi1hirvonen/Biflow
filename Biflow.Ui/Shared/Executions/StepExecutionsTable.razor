@@ -379,8 +379,9 @@
                 .Select(s =>
                 {
                     var step = Executions.First(e => e.ExecutionId == s.ExecutionId && e.StepId == s.StepId);
-                    return (step.ExecutionId, step.ExecutionMode, step.StepId, step.ExecutionPhase, step.Dependencies);
+                    return (step.ExecutionId, step.ExecutionMode, step.StepId, step.ExecutionPhase, step.Dependencies, step.CanBeStopped);
                 })
+                .Where(s => s.CanBeStopped)
                 .GroupBy(e => (e.ExecutionId, e.ExecutionMode), e => (e.ExecutionId, e.StepId, e.ExecutionPhase, e.Dependencies));
 
             var successCount = 0;
