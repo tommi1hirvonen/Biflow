@@ -323,16 +323,6 @@ public partial class Jobs : ComponentBase, IDisposable
         }
     }
 
-    private async Task RunSelectedJobsAsync()
-    {
-        if (!await Confirmer.ConfirmAsync("Run jobs", $"Are you sure you want run all enabled steps for the selected {selectedJobs.Count} job(s)?"))
-        {
-            return;
-        }
-
-        
-    }
-
     private void GoToExecutionDetails(Guid executionId)
     {
         NavigationManager.NavigateTo($"executions/{executionId}/list");
