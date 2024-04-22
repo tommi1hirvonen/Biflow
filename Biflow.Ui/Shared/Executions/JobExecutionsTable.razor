@@ -18,9 +18,15 @@
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
     @if (selectedExecutions.Count > 0)
     {
+        var executions = selectedExecutions.Select(id => Executions?.FirstOrDefault(e => e.ExecutionId == id));
+        var enabled = executions.Any(e => e?.ExecutionStatus == ExecutionStatus.Running);
         <HoverBox Header="@selectedText">
             <HxButtonGroup Size="ButtonGroupSize.Small">
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger" OnClick="StopSelectedExecutionsAsync">
+                <HxButton Size="ButtonSize.Small"
+                          Color="ThemeColor.None"
+                          CssClass="btn-auto text-danger"
+                          Enabled="enabled"
+                          OnClick="StopSelectedExecutionsAsync">
                     <CxIcon Icon="FeatherIcon.XOctagon" />
                     Stop...
                 </HxButton>
@@ -189,6 +195,7 @@
 
         try
         {
+            ArgumentNullException.ThrowIfNull(Executions);
             ArgumentNullException.ThrowIfNull(AuthenticationState);
             var authState = await AuthenticationState;
             var username = authState.User.Identity?.Name;
@@ -199,6 +206,11 @@
 
             foreach (var executionId in selectedExecutions)
             {
+                var execution = Executions.FirstOrDefault(e => e.ExecutionId == executionId);
+                if (execution is null || execution.ExecutionStatus != ExecutionStatus.Running)
+                {
+                    continue;
+                }
                 try
                 {
                     await ExecutorService.StopExecutionAsync(executionId, username);

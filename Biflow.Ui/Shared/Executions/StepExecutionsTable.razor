@@ -19,9 +19,15 @@
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
     @if (selectedSteps.Count > 0)
     {
+        var executions = selectedSteps.Select(id => Executions?.FirstOrDefault(e => e.ExecutionId == id.ExecutionId && e.StepId == id.StepId && e.RetryAttemptIndex == id.RetryAttemptIndex));
+        var enabled = executions.Any(e => e?.CanBeStopped == true);
         <HoverBox Header="@selectedText">
             <HxButtonGroup Size="ButtonGroupSize.Small">
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger" OnClick="StopSelectedStepsAsync">
+                <HxButton Size="ButtonSize.Small"
+                          Color="ThemeColor.None"
+                          CssClass="btn-auto text-danger"
+                          Enabled="enabled"
+                          OnClick="StopSelectedStepsAsync">
                     <CxIcon Icon="FeatherIcon.XOctagon" />
                     Stop...
                 </HxButton>
