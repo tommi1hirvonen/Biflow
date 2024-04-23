@@ -12297,7 +12297,7 @@ form {
 }
 
 .dependency-graph .node.external {
-  cursor: default;
+  cursor: pointer;
 }
 
 .dependency-graph .node rect {

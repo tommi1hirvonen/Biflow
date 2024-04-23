@@ -36,7 +36,16 @@
             .ToArrayAsync();
         steps = await context.Steps
             .AsNoTrackingWithIdentityResolution()
-            .Select(s => new StepProjection(s.StepId, s.JobId, s.Job.JobName, s.StepName, s.StepType, s.ExecutionPhase, s.IsEnabled, s.Tags.ToArray(), s.Dependencies.Select(d => d.DependantOnStepId).ToArray()))
+            .Select(s => new StepProjection(
+                s.StepId,
+                s.JobId,
+                s.Job.JobName,
+                s.StepName,
+                s.StepType,
+                s.ExecutionPhase,
+                s.IsEnabled,
+                s.Tags.ToArray(),
+                s.Dependencies.Select(d => new DependencyProjection(d.StepId, d.DependantOnStepId, d.DependencyType)).ToArray()))
             .ToArrayAsync();
         tags = await context.StepTags
             .AsNoTrackingWithIdentityResolution()
