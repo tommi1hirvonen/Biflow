@@ -468,11 +468,6 @@
 
     private async Task UpdateExecutionStatusAsync(StepExecutionStatus status)
     {
-        if (!await Confirmer.ConfirmAsync($"Update selected {selectedSteps.Count} step(s) to status {status}?"))
-        {
-            return;
-        }
-
         try
         {
             foreach (var step in selectedSteps)

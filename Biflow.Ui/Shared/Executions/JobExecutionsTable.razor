@@ -305,11 +305,6 @@
 
     private async Task UpdateExecutionStatusAsync(ExecutionStatus status)
     {
-        if (!await Confirmer.ConfirmAsync($"Update selected {selectedExecutions.Count} execution(s) to status {status}?"))
-        {
-            return;
-        }
-
         try
         {
             var command = new UpdateExecutionStatusCommand([.. selectedExecutions], status);
