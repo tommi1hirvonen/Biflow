@@ -148,6 +148,10 @@
                         <DropdownMenuHeader>
                             @item.JobName
                         </DropdownMenuHeader>
+                        <DropdownMenuItem @onclick="async () => await jobHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.JobId))">
+                            <CxIcon Icon="LucideIcon.History" />
+                            History
+                        </DropdownMenuItem>
                         @if (item.ExecutionStatus == ExecutionStatus.Running)
                         {
                             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
@@ -164,6 +168,8 @@
     </tbody>
 </table>
 
+<JobHistoryOffcanvas @ref="jobHistoryOffcanvas" />
+
 @code {
     [CascadingParameter]
     public Task<AuthenticationState>? AuthenticationState { get; set; }
@@ -174,6 +180,7 @@
     [Parameter]
     public EventCallback OnExecutionsUpdated { get; set; }
 
+    private JobHistoryOffcanvas? jobHistoryOffcanvas;
     private HashSet<Guid> selectedExecutions = [];
 
     private void ToggleExecutionSelected(ExecutionProjection execution)

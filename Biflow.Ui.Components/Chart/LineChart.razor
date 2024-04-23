@@ -62,7 +62,7 @@
             fill = s.Fill,
             backgroundColor = s.Color,
             borderColor = s.Color,
-            data = s.DataPoints.Select(d => new { x = d.XValue.ToString("o"), y = d.YValue }),
+            data = s.DataPoints.OrderBy(d => d.XValue).Select(d => new { x = d.XValue.ToString("o"), y = d.YValue }),
             tension = s.Tension
         });
         var seriesJson = JsonSerializer.Serialize(series, serializationOptions);
