@@ -7,16 +7,26 @@ using Quartz.Impl.Matchers;
 
 namespace Biflow.Scheduler.Core;
 
-internal class SchedulesManager<TJob>(
-    ILogger<SchedulesManager<TJob>> logger,
-    IDbContextFactory<SchedulerDbContext> dbContextFactory,
-    ISchedulerFactory schedulerFactory) : BackgroundService, ISchedulesManager
+internal class SchedulesManager<TJob> : BackgroundService, ISchedulesManager
     where TJob : ExecutionJobBase
 {
-    private readonly ILogger _logger = logger;
-    private readonly IScheduler _scheduler = schedulerFactory.GetScheduler().GetAwaiter().GetResult();
-    private readonly IDbContextFactory<SchedulerDbContext> _dbContextFactory = dbContextFactory;
+    private readonly ILogger _logger;
+    private readonly IScheduler _scheduler;
+    private readonly IDbContextFactory<SchedulerDbContext> _dbContextFactory;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
+
+    public SchedulesManager(
+        ILogger<SchedulesManager<TJob>> logger,
+        IDbContextFactory<SchedulerDbContext> dbContextFactory,
+        ISchedulerFactory schedulerFactory)
+    {
+        _logger = logger;
+        _scheduler = schedulerFactory.GetScheduler().GetAwaiter().GetResult();
+        _dbContextFactory = dbContextFactory;
+
+        var listener = new TriggerListener(_logger);
+        _scheduler.ListenerManager.AddTriggerListener(listener);
+    }
 
     public bool DatabaseReadError { get; private set; }
 
@@ -225,5 +235,25 @@ internal class SchedulesManager<TJob>(
 
         _logger.LogInformation("Added schedule id {ScheduleId} for job id {JobId} with Cron expression {CronExpression}, status {status} and ",
                 schedule.ScheduleId, schedule.JobId, schedule.CronExpression, schedule.IsEnabled);
+    }
+
+    private class TriggerListener(ILogger logger) : ITriggerListener
+    {
+        public string Name { get; } = "MisfireLoggingListener";
+
+        public Task TriggerComplete(ITrigger trigger, IJobExecutionContext context, SchedulerInstruction triggerInstructionCode, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+        public Task TriggerFired(ITrigger trigger, IJobExecutionContext context, CancellationToken cancellationToken = default) => Task.CompletedTask;
+
+        public Task TriggerMisfired(ITrigger trigger, CancellationToken cancellationToken = default)
+        {
+            var scheduleId = trigger.JobKey?.Name;
+            var jobId = trigger.JobKey?.Group;
+            var cron = (trigger as ICronTrigger)?.CronExpressionString;
+            logger.LogError("Schedule {scheduleId} for job {jobId} with cron '{cron}' misfired", scheduleId, jobId, cron);
+            return Task.CompletedTask;
+        }
+
+        public Task<bool> VetoJobExecution(ITrigger trigger, IJobExecutionContext context, CancellationToken cancellationToken = default) => Task.FromResult(false);
     }
 }
