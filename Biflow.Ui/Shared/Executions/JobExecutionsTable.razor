@@ -66,19 +66,67 @@
                 {
                     <div class="text-muted small fw-normal d-inline me-3">@selectedText</div>
                 }
-                Job
+                <span class="sortable" @onclick="ToggleJobSortMode">
+                    Job
+                </span>
+                <span class="ms-2">
+                    @if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.JobAsc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowUp" />
+                    }
+                    else if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.JobDesc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowDown" />
+                    }
+                </span>
             </th>
             <th>
                 Created by
             </th>
             <th>
-                Started
+                <span class="sortable" @onclick="ToggleStartedSortMode">
+                    Started
+                </span>
+                <span class="ms-2">
+                    @if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.StartedAsc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowUp" />
+                    }
+                    else if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.StartedDesc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowDown" />
+                    }
+                </span>
             </th>
             <th>
-                Ended
+                <span class="sortable" @onclick="ToggleEndedSortMode">
+                    Ended
+                </span>
+                <span class="ms-2">
+                    @if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.EndedAsc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowUp" />
+                    }
+                    else if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.EndedDesc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowDown" />
+                    }
+                </span>
             </th>
             <th>
-                Duration
+                <span class="sortable" @onclick="ToggleDurationSortMode">
+                    Duration
+                </span>
+                <span class="ms-2">
+                    @if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.DurationAsc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowUp" />
+                    }
+                    else if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.DurationDesc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowDown" />
+                    }
+                </span>
             </th>
             <th>
                 Number of steps
@@ -174,14 +222,64 @@
     [CascadingParameter]
     public Task<AuthenticationState>? AuthenticationState { get; set; }
 
+    [CascadingParameter]
+    public UserState UserState { get; set; } = new();
+
     [Parameter]
     public IEnumerable<ExecutionProjection>? Executions { get; set; }
 
     [Parameter]
     public EventCallback OnExecutionsUpdated { get; set; }
 
+    [Parameter]
+    public EventCallback OnSortingChanged { get; set; }
+
     private JobHistoryOffcanvas? jobHistoryOffcanvas;
     private HashSet<Guid> selectedExecutions = [];
+
+    private void ToggleJobSortMode()
+    {
+        UserState.Executions.ExecutionSortMode = UserState.Executions.ExecutionSortMode switch
+        {
+            ExecutionSortMode.JobAsc => ExecutionSortMode.JobDesc,
+            ExecutionSortMode.JobDesc => ExecutionSortMode.CreatedDesc,
+            _ => ExecutionSortMode.JobAsc
+        };
+        OnSortingChanged.InvokeAsync();
+    }
+
+    private void ToggleStartedSortMode()
+    {
+        UserState.Executions.ExecutionSortMode = UserState.Executions.ExecutionSortMode switch
+        {
+            ExecutionSortMode.StartedAsc => ExecutionSortMode.StartedDesc,
+            ExecutionSortMode.StartedDesc => ExecutionSortMode.CreatedDesc,
+            _ => ExecutionSortMode.StartedAsc
+        };
+        OnSortingChanged.InvokeAsync();
+    }
+
+    private void ToggleEndedSortMode()
+    {
+        UserState.Executions.ExecutionSortMode = UserState.Executions.ExecutionSortMode switch
+        {
+            ExecutionSortMode.EndedAsc => ExecutionSortMode.EndedDesc,
+            ExecutionSortMode.EndedDesc => ExecutionSortMode.CreatedDesc,
+            _ => ExecutionSortMode.EndedAsc
+        };
+        OnSortingChanged.InvokeAsync();
+    }
+
+    private void ToggleDurationSortMode()
+    {
+        UserState.Executions.ExecutionSortMode = UserState.Executions.ExecutionSortMode switch
+        {
+            ExecutionSortMode.DurationAsc => ExecutionSortMode.DurationDesc,
+            ExecutionSortMode.DurationDesc => ExecutionSortMode.CreatedDesc,
+            _ => ExecutionSortMode.DurationAsc
+        };
+        OnSortingChanged.InvokeAsync();
+    }
 
     private void ToggleExecutionSelected(ExecutionProjection execution)
     {

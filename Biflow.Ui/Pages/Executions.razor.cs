@@ -17,9 +17,6 @@ public partial class Executions : ComponentBase, IDisposable
     private Paginator<ExecutionProjection>? executionPaginator;
     private Paginator<StepExecutionProjection>? stepExecutionPaginator;
 
-    private IEnumerable<ExecutionProjection>? FilteredExecutions => executions?
-        .Where(e => State.ExecutionPredicates.All(p => p(e)));
-
     private IEnumerable<StepExecutionProjection>? FilteredStepExecutions => stepExecutions?
         .Where(e => State.StepExecutionPredicates.All(p => p(e)));
 
@@ -30,6 +27,24 @@ public partial class Executions : ComponentBase, IDisposable
             (State.FromDateTime, State.ToDateTime) = GetPreset(preset);
         }
         await LoadDataAsync();
+    }
+
+    private IEnumerable<ExecutionProjection>? GetOrderedExecutions()
+    {
+        var filtered = executions?.Where(e => State.ExecutionPredicates.All(p => p(e)));
+        return UserState.Executions.ExecutionSortMode switch
+        {
+            ExecutionSortMode.CreatedDesc => filtered?.OrderByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
+            ExecutionSortMode.JobAsc => filtered?.OrderBy(e => e.JobName).ThenByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
+            ExecutionSortMode.JobDesc => filtered?.OrderByDescending(e => e.JobName).ThenByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
+            ExecutionSortMode.StartedAsc => filtered?.OrderBy(e => e.StartedOn),
+            ExecutionSortMode.StartedDesc => filtered?.OrderByDescending(e => e.StartedOn),
+            ExecutionSortMode.EndedAsc => filtered?.OrderBy(e => e.EndedOn),
+            ExecutionSortMode.EndedDesc => filtered?.OrderByDescending(e => e.EndedOn),
+            ExecutionSortMode.DurationAsc => filtered?.OrderBy(e => e.ExecutionInSeconds).ThenByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
+            ExecutionSortMode.DurationDesc => filtered?.OrderByDescending(e => e.ExecutionInSeconds).ThenByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
+            _ => filtered
+        };
     }
 
     private async Task ShowExecutionsAsync()

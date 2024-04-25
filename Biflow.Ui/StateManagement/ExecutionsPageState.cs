@@ -59,6 +59,8 @@ public class ExecutionsPageState
     }
     private DateTime _toDateTime = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddMinutes(1);
 
+    public ExecutionSortMode ExecutionSortMode { get; set; } = ExecutionSortMode.CreatedDesc;
+
     public StartType StartTypeFilter { get; set; } = StartType.All;
     
     public HashSet<ExecutionStatus> JobStatusFilter { get; } = [];
