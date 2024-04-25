@@ -41,7 +41,15 @@
             <HxDropdownButtonGroup CssClass="ms-3">
                 <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" Enabled="!loading">
                     <CxIcon Icon="FeatherIcon.Bookmark" />
-                    Presets
+                    @if (!string.IsNullOrEmpty(State.PresetText))
+                    {
+                        <span class="ms-1">Presets:</span>
+                        <span class="fw-normal">@State.PresetText</span>
+                    }
+                    else
+                    {
+                        <span class="ms-1">Presets</span>
+                    }
                 </HxDropdownToggleButton>
                 <HxDropdownMenu>
                     <HxDropdownHeader>Last</HxDropdownHeader>
