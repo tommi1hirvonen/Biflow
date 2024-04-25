@@ -1,4 +1,4 @@
-﻿namespace Biflow.Ui.Core;
+﻿namespace Biflow.Ui.StateManagement;
 
 public enum SortMode
 {
