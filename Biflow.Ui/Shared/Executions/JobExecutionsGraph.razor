@@ -15,7 +15,7 @@
                      style="height: 100%; border-left: 1px dashed var(--bs-border-color); position: absolute; left: @(percentage.ToString("F10", CultureInfo.InvariantCulture))%;">
                         @if (i < Columns)
                         {
-                            <small>@GetDateFromPercentage(i)<br />@GetTimeFromPercentage(i)</small>
+                            <small>@GetDateFromPercentage(percentage)<br />@GetTimeFromPercentage(percentage)</small>
                         }
                     </div>
                 }
@@ -75,23 +75,23 @@
     private long MinTicks => MinTime.Ticks;
     private long MaxTicks => MaxTime.Ticks;
 
-    private string GetTimeFromPercentage(int percentage)
+    private string GetTimeFromPercentage(double percentage)
     {
         if (MinTicks == MaxTicks)
             return DateTime.Now.ToString("T");
 
         var ticks = MinTicks + (MaxTicks - MinTicks) * percentage / 100;
-        var time = new DateTime(ticks);
+        var time = new DateTime(Convert.ToInt64(ticks));
         return time.ToString("T");
     }
 
-    private string GetDateFromPercentage(int percentage)
+    private string GetDateFromPercentage(double percentage)
     {
         if (MinTicks == MaxTicks)
             return DateTime.Now.ToString("d");
 
         var ticks = MinTicks + (MaxTicks - MinTicks) * percentage / 100;
-        var time = new DateTime(ticks);
+        var time = new DateTime(Convert.ToInt64(ticks));
         return time.ToString("d");
     }
 
