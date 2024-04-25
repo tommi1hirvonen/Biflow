@@ -150,7 +150,7 @@
                         <HxButton Size="ButtonSize.Small"
                                   Color="ThemeColor.None"
                                   CssClass="btn-auto"
-                                  OnClick="() => executeMultipleModal.LetAsync(x => x.ShowAsync(selectedJobs))">
+                                  OnClick="() => ExecuteMultipleModal.LetAsync(x => x.ShowAsync(selectedJobs))">
                             <CxIcon Icon="FeatherIcon.Play" />
                             Execute...
                         </HxButton>
@@ -409,8 +409,6 @@
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
     <ExecuteModal @ref="executeModal" />
-
-    <ExecuteMultipleModal @ref="executeMultipleModal" />
 </AuthorizeView>
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">

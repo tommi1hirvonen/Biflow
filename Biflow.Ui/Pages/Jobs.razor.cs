@@ -19,6 +19,7 @@ public partial class Jobs : ComponentBase, IDisposable
 
     [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
     [CascadingParameter] public UserState UserState { get; set; } = new();
+    [CascadingParameter] public ExecuteMultipleModal ExecuteMultipleModal { get; set; } = null!;
 
     private static readonly JsonSerializerOptions jsonOptions = new() { WriteIndented = true };
     private readonly CancellationTokenSource cts = new();
@@ -32,7 +33,6 @@ public partial class Jobs : ComponentBase, IDisposable
     private JobsBatchEditTagsModal? jobsBatchEditTagsModal;
     private Paginator<ListItem>? paginator;
     private HashSet<Job> selectedJobs = [];
-    private ExecuteMultipleModal? executeMultipleModal;
 
     private record ListItem(Job Job, Execution? LastExecution, Schedule? NextSchedule, DateTime? NextExecution);
 
