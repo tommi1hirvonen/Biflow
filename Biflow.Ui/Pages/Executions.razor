@@ -354,7 +354,7 @@
     {
         <Paginator @ref="stepExecutionPaginator"
                    TItem="StepExecutionProjection"
-                   Items="FilteredStepExecutions"
+                   Items="GetOrderedStepExecutions()"
                    Context="stepExecutions"
                    InitialPageSize="State.PageSize"
                    InitialPage="State.StepExecutionsCurrentPage"
@@ -368,7 +368,10 @@
             </div>
 
             <div class="card shadow-sm pt-2 mt-1 my-3 table-responsive">
-                <StepExecutionsTable Executions="stepExecutions" OnStepsUpdated="LoadDataAsync" />
+                <StepExecutionsTable Executions="stepExecutions"
+                                     OnStepsUpdated="LoadDataAsync"
+                                     SortMode="UserState.Executions.StepExecutionSortMode"
+                                     OnSortingChanged="sortMode => { UserState.Executions.StepExecutionSortMode = sortMode; StateHasChanged(); }" />
             </div>
 
         </Paginator>
@@ -383,7 +386,7 @@ else
         }
         else
         {
-            <StepExecutionsGraph Executions="FilteredStepExecutions" />
+            <StepExecutionsGraph Executions="GetOrderedStepExecutions()" />
         }
     </div>
 }

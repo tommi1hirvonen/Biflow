@@ -37,10 +37,6 @@
                         .Any(other => e.StartedOn >= other.StartedOn && e.StartedOn <= (other.EndedOn ?? DateTime.Now));
                     return (e.StepId, e.StepName, e.StepType, overlapsWithSelf ? e.ExecutionId : Guid.Empty);
                 })
-                .OrderBy(g => SortMode == SortMode.DurationAsc ? g.Max(e => e.ExecutionInSeconds) : null)
-                .OrderByDescending(g => SortMode == SortMode.DurationDesc ? g.Max(e => e.ExecutionInSeconds) : null)
-                .ThenBy(g => SortMode == SortMode.StartedAsc ? g.Min(e => e.StartedOn) : null)
-                .ThenByDescending(g => SortMode == SortMode.StartedDesc ? g.Min(e => e.StartedOn) : null)
                 .ToList();
             <Virtualize Context="group" Items="executions" ItemSize="32.5714f">
                 <div class="row border-top">
@@ -150,8 +146,6 @@
     [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
 
     [Parameter] public IEnumerable<StepExecutionProjection>? Executions { get; set; }
-
-    [Parameter] public SortMode SortMode { get; set; } = SortMode.StartedAsc;
 
     [Parameter] public Func<StepExecutionProjection, StepExecutionAttempt?>? DetailStepProvider { get; set; }
 

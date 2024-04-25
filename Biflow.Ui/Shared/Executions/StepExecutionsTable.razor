@@ -69,7 +69,19 @@
                     {
                         <div class="text-muted small fw-normal d-inline me-3">@selectedText</div>
                     }
-                    Job
+                    <span class="sortable" @onclick="ToggleJobSortMode">
+                        Job
+                    </span>
+                    <span class="ms-2">
+                        @if (SortMode == StepExecutionSortMode.JobAsc)
+                        {
+                            <CxIcon Icon="FeatherIcon.ArrowUp" />
+                        }
+                        else if (SortMode == StepExecutionSortMode.JobDesc)
+                        {
+                            <CxIcon Icon="FeatherIcon.ArrowDown" />
+                        }
+                    </span>
                 </th>
             }
             <th>
@@ -86,19 +98,67 @@
                         <div class="text-muted small fw-normal d-inline me-3">@selectedText</div>
                     }
                 }
-                Step
+                <span class="sortable" @onclick="ToggleStepSortMode">
+                    Step
+                </span>
+                <span class="ms-2">
+                    @if (SortMode == StepExecutionSortMode.StepAsc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowUp" />
+                    }
+                    else if (SortMode == StepExecutionSortMode.StepDesc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowDown" />
+                    }
+                </span>
             </th>
             <th>
                 Execution phase
             </th>
             <th>
-                Started
+                <span class="sortable" @onclick="ToggleStartedSortMode">
+                    Started
+                </span>
+                <span class="ms-2">
+                    @if (SortMode == StepExecutionSortMode.StartedAsc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowUp" />
+                    }
+                    else if (SortMode == StepExecutionSortMode.StartedDesc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowDown" />
+                    }
+                </span>
             </th>
             <th>
-                Ended
+                <span class="sortable" @onclick="ToggleEndedSortMode">
+                    Ended
+                </span>
+                <span class="ms-2">
+                    @if (SortMode == StepExecutionSortMode.EndedAsc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowUp" />
+                    }
+                    else if (SortMode == StepExecutionSortMode.EndedDesc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowDown" />
+                    }
+                </span>
             </th>
             <th>
-                Duration
+                <span class="sortable" @onclick="ToggleDurationSortMode">
+                    Duration
+                </span>
+                <span class="ms-2">
+                    @if (SortMode == StepExecutionSortMode.DurationAsc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowUp" />
+                    }
+                    else if (SortMode == StepExecutionSortMode.DurationDesc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowDown" />
+                    }
+                </span>
             </th>
             <th>
                 Status
@@ -262,12 +322,73 @@
     [Parameter]
     public EventCallback OnStepsUpdated { get; set; }
 
+    [Parameter]
+    public EventCallback<StepExecutionSortMode> OnSortingChanged { get; set; }
+
+    [Parameter]
+    public StepExecutionSortMode SortMode { get; set; }
+
     private StepExecutionProjection? selectedStepExecution;
     private StepHistoryOffcanvas? stepHistoryOffcanvas;
     private StepExecutionAttempt? detailStep;
     private HashSet<StepExecutionId> selectedSteps = [];
 
     private record StepExecutionId(Guid ExecutionId, Guid StepId, int RetryAttemptIndex);
+
+    private void ToggleJobSortMode()
+    {
+        var sortMode = SortMode switch
+        {
+            StepExecutionSortMode.JobAsc => StepExecutionSortMode.JobDesc,
+            StepExecutionSortMode.JobDesc => StepExecutionSortMode.CreatedDesc,
+            _ => StepExecutionSortMode.JobAsc
+        };
+        OnSortingChanged.InvokeAsync(sortMode);
+    }
+
+    private void ToggleStepSortMode()
+    {
+        var sortMode = SortMode switch
+        {
+            StepExecutionSortMode.StepAsc => StepExecutionSortMode.StepDesc,
+            StepExecutionSortMode.StepDesc => StepExecutionSortMode.CreatedDesc,
+            _ => StepExecutionSortMode.StepAsc
+        };
+        OnSortingChanged.InvokeAsync(sortMode);
+    }
+
+    private void ToggleStartedSortMode()
+    {
+        var sortMode = SortMode switch
+        {
+            StepExecutionSortMode.StartedAsc => StepExecutionSortMode.StartedDesc,
+            StepExecutionSortMode.StartedDesc => StepExecutionSortMode.CreatedDesc,
+            _ => StepExecutionSortMode.StartedAsc
+        };
+        OnSortingChanged.InvokeAsync(sortMode);
+    }
+
+    private void ToggleEndedSortMode()
+    {
+        var sortMode = SortMode switch
+        {
+            StepExecutionSortMode.EndedAsc => StepExecutionSortMode.EndedDesc,
+            StepExecutionSortMode.EndedDesc => StepExecutionSortMode.CreatedDesc,
+            _ => StepExecutionSortMode.EndedAsc
+        };
+        OnSortingChanged.InvokeAsync(sortMode);
+    }
+
+    private void ToggleDurationSortMode()
+    {
+        var sortMode = SortMode switch
+        {
+            StepExecutionSortMode.DurationAsc => StepExecutionSortMode.DurationDesc,
+            StepExecutionSortMode.DurationDesc => StepExecutionSortMode.CreatedDesc,
+            _ => StepExecutionSortMode.DurationAsc
+        };
+        OnSortingChanged.InvokeAsync(sortMode);
+    }
 
     private async Task ToggleSelectedStepExecutionAsync(StepExecutionProjection execution)
     {

@@ -459,34 +459,6 @@
                 </HxButton>
             </HxButtonGroup>
         </div>
-        <div class="col-xxl d-inline mt-3 mt-xxl-0">
-            <CxIcon Icon="LucideIcon.SortDesc" />
-            <span class="me-3">Sort</span>
-            <div class="form-check form-check-inline">
-                <input type="radio" class="form-check-input" id="radio_started_asc"
-                       checked=@(sortMode == SortMode.StartedAsc)
-                       @onchange="() => sortMode = SortMode.StartedAsc">
-                <label class="form-check-label" for="radio_started_asc">Started <sup>asc</sup></label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input type="radio" class="form-check-input" id="radio_started_desc"
-                       checked=@(sortMode == SortMode.StartedDesc)
-                       @onchange="() => sortMode = SortMode.StartedDesc">
-                <label class="form-check-label" for="radio_started_desc">Started<sup>desc</sup></label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input type="radio" class="form-check-input" id="radio_duration_asc"
-                       checked=@(sortMode == SortMode.DurationAsc)
-                       @onchange="() => sortMode = SortMode.DurationAsc">
-                <label class="form-check-label" for="radio_duration_asc">Duration<sup>asc</sup></label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input type="radio" class="form-check-input" id="radio_duration_desc"
-                       checked=@(sortMode == SortMode.DurationDesc)
-                       @onchange="() => sortMode = SortMode.DurationDesc">
-                <label class="form-check-label" for="radio_duration_desc">Duration<sup>desc</sup></label>
-            </div>
-        </div>
     </div>
 }
 
@@ -503,21 +475,9 @@
     <div class="card shadow-sm mt-3 pt-2 table-responsive mb-4">
         <StepExecutionsTable
             ShowDetailed="false"
-            Executions="FilteredExecutions
-                        ?.OrderBy(e => sortMode switch
-                        {
-                            SortMode.DurationAsc => e.ExecutionInSeconds,
-                            SortMode.DurationDesc => -e.ExecutionInSeconds,
-                            _ => null
-                        })
-                        // asc => Show not started steps last. desc => Show not started steps first.
-                        .ThenBy(e => sortMode == SortMode.StartedAsc ? e.StartedOn is null : e.StartedOn is not null)
-                        .ThenBy(e => sortMode == SortMode.StartedAsc ? e.StartedOn : null)
-                        .ThenByDescending(e => sortMode == SortMode.StartedDesc ? e.StartedOn : null)
-                        .ThenBy(e => e.EndedOn is null)
-                        .ThenBy(e => e.EndedOn)
-                        .ThenBy(e => e.ExecutionPhase)
-                        .ThenBy(e => e.StepName)"
+            Executions="GetOrderedExecutions()"
+            SortMode="sortMode"
+            OnSortingChanged="sortMode => { this.sortMode = sortMode; StateHasChanged(); }"
             DetailStepProvider="detailStepProvider"
             OnStepsUpdated="LoadData" />
     </div>
@@ -525,10 +485,8 @@
 else if (ShowReport == Report.Gantt)
 {
     <div class="card shadow-sm mt-3 pt-3 mb-4">
-        <StepExecutionsGraph
-            Executions="FilteredExecutions"
-            SortMode="sortMode"
-            DetailStepProvider="detailStepProvider" />
+        <StepExecutionsGraph Executions="GetOrderedExecutions()"
+                             DetailStepProvider="detailStepProvider" />
     </div>
 }
 else if (ShowReport == Report.Graph)

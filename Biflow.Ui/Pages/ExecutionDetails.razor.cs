@@ -35,7 +35,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
     private Job? job;
     private Schedule? schedule;
     private bool loading = false;
-    private SortMode sortMode = SortMode.StartedAsc;
+    private StepExecutionSortMode sortMode = StepExecutionSortMode.StartedAsc;
     private ExecutionParameterLineageOffcanvas? parameterLineageOffcanvas;
 
     // Maintain a list of executions that are being stopped.
@@ -62,11 +62,26 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
 
     private bool Stopping => stoppingExecutions.Any(id => id == ExecutionId);
 
-    private IEnumerable<StepExecutionProjection>? FilteredExecutions => stepProjections
-        ?.Where(e => tagFilter.Count == 0 || e.StepTags.Any(t1 => tagFilter.Any(t2 => t1.TagId == t2.TagId)) == true)
-        .Where(e => stepStatusFilter.Count == 0 || stepStatusFilter.Contains(e.StepExecutionStatus))
-        .Where(e => stepFilter.Count == 0 || stepFilter.Contains((e.StepName, e.StepType)))
-        .Where(e => stepTypeFilter.Count == 0 || stepTypeFilter.Contains(e.StepType));
+    private IEnumerable<StepExecutionProjection>? GetOrderedExecutions()
+    {
+        var filtered = stepProjections
+            ?.Where(e => tagFilter.Count == 0 || e.StepTags.Any(t1 => tagFilter.Any(t2 => t1.TagId == t2.TagId)) == true)
+            .Where(e => stepStatusFilter.Count == 0 || stepStatusFilter.Contains(e.StepExecutionStatus))
+            .Where(e => stepFilter.Count == 0 || stepFilter.Contains((e.StepName, e.StepType)))
+            .Where(e => stepTypeFilter.Count == 0 || stepTypeFilter.Contains(e.StepType));
+        return sortMode switch
+        {
+            StepExecutionSortMode.StepAsc => filtered?.OrderBy(e => e.StepName),
+            StepExecutionSortMode.StepDesc => filtered?.OrderByDescending(e => e.StepName),
+            StepExecutionSortMode.StartedAsc => filtered?.OrderBy(e => e.StartedOn is null).ThenBy(e => e.StartedOn),
+            StepExecutionSortMode.StartedDesc => filtered?.OrderByDescending(e => e.StartedOn),
+            StepExecutionSortMode.EndedAsc => filtered?.OrderBy(e => e.EndedOn),
+            StepExecutionSortMode.EndedDesc => filtered?.OrderByDescending(e => e.EndedOn),
+            StepExecutionSortMode.DurationAsc => filtered?.OrderBy(e => e.ExecutionInSeconds).ThenByDescending(e => e.StartedOn),
+            StepExecutionSortMode.DurationDesc => filtered?.OrderByDescending(e => e.ExecutionInSeconds).ThenByDescending(e => e.StartedOn),
+            _ => filtered?.OrderBy(e => e.StartedOn is null).ThenBy(e => e.StartedOn)
+        };
+    }
 
     private Report ShowReport => Page switch
     {

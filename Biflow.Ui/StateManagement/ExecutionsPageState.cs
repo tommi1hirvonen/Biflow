@@ -80,6 +80,8 @@ public class ExecutionsPageState
 
     public ExecutionSortMode ExecutionSortMode { get; set; } = ExecutionSortMode.CreatedDesc;
 
+    public StepExecutionSortMode StepExecutionSortMode { get; set; } = StepExecutionSortMode.CreatedDesc;
+
     public StartType StartTypeFilter { get; set; } = StartType.All;
     
     public HashSet<ExecutionStatus> JobStatusFilter { get; } = [];

@@ -17,9 +17,6 @@ public partial class Executions : ComponentBase, IDisposable
     private Paginator<ExecutionProjection>? executionPaginator;
     private Paginator<StepExecutionProjection>? stepExecutionPaginator;
 
-    private IEnumerable<StepExecutionProjection>? FilteredStepExecutions => stepExecutions?
-        .Where(e => State.StepExecutionPredicates.All(p => p(e)));
-
     protected override async Task OnInitializedAsync()
     {
         if (State.Preset is Preset preset)
@@ -43,6 +40,26 @@ public partial class Executions : ComponentBase, IDisposable
             ExecutionSortMode.EndedDesc => filtered?.OrderByDescending(e => e.EndedOn),
             ExecutionSortMode.DurationAsc => filtered?.OrderBy(e => e.ExecutionInSeconds).ThenByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
             ExecutionSortMode.DurationDesc => filtered?.OrderByDescending(e => e.ExecutionInSeconds).ThenByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
+            _ => filtered
+        };
+    }
+
+    private IEnumerable<StepExecutionProjection>? GetOrderedStepExecutions()
+    {
+        var filtered = stepExecutions?.Where(e => State.StepExecutionPredicates.All(p => p(e)));
+        return UserState.Executions.StepExecutionSortMode switch
+        {
+            StepExecutionSortMode.CreatedDesc => filtered?.OrderByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
+            StepExecutionSortMode.JobAsc => filtered?.OrderBy(e => e.JobName).ThenByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
+            StepExecutionSortMode.JobDesc => filtered?.OrderByDescending(e => e.JobName).ThenByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
+            StepExecutionSortMode.StepAsc => filtered?.OrderBy(e => e.StepName).ThenByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
+            StepExecutionSortMode.StepDesc => filtered?.OrderByDescending(e => e.StepName).ThenByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
+            StepExecutionSortMode.StartedAsc => filtered?.OrderBy(e => e.StartedOn),
+            StepExecutionSortMode.StartedDesc => filtered?.OrderByDescending(e => e.StartedOn),
+            StepExecutionSortMode.EndedAsc => filtered?.OrderBy(e => e.EndedOn),
+            StepExecutionSortMode.EndedDesc => filtered?.OrderByDescending(e => e.EndedOn),
+            StepExecutionSortMode.DurationAsc => filtered?.OrderBy(e => e.ExecutionInSeconds).ThenByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
+            StepExecutionSortMode.DurationDesc => filtered?.OrderByDescending(e => e.ExecutionInSeconds).ThenByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
             _ => filtered
         };
     }
