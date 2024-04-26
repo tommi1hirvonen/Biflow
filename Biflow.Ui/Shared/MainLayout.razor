@@ -147,7 +147,12 @@
             if (identity is null || !identity.IsAuthenticated)
             {
                 redirecting = true;
-                NavigationManager.NavigateTo("login", true);
+
+                var redirectUrl = Uri.EscapeDataString(NavigationManager.ToBaseRelativePath(NavigationManager.Uri));
+                var url = string.IsNullOrEmpty(redirectUrl)
+                    ? "login"
+                    : $"login?redirectUrl={redirectUrl}";
+                NavigationManager.NavigateTo(url, true);
                 return;
             }
         }

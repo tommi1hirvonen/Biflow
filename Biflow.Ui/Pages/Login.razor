@@ -113,6 +113,12 @@
             return;
         }
 
+        if (HttpContext.Request.Query.TryGetValue("redirectUrl", out var redirectUrl))
+        {
+            NavigationManager.NavigateTo($"/{redirectUrl}");
+            return;
+        }
+
         NavigationManager.NavigateTo("/");
     }
 
