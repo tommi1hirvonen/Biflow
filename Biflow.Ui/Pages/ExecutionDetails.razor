@@ -486,7 +486,9 @@ else if (ShowReport == Report.Gantt)
 {
     <div class="card shadow-sm mt-3 pt-3 mb-4">
         <StepExecutionsGraph Executions="GetOrderedExecutions()"
-                             DetailStepProvider="detailStepProvider" />
+                             DetailStepProvider="detailStepProvider"
+                             SortMode="sortMode"
+                             OnSortingChanged="sortMode => { this.sortMode = sortMode; StateHasChanged(); }" />
     </div>
 }
 else if (ShowReport == Report.Graph)

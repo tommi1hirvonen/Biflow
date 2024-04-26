@@ -379,14 +379,18 @@
 }
 else
 {
-    <div class="card shadow-sm pt-2 mt-3 my-3 table-responsive">
+    <div class="card shadow-sm pt-2 mt-3 my-3">
         @if (!State.ShowSteps)
         {
-            <JobExecutionsGraph Executions="GetOrderedExecutions()" />
+            <JobExecutionsGraph Executions="GetOrderedExecutions()"
+                                SortMode="UserState.Executions.ExecutionSortMode"
+                                OnSortingChanged="sortMode => { UserState.Executions.ExecutionSortMode = sortMode; StateHasChanged(); }" />
         }
         else
         {
-            <StepExecutionsGraph Executions="GetOrderedStepExecutions()" />
+            <StepExecutionsGraph Executions="GetOrderedStepExecutions()"
+                                 SortMode="UserState.Executions.StepExecutionSortMode"
+                                 OnSortingChanged="sortMode => { UserState.Executions.StepExecutionSortMode = sortMode; StateHasChanged(); }" />
         }
     </div>
 }

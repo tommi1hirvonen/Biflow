@@ -7,6 +7,43 @@
 @inject IHxMessageBoxService Confirmer
 
 <div class="row mx-1 my-2">
+
+    <HxDropdownButtonGroup>
+        <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto position-absolute border-0">
+            <CxIcon Icon="LucideIcon.SortDesc" />
+            Sort by: <span class="fw-normal">@SortMode</span>
+        </HxDropdownToggleButton>
+        <HxDropdownMenu>
+            <HxDropdownItem CssClass="@(SortMode == StepExecutionSortMode.CreatedDesc ? "active" : null)" OnClick="() => SetSortMode(StepExecutionSortMode.CreatedDesc)">
+                Created<sup>desc</sup>
+            </HxDropdownItem>
+            <HxDropdownItem CssClass="@(SortMode == StepExecutionSortMode.StartedAsc ? "active" : null)" OnClick="() => SetSortMode(StepExecutionSortMode.StartedAsc)">
+                Started<sup>asc</sup>
+            </HxDropdownItem>
+            <HxDropdownItem CssClass="@(SortMode == StepExecutionSortMode.StartedDesc ? "active" : null)" OnClick="() => SetSortMode(StepExecutionSortMode.StartedDesc)">
+                Started<sup>desc</sup>
+            </HxDropdownItem>
+            <HxDropdownItem CssClass="@(SortMode == StepExecutionSortMode.EndedAsc ? "active" : null)" OnClick="() => SetSortMode(StepExecutionSortMode.EndedAsc)">
+                Ended<sup>asc</sup>
+            </HxDropdownItem>
+            <HxDropdownItem CssClass="@(SortMode == StepExecutionSortMode.EndedDesc ? "active" : null)" OnClick="() => SetSortMode(StepExecutionSortMode.EndedDesc)">
+                Ended<sup>desc</sup>
+            </HxDropdownItem>
+            <HxDropdownItem CssClass="@(SortMode == StepExecutionSortMode.DurationAsc ? "active" : null)" OnClick="() => SetSortMode(StepExecutionSortMode.DurationAsc)">
+                Duration<sup>asc</sup>
+            </HxDropdownItem>
+            <HxDropdownItem CssClass="@(SortMode == StepExecutionSortMode.DurationDesc ? "active" : null)" OnClick="() => SetSortMode(StepExecutionSortMode.DurationDesc)">
+                Duration<sup>desc</sup>
+            </HxDropdownItem>
+            <HxDropdownItem CssClass="@(SortMode == StepExecutionSortMode.StepAsc ? "active" : null)" OnClick="() => SetSortMode(StepExecutionSortMode.StepAsc)">
+                Step<sup>asc</sup>
+            </HxDropdownItem>
+            <HxDropdownItem CssClass="@(SortMode == StepExecutionSortMode.StepDesc ? "active" : null)" OnClick="() => SetSortMode(StepExecutionSortMode.StepDesc)">
+                Step<sup>desc</sup>
+            </HxDropdownItem>
+        </HxDropdownMenu>
+    </HxDropdownButtonGroup>
+    
     <div class="col">
         <div class="row" style="height: 40px;">
             <div class="col-xl-3 col-lg-4 col-5 py-1 d-flex align-items-center justify-content-end">
@@ -149,11 +186,20 @@
 
     [Parameter] public Func<StepExecutionProjection, StepExecutionAttempt?>? DetailStepProvider { get; set; }
 
+    [Parameter] public StepExecutionSortMode SortMode { get; set; }
+
+    [Parameter] public EventCallback<StepExecutionSortMode> OnSortingChanged { get; set; }
+
     private const int Columns = 12;
 
     private StepExecutionProjection? selectedStepExecution;
     private StepHistoryOffcanvas? stepHistoryOffcanvas;
     private StepExecutionAttempt? detailStep;
+
+    private void SetSortMode(StepExecutionSortMode sort)
+    {
+        OnSortingChanged.InvokeAsync(sort);
+    }
 
     private async Task ToggleSelectedStepExecutionAsync(StepExecutionProjection execution)
     {
