@@ -6,13 +6,14 @@ internal class ExecutionPhaseTracker(StepExecution stepExecution) : IOrchestrati
 {
     private readonly Dictionary<StepExecution, OrchestrationStatus> _execution = [];
 
-    public void HandleUpdate(OrchestrationUpdate value)
+    public StepExecutionMonitor? HandleUpdate(OrchestrationUpdate value)
     {
         var (step, status) = value;
         if (stepExecution.ExecutionId == step.ExecutionId && stepExecution.StepId != step.StepId)
         {
             _execution[step] = status;
         }
+        return null;
     }
 
     public StepAction? GetStepAction()

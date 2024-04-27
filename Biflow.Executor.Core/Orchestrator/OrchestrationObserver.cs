@@ -30,27 +30,27 @@ internal class OrchestrationObserver(
         _unsubscriber = null;
     }
 
-    public void RegisterInitialUpdates(IEnumerable<OrchestrationUpdate> initialStatuses)
+    public IEnumerable<StepExecutionMonitor> RegisterInitialUpdates(IEnumerable<OrchestrationUpdate> initialStatuses)
     {
-        foreach (var status in initialStatuses)
-        {
-            HandleUpdate(status);
-        }
+        var monitorings = initialStatuses.SelectMany(HandleUpdate)
+            .ToArray();
         var action = GetStepAction();
         if (action is not null)
         {
             SetResult(action);
         }
+        return monitorings;
     }
 
-    public void OnUpdate(OrchestrationUpdate value)
+    public IEnumerable<StepExecutionMonitor> OnUpdate(OrchestrationUpdate value)
     {
-        HandleUpdate(value);
+        var monitorings = HandleUpdate(value);
         var action = GetStepAction();
         if (action is not null)
         {
             SetResult(action);
         }
+        return monitorings;
     }
 
     public async Task WaitForProcessingAsync(IStepReadyForProcessingListener stepReadyListener)
@@ -73,12 +73,11 @@ internal class OrchestrationObserver(
     /// After that it is called once whenever orchestration updates are provided.
     /// </summary>
     /// <param name="value"></param>
-    private void HandleUpdate(OrchestrationUpdate value)
+    private IEnumerable<StepExecutionMonitor> HandleUpdate(OrchestrationUpdate value)
     {
-        foreach (var tracker in _orchestrationTrackers)
-        {
-            tracker.HandleUpdate(value);
-        }
+        return _orchestrationTrackers.Select(t => t.HandleUpdate(value))
+            .WhereNotNull()
+            .ToArray();
     }
 
     /// <summary>

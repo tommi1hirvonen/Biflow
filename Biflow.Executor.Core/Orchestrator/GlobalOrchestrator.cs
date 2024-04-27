@@ -21,24 +21,28 @@ internal class GlobalOrchestrator(
         try
         {
             Task[] tasks;
+            StepExecutionMonitor[] monitors;
             // Acquire lock for editing the step statuses and until all observers have subscribed.
             lock (_lock)
             {
-                foreach (var observer in observers)
-                {
-                    UpdateStatus(observer.StepExecution, OrchestrationStatus.NotStarted);
-                }
-                var statuses = _stepStatuses.Select(s => new OrchestrationUpdate(s.Key, s.Value)).ToArray();
-                foreach (var observer in observers)
-                {
-                    observer.RegisterInitialUpdates(statuses);
-                    observer.Subscribe(this);
-                }
-                tasks = observers
-                    .OrderBy(o => o.Priority) // Start tasks with higher priority (lower value) first.
-                    .Select(o => o.WaitForProcessingAsync(this))
+                var monitorsFromExistingObservers = observers
+                    .SelectMany(observer => UpdateStatus(observer.StepExecution, OrchestrationStatus.NotStarted))
                     .ToArray();
+                var statuses = _stepStatuses.Select(s => new OrchestrationUpdate(s.Key, s.Value)).ToArray();
+                var monitorsFromNewObservers = observers
+                    .SelectMany(observer =>
+                    {
+                        var monitorsFromInitialUpdates = observer.RegisterInitialUpdates(statuses);
+                        observer.Subscribe(this);
+                        return monitorsFromInitialUpdates;
+                    }).ToArray();
+                tasks = observers
+                    .OrderBy(observer => observer.Priority) // Start tasks with higher priority (lower value) first.
+                    .Select(observer => observer.WaitForProcessingAsync(this))
+                    .ToArray();
+                monitors = [.. monitorsFromExistingObservers, .. monitorsFromNewObservers];
             }
+            _ = AddMonitorsAsync(monitors);
             await Task.WhenAll(tasks);
         }
         finally
@@ -148,7 +152,7 @@ internal class GlobalOrchestrator(
         }
     }
 
-    private void UpdateStatus(StepExecution step, OrchestrationStatus status)
+    private StepExecutionMonitor[] UpdateStatus(StepExecution step, OrchestrationStatus status)
     {
         lock (_lock)
         {
@@ -160,10 +164,9 @@ internal class GlobalOrchestrator(
             {
                 _stepStatuses[step] = status;
             }
-            foreach (var observer in _observers.ToArray()) // Make a copy of the list as observers might unsubscribe during enumeration
-            {
-                observer.OnUpdate(new(step, status));
-            }
+            return _observers.ToArray() // Make a copy of the list as observers might unsubscribe during enumeration
+                .SelectMany(observer => observer.OnUpdate(new(step, status)))
+                .ToArray();
         }
     }
 
@@ -212,4 +215,19 @@ internal class GlobalOrchestrator(
         await context.SaveChangesAsync();
     }
 
+    private async Task AddMonitorsAsync(IEnumerable<StepExecutionMonitor> monitors)
+    {
+        try
+        {
+            using var context = _dbContextFactory.CreateDbContext();
+            var distinct = monitors
+                .DistinctBy(t => (t.ExecutionId, t.StepId, t.MonitoredExecutionId, t.MonitoredStepId, TrackingReason:t.MonitoringReason));
+            context.StepExecutionMonitors.AddRange(distinct);
+            await context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error saving new step execution monitors");
+        }
+    }
 }

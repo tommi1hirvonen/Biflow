@@ -6,14 +6,23 @@ internal class DuplicateExecutionTracker(StepExecution stepExecution) : IOrchest
 {
     private readonly Dictionary<StepExecution, OrchestrationStatus> _duplicates = [];
 
-    public void HandleUpdate(OrchestrationUpdate value)
+    public StepExecutionMonitor? HandleUpdate(OrchestrationUpdate value)
     {
         var (step, status) = value;
         // Keep track of the same being possibly executed in a different execution.
         if (step.StepId == stepExecution.StepId && step.ExecutionId != stepExecution.ExecutionId)
         {
             _duplicates[step] = status;
+            return new()
+            {
+                ExecutionId = stepExecution.ExecutionId,
+                StepId = stepExecution.StepId,
+                MonitoredExecutionId = step.ExecutionId,
+                MonitoredStepId = step.StepId,
+                MonitoringReason = MonitoringReason.Duplicate
+            };
         }
+        return null;
     }
 
     public StepAction? GetStepAction()

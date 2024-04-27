@@ -66,6 +66,17 @@ public static class Extensions
         }
     }
 
+    public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> enumerable)
+    {
+        foreach (var item in enumerable)
+        {
+            if (item is not null)
+            {
+                yield return item;
+            }
+        }
+    }
+
     public static void SortBy<T, U>(this IList<T> list, Func<T, U> propertyDelegate) where U : IComparable =>
         list.Sort((one, other) => propertyDelegate(one).CompareTo(propertyDelegate(other)));
 
