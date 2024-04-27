@@ -144,14 +144,13 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
                 from exec in context.StepExecutions
                     .AsNoTrackingWithIdentityResolution()
                     .Where(e => e.ExecutionId == ExecutionId)
-                    .Include(e => e.Execution)
-                    .ThenInclude(e => e.ExecutionParameters)
+                    .Include(e => e.Execution).ThenInclude(e => e.ExecutionParameters)
                     .Include(e => e.StepExecutionAttempts)
                     .Include(e => e.ExecutionDependencies)
+                    .Include(e => e.MonitoredStepExecutions).ThenInclude(e => e.MonitoredStepExecution).ThenInclude(e => e.StepExecutionAttempts)
                     .Include($"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
                     .Include($"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
-                    .Include(e => e.ExecutionConditionParameters)
-                    .ThenInclude(p => p.ExecutionParameter)
+                    .Include(e => e.ExecutionConditionParameters).ThenInclude(p => p.ExecutionParameter)
                 join step in context.Steps.Include(s => s.Tags) on exec.StepId equals step.StepId into es
                 from step in es.DefaultIfEmpty()
                 select new { exec, step }

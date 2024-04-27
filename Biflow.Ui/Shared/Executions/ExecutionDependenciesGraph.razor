@@ -106,7 +106,7 @@
 {
     <DependencyGraph @ref="dependencyGraph"
                      TItem="StepExecution"
-                     ItemFromNodeIdSelector="nodeId => Execution?.StepExecutions.FirstOrDefault(s => s.StepId.ToString() == nodeId)"
+                     ItemFromNodeIdSelector="@(nodeId => Execution?.StepExecutions.FirstOrDefault(s => $"{s.ExecutionId}_{s.StepId}" == nodeId))"
                      AfterRender="LoadGraphAsync"
                      CssClass="dependency-graph">
         <ContextMenuTemplate Context="step">
@@ -201,26 +201,60 @@
         if (dependencyGraphStepFilter is null)
         {
             // Create a list of steps and dependencies and send them through JSInterop as JSON objects.
+            var crossExecutionDependencies = Execution.StepExecutions
+                .SelectMany(e => e.MonitoredStepExecutions.Where(m => m.MonitoringReason is MonitoringReason.UpstreamDependency or MonitoringReason.DownstreamDependency))
+                .Select(e => e.MonitoredStepExecution)
+                .Where(e => e.ExecutionId != Execution.ExecutionId);
             nodes = Execution.StepExecutions
+                .Concat(crossExecutionDependencies)
                 .Select(step =>
                 {
                     var status = step.ExecutionStatus.ToString() ?? "";
+                    var @internal = step.ExecutionId == Execution.ExecutionId;
                     return new DependencyGraphNode(
-                        Id: step.StepId.ToString(),
+                        Id: $"{step.ExecutionId}_{step.StepId}",
                         Name: step.StepName,
-                        CssClass: $"enabled {status.ToLower()} internal",
+                        CssClass: $"enabled {status.ToLower()} {(@internal ? "internal" : "external")}",
                         TooltipText: $"{step.StepType}, {status}, {step.GetDurationInSeconds().SecondsToReadableFormat()}",
                         EnableOnClick: true
                     );
                 }).ToArray();
+
+            var crossExecutionEdgesUpstream = Execution.StepExecutions
+                .SelectMany(e => e.MonitoredStepExecutions.Where(m => m.MonitoringReason == MonitoringReason.UpstreamDependency))
+                .Where(m => m.MonitoredExecutionId != Execution.ExecutionId)
+                .Select(m => 
+                {
+                    var dependencyType = m.StepExecution.ExecutionDependencies
+                        .FirstOrDefault(d => d.DependantOnStepId == m.MonitoredStepId)
+                        ?.DependencyType
+                        ?? DependencyType.OnCompleted;
+                    return new DependencyGraphEdge(
+                        Id: $"{m.ExecutionId}_{m.StepId}",
+                        DependsOnId: $"{m.MonitoredExecutionId}_{m.MonitoredStepId}",
+                        CssClass: dependencyType.ToString().ToLower());
+                });
+            var crossExecutionEdgesDownstream = Execution.StepExecutions
+                .SelectMany(e => e.MonitoredStepExecutions.Where(m => m.MonitoringReason == MonitoringReason.DownstreamDependency))
+                .Where(m => m.MonitoredExecutionId != Execution.ExecutionId)
+                .Select(m =>
+                {
+                    return new DependencyGraphEdge(
+                        Id: $"{m.MonitoredExecutionId}_{m.MonitoredStepId}",
+                        DependsOnId: $"{m.ExecutionId}_{m.StepId}",
+                        CssClass: DependencyType.OnCompleted.ToString().ToLower());
+                });
             edges = Execution.StepExecutions
                 .SelectMany(step => step.ExecutionDependencies)
                 .Where(dep => Execution.StepExecutions.Any(s => dep.DependantOnStepId == s.StepId))
                 .Select(dep => new DependencyGraphEdge(
-                    Id: dep.StepId.ToString(),
-                    DependsOnId: ((Guid)dep.DependantOnStepId!).ToString(),
+                    Id: $"{dep.ExecutionId}_{dep.StepId}",
+                    DependsOnId: $"{dep.ExecutionId}_{dep.DependantOnStepId}",
                     CssClass: dep.DependencyType.ToString().ToLower()
-                )).ToArray();
+                ))
+                .Concat(crossExecutionEdgesUpstream)
+                .Concat(crossExecutionEdgesDownstream)
+                .ToArray();
         }
         else
         {
