@@ -491,9 +491,9 @@ else if (ShowReport == Report.Gantt)
                              OnSortingChanged="sortMode => { this.sortMode = sortMode; StateHasChanged(); }" />
     </div>
 }
-else if (ShowReport == Report.Graph)
+else if (ShowReport == Report.Graph && execution is not null)
 {
-    <ExecutionDependenciesGraph Execution="execution" InitialStepId="InitialStepId" />
+    <ExecutionDependenciesGraph @ref="dependenciesGraph" Execution="execution" InitialStepId="InitialStepId" />
 }
 else if (ShowReport == Report.Rerun)
 {

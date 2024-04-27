@@ -37,6 +37,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
     private bool loading = false;
     private StepExecutionSortMode sortMode = StepExecutionSortMode.StartedAsc;
     private ExecutionParameterLineageOffcanvas? parameterLineageOffcanvas;
+    private ExecutionDependenciesGraph? dependenciesGraph;
 
     // Maintain a list of executions that are being stopped.
     // This same component instance can be used to switch between different job executions.
@@ -201,6 +202,10 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
                 AutoRefresh = false;
             }
             await InvokeAsync(StateHasChanged);
+            if (dependenciesGraph is not null)
+            {
+                await dependenciesGraph.LoadGraphAsync();
+            }
         }
     }
 

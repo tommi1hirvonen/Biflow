@@ -191,7 +191,7 @@
         return LoadGraphAsync();
     }
 
-    private async Task LoadGraphAsync()
+    public async Task LoadGraphAsync()
     {
         ArgumentNullException.ThrowIfNull(dependencyGraph);
         ArgumentNullException.ThrowIfNull(Execution);
