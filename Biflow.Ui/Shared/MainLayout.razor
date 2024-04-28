@@ -31,6 +31,7 @@
         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")" Context="auth2">
             <ExecuteMultipleModal @ref="executeMultipleModal" />
         </AuthorizeView>
+        <StepExecutionMonitorsOffcanvas @ref="stepExecutionMonitorsOffcanvas" />
         <header>
             <nav class="navbar navbar-dark navbar-custom sticky-top flex-lg-nowrap navbar-expand-lg p-0 shadow bg-gradient-primary">
                 <span class="navbar-brand navbar-brand-bg fw-bold ps-4 py-2 fs-4 me-0">biflow</span>
@@ -66,7 +67,9 @@
                     }
                     <CascadingValue Value="userState">
                         <CascadingValue Value="executeMultipleModal">
-                            @Body
+                            <CascadingValue Value="stepExecutionMonitorsOffcanvas">
+                                @Body
+                            </CascadingValue>
                         </CascadingValue>
                     </CascadingValue>
                 </main>
@@ -128,6 +131,7 @@
     private string? schedulerServiceErrorMessage = null;
     private bool redirecting;
     private ExecuteMultipleModal? executeMultipleModal;
+    private StepExecutionMonitorsOffcanvas? stepExecutionMonitorsOffcanvas;
 
     private string? SidebarClass => collapseSidebar ? "collapse" : null;
 

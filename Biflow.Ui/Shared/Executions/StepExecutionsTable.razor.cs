@@ -21,6 +21,9 @@ public partial class StepExecutionsTable : ComponentBase
     [CascadingParameter]
     public Task<AuthenticationState>? AuthenticationState { get; set; }
 
+    [CascadingParameter]
+    public StepExecutionMonitorsOffcanvas? StepExecutionMonitorsOffcanvas { get; set; }
+
     [Parameter]
     public IEnumerable<StepExecutionProjection>? Executions { get; set; }
 
@@ -132,7 +135,6 @@ public partial class StepExecutionsTable : ComponentBase
                     .Include(e => e.StepExecution)
                     .ThenInclude(e => e.ExecutionConditionParameters)
                     .ThenInclude(e => e.ExecutionParameter)
-                    .Include(e => e.StepExecution)
                     .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId && e.StepId == execution.StepId && e.RetryAttemptIndex == execution.RetryAttemptIndex);
                 if (detailStep is not null)
                 {
