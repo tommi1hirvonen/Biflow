@@ -5,6 +5,8 @@ public partial class Executions : ComponentBase, IDisposable
 {
     [Inject] private IMediator Mediator { get; set; } = null!;
 
+    [Inject] private ToasterService Toaster { get; set; } = null!;
+
     [CascadingParameter] UserState UserState { get; set; } = null!;
 
     private ExecutionsPageState State => UserState.Executions;
@@ -16,6 +18,9 @@ public partial class Executions : ComponentBase, IDisposable
     private IEnumerable<StepExecutionProjection>? stepExecutions;
     private Paginator<ExecutionProjection>? executionPaginator;
     private Paginator<StepExecutionProjection>? stepExecutionPaginator;
+    private HxOffcanvas? deleteOffcanvas;
+    private DateTime deleteFrom = new(2000, 1, 1);
+    private DateTime deleteTo = DateTime.Now.AddYears(-1);
 
     protected override async Task OnInitializedAsync()
     {
@@ -103,6 +108,20 @@ public partial class Executions : ComponentBase, IDisposable
 
         loading = false;
         StateHasChanged();
+    }
+
+    private async Task DeleteExecutionsAsync()
+    {
+        try
+        {
+            var command = new DeleteExecutionsCommand(deleteFrom, deleteTo);
+            await Mediator.SendAsync(command);
+            Toaster.AddSuccess("Executions deleted successfully");
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error deleting executions", ex.Message);
+        }
     }
 
     private async Task ApplyPresetAsync(Preset preset)
