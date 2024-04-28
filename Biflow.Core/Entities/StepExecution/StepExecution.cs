@@ -75,6 +75,10 @@ public abstract class StepExecution
 
     public IEnumerable<StepExecutionDataObject> DataObjects { get; } = new List<StepExecutionDataObject>();
 
+    public IEnumerable<StepExecutionMonitor> MonitoredStepExecutions { get; } = new List<StepExecutionMonitor>();
+
+    public IEnumerable<StepExecutionMonitor> MonitoringStepExecutions { get; } = new List<StepExecutionMonitor>();
+
     public abstract StepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default);
 
     protected void AddAttempt(StepExecutionAttempt attempt) => _stepExecutionAttempts.Add(attempt);

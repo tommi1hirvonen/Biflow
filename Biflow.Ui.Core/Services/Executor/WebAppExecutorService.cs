@@ -28,9 +28,9 @@ public class WebAppExecutorService : IExecutorService
         _httpClient.BaseAddress = new Uri(baseUrl);
     }
 
-    public async Task StartExecutionAsync(Guid executionId)
+    public async Task StartExecutionAsync(Guid executionId, CancellationToken cancellationToken = default)
     {
-        var response = await _httpClient.GetAsync($"/executions/start/{executionId}");
+        var response = await _httpClient.GetAsync($"/executions/start/{executionId}", cancellationToken);
         response.EnsureSuccessStatusCode();
     }
 

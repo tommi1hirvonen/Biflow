@@ -112,6 +112,18 @@
             return;
         }
 
+        if (HttpContext.Request.Query.TryGetValue("redirectUrl", out var redirectUrlValues)
+            && redirectUrlValues.FirstOrDefault() is not null and { Length: > 0 } redirectUrl)
+        {
+            if (redirectUrl[0] == '/')
+            {
+                NavigationManager.NavigateTo(redirectUrl);
+                return;
+            }
+            NavigationManager.NavigateTo($"/{redirectUrl}");
+            return;
+        }
+
         NavigationManager.NavigateTo("/");
     }
 

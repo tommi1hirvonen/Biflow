@@ -129,14 +129,7 @@
 </AuthorizeView>
 
 @{
-    var schedules = FilteredSchedules
-        ?.Where(s => UserState.Schedules.StateFilter switch { StateFilter.Enabled => s.IsEnabled, StateFilter.Disabled => !s.IsEnabled, _ => true })
-        .Where(s => s.TriggersBetween(UserState.Schedules.TriggersAfter, UserState.Schedules.TriggersBefore))
-        .OrderBy(s => s.Job.JobName)
-        .ThenBy(s => s.ScheduleName)
-        .AsEnumerable()
-        ?? [];
-    var count = FilteredSchedules?.Count() ?? 0;
+    var count = VisibleSchedules?.Count() ?? 0;
     var selectedText = selectedSchedules.Count switch
     {
         1 => $"{selectedSchedules.Count} selected schedule",
@@ -147,7 +140,7 @@
 
 <Paginator TItem="Schedule"
            @ref="paginator"
-           Items="schedules"
+           Items="VisibleSchedules"
            Context="items"
            InitialPageSize="UserState.Schedules.PageSize"
            InitialPage="UserState.Schedules.CurrentPage"
@@ -395,6 +388,14 @@
 
     [Parameter] public EventCallback OnSchedulesChanged { get; set; }
 
+    private IEnumerable<Schedule> VisibleSchedules => FilteredSchedules
+        ?.Where(s => UserState.Schedules.StateFilter switch { StateFilter.Enabled => s.IsEnabled, StateFilter.Disabled => !s.IsEnabled, _ => true })
+        .Where(s => s.TriggersBetween(UserState.Schedules.TriggersAfter, UserState.Schedules.TriggersBefore))
+        .OrderBy(s => s.Job.JobName)
+        .ThenBy(s => s.ScheduleName)
+        .AsEnumerable()
+        ?? [];
+
     private static readonly JsonSerializerOptions SerializerOptions = new() { WriteIndented = true };
 
     private ScheduleEditModal? editModal;
@@ -493,7 +494,7 @@
     {
         if (value)
         {
-            var schedulesToAdd = FilteredSchedules?.Where(s => !selectedSchedules.Contains(s)) ?? [];
+            var schedulesToAdd = VisibleSchedules.Where(s => !selectedSchedules.Contains(s)) ?? [];
             foreach (var s in schedulesToAdd) selectedSchedules.Add(s);
         }
         else

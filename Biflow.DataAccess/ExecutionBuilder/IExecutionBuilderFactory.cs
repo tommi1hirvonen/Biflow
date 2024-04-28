@@ -11,7 +11,11 @@ public interface IExecutionBuilderFactory<TDbContext> where TDbContext : AppDbCo
     /// <param name="createdBy"></param>
     /// <param name="predicates">List of predicates to be applied as where clause predicates when translating the database query</param>
     /// <returns><see cref="ExecutionBuilder"/> if <see cref="Job"/> was found with the given <paramref name="jobId"/>, <see langword="null"/> if not</returns>
-    public Task<ExecutionBuilder?> CreateAsync(Guid jobId, string? createdBy, params Func<TDbContext, Expression<Func<Step, bool>>>[] predicates);
+    public Task<ExecutionBuilder?> CreateAsync(
+        Guid jobId,
+        string? createdBy,
+        IEnumerable<Func<TDbContext, Expression<Func<Step, bool>>>>? predicates = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 
@@ -21,7 +25,12 @@ public interface IExecutionBuilderFactory<TDbContext> where TDbContext : AppDbCo
     /// <param name="parent">The parent <see cref="StepExecutionAttempt"/> that is creating/launching the built <see cref="Execution"/></param>
     /// <param name="predicates">List of predicates to be applied as where clause predicates when translating the database query</param>
     /// <returns><see cref="ExecutionBuilder"/> if <see cref="Job"/> was found with the given <paramref name="jobId"/>, <see langword="null"/> if not</returns>
-    public Task<ExecutionBuilder?> CreateAsync(Guid jobId, string? createdBy, StepExecutionAttempt? parent, params Func<TDbContext, Expression<Func<Step, bool>>>[] predicates);
+    public Task<ExecutionBuilder?> CreateAsync(
+        Guid jobId,
+        string? createdBy,
+        StepExecutionAttempt? parent,
+        IEnumerable<Func<TDbContext, Expression<Func<Step, bool>>>>? predicates = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// 
@@ -30,5 +39,9 @@ public interface IExecutionBuilderFactory<TDbContext> where TDbContext : AppDbCo
     /// <param name="scheduleId"></param>
     /// <param name="predicates">List of predicates to be applied as where clause predicates when translating the database query</param>
     /// <returns><see cref="ExecutionBuilder"/> if <see cref="Job"/> was found with the given <paramref name="jobId"/>, <see langword="null"/> if not</returns>
-    public Task<ExecutionBuilder?> CreateAsync(Guid jobId, Guid scheduleId, params Func<TDbContext, Expression<Func<Step, bool>>>[] predicates);
+    public Task<ExecutionBuilder?> CreateAsync(
+        Guid jobId,
+        Guid scheduleId,
+        IEnumerable<Func<TDbContext, Expression<Func<Step, bool>>>>? predicates = null,
+        CancellationToken cancellationToken = default);
 }

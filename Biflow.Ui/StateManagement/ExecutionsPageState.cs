@@ -45,6 +45,25 @@ public class ExecutionsPageState
 
     public Preset? Preset { get; set; } = StateManagement.Preset.OneHour;
 
+    public string? PresetText => Preset switch
+    {
+        StateManagement.Preset.OneHour => "Last 1 h",
+        StateManagement.Preset.ThreeHours => "Last 3 h",
+        StateManagement.Preset.TwelveHours => "Last 12 h",
+        StateManagement.Preset.TwentyFourHours => "Last 24 h",
+        StateManagement.Preset.ThreeDays => "Last 3 d",
+        StateManagement.Preset.SevenDays => "Last 7 d",
+        StateManagement.Preset.FourteenDays => "Last 14 d",
+        StateManagement.Preset.ThirtyDays => "Last 30 d",
+        StateManagement.Preset.ThisDay => "This day",
+        StateManagement.Preset.ThisWeek => "This week",
+        StateManagement.Preset.ThisMonth => "This month",
+        StateManagement.Preset.PreviousDay => "Previous day",
+        StateManagement.Preset.PreviousWeek => "Previous week",
+        StateManagement.Preset.PreviousMonth => "Previous month",
+        _ => null
+    };
+
     public DateTime FromDateTime
     {
         get => _fromDateTime;
@@ -58,6 +77,10 @@ public class ExecutionsPageState
         set => _toDateTime = value < FromDateTime ? FromDateTime : value;
     }
     private DateTime _toDateTime = DateTime.Now.Trim(TimeSpan.TicksPerMinute).AddMinutes(1);
+
+    public ExecutionSortMode ExecutionSortMode { get; set; } = ExecutionSortMode.CreatedDesc;
+
+    public StepExecutionSortMode StepExecutionSortMode { get; set; } = StepExecutionSortMode.CreatedDesc;
 
     public StartType StartTypeFilter { get; set; } = StartType.All;
     

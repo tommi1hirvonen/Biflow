@@ -10,14 +10,23 @@ internal class TargetTracker(StepExecution stepExecution) : IOrchestrationTracke
         .Select(o => o.ObjectId)
         .ToHashSet();
 
-    public void HandleUpdate(OrchestrationUpdate value)
+    public StepExecutionMonitor? HandleUpdate(OrchestrationUpdate value)
     {
         var (step, status) = value;
         if ((step.StepId != stepExecution.StepId || step.ExecutionId != stepExecution.ExecutionId)
             && step.DataObjects.Any(o => o.ReferenceType == DataObjectReferenceType.Target && _targets.Contains(o.ObjectId)))
         {
             _writers[step] = status;
+            return new()
+            {
+                ExecutionId = stepExecution.ExecutionId,
+                StepId = stepExecution.StepId,
+                MonitoredExecutionId = step.ExecutionId,
+                MonitoredStepId = step.StepId,
+                MonitoringReason = MonitoringReason.CommonTarget
+            };
         }
+        return null;
     }
 
     public StepAction? GetStepAction()

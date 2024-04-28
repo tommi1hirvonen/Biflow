@@ -1,0 +1,103 @@
+﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject NavigationManager NavigationManager
+
+<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Large" Title="@stepExecution?.StepName">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <table class="table table-sm small">
+                    <thead>
+                        <tr>
+                            <th>Step</th>
+                            <th>Monitoring reason</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (monitors is null)
+                        {
+                            <tr>
+                                <td colspan="3" class="text-center">
+                                    <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                                </td>
+                            </tr>
+                        }
+                        else if (monitors.Count() == 0)
+                        {
+                            <tr>
+                                <td colspan="3">
+                                    No monitors
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var monitor in monitors)
+                            {
+                                <tr>
+                                    <td class="align-middle">
+                                        <div class="row">
+                                            <div class="col">
+                                                <StepTypeIcon StepType="monitor.MonitoredStepExecution.StepType" />
+                                                <span class="ms-1">@monitor.MonitoredStepExecution.StepName</span>
+                                            </div>
+                                        </div>
+                                        
+                                        @if (monitor.MonitoredExecutionId != monitor.ExecutionId)
+                                        {
+                                            <div class="row">
+                                                <div class="col">
+                                                    <span class="text-decoration-underline pointer" @onclick="() => GoToExecutionAsync(monitor.MonitoredExecutionId)">
+                                                        @monitor.MonitoredStepExecution.Execution.JobName
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        }
+                                    </td>
+                                    <td class="align-middle">
+                                        @monitor.MonitoringReason
+                                    </td>
+                                    <td class="align-middle">
+                                        <StepExecutionStatusBadge ExecutionStatus="monitor.MonitoredStepExecution.ExecutionStatus" />
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
+@code {
+    private StepExecution? stepExecution;
+    private StepExecutionMonitor[]? monitors;
+    private HxOffcanvas? offcanvas;
+
+    public async Task ShowAsync(StepExecution step)
+    {
+        monitors = null;
+        stepExecution = step;
+        StateHasChanged();
+        await offcanvas.LetAsync(x => x.ShowAsync());
+        using var context = DbContextFactory.CreateDbContext();
+        monitors = await context.StepExecutionMonitors
+            .AsNoTrackingWithIdentityResolution()
+            .IgnoreQueryFilters()
+            .Where(m => m.ExecutionId == step.ExecutionId && m.StepId == step.StepId)
+            .Include(m => m.MonitoredStepExecution).ThenInclude(e => e.StepExecutionAttempts)
+            .Include(m => m.MonitoredStepExecution).ThenInclude(e => e.Execution)
+            .ToArrayAsync();
+        StateHasChanged();
+    }
+
+    private async Task GoToExecutionAsync(Guid executionId)
+    {
+        await offcanvas.LetAsync(x => x.HideAsync());
+        NavigationManager.NavigateTo($"executions/{executionId}/list");
+    }
+}

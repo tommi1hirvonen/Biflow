@@ -9,4 +9,4 @@ namespace Biflow.Ui.Core.Projection;
 public class TopologicalStepProjectionComparer(IEnumerable<StepProjection> steps) : TopologicalComparer<StepProjection, Guid>(
         steps,
         step => step?.StepId ?? Guid.Empty,
-        step => step.Dependencies);
+        step => step.Dependencies.Select(d => d.DependentOnStepId));

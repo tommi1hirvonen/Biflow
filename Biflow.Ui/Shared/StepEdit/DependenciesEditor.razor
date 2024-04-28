@@ -14,7 +14,7 @@
     <div class="col-auto">
         <HxButtonGroup>
             <FilterDropdown TItem="JobProjection"
-                            Items="JobSlims.Values"
+                            Items="JobSlims.Values.OrderBy(j => j.JobName)"
                             FilterSet="jobFilter"                            
                             IdSelector="x => x.JobId.ToString()"
                             TextSelector="x => x.JobName"
@@ -84,7 +84,7 @@
                 <tbody>
                     @{
                         var steps = GetOrderedSteps().ToList();
-                        var multiJobAvailable = steps.Select(s => s.JobId).Distinct().Count() > 1;
+                        var multiJobAvailable = jobFilter.Count > 1;
                     }
                     @foreach (var step in steps)
                     {

@@ -31,11 +31,13 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
     private readonly HashSet<(string StepName, StepType StepType)> stepFilter = [];
     private Guid prevExecutionId;
     private Execution? execution;
+    private IEnumerable<StepExecutionProjection>? stepProjections = null;
     private Job? job;
     private Schedule? schedule;
     private bool loading = false;
-    private SortMode sortMode = SortMode.StartedAsc;
+    private StepExecutionSortMode sortMode = StepExecutionSortMode.StartedAsc;
     private ExecutionParameterLineageOffcanvas? parameterLineageOffcanvas;
+    private ExecutionDependenciesGraph? dependenciesGraph;
 
     // Maintain a list of executions that are being stopped.
     // This same component instance can be used to switch between different job executions.
@@ -61,32 +63,26 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
 
     private bool Stopping => stoppingExecutions.Any(id => id == ExecutionId);
 
-    private IEnumerable<StepExecutionAttempt>? Executions => execution?.StepExecutions.SelectMany(e => e.StepExecutionAttempts);
-
-    private IEnumerable<StepExecutionProjection>? FilteredExecutions => Executions
-        ?.Where(e => tagFilter.Count == 0 || e.StepExecution.GetStep()?.Tags.Any(t1 => tagFilter.Any(t2 => t1.TagId == t2.TagId)) == true)
-        .Where(e => stepStatusFilter.Count == 0 || stepStatusFilter.Contains(e.ExecutionStatus))
-        .Where(e => stepFilter.Count == 0 || stepFilter.Contains((e.StepExecution.StepName, e.StepExecution.StepType)))
-        .Where(e => stepTypeFilter.Count == 0 || stepTypeFilter.Contains(e.StepExecution.StepType))
-        .Select(e => new StepExecutionProjection(
-            e.StepExecution.ExecutionId,
-            e.StepExecution.StepId,
-            e.RetryAttemptIndex,
-            e.StepExecution.GetStep()?.StepName ?? e.StepExecution.StepName,
-            e.StepType,
-            e.StepExecution.ExecutionPhase,
-            e.StepExecution.Execution.CreatedOn,
-            e.StartedOn,
-            e.EndedOn,
-            e.ExecutionStatus,
-            e.StepExecution.Execution.ExecutionStatus,
-            e.StepExecution.Execution.ExecutionMode,
-            e.StepExecution.Execution.ScheduleId,
-            e.StepExecution.Execution.ScheduleName,
-            e.StepExecution.Execution.JobId,
-            job?.JobName ?? e.StepExecution.Execution.JobName,
-            e.StepExecution.GetStep()?.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color)).ToArray() ?? [],
-            []));
+    private IEnumerable<StepExecutionProjection>? GetOrderedExecutions()
+    {
+        var filtered = stepProjections
+            ?.Where(e => tagFilter.Count == 0 || e.StepTags.Any(t1 => tagFilter.Any(t2 => t1.TagId == t2.TagId)) == true)
+            .Where(e => stepStatusFilter.Count == 0 || stepStatusFilter.Contains(e.StepExecutionStatus))
+            .Where(e => stepFilter.Count == 0 || stepFilter.Contains((e.StepName, e.StepType)))
+            .Where(e => stepTypeFilter.Count == 0 || stepTypeFilter.Contains(e.StepType));
+        return sortMode switch
+        {
+            StepExecutionSortMode.StepAsc => filtered?.OrderBy(e => e.StepName),
+            StepExecutionSortMode.StepDesc => filtered?.OrderByDescending(e => e.StepName),
+            StepExecutionSortMode.StartedAsc => filtered?.OrderBy(e => e.StartedOn is null).ThenBy(e => e.StartedOn),
+            StepExecutionSortMode.StartedDesc => filtered?.OrderByDescending(e => e.StartedOn),
+            StepExecutionSortMode.EndedAsc => filtered?.OrderBy(e => e.EndedOn),
+            StepExecutionSortMode.EndedDesc => filtered?.OrderByDescending(e => e.EndedOn),
+            StepExecutionSortMode.DurationAsc => filtered?.OrderBy(e => e.ExecutionInSeconds).ThenByDescending(e => e.StartedOn),
+            StepExecutionSortMode.DurationDesc => filtered?.OrderByDescending(e => e.ExecutionInSeconds).ThenByDescending(e => e.StartedOn),
+            _ => filtered?.OrderBy(e => e.StartedOn is null).ThenBy(e => e.StartedOn)
+        };
+    }
 
     private Report ShowReport => Page switch
     {
@@ -96,12 +92,10 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
         "parameters" => Report.Parameters,
         "rerun" => Report.Rerun,
         "history" => Report.History,
-        "statuses" => Report.Statuses,
-        "cancel" => Report.Cancel,
         _ => Report.List
     };
 
-    private enum Report { List, Gantt, Graph, ExecutionDetails, Parameters, Rerun, History, Statuses, Cancel }
+    private enum Report { List, Gantt, Graph, ExecutionDetails, Parameters, Rerun, History }
 
     protected override void OnInitialized()
     {
@@ -151,14 +145,13 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
                 from exec in context.StepExecutions
                     .AsNoTrackingWithIdentityResolution()
                     .Where(e => e.ExecutionId == ExecutionId)
-                    .Include(e => e.Execution)
-                    .ThenInclude(e => e.ExecutionParameters)
+                    .Include(e => e.Execution).ThenInclude(e => e.ExecutionParameters)
                     .Include(e => e.StepExecutionAttempts)
                     .Include(e => e.ExecutionDependencies)
+                    .Include(e => e.MonitoredStepExecutions).ThenInclude(e => e.MonitoredStepExecution).ThenInclude(e => e.StepExecutionAttempts)
                     .Include($"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
                     .Include($"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
-                    .Include(e => e.ExecutionConditionParameters)
-                    .ThenInclude(p => p.ExecutionParameter)
+                    .Include(e => e.ExecutionConditionParameters).ThenInclude(p => p.ExecutionParameter)
                 join step in context.Steps.Include(s => s.Tags) on exec.StepId equals step.StepId into es
                 from step in es.DefaultIfEmpty()
                 select new { exec, step }
@@ -174,6 +167,31 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             schedule = execution?.ScheduleId is not null
                 ? await context.Schedules.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(s => s.ScheduleId == execution.ScheduleId, cts.Token)
                 : null;
+
+            stepProjections = execution?.StepExecutions
+                .SelectMany(e => e.StepExecutionAttempts)
+                .Select(e => new StepExecutionProjection(
+                    e.StepExecution.ExecutionId,
+                    e.StepExecution.StepId,
+                    e.RetryAttemptIndex,
+                    e.StepExecution.GetStep()?.StepName ?? e.StepExecution.StepName,
+                    e.StepType,
+                    e.StepExecution.ExecutionPhase,
+                    e.StepExecution.Execution.CreatedOn,
+                    e.StartedOn,
+                    e.EndedOn,
+                    e.ExecutionStatus,
+                    e.StepExecution.Execution.ExecutionStatus,
+                    e.StepExecution.Execution.ExecutionMode,
+                    e.StepExecution.Execution.ScheduleId,
+                    e.StepExecution.Execution.ScheduleName,
+                    e.StepExecution.Execution.JobId,
+                    job?.JobName ?? e.StepExecution.Execution.JobName,
+                    e.StepExecution.ExecutionDependencies.Select(d => d.DependantOnStepId).ToArray(),
+                    e.StepExecution.GetStep()?.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color)).ToArray() ?? [],
+                    []))
+                .ToArray();
+
             loading = false;
             if (AutoRefresh && (execution?.ExecutionStatus == ExecutionStatus.Running || execution?.ExecutionStatus == ExecutionStatus.NotStarted))
             {
@@ -184,6 +202,10 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
                 AutoRefresh = false;
             }
             await InvokeAsync(StateHasChanged);
+            if (ShowReport == Report.Graph && dependenciesGraph is not null)
+            {
+                await dependenciesGraph.LoadGraphAsync();
+            }
         }
     }
 

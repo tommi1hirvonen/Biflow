@@ -563,7 +563,7 @@ public class DatabaseFixture : IAsyncLifetime
             executionBuilder1.AddAll();
             await executionBuilder1.SaveExecutionAsync();
 
-            using var executionBuilder2 = await ExecutionBuilderFactory.CreateAsync(job2.JobId, schedule1.ScheduleId, (ctx) => (step) => step.IsEnabled);
+            using var executionBuilder2 = await ExecutionBuilderFactory.CreateAsync(job2.JobId, schedule1.ScheduleId, [ctx => step => step.IsEnabled]);
             ArgumentNullException.ThrowIfNull(executionBuilder2);
             executionBuilder2.AddAll();
             await executionBuilder2.SaveExecutionAsync();

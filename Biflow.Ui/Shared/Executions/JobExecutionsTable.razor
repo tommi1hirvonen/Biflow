@@ -1,22 +1,132 @@
 ﻿@inject NavigationManager NavigationManager
+@inject ToasterService Toaster
+@inject IExecutorService ExecutorService
+@inject IHxMessageBoxService Confirmer
+@inject IJSRuntime JS
+@inject IMediator Mediator
+
+@{
+    var count = Executions?.Count() ?? 0;
+    var selectedText = selectedExecutions.Count switch
+    {
+        1 => $"{selectedExecutions.Count} selected execution",
+        > 1 => $"{selectedExecutions.Count} selected executions",
+        _ => ""
+    };
+}
+
+<AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+    @if (selectedExecutions.Count > 0)
+    {
+        var executions = selectedExecutions.Select(id => Executions?.FirstOrDefault(e => e.ExecutionId == id));
+        var enabled = executions.Any(e => e?.ExecutionStatus == ExecutionStatus.Running);
+        <HoverBox Header="@selectedText">
+            <HxButtonGroup Size="ButtonGroupSize.Small">
+                <HxButton Size="ButtonSize.Small"
+                          Color="ThemeColor.None"
+                          CssClass="btn-auto text-danger"
+                          Enabled="enabled"
+                          OnClick="StopSelectedExecutionsAsync">
+                    <CxIcon Icon="FeatherIcon.XOctagon" />
+                    Stop...
+                </HxButton>
+                <HxDropdownButtonGroup>
+                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                        Mark status as...
+                    </HxDropdownToggleButton>
+                    <HxDropdownMenu>
+                        @foreach (var status in Enum.GetValues<ExecutionStatus>())
+                        {
+                            <HxDropdownItem OnClick="() => UpdateExecutionStatusAsync(status)">
+                                <JobExecutionStatusBadge ExecutionStatus="status" />
+                            </HxDropdownItem>
+                        }
+                    </HxDropdownMenu>
+                </HxDropdownButtonGroup>
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="selectedExecutions.Clear">
+                    <CxIcon Icon="FeatherIcon.X" />
+                    Cancel
+                </HxButton>
+            </HxButtonGroup>
+        </HoverBox>
+    }
+</AuthorizeView>
 
 <table class="table table-sm table-hover">
     <thead>
         <tr>
             <th>
-                Job
+                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+                    <TriStateCheckbox CssClass="me-0"
+                                      Checked="@(selectedExecutions.Count > 0 && count > 0)"
+                                      Indeterminate="@(selectedExecutions.Any() && selectedExecutions.Count != count)"
+                                      CheckedChanged="value => ToggleExecutionsSelected(value)" />
+                </AuthorizeView>
+                @if (!string.IsNullOrEmpty(selectedText))
+                {
+                    <div class="text-muted small fw-normal d-inline me-3">@selectedText</div>
+                }
+                <span class="sortable" @onclick="ToggleJobSortMode">
+                    Job
+                </span>
+                <span class="ms-2">
+                    @if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.JobAsc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowUp" />
+                    }
+                    else if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.JobDesc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowDown" />
+                    }
+                </span>
             </th>
             <th>
                 Created by
             </th>
             <th>
-                Started
+                <span class="sortable" @onclick="ToggleStartedSortMode">
+                    Started
+                </span>
+                <span class="ms-2">
+                    @if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.StartedAsc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowUp" />
+                    }
+                    else if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.StartedDesc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowDown" />
+                    }
+                </span>
             </th>
             <th>
-                Ended
+                <span class="sortable" @onclick="ToggleEndedSortMode">
+                    Ended
+                </span>
+                <span class="ms-2">
+                    @if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.EndedAsc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowUp" />
+                    }
+                    else if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.EndedDesc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowDown" />
+                    }
+                </span>
             </th>
             <th>
-                Duration
+                <span class="sortable" @onclick="ToggleDurationSortMode">
+                    Duration
+                </span>
+                <span class="ms-2">
+                    @if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.DurationAsc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowUp" />
+                    }
+                    else if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.DurationDesc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowDown" />
+                    }
+                </span>
             </th>
             <th>
                 Number of steps
@@ -39,43 +149,272 @@
         {
             foreach (var item in Executions)
             {
-                <tr style="cursor: pointer;" @onclick="() => GoToExecutionDetails(item.ExecutionId)">
-                    <td>
-                        @item.JobName
-                    </td>
-                    <td class="small">
-                        @if (!string.IsNullOrEmpty(item.ScheduleName))
+                var checkBoxId = $"select_execution_{item.ExecutionId}";
+                <ContextMenuToggle ContainerHtmlTag="tr"
+                                   style="cursor: pointer;"
+                                   @onclick="() => GoToExecutionDetails(item.ExecutionId)">
+                    <ChildContent>
+                        <td>
+                            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")" Context="auth">
+                                <div class="form-check form-check-inline me-0">
+                                    <input type="checkbox" class="form-check-input" id="@checkBoxId"
+                                           checked=@selectedExecutions.Contains(item.ExecutionId)
+                                           @onclick:stopPropagation="true"
+                                           @onchange="args => ToggleExecutionSelected(item)">
+                                    <label class="form-check-label" for="@checkBoxId"></label>
+                                </div>
+                            </AuthorizeView>
+                            @item.JobName
+                        </td>
+                        <td class="small">
+                            @if (!string.IsNullOrEmpty(item.ScheduleName))
+                            {
+                                <span>@item.ScheduleName</span>
+                            }
+                            else if (!string.IsNullOrEmpty(item.CreatedBy))
+                            {
+                                <span>@item.CreatedBy</span>
+                            }
+                        </td>
+                        <td>
+                            @item.StartedOn?.LocalDateTime
+                        </td>
+                        <td>
+                            @item.EndedOn?.LocalDateTime
+                        </td>
+                        <td>
+                            <text>@item.ExecutionInSeconds?.SecondsToReadableFormat()</text>
+                        </td>
+                        <td>
+                            @item.StepExecutionCount
+                        </td>
+                        <td>
+                            <JobExecutionStatusBadge ExecutionStatus="@item.ExecutionStatus" />
+                        </td>
+                    </ChildContent>
+                    <MenuContent>
+                        <DropdownMenuHeader>
+                            @item.JobName
+                        </DropdownMenuHeader>
+                        <DropdownMenuItem @onclick="async () => await jobHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.JobId))">
+                            <CxIcon Icon="LucideIcon.History" />
+                            History
+                        </DropdownMenuItem>
+                        @if (item.ExecutionStatus == ExecutionStatus.Running)
                         {
-                            <span>@item.ScheduleName</span>
+                            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+                                <DropdownMenuItem @onclick="() => StopExecutionAsync(item)">
+                                    <CxIcon Icon="FeatherIcon.XOctagon" />
+                                    Stop...
+                                </DropdownMenuItem>
+                            </AuthorizeView>
                         }
-                        else if (!string.IsNullOrEmpty(item.CreatedBy))
-                        {
-                            <span>@item.CreatedBy</span>
-                        }
-                    </td>
-                    <td>
-                        @item.StartedOn?.LocalDateTime
-                    </td>
-                    <td>
-                        @item.EndedOn?.LocalDateTime
-                    </td>
-                    <td>
-                        <text>@item.ExecutionInSeconds?.SecondsToReadableFormat()</text>
-                    </td>
-                    <td>
-                        @item.StepExecutionCount
-                    </td>
-                    <td>
-                        <JobExecutionStatusBadge ExecutionStatus="@item.ExecutionStatus" />
-                    </td>
-                </tr>
+                    </MenuContent>
+                </ContextMenuToggle>
             }
         }
     </tbody>
 </table>
 
+<JobHistoryOffcanvas @ref="jobHistoryOffcanvas" />
+
 @code {
-    [Parameter] public IEnumerable<ExecutionProjection>? Executions { get; set; }
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    [CascadingParameter]
+    public UserState UserState { get; set; } = new();
+
+    [Parameter]
+    public IEnumerable<ExecutionProjection>? Executions { get; set; }
+
+    [Parameter]
+    public EventCallback OnExecutionsUpdated { get; set; }
+
+    [Parameter]
+    public EventCallback OnSortingChanged { get; set; }
+
+    private JobHistoryOffcanvas? jobHistoryOffcanvas;
+    private HashSet<Guid> selectedExecutions = [];
+
+    private void ToggleJobSortMode()
+    {
+        UserState.Executions.ExecutionSortMode = UserState.Executions.ExecutionSortMode switch
+        {
+            ExecutionSortMode.JobAsc => ExecutionSortMode.JobDesc,
+            ExecutionSortMode.JobDesc => ExecutionSortMode.CreatedDesc,
+            _ => ExecutionSortMode.JobAsc
+        };
+        OnSortingChanged.InvokeAsync();
+    }
+
+    private void ToggleStartedSortMode()
+    {
+        UserState.Executions.ExecutionSortMode = UserState.Executions.ExecutionSortMode switch
+        {
+            ExecutionSortMode.StartedAsc => ExecutionSortMode.StartedDesc,
+            ExecutionSortMode.StartedDesc => ExecutionSortMode.CreatedDesc,
+            _ => ExecutionSortMode.StartedAsc
+        };
+        OnSortingChanged.InvokeAsync();
+    }
+
+    private void ToggleEndedSortMode()
+    {
+        UserState.Executions.ExecutionSortMode = UserState.Executions.ExecutionSortMode switch
+        {
+            ExecutionSortMode.EndedAsc => ExecutionSortMode.EndedDesc,
+            ExecutionSortMode.EndedDesc => ExecutionSortMode.CreatedDesc,
+            _ => ExecutionSortMode.EndedAsc
+        };
+        OnSortingChanged.InvokeAsync();
+    }
+
+    private void ToggleDurationSortMode()
+    {
+        UserState.Executions.ExecutionSortMode = UserState.Executions.ExecutionSortMode switch
+        {
+            ExecutionSortMode.DurationAsc => ExecutionSortMode.DurationDesc,
+            ExecutionSortMode.DurationDesc => ExecutionSortMode.CreatedDesc,
+            _ => ExecutionSortMode.DurationAsc
+        };
+        OnSortingChanged.InvokeAsync();
+    }
+
+    private void ToggleExecutionSelected(ExecutionProjection execution)
+    {
+        if (selectedExecutions.Contains(execution.ExecutionId))
+        {
+            selectedExecutions.Remove(execution.ExecutionId);
+        }
+        else
+        {
+            selectedExecutions.Add(execution.ExecutionId);
+        }
+    }
+
+    private void ToggleExecutionsSelected(bool value)
+    {
+        if (value)
+        {
+            var toAdd = Executions?
+                .Where(e => !selectedExecutions.Contains(e.ExecutionId))
+                .Select(e => e.ExecutionId)
+                ?? [];
+            foreach (var e in toAdd) selectedExecutions.Add(e);
+        }
+        else
+        {
+            selectedExecutions.Clear();
+        }
+    }
+
+    private async Task StopExecutionAsync(ExecutionProjection execution)
+    {
+        if (!await Confirmer.ConfirmAsync("Stop execution", $"Are you sure you want to stop this execution of job {execution.JobName}"))
+        {
+            return;
+        }
+
+        try
+        {
+            ArgumentNullException.ThrowIfNull(AuthenticationState);
+            var authState = await AuthenticationState;
+            var username = authState.User.Identity?.Name;
+            ArgumentNullException.ThrowIfNull(username);
+            await ExecutorService.StopExecutionAsync(execution.ExecutionId, username);
+            Toaster.AddSuccess("Cancellations requested successfully");
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error stopping execution", ex.Message);
+        }
+    }
+
+    private async Task StopSelectedExecutionsAsync()
+    {
+        if (!await Confirmer.ConfirmAsync("Stop executions", $"Are you sure you want to stop all running steps in the selected {selectedExecutions.Count} execution(s)?"))
+        {
+            return;
+        }
+
+        try
+        {
+            ArgumentNullException.ThrowIfNull(Executions);
+            ArgumentNullException.ThrowIfNull(AuthenticationState);
+            var authState = await AuthenticationState;
+            var username = authState.User.Identity?.Name;
+            ArgumentNullException.ThrowIfNull(username);
+
+            var successCount = 0;
+            var errorMessages = new List<string>();
+
+            foreach (var executionId in selectedExecutions)
+            {
+                var execution = Executions.FirstOrDefault(e => e.ExecutionId == executionId);
+                if (execution is null || execution.ExecutionStatus != ExecutionStatus.Running)
+                {
+                    continue;
+                }
+                try
+                {
+                    await ExecutorService.StopExecutionAsync(executionId, username);
+                    successCount++;
+                }
+                catch (TimeoutException ex)
+                {
+                    errorMessages.Add(ex.Message);
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    errorMessages.Add(ex.Message);
+                }
+            }
+
+            var distinctErrors = errorMessages.Distinct().ToArray();
+            foreach (var error in distinctErrors)
+            {
+                await JS.InvokeVoidAsync("console.error", error);
+            }
+
+            var errorMessage = distinctErrors.Length == 1
+                ? distinctErrors[0]
+                : "See browser console for detailed errors";
+
+            if (successCount > 0 && distinctErrors.Length > 0)
+            {
+                Toaster.AddWarning("Error canceling some executions", errorMessage);
+            }
+            else if (distinctErrors.Length > 0)
+            {
+                Toaster.AddError("Error canceling executions", errorMessage);
+            }
+            else
+            {
+                Toaster.AddSuccess("Cancellations requested successfully");
+            }
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error stopping executions", ex.Message);
+        }
+    }
+
+    private async Task UpdateExecutionStatusAsync(ExecutionStatus status)
+    {
+        try
+        {
+            var command = new UpdateExecutionStatusCommand([.. selectedExecutions], status);
+            await Mediator.SendAsync(command);
+            Toaster.AddSuccess("Statuses updated successfully");
+            await OnExecutionsUpdated.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error updating statuses", ex.Message);
+        }
+    }
 
     private void GoToExecutionDetails(Guid executionId)
     {

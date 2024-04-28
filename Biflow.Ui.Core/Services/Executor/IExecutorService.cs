@@ -2,7 +2,7 @@
 
 public interface IExecutorService
 {
-    public Task StartExecutionAsync(Guid executionId);
+    public Task StartExecutionAsync(Guid executionId, CancellationToken cancellationToken = default);
 
     public Task StopExecutionAsync(Guid executionId, Guid stepId, string username);
 

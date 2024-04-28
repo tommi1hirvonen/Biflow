@@ -35,7 +35,12 @@ public static partial class Extensions
         if (authentication == "BuiltIn")
         {
             services.AddScoped<IAuthHandler, BuiltInAuthHandler>();
-            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
+                {
+                    options.LoginPath = "/login";
+                    options.ReturnUrlParameter = "redirectUrl";
+                });
             method = AuthenticationMethod.BuiltIn;
         }
         else if (authentication == "Windows")
@@ -63,7 +68,12 @@ public static partial class Extensions
         else if (authentication == "Ldap")
         {
             services.AddScoped<IAuthHandler, LdapAuthHandler>();
-            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
+                {
+                    options.LoginPath = "/login";
+                    options.ReturnUrlParameter = "redirectUrl";
+                });
             method = AuthenticationMethod.Ldap;
         }
         else

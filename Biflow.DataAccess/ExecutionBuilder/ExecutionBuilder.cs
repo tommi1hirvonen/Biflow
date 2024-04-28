@@ -85,14 +85,14 @@ public partial class ExecutionBuilder : IDisposable
     /// </summary>
     /// <returns><see cref="Execution"/> that was saved to the database.
     /// <see langword="null"/> if no <see cref="StepExecution"/> objects were included.</returns>
-    public async Task<Execution?> SaveExecutionAsync()
+    public async Task<Execution?> SaveExecutionAsync(CancellationToken cancellationToken = default)
     {
         if (_execution.StepExecutions.Count == 0)
         {
             return null;
         }
         _context.Executions.Add(_execution);
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(cancellationToken);
         return _execution;
     }
 

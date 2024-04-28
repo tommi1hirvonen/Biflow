@@ -98,15 +98,12 @@
             {
                 <div class="col-auto align-self-center">
                     <HxDropdownButtonGroup>
-                        <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None"
-                                                CssClass="@(Stopping ? "btn-auto disabled text-danger" : "btn-auto text-danger")">
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None"
+                                  CssClass="@(Stopping ? "btn-auto disabled text-danger" : "btn-auto text-danger")"
+                                  OnClick="StopJobExecutionAsync">
                             <CxIcon Icon="FeatherIcon.XOctagon" />
-                            Stop...
-                        </HxDropdownToggleButton>
-                        <HxDropdownMenu>
-                            <HxDropdownItem @onclick="@(() => NavigationManager.NavigateTo($"executions/{ExecutionId}/cancel"))">Select steps</HxDropdownItem>
-                            <HxDropdownItem @onclick="StopJobExecutionAsync" Enabled="!Stopping">All steps</HxDropdownItem>
-                        </HxDropdownMenu>
+                            Stop all...
+                        </HxButton>
                     </HxDropdownButtonGroup>
                 </div>
             }
@@ -161,9 +158,6 @@
                             }
                         </HxDropdownMenu>
                     </HxDropdownButtonGroup>
-                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="@(() => NavigationManager.NavigateTo($"executions/{ExecutionId}/statuses"))">
-                        Update step statuses...
-                    </HxButton>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger" OnClick="DeleteExecutionAsync">
                         Delete...
                     </HxButton>
@@ -465,91 +459,46 @@
                 </HxButton>
             </HxButtonGroup>
         </div>
-        <div class="col-xxl d-inline mt-3 mt-xxl-0">
-            <CxIcon Icon="LucideIcon.SortDesc" />
-            <span class="me-3">Sort</span>
-            <div class="form-check form-check-inline">
-                <input type="radio" class="form-check-input" id="radio_started_asc"
-                       checked=@(sortMode == SortMode.StartedAsc)
-                       @onchange="() => sortMode = SortMode.StartedAsc">
-                <label class="form-check-label" for="radio_started_asc">Started <sup>asc</sup></label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input type="radio" class="form-check-input" id="radio_started_desc"
-                       checked=@(sortMode == SortMode.StartedDesc)
-                       @onchange="() => sortMode = SortMode.StartedDesc">
-                <label class="form-check-label" for="radio_started_desc">Started<sup>desc</sup></label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input type="radio" class="form-check-input" id="radio_duration_asc"
-                       checked=@(sortMode == SortMode.DurationAsc)
-                       @onchange="() => sortMode = SortMode.DurationAsc">
-                <label class="form-check-label" for="radio_duration_asc">Duration<sup>asc</sup></label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input type="radio" class="form-check-input" id="radio_duration_desc"
-                       checked=@(sortMode == SortMode.DurationDesc)
-                       @onchange="() => sortMode = SortMode.DurationDesc">
-                <label class="form-check-label" for="radio_duration_desc">Duration<sup>desc</sup></label>
-            </div>
-        </div>
     </div>
+}
+
+@{
+    var detailStepProvider = (StepExecutionProjection e) =>
+        execution?.StepExecutions
+            .SelectMany(e => e.StepExecutionAttempts)
+            ?.FirstOrDefault(x => x.ExecutionId == e.ExecutionId && x.StepId == e.StepId && x.RetryAttemptIndex == e.RetryAttemptIndex);
 }
 
 @if (ShowReport == Report.List)
 {
+    
     <div class="card shadow-sm mt-3 pt-2 table-responsive mb-4">
         <StepExecutionsTable
             ShowDetailed="false"
-            Executions="FilteredExecutions
-                        ?.OrderBy(e => sortMode switch
-                        {
-                            SortMode.DurationAsc => e.ExecutionInSeconds,
-                            SortMode.DurationDesc => -e.ExecutionInSeconds,
-                            _ => null
-                        })
-                        // asc => Show not started steps last. desc => Show not started steps first.
-                        .ThenBy(e => sortMode == SortMode.StartedAsc ? e.StartedOn is null : e.StartedOn is not null)
-                        .ThenBy(e => sortMode == SortMode.StartedAsc ? e.StartedOn : null)
-                        .ThenByDescending(e => sortMode == SortMode.StartedDesc ? e.StartedOn : null)
-                        .ThenBy(e => e.EndedOn is null)
-                        .ThenBy(e => e.EndedOn)
-                        .ThenBy(e => e.ExecutionPhase)
-                        .ThenBy(e => e.StepName)"
-            DetailStepProvider="e => Executions?.FirstOrDefault(x => x.ExecutionId == e.ExecutionId && x.StepId == e.StepId && x.RetryAttemptIndex == e.RetryAttemptIndex)" />
+            Executions="GetOrderedExecutions()"
+            SortMode="sortMode"
+            OnSortingChanged="sortMode => { this.sortMode = sortMode; StateHasChanged(); }"
+            DetailStepProvider="detailStepProvider"
+            OnStepsUpdated="LoadData" />
     </div>
-    
 }
 else if (ShowReport == Report.Gantt)
 {
     <div class="card shadow-sm mt-3 pt-3 mb-4">
-        <StepExecutionsGraph
-            Executions="FilteredExecutions"
-            SortMode="sortMode"
-            DetailStepProvider="e => Executions?.FirstOrDefault(x => x.ExecutionId == e.ExecutionId && x.StepId == e.StepId && x.RetryAttemptIndex == e.RetryAttemptIndex)" />
+        <StepExecutionsGraph Executions="GetOrderedExecutions()"
+                             DetailStepProvider="detailStepProvider"
+                             SortMode="sortMode"
+                             OnSortingChanged="sortMode => { this.sortMode = sortMode; StateHasChanged(); }" />
     </div>
-    
 }
-else if (ShowReport == Report.Graph)
+else if (ShowReport == Report.Graph && execution is not null)
 {
-    <ExecutionDependenciesGraph Execution="execution" InitialStepId="InitialStepId" />
+    <ExecutionDependenciesGraph @ref="dependenciesGraph" Execution="execution" InitialStepId="InitialStepId" />
 }
 else if (ShowReport == Report.Rerun)
 {
     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
             <RerunBuilder Execution="execution" />
-    </AuthorizeView>
-}
-else if (ShowReport == Report.Statuses)
-{
-    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-        <StepStatusesEdit Execution="execution" />
-    </AuthorizeView>
-}
-else if (ShowReport == Report.Cancel)
-{
-    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-        <StepsCancel Execution="execution" />
     </AuthorizeView>
 }
 else if (ShowReport == Report.History && execution is not null)

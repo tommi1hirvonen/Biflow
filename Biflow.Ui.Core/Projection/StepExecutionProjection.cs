@@ -20,6 +20,7 @@ public record StepExecutionProjection(
     string? ScheduleName,
     Guid? JobId,
     string JobName,
+    Guid[] Dependencies,
     TagProjection[] StepTags,
     TagProjection[] JobTags) : IExecutionProjection
 {

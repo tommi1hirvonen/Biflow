@@ -1,15 +1,18 @@
 ﻿using Biflow.Executor.Core.Common;
 using Biflow.Executor.Core.OrchestrationTracker;
+using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.Orchestrator;
 
 internal class OrchestrationObserver(
+    ILogger logger,
     StepExecution stepExecution,
     IStepExecutionListener orchestrationListener,
     IEnumerable<IOrchestrationTracker> orchestrationTrackers,
     ExtendedCancellationTokenSource cancellationTokenSource) : IOrchestrationObserver, IDisposable
 {
     private readonly TaskCompletionSource<StepAction> _tcs = new();
+    private readonly ILogger _logger = logger;
     private readonly IStepExecutionListener _orchestrationListener = orchestrationListener;
     private readonly IEnumerable<IOrchestrationTracker> _orchestrationTrackers = orchestrationTrackers;
     private readonly ExtendedCancellationTokenSource _cancellationTokenSource = cancellationTokenSource;
@@ -30,26 +33,46 @@ internal class OrchestrationObserver(
         _unsubscriber = null;
     }
 
-    public void RegisterInitialUpdates(IEnumerable<OrchestrationUpdate> initialStatuses)
+    public IEnumerable<StepExecutionMonitor> RegisterInitialUpdates(IEnumerable<OrchestrationUpdate> initialStatuses)
     {
-        foreach (var status in initialStatuses)
+        try
         {
-            HandleUpdate(status);
+            var monitors = initialStatuses.SelectMany(HandleUpdate)
+            .ToArray();
+            var action = GetStepAction();
+            if (action is not null)
+            {
+                SetResult(action);
+            }
+            return monitors;
         }
-        var action = GetStepAction();
-        if (action is not null)
+        catch (Exception ex)
         {
+            _logger.LogError(ex, "Error while registering initial updates in orchestration observer");
+            var action = new Fail(StepExecutionStatus.Failed, $"Error while registering initial updates in orchestration observer");
             SetResult(action);
-        }
+            return [];
+        }   
     }
 
-    public void OnUpdate(OrchestrationUpdate value)
+    public IEnumerable<StepExecutionMonitor> OnUpdate(OrchestrationUpdate value)
     {
-        HandleUpdate(value);
-        var action = GetStepAction();
-        if (action is not null)
+        try
         {
+            var monitors = HandleUpdate(value);
+            var action = GetStepAction();
+            if (action is not null)
+            {
+                SetResult(action);
+            }
+            return monitors;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while handling update in orchestration observer");
+            var action = new Fail(StepExecutionStatus.Failed, $"Error while handling update in orchestration observer");
             SetResult(action);
+            return [];
         }
     }
 
@@ -73,12 +96,11 @@ internal class OrchestrationObserver(
     /// After that it is called once whenever orchestration updates are provided.
     /// </summary>
     /// <param name="value"></param>
-    private void HandleUpdate(OrchestrationUpdate value)
+    private IEnumerable<StepExecutionMonitor> HandleUpdate(OrchestrationUpdate value)
     {
-        foreach (var tracker in _orchestrationTrackers)
-        {
-            tracker.HandleUpdate(value);
-        }
+        return _orchestrationTrackers.Select(t => t.HandleUpdate(value))
+            .WhereNotNull()
+            .ToArray();
     }
 
     /// <summary>

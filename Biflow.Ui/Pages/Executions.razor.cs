@@ -5,6 +5,8 @@ public partial class Executions : ComponentBase, IDisposable
 {
     [Inject] private IMediator Mediator { get; set; } = null!;
 
+    [Inject] private ToasterService Toaster { get; set; } = null!;
+
     [CascadingParameter] UserState UserState { get; set; } = null!;
 
     private ExecutionsPageState State => UserState.Executions;
@@ -16,12 +18,9 @@ public partial class Executions : ComponentBase, IDisposable
     private IEnumerable<StepExecutionProjection>? stepExecutions;
     private Paginator<ExecutionProjection>? executionPaginator;
     private Paginator<StepExecutionProjection>? stepExecutionPaginator;
-
-    private IEnumerable<ExecutionProjection>? FilteredExecutions => executions?
-        .Where(e => State.ExecutionPredicates.All(p => p(e)));
-
-    private IEnumerable<StepExecutionProjection>? FilteredStepExecutions => stepExecutions?
-        .Where(e => State.StepExecutionPredicates.All(p => p(e)));
+    private HxOffcanvas? deleteOffcanvas;
+    private DateTime deleteFrom = new(2000, 1, 1);
+    private DateTime deleteTo = DateTime.Now.AddYears(-1);
 
     protected override async Task OnInitializedAsync()
     {
@@ -30,6 +29,44 @@ public partial class Executions : ComponentBase, IDisposable
             (State.FromDateTime, State.ToDateTime) = GetPreset(preset);
         }
         await LoadDataAsync();
+    }
+
+    private IEnumerable<ExecutionProjection>? GetOrderedExecutions()
+    {
+        var filtered = executions?.Where(e => State.ExecutionPredicates.All(p => p(e)));
+        return UserState.Executions.ExecutionSortMode switch
+        {
+            ExecutionSortMode.CreatedDesc => filtered?.OrderByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
+            ExecutionSortMode.JobAsc => filtered?.OrderBy(e => e.JobName).ThenByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
+            ExecutionSortMode.JobDesc => filtered?.OrderByDescending(e => e.JobName).ThenByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
+            ExecutionSortMode.StartedAsc => filtered?.OrderBy(e => e.StartedOn),
+            ExecutionSortMode.StartedDesc => filtered?.OrderByDescending(e => e.StartedOn),
+            ExecutionSortMode.EndedAsc => filtered?.OrderBy(e => e.EndedOn),
+            ExecutionSortMode.EndedDesc => filtered?.OrderByDescending(e => e.EndedOn),
+            ExecutionSortMode.DurationAsc => filtered?.OrderBy(e => e.ExecutionInSeconds).ThenByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
+            ExecutionSortMode.DurationDesc => filtered?.OrderByDescending(e => e.ExecutionInSeconds).ThenByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
+            _ => filtered
+        };
+    }
+
+    private IEnumerable<StepExecutionProjection>? GetOrderedStepExecutions()
+    {
+        var filtered = stepExecutions?.Where(e => State.StepExecutionPredicates.All(p => p(e)));
+        return UserState.Executions.StepExecutionSortMode switch
+        {
+            StepExecutionSortMode.CreatedDesc => filtered?.OrderByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
+            StepExecutionSortMode.JobAsc => filtered?.OrderBy(e => e.JobName).ThenByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
+            StepExecutionSortMode.JobDesc => filtered?.OrderByDescending(e => e.JobName).ThenByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
+            StepExecutionSortMode.StepAsc => filtered?.OrderBy(e => e.StepName).ThenByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
+            StepExecutionSortMode.StepDesc => filtered?.OrderByDescending(e => e.StepName).ThenByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
+            StepExecutionSortMode.StartedAsc => filtered?.OrderBy(e => e.StartedOn),
+            StepExecutionSortMode.StartedDesc => filtered?.OrderByDescending(e => e.StartedOn),
+            StepExecutionSortMode.EndedAsc => filtered?.OrderBy(e => e.EndedOn),
+            StepExecutionSortMode.EndedDesc => filtered?.OrderByDescending(e => e.EndedOn),
+            StepExecutionSortMode.DurationAsc => filtered?.OrderBy(e => e.ExecutionInSeconds).ThenByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
+            StepExecutionSortMode.DurationDesc => filtered?.OrderByDescending(e => e.ExecutionInSeconds).ThenByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
+            _ => filtered
+        };
     }
 
     private async Task ShowExecutionsAsync()
@@ -71,6 +108,20 @@ public partial class Executions : ComponentBase, IDisposable
 
         loading = false;
         StateHasChanged();
+    }
+
+    private async Task DeleteExecutionsAsync()
+    {
+        try
+        {
+            var command = new DeleteExecutionsCommand(deleteFrom, deleteTo);
+            await Mediator.SendAsync(command);
+            Toaster.AddSuccess("Executions deleted successfully");
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error deleting executions", ex.Message);
+        }
     }
 
     private async Task ApplyPresetAsync(Preset preset)

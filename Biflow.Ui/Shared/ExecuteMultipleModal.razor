@@ -1,0 +1,270 @@
+﻿@using System.Collections.Concurrent
+
+@inject IExecutionBuilderFactory<AppDbContext> BuilderFactory
+@inject IExecutorService Executor
+@inject ToasterService Toaster
+@inject NavigationManager NavigationManager
+
+<HxModal @ref="modal" Size="ModalSize.Large" Title="Run jobs" Scrollable="true">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                @if (state == State.Building)
+                {
+                    <span>
+                        Run all enabled steps for the following @jobs.Count job(s)?
+                    </span>
+                }
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Job</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var job in jobs.OrderBy(j => j.JobName))
+                        {
+                            <tr>
+                                <td>
+                                    @job.JobName
+                                </td>
+                                <td>
+                                    @if (state == State.Building)
+                                    {
+                                        <HxButton Size="ButtonSize.Small"
+                                                  Color="ThemeColor.None"
+                                                  CssClass="btn-auto"
+                                                  OnClick="() => jobs.Remove(job)"
+                                                  title="Remove from list of jobs to run">
+                                            <CxIcon Icon="FeatherIcon.Delete" />
+                                        </HxButton>
+                                    }
+                                    else if (responses.TryGetValue(job, out var response))
+                                    {
+                                        if (response.Success)
+                                        {
+                                            <div class="text-success">
+                                                <span class="text-success">
+                                                    <CxIcon Icon="FeatherIcon.CheckCircle" />
+                                                </span>
+                                                @if (response.Execution is not null)
+                                                {
+                                                    <a class="small ms-1" href="javascript:void(0)" @onclick="() => NavigateToExecutionAsync(response.Execution.ExecutionId)">
+                                                        View execution
+                                                    </a>
+                                                }
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="text-danger">
+                                                <CxIcon Icon="FeatherIcon.AlertOctagon" />
+                                                <HxPopover Content="@(response.Exception?.ToString() ?? string.Empty)" Trigger="PopoverTrigger.Hover">
+                                                    <span class=" ms-1 small text-decoration-underline text-primary pointer">
+                                                        Show error
+                                                    </span>
+                                                </HxPopover>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <HxSpinner Size="SpinnerSize.Small" Color="ThemeColor.Secondary" />
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        @if (state == State.Building)
+        {
+            <div class="col mr-auto">
+                <HxDropdownButtonGroup AutoClose="DropdownAutoClose.Outside">
+                    <HxDropdownToggleButton Color="ThemeColor.Secondary">
+                        <CxIcon Icon="FeatherIcon.Bell" />
+                        Notifications
+                    </HxDropdownToggleButton>
+                    <HxDropdownContent>
+                        <div class="row p-3" style="min-width: 20rem;">
+                            <div class="col">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="execute_notify"
+                                           checked=@notify
+                                           @bind-value="notify">
+                                    <label class="form-check-label" for="execute_notify">Notify based on subscriptions</label>
+                                </div>
+                                <h6 class="mt-3">Notify me</h6>
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" id="radio_notify_me_none"
+                                           checked=@(notifyCaller is null)
+                                           @onchange="() => notifyCaller = null">
+                                    <label class="form-check-label" for="radio_notify_me_none">None</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" id="radio_notify_me_completion"
+                                           checked=@(notifyCaller == AlertType.OnCompletion)
+                                           @onchange="() => notifyCaller = AlertType.OnCompletion">
+                                    <label class="form-check-label" for="radio_notify_me_completion">On completion</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" id="radio_notify_me_failure"
+                                           checked=@(notifyCaller == AlertType.OnFailure)
+                                           @onchange="() => notifyCaller = AlertType.OnFailure">
+                                    <label class="form-check-label" for="radio_notify_me_failure">On failure</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" id="radio_notify_me_success"
+                                           checked=@(notifyCaller == AlertType.OnSuccess)
+                                           @onchange="() => notifyCaller = AlertType.OnSuccess">
+                                    <label class="form-check-label" for="radio_notify_me_success">On success</label>
+                                </div>
+                                <div class="form-check mt-3">
+                                    <input type="checkbox" class="form-check-input" id="execute_notify_me_overtime"
+                                           checked=@notifyCallerOvertime
+                                           @bind-value="notifyCallerOvertime">
+                                    <label class="form-check-label" for="execute_notify_me_overtime">On overtime</label>
+                                </div>
+                            </div>
+                        </div>
+                    </HxDropdownContent>
+                </HxDropdownButtonGroup>
+            </div>
+            <HxButton Color="ThemeColor.Primary"
+                      CssClass="ml-5"
+                      Enabled="jobs.Count > 0"
+                      @onclick="ExecuteAsync">
+                <CxIcon Icon="FeatherIcon.Play" />
+                Execute
+            </HxButton>
+            <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await modal.LetAsync(x => x.HideAsync())">
+                Cancel
+            </HxButton>
+        }
+        else if (state == State.Starting)
+        {
+            <HxButton Color="ThemeColor.Secondary" @onclick="cts.Cancel">
+                <CxIcon Icon="FeatherIcon.X" />
+                Cancel
+            </HxButton>
+        }
+        else
+        {
+            <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await modal.LetAsync(x => x.HideAsync())">
+                Close
+            </HxButton>
+        }
+    </FooterTemplate>
+</HxModal>
+
+@code {
+    [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
+
+    private bool notify = false;
+    private AlertType? notifyCaller;
+    private bool notifyCallerOvertime = false;
+    private HxModal? modal;
+    private List<Job> jobs = [];
+    private ConcurrentDictionary<Job, Response> responses = [];
+    private State state = State.Building;
+    private CancellationTokenSource cts = new();
+
+    private enum State { Building, Starting, Done }
+
+    public async Task ShowAsync(IEnumerable<Job> selectedJobs)
+    {
+        state = State.Building;
+        jobs = [.. selectedJobs];
+        responses.Clear();
+        cts = new();
+        await modal.LetAsync(x => x.ShowAsync());
+    }
+
+    private async Task ExecuteAsync()
+    {
+        state = State.Starting;
+        StateHasChanged();
+        var options = new ParallelOptions
+        {
+            MaxDegreeOfParallelism = 3,
+            CancellationToken = cts.Token
+        };
+        try
+        {
+            await Parallel.ForEachAsync(jobs, options, async (job, cancellationToken) =>
+            {
+                try
+                {
+                    var execution = await CreateAndStartExecution(job.JobId, cancellationToken);
+                    responses[job] = new(true, execution);
+                }
+                catch (Exception ex)
+                {
+                    responses[job] = new(false, null, ex);
+                }
+                finally
+                {
+                    await InvokeAsync(StateHasChanged);
+                }
+            });
+
+            if (responses.Values.All(r => r.Exception is not null))
+            {
+                Toaster.AddError("Error starting jobs");
+            }
+            else if (responses.Values.Any(r => r.Exception is not null))
+            {
+                Toaster.AddWarning("Errors while starting some jobs");
+            }
+            else
+            {
+                Toaster.AddSuccess("Jobs started successfully");
+            }
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error starting executions", ex.Message);
+        }
+        state = State.Done;
+    }
+
+    private async Task<Execution?> CreateAndStartExecution(Guid jobId, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(AuthenticationState);
+        var authState = await AuthenticationState;
+        var username = authState.User.Identity?.Name;
+
+        var executionBuilder = await BuilderFactory.CreateAsync(jobId, username, [context => step => step.IsEnabled], cancellationToken);
+        ArgumentNullException.ThrowIfNull(executionBuilder);
+
+        executionBuilder.AddAll();
+        executionBuilder.Notify = notify;
+        executionBuilder.NotifyCaller = notifyCaller;
+        executionBuilder.NotifyCallerOvertime = notifyCallerOvertime;
+
+        var execution = await executionBuilder.SaveExecutionAsync(cancellationToken);
+        if (execution is null)
+        {
+            return null;
+        }
+
+        await Executor.StartExecutionAsync(execution.ExecutionId, cancellationToken);
+        return execution;
+    }
+
+    private async Task NavigateToExecutionAsync(Guid executionId)
+    {
+        await modal.LetAsync(x => x.HideAsync());
+        NavigationManager.NavigateTo($"executions/{executionId}/list");
+    }
+
+    private record Response(bool Success, Execution? Execution, Exception? Exception = null);
+}

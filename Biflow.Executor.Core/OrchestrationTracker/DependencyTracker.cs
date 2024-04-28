@@ -7,19 +7,36 @@ internal class DependencyTracker(StepExecution stepExecution) : IOrchestrationTr
     private readonly Dictionary<StepExecution, OrchestrationStatus> _dependencies = [];
     private readonly Dictionary<StepExecution, OrchestrationStatus> _dependsOnThis = [];
 
-    public void HandleUpdate(OrchestrationUpdate value)
+    public StepExecutionMonitor? HandleUpdate(OrchestrationUpdate value)
     {
         var (step, status) = value;
         // Keep track of steps that this step depends on.
         if (stepExecution.ExecutionDependencies.Any(d => d.DependantOnStepId == step.StepId))
         {
             _dependencies[step] = status;
+            return new()
+            {
+                ExecutionId = stepExecution.ExecutionId,
+                StepId = stepExecution.StepId,
+                MonitoredExecutionId = step.ExecutionId,
+                MonitoredStepId = step.StepId,
+                MonitoringReason = MonitoringReason.UpstreamDependency
+            };
         }
         // Keep track of steps that depend on this step.
         else if (step.ExecutionDependencies.Any(d => d.DependantOnStepId == stepExecution.StepId))
         {
             _dependsOnThis[step] = status;
+            return new()
+            {
+                ExecutionId = stepExecution.ExecutionId,
+                StepId = stepExecution.StepId,
+                MonitoredExecutionId = step.ExecutionId,
+                MonitoredStepId = step.StepId,
+                MonitoringReason = MonitoringReason.DownstreamDependency
+            };
         }
+        return null;
     }
 
     public StepAction? GetStepAction()

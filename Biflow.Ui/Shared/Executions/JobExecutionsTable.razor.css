@@ -1,0 +1,7 @@
+﻿th .sortable {
+    cursor: pointer;
+}
+
+tr:hover th .sortable {
+    text-decoration: underline;
+}

@@ -8,74 +8,125 @@ namespace Biflow.Executor.Core;
 internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFactory jobExecutorFactory)
     : BackgroundService, IExecutionManager, IDisposable
 {
+    private readonly object _lock = new();
     private readonly ILogger<ExecutionManager> _logger = logger;
     private readonly IJobExecutorFactory _jobExecutorFactory = jobExecutorFactory;
     private readonly Dictionary<Guid, IJobExecutor> _jobExecutors = [];
     private readonly Dictionary<Guid, Task> _executionTasks = [];
-    private readonly AsyncQueue<Func<Task>> _backgroundTaskQueue = new();
     private readonly CancellationTokenSource _shutdownCts = new();
 
-    public IEnumerable<Execution> CurrentExecutions => _jobExecutors.Values.Select(e => e.Execution);
-
-    public async Task StartExecutionAsync(Guid executionId)
+    public IEnumerable<Execution> CurrentExecutions
     {
-        if (_jobExecutors.ContainsKey(executionId))
+        get
         {
-            throw new DuplicateExecutionException(executionId);
+            lock (_lock)
+            {
+                return _jobExecutors.Values.Select(e => e.Execution).ToArray();
+            }
+        }
+    }
+
+    public async Task StartExecutionAsync(Guid executionId, CancellationToken cancellationToken = default)
+    {
+        // Check for shutdown and duplicate key before proceeding
+        // to creating the job executor which is a heavy operation.
+        if (_shutdownCts.IsCancellationRequested)
+        {
+            throw new ApplicationException("Cannot start new executions when service shutdown is requested.");
         }
 
-        var jobExecutor = await _jobExecutorFactory.CreateAsync(executionId);
-        _jobExecutors[executionId] = jobExecutor;
-        var task = jobExecutor.RunAsync(executionId, _shutdownCts.Token);
-        _executionTasks[executionId] = task;
-        _backgroundTaskQueue.Enqueue(() => MonitorExecutionTaskAsync(task, executionId));
+        lock (_lock)
+        {
+            if (_jobExecutors.ContainsKey(executionId))
+            {
+                throw new DuplicateExecutionException(executionId);
+            }
+        }
+
+        var jobExecutor = await _jobExecutorFactory.CreateAsync(executionId, cancellationToken);
+
+        lock (_lock)
+        {
+            // Check for shutdown and duplicate key again because the dictionary
+            // or token might have changed after the executor was created and the previous lock was released.
+            if (_shutdownCts.IsCancellationRequested)
+            {
+                throw new ApplicationException("Cannot start new executions when service shutdown is requested.");
+            }
+            if (_jobExecutors.ContainsKey(executionId))
+            {
+                throw new DuplicateExecutionException(executionId);
+            }
+
+            _jobExecutors[executionId] = jobExecutor;
+            var task = jobExecutor.RunAsync(_shutdownCts.Token);
+            _executionTasks[executionId] = task;
+            _ = MonitorExecutionTaskAsync(task, executionId);
+        }
     }
 
     public void CancelExecution(Guid executionId, string username)
     {
-        if (!_jobExecutors.TryGetValue(executionId, out var value))
+        IJobExecutor? executor;
+        lock (_lock)
         {
-            throw new ExecutionNotFoundException(executionId, $"No execution with id {executionId} is being managed.");
+            if (!_jobExecutors.TryGetValue(executionId, out executor))
+            {
+                throw new ExecutionNotFoundException(executionId, $"No execution with id {executionId} is being managed.");
+            }
         }
-
-        var executor = value;
         executor.Cancel(username);
     }
 
     public void CancelExecution(Guid executionId, string username, Guid stepId)
     {
-        if (!_jobExecutors.TryGetValue(executionId, out var value))
+        IJobExecutor? executor;
+        lock (_lock)
         {
-            throw new ExecutionNotFoundException(executionId, $"No execution with id {executionId} is being managed.");
+            if (!_jobExecutors.TryGetValue(executionId, out executor))
+            {
+                throw new ExecutionNotFoundException(executionId, $"No execution with id {executionId} is being managed.");
+            }
         }
-
-        var executor = value;
         executor.Cancel(username, stepId);
     }
 
-    public bool IsExecutionRunning(Guid executionId) => _jobExecutors.ContainsKey(executionId);
+    public bool IsExecutionRunning(Guid executionId)
+    {
+        lock (_lock)
+        {
+            return _jobExecutors.ContainsKey(executionId);
+        }
+    }
 
     public async Task WaitForTaskCompleted(Guid executionId, CancellationToken cancellationToken)
     {
-        if (_executionTasks.TryGetValue(executionId, out var task))
+        Task? task;
+        lock (_lock)
         {
-            await task.WaitAsync(cancellationToken);
+            if (!_executionTasks.TryGetValue(executionId, out task))
+            {
+                return;
+            }
         }
+        await task.WaitAsync(cancellationToken);
     }
 
     protected override async Task ExecuteAsync(CancellationToken shutdownToken)
     {
         try
         {
-            await foreach (var taskDelegate in _backgroundTaskQueue.WithCancellation(shutdownToken))
-            {
-                _ = taskDelegate();
-            }
+            await Task.Delay(-1, shutdownToken);
         }
         finally
         {
-            _shutdownCts.Cancel();
-            await Task.WhenAll(_executionTasks.Values);
+            Task[] tasks;
+            lock (_lock)
+            {
+                _shutdownCts.Cancel();
+                tasks = [.. _executionTasks.Values];
+            }
+            await Task.WhenAll(tasks);
         }
     }
 
@@ -95,8 +146,11 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
         }
         finally
         {
-            _jobExecutors.Remove(executionId);
-            _executionTasks.Remove(executionId);
+            lock (_lock)
+            {
+                _jobExecutors.Remove(executionId);
+                _executionTasks.Remove(executionId);
+            }
         }
     }
 

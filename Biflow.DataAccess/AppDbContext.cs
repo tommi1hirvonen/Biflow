@@ -46,6 +46,7 @@ public class AppDbContext : DbContext
     public DbSet<Execution> Executions => Set<Execution>();
     public DbSet<StepExecution> StepExecutions => Set<StepExecution>();
     public DbSet<StepExecutionAttempt> StepExecutionAttempts => Set<StepExecutionAttempt>();
+    public DbSet<StepExecutionMonitor> StepExecutionMonitors => Set<StepExecutionMonitor>();
     public DbSet<StepExecutionParameterExpressionParameter> StepExecutionParameterExpressionParameters => Set<StepExecutionParameterExpressionParameter>();
     public DbSet<Dependency> Dependencies => Set<Dependency>();
     public DbSet<Schedule> Schedules => Set<Schedule>();

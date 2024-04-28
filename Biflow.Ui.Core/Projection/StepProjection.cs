@@ -12,7 +12,7 @@ public record StepProjection(
     int ExecutionPhase,
     bool IsEnabled,
     StepTag[] Tags,
-    Guid[] Dependencies) : IComparable
+    DependencyProjection[] Dependencies) : IComparable
 {
     public virtual bool Equals(StepProjection? other) =>
         other is not null && StepId == other.StepId;

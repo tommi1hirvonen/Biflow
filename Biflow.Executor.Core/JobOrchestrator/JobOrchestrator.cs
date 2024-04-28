@@ -70,7 +70,7 @@ internal class JobOrchestrator : IJobOrchestrator
                     ExecutionMode.Hybrid => [duplicateTracker, new ExecutionPhaseTracker(step), new DependencyTracker(step), targetTracker],
                     _ => throw new ApplicationException()
                 };
-                var observer = new OrchestrationObserver(step, listener, trackers, _cancellationTokenSources[step]);
+                var observer = new OrchestrationObserver(_logger, step, listener, trackers, _cancellationTokenSources[step]);
                 return observer;
             })
             .ToList();

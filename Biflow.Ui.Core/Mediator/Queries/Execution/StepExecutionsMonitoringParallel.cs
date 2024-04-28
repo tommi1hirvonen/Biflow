@@ -22,7 +22,7 @@ internal class StepExecutionsParallelQueryHandler(IDbContextFactory<AppDbContext
         // The predicates are logically designed so that they do not produce duplicates
 
         var predicates = Enumerable.Empty<Expression<Func<StepExecutionAttempt, bool>>>()
-            .Append(e => e.StepExecution.Execution.CreatedOn <= request.ToDateTime && e.StepExecution.Execution.EndedOn >= request.FromDateTime);
+            .Append(e => e.StepExecution.Execution.CreatedOn <= request.ToDateTime && e.EndedOn >= request.FromDateTime);
 
         if (DateTime.Now >= request.FromDateTime && DateTime.Now <= request.ToDateTime)
         {
@@ -90,6 +90,7 @@ internal class StepExecutionsParallelQueryHandler(IDbContextFactory<AppDbContext
                 e.StepExecution.Execution.ScheduleName,
                 e.StepExecution.Execution.JobId,
                 job.JobName ?? e.StepExecution.Execution.JobName,
+                step.Dependencies.Select(d => d.DependantOnStepId).ToArray(),
                 step.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color)).ToArray(),
                 job.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color)).ToArray()
             )).ToArrayAsync(cancellationToken);

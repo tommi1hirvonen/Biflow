@@ -1,8 +1,49 @@
-﻿@inject ToasterService Toaster
-@inject IHxMessageBoxService Confirmer
-@inject IExecutorService ExecutorService
-@inject IDbContextFactory<AppDbContext> DbContextFactory
-@inject NavigationManager NavigationManager
+﻿@{
+    var count = Executions?.Count() ?? 0;
+    var selectedText = selectedSteps.Count switch
+    {
+        1 => $"{selectedSteps.Count} selected step",
+        > 1 => $"{selectedSteps.Count} selected steps",
+        _ => ""
+    };
+}
+
+<AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+    @if (selectedSteps.Count > 0)
+    {
+        var executions = selectedSteps.Select(id => Executions?.FirstOrDefault(e => e.ExecutionId == id.ExecutionId && e.StepId == id.StepId && e.RetryAttemptIndex == id.RetryAttemptIndex));
+        var enabled = executions.Any(e => e?.CanBeStopped == true);
+        <HoverBox Header="@selectedText">
+            <HxButtonGroup Size="ButtonGroupSize.Small">
+                <HxButton Size="ButtonSize.Small"
+                          Color="ThemeColor.None"
+                          CssClass="btn-auto text-danger"
+                          Enabled="enabled"
+                          OnClick="StopSelectedStepsAsync">
+                    <CxIcon Icon="FeatherIcon.XOctagon" />
+                    Stop...
+                </HxButton>
+                <HxDropdownButtonGroup>
+                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                        Mark status as...
+                    </HxDropdownToggleButton>
+                    <HxDropdownMenu>
+                        @foreach (var status in Enum.GetValues<StepExecutionStatus>())
+                        {
+                            <HxDropdownItem OnClick="() => UpdateExecutionStatusAsync(status)">
+                                <StepExecutionStatusBadge ExecutionStatus="status" />
+                            </HxDropdownItem>
+                        }
+                    </HxDropdownMenu>
+                </HxDropdownButtonGroup>
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="selectedSteps.Clear">
+                    <CxIcon Icon="FeatherIcon.X" />
+                    Cancel
+                </HxButton>
+            </HxButtonGroup>
+        </HoverBox>
+    }
+</AuthorizeView>
 
 <table class="table table-sm table-hover">
     <thead>
@@ -10,23 +51,106 @@
             @if (ShowDetailed)
             {
                 <th>
-                    Job
+                    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+                        <TriStateCheckbox CssClass="me-0"
+                                          Checked="@(selectedSteps.Count > 0 && count > 0)"
+                                          Indeterminate="@(selectedSteps.Any() && selectedSteps.Count != count)"
+                                          CheckedChanged="value => ToggleStepsSelected(value)" />
+                    </AuthorizeView>
+                    @if (!string.IsNullOrEmpty(selectedText))
+                    {
+                        <div class="text-muted small fw-normal d-inline me-3">@selectedText</div>
+                    }
+                    <span class="sortable" @onclick="ToggleJobSortMode">
+                        Job
+                    </span>
+                    <span class="ms-2">
+                        @if (SortMode == StepExecutionSortMode.JobAsc)
+                        {
+                            <CxIcon Icon="FeatherIcon.ArrowUp" />
+                        }
+                        else if (SortMode == StepExecutionSortMode.JobDesc)
+                        {
+                            <CxIcon Icon="FeatherIcon.ArrowDown" />
+                        }
+                    </span>
                 </th>
             }
             <th>
-                Step
+                @if (!ShowDetailed)
+                {
+                    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+                        <TriStateCheckbox CssClass="me-0"
+                                          Checked="@(selectedSteps.Count > 0 && count > 0)"
+                                          Indeterminate="@(selectedSteps.Any() && selectedSteps.Count != count)"
+                                          CheckedChanged="value => ToggleStepsSelected(value)" />
+                    </AuthorizeView>
+                    @if (!string.IsNullOrEmpty(selectedText))
+                    {
+                        <div class="text-muted small fw-normal d-inline me-3">@selectedText</div>
+                    }
+                }
+                <span class="sortable" @onclick="ToggleStepSortMode">
+                    Step
+                </span>
+                <span class="ms-2">
+                    @if (SortMode == StepExecutionSortMode.StepAsc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowUp" />
+                    }
+                    else if (SortMode == StepExecutionSortMode.StepDesc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowDown" />
+                    }
+                </span>
             </th>
             <th>
                 Execution phase
             </th>
             <th>
-                Started
+                <span class="sortable" @onclick="ToggleStartedSortMode">
+                    Started
+                </span>
+                <span class="ms-2">
+                    @if (SortMode == StepExecutionSortMode.StartedAsc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowUp" />
+                    }
+                    else if (SortMode == StepExecutionSortMode.StartedDesc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowDown" />
+                    }
+                </span>
             </th>
             <th>
-                Ended
+                <span class="sortable" @onclick="ToggleEndedSortMode">
+                    Ended
+                </span>
+                <span class="ms-2">
+                    @if (SortMode == StepExecutionSortMode.EndedAsc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowUp" />
+                    }
+                    else if (SortMode == StepExecutionSortMode.EndedDesc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowDown" />
+                    }
+                </span>
             </th>
             <th>
-                Duration
+                <span class="sortable" @onclick="ToggleDurationSortMode">
+                    Duration
+                </span>
+                <span class="ms-2">
+                    @if (SortMode == StepExecutionSortMode.DurationAsc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowUp" />
+                    }
+                    else if (SortMode == StepExecutionSortMode.DurationDesc)
+                    {
+                        <CxIcon Icon="FeatherIcon.ArrowDown" />
+                    }
+                </span>
             </th>
             <th>
                 Status
@@ -46,6 +170,8 @@
         {
             foreach (var item in Executions)
             {
+                var id = new StepExecutionId(item.ExecutionId, item.StepId, item.RetryAttemptIndex);
+                var checkBoxId = $"select_step_{item.StepId}_{item.RetryAttemptIndex}";
                 <ContextMenuToggle ContainerHtmlTag="tr"
                                    CssClass="@(selectedStepExecution == item ? "bg-body-tertiary" : null)"
                                    CssClassDelegate="@(open => open ? "bg-body-tertiary" : null)"
@@ -55,10 +181,31 @@
                         @if (ShowDetailed)
                         {
                             <td>
+                                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")" Context="auth">
+                                    <div class="form-check form-check-inline me-0">
+                                        <input type="checkbox" class="form-check-input" id="@checkBoxId"
+                                               checked=@selectedSteps.Contains(id)
+                                               @onclick:stopPropagation="true"
+                                               @onchange="args => ToggleStepSelected(item)">
+                                        <label class="form-check-label" for="@checkBoxId"></label>
+                                    </div>
+                                </AuthorizeView>
                                 @item.JobName
                             </td>
                         }
                         <td>
+                            @if (!ShowDetailed)
+                            {
+                                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")" Context="auth">
+                                    <div class="form-check form-check-inline me-0">
+                                        <input type="checkbox" class="form-check-input" id="@checkBoxId"
+                                               checked=@selectedSteps.Contains(id)
+                                               @onclick:stopPropagation="true"
+                                               @onchange="args => ToggleStepSelected(item)">
+                                        <label class="form-check-label" for="@checkBoxId"></label>
+                                    </div>
+                                </AuthorizeView>
+                            }
                             <StepTypeIcon StepType="item.StepType" />
                             &nbsp;
                             @item.StepName
@@ -118,26 +265,29 @@
                     {
                         <tr class="table-borderless no-hover bg-body-tertiary">
                             <td colspan="7" class="px-3">
-                                <HxButtonToolbar CssClass="mb-3 mt-1 ms-2">
+                                <HxButtonGroup CssClass="mb-3 mt-1 ms-2">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await StepExecutionMonitorsOffcanvas.LetAsync(x => x.ShowAsync(detailStep.StepExecution))">
+                                        Monitors
+                                    </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
                                         <CxIcon Icon="LucideIcon.History" />
                                         History
                                     </HxButton>
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto ms-3" @onclick="@(() => NavigationManager.NavigateTo($"executions/{item.ExecutionId}/graph/{item.StepId}"))">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="@(() => NavigationManager.NavigateTo($"executions/{item.ExecutionId}/graph/{item.StepId}"))">
                                         <CxIcon Icon="LucideIcon.Workflow" />
                                         Dependencies
                                     </HxButton>
                                     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                                         @if (detailStep.CanBeStopped)
                                         {
-                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger ms-3"
+                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger"
                                                       @onclick="async () => await StopStepExecutionAsync(item.ExecutionId, item.StepId, item.StepName)">
                                                 <CxIcon Icon="FeatherIcon.XOctagon" />
                                                 Stop...
                                             </HxButton>
                                         }
                                     </AuthorizeView>
-                                </HxButtonToolbar>
+                                </HxButtonGroup>
 
                                 <StepExecutionDetails StepExecutionAttempt="detailStep" />
                             </td>
@@ -150,89 +300,3 @@
 </table>
 
 <StepHistoryOffcanvas @ref="stepHistoryOffcanvas" />
-
-@code {
-    [CascadingParameter]
-    public Task<AuthenticationState>? AuthenticationState { get; set; }
-
-    [Parameter]
-    public IEnumerable<StepExecutionProjection>? Executions { get; set; }
-
-    [Parameter]
-    public bool ShowDetailed { get; set; } = true;
-
-    [Parameter]
-    public Func<StepExecutionProjection, StepExecutionAttempt?>? DetailStepProvider { get; set; }
-
-    private StepExecutionProjection? selectedStepExecution;
-    private StepHistoryOffcanvas? stepHistoryOffcanvas;
-    private StepExecutionAttempt? detailStep;
-
-    private async Task ToggleSelectedStepExecutionAsync(StepExecutionProjection execution)
-    {
-        // If the selected execution is the same that was previously selected, set to null
-        // => hides step execution details component.
-        if (selectedStepExecution == execution)
-        {
-            selectedStepExecution = null;
-            detailStep = null;
-        }
-        else
-        {
-            selectedStepExecution = execution;
-
-            if (DetailStepProvider is not null)
-            {
-                detailStep = DetailStepProvider(execution);
-            }
-            else
-            {
-                using var context = await DbContextFactory.CreateDbContextAsync();
-                detailStep = await context.StepExecutionAttempts
-                    .AsNoTrackingWithIdentityResolution()
-                    .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
-                    .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
-                    .Include(e => e.StepExecution)
-                    .ThenInclude(e => e.Execution)
-                    .ThenInclude(e => e.ExecutionParameters)
-                    .Include(e => e.StepExecution)
-                    .ThenInclude(e => e.ExecutionConditionParameters)
-                    .ThenInclude(e => e.ExecutionParameter)
-                    .Include(e => e.StepExecution)
-                    .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId && e.StepId == execution.StepId && e.RetryAttemptIndex == execution.RetryAttemptIndex);
-                if (detailStep is not null)
-                {
-                    var step = await context.Steps.FirstOrDefaultAsync(s => s.StepId == detailStep.StepId);
-                    detailStep.StepExecution.SetStep(step);
-                }
-            }   
-        }
-        StateHasChanged();
-    }
-
-    private async Task StopStepExecutionAsync(Guid executionId, Guid stepId, string stepName)
-    {
-        if (!await Confirmer.ConfirmAsync("Stop step execution", $"Are you sure you want to stop \"{stepName}\"?"))
-        {
-            return;
-        }
-        try
-        {
-            ArgumentNullException.ThrowIfNull(AuthenticationState);
-            var authState = await AuthenticationState;
-            var username = authState.User.Identity?.Name;
-            ArgumentNullException.ThrowIfNull(username);
-            
-            await ExecutorService.StopExecutionAsync(executionId, stepId, username);
-            Toaster.AddSuccess("Stop request sent successfully to the executor service");
-        }
-        catch (TimeoutException)
-        {
-            Toaster.AddError("Operation timed out", "The executor process may no longer be running");
-        }
-        catch (Exception ex)
-        {
-            Toaster.AddError("Error stopping execution", ex.Message);
-        }
-    }
-}

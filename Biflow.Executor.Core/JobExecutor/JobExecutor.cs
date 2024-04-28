@@ -23,7 +23,7 @@ internal partial class JobExecutor(
 
     public Execution Execution => _execution;
 
-    public async Task RunAsync(Guid executionId, CancellationToken cancellationToken)
+    public async Task RunAsync(CancellationToken cancellationToken)
     {
         // CancellationToken is triggered when the executor service is being shut down
         cancellationToken.ThrowIfCancellationRequested();
@@ -71,7 +71,7 @@ internal partial class JobExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{executionId} Error evaluating execution parameters and saving evaluation results", executionId);
+            _logger.LogError(ex, "{executionId} Error evaluating execution parameters and saving evaluation results", _execution.ExecutionId);
             await UpdateExecutionFailedAsync("Error evaluating execution parameters and saving evaluation results");
             return;
         }

@@ -28,6 +28,10 @@
         </div>
         <Toaster />
         <SchedulerStatusResolver OnStatusMessageResolved="message => schedulerServiceErrorMessage = message" />
+        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")" Context="auth2">
+            <ExecuteMultipleModal @ref="executeMultipleModal" />
+        </AuthorizeView>
+        <StepExecutionMonitorsOffcanvas @ref="stepExecutionMonitorsOffcanvas" />
         <header>
             <nav class="navbar navbar-dark navbar-custom sticky-top flex-lg-nowrap navbar-expand-lg p-0 shadow bg-gradient-primary">
                 <div class="navbar-brand navbar-brand-bg d-flex align-items-center py-2 ps-3 me-0">
@@ -73,7 +77,11 @@
                         </HxAlert>
                     }
                     <CascadingValue Value="userState">
-                        @Body
+                        <CascadingValue Value="executeMultipleModal">
+                            <CascadingValue Value="stepExecutionMonitorsOffcanvas">
+                                @Body
+                            </CascadingValue>
+                        </CascadingValue>
                     </CascadingValue>
                 </main>
             </div>
@@ -133,6 +141,8 @@
     private bool collapseSidebar = true;
     private string? schedulerServiceErrorMessage = null;
     private bool redirecting;
+    private ExecuteMultipleModal? executeMultipleModal;
+    private StepExecutionMonitorsOffcanvas? stepExecutionMonitorsOffcanvas;
 
     private string? SidebarClass => collapseSidebar ? "collapse" : null;
 
@@ -152,7 +162,12 @@
             if (identity is null || !identity.IsAuthenticated)
             {
                 redirecting = true;
-                NavigationManager.NavigateTo("login", true);
+
+                var redirectUrl = Uri.EscapeDataString(NavigationManager.ToBaseRelativePath(NavigationManager.Uri));
+                var url = string.IsNullOrEmpty(redirectUrl)
+                    ? "login"
+                    : $"login?redirectUrl={redirectUrl}";
+                NavigationManager.NavigateTo(url, true);
                 return;
             }
         }

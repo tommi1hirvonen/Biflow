@@ -2,6 +2,7 @@
 @inject IDbContextFactory<AppDbContext> DbFactory
 @inject IHxMessageBoxService Confirmer
 @inject IMediator Mediator
+@inject NavigationManager NavigationManager
 
 @*CSS definitions for the dependency graph nodes and paths created in site.js through JSInterop.*@
 <style>
@@ -21,10 +22,14 @@
 
 <div class="row align-items-end mb-3">
     <div class="col-xl-5 col-lg-5 col-12">
-        <HxAutosuggest  @bind-Value="stepFilter"
+        <HxAutosuggest  TValue="Guid?"
+                        TItem="StepProjection"
+                        @bind-Value="stepFilter"
                         @bind-Value:after="LoadGraphAsync"
                         DataProvider="ProvideSuggestions"
-                        TextSelector="TextSelector"
+                        ItemFromValueResolver="v => Task.FromResult(stepSlims?.FirstOrDefault(s => s.StepId == v))"
+                        ValueSelector="item => item.StepId"
+                        TextSelector="@(item => item.StepName ?? "")"
                         MinimumLength="0"
                         Delay="1"
                         InputSize="InputSize.Small"
@@ -117,64 +122,77 @@
 
 </div>
 
-<DependencyGraph @ref="dependencyGraph"
-                 TItem="Step"
-                 ItemFromNodeIdSelector="nodeId => Steps?.FirstOrDefault(s => s.StepId.ToString() == nodeId)"
-                 AfterRender="LoadGraphAsync"
-                 CssClass="dependency-graph">
-    <ContextMenuTemplate Context="step">
-        <li>
-            <h6 class="dropdown-header">
-                <StepTypeIcon StepType="step.StepType" />
-                @step.StepName
-            </h6>
-        </li>
-        <li>
-            <span class="dropdown-item" role="button" @onclick="async () => { stepFilter = step; await LoadGraphAsync();}">
-                <CxIcon Icon="FeatherIcon.Filter" />
-                Limit graph to this
-            </span>
-        </li>
-         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+@if (Job is not null)
+{
+    <DependencyGraph @ref="dependencyGraph"
+                     TItem="StepProjection"
+                     ItemFromNodeIdSelector="nodeId => stepSlims?.FirstOrDefault(s => s.StepId.ToString() == nodeId)"
+                     AfterRender="LoadGraphAsync"
+                     CssClass="dependency-graph">
+        <ContextMenuTemplate Context="step">
             <li>
-                <span class="dropdown-item" role="button" @onclick="() => OpenStepEditModalAsync(step)">
-                    <CxIcon Icon="FeatherIcon.Edit2" />
-                    Edit
+                <h6 class="dropdown-header">
+                    <StepTypeIcon StepType="step.StepType" />
+                    @step.StepName
+                </h6>
+            </li>
+            <li>
+                <span class="dropdown-item" role="button" @onclick="async () => { stepFilter = step.StepId; await LoadGraphAsync();}">
+                    <CxIcon Icon="FeatherIcon.Filter" />
+                    Limit graph to this
                 </span>
             </li>
-            <li>
-                @if (step.IsEnabled)
-                {
-                    <span class="dropdown-item" role="button" @onclick="() => ToggleEnabled(step, false)">
-                        <CxIcon Icon="FeatherIcon.ToggleLeft" />
-                        Disable
+            @if (step.JobId == Job?.JobId)
+            {
+                <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+                    <li>
+                        <span class="dropdown-item" role="button" @onclick="() => OpenStepEditModalAsync(step)">
+                            <CxIcon Icon="FeatherIcon.Edit2" />
+                            Edit
+                        </span>
+                    </li>
+                    <li>
+                        @if (step.IsEnabled)
+                        {
+                            <span class="dropdown-item" role="button" @onclick="() => ToggleEnabled(step, false)">
+                                <CxIcon Icon="FeatherIcon.ToggleLeft" />
+                                Disable
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="dropdown-item" role="button" @onclick="() => ToggleEnabled(step, true)">
+                                <CxIcon Icon="FeatherIcon.ToggleRight" />
+                                Enable
+                            </span>
+                        }
+                    </li>
+                    <li>
+                        <span class="dropdown-item" role="button" @onclick="() => DeleteStep(step)">
+                            <CxIcon Icon="FeatherIcon.Trash2" />
+                            Delete...
+                        </span>
+                    </li>
+                </AuthorizeView>
+            }
+            else
+            {
+                <li>
+                    <span class="dropdown-item" role="button" @onclick="@(() => NavigationManager.NavigateTo($"jobs/{step.JobId}/steps"))">
+                        <CxIcon Icon="FeatherIcon.ArrowRight" />
+                        Go to job
                     </span>
-                }
-                else
-                {
-                    <span class="dropdown-item" role="button" @onclick="() => ToggleEnabled(step, true)">
-                        <CxIcon Icon="FeatherIcon.ToggleRight" />
-                        Enable
-                    </span>
-                }
-            </li>
-        </AuthorizeView>
-        <li>
-            <span class="dropdown-item" role="button" @onclick="() => stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
-                <CxIcon Icon="LucideIcon.History" />
-                History
-            </span>
-        </li>
-        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+                </li>
+            }
             <li>
-                <span class="dropdown-item" role="button" @onclick="() => DeleteStep(step)">
-                    <CxIcon Icon="FeatherIcon.Trash2" />
-                    Delete...
+                <span class="dropdown-item" role="button" @onclick="() => stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
+                    <CxIcon Icon="LucideIcon.History" />
+                    History
                 </span>
             </li>
-        </AuthorizeView>
-    </ContextMenuTemplate>
-</DependencyGraph>
+        </ContextMenuTemplate>
+    </DependencyGraph>
+}
 
 <StepHistoryOffcanvas @ref="stepHistoryOffcanvas" />
 
@@ -284,10 +302,11 @@
 
     private readonly Dictionary<StepType, IStepEditModal?> stepEditModals = [];
 
-    private DependencyGraph<Step>? dependencyGraph;
+    private DependencyGraph<StepProjection>? dependencyGraph;
     private StepHistoryOffcanvas? stepHistoryOffcanvas;
-    private Step? stepFilter;
+    private Guid? stepFilter;
     private DependencyGraphDirection direction = DependencyGraphDirection.LeftToRight;
+    private List<StepProjection>? stepSlims;
 
     private int FilterDepthBackwards
     {
@@ -311,7 +330,7 @@
         {
             if (InitialStepId is Guid filterStepId)
             {
-                stepFilter = Steps?.FirstOrDefault(s => s.StepId == filterStepId);
+                stepFilter = filterStepId;
                 StateHasChanged();
             }
         }
@@ -330,15 +349,25 @@
     private async Task LoadGraphAsync()
     {
         ArgumentNullException.ThrowIfNull(Job);
-        ArgumentNullException.ThrowIfNull(Steps);
         ArgumentNullException.ThrowIfNull(dependencyGraph);
 
         using var context = await DbFactory.CreateDbContextAsync();
-        var stepSlims = await context.Steps
+        stepSlims = await context.Steps
             .AsNoTrackingWithIdentityResolution()
             .IgnoreQueryFilters()
-            .Where(s => s.JobId == Job.JobId || context.Dependencies.Any(d => d.DependantOnStepId == s.StepId && d.Step.JobId == Job.JobId))
-            .Select(s => new StepProjection(s.StepId, s.JobId, s.Job.JobName, s.StepName, s.StepType, s.ExecutionPhase, s.IsEnabled, Array.Empty<StepTag>(), s.Dependencies.Select(d => d.DependantOnStepId).ToArray()))
+            .Where(s => s.JobId == Job.JobId
+                    || context.Dependencies.Any(d => d.DependantOnStepId == s.StepId && d.Step.JobId == Job.JobId)
+                    || context.Dependencies.Any(d => d.StepId == s.StepId && d.DependantOnStep.JobId == Job.JobId))
+            .Select(s => new StepProjection(
+                s.StepId,
+                s.JobId,
+                s.Job.JobName,
+                s.StepName,
+                s.StepType,
+                s.ExecutionPhase,
+                s.IsEnabled,
+                Array.Empty<StepTag>(),
+                s.Dependencies.Select(d => new DependencyProjection(d.StepId, d.DependantOnStepId, d.DependencyType)).ToArray()))
             .ToListAsync();
 
         List<DependencyGraphNode> nodes;
@@ -350,19 +379,20 @@
                 Name: step.StepName ?? "",
                 CssClass: $"{(step.IsEnabled ? "enabled" : "disabled")} {(step.JobId != Job.JobId ? "external" : "internal")}",
                 TooltipText: step.JobId == Job.JobId ? $"{step.StepType}" : $"{step.StepType}, {step.JobName}",
-                EnableOnClick: step.JobId == Job.JobId
+                EnableOnClick: true
             )).ToList();
-            edges = Steps
+            edges = stepSlims
                 .SelectMany(step => step.Dependencies)
+                .Where(d => stepSlims.Any(s => s.StepId == d.DependentOnStepId))
                 .Select(dep => new DependencyGraphEdge(
                     Id: dep.StepId.ToString(),
-                    DependsOnId: dep.DependantOnStepId.ToString(),
+                    DependsOnId: dep.DependentOnStepId.ToString(),
                     CssClass: dep.DependencyType.ToString().ToLower()
                 )).ToList();
         }
         else
         {
-            var startStep = stepSlims.FirstOrDefault(s => s.StepId == stepFilter.StepId);
+            var startStep = stepSlims.FirstOrDefault(s => s.StepId == stepFilter);
             if (startStep is not null)
             {
                 var steps = RecurseDependenciesBackward(startStep, stepSlims, new(), 0);
@@ -372,16 +402,16 @@
                 nodes = steps.Select(step => new DependencyGraphNode(
                     Id: step.StepId.ToString(),
                     Name: step.StepName ?? "",
-                    CssClass: $"{(step.IsEnabled ? "enabled" : "disabled")} {(step.JobId != Job.JobId ? "external" : "internal")} {(step.StepId == stepFilter.StepId ? "selected" : null)}",
+                    CssClass: $"{(step.IsEnabled ? "enabled" : "disabled")} {(step.JobId != Job.JobId ? "external" : "internal")} {(step.StepId == stepFilter ? "selected" : null)}",
                     TooltipText: $"{step.StepType}",
-                    EnableOnClick: step.JobId == Job.JobId
+                    EnableOnClick: true
                 )).ToList();
-                edges = Steps
+                edges = stepSlims
                     .SelectMany(step => step.Dependencies)
-                    .Where(d => steps.Any(s => d.DependantOnStepId == s.StepId) && steps.Any(s => d.StepId == s.StepId)) // only include dependencies whose step is included
+                    .Where(d => steps.Any(s => d.DependentOnStepId == s.StepId) && steps.Any(s => d.StepId == s.StepId)) // only include dependencies whose step is included
                     .Select(dep => new DependencyGraphEdge(
                         Id: dep.StepId.ToString(),
-                        DependsOnId: dep.DependantOnStepId.ToString(),
+                        DependsOnId: dep.DependentOnStepId.ToString(),
                         CssClass: dep.DependencyType.ToString().ToLower()
                     )).ToList();
             }
@@ -396,8 +426,6 @@
 
     private List<StepProjection> RecurseDependenciesBackward(StepProjection step, List<StepProjection> allSteps, List<StepProjection> processedSteps, int depth)
     {
-        ArgumentNullException.ThrowIfNull(Steps);
-
         // If the step was already handled, return.
         // This way we do not loop indefinitely in case of circular dependencies.
         if (processedSteps.Any(s => s.StepId == step.StepId))
@@ -414,7 +442,7 @@
         processedSteps.Add(step);
 
         // Get dependency steps.
-        List<StepProjection> dependencySteps = allSteps.Where(s => step.Dependencies.Contains(s.StepId)).ToList();
+        List<StepProjection> dependencySteps = allSteps.Where(s => step.Dependencies.Any(d => d.DependentOnStepId == s.StepId)).ToList();
 
         // Loop through the dependencies and handle them recursively.
         foreach (var depencyStep in dependencySteps)
@@ -429,7 +457,6 @@
 
     private List<StepProjection> RecurseDependenciesForward(StepProjection step, List<StepProjection> allSteps, List<StepProjection> processedSteps, int depth)
     {
-        ArgumentNullException.ThrowIfNull(Steps);
         if (processedSteps.Any(s => s.StepId == step.StepId))
         {
             return processedSteps;
@@ -443,7 +470,7 @@
 
         processedSteps.Add(step);
 
-        List<StepProjection> dependencySteps = allSteps.Where(s => s.Dependencies.Contains(step.StepId)).ToList();
+        List<StepProjection> dependencySteps = allSteps.Where(s => s.Dependencies.Any(d => d.DependentOnStepId == step.StepId)).ToList();
 
         foreach (var depencyStep in dependencySteps)
         {
@@ -455,7 +482,7 @@
         return processedSteps;
     }
 
-    private Task OpenStepEditModalAsync(Step step) =>
+    private Task OpenStepEditModalAsync(StepProjection step) =>
         stepEditModals[step.StepType].LetAsync(x => x.ShowAsync(step.StepId, StepEditModalView.Dependencies));
 
     private async Task OnStepSubmit(Step step)
@@ -479,10 +506,12 @@
         StateHasChanged();
     }
 
-    private async Task ToggleEnabled(Step step, bool value)
+    private async Task ToggleEnabled(StepProjection projection, bool value)
     {
         try
         {
+            ArgumentNullException.ThrowIfNull(Steps);
+            var step = Steps.First(s => s.StepId == projection.StepId);
             await Mediator.SendAsync(new ToggleStepsCommand(step.StepId, value));
             step.IsEnabled = value;
             await LoadGraphAsync();
@@ -493,16 +522,18 @@
         }
     }
 
-    private async Task DeleteStep(Step step)
+    private async Task DeleteStep(StepProjection projection)
     {
-        var result = await Confirmer.ConfirmAsync("", $"Are you sure you want to delete step \"{step.StepName}\"?");
-        if (!result)
-        {
-            return;    
-        }
-
         try
         {
+            ArgumentNullException.ThrowIfNull(Steps);
+            var step = Steps.First(s => s.StepId == projection.StepId);
+            var result = await Confirmer.ConfirmAsync("", $"Are you sure you want to delete step \"{step.StepName}\"?");
+            if (!result)
+            {
+                return;    
+            }
+
             await Mediator.SendAsync(new DeleteStepsCommand(step.StepId));
             Steps?.Remove(step);
             // Remove the deleted step from dependencies.
@@ -521,16 +552,13 @@
         }
     }
 
-    private Task<AutosuggestDataProviderResult<Step>> ProvideSuggestions(AutosuggestDataProviderRequest request)
+    private Task<AutosuggestDataProviderResult<StepProjection>> ProvideSuggestions(AutosuggestDataProviderRequest request)
     {
-        ArgumentNullException.ThrowIfNull(Steps);
-        var filteredModules = Steps.Where(s => s.StepName?.ContainsIgnoreCase(request.UserInput) ?? false);
-        return Task.FromResult(new AutosuggestDataProviderResult<Step>
+        ArgumentNullException.ThrowIfNull(stepSlims);
+        var filteredModules = stepSlims.Where(s => s.StepName?.ContainsIgnoreCase(request.UserInput) ?? false);
+        return Task.FromResult(new AutosuggestDataProviderResult<StepProjection>
         {
             Data = filteredModules
         });
     }
-
-    private string TextSelector(Step step) => step.StepName ?? "";
-
 }

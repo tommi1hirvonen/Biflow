@@ -887,6 +887,13 @@ namespace Biflow.DataAccess.Migrations
                     b.Property<Guid>("JobId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("LastModifiedBy")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<DateTimeOffset>("LastModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<string>("ScheduleName")
                         .IsRequired()
                         .HasMaxLength(250)
@@ -1150,6 +1157,35 @@ namespace Biflow.DataAccess.Migrations
                     b.HasKey("ExecutionId", "StepId", "ObjectId");
 
                     b.ToTable("ExecutionStepDataObject", "app");
+                });
+
+            modelBuilder.Entity("Biflow.Core.Entities.StepExecutionMonitor", b =>
+                {
+                    b.Property<Guid>("ExecutionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("StepId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MonitoredExecutionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MonitoredStepId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("MonitoringReason")
+                        .HasMaxLength(50)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("ExecutionId", "StepId", "MonitoredExecutionId", "MonitoredStepId", "MonitoringReason");
+
+                    b.HasIndex("MonitoredExecutionId", "MonitoredStepId");
+
+                    b.ToTable("ExecutionStepMonitor", "app");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.StepExecutionParameterBase", b =>
@@ -1674,6 +1710,11 @@ namespace Biflow.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<double>("TimeoutMinutes")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("float")
+                        .HasColumnName("TimeoutMinutes");
+
                     b.HasDiscriminator().HasValue("Job");
                 });
 
@@ -1947,6 +1988,11 @@ namespace Biflow.DataAccess.Migrations
 
                     b.Property<Guid>("JobToExecuteId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("TimeoutMinutes")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("float")
+                        .HasColumnName("TimeoutMinutes");
 
                     b.Property<string>("_tagFilters")
                         .IsRequired()
@@ -2808,6 +2854,25 @@ namespace Biflow.DataAccess.Migrations
                     b.Navigation("StepExecution");
                 });
 
+            modelBuilder.Entity("Biflow.Core.Entities.StepExecutionMonitor", b =>
+                {
+                    b.HasOne("Biflow.Core.Entities.StepExecution", "StepExecution")
+                        .WithMany("MonitoredStepExecutions")
+                        .HasForeignKey("ExecutionId", "StepId")
+                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .IsRequired();
+
+                    b.HasOne("Biflow.Core.Entities.StepExecution", "MonitoredStepExecution")
+                        .WithMany("MonitoringStepExecutions")
+                        .HasForeignKey("MonitoredExecutionId", "MonitoredStepId")
+                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .IsRequired();
+
+                    b.Navigation("MonitoredStepExecution");
+
+                    b.Navigation("StepExecution");
+                });
+
             modelBuilder.Entity("Biflow.Core.Entities.StepExecutionParameterBase", b =>
                 {
                     b.HasOne("Biflow.Core.Entities.ExecutionParameter", "InheritFromExecutionParameter")
@@ -3468,6 +3533,10 @@ namespace Biflow.DataAccess.Migrations
                     b.Navigation("ExecutionConditionParameters");
 
                     b.Navigation("ExecutionDependencies");
+
+                    b.Navigation("MonitoredStepExecutions");
+
+                    b.Navigation("MonitoringStepExecutions");
 
                     b.Navigation("StepExecutionAttempts");
                 });

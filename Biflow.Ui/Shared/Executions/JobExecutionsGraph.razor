@@ -2,6 +2,43 @@
 @inject NavigationManager NavigationManager
 
 <div class="row mx-1 my-2">
+
+    <HxDropdownButtonGroup>
+        <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto position-absolute border-0">
+            <CxIcon Icon="LucideIcon.SortDesc" />
+            Sort by: <span class="fw-normal">@SortMode</span>
+        </HxDropdownToggleButton>
+        <HxDropdownMenu>
+            <HxDropdownItem CssClass="@(SortMode == ExecutionSortMode.CreatedDesc ? "active" : null)" OnClick="() => SetSortMode(ExecutionSortMode.CreatedDesc)">
+                Created<sup>desc</sup>
+            </HxDropdownItem>
+            <HxDropdownItem CssClass="@(SortMode == ExecutionSortMode.StartedAsc ? "active" : null)" OnClick="() => SetSortMode(ExecutionSortMode.StartedAsc)">
+                Started<sup>asc</sup>
+            </HxDropdownItem>
+            <HxDropdownItem CssClass="@(SortMode == ExecutionSortMode.StartedDesc ? "active" : null)" OnClick="() => SetSortMode(ExecutionSortMode.StartedDesc)">
+                Started<sup>desc</sup>
+            </HxDropdownItem>
+            <HxDropdownItem CssClass="@(SortMode == ExecutionSortMode.EndedAsc ? "active" : null)" OnClick="() => SetSortMode(ExecutionSortMode.EndedAsc)">
+                Ended<sup>asc</sup>
+            </HxDropdownItem>
+            <HxDropdownItem CssClass="@(SortMode == ExecutionSortMode.EndedDesc ? "active" : null)" OnClick="() => SetSortMode(ExecutionSortMode.EndedDesc)">
+                Ended<sup>desc</sup>
+            </HxDropdownItem>
+            <HxDropdownItem CssClass="@(SortMode == ExecutionSortMode.DurationAsc ? "active" : null)" OnClick="() => SetSortMode(ExecutionSortMode.DurationAsc)">
+                Duration<sup>asc</sup>
+            </HxDropdownItem>
+            <HxDropdownItem CssClass="@(SortMode == ExecutionSortMode.DurationDesc ? "active" : null)" OnClick="() => SetSortMode(ExecutionSortMode.DurationDesc)">
+                Duration<sup>desc</sup>
+            </HxDropdownItem>
+            <HxDropdownItem CssClass="@(SortMode == ExecutionSortMode.JobAsc ? "active" : null)" OnClick="() => SetSortMode(ExecutionSortMode.JobAsc)">
+                Job<sup>asc</sup>
+            </HxDropdownItem>
+            <HxDropdownItem CssClass="@(SortMode == ExecutionSortMode.JobDesc ? "active" : null)" OnClick="() => SetSortMode(ExecutionSortMode.JobDesc)">
+                Job<sup>desc</sup>
+            </HxDropdownItem>
+        </HxDropdownMenu>
+    </HxDropdownButtonGroup>
+
     <div class="col">
         <div class="row" style="height: 40px;">
             <div class="col-xl-3 col-lg-4 col-5 py-1 d-flex align-items-center justify-content-end">
@@ -15,7 +52,7 @@
                      style="height: 100%; border-left: 1px dashed var(--bs-border-color); position: absolute; left: @(percentage.ToString("F10", CultureInfo.InvariantCulture))%;">
                         @if (i < Columns)
                         {
-                            <small>@GetDateFromPercentage(i)<br />@GetTimeFromPercentage(i)</small>
+                            <small>@GetDateFromPercentage(percentage)<br />@GetTimeFromPercentage(percentage)</small>
                         }
                     </div>
                 }
@@ -68,30 +105,39 @@
 @code {
     [Parameter] public IEnumerable<ExecutionProjection>? Executions { get; set; }
 
+    [Parameter] public ExecutionSortMode SortMode { get; set; }
+
+    [Parameter] public EventCallback<ExecutionSortMode> OnSortingChanged { get; set; }
+
     private const int Columns = 12;
+
+    private void SetSortMode(ExecutionSortMode sort)
+    {
+        OnSortingChanged.InvokeAsync(sort);
+    }
 
     private DateTime MinTime => Executions?.Any() ?? false ? Executions.Min(e => e.StartedOn?.LocalDateTime) ?? DateTime.Now : DateTime.Now;
     private DateTime MaxTime => Executions?.Any() ?? false ? Executions.Max(e => e.EndedOn?.LocalDateTime ?? DateTime.Now) : DateTime.Now;
     private long MinTicks => MinTime.Ticks;
     private long MaxTicks => MaxTime.Ticks;
 
-    private string GetTimeFromPercentage(int percentage)
+    private string GetTimeFromPercentage(double percentage)
     {
         if (MinTicks == MaxTicks)
             return DateTime.Now.ToString("T");
 
         var ticks = MinTicks + (MaxTicks - MinTicks) * percentage / 100;
-        var time = new DateTime(ticks);
+        var time = new DateTime(Convert.ToInt64(ticks));
         return time.ToString("T");
     }
 
-    private string GetDateFromPercentage(int percentage)
+    private string GetDateFromPercentage(double percentage)
     {
         if (MinTicks == MaxTicks)
             return DateTime.Now.ToString("d");
 
         var ticks = MinTicks + (MaxTicks - MinTicks) * percentage / 100;
-        var time = new DateTime(ticks);
+        var time = new DateTime(Convert.ToInt64(ticks));
         return time.ToString("d");
     }
 

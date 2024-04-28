@@ -118,20 +118,23 @@
     </div>
 </div>
 
-<DependencyGraph @ref="dependencyGraph"
-                 TItem="INode"
-                 AfterRender="LoadGraphAsync"
-                 ItemFromNodeIdSelector="nodeId => graphNodes.FirstOrDefault(node => node.Id == nodeId)"
-                 CssClass="dependency-graph">
-    <ContextMenuTemplate Context="node">
-        <li>
-            <span class="dropdown-item" role="button" @onclick="async () => { filterNode = node; await LoadGraphAsync();}">
-                <CxIcon Icon="FeatherIcon.Filter" />
-                Limit graph to this
-            </span>
-        </li>
-    </ContextMenuTemplate>
-</DependencyGraph>
+@if (Job is not null)
+{
+    <DependencyGraph @ref="dependencyGraph"
+                     TItem="INode"
+                     AfterRender="LoadGraphAsync"
+                     ItemFromNodeIdSelector="nodeId => graphNodes.FirstOrDefault(node => node.Id == nodeId)"
+                     CssClass="dependency-graph">
+        <ContextMenuTemplate Context="node">
+            <li>
+                <span class="dropdown-item" role="button" @onclick="async () => { filterNode = node; await LoadGraphAsync();}">
+                    <CxIcon Icon="FeatherIcon.Filter" />
+                    Limit graph to this
+                </span>
+            </li>
+        </ContextMenuTemplate>
+    </DependencyGraph>
+}
 
 @code {
     [CascadingParameter] public Job? Job { get; set; }
