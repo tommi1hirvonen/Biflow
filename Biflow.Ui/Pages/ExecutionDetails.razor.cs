@@ -202,7 +202,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
                 AutoRefresh = false;
             }
             await InvokeAsync(StateHasChanged);
-            if (dependenciesGraph is not null)
+            if (ShowReport == Report.Graph && dependenciesGraph is not null)
             {
                 await dependenciesGraph.LoadGraphAsync();
             }
