@@ -413,6 +413,8 @@
         {
             await Mediator.SendAsync(new ToggleScheduleCommand(schedule.ScheduleId, value));
             schedule.IsEnabled = value;
+            var message = value ? "Schedule enabled" : "Schedule disabled";
+            Toaster.AddSuccess(message, 2500);
         }
         catch (Exception ex)
         {
@@ -429,7 +431,6 @@
                 await Mediator.SendAsync(new ToggleScheduleCommand(schedule.ScheduleId, value));
                 schedule.IsEnabled = value;
             }
-
         }
         catch (Exception ex)
         {

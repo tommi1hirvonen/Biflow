@@ -142,6 +142,8 @@ public partial class Jobs : ComponentBase, IDisposable
         {
             await Mediator.SendAsync(new ToggleJobCommand(job.JobId, value));
             job.IsEnabled = value;
+            var message = value ? "Job enabled" : "Job disabled";
+            Toaster.AddSuccess(message, 2500);
         }
         catch (Exception ex)
         {

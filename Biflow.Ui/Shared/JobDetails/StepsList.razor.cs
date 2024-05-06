@@ -145,7 +145,7 @@ public partial class StepsList : ComponentBase
                 Steps?.Remove(step);
 
                 // Remove the deleted step from dependencies.
-                foreach (var dependant in Steps?.Where(s => s.Dependencies.Any(d => d.DependantOnStepId == step.StepId)) ?? Enumerable.Empty<Step>())
+                foreach (var dependant in Steps?.Where(s => s.Dependencies.Any(d => d.DependantOnStepId == step.StepId)) ?? [])
                 {
                     var dependency = dependant.Dependencies.First(d => d.DependantOnStepId == step.StepId);
                     dependant.Dependencies.Remove(dependency);
@@ -166,6 +166,8 @@ public partial class StepsList : ComponentBase
         {
             await Mediator.SendAsync(new ToggleStepsCommand(step.StepId, value));
             step.IsEnabled = value;
+            var message = value ? "Step enabled" : "Step disabled";
+            Toaster.AddSuccess(message, 2500);
         }
         catch (Exception ex)
         {
@@ -186,7 +188,7 @@ public partial class StepsList : ComponentBase
             selectedSteps.Remove(step);
 
             // Remove the deleted step from dependencies.
-            foreach (var dependant in Steps?.Where(s => s.Dependencies.Any(d => d.DependantOnStepId == step.StepId)) ?? Enumerable.Empty<Step>())
+            foreach (var dependant in Steps?.Where(s => s.Dependencies.Any(d => d.DependantOnStepId == step.StepId)) ?? [])
             {
                 var dependency = dependant.Dependencies.First(d => d.DependantOnStepId == step.StepId);
                 dependant.Dependencies.Remove(dependency);
