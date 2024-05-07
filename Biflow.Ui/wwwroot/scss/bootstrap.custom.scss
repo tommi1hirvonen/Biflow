@@ -162,7 +162,7 @@ $navbar-gradient: #8F75DA;
 }
 
 tr .btn-auto, .list-group-item .btn-auto {
-    border: none;
+    border-width: 0;
 }
 
 // Nav links
@@ -194,10 +194,6 @@ tr.context-menu-toggle.open {
 .table .btn-group .btn {
     display: inline-block;
     float: none;
-}
-
-.table .btn-group .btn + .btn {
-    margin-left: -5px;
 }
 
 .table-hover > tbody > tr.no-hover:hover {

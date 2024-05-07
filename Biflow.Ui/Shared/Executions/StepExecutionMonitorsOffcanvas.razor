@@ -74,11 +74,11 @@
 </HxOffcanvas>
 
 @code {
-    private StepExecution? stepExecution;
+    private StepExecutionProjection? stepExecution;
     private StepExecutionMonitor[]? monitors;
     private HxOffcanvas? offcanvas;
 
-    public async Task ShowAsync(StepExecution step)
+    public async Task ShowAsync(StepExecutionProjection step)
     {
         monitors = null;
         stepExecution = step;

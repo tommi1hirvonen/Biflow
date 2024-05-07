@@ -232,6 +232,10 @@
                             <StepTypeIcon StepType="item.StepType" />
                             @item.StepName
                         </DropdownMenuHeader>
+                        <DropdownMenuItem @onclick="async () => await StepExecutionMonitorsOffcanvas.LetAsync(x => x.ShowAsync(item))">
+                            <CxIcon Icon="LucideIcon.Monitor" />
+                            Monitors
+                        </DropdownMenuItem>
                         <DropdownMenuItem @onclick="async () => await stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
                             <CxIcon Icon="LucideIcon.History" />
                             History
@@ -266,21 +270,26 @@
                         <tr class="table-borderless no-hover bg-body-tertiary">
                             <td colspan="7" class="px-3">
                                 <HxButtonGroup CssClass="mb-3 mt-1 ms-2">
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await StepExecutionMonitorsOffcanvas.LetAsync(x => x.ShowAsync(detailStep.StepExecution))">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1" @onclick="() => ToggleSelectedStepExecutionAsync(selectedStepExecution)">
+                                        <CxIcon Icon="FeatherIcon.X" />
+                                        Close
+                                    </HxButton>
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1" @onclick="async () => await StepExecutionMonitorsOffcanvas.LetAsync(x => x.ShowAsync(item))">
+                                        <CxIcon Icon="LucideIcon.Monitor" />
                                         Monitors
                                     </HxButton>
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1" @onclick="async () => await stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
                                         <CxIcon Icon="LucideIcon.History" />
                                         History
                                     </HxButton>
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="@(() => NavigationManager.NavigateTo($"executions/{item.ExecutionId}/graph/{item.StepId}"))">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1" @onclick="@(() => NavigationManager.NavigateTo($"executions/{item.ExecutionId}/graph/{item.StepId}"))">
                                         <CxIcon Icon="LucideIcon.Workflow" />
                                         Dependencies
                                     </HxButton>
                                     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                                         @if (detailStep.CanBeStopped)
                                         {
-                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger"
+                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1 text-danger"
                                                       @onclick="async () => await StopStepExecutionAsync(item.ExecutionId, item.StepId, item.StepName)">
                                                 <CxIcon Icon="FeatherIcon.XOctagon" />
                                                 Stop...
