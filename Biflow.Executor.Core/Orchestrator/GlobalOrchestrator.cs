@@ -16,7 +16,7 @@ internal class GlobalOrchestrator(
     private readonly List<IOrchestrationObserver> _observers = [];
     private readonly Dictionary<StepExecution, OrchestrationStatus> _stepStatuses = [];
 
-    public async Task RegisterStepsAndObservers(IEnumerable<IOrchestrationObserver> observers)
+    public async Task RegisterStepsAndObserversAsync(IEnumerable<IOrchestrationObserver> observers)
     {
         try
         {
