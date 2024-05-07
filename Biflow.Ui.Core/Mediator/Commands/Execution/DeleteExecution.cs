@@ -8,15 +8,41 @@ internal class DeleteExecutionCommandHandler(IDbContextFactory<ServiceDbContext>
     public async Task Handle(DeleteExecutionCommand request, CancellationToken cancellationToken)
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        var execution = await context.Executions
-                .Include($"{nameof(Execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
-                .Include(e => e.StepExecutions).ThenInclude(e => e.MonitoredStepExecutions)
-                .Include(e => e.StepExecutions).ThenInclude(e => e.MonitoringStepExecutions)
-                .FirstOrDefaultAsync(e => e.ExecutionId == request.ExecutionId, cancellationToken);
-        if (execution is not null)
+        using var transaction = context.Database.BeginTransaction();
+        try
         {
-            context.Executions.Remove(execution);
-            await context.SaveChangesAsync(cancellationToken);
+            // Specify delete commands with joins for tables that do not have cascade deleted enabled.
+
+            // Step parameter expression parameters
+            await context.StepExecutionParameterExpressionParameters
+                .Where(e => e.ExecutionId == request.ExecutionId)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            // Monitoring steps
+            await context.StepExecutionMonitors
+                .Where(e => e.ExecutionId == request.ExecutionId)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            // Monitored steps
+            await context.StepExecutionMonitors
+                .Where(e => e.MonitoredExecutionId == request.ExecutionId)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            // Step executions
+            await context.StepExecutions
+                .Where(e => e.ExecutionId == request.ExecutionId)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            await context.Executions
+                .Where(e => e.ExecutionId == request.ExecutionId)
+                .ExecuteDeleteAsync(cancellationToken);
+
+            transaction.Commit();
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
         }
     }
 }
