@@ -49,7 +49,7 @@ public partial class Credential
         return WindowsIdentity.RunImpersonatedAsync(token, func);
     }
 
-    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Only used when running on Windows")]
+    [SupportedOSPlatform("windows")]
     private bool TryGetTokenHandle([NotNullWhen(true)] out SafeAccessTokenHandle? token)
     {
         var domain = Domain;
