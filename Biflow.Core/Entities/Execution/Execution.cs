@@ -132,11 +132,11 @@ public class Execution
             .SelectMany(e => e.StepExecutionAttempts)
             .ToArray();
         ExecutionStatus status;
-        if (attempts.All(x => x.ExecutionStatus is StepExecutionStatus.Succeeded or StepExecutionStatus.Skipped or StepExecutionStatus.DependenciesFailed))
+        if (attempts.All(x => x.ExecutionStatus is StepExecutionStatus.Succeeded or StepExecutionStatus.Skipped))
         {
             status = ExecutionStatus.Succeeded;
         }
-        else if (attempts.Any(x => x.ExecutionStatus is StepExecutionStatus.Failed))
+        else if (attempts.Any(x => x.ExecutionStatus is StepExecutionStatus.Failed or StepExecutionStatus.DependenciesFailed))
         {
             status = ExecutionStatus.Failed;
         }
@@ -148,7 +148,7 @@ public class Execution
         {
             status = ExecutionStatus.Stopped;
         }
-        else if (attempts.Any(x => x.ExecutionStatus is StepExecutionStatus.NotStarted or StepExecutionStatus.Queued or StepExecutionStatus.AwaitingRetry))
+        else if (attempts.Any(x => x.ExecutionStatus is StepExecutionStatus.NotStarted or StepExecutionStatus.Queued or StepExecutionStatus.AwaitingRetry or StepExecutionStatus.Running))
         {
             status = ExecutionStatus.Suspended;
         }
