@@ -118,7 +118,7 @@ internal class ExeStepExecutor(
             // In case of cancellation or timeout 
             try
             {
-                process.Kill();
+                process.Kill(entireProcessTree: true);
             }
             catch (Exception ex)
             {
