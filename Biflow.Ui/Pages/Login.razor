@@ -90,11 +90,11 @@
             claims.AddRange(roleClaims);
             var claimIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var claimPrincipal = new ClaimsPrincipal(claimIdentity);
-            var authenticationProperties = new AuthenticationProperties()
-                {
-                    IsPersistent = false,
-                    ExpiresUtc = DateTime.UtcNow.AddMinutes(30)
-                };
+            var authenticationProperties = new AuthenticationProperties
+            {
+                IsPersistent = true,
+                ExpiresUtc = DateTime.UtcNow.AddHours(10)
+            };
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimPrincipal, authenticationProperties);
         }
         catch (InvalidCredentialException)
