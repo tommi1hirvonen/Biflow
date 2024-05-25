@@ -8,6 +8,9 @@
 	<ImplicitUsings>enable</ImplicitUsings>
 	<AssemblyName>BiflowUi</AssemblyName>
 	<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+	<AssemblyVersion>$(VersionName)</AssemblyVersion>
+	<FileVersion>$(AssemblyVersion)</FileVersion>
+	<Version>$(AssemblyVersion)</Version>
   </PropertyGroup>
 
   <ItemGroup>

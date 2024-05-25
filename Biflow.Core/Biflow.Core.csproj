@@ -6,6 +6,9 @@
 	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	<ImplicitUsings>enable</ImplicitUsings>
 	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	<AssemblyVersion>$(VersionName)</AssemblyVersion>
+	<FileVersion>$(AssemblyVersion)</FileVersion>
+	<Version>$(AssemblyVersion)</Version>
   </PropertyGroup>
 
   <ItemGroup>
