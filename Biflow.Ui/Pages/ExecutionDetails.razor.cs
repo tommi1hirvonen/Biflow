@@ -144,7 +144,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
 
             try
             {
-            var stepExecutions = await (
+                var stepExecutions = await (
                 from exec in context.StepExecutions
                     .AsNoTrackingWithIdentityResolution()
                     .Where(e => e.ExecutionId == ExecutionId)
@@ -159,17 +159,17 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
                 from step in es.DefaultIfEmpty()
                 select new { exec, step }
                 ).ToArrayAsync(cts.Token);
-            foreach (var item in stepExecutions)
-            {
-                item.exec.SetStep(item.step);
-            }
-            execution = stepExecutions.FirstOrDefault()?.exec.Execution;
-            job = execution is not null
-                ? await context.Jobs.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(j => j.JobId == execution.JobId, cts.Token)
-                : null;
-            schedule = execution?.ScheduleId is not null
-                ? await context.Schedules.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(s => s.ScheduleId == execution.ScheduleId, cts.Token)
-                : null;
+                foreach (var item in stepExecutions)
+                {
+                    item.exec.SetStep(item.step);
+                }
+                execution = stepExecutions.FirstOrDefault()?.exec.Execution;
+                job = execution is not null
+                    ? await context.Jobs.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(j => j.JobId == execution.JobId, cts.Token)
+                    : null;
+                schedule = execution?.ScheduleId is not null
+                    ? await context.Schedules.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(s => s.ScheduleId == execution.ScheduleId, cts.Token)
+                    : null;
             }
             catch (OperationCanceledException)
             {
@@ -212,7 +212,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             await InvokeAsync(StateHasChanged);
             if (ShowReport == Report.Graph && dependenciesGraph is not null)
             {
-                await dependenciesGraph.LoadGraphAsync();
+                await InvokeAsync(dependenciesGraph.LoadGraphAsync);
             }
         }
     }
