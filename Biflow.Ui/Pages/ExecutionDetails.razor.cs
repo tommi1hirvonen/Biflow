@@ -141,6 +141,9 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             loading = true;
             await InvokeAsync(StateHasChanged);
             using var context = DbFactory.CreateDbContext();
+
+            try
+            {
             var stepExecutions = await (
                 from exec in context.StepExecutions
                     .AsNoTrackingWithIdentityResolution()
@@ -167,6 +170,11 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             schedule = execution?.ScheduleId is not null
                 ? await context.Schedules.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(s => s.ScheduleId == execution.ScheduleId, cts.Token)
                 : null;
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
 
             stepProjections = execution?.StepExecutions
                 .SelectMany(e => e.StepExecutionAttempts)
