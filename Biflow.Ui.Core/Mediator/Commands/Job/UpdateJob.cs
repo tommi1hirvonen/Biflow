@@ -29,11 +29,11 @@ internal class UpdateJobCommandHandler(IDbContextFactory<AppDbContext> dbContext
 
         var tagsToAdd = request.Job.Tags
             .Where(t1 => !jobFromDb.Tags.Any(t2 => t2.TagId == t1.TagId))
-            .Select(t => (t.TagId, t.TagName));
-        foreach (var (id, name) in tagsToAdd)
+            .Select(t => (t.TagId, t.TagName, t.Color));
+        foreach (var (id, name, color) in tagsToAdd)
         {
             // New tag
-            var tag = tagsFromDb.FirstOrDefault(t => t.TagId == id) ?? new JobTag(name);
+            var tag = tagsFromDb.FirstOrDefault(t => t.TagId == id) ?? new JobTag(name) { Color = color };
             jobFromDb.Tags.Add(tag);
         }
 

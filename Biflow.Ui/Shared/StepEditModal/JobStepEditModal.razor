@@ -70,12 +70,10 @@
                 <label class="form-label mb-lg-0">Tag filters</label>
             </div>
             <div class="col-md-6">
-                <HxInputTags @bind-Value="tagFilters"
-                             DataProvider="GetTagFilterSuggestions"
-                             AllowCustomTags="false"
-                             SuggestMinimumLength="0"
-                             SuggestDelay="0"
-                             TagBadgeSettings="new BadgeSettings() { Color = ThemeColor.Secondary }" />
+                <TagInput TTag="StepTag"
+                          Items="AllTags"
+                          AllowCustomValues="false"
+                          SelectedItems="Step.TagFilters" />
                 <div class="form-text">Use tag filters to only include steps with specific tags in job executions.</div>
             </div>
         </div>

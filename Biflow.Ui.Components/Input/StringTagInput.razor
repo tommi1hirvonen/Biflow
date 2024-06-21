@@ -26,11 +26,11 @@
 
     [Parameter] public string? Placeholder { get; set; }
 
-    [Parameter] public IList<string>? Items { get; set; }
+    [Parameter] public IEnumerable<string>? Items { get; set; }
 
     [Parameter] public RenderFragment? EmptyTemplate { get; set; }
 
-    [Parameter] public IList<string> SelectedItems { get; set; } = new List<string>();
+    [Parameter] public ICollection<string> SelectedItems { get; set; } = new List<string>();
 
     [Parameter] public EventCallback OnSelectedItemsChanged { get; set; }
 

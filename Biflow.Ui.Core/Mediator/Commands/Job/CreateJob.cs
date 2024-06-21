@@ -8,18 +8,18 @@ internal class CreateJobCommandHandler(IDbContextFactory<AppDbContext> dbContext
     public async Task Handle(CreateJobCommand request, CancellationToken cancellationToken)
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        var tagNames = request.Job.Tags
-            .Select(t => t.TagName)
+        var tags = request.Job.Tags
+            .Select(t => (t.TagName, t.Color))
             .Distinct()
             .ToArray();
         request.Job.Tags.Clear();
-        var tags = await context.JobTags
-            .Where(t => tagNames.Contains(t.TagName))
+        var tagsFromDb = await context.JobTags
+            .Where(t => tags.Select(t => t.TagName).Contains(t.TagName))
             .ToArrayAsync(cancellationToken);
         context.Jobs.Attach(request.Job).State = EntityState.Added;
-        foreach (var text in tagNames)
+        foreach (var (name, color) in tags)
         {
-            var tag = tags.FirstOrDefault(t => t.TagName == text) ?? new JobTag(text);
+            var tag = tagsFromDb.FirstOrDefault(t => t.TagName == name) ?? new JobTag(name) { Color = color };
             request.Job.Tags.Add(tag);
         }
         await context.SaveChangesAsync(cancellationToken);

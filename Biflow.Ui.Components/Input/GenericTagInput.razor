@@ -92,11 +92,11 @@
 
     [Parameter] public string? Placeholder { get; set; }
 
-    [Parameter] public IList<TTag>? Items { get; set; }
+    [Parameter] public IEnumerable<TTag>? Items { get; set; }
 
     [Parameter] public RenderFragment? EmptyTemplate { get; set; }
 
-    [Parameter] public IList<TTag> SelectedItems { get; set; } = new List<TTag>();
+    [Parameter] public ICollection<TTag> SelectedItems { get; set; } = new List<TTag>();
 
     [Parameter] public EventCallback OnSelectedItemsChanged { get; set; }
 

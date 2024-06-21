@@ -1,25 +1,8 @@
-﻿using Biflow.Ui.Pages;
-
-namespace Biflow.Ui.Shared.StepEditModal;
+﻿namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class JobStepEditModal : StepEditModal<JobStep>
 {
     internal override string FormId => "job_step_edit_form";
-
-    private List<string> tagFilters = [];
-
-    private async Task<InputTagsDataProviderResult> GetTagFilterSuggestions(InputTagsDataProviderRequest request)
-    {
-        await EnsureAllTagsInitialized();
-        return new InputTagsDataProviderResult
-        {
-            Data = AllTags?
-            .Select(t => t.TagName)
-            .Where(t => t.ContainsIgnoreCase(request.UserInput))
-            .Where(t => !tagFilters.Any(tag => t == tag))
-            .OrderBy(t => t) ?? Enumerable.Empty<string>()
-        };
-    }
 
     protected override JobStep CreateNewStep(Job job) =>
         new()
@@ -48,27 +31,7 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
             .Include(step => step.ExecutionConditionParameters)
             .FirstAsync(step => step.StepId == stepId);
         SetJobToExecute();
-        tagFilters = step.TagFilters
-                .Select(t => t.TagName)
-                .OrderBy(t => t)
-                .ToList();
         return step;
-    }
-
-    protected override Task OnSubmitAsync(JobStep step)
-    {
-        // Synchronize tags
-        foreach (var text in tagFilters.Where(str => !step.TagFilters.Any(t => t.TagName == str)))
-        {
-            // New tags
-            var tag = AllTags?.FirstOrDefault(t => t.TagName == text) ?? new StepTag(text);
-            step.TagFilters.Add(tag);
-        }
-        foreach (var tag in step.TagFilters.Where(t => !tagFilters.Contains(t.TagName)).ToList() ?? [])
-        {
-            step.TagFilters.Remove(tag);
-        }
-        return Task.CompletedTask;
     }
 
     private Task<AutosuggestDataProviderResult<JobProjection>> GetSuggestionsAsync(AutosuggestDataProviderRequest request)

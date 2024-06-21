@@ -18,11 +18,11 @@
         </div>
         <div style="max-width: 50rem;">
             <label class="form-label">Tags</label>
-            <HxInputTags @bind-Value="tags"
-                        DataProvider="GetTagSuggestions"
-                        SuggestMinimumLength="0"
-                        SuggestDelay="0"
-                        TagBadgeSettings="new BadgeSettings() { Color = ThemeColor.Secondary }" />
+            <TagInput TTag="JobTag"
+                      Items="allTags"
+                      AllowCustomValues
+                      SelectedItems="editJob.Tags"
+                      NewItemFromText="text => new JobTag(text) { Color = TagColor.DarkGray }" />
         </div>
         <div>
             <label class="form-label">Description</label>
@@ -71,7 +71,6 @@
 
     private Job? editJob;
     private IEnumerable<JobTag> allTags = [];
-    private List<string> tags = [];
 
     protected override async void OnParametersSet()
     {
@@ -86,11 +85,6 @@
             .AsNoTrackingWithIdentityResolution()
             .Include(j => j.Tags)
             .FirstAsync(j => j.JobId == Job.JobId);
-        tags = editJob.Tags
-            .Select(t => t.TagName)
-            .Distinct()
-            .Order()
-            .ToList();
         StateHasChanged();
     }
 
@@ -99,19 +93,6 @@
         try
         {
             ArgumentNullException.ThrowIfNull(editJob);
-
-            // Synchronize tags
-            foreach (var text in tags.Where(str => !editJob.Tags.Any(t => t.TagName == str)))
-            {
-                // New tags
-                var tag = allTags.FirstOrDefault(t => t.TagName == text) ?? new JobTag(text);
-                editJob.Tags.Add(tag);
-            }
-            foreach (var tag in editJob.Tags.Where(t => !tags.Contains(t.TagName)).ToList() ?? [])
-            {
-                editJob.Tags.Remove(tag);
-            }
-
             await Mediator.SendAsync(new UpdateJobCommand(editJob));
             Toaster.AddSuccess("Job settings saved successfully");
             OnJobUpdated?.Invoke(editJob);
@@ -124,19 +105,5 @@
         {
             Toaster.AddError("Error updating job", ex.Message);
         }
-    }
-
-    private Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
-    {
-        return Task.FromResult(new InputTagsDataProviderResult
-        {
-            Data = allTags
-                .Select(t => t.TagName)
-                .Where(t => t.ContainsIgnoreCase(request.UserInput))
-                .Where(t => !tags.Any(tag => t == tag))
-                .OrderBy(t => t)
-                .AsEnumerable()
-                ?? []
-        });
     }
 }
