@@ -113,9 +113,13 @@
     [Parameter] public bool AllowCustomValues { get; set; } = true;
 
     private IEnumerable<TTag> FilteredItems => Items?
-        .Where(i => TagTextSelector?.Invoke(i)?.Contains(inputValue, StringComparison.InvariantCultureIgnoreCase) == true)
-        .Where(i => !SelectedItems.Contains(i))
-        ?? [];
+        .Where(i =>
+        {
+            var text = TagTextSelector?.Invoke(i);
+            var containsInputValue = text?.Contains(inputValue, StringComparison.InvariantCultureIgnoreCase) ?? false;
+            var alreadySelected = SelectedItems.Any(s => TagTextSelector?.Invoke(s) == text);
+            return containsInputValue && !alreadySelected;
+        }) ?? [];
 
     private readonly string id = Guid.NewGuid().ToString();
     private ElementReference inputElement;
