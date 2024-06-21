@@ -1,0 +1,59 @@
+﻿@page "/taginput"
+
+@using Biflow.Ui.Components.Input
+
+<PageTitle>Tag input</PageTitle>
+
+<h1>Tag input</h1>
+
+<StringTagInput Label="No custom values"
+                Placeholder="Search for tags"
+                Items="tags"
+                SelectedItems="selected"
+                AllowCustomValues="false"
+                TagColorSelector="GetTagColor" />
+
+<br />
+
+<StringTagInput Label="Allow custom values"
+                Placeholder="Search for tags"
+                Items="tags2"
+                SelectedItems="selected2"
+                AllowCustomValues
+                TagColorSelector="GetTagColor" />
+
+<br />
+
+<StringTagInput Label="Allow custom values"
+                Placeholder="Search for tags"
+                Items="tags2"
+                SelectedItems="selected2"
+                AllowCustomValues
+                TagColorSelector="GetTagColor"
+                IsDisabled />
+
+@code {
+    private List<string> tags = ["economy", "politics", "sports", "domestic", "abroad", "food", "health", "art"];
+
+    private List<string> tags2 = ["economy", "politics", "sports", "domestic", "abroad", "food", "health", "art"];
+
+    private List<string> selected = ["sports", "health"];
+
+    private List<string> selected2 = ["food", "art"];
+
+    private TagColor GetTagColor(string text) => text switch
+    {
+        "politics" => TagColor.Red,
+        "sports" => TagColor.Green,
+        "health" => TagColor.Blue,
+        _ => TagColor.DarkGray
+    };
+
+    // private List<Tag> tags = Enum.GetValues<TagColor>()
+    //     .Select(color => new Tag(Guid.NewGuid(), color.ToString().ToLower(), color))
+    //     .ToList();
+
+    // private Tag NewTagDelegate(string text) => new(Guid.NewGuid(), text, TagColor.LightGray);
+
+    // private record Tag(Guid TagId, string TagName, TagColor Color) : ITag;
+}
