@@ -19,7 +19,8 @@ internal class CreateJobCommandHandler(IDbContextFactory<AppDbContext> dbContext
         context.Jobs.Attach(request.Job).State = EntityState.Added;
         foreach (var (name, color) in tags)
         {
-            var tag = tagsFromDb.FirstOrDefault(t => t.TagName == name) ?? new JobTag(name) { Color = color };
+            var tag = tagsFromDb.FirstOrDefault(t => t.TagName == name)
+                ?? new JobTag(name) { Color = color };
             request.Job.Tags.Add(tag);
         }
         await context.SaveChangesAsync(cancellationToken);

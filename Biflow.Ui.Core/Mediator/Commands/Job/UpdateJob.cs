@@ -33,7 +33,8 @@ internal class UpdateJobCommandHandler(IDbContextFactory<AppDbContext> dbContext
         foreach (var (id, name, color) in tagsToAdd)
         {
             // New tag
-            var tag = tagsFromDb.FirstOrDefault(t => t.TagId == id) ?? new JobTag(name) { Color = color };
+            var tag = tagsFromDb.FirstOrDefault(t => t.TagId == id)
+                ?? new JobTag(name) { Color = color };
             jobFromDb.Tags.Add(tag);
         }
 

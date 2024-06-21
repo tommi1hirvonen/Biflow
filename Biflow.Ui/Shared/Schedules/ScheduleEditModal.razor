@@ -48,11 +48,11 @@
                     <div class="row mt-3">
                         <div class="col">
                             <label class="form-label">Tags</label>
-                            <HxInputTags @bind-Value="scheduleTags"
-                                         DataProvider="GetScheduleTagSuggestions"
-                                         SuggestMinimumLength="0"
-                                         SuggestDelay="0"
-                                         TagBadgeSettings="new BadgeSettings() { Color = ThemeColor.Secondary }" />
+                            <TagInput TTag="ScheduleTag"
+                                      Items="allScheduleTags"
+                                      AllowCustomValues
+                                      SelectedItems="schedule.Tags"
+                                      NewItemFromText="text => new ScheduleTag(text) { Color = TagColor.DarkGray }" />
                         </div>
                     </div>
                     <div class="mt-3">
@@ -95,12 +95,11 @@
                     }
                     <div class="row mt-3">
                         <label class="form-label">Tag filters</label>
-                        <HxInputTags @bind-Value="stepTags"
-                                     DataProvider="GetStepTagSuggestions"
-                                     AllowCustomTags="false"
-                                     SuggestMinimumLength="0"
-                                     SuggestDelay="0"
-                                     TagBadgeSettings="new BadgeSettings() { Color = ThemeColor.Secondary }" />
+                        <TagInput TTag="StepTag"
+                                  Items="allStepTags"
+                                  AllowCustomValues="false"
+                                  SelectedItems="schedule.TagFilter"
+                                  NewItemFromText="text => new StepTag(text) { Color = TagColor.DarkGray }" />
                         <div class="form-text">Use tag filters to only include steps with specific tags in scheduled executions.</div>
                     </div>
                     <div class="row mt-3">
@@ -139,34 +138,8 @@
 
     private Schedule schedule = new(); // assign placeholder
     private HxOffcanvas? offcanvas;
-    private List<string> stepTags = [];
-    private List<string> scheduleTags = [];
     private IEnumerable<StepTag> allStepTags = [];
     private IEnumerable<ScheduleTag> allScheduleTags = [];
-
-    private Task<InputTagsDataProviderResult> GetStepTagSuggestions(InputTagsDataProviderRequest request)
-    {
-        return Task.FromResult(new InputTagsDataProviderResult
-        {
-             Data = allStepTags
-                 .Select(t => t.TagName)
-                 .Where(t => t.ContainsIgnoreCase(request.UserInput))
-                 .Where(t => !stepTags.Any(tag => t == tag))
-                 .Order()
-        });
-    }
-
-    private Task<InputTagsDataProviderResult> GetScheduleTagSuggestions(InputTagsDataProviderRequest request)
-    {
-        return Task.FromResult(new InputTagsDataProviderResult
-        {
-            Data = allScheduleTags
-                .Select(t => t.TagName)
-                .Where(t => t.ContainsIgnoreCase(request.UserInput))
-                .Where(t => !scheduleTags.Any(tag => t == tag))
-                .Order()
-        });
-    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -182,11 +155,9 @@
         {
             try
             {
-                await Mediator.SendAsync(new CreateScheduleCommand(schedule, stepTags, scheduleTags));
+                await Mediator.SendAsync(new CreateScheduleCommand(schedule));
                 await OnSubmit.InvokeAsync(schedule);
                 await offcanvas.LetAsync(x => x.HideAsync());
-                stepTags.Clear();
-                scheduleTags.Clear();
             }
             catch (Exception ex)
             {
@@ -198,11 +169,9 @@
         {
             try
             {
-                await Mediator.SendAsync(new UpdateScheduleCommand(schedule, stepTags, scheduleTags));
+                await Mediator.SendAsync(new UpdateScheduleCommand(schedule));
                 await OnSubmit.InvokeAsync(schedule);
                 await offcanvas.LetAsync(x => x.HideAsync());
-                stepTags.Clear();
-                scheduleTags.Clear();
             }
             catch (Exception ex)
             {
@@ -231,15 +200,6 @@
                 JobId = (Guid)jobId
             };
         }
-
-        scheduleTags = schedule.Tags
-            .Select(t => t.TagName)
-            .Order()
-            .ToList();
-        stepTags = schedule.TagFilter
-            .Select(t => t.TagName)
-            .Order()
-            .ToList();
 
         await offcanvas.LetAsync(x => x.ShowAsync());
     }
