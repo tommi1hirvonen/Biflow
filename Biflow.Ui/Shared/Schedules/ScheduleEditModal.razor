@@ -144,8 +144,8 @@
     protected override async Task OnInitializedAsync()
     {
         using var context = DbContextFactory.CreateDbContext();
-        allStepTags = await context.StepTags.ToListAsync();
-        allScheduleTags = await context.ScheduleTags.ToListAsync();
+        allStepTags = await context.StepTags.OrderBy(t => t.TagName).ToListAsync();
+        allScheduleTags = await context.ScheduleTags.OrderBy(t => t.TagName).ToListAsync();
     }
 
     private async Task SubmitSchedule()

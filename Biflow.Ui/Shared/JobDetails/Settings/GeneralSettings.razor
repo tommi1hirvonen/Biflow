@@ -80,7 +80,7 @@
         }
 
         using var context = await DbContextFactory.CreateDbContextAsync();
-        allTags = await context.JobTags.ToArrayAsync();
+        allTags = await context.JobTags.OrderBy(t => t.TagName).ToArrayAsync();
         editJob = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Include(j => j.Tags)
