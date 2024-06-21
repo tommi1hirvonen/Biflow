@@ -24,13 +24,22 @@
 
 <br />
 
-<StringTagInput Label="Allow custom values"
+<StringTagInput Label="Disabled"
                 Placeholder="Search for tags"
                 Items="tags2"
                 SelectedItems="selected2"
                 AllowCustomValues
                 TagColorSelector="GetTagColor"
                 IsDisabled />
+
+<br />
+
+<Biflow.Ui.Components.Input.TagInput Label="Tag type"
+                                     Placeholder="Search for tags"
+                                     Items="tags3"
+                                     SelectedItems="selected3"
+                                     AllowCustomValues
+                                     NewItemFromText="text => new Tag(Guid.NewGuid(), text, TagColor.DarkGray)" />
 
 @code {
     private List<string> tags = ["economy", "politics", "sports", "domestic", "abroad", "food", "health", "art"];
@@ -49,11 +58,13 @@
         _ => TagColor.DarkGray
     };
 
-    // private List<Tag> tags = Enum.GetValues<TagColor>()
-    //     .Select(color => new Tag(Guid.NewGuid(), color.ToString().ToLower(), color))
-    //     .ToList();
+    private List<Tag> tags3 = Enum.GetValues<TagColor>()
+        .Select(color => new Tag(Guid.NewGuid(), color.ToString().ToLower(), color))
+        .ToList();
 
-    // private Tag NewTagDelegate(string text) => new(Guid.NewGuid(), text, TagColor.LightGray);
+    private List<Tag> selected3 = [];
 
-    // private record Tag(Guid TagId, string TagName, TagColor Color) : ITag;
+    private Tag NewTagDelegate(string text) => new(Guid.NewGuid(), text, TagColor.LightGray);
+
+    private record Tag(Guid TagId, string TagName, TagColor Color) : ITag;
 }

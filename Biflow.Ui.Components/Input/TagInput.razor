@@ -1,6 +1,9 @@
 @using Biflow.Core.Entities
+@using Biflow.Core.Interfaces
 
-<GenericTagInput TTag="string"
+@typeparam TTag where TTag : ITag
+
+<GenericTagInput TTag="TTag"
                  CssClass="@CssClass"
                  InputAttributes="InputAttributes"
                  Label="@Label"
@@ -11,10 +14,10 @@
                  EmptyTemplate="@(EmptyTemplate!)"
                  OnSelectedItemsChanged="OnSelectedItemsChanged"
                  OnSuggestionsShown="OnSuggestionsShown"
-                 TagTextSelector="text => text"
-                 TagColorSelector="text => TagColorSelector?.Invoke(text) ?? TagColor.DarkGray"
-                 NewItemFromText="text => text"
-                 AllowCustomValues="AllowCustomValues"/>
+                 TagTextSelector="tag => tag.TagName"
+                 TagColorSelector="tag => tag.Color"
+                 NewItemFromText="@(NewItemFromText!)"
+                 AllowCustomValues="AllowCustomValues" />
 
 
 @code {
@@ -26,20 +29,19 @@
 
     [Parameter] public string? Placeholder { get; set; }
 
-    [Parameter] public IList<string>? Items { get; set; }
+    [Parameter] public IList<TTag>? Items { get; set; }
 
     [Parameter] public RenderFragment? EmptyTemplate { get; set; }
 
-    [Parameter] public IList<string> SelectedItems { get; set; } = new List<string>();
+    [Parameter] public IList<TTag> SelectedItems { get; set; } = new List<TTag>();
 
     [Parameter] public EventCallback OnSelectedItemsChanged { get; set; }
 
     [Parameter] public EventCallback OnSuggestionsShown { get; set; }
 
+    [Parameter] public Func<string, TTag>? NewItemFromText { get; set; }
+
     [Parameter] public bool IsDisabled { get; set; }
 
-    [Parameter] public Func<string, TagColor>? TagColorSelector { get; set; }
-
     [Parameter] public bool AllowCustomValues { get; set; } = true;
-
 }
