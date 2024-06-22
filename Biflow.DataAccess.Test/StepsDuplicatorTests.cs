@@ -11,7 +11,7 @@ public class StepsDuplicatorTests(DatabaseFixture fixture)
     private readonly IDbContextFactory<AppDbContext> _dbContextFactory = fixture.DbContextFactory;
 
     [Fact]
-    public async Task TestDuplicatingSteps()
+    public async Task StepsDuplicatorProducesExpected()
     {
         using var dbContext = await _dbContextFactory.CreateDbContextAsync();
         var step = (SqlStep)await dbContext.Steps

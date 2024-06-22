@@ -10,7 +10,7 @@ public class JobDuplicatorTests(DatabaseFixture fixture)
     private readonly IDbContextFactory<AppDbContext> _dbContextFactory = fixture.DbContextFactory;
 
     [Fact]
-    public async Task TestDuplicatingJob()
+    public async Task JobDuplicatorProducesExpected()
     {
         using var dbContext = await _dbContextFactory.CreateDbContextAsync();
         var job1 = await dbContext.Jobs
