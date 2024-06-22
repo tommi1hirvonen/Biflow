@@ -11,7 +11,5 @@
         <dd>@(Configuration.GetValue<string>("EnvironmentName"))</dd>
         <dt>Version</dt>
         <dd>v@(Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion)</dd>
-        <dt>Commit SHA</dt>
-        <dd>@Biflow.Ui.Properties.Resources.CurrentCommit</dd>
     </dl>
 </div>
