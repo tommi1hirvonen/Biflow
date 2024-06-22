@@ -4,6 +4,10 @@
     outline: 0;
 }
 
+.taginput input {
+    background-color: inherit;
+}
+
 .taginput input:focus-visible {
     border: none !important;
     outline: none;
