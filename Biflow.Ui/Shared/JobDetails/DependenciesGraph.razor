@@ -22,18 +22,19 @@
 
 <div class="row align-items-end mb-3">
     <div class="col-xl-5 col-lg-5 col-12">
-        <HxAutosuggest  TValue="Guid?"
-                        TItem="StepProjection"
-                        @bind-Value="stepFilter"
-                        @bind-Value:after="LoadGraphAsync"
-                        DataProvider="ProvideSuggestions"
-                        ItemFromValueResolver="v => Task.FromResult(stepSlims?.FirstOrDefault(s => s.StepId == v))"
-                        ValueSelector="item => item.StepId"
-                        TextSelector="@(item => item.StepName ?? "")"
-                        MinimumLength="0"
-                        Delay="1"
-                        InputSize="InputSize.Small"
-                        Placeholder="Filter step">
+        <HxAutosuggest TValue="Guid?"
+                       TItem="StepProjection"
+                       @bind-Value="stepFilter"
+                       @bind-Value:after="LoadGraphAsync"
+                       DataProvider="ProvideSuggestions"
+                       ItemFromValueResolver="v => Task.FromResult(stepSlims?.FirstOrDefault(s => s.StepId == v))"
+                       ValueSelector="item => item.StepId"
+                       TextSelector="@(item => item.StepName ?? "")"
+                       MinimumLength="0"
+                       Delay="1"
+                       InputSize="InputSize.Small"
+                       Placeholder="Filter step"
+                       autocomplete="off">
             <ItemTemplate Context="item">
                 <StepTypeIcon StepType="item.StepType" />
                 @item.StepName

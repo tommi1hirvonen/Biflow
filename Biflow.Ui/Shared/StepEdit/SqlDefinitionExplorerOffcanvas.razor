@@ -37,7 +37,8 @@
                                MinimumLength="0"
                                InputSize="InputSize.Small"
                                ValueChanged="RunQuery"
-                               ValueExpression="() => objectName">
+                               ValueExpression="() => objectName"
+                               autocomplete="off">
                     <ItemTemplate Context="item">@($"{item?.Item1}.{@item?.Item2}") <sup>@item?.Item3</sup></ItemTemplate>
                     <EmptyTemplate>
                         <span class="p-2">No matching modules</span>

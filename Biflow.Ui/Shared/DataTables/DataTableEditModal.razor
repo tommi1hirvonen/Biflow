@@ -259,7 +259,7 @@
                             </button>
                         </div>
                     </div>
-                    <table class="table table-sm mb-5">
+                    <table class="table table-sm" style="margin-bottom: 20rem;">
                         <thead>
                             <tr>
                                 <th>Column</th>
@@ -286,10 +286,11 @@
                                             <HxAutosuggest TItem="string"
                                                            TValue="string"
                                                            DataProvider="GetColumnSuggestions"
-                                            @bind-Value="lookup.ColumnName"
+                                                           @bind-Value="lookup.ColumnName"
                                                            MinimumLength="0"
                                                            ValidationMessageMode="ValidationMessageMode.None"
-                                                           InputSize="InputSize.Small" />
+                                                           InputSize="InputSize.Small"
+                                                           autocomplete="off" />
                                         </td>
                                         <td>
                                             <HxAutosuggest CssClass="@(string.IsNullOrEmpty(lookup.ColumnName) ? "d-none" : null)"
@@ -302,7 +303,8 @@
                                                            TextSelector="table => table.DataTableName"
                                                            MinimumLength="0"
                                                            ValidationMessageMode="ValidationMessageMode.None"
-                                                           InputSize="InputSize.Small">
+                                                           InputSize="InputSize.Small"
+                                                           autocomplete="off" >
                                                 <ItemTemplate Context="item">
                                                     <sup>@item.Category?.CategoryName</sup><small>@item.DataTableName</small>
                                                 </ItemTemplate>
@@ -313,20 +315,22 @@
                                                            TItem="string"
                                                            TValue="string"
                                                            DataProvider="request => GetLookupColumnSuggestions(request, lookup)"
-                                            @bind-Value="lookup.LookupValueColumn"
+                                                           @bind-Value="lookup.LookupValueColumn"
                                                            MinimumLength="0"
                                                            ValidationMessageMode="ValidationMessageMode.None"
-                                                           InputSize="InputSize.Small" />
+                                                           InputSize="InputSize.Small"
+                                                           autocomplete="off" />
                                         </td>
                                         <td>
                                             <HxAutosuggest CssClass="@(string.IsNullOrEmpty(lookup.ColumnName) || lookup.LookupTableId == Guid.Empty ? "d-none" : null)"
                                                            TItem="string"
                                                            TValue="string"
                                                            DataProvider="request => GetLookupColumnSuggestions(request, lookup)"
-                                            @bind-Value="lookup.LookupDescriptionColumn"
+                                                           @bind-Value="lookup.LookupDescriptionColumn"
                                                            MinimumLength="0"
                                                            ValidationMessageMode="ValidationMessageMode.None"
-                                                           InputSize="InputSize.Small" />
+                                                           InputSize="InputSize.Small"
+                                                           autocomplete="off" />
                                         </td>
                                         <td>
                                             @if (!string.IsNullOrEmpty(lookup.ColumnName) && lookup.LookupTableId != Guid.Empty)

@@ -137,7 +137,7 @@
 <div class="row my-3">
     <div class="col">
         <div class="card shadow-sm">
-            <div class="card-body px-0 table-responsive">
+            <div class="card-body px-0">
                 @{
                     var rows = GetOrderedRowRecords();
                 }
@@ -255,7 +255,7 @@
 
                                                 else if (datatype == typeof(byte))
                                                 {
-                                                    <input class="form-control form-control-sm" type="number" disabled=@isLocked @bind-value="row.ByteIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="number" autocomplete="off" disabled=@isLocked @bind-value="row.ByteIndexer[column]" />
                                                 }
 
                                                 else if (datatype == typeof(short) && lookupValues is not null)
@@ -264,7 +264,7 @@
                                                 }
                                                 else if (datatype == typeof(short))
                                                 {
-                                                    <input class="form-control form-control-sm" type="number" disabled=@isLocked @bind-value="row.ShortIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="number" autocomplete="off" disabled=@isLocked @bind-value="row.ShortIndexer[column]" />
                                                 }
 
                                                 else if (datatype == typeof(int) && lookupValues is not null)
@@ -273,7 +273,7 @@
                                                 }
                                                 else if (datatype == typeof(int))
                                                 {
-                                                    <input class="form-control form-control-sm" type="number" disabled=@isLocked @bind-value="row.IntIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="number" autocomplete="off" disabled=@isLocked @bind-value="row.IntIndexer[column]" />
                                                 }
 
                                                 else if (datatype == typeof(long) && lookupValues is not null)
@@ -282,7 +282,7 @@
                                                 }
                                                 else if (datatype == typeof(long))
                                                 {
-                                                    <input class="form-control form-control-sm" type="number" disabled=@isLocked @bind-value="row.LongIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="number" autocomplete="off" disabled=@isLocked @bind-value="row.LongIndexer[column]" />
                                                 }
 
                                                 else if (datatype == typeof(decimal) && lookupValues is not null)
@@ -291,16 +291,16 @@
                                                 }
                                                 else if (datatype == typeof(decimal))
                                                 {
-                                                    <input class="form-control form-control-sm" type="number" disabled=@isLocked @bind-value="row.DecimalIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="number" autocomplete="off" disabled=@isLocked @bind-value="row.DecimalIndexer[column]" />
                                                 }
 
                                                 else if (datatype == typeof(double))
                                                 {
-                                                    <input class="form-control form-control-sm" type="number" disabled=@isLocked @bind-value="row.DoubleIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="number" autocomplete="off" disabled=@isLocked @bind-value="row.DoubleIndexer[column]" />
                                                 }
                                                 else if (datatype == typeof(float))
                                                 {
-                                                    <input class="form-control form-control-sm" type="number" disabled=@isLocked @bind-value="row.FloatIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="number" autocomplete="off" disabled=@isLocked @bind-value="row.FloatIndexer[column]" />
                                                 }
 
                                                 else if (datatype == typeof(string) && lookupValues is not null)
@@ -309,7 +309,7 @@
                                                 }
                                                 else if (datatype == typeof(string))
                                                 {
-                                                    <input class="form-control form-control-sm" type="text" disabled=@isLocked @bind-value="row.StringIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="text" autocomplete="off" disabled=@isLocked @bind-value="row.StringIndexer[column]" />
                                                 }
 
                                                 else if (datatype == typeof(bool))
