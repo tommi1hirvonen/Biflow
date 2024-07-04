@@ -27,12 +27,6 @@
                 Executions
             </NavLink>
         </li>
-        <li class="nav-item">
-            <NavLink class="nav-link" href="dashboard" @onclick="NavLinkClick">
-                <CxIcon Icon="FeatherIcon.BarChart2" />
-                Dashboard
-            </NavLink>
-        </li>
         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
             <li class="nav-item">
                 <NavLink class="nav-link" href="tags" @onclick="NavLinkClick" Match="NavLinkMatch.Prefix">
