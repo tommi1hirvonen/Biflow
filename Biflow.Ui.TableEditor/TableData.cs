@@ -145,7 +145,14 @@ public class TableData
             var colIndex = 1;
             foreach (var column in exportColumns)
             {
-                sheet.Cell(rowIndex, colIndex).Value = XLCellValue.FromObject(row.Values[column.Name]);
+                var value = row.Values[column.Name] switch
+                {
+                    DateOnly date => date.ToDateTime(TimeOnly.MinValue),
+                    TimeOnly time => DateTime.MinValue.Add(time.ToTimeSpan()),
+                    { } obj => obj,
+                    null => null
+                };
+                sheet.Cell(rowIndex, colIndex).Value = XLCellValue.FromObject(value);
                 colIndex++;
             }
             rowIndex++;

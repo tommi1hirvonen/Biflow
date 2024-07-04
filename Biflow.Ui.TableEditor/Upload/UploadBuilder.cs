@@ -94,11 +94,13 @@ public class UploadBuilder
                 }
                 else if (type == typeof(DateOnly))
                 {
-                    dataRow[col] = cell.GetValue<DateOnly?>();
+                    var dt = cell.GetValue<DateTime?>();
+                    dataRow[col] = dt is DateTime notNull ? DateOnly.FromDateTime(notNull) : null;
                 }
                 else if (type == typeof(TimeOnly))
                 {
-                    dataRow[col] = cell.GetValue<TimeOnly?>();
+                    var dt = cell.GetValue<DateTime?>();
+                    dataRow[col] = dt is DateTime notNull ? TimeOnly.FromDateTime(notNull) : null;
                 }
                 else if (type == typeof(bool))
                 {
