@@ -345,6 +345,25 @@
                                                 {
                                                     <input class="form-control form-control-sm" type="datetime-local" disabled=@isLocked @bind-value="row.DateTimeIndexer[column]" />
                                                 }
+
+                                                else if (datatype == typeof(DateOnly) && lookupValues is not null)
+                                                {
+                                                    <LookupAutosuggest TValue="DateOnly?" LookupValues="lookupValues" @bind-Value="row.DateIndexer[column]" />
+                                                }
+                                                else if (datatype == typeof(DateOnly))
+                                                {
+                                                    <input class="form-control form-control-sm" type="date" disabled=@isLocked @bind-value="row.DateIndexer[column]" />
+                                                }
+
+                                                else if (datatype == typeof(TimeOnly) && lookupValues is not null)
+                                                {
+                                                    <LookupAutosuggest TValue="TimeOnly?" LookupValues="lookupValues" @bind-Value="row.TimeIndexer[column]" />
+                                                }
+                                                else if (datatype == typeof(TimeOnly))
+                                                {
+                                                    <input class="form-control form-control-sm" type="time" disabled=@isLocked @bind-value="row.TimeIndexer[column]" />
+                                                }
+
                                                 else
                                                 {
                                                     <text>@row.Values[column]</text>

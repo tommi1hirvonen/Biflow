@@ -271,6 +271,56 @@
                     @<input class="form-control form-control-sm" type="datetime-local" @bind-value="Filters.DateTimeIndexer[column].TypedFilterValue2" disabled="@(!Filters.Filters[column].Enabled2)" />
                     ;
                 }
+                else if (datatype == typeof(DateOnly))
+                {
+                    operator1Input = 
+                    @<select class="form-select form-select-sm" @bind="Filters.DateIndexer[column].TypedOperator1">
+                        @foreach (var filterOperator in Enum.GetValues(Filters.DateIndexer[column].TypedOperator1.GetType()))
+                        {
+                            <option selected=@((object)Filters.DateIndexer[column].TypedOperator1 == filterOperator)>@filterOperator</option>
+                        }
+                    </select>
+                    ;
+                    value1Input =
+                    @<input class="form-control form-control-sm" type="date" @bind-value="Filters.DateIndexer[column].TypedFilterValue1" />
+                    ;
+                    operator2Input = 
+                    @<select class="form-select form-select-sm" @bind="Filters.DateIndexer[column].TypedOperator2" disabled="@(!Filters.Filters[column].Enabled2)">
+                        @foreach (var filterOperator in Enum.GetValues(Filters.DateIndexer[column].TypedOperator2.GetType()))
+                        {
+                            <option selected=@((object)Filters.DateIndexer[column].TypedOperator2 == filterOperator)>@filterOperator</option>
+                        }
+                    </select>
+                    ;
+                    value2Input =
+                    @<input class="form-control form-control-sm" type="date" @bind-value="Filters.DateIndexer[column].TypedFilterValue2" disabled="@(!Filters.Filters[column].Enabled2)" />
+                    ;
+                }
+                else if (datatype == typeof(TimeOnly))
+                {
+                    operator1Input = 
+                    @<select class="form-select form-select-sm" @bind="Filters.TimeIndexer[column].TypedOperator1">
+                        @foreach (var filterOperator in Enum.GetValues(Filters.TimeIndexer[column].TypedOperator1.GetType()))
+                        {
+                            <option selected=@((object)Filters.TimeIndexer[column].TypedOperator1 == filterOperator)>@filterOperator</option>
+                        }
+                    </select>
+                    ;
+                    value1Input =
+                    @<input class="form-control form-control-sm" type="time" @bind-value="Filters.TimeIndexer[column].TypedFilterValue1" />
+                    ;
+                    operator2Input = 
+                    @<select class="form-select form-select-sm" @bind="Filters.TimeIndexer[column].TypedOperator2" disabled="@(!Filters.Filters[column].Enabled2)">
+                        @foreach (var filterOperator in Enum.GetValues(Filters.TimeIndexer[column].TypedOperator2.GetType()))
+                        {
+                            <option selected=@((object)Filters.TimeIndexer[column].TypedOperator2 == filterOperator)>@filterOperator</option>
+                        }
+                    </select>
+                    ;
+                    value2Input =
+                    @<input class="form-control form-control-sm" type="time" @bind-value="Filters.TimeIndexer[column].TypedFilterValue2" disabled="@(!Filters.Filters[column].Enabled2)" />
+                    ;
+                }
                 <div class="row mt-3">
                     <div class="col">
                         <div class="row">

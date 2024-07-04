@@ -1,4 +1,6 @@
 using Biflow.Ui;
+using Biflow.Ui.TableEditor;
+using Dapper;
 using Microsoft.AspNetCore.Components.Server.Circuits;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Identity.Web;
@@ -36,6 +38,10 @@ builder.Services.AddScoped<ToasterService>();
 
 builder.Services.AddHxServices();
 builder.Services.AddHxMessageBoxHost();
+
+// Add type handlers required by the table editor.
+SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
+SqlMapper.AddTypeHandler(new TimeOnlyTypeHandler());
 
 var app = builder.Build();
 
