@@ -32,3 +32,22 @@ $toast-colors:
         }
     }
 }
+
+// Resizable table
+.table-resizable th {
+    position: relative;
+}
+
+.table-resizable .resizer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 5px;
+    cursor: col-resize;
+    user-select: none;
+}
+
+.table-resizable .resizer:hover,
+.table-resizable .resizing {
+    border-right: 2px solid var(--bs-primary);
+}

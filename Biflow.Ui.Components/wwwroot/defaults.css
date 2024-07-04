@@ -61,3 +61,21 @@
 .toast.toast-primary .toast-header {
   --bs-toast-header-bg: var(--bs-primary-bg-subtle) !important;
 }
+
+.table-resizable th {
+  position: relative;
+}
+
+.table-resizable .resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 5px;
+  cursor: col-resize;
+  user-select: none;
+}
+
+.table-resizable .resizer:hover,
+.table-resizable .resizing {
+  border-right: 2px solid var(--bs-primary);
+}
