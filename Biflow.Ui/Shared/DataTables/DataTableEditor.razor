@@ -184,7 +184,7 @@
                     {
                         <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
                     }
-                    <table class="table table-sm">
+                    <ResizableTable CssClass="table-sm">
                         <thead>
                             <tr>
                                 @foreach (var column in columns)
@@ -192,7 +192,7 @@
                                     var orderBy = this.orderBy.FirstOrDefault(o => o.Column == column.Name);
                                     var filterSet = quickFilters.GetOrCreate(column);
                                     <th class="fw-normal" title="@column.DbDatatypeDescription">
-                                        <div class="row">
+                                        <div class="row g-0">
                                             <div class="col d-flex">
                                                 <span class="fw-bold" style="cursor: pointer;" @onclick="() => ToggleOrderBy(column.Name)">@column.Name</span>
                                                 @if (column.IsPrimaryKey)
@@ -382,7 +382,7 @@
                                 </tr>
                             </Virtualize>
                         </tbody>
-                    </table>
+                    </ResizableTable>
                 }
                 else if (Table is not null)
                 {
