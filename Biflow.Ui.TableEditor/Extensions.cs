@@ -1,6 +1,4 @@
-﻿using Biflow.Core;
-
-namespace Biflow.Ui.TableEditor;
+﻿namespace Biflow.Ui.TableEditor;
 
 public static class Extensions
 {
@@ -233,7 +231,8 @@ public static class Extensions
         { "smalldatetime", typeof(DateTime) },
         { "datetime", typeof(DateTime) },
         { "datetime2", typeof(DateTime) },
-        { "date", typeof(DateTime) },
+        { "date", typeof(DateOnly) },
+        { "time", typeof(TimeOnly) },
         { "bit", typeof(bool) }
     };
 
