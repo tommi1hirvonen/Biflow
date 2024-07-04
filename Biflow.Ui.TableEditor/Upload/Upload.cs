@@ -101,7 +101,8 @@ public class Upload
             throw new InvalidOperationException("Insert operation rejected because the table does not allow inserts. No changes were made.");
         }
         var quotedInsertColumns = _columns
-            .Where(c => !c.IsIdentity && !c.IsComputed && !c.IsLocked && !c.IsHidden || c.IsPrimaryKey)
+            .Where(c => !c.IsIdentity && !c.IsComputed)
+            .Where(c => !c.IsLocked && !c.IsHidden || c.IsPrimaryKey)
             .Select(c => c.Name.QuoteName())
             .ToArray();
         if (quotedInsertColumns.Length == 0)
