@@ -1,4 +1,6 @@
-﻿
+﻿@using System.Security.Cryptography
+@using System.Text
+
 <div class="row">
     <div class="col">
         <div>
@@ -184,14 +186,21 @@
                     {
                         <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
                     }
-                    <ResizableTable CssClass="table-sm">
+                    <ResizableTable CssClass="table-sm" ColumnWidthSet="x => columnWidths[x.ColumnHeaderElementId] = x.Width">
                         <thead>
                             <tr>
                                 @foreach (var column in columns)
                                 {
+                                    // Use an MD5 hash of the column name as the column header element id.
+                                    // It remains the same between reloads of the table.
+                                    // We can tie the column width logic around these unchanging ids.
+                                    var bytes = Encoding.UTF8.GetBytes(column.Name);
+                                    var hash = MD5.HashData(bytes);
+                                    var id = Convert.ToHexString(hash);
+                                    var width = columnWidths.GetValueOrDefault(id) is string s ? $"width: {s};" : null;
                                     var orderBy = this.orderBy.FirstOrDefault(o => o.Column == column.Name);
                                     var filterSet = quickFilters.GetOrCreate(column);
-                                    <th class="fw-normal" title="@column.DbDatatypeDescription">
+                                    <th id="@id" class="fw-normal" title="@column.DbDatatypeDescription" style="@width">
                                         <div class="row g-0">
                                             <div class="col d-flex">
                                                 <span class="fw-bold" style="cursor: pointer;" @onclick="() => ToggleOrderBy(column.Name)">@column.Name</span>
