@@ -12,10 +12,18 @@ public class ResizableTable : ComponentBase, IAsyncDisposable
 
     [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? InputAttributes { get; set; }
 
+    [Parameter] public EventCallback<ResizableTableColumnWidth> ColumnWidthSet { get; set; }
+
     [Inject] private IJSRuntime JS { get; set; } = null!;
 
+    private DotNetObjectReference<ResizableTable>? dotNetObject;
     private IJSObjectReference? jsObject;
     private ElementReference tableElement;
+
+    protected override void OnInitialized()
+    {
+        dotNetObject = DotNetObjectReference.Create(this);
+    }
 
     protected override void BuildRenderTree(RenderTreeBuilder builder)
     {
@@ -37,10 +45,17 @@ public class ResizableTable : ComponentBase, IAsyncDisposable
         {
             jsObject = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/ResizableTable.js");
         }
-        if (jsObject is not null)
+        if (jsObject is not null && dotNetObject is not null)
         {
-            await jsObject.InvokeVoidAsync("createResizableTable", tableElement);
+            await jsObject.InvokeVoidAsync("createResizableTable", tableElement, dotNetObject);
         }
+    }
+
+    [JSInvokable]
+    public async Task SetColumnWidthAsync(string columnHeaderElementId, string width)
+    {
+        var columnWidth = new ResizableTableColumnWidth(columnHeaderElementId, width);
+        await ColumnWidthSet.InvokeAsync(columnWidth);
     }
 
     public async ValueTask DisposeAsync()
@@ -53,5 +68,6 @@ public class ResizableTable : ComponentBase, IAsyncDisposable
             }
             catch (JSDisconnectedException) { }
         }
+        dotNetObject?.Dispose();
     }
 }

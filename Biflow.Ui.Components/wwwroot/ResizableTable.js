@@ -1,4 +1,4 @@
-export function createResizableTable(table) {
+export function createResizableTable(table, dotNetObjectReference) {
     const cols = table.querySelectorAll('th');
     [].forEach.call(cols, function (col) {
         // Add a resizer element to the column
@@ -7,11 +7,11 @@ export function createResizableTable(table) {
         // Set the height
         resizer.style.height = `${table.offsetHeight}px`;
         col.appendChild(resizer);
-        createResizableColumn(col, resizer);
+        createResizableColumn(col, resizer, dotNetObjectReference);
     });
 }
 
-function createResizableColumn(col, resizer) {
+function createResizableColumn(col, resizer, dotNetObjectReference) {
     let x = 0;
     let w = 0;
 
@@ -32,10 +32,11 @@ function createResizableColumn(col, resizer) {
         col.style.width = `${w + dx}px`;
     };
 
-    const mouseUpHandler = function () {
+    const mouseUpHandler = async function () {
         resizer.classList.remove('resizing');
         document.removeEventListener('mousemove', mouseMoveHandler);
         document.removeEventListener('mouseup', mouseUpHandler);
+        await dotNetObjectReference.invokeMethodAsync("SetColumnWidthAsync", col.id, col.style.width);
     };
 
     resizer.addEventListener('mousedown', mouseDownHandler);
