@@ -76,9 +76,9 @@
             index++;
             var text = TagTextSelector?.Invoke(item) ?? "";
             var color = TagColorSelector?.Invoke(item) ?? TagColor.DarkGray;
-            <button class="dropdown-item @(index == focusIndex ? "focus" : null)" @onclick="async () => await SelectItemAsync(item)">
+            <div role="button" class="dropdown-item @(index == focusIndex ? "focus" : null)" @onclick="async () => await SelectItemAsync(item)">
                 <Badge Text="@text" Color="color" />
-            </button>
+            </div>
         }
     </div>
 </div>
