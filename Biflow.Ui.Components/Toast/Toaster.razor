@@ -43,6 +43,10 @@
 					</div>
 				</div>
 			}
+			else if (message is ToastTemplateMessage template)
+			{
+				@template.RenderFragment
+			}
 		</Toast>
 	}
 </div>

@@ -30,6 +30,10 @@ $toast-colors:
         .toast-header {
             --bs-toast-header-bg: var(--bs-#{$color}-bg-subtle) !important;
         }
+
+        .toast-body a {
+            color: var(--bs-#{$color}-text-emphasis);
+        }
     }
 }
 

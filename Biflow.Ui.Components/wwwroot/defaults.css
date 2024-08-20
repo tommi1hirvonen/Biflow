@@ -22,6 +22,9 @@
 .toast.toast-success .toast-header {
   --bs-toast-header-bg: var(--bs-success-bg-subtle) !important;
 }
+.toast.toast-success .toast-body a {
+  color: var(--bs-success-text-emphasis);
+}
 
 .toast.toast-danger {
   --bs-toast-header-color: var(--bs-danger-text-emphasis);
@@ -34,6 +37,9 @@
 }
 .toast.toast-danger .toast-header {
   --bs-toast-header-bg: var(--bs-danger-bg-subtle) !important;
+}
+.toast.toast-danger .toast-body a {
+  color: var(--bs-danger-text-emphasis);
 }
 
 .toast.toast-warning {
@@ -48,6 +54,9 @@
 .toast.toast-warning .toast-header {
   --bs-toast-header-bg: var(--bs-warning-bg-subtle) !important;
 }
+.toast.toast-warning .toast-body a {
+  color: var(--bs-warning-text-emphasis);
+}
 
 .toast.toast-primary {
   --bs-toast-header-color: var(--bs-primary-text-emphasis);
@@ -60,6 +69,9 @@
 }
 .toast.toast-primary .toast-header {
   --bs-toast-header-bg: var(--bs-primary-bg-subtle) !important;
+}
+.toast.toast-primary .toast-body a {
+  color: var(--bs-primary-text-emphasis);
 }
 
 .table-resizable th {

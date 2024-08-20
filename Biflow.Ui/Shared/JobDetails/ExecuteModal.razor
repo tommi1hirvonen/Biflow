@@ -454,13 +454,16 @@
             if (execution is not null)
             {
                 await Executor.StartExecutionAsync(execution.ExecutionId);
-                var message = new ToastActionMessage
+                var message = new ToastTemplateMessage
                 {
                     Title = "Execution started successfully",
                     Color = ComponentColor.Success,
-                    ButtonColor = ButtonColor.Link,
-                    ButtonText = "View execution",
-                    ButtonAction = () => NavigationManager.NavigateTo($"executions/{execution.ExecutionId}/list")
+                    RenderFragment =
+                    @<div class="row">
+                        <div class="col">
+                            <a href="@($"executions/{execution.ExecutionId}/list")">View execution</a>
+                        </div>
+                    </div>
                 };
                 Toaster.AddMessage(message);
             }
