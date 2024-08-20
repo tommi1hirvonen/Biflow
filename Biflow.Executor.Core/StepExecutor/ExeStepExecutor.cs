@@ -48,9 +48,9 @@ internal class ExeStepExecutor(
             // A new process launched with the Process class runs in the same
             // window station and desktop as the launching process => grant permissions.
             WindowsExtensions.GrantAccessToWindowStationAndDesktop(cred.Domain, cred.Username);
-            startInfo.Domain = cred.Domain.NullIfEmpty();
+            startInfo.Domain = cred.Domain?.NullIfEmpty();
             startInfo.UserName = cred.Username;
-            startInfo.PasswordInClearText = cred.Password.NullIfEmpty();
+            startInfo.PasswordInClearText = cred.Password?.NullIfEmpty();
             startInfo.LoadUserProfile = true;
         }
         else if (cred is not null)
