@@ -1,24 +1,35 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
+using System.Collections.Immutable;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Biflow.Ui.SourceGeneration;
 
 [Generator]
-internal class LucideIconSourceGenerator : ISourceGenerator
+internal class LucideIconSourceGenerator : IIncrementalGenerator
 {
-    public void Execute(GeneratorExecutionContext context)
+    public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        foreach (var tree in context.Compilation.SyntaxTrees)
-        {
-            if (Path.GetFileNameWithoutExtension(tree.FilePath) != "CxIcon")
+        var separator = Path.DirectorySeparatorChar;
+
+        var icons = context.AdditionalTextsProvider
+            .Where(text => text.Path.Contains($"wwwroot{separator}icons{separator}lucide") && text.Path.EndsWith(".svg"))
+            .Select((text, cancellationToken) =>
             {
-                continue;
-            }
+                return (text.Path, Text: text.GetText(cancellationToken)?.ToString());
+            })
+            .Where(text => text.Text is not null)
+            .Collect();
 
-            var sourceBuilder = new StringBuilder("""
+        context.RegisterSourceOutput(icons, GenerateCode);
+    }
+
+    private static void GenerateCode(SourceProductionContext context, ImmutableArray<(string Path, string Text)> values)
+    {
+        var sourceBuilder = new StringBuilder("""
                 namespace Biflow.Ui.Components;
-
+                
                 public class LucideIcon : IconBase
                 {
                     private LucideIcon(string svgText)
@@ -29,34 +40,21 @@ internal class LucideIconSourceGenerator : ISourceGenerator
 
                 """);
 
-            var iconsDirectory = Path.Combine(Path.GetDirectoryName(tree.FilePath), "..\\", "wwwroot", "icons", "lucide");
-            var svgFiles = Directory.GetFiles(iconsDirectory, "*.svg");
+        foreach (var (path, text) in values)
+        {
+            var iconName = Path.GetFileNameWithoutExtension(path);
+            var propertyName = iconName.GetPropertyNameFromIconName();
 
-            foreach (var file in svgFiles)
-            {
-                var svgText = File.ReadAllText(file);
-                svgText = svgText.Replace(@"<svg", @"<svg class=""lucide""");
-                var iconName = Path.GetFileNameWithoutExtension(file);
-                var propertyName = iconName.GetPropertyNameFromIconName();
-
-                sourceBuilder.AppendLine($"""""""
+            sourceBuilder.AppendLine($"""""""
                     public static LucideIcon {propertyName} => new LucideIcon(""""""
-                    {svgText}
+                    {text}
                     """""");
 
                     """"""");
-            }
-
-            sourceBuilder.Append("}");
-
-            context.AddSource("LucideIcon.g.cs", sourceBuilder.ToString());
-
         }
 
-    }
+        sourceBuilder.Append("}");
 
-    public void Initialize(GeneratorInitializationContext context)
-    {
-
+        context.AddSource("LucideIcon.g.cs", sourceBuilder.ToString());
     }
 }
