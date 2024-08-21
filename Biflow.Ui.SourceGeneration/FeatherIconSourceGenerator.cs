@@ -25,7 +25,7 @@ internal class FeatherIconSourceGenerator : IIncrementalGenerator
         context.RegisterSourceOutput(icons, GenerateCode);
     }
 
-    private static void GenerateCode(SourceProductionContext context, ImmutableArray<(string Path, string Text)> values)
+    private static void GenerateCode(SourceProductionContext context, ImmutableArray<(string Path, string? Text)> values)
     {
         var sourceBuilder = new StringBuilder("""
                 namespace Biflow.Ui.Components;
