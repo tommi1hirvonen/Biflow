@@ -23,7 +23,7 @@
                       CssClass="btn-auto"
                       Size="ButtonSize.Small"
                       @onclick="() => descriptionOpen = !descriptionOpen">
-                <CxIcon Icon="FeatherIcon.Info" />
+                <SvgIcon Icon="FeatherIcon.Info" />
                 &nbsp;
                 @if (descriptionOpen)
                 {
@@ -43,7 +43,7 @@
                 @*Dropdown to delete the current job*@
                 <HxDropdownButtonGroup CssClass="ms-3">
                     <HxDropdownToggleButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto text-danger">
-                        <CxIcon Icon="FeatherIcon.Trash2" />
+                        <SvgIcon Icon="FeatherIcon.Trash2" />
                         Delete
                     </HxDropdownToggleButton>
                     <HxDropdownMenu CssClass="dropdown-menu-xl-right">
@@ -98,46 +98,46 @@
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" href="@($"jobs/{job?.JobId}/steps")">
-                    <CxIcon Icon="LucideIcon.ListChecks" />
+                    <SvgIcon Icon="LucideIcon.ListChecks" />
                     Steps
                 </NavLink>
             </li>
             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                 <li class="nav-item" role="presentation">
                     <NavLink class="nav-link" href="@($"jobs/{job?.JobId}/parameters")">
-                        <CxIcon Icon="FeatherIcon.AtSign" />
+                        <SvgIcon Icon="FeatherIcon.AtSign" />
                         Parameters
                     </NavLink>
                 </li>
             </AuthorizeView>
             <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" href="@($"jobs/{job?.JobId}/graph")">
-                    <CxIcon Icon="LucideIcon.Workflow" />
+                    <SvgIcon Icon="LucideIcon.Workflow" />
                     Graph
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" href="@($"jobs/{job?.JobId}/lineage")">
-                    <CxIcon Icon="LucideIcon.Network" />
+                    <SvgIcon Icon="LucideIcon.Network" />
                     Lineage
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" href="@($"jobs/{job?.JobId}/schedules")">
-                    <CxIcon Icon="FeatherIcon.Calendar" />
+                    <SvgIcon Icon="FeatherIcon.Calendar" />
                     Schedules
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" href="@($"jobs/{job?.JobId}/history")">
-                    <CxIcon Icon="LucideIcon.History" />
+                    <SvgIcon Icon="LucideIcon.History" />
                     History
                 </NavLink>
             </li>
             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                 <li class="nav-item" role="presentation">
                     <NavLink class="nav-link" href="@($"jobs/{job?.JobId}/settings")">
-                        <CxIcon Icon="LucideIcon.Settings2" />
+                        <SvgIcon Icon="LucideIcon.Settings2" />
                         Settings
                     </NavLink>
                 </li>

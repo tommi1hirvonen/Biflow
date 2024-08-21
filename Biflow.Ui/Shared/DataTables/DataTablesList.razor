@@ -27,7 +27,7 @@
         </div>
         <div class="col text-end">
             <HxButton Color="ThemeColor.None" CssClass="btn-auto" OnClick="async () => await helpOffcanvas.LetAsync(x => x.ShowAsync())">
-                <CxIcon Icon="FeatherIcon.HelpCircle" />
+                <SvgIcon Icon="FeatherIcon.HelpCircle" />
             </HxButton>
         </div>
     </div>
@@ -37,7 +37,7 @@
     <div class="col-xxl-5 col-xl-7 col-md-8 col-sm-9">
         <div class="input-group input-group-sm me-3">
             <div class="input-group-text">
-                <CxIcon Icon="FeatherIcon.Filter" />
+                <SvgIcon Icon="FeatherIcon.Filter" />
                 Filter by
             </div>
             <input type="search" class="form-control" @bind-value="tableNameFilter" @bind-value:event="oninput" placeholder="Name" />
@@ -52,7 +52,7 @@
                     targetTableNameFilter = string.Empty;
                     tableNameFilter = string.Empty;
                 }">
-                <CxIcon Icon="FeatherIcon.X" />
+                <SvgIcon Icon="FeatherIcon.X" />
                 Clear
             </HxButton>
         </HxButtonGroup>
@@ -76,10 +76,10 @@
     {
         <li class="list-group-item list-group-header">
             <span title="Collapse all" @onclick="CollapseAll" style="cursor: pointer;">
-                <CxIcon Icon="FeatherIcon.ChevronsUp" />
+                <SvgIcon Icon="FeatherIcon.ChevronsUp" />
             </span>
             <span class="ms-1" title="Expand all" @onclick="ExpandAll" style="cursor: pointer;">
-                <CxIcon Icon="FeatherIcon.ChevronsDown" />
+                <SvgIcon Icon="FeatherIcon.ChevronsDown" />
             </span>
         </li>
         foreach (var category in Categories.Append(null))
@@ -107,14 +107,14 @@
                         @if (state.IsExpanded)
                         {
                             <span title="Collapse" @onclick="() => state.IsExpanded = false" style="cursor: pointer;">
-                                <CxIcon Icon="FeatherIcon.ChevronDown" />
+                                <SvgIcon Icon="FeatherIcon.ChevronDown" />
                                 @(category?.CategoryName ?? "No category")
                             </span>
                         }
                         else
                         {
                             <span title="Expand" @onclick="() => state.IsExpanded = true" style="cursor: pointer;">
-                                <CxIcon Icon="FeatherIcon.ChevronRight" />
+                                <SvgIcon Icon="FeatherIcon.ChevronRight" />
                                 @(category?.CategoryName ?? "No category")
                             </span>
                         }
@@ -125,11 +125,11 @@
                             <div class="col-auto">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
                                         OnClick="() => categoryEditModal.LetAsync(x => x.ShowAsync(category))">
-                                    <CxIcon Icon="FeatherIcon.Edit2" />
+                                    <SvgIcon Icon="FeatherIcon.Edit2" />
                                 </HxButton>
                                 <HxDropdownButtonGroup>
                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                        <CxIcon Icon="FeatherIcon.Trash2" />
+                                        <SvgIcon Icon="FeatherIcon.Trash2" />
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
                                         <HxDropdownHeader>Delete category?</HxDropdownHeader>
@@ -181,11 +181,11 @@
                             <div class="col-auto">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
                                             OnClick="async () => await editModal.LetAsync(x => x.SetEditContextAsync(table))">
-                                    <CxIcon Icon="FeatherIcon.Edit2" />
+                                    <SvgIcon Icon="FeatherIcon.Edit2" />
                                 </HxButton>
                                 <HxDropdownButtonGroup>
                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                        <CxIcon Icon="FeatherIcon.Trash2" />
+                                        <SvgIcon Icon="FeatherIcon.Trash2" />
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
                                         <HxDropdownHeader>Delete table?</HxDropdownHeader>

@@ -28,7 +28,7 @@
                           Enabled="filterSet is not null"
                           CssClass="@(filterSet?.Filters.Values.Any(v => v.Enabled1) ?? false ? "fw-bold btn-auto" : "btn-auto")"
                           OnClick="async () => await filterSetOffcanvas.LetAsync(x => x.ShowAsync())">
-                    <CxIcon Icon="FeatherIcon.Filter" />
+                    <SvgIcon Icon="FeatherIcon.Filter" />
                     Query filters
                 </HxButton>
 
@@ -36,7 +36,7 @@
                                 Items="tableData?.Columns.Select(c => c.Name) ?? Enumerable.Empty<string>()"
                                 OnChange="StateHasChanged">
                     <TitleTemplate>
-                        <CxIcon Icon="FeatherIcon.Columns" />
+                        <SvgIcon Icon="FeatherIcon.Columns" />
                         Columns
                     </TitleTemplate>
                 </FilterDropdown>
@@ -64,7 +64,7 @@
 
                 <HxDropdownButtonGroup>
                     <HxDropdownToggleButton Spinner="exporting" Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" Enabled="!exporting">
-                        <CxIcon Icon="FeatherIcon.Download" />
+                        <SvgIcon Icon="FeatherIcon.Download" />
                         Export
                     </HxDropdownToggleButton>
                     <HxDropdownMenu>
@@ -85,14 +85,14 @@
                     var importDisabled = isNotEditable || !Table.AllowImport;
                 }
                 <a class="btn btn-sm btn-auto @(importDisabled ? "disabled" : null)" href="/datatables/import/@Table.DataTableId">
-                    <CxIcon Icon="FeatherIcon.Upload" />
+                    <SvgIcon Icon="FeatherIcon.Upload" />
                     Import
                 </a>
 
                 <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small"
                           Enabled="!string.IsNullOrEmpty(Table.DataTableDescription)"
                           OnClick="async () => await tableInfoOffcanvas.LetAsync(x => x.ShowAsync())">
-                    <CxIcon Icon="FeatherIcon.Info" />
+                    <SvgIcon Icon="FeatherIcon.Info" />
                     Table info
                 </HxButton>
 
@@ -106,7 +106,7 @@
         <HxButtonToolbar>
             <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small"
                       OnClick="async () => await ReloadDataAsync()">
-                <CxIcon Icon="FeatherIcon.RefreshCw" />
+                <SvgIcon Icon="FeatherIcon.RefreshCw" />
                 Reload
             </HxButton>
 
@@ -114,7 +114,7 @@
                       CssClass="ms-3"
                       Enabled="tableData is not null && tableData.IsEditable"
                       OnClick="SaveChangesAsync">
-                <CxIcon Icon="FeatherIcon.Save" />
+                <SvgIcon Icon="FeatherIcon.Save" />
                 Save changes
             </HxButton>
 
@@ -123,7 +123,7 @@
                 <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small"
                       Enabled="tableData is not null && tableData.IsEditable"
                       OnClick="() => tableData?.AddRow()">
-                    <CxIcon Icon="FeatherIcon.Plus" />
+                    <SvgIcon Icon="FeatherIcon.Plus" />
                     Add record
                 </HxButton>
             }
@@ -166,7 +166,7 @@
                         {
                             <span class="text-warning ms-2" style="cursor: pointer;">
                                 <HxPopover Trigger="PopoverTrigger.Hover" Content="Table contains more records with applied filters than is currently shown. Increase row limit to show more records.">
-                                    <CxIcon Icon="FeatherIcon.AlertCircle" />
+                                    <SvgIcon Icon="FeatherIcon.AlertCircle" />
                                 </HxPopover>
                             </span>
                         }
@@ -207,13 +207,13 @@
                                                 @if (column.IsPrimaryKey)
                                                 {
                                                     <span class="ms-2" title="Primary key column">
-                                                        <CxIcon Icon="FeatherIcon.Key" />
+                                                        <SvgIcon Icon="FeatherIcon.Key" />
                                                     </span>
                                                 }
                                                 @if (column.IsComputed)
                                                 {
                                                     <span class="ms-2" title="Computed column">
-                                                        <CxIcon Icon="LucideIcon.Calculator" />
+                                                        <SvgIcon Icon="LucideIcon.Calculator" />
                                                     </span>
                                                 }
                                                 @if (orderBy.Column is not null)
@@ -221,11 +221,11 @@
                                                     <span class="ms-2">
                                                         @if (orderBy.Descending)
                                                         {
-                                                            <CxIcon Icon="FeatherIcon.ArrowUp" />
+                                                            <SvgIcon Icon="FeatherIcon.ArrowUp" />
                                                         }
                                                         else
                                                         {
-                                                            <CxIcon Icon="FeatherIcon.ArrowDown" />
+                                                            <SvgIcon Icon="FeatherIcon.ArrowDown" />
                                                         }
                                                     </span>
                                                 }
@@ -233,7 +233,7 @@
                                                     @if (filterSet.Count > 0)
                                                     {
                                                         <button class="btn btn-sm btn-auto" @onclick="filterSet.Clear" title="Clear filter">
-                                                            <CxIcon Icon="LucideIcon.FilterX" />
+                                                            <SvgIcon Icon="LucideIcon.FilterX" />
                                                         </button>
                                                     }
                                                     <FilterDropdown TItem="object"
@@ -245,7 +245,7 @@
                                                                     IsSearchable
                                                                     CssClass="position-static">
                                                         <TitleTemplate>
-                                                            <CxIcon Icon="FeatherIcon.Filter" />
+                                                            <SvgIcon Icon="FeatherIcon.Filter" />
                                                         </TitleTemplate>
                                                     </FilterDropdown>
                                                 </div>
@@ -389,18 +389,18 @@
                                         <td>
                                             <div class="btn-group btn-group-sm">
                                                 <button class="btn btn-sm btn-auto" @onclick="row.RevertChanges" title="Revert changes" disabled=@(!row.HasChanges)>
-                                                    <CxIcon Icon="LucideIcon.Undo2" />
+                                                    <SvgIcon Icon="LucideIcon.Undo2" />
                                                 </button>
                                                 @if (Table.AllowInsert)
                                                 {
                                                     <button class="btn btn-sm btn-auto" @onclick="() => tableData.AddRow(row)" title="Copy record">
-                                                        <CxIcon Icon="FeatherIcon.Copy" />
+                                                        <SvgIcon Icon="FeatherIcon.Copy" />
                                                     </button>
                                                 }
                                                 @if (Table.AllowDelete)
                                                 {
                                                     <button class="btn btn-sm btn-auto btn-delete-record" @onclick="row.Delete" title="Delete record">
-                                                        <CxIcon Icon="FeatherIcon.Delete" />
+                                                        <SvgIcon Icon="FeatherIcon.Delete" />
                                                     </button>
                                                 }
                                             </div>

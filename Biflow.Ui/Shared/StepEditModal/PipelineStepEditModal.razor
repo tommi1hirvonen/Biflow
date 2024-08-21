@@ -10,7 +10,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.XOctagon" />
+                        <SvgIcon Icon="FeatherIcon.XOctagon" />
                     </div>
                     <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 5rem;"></InputNumber>
                 </div>
@@ -25,7 +25,7 @@
             <div class="col-md-6 d-inline">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <CxIcon Icon="LucideIcon.Factory" />
+                        <SvgIcon Icon="LucideIcon.Factory" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.PipelineClientId">
                         @foreach (var client in PipelineClients ?? Enumerable.Empty<PipelineClient>())
@@ -34,7 +34,7 @@
                         }
                     </InputSelect>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenPipelineSelectOffcanvas">
-                        <CxIcon Icon="FeatherIcon.MoreHorizontal" />
+                        <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
                         Browse pipelines
                     </HxButton>
                 </div>
@@ -48,7 +48,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.Pipeline" />
+                        <SvgIcon Icon="FeatherIcon.Pipeline" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.PipelineName"></InputText>
                 </div>

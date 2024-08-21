@@ -8,7 +8,7 @@
                 Execution condition expression
                 &nbsp;
                 <span style="cursor: pointer;" @onclick="async () => await helpOffcanvas.LetAsync(x => x.ShowAsync())">
-                    <CxIcon Icon="FeatherIcon.HelpCircle" />
+                    <SvgIcon Icon="FeatherIcon.HelpCircle" />
                 </span>
             </label>
             <CodeEditor @ref="editor"
@@ -22,7 +22,7 @@
     <div class="row mt-3">
         <div class="col">
             <HxButton OnClick="TestEvaluate" Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
-                <CxIcon Icon="FeatherIcon.Check" />
+                <SvgIcon Icon="FeatherIcon.Check" />
                 Test evaluate / validate
             </HxButton>
         </div>
@@ -85,7 +85,7 @@
                                       Size="ButtonSize.Small"
                                       CssClass="btn-auto"
                                       @onclick="() => Step.ExecutionConditionParameters.Remove(param)">
-                                <CxIcon Icon="FeatherIcon.Delete" />
+                                <SvgIcon Icon="FeatherIcon.Delete" />
                             </HxButton>
                         </HxButtonGroup>
                     </td>
@@ -95,7 +95,7 @@
         </tbody>
     </table>
     <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="() => Step.ExecutionConditionParameters.Add(new ExecutionConditionParameter())">
-        <CxIcon Icon="FeatherIcon.Plus" />
+        <SvgIcon Icon="FeatherIcon.Plus" />
         Add parameter
     </HxButton>
 }

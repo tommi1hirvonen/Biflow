@@ -25,42 +25,42 @@
                                     <li class="nav-item">
                                         <span class="nav-link @(Modal.CurrentView == StepEditModalView.Settings ? "active" : null)"
                                               @onclick="() => Modal.CurrentView = StepEditModalView.Settings">
-                                            <CxIcon Icon="FeatherIcon.Settings" />
+                                            <SvgIcon Icon="FeatherIcon.Settings" />
                                             Settings
                                         </span>
                                     </li>
                                     <li class="nav-item">
                                         <span class="nav-link @(Modal.CurrentView == StepEditModalView.Targets ? "active" : null)"
                                               @onclick="() => Modal.CurrentView = StepEditModalView.Targets">
-                                            <CxIcon Icon="FeatherIcon.Download" />
+                                            <SvgIcon Icon="FeatherIcon.Download" />
                                             Targets
                                         </span>
                                     </li>
                                     <li class="nav-item">
                                         <span class="nav-link @(Modal.CurrentView == StepEditModalView.Sources ? "active" : null)"
                                               @onclick="() => Modal.CurrentView = StepEditModalView.Sources">
-                                            <CxIcon Icon="FeatherIcon.Share" />
+                                            <SvgIcon Icon="FeatherIcon.Share" />
                                             Sources
                                         </span>
                                     </li>
                                     <li class="nav-item">
                                         <span class="nav-link @(Modal.CurrentView == StepEditModalView.Dependencies ? "active" : null)"
                                               @onclick="() => Modal.CurrentView = StepEditModalView.Dependencies">
-                                            <CxIcon Icon="LucideIcon.Workflow" />
+                                            <SvgIcon Icon="LucideIcon.Workflow" />
                                             Dependencies
                                         </span>
                                     </li>
                                     <li class="nav-item">
                                         <span class="nav-link @(Modal.CurrentView == StepEditModalView.Condition ? "active" : null)"
                                           @onclick="() => Modal.CurrentView = StepEditModalView.Condition">
-                                            <CxIcon Icon="FeatherIcon.CheckSquare" />
+                                            <SvgIcon Icon="FeatherIcon.CheckSquare" />
                                             Condition
                                             @if (!string.IsNullOrWhiteSpace(Modal.Step.ExecutionConditionExpression.Expression))
                                             {
                                                 <HxTooltip Trigger="TooltipTrigger.Hover" Text="Execution condition enabled">
                                                     <span style="color: var(--bs-warning);">
                                                         &nbsp;
-                                                        <CxIcon Icon="FeatherIcon.Info" />
+                                                        <SvgIcon Icon="FeatherIcon.Info" />
                                                     </span>
                                                 </HxTooltip>
                                             }
@@ -107,7 +107,7 @@
                                     <div class="col-md-6">
                                         <div class="input-group input-group-sm">
                                             <div class="input-group-text">
-                                                <CxIcon Icon="FeatherIcon.Edit3" />
+                                                <SvgIcon Icon="FeatherIcon.Edit3" />
                                             </div>
                                             <InputText class="form-control form-control-sm" @bind-Value="Modal.Step.StepName"></InputText>
                                         </div>
@@ -132,7 +132,7 @@
                                     <div class="col-md-6">
                                         <div class="input-group input-group-sm">
                                             <div class="input-group-text">
-                                                <CxIcon Icon="FeatherIcon.BookOpen" />
+                                                <SvgIcon Icon="FeatherIcon.BookOpen" />
                                             </div>
                                             <InputTextArea class="form-control form-control-sm" @bind-Value="Modal.Step.StepDescription" rows="3"></InputTextArea>
                                         </div>
@@ -145,7 +145,7 @@
                                     <div class="col-md-6">
                                         <div class="input-group input-group-sm">
                                             <div class="input-group-text">
-                                                <CxIcon Icon="FeatherIcon.Layers" />
+                                                <SvgIcon Icon="FeatherIcon.Layers" />
                                             </div>
                                             <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.ExecutionPhase" style="max-width: 6rem;"></InputNumber>
                                         </div>
@@ -156,7 +156,7 @@
                                         <label class="form-label mb-lg-0">
                                             Duplicate execution behaviour
                                             <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@DuplicateBehaviourPopoverContent">
-                                                <CxIcon Icon="FeatherIcon.Info" />
+                                                <SvgIcon Icon="FeatherIcon.Info" />
                                             </HxPopover>
                                         </label>
                                     </div>
@@ -176,13 +176,13 @@
                                     <div class="col-md-6">
                                         <div class="input-group input-group-sm">
                                             <div class="input-group-text">
-                                                <CxIcon Icon="FeatherIcon.Repeat" />
+                                                <SvgIcon Icon="FeatherIcon.Repeat" />
                                                 &nbsp;
                                                 Attempts
                                             </div>
                                             <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.RetryAttempts" style="max-width: 5rem;"></InputNumber>
                                             <div class="input-group-text">
-                                                <CxIcon Icon="FeatherIcon.Clock" />
+                                                <SvgIcon Icon="FeatherIcon.Clock" />
                                                 &nbsp;
                                                 Interval (min)
                                             </div>
@@ -262,12 +262,12 @@
         <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="me-auto">
             <HxButton CssClass="btn-auto" Size="ButtonSize.Small" title="Explore database module definitions (e.g. stored procedures)"
                       @onclick="async () => await sqlDefinitionOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId, SqlStatement))">
-                <CxIcon Icon="FeatherIcon.MoreHorizontal" />
+                <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
                 SQL definition explorer
             </HxButton>
             <HxButton CssClass="btn-auto" Size="ButtonSize.Small" title="Explore references between database objects"
                       @onclick="async () => await sqlReferenceOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId, SqlStatement))">
-                <CxIcon Icon="FeatherIcon.MoreHorizontal" />
+                <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
                 SQL reference explorer
             </HxButton>
         </HxButtonGroup>
@@ -278,7 +278,7 @@
             <div class="me-auto ms-3">
                 <HxPopover Content="@errors" Html Trigger="PopoverTrigger.Hover" Placement="PopoverPlacement.Top">
                     <span class="border border-danger text-danger small rounded py-1 px-2">
-                        <CxIcon Icon="FeatherIcon.AlertOctagon" />
+                        <SvgIcon Icon="FeatherIcon.AlertOctagon" />
                         Validation errors
                     </span>
                 </HxPopover>

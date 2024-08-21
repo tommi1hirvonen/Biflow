@@ -20,7 +20,7 @@
                           CssClass="btn-auto text-danger"
                           Enabled="enabled"
                           OnClick="StopSelectedStepsAsync">
-                    <CxIcon Icon="FeatherIcon.XOctagon" />
+                    <SvgIcon Icon="FeatherIcon.XOctagon" />
                     Stop...
                 </HxButton>
                 <HxDropdownButtonGroup>
@@ -37,7 +37,7 @@
                     </HxDropdownMenu>
                 </HxDropdownButtonGroup>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="selectedSteps.Clear">
-                    <CxIcon Icon="FeatherIcon.X" />
+                    <SvgIcon Icon="FeatherIcon.X" />
                     Cancel
                 </HxButton>
             </HxButtonGroup>
@@ -67,11 +67,11 @@
                     <span class="ms-2">
                         @if (SortMode == StepExecutionSortMode.JobAsc)
                         {
-                            <CxIcon Icon="FeatherIcon.ArrowUp" />
+                            <SvgIcon Icon="FeatherIcon.ArrowUp" />
                         }
                         else if (SortMode == StepExecutionSortMode.JobDesc)
                         {
-                            <CxIcon Icon="FeatherIcon.ArrowDown" />
+                            <SvgIcon Icon="FeatherIcon.ArrowDown" />
                         }
                     </span>
                 </th>
@@ -96,11 +96,11 @@
                 <span class="ms-2">
                     @if (SortMode == StepExecutionSortMode.StepAsc)
                     {
-                        <CxIcon Icon="FeatherIcon.ArrowUp" />
+                        <SvgIcon Icon="FeatherIcon.ArrowUp" />
                     }
                     else if (SortMode == StepExecutionSortMode.StepDesc)
                     {
-                        <CxIcon Icon="FeatherIcon.ArrowDown" />
+                        <SvgIcon Icon="FeatherIcon.ArrowDown" />
                     }
                 </span>
             </th>
@@ -114,11 +114,11 @@
                 <span class="ms-2">
                     @if (SortMode == StepExecutionSortMode.StartedAsc)
                     {
-                        <CxIcon Icon="FeatherIcon.ArrowUp" />
+                        <SvgIcon Icon="FeatherIcon.ArrowUp" />
                     }
                     else if (SortMode == StepExecutionSortMode.StartedDesc)
                     {
-                        <CxIcon Icon="FeatherIcon.ArrowDown" />
+                        <SvgIcon Icon="FeatherIcon.ArrowDown" />
                     }
                 </span>
             </th>
@@ -129,11 +129,11 @@
                 <span class="ms-2">
                     @if (SortMode == StepExecutionSortMode.EndedAsc)
                     {
-                        <CxIcon Icon="FeatherIcon.ArrowUp" />
+                        <SvgIcon Icon="FeatherIcon.ArrowUp" />
                     }
                     else if (SortMode == StepExecutionSortMode.EndedDesc)
                     {
-                        <CxIcon Icon="FeatherIcon.ArrowDown" />
+                        <SvgIcon Icon="FeatherIcon.ArrowDown" />
                     }
                 </span>
             </th>
@@ -144,11 +144,11 @@
                 <span class="ms-2">
                     @if (SortMode == StepExecutionSortMode.DurationAsc)
                     {
-                        <CxIcon Icon="FeatherIcon.ArrowUp" />
+                        <SvgIcon Icon="FeatherIcon.ArrowUp" />
                     }
                     else if (SortMode == StepExecutionSortMode.DurationDesc)
                     {
-                        <CxIcon Icon="FeatherIcon.ArrowDown" />
+                        <SvgIcon Icon="FeatherIcon.ArrowDown" />
                     }
                 </span>
             </th>
@@ -211,7 +211,7 @@
                             @item.StepName
                         </td>
                         <td class="@(item.ExecutionMode == ExecutionMode.Dependency ? "text-body-tertiary" : "text-body")" style="">
-                            <CxIcon Icon="FeatherIcon.Layers" />
+                            <SvgIcon Icon="FeatherIcon.Layers" />
                             <sup>@item.ExecutionPhase</sup>
                         </td>
                         <td>
@@ -233,22 +233,22 @@
                             @item.StepName
                         </DropdownMenuHeader>
                         <DropdownMenuItem @onclick="async () => await StepExecutionMonitorsOffcanvas.LetAsync(x => x.ShowAsync(item))">
-                            <CxIcon Icon="LucideIcon.Monitor" />
+                            <SvgIcon Icon="LucideIcon.Monitor" />
                             Monitors
                         </DropdownMenuItem>
                         <DropdownMenuItem @onclick="async () => await stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
-                            <CxIcon Icon="LucideIcon.History" />
+                            <SvgIcon Icon="LucideIcon.History" />
                             History
                         </DropdownMenuItem>
                         <DropdownMenuItem @onclick="@(() => NavigationManager.NavigateTo($"executions/{item.ExecutionId}/graph/{item.StepId}"))">
-                            <CxIcon Icon="LucideIcon.Workflow" />
+                            <SvgIcon Icon="LucideIcon.Workflow" />
                             Dependencies
                         </DropdownMenuItem>
                         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                             @if (item.CanBeStopped)
                             {
                                 <DropdownMenuItem @onclick="async () => await StopStepExecutionAsync(item.ExecutionId, item.StepId, item.StepName)">
-                                    <CxIcon Icon="FeatherIcon.XOctagon" />
+                                    <SvgIcon Icon="FeatherIcon.XOctagon" />
                                     Stop...
                                 </DropdownMenuItem>
                             }
@@ -271,19 +271,19 @@
                             <td colspan="7" class="px-3">
                                 <HxButtonGroup CssClass="mb-3 mt-1 ms-2">
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1" @onclick="() => ToggleSelectedStepExecutionAsync(selectedStepExecution)">
-                                        <CxIcon Icon="FeatherIcon.X" />
+                                        <SvgIcon Icon="FeatherIcon.X" />
                                         Close
                                     </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1" @onclick="async () => await StepExecutionMonitorsOffcanvas.LetAsync(x => x.ShowAsync(item))">
-                                        <CxIcon Icon="LucideIcon.Monitor" />
+                                        <SvgIcon Icon="LucideIcon.Monitor" />
                                         Monitors
                                     </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1" @onclick="async () => await stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
-                                        <CxIcon Icon="LucideIcon.History" />
+                                        <SvgIcon Icon="LucideIcon.History" />
                                         History
                                     </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1" @onclick="@(() => NavigationManager.NavigateTo($"executions/{item.ExecutionId}/graph/{item.StepId}"))">
-                                        <CxIcon Icon="LucideIcon.Workflow" />
+                                        <SvgIcon Icon="LucideIcon.Workflow" />
                                         Dependencies
                                     </HxButton>
                                     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
@@ -291,7 +291,7 @@
                                         {
                                             <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1 text-danger"
                                                       @onclick="async () => await StopStepExecutionAsync(item.ExecutionId, item.StepId, item.StepName)">
-                                                <CxIcon Icon="FeatherIcon.XOctagon" />
+                                                <SvgIcon Icon="FeatherIcon.XOctagon" />
                                                 Stop...
                                             </HxButton>
                                         }

@@ -5,64 +5,64 @@
     <ul class="nav flex-column pt-3">
         <li class="nav-item">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All" @onclick="NavLinkClick">
-                <CxIcon Icon="FeatherIcon.Home" />
+                <SvgIcon Icon="FeatherIcon.Home" />
                 Home
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="jobs" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
-                <CxIcon Icon="LucideIcon.ClipboardList" />
+                <SvgIcon Icon="LucideIcon.ClipboardList" />
                 Jobs
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="schedules" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
-                <CxIcon Icon="FeatherIcon.Calendar" />
+                <SvgIcon Icon="FeatherIcon.Calendar" />
                 Schedules
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="executions" @onclick="NavLinkClick">
-                <CxIcon Icon="FeatherIcon.Activity" />
+                <SvgIcon Icon="FeatherIcon.Activity" />
                 Executions
             </NavLink>
         </li>
         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
             <li class="nav-item">
                 <NavLink class="nav-link" href="tags" @onclick="NavLinkClick" Match="NavLinkMatch.Prefix">
-                    <CxIcon Icon="FeatherIcon.Tag" />
+                    <SvgIcon Icon="FeatherIcon.Tag" />
                     Tags
                 </NavLink>
             </li>
             <li class="nav-item">
                 <NavLink class="nav-link" href="dataobjects" @onclick="NavLinkClick">
-                    <CxIcon Icon="FeatherIcon.Table" />
+                    <SvgIcon Icon="FeatherIcon.Table" />
                     Data Objects
                 </NavLink>
             </li>
         </AuthorizeView>
         <li class="nav-item">
             <NavLink class="nav-link" href="datatables" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
-                <CxIcon Icon="LucideIcon.Table" />
+                <SvgIcon Icon="LucideIcon.Table" />
                 Data Tables
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="account" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
-                <CxIcon Icon="FeatherIcon.User" />
+                <SvgIcon Icon="FeatherIcon.User" />
                 Account
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="subscriptions" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
-                <CxIcon Icon="FeatherIcon.Mail" />
+                <SvgIcon Icon="FeatherIcon.Mail" />
                 Subscriptions
             </NavLink>
         </li>
         <AuthorizeView Roles="@($"{Roles.Admin}")">
             <li class="nav-item">
                 <NavLink class="nav-link" href="versions" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
-                    <CxIcon Icon="FeatherIcon.Tool" />
+                    <SvgIcon Icon="FeatherIcon.Tool" />
                     Versions
                 </NavLink>
             </li>
@@ -70,7 +70,7 @@
         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
             <li class="nav-item">
                 <NavLink class="nav-link" href="settings" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
-                    <CxIcon Icon="FeatherIcon.Settings" />
+                    <SvgIcon Icon="FeatherIcon.Settings" />
                     Settings
                 </NavLink>
             </li>
@@ -79,7 +79,7 @@
         {
             <li class="nav-item mt-3">
                 <a class="nav-link" href="javascript:void()" @onclick="@(() => NavigationManager.NavigateTo("logout", forceLoad: true))">
-                    <CxIcon Icon="FeatherIcon.LogOut" />
+                    <SvgIcon Icon="FeatherIcon.LogOut" />
                     Log out
                 </a>
             </li>
@@ -88,7 +88,7 @@
         {
             <li class="nav-item mt-3">
                 <a class="nav-link" href="javascript:void()" @onclick="@(() => NavigationManager.NavigateTo("MicrosoftIdentity/Account/SignOut", forceLoad: true))">
-                    <CxIcon Icon="FeatherIcon.LogOut" />
+                    <SvgIcon Icon="FeatherIcon.LogOut" />
                     Log out
                 </a>
             </li>

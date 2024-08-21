@@ -5,7 +5,7 @@
 <div class="row mt-3">
     <div class="col">
         <button class="btn btn-secondary" @onclick="OpenConfirmDeleteModalAsync">
-            <CxIcon Icon="FeatherIcon.Trash2" />
+            <SvgIcon Icon="FeatherIcon.Trash2" />
             Delete unused...
         </button>
     </div>
@@ -50,7 +50,7 @@
                                             @*Dropdown to edit the tag's name*@
                                             <HxDropdownButtonGroup>
                                                 <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => templateTag.TagName = tag.TagName">
-                                                    <CxIcon Icon="FeatherIcon.Edit3" />
+                                                    <SvgIcon Icon="FeatherIcon.Edit3" />
                                                 </HxDropdownToggleButton>
                                                 <HxDropdownContent CssClass="p-4">
                                                     <EditForm Model="templateTag" OnValidSubmit="async () => await UpdateTagNameAsync(tag)" Context="_context" style="min-width: 20rem;">
@@ -66,7 +66,7 @@
                                             </HxDropdownButtonGroup>
                                             <HxDropdownButtonGroup>
                                                 <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                                    <CxIcon Icon="FeatherIcon.Trash2" />
+                                                    <SvgIcon Icon="FeatherIcon.Trash2" />
                                                 </HxDropdownToggleButton>
                                                 <HxDropdownMenu>
                                                     <HxDropdownHeader>Delete?</HxDropdownHeader>
@@ -145,7 +145,7 @@
                                 <td class="align-middle">
                                     <div class="btn-group">
                                         <button class="btn btn-sm btn-auto" @onclick="async () => await DeleteScheduleTag(schedule)">
-                                            <CxIcon Icon="FeatherIcon.Delete" />
+                                            <SvgIcon Icon="FeatherIcon.Delete" />
                                         </button>
                                     </div>
                                 </td>

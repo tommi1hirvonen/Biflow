@@ -7,7 +7,7 @@
 <div class="row mt-3">
     <div class="col">
         <HxButton Size="ButtonSize.Regular" Color="ThemeColor.Primary" OnClick="CalculateChangesAsync">
-            <CxIcon Icon="FeatherIcon.RefreshCw" />
+            <SvgIcon Icon="FeatherIcon.RefreshCw" />
             Calculate changes
         </HxButton>
     </div>
@@ -83,7 +83,7 @@
                                     };
                                 }
                                 <span class="@className">
-                                    <CxIcon Icon="icon" />
+                                    <SvgIcon Icon="icon" />
                                 </span>
                             </td>
                             <td class="align-middle">
@@ -99,12 +99,12 @@
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None"
                                               title="Commit this modification"
                                               CssClass="btn-auto text-success" OnClick="async () => await commitTask()">
-                                        <CxIcon Icon="FeatherIcon.Check" />
+                                        <SvgIcon Icon="FeatherIcon.Check" />
                                     </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None"
                                               title="Discard this modification"
                                               CssClass="btn-auto text-danger" OnClick="() => discardAction()">
-                                        <CxIcon Icon="FeatherIcon.X" />
+                                        <SvgIcon Icon="FeatherIcon.X" />
                                     </HxButton>
                                 </HxButtonGroup>
                             </td>
@@ -128,7 +128,7 @@
     <div class="row mt-3">
         <div class="col">
             <HxButton Color="ThemeColor.Success" OnClick="CommitAllAsync">
-                <CxIcon Icon="FeatherIcon.Check" />
+                <SvgIcon Icon="FeatherIcon.Check" />
                 Commit all
             </HxButton>
         </div>

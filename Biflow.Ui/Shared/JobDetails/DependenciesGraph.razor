@@ -50,7 +50,7 @@
             <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal backwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
                 <ChildContent>
                     <span style="cursor: pointer;">
-                        <CxIcon Icon="FeatherIcon.Info" />
+                        <SvgIcon Icon="FeatherIcon.Info" />
                     </span>
                 </ChildContent>
             </HxPopover>
@@ -61,7 +61,7 @@
             <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal forwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
                 <ChildContent>
                     <span style="cursor: pointer;">
-                        <CxIcon Icon="FeatherIcon.Info" />
+                        <SvgIcon Icon="FeatherIcon.Info" />
                     </span>
                 </ChildContent>
             </HxPopover>
@@ -83,7 +83,7 @@
                                        checked=@(direction == DependencyGraphDirection.LeftToRight)
                                        @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.LeftToRight))">
                                 <label class="form-check-label fw-normal" for="direction_radio_admin">
-                                    <CxIcon Icon="FeatherIcon.ArrowRight" />
+                                    <SvgIcon Icon="FeatherIcon.ArrowRight" />
                                     Left to right
                                 </label>
                             </div>
@@ -92,7 +92,7 @@
                                        checked=@(direction == DependencyGraphDirection.RightToLeft)
                                        @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.RightToLeft))">
                                 <label class="form-check-label fw-normal" for="direction_radio_editor">
-                                    <CxIcon Icon="FeatherIcon.ArrowLeft" />
+                                    <SvgIcon Icon="FeatherIcon.ArrowLeft" />
                                     Right to left
                                 </label>
                             </div>
@@ -101,7 +101,7 @@
                                        checked=@(direction == DependencyGraphDirection.TopToBottom)
                                        @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.TopToBottom))">
                                 <label class="form-check-label fw-normal" for="direction_radio_operator">
-                                    <CxIcon Icon="FeatherIcon.ArrowDown" />
+                                    <SvgIcon Icon="FeatherIcon.ArrowDown" />
                                     Top to bottom
                                 </label>
                             </div>
@@ -110,7 +110,7 @@
                                        checked=@(direction == DependencyGraphDirection.BottomToTop)
                                        @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.BottomToTop))">
                                 <label class="form-check-label fw-normal" for="direction_radio_viewer">
-                                    <CxIcon Icon="FeatherIcon.ArrowUp" />
+                                    <SvgIcon Icon="FeatherIcon.ArrowUp" />
                                     Bottom to top
                                 </label>
                             </div>
@@ -139,7 +139,7 @@
             </li>
             <li>
                 <span class="dropdown-item" role="button" @onclick="async () => { stepFilter = step.StepId; await LoadGraphAsync();}">
-                    <CxIcon Icon="FeatherIcon.Filter" />
+                    <SvgIcon Icon="FeatherIcon.Filter" />
                     Limit graph to this
                 </span>
             </li>
@@ -148,7 +148,7 @@
                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                     <li>
                         <span class="dropdown-item" role="button" @onclick="() => OpenStepEditModalAsync(step)">
-                            <CxIcon Icon="FeatherIcon.Edit2" />
+                            <SvgIcon Icon="FeatherIcon.Edit2" />
                             Edit
                         </span>
                     </li>
@@ -156,21 +156,21 @@
                         @if (step.IsEnabled)
                         {
                             <span class="dropdown-item" role="button" @onclick="() => ToggleEnabled(step, false)">
-                                <CxIcon Icon="FeatherIcon.ToggleLeft" />
+                                <SvgIcon Icon="FeatherIcon.ToggleLeft" />
                                 Disable
                             </span>
                         }
                         else
                         {
                             <span class="dropdown-item" role="button" @onclick="() => ToggleEnabled(step, true)">
-                                <CxIcon Icon="FeatherIcon.ToggleRight" />
+                                <SvgIcon Icon="FeatherIcon.ToggleRight" />
                                 Enable
                             </span>
                         }
                     </li>
                     <li>
                         <span class="dropdown-item" role="button" @onclick="() => DeleteStep(step)">
-                            <CxIcon Icon="FeatherIcon.Trash2" />
+                            <SvgIcon Icon="FeatherIcon.Trash2" />
                             Delete...
                         </span>
                     </li>
@@ -180,14 +180,14 @@
             {
                 <li>
                     <span class="dropdown-item" role="button" @onclick="@(() => NavigationManager.NavigateTo($"jobs/{step.JobId}/steps"))">
-                        <CxIcon Icon="FeatherIcon.ArrowRight" />
+                        <SvgIcon Icon="FeatherIcon.ArrowRight" />
                         Go to job
                     </span>
                 </li>
             }
             <li>
                 <span class="dropdown-item" role="button" @onclick="() => stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
-                    <CxIcon Icon="LucideIcon.History" />
+                    <SvgIcon Icon="LucideIcon.History" />
                     History
                 </span>
             </li>

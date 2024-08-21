@@ -28,7 +28,7 @@
                                        autocomplete="off">
                             <InputGroupStartTemplate>
                                 <div class="input-group-text">
-                                    <CxIcon Icon="LucideIcon.ClipboardList" />
+                                    <SvgIcon Icon="LucideIcon.ClipboardList" />
                                 </div>
                             </InputGroupStartTemplate>
                             <ItemTemplate>
@@ -40,7 +40,7 @@
                         <label class="form-label">Name</label>
                         <div class="input-group">
                             <div class="input-group-text">
-                                <CxIcon Icon="FeatherIcon.Edit3" />
+                                <SvgIcon Icon="FeatherIcon.Edit3" />
                             </div>
                             <InputText DisplayName="Name" class="form-control" @bind-Value="schedule.ScheduleName"></InputText>
                         </div>
@@ -60,12 +60,12 @@
                         <label class="form-label">
                             Cron expression
                             <HxPopover Trigger="PopoverTrigger.Hover" Content="Schedule cron expression cannot be edited once the schedule has been created. To change the expression, a new schedule needs to be created and the old one removed.">
-                                <CxIcon Icon="FeatherIcon.Info" />
+                                <SvgIcon Icon="FeatherIcon.Info" />
                             </HxPopover>
                         </label>
                         <div class="input-group">
                             <div class="input-group-text">
-                                <CxIcon Icon="FeatherIcon.Calendar" />
+                                <SvgIcon Icon="FeatherIcon.Calendar" />
                             </div>
                             <OnInputText class="form-control" @bind-Value="schedule.CronExpression" />
                         </div>
@@ -112,7 +112,7 @@
                                 <label class="form-check-label fw-normal" for="schedule_concurrency_check">
                                     Disallow concurrent execution
                                     <HxPopover Trigger="PopoverTrigger.Hover" Content="Allow only one concurrent execution of this job and schedule. This option is useful in cases where the job's duration might overlap with the schedule's next fire time but concurrent execution should not be allowed.">
-                                        <CxIcon Icon="FeatherIcon.Info" />
+                                        <SvgIcon Icon="FeatherIcon.Info" />
                                     </HxPopover>
                                 </label>
                             </div>

@@ -84,7 +84,7 @@ else if (Step is not null && targetJob is not null)
                     <td>
                         <HxButtonGroup Size="ButtonGroupSize.Small">
                             <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="() => Step.StepParameters.Remove(param)">
-                                <CxIcon Icon="FeatherIcon.Delete" />
+                                <SvgIcon Icon="FeatherIcon.Delete" />
                             </HxButton>
                         </HxButtonGroup>
                     </td>
@@ -95,7 +95,7 @@ else if (Step is not null && targetJob is not null)
     </table>
     <HxDropdownButtonGroup>
         <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" Enabled="AvailableTargetParameters.Any()">
-            <CxIcon Icon="FeatherIcon.Plus" />
+            <SvgIcon Icon="FeatherIcon.Plus" />
             Add parameter
         </HxDropdownToggleButton>
         <HxDropdownMenu>

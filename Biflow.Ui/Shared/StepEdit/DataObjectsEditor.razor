@@ -10,7 +10,7 @@
                 Attempt to infer from stored procedure
             </HxButton>
             <HxPopover Trigger="PopoverTrigger.Hover" Content="@popoverContent">
-                <CxIcon Icon="FeatherIcon.Info" />
+                <SvgIcon Icon="FeatherIcon.Info" />
             </HxPopover>
         </div>
     </div>
@@ -81,7 +81,7 @@
                                     }
                                     <span class="data-attribute-edit bg-light-subtle border d-inline-flex align-items-center rounded small mx-1" title="Add data attributes"
                                           @onclick="() => { editReference = reference; editReferenceAttributes = reference.DataAttributes.ToList(); }">
-                                        <CxIcon Icon="FeatherIcon.Plus" />
+                                        <SvgIcon Icon="FeatherIcon.Plus" />
                                     </span>
                                 }
                             </div>
@@ -113,14 +113,14 @@
                                           CssClass="btn-auto text-success"
                                           OnClick="() => { reference.DataAttributes.Clear(); reference.DataAttributes.AddRange(editReferenceAttributes); editReferenceAttributes.Clear(); editReference = null; }"
                                           title="Done">
-                                    <CxIcon Icon="FeatherIcon.Check" />
+                                    <SvgIcon Icon="FeatherIcon.Check" />
                                 </HxButton>
                                 <HxButton Size="ButtonSize.Small"
                                           Color="ThemeColor.None"
                                           CssClass="btn-auto text-danger"
                                           OnClick="() => { editReference = null; editReferenceAttributes.Clear(); }"
                                           title="Discard">
-                                    <CxIcon Icon="FeatherIcon.X" />
+                                    <SvgIcon Icon="FeatherIcon.X" />
                                 </HxButton>
                             }
                             else
@@ -129,7 +129,7 @@
                                           Color="ThemeColor.None"
                                           CssClass="btn-auto"
                                           OnClick="() => references.Remove(reference)">
-                                    <CxIcon Icon="FeatherIcon.Delete" />
+                                    <SvgIcon Icon="FeatherIcon.Delete" />
                                 </HxButton>
                             }
                         </HxButtonGroup>
@@ -148,10 +148,10 @@
                 <td colspan="2">
                     <HxButtonGroup Size="ButtonGroupSize.Small">
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-success" OnClick="SubmitNewObject" title="Add">
-                            <CxIcon Icon="FeatherIcon.Check" />
+                            <SvgIcon Icon="FeatherIcon.Check" />
                         </HxButton>
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger" OnClick="() => newObject = null" title="Discard">
-                            <CxIcon Icon="FeatherIcon.X" />
+                            <SvgIcon Icon="FeatherIcon.X" />
                         </HxButton>
                     </HxButtonGroup>
                 </td>
@@ -179,7 +179,7 @@
                                     <td>
                                         <HxButtonGroup Size="ButtonGroupSize.Small">
                                             <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => { newObject = obj; }" title="Edit before adding">
-                                                <CxIcon Icon="FeatherIcon.Edit2" />
+                                                <SvgIcon Icon="FeatherIcon.Edit2" />
                                             </HxButton>
                                         </HxButtonGroup>
                                     </td>
@@ -195,7 +195,7 @@
 
 <HxDropdownButtonGroup CssClass="mt-2">
     <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
-        <CxIcon Icon="FeatherIcon.Plus" />
+        <SvgIcon Icon="FeatherIcon.Plus" />
         @addButton
     </HxDropdownToggleButton>
     <HxDropdownMenu>
@@ -205,27 +205,27 @@
             Guid? tabularConnectionId = Step is TabularStep tabular ? tabular.ConnectionId : null;
         }
         <HxDropdownItem OnClick="() => appOffcanvas.LetAsync(x => x.ShowAsync(qlikClientId))">
-            <CxIcon Icon="LucideIcon.FilePieChart" />
+            <SvgIcon Icon="LucideIcon.FilePieChart" />
             Add app
         </HxDropdownItem>
         <HxDropdownItem OnClick="() => tabularOffcanvas.LetAsync(x => x.ShowAsync(tabularConnectionId))">
-            <CxIcon Icon="FeatherIcon.Box" />
+            <SvgIcon Icon="FeatherIcon.Box" />
             Add tabular
         </HxDropdownItem>
         <HxDropdownItem OnClick="() => datasetOffcanvas.LetAsync(x => x.ShowAsync(appRegistrationId))">
-            <CxIcon Icon="LucideIcon.FileBarChart2" />
+            <SvgIcon Icon="LucideIcon.FileBarChart2" />
             Add dataset
         </HxDropdownItem>
         <HxDropdownItem OnClick="() => blobOffcanvas.LetAsync(x => x.ShowAsync())">
-            <CxIcon Icon="FeatherIcon.File" />
+            <SvgIcon Icon="FeatherIcon.File" />
             Add blob
         </HxDropdownItem>
         <HxDropdownItem OnClick="() => dbObjectExplorerOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId))">
-            <CxIcon Icon="FeatherIcon.Table" />
+            <SvgIcon Icon="FeatherIcon.Table" />
             Add table
         </HxDropdownItem>
         <HxDropdownItem OnClick="AddNewObjectAsync">
-            <CxIcon Icon="FeatherIcon.Edit3" />
+            <SvgIcon Icon="FeatherIcon.Edit3" />
             Add manually
         </HxDropdownItem>
     </HxDropdownMenu>

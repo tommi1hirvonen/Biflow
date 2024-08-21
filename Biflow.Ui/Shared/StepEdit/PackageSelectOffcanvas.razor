@@ -7,7 +7,7 @@
             <div class="col">
                 <div class="input-group">
                     <div class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.Search" />
+                        <SvgIcon Icon="FeatherIcon.Search" />
                     </div>
                     <input type="search" class="form-control form-control-sm" placeholder="Search packages" @bind-value="filterText" @bind-value:event="oninput" />
                 </div>
@@ -43,14 +43,14 @@
                             <div class="list-group-item list-group-item-action d-flex align-items-center small" style="cursor: pointer;" @onclick="() => ToggleFolder(folder)">
                                 @if (folderExpanded)
                                 {
-                                    <CxIcon Icon="FeatherIcon.ChevronDown" />
+                                    <SvgIcon Icon="FeatherIcon.ChevronDown" />
                                 }
                                 else
                                 {
-                                    <CxIcon Icon="FeatherIcon.ChevronRight" />
+                                    <SvgIcon Icon="FeatherIcon.ChevronRight" />
                                 }
                                 &nbsp;
-                                <CxIcon Icon="FeatherIcon.Folder" />
+                                <SvgIcon Icon="FeatherIcon.Folder" />
                                 &nbsp;
                                 @folder.FolderName
                                 <span class="ms-auto badge rounded-pill @(projects.Length > 0 ? "bg-primary" : "bg-secondary")">
@@ -75,14 +75,14 @@
                                     <div class="list-group-item list-group-item-action d-flex align-items-center small" style="cursor: pointer; padding-left: 2rem;" @onclick="() => ToggleProject(project)">
                                         @if (projectExpanded)
                                         {
-                                            <CxIcon Icon="FeatherIcon.ChevronDown" />
+                                            <SvgIcon Icon="FeatherIcon.ChevronDown" />
                                         }
                                         else
                                         {
-                                            <CxIcon Icon="FeatherIcon.ChevronRight" />
+                                            <SvgIcon Icon="FeatherIcon.ChevronRight" />
                                         }
                                         &nbsp;
-                                        <CxIcon Icon="FeatherIcon.Briefcase" />
+                                        <SvgIcon Icon="FeatherIcon.Briefcase" />
                                         &nbsp;
                                         @project.ProjectName
                                         <span class="ms-auto badge rounded-pill @(packages.Length > 0 ? "bg-primary" : "bg-secondary")">
@@ -106,7 +106,7 @@
                                             <div class="list-group-item list-group-item-action small @(package == selectedPackage ? "bg-body" : null)" style="cursor: pointer;" @onclick="() => TogglePackage(package)">
                                                 <div class="row" style="padding-left: 3rem;">
                                                     <div class="col d-flex align-items-center @(package == selectedPackage ? "fw-bold" : null)">
-                                                        <CxIcon Icon="FeatherIcon.Package" />
+                                                        <SvgIcon Icon="FeatherIcon.Package" />
                                                         &nbsp;
                                                         <HighlightableText Text="@package.PackageName" PartToHighlight="@filterText" />
                                                     </div>

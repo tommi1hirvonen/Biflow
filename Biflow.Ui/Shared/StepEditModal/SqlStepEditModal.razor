@@ -10,7 +10,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.XOctagon" />
+                        <SvgIcon Icon="FeatherIcon.XOctagon" />
                     </div>
                     <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 5rem;"></InputNumber>
                 </div>
@@ -25,7 +25,7 @@
             <div class="col-md-6 d-inline">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.Database" />
+                        <SvgIcon Icon="FeatherIcon.Database" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId">
                         @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
@@ -34,7 +34,7 @@
                         }
                     </InputSelect>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenStoredProcedureSelectModal">
-                        <CxIcon Icon="FeatherIcon.MoreHorizontal" />
+                        <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
                         Stored procedures
                     </HxButton>
                 </div>
@@ -65,7 +65,7 @@
                 <label class="form-label mb-md-0">
                     Capture scalar result
                     <HxPopover Trigger="PopoverTrigger.Hover" Content="Capture and assign the scalar result of the SQL statement to a job parameter">
-                         <CxIcon Icon="FeatherIcon.Info" />
+                         <SvgIcon Icon="FeatherIcon.Info" />
                      </HxPopover>
                 </label>
             </div>

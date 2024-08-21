@@ -18,21 +18,21 @@
                              <li class="nav-item">
                                  <span class="nav-link @(currentView == TableEditView.Settings ? "active" : null)"
                                  @onclick="() => currentView = TableEditView.Settings">
-                                     <CxIcon Icon="FeatherIcon.Settings" />
+                                     <SvgIcon Icon="FeatherIcon.Settings" />
                                      Settings
                                  </span>
                              </li>
                              <li class="nav-item">
                                  <span class="nav-link @(currentView == TableEditView.ColumnOrder ? "active" : null)"
                                  @onclick="() => currentView = TableEditView.ColumnOrder">
-                                     <CxIcon Icon="FeatherIcon.Columns" />
+                                     <SvgIcon Icon="FeatherIcon.Columns" />
                                      Column Order
                                  </span>
                              </li>
                              <li class="nav-item">
                                  <span class="nav-link @(currentView == TableEditView.Lookups ? "active" : null)"
                                  @onclick="() => currentView = TableEditView.Lookups">
-                                     <CxIcon Icon="FeatherIcon.Search" />
+                                     <SvgIcon Icon="FeatherIcon.Search" />
                                      Lookup Columns
                                  </span>
                              </li>
@@ -85,7 +85,7 @@
                                 </select>
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
                                           OnClick="async () => await offcanvas.LetAsync(x => x.ShowAsync(editTable.Connection.ConnectionId))">
-                                    <CxIcon Icon="FeatherIcon.MoreHorizontal" />
+                                    <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
                                     Select table
                                 </HxButton>
                             </div>
@@ -158,7 +158,7 @@
                             <label class="form-label mb-lg-0">
                                 Locked columns
                                 <HxPopover Trigger="PopoverTrigger.Hover" Content="Define a list of locked columns to prevent editing. If the table has a column with a matching name, the column's edit fields will be disabled.">
-                                    <CxIcon Icon="FeatherIcon.Info" />
+                                    <SvgIcon Icon="FeatherIcon.Info" />
                                 </HxPopover>
                             </label>
                         </div>
@@ -177,7 +177,7 @@
                                 <label class="form-check-label" for="locked_columns_exclude">
                                     Exclude mode
                                     <HxPopover Trigger="PopoverTrigger.Hover" Content="When enabled, columns not listed will be locked.">
-                                        <CxIcon Icon="FeatherIcon.Info" />
+                                        <SvgIcon Icon="FeatherIcon.Info" />
                                     </HxPopover>
                                 </label>
                             </div>
@@ -189,7 +189,7 @@
                             <label class="form-label mb-lg-0">
                                 Hidden columns
                                 <HxPopover Trigger="PopoverTrigger.Hover" Content="Define a list of hidden columns. If a hidden column is part of the primary key and 'allow import' is enabled, the column will still be included in Excel exports.">
-                                    <CxIcon Icon="FeatherIcon.Info" />
+                                    <SvgIcon Icon="FeatherIcon.Info" />
                                 </HxPopover>
                             </label>
                         </div>
@@ -219,11 +219,11 @@
                                 <div class="col">
                                     <HxButtonGroup Orientation="ButtonGroupOrientation.Vertical">
                                         <HxButton Color="ThemeColor.None" CssClass="btn-auto" OnClick="PromoteSelectedColumn">
-                                            <CxIcon Icon="FeatherIcon.ChevronUp" />
+                                            <SvgIcon Icon="FeatherIcon.ChevronUp" />
                                             Promote
                                         </HxButton>
                                         <HxButton Color="ThemeColor.None" CssClass="btn-auto" OnClick="DemoteSelectedColumn">
-                                            <CxIcon Icon="FeatherIcon.ChevronDown" />
+                                            <SvgIcon Icon="FeatherIcon.ChevronDown" />
                                             Demote
                                         </HxButton>
                                     </HxButtonGroup>
@@ -254,7 +254,7 @@
                         <div class="col">
                             <button type="button" class="btn btn-sm btn-auto @(string.IsNullOrEmpty(editTable.TargetSchemaName) || string.IsNullOrEmpty(editTable.TargetTableName) ? "disabled" : null)"
                             @onclick="() => editTable.Lookups.Add(new())">
-                                <CxIcon Icon="FeatherIcon.Plus" />
+                                <SvgIcon Icon="FeatherIcon.Plus" />
                                 Add lookup
                             </button>
                         </div>
@@ -346,7 +346,7 @@
                                         <td>
                                             <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" title="Delete lookup"
                                                       OnClick="() => { editTable.Lookups.Remove(lookup); StateHasChanged(); }">
-                                                <CxIcon Icon="FeatherIcon.Delete" />
+                                                <SvgIcon Icon="FeatherIcon.Delete" />
                                             </HxButton>
                                         </td>
                                     </tr>
@@ -370,11 +370,11 @@
     </BodyTemplate>
     <FooterTemplate>
         <HxSubmit FormId="table_edit_form" Color="ThemeColor.Success">
-            <CxIcon Icon="FeatherIcon.Save" />
+            <SvgIcon Icon="FeatherIcon.Save" />
             Save
         </HxSubmit>
         <HxButton Color="ThemeColor.Secondary" OnClick="EndEditContext" Spinner="false">
-            <CxIcon Icon="FeatherIcon.X" />
+            <SvgIcon Icon="FeatherIcon.X" />
             Cancel
         </HxButton>
     </FooterTemplate>

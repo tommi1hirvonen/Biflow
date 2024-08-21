@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Components.Rendering;
 
 namespace Biflow.Ui.Components;
 
-public class CxIcon : ComponentBase
+public class SvgIcon : ComponentBase
 {
     [Parameter, EditorRequired] public IconBase? Icon { get; set; }
 

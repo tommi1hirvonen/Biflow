@@ -80,7 +80,7 @@
                                       Size="ButtonSize.Small"
                                       CssClass="btn-auto"
                                       @onclick="async () => { Step.StepParameters.Remove(param); await ParametersValidator.LetAsync(x => x.ValidateAsync()); }">
-                                <CxIcon Icon="FeatherIcon.Delete" />
+                                <SvgIcon Icon="FeatherIcon.Delete" />
                             </HxButton>
                         </HxButtonGroup>
                     </td>
@@ -90,12 +90,12 @@
     </table>
     <HxButtonGroup Size="ButtonGroupSize.Small">
         <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="AddParameter">
-            <CxIcon Icon="FeatherIcon.Plus" />
+            <SvgIcon Icon="FeatherIcon.Plus" />
             Add parameter
         </HxButton>
         <HxDropdownButtonGroup>
             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" Spinner="loadingParameters" Enabled="!loadingParameters">
-                <CxIcon Icon="FeatherIcon.AtSign" />
+                <SvgIcon Icon="FeatherIcon.AtSign" />
                 Import parameters
             </HxDropdownToggleButton>
             <HxDropdownMenu>

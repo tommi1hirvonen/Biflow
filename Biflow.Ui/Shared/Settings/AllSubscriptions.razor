@@ -6,7 +6,7 @@
     <div class="col-auto">
         <div class="input-group">
             <div class="input-group-text">
-                <CxIcon Icon="FeatherIcon.User" />
+                <SvgIcon Icon="FeatherIcon.User" />
             </div>
             <select class="form-select" @bind="userId" @bind:after="() => user = users?.FirstOrDefault(u => u.UserId == userId)">
                 @if (users is not null)

@@ -6,25 +6,25 @@
         <div class="list-group shadow-sm">
             <button type="button" class="list-group-item list-group-item-action @(activeTab == SettingsTab.General ? "active" : null)"
                     @onclick="() => activeTab = SettingsTab.General">
-                <CxIcon Icon="FeatherIcon.Info" />
+                <SvgIcon Icon="FeatherIcon.Info" />
                 &nbsp;
                 General
             </button>
             <button type="button" class="list-group-item list-group-item-action @(activeTab == SettingsTab.Execution ? "active" : null)"
                     @onclick="() => activeTab = SettingsTab.Execution">
-                <CxIcon Icon="FeatherIcon.Tool" />
+                <SvgIcon Icon="FeatherIcon.Tool" />
                 &nbsp;
                 Execution mode
             </button>
             <button type="button" class="list-group-item list-group-item-action @(activeTab == SettingsTab.Concurrency ? "active" : null)"
                     @onclick="() => activeTab = SettingsTab.Concurrency">
-                <CxIcon Icon="FeatherIcon.Sliders" />
+                <SvgIcon Icon="FeatherIcon.Sliders" />
                 &nbsp;
                 Concurrency
             </button>
             <button type="button" class="list-group-item list-group-item-action @(activeTab == SettingsTab.SyncDependencies ? "active" : null)"
                     @onclick="() => activeTab = SettingsTab.SyncDependencies">
-                <CxIcon Icon="FeatherIcon.RefreshCw" />
+                <SvgIcon Icon="FeatherIcon.RefreshCw" />
                 &nbsp;
                 Sync dependencies
             </button>

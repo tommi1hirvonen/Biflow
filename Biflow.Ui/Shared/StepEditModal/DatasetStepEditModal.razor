@@ -10,7 +10,7 @@
             <div class="col-md-6 d-inline">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.Globe" />
+                        <SvgIcon Icon="FeatherIcon.Globe" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.AppRegistrationId">
                         @foreach (var app in AppRegistrations ?? Enumerable.Empty<AppRegistration>())
@@ -19,7 +19,7 @@
                         }
                     </InputSelect>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenDatasetSelectOffcanvas">
-                        <CxIcon Icon="FeatherIcon.MoreHorizontal" />
+                        <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
                         Browse datasets
                     </HxButton>
                 </div>
@@ -33,7 +33,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.Folder" />
+                        <SvgIcon Icon="FeatherIcon.Folder" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.DatasetGroupId"
                                @bind-Value:after="() => datasetGroupName = string.Empty"></InputText>
@@ -59,7 +59,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <CxIcon Icon="LucideIcon.FileBarChart2" />
+                        <SvgIcon Icon="LucideIcon.FileBarChart2" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.DatasetId"
                                @bind-Value:after="() => datasetName = string.Empty"></InputText>

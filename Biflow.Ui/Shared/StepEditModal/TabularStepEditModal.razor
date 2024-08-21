@@ -10,7 +10,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.XOctagon" />
+                        <SvgIcon Icon="FeatherIcon.XOctagon" />
                     </div>
                     <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 5rem;"></InputNumber>
                 </div>
@@ -25,7 +25,7 @@
             <div class="col-md-6 d-inline">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.Database" />
+                        <SvgIcon Icon="FeatherIcon.Database" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId">
                         @foreach (var connection in AsConnections ?? Enumerable.Empty<AnalysisServicesConnectionInfo>())
@@ -34,7 +34,7 @@
                         }
                     </InputSelect>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await offcanvas.LetAsync(x => x.ShowAsync(Step?.ConnectionId))">
-                        <CxIcon Icon="FeatherIcon.MoreHorizontal" />
+                        <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
                         Browse models
                     </HxButton>
                 </div>
@@ -48,7 +48,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.Box" />
+                        <SvgIcon Icon="FeatherIcon.Box" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.TabularModelName" />
                 </div>
@@ -63,7 +63,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.Table" />
+                        <SvgIcon Icon="FeatherIcon.Table" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.TabularTableName" />
                 </div>
@@ -78,7 +78,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.PieChart" />
+                        <SvgIcon Icon="FeatherIcon.PieChart" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.TabularPartitionName" />
                 </div>
