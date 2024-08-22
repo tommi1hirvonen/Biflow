@@ -1,4 +1,5 @@
-﻿
+﻿@using Biflow.Ui.Icons
+
 @{
     var (color, icon) = Badge;
     var badgeCss = $"bg-{color}-subtle border-{color}-subtle text-{color}-emphasis";
@@ -13,7 +14,7 @@
 @code {
     [Parameter] public StepExecutionStatus? ExecutionStatus { get; set; }
 
-    private (string Color, FeatherIcon Icon) Badge => ExecutionStatus switch
+    private (string Color, Svg Icon) Badge => ExecutionStatus switch
     {
         StepExecutionStatus.Succeeded => ("success", FeatherIcon.CheckCircle),
         StepExecutionStatus.Warning => ("warning", FeatherIcon.AlertTriangle),

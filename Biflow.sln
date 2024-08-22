@@ -35,7 +35,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Ui.SqlServer", "Bifl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Executor.Core.Test", "Biflow.Executor.Core.Tests\Biflow.Executor.Core.Test.csproj", "{ACC0F44D-9F25-47CA-BA60-D9BC8F302D0C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Biflow.Ui.Components.Sample", "Biflow.Ui.Components.Sample\Biflow.Ui.Components.Sample.csproj", "{EA48319F-D1F3-4D57-B8BF-F8DF5225B80E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Ui.Components.Sample", "Biflow.Ui.Components.Sample\Biflow.Ui.Components.Sample.csproj", "{EA48319F-D1F3-4D57-B8BF-F8DF5225B80E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Ui.Icons", "Biflow.Ui.Icons\Biflow.Ui.Icons.csproj", "{0BB64A1A-43A1-4244-BE24-BFAE09DA7BE8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -111,6 +113,10 @@ Global
 		{EA48319F-D1F3-4D57-B8BF-F8DF5225B80E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EA48319F-D1F3-4D57-B8BF-F8DF5225B80E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EA48319F-D1F3-4D57-B8BF-F8DF5225B80E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0BB64A1A-43A1-4244-BE24-BFAE09DA7BE8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0BB64A1A-43A1-4244-BE24-BFAE09DA7BE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0BB64A1A-43A1-4244-BE24-BFAE09DA7BE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0BB64A1A-43A1-4244-BE24-BFAE09DA7BE8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

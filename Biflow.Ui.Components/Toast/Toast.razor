@@ -1,3 +1,4 @@
+@using Biflow.Ui.Icons
 @using Microsoft.AspNetCore.Components.Web
 
 @namespace Biflow.Ui.Components
@@ -89,7 +90,7 @@
         _ => ""
     };
 
-    private IconBase Icon => Color switch
+    private Svg Icon => Color switch
     {
         ComponentColor.Success => FeatherIcon.CheckCircle,
         ComponentColor.Warning => FeatherIcon.AlertTriangle,

@@ -1,10 +1,11 @@
-﻿
+﻿@using Biflow.Ui.Icons
+
 <SvgIcon Icon="Icon" />
 
 @code {
     [Parameter] public string? Filename { get; set; }
 
-    private Components.IconBase Icon => Filename switch
+    private Svg Icon => Filename switch
     {
         string json when json.EndsWith(".json") => LucideIcon.FileJson,
         string xml when xml.EndsWith(".xml") => LucideIcon.FileCode,

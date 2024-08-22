@@ -1,0 +1,84 @@
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Collections.Immutable;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading;
+
+namespace Biflow.Ui.SourceGeneration;
+
+[Generator]
+internal class IconSourceGenerator : IIncrementalGenerator
+{
+    public void Initialize(IncrementalGeneratorInitializationContext context)
+    {
+        var classes = context.SyntaxProvider
+            .ForAttributeWithMetadataName(
+                fullyQualifiedMetadataName: "Biflow.Ui.Icons.GenerateIconsAttribute",
+                predicate: IsPartialClass,
+                transform: Transform)
+            .Collect();
+
+        var separator = Path.DirectorySeparatorChar;
+
+        var icons = context.AdditionalTextsProvider
+            .Where(text => text.Path.EndsWith(".svg"))
+            .Select((text, cancellationToken) => new IconData(text.Path, text.GetText(cancellationToken)?.ToString()))
+            .Collect();
+
+        var classIconMatches = classes.Combine(icons);
+
+        context.RegisterSourceOutput(classes.Combine(icons), GenerateCode);
+    }
+
+    private static bool IsPartialClass(SyntaxNode node, CancellationToken cancellationToken) =>
+        node is ClassDeclarationSyntax classDeclaration
+        && classDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword));
+
+    private static IconsClassData? Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
+    {
+        if (context.Attributes.FirstOrDefault() is AttributeData data)
+        {
+            var args = data.ConstructorArguments[0].Values.Select(v => v.Value?.ToString()).ToArray();
+            var classDeclaration = (ClassDeclarationSyntax)context.TargetNode;
+            var @namespace = classDeclaration.GetNamespace();
+            return new IconsClassData(@namespace, context.TargetSymbol.Name, args);
+        }
+        return null;
+    }
+
+    private static void GenerateCode(SourceProductionContext context, (ImmutableArray<IconsClassData?> Left, ImmutableArray<IconData> Right) tuple)
+    {
+        var (classInfos, generationInfos) = tuple;
+        foreach (var classInfo in classInfos.OfType<IconsClassData>())
+        {
+            var sourceBuilder = new StringBuilder($$"""
+                using Biflow.Ui.Icons;
+
+                namespace {{classInfo.Namespace}};
+                
+                public static partial class {{classInfo.ClassName}}
+                {
+
+                """);
+
+            foreach (var generationInfo in generationInfos.Where(g => g.IconPath.Contains(classInfo.IconsPath)))
+            {
+                var propertyName = generationInfo.IconName.GetPropertyNameFromIconName();
+
+                sourceBuilder.AppendLine($"""""""
+                    public static Svg {propertyName} => new Svg(""""""
+                    {generationInfo.IconText}
+                    """""");
+
+                    """"""");
+            }
+
+            sourceBuilder.Append("}");
+            
+            context.AddSource($"{classInfo.ClassName}.g.cs", sourceBuilder.ToString());
+        }
+    }
+}
