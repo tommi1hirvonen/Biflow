@@ -34,8 +34,7 @@ internal class IconSourceGenerator : IIncrementalGenerator
     }
 
     private static bool IsPartialClass(SyntaxNode node, CancellationToken cancellationToken) =>
-        node is ClassDeclarationSyntax classDeclaration
-        && classDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword));
+        node is ClassDeclarationSyntax classDeclaration;
 
     private static IconsClassData? Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
     {
@@ -44,7 +43,19 @@ internal class IconSourceGenerator : IIncrementalGenerator
             var args = data.ConstructorArguments[0].Values.Select(v => v.Value?.ToString()).ToArray();
             var classDeclaration = (ClassDeclarationSyntax)context.TargetNode;
             var @namespace = classDeclaration.GetNamespace();
-            return new IconsClassData(@namespace, context.TargetSymbol.Name, args);
+            var incorrectModifiers = true;
+            if (classDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword))
+                && classDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.StaticKeyword))
+                && classDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword)))
+            {
+                incorrectModifiers = false;
+            }
+            return new IconsClassData(
+                @namespace,
+                context.TargetSymbol.Name,
+                args,
+                incorrectModifiers,
+                context.TargetSymbol.Locations.FirstOrDefault());
         }
         return null;
     }
@@ -54,6 +65,12 @@ internal class IconSourceGenerator : IIncrementalGenerator
         var (classInfos, generationInfos) = tuple;
         foreach (var classInfo in classInfos.OfType<IconsClassData>())
         {
+            if (classInfo.IncorrectModifiers)
+            {
+                var diagnostic = Diagnostic.Create(DiagnosticDescriptors.IncorrectModifiers, classInfo.Location, classInfo.ClassName);
+                context.ReportDiagnostic(diagnostic);
+                continue;
+            }
             var sourceBuilder = new StringBuilder($$"""
                 using Biflow.Ui.Icons;
 
