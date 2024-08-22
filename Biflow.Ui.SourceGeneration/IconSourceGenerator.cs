@@ -17,7 +17,7 @@ internal class IconSourceGenerator : IIncrementalGenerator
         var classes = context.SyntaxProvider
             .ForAttributeWithMetadataName(
                 fullyQualifiedMetadataName: "Biflow.Ui.Icons.GenerateIconsAttribute",
-                predicate: IsPartialClass,
+                predicate: (syntaxNode, cancellationToken) => syntaxNode is ClassDeclarationSyntax,
                 transform: Transform)
             .Collect();
 
@@ -32,9 +32,6 @@ internal class IconSourceGenerator : IIncrementalGenerator
 
         context.RegisterSourceOutput(classes.Combine(icons), GenerateCode);
     }
-
-    private static bool IsPartialClass(SyntaxNode node, CancellationToken cancellationToken) =>
-        node is ClassDeclarationSyntax classDeclaration;
 
     private static IconsClassData? Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
     {
