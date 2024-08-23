@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using Biflow.Ui.Icons;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Collections.Immutable;
@@ -15,7 +16,7 @@ internal class IconSourceGenerator : IIncrementalGenerator
     {
         var classes = context.SyntaxProvider
             .ForAttributeWithMetadataName(
-                fullyQualifiedMetadataName: "Biflow.Ui.Icons.GenerateIconsAttribute",
+                fullyQualifiedMetadataName: typeof(GenerateIconsAttribute).FullName,
                 predicate: (syntaxNode, cancellationToken) => syntaxNode is ClassDeclarationSyntax,
                 transform: Transform)
             .Collect();
@@ -32,7 +33,7 @@ internal class IconSourceGenerator : IIncrementalGenerator
 
     private static IconsClassData? Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
     {
-        if (context.Attributes.FirstOrDefault(a => a.AttributeClass?.Name == "GenerateIconsAttribute") is AttributeData data)
+        if (context.Attributes.FirstOrDefault(a => a.AttributeClass?.Name == nameof(GenerateIconsAttribute)) is AttributeData data)
         {
             var args = data.ConstructorArguments[0].Values
                 .Select(v => v.Value?.ToString())
@@ -68,7 +69,7 @@ internal class IconSourceGenerator : IIncrementalGenerator
                 continue;
             }
             var sourceBuilder = new StringBuilder($$"""
-                using Biflow.Ui.Icons;
+                using {{typeof(Svg).Namespace}};
 
                 namespace {{classData.Namespace}};
                 
@@ -82,7 +83,7 @@ internal class IconSourceGenerator : IIncrementalGenerator
                 var propertyName = iconData.IconName.GetPropertyNameFromIconName();
 
                 sourceBuilder.AppendLine($"""""""
-                    public static Svg {propertyName} => new Svg(""""""
+                    public static {nameof(Svg)} {propertyName} => new {nameof(Svg)}(""""""
                     {iconData.IconText}
                     """""");
 

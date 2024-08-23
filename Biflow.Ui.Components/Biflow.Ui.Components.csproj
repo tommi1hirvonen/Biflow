@@ -22,6 +22,7 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\Biflow.Core\Biflow.Core.csproj" />
 	  <ProjectReference Include="..\Biflow.Ui.Icons\Biflow.Ui.Icons.csproj" />
+	  <ProjectReference Include="..\Biflow.Ui.Icons\Biflow.Ui.Icons.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	  <ProjectReference Include="..\Biflow.Ui.SourceGeneration\Biflow.Ui.SourceGeneration.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 
