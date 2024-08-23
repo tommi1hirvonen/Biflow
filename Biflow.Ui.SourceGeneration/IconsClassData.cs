@@ -3,7 +3,12 @@ using System.IO;
 
 namespace Biflow.Ui.SourceGeneration;
 
-class IconsClassData(string @namespace, string className, string?[] pathSegments, bool incorrectModifiers, Location? location)
+internal class IconsClassData(
+    string @namespace,
+    string className,
+    string?[] pathSegments,
+    bool incorrectModifiers,
+    Location? location)
 {
     public string Namespace { get; } = @namespace;
 

@@ -2,7 +2,7 @@
 
 namespace Biflow.Ui.SourceGeneration;
 
-class IconData(string iconPath, string? iconText)
+internal class IconData(string iconPath, string? iconText)
 {
     public string IconPath { get; } = iconPath;
 
