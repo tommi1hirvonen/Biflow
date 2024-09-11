@@ -1,4 +1,5 @@
 ﻿using Biflow.Ui.Shared;
+using Biflow.Ui.Shared.Executions;
 using Biflow.Ui.Shared.JobDetails;
 using Biflow.Ui.Shared.JobsBatchEdit;
 using Microsoft.JSInterop;
@@ -33,6 +34,7 @@ public partial class Jobs : ComponentBase, IDisposable
     private JobsBatchEditTagsModal? jobsBatchEditTagsModal;
     private Paginator<ListItem>? paginator;
     private HashSet<Job> selectedJobs = [];
+    private JobHistoryOffcanvas? jobHistoryOffcanvas;
 
     private record ListItem(Job Job, Execution? LastExecution, Schedule? NextSchedule, DateTime? NextExecution);
 

@@ -374,7 +374,7 @@
                                         Copy
                                     </DropdownMenuItem>
                                 </AuthorizeView>
-                                <DropdownMenuItem @onclick="@(() => NavigationManager.NavigateTo($"jobs/{item.JobId}/history"))">
+                                <DropdownMenuItem @onclick="@(() => jobHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.JobId)))">
                                     <SvgIcon Icon="LucideIcon.History" />
                                     History
                                 </DropdownMenuItem>
@@ -402,6 +402,8 @@
         </table>
     </div>
 </Paginator>
+
+<JobHistoryOffcanvas @ref="jobHistoryOffcanvas" />
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
     <JobEditModal @ref="jobEditModal" OnJobSubmitted="OnJobSubmitted" />
