@@ -2,5 +2,5 @@
 
 namespace Biflow.Ui.Components;
 
-[GenerateIcons("wwwroot", "icons", "lucide")]
+[GenerateIcons(cssClass: "lucide", "wwwroot", "icons", "lucide")]
 public static partial class LucideIcon;

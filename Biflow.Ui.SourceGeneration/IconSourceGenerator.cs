@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using System.Xml.Linq;
 
 namespace Biflow.Ui.SourceGeneration;
 
@@ -38,7 +39,8 @@ internal sealed class IconSourceGenerator : IIncrementalGenerator
     {
         if (context.Attributes.FirstOrDefault(a => a.AttributeClass?.Name == nameof(GenerateIconsAttribute)) is AttributeData data)
         {
-            var args = data.ConstructorArguments[0].Values
+            var cssClass = data.ConstructorArguments[0].Value?.ToString();
+            var pathSegments = data.ConstructorArguments[1].Values
                 .Select(v => v.Value?.ToString())
                 .ToArray();
             var classDeclaration = (ClassDeclarationSyntax)context.TargetNode;
@@ -53,7 +55,8 @@ internal sealed class IconSourceGenerator : IIncrementalGenerator
             return new IconsClassData(
                 @namespace: @namespace,
                 className: context.TargetSymbol.Name,
-                pathSegments: args,
+                cssClass: cssClass,
+                pathSegments: pathSegments,
                 incorrectModifiers: incorrectModifiers,
                 location: context.TargetSymbol.Locations.FirstOrDefault());
         }
@@ -87,9 +90,23 @@ internal sealed class IconSourceGenerator : IIncrementalGenerator
             {
                 var propertyName = iconData.IconName.GetPropertyNameFromIconName();
 
+                var xml = XDocument.Parse(iconData.IconText);
+
+                if (classData.CssClass is { Length: > 0 } cssClass)
+                {
+                    if (xml.Root.Attributes("class").FirstOrDefault() is XAttribute attr)
+                    {
+                        attr.Value = string.Join(" ", cssClass.Split(' ').Union(attr.Value.Split(' ')));
+                    }
+                    else
+                    {
+                        xml.Root.Add(new XAttribute("class", classData.CssClass));
+                    }
+                }
+
                 sourceBuilder.AppendLine($"""""""
                     public static {nameof(Svg)} {propertyName} => new {nameof(Svg)}(""""""
-                    {iconData.IconText}
+                    {xml}
                     """""");
 
                     """"""");

@@ -2,5 +2,5 @@
 
 namespace Biflow.Ui.Components;
 
-[GenerateIcons("wwwroot", "icons", "feather")]
+[GenerateIcons(cssClass: "feather", "wwwroot", "icons", "feather")]
 public static partial class FeatherIcon;

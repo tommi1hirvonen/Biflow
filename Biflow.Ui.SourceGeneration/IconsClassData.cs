@@ -8,6 +8,7 @@ namespace Biflow.Ui.SourceGeneration;
 internal class IconsClassData(
     string @namespace,
     string className,
+    string? cssClass,
     string?[] pathSegments,
     bool incorrectModifiers,
     Location? location) : IEquatable<IconsClassData?>
@@ -15,6 +16,8 @@ internal class IconsClassData(
     public string Namespace { get; } = @namespace;
 
     public string ClassName { get; } = className;
+
+    public string? CssClass { get; } = cssClass;
 
     public string IconsPath { get; } = string.Join(Path.DirectorySeparatorChar.ToString(), pathSegments);
 
