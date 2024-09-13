@@ -11,17 +11,13 @@
 }
 
 // Extensions for BlazorMonaco to get diff navigation.
-var navi;
 
-function createDiffNavigator(id, options) {
+function diffNavigationNext(id) {
     let editor = blazorMonaco.editor.getEditor(id);
-    navi = monaco.editor.createDiffNavigator(editor, options);
+    editor.goToDiff("next");
 }
 
-function diffNavigationNext() {
-    navi.next();
-}
-
-function diffNavigationPrevious() {
-    navi.previous();
+function diffNavigationPrevious(id) {
+    let editor = blazorMonaco.editor.getEditor(id);
+    editor.goToDiff("previous");
 }
