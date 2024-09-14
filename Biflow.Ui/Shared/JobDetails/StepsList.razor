@@ -623,7 +623,8 @@
 @{
     var connections = SqlConnections
         ?.Cast<ConnectionBase>()
-        .Concat(AsConnections?.Cast<ConnectionBase>() ?? Enumerable.Empty<ConnectionBase>())
+        .Concat(AsConnections ?? [])
+        .Concat(SnowflakeConnections ?? [])
         .Where(c => Steps?.OfType<IHasConnection>().Any(step => c.ConnectionId == step.ConnectionId) ?? false)
         .OrderBy(c => c.ConnectionName)
         ?? Enumerable.Empty<ConnectionBase>();
