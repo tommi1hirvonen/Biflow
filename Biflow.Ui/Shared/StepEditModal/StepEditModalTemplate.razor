@@ -315,7 +315,7 @@
 
     private Guid? ConnectionId => Modal?.Step switch
     {
-        IHasConnection<MsSqlConnection> sql => sql.ConnectionId,
+        IHasConnection and { Connection: MsSqlConnection sql } => sql.ConnectionId,
         _ => null
     };
 

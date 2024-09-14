@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
-public class TabularStep : Step, IHasConnection<AnalysisServicesConnection>, IHasTimeout
+public class TabularStep : Step, IHasConnection, IHasTimeout
 {
     [JsonConstructor]
     public TabularStep() : base(StepType.Tabular)
@@ -47,6 +47,9 @@ public class TabularStep : Step, IHasConnection<AnalysisServicesConnection>, IHa
 
     [JsonIgnore]
     public AnalysisServicesConnection Connection { get; set; } = null!;
+
+    [JsonIgnore]
+    ConnectionBase IHasConnection.Connection => Connection;
 
     public override TabularStep Copy(Job? targetJob = null) => new(this, targetJob);
 
