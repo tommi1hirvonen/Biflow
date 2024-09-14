@@ -66,6 +66,7 @@
                     {
                         MsSqlConnection sql => sql.SqlSteps.Count() + sql.PackageSteps.Count() + sql.AgentJobSteps.Count(),
                         AnalysisServicesConnection analysis => analysis.TabularSteps.Count(),
+                        SnowflakeConnection snow => snow.SqlSteps.Count(),
                         _ => 0
                     };
                     var jobs = connection switch
@@ -74,6 +75,7 @@
                                                         .Union(sql.PackageSteps.Select(s => s.Job))
                                                         .Union(sql.AgentJobSteps.Select(s => s.Job)).Count(),
                         AnalysisServicesConnection analysis => analysis.Steps.Select(s => s.Job).Distinct().Count(),
+                        SnowflakeConnection snow => snow.SqlSteps.Select(s => s.Job).Distinct().Count(),
                         _ => 0
                     };
                     <tr>
@@ -152,6 +154,9 @@
                         Credentials="credentials"
                         OnConnectionSubmit="OnConnectionSubmit" />
 
+<SnowflakeConnectionEditModal @ref="connectionEditModals[ConnectionType.Snowflake]"
+                              OnConnectionSubmit="OnConnectionSubmit"/>
+
 <HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsConnection?.ConnectionName}")">
     <BodyTemplate>
         <div class="row">
@@ -208,6 +213,8 @@
             .ToListAsync();
         connections = await context.Connections
             .AsNoTrackingWithIdentityResolution()
+            .Include(c => (c as SnowflakeConnection)!.SqlSteps)
+            .ThenInclude(step => step.Job)
             .Include(c => (c as MsSqlConnection)!.SqlSteps)
             .ThenInclude(step => step.Job)
             .Include(c => (c as MsSqlConnection)!.PackageSteps)

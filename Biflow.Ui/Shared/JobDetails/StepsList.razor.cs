@@ -22,7 +22,9 @@ public partial class StepsList : ComponentBase
     [CascadingParameter] public List<Job>? Jobs { get; set; }
     
     [Parameter] public List<MsSqlConnection>? SqlConnections { get; set; }
-    
+
+    [Parameter] public List<SnowflakeConnection>? SnowflakeConnections { get; set; }
+
     [Parameter] public List<AnalysisServicesConnection>? AsConnections { get; set; }
     
     [Parameter] public List<PipelineClient>? PipelineClients { get; set; }

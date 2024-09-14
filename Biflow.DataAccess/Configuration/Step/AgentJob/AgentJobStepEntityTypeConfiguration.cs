@@ -7,5 +7,6 @@ internal class AgentJobStepEntityTypeConfiguration : IEntityTypeConfiguration<Ag
     {
         builder.Property(x => x.TimeoutMinutes).HasColumnName("TimeoutMinutes");
         builder.Property(x => x.ConnectionId).HasColumnName("ConnectionId");
+        builder.HasOne(x => x.Connection).WithMany(x => x.AgentJobSteps);
     }
 }

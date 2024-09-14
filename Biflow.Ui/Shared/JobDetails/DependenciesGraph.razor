@@ -200,6 +200,7 @@
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
     <SqlStepEditModal @ref="stepEditModals[StepType.Sql]"
         Connections="SqlConnections"
+        SnowflakeConnections="SnowflakeConnections"
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
@@ -286,6 +287,8 @@
     [CascadingParameter(Name = "SortSteps")] public Action? SortSteps { get; set; }
 
     [Parameter] public List<MsSqlConnection>? SqlConnections { get; set; }
+
+    [Parameter] public List<SnowflakeConnection>? SnowflakeConnections { get; set; }
 
     [Parameter] public List<AnalysisServicesConnection>? AsConnections { get; set; }
 

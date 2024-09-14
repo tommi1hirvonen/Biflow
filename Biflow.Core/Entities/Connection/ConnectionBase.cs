@@ -6,6 +6,7 @@ namespace Biflow.Core.Entities;
 
 [JsonDerivedType(typeof(MsSqlConnection), nameof(ConnectionType.Sql))]
 [JsonDerivedType(typeof(AnalysisServicesConnection), nameof(ConnectionType.AnalysisServices))]
+[JsonDerivedType(typeof(SnowflakeConnection), nameof(ConnectionType.Snowflake))]
 public abstract class ConnectionBase(ConnectionType connectionType) : IComparable
 {
     [Display(Name = "Connection id")]
@@ -31,6 +32,9 @@ public abstract class ConnectionBase(ConnectionType connectionType) : IComparabl
         ConnectionBase connection => -connection.ConnectionName.CompareTo(ConnectionName),
         _ => throw new ArgumentException("Object does not inherit from ConnectionInfoBase")
     };
+
+    [JsonIgnore]
+    public IEnumerable<SqlStep> SqlSteps { get; set; } = new List<SqlStep>();
 
     [JsonIgnore]
     public abstract IEnumerable<Step> Steps { get; }

@@ -1,6 +1,7 @@
 ﻿using Biflow.Core.Attributes.Validation;
 using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
@@ -61,10 +62,23 @@ public class SqlStep : Step, IHasConnection, IHasTimeout, IHasStepParameters<Sql
     public JobParameter? ResultCaptureJobParameter { get; set; }
 
     [JsonIgnore]
-    public MsSqlConnection Connection { get; set; } = null!;
+    public ConnectionBase Connection
+    {
+        get => _connection;
+        set
+        {
+            if (value is MsSqlConnection or SnowflakeConnection)
+            {
+                _connection = value;
+            }
+            else
+            {
+                throw new ArgumentException($"Unallowed connection type: {value.GetType().Name}. Connection must be of type {typeof(MsSqlConnection).Name} or {typeof(SnowflakeConnection).Name}.");
+            }
+        }
+    }
 
-    [JsonIgnore]
-    ConnectionBase IHasConnection.Connection => Connection;
+    private ConnectionBase _connection = null!;
 
     [ValidateComplexType]
     public IList<SqlStepParameter> StepParameters { get; } = new List<SqlStepParameter>();

@@ -9,10 +9,9 @@ public class AnalysisServicesConnection() : ConnectionBase(ConnectionType.Analys
     public Credential? Credential { get; set; }
 
     [JsonIgnore]
-    public IEnumerable<TabularStep> TabularSteps { get; } = new List<TabularStep>();
+    public IEnumerable<TabularStep> TabularSteps { get; set; } = new List<TabularStep>();
 
-    [JsonIgnore]
-    public override IEnumerable<Step> Steps => TabularSteps?.Cast<Step>() ?? Enumerable.Empty<Step>();
+    public override IEnumerable<Step> Steps => TabularSteps;
 
     public override async Task TestConnectionAsync(CancellationToken cancellationToken = default)
     {

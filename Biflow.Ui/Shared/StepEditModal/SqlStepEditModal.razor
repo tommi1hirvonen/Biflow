@@ -28,7 +28,7 @@
                         <SvgIcon Icon="FeatherIcon.Database" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId">
-                        @foreach (var connection in Connections ?? Enumerable.Empty<MsSqlConnection>())
+                        @foreach (var connection in Connections?.Cast<ConnectionBase>().Concat(SnowflakeConnections ?? [])?.OrderBy(c => c.ConnectionName).AsEnumerable() ?? [])
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }

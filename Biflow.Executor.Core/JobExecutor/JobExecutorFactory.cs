@@ -34,7 +34,7 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
         // Left join endpoint clients to step executions.
         var query2 =
             from step in query1
-            join sql in context.SqlConnections.Include(c => c.Credential) on ((SqlStepExecution)step).ConnectionId equals sql.ConnectionId into sql_
+            join sql in context.Connections.Include(c => (c as MsSqlConnection)!.Credential) on ((SqlStepExecution)step).ConnectionId equals sql.ConnectionId into sql_
             from sql in sql_.DefaultIfEmpty()
             join package in context.SqlConnections.Include(c => c.Credential) on ((PackageStepExecution)step).ConnectionId equals package.ConnectionId into package_
             from package in package_.DefaultIfEmpty()

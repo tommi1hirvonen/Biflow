@@ -7,6 +7,8 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
 {
     [Inject] private SqlServerHelperService SqlServerHelper { get; set; } = null!;
 
+    [Parameter] public IEnumerable<SnowflakeConnection> SnowflakeConnections { get; set; } = [];
+
     internal override string FormId => "sql_step_edit_form";
 
     private StoredProcedureSelectOffcanvas? storedProcedureSelectModal;

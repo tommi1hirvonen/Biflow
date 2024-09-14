@@ -1,6 +1,6 @@
 ﻿namespace Biflow.DataAccess.Configuration;
 
-internal class ConnectionInfoEntityTypeConfiguration : IEntityTypeConfiguration<ConnectionBase>
+internal class ConnectionEntityTypeConfiguration : IEntityTypeConfiguration<ConnectionBase>
 {
     public void Configure(EntityTypeBuilder<ConnectionBase> builder)
     {
@@ -11,6 +11,7 @@ internal class ConnectionInfoEntityTypeConfiguration : IEntityTypeConfiguration<
 
         builder.HasDiscriminator<ConnectionType>("ConnectionType")
             .HasValue<MsSqlConnection>(ConnectionType.Sql)
-            .HasValue<AnalysisServicesConnection>(ConnectionType.AnalysisServices);
+            .HasValue<AnalysisServicesConnection>(ConnectionType.AnalysisServices)
+            .HasValue<SnowflakeConnection>(ConnectionType.Snowflake);
     }
 }

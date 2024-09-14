@@ -21,22 +21,15 @@ public class MsSqlConnection() : ConnectionBase(ConnectionType.Sql)
     private string? _executePackagesAsLogin;
 
     [JsonIgnore]
-    public IEnumerable<SqlStep> SqlSteps { get; } = new List<SqlStep>();
+    public IEnumerable<AgentJobStep> AgentJobSteps { get; set; } = new List<AgentJobStep>();
 
     [JsonIgnore]
-    public IEnumerable<PackageStep> PackageSteps { get; } = new List<PackageStep>();
+    public IEnumerable<PackageStep> PackageSteps { get; set; } = new List<PackageStep>();
 
-    [JsonIgnore]
-    public IEnumerable<AgentJobStep> AgentJobSteps { get; } = new List<AgentJobStep>();
+    public override IEnumerable<Step> Steps => AgentJobSteps.Cast<Step>().Concat(PackageSteps);
 
     [JsonIgnore]
     public IEnumerable<MasterDataTable> DataTables { get; } = new List<MasterDataTable>();
-
-    [JsonIgnore]
-    public override IEnumerable<Step> Steps =>
-        (SqlSteps?.Cast<Step>() ?? Enumerable.Empty<Step>())
-        .Concat(PackageSteps?.Cast<Step>() ?? Enumerable.Empty<Step>())
-        .Concat(AgentJobSteps?.Cast<Step>() ?? Enumerable.Empty<Step>());
 
     public override async Task TestConnectionAsync(CancellationToken cancellationToken = default)
     {

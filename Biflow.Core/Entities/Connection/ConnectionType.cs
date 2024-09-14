@@ -3,5 +3,6 @@
 public enum ConnectionType
 {
     Sql,
-    AnalysisServices
+    AnalysisServices,
+    Snowflake
 }
