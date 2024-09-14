@@ -1,5 +1,4 @@
-﻿@inject NavigationManager NavigationManager
-
+﻿
 @if (Execution?.ExecutionMode == ExecutionMode.ExecutionPhase)
 {
     <HxAlert Color="ThemeColor.Warning" CssClass="mt-3">
@@ -143,10 +142,10 @@
             else
             {
                 <li>
-                    <span class="dropdown-item" role="button" @onclick="@(() => NavigationManager.NavigateTo($"executions/{step.ExecutionId}/list"))">
+                    <a class="dropdown-item" role="button" href="@($"executions/{step.ExecutionId}/list")">
                         <SvgIcon Icon="FeatherIcon.ArrowRight" />
                         Go to execution
-                    </span>
+                    </a>
                 </li>
             }
         </ContextMenuTemplate>

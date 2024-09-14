@@ -320,7 +320,7 @@
                                             _ => null
                                         };
                                         var createdBy = lastExecution.ScheduleName ?? lastExecution.CreatedBy;
-                                        <a class="text-body" href="javascript:void(0)" @onclick="() => GoToExecutionDetails(lastExecution.ExecutionId)" title="@title">
+                                        <a class="text-body" href="@($"executions/{lastExecution.ExecutionId}/list")" title="@title">
                                             @lastExecution.StartedOn?.LocalDateTime
                                         </a>
                                     }
@@ -378,10 +378,10 @@
                                     <SvgIcon Icon="LucideIcon.History" />
                                     History
                                 </DropdownMenuItem>
-                                <DropdownMenuItem @onclick="@(() => NavigationManager.NavigateTo($"jobs/{item.JobId}/schedules"))">
+                                <DropdownMenuLink href="@($"jobs/{item.JobId}/schedules")">
                                     <SvgIcon Icon="FeatherIcon.Calendar" />
                                     Schedules
-                                </DropdownMenuItem>
+                                </DropdownMenuLink>
                                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                                     <DropdownMenuItem @onclick="() => executeModal.LetAsync(x => x.ShowAsync(item.JobId))">
                                         <SvgIcon Icon="FeatherIcon.Play" />

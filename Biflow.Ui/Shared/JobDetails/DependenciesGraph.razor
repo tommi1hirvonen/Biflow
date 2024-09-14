@@ -179,10 +179,10 @@
             else
             {
                 <li>
-                    <span class="dropdown-item" role="button" @onclick="@(() => NavigationManager.NavigateTo($"jobs/{step.JobId}/steps"))">
+                    <a class="dropdown-item" role="button" href="@($"jobs/{step.JobId}/steps")">
                         <SvgIcon Icon="FeatherIcon.ArrowRight" />
                         Go to job
-                    </span>
+                    </a>
                 </li>
             }
             <li>

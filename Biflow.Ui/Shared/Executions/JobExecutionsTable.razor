@@ -1,5 +1,4 @@
-﻿@inject NavigationManager NavigationManager
-@inject ToasterService Toaster
+﻿@inject ToasterService Toaster
 @inject IExecutorService ExecutorService
 @inject IHxMessageBoxService Confirmer
 @inject IJSRuntime JS
@@ -149,10 +148,14 @@
         {
             foreach (var item in Executions)
             {
+                var createdBy = item switch
+                {
+                    { ScheduleName: { Length: > 0 } scheduleName } => scheduleName,
+                    { CreatedBy: { Length: > 0 } username } => username,
+                    _ => ""
+                };
                 var checkBoxId = $"select_execution_{item.ExecutionId}";
-                <ContextMenuToggle ContainerHtmlTag="tr"
-                                   style="cursor: pointer;"
-                                   @onclick="() => GoToExecutionDetails(item.ExecutionId)">
+                <ContextMenuToggle ContainerHtmlTag="tr">
                     <ChildContent>
                         <td>
                             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")" Context="auth">
@@ -164,17 +167,12 @@
                                     <label class="form-check-label" for="@checkBoxId"></label>
                                 </div>
                             </AuthorizeView>
-                            @item.JobName
+                            <a class="text-body" href="@($"executions/{item.ExecutionId}/list")">
+                                @item.JobName
+                            </a>
                         </td>
-                        <td class="small">
-                            @if (!string.IsNullOrEmpty(item.ScheduleName))
-                            {
-                                <span>@item.ScheduleName</span>
-                            }
-                            else if (!string.IsNullOrEmpty(item.CreatedBy))
-                            {
-                                <span>@item.CreatedBy</span>
-                            }
+                        <td class="align-middle small">
+                            @createdBy
                         </td>
                         <td>
                             @item.StartedOn?.LocalDateTime
@@ -414,10 +412,5 @@
         {
             Toaster.AddError("Error updating statuses", ex.Message);
         }
-    }
-
-    private void GoToExecutionDetails(Guid executionId)
-    {
-        NavigationManager.NavigateTo($"executions/{executionId}/list");
     }
 }

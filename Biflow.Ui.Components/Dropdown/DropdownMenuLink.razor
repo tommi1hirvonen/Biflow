@@ -1,0 +1,15 @@
+@namespace Biflow.Ui.Components
+
+<li>
+    <a class="dropdown-item @CssClass" role="button" @attributes="InputAttributes">
+        @ChildContent
+    </a>
+</li>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    [Parameter] public string? CssClass { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? InputAttributes { get; set; }
+}

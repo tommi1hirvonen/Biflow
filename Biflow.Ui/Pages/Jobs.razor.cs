@@ -327,11 +327,6 @@ public partial class Jobs : ComponentBase, IDisposable
         }
     }
 
-    private void GoToExecutionDetails(Guid executionId)
-    {
-        NavigationManager.NavigateTo($"executions/{executionId}/list");
-    }
-
     private void OnJobSubmitted(Job job)
     {
         var remove = jobs?.FirstOrDefault(j => j.JobId == job.JobId);

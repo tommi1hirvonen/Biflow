@@ -485,13 +485,10 @@
                                 <SvgIcon Icon="LucideIcon.History" />
                                 History
                             </DropdownMenuItem>
-                            @{
-                                var navigateToDependencies = () => NavigationManager.NavigateTo($"jobs/{Job?.JobId}/graph/{item.StepId}");
-                            }
-                            <DropdownMenuItem @onclick="navigateToDependencies">
+                            <DropdownMenuLink href="@($"jobs/{Job?.JobId}/graph/{item.StepId}")">
                                 <SvgIcon Icon="LucideIcon.Workflow" />
                                 Dependencies
-                            </DropdownMenuItem>
+                            </DropdownMenuLink>
                             <DropdownMenuItem @onclick="() => stepDetailsModal.LetAsync(x => x.ShowAsync(item))">
                                 <SvgIcon Icon="FeatherIcon.Info" />
                                 Details

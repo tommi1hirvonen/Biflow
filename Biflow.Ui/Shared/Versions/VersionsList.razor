@@ -66,9 +66,9 @@
                                     </td>
                                     <td>
                                         <HxButtonGroup Size="ButtonGroupSize.Small">
-                                            <HxButton Color="ThemeColor.None" CssClass="btn-auto" title="Compare to current" OnClick="@(() => NavigationManager.NavigateTo($"versions/compare/{version.VersionId}"))">
+                                            <a role="button" class="btn btn-sm btn-auto" href="@($"versions/compare/{version.VersionId}")">
                                                 <SvgIcon Icon="LucideIcon.GitCompareArrows" />
-                                            </HxButton>
+                                            </a>
                                             <HxButton Color="ThemeColor.None" CssClass="btn-auto" title="Download JSON" OnClick="() => DownloadAsync(version.VersionId)">
                                                 <SvgIcon Icon="FeatherIcon.Download" />
                                             </HxButton>

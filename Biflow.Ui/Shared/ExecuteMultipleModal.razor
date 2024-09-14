@@ -54,7 +54,7 @@
                                                 </span>
                                                 @if (response.Execution is not null)
                                                 {
-                                                    <a class="small ms-1" href="javascript:void(0)" @onclick="() => NavigateToExecutionAsync(response.Execution.ExecutionId)">
+                                                    <a class="small text-body ms-1" href="@($"executions/{response.Execution.ExecutionId}/list")">
                                                         View execution
                                                     </a>
                                                 }
@@ -258,12 +258,6 @@
 
         await Executor.StartExecutionAsync(execution.ExecutionId, cancellationToken);
         return execution;
-    }
-
-    private async Task NavigateToExecutionAsync(Guid executionId)
-    {
-        await modal.LetAsync(x => x.HideAsync());
-        NavigationManager.NavigateTo($"executions/{executionId}/list");
     }
 
     private record Response(bool Success, Execution? Execution, Exception? Exception = null);
