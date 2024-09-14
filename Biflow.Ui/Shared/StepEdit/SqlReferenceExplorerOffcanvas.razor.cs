@@ -4,7 +4,7 @@ namespace Biflow.Ui.Shared.StepEdit;
 
 public partial class SqlReferenceExplorerOffcanvas : ComponentBase
 {
-    [Parameter] public IEnumerable<MsSqlConnection> Connections { get; set; } = Enumerable.Empty<MsSqlConnection>();
+    [Parameter] public IEnumerable<MsSqlConnection> Connections { get; set; } = [];
 
     private Guid? connectionId;
     private HxOffcanvas? offcanvas;
@@ -30,8 +30,8 @@ public partial class SqlReferenceExplorerOffcanvas : ComponentBase
         try
         {
             Guid connectionId = this.connectionId ?? throw new ArgumentNullException(nameof(connectionId), "Connection id was null");
-            queryResults = await SqlServerHelper.GetSqlReferencedObjectsAsync(
-                connectionId,
+            var connection = Connections.First(c => c.ConnectionId == connectionId);
+            queryResults = await connection.GetSqlReferencedObjectsAsync(
                 referencingSchemaOperator: referencingSchemaOperator,
                 referencingSchemaFilter: referencingSchemaFilter,
                 referencingNameOperator: referencingNameOperator,

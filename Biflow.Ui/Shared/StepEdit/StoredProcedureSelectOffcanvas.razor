@@ -1,5 +1,4 @@
-﻿@inject SqlServerHelperService SqlServerHelperService
-@inject ToasterService Toaster
+﻿@inject ToasterService Toaster
 
 <HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select stored procedure">
     <BodyTemplate>
@@ -84,9 +83,6 @@
 
 @code {
     [Parameter]
-    public Guid? ConnectionId { get; set; }
-
-    [Parameter]
     public EventCallback<string> OnProcedureSelected { get; set; }
 
     private HxOffcanvas? offcanvas;
@@ -118,13 +114,25 @@
         filterTextName = string.Empty;
     }
 
-    public async Task ShowAsync()
+    public async Task ShowAsync(ConnectionBase connection)
     {
         await offcanvas.LetAsync(x => x.ShowAsync());
-        if (ConnectionId is null || ConnectionId == Guid.Empty) return;
         try
         {
-            procedures = await SqlServerHelperService.GetStoredProceduresAsync((Guid)ConnectionId);
+            if (connection is MsSqlConnection msSql)
+            {
+                procedures = await msSql.GetStoredProceduresAsync();
+                
+            }
+            else if (connection is SnowflakeConnection snow)
+            {
+                // TODO Handle Snowflake procedures
+            }
+            else
+            {
+                throw new ArgumentException($"Unsupported connection type {connection.GetType().Name}");
+            }
+            
             StateHasChanged();
         }
         catch (Exception ex)

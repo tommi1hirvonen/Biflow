@@ -6,10 +6,7 @@ namespace Biflow.Ui.Shared.JobDetails;
 
 public partial class StepsList : ComponentBase
 {
-    [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
-    [Inject] private StepsDuplicatorFactory StepDuplicatorFactory { get; set; } = null!;
     [Inject] private ToasterService Toaster { get; set; } = null!;
-    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
     [Inject] private IMediator Mediator { get; set; } = null!;
     
@@ -21,9 +18,9 @@ public partial class StepsList : ComponentBase
     
     [CascadingParameter] public List<Job>? Jobs { get; set; }
     
-    [Parameter] public List<MsSqlConnection>? SqlConnections { get; set; }
+    [Parameter] public List<ConnectionBase>? SqlConnections { get; set; }
 
-    [Parameter] public List<SnowflakeConnection>? SnowflakeConnections { get; set; }
+    [Parameter] public List<MsSqlConnection>? MsSqlConnections { get; set; }
 
     [Parameter] public List<AnalysisServicesConnection>? AsConnections { get; set; }
     
@@ -99,12 +96,13 @@ public partial class StepsList : ComponentBase
 
     private (bool, string) IsStepTypeDisabled(StepType type) => type switch
     {
-        StepType.Sql or StepType.Package => ((SqlConnections?.Count ?? 0) == 0, "No SQL connections defined"),
+        StepType.Sql => ((SqlConnections?.Count ?? 0) == 0, "No SQL connections defined"),
+        StepType.Package => ((MsSqlConnections?.Count ?? 0) == 0, "No MS SQL connections defined"),
         StepType.Pipeline => ((PipelineClients?.Count ?? 0) == 0, "No pipeline clients defined"),
         StepType.Function => ((FunctionApps?.Count ?? 0) == 0, "No Function Apps defined"),
         StepType.Dataset => ((AppRegistrations?.Count ?? 0) == 0, "No app registrations defined"),
         StepType.Job => (Jobs is null || Jobs.Count == 1, ""),
-        StepType.AgentJob => ((SqlConnections?.Count ?? 0) == 0, "No SQL connections defined"),
+        StepType.AgentJob => ((MsSqlConnections?.Count ?? 0) == 0, "No MS SQL connections defined"),
         StepType.Tabular => ((AsConnections?.Count ?? 0) == 0, "No Analysis Services connections defined"),
         StepType.Qlik => ((QlikCloudClients?.Count ?? 0) == 0, "No Qlik Cloud clients defined"),
         _ => (false, "")

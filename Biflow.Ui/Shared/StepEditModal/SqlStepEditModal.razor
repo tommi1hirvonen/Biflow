@@ -25,10 +25,10 @@
             <div class="col-md-6 d-inline">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Database" />
+                        <ConnectionTypeIcon ConnectionType="Connection.ConnectionType" />
                     </div>
-                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId">
-                        @foreach (var connection in Connections?.Cast<ConnectionBase>().Concat(SnowflakeConnections ?? [])?.OrderBy(c => c.ConnectionName).AsEnumerable() ?? [])
+                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId" @bind-Value:after="StateHasChanged">
+                        @foreach (var connection in SqlConnections ?? [])
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }
@@ -58,7 +58,7 @@
             </div>
         </div>
 
-        <StoredProcedureSelectOffcanvas @ref="storedProcedureSelectModal" ConnectionId="Step.ConnectionId" OnProcedureSelected="OnStoredProcedureSelected" />
+        <StoredProcedureSelectOffcanvas @ref="storedProcedureSelectModal" OnProcedureSelected="OnStoredProcedureSelected" />
 
         <div class="row mt-3">
             <div class="col-md-4 d-md-flex align-items-center justify-content-end">

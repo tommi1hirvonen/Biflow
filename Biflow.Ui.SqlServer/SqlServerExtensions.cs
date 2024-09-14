@@ -1,18 +1,14 @@
 ﻿using Biflow.Core.Entities;
-using Biflow.DataAccess;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.SqlServer;
 
-public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFactory)
+public static class SqlServerExtensions
 {
-    private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
-
-    public async Task<SSISCatalog> GetCatalogPackagesAsync(Guid connectionId)
+    public static async Task<SSISCatalog> GetCatalogPackagesAsync(this MsSqlConnection connection)
     {
-        var connection = await GetSqlConnectionAsync(connectionId);
         using var sqlConnection = new SqlConnection(connection.ConnectionString);
         var folders = new Dictionary<long, CatalogFolder>();
         var rows = await connection.RunImpersonatedOrAsCurrentUserAsync(
@@ -98,10 +94,13 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
         return new SSISCatalog(folders);
     }
 
-    public async Task<IEnumerable<PackageParameter>> GetPackageParametersAsync(
-        Guid connectionId, string folder, string project, string package, bool includeConnectionManagerParameters)
+    public static async Task<IEnumerable<PackageParameter>> GetPackageParametersAsync(
+        this MsSqlConnection connection,
+        string folder,
+        string project,
+        string package,
+        bool includeConnectionManagerParameters)
     {
-        var connection = await GetSqlConnectionAsync(connectionId);
         using var sqlConnection = new SqlConnection(connection.ConnectionString);
         return await connection.RunImpersonatedOrAsCurrentUserAsync(async () =>
         {
@@ -180,9 +179,8 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
         });
     }
 
-    public async Task<IEnumerable<StoredProcedure>> GetStoredProceduresAsync(Guid connectionId)
+    public static async Task<IEnumerable<StoredProcedure>> GetStoredProceduresAsync(this MsSqlConnection connection)
     {
-        var connection = await GetSqlConnectionAsync(connectionId);
         using var sqlConnection = new SqlConnection(connection.ConnectionString);
         var sql = """
             select
@@ -221,9 +219,11 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
         return procedures.Values.ToArray();
     }
 
-    public async Task<IEnumerable<(string ParameterName, ParameterValue Value)>> GetStoredProcedureParametersAsync(Guid connectionId, string schema, string procedure)
+    public static async Task<IEnumerable<(string ParameterName, ParameterValue Value)>> GetStoredProcedureParametersAsync(
+        this MsSqlConnection connection,
+        string schema,
+        string procedure)
     {
-        var connection = await GetSqlConnectionAsync(connectionId);
         using var sqlConnection = new SqlConnection(connection.ConnectionString);
         return await connection.RunImpersonatedOrAsCurrentUserAsync(async () =>
         {
@@ -267,9 +267,8 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
         });
     }
 
-    public async Task<IEnumerable<(string AgentJobName, bool IsEnabled)>> GetAgentJobsAsync(Guid connectionId)
+    public static async Task<IEnumerable<(string AgentJobName, bool IsEnabled)>> GetAgentJobsAsync(this MsSqlConnection connection)
     {
-        var connection = await GetSqlConnectionAsync(connectionId);
         using var sqlConnection = new SqlConnection(connection.ConnectionString);
         var rows = await connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.QueryAsync<dynamic>("EXEC msdb.dbo.sp_help_job"));
@@ -277,9 +276,8 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
         return agentJobs;
     }
 
-    public async Task<IEnumerable<(string Schema, string Name, string Type)?>> GetSqlModulesAsync(Guid connectionId)
+    public static async Task<IEnumerable<(string Schema, string Name, string Type)?>> GetSqlModulesAsync(this MsSqlConnection connection)
     {
-        var connection = await GetSqlConnectionAsync(connectionId);
         using var sqlConnection = new SqlConnection(connection.ConnectionString);
         var results = await connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.QueryAsync<(string, string, string)?>("""
@@ -297,9 +295,8 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
         return results;
     }
 
-    public async Task<string?> GetObjectDefinitionAsync(Guid connectionId, string objectName)
+    public static async Task<string?> GetObjectDefinitionAsync(this MsSqlConnection connection, string objectName)
     {
-        var connection = await GetSqlConnectionAsync(connectionId);
         using var sqlConnection = new SqlConnection(connection.ConnectionString);
         var definition = await connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.ExecuteScalarAsync<string>(
@@ -308,8 +305,8 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
         return definition;
     }
 
-    public async Task<IEnumerable<SqlReference>> GetSqlReferencedObjectsAsync(
-        Guid connectionId,
+    public static async Task<IEnumerable<SqlReference>> GetSqlReferencedObjectsAsync(
+        this MsSqlConnection connection,
         string referencingSchemaOperator = "like",
         string referencingSchemaFilter = "",
         string referencingNameOperator = "like",
@@ -339,7 +336,6 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
         var encodedReferencedSchemaFilter = referencedSchemaOperator == "=" ? referencedSchemaFilter : $"%{referencedSchemaFilter.EncodeForLike()}%";
         var encodedReferencedNameFilter = referencedNameOperator == "=" ? referencedNameFilter :  $"%{referencedNameFilter.EncodeForLike()}%";
 
-        var connection = await GetSqlConnectionAsync(connectionId);
         using var sqlConnection = new SqlConnection(connection.ConnectionString);
         var rows = await connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.QueryAsync<SqlReference>($"""
@@ -377,9 +373,11 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
         return rows;
     }
 
-    public async Task<IEnumerable<DbObjectReference>> GetSourceObjectsAsync(Guid connectionId, string? schema, string name)
+    public static async Task<IEnumerable<DbObjectReference>> GetSourceObjectsAsync(
+        this MsSqlConnection connection,
+        string? schema,
+        string name)
     {
-        var connection = await GetSqlConnectionAsync(connectionId);
         using var sqlConnection = new SqlConnection(connection.ConnectionString);
 
         schema ??= "[dbo]";
@@ -441,9 +439,11 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
             .ToArray();
     }
 
-    public async Task<IEnumerable<DbObjectReference>> GetTargetObjectsAsync(Guid connectionId, string? schema, string name)
+    public static async Task<IEnumerable<DbObjectReference>> GetTargetObjectsAsync(
+        this MsSqlConnection connection,
+        string? schema,
+        string name)
     {
-        var connection = await GetSqlConnectionAsync(connectionId);
         using var sqlConnection = new SqlConnection(connection.ConnectionString);
 
         schema ??= "[dbo]";
@@ -505,14 +505,13 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
             .ToArray();
     }
 
-    public async Task<IEnumerable<DbObject>> GetDatabaseObjectsAsync(
-        Guid connectionId,
+    public static async Task<IEnumerable<DbObject>> GetDatabaseObjectsAsync(
+        this MsSqlConnection connection,
         string? schemaNameSearchTerm = null,
         string? objectNameSearchTerm = null,
         int? top = null,
         CancellationToken cancellationToken = default)
     {
-        var connection = await GetSqlConnectionAsync(connectionId, cancellationToken);
         using var sqlConnection = new SqlConnection(connection.ConnectionString);
         var topTerm = top > 0 ? $"top {top}" : "";
         var schema = string.IsNullOrEmpty(schemaNameSearchTerm) ? null : $"%{schemaNameSearchTerm.EncodeForLike()}%";
@@ -540,9 +539,8 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
             .ToArray();
     }
 
-    public async Task<IEnumerable<DbTable>> GetDatabaseTablesAsync(Guid connectionId, CancellationToken cancellationToken = default)
+    public static async Task<IEnumerable<DbTable>> GetDatabaseTablesAsync(this MsSqlConnection connection, CancellationToken cancellationToken = default)
     {
-        var connection = await GetSqlConnectionAsync(connectionId, cancellationToken);
         using var sqlConnection = new SqlConnection(connection.ConnectionString);
         var command = new CommandDefinition("""
             select
@@ -562,9 +560,8 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
             .ToArray();
     }
 
-    public async Task<AsServer> GetAnalysisServicesModelsAsync(Guid connectionId)
+    public static async Task<AsServer> GetAnalysisServicesModelsAsync(this AnalysisServicesConnection connection)
     {
-        var connection = await GetAsConnectionAsync(connectionId);
         return await connection.RunImpersonatedOrAsCurrentUserAsync(() =>
         {
             return Task.Run(() =>
@@ -598,25 +595,5 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
                 return asServer;
             });
         });
-    }
-
-    private async Task<MsSqlConnection> GetSqlConnectionAsync(Guid connectionId, CancellationToken cancellationToken = default)
-    {
-        using var context = _dbContextFactory.CreateDbContext();
-        return await context.SqlConnections
-            .AsNoTracking()
-            .Include(c => c.Credential)
-            .Where(c => c.ConnectionId == connectionId)
-            .FirstAsync(cancellationToken);
-    }
-
-    private async Task<AnalysisServicesConnection> GetAsConnectionAsync(Guid connectionId, CancellationToken cancellationToken = default)
-    {
-        using var context = _dbContextFactory.CreateDbContext();
-        return await context.AnalysisServicesConnections
-            .AsNoTracking()
-            .Include(c => c.Credential)
-            .Where(c => c.ConnectionId == connectionId)
-            .FirstAsync(cancellationToken);
     }
 }

@@ -13,7 +13,9 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     [Parameter] public EventCallback<Step> OnStepSubmit { get; set; }
     
-    [Parameter] public IEnumerable<MsSqlConnection> Connections { get; set; } = [];
+    [Parameter] public IEnumerable<ConnectionBase> SqlConnections { get; set; } = [];
+
+    [Parameter] public IEnumerable<MsSqlConnection> MsSqlConnections { get; set; } = [];
 
     [Parameter] public IEnumerable<AnalysisServicesConnection> AsConnections { get; set; } = [];
 

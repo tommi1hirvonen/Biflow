@@ -1,5 +1,4 @@
 ﻿@inject ToasterService Toaster
-@inject SqlServerHelperService SqlServerHelperService
 
 <HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" Title="Select package">
     <BodyTemplate>
@@ -165,7 +164,6 @@
     private readonly Dictionary<CatalogProject, bool> projectExpandedStates = [];
 
     private HxOffcanvas? offcanvas;
-    private Guid connectionId;
     private SSISCatalog? catalog;
     private string filterText = string.Empty;
     private CatalogPackage? selectedPackage;
@@ -202,7 +200,7 @@
         selectedPackage = package;
     }
 
-    public async Task ShowAsync(Guid connectionId)
+    public async Task ShowAsync(MsSqlConnection connection)
     {
         folderExpandedStates.Clear();
         projectExpandedStates.Clear();
@@ -214,8 +212,7 @@
         
         try
         {
-            catalog = await SqlServerHelperService.GetCatalogPackagesAsync(connectionId);
-            this.connectionId = connectionId;
+            catalog = await connection.GetCatalogPackagesAsync();
             StateHasChanged();
         }
         catch (Exception ex)

@@ -1,5 +1,4 @@
-﻿@inject SqlServerHelperService SqlServerHelperService
-@inject ToasterService Toaster
+﻿@inject ToasterService Toaster
 
 <HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select Agent job">
     <BodyTemplate>
@@ -78,7 +77,7 @@
 
 @code {
     [Parameter]
-    public Guid? ConnectionId { get; set; }
+    public MsSqlConnection? Connection { get; set; }
 
     [Parameter]
     public EventCallback<string> OnAgentJobSelected { get; set; }
@@ -107,10 +106,10 @@
     public async Task ShowAsync()
     {
         await offcanvas.LetAsync(x => x.ShowAsync());
-        if (ConnectionId is null || ConnectionId == Guid.Empty) return;
+        if (Connection is null) return;
         try
         {
-            agentJobs = await SqlServerHelperService.GetAgentJobsAsync((Guid)ConnectionId);
+            agentJobs = await Connection.GetAgentJobsAsync();
             StateHasChanged();
         }
         catch (Exception ex)

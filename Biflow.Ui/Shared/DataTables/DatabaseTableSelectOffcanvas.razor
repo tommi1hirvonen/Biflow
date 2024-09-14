@@ -1,5 +1,4 @@
-﻿@inject SqlServerHelperService SqlServerHelper
-@inject ToasterService Toaster
+﻿@inject ToasterService Toaster
 
 <HxOffcanvas @ref="offcanvas" Title="Select table" Size="OffcanvasSize.Large" OnClosed="OnClosed" ScrollingEnabled="true">
     <BodyTemplate>
@@ -71,7 +70,7 @@
     [Parameter] public EventCallback<DatabaseTableSelectedResult> OnTableSelected { get; set; }
 
     private HxOffcanvas? offcanvas;
-    private Guid connectionId;
+    private MsSqlConnection? connection;
     private IEnumerable<DbTable>? tables;
     private DbTable? selectedTable;
     private string schemaFilter = string.Empty;
@@ -100,15 +99,15 @@
         tableFilter = "";
     }
 
-    public async Task ShowAsync(Guid connectionId)
+    public async Task ShowAsync(MsSqlConnection connection)
     {
-        if (this.connectionId != connectionId)
+        if (this.connection != connection)
         {
             tables = null;
-            this.connectionId = connectionId;
+            this.connection = connection;
             try
             {
-                tables = await SqlServerHelper.GetDatabaseTablesAsync(this.connectionId);
+                tables = await connection.GetDatabaseTablesAsync();
             }
             catch (Exception ex)
             {

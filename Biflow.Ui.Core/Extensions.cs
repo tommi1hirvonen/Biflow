@@ -169,7 +169,6 @@ public static partial class Extensions
 
         services.AddSingleton(new ExecutorModeResolver(executorMode));
         services.AddScoped<EnvironmentSnapshotBuilder>();
-        services.AddScoped<SqlServerHelperService>();
         services.AddDuplicatorServices();
 
         // Add the mediator dispatcher as a scoped service.

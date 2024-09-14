@@ -28,7 +28,7 @@
                         <SvgIcon Icon="FeatherIcon.Database" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId">
-                        @foreach (var connection in Connections ?? Enumerable.Empty<MsSqlConnection>())
+                        @foreach (var connection in MsSqlConnections ?? Enumerable.Empty<MsSqlConnection>())
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }
@@ -55,6 +55,6 @@
                 </div>
             </div>
         </div>
-        <AgentJobSelectOffcanvas @ref="agentJobSelectOffcanvas" ConnectionId="Step.ConnectionId" OnAgentJobSelected="OnAgentJobSelected" />
+        <AgentJobSelectOffcanvas @ref="agentJobSelectOffcanvas" Connection="Connection" OnAgentJobSelected="OnAgentJobSelected" />
     }
 </StepEditModalTemplate>

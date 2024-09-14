@@ -1,5 +1,4 @@
 ﻿@inject ToasterService Toaster
-@inject SqlServerHelperService SqlServerHelperService
 
 <HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select Analysis Services object">
     <BodyTemplate>
@@ -246,7 +245,10 @@
         selectedPartition = null;
         try
         {
-            server = await SqlServerHelperService.GetAnalysisServicesModelsAsync(connectionId);
+            ArgumentNullException.ThrowIfNull(Connections);
+            var connection = Connections.FirstOrDefault(c => c.ConnectionId == connectionId);
+            ArgumentNullException.ThrowIfNull(connection);
+            server = await connection.GetAnalysisServicesModelsAsync();
         }
         catch (Exception ex)
         {

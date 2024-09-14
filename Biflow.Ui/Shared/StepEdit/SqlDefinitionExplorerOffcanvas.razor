@@ -1,5 +1,4 @@
-﻿@inject SqlServerHelperService SqlServerHelper
-@inject ToasterService Toaster
+﻿@inject ToasterService Toaster
 @inject IJSRuntime JS
 
 <HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Large" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true" Title="Explore SQL definitions">
@@ -82,7 +81,7 @@
 </HxOffcanvas>
 
 @code {
-    [Parameter] public IEnumerable<MsSqlConnection> Connections { get; set; } = [];
+    [Parameter] public IEnumerable<ConnectionBase> Connections { get; set; } = [];
 
     private Guid? connectionId;
     private Guid prevConnectionId;
@@ -103,7 +102,15 @@
                 prevConnectionId = connectionId;
                 sqlModules = null;
             }
-            sqlModules ??= await SqlServerHelper.GetSqlModulesAsync(connectionId);
+            var connection = Connections.First(c => c.ConnectionId == connectionId);
+            if (connection is MsSqlConnection mssql)
+            {
+                sqlModules ??= await mssql.GetSqlModulesAsync();
+            }
+            else if (connection is SnowflakeConnection snow)
+            {
+                // TODO Handle Snowflake connection
+            }
 
             var filteredModules = sqlModules?
                 .Where(module => $"{module?.Item1}.{module?.Item2}".ContainsIgnoreCase(request.UserInput));
@@ -142,7 +149,13 @@
         try
         {
             Guid connectionId = this.connectionId ?? throw new ArgumentNullException(nameof(connectionId), "Connection id was null");
-            objectDefinition = await SqlServerHelper.GetObjectDefinitionAsync(connectionId, this.objectName);
+            var connection = Connections.First(c => c.ConnectionId == connectionId);
+            objectDefinition = connection switch
+            {
+                MsSqlConnection msSql => await msSql.GetObjectDefinitionAsync(this.objectName),
+                SnowflakeConnection snow => null, // TODO Handle Snowflake
+                _ => throw new ArgumentException($"Unsupported connection type: {connection.GetType().Name}")
+            };
             if (objectDefinition is null)
             {
                 errorMessage = $"No object definition found for '{this.objectName}'";

@@ -1,12 +1,11 @@
 ﻿@inject ToasterService Toaster
-@inject SqlServerHelperService SqlServerHelper
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 
-@if (Step is SqlStep sql && sql.SqlStatement is not null)
+@if (Step is SqlStep sql && sql.SqlStatement is not null && Connection is MsSqlConnection mssql)
 {
     <div class="row">
         <div class="col">
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Link" OnClick="() => GetDatabaseObjectsAsync(sql.SqlStatement)">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Link" OnClick="() => GetDatabaseObjectsAsync(mssql, sql.SqlStatement)">
                 Attempt to infer from stored procedure
             </HxButton>
             <HxPopover Trigger="PopoverTrigger.Hover" Content="@popoverContent">
@@ -220,7 +219,7 @@
             <SvgIcon Icon="FeatherIcon.File" />
             Add blob
         </HxDropdownItem>
-        <HxDropdownItem OnClick="() => dbObjectExplorerOffcanvas.LetAsync(x => x.ShowAsync(ConnectionId))">
+        <HxDropdownItem OnClick="() => dbObjectExplorerOffcanvas.LetAsync(x => x.ShowAsync(Connection?.ConnectionId))">
             <SvgIcon Icon="FeatherIcon.Table" />
             Add table
         </HxDropdownItem>
@@ -246,9 +245,9 @@
 
     [Parameter] public Step? Step { get; set; }
 
-    [Parameter] public Guid? ConnectionId { get; set; }
+    [Parameter] public ConnectionBase? Connection { get; set; }
 
-    [Parameter] public IEnumerable<MsSqlConnection>? SqlConnections { get; set; }
+    [Parameter] public IEnumerable<ConnectionBase>? SqlConnections { get; set; }
 
     [Parameter] public IEnumerable<AnalysisServicesConnection>? AsConnections { get; set; }
 
@@ -330,7 +329,7 @@
         newObject = null;
     }
 
-    private async Task GetDatabaseObjectsAsync(string sqlStatement)
+    private async Task GetDatabaseObjectsAsync(MsSqlConnection connection, string sqlStatement)
     {
         try
         {
@@ -346,11 +345,10 @@
 
             allObjects ??= await LoadAllDataObjects();
 
-            Guid connectionId = ConnectionId ?? throw new ArgumentNullException(nameof(ConnectionId), "Connection id was null");
             var dependencies = ReferenceType switch
             {
-                DataObjectReferenceType.Source => await SqlServerHelper.GetSourceObjectsAsync(connectionId, schema, name),
-                _ => await SqlServerHelper.GetTargetObjectsAsync(connectionId, schema, name)
+                DataObjectReferenceType.Source => await connection.GetSourceObjectsAsync(schema, name),
+                _ => await connection.GetTargetObjectsAsync(schema, name)
             };
 
             // Add new data objects for the step if they are not present.
