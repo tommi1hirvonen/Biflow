@@ -1,0 +1,15 @@
+﻿@using Biflow.Ui.Icons
+
+<SvgIcon Icon="Icon" />
+
+@code {
+    [Parameter] public ConnectionType ConnectionType { get; set; }
+
+    private Svg Icon => ConnectionType switch
+    {
+        ConnectionType.Sql => FeatherIcon.Database,
+        ConnectionType.AnalysisServices => FeatherIcon.Box,
+        ConnectionType.Snowflake => LucideIcon.Snowflake,
+        _ => FeatherIcon.HelpCircle
+    };
+}

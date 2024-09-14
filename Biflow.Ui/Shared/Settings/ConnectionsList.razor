@@ -20,10 +20,12 @@
     </HxDropdownToggleButton>
     <HxDropdownMenu>
         <HxDropdownHeader>Connection type</HxDropdownHeader>
-        @foreach (var connectionType in Enum.GetValues<ConnectionType>())
+        @foreach (var connectionType in ConnectionTypes)
         {
-            <HxDropdownItem @onclick="async () => await ShowNewConnectionModalAsync(connectionType)">
-                @connectionType.ToString()
+            var (name, _, desc, type) = connectionType;
+            <HxDropdownItem @onclick="async () => await ShowNewConnectionModalAsync(type)" title="@desc">
+                <ConnectionTypeIcon ConnectionType="type" />
+                @name
             </HxDropdownItem>
         }
     </HxDropdownMenu>
@@ -83,7 +85,8 @@
                             @connection.ConnectionName
                         </td>
                         <td class="align-middle">
-                            @connection.ConnectionType
+                            <ConnectionTypeIcon ConnectionType="connection.ConnectionType" />
+                            @connection.ConnectionType.GetCategory()?.Name
                         </td>
                         <td class="align-middle">
                             <HxButtonGroup>
@@ -202,6 +205,16 @@
     private Dictionary<Guid, bool> showConnectionString = [];
     private ConnectionBase? stepsConnection;
     private HxModal? stepsModal;
+
+    private static readonly (string Name, int Ordinal, string? Description, ConnectionType Type)[] ConnectionTypes =
+        Enum.GetValues<ConnectionType>().Select(c =>
+        {
+            var (name, ordinal) = c.GetCategory() ?? ("", 0);
+            var desc = c.GetDescription();
+            return (name, ordinal, desc, c);
+        })
+        .OrderBy(c => c.ordinal)
+        .ToArray();
 
     protected override async Task OnInitializedAsync()
     {

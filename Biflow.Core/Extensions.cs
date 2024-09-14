@@ -28,6 +28,30 @@ public static class Extensions
         return result;
     }
 
+    public static (string Name, int Ordinal)? GetCategory(this ConnectionType value)
+    {
+        var name = Enum.GetName(value);
+        if (name is null)
+        {
+            return null;
+        }
+        var category = typeof(ConnectionType).GetField(name)?.GetCustomAttributes<CategoryAttribute>().FirstOrDefault();
+        return category is not null
+            ? (category.Name, category.Ordinal)
+            : null;
+    }
+
+    public static string? GetDescription(this ConnectionType value)
+    {
+        var name = Enum.GetName(value);
+        if (name is null)
+        {
+            return null;
+        }
+        var desc = typeof(ConnectionType).GetField(name)?.GetCustomAttributes<DescriptionAttribute>().FirstOrDefault();
+        return desc?.Text;
+    }
+
     public static (string Name, int Ordinal)? GetCategory(this StepType value)
     {
         var name = Enum.GetName(value);
