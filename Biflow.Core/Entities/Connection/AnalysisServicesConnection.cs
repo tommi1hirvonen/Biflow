@@ -2,7 +2,7 @@
 
 namespace Biflow.Core.Entities;
 
-public class AnalysisServicesConnectionInfo() : ConnectionInfoBase(ConnectionType.AnalysisServices)
+public class AnalysisServicesConnection() : ConnectionBase(ConnectionType.AnalysisServices)
 {
     [JsonIgnore]
     public IEnumerable<TabularStep> TabularSteps { get; } = new List<TabularStep>();

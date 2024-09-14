@@ -172,10 +172,10 @@ public static class Extensions
 
 file record StepExecutionProjection(
     StepExecution StepExecution,
-    SqlConnectionInfo? SqlStepConnection,
-    SqlConnectionInfo? PackageStepConnection,
-    SqlConnectionInfo? AgentJobStepConnection,
-    AnalysisServicesConnectionInfo? TabularStepConnection,
+    MsSqlConnection? SqlStepConnection,
+    MsSqlConnection? PackageStepConnection,
+    MsSqlConnection? AgentJobStepConnection,
+    AnalysisServicesConnection? TabularStepConnection,
     AppRegistration? DatasetStepAppRegistration,
     FunctionApp? FunctionStepApp,
     PipelineClient? PipelineStepClient,

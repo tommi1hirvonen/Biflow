@@ -285,9 +285,9 @@
 
     [CascadingParameter(Name = "SortSteps")] public Action? SortSteps { get; set; }
 
-    [Parameter] public List<SqlConnectionInfo>? SqlConnections { get; set; }
+    [Parameter] public List<MsSqlConnection>? SqlConnections { get; set; }
 
-    [Parameter] public List<AnalysisServicesConnectionInfo>? AsConnections { get; set; }
+    [Parameter] public List<AnalysisServicesConnection>? AsConnections { get; set; }
 
     [Parameter] public List<PipelineClient>? PipelineClients { get; set; }
 

@@ -23,7 +23,7 @@ public class EnvironmentSnapshot
     public required Tag[] Tags { get; init; }
     public required DataObject[] DataObjects { get; init; }
 
-    public required ConnectionInfoBase[] Connections { get; init; }
+    public required ConnectionBase[] Connections { get; init; }
     public required AppRegistration[] AppRegistrations { get; init; }
     public required PipelineClient[] PipelineClients { get; init; }
     public required FunctionApp[] FunctionApps { get; init; }

@@ -28,7 +28,7 @@
                         <SvgIcon Icon="FeatherIcon.Database" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId">
-                        @foreach (var connection in AsConnections ?? Enumerable.Empty<AnalysisServicesConnectionInfo>())
+                        @foreach (var connection in AsConnections ?? Enumerable.Empty<AnalysisServicesConnection>())
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }

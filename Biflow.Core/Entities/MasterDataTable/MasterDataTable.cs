@@ -47,7 +47,7 @@ public class MasterDataTable
     public MasterDataTableCategory? Category { get; set; }
 
     [JsonIgnore]
-    public SqlConnectionInfo Connection { get; set; } = null!;
+    public MsSqlConnection Connection { get; set; } = null!;
 
     [JsonIgnore]
     public ICollection<User> Users { get; set; } = null!;

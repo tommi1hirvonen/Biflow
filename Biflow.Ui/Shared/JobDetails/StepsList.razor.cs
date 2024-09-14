@@ -21,9 +21,9 @@ public partial class StepsList : ComponentBase
     
     [CascadingParameter] public List<Job>? Jobs { get; set; }
     
-    [Parameter] public List<SqlConnectionInfo>? SqlConnections { get; set; }
+    [Parameter] public List<MsSqlConnection>? SqlConnections { get; set; }
     
-    [Parameter] public List<AnalysisServicesConnectionInfo>? AsConnections { get; set; }
+    [Parameter] public List<AnalysisServicesConnection>? AsConnections { get; set; }
     
     [Parameter] public List<PipelineClient>? PipelineClients { get; set; }
     
@@ -39,7 +39,7 @@ public partial class StepsList : ComponentBase
 
     private readonly HashSet<StepType> stepTypeFilter = [];
     private readonly Dictionary<StepType, IStepEditModal?> stepEditModals = [];
-    private readonly HashSet<ConnectionInfoBase> connectionFilter = [];
+    private readonly HashSet<ConnectionBase> connectionFilter = [];
     private readonly HashSet<StepTag> tagsFilterSet = [];
 
     private HashSet<Step> selectedSteps = [];

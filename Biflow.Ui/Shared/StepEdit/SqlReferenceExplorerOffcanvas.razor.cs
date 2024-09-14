@@ -4,7 +4,7 @@ namespace Biflow.Ui.Shared.StepEdit;
 
 public partial class SqlReferenceExplorerOffcanvas : ComponentBase
 {
-    [Parameter] public IEnumerable<SqlConnectionInfo> Connections { get; set; } = Enumerable.Empty<SqlConnectionInfo>();
+    [Parameter] public IEnumerable<MsSqlConnection> Connections { get; set; } = Enumerable.Empty<MsSqlConnection>();
 
     private Guid? connectionId;
     private HxOffcanvas? offcanvas;

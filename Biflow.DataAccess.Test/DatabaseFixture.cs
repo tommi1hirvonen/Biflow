@@ -79,13 +79,13 @@ public class DatabaseFixture : IAsyncLifetime
             await context.Database.EnsureCreatedAsync();
 
             #region SETTINGS
-            var sqlConnection = new SqlConnectionInfo
+            var sqlConnection = new MsSqlConnection
             {
                 ConnectionName = "Test SQL connection",
                 ConnectionString = _connectionString
             };
 
-            var asConnection = new AnalysisServicesConnectionInfo
+            var asConnection = new AnalysisServicesConnection
             {
                 ConnectionName = "Test AS connection",
                 ConnectionString = "Data Source=localhost;Password=asd"

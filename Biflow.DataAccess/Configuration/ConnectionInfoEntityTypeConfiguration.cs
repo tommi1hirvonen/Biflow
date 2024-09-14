@@ -1,8 +1,8 @@
 ﻿namespace Biflow.DataAccess.Configuration;
 
-internal class ConnectionInfoEntityTypeConfiguration : IEntityTypeConfiguration<ConnectionInfoBase>
+internal class ConnectionInfoEntityTypeConfiguration : IEntityTypeConfiguration<ConnectionBase>
 {
-    public void Configure(EntityTypeBuilder<ConnectionInfoBase> builder)
+    public void Configure(EntityTypeBuilder<ConnectionBase> builder)
     {
         builder.ToTable("Connection")
             .HasKey(x => x.ConnectionId);
@@ -10,7 +10,7 @@ internal class ConnectionInfoEntityTypeConfiguration : IEntityTypeConfiguration<
         builder.Ignore(x => x.Steps);
 
         builder.HasDiscriminator<ConnectionType>("ConnectionType")
-            .HasValue<SqlConnectionInfo>(ConnectionType.Sql)
-            .HasValue<AnalysisServicesConnectionInfo>(ConnectionType.AnalysisServices);
+            .HasValue<MsSqlConnection>(ConnectionType.Sql)
+            .HasValue<AnalysisServicesConnection>(ConnectionType.AnalysisServices);
     }
 }

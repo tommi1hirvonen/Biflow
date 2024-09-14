@@ -1,6 +1,6 @@
 ﻿namespace Biflow.Ui.Core;
 
-public record CreateConnectionCommand(ConnectionInfoBase Connection) : IRequest;
+public record CreateConnectionCommand(ConnectionBase Connection) : IRequest;
 
 internal class CreateConnectionCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<CreateConnectionCommand>
 {

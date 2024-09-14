@@ -14,7 +14,7 @@
                         <SvgIcon Icon="FeatherIcon.Database" />
                     </div>
                     <select class="form-select form-select-sm" @bind="connectionId">
-                        @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
+                        @foreach (var connection in Connections ?? [])
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }
@@ -82,7 +82,7 @@
 </HxOffcanvas>
 
 @code {
-    [Parameter] public IEnumerable<SqlConnectionInfo> Connections { get; set; } = Enumerable.Empty<SqlConnectionInfo>();
+    [Parameter] public IEnumerable<MsSqlConnection> Connections { get; set; } = [];
 
     private Guid? connectionId;
     private Guid prevConnectionId;

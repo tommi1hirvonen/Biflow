@@ -8,7 +8,7 @@ public partial class AdvancedFiltersOffcanvas : ComponentBase
 
     [Parameter] public IEnumerable<PipelineClient> PipelineClients { get; set; } = Enumerable.Empty<PipelineClient>();
 
-    [Parameter] public IEnumerable<ConnectionInfoBase> Connections { get; set; } = Enumerable.Empty<ConnectionInfoBase>();
+    [Parameter] public IEnumerable<ConnectionBase> Connections { get; set; } = Enumerable.Empty<ConnectionBase>();
 
     public string Description { get; private set; } = "";
     public string SqlStatement { get; private set; } = "";
@@ -21,7 +21,7 @@ public partial class AdvancedFiltersOffcanvas : ComponentBase
     public string ExeFilePath { get; private set; } = "";
     public string ExeArguments { get; private set; } = "";
 
-    private readonly HashSet<ConnectionInfoBase> connectionsFilter = [];
+    private readonly HashSet<ConnectionBase> connectionsFilter = [];
     private readonly HashSet<FunctionApp> functionAppsFilter = [];
     private readonly HashSet<PipelineClient> pipelineClientsFilter = [];
     private readonly Dictionary<StepType, bool> expandedSections = [];

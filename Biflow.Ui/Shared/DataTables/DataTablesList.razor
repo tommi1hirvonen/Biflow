@@ -214,7 +214,7 @@
 
     [Parameter] public List<MasterDataTableCategory>? Categories { get; set; }
 
-    [Parameter] public List<SqlConnectionInfo> Connections { get; set; } = new();
+    [Parameter] public List<MsSqlConnection> Connections { get; set; } = new();
 
     [CascadingParameter] public UserState UserState { get; set; } = new();
 

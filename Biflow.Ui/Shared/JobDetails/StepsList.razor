@@ -621,11 +621,11 @@
 
 @{
     var connections = SqlConnections
-        ?.Cast<ConnectionInfoBase>()
-        .Concat(AsConnections?.Cast<ConnectionInfoBase>() ?? Enumerable.Empty<ConnectionInfoBase>())
+        ?.Cast<ConnectionBase>()
+        .Concat(AsConnections?.Cast<ConnectionBase>() ?? Enumerable.Empty<ConnectionBase>())
         .Where(c => Steps?.OfType<IHasConnection>().Any(step => c.ConnectionId == step.ConnectionId) ?? false)
         .OrderBy(c => c.ConnectionName)
-        ?? Enumerable.Empty<ConnectionInfoBase>();
+        ?? Enumerable.Empty<ConnectionBase>();
     var pipelineClients = PipelineClients
         ?.Where(c => Steps?.OfType<PipelineStep>().Any(step => c.PipelineClientId == step.PipelineClientId) ?? false)
         ?? Enumerable.Empty<PipelineClient>();

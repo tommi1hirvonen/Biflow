@@ -10,7 +10,7 @@ public class SerializationTestsFixture(DatabaseFixture fixture) : IAsyncLifetime
 {
     private readonly IDbContextFactory<AppDbContext> dbContextFactory = fixture.DbContextFactory;
 
-    public ConnectionInfoBase[] Connections { get; private set; } = [];
+    public ConnectionBase[] Connections { get; private set; } = [];
     public AppRegistration[] AppRegistrations { get; private set; } = [];
     public PipelineClient[] PipelineClients { get; private set; } = [];
     public FunctionApp[] FunctionApps { get; private set; } = [];

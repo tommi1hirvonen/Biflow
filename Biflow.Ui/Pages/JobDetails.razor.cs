@@ -25,8 +25,8 @@ public partial class JobDetails : ComponentBase, IDisposable
     private Job? job;
     private List<Job> jobs = [];
     private List<Step> steps = [];
-    private List<SqlConnectionInfo>? sqlConnections;
-    private List<AnalysisServicesConnectionInfo>? asConnections;
+    private List<MsSqlConnection>? sqlConnections;
+    private List<AnalysisServicesConnection>? asConnections;
     private List<PipelineClient>? pipelineClients;
     private List<AppRegistration>? appRegistrations;
     private List<FunctionApp>? functionApps;

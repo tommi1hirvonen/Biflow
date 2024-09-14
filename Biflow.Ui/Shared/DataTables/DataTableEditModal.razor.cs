@@ -22,7 +22,7 @@ public partial class DataTableEditModal : ComponentBase, IDisposable
     private MasterDataTable? editTable;
     private TableEditView currentView = TableEditView.Settings;
     private IEnumerable<MasterDataTable>? tables;
-    private IEnumerable<SqlConnectionInfo>? connections;
+    private IEnumerable<MsSqlConnection>? connections;
     private IEnumerable<MasterDataTableCategory>? categories;
     private IEnumerable<string>? columns;
     private string columnOrderSelected = "";

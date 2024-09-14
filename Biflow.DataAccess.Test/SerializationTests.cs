@@ -13,7 +13,7 @@ public class SerializationTests(SerializationTestsFixture fixture) : IClassFixtu
     public void Serialize_Connections()
     {
         var json = JsonSerializer.Serialize(fixture.Connections, Options);
-        var items = JsonSerializer.Deserialize<ConnectionInfoBase[]>(json, Options);
+        var items = JsonSerializer.Deserialize<ConnectionBase[]>(json, Options);
         Assert.NotNull(items);
         Assert.NotEmpty(items);
         Assert.All(items, x => Assert.NotEqual(x.ConnectionId, Guid.Empty));

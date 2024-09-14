@@ -8,7 +8,7 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase, IDisposable
 
     [Inject] public SqlServerHelperService SqlServerHelper { get; set; } = null!;
 
-    [Parameter] public IEnumerable<SqlConnectionInfo> Connections { get; set; } = Enumerable.Empty<SqlConnectionInfo>();
+    [Parameter] public IEnumerable<MsSqlConnection> Connections { get; set; } = Enumerable.Empty<MsSqlConnection>();
 
     [Parameter] public Action<(string, string, string, string), bool>? OnDbObjectSelected { get; set; }
 

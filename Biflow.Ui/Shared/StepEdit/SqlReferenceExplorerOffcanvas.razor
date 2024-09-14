@@ -13,7 +13,7 @@
                         <SvgIcon Icon="FeatherIcon.Database" />
                     </div>
                     <select class="form-select form-select-sm" @bind="connectionId">
-                        @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
+                        @foreach (var connection in Connections ?? [])
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }

@@ -75,7 +75,7 @@
                         <div class="col-md-6">
                             <div class="input-group input-group-sm">
                                 <select class="form-select form-select-sm" @onchange="ConnectionChanged">
-                                    @foreach (var connection in connections ?? Enumerable.Empty<SqlConnectionInfo>())
+                                    @foreach (var connection in connections ?? Enumerable.Empty<MsSqlConnection>())
                                     {
                                         <option value="@connection.ConnectionId"
                                                 selected="@(connection.ConnectionId == editTable.Connection.ConnectionId)">

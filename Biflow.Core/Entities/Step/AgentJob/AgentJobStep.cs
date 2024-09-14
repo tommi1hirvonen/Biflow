@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
-public class AgentJobStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout
+public class AgentJobStep : Step, IHasConnection<MsSqlConnection>, IHasTimeout
 {
     [JsonConstructor]
     public AgentJobStep() : base(StepType.AgentJob)
@@ -36,7 +36,7 @@ public class AgentJobStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout
     public Guid ConnectionId { get; set; }
 
     [JsonIgnore]
-    public SqlConnectionInfo Connection { get; set; } = null!;
+    public MsSqlConnection Connection { get; set; } = null!;
 
     public override AgentJobStep Copy(Job? targetJob = null) => new(this, targetJob);
 

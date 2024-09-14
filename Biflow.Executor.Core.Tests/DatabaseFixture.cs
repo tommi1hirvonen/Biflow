@@ -65,7 +65,7 @@ public class DatabaseFixture : IAsyncLifetime
             await context.Database.EnsureDeletedAsync();
             await context.Database.EnsureCreatedAsync();
 
-            var sqlConnection1 = new SqlConnectionInfo
+            var sqlConnection1 = new MsSqlConnection
             {
                 ConnectionName = "Test SQL connection",
                 ConnectionString = _connectionString

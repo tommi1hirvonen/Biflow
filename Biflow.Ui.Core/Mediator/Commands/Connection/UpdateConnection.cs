@@ -1,6 +1,6 @@
 ﻿namespace Biflow.Ui.Core;
 
-public record UpdateConnectionCommand(ConnectionInfoBase Connection) : IRequest;
+public record UpdateConnectionCommand(ConnectionBase Connection) : IRequest;
 
 internal class UpdateConnectionCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<UpdateConnectionCommand>
 {

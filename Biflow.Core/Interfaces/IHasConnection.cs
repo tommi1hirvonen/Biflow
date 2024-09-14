@@ -3,16 +3,16 @@
 namespace Biflow.Core.Interfaces;
 
 public interface IHasConnection<T> : IHasConnection
-    where T : ConnectionInfoBase?
+    where T : ConnectionBase?
 {
     public new T Connection { get; set; }
 
-    ConnectionInfoBase? IHasConnection.Connection => Connection;
+    ConnectionBase? IHasConnection.Connection => Connection;
 }
 
 public interface IHasConnection
 {
     public Guid ConnectionId { get; }
 
-    public ConnectionInfoBase? Connection { get; }
+    public ConnectionBase? Connection { get; }
 }

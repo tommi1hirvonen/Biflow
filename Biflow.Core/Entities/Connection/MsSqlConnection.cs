@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
-public class SqlConnectionInfo() : ConnectionInfoBase(ConnectionType.Sql)
+public class MsSqlConnection() : ConnectionBase(ConnectionType.Sql)
 {
     [Display(Name = "Execute packages as login")]
     [MaxLength(128)]

@@ -1,5 +1,4 @@
-﻿using Biflow.Core;
-using Biflow.Core.Entities;
+﻿using Biflow.Core.Entities;
 using Biflow.DataAccess;
 using Dapper;
 using Microsoft.Data.SqlClient;
@@ -601,7 +600,7 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
         });
     }
 
-    private async Task<SqlConnectionInfo> GetSqlConnectionAsync(Guid connectionId, CancellationToken cancellationToken = default)
+    private async Task<MsSqlConnection> GetSqlConnectionAsync(Guid connectionId, CancellationToken cancellationToken = default)
     {
         using var context = _dbContextFactory.CreateDbContext();
         return await context.SqlConnections
@@ -611,7 +610,7 @@ public class SqlServerHelperService(IDbContextFactory<AppDbContext> dbContextFac
             .FirstAsync(cancellationToken);
     }
 
-    private async Task<AnalysisServicesConnectionInfo> GetAsConnectionAsync(Guid connectionId, CancellationToken cancellationToken = default)
+    private async Task<AnalysisServicesConnection> GetAsConnectionAsync(Guid connectionId, CancellationToken cancellationToken = default)
     {
         using var context = _dbContextFactory.CreateDbContext();
         return await context.AnalysisServicesConnections

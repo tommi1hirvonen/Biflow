@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
-public class PackageStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout, IHasStepParameters<PackageStepParameter>
+public class PackageStep : Step, IHasConnection<MsSqlConnection>, IHasTimeout, IHasStepParameters<PackageStepParameter>
 {
     [JsonConstructor]
     public PackageStep() : base(StepType.Package) { }
@@ -64,7 +64,7 @@ public class PackageStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout,
     private string? _executeAsLogin;
 
     [JsonIgnore]
-    public SqlConnectionInfo Connection { get; set; } = null!;
+    public MsSqlConnection Connection { get; set; } = null!;
 
     [ValidateComplexType]
     public IList<PackageStepParameter> StepParameters { get; } = new List<PackageStepParameter>();

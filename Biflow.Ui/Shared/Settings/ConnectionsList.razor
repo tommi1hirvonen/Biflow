@@ -64,16 +64,16 @@
                 {
                     var steps = connection switch
                     {
-                        SqlConnectionInfo sql => sql.SqlSteps.Count() + sql.PackageSteps.Count() + sql.AgentJobSteps.Count(),
-                        AnalysisServicesConnectionInfo analysis => analysis.TabularSteps.Count(),
+                        MsSqlConnection sql => sql.SqlSteps.Count() + sql.PackageSteps.Count() + sql.AgentJobSteps.Count(),
+                        AnalysisServicesConnection analysis => analysis.TabularSteps.Count(),
                         _ => 0
                     };
                     var jobs = connection switch
                     {
-                        SqlConnectionInfo sql => sql.SqlSteps.Select(s => s.Job)
+                        MsSqlConnection sql => sql.SqlSteps.Select(s => s.Job)
                                                         .Union(sql.PackageSteps.Select(s => s.Job))
                                                         .Union(sql.AgentJobSteps.Select(s => s.Job)).Count(),
-                        AnalysisServicesConnectionInfo analysis => analysis.Steps.Select(s => s.Job).Distinct().Count(),
+                        AnalysisServicesConnection analysis => analysis.Steps.Select(s => s.Job).Distinct().Count(),
                         _ => 0
                     };
                     <tr>
@@ -193,9 +193,9 @@
     private readonly Dictionary<ConnectionType, IConnectionEditModal?> connectionEditModals = [];
 
     private List<Credential> credentials = [];
-    private List<ConnectionInfoBase>? connections;
+    private List<ConnectionBase>? connections;
     private Dictionary<Guid, bool> showConnectionString = [];
-    private ConnectionInfoBase? stepsConnection;
+    private ConnectionBase? stepsConnection;
     private HxModal? stepsModal;
 
     protected override async Task OnInitializedAsync()
@@ -208,20 +208,20 @@
             .ToListAsync();
         connections = await context.Connections
             .AsNoTrackingWithIdentityResolution()
-            .Include(c => (c as SqlConnectionInfo)!.SqlSteps)
+            .Include(c => (c as MsSqlConnection)!.SqlSteps)
             .ThenInclude(step => step.Job)
-            .Include(c => (c as SqlConnectionInfo)!.PackageSteps)
+            .Include(c => (c as MsSqlConnection)!.PackageSteps)
             .ThenInclude(step => step.Job)
-            .Include(c => (c as SqlConnectionInfo)!.AgentJobSteps)
+            .Include(c => (c as MsSqlConnection)!.AgentJobSteps)
             .ThenInclude(step => step.Job)
-            .Include(c => (c as AnalysisServicesConnectionInfo)!.TabularSteps)
+            .Include(c => (c as AnalysisServicesConnection)!.TabularSteps)
             .ThenInclude(step => step.Job)
             .OrderBy(c => c.ConnectionName)
             .ToListAsync();
         showConnectionString = connections.ToDictionary(key => key.ConnectionId, value => false);
     }
 
-    private async Task DeleteConnection(ConnectionInfoBase connection)
+    private async Task DeleteConnection(ConnectionBase connection)
     {
         try
         {
@@ -236,7 +236,7 @@
         }
     }
 
-    private async Task OnConnectionSubmit(ConnectionInfoBase connection)
+    private async Task OnConnectionSubmit(ConnectionBase connection)
     {
         if (connection.ConnectionId == Guid.Empty)
         {
@@ -254,7 +254,7 @@
         StateHasChanged();
     }
 
-    private async Task ShowEditModalAsync(ConnectionInfoBase connection)
+    private async Task ShowEditModalAsync(ConnectionBase connection)
     {
         await OpenConnectionEditModalAsync(connection.ConnectionType, connection.ConnectionId);
     }

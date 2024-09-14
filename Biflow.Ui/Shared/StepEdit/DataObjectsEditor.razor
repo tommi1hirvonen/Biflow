@@ -248,9 +248,9 @@
 
     [Parameter] public Guid? ConnectionId { get; set; }
 
-    [Parameter] public IEnumerable<SqlConnectionInfo>? SqlConnections { get; set; }
+    [Parameter] public IEnumerable<MsSqlConnection>? SqlConnections { get; set; }
 
-    [Parameter] public IEnumerable<AnalysisServicesConnectionInfo>? AsConnections { get; set; }
+    [Parameter] public IEnumerable<AnalysisServicesConnection>? AsConnections { get; set; }
 
     [Parameter] public IEnumerable<AppRegistration>? AppRegistrations { get; set; }
 

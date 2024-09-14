@@ -96,9 +96,9 @@
     public IEnumerable<Credential> Credentials { get; set; } = [];
 
     [Parameter]
-    public EventCallback<ConnectionInfoBase> OnConnectionSubmit { get; set; }
+    public EventCallback<ConnectionBase> OnConnectionSubmit { get; set; }
 
-    private SqlConnectionInfo? connection;
+    private MsSqlConnection? connection;
     private HxModal? modal;
     private bool? connectionTestSuccess = null;
     private bool testingConnection = false;
