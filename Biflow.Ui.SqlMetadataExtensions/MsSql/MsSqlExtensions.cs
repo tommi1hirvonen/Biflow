@@ -179,7 +179,7 @@ public static partial class MsSqlExtensions
         });
     }
 
-    public static async Task<IEnumerable<IStoredProcedure>> GetStoredProceduresAsync(this MsSqlConnection connection)
+    public static async Task<IEnumerable<MsSqlStoredProcedure>> GetStoredProceduresAsync(this MsSqlConnection connection)
     {
         using var sqlConnection = new SqlConnection(connection.ConnectionString);
         var sql = """
@@ -217,6 +217,46 @@ public static partial class MsSqlExtensions
                 },
                 splitOn: "ParameterId"));
         return procedures.Values.ToArray();
+    }
+
+    public static async Task<MsSqlStoredProcedure?> GetStoredProcedureAsync(this MsSqlConnection connection, string? schema, string name)
+    {
+        using var sqlConnection = new SqlConnection(connection.ConnectionString);
+        var sql = """
+            select
+                ProcedureId = a.object_id,
+                SchemaName = b.name,
+                ProcedureName = a.name,
+                ParameterId = c.parameter_id,
+                ParameterName = c.name,
+                ParameterType = TYPE_NAME(c.user_type_id)
+            from sys.procedures as a
+                inner join sys.schemas as b on a.schema_id = b.schema_id
+                left join sys.parameters as c on a.object_id = c.object_id
+            where b.name = @schema and a.name = @name
+            order by
+                ParameterId
+            """;
+        MsSqlStoredProcedure? procedure = null;
+        schema ??= "dbo";
+        var data = await connection.RunImpersonatedOrAsCurrentUserAsync(
+            () => sqlConnection.QueryAsync<MsSqlStoredProcedure, MsSqlStoredProcedureParameter?, MsSqlStoredProcedure>(
+                sql,
+                (proc, param) =>
+                {
+                    procedure ??= proc;
+                    if (param is not null)
+                    {
+                        procedure.Parameters.Add(param);
+                    }
+                    return procedure;
+                },
+                splitOn: "ParameterId",
+                param: new
+                {
+                    schema, name
+                }));
+        return procedure;
     }
 
     public static async Task<IEnumerable<(string ParameterName, ParameterValue Value)>> GetStoredProcedureParametersAsync(
@@ -276,32 +316,13 @@ public static partial class MsSqlExtensions
         return agentJobs;
     }
 
-    public static async Task<IEnumerable<(string Schema, string Name, string Type)?>> GetSqlModulesAsync(this MsSqlConnection connection)
-    {
-        using var sqlConnection = new SqlConnection(connection.ConnectionString);
-        var results = await connection.RunImpersonatedOrAsCurrentUserAsync(
-            () => sqlConnection.QueryAsync<(string, string, string)?>("""
-                select
-                    SchemaName = c.name,
-                    ObjectName = b.name,
-                    ObjectType = b.type_desc
-                from sys.sql_modules as a
-                join sys.objects as b on a.object_id = b.object_id
-                    join sys.schemas as c on b.schema_id = c.schema_id
-                order by
-                    SchemaName,
-                    ObjectName
-                """));
-        return results;
-    }
-
-    public static async Task<string?> GetObjectDefinitionAsync(this MsSqlConnection connection, string objectName)
+    public static async Task<string?> GetProcedureDefinitionAsync(this MsSqlConnection connection, MsSqlStoredProcedure procedure)
     {
         using var sqlConnection = new SqlConnection(connection.ConnectionString);
         var definition = await connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.ExecuteScalarAsync<string>(
-                "SELECT OBJECT_DEFINITION(OBJECT_ID(@ObjectName))",
-                new { ObjectName = objectName}));
+                "SELECT OBJECT_DEFINITION(@ObjectId)",
+                new { ObjectId = procedure.ProcedureId}));
         return definition;
     }
 

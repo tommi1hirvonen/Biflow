@@ -6,7 +6,7 @@ namespace Biflow.Ui.SqlMetadataExtensions;
 
 public static class SnowflakeExtensions
 {
-    public static async Task<IEnumerable<IStoredProcedure>> GetStoredProceduresAsync(this SnowflakeConnection connection)
+    public static async Task<IEnumerable<SnowflakeStoredProcedure>> GetStoredProceduresAsync(this SnowflakeConnection connection)
     {
         using var sfConnection = new SnowflakeDbConnection(connection.ConnectionString);
         var sql = """
@@ -37,5 +37,25 @@ public static class SnowflakeExtensions
             },
             splitOn: "ParameterName");
         return procs;
+    }
+
+    public static async Task<string?> GetProcedureDefinitionAsync(this SnowflakeConnection connection, SnowflakeStoredProcedure procedure)
+    {
+        using var sfConnection = new SnowflakeDbConnection(connection.ConnectionString);
+        var sql = """
+            select PROCEDURE_DEFINITION
+            from INFORMATION_SCHEMA.PROCEDURES
+            where PROCEDURE_SCHEMA = :schema and PROCEDURE_NAME = :name and ARGUMENT_SIGNATURE = :arguments
+            limit 1
+            """;
+        var definition = await sfConnection.ExecuteScalarAsync<string?>(
+            sql,
+            param: new
+            {
+                schema = procedure.SchemaName,
+                name = procedure.ProcedureName,
+                arguments = procedure.ArgumentSignature
+            });
+        return definition;
     }
 }

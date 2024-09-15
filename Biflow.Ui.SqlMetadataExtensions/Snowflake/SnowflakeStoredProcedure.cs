@@ -1,6 +1,6 @@
 ﻿namespace Biflow.Ui.SqlMetadataExtensions;
 
-internal class SnowflakeStoredProcedure(string schemaName, string procedureName, string argumentSignature) : IStoredProcedure
+public class SnowflakeStoredProcedure(string schemaName, string procedureName, string argumentSignature) : IStoredProcedure
 {
     public string SchemaName { get; } = schemaName;
 
@@ -26,6 +26,8 @@ internal class SnowflakeStoredProcedure(string schemaName, string procedureName,
     public List<SnowflakeStoredProcedureParameter> Parameters { get; } = [];
 
     IEnumerable<IStoredProcedureParameter> IStoredProcedure.Parameters => Parameters;
+
+    public override string ToString() => $"{QuotedSchemaName}.{QuotedProcedureName}{ArgumentSignature}";
 
     public override bool Equals(object? obj)
     {

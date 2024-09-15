@@ -335,7 +335,7 @@
         {
             ArgumentNullException.ThrowIfNull(references);
 
-            var proc = sqlStatement.ParseStoredProcedureFromSqlStatement();
+            var proc = MsSqlExtensions.ParseStoredProcedureFromSqlStatement(sqlStatement);
             var schema = proc?.Schema;
             var name = proc?.ProcedureName;
             if (name is null)

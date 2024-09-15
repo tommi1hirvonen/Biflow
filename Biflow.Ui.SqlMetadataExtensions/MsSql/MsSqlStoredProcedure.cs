@@ -1,6 +1,6 @@
 ﻿namespace Biflow.Ui.SqlMetadataExtensions;
 
-internal class MsSqlStoredProcedure(int procedureId, string schemaName, string procedureName) : IStoredProcedure
+public class MsSqlStoredProcedure(int procedureId, string schemaName, string procedureName) : IStoredProcedure
 {
     public int ProcedureId { get; } = procedureId;
 
@@ -19,4 +19,6 @@ internal class MsSqlStoredProcedure(int procedureId, string schemaName, string p
     public List<MsSqlStoredProcedureParameter> Parameters { get; } = [];
 
     IEnumerable<IStoredProcedureParameter> IStoredProcedure.Parameters => Parameters;
+
+    public override string ToString() => $"{QuotedSchemaName}.{QuotedProcedureName}";
 }

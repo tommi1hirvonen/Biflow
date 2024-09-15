@@ -99,7 +99,7 @@ public partial class SqlReferenceExplorerOffcanvas : ComponentBase
     public async Task ShowAsync(Guid? connectionId, string? sqlStatement = null)
     {
         this.connectionId = connectionId ?? Connections.FirstOrDefault()?.ConnectionId;
-        var proc = sqlStatement?.ParseStoredProcedureFromSqlStatement();
+        var proc = sqlStatement is not null ? MsSqlExtensions.ParseStoredProcedureFromSqlStatement(sqlStatement) : null;
         var schema = proc?.Schema;
         var name = proc?.ProcedureName;
         if (schema is not null)

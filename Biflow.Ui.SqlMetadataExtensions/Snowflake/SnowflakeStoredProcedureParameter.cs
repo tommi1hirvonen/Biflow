@@ -1,6 +1,6 @@
 ﻿namespace Biflow.Ui.SqlMetadataExtensions;
 
-internal class SnowflakeStoredProcedureParameter(string parameterName, string parameterType) : IStoredProcedureParameter
+public class SnowflakeStoredProcedureParameter(string parameterName, string parameterType) : IStoredProcedureParameter
 {
     public string ParameterName { get; } = parameterName;
 
