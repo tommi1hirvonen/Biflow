@@ -36,7 +36,7 @@ public partial class DataTableEditModal : ComponentBase, IDisposable
         await modal.LetAsync(x => x.ShowAsync());
         editContext?.Dispose();
         editContext = DbContextFactory.CreateDbContext();
-        connections = await editContext.SqlConnections
+        connections = await editContext.MsSqlConnections
             .OrderBy(c => c.ConnectionName)
             .ToListAsync();
         categories = await editContext.MasterDataTableCategories

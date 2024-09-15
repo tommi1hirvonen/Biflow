@@ -36,9 +36,9 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
             from step in query1
             join sql in context.Connections.Include(c => (c as MsSqlConnection)!.Credential) on ((SqlStepExecution)step).ConnectionId equals sql.ConnectionId into sql_
             from sql in sql_.DefaultIfEmpty()
-            join package in context.SqlConnections.Include(c => c.Credential) on ((PackageStepExecution)step).ConnectionId equals package.ConnectionId into package_
+            join package in context.MsSqlConnections.Include(c => c.Credential) on ((PackageStepExecution)step).ConnectionId equals package.ConnectionId into package_
             from package in package_.DefaultIfEmpty()
-            join agent in context.SqlConnections.Include(c => c.Credential) on ((AgentJobStepExecution)step).ConnectionId equals agent.ConnectionId into agent_
+            join agent in context.MsSqlConnections.Include(c => c.Credential) on ((AgentJobStepExecution)step).ConnectionId equals agent.ConnectionId into agent_
             from agent in agent_.DefaultIfEmpty()
             join tabular in context.AnalysisServicesConnections.Include(c => c.Credential) on ((TabularStepExecution)step).ConnectionId equals tabular.ConnectionId into tabular_
             from tabular in tabular_.DefaultIfEmpty()

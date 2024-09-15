@@ -136,7 +136,7 @@
         if (connectionId != Guid.Empty)
         {
             using var context = DbFactory.CreateDbContext();
-            connection = await context.SqlConnections
+            connection = await context.MsSqlConnections
                 .AsNoTrackingWithIdentityResolution()
                 .Include(c => c.SqlSteps)
                 .ThenInclude(step => step.Job)
