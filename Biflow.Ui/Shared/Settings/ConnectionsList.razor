@@ -64,22 +64,8 @@
             {
                 @foreach (var connection in connections.OrderBy(c => c.ConnectionName))
                 {
-                    var steps = connection switch
-                    {
-                        MsSqlConnection sql => sql.SqlSteps.Count() + sql.PackageSteps.Count() + sql.AgentJobSteps.Count(),
-                        AnalysisServicesConnection analysis => analysis.TabularSteps.Count(),
-                        SnowflakeConnection snow => snow.SqlSteps.Count(),
-                        _ => 0
-                    };
-                    var jobs = connection switch
-                    {
-                        MsSqlConnection sql => sql.SqlSteps.Select(s => s.Job)
-                                                        .Union(sql.PackageSteps.Select(s => s.Job))
-                                                        .Union(sql.AgentJobSteps.Select(s => s.Job)).Count(),
-                        AnalysisServicesConnection analysis => analysis.Steps.Select(s => s.Job).Distinct().Count(),
-                        SnowflakeConnection snow => snow.SqlSteps.Select(s => s.Job).Distinct().Count(),
-                        _ => 0
-                    };
+                    var steps = connection.Steps.Count();
+                    var jobs = connection.Steps.Select(s => s.JobId).Distinct().Count();
                     <tr>
                         <td class="align-middle">
                             @connection.ConnectionName
