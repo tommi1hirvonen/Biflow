@@ -140,11 +140,23 @@ public class SerializationTests(SerializationTestsFixture fixture) : IClassFixtu
     }
 
     [Fact]
+    public void Serialize_Credentials()
+    {
+        var json = JsonSerializer.Serialize(fixture.Credentials, Options);
+        var items = JsonSerializer.Deserialize<Credential[]>(json, Options);
+        Assert.NotNull(items);
+        Assert.NotEmpty(items);
+        Assert.All(items, x => Assert.NotEqual(x.CredentialId, Guid.Empty));
+        Assert.All(items, x => Assert.Empty(x.Password ?? ""));
+    }
+
+    [Fact]
     public void Serialize_Snapshot()
     {
         var snapshot = new EnvironmentSnapshot
         {
             Connections = fixture.Connections,
+            Credentials = fixture.Credentials,
             AppRegistrations = fixture.AppRegistrations,
             PipelineClients = fixture.PipelineClients,
             FunctionApps = fixture.FunctionApps,

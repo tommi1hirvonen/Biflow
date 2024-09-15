@@ -15,6 +15,10 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
             .AsNoTracking()
             .OrderBy(c => c.ConnectionId)
             .ToArrayAsync();
+        var credentials = await context.Credentials
+            .AsNoTracking()
+            .OrderBy(c => c.Username)
+            .ToArrayAsync();
         var appRegistrations = await context.AppRegistrations
             .AsNoTracking()
             .OrderBy(a => a.AppRegistrationId)
@@ -90,6 +94,7 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
         var snapshot = new EnvironmentSnapshot
         {
             Connections = connections,
+            Credentials = credentials,
             AppRegistrations = appRegistrations,
             PipelineClients = pipelineClients,
             FunctionApps = functionApps,
