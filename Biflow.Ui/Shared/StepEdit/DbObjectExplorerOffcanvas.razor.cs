@@ -40,19 +40,12 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase, IDisposable
             await semaphore.WaitAsync();
             Guid connectionId = this.connectionId ?? throw new ArgumentNullException(nameof(connectionId), "Connection id was null");
             var connection = Connections.First(c => c.ConnectionId == connectionId);
-            if (connection is MsSqlConnection msSql)
+            queryTask = connection switch
             {
-                queryTask = msSql.GetDatabaseObjectsAsync(schemaSearchTerm, nameSearchTerm, 50, cts.Token);
-            }
-            else if (connection is SnowflakeConnection snow)
-            {
-                // TODO Handle Snowflake data
-                queryTask = Task.FromResult(Enumerable.Empty<DbObject>());
-            }
-            else
-            {
-                throw new ArgumentException($"Unsupported connection type {connection.GetType().Name}");
-            }
+                MsSqlConnection ms => ms.GetDatabaseObjectsAsync(schemaSearchTerm, nameSearchTerm, 50, cts.Token),
+                SnowflakeConnection sf => sf.GetDatabaseObjectsAsync(schemaSearchTerm, nameSearchTerm, 50, cts.Token),
+                _ => throw new ArgumentException($"Unsupported connection type {connection.GetType().Name}")
+            };
             StateHasChanged();
             databaseObjects = await queryTask;
         }

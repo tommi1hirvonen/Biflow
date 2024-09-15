@@ -1,4 +1,5 @@
-﻿using Biflow.Core.Entities;
+﻿using Apache.Arrow;
+using Biflow.Core.Entities;
 using Dapper;
 using Snowflake.Data.Client;
 
@@ -57,5 +58,38 @@ public static class SnowflakeExtensions
                 arguments = procedure.ArgumentSignature
             });
         return definition;
+    }
+
+    public static async Task<IEnumerable<DbObject>> GetDatabaseObjectsAsync(
+        this SnowflakeConnection connection,
+        string? schemaNameSearchTerm = null,
+        string? objectNameSearchTerm = null,
+        int? limit = null,
+        CancellationToken cancellationToken = default)
+    {
+        using var sfConnection = new SnowflakeDbConnection(connection.ConnectionString);
+        var limitTerm = limit > 0 ? $"limit {limit}" : "";
+        var schema = string.IsNullOrEmpty(schemaNameSearchTerm) ? null : $"%{schemaNameSearchTerm.ToLower()}%";
+        var name = string.IsNullOrEmpty(objectNameSearchTerm) ? null : $"%{objectNameSearchTerm.ToLower()}%";
+        var command = new CommandDefinition($"""
+            select
+                CURRENT_ACCOUNT_NAME() as SERVER_NAME,
+                TABLE_CATALOG as DATABASE_NAME,
+                TABLE_SCHEMA as SCHEMA_NAME,
+                TABLE_NAME as OBJECT_NAME,
+                TABLE_TYPE as OBJECT_TYPE
+            from INFORMATION_SCHEMA.TABLES
+            where (
+                    :schema is null or lower(TABLE_SCHEMA) like :schema
+                ) and (
+                    :name is null or lower(TABLE_NAME) like :name
+                )
+            order by SCHEMA_NAME, OBJECT_NAME
+            {limitTerm}
+            """, new { schema, name }, cancellationToken: cancellationToken);
+        var rows = await sfConnection.QueryAsync<(string, string, string, string, string)>(command);
+        return rows
+            .Select(r => new DbObject(r.Item1, r.Item2, r.Item3, r.Item4, r.Item5))
+            .ToArray();
     }
 }
