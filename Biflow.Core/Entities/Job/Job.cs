@@ -113,7 +113,8 @@ public class Job : IAuditable
     public IEnumerable<JobStep> JobSteps { get; } = new List<JobStep>();
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public ICollection<Schedule> Schedules { get; } = new List<Schedule>();
+    [JsonInclude]
+    public ICollection<Schedule> Schedules { get; private set; } = new List<Schedule>();
 
     [JsonIgnore]
     public IEnumerable<JobSubscription> JobSubscriptions { get; } = new List<JobSubscription>();

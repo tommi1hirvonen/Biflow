@@ -159,5 +159,8 @@ public class SerializationTests(SerializationTestsFixture fixture) : IClassFixtu
         var json = JsonSerializer.Serialize(snapshot, Options);
         var items = JsonSerializer.Deserialize<EnvironmentSnapshot>(json, Options);
         Assert.NotNull(items);
+        Assert.NotEmpty(items.Jobs);
+        var schedules = items.Jobs.SelectMany(j => j.Schedules).ToArray();
+        Assert.NotEmpty(schedules);
     }
 }
