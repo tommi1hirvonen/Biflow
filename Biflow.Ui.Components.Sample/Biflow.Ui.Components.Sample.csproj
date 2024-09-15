@@ -8,6 +8,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Biflow.Ui.Components\Biflow.Ui.Components.csproj" />
+    <ProjectReference Include="..\Biflow.Ui.Icons\Biflow.Ui.Icons.csproj" />
   </ItemGroup>
 
 </Project>
