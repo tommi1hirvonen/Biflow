@@ -1,4 +1,4 @@
-﻿namespace Biflow.Ui.SqlServer;
+﻿namespace Biflow.Ui.SqlMetadataExtensions;
 
 public class CatalogPackage(long packageId, string packageName, CatalogProject project)
 {

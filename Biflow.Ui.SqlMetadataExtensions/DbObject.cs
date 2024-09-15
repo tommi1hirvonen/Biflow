@@ -1,4 +1,4 @@
-﻿namespace Biflow.Ui.SqlServer;
+﻿namespace Biflow.Ui.SqlMetadataExtensions;
 
 public record DbObject(string Server, string Database, string Schema, string Object, string Type)
 {

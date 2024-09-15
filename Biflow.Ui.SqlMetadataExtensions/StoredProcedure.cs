@@ -1,4 +1,4 @@
-﻿namespace Biflow.Ui.SqlServer;
+﻿namespace Biflow.Ui.SqlMetadataExtensions;
 
 public class StoredProcedure(int procedureId, string schemaName, string procedureName)
 {

@@ -1,7 +1,7 @@
 ﻿using Biflow.Core.Entities;
 using Biflow.Core.Interfaces;
 
-namespace Biflow.Ui.SqlServer;
+namespace Biflow.Ui.SqlMetadataExtensions;
 
 public record DbObjectReference(string ServerName, string DatabaseName, string SchemaName, string ObjectName, bool IsUnreliable) : IDataObject
 {

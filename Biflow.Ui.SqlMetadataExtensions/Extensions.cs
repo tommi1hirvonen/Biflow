@@ -1,4 +1,4 @@
-﻿namespace Biflow.Ui.SqlServer;
+﻿namespace Biflow.Ui.SqlMetadataExtensions;
 
 internal static class Extensions
 {

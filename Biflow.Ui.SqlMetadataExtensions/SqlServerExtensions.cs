@@ -1,9 +1,8 @@
 ﻿using Biflow.Core.Entities;
 using Dapper;
 using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
 
-namespace Biflow.Ui.SqlServer;
+namespace Biflow.Ui.SqlMetadataExtensions;
 
 public static class SqlServerExtensions
 {

@@ -31,7 +31,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Core.Test", "Biflow.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Ui.TableEditor", "Biflow.Ui.TableEditor\Biflow.Ui.TableEditor.csproj", "{0809CD5F-F935-41A1-B5E5-7F1216CFB8BC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Ui.SqlServer", "Biflow.Ui.SqlServer\Biflow.Ui.SqlServer.csproj", "{E1F815B5-C69C-46E0-AC4E-C0949D78EBE9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Ui.SqlMetadataExtensions", "Biflow.Ui.SqlMetadataExtensions\Biflow.Ui.SqlMetadataExtensions.csproj", "{E1F815B5-C69C-46E0-AC4E-C0949D78EBE9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Biflow.Executor.Core.Test", "Biflow.Executor.Core.Tests\Biflow.Executor.Core.Test.csproj", "{ACC0F44D-9F25-47CA-BA60-D9BC8F302D0C}"
 EndProject

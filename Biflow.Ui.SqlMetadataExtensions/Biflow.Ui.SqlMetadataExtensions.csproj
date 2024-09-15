@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Biflow.DataAccess\Biflow.DataAccess.csproj" />
+    <ProjectReference Include="..\Biflow.Core\Biflow.Core.csproj" />
   </ItemGroup>
 
 </Project>

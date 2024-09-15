@@ -1,4 +1,4 @@
-﻿namespace Biflow.Ui.SqlServer;
+﻿namespace Biflow.Ui.SqlMetadataExtensions;
 
 public class StoredProcedureParameter(int parameterId, string parameterName, string parameterType)
 {
