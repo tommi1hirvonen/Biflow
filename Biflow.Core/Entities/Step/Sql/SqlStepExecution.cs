@@ -69,7 +69,7 @@ public class SqlStepExecution : StepExecution,
     /// The ConnectionIds are compared and the value is set only if the ids match.</param>
     public void SetConnection(ConnectionBase? connection)
     {
-        if (!(connection is MsSqlConnection or SnowflakeConnection))
+        if (!(connection is MsSqlConnection or SnowflakeConnection or null))
         {
             throw new ArgumentException($"Unallowed connection type: {connection?.GetType().Name}. Connection must be of type {typeof(MsSqlConnection).Name} or {typeof(SnowflakeConnection).Name}.");
         }
