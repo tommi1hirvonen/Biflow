@@ -41,8 +41,8 @@
                                 <tr style="cursor: pointer;"
                                     @onclick="() => selectedProcedure = proc"
                                     class="@(proc == selectedProcedure ? "bg-body-tertiary fw-bold" : null)">
-                                    <td>
-                                        <HighlightableText Text="@($"[{proc.SchemaName}]")" PartToHighlight="@filterTextSchema" />.<HighlightableText Text="@($"[{proc.ProcedureName}]")" PartToHighlight="@filterTextName" />
+                                    <td class="small">
+                                        <HighlightableText Text="@(proc.QuotedSchemaName)" PartToHighlight="@filterTextSchema" />.<HighlightableText Text="@(proc.QuotedProcedureName)" PartToHighlight="@filterTextName" />@proc.ArgumentSignature
                                     </td>
                                 </tr>
                                 @if (proc == selectedProcedure && proc.Parameters.Any())
@@ -83,25 +83,26 @@
 
 @code {
     [Parameter]
-    public EventCallback<string> OnProcedureSelected { get; set; }
+    public EventCallback<IStoredProcedure> OnProcedureSelected { get; set; }
 
     private HxOffcanvas? offcanvas;
-    private IEnumerable<StoredProcedure>? procedures;
+    private IEnumerable<IStoredProcedure>? procedures;
     private string filterTextName = string.Empty;
     private string filterTextSchema = string.Empty;
-    private StoredProcedure? selectedProcedure;
+    private IStoredProcedure? selectedProcedure;
 
-    private IEnumerable<StoredProcedure> ProceduresFiltered => procedures?
-        .Where(proc => $"[{proc.SchemaName}]".ContainsIgnoreCase(filterTextSchema))
-        .Where(proc => $"[{proc.ProcedureName}]".ContainsIgnoreCase(filterTextName))
+    private IEnumerable<IStoredProcedure> ProceduresFiltered => procedures?
+        .Where(proc => proc.QuotedSchemaName.ContainsIgnoreCase(filterTextSchema))
+        .Where(proc => proc.QuotedProcedureName.ContainsIgnoreCase(filterTextName))
         .OrderBy(proc => proc.SchemaName)
-        .ThenBy(proc => proc.ProcedureName) ?? Enumerable.Empty<StoredProcedure>();
+        .ThenBy(proc => proc.ProcedureName)
+        .AsEnumerable() ?? [];
 
     private async Task SelectProcedure()
     {
         if (selectedProcedure is not null)
         {
-            await OnProcedureSelected.InvokeAsync($"[{selectedProcedure.SchemaName}].[{selectedProcedure.ProcedureName}]");
+            await OnProcedureSelected.InvokeAsync(selectedProcedure);
             await offcanvas.LetAsync(x => x.HideAsync());
         }
     }
@@ -119,20 +120,12 @@
         await offcanvas.LetAsync(x => x.ShowAsync());
         try
         {
-            if (connection is MsSqlConnection msSql)
+            procedures = connection switch
             {
-                procedures = await msSql.GetStoredProceduresAsync();
-                
-            }
-            else if (connection is SnowflakeConnection snow)
-            {
-                // TODO Handle Snowflake procedures
-            }
-            else
-            {
-                throw new ArgumentException($"Unsupported connection type {connection.GetType().Name}");
-            }
-            
+                MsSqlConnection ms => await ms.GetStoredProceduresAsync(),
+                SnowflakeConnection sf => await sf.GetStoredProceduresAsync(),
+                _ => throw new ArgumentException($"Unsupported connection type {connection.GetType().Name}")
+            };
             StateHasChanged();
         }
         catch (Exception ex)
@@ -140,5 +133,4 @@
             Toaster.AddError("Error reading procedures", ex.Message);
         }
     }
-
 }

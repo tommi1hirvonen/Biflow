@@ -4,7 +4,7 @@ using Microsoft.Data.SqlClient;
 
 namespace Biflow.Ui.SqlMetadataExtensions;
 
-public static class SqlServerExtensions
+public static class MsSqlExtensions
 {
     public static async Task<SSISCatalog> GetCatalogPackagesAsync(this MsSqlConnection connection)
     {
@@ -178,7 +178,7 @@ public static class SqlServerExtensions
         });
     }
 
-    public static async Task<IEnumerable<StoredProcedure>> GetStoredProceduresAsync(this MsSqlConnection connection)
+    public static async Task<IEnumerable<IStoredProcedure>> GetStoredProceduresAsync(this MsSqlConnection connection)
     {
         using var sqlConnection = new SqlConnection(connection.ConnectionString);
         var sql = """
@@ -197,9 +197,9 @@ public static class SqlServerExtensions
                 ProcedureName,
                 ParameterId
             """;
-        var procedures = new Dictionary<int, StoredProcedure>();
+        var procedures = new Dictionary<int, MsSqlStoredProcedure>();
         var data = await connection.RunImpersonatedOrAsCurrentUserAsync(
-            () => sqlConnection.QueryAsync<StoredProcedure, StoredProcedureParameter?, StoredProcedure>(
+            () => sqlConnection.QueryAsync<MsSqlStoredProcedure, MsSqlStoredProcedureParameter?, MsSqlStoredProcedure>(
                 sql,
                 (proc, param) =>
                 {
@@ -595,4 +595,6 @@ public static class SqlServerExtensions
             });
         });
     }
+
+    internal static string EncodeForLike(this string term) => term.Replace("[", "[[]").Replace("%", "[%]");
 }

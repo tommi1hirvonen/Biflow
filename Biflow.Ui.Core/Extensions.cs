@@ -1,7 +1,6 @@
 ﻿using Biflow.Executor.Core;
 using Biflow.Scheduler.Core;
 using Biflow.Ui.Core.Authentication;
-using Biflow.Ui.SqlServer;
 using CronExpressionDescriptor;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;

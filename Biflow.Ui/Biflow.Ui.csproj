@@ -42,6 +42,7 @@
     <ProjectReference Include="..\Biflow.Ui.Core\Biflow.Ui.Core.csproj" />
     <ProjectReference Include="..\Biflow.Core\Biflow.Core.csproj" />
     <ProjectReference Include="..\Biflow.Ui.Icons\Biflow.Ui.Icons.csproj" />
+    <ProjectReference Include="..\Biflow.Ui.SqlMetadataExtensions\Biflow.Ui.SqlMetadataExtensions.csproj" />
     <ProjectReference Include="..\Biflow.Ui.TableEditor\Biflow.Ui.TableEditor.csproj" />
   </ItemGroup>
 

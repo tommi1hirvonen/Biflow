@@ -1,6 +1,6 @@
 ﻿namespace Biflow.Ui.SqlMetadataExtensions;
 
-public class StoredProcedureParameter(int parameterId, string parameterName, string parameterType)
+internal class MsSqlStoredProcedureParameter(int parameterId, string parameterName, string parameterType) : IStoredProcedureParameter
 {
     public int ParameterId { get; } = parameterId;
 

@@ -1,5 +1,5 @@
 ﻿using Biflow.Ui.Shared.StepEdit;
-using Biflow.Ui.SqlServer;
+using Biflow.Ui.SqlMetadataExtensions;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
@@ -111,16 +111,11 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
         }
     }
 
-    private Task OnStoredProcedureSelected(string procedure)
+    private Task OnStoredProcedureSelected(IStoredProcedure procedure)
     {
         ArgumentNullException.ThrowIfNull(editor);
         ArgumentNullException.ThrowIfNull(Step);
-        Step.SqlStatement = Connection.ConnectionType switch
-        {
-            ConnectionType.Snowflake => $"CALL {procedure}()",
-            ConnectionType.Sql => $"EXEC {procedure}",
-            _ => procedure
-        };
+        Step.SqlStatement = procedure.InvokeSqlStatement;
         return editor.SetValueAsync(Step.SqlStatement);
     }
     
