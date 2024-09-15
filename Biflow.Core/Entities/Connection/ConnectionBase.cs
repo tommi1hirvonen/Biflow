@@ -37,7 +37,7 @@ public abstract class ConnectionBase(ConnectionType connectionType) : IComparabl
     public IEnumerable<SqlStep> SqlSteps { get; set; } = new List<SqlStep>();
 
     [JsonIgnore]
-    public abstract IEnumerable<Step> Steps { get; }
+    public virtual IEnumerable<Step> Steps { get => SqlSteps; }
 
     public abstract Task TestConnectionAsync(CancellationToken cancellationToken = default);
 }

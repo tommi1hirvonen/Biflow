@@ -26,7 +26,7 @@ public class MsSqlConnection() : ConnectionBase(ConnectionType.Sql)
     [JsonIgnore]
     public IEnumerable<PackageStep> PackageSteps { get; set; } = new List<PackageStep>();
 
-    public override IEnumerable<Step> Steps => AgentJobSteps.Cast<Step>().Concat(PackageSteps);
+    public override IEnumerable<Step> Steps => AgentJobSteps.Cast<Step>().Concat(PackageSteps).Concat(SqlSteps);
 
     [JsonIgnore]
     public IEnumerable<MasterDataTable> DataTables { get; } = new List<MasterDataTable>();

@@ -4,7 +4,7 @@ namespace Biflow.Core.Entities;
 
 public class SnowflakeConnection() : ConnectionBase(ConnectionType.Snowflake)
 {
-    public override IEnumerable<Step> Steps => [];
+    public override IEnumerable<Step> Steps => SqlSteps;
 
     public override async Task TestConnectionAsync(CancellationToken cancellationToken = default)
     {
