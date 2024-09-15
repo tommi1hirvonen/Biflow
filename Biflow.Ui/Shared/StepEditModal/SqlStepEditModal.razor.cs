@@ -71,7 +71,7 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
 
             if (Connection is MsSqlConnection msSql)
             {
-                var procedure = Step.SqlStatement.ParseStoredProcedureFromSqlStatement();
+                var procedure = MsSqlExtensions.ParseStoredProcedureFromSqlStatement(Step.SqlStatement);
                 if (procedure is null || procedure.Value.ProcedureName is null || Step.ConnectionId == Guid.Empty)
                 {
                     Toaster.AddWarning("Stored procedure could not be parsed from SQL statement");
@@ -95,10 +95,6 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
                         ParameterValue = paramValue
                     });
                 }
-            }
-            else if (Connection is SnowflakeConnection snow)
-            {
-                // TODO Handle Snowflake
             }
             else
             {

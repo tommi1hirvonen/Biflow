@@ -188,16 +188,20 @@
     public async Task ShowAsync(Guid? connectionId = null, string? sqlStatement = null)
     {
         this.connectionId = connectionId ?? Connections.FirstOrDefault()?.ConnectionId;
-        var proc = sqlStatement?.ParseStoredProcedureFromSqlStatement();
-        var schema = proc?.Schema;
-        var name = proc?.ProcedureName;
-        if (schema is not null && name is not null)
+        var connection = Connections.FirstOrDefault(c => c.ConnectionId == this.connectionId);
+        if (connection is MsSqlConnection && sqlStatement is not null)
         {
-            await RunQuery($"[{schema}].[{name}]");
-        }
-        else if (name is not null)
-        {
-            await RunQuery($"[{name}]");
+            var proc = MsSqlExtensions.ParseStoredProcedureFromSqlStatement(sqlStatement);
+            var schema = proc?.Schema;
+            var name = proc?.ProcedureName;
+            if (schema is not null && name is not null)
+            {
+                await RunQuery($"[{schema}].[{name}]");
+            }
+            else if (name is not null)
+            {
+                await RunQuery($"[{name}]");
+            }
         }
         await offcanvas.LetAsync(x => x.ShowAsync());
     }

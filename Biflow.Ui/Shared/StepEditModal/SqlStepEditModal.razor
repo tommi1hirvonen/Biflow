@@ -84,6 +84,8 @@
                 </InputSelect>
             </div>
         </div>
-        <StepParametersEditor Step="Step" NewParameterDelegate="() => new() { Step = Step }" OnImportParameters="ImportParametersAsync" />
+        <StepParametersEditor Step="Step"
+                              NewParameterDelegate="() => new() { Step = Step }"
+                              OnImportParameters="Connection is MsSqlConnection ? ImportParametersAsync : null" />
     }
 </StepEditModalTemplate>

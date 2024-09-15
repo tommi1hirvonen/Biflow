@@ -14,12 +14,11 @@ using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 using Quartz;
 using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 using StartEnd = (System.DateTimeOffset? Start, System.DateTimeOffset? End);
 
 namespace Biflow.Ui.Core;
 
-public static partial class Extensions
+public static class Extensions
 {
     /// <summary>
     /// Adds authentication services based on settings defined in configuration. Needs to be called after AddUiCoreServices().
@@ -257,54 +256,6 @@ public static partial class Extensions
         }
     }
 
-    /// <summary>
-    /// Try to identify and parse a SQL stored procedure from a SQL statement
-    /// </summary>
-    /// <remarks>For example, SQL statement <c>exec [dbo].[MyProc]</c> would return a schema of dbo and procedure name MyProc</remarks>
-    /// <returns>Tuple of strings if the stored procedure was parsed successfully, null if not. The schema is null if the SQL statement did not include a schema.</returns>
-    public static (string? Schema, string ProcedureName)? ParseStoredProcedureFromSqlStatement(this string sqlStatement)
-    {
-        // Can handle white space inside object names
-        var regex1 = ProcedureWithSchemaWithBracketsRegex();
-        var match1 = regex1.Match(sqlStatement);
-        if (match1.Success)
-        {
-            var schema = match1.Groups[1].Value[1..^1]; // skip first and last character
-            var proc = match1.Groups[2].Value[1..^1];
-            return (schema, proc);
-        }
-
-        // No square brackets => no whitespace in object names
-        var regex2 = ProcedureWithSchemaWithoutBracketsRegex();
-        var match2 = regex2.Match(sqlStatement);
-        if (match2.Success)
-        {
-            var schema = match2.Groups[1].Value;
-            var proc = match2.Groups[2].Value;
-            return (schema, proc);
-        }
-
-        // Can handle white space inside object names
-        var regex3 = ProcedureWithoutSchemaWithBracketsRegex();
-        var match3 = regex3.Match(sqlStatement);
-        if (match3.Success)
-        {
-            var proc = match3.Groups[1].Value[1..^1]; // skip first and last character
-            return (null, proc);
-        }
-
-        // No square brackets => no whitespace in object names
-        var regex4 = ProcedureWithoutSchemaWithoutBracketsRegex();
-        var match4 = regex4.Match(sqlStatement);
-        if (match4.Success)
-        {
-            var proc = match4.Groups[1].Value;
-            return (null, proc);
-        }
-
-        return null;
-    }
-
     public static (double Offset, double Width) GetGanttGraphDimensions(this StepExecutionAttempt attempt)
     {
         var allAttempts = attempt.StepExecution.Execution.StepExecutions
@@ -540,21 +491,5 @@ public static partial class Extensions
         return value;
     }
 
-    // Using the GeneratedRegex attributes we can create the regex already at compile time.
-
-    // Can handle white space inside object names
-    [GeneratedRegex("EXEC(?:UTE)?[\\s*](\\[.*\\]).(\\[.*\\])", RegexOptions.IgnoreCase, "en-US")]
-    private static partial Regex ProcedureWithSchemaWithBracketsRegex();
-
-    // No square brackets => no whitespace in object names
-    [GeneratedRegex("EXEC(?:UTE)?[\\s*](\\S*)\\.(\\S*)", RegexOptions.IgnoreCase, "en-US")]
-    private static partial Regex ProcedureWithSchemaWithoutBracketsRegex();
-
-    // Can handle white space inside object names
-    [GeneratedRegex("EXEC(?:UTE)?[\\s*](\\[.*\\])", RegexOptions.IgnoreCase, "en-US")]
-    private static partial Regex ProcedureWithoutSchemaWithBracketsRegex();
-
-    // No square brackets => no whitespace in object names
-    [GeneratedRegex("EXEC(?:UTE)?[\\s*](\\S*)", RegexOptions.IgnoreCase, "en-US")]
-    private static partial Regex ProcedureWithoutSchemaWithoutBracketsRegex();
+    
 }
