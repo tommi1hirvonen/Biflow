@@ -30,7 +30,9 @@ public static class SnowflakeExtensions
                     storedProc = proc;
                     procs.Add(storedProc);
                 }
-                if (param is not null)
+                if (param is not null 
+                && !string.IsNullOrWhiteSpace(param.ParameterName) 
+                && !string.IsNullOrWhiteSpace(param.ParameterType))
                 {
                     storedProc.Parameters.Add(param);
                 }
