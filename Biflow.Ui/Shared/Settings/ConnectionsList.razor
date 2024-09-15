@@ -139,9 +139,9 @@
                                      Credentials="credentials"
                                      OnConnectionSubmit="OnConnectionSubmit" />
 
-<SqlConnectionEditModal @ref="connectionEditModals[ConnectionType.Sql]"
-                        Credentials="credentials"
-                        OnConnectionSubmit="OnConnectionSubmit" />
+<MsSqlConnectionEditModal @ref="connectionEditModals[ConnectionType.Sql]"
+                          Credentials="credentials"
+                          OnConnectionSubmit="OnConnectionSubmit" />
 
 <SnowflakeConnectionEditModal @ref="connectionEditModals[ConnectionType.Snowflake]"
                               OnConnectionSubmit="OnConnectionSubmit"/>
