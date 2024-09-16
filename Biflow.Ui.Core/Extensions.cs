@@ -244,6 +244,7 @@ public static class Extensions
             // context.Set<T>().Remove(item);
         }
 
+        List<T> toAdd = [];
         foreach (var newItem in newItems)
         {
             var newKey = keyFunc(newItem);
@@ -251,8 +252,13 @@ public static class Extensions
             var found = currentItems.FirstOrDefault(x => newKey.Equals(keyFunc(x)));
             if (found is null)
             {
-                currentItems.Add(newItem);
+                toAdd.Add(newItem);
             }
+        }
+
+        foreach (var item in toAdd)
+        {
+            currentItems.Add(item);
         }
     }
 
