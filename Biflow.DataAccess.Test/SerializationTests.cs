@@ -83,6 +83,11 @@ public class SerializationTests(SerializationTestsFixture fixture) : IClassFixtu
         Assert.NotNull(items);
         Assert.NotEmpty(items);
         Assert.All(items, x => Assert.NotEqual(x.JobId, Guid.Empty));
+        Assert.NotEmpty(items.SelectMany(x => x.Steps));
+        Assert.NotEmpty(items.SelectMany(x => x.Schedules));
+        Assert.NotEmpty(items.SelectMany(x => x.JobParameters));
+        Assert.NotEmpty(items.SelectMany(x => x.JobConcurrencies));
+        Assert.NotEmpty(items.SelectMany(x => x.Tags));
     }
 
     [Fact]
@@ -92,10 +97,14 @@ public class SerializationTests(SerializationTestsFixture fixture) : IClassFixtu
         var items = JsonSerializer.Deserialize<Step[]>(json, Options);
         Assert.NotNull(items);
         Assert.NotEmpty(items);
+        Assert.NotEmpty(items.SelectMany(s => s.ExecutionConditionParameters));
         Assert.All(items, x => Assert.NotEqual(x.StepId, Guid.Empty));
         Assert.All(items, x => Assert.NotEqual(x.JobId, Guid.Empty));
         var functionSteps = items.OfType<FunctionStep>();
         Assert.All(functionSteps, x => Assert.Empty(x.FunctionKey ?? ""));
+        var sqlSteps = items.OfType<SqlStep>();
+        Assert.NotEmpty(sqlSteps.SelectMany(s => s.StepParameters));
+        Assert.NotEmpty(sqlSteps.SelectMany(s => s.StepParameters.Select(p => p.ExpressionParameters)));
     }
 
     [Fact]

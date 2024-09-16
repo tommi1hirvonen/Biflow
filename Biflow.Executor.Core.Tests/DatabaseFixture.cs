@@ -1,5 +1,4 @@
 ﻿using Biflow.Core;
-using Biflow.Core.Constants;
 using Biflow.Core.Entities;
 using Biflow.DataAccess;
 using Microsoft.EntityFrameworkCore;
@@ -98,9 +97,9 @@ public class DatabaseFixture : IAsyncLifetime
                 StepName = "Test step 1",
                 ExecutionPhase = 10,
                 SqlStatement = "select 1",
-                Connection = sqlConnection1,
-                Tags = [tag1, tag2]
+                Connection = sqlConnection1
             };
+            step1.Tags.AddRange([tag1, tag2]);
 
             var step2 = new SqlStep
             {
@@ -108,9 +107,9 @@ public class DatabaseFixture : IAsyncLifetime
                 StepDescription = "Test step 2",
                 ExecutionPhase = 20,
                 SqlStatement = "select @param",
-                Connection = sqlConnection1,
-                Tags = [tag1]
+                Connection = sqlConnection1
             };
+            step2.Tags.Add(tag1);
             var step2Dependency = new Dependency
             {
                 StepId = step2.StepId,

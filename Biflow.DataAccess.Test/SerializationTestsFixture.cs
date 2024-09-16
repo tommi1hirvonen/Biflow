@@ -68,6 +68,7 @@ public class SerializationTestsFixture(DatabaseFixture fixture) : IAsyncLifetime
             .AsNoTracking()
             .Include(j => j.JobParameters)
             .Include(j => j.JobConcurrencies)
+            .Include(j => j.Tags)
             .OrderBy(j => j.JobId)
             .ToArrayAsync();
         Steps = await context.Steps
