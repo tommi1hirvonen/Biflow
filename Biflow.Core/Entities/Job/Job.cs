@@ -101,13 +101,16 @@ public class Job : IAuditable
     public bool IsEnabled { get; set; } = true;
 
     [ValidateComplexType]
-    public IList<JobParameter> JobParameters { get; } = new List<JobParameter>();
+    [JsonInclude]
+    public IList<JobParameter> JobParameters { get; private set; } = new List<JobParameter>();
 
     [ValidateComplexType]
-    public ICollection<JobConcurrency> JobConcurrencies { get; } = new List<JobConcurrency>();
+    [JsonInclude]
+    public ICollection<JobConcurrency> JobConcurrencies { get; private set; } = new List<JobConcurrency>();
 
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public ICollection<Step> Steps { get; } = new List<Step>();
+    [JsonInclude]
+    public ICollection<Step> Steps { get; private set; } = new List<Step>();
 
     [JsonIgnore]
     public IEnumerable<JobStep> JobSteps { get; } = new List<JobStep>();
@@ -125,7 +128,8 @@ public class Job : IAuditable
     [JsonIgnore]
     public IEnumerable<User> Users { get; } = new List<User>();
 
-    public ICollection<JobTag> Tags { get; init; } = new List<JobTag>();
+    [JsonInclude]
+    public ICollection<JobTag> Tags { get; private set; } = new List<JobTag>();
 
     [Display(Name = "Created")]
     public DateTimeOffset CreatedOn { get; set; }

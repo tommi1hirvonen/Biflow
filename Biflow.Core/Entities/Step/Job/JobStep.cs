@@ -38,9 +38,11 @@ public class JobStep : Step, IHasStepParameters<JobStepParameter>, IHasTimeout
     public Job JobToExecute { get; set; } = null!;
 
     [ValidateComplexType]
-    public IList<JobStepParameter> StepParameters { get; } = new List<JobStepParameter>();
+    [JsonInclude]
+    public IList<JobStepParameter> StepParameters { get; private set; } = new List<JobStepParameter>();
 
-    public ICollection<StepTag> TagFilters { get; init; } = new List<StepTag>();
+    [JsonInclude]
+    public ICollection<StepTag> TagFilters { get; private set; } = new List<StepTag>();
 
     public override JobStep Copy(Job? targetJob = null) => new(this, targetJob);
 

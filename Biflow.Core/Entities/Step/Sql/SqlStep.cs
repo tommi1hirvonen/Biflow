@@ -1,7 +1,6 @@
 ﻿using Biflow.Core.Attributes.Validation;
 using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
@@ -81,7 +80,8 @@ public class SqlStep : Step, IHasConnection, IHasTimeout, IHasStepParameters<Sql
     private ConnectionBase _connection = null!;
 
     [ValidateComplexType]
-    public IList<SqlStepParameter> StepParameters { get; } = new List<SqlStepParameter>();
+    [JsonInclude]
+    public IList<SqlStepParameter> StepParameters { get; private set; } = new List<SqlStepParameter>();
 
     public override SqlStep Copy(Job? targetJob = null) => new(this, targetJob);
 

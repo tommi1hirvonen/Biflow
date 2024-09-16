@@ -53,7 +53,8 @@ public class MasterDataTable
     public ICollection<User> Users { get; set; } = null!;
 
     [ValidateComplexType]
-    public ICollection<MasterDataTableLookup> Lookups { get; } = new List<MasterDataTableLookup>();
+    [JsonInclude]
+    public ICollection<MasterDataTableLookup> Lookups { get; private set; } = new List<MasterDataTableLookup>();
 
     [JsonIgnore]
     public IEnumerable<MasterDataTableLookup> DependentLookups { get; } = new List<MasterDataTableLookup>();

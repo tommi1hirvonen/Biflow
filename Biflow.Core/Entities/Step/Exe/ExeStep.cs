@@ -59,7 +59,8 @@ public class ExeStep : Step, IHasTimeout, IHasStepParameters<ExeStepParameter>
     public Credential? RunAsCredential { get; set; }
 
     [ValidateComplexType]
-    public IList<ExeStepParameter> StepParameters { get; } = new List<ExeStepParameter>();
+    [JsonInclude]
+    public IList<ExeStepParameter> StepParameters { get; private set; } = new List<ExeStepParameter>();
 
     public override StepExecution ToStepExecution(Execution execution) => new ExeStepExecution(this, execution);
 

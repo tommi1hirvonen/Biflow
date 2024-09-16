@@ -70,7 +70,8 @@ public class PackageStep : Step, IHasConnection, IHasTimeout, IHasStepParameters
     ConnectionBase IHasConnection.Connection => Connection;
 
     [ValidateComplexType]
-    public IList<PackageStepParameter> StepParameters { get; } = new List<PackageStepParameter>();
+    [JsonInclude]
+    public IList<PackageStepParameter> StepParameters { get; private set; } = new List<PackageStepParameter>();
 
     public override StepExecution ToStepExecution(Execution execution) => new PackageStepExecution(this, execution);
 
