@@ -18,7 +18,7 @@
     <div class="col">
         <div class="card shadow-sm">
             <div class="card-body px-0">
-                <table class="table">
+                <table class="table table-hover">
                     <thead>
                         <tr>
                             <th>Version id</th>
@@ -49,32 +49,44 @@
                         {
                             foreach (var version in Versions)
                             {
-                                <tr>
-                                    <td class="align-middle">
-                                        <span class="link-primary text-decoration-underline pointer" @onclick="() => OpenDetailsAsync(version.VersionId)">
-                                            @version.VersionId
-                                        </span>
-                                    </td>
-                                    <td class="align-middle">
-                                        @version.Description
-                                    </td>
-                                    <td class="align-middle">
-                                        @version.CreatedDateTime.LocalDateTime
-                                    </td>
-                                    <td class="align-middle">
-                                        @version.CreatedBy
-                                    </td>
-                                    <td>
-                                        <HxButtonGroup Size="ButtonGroupSize.Small">
-                                            <a role="button" class="btn btn-sm btn-auto" href="@($"versions/compare/{version.VersionId}")">
-                                                <SvgIcon Icon="LucideIcon.GitCompareArrows" />
-                                            </a>
-                                            <HxButton Color="ThemeColor.None" CssClass="btn-auto" title="Download JSON" OnClick="() => DownloadAsync(version.VersionId)">
-                                                <SvgIcon Icon="FeatherIcon.Download" />
+                                <ContextMenuToggle ContainerHtmlTag="tr">
+                                    <ChildContent Context="menu">
+                                        <td class="align-middle">
+                                            <span class="pointer text-decoration-underline" @onclick="() => OpenDetailsAsync(version.VersionId)">
+                                                @version.VersionId
+                                            </span>
+                                        </td>
+                                        <td class="align-middle">
+                                            @version.Description
+                                        </td>
+                                        <td class="align-middle">
+                                            @version.CreatedDateTime.LocalDateTime
+                                        </td>
+                                        <td class="align-middle">
+                                            @version.CreatedBy
+                                        </td>
+                                        <td>
+                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" Spinner="false" CssClass="btn-auto" @onclick="e => menu.ShowContextMenuAsync(e)">
+                                                <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
                                             </HxButton>
-                                        </HxButtonGroup>
-                                    </td>
-                                </tr>
+                                        </td>
+                                    </ChildContent>
+                                    <MenuContent>
+                                        <DropdownMenuHeader>Version id: @version.VersionId</DropdownMenuHeader>
+                                        <DropdownMenuItem @onclick="() => OpenDetailsAsync(version.VersionId)">
+                                            <SvgIcon Icon="LucideIcon.Braces" />
+                                            Show JSON
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem @onclick="() => DownloadAsync(version.VersionId)">
+                                            <SvgIcon Icon="FeatherIcon.Download" />
+                                            Download JSON
+                                        </DropdownMenuItem>
+                                        <DropdownMenuLink href="@($"versions/compare/{version.VersionId}")">
+                                            <SvgIcon Icon="LucideIcon.GitCompareArrows" />
+                                            Compare to current
+                                        </DropdownMenuLink>
+                                    </MenuContent>
+                                </ContextMenuToggle>
                             }
                         }
                     </tbody>

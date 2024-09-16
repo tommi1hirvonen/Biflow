@@ -1,4 +1,4 @@
-﻿@page "/versions/{Page?}/{InitialSourceVersionId:int?}"
+﻿@page "/versions/{Page?}/{VersionId:int?}"
 
 @attribute [Authorize(Roles = $"{Roles.Admin}")]
 
@@ -7,52 +7,45 @@
 
 <PageTitle>Versions | Biflow</PageTitle>
 
-<h4>Versions</h4>
+@if (Page is null or "compare")
+{
+    <h4>Versions</h4>
 
-<div class="row mt-3 mb-4">
-    <div class="col">
-        <ul class="nav nav-tabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <NavLink class="nav-link" href="versions/list">
-                    <SvgIcon Icon="FeatherIcon.List" />
-                    List
-                </NavLink>
-            </li>
-            <li class="nav-item" role="presentation">
-                <NavLink class="nav-link" href="versions/compare">
-                    <SvgIcon Icon="LucideIcon.GitCompareArrows" />
-                    Compare
-                </NavLink>
-            </li>
-        </ul>
+    <div class="row mt-3 mb-4">
+        <div class="col">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <NavLink class="nav-link" href="versions" Match="NavLinkMatch.All">
+                        <SvgIcon Icon="FeatherIcon.List" />
+                        List
+                    </NavLink>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <NavLink class="nav-link" href="versions/compare">
+                        <SvgIcon Icon="LucideIcon.GitCompareArrows" />
+                        Compare
+                    </NavLink>
+                </li>
+            </ul>
+        </div>
     </div>
-</div>
+}
 
-@if (Page == "list")
+@if (Page is null)
 {
     <VersionsList Versions="versions" />   
 }
 else if (Page == "compare")
 {
-    <VersionsCompare Versions="versions" InitialSourceVersionId="InitialSourceVersionId" />
+    <VersionsCompare Versions="versions" InitialSourceVersionId="VersionId" />
 }
 
 @code {
     [Parameter] public string? Page { get; set; }
 
-    [Parameter] public int? InitialSourceVersionId { get; set; }
+    [Parameter] public int? VersionId { get; set; }
 
     private IList<VersionProjection>? versions;
-
-    protected override void OnInitialized()
-    {
-        if (Page is not null)
-        {
-            return;
-        }
-
-        NavigationManager.NavigateTo("versions/list");
-    }
 
     protected override async Task OnInitializedAsync()
     {
