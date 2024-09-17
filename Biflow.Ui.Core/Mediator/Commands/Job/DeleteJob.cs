@@ -19,7 +19,6 @@ internal class DeleteJobCommandHandler(
             .ThenInclude(j => j.AssigningStepParameters)
             .ThenInclude(p => p.Step)
             .Include(j => j.Steps)
-            .Include(j => j.Steps)
             .ThenInclude(s => s.Dependencies)
             .Include(j => j.Steps)
             .ThenInclude(s => s.Depending)
