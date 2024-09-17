@@ -12,6 +12,7 @@ public class EnvironmentSnapshot
     {
         WriteIndented = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        ReferenceHandler = ReferenceHandler.Preserve,
         Converters = { new JsonStringEnumConverter() },
         TypeInfoResolver = new DefaultJsonTypeInfoResolver
         {
