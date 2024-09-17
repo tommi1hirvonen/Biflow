@@ -355,6 +355,9 @@ If you want to implement Always Encrypted, these columns are good candidates for
 - [app].[Credential].[Password]
 - [app].[FunctionApp].[FunctionAppKey]
 - [app].[Step].[FunctionKey]
+- [app].[QlikCloudClient].[ApiToken]
+- [app].[BlobStorageClient].[ConnectionString]
+- [app].[BlobStorageClient].[StorageAccountUrl]
 
 If Always Encrypted is utilized, this should be reflected in the connection strings set in the application settings (AppDbContext). Always Encrypted is enabled with the following connection string property: `Column Encryption Setting=enabled`
 
