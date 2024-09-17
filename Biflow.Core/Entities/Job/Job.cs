@@ -145,6 +145,7 @@ public class Job : IAuditable
     [MaxLength(250)]
     public string? LastModifiedBy { get; set; }
 
+    [JsonIgnore]
     public byte[]? Timestamp { get; private set; }
 
     public Job Copy() => new(this);

@@ -59,5 +59,6 @@ public class MasterDataTable
     [JsonIgnore]
     public IEnumerable<MasterDataTableLookup> DependentLookups { get; } = new List<MasterDataTableLookup>();
 
+    [JsonIgnore]
     public byte[]? Timestamp { get; set; }
 }
