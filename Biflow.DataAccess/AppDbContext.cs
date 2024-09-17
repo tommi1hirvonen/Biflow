@@ -114,7 +114,7 @@ public class AppDbContext : DbContext
         configurationBuilder.Conventions.Remove<ForeignKeyIndexConvention>();
     }
 
-    private void OnSavingChanges(object? sender, SavingChangesEventArgs e)
+    protected virtual void OnSavingChanges(object? sender, SavingChangesEventArgs e)
     {
         var now = DateTimeOffset.Now;
 

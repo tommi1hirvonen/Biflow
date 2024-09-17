@@ -122,9 +122,10 @@ public static class Extensions
         services.AddScoped<IUserService, UserService>();
         services.AddDbContextFactory<AppDbContext>(lifetime: ServiceLifetime.Scoped);
 
-        // Add a second DbContext factory with singleton lifetime.
-        // This is used in background services where the user session is not relevant.
+        // Add additional DbContext factories with singleton lifetime.
+        // These are used in background services where the user session is not relevant.
         services.AddDbContextFactory<ServiceDbContext>(lifetime: ServiceLifetime.Singleton);
+        services.AddDbContextFactory<RevertDbContext>(lifetime: ServiceLifetime.Singleton);
 
         services.AddExecutionBuilderFactory<AppDbContext>(ServiceLifetime.Scoped);
         
