@@ -20,7 +20,7 @@
                 <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th>Version id</th>
+                            <th>ID</th>
                             <th>Description</th>
                             <th>Created on</th>
                             <th>Created by</th>
@@ -48,6 +48,9 @@
                         {
                             foreach (var version in Versions)
                             {
+                                var description = version.Description?.Length > 100
+                                    ? $"{version.Description.Substring(0, 100)}..."
+                                    : version.Description;
                                 <ContextMenuToggle ContainerHtmlTag="tr">
                                     <ChildContent Context="menu">
                                         <td class="align-middle">
@@ -55,13 +58,13 @@
                                                 @version.VersionId
                                             </span>
                                         </td>
-                                        <td class="align-middle">
-                                            @version.Description
+                                        <td class="align-middle small">
+                                            @description
                                         </td>
                                         <td class="align-middle">
                                             @version.CreatedDateTime.LocalDateTime
                                         </td>
-                                        <td class="align-middle">
+                                        <td class="align-middle small">
                                             @version.CreatedBy
                                         </td>
                                         <td>
