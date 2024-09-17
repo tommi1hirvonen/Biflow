@@ -71,6 +71,20 @@
                                 </ul>
                             </p>
                             <p>
+                                Sensitive string values are not included in the snapshot JSON and thus cannot be restored. The following sensitive values from the current version are carried over to the reverted version for matching objects:
+                                <ul>
+                                    <li>App registration client secrets</li>
+                                    <li>Connection strings (when containing passwords)</li>
+                                    <li>Credential passwords</li>
+                                    <li>Function app keys</li>
+                                    <li>Function step keys</li>
+                                    <li>Qlik Cloud API tokens</li>
+                                    <li>Blob storage client connection strings</li>
+                                    <li>Blob storage client account urls (when containining signatures)</li>
+                                </ul>
+                                It is recommended to validate and test the various endpoints listed above in settings after the revert process.
+                            </p>
+                            <p>
                                 The following entity types will remain unchanged:
                                 <ul>
                                     <li>Users</li>
