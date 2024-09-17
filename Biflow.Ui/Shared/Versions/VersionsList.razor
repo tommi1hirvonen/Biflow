@@ -4,7 +4,6 @@
 @inject EnvironmentSnapshotBuilder SnapshotBuilder
 @inject ToasterService Toaster
 @inject IJSRuntime JS
-@inject NavigationManager NavigationManager
 
 <div class="row">
     <div class="col">
@@ -84,6 +83,10 @@
                                         <DropdownMenuLink href="@($"versions/compare/{version.VersionId}")">
                                             <SvgIcon Icon="LucideIcon.GitCompareArrows" />
                                             Compare to current
+                                        </DropdownMenuLink>
+                                        <DropdownMenuLink href="@($"versions/revert/{version.VersionId}")">
+                                            <SvgIcon Icon="LucideIcon.History" />
+                                            Revert...
                                         </DropdownMenuLink>
                                     </MenuContent>
                                 </ContextMenuToggle>

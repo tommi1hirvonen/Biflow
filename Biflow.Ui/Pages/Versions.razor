@@ -39,6 +39,10 @@ else if (Page == "compare")
 {
     <VersionsCompare Versions="versions" InitialSourceVersionId="VersionId" />
 }
+else if (Page == "revert")
+{
+    <VersionRevert VersionId="VersionId" />
+}
 
 @code {
     [Parameter] public string? Page { get; set; }
