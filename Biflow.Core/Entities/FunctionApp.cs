@@ -45,6 +45,7 @@ public class FunctionApp
 
     [Required]
     [Display(Name = "App registration")]
+    [JsonInclude]
     public Guid AppRegistrationId { get; private set; }
 
     [JsonIgnore]
