@@ -18,7 +18,7 @@
 @if (version is not null)
 {
     <div class="row my-3">
-        <div class="col-auto" style="max-width: 60rem;">
+        <div class="col-auto" style="max-width: 50rem;">
             <div class="card shadow-sm">
                 <div class="card-body py-3 px-4">
                     <div class="row">
@@ -38,14 +38,18 @@
                     <hr />
                     <div class="row mt-4">
                         <div class="col">
+                            <h5>Note</h5>
+                            <p>
+                                During the revert process, keep this page open. Leaving or closing the page will automatically cancel the revert process.
+                            </p>
                             <p>
                                 Reverting to a previous version can take several minutes. It is highly recommended to make sure no executions are scheduled to start while the revert process is taking place. This can lead to undefined behaviour. Users should also avoid making changes in the application during the process.
                             </p>
                             <p>
-                                It is also recommended to create a version snapshot of the current environment before reverting to a previous version.
+                                It is recommended to create a version snapshot of the current environment before reverting to a previous version.
                             </p>
                             <p>
-                                Reverting to a previous version snapshot will restore the following entity types:
+                                The following entity types will be restored:
                                 <ul>
                                     <li>
                                         Settings
@@ -78,6 +82,9 @@
                                 Currently configured user authorizations and subscriptions may be affected. Authorizations and subscriptions from the current version are carried over to the reverted version only for objects (e.g. jobs, steps, data tables, tags) that exist in both versions. Comparing whether two objects are the same is done based on the underlying object ids.
                             </p>
                             <p>
+                                If the revert fails at any point of the process, the entire revert is rolled back. Either the entire revert is successful or the current version is retained.
+                            </p>
+                            <p>
                                 If the revert process completes successfully, the scheduler service is automatically requested to synchronize its schedules from the application database. Reverted schedules should then automatically take effect.
                             </p>
                         </div>
@@ -104,6 +111,17 @@
                             }
                         </div>
                     </div>
+                    @if (revertTask is not null)
+                    {
+                        <div class="row mt-3">
+                            <div class="col">
+                                <HxAlert Color="ThemeColor.Info">
+                                    <p><strong>Version revert in progress</strong></p>
+                                    Please do not leave or close this page.
+                                </HxAlert>
+                            </div>
+                        </div>
+                    }
                     @if (result is not null)
                     {
                         <div class="row mt-3">
