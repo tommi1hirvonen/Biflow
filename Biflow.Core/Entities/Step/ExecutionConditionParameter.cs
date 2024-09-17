@@ -80,7 +80,7 @@ public class ExecutionConditionParameter : ParameterBase, IAsyncEvaluable
             return await JobParameter.EvaluateAsync();
         }
 
-        return ParameterValue;
+        return ParameterValue.Value;
     }
 
     [JsonIgnore]
