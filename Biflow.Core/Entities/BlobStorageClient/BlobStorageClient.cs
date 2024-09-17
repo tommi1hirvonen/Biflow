@@ -26,6 +26,7 @@ public class BlobStorageClient
     [JsonSensitive]
     public string? ConnectionString { get; private set; }
 
+    [JsonInclude]
     public Guid? AppRegistrationId { get; private set; }
 
     [JsonIgnore]
