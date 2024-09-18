@@ -13,7 +13,7 @@
 <div class="row mt-3">
     <div class="col">
         <button class="btn btn-secondary" @onclick="OpenConfirmDeleteModalAsync">
-            <CxIcon Icon="FeatherIcon.Trash2" />
+            <SvgIcon Icon="FeatherIcon.Trash2" />
             Delete unused...
         </button>
     </div>
@@ -23,7 +23,7 @@
     <div class="col">
         <div class="input-group input-group-sm">
             <div class="input-group-text">
-                <CxIcon Icon="FeatherIcon.Search" />
+                <SvgIcon Icon="FeatherIcon.Search" />
             </div>
             <input type="search" class="form-control" @bind-value="searchTerm" @bind-value:event="oninput" placeholder="Search" style="max-width: 30rem;" />
         </div>
@@ -71,11 +71,11 @@
                                     <td>
                                         <div class="btn-group">
                                             <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => editOffcanvas.LetAsync(x => x.ShowAsync(obj.ObjectId))">
-                                                <CxIcon Icon="FeatherIcon.Edit2" />
+                                                <SvgIcon Icon="FeatherIcon.Edit2" />
                                             </HxButton>
                                             <HxDropdownButtonGroup>
                                                 <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                                    <CxIcon Icon="FeatherIcon.Trash2" />
+                                                    <SvgIcon Icon="FeatherIcon.Trash2" />
                                                 </HxDropdownToggleButton>
                                                 <HxDropdownMenu>
                                                     <HxDropdownHeader>Delete?</HxDropdownHeader>
@@ -195,7 +195,7 @@
                                     <td>
                                         <div class="btn-group">
                                             <button class="btn btn-sm btn-auto" @onclick="async () => await DeleteReferenceAsync(reader)">
-                                                <CxIcon Icon="FeatherIcon.Delete" />
+                                                <SvgIcon Icon="FeatherIcon.Delete" />
                                             </button>
                                         </div>
                                     </td>

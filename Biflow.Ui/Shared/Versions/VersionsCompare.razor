@@ -33,9 +33,21 @@
                 <HxSpinner Color="ThemeColor.Secondary" CssClass="ms-4" />
             }
         </div>
+        <div class="col-xxl-auto mt-3 mt-xxl-0">
+            <div class="input-group input-group-sm">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => diffEditor.LetAsync(x => x.GotoPreviousDiffAsync())" Spinner="false" Enabled="sourceVersionId >= 0 && targetVersionId >= 0">
+                    <SvgIcon Icon="FeatherIcon.ChevronUp" />
+                </HxButton>
+                <div class="input-group-text">
+                    Navigate diffs
+                </div>
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => diffEditor.LetAsync(x => x.GotoNextDiffAsync())" Spinner="false" Enabled="sourceVersionId >= 0 && targetVersionId >= 0">
+                    <SvgIcon Icon="FeatherIcon.ChevronDown" />
+                </HxButton>
+            </div>
+        </div>
     </div>
-
-    <div class="row mt-3">
+    <div class="row mt-3 mb-5">
         <div class="col">
             <CodeDiffEditor @ref="diffEditor" InitialHeight="calc(100vh - 250px)" FontSize="12" />
         </div>

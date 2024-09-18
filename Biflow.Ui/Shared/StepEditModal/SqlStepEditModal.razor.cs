@@ -1,16 +1,28 @@
 ﻿using Biflow.Ui.Shared.StepEdit;
-using Biflow.Ui.SqlServer;
+using Biflow.Ui.SqlMetadataExtensions;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class SqlStepEditModal : StepEditModal<SqlStep>
 {
-    [Inject] private SqlServerHelperService SqlServerHelper { get; set; } = null!;
-
     internal override string FormId => "sql_step_edit_form";
 
     private StoredProcedureSelectOffcanvas? storedProcedureSelectModal;
     private CodeEditor? editor;
+    
+    private ConnectionBase Connection
+    {
+        get
+        {
+            if (_connection is null || _connection.ConnectionId != Step?.ConnectionId)
+            {
+                _connection = SqlConnections.FirstOrDefault(c => c.ConnectionId == Step?.ConnectionId) ?? SqlConnections.First();
+            }
+            return _connection;
+        }
+    }
+
+    private ConnectionBase? _connection = null;
 
     protected override Task<SqlStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>
         context.SqlSteps
@@ -46,38 +58,47 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            ConnectionId = Connections.First().ConnectionId
+            ConnectionId = SqlConnections.First().ConnectionId
         };
 
-    private Task OpenStoredProcedureSelectModal() => storedProcedureSelectModal.LetAsync(x => x.ShowAsync());
+    private Task OpenStoredProcedureSelectModal() => storedProcedureSelectModal.LetAsync(x => x.ShowAsync(Connection));
 
     private async Task ImportParametersAsync()
     {
         try
         {
             ArgumentNullException.ThrowIfNull(Step);
-            var procedure = Step.SqlStatement.ParseStoredProcedureFromSqlStatement();
-            if (procedure is null || procedure.Value.ProcedureName is null || Step.ConnectionId == Guid.Empty)
+
+            if (Connection is MsSqlConnection msSql)
             {
-                Toaster.AddWarning("Stored procedure could not be parsed from SQL statement");
-                return;
-            }
-            var procSchema = procedure.Value.Schema ?? "dbo";
-            var procName = procedure.Value.ProcedureName;
-            var parameters = await SqlServerHelper.GetStoredProcedureParametersAsync(Step.ConnectionId, procSchema, procName);
-            if (!parameters.Any())
-            {
-                Toaster.AddInformation($"No parameters for [{procSchema}].[{procName}]");
-                return;
-            }
-            Step.StepParameters.Clear();
-            foreach (var (paramName, paramValue) in parameters)
-            {
-                Step.StepParameters.Add(new SqlStepParameter
+                var procedure = MsSqlExtensions.ParseStoredProcedureFromSqlStatement(Step.SqlStatement);
+                if (procedure is null || procedure.Value.ProcedureName is null || Step.ConnectionId == Guid.Empty)
                 {
-                    ParameterName = paramName,
-                    ParameterValue = paramValue
-                });
+                    Toaster.AddWarning("Stored procedure could not be parsed from SQL statement");
+                    return;
+                }
+                var procSchema = procedure.Value.Schema ?? "dbo";
+                var procName = procedure.Value.ProcedureName;
+                var parameters = await msSql.GetStoredProcedureParametersAsync(procSchema, procName);
+                if (!parameters.Any())
+                {
+                    Toaster.AddInformation($"No parameters for [{procSchema}].[{procName}]");
+                    return;
+                }
+
+                Step.StepParameters.Clear();
+                foreach (var (paramName, paramValue) in parameters)
+                {
+                    Step.StepParameters.Add(new SqlStepParameter
+                    {
+                        ParameterName = paramName,
+                        ParameterValue = paramValue
+                    });
+                }
+            }
+            else
+            {
+                throw new ArgumentException($"Unsupported connection type: {Connection.GetType().Name}");
             }
         }
         catch (Exception ex)
@@ -86,11 +107,11 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
         }
     }
 
-    private Task OnStoredProcedureSelected(string procedure)
+    private Task OnStoredProcedureSelected(IStoredProcedure procedure)
     {
         ArgumentNullException.ThrowIfNull(editor);
         ArgumentNullException.ThrowIfNull(Step);
-        Step.SqlStatement = $"EXEC {procedure}";
+        Step.SqlStatement = procedure.InvokeSqlStatement;
         return editor.SetValueAsync(Step.SqlStatement);
     }
     

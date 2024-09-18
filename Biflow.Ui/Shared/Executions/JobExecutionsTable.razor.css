@@ -1,4 +1,12 @@
-﻿th .sortable {
+﻿tr a {
+    text-decoration: none;
+}
+
+tr:hover a {
+    text-decoration: underline;
+}
+
+th .sortable {
     cursor: pointer;
 }
 

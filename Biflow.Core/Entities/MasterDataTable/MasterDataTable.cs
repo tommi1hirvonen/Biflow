@@ -47,16 +47,18 @@ public class MasterDataTable
     public MasterDataTableCategory? Category { get; set; }
 
     [JsonIgnore]
-    public SqlConnectionInfo Connection { get; set; } = null!;
+    public MsSqlConnection Connection { get; set; } = null!;
 
     [JsonIgnore]
     public ICollection<User> Users { get; set; } = null!;
 
     [ValidateComplexType]
-    public ICollection<MasterDataTableLookup> Lookups { get; } = new List<MasterDataTableLookup>();
+    [JsonInclude]
+    public ICollection<MasterDataTableLookup> Lookups { get; private set; } = new List<MasterDataTableLookup>();
 
     [JsonIgnore]
     public IEnumerable<MasterDataTableLookup> DependentLookups { get; } = new List<MasterDataTableLookup>();
 
+    [JsonIgnore]
     public byte[]? Timestamp { get; set; }
 }

@@ -7,7 +7,7 @@ namespace Biflow.Core;
 
 public static class Extensions
 {
-    public static string? NullIfEmpty(this string? value) => string.IsNullOrEmpty(value) ? null : value;
+    public static string? NullIfEmpty(this string value) => string.IsNullOrEmpty(value) ? null : value;
 
     public static string? GetDurationInReadableFormat(this StepExecutionAttempt attempt) => attempt.ExecutionInSeconds?.SecondsToReadableFormat();
 
@@ -26,6 +26,30 @@ public static class Extensions
         if (minutes > 0 || hours > 0 || days > 0) result += minutes + " min ";
         result += seconds + " s";
         return result;
+    }
+
+    public static (string Name, int Ordinal)? GetCategory(this ConnectionType value)
+    {
+        var name = Enum.GetName(value);
+        if (name is null)
+        {
+            return null;
+        }
+        var category = typeof(ConnectionType).GetField(name)?.GetCustomAttributes<CategoryAttribute>().FirstOrDefault();
+        return category is not null
+            ? (category.Name, category.Ordinal)
+            : null;
+    }
+
+    public static string? GetDescription(this ConnectionType value)
+    {
+        var name = Enum.GetName(value);
+        if (name is null)
+        {
+            return null;
+        }
+        var desc = typeof(ConnectionType).GetField(name)?.GetCustomAttributes<DescriptionAttribute>().FirstOrDefault();
+        return desc?.Text;
     }
 
     public static (string Name, int Ordinal)? GetCategory(this StepType value)

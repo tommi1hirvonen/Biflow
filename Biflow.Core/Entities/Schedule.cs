@@ -48,7 +48,9 @@ public class Schedule : IAuditable
     [MaxLength(250)]
     public string? LastModifiedBy { get; set; }
 
-    public ICollection<StepTag> TagFilter { get; } = new List<StepTag>();
+    [JsonInclude]
+    public ICollection<StepTag> TagFilter { get; private set; } = new List<StepTag>();
 
-    public ICollection<ScheduleTag> Tags { get; init; } = new List<ScheduleTag>();
+    [JsonInclude]
+    public ICollection<ScheduleTag> Tags { get; private set; } = new List<ScheduleTag>();
 }

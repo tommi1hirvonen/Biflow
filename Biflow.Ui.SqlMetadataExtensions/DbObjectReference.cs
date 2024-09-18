@@ -1,0 +1,9 @@
+﻿using Biflow.Core.Entities;
+using Biflow.Core.Interfaces;
+
+namespace Biflow.Ui.SqlMetadataExtensions;
+
+public record DbObjectReference(string ServerName, string DatabaseName, string SchemaName, string ObjectName, bool IsUnreliable) : IDataObject
+{
+    public string ObjectUri { get; } = DataObject.CreateTableUri(ServerName, DatabaseName, SchemaName, ObjectName);
+}

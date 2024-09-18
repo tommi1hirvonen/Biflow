@@ -1,5 +1,4 @@
-﻿@inject SqlServerHelperService SqlServerHelper
-@inject ToasterService Toaster
+﻿@inject ToasterService Toaster
 
 @if (Step is not null)
 {
@@ -80,7 +79,7 @@
                                       Size="ButtonSize.Small"
                                       CssClass="btn-auto"
                                       @onclick="async () => { Step.StepParameters.Remove(param); await ParametersValidator.LetAsync(x => x.ValidateAsync()); }">
-                                <CxIcon Icon="FeatherIcon.Delete" />
+                                <SvgIcon Icon="FeatherIcon.Delete" />
                             </HxButton>
                         </HxButtonGroup>
                     </td>
@@ -90,12 +89,12 @@
     </table>
     <HxButtonGroup Size="ButtonGroupSize.Small">
         <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="AddParameter">
-            <CxIcon Icon="FeatherIcon.Plus" />
+            <SvgIcon Icon="FeatherIcon.Plus" />
             Add parameter
         </HxButton>
         <HxDropdownButtonGroup>
             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" Spinner="loadingParameters" Enabled="!loadingParameters">
-                <CxIcon Icon="FeatherIcon.AtSign" />
+                <SvgIcon Icon="FeatherIcon.AtSign" />
                 Import parameters
             </HxDropdownToggleButton>
             <HxDropdownMenu>
@@ -120,6 +119,8 @@
     [CascadingParameter(Name = "StepParametersValidator")] FluentValidationValidator? ParametersValidator { get; set; }
 
     [Parameter] public PackageStep? Step { get; set; }
+
+    [Parameter] public MsSqlConnection? Connection { get; set; }
 
     [Parameter] public EventCallback OnImportParameters { get; set; }
 
@@ -159,12 +160,12 @@
     {
         try
         {
-            if (Step?.ConnectionId is null || Step.PackageFolderName is null || Step.PackageProjectName is null || Step.PackageName is null)
+            if (Connection is null || Step?.PackageFolderName is null || Step.PackageProjectName is null || Step.PackageName is null)
             {
                 return;
             }
             loadingParameters = true;
-            var parameters = await SqlServerHelper.GetPackageParametersAsync((Guid)Step.ConnectionId, Step.PackageFolderName, Step.PackageProjectName, Step.PackageName, includeConnectionManagerParameters);
+            var parameters = await Connection.GetPackageParametersAsync(Step.PackageFolderName, Step.PackageProjectName, Step.PackageName, includeConnectionManagerParameters);
             if (!parameters.Any())
             {
                 Toaster.AddInformation($"No parameters for package");

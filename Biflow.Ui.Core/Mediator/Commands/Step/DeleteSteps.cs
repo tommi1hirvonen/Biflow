@@ -14,7 +14,6 @@ internal class DeleteStepsCommandHandler(IDbContextFactory<AppDbContext> dbConte
             .Include(s => s.Dependencies)
             .Include(s => s.Depending)
             .Include($"{nameof(IHasStepParameters.StepParameters)}")
-            .Include(s => s.StepSubscriptions)
             .Where(s => request.StepIds.Contains(s.StepId))
             .ToArrayAsync(cancellationToken);
         context.Steps.RemoveRange(steps);

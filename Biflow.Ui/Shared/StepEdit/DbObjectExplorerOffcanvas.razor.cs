@@ -1,4 +1,4 @@
-﻿using Biflow.Ui.SqlServer;
+﻿using Biflow.Ui.SqlMetadataExtensions;
 
 namespace Biflow.Ui.Shared.StepEdit;
 
@@ -6,9 +6,7 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase, IDisposable
 {
     [Inject] public ToasterService Toaster { get; set; } = null!;
 
-    [Inject] public SqlServerHelperService SqlServerHelper { get; set; } = null!;
-
-    [Parameter] public IEnumerable<SqlConnectionInfo> Connections { get; set; } = Enumerable.Empty<SqlConnectionInfo>();
+    [Parameter] public IEnumerable<ConnectionBase> Connections { get; set; } = [];
 
     [Parameter] public Action<(string, string, string, string), bool>? OnDbObjectSelected { get; set; }
 
@@ -41,7 +39,13 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase, IDisposable
         {
             await semaphore.WaitAsync();
             Guid connectionId = this.connectionId ?? throw new ArgumentNullException(nameof(connectionId), "Connection id was null");
-            queryTask = SqlServerHelper.GetDatabaseObjectsAsync(connectionId, schemaSearchTerm, nameSearchTerm, 50, cts.Token);
+            var connection = Connections.First(c => c.ConnectionId == connectionId);
+            queryTask = connection switch
+            {
+                MsSqlConnection ms => ms.GetDatabaseObjectsAsync(schemaSearchTerm, nameSearchTerm, 50, cts.Token),
+                SnowflakeConnection sf => sf.GetDatabaseObjectsAsync(schemaSearchTerm, nameSearchTerm, 50, cts.Token),
+                _ => throw new ArgumentException($"Unsupported connection type {connection.GetType().Name}")
+            };
             StateHasChanged();
             databaseObjects = await queryTask;
         }

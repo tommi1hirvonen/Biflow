@@ -1,19 +1,20 @@
-﻿
+﻿@using Biflow.Ui.Icons
+
 @{
     var (color, icon) = Badge;
     var badgeCss = $"bg-{color}-subtle border-{color}-subtle text-{color}-emphasis";
 }
 
 <span class="rounded border d-inline-flex align-items-center fw-semibold @badgeCss"
-      style="font-size: 0.8rem; padding-left: 0.3rem; padding-right: 0.3rem; padding-top: 0.1rem; padding-bottom: 0.1rem; border-width: 1.5px !important;">
-    <CxIcon Icon="icon" />
+      style="font-size: 0.8em; padding-left: 0.3rem; padding-right: 0.3rem; padding-top: 0.1rem; padding-bottom: 0.1rem; border-width: 1.5px !important;">
+    <SvgIcon Icon="icon" />
     <span class="ms-1">@ExecutionStatus</span>
 </span>
 
 @code {
     [Parameter] public StepExecutionStatus? ExecutionStatus { get; set; }
 
-    private (string Color, FeatherIcon Icon) Badge => ExecutionStatus switch
+    private (string Color, Svg Icon) Badge => ExecutionStatus switch
     {
         StepExecutionStatus.Succeeded => ("success", FeatherIcon.CheckCircle),
         StepExecutionStatus.Warning => ("warning", FeatherIcon.AlertTriangle),

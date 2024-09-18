@@ -2,6 +2,7 @@
 using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
+using Snowflake.Data.Client;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
@@ -13,7 +14,7 @@ internal class SqlStepExecutor(
     private readonly ILogger<SqlStepExecutor> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
 
-    protected override async Task<Result> ExecuteAsync(
+    protected override Task<Result> ExecuteAsync(
         SqlStepExecution step,
         SqlStepExecutionAttempt attempt,
         ExtendedCancellationTokenSource cancellationTokenSource)
@@ -21,18 +22,42 @@ internal class SqlStepExecutor(
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
-        var connectionInfo = step.GetConnection();
-        ArgumentNullException.ThrowIfNull(connectionInfo);
+        var connection = step.GetConnection();
+        ArgumentNullException.ThrowIfNull(connection);
 
-        if (connectionInfo.Credential is not null && !OperatingSystem.IsWindows())
+        if (connection is MsSqlConnection mssql)
+        {
+            return ExecuteMsSqlAsync(step, attempt, mssql, cancellationToken);
+        }
+        else if (connection is SnowflakeConnection sf)
+        {
+            return ExecuteSnowflakeAsync(step, attempt, sf, cancellationToken);
+        }
+        else
+        {
+            _logger.LogError("Unsupported connection type: {connectionType}. Connection must be of type {msSqlType} or {snowFlakeType}.",
+                connection.GetType().Name, typeof(MsSqlConnection).Name, typeof(SnowflakeConnection).Name);
+            attempt.AddError($"Unsupported connection type: {connection.GetType().Name}. Connection must be of type {typeof(MsSqlConnection).Name} or {typeof(SnowflakeConnection).Name}.");
+            return Task.FromResult(Result.Failure);
+        }
+    }
+
+    private async Task<Result> ExecuteMsSqlAsync(
+        SqlStepExecution step,
+        SqlStepExecutionAttempt attempt,
+        MsSqlConnection msSqlConnection,
+        CancellationToken cancellationToken)
+    {
+
+        if (msSqlConnection.Credential is not null && !OperatingSystem.IsWindows())
         {
             attempt.AddWarning("Connection has impersonation enabled but the OS platform does not support it. Impersonation will be skipped.");
         }
 
         try
         {
-            _logger.LogInformation("{ExecutionId} {Step} Starting SQL execution", step.ExecutionId, step);
-            using var connection = new SqlConnection(connectionInfo.ConnectionString);
+            _logger.LogInformation("{ExecutionId} {Step} Starting SQL execution with MSSQL connector", step.ExecutionId, step);
+            using var connection = new SqlConnection(msSqlConnection.ConnectionString);
             connection.InfoMessage += (s, e) => attempt.AddOutput(e.Message);
 
             var parameters = step.StepExecutionParameters
@@ -49,7 +74,7 @@ internal class SqlStepExecutor(
             // Check whether the query result should be captured to a job parameter.
             if (step.ResultCaptureJobParameterId is not null)
             {
-                var result = await connectionInfo.RunImpersonatedOrAsCurrentUserAsync(
+                var result = await msSqlConnection.RunImpersonatedOrAsCurrentUserAsync(
                     () => connection.ExecuteScalarAsync(command));
 
                 // Update the capture value.
@@ -65,11 +90,11 @@ internal class SqlStepExecutor(
                     param.ParameterValue = new(result);
                 }
 
-                await context.SaveChangesAsync();
+                await context.SaveChangesAsync(CancellationToken.None);
             }
             else
             {
-                await connectionInfo.RunImpersonatedOrAsCurrentUserAsync(
+                await msSqlConnection.RunImpersonatedOrAsCurrentUserAsync(
                     () => connection.ExecuteAsync(command));
             }
         }
@@ -81,6 +106,73 @@ internal class SqlStepExecutor(
                 var message = $"Line: {error.LineNumber}\nMessage: {error.Message}";
                 attempt.AddError(ex, message);
             }
+
+            // Return Cancel if the SqlCommand failed due to cancel being requested.
+            // ExecuteNonQueryAsync() throws SqlException in case cancel was requested.
+            if (cancellationToken.IsCancellationRequested)
+            {
+                attempt.AddWarning(ex);
+                return Result.Cancel;
+            }
+
+            _logger.LogWarning(ex, "{ExecutionId} {Step} SQL execution failed", step.ExecutionId, step);
+
+            return Result.Failure;
+        }
+
+        return Result.Success;
+    }
+
+    private async Task<Result> ExecuteSnowflakeAsync(
+        SqlStepExecution step,
+        SqlStepExecutionAttempt attempt,
+        SnowflakeConnection sfConnection,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            _logger.LogInformation("{ExecutionId} {Step} Starting SQL execution with Snowflake connector", step.ExecutionId, step);
+            using var connection = new SnowflakeDbConnection(sfConnection.ConnectionString);
+
+            var parameters = step.StepExecutionParameters
+                .ToDictionary(key => key.ParameterName, value => value.ParameterValue.Value);
+            var dynamicParams = new DynamicParameters(parameters);
+
+            // command timeout = 0 => wait indefinitely
+            var command = new CommandDefinition(
+                step.SqlStatement,
+                commandTimeout: Convert.ToInt32(step.TimeoutMinutes * 60),
+                parameters: dynamicParams,
+                cancellationToken: cancellationToken);
+
+            // Check whether the query result should be captured to a job parameter.
+            if (step.ResultCaptureJobParameterId is not null)
+            {
+                var result = await connection.ExecuteScalarAsync(command);
+
+                // Update the capture value.
+                using var context = _dbContextFactory.CreateDbContext();
+                context.Attach(step);
+                step.ResultCaptureJobParameterValue = new(result);
+
+                // Update the job execution parameter with the result value for following steps to use.
+                var param = step.Execution.ExecutionParameters.FirstOrDefault(p => p.ParameterId == step.ResultCaptureJobParameterId);
+                if (param is not null)
+                {
+                    context.Attach(param);
+                    param.ParameterValue = new(result);
+                }
+
+                await context.SaveChangesAsync(CancellationToken.None);
+            }
+            else
+            {
+                await connection.ExecuteAsync(command);
+            }
+        }
+        catch (SnowflakeDbException ex)
+        {
+            attempt.AddError(ex, ex.Message);
 
             // Return Cancel if the SqlCommand failed due to cancel being requested.
             // ExecuteNonQueryAsync() throws SqlException in case cancel was requested.

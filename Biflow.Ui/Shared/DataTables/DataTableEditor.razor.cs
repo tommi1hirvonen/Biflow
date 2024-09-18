@@ -19,6 +19,7 @@ public partial class DataTableEditor : ComponentBase
     private readonly List<(string Column, bool Descending)> orderBy = [];
     private readonly HashSet<string> columnSelections = [];
     private readonly Dictionary<Column, HashSet<object?>> quickFilters = [];
+    private readonly Dictionary<string, string> columnWidths = [];
 
     private TableData? tableData;
     private FilterSet? filterSet;

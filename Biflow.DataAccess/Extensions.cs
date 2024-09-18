@@ -69,22 +69,22 @@ public static class Extensions
         // even if it is present in the SQL query => no performance penalty.
         var query2 =
             from stepExec in query1
-            join sql in context.SqlConnections
+            join sql in context.Connections.Include(c => (c as MsSqlConnection)!.Credential)
                 on new { Id = includeEndpoint ? (object?)((SqlStepExecution)stepExec).ConnectionId : true }
                 equals new { Id = includeEndpoint ? (object?)sql.ConnectionId : false }
                 into sql_
             from sql in sql_.DefaultIfEmpty()
-            join package in context.SqlConnections
+            join package in context.MsSqlConnections.Include(c => c.Credential)
                 on new { Id = includeEndpoint ? (object?)((PackageStepExecution)stepExec).ConnectionId : true }
                 equals new { Id = includeEndpoint ? (object?)package.ConnectionId : false }
                 into package_
             from package in package_.DefaultIfEmpty()
-            join agent in context.SqlConnections
+            join agent in context.MsSqlConnections.Include(c => c.Credential)
                 on new { Id = includeEndpoint ? (object?)((AgentJobStepExecution)stepExec).ConnectionId : true }
                 equals new { Id = includeEndpoint ? (object?)agent.ConnectionId : false }
                 into agent_
             from agent in agent_.DefaultIfEmpty()
-            join tabular in context.AnalysisServicesConnections
+            join tabular in context.AnalysisServicesConnections.Include(c => c.Credential)
                 on new { Id = includeEndpoint ? (object?)((TabularStepExecution)stepExec).ConnectionId : true }
                 equals new { Id = includeEndpoint ? (object?)tabular.ConnectionId : false }
                 into tabular_
@@ -172,10 +172,10 @@ public static class Extensions
 
 file record StepExecutionProjection(
     StepExecution StepExecution,
-    SqlConnectionInfo? SqlStepConnection,
-    SqlConnectionInfo? PackageStepConnection,
-    SqlConnectionInfo? AgentJobStepConnection,
-    AnalysisServicesConnectionInfo? TabularStepConnection,
+    ConnectionBase? SqlStepConnection,
+    MsSqlConnection? PackageStepConnection,
+    MsSqlConnection? AgentJobStepConnection,
+    AnalysisServicesConnection? TabularStepConnection,
     AppRegistration? DatasetStepAppRegistration,
     FunctionApp? FunctionStepApp,
     PipelineClient? PipelineStepClient,

@@ -1,0 +1,47 @@
+@using Biflow.Core.Entities
+@using Biflow.Core.Interfaces
+
+@typeparam TTag where TTag : ITag
+
+<GenericTagInput TTag="TTag"
+                 CssClass="@CssClass"
+                 InputAttributes="InputAttributes"
+                 Label="@Label"
+                 Placeholder="@Placeholder"
+                 IsDisabled="IsDisabled"
+                 Items="Items"
+                 SelectedItems="SelectedItems"
+                 EmptyTemplate="@(EmptyTemplate!)"
+                 OnSelectedItemsChanged="OnSelectedItemsChanged"
+                 OnSuggestionsShown="OnSuggestionsShown"
+                 TagTextSelector="tag => tag.TagName"
+                 TagColorSelector="tag => tag.Color"
+                 NewItemFromText="@(NewItemFromText!)"
+                 AllowCustomValues="AllowCustomValues" />
+
+
+@code {
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object> InputAttributes { get; set; } = new();
+
+    [Parameter] public string? CssClass { get; set; }
+
+    [Parameter] public string? Label { get; set; }
+
+    [Parameter] public string? Placeholder { get; set; }
+
+    [Parameter] public IEnumerable<TTag>? Items { get; set; }
+
+    [Parameter] public RenderFragment? EmptyTemplate { get; set; }
+
+    [Parameter] public ICollection<TTag> SelectedItems { get; set; } = new List<TTag>();
+
+    [Parameter] public EventCallback OnSelectedItemsChanged { get; set; }
+
+    [Parameter] public EventCallback OnSuggestionsShown { get; set; }
+
+    [Parameter] public Func<string, TTag>? NewItemFromText { get; set; }
+
+    [Parameter] public bool IsDisabled { get; set; }
+
+    [Parameter] public bool AllowCustomValues { get; set; } = true;
+}

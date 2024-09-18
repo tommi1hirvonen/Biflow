@@ -17,7 +17,7 @@ public enum StepType
     Function,
     
     [Category("Transformation", 2)]
-    [Description("Custom SQL command")]
+    [Description("Custom SQL command (MS SQL or Snowflake)")]
     Sql,
     
     [Category("Reporting", 3)]

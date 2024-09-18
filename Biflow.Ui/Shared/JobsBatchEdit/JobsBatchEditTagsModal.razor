@@ -14,7 +14,7 @@
                         Add
                         &nbsp;
                         <HxPopover Trigger="PopoverTrigger.Hover" Content="Tags listed will be added to all selected jobs where they are not present. New tags can also be added.">
-                            <CxIcon Icon="FeatherIcon.Info" />
+                            <SvgIcon Icon="FeatherIcon.Info" />
                         </HxPopover>
                     </label>
                 </div>
@@ -26,7 +26,7 @@
                         Remove
                         &nbsp;
                         <HxPopover Trigger="PopoverTrigger.Hover" Content="Remove tags from the list to remove them from selected jobs where they are present.">
-                            <CxIcon Icon="FeatherIcon.Info" />
+                            <SvgIcon Icon="FeatherIcon.Info" />
                         </HxPopover>
                     </label>
                 </div>
@@ -36,11 +36,11 @@
             <div class="col">
                 @if (jobs is not null)
                 {
-                    <HxInputTags @bind-Value="tags"
-                                 DataProvider="GetTagSuggestions"
-                                 SuggestMinimumLength="0"
-                                 SuggestDelay="0"
-                                 TagBadgeSettings="new BadgeSettings() { Color = ThemeColor.Secondary }" />
+                    <TagInput TTag="JobTag"
+                              Items="allTags"
+                              SelectedItems="tags"
+                              AllowCustomValues="editMode == EditMode.Add"
+                              NewItemFromText="text => new JobTag(text) { Color = TagColor.DarkGray }" />
                 }
                 else
                 {
@@ -67,8 +67,8 @@
     private HxModal? modal;
     private bool saving = false;
     private AppDbContext? context;
-    protected HashSet<JobTag>? allTags;
-    private List<string> tags = [];
+    protected List<JobTag>? allTags;
+    private List<JobTag> tags = [];
     private List<Job>? jobs;
     private EditMode editMode = EditMode.Add;
 
@@ -88,6 +88,7 @@
             await context.DisposeAsync();
         }
         context = await DbContextFactory.CreateDbContextAsync();
+        allTags = await context.JobTags.OrderBy(t => t.TagName).ToListAsync();
         var jobIds = SelectedJobs.Select(s => s.JobId).ToArray();
         jobs = await context.Jobs
             .Include(job => job.Tags)
@@ -118,30 +119,10 @@
         {
             tags = jobs?
                 .SelectMany(s => s.Tags)
-                .Select(t => t.TagName)
                 .Distinct()
-                .OrderBy(t => t)
+                .OrderBy(t => t.TagName)
                 .ToList() ?? new();
         }
-    }
-
-    private async Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
-    {
-        await EnsureAllTagsInitialized();
-        return new InputTagsDataProviderResult
-        {
-            Data = allTags?
-            .Select(t => t.TagName)
-            .Where(t => t.ContainsIgnoreCase(request.UserInput))
-            .Where(t => !tags.Any(tag => t == tag))
-            .OrderBy(t => t) ?? Enumerable.Empty<string>()
-        };
-    }
-
-    private async Task EnsureAllTagsInitialized()
-    {
-        ArgumentNullException.ThrowIfNull(context);
-        allTags ??= (await context.JobTags.ToListAsync()).ToHashSet();
     }
 
     private async Task SubmitJobsAsync()
@@ -151,21 +132,21 @@
 
         if (editMode == EditMode.Add)
         {
-            var jobTagsToAdd = jobs
-                .SelectMany(s => tags, (s, t) => (Job: s, Tag: t))
-                .Where(st => !st.Job.Tags.Any(t => t.TagName == st.Tag))
-                .ToArray();
-            foreach (var (job, tagName) in jobTagsToAdd)
+            foreach (var job in jobs)
             {
-                var tag = allTags?.FirstOrDefault(t => t.TagName == tagName) ?? new JobTag(tagName);
-                allTags?.Add(tag); // In case of new tag, add it to the list.
-                job.Tags.Add(tag);
+                foreach (var tag in tags)
+                {
+                    if (!job.Tags.Contains(tag))
+                    {
+                        job.Tags.Add(tag);
+                    }
+                }
             }
         }
         else if (editMode == EditMode.Remove)
         {
             var jobTagsToRemove = jobs
-                .SelectMany(s => s.Tags.Where(t => !tags.Contains(t.TagName)), (s, t) => (Job: s, Tag: t))
+                .SelectMany(s => s.Tags.Where(t => !tags.Contains(t)), (s, t) => (Job: s, Tag: t))
                 .ToArray();
             foreach (var (job, tag) in jobTagsToRemove)
             {

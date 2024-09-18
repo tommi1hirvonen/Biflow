@@ -93,11 +93,11 @@
                         <td class="align-middle">
                             <HxButtonGroup Size="ButtonGroupSize.Small">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="() => ShowEditModal(key)">
-                                    <CxIcon Icon="FeatherIcon.Edit2" />
+                                    <SvgIcon Icon="FeatherIcon.Edit2" />
                                 </HxButton>
                                 <HxDropdownButtonGroup>
                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" Enabled="!key.IsRevoked" aria-label="revoke" title="Revoke API key">
-                                        <CxIcon Icon="FeatherIcon.XCircle" />
+                                        <SvgIcon Icon="FeatherIcon.XCircle" />
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
                                         <HxDropdownHeader>Revoke?</HxDropdownHeader>
@@ -106,7 +106,7 @@
                                 </HxDropdownButtonGroup>
                                 <HxDropdownButtonGroup>
                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="delete" title="Delete API key">
-                                        <CxIcon Icon="FeatherIcon.Trash2" />
+                                        <SvgIcon Icon="FeatherIcon.Trash2" />
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
                                         <HxDropdownHeader>Delete?</HxDropdownHeader>

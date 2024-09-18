@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Biflow.Ui.SourceGeneration": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "..\\Biflow.Ui.Components\\Biflow.Ui.Components.csproj"
+    }
+  }
+}

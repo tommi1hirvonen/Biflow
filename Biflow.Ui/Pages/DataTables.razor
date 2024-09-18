@@ -31,7 +31,7 @@ else
 
     private MasterDataTable? table;
     private List<MasterDataTable>? tables;
-    private List<SqlConnectionInfo>? connections;
+    private List<MsSqlConnection>? connections;
     private List<MasterDataTableCategory>? categories;
 
     protected override async Task OnInitializedAsync()
@@ -94,7 +94,7 @@ else
                 .DistinctBy(c => c.CategoryId)
                 .ToList();
         }
-        connections = await context.SqlConnections
+        connections = await context.MsSqlConnections
             .AsNoTrackingWithIdentityResolution()
             .Include(c => c.Credential)
             .OrderBy(c => c.ConnectionName)

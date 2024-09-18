@@ -2,5 +2,5 @@
 
 internal interface IGlobalOrchestrator : IOrchestrationObservable
 {
-    public Task RegisterStepsAndObservers(IEnumerable<IOrchestrationObserver> observers);
+    public Task RegisterStepsAndObserversAsync(IEnumerable<IOrchestrationObserver> observers);
 }

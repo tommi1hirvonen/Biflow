@@ -37,9 +37,10 @@ Biflow is a powerful platform for easy business intelligence (BI) and data platf
   - Azure Functions
   - Azure Analysis Services
 - Microsoft Power BI
+- Snowflake
 - Qlik Cloud
 
-The focus of Biflow is ease-of-use. When set up, it should be fairly easy even for relatively non-technical people to start authoring, scheduling, executing and monitoring workflows via the web user interface. Biflows enables intelligent management of even large and complex workflows.
+The focus of Biflow is ease-of-use. When set up, it should be fairly easy even for relatively non-technical people to start authoring, scheduling, executing and monitoring workflows via the web user interface. Biflow enables intelligent management of even large and complex workflows.
 
 - *__Author, schedule, execute and monitor workflows__* (jobs) comprising of multiple steps
     - Supports complex schedules using Cron expressions
@@ -63,7 +64,7 @@ The focus of Biflow is ease-of-use. When set up, it should be fairly easy even f
 
 Currently supported step types:
 - Sql
-    - Run arbitrary SQL commands (e.g. stored procs) either on SQL Server or Azure SQL databases
+    - Run arbitrary SQL commands (e.g. stored procedures) on SQL Server, Azure SQL and Snowflake.
     - Return scalar values and assign them to workflow parameters/variables
 - Package
     - Execute SQL Server Integration Services (SSIS) packages deployed to the SSIS catalogue
@@ -79,7 +80,7 @@ Currently supported step types:
 - Exe
     - Run locally stored executables (e.g. Python or PowerShell scripts)
 - Dataset
-    - Refresh datasets published to Power BI Service workspaces
+    - Refresh datasets/semantic models published to Power BI Service workspaces
 - Qlik
     - Reload apps in Qlik Cloud
 - Mail
@@ -114,9 +115,9 @@ The downside in both tools is the fact that dependency management between tasks 
 
 #### Airflow
 
-Orchestration is one of the main purposes of Airflow. Shortcomings with the previous tools can be overcome by using Airflow, since you can integrate various technologies and build comples orchestration jobs or DAGs as they are called in Airflow. (Actually, jobs running in dependency mode in Biflow are DAGs too.) You define DAGs by writing Python, making the leveraging of metadata possible for managing dependencies between a large number of tasks. Extensibility is a major advantage of Airflow.
+Orchestration is one of the main purposes of Airflow. Shortcomings with the previous tools can be overcome by using Airflow, since you can integrate various technologies and build complex orchestration workflows or DAGs as they are called in Airflow. (Actually, jobs running in dependency mode in Biflow are DAGs too.) You define DAGs by writing Python, making the leveraging of metadata possible for managing dependencies between a large number of tasks. Extensibility is a major advantage of Airflow.
 
-But this flexibility with Airflow comes at a cost. Give a business oriented user access to Airflow and ask them to author a new DAG to orchestrate some ADF pipelines and reports that they might be familiar with. Writing Python to define DAGs and working with Airflow in general requires technical and technological know-how, making it very hard for business users to do anything other than launch predefined DAGs and monitor their execution.
+But this flexibility with Airflow comes at a cost. Give a business-oriented user access to Airflow and ask them to author a new DAG to orchestrate some ADF pipelines and reports that they might be familiar with. Writing Python to define DAGs and working with Airflow in general requires technical and technological know-how, making it very hard for business users to do anything other than launch predefined DAGs and monitor their execution.
 
 #### Conclusion
 
@@ -124,17 +125,18 @@ Using metadata to define and manage dependencies between tasks makes it possible
 
 Including an intuitive browser based graphical user interface makes it possible for even non-technical users to author orchestration jobs in Biflow. And even though dependencies are metadata based, they can be visualized to easily see and understand the dependencies of complex jobs. It is also easy to only include selected steps in a manual on-demand execution of jobs. Something that is significantly more involved in SSIS and ADF.
 
-The creation and development of Biflow has largely been informed by my own experiences working with data platforms full-time since 2016. The methods and features in Biflow are informed by the real-life frustrations I've faced using some of the tools mentioned here. Biflow supports orchestrating data platforms in a way that I see being useful, smart and optimal. That also means tight integration with the ETL and data platform technologies I use most often (see supported step types).
+The creation and development of Biflow has largely been inspired by my own experiences working with data platforms full-time since 2016. The methods and features in Biflow are informed by the real-life frustrations I've faced using some of the tools mentioned here. Biflow supports orchestrating data platforms in a way that I see being useful, smart and optimal. That also means tight integration with the ETL and data platform technologies I use most often (see supported step types).
 
 ## 1.2. Technical requirements
 
 Some requirements apply depending on whether Biflow is configured to run either on-premise or in Azure but some requirements are common.
 
 ### Common
-- SQL Server or Azure SQL Database to host the system database
-    - SQL Server 2012 or newer (tested on 2017 and 2019)
+- SQL Server or Azure SQL Database to host the application database
+    - SQL Server 2012 or newer
         - Edition: Express or above
     - Azure SQL Database or Managed Instance
+        - An S1 (or maybe even S0) tier Azure SQL Database is already sufficient for small scale production use.
 - Email notifications
     - An email account is needed to send email notifications from the application
 
@@ -167,9 +169,9 @@ Four methods of authentication are supported:
 - LDAP
   - An LDAP server (e.g. Active Directory) can be used as the identity provider to authenticate users
   - Supports remote access
-- Azure Active Directory
+- Entra ID (formerly Azure Active Directory)
   - Users are authenticated using their Microsoft organizational accounts
-  - Requires an app registration to be created in the host tenant's Active Directory
+  - Requires an app registration to be created in the host tenant's Entra ID
   - Requires internet access
   - Supports remote access
 
@@ -201,7 +203,7 @@ To better understand the documentation and some of the main features of Biflow, 
 
 An **execution** is a copy (snapshot in time) of a job created when the job needs to be executed. When the execution is created, it becomes independent from the job it was based on – changes to a job do not affect executions that have already been created.
 
-The order in which steps are executed is determined by two factors: the job's **execution mode** and the **dependencies** between steps. There are three different execution modes to choose from.
+The order in which steps are executed is determined by two factors: the job's **execution mode** and the **dependencies** between steps. There are three different execution modes to choose from: execution phase mode (1), dependency mode (2) and hybrid mode (3).
 
 #### Execution phase mode
 
@@ -214,6 +216,8 @@ Jobs using dependency mode are essentially Directed Acyclic Graphs (DAGs). Steps
 #### Hybrid mode
 
 Steps are executed in order based on their execution phase (same as execution phase mode). Additionally, step dependencies are also checked after execution phase conditions are met (dependency mode).
+
+### Features
 
 Steps can have any number of dependencies, even to steps in other jobs. There are three types of dependencies.
 - On completed (loose dependency) – the dependency must complete/finish
@@ -240,17 +244,19 @@ Outside of data orchestration, Biflow also supports **data tables**. These are s
 
 |Project|Description|
 |-|-|
-|Database|SQL Server database project containing definitions for all table structures and stored procedures|
-|DataAccess|Data access layer project responsible for ORM (Object-relational mapping). Contains all model definitions as well as the definitions for the Entity Framework Core database context.|
-|Executor.Core|Core library for the executor application|
-|Executor.WebApp|Web App front-end project for the executor application|
-|Scheduler.Core|Core library for the scheduler service|
+|Core|Core library project containining common models, entities, interfaces and extensions.|
+|DataAccess|Data access layer project responsible for ORM (Object-relational mapping). Contains the model configuration for the Entity Framework Core database context and some data management related services.|
+|Executor.Core|Core library for the executor and orchestration services|
+|Executor.WebApp|Web App front-end project for the executor and orchestration application|
+|Scheduler.Core|Core library for the scheduler services|
 |Scheduler.WebApp|Web App front-end project for the scheduler service|
+|Ui.Icons|Library for common icon related models|
+|Ui.SourceGeneration|Source generator for the component library project|
+|Ui.TableEditor|Library for models and extensions related to data table interaction|
+|Ui.SqlMetadataExtensions|Library for models and extensions related to retrieving metadata from MS SQL and Snowflake databases|
 |Ui.Core|Common UI services that can be shared between different UI versions/editions|
 |Ui.Components|Razor component library for the UI project. Project also contains generated icon classes generated by the separate source generation project.|
-|Ui.SourceGeneration|Source generators for the component library project|
 |Ui|Blazor Server UI application. Can be configured to host the executor and scheduler services internally.|
-|Utilities|Common utilities library project|
 
 ## 3.2. Execution statuses
 
@@ -285,9 +291,9 @@ Outside of data orchestration, Biflow also supports **data tables**. These are s
 
 ### 3.2.3 Step execution lifecycle
 
-The flowchart below describes the lifecycle and states of a step execution. During the `NotStarted`, `Queued`, `Running` and `AwaitingRetry` states it is possible for a user to cancel/stop the execution of a step. If a stop request is received, the step execution is canceled and the final step execution status will be `Stopped`. Remaining retries will not be attempted after the execution has been stopped. Note however, that if the step is stopped during the `NotStarted` state, the step is stopped and its status updated only after it reaches the `Queued` state.
+The flowchart below describes the lifecycle and states of a step execution in dependency mode. During the `NotStarted`, `Queued`, `Running` and `AwaitingRetry` states it is possible for a user to cancel/stop the execution of a step. If a stop request is received, the step execution is canceled and the final step execution status will be `Stopped`. Remaining retries will not be attempted after the execution has been stopped. Note however, that if the step is stopped during the `NotStarted` state, the step is stopped and its status updated only after it reaches the `Queued` state.
 
-![The lifecycle and states of a step execution](/Images/StepExecutionLifecycle.png)*The lifecycle and states of a step execution*
+![The lifecycle and states of a step execution](/Images/StepExecutionLifecycle.png)*The lifecycle and states of a step execution in dependency mode*
 
 ## 3.3. User roles
 
@@ -326,7 +332,7 @@ Secondary roles can be assigned to non-admin users to extend their user rights.
 
 #### SettingsEditor
 - Allows users to manage endpoint settings
-    - SQL and tabular connections
+    - SQL, Snowflake and tabular connections
     - Data Factory instances
     - Function Apps
     - Qlik Cloud endpoints
@@ -349,6 +355,9 @@ If you want to implement Always Encrypted, these columns are good candidates for
 - [app].[Credential].[Password]
 - [app].[FunctionApp].[FunctionAppKey]
 - [app].[Step].[FunctionKey]
+- [app].[QlikCloudClient].[ApiToken]
+- [app].[BlobStorageClient].[ConnectionString]
+- [app].[BlobStorageClient].[StorageAccountUrl]
 
 If Always Encrypted is utilized, this should be reflected in the connection strings set in the application settings (AppDbContext). Always Encrypted is enabled with the following connection string property: `Column Encryption Setting=enabled`
 
@@ -427,9 +436,9 @@ There are three different installation alternatives: on-premise, Azure (monolith
 
 ### User interface web application
 
-1. If Azure AD is used for authentication, an app registration needs to be created in the hosting tenant's Azure Active Directory.
+1. If Entra ID is used for authentication, an app registration needs to be created in the hosting tenant's Entra ID.
     - Navigate to the target tenant’s Azure portal in portal.azure.com.
-    - Go to Azure Active Directory => App registration => New registration.
+    - Go to Entra ID => App registration => New registration.
     - Register the app and save the client id and client secret someplace. You will not be able to access the client secret after it has been created.
     - Add a redirect URL for the app registration under Manage => Authentication => Add a platform
         - Select **Web**
@@ -437,7 +446,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
         - **Front-channel logout URL**: Similarly, the logout URL is the UI app's URL appended with `/signout-oidc`. With the base URL of the example above, the logout URL would be `https://contoso.azurewebsites.net/signout-oidc`
         - **Implicit grant and hybrid flows**: Select **ID tokens**
         - **Supported account types**: In most cases, the correct option will be *Accounts in this organizational directory only*. However, if you need to be able to authorize users outside your organization to access the UI, select *Accounts in any organizational directory*.
-2. Extract the BiflowUi.zip file to the C: root on the application server (C:\Biflow\BiflowUi)).
+2. Extract the BiflowUi.zip file to the C: root on the application server (C:\Biflow\BiflowUi).
     - The account created in step 1 should have read/write access to this folder.
 3. In the folder where you extracted the installation zip file, locate the file appsettings.production.json. Update the file with the correct settings.
 
@@ -448,7 +457,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
 |Authentication|`[ BuiltIn \| Windows \| AzureAd \| Ldap ]`|
 ||`BuiltIn`: Users accounts and passwords are managed in Biflow. Users are application specific.
 ||`Windows`: Authentication is done using Active Directory. User roles and access are defined in the Biflow users management. The user does not need to log in but instead their workstation Windows account is used for authentication.|
-||`AzureAd`: Authentication is done using Azure Active Directory. User roles and access are defined in the Biflow users management.|
+||`AzureAd`: Authentication is done using Entra ID. User roles and access are defined in the Biflow users management.|
 ||`Ldap`: LDAP connection is used to authenticate users. This also supports Active Directory. User roles and access are defined in the Biflow users management. User matching is done using the LDAP `userPrincipalName` attribute.|
 |AdminUser|When this section is defined, the UI application will ensure at startup that an admin user with the credentials from this configuration section exists in the database. This section can be used to create the first admin user to be able to log in via the UI.|
 |AdminUser:Username|Username for the admin user|
@@ -652,10 +661,15 @@ Navigate to the Biflow UI website. You should be able to log in using the accoun
 
 ### Connections
 
-1. In order to create SQL, SSIS package or tabular model execution steps, connections need to be defined in the UI application's settings (Settings => Connections).
-2. Both Windows Authentication (Integrated Security=SSPI) and SQL Server Authentication are supported.
+- In order to create SQL, SSIS package, Agent job and tabular model execution steps, connections need to be defined in the UI application's settings (Settings => Connections).
+    - SQL steps can reference MS SQL or Snowflake connections.
+    - SSIS package, Agent job and tabular model steps can only reference MS SQL connections.
+
+#### MS SQL (SQL Server)
+
+- Both Windows Authentication (Integrated Security=SSPI) and SQL Server Authentication are supported for SQL Server connections.
     - If Windows Authentication is used, the account used to run the UI and scheduler applications is used to connect to the database.
-3. Use **either** of these two approaches based on the authentication method to set the necessary database level privileges on the target database.
+- Use **either** of these two approaches based on the authentication method to set the necessary database level privileges on the target database.
     - Windows Authentication
         - Sufficient roles required by the ETL processes (usually `db_owner`)
         - `db_ssisadmin` role in the SSISDB database (only if SSIS packages are used)
@@ -667,11 +681,23 @@ Navigate to the Biflow UI website. You should be able to log in using the accoun
             - Add a new login using a Windows account which also has `db_ssisadmin` role in the SSISDB database
             - Execute the following T-SQL command in the `master` database: `GRANT IMPERSONATE ON LOGIN::[WindowsLoginName] TO [SqlServerLoginName]`
 
+#### MS SQL (Azure SQL)
+
+- SQL Server Authentication and service principal authentication are supported. When the applications are hosted as Azure Web Apps, managed identities can be used to authenticate to Azure databases when they are located in the same Azure tenant.
+
+#### Snowflake
+
+- For the best compatibility, Snowflake connection strings should include the default database used with the connection:
+
+```
+ACCOUNT=ACCOUNT_NAME;HOST=xxxxx-accountname.snowflakecomputing.com;ROLE=user_role;WAREHOUSE=COMPUTE_WH;USER=my_user;PASSWORD=my_Secure_Password9000;DB=DATAWAREHOUSE;SCHEMA=PUBLIC;
+```
+
 ### App registrations
 
 1. In order to add Data Factories, Function Apps or to create Power BI dataset refresh steps, Azure app registrations need to be created and added.
 2. Navigate to the target tenant’s Azure portal in portal.azure.com.
-3. Go to Azure Active Directory => App registration => New registration.
+3. Go to Entra ID => App registration => New registration.
 4. Register the app and save the client id and client secret someplace.
 5. Add a new app registration in Biflow using these key information.
 
@@ -741,7 +767,7 @@ When shutting down services, the recommended order is reversed.
 
 ### Executor service
 
-The executor services does not run any major startup tasks. It does validate the executor settings (max parallel tasks, polling interval etc.) defined in `appsettings.json` or in app configurations in Azure. If the settings do not pass validation, the service will not start.
+The executor service does not run any major startup tasks. It does validate the executor settings (max parallel tasks, polling interval etc.) defined in `appsettings.json` or in app configurations in Azure. If the settings do not pass validation, the service will not start.
 
 When the executor service is shut down, it will immediately send cancel commands to all steps currently being managed. If all steps are successfully canceled in 20 seconds, the service will shut down gracefully. After 20 seconds the service will forcefully shut down and abandon any steps that may have been left running. This may leave some steps and execution logs in an undefined state. Usually though 20 seconds should be enough for a graceful shutdown, if the polling interval is not too long.
 

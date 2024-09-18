@@ -72,6 +72,7 @@ public class DbContextTests(DatabaseFixture fixture)
                 .ThenInclude(p => p.InheritFromExecutionParameter)
                 .Include(e => (e as SqlStepExecution)!.StepExecutionParameters)
                 .ThenInclude(p => p.ExpressionParameters)
+                .ThenInclude(p => p.InheritFromExecutionParameter)
                 .Include(e => e.StepExecutionAttempts)
                 .FirstAsync(e => e.Execution.JobName == "Test job 1" && e.StepName == "Test step 4");
         }

@@ -12346,7 +12346,7 @@ textarea.form-control-lg {
 }
 
 tr .btn-auto, .list-group-item .btn-auto {
-  border: none;
+  border-width: 0;
 }
 
 .nav.nav-tabs .nav-item .nav-link {
@@ -12375,10 +12375,6 @@ tr.context-menu-toggle.open {
 .table .btn-group .btn {
   display: inline-block;
   float: none;
-}
-
-.table .btn-group .btn + .btn {
-  margin-left: -5px;
 }
 
 .table-hover > tbody > tr.no-hover:hover {

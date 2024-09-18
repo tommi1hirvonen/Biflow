@@ -1,14 +1,11 @@
-﻿using Biflow.Core;
-using Biflow.Core.Entities;
-using Biflow.Core.Interfaces;
-using Microsoft.EntityFrameworkCore;
+﻿using Biflow.Core.Entities;
 using System.Text.Json;
 using Xunit;
 
 namespace Biflow.DataAccess.Test;
 
 [Collection(nameof(DatabaseCollection))]
-public class SerializationTests(SerializationFixture fixture) : IClassFixture<SerializationFixture>
+public class SerializationTests(SerializationTestsFixture fixture) : IClassFixture<SerializationTestsFixture>
 {
     private static JsonSerializerOptions Options => EnvironmentSnapshot.JsonSerializerOptions;
 
@@ -16,7 +13,7 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
     public void Serialize_Connections()
     {
         var json = JsonSerializer.Serialize(fixture.Connections, Options);
-        var items = JsonSerializer.Deserialize<ConnectionInfoBase[]>(json, Options);
+        var items = JsonSerializer.Deserialize<ConnectionBase[]>(json, Options);
         Assert.NotNull(items);
         Assert.NotEmpty(items);
         Assert.All(items, x => Assert.NotEqual(x.ConnectionId, Guid.Empty));
@@ -86,6 +83,11 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
         Assert.NotNull(items);
         Assert.NotEmpty(items);
         Assert.All(items, x => Assert.NotEqual(x.JobId, Guid.Empty));
+        Assert.NotEmpty(items.SelectMany(x => x.Steps));
+        Assert.NotEmpty(items.SelectMany(x => x.Schedules));
+        Assert.NotEmpty(items.SelectMany(x => x.JobParameters));
+        Assert.NotEmpty(items.SelectMany(x => x.JobConcurrencies));
+        Assert.NotEmpty(items.SelectMany(x => x.Tags));
     }
 
     [Fact]
@@ -95,10 +97,14 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
         var items = JsonSerializer.Deserialize<Step[]>(json, Options);
         Assert.NotNull(items);
         Assert.NotEmpty(items);
+        Assert.NotEmpty(items.SelectMany(s => s.ExecutionConditionParameters));
         Assert.All(items, x => Assert.NotEqual(x.StepId, Guid.Empty));
         Assert.All(items, x => Assert.NotEqual(x.JobId, Guid.Empty));
         var functionSteps = items.OfType<FunctionStep>();
         Assert.All(functionSteps, x => Assert.Empty(x.FunctionKey ?? ""));
+        var sqlSteps = items.OfType<SqlStep>();
+        Assert.NotEmpty(sqlSteps.SelectMany(s => s.StepParameters));
+        Assert.NotEmpty(sqlSteps.SelectMany(s => s.StepParameters.Select(p => p.ExpressionParameters)));
     }
 
     [Fact]
@@ -143,11 +149,23 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
     }
 
     [Fact]
+    public void Serialize_Credentials()
+    {
+        var json = JsonSerializer.Serialize(fixture.Credentials, Options);
+        var items = JsonSerializer.Deserialize<Credential[]>(json, Options);
+        Assert.NotNull(items);
+        Assert.NotEmpty(items);
+        Assert.All(items, x => Assert.NotEqual(x.CredentialId, Guid.Empty));
+        Assert.All(items, x => Assert.Empty(x.Password ?? ""));
+    }
+
+    [Fact]
     public void Serialize_Snapshot()
     {
         var snapshot = new EnvironmentSnapshot
         {
             Connections = fixture.Connections,
+            Credentials = fixture.Credentials,
             AppRegistrations = fixture.AppRegistrations,
             PipelineClients = fixture.PipelineClients,
             FunctionApps = fixture.FunctionApps,
@@ -162,109 +180,8 @@ public class SerializationTests(SerializationFixture fixture) : IClassFixture<Se
         var json = JsonSerializer.Serialize(snapshot, Options);
         var items = JsonSerializer.Deserialize<EnvironmentSnapshot>(json, Options);
         Assert.NotNull(items);
-    }
-}
-
-public class SerializationFixture(DatabaseFixture fixture) : IAsyncLifetime
-{
-    private readonly IDbContextFactory<AppDbContext> dbContextFactory = fixture.DbContextFactory;
-
-    public ConnectionInfoBase[] Connections { get; private set; } = [];
-    public AppRegistration[] AppRegistrations { get; private set; } = [];
-    public PipelineClient[] PipelineClients { get; private set; } = [];
-    public FunctionApp[] FunctionApps { get; private set; } = [];
-    public QlikCloudClient[] QlikCloudClients { get; private set; } = [];
-    public BlobStorageClient[] BlobStorageClients { get; private set; } = [];
-    
-    public Job[] Jobs { get; private set; } = [];
-    public Step[] Steps { get; private set; } = [];
-    public Schedule[] Schedules { get; private set; } = [];
-
-    public StepTag[] Tags { get; private set; } = [];
-    public DataObject[] DataObjects {  get; private set; } = [];
-
-    public MasterDataTable[] DataTables { get; private set; } = [];
-    public MasterDataTableCategory[] DataTableCategories { get; private set; } = [];
-
-    public Task DisposeAsync() => Task.CompletedTask;
-
-    public async Task InitializeAsync()
-    {
-        using var context = await dbContextFactory.CreateDbContextAsync();
-
-        Connections = await context.Connections
-            .AsNoTracking()
-            .OrderBy(c => c.ConnectionId)
-            .ToArrayAsync();
-        AppRegistrations = await context.AppRegistrations
-            .AsNoTracking()
-            .OrderBy(a => a.AppRegistrationId)
-            .ToArrayAsync();
-        PipelineClients = await context.PipelineClients
-            .AsNoTracking()
-            .OrderBy(p => p.PipelineClientId)
-            .ToArrayAsync();
-        FunctionApps = await context.FunctionApps
-            .AsNoTracking()
-            .OrderBy(f => f.FunctionAppId)
-            .ToArrayAsync();
-        QlikCloudClients = await context.QlikCloudClients
-            .AsNoTracking()
-            .OrderBy(q => q.QlikCloudClientId)
-            .ToArrayAsync();
-        BlobStorageClients = await context.BlobStorageClients
-            .AsNoTracking()
-            .OrderBy(b => b.BlobStorageClientId)
-            .ToArrayAsync();
-
-
-        Jobs = await context.Jobs
-            .AsNoTracking()
-            .Include(j => j.JobParameters)
-            .Include(j => j.JobConcurrencies)
-            .OrderBy(j => j.JobId)
-            .ToArrayAsync();
-        Steps = await context.Steps
-            .AsNoTracking()
-            .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.ExpressionParameters)}")
-            .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.InheritFromJobParameter)}")
-            .Include(s => (s as JobStep)!.TagFilters)
-            .Include(s => s.Dependencies)
-            .Include(s => s.DataObjects)
-            .Include(s => s.Tags)
-            .Include(s => s.ExecutionConditionParameters)
-            .OrderBy(s => s.JobId).ThenBy(s => s.StepId)
-            .ToArrayAsync();
-        Schedules = await context.Schedules
-            .AsNoTracking()
-            .Include(s => s.TagFilter)
-            .Include(s => s.Tags)
-            .OrderBy(s => s.JobId).ThenBy(s => s.ScheduleId)
-            .ToArrayAsync();
-
-        foreach (var job in Jobs)
-        {
-            job.Steps.AddRange(Steps.Where(s => s.JobId == job.JobId));
-            job.Schedules.AddRange(Schedules.Where(s => s.JobId == job.JobId));
-        }
-
-        Tags = await context.StepTags
-            .AsNoTracking()
-            .OrderBy(t => t.TagId)
-            .ToArrayAsync();
-        DataObjects = await context.DataObjects
-            .AsNoTracking()
-            .OrderBy(d => d.ObjectId)
-            .ToArrayAsync();
-
-        DataTables = await context.MasterDataTables
-            .AsNoTracking()
-            .Include(t => t.Lookups)
-            .OrderBy(t => t.DataTableId)
-            .ToArrayAsync();
-        DataTableCategories = await context.MasterDataTableCategories
-            .AsNoTracking()
-            .OrderBy(c => c.CategoryId)
-            .ToArrayAsync();
+        Assert.NotEmpty(items.Jobs);
+        var schedules = items.Jobs.SelectMany(j => j.Schedules).ToArray();
+        Assert.NotEmpty(schedules);
     }
 }

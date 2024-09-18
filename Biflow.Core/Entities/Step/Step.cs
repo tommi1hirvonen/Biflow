@@ -127,20 +127,25 @@ public abstract class Step : IComparable, IAuditable
     [MaxLength(250)]
     public string? LastModifiedBy { get; set; }
 
+    [JsonIgnore]
     public byte[]? Timestamp { get; private set; }
 
-    public ICollection<Dependency> Dependencies { get; } = new List<Dependency>();
+    [JsonInclude]
+    public ICollection<Dependency> Dependencies { get; private set; } = new List<Dependency>();
 
     [JsonIgnore]
     public IEnumerable<Dependency> Depending { get; } = new List<Dependency>();
 
     [ValidateComplexType]
-    public ICollection<StepDataObject> DataObjects { get; } = new List<StepDataObject>();
+    [JsonInclude]
+    public ICollection<StepDataObject> DataObjects { get; private set; } = new List<StepDataObject>();
 
     [ValidateComplexType]
-    public ICollection<ExecutionConditionParameter> ExecutionConditionParameters { get; } = new List<ExecutionConditionParameter>();
+    [JsonInclude]
+    public ICollection<ExecutionConditionParameter> ExecutionConditionParameters { get; private set; } = new List<ExecutionConditionParameter>();
 
-    public ICollection<StepTag> Tags { get; init; } = new List<StepTag>();
+    [JsonInclude]
+    public ICollection<StepTag> Tags { get; private set; } = new List<StepTag>();
 
     [JsonIgnore]
     public IEnumerable<StepSubscription> StepSubscriptions { get; } = new List<StepSubscription>();

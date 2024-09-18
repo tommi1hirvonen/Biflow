@@ -10,7 +10,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.XOctagon" />
+                        <SvgIcon Icon="FeatherIcon.XOctagon" />
                     </div>
                     <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 5rem;"></InputNumber>
                 </div>
@@ -33,10 +33,11 @@
                                @bind-Value:after="SetJobToExecute"
                                Context="job"
                                MinimumLength="0"
-                               Placeholder="Select job">
+                               Placeholder="Select job"
+                               autocomplete="off">
                     <InputGroupStartTemplate>
                         <div class="input-group-text">
-                            <CxIcon Icon="LucideIcon.ClipboardList" />
+                            <SvgIcon Icon="LucideIcon.ClipboardList" />
                         </div>
                     </InputGroupStartTemplate>
                     <ItemTemplate>
@@ -52,7 +53,7 @@
                     Synchronized
                     &nbsp;
                     <HxPopover Trigger="PopoverTrigger.Hover" Content="By default child job executions are launched asynchronously (fire and forget). If synchronized execution is enabled, the step completes only after the child job's execution is completed.">
-                        <CxIcon Icon="FeatherIcon.Info" />
+                        <SvgIcon Icon="FeatherIcon.Info" />
                     </HxPopover>
                 </label>
             </div>
@@ -70,12 +71,10 @@
                 <label class="form-label mb-lg-0">Tag filters</label>
             </div>
             <div class="col-md-6">
-                <HxInputTags @bind-Value="tagFilters"
-                             DataProvider="GetTagFilterSuggestions"
-                             AllowCustomTags="false"
-                             SuggestMinimumLength="0"
-                             SuggestDelay="0"
-                             TagBadgeSettings="new BadgeSettings() { Color = ThemeColor.Secondary }" />
+                <TagInput TTag="StepTag"
+                          Items="AllTags"
+                          AllowCustomValues="false"
+                          SelectedItems="Step.TagFilters" />
                 <div class="form-text">Use tag filters to only include steps with specific tags in job executions.</div>
             </div>
         </div>

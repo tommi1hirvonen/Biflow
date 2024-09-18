@@ -1,5 +1,4 @@
-﻿using Biflow.Core;
-using ClosedXML.Excel;
+﻿using ClosedXML.Excel;
 using System.Runtime.InteropServices;
 
 namespace Biflow.Ui.TableEditor;
@@ -25,6 +24,36 @@ public class TableData
     {
         MasterDataTable = masterDataTable;
         _columns = columns;
+        var dateColumns = columns.Where(c => c.Datatype == typeof(DateOnly)).ToArray();
+        if (dateColumns.Length > 0)
+        {
+            foreach (var row in data)
+            {
+                foreach (var col in dateColumns)
+                {
+                    var value = row[col.Name];
+                    if (value is DateTime dt)
+                    {
+                        row[col.Name] = DateOnly.FromDateTime(dt);
+                    }
+                }
+            }
+        }
+        var timeColumns = columns.Where(c => c.Datatype == typeof(TimeOnly)).ToArray();
+        if (timeColumns.Length > 0)
+        {
+            foreach (var row in data)
+            {
+                foreach (var col in timeColumns)
+                {
+                    var value = row[col.Name];
+                    if (value is TimeSpan ts)
+                    {
+                        row[col.Name] = TimeOnly.FromTimeSpan(ts);
+                    }
+                }
+            }
+        }
         _rows = new LinkedList<Row>(data.Select(row => new Row(this, masterDataTable.AllowUpdate, row)));
         HasMoreRows = hasMoreRows;
     }
@@ -116,7 +145,14 @@ public class TableData
             var colIndex = 1;
             foreach (var column in exportColumns)
             {
-                sheet.Cell(rowIndex, colIndex).Value = XLCellValue.FromObject(row.Values[column.Name]);
+                var value = row.Values[column.Name] switch
+                {
+                    DateOnly date => date.ToDateTime(TimeOnly.MinValue),
+                    TimeOnly time => DateTime.MinValue.Add(time.ToTimeSpan()),
+                    { } obj => obj,
+                    null => null
+                };
+                sheet.Cell(rowIndex, colIndex).Value = XLCellValue.FromObject(value);
                 colIndex++;
             }
             rowIndex++;

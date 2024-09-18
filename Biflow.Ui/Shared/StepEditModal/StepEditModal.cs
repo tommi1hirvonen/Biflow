@@ -13,9 +13,11 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     [Parameter] public EventCallback<Step> OnStepSubmit { get; set; }
     
-    [Parameter] public IEnumerable<SqlConnectionInfo> Connections { get; set; } = [];
+    [Parameter] public IEnumerable<ConnectionBase> SqlConnections { get; set; } = [];
 
-    [Parameter] public IEnumerable<AnalysisServicesConnectionInfo> AsConnections { get; set; } = [];
+    [Parameter] public IEnumerable<MsSqlConnection> MsSqlConnections { get; set; } = [];
+
+    [Parameter] public IEnumerable<AnalysisServicesConnection> AsConnections { get; set; } = [];
 
     [Parameter] public IEnumerable<AppRegistration> AppRegistrations { get; set; } = [];
 
@@ -27,8 +29,6 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     internal TStep? Step { get; private set; }
 
-    internal List<string> Tags { get; set; } = [];
-
     internal HxModal? Modal { get; set; }
 
     internal StepEditModalView CurrentView { get; set; } = StepEditModalView.Settings;
@@ -39,29 +39,10 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     internal bool Saving { get; set; } = false;
 
-    protected IEnumerable<StepTag>? AllTags { get; private set; }
+    public IEnumerable<StepTag>? AllTags { get; private set; }
 
     private AppDbContext? context;
     private IEnumerable<DataObject>? dataObjects;
-
-    internal async Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
-    {
-        await EnsureAllTagsInitialized();
-        return new InputTagsDataProviderResult
-        {
-            Data = AllTags?
-            .Select(t => t.TagName)
-            .Where(t => t.ContainsIgnoreCase(request.UserInput))
-            .Where(t => !Tags.Any(tag => t == tag))
-            .OrderBy(t => t) ?? Enumerable.Empty<string>()
-        };
-    }
-
-    protected async Task EnsureAllTagsInitialized()
-    {
-        ArgumentNullException.ThrowIfNull(context);
-        AllTags ??= await context.StepTags.ToListAsync();
-    }
 
     protected virtual Task OnModalShownAsync(TStep step) => Task.CompletedTask;
 
@@ -103,11 +84,6 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
         context = await DbContextFactory.CreateDbContextAsync();
     }
 
-    private void ResetTags() => Tags = Step?.Tags
-        .Select(t => t.TagName)
-        .OrderBy(t => t)
-        .ToList() ?? [];
-
     internal void OnClosed()
     {
         Step = null;
@@ -131,18 +107,6 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
             }
 
             await MapExistingDataObjectsAsync(Step.DataObjects);
-
-            // Synchronize tags
-            foreach (var text in Tags.Where(str => !Step.Tags.Any(t => t.TagName == str)))
-            {
-                // New tags
-                var tag = AllTags?.FirstOrDefault(t => t.TagName == text) ?? new StepTag(text);
-                Step.Tags.Add(tag);
-            }
-            foreach (var tag in Step.Tags.Where(t => !Tags.Contains(t.TagName)).ToList() ?? Enumerable.Empty<StepTag>())
-            {
-                Step.Tags.Remove(tag);
-            }
 
             await OnSubmitAsync(Step);
 
@@ -191,6 +155,7 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
         await Modal.LetAsync(x => x.ShowAsync());
         await ResetContext();
         ArgumentNullException.ThrowIfNull(context);
+        AllTags = await context.StepTags.OrderBy(t => t.TagName).ToListAsync();
         // Use slim classes to only load selected columns from the db.
         // When loading all steps from the db, the number of steps may be very high.
         JobSlims = await context.Jobs
@@ -219,7 +184,6 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
             var job = await context.Jobs.Include(j => j.JobParameters).FirstAsync(j => j.JobId == Job.JobId);
             Step = CreateNewStep(job);
         }
-        ResetTags();
         StateHasChanged();
         if (Step is not null)
             await OnModalShownAsync(Step);

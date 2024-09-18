@@ -5,11 +5,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Security.Principal;
+using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
 public partial class Credential
 {
+    [JsonInclude]
     public Guid CredentialId { get; private set; }
 
     [MaxLength(200)]
@@ -22,6 +24,7 @@ public partial class Credential
     [JsonSensitive]
     public string? Password { get; set; }
 
+    [JsonIgnore]
     public string DisplayName => Domain is { Length: > 0 } domain
         ? $@"{domain}\{Username}"
         : Username;
@@ -49,7 +52,7 @@ public partial class Credential
         return WindowsIdentity.RunImpersonatedAsync(token, func);
     }
 
-    [SuppressMessage("Interoperability", "CA1416:Validate platform compatibility", Justification = "Only used when running on Windows")]
+    [SupportedOSPlatform("windows")]
     private bool TryGetTokenHandle([NotNullWhen(true)] out SafeAccessTokenHandle? token)
     {
         var domain = Domain;

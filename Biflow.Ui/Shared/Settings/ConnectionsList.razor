@@ -20,10 +20,12 @@
     </HxDropdownToggleButton>
     <HxDropdownMenu>
         <HxDropdownHeader>Connection type</HxDropdownHeader>
-        @foreach (var connectionType in Enum.GetValues<ConnectionType>())
+        @foreach (var connectionType in ConnectionTypes)
         {
-            <HxDropdownItem @onclick="async () => await ShowNewConnectionModalAsync(connectionType)">
-                @connectionType.ToString()
+            var (name, _, desc, type) = connectionType;
+            <HxDropdownItem @onclick="async () => await ShowNewConnectionModalAsync(type)" title="@desc">
+                <ConnectionTypeIcon ConnectionType="type" />
+                @name
             </HxDropdownItem>
         }
     </HxDropdownMenu>
@@ -62,35 +64,24 @@
             {
                 @foreach (var connection in connections.OrderBy(c => c.ConnectionName))
                 {
-                    var steps = connection switch
-                    {
-                        SqlConnectionInfo sql => sql.SqlSteps.Count() + sql.PackageSteps.Count() + sql.AgentJobSteps.Count(),
-                        AnalysisServicesConnectionInfo analysis => analysis.TabularSteps.Count(),
-                        _ => 0
-                    };
-                    var jobs = connection switch
-                    {
-                        SqlConnectionInfo sql => sql.SqlSteps.Select(s => s.Job)
-                                                        .Union(sql.PackageSteps.Select(s => s.Job))
-                                                        .Union(sql.AgentJobSteps.Select(s => s.Job)).Count(),
-                        AnalysisServicesConnectionInfo analysis => analysis.Steps.Select(s => s.Job).Distinct().Count(),
-                        _ => 0
-                    };
+                    var steps = connection.Steps.Count();
+                    var jobs = connection.Steps.Select(s => s.JobId).Distinct().Count();
                     <tr>
                         <td class="align-middle">
                             @connection.ConnectionName
                         </td>
                         <td class="align-middle">
-                            @connection.ConnectionType
+                            <ConnectionTypeIcon ConnectionType="connection.ConnectionType" />
+                            @connection.ConnectionType.GetCategory()?.Name
                         </td>
                         <td class="align-middle">
                             <HxButtonGroup>
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="async () => await ShowEditModalAsync(connection)">
-                                    <CxIcon Icon="FeatherIcon.Edit2" />
+                                    <SvgIcon Icon="FeatherIcon.Edit2" />
                                 </HxButton>
                                 <HxDropdownButtonGroup>
                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="delete">
-                                        <CxIcon Icon="FeatherIcon.Trash2" />
+                                        <SvgIcon Icon="FeatherIcon.Trash2" />
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
                                         <HxDropdownHeader>Delete?</HxDropdownHeader>
@@ -105,11 +96,11 @@
                                             @onclick="() => showConnectionString[connection.ConnectionId] = !showConnectionString[connection.ConnectionId]">
                                     @if (showConnectionString[connection.ConnectionId])
                                     {
-                                        <CxIcon Icon="FeatherIcon.EyeOff" />
+                                        <SvgIcon Icon="FeatherIcon.EyeOff" />
                                     }
                                     else
                                     {
-                                        <CxIcon Icon="FeatherIcon.Eye" />
+                                        <SvgIcon Icon="FeatherIcon.Eye" />
                                     }
                                 </HxButton>
                             </HxButtonGroup>
@@ -148,9 +139,12 @@
                                      Credentials="credentials"
                                      OnConnectionSubmit="OnConnectionSubmit" />
 
-<SqlConnectionEditModal @ref="connectionEditModals[ConnectionType.Sql]"
-                        Credentials="credentials"
-                        OnConnectionSubmit="OnConnectionSubmit" />
+<MsSqlConnectionEditModal @ref="connectionEditModals[ConnectionType.Sql]"
+                          Credentials="credentials"
+                          OnConnectionSubmit="OnConnectionSubmit" />
+
+<SnowflakeConnectionEditModal @ref="connectionEditModals[ConnectionType.Snowflake]"
+                              OnConnectionSubmit="OnConnectionSubmit"/>
 
 <HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsConnection?.ConnectionName}")">
     <BodyTemplate>
@@ -193,10 +187,20 @@
     private readonly Dictionary<ConnectionType, IConnectionEditModal?> connectionEditModals = [];
 
     private List<Credential> credentials = [];
-    private List<ConnectionInfoBase>? connections;
+    private List<ConnectionBase>? connections;
     private Dictionary<Guid, bool> showConnectionString = [];
-    private ConnectionInfoBase? stepsConnection;
+    private ConnectionBase? stepsConnection;
     private HxModal? stepsModal;
+
+    private static readonly (string Name, int Ordinal, string? Description, ConnectionType Type)[] ConnectionTypes =
+        Enum.GetValues<ConnectionType>().Select(c =>
+        {
+            var (name, ordinal) = c.GetCategory() ?? ("", 0);
+            var desc = c.GetDescription();
+            return (name, ordinal, desc, c);
+        })
+        .OrderBy(c => c.ordinal)
+        .ToArray();
 
     protected override async Task OnInitializedAsync()
     {
@@ -208,20 +212,22 @@
             .ToListAsync();
         connections = await context.Connections
             .AsNoTrackingWithIdentityResolution()
-            .Include(c => (c as SqlConnectionInfo)!.SqlSteps)
+            .Include(c => (c as SnowflakeConnection)!.SqlSteps)
             .ThenInclude(step => step.Job)
-            .Include(c => (c as SqlConnectionInfo)!.PackageSteps)
+            .Include(c => (c as MsSqlConnection)!.SqlSteps)
             .ThenInclude(step => step.Job)
-            .Include(c => (c as SqlConnectionInfo)!.AgentJobSteps)
+            .Include(c => (c as MsSqlConnection)!.PackageSteps)
             .ThenInclude(step => step.Job)
-            .Include(c => (c as AnalysisServicesConnectionInfo)!.TabularSteps)
+            .Include(c => (c as MsSqlConnection)!.AgentJobSteps)
+            .ThenInclude(step => step.Job)
+            .Include(c => (c as AnalysisServicesConnection)!.TabularSteps)
             .ThenInclude(step => step.Job)
             .OrderBy(c => c.ConnectionName)
             .ToListAsync();
         showConnectionString = connections.ToDictionary(key => key.ConnectionId, value => false);
     }
 
-    private async Task DeleteConnection(ConnectionInfoBase connection)
+    private async Task DeleteConnection(ConnectionBase connection)
     {
         try
         {
@@ -236,7 +242,7 @@
         }
     }
 
-    private async Task OnConnectionSubmit(ConnectionInfoBase connection)
+    private async Task OnConnectionSubmit(ConnectionBase connection)
     {
         if (connection.ConnectionId == Guid.Empty)
         {
@@ -254,7 +260,7 @@
         StateHasChanged();
     }
 
-    private async Task ShowEditModalAsync(ConnectionInfoBase connection)
+    private async Task ShowEditModalAsync(ConnectionBase connection)
     {
         await OpenConnectionEditModalAsync(connection.ConnectionType, connection.ConnectionId);
     }

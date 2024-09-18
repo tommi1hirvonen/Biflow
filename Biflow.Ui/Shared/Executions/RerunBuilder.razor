@@ -33,7 +33,7 @@ else if (builder is null)
             <div class="col-auto mt-3">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.Filter" />
+                        <SvgIcon Icon="FeatherIcon.Filter" />
                     </div>
                     <input type="search" class="form-control" @bind-value="stepNameFilter" @bind-value:event="oninput"
                             placeholder="Filter by name" autocomplete="off" style="min-width: 15rem; max-width: 15rem;" />
@@ -46,7 +46,7 @@ else if (builder is null)
                                     Items="builder?.Steps.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
                                     OnChange="StateHasChanged">
                         <TitleTemplate>
-                            <CxIcon Icon="FeatherIcon.Tool" />
+                            <SvgIcon Icon="FeatherIcon.Tool" />
                             Step type
                         </TitleTemplate>
                         <ItemTemplate Context="item">
@@ -62,7 +62,7 @@ else if (builder is null)
                                     IsSearchable
                                     OnChange="StateHasChanged">
                             <TitleTemplate>
-                                <CxIcon Icon="FeatherIcon.Tag" />
+                                <SvgIcon Icon="FeatherIcon.Tag" />
                                 Tags
                             </TitleTemplate>
                             <ItemTemplate Context="item">
@@ -74,7 +74,7 @@ else if (builder is null)
                                     Items="Statuses"
                                     OnChange="StateHasChanged">
                         <TitleTemplate>
-                            <CxIcon Icon="FeatherIcon.Info" />
+                            <SvgIcon Icon="FeatherIcon.Info" />
                             Status
                         </TitleTemplate>
                         <ItemTemplate Context="item">
@@ -83,7 +83,7 @@ else if (builder is null)
                     </FilterDropdown>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
                                 @onclick="() => { tagFilter.Clear(); stepTypeFilter.Clear(); statusFilter.Clear(); stepNameFilter = string.Empty; }">
-                        <CxIcon Icon="FeatherIcon.X" />
+                        <SvgIcon Icon="FeatherIcon.X" />
                         Clear
                     </HxButton>
                 </HxButtonGroup>
@@ -119,11 +119,11 @@ else if (builder is null)
                     @*Add all available AND enabled steps that have not yet been added to selected steps. Also filter based on current filter text.*@
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                                 @onclick="() => builder.AddAll(s => StepsAvailableToExecute.Any(available => s.StepId == available.StepId))">
-                        <CxIcon Icon="FeatherIcon.ChevronsRight" />
+                        <SvgIcon Icon="FeatherIcon.ChevronsRight" />
                         Select all
                     </HxButton>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => builder?.Clear()">
-                        <CxIcon Icon="FeatherIcon.ChevronsLeft" />
+                        <SvgIcon Icon="FeatherIcon.ChevronsLeft" />
                         Deselect all
                     </HxButton>
                 </HxButtonGroup>
@@ -131,7 +131,7 @@ else if (builder is null)
                 <div class="col-auto ms-auto mt-3">
                     <HxDropdownButtonGroup AutoClose="DropdownAutoClose.Outside" CssClass="ms-auto">
                         <HxDropdownToggleButton Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="builder is not null">
-                            <CxIcon Icon="FeatherIcon.Bell" />
+                            <SvgIcon Icon="FeatherIcon.Bell" />
                             Notifications
                         </HxDropdownToggleButton>
                         <HxDropdownContent>
@@ -185,7 +185,7 @@ else if (builder is null)
             <div class="col-auto ms-auto mt-3">
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" @onclick="Execute"
                             Enabled="(builder?.StepExecutions.Any() ?? false) && !startingExecution" Spinner="startingExecution">
-                    <CxIcon Icon="FeatherIcon.Play" />
+                    <SvgIcon Icon="FeatherIcon.Play" />
                     Execute
                 </HxButton>
             </div>
@@ -213,7 +213,7 @@ else if (builder is null)
                                     <StepExecutionStatusBadge ExecutionStatus="status" />
                                 </td>
                                 <td class="@(builder?.ExecutionMode == ExecutionMode.Dependency ? "text-body-tertiary" : null)">
-                                    <CxIcon Icon="FeatherIcon.Layers" />
+                                    <SvgIcon Icon="FeatherIcon.Layers" />
                                     <sup>@step.ExecutionPhase</sup>
                                 </td>
                             </tr>
@@ -237,7 +237,7 @@ else if (builder is null)
                                     @step.StepName
                                 </td>
                                 <td class="@(builder?.ExecutionMode == ExecutionMode.Dependency ? "text-body-tertiary" : null)">
-                                    <CxIcon Icon="FeatherIcon.Layers" />
+                                    <SvgIcon Icon="FeatherIcon.Layers" />
                                     <sup>@step.ExecutionPhase</sup>
                                 </td>
                             </tr>
@@ -335,13 +335,16 @@ else if (builder is null)
             if (execution is not null)
             {
                 await Executor.StartExecutionAsync(execution.ExecutionId);
-                var message = new ToastActionMessage
+                var message = new ToastTemplateMessage
                 {
                     Title = "Execution started successfully",
                     Color = ComponentColor.Success,
-                    ButtonColor = ButtonColor.Link,
-                    ButtonText = "View execution",
-                    ButtonAction = () => NavigationManager.NavigateTo($"executions/{execution.ExecutionId}/list")
+                    RenderFragment =
+                    @<div class="row">
+                        <div class="col">
+                            <a href="@($"executions/{execution.ExecutionId}/list")">View execution</a>
+                        </div>
+                    </div>
                 };
                 Toaster.AddMessage(message);
             }

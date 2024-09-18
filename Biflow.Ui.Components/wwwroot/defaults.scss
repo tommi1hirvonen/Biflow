@@ -30,5 +30,28 @@ $toast-colors:
         .toast-header {
             --bs-toast-header-bg: var(--bs-#{$color}-bg-subtle) !important;
         }
+
+        .toast-body a {
+            color: var(--bs-#{$color}-text-emphasis);
+        }
     }
+}
+
+// Resizable table
+.table-resizable th {
+    position: relative;
+}
+
+.table-resizable .resizer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 5px;
+    cursor: col-resize;
+    user-select: none;
+}
+
+.table-resizable .resizer:hover,
+.table-resizable .resizing {
+    border-right: 2px solid var(--bs-primary);
 }

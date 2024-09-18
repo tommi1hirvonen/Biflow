@@ -1,5 +1,4 @@
-﻿@inject SqlServerHelperService SqlServerHelperService
-@inject ToasterService Toaster
+﻿@inject ToasterService Toaster
 
 <HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select stored procedure">
     <BodyTemplate>
@@ -7,7 +6,7 @@
             <div class="col">
                 <div class="input-group input-group-sm">
                     <span class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.Filter" />
+                        <SvgIcon Icon="FeatherIcon.Filter" />
                     </span>
                     <input type="text" class="form-control form-control-sm" autocomplete="off" placeholder="Schema"
                            @bind-value="filterTextSchema" @bind-value:event="oninput" />
@@ -42,8 +41,8 @@
                                 <tr style="cursor: pointer;"
                                     @onclick="() => selectedProcedure = proc"
                                     class="@(proc == selectedProcedure ? "bg-body-tertiary fw-bold" : null)">
-                                    <td>
-                                        <HighlightableText Text="@($"[{proc.SchemaName}]")" PartToHighlight="@filterTextSchema" />.<HighlightableText Text="@($"[{proc.ProcedureName}]")" PartToHighlight="@filterTextName" />
+                                    <td class="small">
+                                        <HighlightableText Text="@(proc.QuotedSchemaName)" PartToHighlight="@filterTextSchema" />.<HighlightableText Text="@(proc.QuotedProcedureName)" PartToHighlight="@filterTextName" />@proc.ArgumentSignature
                                     </td>
                                 </tr>
                                 @if (proc == selectedProcedure && proc.Parameters.Any())
@@ -84,28 +83,26 @@
 
 @code {
     [Parameter]
-    public Guid? ConnectionId { get; set; }
-
-    [Parameter]
-    public EventCallback<string> OnProcedureSelected { get; set; }
+    public EventCallback<IStoredProcedure> OnProcedureSelected { get; set; }
 
     private HxOffcanvas? offcanvas;
-    private IEnumerable<StoredProcedure>? procedures;
+    private IEnumerable<IStoredProcedure>? procedures;
     private string filterTextName = string.Empty;
     private string filterTextSchema = string.Empty;
-    private StoredProcedure? selectedProcedure;
+    private IStoredProcedure? selectedProcedure;
 
-    private IEnumerable<StoredProcedure> ProceduresFiltered => procedures?
-        .Where(proc => $"[{proc.SchemaName}]".ContainsIgnoreCase(filterTextSchema))
-        .Where(proc => $"[{proc.ProcedureName}]".ContainsIgnoreCase(filterTextName))
+    private IEnumerable<IStoredProcedure> ProceduresFiltered => procedures?
+        .Where(proc => proc.QuotedSchemaName.ContainsIgnoreCase(filterTextSchema))
+        .Where(proc => proc.QuotedProcedureName.ContainsIgnoreCase(filterTextName))
         .OrderBy(proc => proc.SchemaName)
-        .ThenBy(proc => proc.ProcedureName) ?? Enumerable.Empty<StoredProcedure>();
+        .ThenBy(proc => proc.ProcedureName)
+        .AsEnumerable() ?? [];
 
     private async Task SelectProcedure()
     {
         if (selectedProcedure is not null)
         {
-            await OnProcedureSelected.InvokeAsync($"[{selectedProcedure.SchemaName}].[{selectedProcedure.ProcedureName}]");
+            await OnProcedureSelected.InvokeAsync(selectedProcedure);
             await offcanvas.LetAsync(x => x.HideAsync());
         }
     }
@@ -118,13 +115,17 @@
         filterTextName = string.Empty;
     }
 
-    public async Task ShowAsync()
+    public async Task ShowAsync(ConnectionBase connection)
     {
         await offcanvas.LetAsync(x => x.ShowAsync());
-        if (ConnectionId is null || ConnectionId == Guid.Empty) return;
         try
         {
-            procedures = await SqlServerHelperService.GetStoredProceduresAsync((Guid)ConnectionId);
+            procedures = connection switch
+            {
+                MsSqlConnection ms => await ms.GetStoredProceduresAsync(),
+                SnowflakeConnection sf => await sf.GetStoredProceduresAsync(),
+                _ => throw new ArgumentException($"Unsupported connection type {connection.GetType().Name}")
+            };
             StateHasChanged();
         }
         catch (Exception ex)
@@ -132,5 +133,4 @@
             Toaster.AddError("Error reading procedures", ex.Message);
         }
     }
-
 }

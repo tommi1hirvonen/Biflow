@@ -92,6 +92,16 @@ public class UploadBuilder
                 {
                     dataRow[col] = cell.GetValue<DateTime?>();
                 }
+                else if (type == typeof(DateOnly))
+                {
+                    var dt = cell.GetValue<DateTime?>();
+                    dataRow[col] = dt is DateTime notNull ? DateOnly.FromDateTime(notNull) : null;
+                }
+                else if (type == typeof(TimeOnly))
+                {
+                    var dt = cell.GetValue<DateTime?>();
+                    dataRow[col] = dt is DateTime notNull ? TimeOnly.FromDateTime(notNull) : null;
+                }
                 else if (type == typeof(bool))
                 {
                     dataRow[col] = cell.GetValue<bool?>();

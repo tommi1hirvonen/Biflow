@@ -1,0 +1,243 @@
+﻿@implements IDisposable
+
+@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject IMediator Mediator
+@inject ToasterService Toaster
+
+<h4>Version revert</h4>
+
+<div class="row mt-3">
+    <div class="col">
+        <a class="btn btn-sm btn-auto" href="versions">
+            <SvgIcon Icon="FeatherIcon.ArrowLeft" />
+            Back
+        </a>
+    </div>
+</div>
+
+@if (version is not null)
+{
+    <div class="row my-3">
+        <div class="col-auto" style="max-width: 50rem;">
+            <div class="card shadow-sm">
+                <div class="card-body py-3 px-4">
+                    <div class="row">
+                        <div class="col">
+                            <dl>
+                                <dt>Version id</dt>
+                                <dd>@version.VersionId</dd>
+                                <dt>Description</dt>
+                                <dd>@version.Description</dd>
+                                <dt>Created on</dt>
+                                <dd>@version.CreatedOn</dd>
+                                <dt>Created by</dt>
+                                <dd>@version.CreatedBy</dd>
+                            </dl>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="row mt-4">
+                        <div class="col">
+                            <h5>Note</h5>
+                            <p>
+                                During the revert process, keep this page open. Leaving or closing the page will automatically cancel the revert process.
+                            </p>
+                            <p>
+                                Reverting to a previous version can take several minutes. It is highly recommended to make sure no executions are scheduled to start while the revert process is taking place. This can lead to undefined behaviour. Users should also avoid making changes in the application during the process.
+                            </p>
+                            <p>
+                                It is recommended to create a version snapshot of the current environment before reverting to a previous version.
+                            </p>
+                            <p>
+                                The following entity types will be restored:
+                                <ul>
+                                    <li>
+                                        Settings
+                                        <ul>
+                                            <li>Connections</li>
+                                            <li>Credentials</li>
+                                            <li>App registrations</li>
+                                            <li>Pipeline clients</li>
+                                            <li>Function apps</li>
+                                            <li>Qlik Cloud clients</li>
+                                            <li>Blob storage clients</li>
+                                        </ul>
+                                    </li>
+                                    <li>Jobs (incl. steps, parameters etc.)</li>
+                                    <li>Schedules</li>
+                                    <li>Data objects</li>
+                                    <li>Tags</li>
+                                    <li>Data tables</li>
+                                </ul>
+                            </p>
+                            <p>
+                                Sensitive string values are not included in the snapshot JSON and thus cannot be restored. The following sensitive values from the current version are carried over to the reverted version for matching objects:
+                                <ul>
+                                    <li>App registration client secrets</li>
+                                    <li>Connection strings (when containing passwords)</li>
+                                    <li>Credential passwords</li>
+                                    <li>Function app keys</li>
+                                    <li>Function step keys</li>
+                                    <li>Qlik Cloud API tokens</li>
+                                    <li>Blob storage client connection strings</li>
+                                    <li>Blob storage client account urls (when containining signatures)</li>
+                                </ul>
+                                It is recommended to validate and test the various endpoints listed above in settings after the revert process.
+                            </p>
+                            <p>
+                                The following entity types will remain unchanged:
+                                <ul>
+                                    <li>Users</li>
+                                    <li>API keys</li>
+                                    <li>Execution history</li>
+                                </ul>
+                            </p>
+                            <p>
+                                Currently configured user authorizations and subscriptions may be affected. Authorizations and subscriptions from the current version are carried over to the reverted version only for objects (e.g. jobs, steps, data tables, tags) that exist in both versions. Comparing whether two objects are the same is done based on the underlying object ids.
+                            </p>
+                            <p>
+                                If the revert fails at any point of the process, the entire revert is rolled back. Either the entire revert is successful or the current version is retained.
+                            </p>
+                            <p>
+                                If the revert process completes successfully, the scheduler service is automatically requested to synchronize its schedules from the application database. Reverted schedules should then automatically take effect.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col">
+                            <HxDropdownButtonGroup>
+                                <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto text-danger me-3" Enabled="revertTask is null" Spinner="revertTask is not null">
+                                    <SvgIcon Icon="FeatherIcon.AlertCircle" />
+                                    Revert...
+                                </HxDropdownToggleButton>
+                                <HxDropdownMenu>
+                                    <HxDropdownItem OnClick="() => RevertAsync(version.VersionId)">
+                                        Start
+                                    </HxDropdownItem>
+                                </HxDropdownMenu>
+                            </HxDropdownButtonGroup>
+                            @if (revertTask is not null)
+                            {
+                                <HxButton Color="ThemeColor.None" CssClass="btn-auto" OnClick="CancelRevertTask">
+                                    <SvgIcon Icon="FeatherIcon.X" />
+                                    Cancel
+                                </HxButton>
+                            }
+                        </div>
+                    </div>
+                    @if (revertTask is not null)
+                    {
+                        <div class="row mt-3">
+                            <div class="col">
+                                <HxAlert Color="ThemeColor.Info">
+                                    <p><strong>Version revert in progress</strong></p>
+                                    Please do not leave or close this page.
+                                </HxAlert>
+                            </div>
+                        </div>
+                    }
+                    @if (result is not null)
+                    {
+                        <div class="row mt-3">
+                            <div class="col">
+                                <HxAlert Color="result.Color">
+                                    @if (result.Title is not null)
+                                    {
+                                        <p><strong>@result.Title</strong></p>
+                                    }
+                                    @result.Message
+                                </HxAlert>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row my-5">
+        <div class="col text-center">
+            <HxSpinner Color="ThemeColor.Secondary" />
+        </div>
+    </div>
+}
+
+
+@code {
+    [Parameter] public int? VersionId { get; set; }
+
+    private int previousVersionId;
+    private EnvironmentVersion? version;
+    private CancellationTokenSource cts = new();
+    private Task? revertTask;
+    private RevertResult? result;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (VersionId is int versionId && versionId != previousVersionId)
+        {
+            previousVersionId = versionId;
+            using var context = DbContextFactory.CreateDbContext();
+            version = await context.EnvironmentVersions
+                .FirstOrDefaultAsync(v => v.VersionId == versionId);
+        }
+    }
+
+    private async Task RevertAsync(int versionId)
+    {
+        if (revertTask is not null)
+        {
+            return;
+        }
+
+        try
+        {
+            result = null;
+            var command = new VersionRevertCommand(versionId);
+            revertTask = Mediator.SendAsync(command, cts.Token);
+            StateHasChanged();
+            await revertTask;
+            result = new(ThemeColor.Success, null, "Version reverted successfully");
+        }
+        catch (OperationCanceledException)
+        {
+            cts.Dispose();
+            cts = new();
+            result = new(ThemeColor.Warning, null, "Revert was canceled");
+        }
+        catch (Exception ex)
+        {
+            var message = ex switch
+            {
+                { InnerException: not null } when ex.Message.ContainsIgnoreCase("see the inner exception") => ex.InnerException.Message,
+                _ => ex.Message
+            };
+            result = new(ThemeColor.Danger, "Error reverting version", message);
+        }
+        finally
+        {
+            revertTask = null;
+        }
+    }
+
+    private void CancelRevertTask()
+    {
+        if (revertTask is not null && !cts.IsCancellationRequested)
+        {
+            cts.Cancel();
+        }
+    }
+
+    public void Dispose()
+    {
+        if (!cts.IsCancellationRequested)
+        {
+            cts.Cancel();
+        }
+        cts.Dispose();
+    }
+
+    private record RevertResult(ThemeColor Color, string? Title, string? Message);
+}

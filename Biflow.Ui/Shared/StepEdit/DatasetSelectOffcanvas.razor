@@ -11,7 +11,7 @@
                     <label class="form-label">App registration</label>
                     <div class="input-group input-group-sm">
                         <div class="input-group-text">
-                            <CxIcon Icon="FeatherIcon.Globe" />
+                            <SvgIcon Icon="FeatherIcon.Globe" />
                         </div>
                         <select class="form-select form-select-sm" @bind="appRegistrationId">
                             @foreach (var appRegistration in AppRegistrations ?? [])
@@ -23,7 +23,7 @@
                 </div>
                 <div class="col-auto">
                     <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="LoadAsync">
-                        <CxIcon Icon="FeatherIcon.RefreshCw" />
+                        <SvgIcon Icon="FeatherIcon.RefreshCw" />
                         Refresh
                     </HxButton>
                 </div>
@@ -33,7 +33,7 @@
             <div class="col">
                 <div class="input-group">
                     <div class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.Search" />
+                        <SvgIcon Icon="FeatherIcon.Search" />
                     </div>
                     <input type="search" class="form-control form-control-sm" placeholder="Search datasets" @bind-value="filterText" @bind-value:event="oninput" />
                 </div>
@@ -83,14 +83,14 @@
                                     <div class="col d-flex align-items-center small">
                                         @if (expanded)
                                         {
-                                            <CxIcon Icon="FeatherIcon.ChevronDown" />
+                                            <SvgIcon Icon="FeatherIcon.ChevronDown" />
                                         }
                                         else
                                         {
-                                            <CxIcon Icon="FeatherIcon.ChevronRight" />
+                                            <SvgIcon Icon="FeatherIcon.ChevronRight" />
                                         }
                                         &nbsp;
-                                        <CxIcon Icon="FeatherIcon.Folder" />
+                                        <SvgIcon Icon="FeatherIcon.Folder" />
                                         &nbsp;
                                         @group.Name
                                         <span class="ms-auto badge rounded-pill @(datasets.Length > 0 ? "bg-primary" : "bg-secondary")">
@@ -106,7 +106,7 @@
                                     <div class="list-group-item list-group-item-action @(dataset == selectedDataset ? "fw-bold bg-body" : null)" style="cursor: pointer;" @onclick="() => selectedDataset = dataset">
                                         <div class="row">
                                             <div class="col d-flex align-items-center ps-5 small">
-                                                <CxIcon Icon="LucideIcon.FileBarChart2" />
+                                                <SvgIcon Icon="LucideIcon.FileBarChart2" />
                                                 &nbsp;
                                                 <HighlightableText Text="@dataset.DatasetName" PartToHighlight="@filterText" />
                                             </div>

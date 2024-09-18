@@ -1092,6 +1092,10 @@ namespace Biflow.DataAccess.Migrations
 
                     b.HasKey("ExecutionId", "StepId", "RetryAttemptIndex");
 
+                    b.HasIndex("EndedOn");
+
+                    b.HasIndex("ExecutionStatus", "EndedOn");
+
                     b.ToTable("ExecutionStepAttempt", "app");
 
                     b.HasDiscriminator<string>("StepType");

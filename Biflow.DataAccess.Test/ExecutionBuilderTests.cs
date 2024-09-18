@@ -56,6 +56,7 @@ public class ExecutionBuilderTests(DatabaseFixture fixture)
         using var builder = await _executionBuilderFactory.CreateAsync(schedule.JobId, schedule.ScheduleId,
             [
                 context => step => step.IsEnabled,
+                context => step => !step.StepName!.Contains("Copy"),
                 context => step =>
                 // Schedule has no tag filters
                 !context.Schedules.Any(sch => sch.ScheduleId == schedule.ScheduleId && sch.TagFilter.Any()) ||

@@ -1,7 +1,5 @@
-﻿using Biflow.Ui.Components;
-using Microsoft.AspNetCore.Components.Forms;
+﻿using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Routing;
-using System.Collections;
 
 namespace Biflow.Ui.Shared.JobDetails;
 
@@ -28,8 +26,7 @@ public partial class JobParameters : ComponentBase
     private FluentValidationValidator? fluentJobValidator;
     private ExpressionEditOffcanvas<JobParameter>? expressionEditOffcanvas;
     private HxOffcanvas? referencingStepsOffcanvas;
-    private ReferencingStepsModel referencingSteps =
-        new(new(), Enumerable.Empty<Step>(), Enumerable.Empty<Step>(), Enumerable.Empty<Step>(), Enumerable.Empty<Step>());
+    private ReferencingStepsModel referencingSteps = new(new(), [], [], [], []);
 
     protected override async Task OnParametersSetAsync()
     {
@@ -125,22 +122,25 @@ public partial class JobParameters : ComponentBase
         ?.Where(s => s is IHasStepParameters hasParams &&
             hasParams.StepParameters.Any(p => p.InheritFromJobParameterId == parameter.ParameterId || p.ExpressionParameters.Any(ep => ep.InheritFromJobParameterId == parameter.ParameterId)))
         .OrderBy(s => s.StepName)
-        ?? Enumerable.Empty<Step>();
+        .AsEnumerable()
+        ?? [];
 
     private IEnumerable<Step> GetCapturingSteps(JobParameter parameter) => Steps
         ?.Where(s => s is SqlStep sql && sql.ResultCaptureJobParameterId == parameter.ParameterId)
         .OrderBy(s => s.StepName)
-        ?? Enumerable.Empty<Step>();
+        .AsEnumerable()
+        ?? [];
 
     private static IEnumerable<Step> GetAssigningSteps(JobParameter parameter) => parameter.AssigningStepParameters
         .Select(p => p.Step)
         .OrderBy(s => s.Job.JobName)
         .ThenBy(s => s.StepName)
-        ?? Enumerable.Empty<Step>();
+        .AsEnumerable()
+        ?? [];
 
     private IEnumerable<Step> GetExecutionConditionSteps(JobParameter parameter) => Steps
         ?.Where(s => s.ExecutionConditionParameters.Any(p => p.JobParameterId == parameter.ParameterId))
-        ?? Enumerable.Empty<Step>();
+        ?? [];
 
     private record ReferencingStepsModel(
         JobParameter Parameter,

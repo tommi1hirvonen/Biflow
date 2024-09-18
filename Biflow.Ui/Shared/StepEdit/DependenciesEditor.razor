@@ -29,7 +29,7 @@
                     }
                     else
                     {
-                        <CxIcon Icon="LucideIcon.ClipboardList" />
+                        <SvgIcon Icon="LucideIcon.ClipboardList" />
                         <span>Job</span>
                     }
                 </TitleTemplate>
@@ -43,7 +43,7 @@
                             Items="Steps.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
-                    <CxIcon Icon="FeatherIcon.Tool" />
+                    <SvgIcon Icon="FeatherIcon.Tool" />
                     Step type
                 </TitleTemplate>
                 <ItemTemplate Context="item">
@@ -59,7 +59,7 @@
                             TextSelector="t => t.TagName"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
-                    <CxIcon Icon="FeatherIcon.Tag" />
+                    <SvgIcon Icon="FeatherIcon.Tag" />
                     Tags
                 </TitleTemplate>
                 <ItemTemplate Context="tag">
@@ -70,7 +70,7 @@
     </div>
     <div class="input-group input-group-sm col">
         <div class="input-group-text rounded-left">
-            <CxIcon Icon="FeatherIcon.Search" />
+            <SvgIcon Icon="FeatherIcon.Search" />
         </div>
         <input type="search" style="max-width: 25rem;" class="form-control" @bind-value="dependenciesFilterText" @bind-value:event="oninput" placeholder="Search" autocomplete="off" />
     </div>    
@@ -162,7 +162,7 @@
                                         };
                                     }
                                     <span class="@className">
-                                        <CxIcon Icon="icon" />
+                                        <SvgIcon Icon="icon" />
                                     </span>
                                 </td>
                                 <td class="align-middle">
@@ -175,7 +175,7 @@
                                 </td>
                                 <td class="align-middle">
                                     <HxButton Size="ButtonSize.Small" CssClass="btn-auto" OnClick="() => RemoveDependency(step)">
-                                        <CxIcon Icon="FeatherIcon.Delete" />
+                                        <SvgIcon Icon="FeatherIcon.Delete" />
                                     </HxButton>
                                 </td>
                             </tr>

@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
-public class SqlStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout, IHasStepParameters<SqlStepParameter>
+public class SqlStep : Step, IHasConnection, IHasTimeout, IHasStepParameters<SqlStepParameter>
 {
     [JsonConstructor]
     public SqlStep() : base(StepType.Sql) { }
@@ -61,10 +61,27 @@ public class SqlStep : Step, IHasConnection<SqlConnectionInfo>, IHasTimeout, IHa
     public JobParameter? ResultCaptureJobParameter { get; set; }
 
     [JsonIgnore]
-    public SqlConnectionInfo Connection { get; set; } = null!;
+    public ConnectionBase Connection
+    {
+        get => _connection;
+        set
+        {
+            if (value is MsSqlConnection or SnowflakeConnection)
+            {
+                _connection = value;
+            }
+            else
+            {
+                throw new ArgumentException($"Unallowed connection type: {value.GetType().Name}. Connection must be of type {typeof(MsSqlConnection).Name} or {typeof(SnowflakeConnection).Name}.");
+            }
+        }
+    }
+
+    private ConnectionBase _connection = null!;
 
     [ValidateComplexType]
-    public IList<SqlStepParameter> StepParameters { get; } = new List<SqlStepParameter>();
+    [JsonInclude]
+    public IList<SqlStepParameter> StepParameters { get; private set; } = new List<SqlStepParameter>();
 
     public override SqlStep Copy(Job? targetJob = null) => new(this, targetJob);
 

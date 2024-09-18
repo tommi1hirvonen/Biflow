@@ -25,8 +25,9 @@ public partial class JobDetails : ComponentBase, IDisposable
     private Job? job;
     private List<Job> jobs = [];
     private List<Step> steps = [];
-    private List<SqlConnectionInfo>? sqlConnections;
-    private List<AnalysisServicesConnectionInfo>? asConnections;
+    private List<ConnectionBase>? sqlConnections;
+    private List<MsSqlConnection>? msSqlConnections;
+    private List<AnalysisServicesConnection>? asConnections;
     private List<PipelineClient>? pipelineClients;
     private List<AppRegistration>? appRegistrations;
     private List<FunctionApp>? functionApps;
@@ -61,10 +62,12 @@ public partial class JobDetails : ComponentBase, IDisposable
     protected override async Task OnInitializedAsync()
     {
         using var context = await DbFactory.CreateDbContextAsync();
-        sqlConnections = await context.SqlConnections
+        sqlConnections = await context.Connections
             .AsNoTracking()
+            .Where(c => c.ConnectionType == ConnectionType.Sql || c.ConnectionType == ConnectionType.Snowflake)
             .OrderBy(c => c.ConnectionName)
             .ToListAsync(cts.Token);
+        msSqlConnections = sqlConnections.OfType<MsSqlConnection>().ToList();
         asConnections = await context.AnalysisServicesConnections
             .AsNoTracking()
             .OrderBy(c => c.ConnectionName)

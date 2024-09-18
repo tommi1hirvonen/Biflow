@@ -22,7 +22,7 @@ public partial class DataTableEditModal : ComponentBase, IDisposable
     private MasterDataTable? editTable;
     private TableEditView currentView = TableEditView.Settings;
     private IEnumerable<MasterDataTable>? tables;
-    private IEnumerable<SqlConnectionInfo>? connections;
+    private IEnumerable<MsSqlConnection>? connections;
     private IEnumerable<MasterDataTableCategory>? categories;
     private IEnumerable<string>? columns;
     private string columnOrderSelected = "";
@@ -36,7 +36,7 @@ public partial class DataTableEditModal : ComponentBase, IDisposable
         await modal.LetAsync(x => x.ShowAsync());
         editContext?.Dispose();
         editContext = DbContextFactory.CreateDbContext();
-        connections = await editContext.SqlConnections
+        connections = await editContext.MsSqlConnections
             .OrderBy(c => c.ConnectionName)
             .ToListAsync();
         categories = await editContext.MasterDataTableCategories

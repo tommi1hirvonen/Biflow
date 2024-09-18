@@ -30,7 +30,7 @@
                                        class="form-control form-control-sm"
                                        type="datetime-local">
                                 <button class="btn btn-sm btn-auto" @onclick="() => UserState.Schedules.TriggersAfter = null" title="Clear">
-                                    <CxIcon Icon="FeatherIcon.X" />
+                                    <SvgIcon Icon="FeatherIcon.X" />
                                 </button>
                             </div>
                         </div>
@@ -44,7 +44,7 @@
                                        class="form-control form-control-sm"
                                        type="datetime-local">
                                 <button class="btn btn-sm btn-auto" @onclick="() => UserState.Schedules.TriggersBefore = null" title="Clear">
-                                    <CxIcon Icon="FeatherIcon.X" />
+                                    <SvgIcon Icon="FeatherIcon.X" />
                                 </button>
                             </div>
                         </div>
@@ -73,7 +73,7 @@
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
                       OnClick="() => { UserState.Schedules.TriggersAfter = null; UserState.Schedules.TriggersBefore = null; }"
                       title="Clear">
-                <CxIcon Icon="FeatherIcon.X" />
+                <SvgIcon Icon="FeatherIcon.X" />
             </HxButton>
         </HxButtonGroup>
     </div>
@@ -90,11 +90,11 @@
                         Add schedule
                     </HxButton>
                     <HxButton CssClass="ms-3" Color="ThemeColor.Primary" @onclick="SynchronizeSchedulerService">
-                        <CxIcon Icon="FeatherIcon.RefreshCw" />
+                        <SvgIcon Icon="FeatherIcon.RefreshCw" />
                         Synchronize
                     </HxButton>
                     <HxButton CssClass="ms-3 btn-auto" Color="ThemeColor.None" OnClick="ShowStatusOffcanvasAsync" Spinner="false" title="Show scheduler service status">
-                        <CxIcon Icon="FeatherIcon.Info" />
+                        <SvgIcon Icon="FeatherIcon.Info" />
                         Status
                     </HxButton>
                 </div>
@@ -122,7 +122,7 @@
         </div>
         <div class="col-auto ms-auto">
             <HxButton Color="ThemeColor.None" CssClass="btn-auto" OnClick="async () => await helpModal.LetAsync(x => x.ShowAsync())">
-                <CxIcon Icon="FeatherIcon.HelpCircle" />
+                <SvgIcon Icon="FeatherIcon.HelpCircle" />
             </HxButton>
         </div>
     </div>
@@ -155,7 +155,7 @@
                     <HxButtonGroup Size="ButtonGroupSize.Small">
                         <HxDropdownButtonGroup>
                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                <CxIcon Icon="FeatherIcon.ToggleRight" />
+                                <SvgIcon Icon="FeatherIcon.ToggleRight" />
                                 Enable
                             </HxDropdownToggleButton>
                             <HxDropdownMenu>
@@ -166,7 +166,7 @@
                         </HxDropdownButtonGroup>
                         <HxDropdownButtonGroup>
                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                <CxIcon Icon="FeatherIcon.ToggleLeft" />
+                                <SvgIcon Icon="FeatherIcon.ToggleLeft" />
                                 Disable
                             </HxDropdownToggleButton>
                             <HxDropdownMenu>
@@ -176,7 +176,7 @@
                             </HxDropdownMenu>
                         </HxDropdownButtonGroup>
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="DeleteSelectedSchedulesAsync">
-                            <CxIcon Icon="FeatherIcon.Trash2" />
+                            <SvgIcon Icon="FeatherIcon.Trash2" />
                             Delete...
                         </HxButton>
                     </HxButtonGroup>
@@ -292,7 +292,7 @@
                                     <HxTooltip Placement="TooltipPlacement.Auto"
                                        Text="@("Next execution(s) (first 15):\n" + string.Join("\n", item.NextFireTimes().Take(15)))"
                                        CssClass="white-space-pre">
-                                        <CxIcon Icon="FeatherIcon.Info" />
+                                        <SvgIcon Icon="FeatherIcon.Info" />
                                     </HxTooltip>
                                 </div>
                                 <br />
@@ -316,11 +316,11 @@
                                     <HxButtonGroup Size="ButtonGroupSize.Small">
                                         <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto"
                                                   @onclick="async () => await editModal.LetAsync(x => x.ShowAsync(item.ScheduleId))">
-                                            <CxIcon Icon="FeatherIcon.Edit2" />
+                                            <SvgIcon Icon="FeatherIcon.Edit2" />
                                         </HxButton>
                                         <HxDropdownButtonGroup>
                                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                                <CxIcon Icon="FeatherIcon.Trash2" />
+                                                <SvgIcon Icon="FeatherIcon.Trash2" />
                                             </HxDropdownToggleButton>
                                             <HxDropdownMenu>
                                                 <HxDropdownHeader>Delete?</HxDropdownHeader>
@@ -413,6 +413,8 @@
         {
             await Mediator.SendAsync(new ToggleScheduleCommand(schedule.ScheduleId, value));
             schedule.IsEnabled = value;
+            var message = value ? "Schedule enabled" : "Schedule disabled";
+            Toaster.AddSuccess(message, 2500);
         }
         catch (Exception ex)
         {
@@ -429,7 +431,6 @@
                 await Mediator.SendAsync(new ToggleScheduleCommand(schedule.ScheduleId, value));
                 schedule.IsEnabled = value;
             }
-
         }
         catch (Exception ex)
         {

@@ -5,12 +5,15 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+	<AssemblyVersion>$(VersionName)</AssemblyVersion>
+	<FileVersion>$(AssemblyVersion)</FileVersion>
+	<Version>$(AssemblyVersion)</Version>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dapper" Version="2.1.4" />
-    <PackageReference Include="Quartz.Extensions.DependencyInjection" Version="3.7.0" />
-    <PackageReference Include="Quartz.Extensions.Hosting" Version="3.7.0" />
+    <PackageReference Include="Dapper" Version="2.1.35" />
+    <PackageReference Include="Quartz.Extensions.DependencyInjection" Version="3.13.0" />
+    <PackageReference Include="Quartz.Extensions.Hosting" Version="3.13.0" />
   </ItemGroup>
 
   <ItemGroup>

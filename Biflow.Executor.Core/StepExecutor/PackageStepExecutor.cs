@@ -149,7 +149,7 @@ internal class PackageStepExecutor(
 
     private static async Task<long> CreatePackageExecutionAsync(
         PackageStepExecution step,
-        SqlConnectionInfo connection,
+        MsSqlConnection connection,
         string? executeAsLogin,
         CancellationToken cancellationToken)
     {
@@ -227,7 +227,7 @@ internal class PackageStepExecutor(
 
     private static async Task RunPackageExecutionAsync(
         long packageOperationId,
-        SqlConnectionInfo connection,
+        MsSqlConnection connection,
         string? executeAsLogin,
         CancellationToken cancellationToken)
     {
@@ -256,7 +256,7 @@ internal class PackageStepExecutor(
     }
 
     private static async Task<bool> GetPackageStatusAsync(
-        SqlConnectionInfo connection,
+        MsSqlConnection connection,
         long packageOperationId,
         CancellationToken cancellationToken)
     {
@@ -275,7 +275,7 @@ internal class PackageStepExecutor(
     }
 
     private static async Task<string?[]> GetErrorMessagesAsync(
-        SqlConnectionInfo connection,
+        MsSqlConnection connection,
         long packageOperationId,
         CancellationToken cancellationToken)
     {

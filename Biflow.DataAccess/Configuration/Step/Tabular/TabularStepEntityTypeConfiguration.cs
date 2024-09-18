@@ -1,5 +1,4 @@
-﻿
-namespace Biflow.DataAccess.Configuration;
+﻿namespace Biflow.DataAccess.Configuration;
 
 internal class TabularStepEntityTypeConfiguration : IEntityTypeConfiguration<TabularStep>
 {
@@ -7,5 +6,6 @@ internal class TabularStepEntityTypeConfiguration : IEntityTypeConfiguration<Tab
     {
         builder.Property(x => x.TimeoutMinutes).HasColumnName("TimeoutMinutes");
         builder.Property(x => x.ConnectionId).HasColumnName("ConnectionId");
+        builder.HasOne(x => x.Connection).WithMany(x => x.TabularSteps);
     }
 }

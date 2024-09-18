@@ -1,0 +1,45 @@
+@using Biflow.Core.Entities
+
+<GenericTagInput TTag="string"
+                 CssClass="@CssClass"
+                 InputAttributes="InputAttributes"
+                 Label="@Label"
+                 Placeholder="@Placeholder"
+                 IsDisabled="IsDisabled"
+                 Items="Items"
+                 SelectedItems="SelectedItems"
+                 EmptyTemplate="@(EmptyTemplate!)"
+                 OnSelectedItemsChanged="OnSelectedItemsChanged"
+                 OnSuggestionsShown="OnSuggestionsShown"
+                 TagTextSelector="text => text"
+                 TagColorSelector="text => TagColorSelector?.Invoke(text) ?? TagColor.DarkGray"
+                 NewItemFromText="text => text"
+                 AllowCustomValues="AllowCustomValues"/>
+
+
+@code {
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object> InputAttributes { get; set; } = new();
+
+    [Parameter] public string? CssClass { get; set; }
+
+    [Parameter] public string? Label { get; set; }
+
+    [Parameter] public string? Placeholder { get; set; }
+
+    [Parameter] public IEnumerable<string>? Items { get; set; }
+
+    [Parameter] public RenderFragment? EmptyTemplate { get; set; }
+
+    [Parameter] public ICollection<string> SelectedItems { get; set; } = new List<string>();
+
+    [Parameter] public EventCallback OnSelectedItemsChanged { get; set; }
+
+    [Parameter] public EventCallback OnSuggestionsShown { get; set; }
+
+    [Parameter] public bool IsDisabled { get; set; }
+
+    [Parameter] public Func<string, TagColor>? TagColorSelector { get; set; }
+
+    [Parameter] public bool AllowCustomValues { get; set; } = true;
+
+}

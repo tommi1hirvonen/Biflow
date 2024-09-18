@@ -12,7 +12,7 @@
             </div>
             <div class="col">
                 <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="ReloadAsync">
-                    <CxIcon Icon="FeatherIcon.RefreshCw" />
+                    <SvgIcon Icon="FeatherIcon.RefreshCw" />
                     Refresh
                 </HxButton>
             </div>
@@ -31,19 +31,23 @@
 
         <div class="row mt-3">
             <div class="col">
-                <table class="table table-sm table-hover">
+                <table class="table table-sm table-hover small">
                     <thead>
                         <tr>
-                            <th>Started</th>
-                            <th>Ended</th>
-                            <th>Duration</th>
-                            <th>Steps</th>
-                            <th>Status</th>
+                            <th class="small">Created by</th>
+                            <th class="small">Started</th>
+                            <th class="small">Ended</th>
+                            <th class="small">Duration</th>
+                            <th class="small">Steps</th>
+                            <th class="small">Status</th>
+                            <th></th>
                         </tr>
                         <tr>
                             <th></th>
                             <th></th>
-                            <th>@AverageDurationInSeconds.SecondsToReadableFormat()</th>
+                            <th></th>
+                            <th class="small">@AverageDurationInSeconds.SecondsToReadableFormat()</th>
+                            <th></th>
                             <th></th>
                             <th></th>
                         </tr>
@@ -51,22 +55,30 @@
                     <tbody>
                         @if (executions is null)
                         {
-                            <tr><td colspan="4" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
+                            <tr><td colspan="7" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                         }
                         else if (!executions.Any())
                         {
-                            <tr><td colspan="4">No executions</td></tr>
+                            <tr><td colspan="7">No executions</td></tr>
                         }
                         else
                         {
                             @foreach (var execution in executions)
                             {
-                                <tr style="cursor: pointer;" @onclick="() => GoToExecutionDetails(execution.ExecutionId)">
-                                    <td>@execution.StartedOn?.LocalDateTime</td>
-                                    <td>@execution.EndedOn?.LocalDateTime</td>
-                                    <td>@execution.ExecutionInSeconds?.SecondsToReadableFormat()</td>
-                                    <td>@execution.StepExecutionCount</td>
+                                var createdBy = execution switch
+                                {
+                                    { ScheduleName: { Length: > 0 } scheduleName } => scheduleName,
+                                    { CreatedBy: { Length: > 0 } username } => username,
+                                    _ => ""
+                                };
+                                <tr>
+                                    <td class="align-middle small">@createdBy</td>
+                                    <td class="align-middle small">@execution.StartedOn?.LocalDateTime</td>
+                                    <td class="align-middle small">@execution.EndedOn?.LocalDateTime</td>
+                                    <td class="align-middle small">@execution.ExecutionInSeconds?.SecondsToReadableFormat()</td>
+                                    <td class="align-middle small">@execution.StepExecutionCount</td>
                                     <td><JobExecutionStatusBadge ExecutionStatus="execution.ExecutionStatus" /></td>
+                                    <td class="align-middle small"><a class="text-body" href="@($"executions/{execution.ExecutionId}/list")">Details</a></td>
                                 </tr>
                             }
                         }
@@ -151,11 +163,6 @@
             new LineChartSeries("Avg. duration", datapoints)
         };
         lineChartDataset = new LineChartDataset(series, "min", 0);
-    }
-
-    private void GoToExecutionDetails(Guid executionId)
-    {
-        NavigationManager.NavigateTo($"executions/{executionId}/list");
     }
 
     private void OnClosed()

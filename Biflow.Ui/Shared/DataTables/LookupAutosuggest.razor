@@ -12,7 +12,8 @@
                TextSelector="l => l.DisplayValue as string"
                ValueSelector="l => l.Value is null ? default(TValue) : (TValue)l.Value"
                DataProvider="GetSuggestionsAsync"
-               ItemFromValueResolver="ResolveItemFromValueAsync">
+               ItemFromValueResolver="ResolveItemFromValueAsync"
+               autocomplete="off">
     <ItemTemplate Context="item">
         <span class="small">@item.DisplayValue</span>
     </ItemTemplate>

@@ -79,13 +79,13 @@ public class DatabaseFixture : IAsyncLifetime
             await context.Database.EnsureCreatedAsync();
 
             #region SETTINGS
-            var sqlConnection = new SqlConnectionInfo
+            var sqlConnection = new MsSqlConnection
             {
                 ConnectionName = "Test SQL connection",
                 ConnectionString = _connectionString
             };
 
-            var asConnection = new AnalysisServicesConnectionInfo
+            var asConnection = new AnalysisServicesConnection
             {
                 ConnectionName = "Test AS connection",
                 ConnectionString = "Data Source=localhost;Password=asd"
@@ -175,9 +175,9 @@ public class DatabaseFixture : IAsyncLifetime
                 ExecutionMode = ExecutionMode.Dependency,
                 StopOnFirstError = true,
                 MaxParallelSteps = 4,
-                OvertimeNotificationLimitMinutes = 120,
-                Tags = [jobTag1, jobTag2]
+                OvertimeNotificationLimitMinutes = 120
             };
+            job1.Tags.AddRange([jobTag1, jobTag2]);
             var jobParameter1 = new JobParameter
             {
                 Job = job1,
@@ -194,7 +194,7 @@ public class DatabaseFixture : IAsyncLifetime
             {
                 Job = job1,
                 ParameterName = "JobParameter3",
-                ParameterValue = new ParameterValue(123.456)
+                ParameterValue = new ParameterValue(400)
             };
             var jobParameter4 = new JobParameter
             {
@@ -220,9 +220,9 @@ public class DatabaseFixture : IAsyncLifetime
                 StepName = "Test step 1",
                 ExecutionPhase = 10,
                 SqlStatement = "select 1",
-                Connection = sqlConnection,
-                Tags = [tag1, tag2]
+                Connection = sqlConnection
             };
+            step1.Tags.AddRange([tag1, tag2]);
 
             var step2 = new SqlStep
             {
@@ -230,9 +230,9 @@ public class DatabaseFixture : IAsyncLifetime
                 StepDescription = "Test step 2 description",
                 ExecutionPhase = 20,
                 SqlStatement = "select @param",
-                Connection = sqlConnection,
-                Tags = [tag1]
+                Connection = sqlConnection
             };
+            step2.Tags.Add(tag1);
             var step2Dependency = new Dependency
             {
                 StepId = step2.StepId,
@@ -255,9 +255,9 @@ public class DatabaseFixture : IAsyncLifetime
                 StepName = "Test step 3",
                 ExecutionPhase = 20,
                 SqlStatement = "select @param",
-                Connection = sqlConnection,
-                Tags = [tag1]
+                Connection = sqlConnection
             };
+            step3.Tags.Add(tag1);
             var step3Parameter = new SqlStepParameter
             {
                 Step = step3,
@@ -273,9 +273,9 @@ public class DatabaseFixture : IAsyncLifetime
                 StepDescription = "Test step 4",
                 SqlStatement = "select @param",
                 Connection = sqlConnection,
-                ExecutionConditionExpression = new() { Expression = "dt >= 2023" },
-                Tags = [tag1]
+                ExecutionConditionExpression = new() { Expression = "dt >= 2023" }
             };
+            step4.Tags.Add(tag1);
             var step4ExecConditionParam = new ExecutionConditionParameter
             {
                 Step = step4,
@@ -300,10 +300,12 @@ public class DatabaseFixture : IAsyncLifetime
                 Expression = new()
                 {
                     Expression = """
-                    $"{100 + 23}-{400 + 56}"
+                    $"{100 + 23}-{value + 56}"
                     """
                 }
             };
+            step4Parameter.AddExpressionParameter(jobParameter3);
+            step4Parameter.ExpressionParameters.First().ParameterName = "value";
             step4.StepParameters.Add(step4Parameter);
 
             var step_1_5 = new SqlStep
@@ -311,8 +313,7 @@ public class DatabaseFixture : IAsyncLifetime
                 StepName = "Test step 5",
                 ExecutionPhase = 35,
                 SqlStatement = "select @param",
-                Connection = sqlConnection,
-                Tags = []
+                Connection = sqlConnection
             };
             var step_1_5_param = new SqlStepParameter
             {
@@ -364,20 +365,18 @@ public class DatabaseFixture : IAsyncLifetime
                 StepName = "Test step 5",
                 ExecutionPhase = 0,
                 JobExecuteSynchronized = true,
-                JobToExecute = job1,
-                TagFilters = [tag2],
-                Tags = []
+                JobToExecute = job1
             };
+            step5.TagFilters.Add(tag2);
 
             var step6 = new JobStep
             {
                 StepName = "Test step 6",
                 ExecutionPhase = 0,
                 JobExecuteSynchronized = true,
-                JobToExecute = job1,
-                TagFilters = [tag1, tag2],
-                Tags = []
+                JobToExecute = job1
             };
+            step6.TagFilters.AddRange([tag1, tag2]);
 
             var step7 = new SqlStep
             {
@@ -385,26 +384,25 @@ public class DatabaseFixture : IAsyncLifetime
                 StepName = "Test step 7",
                 ExecutionPhase = 30,
                 SqlStatement = "select 1",
-                Connection = sqlConnection,
-                Tags = [tag1]
+                Connection = sqlConnection
             };
+            step7.Tags.Add(tag1);
 
             var step8 = new SqlStep
             {
                 StepName = "Test step 8",
                 ExecutionPhase = 30,
                 SqlStatement = "select 1",
-                Connection = sqlConnection,
-                Tags = [tag1]
+                Connection = sqlConnection
             };
+            step8.Tags.Add(tag1);
 
             var step9 = new PipelineStep
             {
                 StepName = "Test step 9",
                 ExecutionPhase = 35,
                 PipelineClient = dataFactory,
-                PipelineName = "test pipeline",
-                Tags = []
+                PipelineName = "test pipeline"
             };
 
             var step10 = new PipelineStep
@@ -412,8 +410,7 @@ public class DatabaseFixture : IAsyncLifetime
                 StepName = "Test step 10",
                 ExecutionPhase = 40,
                 PipelineClient = synapseWorkspace,
-                PipelineName = "test pipeline 2",
-                Tags = []
+                PipelineName = "test pipeline 2"
             };
 
             var step11 = new FunctionStep
@@ -423,8 +420,7 @@ public class DatabaseFixture : IAsyncLifetime
                 FunctionApp = functionApp,
                 FunctionInput = "test-input",
                 FunctionKey = "some-key",
-                FunctionUrl = "http://function-url.com/test-function",
-                Tags = []
+                FunctionUrl = "http://function-url.com/test-function"
             };
 
             var step12 = new QlikStep
@@ -432,8 +428,7 @@ public class DatabaseFixture : IAsyncLifetime
                 StepName = "Test step 12",
                 ExecutionPhase = 50,
                 AppId = "some-app-id",
-                QlikCloudClient = qlikClient,
-                Tags = []
+                QlikCloudClient = qlikClient
             };
 
             var step13 = new TabularStep

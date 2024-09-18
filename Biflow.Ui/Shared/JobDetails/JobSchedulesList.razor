@@ -90,7 +90,7 @@
                                 <HxTooltip Placement="TooltipPlacement.Auto"
                                            Text="@("Next execution(s) (first 15):\n" + string.Join("\n", item.NextFireTimes().Take(15)))"
                                            CssClass="white-space-pre">
-                                    <CxIcon Icon="FeatherIcon.Info" />
+                                    <SvgIcon Icon="FeatherIcon.Info" />
                                 </HxTooltip>
                             </div>
                             <br />
@@ -114,11 +114,11 @@
                                 <HxButtonGroup Size="ButtonGroupSize.Small">
                                     <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto"
                                               @onclick="async () => await editModal.LetAsync(x => x.ShowAsync(item.ScheduleId))">
-                                        <CxIcon Icon="FeatherIcon.Edit2" />
+                                        <SvgIcon Icon="FeatherIcon.Edit2" />
                                     </HxButton>
                                     <HxDropdownButtonGroup>
                                         <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                            <CxIcon Icon="FeatherIcon.Trash2" />
+                                            <SvgIcon Icon="FeatherIcon.Trash2" />
                                         </HxDropdownToggleButton>
                                         <HxDropdownMenu>
                                             <HxDropdownHeader>Delete?</HxDropdownHeader>
@@ -167,6 +167,8 @@
         {
             await Mediator.SendAsync(new ToggleScheduleCommand(schedule.ScheduleId, value));
             schedule.IsEnabled = value;
+            var message = value ? "Schedule enabled" : "Schedule disabled";
+            Toaster.AddSuccess(message, 2500);
         }
         catch (Exception ex)
         {

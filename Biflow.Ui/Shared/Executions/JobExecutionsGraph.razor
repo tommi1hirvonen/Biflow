@@ -1,11 +1,14 @@
 ﻿@using System.Globalization;
-@inject NavigationManager NavigationManager
+
+@inject ToasterService Toaster
+@inject IExecutorService ExecutorService
+@inject IHxMessageBoxService Confirmer
 
 <div class="row mx-1 my-2">
 
     <HxDropdownButtonGroup>
         <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto position-absolute border-0">
-            <CxIcon Icon="LucideIcon.SortDesc" />
+            <SvgIcon Icon="LucideIcon.SortDesc" />
             Sort by: <span class="fw-normal">@SortMode</span>
         </HxDropdownToggleButton>
         <HxDropdownMenu>
@@ -88,12 +91,35 @@
                         {
                             (var offset, var width) = (execution.StartedOn, execution.EndedOn)
                                 .GetGanttGraphDimensions(Executions.Select(e => (e.StartedOn, e.EndedOn)));
-                            <div class="progress hover @execution.ExecutionStatus.ToString().ToLower()"
-                                 style="cursor: pointer; position: absolute; width: @($"{width.ToString("F10", CultureInfo.InvariantCulture)}%"); left: @($"{offset.ToString("F10", CultureInfo.InvariantCulture)}%");"
-                                 title="@($"{execution.ExecutionStatus}, {execution.ExecutionInSeconds?.SecondsToReadableFormat()}")"
-                                 @onclick="() => GoToExecutionDetails(execution.ExecutionId)">
-                                <div class="progress-bar" style="width: 100%;"></div>
-                            </div>
+                            <ContextMenuToggle CssClass="@($"progress hover {execution.ExecutionStatus.ToString().ToLower()}")"
+                                               style="@($"cursor: pointer; position: absolute; width: {width.ToString("F10", CultureInfo.InvariantCulture)}%; left: {offset.ToString("F10", CultureInfo.InvariantCulture)}%;")"
+                                               title="@($"{execution.ExecutionStatus}, {execution.ExecutionInSeconds?.SecondsToReadableFormat()}")">
+                                <ChildContent>
+                                    <div class="progress-bar" style="width: 100%;"></div>
+                                </ChildContent>
+                                <MenuContent>
+                                    <DropdownMenuHeader>
+                                        @execution.JobName
+                                    </DropdownMenuHeader>
+                                    <DropdownMenuLink href="@($"executions/{execution.ExecutionId}/list")">
+                                        <SvgIcon Icon="FeatherIcon.ArrowRight" />
+                                        Go to details
+                                    </DropdownMenuLink>
+                                    <DropdownMenuItem @onclick="async () => await jobHistoryOffcanvas.LetAsync(x => x.ShowAsync(execution.JobId))">
+                                        <SvgIcon Icon="LucideIcon.History" />
+                                        History
+                                    </DropdownMenuItem>
+                                    @if (execution.ExecutionStatus == ExecutionStatus.Running)
+                                    {
+                                        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+                                            <DropdownMenuItem @onclick="() => StopExecutionAsync(execution)">
+                                                <SvgIcon Icon="FeatherIcon.XOctagon" />
+                                                Stop...
+                                            </DropdownMenuItem>
+                                        </AuthorizeView>
+                                    }
+                                </MenuContent>
+                            </ContextMenuToggle>
                         }
                     </div>
                 </div>
@@ -102,7 +128,12 @@
     </div>
 </div>
 
+<JobHistoryOffcanvas @ref="jobHistoryOffcanvas" />
+
 @code {
+    [CascadingParameter]
+    public Task<AuthenticationState>? AuthenticationState { get; set; }
+
     [Parameter] public IEnumerable<ExecutionProjection>? Executions { get; set; }
 
     [Parameter] public ExecutionSortMode SortMode { get; set; }
@@ -110,6 +141,8 @@
     [Parameter] public EventCallback<ExecutionSortMode> OnSortingChanged { get; set; }
 
     private const int Columns = 12;
+
+    private JobHistoryOffcanvas? jobHistoryOffcanvas;
 
     private void SetSortMode(ExecutionSortMode sort)
     {
@@ -141,8 +174,25 @@
         return time.ToString("d");
     }
 
-    private void GoToExecutionDetails(Guid executionId)
+    private async Task StopExecutionAsync(ExecutionProjection execution)
     {
-        NavigationManager.NavigateTo($"executions/{executionId}/list");
+        if (!await Confirmer.ConfirmAsync("Stop execution", $"Are you sure you want to stop this execution of job {execution.JobName}"))
+        {
+            return;
+        }
+
+        try
+        {
+            ArgumentNullException.ThrowIfNull(AuthenticationState);
+            var authState = await AuthenticationState;
+            var username = authState.User.Identity?.Name;
+            ArgumentNullException.ThrowIfNull(username);
+            await ExecutorService.StopExecutionAsync(execution.ExecutionId, username);
+            Toaster.AddSuccess("Cancellations requested successfully");
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error stopping execution", ex.Message);
+        }
     }
 }

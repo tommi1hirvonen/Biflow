@@ -8,6 +8,9 @@
 	<ImplicitUsings>enable</ImplicitUsings>
 	<AssemblyName>BiflowUi</AssemblyName>
 	<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+	<AssemblyVersion>$(VersionName)</AssemblyVersion>
+	<FileVersion>$(AssemblyVersion)</FileVersion>
+	<Version>$(AssemblyVersion)</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,12 +26,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BlazorMonaco" Version="3.1.0" />
-    <PackageReference Include="Havit.Blazor.Components.Web.Bootstrap" Version="4.5.2" />
+    <PackageReference Include="BlazorMonaco" Version="3.2.0" />
+    <PackageReference Include="Havit.Blazor.Components.Web.Bootstrap" Version="4.6.12" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.0" />
-    <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.2" />
   </ItemGroup>
 
   <ItemGroup>
@@ -38,26 +41,9 @@
     <ProjectReference Include="..\Biflow.Ui.Components\Biflow.Ui.Components.csproj" />
     <ProjectReference Include="..\Biflow.Ui.Core\Biflow.Ui.Core.csproj" />
     <ProjectReference Include="..\Biflow.Core\Biflow.Core.csproj" />
+    <ProjectReference Include="..\Biflow.Ui.Icons\Biflow.Ui.Icons.csproj" />
+    <ProjectReference Include="..\Biflow.Ui.SqlMetadataExtensions\Biflow.Ui.SqlMetadataExtensions.csproj" />
     <ProjectReference Include="..\Biflow.Ui.TableEditor\Biflow.Ui.TableEditor.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Properties\Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
-
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="git rev-parse HEAD &gt; &quot;$(ProjectDir.TrimEnd('\'))\CurrentCommit.txt&quot;" />
-  </Target>
 
 </Project>

@@ -5,6 +5,11 @@ namespace Biflow.Core.Entities;
 
 public class JobStepParameter : StepParameterBase
 {
+    [JsonConstructor]
+    private JobStepParameter() : base(ParameterType.Job)
+    {
+    }
+
     public JobStepParameter(Guid assignToJobParameterId) : base(ParameterType.Job)
     {
         AssignToJobParameterId = assignToJobParameterId;

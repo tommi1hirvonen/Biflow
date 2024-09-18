@@ -104,7 +104,15 @@ internal class NotificationService(
                             </tr>
                             <tr>
                                 <td>Duration:</td>
-                                <td>{{execution.GetDurationInReadableFormat()}}</td >
+                                <td>{{execution.GetDurationInReadableFormat()}}</td>
+                            </tr>
+                            <tr>
+                                <td>Created by:</td>
+                                <td>{{execution.ScheduleName?.NullIfEmpty() ?? execution.CreatedBy}}</td>
+                            </tr>
+                            <tr>
+                                <td>Number of steps:</td>
+                                <td>{{execution.StepExecutions.Count}}</td>
                             </tr>
                         </tbody>
                     </table>

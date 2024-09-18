@@ -1,0 +1,9 @@
+::deep .feather {
+    width: 13px;
+    height: 13px;
+    cursor: pointer;
+}
+
+    ::deep .feather:hover {
+        filter: brightness(140%);
+    }

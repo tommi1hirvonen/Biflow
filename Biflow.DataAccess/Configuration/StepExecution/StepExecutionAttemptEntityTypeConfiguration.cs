@@ -70,5 +70,8 @@ internal class StepExecutionAttemptEntityTypeConfiguration : IEntityTypeConfigur
         builder.HasOne(x => x.StepExecution)
             .WithMany(x => x.StepExecutionAttempts)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(x => new { x.ExecutionStatus, x.EndedOn });
+        builder.HasIndex(x => new { x.EndedOn });
     }
 }

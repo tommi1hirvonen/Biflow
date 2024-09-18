@@ -1,14 +1,11 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Security.AccessControl;
 using System.Security.Principal;
 
 namespace Biflow.Executor.Core;
 
-[SuppressMessage(
-    "Interoperability",
-    "CA1416:Validate platform compatibility",
-    Justification = "These extensions are used only when hosted as a Windows Service")]
+[SupportedOSPlatform("windows")]
 internal static partial class WindowsExtensions
 {
     private const int WindowStationAllAccess = 0x000f037f;

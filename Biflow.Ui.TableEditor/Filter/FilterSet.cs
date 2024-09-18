@@ -14,6 +14,8 @@ public class FilterSet
     public FilterIndexer<StringFilter> StringIndexer { get; }
     public FilterIndexer<ValueFilter<bool, BooleanFilterOperator>> BooleanIndexer { get; }
     public FilterIndexer<ValueFilter<DateTime, NumberFilterOperator>> DateTimeIndexer { get; }
+    public FilterIndexer<ValueFilter<DateOnly, NumberFilterOperator>> DateIndexer { get; }
+    public FilterIndexer<ValueFilter<TimeOnly, NumberFilterOperator>> TimeIndexer { get; }
 
     public IEnumerable<Column> Columns { get; }
 
@@ -29,6 +31,8 @@ public class FilterSet
         StringIndexer = new(Filters);
         BooleanIndexer = new(Filters);
         DateTimeIndexer = new(Filters);
+        DateIndexer = new(Filters);
+        TimeIndexer = new(Filters);
 
         Columns = columns;
         foreach (var columnInfo in Columns)
@@ -55,6 +59,10 @@ public class FilterSet
                 BooleanIndexer[column] = new ValueFilter<bool, BooleanFilterOperator>(BooleanFilterOperator.Equals);
             else if (datatype == typeof(DateTime))
                 DateTimeIndexer[column] = new ValueFilter<DateTime, NumberFilterOperator>(NumberFilterOperator.Equals);
+            else if (datatype == typeof(DateOnly))
+                DateIndexer[column] = new ValueFilter<DateOnly, NumberFilterOperator>(NumberFilterOperator.Equals);
+            else if (datatype == typeof(TimeOnly))
+                TimeIndexer[column] = new ValueFilter<TimeOnly, NumberFilterOperator>(NumberFilterOperator.Equals);
             else
                 throw new ArgumentException($"Unsupported datatype [{columnInfo.DbDatatype}]");
         }

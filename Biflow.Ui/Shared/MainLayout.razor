@@ -47,7 +47,7 @@
                 </div>
                 
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="my-1 mx-3 d-lg-none text-white" OnClick="ToggleSidebar">
-                    <CxIcon Icon="FeatherIcon.Menu" />
+                    <SvgIcon Icon="FeatherIcon.Menu" />
                     Menu
                 </HxButton>
                 <ThemeDropdown />
@@ -103,7 +103,7 @@
                                         <strong>@username</strong>
                                         <div class="d-grid mt-4 mb-3">
                                             <a class="btn btn-primary" href="MicrosoftIdentity/Account/SignOut">
-                                                <CxIcon Icon="FeatherIcon.LogOut" />
+                                                <SvgIcon Icon="FeatherIcon.LogOut" />
                                                 &nbsp;
                                                 Sign out
                                             </a>
@@ -115,7 +115,7 @@
                                         <strong>@username</strong>
                                         <div class="d-grid mt-4 mb-3">
                                             <a class="btn btn-primary" href="javascript:void()" @onclick="@(() => NavigationManager.NavigateTo("logout", forceLoad: true))">
-                                                <CxIcon Icon="FeatherIcon.LogOut" />
+                                                <SvgIcon Icon="FeatherIcon.LogOut" />
                                                 &nbsp;
                                                 Log out
                                             </a>

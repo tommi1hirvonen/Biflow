@@ -62,9 +62,10 @@ public class AppDbContext : DbContext
     public DbSet<AppRegistration> AppRegistrations => Set<AppRegistration>();
     public DbSet<AccessToken> AccessTokens => Set<AccessToken>();
     public DbSet<FunctionApp> FunctionApps => Set<FunctionApp>();
-    public DbSet<ConnectionInfoBase> Connections => Set<ConnectionInfoBase>();
-    public DbSet<SqlConnectionInfo> SqlConnections => Set<SqlConnectionInfo>();
-    public DbSet<AnalysisServicesConnectionInfo> AnalysisServicesConnections => Set<AnalysisServicesConnectionInfo>();
+    public DbSet<ConnectionBase> Connections => Set<ConnectionBase>();
+    public DbSet<MsSqlConnection> MsSqlConnections => Set<MsSqlConnection>();
+    public DbSet<AnalysisServicesConnection> AnalysisServicesConnections => Set<AnalysisServicesConnection>();
+    public DbSet<SnowflakeConnection> SnowflakeConnections => Set<SnowflakeConnection>();
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<StepTag> StepTags => Set<StepTag>();
     public DbSet<JobTag> JobTags => Set<JobTag>();
@@ -113,7 +114,7 @@ public class AppDbContext : DbContext
         configurationBuilder.Conventions.Remove<ForeignKeyIndexConvention>();
     }
 
-    private void OnSavingChanges(object? sender, SavingChangesEventArgs e)
+    protected virtual void OnSavingChanges(object? sender, SavingChangesEventArgs e)
     {
         var now = DateTimeOffset.Now;
 

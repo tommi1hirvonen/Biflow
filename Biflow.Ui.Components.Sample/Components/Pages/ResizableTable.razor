@@ -1,0 +1,42 @@
+﻿@page "/resizabletable"
+
+<Biflow.Ui.Components.ResizableTable>
+    <thead>
+        <tr>
+            <th>Country</th>
+            <th>Capital</th>
+            <th>Population (2023)</th>
+            <th>Area (km<sup>2</sup>)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var country in countries)
+        {
+            <tr>
+                <td>@country.Name</td>
+                <td>@country.Capital</td>
+                <td>@country.Population</td>
+                <td>@country.Area</td>
+                <td>
+                    <span class="text-decoration-underline" @onclick="() => countries.Remove(country)" style="cursor: pointer;">
+                        Delete
+                    </span>
+                </td>
+            </tr>
+        }
+    </tbody>
+</Biflow.Ui.Components.ResizableTable>
+
+@code {
+    private List<Country> countries =
+    [
+        new("Finland", "Helsinki", 5_616_923, 338_472),
+        new("Sweden", "Stockholm", 10_529_000, 450_295),
+        new("Norway", "Oslo", 5_550_203, 323_808),
+        new("Denmark", "Copenhagen", 5_932_654, 43_094),
+        new("Iceland", "Reykjavik", 388_000, 103_000),
+    ];
+
+    private record Country(string Name, string Capital, int Population, int Area);
+}

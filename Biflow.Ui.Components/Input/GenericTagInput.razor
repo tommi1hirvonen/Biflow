@@ -1,0 +1,329 @@
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+@using System.Linq.Expressions
+@using Biflow.Core.Entities
+
+@implements IAsyncDisposable
+
+@typeparam TTag
+
+@inject IJSRuntime JS
+
+<div @ref="comboboxElement" @attributes=@InputAttributes class="@CssClass taginput-wrapper position-relative">
+    @if (Label is not null)
+    {
+        <label for="@($"{id}_input")" class="form-label mb-0">@Label</label>
+    }
+
+    <div class="taginput form-control p-1 d-flex flex-wrap border @(IsDisabled ? "disabled" : null)">
+        @foreach (var item in SelectedItems)
+        {
+            var text = TagTextSelector?.Invoke(item) ?? "";
+            var color = TagColorSelector?.Invoke(item) ?? TagColor.DarkGray;
+            <Badge CssClass="m-1"
+                   Text="@text"
+                   Color="color"
+                   IsRemovable="!IsDisabled"
+                   OnRemoveClick="async () => await RemoveItemAsync(item)"
+                   style="height: 1.4rem;" />
+        }
+
+        @if (!IsDisabled)
+        {
+            <div class="d-flex flex-grow-1" style="max-width: 100%;">
+                <input class="d-flex flex-grow-1 border-0 small"
+                       @ref="inputElement"
+                       type="text"
+                       id="@($"{id}_input")"
+                       placeholder="@Placeholder"
+                       spellcheck="false"
+                       autocomplete="off"
+                       value="@inputValue"
+                       @onfocusin="ShowSuggestionsAsync"
+                       @oninput="SearchValueChanged"
+                       @onkeydown="OnKeyDownAsync"
+                       @onkeypress="OnKeyPressAsync"
+                @onkeypress:preventDefault>
+            </div>
+
+            <span class="m-1 @(inputValue.Length > 0 ? null : "d-none")" @onclick="ClearInputValue" style="cursor: pointer;">
+                <SvgIcon Icon="FeatherIcon.X" />
+            </span>
+
+            <span class="m-1" @onclick="ToggleSuggestionsAsync" style="cursor: pointer;">
+                <SvgIcon Icon="FeatherIcon.Search" />
+            </span>
+        }
+
+    </div>
+
+    <div @ref="dropdownElement"
+         class="dropdown-menu position-absolute overflow-auto shadow-sm @(suggestionsVisible ? "show" : null) @(showUp ? "up" : null)"
+         style="max-height: 20rem; scrollbar-width: thin;">
+        @{
+            var filteredItems = FilteredItems;
+            var index = -1;
+        }
+        @if (!filteredItems.Any() && EmptyTemplate is not null)
+        {
+            <div class="dropdown-item">
+                @EmptyTemplate
+            </div>
+        }
+        @foreach (var item in filteredItems)
+        {
+            index++;
+            var text = TagTextSelector?.Invoke(item) ?? "";
+            var color = TagColorSelector?.Invoke(item) ?? TagColor.DarkGray;
+            <div role="button" class="dropdown-item @(index == focusIndex ? "focus" : null)" @onclick="async () => await SelectItemAsync(item)">
+                <Badge Text="@text" Color="color" />
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object> InputAttributes { get; set; } = new();
+
+    [Parameter] public string? CssClass { get; set; }
+
+    [Parameter] public string? Label { get; set; }
+
+    [Parameter] public string? Placeholder { get; set; }
+
+    [Parameter] public IEnumerable<TTag>? Items { get; set; }
+
+    [Parameter] public RenderFragment? EmptyTemplate { get; set; }
+
+    [Parameter] public ICollection<TTag> SelectedItems { get; set; } = new List<TTag>();
+
+    [Parameter] public EventCallback OnSelectedItemsChanged { get; set; }
+
+    [Parameter] public EventCallback OnSuggestionsShown { get; set; }
+
+    [Parameter] public bool IsDisabled { get; set; }
+
+    [Parameter] public Func<TTag, string>? TagTextSelector { get; set; }
+
+    [Parameter] public Func<TTag, TagColor>? TagColorSelector { get; set; }
+
+    [Parameter] public Func<string, TTag>? NewItemFromText { get; set; }
+
+    [Parameter] public bool AllowCustomValues { get; set; } = true;
+
+    private IEnumerable<TTag> FilteredItems => Items?
+        .Where(i =>
+        {
+            var text = TagTextSelector?.Invoke(i);
+            var containsInputValue = text?.Contains(inputValue, StringComparison.InvariantCultureIgnoreCase) ?? false;
+            var alreadySelected = SelectedItems.Any(s => TagTextSelector?.Invoke(s) == text);
+            return containsInputValue && !alreadySelected;
+        }) ?? [];
+
+    private readonly string id = Guid.NewGuid().ToString();
+    private ElementReference inputElement;
+    private ElementReference comboboxElement;
+    private ElementReference dropdownElement;
+
+    private string inputValue = "";
+    private int? focusIndex = null;
+
+    private bool suggestionsVisible;
+    private bool showUp;
+
+    private DotNetObjectReference<GenericTagInput<TTag>>? dotNetObject;
+    private IJSObjectReference? jSObject;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            dotNetObject = DotNetObjectReference.Create(this);
+            jSObject = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/TagInput.js");
+            if (dotNetObject is not null)
+                await jSObject.InvokeVoidAsync("create", comboboxElement, dotNetObject);
+        }
+    }
+
+    [JSInvokable("TagInput_Hide")]
+    public void Hide()
+    {
+        HideSuggestions();
+        StateHasChanged();
+    }
+
+    private void SearchValueChanged(ChangeEventArgs args)
+    {
+        inputValue = args.Value?.ToString() ?? "";
+        suggestionsVisible = true;
+    }
+
+    private async Task RemoveItemAsync(TTag item)
+    {
+        SelectedItems.Remove(item);
+        await OnSelectedItemsChanged.InvokeAsync();
+    }
+
+    private async Task SelectItemAsync(TTag item)
+    {
+        if (SelectedItems.Contains(item))
+        {
+            return;
+        }
+        inputValue = "";
+        SelectedItems.Add(item);
+        await OnSelectedItemsChanged.InvokeAsync();
+    }
+
+    private async Task ToggleSuggestionsAsync()
+    {
+        if (suggestionsVisible)
+        {
+            HideSuggestions();
+        }
+        else
+        {
+            await ShowSuggestionsAsync();
+        }
+    }
+
+    private async Task ShowSuggestionsAsync()
+    {
+        suggestionsVisible = true;
+        showUp = await (jSObject?.InvokeAsync<bool>("calculateShowUp", dropdownElement) ?? ValueTask.FromResult(false));
+        await inputElement.FocusAsync();
+        await OnSuggestionsShown.InvokeAsync();
+    }
+
+    private void HideSuggestions()
+    {
+        showUp = false;
+        suggestionsVisible = false;
+    }
+
+    private async Task ClearInputValue()
+    {
+        inputValue = "";
+        await inputElement.FocusAsync();
+    }
+
+    private async Task OnKeyDownAsync(KeyboardEventArgs args)
+    {
+        var filteredItems = FilteredItems.ToArray();
+        if (args.Key == "Escape")
+        {
+            focusIndex = null;
+            HideSuggestions();
+        }
+        else if (args.Key == "ArrowDown")
+        {
+            if (focusIndex < filteredItems.Length - 1)
+                focusIndex++;
+            else
+                focusIndex = 0;
+        }
+        else if (args.Key == "ArrowUp")
+        {
+            if (focusIndex > 0)
+                focusIndex--;
+            else
+                focusIndex = filteredItems.Length - 1;
+        }
+        else if (args.Key == "PageDown")
+        {
+            if (focusIndex is null)
+                focusIndex = 0;
+            else if (focusIndex < filteredItems.Length - 10)
+                focusIndex += 10;
+            else
+                focusIndex = filteredItems.Length - 1;
+        }
+        else if (args.Key == "PageUp")
+        {
+            if (focusIndex is null)
+                focusIndex = filteredItems.Length - 1;
+            else if (focusIndex > 10)
+                focusIndex -= 10;
+            else
+                focusIndex = 0;
+        }
+        else if (args.Key == "Home")
+        {
+            focusIndex = 0;
+        }
+        else if (args.Key == "End")
+        {
+            focusIndex = filteredItems.Length - 1;
+        }
+        else if (args.Key == "Enter" && filteredItems.Any() && focusIndex >= 0 && focusIndex < filteredItems.Length)
+        {
+            var item = filteredItems[(int)focusIndex];
+            if (focusIndex == filteredItems.Length - 1)
+            {
+                focusIndex--;
+            }
+            await SelectItemAsync(item);
+        }
+        else if (args.Key == "Backspace" && !inputValue.Any())
+        {
+            var lastItem = SelectedItems.LastOrDefault();
+            if (lastItem is not null)
+                SelectedItems.Remove(lastItem);
+        }
+        else if (args.Key == "Backspace")
+        {
+            inputValue = inputValue[..^1];
+        }
+        else if (args.Key == " ")
+        {
+            AddNewItem();
+        }
+    }
+
+    private async Task OnKeyPressAsync(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter" || args.Key == " " && AllowCustomValues)
+        {
+            return;
+        }
+        var key = (string)args.Key;
+        inputValue += key;
+        await ShowSuggestionsAsync();
+    }
+
+    private async void AddNewItem()
+    {
+        if (!inputValue.Any() || !AllowCustomValues || NewItemFromText is null || TagTextSelector is null)
+        {
+            return;
+        }
+
+        foreach (var item in Items?.Concat(SelectedItems) ?? [])
+        {
+            var text = TagTextSelector.Invoke(item);
+            if (text == inputValue)
+            {
+                return;
+            }
+        }
+
+        var newItem = NewItemFromText(inputValue);
+        await SelectItemAsync(newItem);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (jSObject is not null)
+        {
+            try
+            {
+                await jSObject.InvokeVoidAsync("dispose", comboboxElement);
+                await jSObject.DisposeAsync();
+            }
+            catch (JSDisconnectedException) { }
+        }
+        dotNetObject?.Dispose();
+        dotNetObject = null;
+    }
+}

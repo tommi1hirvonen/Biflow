@@ -71,7 +71,11 @@
     {
         if (jsObject is not null)
         {
-            await jsObject.DisposeAsync();
+            try
+            {
+                await jsObject.DisposeAsync();
+            }
+            catch (JSDisconnectedException) { }
         }
     }
 }

@@ -11,24 +11,24 @@
             <label class="form-label">Name</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    <CxIcon Icon="FeatherIcon.Edit3" />
+                    <SvgIcon Icon="FeatherIcon.Edit3" />
                 </div>
                 <InputText class="form-control" @bind-Value="editJob.JobName" autocomplete="off" style="max-width: 50rem;"></InputText>
             </div>
         </div>
         <div style="max-width: 50rem;">
             <label class="form-label">Tags</label>
-            <HxInputTags @bind-Value="tags"
-                        DataProvider="GetTagSuggestions"
-                        SuggestMinimumLength="0"
-                        SuggestDelay="0"
-                        TagBadgeSettings="new BadgeSettings() { Color = ThemeColor.Secondary }" />
+            <TagInput TTag="JobTag"
+                      Items="allTags"
+                      AllowCustomValues
+                      SelectedItems="editJob.Tags"
+                      NewItemFromText="text => new JobTag(text) { Color = TagColor.DarkGray }" />
         </div>
         <div>
             <label class="form-label">Description</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    <CxIcon Icon="FeatherIcon.BookOpen" />
+                    <SvgIcon Icon="FeatherIcon.BookOpen" />
                 </div>
                 <InputTextArea class="form-control form-control-sm" @bind-Value="editJob.JobDescription" rows="5" style="max-width: 50rem;"></InputTextArea>
             </div>
@@ -37,7 +37,7 @@
             <label class="form-label">Timeout (min, 0 = indefinite)</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    <CxIcon Icon="FeatherIcon.XOctagon" />
+                    <SvgIcon Icon="FeatherIcon.XOctagon" />
                 </div>
                 <InputNumber class="form-control form-control-sm" style="max-width: 10rem;" @bind-Value="editJob.TimeoutMinutes"></InputNumber>
             </div>
@@ -47,7 +47,7 @@
             <label class="form-label">Overtime notification limit (min, 0 = indefinite)</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    <CxIcon Icon="FeatherIcon.Bell" />
+                    <SvgIcon Icon="FeatherIcon.Bell" />
                 </div>
                 <InputNumber class="form-control form-control-sm" style="max-width: 10rem;" @bind-Value="editJob.OvertimeNotificationLimitMinutes"></InputNumber>
             </div>
@@ -56,7 +56,7 @@
         <div class="row">
             <div class="col">
                 <HxSubmit Color="ThemeColor.Success">
-                    <CxIcon Icon="FeatherIcon.Save" />
+                    <SvgIcon Icon="FeatherIcon.Save" />
                     Save
                 </HxSubmit>
             </div>
@@ -71,7 +71,6 @@
 
     private Job? editJob;
     private IEnumerable<JobTag> allTags = [];
-    private List<string> tags = [];
 
     protected override async void OnParametersSet()
     {
@@ -81,16 +80,11 @@
         }
 
         using var context = await DbContextFactory.CreateDbContextAsync();
-        allTags = await context.JobTags.ToArrayAsync();
+        allTags = await context.JobTags.OrderBy(t => t.TagName).ToArrayAsync();
         editJob = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Include(j => j.Tags)
             .FirstAsync(j => j.JobId == Job.JobId);
-        tags = editJob.Tags
-            .Select(t => t.TagName)
-            .Distinct()
-            .Order()
-            .ToList();
         StateHasChanged();
     }
 
@@ -99,19 +93,6 @@
         try
         {
             ArgumentNullException.ThrowIfNull(editJob);
-
-            // Synchronize tags
-            foreach (var text in tags.Where(str => !editJob.Tags.Any(t => t.TagName == str)))
-            {
-                // New tags
-                var tag = allTags.FirstOrDefault(t => t.TagName == text) ?? new JobTag(text);
-                editJob.Tags.Add(tag);
-            }
-            foreach (var tag in editJob.Tags.Where(t => !tags.Contains(t.TagName)).ToList() ?? [])
-            {
-                editJob.Tags.Remove(tag);
-            }
-
             await Mediator.SendAsync(new UpdateJobCommand(editJob));
             Toaster.AddSuccess("Job settings saved successfully");
             OnJobUpdated?.Invoke(editJob);
@@ -124,19 +105,5 @@
         {
             Toaster.AddError("Error updating job", ex.Message);
         }
-    }
-
-    private Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
-    {
-        return Task.FromResult(new InputTagsDataProviderResult
-        {
-            Data = allTags
-                .Select(t => t.TagName)
-                .Where(t => t.ContainsIgnoreCase(request.UserInput))
-                .Where(t => !tags.Any(tag => t == tag))
-                .OrderBy(t => t)
-                .AsEnumerable()
-                ?? []
-        });
     }
 }

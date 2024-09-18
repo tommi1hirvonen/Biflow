@@ -1,4 +1,6 @@
-﻿
+﻿@using System.Security.Cryptography
+@using System.Text
+
 <div class="row">
     <div class="col">
         <div>
@@ -26,7 +28,7 @@
                           Enabled="filterSet is not null"
                           CssClass="@(filterSet?.Filters.Values.Any(v => v.Enabled1) ?? false ? "fw-bold btn-auto" : "btn-auto")"
                           OnClick="async () => await filterSetOffcanvas.LetAsync(x => x.ShowAsync())">
-                    <CxIcon Icon="FeatherIcon.Filter" />
+                    <SvgIcon Icon="FeatherIcon.Filter" />
                     Query filters
                 </HxButton>
 
@@ -34,14 +36,35 @@
                                 Items="tableData?.Columns.Select(c => c.Name) ?? Enumerable.Empty<string>()"
                                 OnChange="StateHasChanged">
                     <TitleTemplate>
-                        <CxIcon Icon="FeatherIcon.Columns" />
+                        <SvgIcon Icon="FeatherIcon.Columns" />
                         Columns
                     </TitleTemplate>
                 </FilterDropdown>
 
                 <HxDropdownButtonGroup>
+                    <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
+                        Row limit
+                        <span class="badge rounded-pill bg-secondary mx-1">
+                            @TopRows
+                        </span>
+                    </HxDropdownToggleButton>
+                    <HxDropdownMenu>
+                        <HxDropdownItem @onclick="async () => { TopRows = 100; await ReloadDataAsync(); }">100</HxDropdownItem>
+                        <HxDropdownItem @onclick="async () => { TopRows = 500; await ReloadDataAsync(); }">500</HxDropdownItem>
+                        <HxDropdownItem @onclick="async () => { TopRows = 1000; await ReloadDataAsync(); }">1000</HxDropdownItem>
+                        <HxDropdownItem @onclick="async () => { TopRows = 5000; await ReloadDataAsync(); }">5000</HxDropdownItem>
+                        <HxDropdownItem @onclick="async () => { TopRows = 10000; await ReloadDataAsync(); }">10000</HxDropdownItem>
+                        <HxDropdownDivider />
+                        <form @onsubmit="ReloadDataAsync" class="d-block ms-3">
+                            <label class="form-label">Custom</label>
+                            <input class="form-control form-control-sm" type="number" @bind-value="TopRows" style="max-width: 100px;" />
+                        </form>
+                    </HxDropdownMenu>
+                </HxDropdownButtonGroup>
+
+                <HxDropdownButtonGroup>
                     <HxDropdownToggleButton Spinner="exporting" Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" Enabled="!exporting">
-                        <CxIcon Icon="FeatherIcon.Download" />
+                        <SvgIcon Icon="FeatherIcon.Download" />
                         Export
                     </HxDropdownToggleButton>
                     <HxDropdownMenu>
@@ -62,14 +85,14 @@
                     var importDisabled = isNotEditable || !Table.AllowImport;
                 }
                 <a class="btn btn-sm btn-auto @(importDisabled ? "disabled" : null)" href="/datatables/import/@Table.DataTableId">
-                    <CxIcon Icon="FeatherIcon.Upload" />
+                    <SvgIcon Icon="FeatherIcon.Upload" />
                     Import
                 </a>
 
                 <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small"
                           Enabled="!string.IsNullOrEmpty(Table.DataTableDescription)"
                           OnClick="async () => await tableInfoOffcanvas.LetAsync(x => x.ShowAsync())">
-                    <CxIcon Icon="FeatherIcon.Info" />
+                    <SvgIcon Icon="FeatherIcon.Info" />
                     Table info
                 </HxButton>
 
@@ -83,7 +106,7 @@
         <HxButtonToolbar>
             <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small"
                       OnClick="async () => await ReloadDataAsync()">
-                <CxIcon Icon="FeatherIcon.RefreshCw" />
+                <SvgIcon Icon="FeatherIcon.RefreshCw" />
                 Reload
             </HxButton>
 
@@ -91,7 +114,7 @@
                       CssClass="ms-3"
                       Enabled="tableData is not null && tableData.IsEditable"
                       OnClick="SaveChangesAsync">
-                <CxIcon Icon="FeatherIcon.Save" />
+                <SvgIcon Icon="FeatherIcon.Save" />
                 Save changes
             </HxButton>
 
@@ -100,7 +123,7 @@
                 <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small"
                       Enabled="tableData is not null && tableData.IsEditable"
                       OnClick="() => tableData?.AddRow()">
-                    <CxIcon Icon="FeatherIcon.Plus" />
+                    <SvgIcon Icon="FeatherIcon.Plus" />
                     Add record
                 </HxButton>
             }
@@ -108,12 +131,6 @@
     </div>
     <div class="col-xl mt-xl-0 mt-3">
         <div class="row">
-            <div class="col-auto d-inline-flex align-items-center">
-                <label>Limit rows</label>
-                <form @onsubmit="ReloadDataAsync">
-                    <input class="form-control form-control-sm ms-3" type="number" @bind-value="TopRows" style="max-width: 100px;" />
-                </form>
-            </div>
             <div class="col-auto align-items-center">
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="editmode_radio"
@@ -137,7 +154,7 @@
 <div class="row my-3">
     <div class="col">
         <div class="card shadow-sm">
-            <div class="card-body px-0 table-responsive">
+            <div class="card-body px-0">
                 @{
                     var rows = GetOrderedRowRecords();
                 }
@@ -149,7 +166,7 @@
                         {
                             <span class="text-warning ms-2" style="cursor: pointer;">
                                 <HxPopover Trigger="PopoverTrigger.Hover" Content="Table contains more records with applied filters than is currently shown. Increase row limit to show more records.">
-                                    <CxIcon Icon="FeatherIcon.AlertCircle" />
+                                    <SvgIcon Icon="FeatherIcon.AlertCircle" />
                                 </HxPopover>
                             </span>
                         }
@@ -169,27 +186,34 @@
                     {
                         <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
                     }
-                    <table class="table table-sm">
+                    <ResizableTable CssClass="table-sm" ColumnWidthSet="x => columnWidths[x.ColumnHeaderElementId] = x.Width">
                         <thead>
                             <tr>
                                 @foreach (var column in columns)
                                 {
+                                    // Use an MD5 hash of the column name as the column header element id.
+                                    // It remains the same between reloads of the table.
+                                    // We can tie the column width logic around these unchanging ids.
+                                    var bytes = Encoding.UTF8.GetBytes(column.Name);
+                                    var hash = MD5.HashData(bytes);
+                                    var id = Convert.ToHexString(hash);
+                                    var width = columnWidths.GetValueOrDefault(id) is string s ? $"width: {s};" : null;
                                     var orderBy = this.orderBy.FirstOrDefault(o => o.Column == column.Name);
                                     var filterSet = quickFilters.GetOrCreate(column);
-                                    <th class="fw-normal" title="@column.DbDatatypeDescription">
-                                        <div class="row">
+                                    <th id="@id" class="fw-normal" title="@column.DbDatatypeDescription" style="@width">
+                                        <div class="row g-0">
                                             <div class="col d-flex">
                                                 <span class="fw-bold" style="cursor: pointer;" @onclick="() => ToggleOrderBy(column.Name)">@column.Name</span>
                                                 @if (column.IsPrimaryKey)
                                                 {
                                                     <span class="ms-2" title="Primary key column">
-                                                        <CxIcon Icon="FeatherIcon.Key" />
+                                                        <SvgIcon Icon="FeatherIcon.Key" />
                                                     </span>
                                                 }
                                                 @if (column.IsComputed)
                                                 {
                                                     <span class="ms-2" title="Computed column">
-                                                        <CxIcon Icon="LucideIcon.Calculator" />
+                                                        <SvgIcon Icon="LucideIcon.Calculator" />
                                                     </span>
                                                 }
                                                 @if (orderBy.Column is not null)
@@ -197,11 +221,11 @@
                                                     <span class="ms-2">
                                                         @if (orderBy.Descending)
                                                         {
-                                                            <CxIcon Icon="FeatherIcon.ArrowUp" />
+                                                            <SvgIcon Icon="FeatherIcon.ArrowUp" />
                                                         }
                                                         else
                                                         {
-                                                            <CxIcon Icon="FeatherIcon.ArrowDown" />
+                                                            <SvgIcon Icon="FeatherIcon.ArrowDown" />
                                                         }
                                                     </span>
                                                 }
@@ -209,7 +233,7 @@
                                                     @if (filterSet.Count > 0)
                                                     {
                                                         <button class="btn btn-sm btn-auto" @onclick="filterSet.Clear" title="Clear filter">
-                                                            <CxIcon Icon="LucideIcon.FilterX" />
+                                                            <SvgIcon Icon="LucideIcon.FilterX" />
                                                         </button>
                                                     }
                                                     <FilterDropdown TItem="object"
@@ -221,7 +245,7 @@
                                                                     IsSearchable
                                                                     CssClass="position-static">
                                                         <TitleTemplate>
-                                                            <CxIcon Icon="FeatherIcon.Filter" />
+                                                            <SvgIcon Icon="FeatherIcon.Filter" />
                                                         </TitleTemplate>
                                                     </FilterDropdown>
                                                 </div>
@@ -255,7 +279,7 @@
 
                                                 else if (datatype == typeof(byte))
                                                 {
-                                                    <input class="form-control form-control-sm" type="number" disabled=@isLocked @bind-value="row.ByteIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="number" autocomplete="off" disabled=@isLocked @bind-value="row.ByteIndexer[column]" />
                                                 }
 
                                                 else if (datatype == typeof(short) && lookupValues is not null)
@@ -264,7 +288,7 @@
                                                 }
                                                 else if (datatype == typeof(short))
                                                 {
-                                                    <input class="form-control form-control-sm" type="number" disabled=@isLocked @bind-value="row.ShortIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="number" autocomplete="off" disabled=@isLocked @bind-value="row.ShortIndexer[column]" />
                                                 }
 
                                                 else if (datatype == typeof(int) && lookupValues is not null)
@@ -273,7 +297,7 @@
                                                 }
                                                 else if (datatype == typeof(int))
                                                 {
-                                                    <input class="form-control form-control-sm" type="number" disabled=@isLocked @bind-value="row.IntIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="number" autocomplete="off" disabled=@isLocked @bind-value="row.IntIndexer[column]" />
                                                 }
 
                                                 else if (datatype == typeof(long) && lookupValues is not null)
@@ -282,7 +306,7 @@
                                                 }
                                                 else if (datatype == typeof(long))
                                                 {
-                                                    <input class="form-control form-control-sm" type="number" disabled=@isLocked @bind-value="row.LongIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="number" autocomplete="off" disabled=@isLocked @bind-value="row.LongIndexer[column]" />
                                                 }
 
                                                 else if (datatype == typeof(decimal) && lookupValues is not null)
@@ -291,16 +315,16 @@
                                                 }
                                                 else if (datatype == typeof(decimal))
                                                 {
-                                                    <input class="form-control form-control-sm" type="number" disabled=@isLocked @bind-value="row.DecimalIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="number" autocomplete="off" disabled=@isLocked @bind-value="row.DecimalIndexer[column]" />
                                                 }
 
                                                 else if (datatype == typeof(double))
                                                 {
-                                                    <input class="form-control form-control-sm" type="number" disabled=@isLocked @bind-value="row.DoubleIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="number" autocomplete="off" disabled=@isLocked @bind-value="row.DoubleIndexer[column]" />
                                                 }
                                                 else if (datatype == typeof(float))
                                                 {
-                                                    <input class="form-control form-control-sm" type="number" disabled=@isLocked @bind-value="row.FloatIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="number" autocomplete="off" disabled=@isLocked @bind-value="row.FloatIndexer[column]" />
                                                 }
 
                                                 else if (datatype == typeof(string) && lookupValues is not null)
@@ -309,7 +333,7 @@
                                                 }
                                                 else if (datatype == typeof(string))
                                                 {
-                                                    <input class="form-control form-control-sm" type="text" disabled=@isLocked @bind-value="row.StringIndexer[column]" />
+                                                    <input class="form-control form-control-sm" type="text" autocomplete="off" disabled=@isLocked @bind-value="row.StringIndexer[column]" />
                                                 }
 
                                                 else if (datatype == typeof(bool))
@@ -330,6 +354,25 @@
                                                 {
                                                     <input class="form-control form-control-sm" type="datetime-local" disabled=@isLocked @bind-value="row.DateTimeIndexer[column]" />
                                                 }
+
+                                                else if (datatype == typeof(DateOnly) && lookupValues is not null)
+                                                {
+                                                    <LookupAutosuggest TValue="DateOnly?" LookupValues="lookupValues" @bind-Value="row.DateIndexer[column]" />
+                                                }
+                                                else if (datatype == typeof(DateOnly))
+                                                {
+                                                    <input class="form-control form-control-sm" type="date" disabled=@isLocked @bind-value="row.DateIndexer[column]" />
+                                                }
+
+                                                else if (datatype == typeof(TimeOnly) && lookupValues is not null)
+                                                {
+                                                    <LookupAutosuggest TValue="TimeOnly?" LookupValues="lookupValues" @bind-Value="row.TimeIndexer[column]" />
+                                                }
+                                                else if (datatype == typeof(TimeOnly))
+                                                {
+                                                    <input class="form-control form-control-sm" type="time" disabled=@isLocked @bind-value="row.TimeIndexer[column]" />
+                                                }
+
                                                 else
                                                 {
                                                     <text>@row.Values[column]</text>
@@ -346,18 +389,18 @@
                                         <td>
                                             <div class="btn-group btn-group-sm">
                                                 <button class="btn btn-sm btn-auto" @onclick="row.RevertChanges" title="Revert changes" disabled=@(!row.HasChanges)>
-                                                    <CxIcon Icon="LucideIcon.Undo2" />
+                                                    <SvgIcon Icon="LucideIcon.Undo2" />
                                                 </button>
                                                 @if (Table.AllowInsert)
                                                 {
                                                     <button class="btn btn-sm btn-auto" @onclick="() => tableData.AddRow(row)" title="Copy record">
-                                                        <CxIcon Icon="FeatherIcon.Copy" />
+                                                        <SvgIcon Icon="FeatherIcon.Copy" />
                                                     </button>
                                                 }
                                                 @if (Table.AllowDelete)
                                                 {
                                                     <button class="btn btn-sm btn-auto btn-delete-record" @onclick="row.Delete" title="Delete record">
-                                                        <CxIcon Icon="FeatherIcon.Delete" />
+                                                        <SvgIcon Icon="FeatherIcon.Delete" />
                                                     </button>
                                                 }
                                             </div>
@@ -367,7 +410,7 @@
                                 </tr>
                             </Virtualize>
                         </tbody>
-                    </table>
+                    </ResizableTable>
                 }
                 else if (Table is not null)
                 {

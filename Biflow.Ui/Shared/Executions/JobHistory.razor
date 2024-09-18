@@ -15,18 +15,18 @@
     </div>
     <div class="col-auto">
         <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="ReloadAsync">
-            <CxIcon Icon="FeatherIcon.RefreshCw" />
+            <SvgIcon Icon="FeatherIcon.RefreshCw" />
             Refresh
         </HxButton>
     </div>
     <div class="col-auto">
         <HxButtonGroup Size="ButtonGroupSize.Small">
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(showChart ? null : "active")" OnClick="() => showChart = false">
-                <CxIcon Icon="FeatherIcon.List" />
+                <SvgIcon Icon="FeatherIcon.List" />
                 List
             </HxButton>
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(showChart ? "active" : null)" OnClick="() => showChart = true">
-                <CxIcon Icon="LucideIcon.LineChart" />
+                <SvgIcon Icon="LucideIcon.LineChart" />
                 Chart
             </HxButton>
         </HxButtonGroup>
@@ -83,12 +83,14 @@
                     <th>
                         Status
                     </th>
+                    <th></th>
                 </tr>
                 <tr>
                     <th></th>
                     <th></th>
                     <th></th>
                     <th><text>@AverageDurationInSeconds.SecondsToReadableFormat()</text></th>
+                    <th></th>
                     <th></th>
                     <th></th>
                 </tr>
@@ -99,12 +101,12 @@
                 }
                 @if (this.executions is null)
                 {
-                    <tr><td colspan="6" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
+                    <tr><td colspan="7" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                 }
                 else if (!executions.Any())
                 {
                     <tr>
-                        <td colspan="6">
+                        <td colspan="7">
                             @{
                                 RenderFragment renderFragment = startTypeFilter switch
                                 {
@@ -122,31 +124,33 @@
                 {
                     @foreach (var item in FilteredExecutions)
                     {
-                        <tr style="cursor: pointer;" @onclick="() => GoToExecutionDetails(item.ExecutionId)">
-                            <td class="small">
-                                @if (!string.IsNullOrEmpty(item.ScheduleName))
-                                {
-                                    <span>@item.ScheduleName</span>
-                                }
-                                else if (!string.IsNullOrEmpty(item.CreatedBy))
-                                {
-                                    <span>@item.CreatedBy</span>
-                                }
+                        var createdBy = item switch
+                        {
+                            { ScheduleName: { Length: > 0 } scheduleName } => scheduleName,
+                            { CreatedBy: { Length: > 0 } username } => username,
+                            _ => ""
+                        };
+                        <tr>
+                            <td class="align-middle small">
+                                @createdBy
                             </td>
-                            <td>
+                            <td class="align-middle">
                                 @item.StartedOn?.LocalDateTime
                             </td>
-                            <td>
+                            <td class="align-middle">
                                 @item.EndedOn?.LocalDateTime
                             </td>
-                            <td>
+                            <td class="align-middle">
                                 <text>@item.ExecutionInSeconds?.SecondsToReadableFormat()</text>
                             </td>
-                            <td>
+                            <td class="align-middle">
                                 @item.StepExecutionCount
                             </td>
-                            <td>
+                            <td class="align-middle">
                                 <JobExecutionStatusBadge ExecutionStatus="@item.ExecutionStatus" />
+                            </td>
+                            <td class="align-middle">
+                                <a class="text-body" href="@($"executions/{item.ExecutionId}/list")">Details</a>
                             </td>
                         </tr>
                     }
@@ -241,11 +245,6 @@
             new("Avg. duration", dataPoints)
         };
         dataset = new LineChartDataset(series, "min", 0);
-    }
-
-    private void GoToExecutionDetails(Guid executionId)
-    {
-        NavigationManager.NavigateTo($"executions/{executionId}/list");
     }
 
     public void Dispose()

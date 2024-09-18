@@ -1,10 +1,10 @@
-﻿using Biflow.Ui.SqlServer;
+﻿using Biflow.Ui.SqlMetadataExtensions;
 
 namespace Biflow.Ui.Shared.StepEdit;
 
 public partial class SqlReferenceExplorerOffcanvas : ComponentBase
 {
-    [Parameter] public IEnumerable<SqlConnectionInfo> Connections { get; set; } = Enumerable.Empty<SqlConnectionInfo>();
+    [Parameter] public IEnumerable<MsSqlConnection> Connections { get; set; } = [];
 
     private Guid? connectionId;
     private HxOffcanvas? offcanvas;
@@ -30,8 +30,8 @@ public partial class SqlReferenceExplorerOffcanvas : ComponentBase
         try
         {
             Guid connectionId = this.connectionId ?? throw new ArgumentNullException(nameof(connectionId), "Connection id was null");
-            queryResults = await SqlServerHelper.GetSqlReferencedObjectsAsync(
-                connectionId,
+            var connection = Connections.First(c => c.ConnectionId == connectionId);
+            queryResults = await connection.GetSqlReferencedObjectsAsync(
                 referencingSchemaOperator: referencingSchemaOperator,
                 referencingSchemaFilter: referencingSchemaFilter,
                 referencingNameOperator: referencingNameOperator,
@@ -99,7 +99,7 @@ public partial class SqlReferenceExplorerOffcanvas : ComponentBase
     public async Task ShowAsync(Guid? connectionId, string? sqlStatement = null)
     {
         this.connectionId = connectionId ?? Connections.FirstOrDefault()?.ConnectionId;
-        var proc = sqlStatement?.ParseStoredProcedureFromSqlStatement();
+        var proc = sqlStatement is not null ? MsSqlExtensions.ParseStoredProcedureFromSqlStatement(sqlStatement) : null;
         var schema = proc?.Schema;
         var name = proc?.ProcedureName;
         if (schema is not null)

@@ -24,6 +24,8 @@ public class Row
     public ColumnValueIndexer<string?> StringIndexer { get; private set; }
     public ColumnValueIndexer<bool?> BooleanIndexer { get; private set; }
     public ColumnValueIndexer<DateTime?> DateTimeIndexer { get; private set; }
+    public ColumnValueIndexer<DateOnly?> DateIndexer { get; private set; }
+    public ColumnValueIndexer<TimeOnly?> TimeIndexer { get; private set; }
 
     internal bool ToBeDeleted { get; private set; }
     
@@ -81,6 +83,8 @@ public class Row
         StringIndexer = new(Values);
         BooleanIndexer = new(Values);
         DateTimeIndexer = new(Values);
+        DateIndexer = new(Values);
+        TimeIndexer = new(Values);
 
         if (_initialValues is null)
         {
@@ -112,6 +116,10 @@ public class Row
                         BooleanIndexer[column.Name] = false;
                     else if (column.Datatype == typeof(DateTime))
                         DateTimeIndexer[column.Name] = DateTime.Now;
+                    else if (column.Datatype == typeof(DateOnly))
+                        DateIndexer[column.Name] = DateOnly.FromDateTime(DateTime.Now);
+                    else if (column.Datatype == typeof(TimeOnly))
+                        TimeIndexer[column.Name] = TimeOnly.FromDateTime(DateTime.Now);
                     else
                         Values[column.Name] = default;
                 }
@@ -146,6 +154,8 @@ public class Row
         StringIndexer = new(Values);
         BooleanIndexer = new(Values);
         DateTimeIndexer = new(Values);
+        DateIndexer = new(Values);
+        TimeIndexer = new(Values);
         _valuesChanged = false;
     }
 

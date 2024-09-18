@@ -41,7 +41,7 @@
                                                   CssClass="btn-auto"
                                                   OnClick="() => jobs.Remove(job)"
                                                   title="Remove from list of jobs to run">
-                                            <CxIcon Icon="FeatherIcon.Delete" />
+                                            <SvgIcon Icon="FeatherIcon.Delete" />
                                         </HxButton>
                                     }
                                     else if (responses.TryGetValue(job, out var response))
@@ -50,11 +50,11 @@
                                         {
                                             <div class="text-success">
                                                 <span class="text-success">
-                                                    <CxIcon Icon="FeatherIcon.CheckCircle" />
+                                                    <SvgIcon Icon="FeatherIcon.CheckCircle" />
                                                 </span>
                                                 @if (response.Execution is not null)
                                                 {
-                                                    <a class="small ms-1" href="javascript:void(0)" @onclick="() => NavigateToExecutionAsync(response.Execution.ExecutionId)">
+                                                    <a class="small text-body ms-1" href="@($"executions/{response.Execution.ExecutionId}/list")">
                                                         View execution
                                                     </a>
                                                 }
@@ -63,7 +63,7 @@
                                         else
                                         {
                                             <div class="text-danger">
-                                                <CxIcon Icon="FeatherIcon.AlertOctagon" />
+                                                <SvgIcon Icon="FeatherIcon.AlertOctagon" />
                                                 <HxPopover Content="@(response.Exception?.ToString() ?? string.Empty)" Trigger="PopoverTrigger.Hover">
                                                     <span class=" ms-1 small text-decoration-underline text-primary pointer">
                                                         Show error
@@ -90,7 +90,7 @@
             <div class="col mr-auto">
                 <HxDropdownButtonGroup AutoClose="DropdownAutoClose.Outside">
                     <HxDropdownToggleButton Color="ThemeColor.Secondary">
-                        <CxIcon Icon="FeatherIcon.Bell" />
+                        <SvgIcon Icon="FeatherIcon.Bell" />
                         Notifications
                     </HxDropdownToggleButton>
                     <HxDropdownContent>
@@ -142,7 +142,7 @@
                       CssClass="ml-5"
                       Enabled="jobs.Count > 0"
                       @onclick="ExecuteAsync">
-                <CxIcon Icon="FeatherIcon.Play" />
+                <SvgIcon Icon="FeatherIcon.Play" />
                 Execute
             </HxButton>
             <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await modal.LetAsync(x => x.HideAsync())">
@@ -152,7 +152,7 @@
         else if (state == State.Starting)
         {
             <HxButton Color="ThemeColor.Secondary" @onclick="cts.Cancel">
-                <CxIcon Icon="FeatherIcon.X" />
+                <SvgIcon Icon="FeatherIcon.X" />
                 Cancel
             </HxButton>
         }
@@ -258,12 +258,6 @@
 
         await Executor.StartExecutionAsync(execution.ExecutionId, cancellationToken);
         return execution;
-    }
-
-    private async Task NavigateToExecutionAsync(Guid executionId)
-    {
-        await modal.LetAsync(x => x.HideAsync());
-        NavigationManager.NavigateTo($"executions/{executionId}/list");
     }
 
     private record Response(bool Success, Execution? Execution, Exception? Exception = null);

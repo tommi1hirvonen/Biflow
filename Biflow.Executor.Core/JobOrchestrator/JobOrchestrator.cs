@@ -74,7 +74,7 @@ internal class JobOrchestrator : IJobOrchestrator
                 return observer;
             })
             .ToList();
-        var orchestrationTask = _globalOrchestrator.RegisterStepsAndObservers(observers);
+        var orchestrationTask = _globalOrchestrator.RegisterStepsAndObserversAsync(observers);
         
         // CancellationToken is triggered when the executor service is being shut down
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);

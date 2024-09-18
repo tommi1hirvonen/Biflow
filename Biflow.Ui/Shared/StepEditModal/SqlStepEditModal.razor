@@ -10,7 +10,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.XOctagon" />
+                        <SvgIcon Icon="FeatherIcon.XOctagon" />
                     </div>
                     <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 5rem;"></InputNumber>
                 </div>
@@ -25,16 +25,16 @@
             <div class="col-md-6 d-inline">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <CxIcon Icon="FeatherIcon.Database" />
+                        <ConnectionTypeIcon ConnectionType="Connection.ConnectionType" />
                     </div>
-                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId">
-                        @foreach (var connection in Connections ?? Enumerable.Empty<SqlConnectionInfo>())
+                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId" @bind-Value:after="StateHasChanged">
+                        @foreach (var connection in SqlConnections ?? [])
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }
                     </InputSelect>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenStoredProcedureSelectModal">
-                        <CxIcon Icon="FeatherIcon.MoreHorizontal" />
+                        <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
                         Stored procedures
                     </HxButton>
                 </div>
@@ -58,14 +58,14 @@
             </div>
         </div>
 
-        <StoredProcedureSelectOffcanvas @ref="storedProcedureSelectModal" ConnectionId="Step.ConnectionId" OnProcedureSelected="OnStoredProcedureSelected" />
+        <StoredProcedureSelectOffcanvas @ref="storedProcedureSelectModal" OnProcedureSelected="OnStoredProcedureSelected" />
 
         <div class="row mt-3">
             <div class="col-md-4 d-md-flex align-items-center justify-content-end">
                 <label class="form-label mb-md-0">
                     Capture scalar result
                     <HxPopover Trigger="PopoverTrigger.Hover" Content="Capture and assign the scalar result of the SQL statement to a job parameter">
-                         <CxIcon Icon="FeatherIcon.Info" />
+                         <SvgIcon Icon="FeatherIcon.Info" />
                      </HxPopover>
                 </label>
             </div>
@@ -84,6 +84,8 @@
                 </InputSelect>
             </div>
         </div>
-        <StepParametersEditor Step="Step" NewParameterDelegate="() => new() { Step = Step }" OnImportParameters="ImportParametersAsync" />
+        <StepParametersEditor Step="Step"
+                              NewParameterDelegate="() => new() { Step = Step }"
+                              OnImportParameters="Connection is MsSqlConnection ? ImportParametersAsync : null" />
     }
 </StepEditModalTemplate>

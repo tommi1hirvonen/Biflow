@@ -6,10 +6,7 @@ namespace Biflow.Ui.Shared.JobDetails;
 
 public partial class StepsList : ComponentBase
 {
-    [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
-    [Inject] private StepsDuplicatorFactory StepDuplicatorFactory { get; set; } = null!;
     [Inject] private ToasterService Toaster { get; set; } = null!;
-    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
     [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
     [Inject] private IMediator Mediator { get; set; } = null!;
     
@@ -21,9 +18,11 @@ public partial class StepsList : ComponentBase
     
     [CascadingParameter] public List<Job>? Jobs { get; set; }
     
-    [Parameter] public List<SqlConnectionInfo>? SqlConnections { get; set; }
-    
-    [Parameter] public List<AnalysisServicesConnectionInfo>? AsConnections { get; set; }
+    [Parameter] public List<ConnectionBase>? SqlConnections { get; set; }
+
+    [Parameter] public List<MsSqlConnection>? MsSqlConnections { get; set; }
+
+    [Parameter] public List<AnalysisServicesConnection>? AsConnections { get; set; }
     
     [Parameter] public List<PipelineClient>? PipelineClients { get; set; }
     
@@ -39,7 +38,7 @@ public partial class StepsList : ComponentBase
 
     private readonly HashSet<StepType> stepTypeFilter = [];
     private readonly Dictionary<StepType, IStepEditModal?> stepEditModals = [];
-    private readonly HashSet<ConnectionInfoBase> connectionFilter = [];
+    private readonly HashSet<ConnectionBase> connectionFilter = [];
     private readonly HashSet<StepTag> tagsFilterSet = [];
 
     private HashSet<Step> selectedSteps = [];
@@ -97,12 +96,13 @@ public partial class StepsList : ComponentBase
 
     private (bool, string) IsStepTypeDisabled(StepType type) => type switch
     {
-        StepType.Sql or StepType.Package => ((SqlConnections?.Count ?? 0) == 0, "No SQL connections defined"),
+        StepType.Sql => ((SqlConnections?.Count ?? 0) == 0, "No SQL connections defined"),
+        StepType.Package => ((MsSqlConnections?.Count ?? 0) == 0, "No MS SQL connections defined"),
         StepType.Pipeline => ((PipelineClients?.Count ?? 0) == 0, "No pipeline clients defined"),
         StepType.Function => ((FunctionApps?.Count ?? 0) == 0, "No Function Apps defined"),
         StepType.Dataset => ((AppRegistrations?.Count ?? 0) == 0, "No app registrations defined"),
         StepType.Job => (Jobs is null || Jobs.Count == 1, ""),
-        StepType.AgentJob => ((SqlConnections?.Count ?? 0) == 0, "No SQL connections defined"),
+        StepType.AgentJob => ((MsSqlConnections?.Count ?? 0) == 0, "No MS SQL connections defined"),
         StepType.Tabular => ((AsConnections?.Count ?? 0) == 0, "No Analysis Services connections defined"),
         StepType.Qlik => ((QlikCloudClients?.Count ?? 0) == 0, "No Qlik Cloud clients defined"),
         _ => (false, "")
@@ -145,7 +145,7 @@ public partial class StepsList : ComponentBase
                 Steps?.Remove(step);
 
                 // Remove the deleted step from dependencies.
-                foreach (var dependant in Steps?.Where(s => s.Dependencies.Any(d => d.DependantOnStepId == step.StepId)) ?? Enumerable.Empty<Step>())
+                foreach (var dependant in Steps?.Where(s => s.Dependencies.Any(d => d.DependantOnStepId == step.StepId)) ?? [])
                 {
                     var dependency = dependant.Dependencies.First(d => d.DependantOnStepId == step.StepId);
                     dependant.Dependencies.Remove(dependency);
@@ -166,6 +166,8 @@ public partial class StepsList : ComponentBase
         {
             await Mediator.SendAsync(new ToggleStepsCommand(step.StepId, value));
             step.IsEnabled = value;
+            var message = value ? "Step enabled" : "Step disabled";
+            Toaster.AddSuccess(message, 2500);
         }
         catch (Exception ex)
         {
@@ -186,7 +188,7 @@ public partial class StepsList : ComponentBase
             selectedSteps.Remove(step);
 
             // Remove the deleted step from dependencies.
-            foreach (var dependant in Steps?.Where(s => s.Dependencies.Any(d => d.DependantOnStepId == step.StepId)) ?? Enumerable.Empty<Step>())
+            foreach (var dependant in Steps?.Where(s => s.Dependencies.Any(d => d.DependantOnStepId == step.StepId)) ?? [])
             {
                 var dependency = dependant.Dependencies.First(d => d.DependantOnStepId == step.StepId);
                 dependant.Dependencies.Remove(dependency);

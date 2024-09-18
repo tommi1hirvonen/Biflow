@@ -14,7 +14,7 @@
                         Add
                         &nbsp;
                         <HxPopover Trigger="PopoverTrigger.Hover" Content="Tags listed will be added to all selected steps where they are not present. New tags can also be added.">
-                            <CxIcon Icon="FeatherIcon.Info" />
+                            <SvgIcon Icon="FeatherIcon.Info" />
                         </HxPopover>
                     </label>
                 </div>
@@ -26,7 +26,7 @@
                         Remove
                         &nbsp;
                         <HxPopover Trigger="PopoverTrigger.Hover" Content="Remove tags from the list to remove them from selected steps where they are present.">
-                            <CxIcon Icon="FeatherIcon.Info" />
+                            <SvgIcon Icon="FeatherIcon.Info" />
                         </HxPopover>
                     </label>
                 </div>
@@ -36,12 +36,11 @@
             <div class="col">
                 @if (steps is not null)
                 {
-                    <HxInputTags
-                        @bind-Value="tags"
-                        DataProvider="GetTagSuggestions"
-                        SuggestMinimumLength="0"
-                        SuggestDelay="0"
-                        TagBadgeSettings="new BadgeSettings() { Color = ThemeColor.Secondary }" />
+                    <TagInput TTag="StepTag"
+                              Items="allTags"
+                              SelectedItems="tags"
+                              AllowCustomValues="editMode == EditMode.Add"
+                              NewItemFromText="text => new StepTag(text) { Color = TagColor.DarkGray }" />
                 }
                 else
                 {
@@ -68,8 +67,8 @@
     private HxModal? modal;
     private bool saving = false;
     private AppDbContext? context;
-    protected HashSet<StepTag>? allTags;
-    private List<string> tags = [];
+    protected StepTag[]? allTags;
+    private List<StepTag> tags = [];
     private List<Step>? steps;
     private EditMode editMode = EditMode.Add;
 
@@ -89,6 +88,7 @@
             await context.DisposeAsync();
         }
         context = await DbContextFactory.CreateDbContextAsync();
+        allTags = await context.StepTags.OrderBy(t => t.TagName).ToArrayAsync();
         var stepIds = SelectedSteps.Select(s => s.StepId).ToArray();
         steps = await JobDetails.BuildStepsQueryWithIncludes(context)
             .Where(s => stepIds.Contains(s.StepId))
@@ -117,30 +117,10 @@
         {
             tags = steps?
                 .SelectMany(s => s.Tags)
-                .Select(t => t.TagName)
                 .Distinct()
-                .OrderBy(t => t)
+                .OrderBy(t => t.TagName)
                 .ToList() ?? new();
         }
-    }
-
-    private async Task<InputTagsDataProviderResult> GetTagSuggestions(InputTagsDataProviderRequest request)
-    {
-        await EnsureAllTagsInitialized();
-        return new InputTagsDataProviderResult
-        {
-            Data = allTags?
-            .Select(t => t.TagName)
-            .Where(t => t.ContainsIgnoreCase(request.UserInput))
-            .Where(t => !tags.Any(tag => t == tag))
-            .OrderBy(t => t) ?? Enumerable.Empty<string>()
-        };
-    }
-
-    private async Task EnsureAllTagsInitialized()
-    {
-        ArgumentNullException.ThrowIfNull(context);
-        allTags ??= (await context.StepTags.ToListAsync()).ToHashSet();
     }
 
     private async Task SubmitStepsAsync()
@@ -150,21 +130,21 @@
 
         if (editMode == EditMode.Add)
         {
-            var stepTagsToAdd = steps
-                .SelectMany(s => tags, (s, t) => (Step: s, Tag: t))
-                .Where(st => !st.Step.Tags.Any(t => t.TagName == st.Tag))
-                .ToArray();
-            foreach (var (step, tagName) in stepTagsToAdd)
+            foreach (var step in steps)
             {
-                var tag = allTags?.FirstOrDefault(t => t.TagName == tagName) ?? new StepTag(tagName);
-                allTags?.Add(tag); // In case of new tag, add it to the list.
-                step.Tags.Add(tag);
+                foreach (var tag in tags)
+                {
+                    if (!step.Tags.Contains(tag))
+                    {
+                        step.Tags.Add(tag);
+                    }
+                }
             }
         }
         else if (editMode == EditMode.Remove)
         {
             var stepTagsToRemove = steps
-                .SelectMany(s => s.Tags.Where(t => !tags.Contains(t.TagName)), (s, t) => (Step: s, Tag: t))
+                .SelectMany(s => s.Tags.Where(t => !tags.Contains(t)), (s, t) => (Step: s, Tag: t))
                 .ToArray();
             foreach (var (step, tag) in stepTagsToRemove)
             {

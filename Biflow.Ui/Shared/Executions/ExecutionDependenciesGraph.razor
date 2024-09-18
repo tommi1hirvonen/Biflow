@@ -1,5 +1,4 @@
-﻿@inject NavigationManager NavigationManager
-
+﻿
 @if (Execution?.ExecutionMode == ExecutionMode.ExecutionPhase)
 {
     <HxAlert Color="ThemeColor.Warning" CssClass="mt-3">
@@ -16,7 +15,8 @@
                        MinimumLength="0"
                        Delay="1"
                        InputSize="InputSize.Small"
-                       Placeholder="Filter step">
+                       Placeholder="Filter step"
+                       autocomplete="off">
             <ItemTemplate Context="item">
                 <StepTypeIcon StepType="item.StepType" />
                 @item.StepName
@@ -32,7 +32,7 @@
             <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal backwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
                  <ChildContent>
                      <span style="cursor: pointer;">
-                         <CxIcon Icon="FeatherIcon.Info" />
+                         <SvgIcon Icon="FeatherIcon.Info" />
                      </span>
                  </ChildContent>
              </HxPopover>
@@ -43,7 +43,7 @@
              <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal forwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
                  <ChildContent>
                      <span style="cursor: pointer;">
-                         <CxIcon Icon="FeatherIcon.Info" />
+                         <SvgIcon Icon="FeatherIcon.Info" />
                      </span>
                  </ChildContent>
              </HxPopover>
@@ -65,7 +65,7 @@
                                        checked=@(direction == DependencyGraphDirection.LeftToRight)
                                        @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.LeftToRight))">
                                 <label class="form-check-label fw-normal" for="direction_radio_admin">
-                                    <CxIcon Icon="FeatherIcon.ArrowRight" />
+                                    <SvgIcon Icon="FeatherIcon.ArrowRight" />
                                     Left to right
                                 </label>
                             </div>
@@ -74,7 +74,7 @@
                                        checked=@(direction == DependencyGraphDirection.RightToLeft)
                                        @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.RightToLeft))">
                                 <label class="form-check-label fw-normal" for="direction_radio_editor">
-                                    <CxIcon Icon="FeatherIcon.ArrowLeft" />
+                                    <SvgIcon Icon="FeatherIcon.ArrowLeft" />
                                     Right to left
                                 </label>
                             </div>
@@ -83,7 +83,7 @@
                                        checked=@(direction == DependencyGraphDirection.TopToBottom)
                                        @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.TopToBottom))">
                                 <label class="form-check-label fw-normal" for="direction_radio_operator">
-                                    <CxIcon Icon="FeatherIcon.ArrowDown" />
+                                    <SvgIcon Icon="FeatherIcon.ArrowDown" />
                                     Top to bottom
                                 </label>
                             </div>
@@ -92,7 +92,7 @@
                                        checked=@(direction == DependencyGraphDirection.BottomToTop)
                                        @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.BottomToTop))">
                                 <label class="form-check-label fw-normal" for="direction_radio_viewer">
-                                    <CxIcon Icon="FeatherIcon.ArrowUp" />
+                                    <SvgIcon Icon="FeatherIcon.ArrowUp" />
                                     Bottom to top
                                 </label>
                             </div>
@@ -120,7 +120,7 @@
             </li>
             <li>
                 <span class="dropdown-item" role="button" @onclick="async () => { dependencyGraphStepFilter = step; await LoadGraphAsync(); }">
-                    <CxIcon Icon="FeatherIcon.Filter" />
+                    <SvgIcon Icon="FeatherIcon.Filter" />
                     Limit graph to this
                 </span>
             </li>
@@ -128,13 +128,13 @@
             {
                 <li>
                     <span class="dropdown-item" role="button" @onclick="() => ShowStepExecutionOffcanvas(step)">
-                        <CxIcon Icon="FeatherIcon.Info" />
+                        <SvgIcon Icon="FeatherIcon.Info" />
                         Details
                     </span>
                 </li>
                 <li>
                     <span class="dropdown-item" role="button" @onclick="() => stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
-                        <CxIcon Icon="LucideIcon.History" />
+                        <SvgIcon Icon="LucideIcon.History" />
                         History
                     </span>
                 </li>
@@ -142,10 +142,10 @@
             else
             {
                 <li>
-                    <span class="dropdown-item" role="button" @onclick="@(() => NavigationManager.NavigateTo($"executions/{step.ExecutionId}/list"))">
-                        <CxIcon Icon="FeatherIcon.ArrowRight" />
+                    <a class="dropdown-item" role="button" href="@($"executions/{step.ExecutionId}/list")">
+                        <SvgIcon Icon="FeatherIcon.ArrowRight" />
                         Go to execution
-                    </span>
+                    </a>
                 </li>
             }
         </ContextMenuTemplate>

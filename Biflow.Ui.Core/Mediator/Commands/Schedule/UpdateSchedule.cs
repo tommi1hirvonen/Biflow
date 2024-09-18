@@ -1,9 +1,8 @@
-﻿namespace Biflow.Ui.Core;
+﻿using Biflow.Core.Entities;
 
-public record UpdateScheduleCommand(
-    Schedule Schedule,
-    ICollection<string> TagFilter,
-    ICollection<string> Tags) : IRequest;
+namespace Biflow.Ui.Core;
+
+public record UpdateScheduleCommand(Schedule Schedule) : IRequest;
 
 internal class UpdateScheduleCommandHandler(
     IDbContextFactory<AppDbContext> dbContextFactory,
@@ -13,35 +12,68 @@ internal class UpdateScheduleCommandHandler(
     public async Task Handle(UpdateScheduleCommand request, CancellationToken cancellationToken)
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        context.Attach(request.Schedule).State = EntityState.Modified;
+
+        var stepTagIds = request.Schedule.TagFilter.Select(t => t.TagId).ToArray();
+        var scheduleTagIds = request.Schedule.Tags.Select(t => t.TagId).ToArray();
+
+        var stepTagsFromDb = await context.StepTags
+            .Where(t => stepTagIds.Contains(t.TagId))
+            .ToListAsync(cancellationToken);
+        var scheduleTagsFromDb = await context.ScheduleTags
+            .Where(t => scheduleTagIds.Contains(t.TagId))
+            .ToListAsync(cancellationToken);
+        var scheduleFromDb = await context.Schedules
+            .Include(s => s.Tags)
+            .Include(s => s.TagFilter)
+            .FirstOrDefaultAsync(s => s.ScheduleId == request.Schedule.ScheduleId, cancellationToken);
+
+        if (scheduleFromDb is null)
+        {
+            return;
+        }
+
+        scheduleFromDb.ScheduleName = request.Schedule.ScheduleName;
+        scheduleFromDb.CronExpression = request.Schedule.CronExpression;
+        scheduleFromDb.DisallowConcurrentExecution = request.Schedule.DisallowConcurrentExecution;
 
         // Synchronize step tags
-        var stepTags = await context.StepTags
-            .Where(t => request.TagFilter.Contains(t.TagName))
-            .ToListAsync(cancellationToken);
-        foreach (var name in request.TagFilter.Where(str => !request.Schedule.TagFilter.Any(t => t.TagName == str)))
+        var stepTagsToAdd = request.Schedule.TagFilter
+            .Where(t1 => !scheduleFromDb.TagFilter.Any(t2 => t2.TagId == t1.TagId))
+            .Select(t => t.TagId);
+        foreach (var id in stepTagsToAdd)
         {
             // New tags
-            var tag = stepTags.FirstOrDefault(t => t.TagName == name) ?? new StepTag(name);
-            request.Schedule.TagFilter.Add(tag);
+            var tag = stepTagsFromDb.FirstOrDefault(t => t.TagId == id);
+            if (tag is null)
+            {
+                continue;
+            }
+            scheduleFromDb.TagFilter.Add(tag);
         }
-        foreach (var tag in request.Schedule.TagFilter.Where(t => !request.TagFilter.Contains(t.TagName)).ToArray())
+        var stepTagsToRemove = scheduleFromDb.TagFilter
+            .Where(t => !stepTagIds.Contains(t.TagId))
+            .ToArray(); // materialize since items may be removed from the sequence during iteration
+        foreach (var tag in stepTagsToRemove)
         {
-            request.Schedule.TagFilter.Remove(tag);
+            scheduleFromDb.TagFilter.Remove(tag);
         }
 
         // Synchronize schedule tags
-        var scheduleTags = await context.ScheduleTags
-            .Where(t => request.Tags.Contains(t.TagName))
-            .ToListAsync(cancellationToken);
-        foreach (var name in request.Tags.Where(str => !request.Schedule.Tags.Any(t => t.TagName == str)))
+        var scheduleTagsToAdd = request.Schedule.Tags
+            .Where(t1 => !scheduleFromDb.Tags.Any(t2 => t2.TagId == t1.TagId))
+            .Select(t => (t.TagId, t.TagName, t.Color));
+        foreach (var (id, name, color) in scheduleTagsToAdd)
         {
-            var tag = scheduleTags.FirstOrDefault(t => t.TagName == name) ?? new ScheduleTag(name);
-            request.Schedule.Tags.Add(tag);
+            var tag = scheduleTagsFromDb.FirstOrDefault(t => t.TagId == id)
+                ?? new ScheduleTag(name) { Color = color };
+            scheduleFromDb.Tags.Add(tag);
         }
-        foreach (var tag in request.Schedule.Tags.Where(t => !request.Tags.Contains(t.TagName)).ToArray())
+        var scheduleTagsToRemove = scheduleFromDb.Tags
+            .Where(t => !scheduleTagIds.Contains(t.TagId))
+            .ToArray(); // materialize since items may be removed from the sequence during iteration
+        foreach (var tag in scheduleTagsToRemove)
         {
-            request.Schedule.Tags.Remove(tag);
+            scheduleFromDb.Tags.Remove(tag);
         }
 
         using var transaction = context.Database.BeginTransaction();

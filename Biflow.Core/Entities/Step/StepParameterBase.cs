@@ -46,8 +46,6 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
             .ToList();
     }
 
-    private readonly List<StepParameterExpressionParameter> _expressionParameters = [];
-
     [Display(Name = "Step id")]
     public Guid StepId { get; set; }
 
@@ -87,7 +85,14 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
     private JobParameter? _inheritFromJobParameter;
 
     [ValidateComplexType]
+    [JsonIgnore]
     public IEnumerable<StepParameterExpressionParameter> ExpressionParameters => _expressionParameters;
+
+    [JsonInclude]
+    [JsonPropertyName("expressionParameters")]
+#pragma warning disable IDE0044 // Skip readonly modifier so that JSON deserialization is able to assign the field.
+    private List<StepParameterExpressionParameter> _expressionParameters = [];
+#pragma warning restore IDE0044
 
     [JsonIgnore]
     public abstract Step BaseStep { get; }

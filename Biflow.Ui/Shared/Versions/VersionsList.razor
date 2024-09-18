@@ -1,27 +1,35 @@
 ﻿@using System.Text
 
+@implements IDisposable
+
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject EnvironmentSnapshotBuilder SnapshotBuilder
 @inject ToasterService Toaster
 @inject IJSRuntime JS
-@inject NavigationManager NavigationManager
+@inject ThemeService ThemeService
 
-<div class="row">
+<div class="row justify-content-between">
     <div class="col">
         <HxButton Color="ThemeColor.Success" OnClick="() => createModal.LetAsync(x => x.ShowAsync())">
             Create version
         </HxButton>
     </div>
+    <div class="col-auto">
+        <HxAlert Color="ThemeService.CurrentTheme == Theme.Light ? ThemeColor.Light : ThemeColor.Dark" CssClass="small py-2">
+            <SvgIcon Icon="FeatherIcon.Info" />
+            Environment versions are point-in-time snapshots of the environment configuration stored as a single JSON object. <a class="alert-link" href="versions/help">Read more</a>
+        </HxAlert>
+    </div>
 </div>
 
-<div class="row my-4">
+<div class="row mb-4">
     <div class="col">
         <div class="card shadow-sm">
             <div class="card-body px-0">
-                <table class="table">
+                <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th>Version id</th>
+                            <th>ID</th>
                             <th>Description</th>
                             <th>Created on</th>
                             <th>Created by</th>
@@ -49,32 +57,51 @@
                         {
                             foreach (var version in Versions)
                             {
-                                <tr>
-                                    <td class="align-middle">
-                                        <span class="link-primary text-decoration-underline pointer" @onclick="() => OpenDetailsAsync(version.VersionId)">
-                                            @version.VersionId
-                                        </span>
-                                    </td>
-                                    <td class="align-middle">
-                                        @version.Description
-                                    </td>
-                                    <td class="align-middle">
-                                        @version.CreatedDateTime.LocalDateTime
-                                    </td>
-                                    <td class="align-middle">
-                                        @version.CreatedBy
-                                    </td>
-                                    <td>
-                                        <HxButtonGroup Size="ButtonGroupSize.Small">
-                                            <HxButton Color="ThemeColor.None" CssClass="btn-auto" title="Compare to current" OnClick="@(() => NavigationManager.NavigateTo($"versions/compare/{version.VersionId}"))">
-                                                <CxIcon Icon="LucideIcon.GitCompareArrows" />
+                                var description = version.Description?.Length > 100
+                                    ? $"{version.Description.Substring(0, 100)}..."
+                                    : version.Description;
+                                <ContextMenuToggle ContainerHtmlTag="tr">
+                                    <ChildContent Context="menu">
+                                        <td class="align-middle">
+                                            <span class="pointer text-decoration-underline" @onclick="() => OpenDetailsAsync(version.VersionId)">
+                                                @version.VersionId
+                                            </span>
+                                        </td>
+                                        <td class="align-middle small">
+                                            @description
+                                        </td>
+                                        <td class="align-middle">
+                                            @version.CreatedDateTime.LocalDateTime
+                                        </td>
+                                        <td class="align-middle small">
+                                            @version.CreatedBy
+                                        </td>
+                                        <td>
+                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" Spinner="false" CssClass="btn-auto" @onclick="e => menu.ShowContextMenuAsync(e)">
+                                                <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
                                             </HxButton>
-                                            <HxButton Color="ThemeColor.None" CssClass="btn-auto" title="Download JSON" OnClick="() => DownloadAsync(version.VersionId)">
-                                                <CxIcon Icon="FeatherIcon.Download" />
-                                            </HxButton>
-                                        </HxButtonGroup>
-                                    </td>
-                                </tr>
+                                        </td>
+                                    </ChildContent>
+                                    <MenuContent>
+                                        <DropdownMenuHeader>Version id: @version.VersionId</DropdownMenuHeader>
+                                        <DropdownMenuItem @onclick="() => OpenDetailsAsync(version.VersionId)">
+                                            <SvgIcon Icon="LucideIcon.Braces" />
+                                            Show JSON
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem @onclick="() => DownloadAsync(version.VersionId)">
+                                            <SvgIcon Icon="FeatherIcon.Download" />
+                                            Download JSON
+                                        </DropdownMenuItem>
+                                        <DropdownMenuLink href="@($"versions/compare/{version.VersionId}")">
+                                            <SvgIcon Icon="LucideIcon.GitCompareArrows" />
+                                            Compare to current
+                                        </DropdownMenuLink>
+                                        <DropdownMenuLink href="@($"versions/revert/{version.VersionId}")">
+                                            <SvgIcon Icon="LucideIcon.History" />
+                                            Revert...
+                                        </DropdownMenuLink>
+                                    </MenuContent>
+                                </ContextMenuToggle>
                             }
                         }
                     </tbody>
@@ -125,6 +152,13 @@
     private CodeEditor? detailsEditor;
     private HxModal? createModal;
     private string? description;
+
+    protected override void OnInitialized()
+    {
+        ThemeService.OnThemeChanged += OnThemeChanged;
+    }
+
+    private void OnThemeChanged(Theme theme, bool isAuto) => StateHasChanged();
 
     private async Task CreateVersionAsync()
     {
@@ -179,4 +213,6 @@
             Toaster.AddError("Error exporting version", ex.Message);
         }
     }
+
+    public void Dispose() => ThemeService.OnThemeChanged -= OnThemeChanged;
 }

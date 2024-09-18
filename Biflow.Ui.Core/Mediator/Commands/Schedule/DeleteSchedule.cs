@@ -14,7 +14,6 @@ internal class DeleteScheduleCommandHandler(
         try
         {
             var schedule = await context.Schedules
-                .Include(s => s.TagFilter)
                 .FirstAsync(s => s.ScheduleId == request.ScheduleId, cancellationToken);
             context.Schedules.Remove(schedule);
             await context.SaveChangesAsync(cancellationToken);

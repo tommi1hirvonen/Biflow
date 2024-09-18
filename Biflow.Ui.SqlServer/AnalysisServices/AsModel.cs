@@ -1,3 +1,0 @@
-﻿namespace Biflow.Ui.SqlServer;
-
-public record AsModel(string ModelName, IEnumerable<AsTable> Tables, AsServer Server);

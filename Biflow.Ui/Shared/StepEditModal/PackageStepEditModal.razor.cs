@@ -1,5 +1,5 @@
 ﻿using Biflow.Ui.Shared.StepEdit;
-using Biflow.Ui.SqlServer;
+using Biflow.Ui.SqlMetadataExtensions;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
@@ -9,6 +9,22 @@ public partial class PackageStepEditModal : StepEditModal<PackageStep>
 
     private PackageSelectOffcanvas? packageSelectOffcanvas;
 
+    private MsSqlConnection Connection
+    {
+        get
+        {
+            if (_connection is null || _connection.ConnectionId != Step?.ConnectionId)
+            {
+                _connection = MsSqlConnections
+                    .FirstOrDefault(c => c.ConnectionId == Step?.ConnectionId)
+                    ?? MsSqlConnections.First();
+            }
+            return _connection;
+        }
+    }
+
+    private MsSqlConnection? _connection = null;
+
     protected override PackageStep CreateNewStep(Job job) =>
         new()
         {
@@ -16,7 +32,7 @@ public partial class PackageStepEditModal : StepEditModal<PackageStep>
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            ConnectionId = Connections.First().ConnectionId
+            ConnectionId = MsSqlConnections.First().ConnectionId
         };
 
     protected override Task<PackageStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>
@@ -37,7 +53,7 @@ public partial class PackageStepEditModal : StepEditModal<PackageStep>
     private Task OpenPackageSelectOffcanvas()
     {
         ArgumentNullException.ThrowIfNull(Step?.ConnectionId);
-        return packageSelectOffcanvas.LetAsync(x => x.ShowAsync((Guid)Step.ConnectionId));
+        return packageSelectOffcanvas.LetAsync(x => x.ShowAsync(Connection));
     }
 
     private void OnPackageSelected(CatalogPackage package)

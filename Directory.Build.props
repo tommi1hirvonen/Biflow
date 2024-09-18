@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+	  <!-- Solution level common version identifier -->
+    <VersionName>1.1.2</VersionName>
+  </PropertyGroup>
+</Project>
