@@ -1,19 +1,28 @@
 ﻿@using System.Text
 
+@implements IDisposable
+
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject EnvironmentSnapshotBuilder SnapshotBuilder
 @inject ToasterService Toaster
 @inject IJSRuntime JS
+@inject ThemeService ThemeService
 
-<div class="row">
+<div class="row justify-content-between">
     <div class="col">
         <HxButton Color="ThemeColor.Success" OnClick="() => createModal.LetAsync(x => x.ShowAsync())">
             Create version
         </HxButton>
     </div>
+    <div class="col-auto">
+        <HxAlert Color="ThemeService.CurrentTheme == Theme.Light ? ThemeColor.Light : ThemeColor.Dark" CssClass="small py-2">
+            <SvgIcon Icon="FeatherIcon.Info" />
+            Environment versions are point-in-time snapshots of the environment configuration stored as a single JSON object. <a class="alert-link" href="versions/help">Read more</a>
+        </HxAlert>
+    </div>
 </div>
 
-<div class="row my-4">
+<div class="row mb-4">
     <div class="col">
         <div class="card shadow-sm">
             <div class="card-body px-0">
@@ -144,6 +153,13 @@
     private HxModal? createModal;
     private string? description;
 
+    protected override void OnInitialized()
+    {
+        ThemeService.OnThemeChanged += OnThemeChanged;
+    }
+
+    private void OnThemeChanged(Theme theme, bool isAuto) => StateHasChanged();
+
     private async Task CreateVersionAsync()
     {
         try
@@ -197,4 +213,6 @@
             Toaster.AddError("Error exporting version", ex.Message);
         }
     }
+
+    public void Dispose() => ThemeService.OnThemeChanged -= OnThemeChanged;
 }

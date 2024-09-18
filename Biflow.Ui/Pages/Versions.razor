@@ -7,7 +7,7 @@
 
 <PageTitle>Versions | Biflow</PageTitle>
 
-@if (Page is null or "compare")
+@if (Page is null or "compare" or "help")
 {
     <h4>Versions</h4>
 
@@ -26,6 +26,12 @@
                         Compare
                     </NavLink>
                 </li>
+                <li class="nav-item" role="presentation">
+                    <NavLink class="nav-link" href="versions/help">
+                        <SvgIcon Icon="FeatherIcon.HelpCircle" />
+                        Help
+                    </NavLink>
+                </li>
             </ul>
         </div>
     </div>
@@ -38,6 +44,10 @@
 else if (Page == "compare")
 {
     <VersionsCompare Versions="versions" InitialSourceVersionId="VersionId" />
+}
+else if (Page == "help")
+{
+    <VersionsHelp />
 }
 else if (Page == "revert")
 {
