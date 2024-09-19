@@ -1,9 +1,12 @@
 ﻿@page "/account"
 
+@using System.Globalization
+
 @inject IDbContextFactory<AppDbContext> DbFactory
 @inject IMediator Mediator
 @inject ToasterService Toaster
 @inject AuthenticationMethodResolver AuthenticationResolver
+@inject NavigationManager NavigationManager
 
 <PageTitle>Account | Biflow</PageTitle>
 
@@ -22,7 +25,20 @@
         <h6>Roles:</h6>
     </div>
     <div class="col-auto">
-        <h6>@string.Join(", ", user?.Roles ?? Enumerable.Empty<string>())</h6>
+        <h6>@string.Join(", ", user?.Roles ?? [])</h6>
+    </div>
+</div>
+<div class="row mt-2 align-items-center">
+    <div class="col-auto">
+        <label class="form-label mb-0">Locale:</label>
+    </div>
+    <div class="col-auto">
+        <select class="form-select form-select-sm" @bind="selectedCulture" @bind:after="ApplySelectedCulture">
+            @foreach (var culture in supportedCultures)
+            {
+                <option value="@culture">@culture.DisplayName</option>
+            }
+        </select>
     </div>
 </div>
 
@@ -137,9 +153,13 @@
     private string? username = null;
     private User? user;
     private PasswordModel passwordModel = new();
+    private CultureInfo? selectedCulture;
+    private static CultureInfo[] supportedCultures = CultureInfo.GetCultures(CultureTypes.AllCultures);
 
     protected override async Task OnInitializedAsync()
     {
+        selectedCulture = CultureInfo.CurrentCulture;
+
         ArgumentNullException.ThrowIfNull(AuthenticationState);
         var state = await AuthenticationState;
         username = state.User.Identity?.Name;
@@ -188,7 +208,22 @@
         {
             Toaster.AddError("Error updating password", ex.Message);
         }
+    }
 
+    private void ApplySelectedCulture()
+    {
+        if (selectedCulture is not null && CultureInfo.CurrentCulture != selectedCulture)
+        {
+            var uri = new Uri(NavigationManager.Uri)
+                .GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
+            var cultureEscaped = Uri.EscapeDataString(selectedCulture.Name);
+            var uriEscaped = Uri.EscapeDataString(uri);
+
+            // Navigate to the culture controller set endpoint which sets the culture cookie.
+            NavigationManager.NavigateTo(
+                $"Culture/Set?culture={cultureEscaped}&redirectUri={uriEscaped}",
+                forceLoad: true);
+        }
     }
 
     private class PasswordModel
