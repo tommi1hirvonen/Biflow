@@ -53,6 +53,10 @@ else if (Page == "revert")
 {
     <VersionRevert VersionId="VersionId" />
 }
+else if (Page == "revertjson")
+{
+    <VersionRevertJson />
+}
 
 @code {
     [Parameter] public string? Page { get; set; }

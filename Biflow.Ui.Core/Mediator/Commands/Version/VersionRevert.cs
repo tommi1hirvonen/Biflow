@@ -1,9 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace Biflow.Ui.Core;
 
-public record VersionRevertCommand(int VersionId) : IRequest;
+public record VersionRevertCommand(EnvironmentSnapshot Snapshot) : IRequest;
 
 internal class VersionRevertCommandHandler(
     IDbContextFactory<RevertDbContext> dbContextFactory,
@@ -15,15 +14,9 @@ internal class VersionRevertCommandHandler(
     {
         try
         {
+            var snapshot = request.Snapshot;
+
             using var context = dbContextFactory.CreateDbContext();
-            var snapshotJson = await context.EnvironmentVersions
-                .AsNoTracking()
-                .Where(v => v.VersionId == request.VersionId)
-                .Select(v => v.Snapshot)
-                .FirstOrDefaultAsync(cancellationToken)
-                ?? throw new NotFoundException<EnvironmentSnapshot>(request.VersionId);
-            var snapshot = JsonSerializer.Deserialize<EnvironmentSnapshot>(snapshotJson, EnvironmentSnapshot.JsonSerializerOptions);
-            ArgumentNullException.ThrowIfNull(snapshot);
 
             // Manually controlling transactions is allowed since RevertDbContext does not use retry-on-failure execution strategy.
             using var transaction = context.Database.BeginTransaction();
