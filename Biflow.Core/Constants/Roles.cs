@@ -8,4 +8,5 @@ public static class Roles
     public const string Viewer = "Viewer";
     public const string DataTableMaintainer = "DataTableMaintainer";
     public const string SettingsEditor = "SettingsEditor";
+    public const string VersionManager = "VersionManager";
 }

@@ -13,9 +13,11 @@
         <HxButton Color="ThemeColor.Success" OnClick="() => createModal.LetAsync(x => x.ShowAsync())">
             Create version
         </HxButton>
-        <a role="button" class="btn btn-auto btn-sm ms-auto" href="versions/revertjson">
-            Revert from JSON
-        </a>
+        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.VersionManager}")">
+            <a role="button" class="btn btn-auto btn-sm ms-auto" href="versions/revertjson">
+                Revert from JSON
+            </a>
+        </AuthorizeView>
     </div>
     <div class="col-auto" style="max-width: 33rem;">
         <HxAlert Color="ThemeService.CurrentTheme == Theme.Light ? ThemeColor.Light : ThemeColor.Dark" CssClass="small py-2">
@@ -105,10 +107,12 @@
                                             <SvgIcon Icon="LucideIcon.GitCompareArrows" />
                                             Compare to current
                                         </DropdownMenuLink>
-                                        <DropdownMenuLink href="@($"versions/revert/{version.VersionId}")">
-                                            <SvgIcon Icon="LucideIcon.History" />
-                                            Revert...
-                                        </DropdownMenuLink>
+                                        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.VersionManager}")">
+                                            <DropdownMenuLink href="@($"versions/revert/{version.VersionId}")">
+                                                <SvgIcon Icon="LucideIcon.History" />
+                                                Revert...
+                                            </DropdownMenuLink>
+                                        </AuthorizeView>
                                     </MenuContent>
                                 </ContextMenuToggle>
                             }

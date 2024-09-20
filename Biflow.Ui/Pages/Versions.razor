@@ -1,6 +1,6 @@
 ﻿@page "/versions/{Page?}/{VersionId:int?}"
 
-@attribute [Authorize(Roles = $"{Roles.Admin}")]
+@attribute [Authorize(Roles = $"{Roles.Admin}, {Roles.VersionManager}, {Roles.Editor}")]
 
 @inject NavigationManager NavigationManager
 @inject IDbContextFactory<AppDbContext> DbContextFactory
@@ -51,11 +51,15 @@ else if (Page == "help")
 }
 else if (Page == "revert")
 {
-    <VersionRevert VersionId="VersionId" />
+    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.VersionManager}")">
+        <VersionRevert VersionId="VersionId" />
+    </AuthorizeView>
 }
 else if (Page == "revertjson")
 {
-    <VersionRevertJson />
+    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.VersionManager}")">
+        <VersionRevertJson />
+    </AuthorizeView>
 }
 
 @code {
