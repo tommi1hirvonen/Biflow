@@ -398,7 +398,6 @@ There are three different installation alternatives: on-premise, Azure (monolith
 |ConnectionStrings:AppDbContext|Connection string used to connect to the Biflow system database based on steps taken in the database section of this guide. **Note:** the connection string must have `MultipleActiveResultSets=true` enabled.|
 |EmailSettings|Settings used to send email notifications.|
 |PollingIntervalMs|Time interval in milliseconds between status polling operations (applies to some step types). Default value is `5000`.|
-|MaximumParallelSteps|Maximum number of parallel steps allowed during execution. Default value is `10`.|
 |Serilog:WriteTo:Args:Path|Path where application will write is log files. Default value is `C:\\Biflow\\BiflowExecutor\\log\\executor.log`.|
 |Kestrel:Endpoints:Http:Url|The http url and port which the executor API should listen to, for example `http://localhost:4321`. If there are multiple installations/environments of the executor service on the same server, the executor applications should listen to different ports.|
 
@@ -514,10 +513,9 @@ There are three different installation alternatives: on-premise, Azure (monolith
         - EnvironmentName = NameOfYourEnvironment
         - Executor__Type = __SelfHosted__
         - Scheduler__Type = __SelfHosted__
-        - Executor__SelfHosted__MaximumParallelSteps = 10
         - Executor__SelfHosted__PollingIntervalMs = 5000
         - ConnectionStrings__AppDbContext = Connection string to the Biflow system database
-        - WEBSITE_TIME_ZONE = Time zone for the application (defaults to UTC), e.g. Europe/Helsinki
+        - WEBSITE_TIME_ZONE = Time zone for the application (defaults to UTC), e.g. `Europe/Helsinki`
             - On Linux, use the TZ identifier from the <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">tz database</a>.
 - Deploy the UI application code (`Biflow.Ui`) as a zip file to the target Web App. Before deploying remove all other configuration sections from the appsettings.json file except the `Logging` section. This way there are no unwanted settings that are applied via the appsettings file.
 - Using System Assigned Managed Identities for authentication to the system database is recommended to avoid having to save sensitive information inside connection strings.
@@ -541,7 +539,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
 - Configure private endpoints for the inbound traffic of the scheduler and executor applications.
     - Create the private endpoints in the default subnet of the virtual network.
     - Disable public network access.
-- Add service endpoints for the following services to the virtual network (subnet biflow-vcfidw):
+- Add service endpoints for the following services to the virtual network (subnet biflow-subnet):
     - Microsoft.AzureActiveDirectory
     - Microsoft.Sql
     - Microsoft.Web
@@ -563,7 +561,6 @@ Add application configurations for each app based on the table below. __Note tha
 |WEBSITE_TIME_ZONE|Time zone, e.g. `Europe/Helsinki`|
 |__Executor__||
 |ConnectionStrings__AppDbContext|Connection string to the system database|
-|MaximumParallelSteps|`10` (default)|
 |PollingIntervalMs|`5000` (default)|
 |WEBSITE_TIME_ZONE|Time zone, e.g. `Europe/Helsinki`|
 |__Scheduler__||
@@ -767,7 +764,7 @@ When shutting down services, the recommended order is reversed.
 
 ### Executor service
 
-The executor service does not run any major startup tasks. It does validate the executor settings (max parallel tasks, polling interval etc.) defined in `appsettings.json` or in app configurations in Azure. If the settings do not pass validation, the service will not start.
+The executor service does not run any major startup tasks. It does validate the executor settings (polling interval etc.) defined in `appsettings.json` or in app configurations in Azure. If the settings do not pass validation, the service will not start.
 
 When the executor service is shut down, it will immediately send cancel commands to all steps currently being managed. If all steps are successfully canceled in 20 seconds, the service will shut down gracefully. After 20 seconds the service will forcefully shut down and abandon any steps that may have been left running. This may leave some steps and execution logs in an undefined state. Usually though 20 seconds should be enough for a graceful shutdown, if the polling interval is not too long.
 
