@@ -149,6 +149,11 @@ internal class JobOrchestrator : IJobOrchestrator
             foreach (var target in targets)
             {
                 // If the target has a max no of concurrent writes defined, wait until the target semaphore can be entered.
+                // This makes sure, if there are multiple steps with the same target in this specific execution,
+                // that they obey the concurrency cap set for the target data object.
+                // The TargetTracker orchestration tracker type makes sure these target concurrency limits are enforced globally across executions.
+                // It doesn't, however, enforce them inside a single execution when its observers are first registered in the global orchestrator.
+                // Thus, the need for these semaphores here specifically.
                 if (_instance._targetSemaphores.TryGetValue(target, out var semaphore))
                 {
                     await semaphore.WaitAsync(cancellationToken);
