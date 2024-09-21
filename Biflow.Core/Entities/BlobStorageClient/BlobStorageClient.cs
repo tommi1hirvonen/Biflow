@@ -20,10 +20,12 @@ public class BlobStorageClient
 
     [MaxLength(4000)]
     [JsonSensitive(WhenContains = "sig=")]
+    [JsonInclude]
     public string? StorageAccountUrl { get; private set; }
 
     [MaxLength(4000)]
     [JsonSensitive]
+    [JsonInclude]
     public string? ConnectionString { get; private set; }
 
     [JsonInclude]
