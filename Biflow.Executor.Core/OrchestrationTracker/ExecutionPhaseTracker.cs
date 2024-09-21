@@ -16,7 +16,7 @@ internal class ExecutionPhaseTracker(StepExecution stepExecution) : IOrchestrati
         return null;
     }
 
-    public StepAction? GetStepAction()
+    public ObserverAction GetStepAction()
     {
         // Get statuses of previous steps according to execution phases.
         var previousStepStatuses = _execution
@@ -26,15 +26,15 @@ internal class ExecutionPhaseTracker(StepExecution stepExecution) : IOrchestrati
             .ToArray();
         if (stepExecution.Execution.StopOnFirstError && previousStepStatuses.Any(status => status == OrchestrationStatus.Failed))
         {
-            return new Fail(StepExecutionStatus.Skipped, "Step was skipped because one or more steps failed and StopOnFirstError was set to true.");
+            return Actions.Fail(StepExecutionStatus.Skipped, "Step was skipped because one or more steps failed and StopOnFirstError was set to true.");
         }
 
         if (previousStepStatuses.All(status => status == OrchestrationStatus.Succeeded || status == OrchestrationStatus.Failed))
         {
-            return new Execute();
+            return Actions.Execute;
         }
 
         // No action should be taken with this step at this time.
-        return null;
+        return Actions.Wait;
     }
 }

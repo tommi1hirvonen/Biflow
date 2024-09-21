@@ -39,12 +39,12 @@ internal class DependencyTracker(StepExecution stepExecution) : IOrchestrationTr
         return null;
     }
 
-    public StepAction? GetStepAction()
+    public ObserverAction GetStepAction()
     {
         // If there are running steps that depend on this step => wait.
         if (_dependsOnThis.Any(d => d.Value == OrchestrationStatus.Running))
         {
-            return null;
+            return Actions.Wait;
         }
 
         var onSucceeded = stepExecution.ExecutionDependencies
@@ -63,16 +63,16 @@ internal class DependencyTracker(StepExecution stepExecution) : IOrchestrationTr
         if (onSucceeded.Any(d1 => dependencyStatuses.Any(d2 => d2.Status == OrchestrationStatus.Failed && d2.StepId == d1)) ||
             onFailed.Any(d1 => dependencyStatuses.Any(d2 => d2.Status == OrchestrationStatus.Succeeded && d2.StepId == d1)))
         {
-            return new Fail(StepExecutionStatus.DependenciesFailed);
+            return Actions.Fail(StepExecutionStatus.DependenciesFailed);
         }
         // No reason to skip this step.
         // If all the step's dependencies have been completed (success or failure), the step can be executed.
         else if (_dependencies.All(d => d.Value == OrchestrationStatus.Succeeded || d.Value == OrchestrationStatus.Failed))
         {
-            return new Execute();
+            return Actions.Execute;
         }
 
         // No action should be taken with this step at this time. Wait until next round.
-        return null;
+        return Actions.Wait;
     }
 }

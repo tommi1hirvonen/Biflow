@@ -6,7 +6,7 @@ internal interface IStepReadyForProcessingListener
 {
     public Task OnStepReadyForProcessingAsync(
         StepExecution stepExecution,
-        StepAction stepAction,
+        OrchestratorAction stepAction,
         IStepExecutionListener orchestrationListener,
         ExtendedCancellationTokenSource cts);
 }

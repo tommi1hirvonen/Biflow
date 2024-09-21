@@ -25,23 +25,23 @@ internal class DuplicateExecutionTracker(StepExecution stepExecution) : IOrchest
         return null;
     }
 
-    public StepAction? GetStepAction()
+    public ObserverAction GetStepAction()
     {
         // There are duplicates and the duplicate behaviour is defined as Fail.
         if (_duplicates.Any(d => d.Value == OrchestrationStatus.Running) &&
             stepExecution.DuplicateExecutionBehaviour == DuplicateExecutionBehaviour.Fail)
         {
-            return new Fail(StepExecutionStatus.Duplicate);
+            return Actions.Fail(StepExecutionStatus.Duplicate);
         }
 
         // There are duplicates and the duplicate behaviour is defined as Wait.
         if (_duplicates.Any(d => d.Value == OrchestrationStatus.Running) &&
             stepExecution.DuplicateExecutionBehaviour == DuplicateExecutionBehaviour.Wait)
         {
-            return null;
+            return Actions.Wait;
         }
 
         // No duplicates or the duplicate behaviour is Allow.
-        return new Execute();
+        return Actions.Execute;
     }
 }

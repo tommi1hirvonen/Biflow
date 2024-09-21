@@ -29,7 +29,7 @@ internal class TargetTracker(StepExecution stepExecution) : IOrchestrationTracke
         return null;
     }
 
-    public StepAction? GetStepAction()
+    public ObserverAction GetStepAction()
     {
         var targets = _writers
             .Where(w => w.Value == OrchestrationStatus.Running)
@@ -44,9 +44,9 @@ internal class TargetTracker(StepExecution stepExecution) : IOrchestrationTracke
             var limit = limits.GetValueOrDefault(target, 0);
             if (limit > 0 && count >= limit)
             {
-                return null;
+                return Actions.Wait;
             }
         }
-        return new Execute();
+        return Actions.Execute;
     }
 }

@@ -78,21 +78,21 @@ internal class GlobalOrchestrator(
 
     public Task OnStepReadyForProcessingAsync(
         StepExecution stepExecution,
-        StepAction stepAction,
+        OrchestratorAction stepAction,
         IStepExecutionListener listener,
         ExtendedCancellationTokenSource cts) =>
         stepAction.Match(
-            async (Execute execute) =>
+            async (ExecuteAction execute) =>
             {
                 UpdateStatus(stepExecution, OrchestrationStatus.Running);
                 await ExecuteStepAsync(stepExecution, listener, cts);
             },
-            async (Cancel cancel) =>
+            async (CancelAction cancel) =>
             {
                 UpdateStatus(stepExecution, OrchestrationStatus.Failed);
                 await UpdateExecutionCancelledAsync(stepExecution, cts.Username);
             },
-            async (Fail fail) =>
+            async (FailAction fail) =>
             {
                 UpdateStatus(stepExecution, OrchestrationStatus.Failed);
                 await UpdateStepAsync(stepExecution, fail.WithStatus, fail.ErrorMessage);
