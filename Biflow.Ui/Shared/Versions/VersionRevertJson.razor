@@ -53,13 +53,6 @@
                                 </HxDropdownItem>
                             </HxDropdownMenu>
                         </HxDropdownButtonGroup>
-                        @if (revertTask is not null)
-                        {
-                            <HxButton Color="ThemeColor.None" CssClass="btn-auto" OnClick="CancelRevertTask">
-                                <SvgIcon Icon="FeatherIcon.X" />
-                                Cancel
-                            </HxButton>
-                        }
                     </div>
                 </div>
                 @if (revertTask is not null)
@@ -68,7 +61,10 @@
                         <div class="col">
                             <HxAlert Color="ThemeColor.Info">
                                 <p><strong>Version revert in progress</strong></p>
-                                Please do not leave or close this page.
+                                <p>Please do not leave or close this page.</p>
+                                <p class="alert-link pointer" @onclick="CancelRevertTask">
+                                    Cancel
+                                </p>
                             </HxAlert>
                         </div>
                     </div>
