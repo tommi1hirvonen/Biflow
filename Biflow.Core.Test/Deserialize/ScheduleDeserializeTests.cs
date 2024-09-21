@@ -1,12 +1,11 @@
 ﻿using Biflow.Core.Entities;
-using System.Text.Json;
 using Xunit;
 
 namespace Biflow.Core.Test.Deserialize;
 
 public class ScheduleDeserializeTests
 {
-    private static readonly Schedule schedule = GetDeserializedSchedule();
+    private static readonly Schedule schedule = CreateSchedule();
 
     [Fact]
     public void Tags_NotEmpty()
@@ -20,15 +19,6 @@ public class ScheduleDeserializeTests
         Assert.NotEmpty(schedule.TagFilter);
     }
 
-
-    private static Schedule GetDeserializedSchedule()
-    {
-        var json = JsonSerializer.Serialize(CreateSchedule(), EnvironmentSnapshot.JsonSerializerOptions);
-        var schedule = JsonSerializer.Deserialize<Schedule>(json, EnvironmentSnapshot.JsonSerializerOptions);
-        ArgumentNullException.ThrowIfNull(schedule);
-        return schedule;
-    }
-
     private static Schedule CreateSchedule()
     {
         var schedule = new Schedule
@@ -38,6 +28,6 @@ public class ScheduleDeserializeTests
         };
         schedule.Tags.Add(new ScheduleTag("Test"));
         schedule.TagFilter.Add(new StepTag("Test"));
-        return schedule;
+        return schedule.JsonRoundtrip(EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
     }
 }

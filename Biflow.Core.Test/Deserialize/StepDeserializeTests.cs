@@ -1,12 +1,11 @@
 ﻿using Biflow.Core.Entities;
-using System.Text.Json;
 using Xunit;
 
 namespace Biflow.Core.Test.Deserialize;
 
 public class StepDeserializeTests
 {
-    private static readonly Step step = GetDeserializedStep();
+    private static readonly Step step = CreateStep();
 
     [Fact]
     public void Dependencies_NotEmpty()
@@ -32,14 +31,6 @@ public class StepDeserializeTests
         Assert.NotEmpty(step.ExecutionConditionParameters);
     }
 
-    private static Step GetDeserializedStep()
-    {
-        var json = JsonSerializer.Serialize(CreateStep(), EnvironmentSnapshot.JsonSerializerOptions);
-        var step = JsonSerializer.Deserialize<SqlStep>(json, EnvironmentSnapshot.JsonSerializerOptions);
-        ArgumentNullException.ThrowIfNull(step);
-        return step;
-    }
-
     private static SqlStep CreateStep()
     {
         var step = new SqlStep();
@@ -47,6 +38,6 @@ public class StepDeserializeTests
         step.DataObjects.Add(new StepDataObject());
         step.Tags.Add(new StepTag("Test"));
         step.ExecutionConditionParameters.Add(new ExecutionConditionParameter());
-        return step;
+        return step.JsonRoundtrip(EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
     }
 }
