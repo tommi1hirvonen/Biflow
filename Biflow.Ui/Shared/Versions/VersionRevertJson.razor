@@ -115,7 +115,7 @@
 
         try
         {
-            snapshot = JsonSerializer.Deserialize<EnvironmentSnapshot>(json, EnvironmentSnapshot.JsonSerializerOptions);
+            snapshot = EnvironmentSnapshot.FromJson(json);
         }
         catch (Exception ex)
         {

@@ -137,7 +137,7 @@ else
                 .Select(v => v.Snapshot)
                 .FirstOrDefaultAsync(cts.Token)
                 ?? throw new NotFoundException<EnvironmentSnapshot>(versionId);
-            var snapshot = JsonSerializer.Deserialize<EnvironmentSnapshot>(snapshotJson, EnvironmentSnapshot.JsonSerializerOptions);
+            var snapshot = EnvironmentSnapshot.FromJson(snapshotJson);
             ArgumentNullException.ThrowIfNull(snapshot);
 
             var command = new VersionRevertCommand(snapshot);

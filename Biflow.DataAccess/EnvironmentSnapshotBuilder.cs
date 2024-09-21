@@ -92,7 +92,7 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
             DataTables = dataTables,
             DataTableCategories = dataTableCategories
         };
-        var json = JsonSerializer.Serialize(snapshot, EnvironmentSnapshot.JsonSerializerOptions);
+        var json = snapshot.ToJson();
         ArgumentNullException.ThrowIfNull(json);
         return json;
     }

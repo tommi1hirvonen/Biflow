@@ -8,11 +8,22 @@ namespace Biflow.Core.Entities;
 
 public class EnvironmentSnapshot
 {
-    public static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    public static readonly JsonSerializerOptions JsonSerializerOptionsPreserveReferences = new()
     {
         WriteIndented = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         ReferenceHandler = ReferenceHandler.Preserve,
+        Converters = { new JsonStringEnumConverter() },
+        TypeInfoResolver = new DefaultJsonTypeInfoResolver
+        {
+            Modifiers = { SensitiveModifier }
+        }
+    };
+
+    public static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        WriteIndented = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         Converters = { new JsonStringEnumConverter() },
         TypeInfoResolver = new DefaultJsonTypeInfoResolver
         {
@@ -34,6 +45,12 @@ public class EnvironmentSnapshot
 
     public required MasterDataTableCategory[] DataTableCategories { get; init; }
     public required MasterDataTable[] DataTables { get; init; }
+
+    public string ToJson(bool preserveReferences = true) =>
+        JsonSerializer.Serialize(this, preserveReferences ? JsonSerializerOptionsPreserveReferences : JsonSerializerOptions);
+
+    public static EnvironmentSnapshot? FromJson(string json, bool referencesPreserved = true) =>
+        JsonSerializer.Deserialize<EnvironmentSnapshot>(json, referencesPreserved ? JsonSerializerOptionsPreserveReferences : JsonSerializerOptions);
 
     private static void SensitiveModifier(JsonTypeInfo typeInfo)
     {
