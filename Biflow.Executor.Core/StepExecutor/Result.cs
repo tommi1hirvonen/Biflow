@@ -12,8 +12,8 @@ internal partial class Result : OneOfBase<Success, Cancel, Failure>
     public static readonly Result Cancel = new Cancel();
 }
 
-internal readonly struct Success;
+internal class Success;
 
-internal readonly struct Failure;
+internal class Failure;
 
-internal readonly struct Cancel;
+internal class Cancel;
