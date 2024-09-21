@@ -216,8 +216,29 @@
             using var context = await DbContextFactory.CreateDbContextAsync();
             var version = await context.EnvironmentVersions.FirstOrDefaultAsync(v => v.VersionId == versionId);
             ArgumentNullException.ThrowIfNull(version);
-            var filename = $"version_{version.VersionId}.json";
-            var bytes = Encoding.UTF8.GetBytes(version.Snapshot);
+
+            IEnumerable<(string Name, string Content)> files =
+            [
+                ("snapshot.json", version.Snapshot),
+                ("snapshot_with_references.json", version.SnapshotWithReferencesPreserved)
+            ];
+
+            using var zipArchiveStream = new MemoryStream();
+            // The ZipArchive object is written to the Stream when it is disposed.
+            using (var zipArchive = new ZipArchive(zipArchiveStream, ZipArchiveMode.Create, leaveOpen: true))
+            {
+
+                foreach (var (name, content) in files)
+                {
+                    using var entryStream = zipArchive.CreateEntry(name).Open();
+                    using var entryStreamWriter = new StreamWriter(entryStream);
+                    await entryStreamWriter.WriteAsync(content);
+                }
+            }
+            zipArchiveStream.Position = 0; // reset the stream position
+
+            var filename = $"version_{version.VersionId}.zip";
+            var bytes = zipArchiveStream.ToArray();
             using var stream = new MemoryStream(bytes);
             using var streamRef = new DotNetStreamReference(stream: stream);
             await JS.InvokeVoidAsync("downloadFileFromStream", filename, streamRef);
