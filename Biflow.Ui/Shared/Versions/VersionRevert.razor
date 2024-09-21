@@ -134,10 +134,10 @@ else
             var snapshotJson = await context.EnvironmentVersions
                 .AsNoTracking()
                 .Where(v => v.VersionId == versionId)
-                .Select(v => v.Snapshot)
+                .Select(v => v.SnapshotWithReferencesPreserved)
                 .FirstOrDefaultAsync(cts.Token)
                 ?? throw new NotFoundException<EnvironmentSnapshot>(versionId);
-            var snapshot = EnvironmentSnapshot.FromJson(snapshotJson);
+            var snapshot = EnvironmentSnapshot.FromJson(snapshotJson, referencesPreserved: true);
             ArgumentNullException.ThrowIfNull(snapshot);
 
             var command = new VersionRevertCommand(snapshot);

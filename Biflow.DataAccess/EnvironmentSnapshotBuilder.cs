@@ -1,5 +1,4 @@
 ﻿using System.Data;
-using System.Text.Json;
 
 namespace Biflow.DataAccess;
 
@@ -7,7 +6,7 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
 {
     private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
 
-    public async Task<string> CreateAsync()
+    public async Task<EnvironmentSnapshot> CreateAsync()
     {
         using var context = await _dbContextFactory.CreateDbContextAsync();
 
@@ -90,8 +89,6 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
             DataTables = dataTables,
             DataTableCategories = dataTableCategories
         };
-        var json = snapshot.ToJson();
-        ArgumentNullException.ThrowIfNull(json);
-        return json;
+        return snapshot;
     }
 }

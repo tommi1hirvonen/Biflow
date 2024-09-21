@@ -5,5 +5,7 @@ internal class EnvironmentVersionEntityTypeConfiguration : IEntityTypeConfigurat
     public void Configure(EntityTypeBuilder<EnvironmentVersion> builder)
     {
         builder.ToTable("EnvironmentVersion").HasKey(x => x.VersionId);
+
+        builder.Property(x => x.SnapshotWithReferencesPreserved).HasDefaultValue("");
     }
 }

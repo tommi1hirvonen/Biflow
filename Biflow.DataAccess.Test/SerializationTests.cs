@@ -175,8 +175,8 @@ public class SerializationTests(SerializationTestsFixture fixture) : IClassFixtu
             DataTables = fixture.DataTables,
             DataTableCategories = fixture.DataTableCategories
         };
-        var json = snapshot.ToJson();
-        var items = EnvironmentSnapshot.FromJson(json);
+        var json = snapshot.ToJson(preserveReferences: true);
+        var items = EnvironmentSnapshot.FromJson(json, referencesPreserved: true);
         Assert.NotNull(items);
         Assert.NotEmpty(items.Jobs);
         var schedules = items.Jobs.SelectMany(j => j.Schedules).ToArray();

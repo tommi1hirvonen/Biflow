@@ -183,7 +183,8 @@
             var snapshot = await SnapshotBuilder.CreateAsync();
             var version = new EnvironmentVersion
             {
-                Snapshot = snapshot,
+                Snapshot = snapshot.ToJson(preserveReferences: false),
+                SnapshotWithReferencesPreserved = snapshot.ToJson(preserveReferences: true),
                 Description = description,
                 CreatedOn = DateTimeOffset.Now,
                 CreatedBy = username

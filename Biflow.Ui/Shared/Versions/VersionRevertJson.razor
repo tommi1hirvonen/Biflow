@@ -115,7 +115,8 @@
 
         try
         {
-            snapshot = EnvironmentSnapshot.FromJson(json);
+            // Assume referencesPreserved = true, because only then is reverting of the snapshot supported.
+            snapshot = EnvironmentSnapshot.FromJson(json, referencesPreserved: true);
         }
         catch (Exception ex)
         {

@@ -46,10 +46,10 @@ public class EnvironmentSnapshot
     public required MasterDataTableCategory[] DataTableCategories { get; init; }
     public required MasterDataTable[] DataTables { get; init; }
 
-    public string ToJson(bool preserveReferences = true) =>
+    public string ToJson(bool preserveReferences) =>
         JsonSerializer.Serialize(this, preserveReferences ? JsonSerializerOptionsPreserveReferences : JsonSerializerOptions);
 
-    public static EnvironmentSnapshot? FromJson(string json, bool referencesPreserved = true) =>
+    public static EnvironmentSnapshot? FromJson(string json, bool referencesPreserved) =>
         JsonSerializer.Deserialize<EnvironmentSnapshot>(json, referencesPreserved ? JsonSerializerOptionsPreserveReferences : JsonSerializerOptions);
 
     private static void SensitiveModifier(JsonTypeInfo typeInfo)
