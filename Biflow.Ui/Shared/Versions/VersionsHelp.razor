@@ -63,8 +63,34 @@
                     </ul>
                 </p>
                 <p>
-                    The snapshot JSON is serialized with .NET System.Text.Json. The serialization and deserialization of the snapshot relies on preserving object references, which affects the readability of the produced JSON and may make it harder to deserialize for serializers other than System.Text.Json.
-                    <br/>
+                    When creating an environment version snapshot, two variants of the JSON snapshot are generated and stored at the same time in the application database:
+                    <ul>
+                        <li>
+                            simplified JSON
+                            <ul>
+                                <li>easier for humans to read</li>
+                                <li>recommended for diff comparisons</li>
+                            </ul>
+                        </li>
+                        <li>
+                            JSON with object references preserved
+                            <ul>
+                                <li>harder for humans to read</li>
+                                <li>includes additional metadata properties that add complexity and reduce readability</li>
+                            </ul>
+                        </li>
+                    </ul>
+                    Both contain the full set of entities included in the snapshot, but only the one with object references preserved can be used when reverting to a previous snapshot. Both files can be exported and downloaded as a single compressed .zip file in the versions management page of the app.
+                </p>
+                <p>
+                    If you are downloading and storing the snapshots also in an external version control system, such as git, it is recommended to store and track both files. The simplified version can be used to more easily reason about diffs between commits. The version with object references, on the other hand, can be used to revert the environment if needed.
+                </p>
+                <p>
+                    When reverting to a previous version stored in the application database, the snapshot with references preserved is automatically used. If reverting to a snapshot provided by manually uploading a snapshot JSON file, please ensure the one with references is being uploaded.
+                </p>
+                <p>
+                    The snapshot JSON is serialized with .NET System.Text.Json. More information can be found in the following documentation:
+                    <br />
                     <a href="https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/preserve-references">Preserve references in System.Text.Json</a>
                 </p>
             </div>
