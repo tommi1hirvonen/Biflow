@@ -40,6 +40,10 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
             .Include(j => j.Tags.OrderBy(t => t.TagId))
             .OrderBy(j => j.JobId)
             .ToArrayAsync();
+
+        // Load steps and schedules separately in order to be able to sort their navigation collections.
+        // Because change tracking on the DbContext is enabled, the steps and schedules navigation collections
+        // on the jobs loaded previously will be automatically populated by EF Core.
         var steps = await context.Steps
             .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.ExpressionParameters)}")
             .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.InheritFromJobParameter)}")
@@ -55,12 +59,6 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
             .Include(s => s.Tags.OrderBy(t => t.TagId))
             .OrderBy(s => s.JobId).ThenBy(s => s.ScheduleId)
             .ToArrayAsync();
-
-        foreach (var job in jobs)
-        {
-            job.Steps.AddRange(steps.Where(s => s.JobId == job.JobId));
-            job.Schedules.AddRange(schedules.Where(s => s.JobId == job.JobId));
-        }
 
         var tags = await context.Tags
             .OrderBy(t => t.TagId)
