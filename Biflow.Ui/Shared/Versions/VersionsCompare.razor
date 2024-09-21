@@ -41,6 +41,9 @@
                        checked=@simplifiedJson
                        @onchange="args => SetSimplifiedJsonAsync((bool)args.Value!)">
                 <label class="form-check-label" for="simplified_json">Simplified JSON</label>
+                <HxPopover Trigger="PopoverTrigger.Hover" WrapperCssClass="ms-2" Content="Simplified JSON is easier for humans to read and is recommended for diff comparisons. JSON with object references preserved (non-simplified) includes additional metadata properties that add complexity and reduce readability but are required when deserializing and reverting snapshots.">
+                    <SvgIcon Icon="FeatherIcon.Info" />
+                </HxPopover>
             </div>
         </div>
         <div class="col-auto">
