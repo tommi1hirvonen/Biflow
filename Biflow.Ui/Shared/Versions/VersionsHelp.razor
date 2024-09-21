@@ -11,6 +11,10 @@
                     </ol>
                     These environment snapshots provide a simplified yet convenient version management system where changes can be undone by reverting to another version.
                 </p>
+                <HxAlert Color="ThemeColor.Secondary" CssClass="small">
+                    <strong>Note: </strong> Environment snapshots do not replace or make redundant the need for regular application database backups. It is highly recommended to have database level backup routines in place as with any system or application. Environment snapshots are meant to be a feature and tool for application users to more easily move between environment configurations without resorting to full database restore operations, and thus it should not be considered a data security feature as such.
+                </HxAlert>
+                <h5>Snapshot contents</h5>
                 <p>
                     The following entity types are stored in the snapshot JSON object:
                     <ul>
@@ -34,7 +38,7 @@
                     </ul>
                 </p>
                 <p>
-                    As the snapshot JSON can also be backed up in version control systems such as git, the following sensitive string values are not included in the snapshot:
+                    As the snapshot JSON can also be backed up in version control systems such as git, <strong>the following sensitive string values are not included in the snapshot</strong>:
                     <ul>
                         <li>App registration client secrets</li>
                         <li>Connection strings (when containing passwords)</li>
@@ -45,7 +49,7 @@
                         <li>Blob storage client connection strings</li>
                         <li>Blob storage client account urls (when containining signatures)</li>
                     </ul>
-                    When reverting to another version, sensitive values from the current version are carried over to the reverted version for matching objects. This makes it possible to at least in part retain some sensitive values across version reverts.
+                    When reverting to another version, <strong>sensitive values from the current version are carried over to the reverted version for matching objects</strong>. This makes it possible to at least in part retain some sensitive values across version reverts.
                 </p>
                 <p>
                     The following entity types are not included in the snapshot:
@@ -62,6 +66,7 @@
                         <li>Execution history</li>
                     </ul>
                 </p>
+                <h5>Snapshot variants</h5>
                 <p>
                     When creating an environment version snapshot, two variants of the JSON snapshot are generated and stored at the same time in the application database:
                     <ul>
@@ -76,22 +81,19 @@
                             JSON with object references preserved
                             <ul>
                                 <li>harder for humans to read</li>
-                                <li>includes additional metadata properties that add complexity and reduce readability</li>
+                                <li>includes additional metadata properties (<span class="font-monospace">$id</span>, <span class="font-monospace">$ref</span> and <span class="font-monospace">$values</span>) that add complexity and reduce readability</li>
                             </ul>
                         </li>
                     </ul>
-                    Both contain the full set of entities included in the snapshot, but only the one with object references preserved can be used when reverting to a previous snapshot. Both files can be exported and downloaded as a single compressed .zip file in the versions management page of the app.
+                    Both contain the full set of entities included in the snapshot, but <strong>only the one preserving object references can be used when reverting to a previous snapshot</strong>. Both files can be exported and downloaded as a single compressed .zip file in the versions management page of the app.
                 </p>
+                <h5>External version control</h5>
                 <p>
                     If you are downloading and storing the snapshots also in an external version control system, such as git, it is recommended to store and track both files. The simplified version can be used to more easily reason about diffs between commits. The version with object references, on the other hand, can be used to revert the environment if needed.
                 </p>
+                <h5>Reverting</h5>
                 <p>
                     When reverting to a previous version stored in the application database, the snapshot with references preserved is automatically used. If reverting to a snapshot provided by manually uploading a snapshot JSON file, please ensure the one with references is being uploaded.
-                </p>
-                <p>
-                    The snapshot JSON is serialized with .NET System.Text.Json. More information can be found in the following documentation:
-                    <br />
-                    <a href="https://learn.microsoft.com/en-us/dotnet/standard/serialization/system-text-json/preserve-references">Preserve references in System.Text.Json</a>
                 </p>
             </div>
         </div>
