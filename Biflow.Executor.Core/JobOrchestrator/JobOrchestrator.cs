@@ -47,13 +47,27 @@ internal class JobOrchestrator : IJobOrchestrator
                 var listener = new StepProcessingListener(this, step);
                 var duplicateTracker = new DuplicateExecutionTracker(step);
                 var targetTracker = new TargetTracker(step); // Handles target data object synchronization across job executions.
-                IEnumerable<IOrchestrationTracker> trackers = step.Execution.ExecutionMode switch
+
+                // The order in which trackers are enumerated in OrchestrationObserver matters.
+                // 1. Check for duplicate executions of the step
+                // 2. Check execution phases or dependencies or both, depending on the execution mode.
+                // 3. Check whether potential target data objects are already being written to or that their concurrency allows more steps to be executed.
+                IOrchestrationTracker[] trackers = step.Execution.ExecutionMode switch
                 {
                     ExecutionMode.ExecutionPhase => [duplicateTracker, new ExecutionPhaseTracker(step), targetTracker],
                     ExecutionMode.Dependency => [duplicateTracker, new DependencyTracker(step), targetTracker],
                     ExecutionMode.Hybrid => [duplicateTracker, new ExecutionPhaseTracker(step), new DependencyTracker(step), targetTracker],
-                    _ => throw new ApplicationException()
+                    _ => throw new ArgumentException($"Unsupported execution mode {step.Execution.ExecutionMode} for execution id {step.ExecutionId}")
                 };
+
+                trackers = step switch
+                {
+                    FunctionStepExecution function => [.. trackers, new FunctionAppTracker(function)],
+                    SqlStepExecution or PackageStepExecution => [.. trackers, new SqlConnectionTracker(step)],
+                    PipelineStepExecution pipeline => [.. trackers, new PipelineClientTracker(pipeline)],
+                    _ => trackers
+                };
+
                 var observer = new OrchestrationObserver(_logger, step, listener, trackers, _cancellationTokenSources[step]);
                 return observer;
             })
@@ -128,9 +142,9 @@ internal class JobOrchestrator : IJobOrchestrator
             // while waiting to enter one of the semaphores, they can be released afterwards.
 
             if (_instance._stepTypeSemaphores.TryGetValue(_stepExecution.StepType, out var stepTypeSemaphore))
-                {
-            await stepTypeSemaphore.WaitAsync(cancellationToken);
-            _enteredSemaphores.Add(stepTypeSemaphore);
+            {
+                await stepTypeSemaphore.WaitAsync(cancellationToken);
+                _enteredSemaphores.Add(stepTypeSemaphore);
             }
 
             await _instance._mainSemaphore.WaitAsync(cancellationToken);
