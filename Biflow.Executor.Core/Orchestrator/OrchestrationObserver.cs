@@ -22,38 +22,91 @@ internal class OrchestrationObserver(
 
     public int Priority => StepExecution.ExecutionPhase;
 
-    public void Subscribe(IOrchestrationObservable provider)
-    {
-        _unsubscriber = provider.Subscribe(this);
-    }
-
-    public void Dispose()
-    {
-        _unsubscriber?.Dispose();
-        _unsubscriber = null;
-    }
-
-    public IEnumerable<StepExecutionMonitor> RegisterInitialUpdates(IEnumerable<OrchestrationUpdate> initialStatuses)
+    public IEnumerable<StepExecutionMonitor> RegisterInitialUpdates(IEnumerable<OrchestrationUpdate> updates)
     {
         try
         {
-            var monitors = initialStatuses
+            var monitors = updates
                 .SelectMany(HandleUpdate)
                 .ToArray();
-            var action = GetStepAction();
-            if (action is not null)
-            {
-                SetResult(action);
-            }
             return monitors;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error while registering initial updates in orchestration observer");
-            var action = Actions.Fail(StepExecutionStatus.Failed, $"Error while registering initial updates in orchestration observer");
+            var action = Actions.Fail(StepExecutionStatus.Failed, "Error while registering initial updates in orchestration observer");
             SetResult(action);
             return [];
         }   
+    }
+
+    public void RegisterInitialUpdate(OrchestrationUpdate update)
+    {
+        try
+        {
+            HandleUpdate(update);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while registering an initial update in orchestration observer");
+            var action = Actions.Fail(StepExecutionStatus.Failed, "Error while registering an initial updates in orchestration observer");
+            SetResult(action);
+        }
+    }
+
+    public Task? AfterInitialUpdatesRegisteredAsync(
+        Func<StepExecution, IStepExecutionListener, ExtendedCancellationTokenSource, Task> executeCallback)
+    {
+        try
+        {
+            // The TaskCompletionSource result was set in RegisterInitialUpdates().
+            // Do not request processing but instead let the observer continue to WaitForProcessingAsync().
+            if (_tcs.Task.IsCompleted)
+            {
+                return null;
+            }
+
+            var action = GetStepAction();
+            if (action?.Value is ExecuteAction)
+            {
+                // If the action was ExecuteAction already after registering initial updates, request execution.
+                return executeCallback(StepExecution, _orchestrationListener, _cancellationTokenSource);
+            }
+            else if (action is not null)
+            {
+                // If the action was something else (fail, cancel), set the result and let the observer continue to WaitForProcessingAsync().
+                SetResult(action);
+            }
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while evaluating actions after registering initial updates");
+            var action = Actions.Fail(StepExecutionStatus.Failed, "Error while evaluating actions after registering initial updates");
+            SetResult(action);
+            return null;
+        }
+    }
+
+    public async Task WaitForProcessingAsync(
+        Func<StepExecution, OrchestratorAction, IStepExecutionListener, ExtendedCancellationTokenSource, Task> processCallback)
+    {
+        OrchestratorAction stepAction;
+        try
+        {
+            stepAction = await _tcs.Task.WaitAsync(_cancellationTokenSource.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            stepAction = Actions.Cancel;
+        }
+        await processCallback(StepExecution, stepAction, _orchestrationListener, _cancellationTokenSource);
+    }
+
+    public void Subscribe(IOrchestrationObservable provider)
+    {
+        _unsubscriber = provider.Subscribe(this);
     }
 
     public IEnumerable<StepExecutionMonitor> OnUpdate(OrchestrationUpdate value)
@@ -75,20 +128,6 @@ internal class OrchestrationObserver(
             SetResult(action);
             return [];
         }
-    }
-
-    public async Task WaitForProcessingAsync(IStepReadyForProcessingListener stepReadyListener)
-    {
-        OrchestratorAction stepAction;
-        try
-        {
-            stepAction = await _tcs.Task.WaitAsync(_cancellationTokenSource.Token);
-        }
-        catch (OperationCanceledException)
-        {
-            stepAction = Actions.Cancel;
-        }
-        await stepReadyListener.OnStepReadyForProcessingAsync(StepExecution, stepAction, _orchestrationListener, _cancellationTokenSource);
     }
 
     /// <summary>
@@ -136,5 +175,11 @@ internal class OrchestrationObserver(
         _unsubscriber?.Dispose();
         _unsubscriber = null;
         _tcs.TrySetResult(action);
+    }
+
+    public void Dispose()
+    {
+        _unsubscriber?.Dispose();
+        _unsubscriber = null;
     }
 }

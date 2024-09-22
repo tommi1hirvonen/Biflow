@@ -7,7 +7,7 @@ namespace Biflow.Executor.Core.Orchestrator;
 internal class GlobalOrchestrator(
     ILogger<GlobalOrchestrator> logger,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    IStepExecutorProvider stepExecutorProvider) : IGlobalOrchestrator, IStepReadyForProcessingListener
+    IStepExecutorProvider stepExecutorProvider) : IGlobalOrchestrator
 {
     private readonly object _lock = new();
     private readonly ILogger<GlobalOrchestrator> _logger = logger;
@@ -20,27 +20,72 @@ internal class GlobalOrchestrator(
     {
         try
         {
-            Task[] tasks;
-            StepExecutionMonitor[] monitors;
+            List<Task> tasks = [];
+            List<StepExecutionMonitor> monitors = [];
             // Acquire lock for editing the step statuses and until all observers have subscribed.
             lock (_lock)
             {
-                var monitorsFromExistingObservers = observers
-                    .SelectMany(observer => UpdateStatus(observer.StepExecution, OrchestrationStatus.NotStarted))
-                    .ToArray();
+                // Update the orchestration statuses with all new observers.
+                foreach (var observer in observers)
+                {
+                    // Existing observers will report back any new monitors caused by the new observers.
+                    var monitorsFromExistingObserver = UpdateStatus(observer.StepExecution, OrchestrationStatus.NotStarted);
+                    monitors.AddRange(monitorsFromExistingObserver);
+                }
+                
+                // Capture the statuses for all steps currently in orchestration, including the newly added steps.
                 var statuses = _stepStatuses.Select(s => new OrchestrationUpdate(s.Key, s.Value)).ToArray();
-                var monitorsFromNewObservers = observers
-                    .SelectMany(observer =>
+
+                // Iterate over the new observers, register initial updates
+                // and tell the observers to subscribe for orchestration updates.
+                foreach (var observer in observers)
+                {
+                    // New observers will report back any monitors added because of both previosuly and newly registered step executions.
+                    var monitorsFromNewObserver = observer.RegisterInitialUpdates(statuses);
+                    monitors.AddRange(monitorsFromNewObserver);
+                }
+
+                // After all new observers have subscribed, iterate over them in priority order
+                // and check whether the observers request immediate execution or start waiting for processing.
+                // In case of immediate execution, the status updates of started steps will be sent to the remaining new observers
+                // since they have already subscribed.
+                foreach (var observer in observers.OrderBy(o => o.Priority))
+                {
+                    // Local function to update the orchestration status and to execute the step.
+                    // The function is not async, so UpdateStatus() will be called before the Task is returned.
+                    Task UpdateAndExecuteAsync(StepExecution stepExecution, IStepExecutionListener listener, ExtendedCancellationTokenSource cts)
                     {
-                        var monitorsFromInitialUpdates = observer.RegisterInitialUpdates(statuses);
-                        observer.Subscribe(this);
-                        return monitorsFromInitialUpdates;
-                    }).ToArray();
-                tasks = observers
-                    .OrderBy(observer => observer.Priority) // Start tasks with higher priority (lower value) first.
-                    .Select(observer => observer.WaitForProcessingAsync(this))
-                    .ToArray();
-                monitors = [.. monitorsFromExistingObservers, .. monitorsFromNewObservers];
+                        // Update the status for observers that have already subscribed.
+                        UpdateStatus(stepExecution, OrchestrationStatus.Running);
+                        var update = new OrchestrationUpdate(stepExecution, OrchestrationStatus.Running);
+                        foreach (var o in observers)
+                        {
+                            // Push updates to the new observers as initial updates.
+                            o.RegisterInitialUpdate(update);
+                        }
+                        return ExecuteStepAsync(stepExecution, listener, cts);
+                    };
+
+                    // Check if the observer is requesting execution immediately before waiting.
+                    if (observer.AfterInitialUpdatesRegisteredAsync(executeCallback: UpdateAndExecuteAsync) is Task executeTask)
+                    {
+                        // If the returned Task is not null, the step can be executed immediately.
+                        tasks.Add(executeTask);
+                    }
+                    else
+                    {
+                        // Otherwise wait for the observer to be ready for processing.
+                        var waitTask = observer.WaitForProcessingAsync(processCallback: OnStepReadyForProcessingAsync);
+                        tasks.Add(waitTask);
+                    }
+                }
+
+                // Tell the observers to subscribe to receive normal updates from the orchestrator
+                // after the previous lifecycle methods have been called.
+                foreach (var observer in observers)
+                {
+                    observer.Subscribe(this); // Calling Subscribe() will add the observer to the _observers List.
+                }
             }
             _ = AddMonitorsAsync(monitors);
             await Task.WhenAll(tasks);
@@ -76,7 +121,7 @@ internal class GlobalOrchestrator(
         return new Unsubscriber(_observers, observer);
     }
 
-    public Task OnStepReadyForProcessingAsync(
+    private Task OnStepReadyForProcessingAsync(
         StepExecution stepExecution,
         OrchestratorAction stepAction,
         IStepExecutionListener listener,
