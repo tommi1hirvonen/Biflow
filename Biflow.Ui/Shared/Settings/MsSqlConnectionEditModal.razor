@@ -183,6 +183,8 @@
                 .ThenInclude(step => step.Job)
                 .Include(c => c.AgentJobSteps)
                 .ThenInclude(step => step.Job)
+                .Include(c => c.DataTables)
+                .ThenInclude(t => t.Category)
                 .FirstAsync(c => c.ConnectionId == connectionId);
             SetCredential();
         }
