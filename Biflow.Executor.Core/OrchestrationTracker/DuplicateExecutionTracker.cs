@@ -33,6 +33,12 @@ internal class DuplicateExecutionTracker(StepExecution stepExecution) : IOrchest
 
     public ObserverAction GetStepAction()
     {
+        // If there are no tracked duplicates, return early.
+        if (_duplicates.Count == 0)
+        {
+            return Actions.Execute;
+        }
+
         // There are duplicates and the duplicate behaviour is defined as Fail.
         if (stepExecution.DuplicateExecutionBehaviour == DuplicateExecutionBehaviour.Fail
             && _duplicates.Any(d => d.Value == OrchestrationStatus.Running))

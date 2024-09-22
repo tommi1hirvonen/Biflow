@@ -10,6 +10,13 @@ internal class DependencyTracker(StepExecution stepExecution) : IOrchestrationTr
     public StepExecutionMonitor? HandleUpdate(OrchestrationUpdate value)
     {
         var (step, status) = value;
+
+        // Step cannot depend on itself. If the StepIds match, return early.
+        if (step.StepId == stepExecution.StepId)
+        {
+            return null;
+        }
+
         // Keep track of steps that this step depends on.
         if (stepExecution.ExecutionDependencies.Any(d => d.DependantOnStepId == step.StepId))
         {
@@ -41,6 +48,12 @@ internal class DependencyTracker(StepExecution stepExecution) : IOrchestrationTr
 
     public ObserverAction GetStepAction()
     {
+        // If there are no dependencies that are being tracked, return early.
+        if (_dependencies.Count == 0 && _dependsOnThis.Count == 0)
+        {
+            return Actions.Execute;
+        }
+
         // If there are running steps that depend on this step => wait.
         if (_dependsOnThis.Any(d => d.Value == OrchestrationStatus.Running))
         {
