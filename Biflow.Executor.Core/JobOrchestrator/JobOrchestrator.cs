@@ -11,7 +11,6 @@ internal class JobOrchestrator : IJobOrchestrator
     private readonly IGlobalOrchestrator _globalOrchestrator;
     private readonly SemaphoreSlim _mainSemaphore;
     private readonly Dictionary<StepType, SemaphoreSlim> _stepTypeSemaphores;
-    private readonly Dictionary<ExecutionDataObject, SemaphoreSlim> _targetSemaphores;
     private readonly Execution _execution;
     private readonly Dictionary<StepExecution, ExtendedCancellationTokenSource> _cancellationTokenSources;
 
@@ -34,26 +33,10 @@ internal class JobOrchestrator : IJobOrchestrator
         _mainSemaphore = new SemaphoreSlim(maxParallelStepsMain, maxParallelStepsMain);
 
         // Create a Dictionary with max parallel steps for each step type.
-        _stepTypeSemaphores = Enum.GetValues<StepType>()
-            .ToDictionary(type => type, type =>
-            {
-                // Default to the main value of max parallel steps if the setting was not defined for the step type.
-                var typeConcurrency = execution.ExecutionConcurrencies.FirstOrDefault(c => c.StepType == type)?.MaxParallelSteps;
-                var maxParallelSteps = typeConcurrency > 0 ? (int)typeConcurrency : maxParallelStepsMain;
-                return new SemaphoreSlim(maxParallelSteps, maxParallelSteps);
-            });
-
-        // Create a Dictionary with max concurrent steps for each target.
-        // This allows only a predefined number of steps to write to the same target concurrently.
-        // This handles situations where the same job execution might start immediately writing to the
-        // same data object with two different steps (not handled by TargetTracker).
-        var targets = _execution.StepExecutions
-            .SelectMany(e => e.DataObjects)
-            .Where(d => d.ReferenceType == DataObjectReferenceType.Target)
-            .Select(t => t.DataObject)
-            .Where(t => t.MaxConcurrentWrites > 0)
-            .Distinct();
-        _targetSemaphores = targets.ToDictionary(t => t, t => new SemaphoreSlim(t.MaxConcurrentWrites, t.MaxConcurrentWrites));
+        _stepTypeSemaphores = execution.ExecutionConcurrencies
+            .Where(c => c.MaxParallelSteps > 0)
+            .DistinctBy(c => c.StepType)
+            .ToDictionary(c => c.StepType, c => new SemaphoreSlim(c.MaxParallelSteps, c.MaxParallelSteps));
     }
 
     public async Task RunAsync(CancellationToken cancellationToken)
@@ -143,26 +126,13 @@ internal class JobOrchestrator : IJobOrchestrator
             // Start from the most detailed semaphores and move towards the main semaphore.
             // Keep track of semaphores that have been entered. If the step is stopped/canceled
             // while waiting to enter one of the semaphores, they can be released afterwards.
-            var targets = _stepExecution.DataObjects
-                .Where(d => d.ReferenceType == DataObjectReferenceType.Target)
-                .Select(d => d.DataObject);
-            foreach (var target in targets)
-            {
-                // If the target has a max no of concurrent writes defined, wait until the target semaphore can be entered.
-                // This makes sure, if there are multiple steps with the same target in this specific execution,
-                // that they obey the concurrency cap set for the target data object.
-                // The TargetTracker orchestration tracker type makes sure these target concurrency limits are enforced globally across executions.
-                // It doesn't, however, enforce them inside a single execution when its observers are first registered in the global orchestrator.
-                // Thus, the need for these semaphores here specifically.
-                if (_instance._targetSemaphores.TryGetValue(target, out var semaphore))
+
+            if (_instance._stepTypeSemaphores.TryGetValue(_stepExecution.StepType, out var stepTypeSemaphore))
                 {
-                    await semaphore.WaitAsync(cancellationToken);
-                    _enteredSemaphores.Add(semaphore);
-                }
-            }
-            var stepTypeSemaphore = _instance._stepTypeSemaphores[_stepExecution.StepType];
             await stepTypeSemaphore.WaitAsync(cancellationToken);
             _enteredSemaphores.Add(stepTypeSemaphore);
+            }
+
             await _instance._mainSemaphore.WaitAsync(cancellationToken);
             _enteredSemaphores.Add(_instance._mainSemaphore);
         }
