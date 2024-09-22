@@ -8,8 +8,14 @@ internal class DuplicateExecutionTracker(StepExecution stepExecution) : IOrchest
 
     public StepExecutionMonitor? HandleUpdate(OrchestrationUpdate value)
     {
+        // If the duplicate execution behaviour is Allow, no need to track steps.
+        if (stepExecution.DuplicateExecutionBehaviour == DuplicateExecutionBehaviour.Allow)
+        {
+            return null;
+        }
+
         var (step, status) = value;
-        // Keep track of the same being possibly executed in a different execution.
+        // Keep track of the same step being possibly executed in a different execution.
         if (step.StepId == stepExecution.StepId && step.ExecutionId != stepExecution.ExecutionId)
         {
             _duplicates[step] = status;
@@ -28,15 +34,15 @@ internal class DuplicateExecutionTracker(StepExecution stepExecution) : IOrchest
     public ObserverAction GetStepAction()
     {
         // There are duplicates and the duplicate behaviour is defined as Fail.
-        if (_duplicates.Any(d => d.Value == OrchestrationStatus.Running) &&
-            stepExecution.DuplicateExecutionBehaviour == DuplicateExecutionBehaviour.Fail)
+        if (stepExecution.DuplicateExecutionBehaviour == DuplicateExecutionBehaviour.Fail
+            && _duplicates.Any(d => d.Value == OrchestrationStatus.Running))
         {
             return Actions.Fail(StepExecutionStatus.Duplicate);
         }
 
         // There are duplicates and the duplicate behaviour is defined as Wait.
-        if (_duplicates.Any(d => d.Value == OrchestrationStatus.Running) &&
-            stepExecution.DuplicateExecutionBehaviour == DuplicateExecutionBehaviour.Wait)
+        if (stepExecution.DuplicateExecutionBehaviour == DuplicateExecutionBehaviour.Wait
+            && _duplicates.Any(d => d.Value == OrchestrationStatus.Running))
         {
             return Actions.Wait;
         }
