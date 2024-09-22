@@ -44,21 +44,17 @@
                 </th>
                 <th></th>
                 <th></th>
-                <th>
-                    Connection string
-                </th>
-                <th></th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
             @if (connections is null)
             {
-                <tr><td colspan="7" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
+                <tr><td colspan="5" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
             else if (connections.Count == 0)
             {
-                <tr><td colspan="7">No connections</td></tr>
+                <tr><td colspan="5">No connections</td></tr>
             }
             else
             {
@@ -89,31 +85,6 @@
                                     </HxDropdownMenu>
                                 </HxDropdownButtonGroup>
                             </HxButtonGroup>
-                        </td>
-                        <td>
-                            <HxButtonGroup>
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
-                                            @onclick="() => showConnectionString[connection.ConnectionId] = !showConnectionString[connection.ConnectionId]">
-                                    @if (showConnectionString[connection.ConnectionId])
-                                    {
-                                        <SvgIcon Icon="FeatherIcon.EyeOff" />
-                                    }
-                                    else
-                                    {
-                                        <SvgIcon Icon="FeatherIcon.Eye" />
-                                    }
-                                </HxButton>
-                            </HxButtonGroup>
-                        </td>
-                        <td class="align-middle font-monospace small">
-                            @if (showConnectionString[connection.ConnectionId])
-                            {
-                                @connection.ConnectionString
-                            }
-                            else
-                            {
-                                <text>************************************************************</text>
-                            }
                         </td>
                         <td class="align-middle">
                             @(jobs > 0 ? $"{jobs} job(s)" : null)
@@ -188,7 +159,6 @@
 
     private List<Credential> credentials = [];
     private List<ConnectionBase>? connections;
-    private Dictionary<Guid, bool> showConnectionString = [];
     private ConnectionBase? stepsConnection;
     private HxModal? stepsModal;
 
@@ -224,7 +194,6 @@
             .ThenInclude(step => step.Job)
             .OrderBy(c => c.ConnectionName)
             .ToListAsync();
-        showConnectionString = connections.ToDictionary(key => key.ConnectionId, value => false);
     }
 
     private async Task DeleteConnection(ConnectionBase connection)
@@ -233,7 +202,6 @@
         {
             await Mediator.SendAsync(new DeleteConnectionCommand(connection.ConnectionId));
             connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
-            showConnectionString.Remove(connection.ConnectionId);
         }
         catch (Exception ex)
         {
@@ -248,7 +216,6 @@
         {
             await Mediator.SendAsync(new CreateConnectionCommand(connection));
             connections?.Add(connection);
-            showConnectionString[connection.ConnectionId] = false;
         }
         else
         {
