@@ -165,7 +165,7 @@ internal class GlobalOrchestrator(
         bool result = false;
         try
         {
-            await listener.OnPreExecuteAsync(cts);
+            await listener.OnPreExecuteAsync(stepExecution, cts);
             var stepExecutor = _stepExecutorProvider.GetExecutorFor(stepExecution, stepExecution.StepExecutionAttempts.First());
             result = await stepExecutor.RunAsync(stepExecution, cts);
         }
@@ -193,7 +193,7 @@ internal class GlobalOrchestrator(
             var status = result ? OrchestrationStatus.Succeeded : OrchestrationStatus.Failed;
             UpdateStatus(stepExecution, status);
 
-            await listener.OnPostExecuteAsync();
+            await listener.OnPostExecuteAsync(stepExecution);
         }
     }
 

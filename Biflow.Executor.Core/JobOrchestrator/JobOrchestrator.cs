@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.JobOrchestrator;
 
-internal class JobOrchestrator : IJobOrchestrator
+internal class JobOrchestrator : IJobOrchestrator, IStepExecutionListener
 {
     private readonly ILogger<JobOrchestrator> _logger;
     private readonly IGlobalOrchestrator _globalOrchestrator;
@@ -13,6 +13,7 @@ internal class JobOrchestrator : IJobOrchestrator
     private readonly Dictionary<StepType, SemaphoreSlim> _stepTypeSemaphores;
     private readonly Execution _execution;
     private readonly Dictionary<StepExecution, ExtendedCancellationTokenSource> _cancellationTokenSources;
+    private readonly Dictionary<StepExecution, List<SemaphoreSlim>> _enteredSemaphores = [];
 
     public JobOrchestrator(
         ILogger<JobOrchestrator> logger,
@@ -44,7 +45,6 @@ internal class JobOrchestrator : IJobOrchestrator
         var observers = _execution.StepExecutions
             .Select(step =>
             {
-                var listener = new StepProcessingListener(this, step);
                 var duplicateTracker = new DuplicateExecutionTracker(step);
                 var targetTracker = new TargetTracker(step); // Handles target data object synchronization across job executions.
 
@@ -68,7 +68,13 @@ internal class JobOrchestrator : IJobOrchestrator
                     _ => trackers
                 };
 
-                var observer = new OrchestrationObserver(_logger, step, listener, trackers, _cancellationTokenSources[step]);
+                var observer = new OrchestrationObserver(
+                    logger: _logger,
+                    stepExecution: step,
+                    orchestrationListener: this,
+                    orchestrationTrackers: trackers,
+                    cancellationTokenSource: _cancellationTokenSources[step]);
+
                 return observer;
             })
             .ToList();
@@ -126,42 +132,38 @@ internal class JobOrchestrator : IJobOrchestrator
         }
     }
 
-    private class StepProcessingListener(JobOrchestrator instance, StepExecution stepExecution) : IStepExecutionListener
+    public async Task OnPreExecuteAsync(StepExecution stepExecution, ExtendedCancellationTokenSource cancellationTokenSource)
     {
-        private readonly JobOrchestrator _instance = instance;
-        private readonly StepExecution _stepExecution = stepExecution;
-        private readonly List<SemaphoreSlim> _enteredSemaphores = [];
+        var cancellationToken = cancellationTokenSource.Token;
 
-        public async Task OnPreExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+        List<SemaphoreSlim> enteredSemaphores = [];
+        _enteredSemaphores[stepExecution] = enteredSemaphores;
+
+        // Wait until the semaphores can be entered and the step can be started.
+        // Start from the most detailed semaphores and move towards the main semaphore.
+        // Keep track of semaphores that have been entered. If the step is stopped/canceled
+        // while waiting to enter one of the semaphores, they can be released afterwards.
+
+        if (_stepTypeSemaphores.TryGetValue(stepExecution.StepType, out var stepTypeSemaphore))
         {
-            var cancellationToken = cancellationTokenSource.Token;
-
-            // Wait until the semaphores can be entered and the step can be started.
-            // Start from the most detailed semaphores and move towards the main semaphore.
-            // Keep track of semaphores that have been entered. If the step is stopped/canceled
-            // while waiting to enter one of the semaphores, they can be released afterwards.
-
-            if (_instance._stepTypeSemaphores.TryGetValue(_stepExecution.StepType, out var stepTypeSemaphore))
-            {
-                await stepTypeSemaphore.WaitAsync(cancellationToken);
-                _enteredSemaphores.Add(stepTypeSemaphore);
-            }
-
-            await _instance._mainSemaphore.WaitAsync(cancellationToken);
-            _enteredSemaphores.Add(_instance._mainSemaphore);
+            await stepTypeSemaphore.WaitAsync(cancellationToken);
+            enteredSemaphores.Add(stepTypeSemaphore);
         }
 
-        public Task OnPostExecuteAsync()
-        {
-            // Release the semaphores once to make room for new parallel executions.
-            foreach (var semaphore in _enteredSemaphores)
-            {
-                semaphore.Release();
-            }
-
-            _instance._logger.LogInformation("{ExecutionId} {step} Finished step execution", _instance._execution.ExecutionId, _stepExecution);
-            return Task.CompletedTask;
-        }
+        await _mainSemaphore.WaitAsync(cancellationToken);
+        enteredSemaphores.Add(_mainSemaphore);
     }
 
+    public Task OnPostExecuteAsync(StepExecution stepExecution)
+    {
+        foreach (var semaphore in _enteredSemaphores[stepExecution])
+        {
+            semaphore.Release();
+        }
+
+        _enteredSemaphores.Remove(stepExecution);
+
+        _logger.LogInformation("{ExecutionId} {step} Finished step execution", _execution.ExecutionId, stepExecution);
+        return Task.CompletedTask;
+    }
 }
