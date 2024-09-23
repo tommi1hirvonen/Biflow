@@ -51,12 +51,17 @@ public static class Extensions
         // Timeout for hosted services (e.g. ExecutionManager) to shut down gracefully when StopAsync() is called.
         services.Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromSeconds(20));
 
-        // Add step executors
-        services.Scan(selector =>
-            selector.FromAssemblyOf<IStepExecutor>()
-                .AddClasses(filter => filter.AssignableTo(typeof(IStepExecutor<,>)))
-                .AsImplementedInterfaces()
-                .WithSingletonLifetime());
+        // Scan assembly and add step executors as their implemented type and as singletons.
+        var stepExecutorType = typeof(IStepExecutor<,>);
+        var types = stepExecutorType.Assembly.GetTypes()
+            .Where(t => t.IsClass && !t.IsAbstract && t.IsAssignableTo(typeof(IStepExecutor)));
+        foreach (var type in types)
+        {
+            var @interface = type.GetInterfaces()
+                .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == stepExecutorType);
+            if (@interface is null) continue;
+            services.AddSingleton(@interface, type);
+        }
 
         return services;
     }
