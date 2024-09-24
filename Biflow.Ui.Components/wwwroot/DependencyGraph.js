@@ -62,6 +62,7 @@ export function drawDependencyGraph(dotNetObject, graphContainer, svgId, nodesJs
     svg.call(zoom.transform, d3.zoomIdentity.translate(translateX, translateY).scale(zoomScale));
 
     var nodeOnClick = async function (event) {
+        event.preventDefault();
         await dotNetObject.invokeMethodAsync("OnNodeClick", this.id, event.clientX, event.clientY);
     };
 
@@ -72,6 +73,7 @@ export function drawDependencyGraph(dotNetObject, graphContainer, svgId, nodesJs
         var node = nodes.find(s => s.Id == element.id);
         if (node.EnableOnClick) {
             element.addEventListener('click', nodeOnClick, false);
+            element.addEventListener('contextmenu', nodeOnClick, false);
         }
         var tooltipText = node.TooltipText;
         if (typeof tooltipText == 'string') {
