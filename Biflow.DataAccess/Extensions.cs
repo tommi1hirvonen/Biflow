@@ -27,15 +27,16 @@ public static class Extensions
         var section = configuration.GetSection("SqlColumnEncryptionAzureKeyVaultProvider");
         if (section.Exists())
         {
-            var miSection = section.GetSection("ManagedIdentity");
+            var useSystemAssignedManagedIdentity = section.GetValue("UseSystemAssignedManagedIdentity", false);
+            var userAssignedManagedIdentityClientId = section.GetValue<string?>("UserAssignedManagedIdentityClientId");
             var spSection = section.GetSection("ServicePrincipal");
-            if (miSection.Exists())
+            if (useSystemAssignedManagedIdentity)
             {
-                var useSystemAssignedManagedIdentity = miSection.GetValue("UseSystemAssignedManagedIdentity", false);
-                if (useSystemAssignedManagedIdentity)
-                {
-                    credential = new ManagedIdentityCredential();
-                }
+                credential = new ManagedIdentityCredential();
+            }
+            else if (userAssignedManagedIdentityClientId is not null)
+            {
+                credential = new ManagedIdentityCredential(userAssignedManagedIdentityClientId);
             }
             else if (spSection.Exists())
             {
