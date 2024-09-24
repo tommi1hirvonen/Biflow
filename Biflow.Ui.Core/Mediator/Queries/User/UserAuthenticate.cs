@@ -1,4 +1,5 @@
-﻿using BC = BCrypt.Net.BCrypt;
+﻿using Microsoft.Extensions.Logging;
+using BC = BCrypt.Net.BCrypt;
 
 namespace Biflow.Ui.Core;
 
@@ -6,22 +7,25 @@ public record UserAuthenticateQuery(string Username, string Password) : IRequest
 
 public record UserAuthenticateQueryResponse(IEnumerable<string> Roles);
 
-internal class UserAuthenticateQueryHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+internal class UserAuthenticateQueryHandler(
+    IDbContextFactory<AppDbContext> dbContextFactory,
+    ILogger<UserAuthenticateQueryHandler> logger)
     : IRequestHandler<UserAuthenticateQuery, UserAuthenticateQueryResponse>
 {
     public async Task<UserAuthenticateQueryResponse> Handle(UserAuthenticateQuery request, CancellationToken cancellationToken)
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var result = await context.Users
-            .Where(u => u.Username == request.Username)
-            .Select(u => new
+            .Where(user => user.Username == request.Username)
+            .Select(user => new
             {
-                PasswordHash = EF.Property<string>(u, "PasswordHash"),
-                u.Roles
+                PasswordHash = EF.Property<string>(user, "PasswordHash"),
+                User = user
             })
             .FirstOrDefaultAsync(cancellationToken);
-        var (hash, roles) = (result?.PasswordHash, result?.Roles);
-        if (hash is null || roles is null)
+        var (hash, user) = (result?.PasswordHash, result?.User);
+
+        if (hash is null || user is null)
         {
             return new([]);
         }
@@ -32,6 +36,21 @@ internal class UserAuthenticateQueryHandler(IDbContextFactory<AppDbContext> dbCo
             return new([]);
         }
 
-        return new(roles ?? []);
+        // No last login or it was over an hour ago.
+        if (user.LastLoginOn is null || user.LastLoginOn is DateTimeOffset dto && dto.AddHours(1) < DateTimeOffset.UtcNow)
+        {
+            // Update last login date and time.
+            user.LastLoginOn = DateTimeOffset.UtcNow;
+            try
+            {
+                await context.SaveChangesAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error updating user last login date and time.");
+            }
+        }
+
+        return new(user.Roles ?? []);
     }
 }
