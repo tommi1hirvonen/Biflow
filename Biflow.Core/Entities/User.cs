@@ -34,6 +34,8 @@ public class User : IAuditable
     [MaxLength(250)]
     public string? LastModifiedBy { get; set; }
 
+    public DateTimeOffset? LastLoginOn { get; set; }
+
     public ICollection<Subscription> Subscriptions { get; } = new List<Subscription>();
 
     public ICollection<Job> Jobs { get; } = new List<Job>();
