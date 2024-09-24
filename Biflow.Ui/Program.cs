@@ -46,6 +46,9 @@ builder.Services.AddHxMessageBoxHost();
 SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
 SqlMapper.AddTypeHandler(new TimeOnlyTypeHandler());
 
+// Register Azure Key Vault provider for Always Encrypted.
+Biflow.DataAccess.Extensions.RegisterAzureKeyVaultColumnEncryptionKeyStoreProvider(builder.Configuration);
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

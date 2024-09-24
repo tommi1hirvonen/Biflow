@@ -1,4 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Azure.Core;
+using Azure.Identity;
+using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient.AlwaysEncrypted.AzureKeyVaultProvider;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Biflow.DataAccess;
 
@@ -13,6 +18,45 @@ public static class Extensions
             lifetime: lifetime);
         services.Add(service);
         return services;
+    }
+
+    public static void RegisterAzureKeyVaultColumnEncryptionKeyStoreProvider(IConfiguration configuration)
+    {
+        TokenCredential? credential = null;
+
+        var section = configuration.GetSection("SqlColumnEncryptionAzureKeyVaultProvider");
+        if (section.Exists())
+        {
+            var miSection = section.GetSection("ManagedIdentity");
+            var spSection = section.GetSection("ServicePrincipal");
+            if (miSection.Exists())
+            {
+                var useSystemAssignedManagedIdentity = miSection.GetValue("UseSystemAssignedManagedIdentity", false);
+                if (useSystemAssignedManagedIdentity)
+                {
+                    credential = new ManagedIdentityCredential();
+                }
+            }
+            else if (spSection.Exists())
+            {
+                var tenantId = spSection.GetValue<string>("TenantId");
+                var clientId = spSection.GetValue<string>("ClientId");
+                var clientSecret = spSection.GetValue<string>("ClientSecret");
+                credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
+            }
+        }
+
+        if (credential is null)
+        {
+            return;
+        }
+
+        var keyVaultProvider = new SqlColumnEncryptionAzureKeyVaultProvider(credential);
+        var customProviders = new Dictionary<string, SqlColumnEncryptionKeyStoreProvider>(capacity: 1, comparer: StringComparer.OrdinalIgnoreCase)
+        {
+            { SqlColumnEncryptionAzureKeyVaultProvider.ProviderName, keyVaultProvider }
+        };
+        SqlConnection.RegisterColumnEncryptionKeyStoreProviders(customProviders: customProviders);
     }
 
     public static IServiceCollection AddDuplicatorServices(this IServiceCollection services)
