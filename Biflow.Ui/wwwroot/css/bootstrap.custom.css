@@ -11913,6 +11913,10 @@ textarea.form-control-lg {
   cursor: pointer;
 }
 
+.hover-underline:hover {
+  text-decoration: underline;
+}
+
 [data-bs-theme=light] .bg-body, [data-bs-theme=auto] .bg-body {
   background-color: #f8f9fa !important;
 }

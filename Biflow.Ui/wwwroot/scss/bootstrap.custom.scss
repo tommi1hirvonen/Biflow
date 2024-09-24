@@ -31,6 +31,10 @@ $highlight-text-dark: #dee2e6;
     cursor: pointer;
 }
 
+.hover-underline:hover {
+    text-decoration: underline;
+}
+
 // Change the light theme body background to be slightly darker than the default.
 [data-bs-theme="light"], [data-bs-theme="auto"] {
     .bg-body {

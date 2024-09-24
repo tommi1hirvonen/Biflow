@@ -75,12 +75,19 @@
     else
     {
         <li class="list-group-item list-group-header">
-            <span title="Collapse all" @onclick="CollapseAll" style="cursor: pointer;">
-                <SvgIcon Icon="FeatherIcon.ChevronsUp" />
-            </span>
-            <span class="ms-1" title="Expand all" @onclick="ExpandAll" style="cursor: pointer;">
-                <SvgIcon Icon="FeatherIcon.ChevronsDown" />
-            </span>
+            <div class="row align-items-center">
+                <div class="col">
+                    <span class="pointer small hover-underline" title="Collapse all" @onclick="CollapseAll">
+                        <SvgIcon Icon="FeatherIcon.ChevronsUp" />
+                        Collapse all
+                    </span>
+                    <span class="ms-3 pointer small hover-underline" title="Expand all" @onclick="ExpandAll">
+                        <SvgIcon Icon="FeatherIcon.ChevronsDown" />
+                        Expand all
+                    </span>
+                </div>
+            </div>
+            
         </li>
         foreach (var category in Categories.Append(null))
         {
@@ -101,19 +108,19 @@
             {
                 continue;
             }
-            <li class="list-group-item list-group-header fw-bold">
-                <div class="row">
-                    <div class="col">
+            <li class="list-group-item list-group-header fw-bold py-1">
+                <div class="row align-items-center">
+                    <div class="col my-1">
                         @if (state.IsExpanded)
                         {
-                            <span title="Collapse" @onclick="() => state.IsExpanded = false" style="cursor: pointer;">
+                            <span class="pointer hover-underline" title="Collapse" @onclick="() => state.IsExpanded = false">
                                 <SvgIcon Icon="FeatherIcon.ChevronDown" />
                                 @(category?.CategoryName ?? "No category")
                             </span>
                         }
                         else
                         {
-                            <span title="Expand" @onclick="() => state.IsExpanded = true" style="cursor: pointer;">
+                            <span class="pointer hover-underline" title="Expand" @onclick="() => state.IsExpanded = true">
                                 <SvgIcon Icon="FeatherIcon.ChevronRight" />
                                 @(category?.CategoryName ?? "No category")
                             </span>
@@ -147,9 +154,9 @@
             }
             foreach (var table in tables)
             {
-                <li class="list-group-item list-group-item-action">
+                <li class="list-group-item list-group-item-action py-1">
                     <div class="row align-items-center">
-                        <div class="col">
+                        <div class="col my-1">
                             <a href="datatables/edit/@table.DataTableId" class="text-body ms-5">
                                 <HighlightableText PartToHighlight="@tableNameFilter" Text="@table.DataTableName" />
                             </a>
