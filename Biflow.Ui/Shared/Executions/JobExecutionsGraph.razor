@@ -91,7 +91,8 @@
                         {
                             (var offset, var width) = (execution.StartedOn, execution.EndedOn)
                                 .GetGanttGraphDimensions(Executions.Select(e => (e.StartedOn, e.EndedOn)));
-                            <ContextMenuToggle CssClass="@($"progress hover {execution.ExecutionStatus.ToString().ToLower()}")"
+                            <ContextMenuToggle AlsoOverrideOnClick
+                                               CssClass="@($"progress hover {execution.ExecutionStatus.ToString().ToLower()}")"
                                                style="@($"cursor: pointer; position: absolute; width: {width.ToString("F10", CultureInfo.InvariantCulture)}%; left: {offset.ToString("F10", CultureInfo.InvariantCulture)}%;")"
                                                title="@($"{execution.ExecutionStatus}, {execution.ExecutionInSeconds?.SecondsToReadableFormat()}")">
                                 <ChildContent>

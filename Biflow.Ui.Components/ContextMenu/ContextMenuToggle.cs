@@ -26,6 +26,8 @@ public class ContextMenuToggle : ComponentBase
 
     [Parameter] public bool Disabled { get; set; } = false;
 
+    [Parameter] public bool AlsoOverrideOnClick { get; set; } = false;
+
     private bool isShowing;
 
     protected override void BuildRenderTree(RenderTreeBuilder builder)
@@ -36,9 +38,13 @@ public class ContextMenuToggle : ComponentBase
         builder.AddAttribute(2, "class", cssClass);
         builder.AddAttribute(3, "oncontextmenu", EventCallback.Factory.Create<MouseEventArgs>(this, ShowContextMenuAsync));
         builder.AddEventPreventDefaultAttribute(4, "oncontextmenu", true);
+        if (AlsoOverrideOnClick)
+        {
+            builder.AddAttribute(5, "onclick", EventCallback.Factory.Create<MouseEventArgs>(this, ShowContextMenuAsync));
+        }
         if (ChildContent is not null)
         {
-            builder.AddContent(5, ChildContent(this));
+            builder.AddContent(6, ChildContent(this));
         }
         builder.CloseElement();
     }
