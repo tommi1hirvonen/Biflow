@@ -12281,6 +12281,14 @@ form {
   background-color: #ed7991;
 }
 
+[data-bs-theme=dark] .gantt-row:hover {
+  background-color: #1b1c1e;
+}
+
+[data-bs-theme=light] .gantt-row:hover, [data-bs-theme=auto] .gantt-row:hover {
+  background-color: #e6e7e9;
+}
+
 .dependency-graph {
   width: 100%;
   height: 100%;

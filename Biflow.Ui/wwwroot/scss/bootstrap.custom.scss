@@ -293,6 +293,18 @@ $statuses: (
     }
 }
 
+[data-bs-theme="dark"] {
+    .gantt-row:hover {
+        background-color: tint-color($secondary-bg-subtle-dark, 2%);
+    }
+}
+
+[data-bs-theme="light"], [data-bs-theme="auto"] {
+    .gantt-row:hover {
+        background-color: tint-color($secondary-bg-subtle, 15%);
+    }
+}
+
 
 // Dependency graph
 .dependency-graph {
