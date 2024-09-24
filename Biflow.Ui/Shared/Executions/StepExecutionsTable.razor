@@ -237,7 +237,7 @@
                             Monitors
                         </DropdownMenuItem>
                         <DropdownMenuItem @onclick="async () => await stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
-                            <SvgIcon Icon="LucideIcon.History" />
+                            <SvgIcon Icon="FeatherIcon.Activity" />
                             History
                         </DropdownMenuItem>
                         <DropdownMenuItem @onclick="@(() => NavigationManager.NavigateTo($"executions/{item.ExecutionId}/graph/{item.StepId}"))">
@@ -279,7 +279,7 @@
                                         Monitors
                                     </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1" @onclick="async () => await stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
-                                        <SvgIcon Icon="LucideIcon.History" />
+                                        <SvgIcon Icon="FeatherIcon.Activity" />
                                         History
                                     </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1" @onclick="@(() => NavigationManager.NavigateTo($"executions/{item.ExecutionId}/graph/{item.StepId}"))">

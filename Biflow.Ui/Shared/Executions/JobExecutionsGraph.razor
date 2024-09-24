@@ -106,7 +106,7 @@
                                         Go to details
                                     </DropdownMenuLink>
                                     <DropdownMenuItem @onclick="async () => await jobHistoryOffcanvas.LetAsync(x => x.ShowAsync(execution.JobId))">
-                                        <SvgIcon Icon="LucideIcon.History" />
+                                        <SvgIcon Icon="FeatherIcon.Activity" />
                                         History
                                     </DropdownMenuItem>
                                     @if (execution.ExecutionStatus == ExecutionStatus.Running)
