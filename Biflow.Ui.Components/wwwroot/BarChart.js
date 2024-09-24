@@ -1,30 +1,30 @@
 export function draw(chartId, series, min, max, stepSize, tickSuffix, horizontal, isDarkTheme) {
 
-    var dataset = JSON.parse(series);
+    const dataset = JSON.parse(series);
 
-    var labels = [];
-    var data = [];
-    var colors = [];
+    const labels = [];
+    const data = [];
+    const colors = [];
 
-    for (var id in dataset) {
-        var item = dataset[id];
+    for (let id in dataset) {
+        const item = dataset[id];
         labels.push(item.label);
         data.push(item.data);
         colors.push(item.color);
     }
 
-    var chartElement = document.getElementById(chartId)
+    const chartElement = document.getElementById(chartId)
 
     // Check if chart already exists and destroy if so.
-    var chart = Chart.getChart(chartId)
+    let chart = Chart.getChart(chartId)
     if (chart) {
         chart.destroy();
     }
 
-    var gridColor = isDarkTheme ? '#393939' : '#e6e6e6';
-    var textColor = isDarkTheme ? '#aaaaaa' : '#666666';
+    const gridColor = isDarkTheme ? '#393939' : '#e6e6e6';
+    const textColor = isDarkTheme ? '#aaaaaa' : '#666666';
 
-    var axis = {
+    const axis = {
         min: min,
         max: max,
         ticks: {
@@ -38,7 +38,7 @@ export function draw(chartId, series, min, max, stepSize, tickSuffix, horizontal
             color: gridColor
         }
     };
-    var otherAxis = {
+    const otherAxis = {
         ticks: {
             color: textColor
         },
@@ -46,7 +46,7 @@ export function draw(chartId, series, min, max, stepSize, tickSuffix, horizontal
             color: gridColor
         }
     }
-    var scale;
+    let scale;
     if (horizontal) {
         scale = {
             x: axis,

@@ -3,11 +3,11 @@ export function showContextMenu(dropdownElement, clientX, clientY, dotNetObjectR
     clientY += document.documentElement.scrollTop;
     clientX += document.documentElement.scrollLeft;
     // Place the dropdown to the location of the mouse.
-    var bodyRect = document.body.getBoundingClientRect();
+    const bodyRect = document.body.getBoundingClientRect();
     // Check whether the dropdown menu would overflow over the right side of the window.
-    var tempX = clientX + dropdownElement.clientWidth <= window.innerWidth ? clientX : clientX - dropdownElement.clientWidth;
+    const tempX = clientX + dropdownElement.clientWidth <= window.innerWidth ? clientX : clientX - dropdownElement.clientWidth;
     // Check whether the dropdown menu would overflow over the bottom of the window.
-    var tempY = clientY + bodyRect.top + dropdownElement.clientHeight <= window.innerHeight ? clientY : clientY - dropdownElement.clientHeight;
+    const tempY = clientY + bodyRect.top + dropdownElement.clientHeight <= window.innerHeight ? clientY : clientY - dropdownElement.clientHeight;
     dropdownElement.style.top = `${tempY}px`;
     dropdownElement.style.left = `${tempX}px`;
 }
