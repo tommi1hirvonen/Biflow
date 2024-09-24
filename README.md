@@ -361,6 +361,24 @@ If you want to implement Always Encrypted, these columns are good candidates for
 
 **If Always Encrypted is utilized, this should be reflected in the connection strings set in the application settings (AppDbContext).** Always Encrypted is enabled with the following connection string property: `Column Encryption Setting=enabled`
 
+The following app settings relate to Always Encrypted when Azure Key Vault is used to store encryption keys. `UseSystemAssignedManagedIdentity`, `UserAssignedManagedIdentityClientId` and `ServicePrincipal` are mutually exclusive. Only one of the three options should be defined in the app settings. The order in which they are evaluated is the following:
+
+1. `UseSystemAssignedManagedIdentity` - if `true`, system assigned managed identity will be used
+2. `UserAssignedManagedIdentityClientId` - if a value is provided, user assigned managed identity with the provided client id will be used
+3. `ServicePrincipal` - if the section and contained values are provided, service principal will be used
+
+```json
+"SqlColumnEncryptionAzureKeyVaultProvider": {
+    "UseSystemAssignedManagedIdentity": true,
+    "UserAssignedManagedIdentityClientId": "",
+    "ServicePrincipal": {
+        "TenantId": "",
+        "ClientId": "",
+        "ClientSecret": ""
+    }
+}
+```
+
 # 4. Installation
 
 There are three different installation alternatives: on-premise, Azure (monolithic) and Azure (modular).
