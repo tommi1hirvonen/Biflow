@@ -343,7 +343,7 @@ Secondary roles can be assigned to non-admin users to extend their user rights.
 
 ## 3.4. Encryption
 
-Data saved and processed by Biflow is not encrypted by default on the database level. If you want to implement database level encryption of sensitive data, this can be achieved using the Always Encrypted feature of SQL Server and Azure SQL Database.
+Data saved and processed by Biflow is not encrypted by default on the database level. If you want to implement database level encryption of sensitive data, this can be achieved using the Always Encrypted feature of SQL Server and Azure SQL Database. Azure Key Vault as a store for encryption keys is supported.
 
 More information about Always Encrypted can be found in <a href="https://docs.microsoft.com/en-us/sql/relational-databases/security/encryption/always-encrypted-database-engine?view=sql-server-ver15">Microsoft’s documentation.</a>
 
@@ -359,7 +359,7 @@ If you want to implement Always Encrypted, these columns are good candidates for
 - [app].[BlobStorageClient].[ConnectionString]
 - [app].[BlobStorageClient].[StorageAccountUrl]
 
-If Always Encrypted is utilized, this should be reflected in the connection strings set in the application settings (AppDbContext). Always Encrypted is enabled with the following connection string property: `Column Encryption Setting=enabled`
+**If Always Encrypted is utilized, this should be reflected in the connection strings set in the application settings (AppDbContext).** Always Encrypted is enabled with the following connection string property: `Column Encryption Setting=enabled`
 
 # 4. Installation
 
