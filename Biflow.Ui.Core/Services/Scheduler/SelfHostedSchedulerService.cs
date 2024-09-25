@@ -43,7 +43,6 @@ public class SelfHostedSchedulerService(ISchedulesManager schedulesManager) : IS
 
     public async Task ToggleScheduleEnabledAsync(Schedule schedule, bool enabled)
     {
-        ArgumentNullException.ThrowIfNull(schedule.JobId);
         var schedulerSchedule = SchedulerSchedule.From(schedule);
         if (enabled)
         {
