@@ -5,6 +5,8 @@
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Authentication.Cookies
 
+@attribute [ExcludeFromInteractiveRouting]
+
 @page "/login"
 
 @inject IAuthHandler AuthHandler

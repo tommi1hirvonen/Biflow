@@ -19,11 +19,11 @@
     <link href="_content/Biflow.Ui.Components/defaults.css" rel="stylesheet" />
     <link href="/css/bootstrap.custom.min.css" rel="stylesheet" />
     <link href="BiflowUi.styles.css" rel="stylesheet" />
-    <HeadOutlet @rendermode="RenderModeForPage" />
+    <HeadOutlet @rendermode="PageRenderMode" />
 </head>
 <body class="bg-body">
     <app>
-        <Routes @rendermode="RenderModeForPage" />
+        <Routes @rendermode="PageRenderMode" />
     </app>
 
     <div id="blazor-error-ui" class="alert alert-danger alert-dismissible">
@@ -70,11 +70,10 @@
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = null!;
 
-    private IComponentRenderMode? RenderModeForPage =>
-        HttpContext.Request.Path.StartsWithSegments("/login") ||
-        HttpContext.Request.Path.StartsWithSegments("/logout")
-        ? null
-        : new InteractiveServerRenderMode(prerender: false);
+    private IComponentRenderMode? PageRenderMode =>
+        HttpContext.AcceptsInteractiveRouting()
+        ? new InteractiveServerRenderMode(prerender: false)
+        : null; // fall back to static server-side rendering
 
     protected override void OnInitialized()
     {
