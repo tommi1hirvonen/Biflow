@@ -8,7 +8,7 @@ namespace Biflow.Executor.Core;
 internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFactory jobExecutorFactory)
     : BackgroundService, IExecutionManager, IDisposable
 {
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
     private readonly ILogger<ExecutionManager> _logger = logger;
     private readonly IJobExecutorFactory _jobExecutorFactory = jobExecutorFactory;
     private readonly Dictionary<Guid, IJobExecutor> _jobExecutors = [];

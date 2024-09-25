@@ -9,7 +9,7 @@ internal class GlobalOrchestrator(
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
     IStepExecutorProvider stepExecutorProvider) : IGlobalOrchestrator
 {
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
     private readonly ILogger<GlobalOrchestrator> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
     private readonly IStepExecutorProvider _stepExecutorProvider = stepExecutorProvider;
