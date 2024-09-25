@@ -9,6 +9,9 @@ internal class AccessTokenEntityTypeConfiguration : IEntityTypeConfiguration<Acc
         builder.Property(t => t.ResourceUrl)
             .HasMaxLength(1000)
             .IsUnicode(false);
+        builder.Property(t => t.Token)
+            .HasMaxLength(-1)
+            .IsUnicode();
         builder.HasOne(x => x.AppRegistration)
             .WithMany(x => x.AccessTokens)
             .OnDelete(DeleteBehavior.Cascade);
