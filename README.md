@@ -111,7 +111,7 @@ All steps in a job are executed sequentially and defining dependencies is almost
 
 The orchestration capabilities in SSIS and ADF are very similar. With SSIS, you often use the scheduling capabilities of SQL Server Agent and the triggers in ADF are also quite powerful. The way in which you can define dependencies between tasks in SSIS and activities in ADF is also similar and has largely inspired and affected how it works in Biflow too.
 
-The downside in both tools is the fact that dependency management between tasks *is not metadata based* but instead you define dependencies between tasks graphically. This works very well and is highly intuitive with simple jobs with a couple dozen tasks at most. However, when you need to manage dependencies across tens of tasks or even a hundred tasks, these tools are no longer optimal. In fact, in ADF, the maximum number of activities in a pipeline is currently 40. This significantly limits the dependency management between individual tasks when you need to split them in separate pipelines.
+The downside in both tools is the fact that dependency management between tasks *is not metadata based* but instead you define dependencies between tasks graphically. This works very well and is highly intuitive with simple jobs with a couple dozen tasks at most. However, when you need to manage dependencies across tens of tasks or even a hundred tasks, these tools are no longer optimal. In fact, in ADF, the maximum number of activities in a pipeline is currently 80 (increased from 40 in 2024). This significantly limits the dependency management between individual tasks when you need to split them in separate pipelines.
 
 #### Airflow
 
