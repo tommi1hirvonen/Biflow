@@ -120,6 +120,7 @@ public class DbContextTests(DatabaseFixture fixture)
             .Select(e => e.ExecutionId)
             .FirstAsync();
         var execution = await context.GetExecutionWithEntireGraphAsync(executionId, includeEndpoint: false, includeStep: false);
+        Assert.NotNull(execution);
         Assert.NotEmpty(execution.StepExecutions.OfType<SqlStepExecution>().Where(s => s.GetConnection() is null));
         Assert.NotEmpty(execution.StepExecutions.Where(s => s.GetStep() is null));
     }
