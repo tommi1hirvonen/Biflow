@@ -347,19 +347,23 @@ Data saved and processed by Biflow is not encrypted by default on the database l
 
 More information about Always Encrypted can be found in <a href="https://docs.microsoft.com/en-us/sql/relational-databases/security/encryption/always-encrypted-database-engine?view=sql-server-ver15">Microsoft’s documentation.</a>
 
-If you want to implement Always Encrypted, these columns are good candidates for encryption:
+Documentation about using Always Encrypted with the .NET Data Provider can be found <a href="https://learn.microsoft.com/en-us/sql/connect/ado-net/sql/sqlclient-support-always-encrypted?view=sql-server-ver16">here</a>.
+
+If you want to implement Always Encrypted, these columns are good candidates for encryption. Randomized encryption can be used for all columns except `[ApiKey].[Value]`.
 - [app].[AccessToken].[Token]
-- [app].[ApiKey].[Value]
+- [app].[ApiKey].[Value] (indexed column, requires deterministic encryption)
 - [app].[AppRegistration].[ClientSecret]
+- [app].[BlobStorageClient].[ConnectionString]
+- [app].[BlobStorageClient].[StorageAccountUrl]
 - [app].[Connection].[ConnectionString]
 - [app].[Credential].[Password]
 - [app].[FunctionApp].[FunctionAppKey]
-- [app].[Step].[FunctionKey]
 - [app].[QlikCloudClient].[ApiToken]
-- [app].[BlobStorageClient].[ConnectionString]
-- [app].[BlobStorageClient].[StorageAccountUrl]
+- [app].[Step].[FunctionKey]
 
-**If Always Encrypted is utilized, this should be reflected in the connection strings set in the application settings (AppDbContext).** Always Encrypted is enabled with the following connection string property: `Column Encryption Setting=enabled`
+Enabling Always Encrypted with secure enclave is not required.
+
+**If Always Encrypted is utilized, this should be reflected in the connection strings set in the application settings (AppDbContext).** Always Encrypted is enabled with the following connection string property: `Column Encryption Setting=enabled;`
 
 The following app settings relate to Always Encrypted when Azure Key Vault is used to store encryption keys. `UseSystemAssignedManagedIdentity`, `UserAssignedManagedIdentityClientId` and `ServicePrincipal` are mutually exclusive. Only one of the three options should be defined in the app settings. The order in which they are evaluated is the following:
 
