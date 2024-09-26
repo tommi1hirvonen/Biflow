@@ -295,13 +295,13 @@ $statuses: (
 
 [data-bs-theme="dark"] {
     .gantt-row:hover {
-        background-color: tint-color($secondary-bg-subtle-dark, 2%);
+        background-color: rgba(0, 0, 0, 0.2);
     }
 }
 
 [data-bs-theme="light"], [data-bs-theme="auto"] {
     .gantt-row:hover {
-        background-color: tint-color($secondary-bg-subtle, 15%);
+        background-color: rgba(0, 0, 0, 0.075);
     }
 }
 
