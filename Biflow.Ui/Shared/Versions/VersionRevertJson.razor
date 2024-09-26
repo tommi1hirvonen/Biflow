@@ -5,24 +5,20 @@
 @inject IMediator Mediator
 @inject ToasterService Toaster
 
-<h4>Version revert</h4>
-
-<div class="row mt-3">
-    <div class="col">
+<div class="row my-3">
+    <div class="col-auto">
         <a class="btn btn-sm btn-auto" href="versions">
             <SvgIcon Icon="FeatherIcon.ArrowLeft" />
             Back
         </a>
     </div>
-</div>
-
-
-<div class="row my-3">
-    <div class="col-auto" style="max-width: 50rem;">
-        <div class="card shadow-sm">
-            <div class="card-body py-3 px-4">
-                <div class="row mt-4">
+    <div class="col-10 d-flex justify-content-center">
+        <div class="card d-flex justify-content-center shadow-sm w-100" style="max-width: 60rem;">
+            <div class="card-body mx-auto py-4" style="max-width: 50rem;">
+                <div class="row">
                     <div class="col">
+                        <h5>Revert from JSON</h5>
+                        <hr />
                         <VersionRevertInfo />
                     </div>
                 </div>
@@ -113,6 +109,9 @@
                 }
             </div>
         </div>
+    </div>
+    <div class="col-1">
+
     </div>
 </div>
 
