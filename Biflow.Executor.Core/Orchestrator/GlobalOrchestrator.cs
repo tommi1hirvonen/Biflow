@@ -178,15 +178,21 @@ internal class GlobalOrchestrator(
             {
                 await UpdateExecutionCancelledAsync(stepExecution, cts.Username);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating step execution status to cancelled");
+            }
         }
-        catch (Exception ex)
+        catch (Exception ex1)
         {
             try
             {
-                await UpdateExecutionFailedAsync(ex, stepExecution);
+                await UpdateExecutionFailedAsync(ex1, stepExecution);
             }
-            catch { }
+            catch (Exception ex2)
+            {
+                _logger.LogError(ex2, "Error updating step execution status to failed");
+            }
         }
         finally
         {
