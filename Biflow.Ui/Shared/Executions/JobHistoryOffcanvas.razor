@@ -34,13 +34,12 @@
                 <table class="table table-sm table-hover small">
                     <thead>
                         <tr>
-                            <th class="small">Created by</th>
-                            <th class="small">Started</th>
+                            <th class="small">Created/started</th>
                             <th class="small">Ended</th>
                             <th class="small">Duration</th>
                             <th class="small">Steps</th>
                             <th class="small">Status</th>
-                            <th></th>
+                            <th class="small">Created by</th>
                         </tr>
                         <tr>
                             <th></th>
@@ -49,17 +48,16 @@
                             <th class="small">@AverageDurationInSeconds.SecondsToReadableFormat()</th>
                             <th></th>
                             <th></th>
-                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
                         @if (executions is null)
                         {
-                            <tr><td colspan="7" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
+                            <tr><td colspan="6" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                         }
                         else if (!executions.Any())
                         {
-                            <tr><td colspan="7">No executions</td></tr>
+                            <tr><td colspan="6">No executions</td></tr>
                         }
                         else
                         {
@@ -72,13 +70,16 @@
                                     _ => ""
                                 };
                                 <tr>
-                                    <td class="align-middle small">@createdBy</td>
-                                    <td class="align-middle small">@execution.StartedOn?.LocalDateTime</td>
+                                    <td class="align-middle small">
+                                        <a class="text-body" href="@($"executions/{execution.ExecutionId}/list")">
+                                            @(execution.StartedOn?.LocalDateTime ?? execution.CreatedOn.LocalDateTime)
+                                        </a>
+                                    </td>
                                     <td class="align-middle small">@execution.EndedOn?.LocalDateTime</td>
                                     <td class="align-middle small">@execution.ExecutionInSeconds?.SecondsToReadableFormat()</td>
                                     <td class="align-middle small">@execution.StepExecutionCount</td>
                                     <td><JobExecutionStatusBadge ExecutionStatus="execution.ExecutionStatus" /></td>
-                                    <td class="align-middle small"><a class="text-body" href="@($"executions/{execution.ExecutionId}/list")">Details</a></td>
+                                    <td class="align-middle small">@createdBy</td>
                                 </tr>
                             }
                         }
