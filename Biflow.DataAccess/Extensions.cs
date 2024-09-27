@@ -154,6 +154,11 @@ public static class Extensions
                 equals new { Id = includeEndpoint ? (object?)qlik.QlikCloudClientId : false }
                 into qlik_
             from qlik in qlik_.DefaultIfEmpty()
+            join exe in context.Credentials
+                on new { Id = includeEndpoint ? (object?)((ExeStepExecution)stepExec).RunAsCredentialId : true }
+                equals new { Id = includeEndpoint ? (object?)exe.CredentialId : false }
+                into exe_
+            from exe in exe_.DefaultIfEmpty()
             join step in context.Steps
                 on new { Id = includeStep ? (object?)stepExec.StepId : true }
                 equals new { Id = includeStep ? (object?)step.StepId : false }
@@ -169,6 +174,7 @@ public static class Extensions
                 function,
                 pipeline,
                 qlik,
+                exe,
                 step);
 
         var stepExecutions = await query2.ToArrayAsync();
@@ -203,6 +209,9 @@ public static class Extensions
                 case QlikStepExecution qlik:
                     qlik.SetClient(step.QlikStepClient);
                     break;
+                case ExeStepExecution exe:
+                    exe.SetRunAsCredential(step.ExeStepCredential);
+                    break;
                 default:
                     break;
             }
@@ -225,4 +234,5 @@ file record StepExecutionProjection(
     FunctionApp? FunctionStepApp,
     PipelineClient? PipelineStepClient,
     QlikCloudClient? QlikStepClient,
+    Credential? ExeStepCredential,
     Step? Step);
