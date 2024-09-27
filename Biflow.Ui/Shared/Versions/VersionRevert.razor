@@ -4,23 +4,20 @@
 @inject IMediator Mediator
 @inject ToasterService Toaster
 
-<h4>Version revert</h4>
-
-<div class="row mt-3">
-    <div class="col">
+<div class="row my-3">
+    <div class="col-auto">
         <a class="btn btn-sm btn-auto" href="versions">
             <SvgIcon Icon="FeatherIcon.ArrowLeft" />
             Back
         </a>
     </div>
-</div>
-
-@if (version is not null)
-{
-    <div class="row my-3">
-        <div class="col-auto" style="max-width: 50rem;">
-            <div class="card shadow-sm">
-                <div class="card-body py-3 px-4">
+    <div class="col-10 d-flex justify-content-center">
+        <div class="card d-flex justify-content-center shadow-sm w-100" style="max-width: 60rem;">
+            <div class="card-body mx-auto py-4" style="max-width: 50rem;">
+                <h5>Version revert</h5>
+                <hr />
+                @if (version is not null)
+                {
                     <div class="row">
                         <div class="col">
                             <dl>
@@ -95,20 +92,22 @@
                             </div>
                         </div>
                     }
-                </div>
+                }
+                else
+                {
+                    <div class="row my-5">
+                        <div class="col text-center">
+                            <HxSpinner Color="ThemeColor.Secondary" />
+                        </div>
+                    </div>
+                }
             </div>
         </div>
     </div>
-}
-else
-{
-    <div class="row my-5">
-        <div class="col text-center">
-            <HxSpinner Color="ThemeColor.Secondary" />
-        </div>
-    </div>
-}
+    <div class="col-1">
 
+    </div>
+</div>
 
 @code {
     [Parameter] public int? VersionId { get; set; }

@@ -20,110 +20,127 @@
             </a>
         </AuthorizeView>
     </div>
-    <div class="col-auto" style="max-width: 33rem;">
-        <HxAlert Color="ThemeService.CurrentTheme == Theme.Light ? ThemeColor.Light : ThemeColor.Dark" CssClass="small py-2">
-            <div class="row g-3">
-                <div class="col-auto">
-                    <SvgIcon Icon="FeatherIcon.Info" />
-                </div>
-                <div class="col">
-                    Environment versions are point-in-time snapshots of the environment configuration stored as a single JSON object. <a class="alert-link" href="versions/help">Read more</a>
-                </div>
-            </div>
-        </HxAlert>
-    </div>
+    
 </div>
 
-<div class="row mb-4">
-    <div class="col">
-        <div class="card shadow-sm">
-            <div class="card-body px-0">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Description</th>
-                            <th>Created on</th>
-                            <th>Created by</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Versions is null)
-                        {
+<Paginator @ref="paginator"
+           Items="Versions"
+           Context="pageItems"
+           InitialPageSize="UserState.Versions.PageSize"
+           InitialPage="UserState.Versions.CurrentPage"
+           OnPageChanged="page => UserState.Versions.CurrentPage = page"
+           OnPageSizeChanged="size => UserState.Versions.PageSize = size">
+
+    <div class="row justify-content-end justify-content-xxl-between align-items-end mt-3">
+        <div class="col-auto" style="max-width: 33rem;">
+            <HxAlert Color="ThemeService.CurrentTheme == Theme.Light ? ThemeColor.Light : ThemeColor.Dark" CssClass="small py-2 mb-0">
+                <div class="row g-3">
+                    <div class="col-auto">
+                        <SvgIcon Icon="FeatherIcon.Info" />
+                    </div>
+                    <div class="col">
+                        Environment versions are point-in-time snapshots of the environment configuration stored as a single JSON object. <a class="alert-link" href="versions/help">Read more</a>
+                    </div>
+                </div>
+            </HxAlert>
+        </div>
+        <div class="col-xxl mt-3 mt-xxl-0 d-flex justify-content-end">
+            <PaginationControls Paginator="paginator" />
+        </div>
+    </div>
+
+    <div class="row mb-4 mt-3">
+        <div class="col">
+            <div class="card shadow-sm">
+                <div class="card-body px-0">
+                    <table class="table table-hover">
+                        <thead>
                             <tr>
-                                <td colspan="5" class="text-center">
-                                    <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
-                                </td>
+                                <th>ID</th>
+                                <th>Description</th>
+                                <th>Created on</th>
+                                <th>Created by</th>
+                                <th></th>
                             </tr>
-                        }
-                        else if (Versions.Count == 0)
-                        {
-                            <tr>
-                                <td colspan="5">
-                                    No versions
-                                </td>
-                            </tr>
-                        }
-                        else
-                        {
-                            foreach (var version in Versions)
+                        </thead>
+                        <tbody>
+                            @if (Versions is null)
                             {
-                                var description = version.Description?.Length > 100
-                                    ? $"{version.Description.Substring(0, 100)}..."
-                                    : version.Description;
-                                <ContextMenuToggle ContainerHtmlTag="tr">
-                                    <ChildContent Context="menu">
-                                        <td class="align-middle">
-                                            <span class="pointer text-decoration-underline" @onclick="() => OpenDetailsAsync(version.VersionId)">
-                                                @version.VersionId
-                                            </span>
-                                        </td>
-                                        <td class="align-middle small">
-                                            @description
-                                        </td>
-                                        <td class="align-middle">
-                                            @version.CreatedDateTime.LocalDateTime
-                                        </td>
-                                        <td class="align-middle small">
-                                            @version.CreatedBy
-                                        </td>
-                                        <td>
-                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" Spinner="false" CssClass="btn-auto" @onclick="e => menu.ShowContextMenuAsync(e)">
-                                                <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
-                                            </HxButton>
-                                        </td>
-                                    </ChildContent>
-                                    <MenuContent>
-                                        <DropdownMenuHeader>Version id: @version.VersionId</DropdownMenuHeader>
-                                        <DropdownMenuItem @onclick="() => OpenDetailsAsync(version.VersionId)">
-                                            <SvgIcon Icon="LucideIcon.Braces" />
-                                            Show JSON
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem @onclick="() => DownloadAsync(version.VersionId)">
-                                            <SvgIcon Icon="FeatherIcon.Download" />
-                                            Download JSON
-                                        </DropdownMenuItem>
-                                        <DropdownMenuLink href="@($"versions/compare/{version.VersionId}")">
-                                            <SvgIcon Icon="LucideIcon.GitCompareArrows" />
-                                            Compare to current
-                                        </DropdownMenuLink>
-                                        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.VersionManager}")">
-                                            <DropdownMenuLink href="@($"versions/revert/{version.VersionId}")">
-                                                <SvgIcon Icon="LucideIcon.History" />
-                                                Revert...
-                                            </DropdownMenuLink>
-                                        </AuthorizeView>
-                                    </MenuContent>
-                                </ContextMenuToggle>
+                                <tr>
+                                    <td colspan="5" class="text-center">
+                                        <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                                    </td>
+                                </tr>
                             }
-                        }
-                    </tbody>
-                </table>
+                            else if (Versions.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="5">
+                                        No versions
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                foreach (var version in pageItems)
+                                {
+                                    var description = version.Description?.Length > 100
+                                        ? $"{version.Description.Substring(0, 100)}..."
+                                        : version.Description;
+                                    <ContextMenuToggle ContainerHtmlTag="tr">
+                                        <ChildContent Context="menu">
+                                            <td class="align-middle">
+                                                <span class="pointer text-decoration-underline" @onclick="() => OpenDetailsAsync(version.VersionId)">
+                                                    @version.VersionId
+                                                </span>
+                                            </td>
+                                            <td class="align-middle small">
+                                                @description
+                                            </td>
+                                            <td class="align-middle">
+                                                @version.CreatedDateTime.LocalDateTime
+                                            </td>
+                                            <td class="align-middle small">
+                                                @version.CreatedBy
+                                            </td>
+                                            <td>
+                                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" Spinner="false" CssClass="btn-auto" @onclick="e => menu.ShowContextMenuAsync(e)">
+                                                    <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
+                                                </HxButton>
+                                            </td>
+                                        </ChildContent>
+                                        <MenuContent>
+                                            <DropdownMenuHeader>Version id: @version.VersionId</DropdownMenuHeader>
+                                            <DropdownMenuItem @onclick="() => OpenDetailsAsync(version.VersionId)">
+                                                <SvgIcon Icon="LucideIcon.Braces" />
+                                                Show JSON
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem @onclick="() => DownloadAsync(version.VersionId)">
+                                                <SvgIcon Icon="FeatherIcon.Download" />
+                                                Download JSON
+                                            </DropdownMenuItem>
+                                            <DropdownMenuLink href="@($"versions/compare/{version.VersionId}")">
+                                                <SvgIcon Icon="LucideIcon.GitCompareArrows" />
+                                                Compare to current
+                                            </DropdownMenuLink>
+                                            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.VersionManager}")">
+                                                <DropdownMenuLink href="@($"versions/revert/{version.VersionId}")">
+                                                    <SvgIcon Icon="LucideIcon.History" />
+                                                    Revert...
+                                                </DropdownMenuLink>
+                                            </AuthorizeView>
+                                        </MenuContent>
+                                    </ContextMenuToggle>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
-</div>
+
+</Paginator>
 
 <HxOffcanvas @ref="detailsOffcanvas" Size="OffcanvasSize.Large" Title="@($"Version {detailsVersion?.VersionId}")">
     <BodyTemplate>
@@ -177,8 +194,11 @@
 @code {
     [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
 
+    [CascadingParameter] public UserState UserState { get; set; } = new();
+
     [Parameter] public IList<VersionProjection>? Versions { get; set; }
 
+    private Paginator<VersionProjection>? paginator;
     private HxOffcanvas? detailsOffcanvas;
     private EnvironmentVersion? detailsVersion;
     private HxModal? createModal;

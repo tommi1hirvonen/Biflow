@@ -12282,11 +12282,11 @@ form {
 }
 
 [data-bs-theme=dark] .gantt-row:hover {
-  background-color: #1b1c1e;
+  background-color: rgba(0, 0, 0, 0.2);
 }
 
 [data-bs-theme=light] .gantt-row:hover, [data-bs-theme=auto] .gantt-row:hover {
-  background-color: #e6e7e9;
+  background-color: rgba(0, 0, 0, 0.075);
 }
 
 .dependency-graph {
