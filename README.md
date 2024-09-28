@@ -26,7 +26,6 @@
     1. [Executions](#51-executions)
     2. [Services](#52-services)
 
-
 # 1. Introduction
 
 Biflow is a powerful platform for easy business intelligence (BI) and data platform workflow orchestration built on top of the .NET stack. It includes an easy-to-use web user interface and integrates with several data related technologies such as
@@ -124,6 +123,8 @@ But this flexibility with Airflow comes at a cost. Give a business-oriented user
 
 Using metadata to define and manage dependencies between tasks makes it possible to author large and complex jobs so that all dependencies can be listed. There is no hard limit to the number of steps or dependencies you can have in a single job in Biflow. Having over a hundred steps in a single job is still very much manageable. This means that the execution of jobs can be optimized to a very high degree and steps towards the end of the job do not lose sight of what may have occurred in the earliest steps of the job. All steps can be executed immediately when they can or skipped if the dependency requirements are not met.
 
+You can approach defining and structuring your workflows in the way you prefer. On the one hand, you can consolidate as many related tasks in a single workflow as you wish. On the other hand, you can have hundreds of jobs running as often as you need. Biflow has been tested in both of these extreme cases, and of course there all the middle ground scenarios in between.
+
 Including an intuitive browser based graphical user interface makes it possible for even non-technical users to author orchestration jobs in Biflow. And even though dependencies are metadata based, they can be visualized to easily see and understand the dependencies of complex jobs. It is also easy to only include selected steps in a manual on-demand execution of jobs. Something that is significantly more involved in SSIS and ADF.
 
 The creation and development of Biflow has largely been inspired by my own experiences working with data platforms full-time since 2016. The methods and features in Biflow are informed by the real-life frustrations I've faced using some of the tools mentioned here. Biflow supports orchestrating data platforms in a way that I see being useful, smart and optimal. That also means tight integration with the ETL and data platform technologies I use most often (see supported step types).
@@ -134,12 +135,12 @@ Some requirements apply depending on whether Biflow is configured to run either 
 
 ### Common
 - SQL Server or Azure SQL Database to host the application database
-    - SQL Server 2012 or newer
+    - SQL Server 2016 or newer
         - Edition: Express or above
     - Azure SQL Database or Managed Instance
         - An S1 (or maybe even S0) tier Azure SQL Database is already sufficient for small scale production use.
 - Email notifications
-    - An email account is needed to send email notifications from the application
+    - An email account is needed to send email notifications from the application.
 
 ### On-premise
 - Windows Server
@@ -155,6 +156,8 @@ Some requirements apply depending on whether Biflow is configured to run either 
 ### Azure
 - Azure App Service (Linux)
     - Minimum B2 or B3 level is recommended
+- Linux Virtual Machine
+    - Optional
 
 ## 1.3. Authentication providers
 
@@ -188,13 +191,13 @@ The on-premise option takes advantage of OS level features such as Windows Servi
 
 ### Azure (monolithic)
 
-The Azure (monolithic) architecture has all the necessary components and services hosted inside one monolithic application. The application is running in an Azure App Service (Linux) as a Web App. This allows for efficient cost minimization through the use of lower tier App Service Plans (B1-B3).
+The monolithic Azure architecture has all the necessary components and services hosted inside one monolithic application. The application is running in an Azure App Service (Linux) as a Web App. This allows for efficient cost minimization through the use of lower tier App Service Plans (B1-B3).
 
-**Note:** The single-app monolithic architecture is recommended only for development and testing purposes.
+**Note:** The single-app monolithic architecture is recommended only for development and testing purposes. Separating the three main components of the application (executor, scheduler and UI) adds robustness to the solution and allows each component to be updated and managed separately without affecting the other components.
 
 ### Azure (modular)
 
-The Azure (modular) approach closely resembles the on-premise architecture. From the two Azure architectures, this offers significantly more control over updates to different components of the application. All services deployed to Azure can still share the same Linux App Service for cost optimization. Note, that a lightweight Linux virtual machine might also be required for deployment and configuration tasks depending on your Azure networking setup.
+The modular Azure approach closely resembles the on-premise architecture. From the two Azure architectures, this offers significantly more control over updates to different components of the application. All services deployed to Azure can still share the same Linux App Service for cost optimization. Note, that a lightweight Linux virtual machine might also be required for deployment and configuration tasks depending on your Azure networking setup. You may also want to consider hosting the executor component in the Linux virtual machine. See the installation section for more information.
 
 # 2. Terminology and features
 
@@ -292,7 +295,7 @@ Outside of data orchestration, Biflow also supports **data tables**. These are s
 
 ### 3.2.3 Step execution lifecycle
 
-The flowchart below describes the lifecycle and states of a step execution in dependency mode. During the `NotStarted`, `Queued`, `Running` and `AwaitingRetry` states it is possible for a user to cancel/stop the execution of a step. If a stop request is received, the step execution is canceled and the final step execution status will be `Stopped`. Remaining retries will not be attempted after the execution has been stopped. Note however, that if the step is stopped during the `NotStarted` state, the step is stopped and its status updated only after it reaches the `Queued` state.
+The flowchart below describes the lifecycle and statuses of a step execution in dependency mode. During the `NotStarted`, `Queued`, `Running` and `AwaitingRetry` states it is possible for a user to cancel/stop the execution of a step. If a stop request is received, the step execution is canceled and the final step execution status will be `Stopped`. Remaining retries will not be attempted after the execution has been stopped. Note however, that if the step is stopped during the `NotStarted` state, the step is stopped and its status updated only after it reaches the `Queued` state.
 
 ![The lifecycle and states of a step execution](/Images/StepExecutionLifecycle.png)*The lifecycle and states of a step execution in dependency mode*
 
@@ -342,15 +345,21 @@ Secondary roles can be assigned to non-admin users to extend their user rights.
 #### DataTableMaintainer
 - Allows users to maintain and edit all data tables
 
+#### VersionManager
+
+- Version managers can fully manage environment version snapshots, including reverting them.
+
 ## 3.4. Encryption
 
-Data saved and processed by Biflow is not encrypted by default on the database level. If you want to implement database level encryption of sensitive data, this can be achieved using the Always Encrypted feature of SQL Server and Azure SQL Database. Azure Key Vault as a store for encryption keys is supported.
+Data saved and processed by Biflow is not encrypted by default on the database level. On Azure SQL Database, use the "Transparent data encryption" option to encrypt the application database at rest.
+
+To implement further encryption of sensitive data in such a way, that malicious high-privileged unauthorized users cannot view this data even if they can login to the database, use the Always Encrypted feature of SQL Server and Azure SQL Database. Azure Key Vault as a store for encryption keys is supported.
 
 More information about Always Encrypted can be found in <a href="https://docs.microsoft.com/en-us/sql/relational-databases/security/encryption/always-encrypted-database-engine?view=sql-server-ver15">Microsoft’s documentation.</a>
 
-Documentation about using Always Encrypted with the .NET Data Provider can be found <a href="https://learn.microsoft.com/en-us/sql/connect/ado-net/sql/sqlclient-support-always-encrypted?view=sql-server-ver16">here</a>.
+Documentation about using Always Encrypted with the .NET Data Provider used by Biflow can be found <a href="https://learn.microsoft.com/en-us/sql/connect/ado-net/sql/sqlclient-support-always-encrypted?view=sql-server-ver16">here</a>.
 
-If you want to implement Always Encrypted, these columns are good candidates for encryption. Randomized encryption can be used for all columns except `[ApiKey].[Value]`.
+When implementing Always Encrypted, these columns are good candidates for encryption. Randomized encryption can be used for all columns except `[ApiKey].[Value]`.
 - [app].[AccessToken].[Token]
 - [app].[ApiKey].[Value] (indexed column, requires deterministic encryption)
 - [app].[AppRegistration].[ClientSecret]
@@ -364,9 +373,9 @@ If you want to implement Always Encrypted, these columns are good candidates for
 
 Enabling Always Encrypted with secure enclave is not required.
 
-**If Always Encrypted is utilized, this should be reflected in the connection strings set in the application settings (AppDbContext).** Always Encrypted is enabled with the following connection string property: `Column Encryption Setting=enabled;`
+**If Always Encrypted is utilized, this should be reflected in the connection string set in the application settings (ConnectionStrings:AppDbContext) for all app components (executor, scheduler, UI).** Always Encrypted is enabled with the following connection string property: `Column Encryption Setting=enabled;`
 
-The following app settings relate to Always Encrypted when Azure Key Vault is used to store encryption keys. `UseSystemAssignedManagedIdentity`, `UserAssignedManagedIdentityClientId` and `ServicePrincipal` are mutually exclusive. Only one of the three options should be defined in the app settings. The order in which they are evaluated is the following:
+The following app settings relate to Always Encrypted when Azure Key Vault is used to store encryption keys. The properties `UseSystemAssignedManagedIdentity`, `UserAssignedManagedIdentityClientId` and `ServicePrincipal` are mutually exclusive. Only one of the three options should be defined in the app settings. The order in which they are evaluated is the following:
 
 1. `UseSystemAssignedManagedIdentity` - if `true`, system assigned managed identity will be used
 2. `UserAssignedManagedIdentityClientId` - if a value is provided, user assigned managed identity with the provided client id will be used
@@ -478,11 +487,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
 |-|-|
 |EnvironmentName|Name of the installation environment to be shown in the UI (e.g. Production, Test, Dev etc.)|
 |ConnectionStrings:AppDbContext|Connection string used to connect to the Biflow database based on steps taken in the database section of this guide. **Note:** The connection string must have `MultipleActiveResultSets=true` enabled.|
-|Authentication|`[ BuiltIn \| Windows \| AzureAd \| Ldap ]`|
-||`BuiltIn`: Users accounts and passwords are managed in Biflow. Users are application specific.
-||`Windows`: Authentication is done using Active Directory. User roles and access are defined in the Biflow users management. The user does not need to log in but instead their workstation Windows account is used for authentication.|
-||`AzureAd`: Authentication is done using Entra ID. User roles and access are defined in the Biflow users management.|
-||`Ldap`: LDAP connection is used to authenticate users. This also supports Active Directory. User roles and access are defined in the Biflow users management. User matching is done using the LDAP `userPrincipalName` attribute.|
+|Authentication|`[ BuiltIn \| Windows \| AzureAd \| Ldap ]`<br>`BuiltIn`: User accounts and passwords are fully managed in Biflow. Accounts are only to scoped to be used with Biflow.<br>`Windows`: Authentication is done using Active Directory. User roles and access are defined in the Biflow users management. The user does not need to log in but instead their workstation Windows account is used for authentication.<br>`AzureAd`: Authentication is done using Entra ID. User roles and access are defined in the Biflow users management.<br>`Ldap`: LDAP connection is used to authenticate users. This also supports Active Directory. User roles and access are defined in the Biflow users management. User matching is done using the LDAP `userPrincipalName` attribute.|
 |AdminUser|When this section is defined, the UI application will ensure at startup that an admin user with the credentials from this configuration section exists in the database. This section can be used to create the first admin user to be able to log in via the UI.|
 |AdminUser:Username|Username for the admin user|
 |AdminUser:Password|Password for the admin user. Only used when `Authentication` is set to `BuiltIn`.|
@@ -498,13 +503,11 @@ There are three different installation alternatives: on-premise, Azure (monolith
 |Ldap:Port|The port to use for the LDAP server connection |
 |Ldap:UseSsl|Boolean value: `true` to use SSL for the connection, `false` if not|
 |Ldap:UserStoreDistinguishedName|The DN (distinguished name) for the LDAP container which to query for users|
-|Executor:Type|`[ WebApp \| SelfHosted ]`|
-||Whether the executor service is installed as a web app or is running self-hosted inside the UI application. **Note:** The SelfHosted executor should only be used for development and testing.|
+|Executor:Type|`[ WebApp \| SelfHosted ]`<br>Whether the executor service is installed as a web app or is running self-hosted inside the UI application. **Note:** The SelfHosted executor should only be used for development and testing.|
 |Executor:WebApp:Url|Needed only when `Executor:Type` is set to `WebApp`. Url to the executor web app API|
 |Executor:WebApp:ApiKey|Needed only when `Executor:Type` is set to `WebApp`. API key used to authenticate requests sent to the executor app's API.|
 |Executor:SelfHosted|This section needs to be defined only if `Executor:Type` is set to `SelfHosted`. Refer to the executor web application's settings section to set the values in this section.|
-|Scheduler:Type|`[ WebApp \| SelfHosted ]`|
-||Whether the scheduler service is installed as a web app or is running self-hosted inside the UI application. If `Executor:Type` is set to `SelfHosted` then this settings must also be set to `SelfHosted`.  **Note:** The SelfHosted scheduler should only be used for development and testing.|
+|Scheduler:Type|`[ WebApp \| SelfHosted ]`<br>Whether the scheduler service is installed as a web app or is running self-hosted inside the UI application. If `Executor:Type` is set to `SelfHosted` then this settings must also be set to `SelfHosted`.  **Note:** The SelfHosted scheduler should only be used for development and testing.|
 |Scheduler:WebApp:Url|Needed only when `Scheduler:Type` is set to `WebApp`. Url to the scheduler service web app API|
 |Scheduler:WebApp:ApiKey|Needed only when `Scheduler:Type` is set to `WebApp`. API key used to authenticate requests sent to the scheduler app's API.|
 |Kestrel:Endpoints:Https:Url|The https url and port which the UI application should listen to, for example `https://localhost`. **Note:** In production environments `localhost` should be replaced with the hosting server's IP address or DNS name. Otherwise external requests will not be routed correctly. If there are multiple installations on the same server, the UI applications should listen to different ports. Applies only to on-premise installations.|
@@ -544,14 +547,14 @@ There are three different installation alternatives: on-premise, Azure (monolith
         - ConnectionStrings__AppDbContext = Connection string to the Biflow system database
         - WEBSITE_TIME_ZONE = Time zone for the application (defaults to UTC), e.g. `Europe/Helsinki`
             - On Linux, use the TZ identifier from the <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">tz database</a>.
-- Deploy the UI application code (`Biflow.Ui`) as a zip file to the target Web App. Before deploying remove all other configuration sections from the appsettings.json file except the `Logging` section. This way there are no unwanted settings that are applied via the appsettings file.
+- Deploy the UI application code (`Biflow.Ui`) as a zip file to the target Web App. Before deploying remove all other configuration sections from the appsettings.json file except the `Logging` section. This way there are no unwanted settings that are applied via the appsettings file. Alternatively, remove the entire appsettings.json file from the zip file being deployed to the Web App.
 - Using System or User Assigned Managed Identities for authentication to the system database is recommended to avoid having to save sensitive information inside connection strings.
 - Recommended: Apply desired access restrictions to the Web App to allow inbound traffic only from trusted IP addresses or networks.
 
 ## 4.3. Azure (modular)
 
 - Create the Azure App Service and UI Web App following the same steps as in the monolithic approach until the configuration stage.
-- Also create two additional Web Apps in the same App Service, one for the scheduler service and the other for the executor service.
+- Also create two additional Web Apps in the same App Service, one for the scheduler service and one for the executor service.
 - Make sure websockets are enabled for the UI application and that "Always on" is enabled for the scheduler and executor applications.
 - Create a virtual network resource.
 - Create a lightweight Linux virtual machine resource (B1s is sufficient).
@@ -571,7 +574,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
     - Microsoft.Sql
     - Microsoft.Web
 
-These steps isolate the executor and scheduler application endpoints from the internet and only exposes them to the UI application. Traffic from the UI and scheduler applications is routed through the virtual network and private endpoint to the executor service. Also traffic from the UI application is routed to the scheduler service using its respective private endpoint.
+These steps isolate the executor and scheduler application endpoints from the internet and only expose them to the UI application. Traffic from the UI and scheduler applications is routed through the virtual network and private endpoint to the executor service. Also traffic from the UI application is routed to the scheduler service using its respective private endpoint.
 
 It is recommended to use a User Assigned Managed Identity, especially in the modular approach, to authenticate to the application database and possibly other Azure services too. Create a new managed identity and assign it to the executor, scheduler and UI applications. This way you can grant access to the application database to only one managed identity, which is shared among the orchestration related resources.
 
@@ -651,7 +654,11 @@ admin@biflow-vm:~$ curl -u "$username:$password" https://<executor_web_app_name>
 
 ## 4.4 Installing on Linux
 
-You can also host any of the application components on Linux. Installing on Linux follows the same pattern for all three components (executor, scheduler, user interface). Here, the executor application is installed as an example. `systemd` is used to host the executor service. You can also reference Microsoft's <a href="https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/linux-nginx?view=aspnetcore-8.0&tabs=linux-ubuntu#create-the-service-file">documentation on hosting an ASP.NET Core web app on Linux</a>.
+Using Linux servers or virtual machines is also supported for hosting any of the three application components (executor, scheduler, user interface). The installation process follows the same pattern for all three.
+
+You may want to consider hosting the executor component on a Linux VM if you observe executions being unintentionally stopped because the underlying Web App is recycled or restarted. This can happen, when Azure push infrastructure updates in your selected region to the App Service platform. This will cause the executor web app to restart even if you have "Always on" enabled, which will cause any running executions to be stopped. Currently, there is no way of setting your own preference for a maintenance window for Web Apps. The workaround is to host the executor component on a lightweight VM. For small scale production use, sizes B1s, B1ms and B2s may already be sufficient. You can use the same Linux VM to manage resources and host the executor component.
+
+Here, the executor application is installed as an example. `systemd` is used to host the executor service. You can also reference Microsoft's <a href="https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/linux-nginx?view=aspnetcore-8.0&tabs=linux-ubuntu#create-the-service-file">documentation on hosting an ASP.NET Core web app on Linux</a>. Using Nginx as a reverse proxy is skipped, as the only users able to access the executor web app are the scheduler and UI services.
 
 #### Installation
 
@@ -665,16 +672,10 @@ Make sure the application executable has execute permissions:
 chmod +x /home/orchestrator_user/orchestrator_executor/BiflowExecutor
 ```
 
-Navigate to the systemd service/unit files directory:
+Create a new unit file called `orchestrator_executor.service` and place it in the systemd unit files directory:
 
 ```
-cd /etc/systemd/system
-```
-
-Create a new unit file called `orchestrator_executor.service`:
-
-```
-sudo nano orchestrator_executor.service
+sudo nano /etc/systemd/system/orchestrator_executor.service
 ```
 
 The content of the unit file should be the following:
@@ -714,7 +715,7 @@ The `[Service]` section defines the service itself and is important.
 The `[Install]` section defines the behaviour of the service.
 - `WantedBy` – specifies, how a unit should be enabled. `multi-user.target` roughly defines a system state, where all network services are started and the system accepts logins, but a GUI is not started.
 
-Note, that application settings, such as connection strings, can still be configured in `appsettings.json`. **Note:** When configuring the HTTP URLs to listen to, remember to use the hosting server's IP address or DNS name. Otherwise external requests will not be routed correctly.
+Note, that application settings, such as connection strings, can and should still be configured in `appsettings.json`. **Note:** When configuring the HTTP URLs to listen to in appsettings, remember to use the hosting server's IP address or DNS name. Otherwise external requests will not be routed correctly.
 
 Save the unit file, enable and start the service and check its status:
 
