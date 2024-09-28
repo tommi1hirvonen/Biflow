@@ -423,7 +423,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
 |EmailSettings|Settings used to send email notifications.|
 |PollingIntervalMs|Time interval in milliseconds between status polling operations (applies to some step types). Default value is `5000`.|
 |Serilog:WriteTo:Args:Path|Path where application will write is log files. Default value is `C:\\Biflow\\BiflowExecutor\\log\\executor.log`.|
-|Kestrel:Endpoints:Http:Url|The http url and port which the executor API should listen to, for example `http://localhost:4321`. If there are multiple installations/environments of the executor service on the same server, the executor applications should listen to different ports.|
+|Kestrel:Endpoints:Http:Url|The http url and port which the executor API should listen to, for example `http://localhost:4321`. **Note:** In production environments `localhost` should be replaced with the hosting server's IP address or DNS name. Otherwise external requests will not be routed correctly. If there are multiple installations/environments of the executor service on the same server, the executor applications should listen to different ports.|
 
 3. Open the Windows command terminal in **administrator mode**.
     - Run the following command: `sc.exe create BiflowExecutor binpath= C:\Biflow\BiflowExecutor\BiflowExecutor.exe start= auto displayname= "Biflow Executor"`
@@ -446,7 +446,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
 |Executor:WebApp:Url|Url to the executor web app|
 |Executor:WebApp:ApiKey|The executor app's API key used to authenticate requests sent to the executor API.|
 |Authorization:Windows:AllowedUsers|Array of Windows users who are authorized to issue requests to the scheduler API, e.g. `[ "DOMAIN\\BiflowService", "DOMAIN\\AdminUser" ]`. If no authorization is required, remove the `Authorization` section. Only applies to on-premise Windows environments.|
-|Kestrel:Endpoints:Http:Url|The http url and port which the scheduler API should listen to, for example `http://localhost:5432`. If there are multiple installations/environments of the scheduler service on the same server, the scheduler applications should listen to different ports.|
+|Kestrel:Endpoints:Http:Url|The http url and port which the scheduler API should listen to, for example `http://localhost:5432`. **Note:** In production environments `localhost` should be replaced with the hosting server's IP address or DNS name. Otherwise external requests will not be routed correctly. If there are multiple installations/environments of the scheduler service on the same server, the scheduler applications should listen to different ports.|
 |Serilog:WriteTo:Args:path|Path where the application will write its log files. Default value is `C:\\Biflow\\BiflowScheduler\\log\\scheduler.log`|
 
 3. Open the Windows command terminal in **administrator mode**.
@@ -507,7 +507,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
 ||Whether the scheduler service is installed as a web app or is running self-hosted inside the UI application. If `Executor:Type` is set to `SelfHosted` then this settings must also be set to `SelfHosted`.  **Note:** The SelfHosted scheduler should only be used for development and testing.|
 |Scheduler:WebApp:Url|Needed only when `Scheduler:Type` is set to `WebApp`. Url to the scheduler service web app API|
 |Scheduler:WebApp:ApiKey|Needed only when `Scheduler:Type` is set to `WebApp`. API key used to authenticate requests sent to the scheduler app's API.|
-|Kestrel:Endpoints:Https:Url|The https url and port which the UI application should listen to, for example https://localhost. If there are multiple installations on the same server, the UI applications should listen to different ports. Applies only to on-premise installations.|
+|Kestrel:Endpoints:Https:Url|The https url and port which the UI application should listen to, for example `https://localhost`. **Note:** In production environments `localhost` should be replaced with the hosting server's IP address or DNS name. Otherwise external requests will not be routed correctly. If there are multiple installations on the same server, the UI applications should listen to different ports. Applies only to on-premise installations.|
 |Serilog:WriteTo:Args:path|Folder path where the application will write its log files. Applies only to on-premise installations. Default value is `C:\\Biflow\\BiflowUi\\log\\ui.log`|
 
 4. Open the Windows command terminal in **administrator mode**.
@@ -714,7 +714,7 @@ The `[Service]` section defines the service itself and is important.
 The `[Install]` section defines the behaviour of the service.
 - `WantedBy` – specifies, how a unit should be enabled. `multi-user.target` roughly defines a system state, where all network services are started and the system accepts logins, but a GUI is not started.
 
-Note, that application settings, such as connection strings, can still be configured in `appsettings.json`.
+Note, that application settings, such as connection strings, can still be configured in `appsettings.json`. **Note:** When configuring the HTTP URLs to listen to, remember to use the hosting server's IP address or DNS name. Otherwise external requests will not be routed correctly.
 
 Save the unit file, enable and start the service and check its status:
 
