@@ -20,7 +20,8 @@
     1. [On-premise](#41-on-premise)
     2. [Azure (monolithic)](#42-azure-monolithic)
     3. [Azure (modular)](#43-azure-modular)
-    4. [First use and configuration](#44-first-use-and-configuration)
+    4. [Installing on Linux](#44-installing-on-linux)
+    5. [First use and configuration](#45-first-use-and-configuration)
 5. [Operation and administrative tasks](#5-operation-and-administrative-tasks)
     1. [Executions](#51-executions)
     2. [Services](#52-services)
@@ -646,7 +647,130 @@ admin@biflow-vm:~$ password=$(az webapp deployment list-publishing-credentials -
 admin@biflow-vm:~$ curl -u "$username:$password" https://<executor_web_app_name>.scm.azurewebsites.net/api/logstream
 ```
 
-## 4.4. First use and configuration
+## 4.4 Installing on Linux
+
+You can also host any of the application components on Linux. Installing on Linux follows the same pattern for all three components (executor, scheduler, user interface). Here, the executor application is installed as an example. `systemd` is used to host the executor service. You can also reference Microsoft's <a href="https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/linux-nginx?view=aspnetcore-8.0&tabs=linux-ubuntu#create-the-service-file">documentation on hosting an ASP.NET Core web app on Linux</a>.
+
+#### Installation
+
+Place the application files to your desired installation directory. Here, the files are placed in the home directory of a user called `orchestrator_user`.
+
+`/home/orchestrator_user/orchestrator_executor`
+
+Make sure the application executable has execute permissions:
+
+```
+chmod +x /home/orchestrator_user/orchestrator_executor/BiflowExecutor
+```
+
+Navigate to the systemd service/unit files directory:
+
+```
+cd /etc/systemd/system
+```
+
+Create a new unit file called `orchestrator_executor.service`:
+
+```
+sudo nano orchestrator_executor.service
+```
+
+The content of the unit file should be the following:
+
+```
+[Unit]
+Description=Orchestrator Executor
+
+[Service]
+WorkingDirectory=/home/orchestrator_user/orchestrator_executor
+ExecStart=/home/orchestrator_user/orchestrator_executor/BiflowExecutor
+SyslogIdentifier=orchestrator_executor
+
+Restart=always
+RestartSec=30
+
+User=orchestrator_user
+
+KillSignal=SIGINT
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=DOTNET_PRINT_TELEMETRY_MESSAGE=false
+
+[Install]
+WantedBy=multi-user.target
+```
+
+The section `[Unit]` defines general information about the service, and the `Description` option briefly describes the service.
+
+The `[Service]` section defines the service itself and is important.
+- `WorkingDirectory` – it is recommended to use the app install directory as the working directory for the service
+- `ExecStart` – the application executable to launch on service startup
+- `SyslogIdentifier` – this is used to identify the service in syslog files
+- `Restart` – with this option enabled, the service is restarted after its process exits, with the exception of a clean stop by the systemctl command
+- `RestartSec` – the time between the service process exiting and restarting the service
+- `User` – the user for running the service
+
+The `[Install]` section defines the behaviour of the service.
+- `WantedBy` – specifies, how a unit should be enabled. `multi-user.target` roughly defines a system state, where all network services are started and the system accepts logins, but a GUI is not started.
+
+Note, that application settings, such as connection strings, can still be configured in `appsettings.json`.
+
+Save the unit file, enable and start the service and check its status:
+
+```
+sudo systemctl enable orchestrator_executor.service
+sudo systemctl start orchestrator_executor.service
+sudo systemctl status orchestrator_executor.service
+```
+
+#### Monitoring
+
+View the systemd journal for event logs:
+
+```
+sudo journalctl -fu orchestrator_executor.service
+```
+
+You can also use more advanced filtering to limit the results returned:
+
+```
+sudo journalctl -fu orchestrator_executor.service --since today
+sudo journalctl -fu orchestrator_executor.service --since "2024-09-23" --until "2024-09-23 07:00"
+```
+
+#### Uninstallation
+
+First, stop the service:
+
+```
+sudo systemctl stop orchestrator_executor.service
+```
+
+Check, that the service is not running (inactive (dead)):
+
+```
+sudo systemctl status orchestrator_executor.service
+```
+
+Disable the service to prevent it from running accidentally:
+
+```
+sudo systemctl disable orchestrator_executor.service
+```
+
+Remove the unit file and any symlink related to it:
+
+```
+sudo rm /etc/systemd/system/orchestrator_executor.service
+sudo rm /usr/lib/systemd/system/orchestrator_executor.service
+```
+
+Reload the system files:
+
+```
+sudo systemctl daemon-reload
+```
+
+## 4.5. First use and configuration
 
 Some administrative tasks need to be done before the applications are ready for normal operation.
 
