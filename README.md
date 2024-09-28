@@ -545,7 +545,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
         - WEBSITE_TIME_ZONE = Time zone for the application (defaults to UTC), e.g. `Europe/Helsinki`
             - On Linux, use the TZ identifier from the <a href="https://en.wikipedia.org/wiki/List_of_tz_database_time_zones">tz database</a>.
 - Deploy the UI application code (`Biflow.Ui`) as a zip file to the target Web App. Before deploying remove all other configuration sections from the appsettings.json file except the `Logging` section. This way there are no unwanted settings that are applied via the appsettings file.
-- Using System Assigned Managed Identities for authentication to the system database is recommended to avoid having to save sensitive information inside connection strings.
+- Using System or User Assigned Managed Identities for authentication to the system database is recommended to avoid having to save sensitive information inside connection strings.
 - Recommended: Apply desired access restrictions to the Web App to allow inbound traffic only from trusted IP addresses or networks.
 
 ## 4.3. Azure (modular)
@@ -572,6 +572,8 @@ There are three different installation alternatives: on-premise, Azure (monolith
     - Microsoft.Web
 
 These steps isolate the executor and scheduler application endpoints from the internet and only exposes them to the UI application. Traffic from the UI and scheduler applications is routed through the virtual network and private endpoint to the executor service. Also traffic from the UI application is routed to the scheduler service using its respective private endpoint.
+
+It is recommended to use a User Assigned Managed Identity, especially in the modular approach, to authenticate to the application database and possibly other Azure services too. Create a new managed identity and assign it to the executor, scheduler and UI applications. This way you can grant access to the application database to only one managed identity, which is shared among the orchestration related resources.
 
 Add application configurations for each app based on the table below. __Note that Linux Web Apps do not recognize colon as a configuration section separator.__ Instead double underscores are used.
 
