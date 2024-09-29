@@ -28,53 +28,36 @@ internal class GlobalOrchestrator(
                 // Update the orchestration statuses with all new observers.
                 foreach (var observer in observers)
                 {
+                    _stepStatuses[observer.StepExecution] = OrchestrationStatus.NotStarted;
                     // Existing observers will report back any new monitors caused by the new observers.
-                    var monitorsFromExistingObserver = UpdateStatus(observer.StepExecution, OrchestrationStatus.NotStarted);
+                    var monitorsFromExistingObserver = _observers.ToArray() // Make a copy of the list as observers might unsubscribe during enumeration.
+                        .SelectMany(observer => observer.OnIncomingStepExecutionUpdate(new(observer.StepExecution, OrchestrationStatus.NotStarted)))
+                        .ToArray();
                     monitors.AddRange(monitorsFromExistingObserver);
                 }
-                
-                // Capture the statuses for all steps currently in orchestration, including the newly added steps.
-                var statuses = _stepStatuses.Select(s => new OrchestrationUpdate(s.Key, s.Value)).ToArray();
 
-                // Iterate over the new observers, register initial updates
-                // and tell the observers to subscribe for orchestration updates.
-                foreach (var observer in observers)
+                // Local function to update the orchestration status and to execute the step.
+                // The function is not async, so UpdateStatus() will be called before the Task is returned.
+                void UpdateRunningAndExecute(StepExecution stepExecution, IStepExecutionListener listener, ExtendedCancellationTokenSource cts)
                 {
-                    // New observers will report back any monitors added because of both previosuly and newly registered step executions.
-                    var monitorsFromNewObserver = observer.RegisterInitialUpdates(statuses);
-                    monitors.AddRange(monitorsFromNewObserver);
-                }
+                    // Update the status for observers that have already subscribed.
+                    UpdateStatus(stepExecution, OrchestrationStatus.Running);
+                    var task = ExecuteStepAsync(stepExecution, listener, cts);
+                    tasks.Add(task);
+                };
 
-                // After all new observers have subscribed, iterate over them in priority order
-                // and check whether the observers request immediate execution or start waiting for processing.
-                // In case of immediate execution, the status updates of started steps will be sent to the remaining new observers
-                // since they have already subscribed.
+                // Iterate over the new observers in priority order, register initial updates and capture the generated monitors.
                 foreach (var observer in observers.OrderBy(o => o.Priority))
                 {
-                    // Local function to update the orchestration status and to execute the step.
-                    // The function is not async, so UpdateStatus() will be called before the Task is returned.
-                    Task UpdateAndExecuteAsync(StepExecution stepExecution, IStepExecutionListener listener, ExtendedCancellationTokenSource cts)
+                    var statuses = _stepStatuses
+                        .Select(s => new OrchestrationUpdate(s.Key, s.Value))
+                        .ToArray();
+                    // New observers will report back any monitors added because of both previously and newly registered step executions.
+                    var monitorsFromNewObserver = observer.RegisterInitialUpdates(statuses, executeCallback: UpdateRunningAndExecute);
+                    monitors.AddRange(monitorsFromNewObserver);
+                    // If the step was not started by the execute callback, wait until the observer requests processing.
+                    if (_stepStatuses[observer.StepExecution] == OrchestrationStatus.NotStarted)
                     {
-                        // Update the status for observers that have already subscribed.
-                        UpdateStatus(stepExecution, OrchestrationStatus.Running);
-                        var update = new OrchestrationUpdate(stepExecution, OrchestrationStatus.Running);
-                        foreach (var o in observers)
-                        {
-                            // Push updates to the new observers as initial updates.
-                            o.RegisterInitialUpdate(update);
-                        }
-                        return ExecuteStepAsync(stepExecution, listener, cts);
-                    };
-
-                    // Check if the observer is requesting execution immediately before waiting.
-                    if (observer.AfterInitialUpdatesRegisteredAsync(executeCallback: UpdateAndExecuteAsync) is Task executeTask)
-                    {
-                        // If the returned Task is not null, the step can be executed immediately.
-                        tasks.Add(executeTask);
-                    }
-                    else
-                    {
-                        // Otherwise wait for the observer to be ready for processing.
                         var waitTask = observer.WaitForProcessingAsync(processCallback: OnStepReadyForProcessingAsync);
                         tasks.Add(waitTask);
                     }
@@ -203,7 +186,7 @@ internal class GlobalOrchestrator(
         }
     }
 
-    private StepExecutionMonitor[] UpdateStatus(StepExecution step, OrchestrationStatus status)
+    private void UpdateStatus(StepExecution step, OrchestrationStatus status)
     {
         lock (_lock)
         {
@@ -215,9 +198,12 @@ internal class GlobalOrchestrator(
             {
                 _stepStatuses[step] = status;
             }
-            return _observers.ToArray() // Make a copy of the list as observers might unsubscribe during enumeration
-                .SelectMany(observer => observer.OnUpdate(new(step, status)))
-                .ToArray();
+
+            // Make a copy of the list as observers might unsubscribe during enumeration.
+            foreach (var observer in _observers.ToArray())
+            {
+                observer.OnUpdate(new(step, status));
+            }
         }
     }
 
