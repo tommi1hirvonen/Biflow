@@ -17,27 +17,12 @@ internal interface IOrchestrationObserver
     /// Called once as the first lifecycle method to provide current snapshot of global orchestration step execution statuses.
     /// </summary>
     /// <param name="updates"></param>
-    public IEnumerable<StepExecutionMonitor> RegisterInitialUpdates(IEnumerable<OrchestrationUpdate> updates);
+    public IEnumerable<StepExecutionMonitor> RegisterInitialUpdates(
+        IEnumerable<OrchestrationUpdate> updates,
+        Action<StepExecution, IStepExecutionListener, ExtendedCancellationTokenSource> executeCallback);
 
     /// <summary>
-    /// Called potentially multiple times as the second lifecycle method to provide status updates
-    /// of steps in the same execution that have been immediately started when the execution is registered in orchestration.
-    /// </summary>
-    /// <param name="update"></param>
-    public void RegisterInitialUpdate(OrchestrationUpdate update);
-
-    /// <summary>
-    /// Called as the next lifecycle method after all calls to <see cref="RegisterInitialUpdate"/>.
-    /// If the observer has no reason to wait for processing,
-    /// it can request processing immediately from the listener parameter by returning a <see cref="Task"/>.
-    /// In this case, the remaining <see cref="IOrchestrationObserver"/> lifecycle methods will not be called.
-    /// </summary>
-    /// <param name="listener"></param>
-    /// <returns><see cref="Task"/> if the observer should be processed right after initial updates, <see langword="null"/> if not.</returns>
-    public Task? AfterInitialUpdatesRegisteredAsync(Func<StepExecution, IStepExecutionListener, ExtendedCancellationTokenSource, Task> executeCallback);
-
-    /// <summary>
-    /// Called after <see cref="AfterInitialUpdatesRegisteredAsync"/> if processing was not requested.
+    /// Called after <see cref="RegisterInitialUpdates"/> if execute was not requested.
     /// This method is designed to suspend/await for a long time until the observer is ready to push the step execution for processing.
     /// </summary>
     /// <param name="listener"></param>
@@ -46,15 +31,23 @@ internal interface IOrchestrationObserver
     public Task WaitForProcessingAsync(Func<StepExecution, OrchestratorAction, IStepExecutionListener, ExtendedCancellationTokenSource, Task> processCallback);
 
     /// <summary>
-    /// Called after <see cref="WaitForProcessingAsync"/> if processing was not requested in <see cref="AfterInitialUpdatesRegisteredAsync"/>.
+    /// Called after <see cref="WaitForProcessingAsync"/> if execution was not requested in <see cref="RegisterInitialUpdates"/>.
     /// </summary>
     /// <param name="observable"></param>
     public void Subscribe(IOrchestrationObservable observable);
 
     /// <summary>
     /// After the call to <see cref="Subscribe"/>, <see cref="OnUpdate"/> is called once on every global orchestration step execution status change until the observer unsubscribes from the provider.
-    /// Called only if processing was not requested in <see cref="AfterInitialUpdatesRegisteredAsync"/>
+    /// Called only if execute was not requested in <see cref="RegisterInitialUpdates"/>
     /// </summary>
     /// <param name="statusChange"></param>
-    public IEnumerable<StepExecutionMonitor> OnUpdate(OrchestrationUpdate statusChange);
+    public void OnUpdate(OrchestrationUpdate statusChange);
+
+    /// <summary>
+    /// After the call to <see cref="Subscribe"/>, <see cref="OnIncomingStepExecutionUpdate"/> is called when new step executions
+    /// are joining global orchestration. It is expected for existing observer to return possible new monitors caused by the joining step.
+    /// </summary>
+    /// <param name="update"></param>
+    /// <returns></returns>
+    public IEnumerable<StepExecutionMonitor> OnIncomingStepExecutionUpdate(OrchestrationUpdate update);
 }
