@@ -6,7 +6,7 @@ using System.Diagnostics;
 
 namespace Biflow.Executor.Core.JobExecutor;
 
-internal partial class JobExecutor(
+internal class JobExecutor(
     ILogger<JobExecutor> logger,
     IEnumerable<IExecutionValidator> validators,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
