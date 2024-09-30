@@ -1,0 +1,62 @@
+﻿@inherits StepEditModal<DbNotebookStep>
+
+<StepEditModalTemplate Modal="this" TStep="DbNotebookStep">
+    @if (Step is not null)
+    {
+        <div class="row">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Timeout (min)</label>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <SvgIcon Icon="FeatherIcon.XOctagon" />
+                    </div>
+                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 5rem;"></InputNumber>
+                </div>
+                <span class="form-text">0 = indefinite</span>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                <label class="form-label mb-lg-0">Databricks workspace</label>
+            </div>
+            <div class="col-md-6 d-inline">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <SvgIcon Icon="FeatherIcon.Layers" />
+                    </div>
+                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.DatabricksWorkspaceId">
+                        @foreach (var workspace in DatabricksWorkspaces ?? [])
+                        {
+                            <option value="@workspace.WorkspaceId">@workspace.WorkspaceName</option>
+                        }
+                    </InputSelect>
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="OpenNotebookSelectOffcanvas">
+                        <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
+                        Browse notebooks
+                    </HxButton>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Notebook path</label>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <SvgIcon Icon="LucideIcon.Notebook" />
+                    </div>
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.NotebookPath" />
+                </div>
+            </div>
+        </div>
+
+        <DbNotebookSelectOffcanvas @ref="notebookSelectOffcanvas" OnNotebookSelected="OnNotebookSelected" />
+
+        <StepParametersEditor Step="Step" NewParameterDelegate="() => new() { Step = Step }" />
+    }
+</StepEditModalTemplate>

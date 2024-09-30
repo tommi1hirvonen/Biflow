@@ -76,6 +76,12 @@
                     Blob Storage Clients
                 </NavLink>
             </li>
+            <li class="nav-item" role="presentation">
+                <NavLink class="nav-link" href="settings/databricksworkspaces">
+                    <SvgIcon Icon="FeatherIcon.Layers" />
+                    Databricks workspaces
+                </NavLink>
+            </li>
         </ul>
     </AuthorizeView>
 </div>
@@ -141,6 +147,12 @@ else if (Page == "qlikcloudclients")
 {
     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
         <QlikCloudClientsList />
+    </AuthorizeView>
+}
+else if (Page == "databricksworkspaces")
+{
+    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
+        <DatabricksWorkspacesList />
     </AuthorizeView>
 }
 else if (Page == "blobclients")

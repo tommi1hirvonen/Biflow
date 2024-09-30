@@ -1,0 +1,135 @@
+﻿@inject ToasterService Toaster
+@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject IHttpClientFactory HttpClientFactory
+
+<HxModal @ref="modal" Size="ModalSize.Large" Title="@(workspace?.WorkspaceId == Guid.Empty ? "New Databricks workspace" : "Edit " + workspace?.WorkspaceName)">
+    <BodyTemplate>
+        @if (workspace is not null)
+        {
+            <EditForm id="databricks_workspace_edit_form" Model="workspace" OnValidSubmit="SubmitAsync">
+                <div class="row">
+                    <div class="col mx-3">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div>
+                            <label class="form-label">Workspace name</label>
+                            <div class="input-group">
+                                <div class="input-group-text">
+                                    <SvgIcon Icon="FeatherIcon.Edit3" />
+                                </div>
+                                <InputText class="form-control" @bind-Value="workspace.WorkspaceName"></InputText>
+                            </div>
+
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-lg">
+                                <label class="form-label">Workspace url</label>
+                                <div class="input-group">
+                                    <div class="input-group-text">
+                                        <SvgIcon Icon="FeatherIcon.Link" />
+                                    </div>
+                                    <InputText class="form-control" @bind-Value="workspace.WorkspaceUrl"></InputText>
+                                </div>
+                                <div class="form-text">e.g. https://my-databricks.12.azuredatabricks.net</div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-lg">
+                                <label class="form-label">Token</label>
+                                <div class="input-group">
+                                    <div class="input-group-text">
+                                        <SvgIcon Icon="FeatherIcon.Key" />
+                                    </div>
+                                    <InputTextArea class="form-control form-control-sm" rows="6" @bind-Value="workspace.ApiToken"></InputTextArea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="TestConnectionAsync" Enabled="!testingConnection">
+                                    Test connection
+                                </HxButton>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col">
+                                @if (connectionTestSuccess == true)
+                                {
+                                    <span class="badge bg-success">Success</span>
+                                }
+                                else if (connectionTestSuccess == false)
+                                {
+                                    <span class="badge bg-danger">Failed</span>
+                                }
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </EditForm>
+        }
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxSubmit form="databricks_workspace_edit_form" Color="ThemeColor.Success">@(workspace?.WorkspaceId == Guid.Empty ? "Add" : "Save")</HxSubmit>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+    </FooterTemplate>
+</HxModal>
+
+@code {
+    [Parameter]
+    public EventCallback<DatabricksWorkspace> OnWorkspaceSubmit { get; set; }
+
+    private HxModal? modal;
+    private DatabricksWorkspace? workspace;
+    private bool? connectionTestSuccess = null;
+    private bool testingConnection = false;
+
+    public async Task ShowAsync(Guid workspaceId)
+    {
+        workspace = null;
+        await modal.LetAsync(x => x.ShowAsync());
+        if (workspaceId != Guid.Empty)
+        {
+            using var context = await DbContextFactory.CreateDbContextAsync();
+            workspace = await context.DatabricksWorkspaces
+                .AsNoTrackingWithIdentityResolution()
+                .Include(c => c.Steps)
+                .ThenInclude(s => s.Job)
+                .FirstAsync(d => d.WorkspaceId == workspaceId);
+        }
+        else
+        {
+            workspace = new();
+        }
+    }
+
+    private async Task TestConnectionAsync()
+    {
+        ArgumentNullException.ThrowIfNull(workspace);
+        connectionTestSuccess = null;
+        testingConnection = true;
+        try
+        {
+            using var client = workspace.CreateClient();
+            await client.TestConnectionAsync();
+            connectionTestSuccess = true;
+        }
+        catch (Exception ex)
+        {
+            connectionTestSuccess = false;
+            Toaster.AddError("Connection test failed", ex.Message);
+        }
+        testingConnection = false;
+    }
+
+    private async Task SubmitAsync()
+    {
+        await OnWorkspaceSubmit.InvokeAsync(workspace);
+        await modal.LetAsync(x => x.HideAsync());
+    }
+}

@@ -31,6 +31,9 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
         var blobStorageClients = await context.BlobStorageClients
             .OrderBy(b => b.BlobStorageClientId)
             .ToArrayAsync();
+        var databricksWorkspaces = await context.DatabricksWorkspaces
+            .OrderBy(w => w.WorkspaceId)
+            .ToArrayAsync();
 
 
         var jobs = await context.Jobs
@@ -82,6 +85,7 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
             PipelineClients = pipelineClients,
             FunctionApps = functionApps,
             QlikCloudClients = qlikCloudClients,
+            DatabricksWorkspaces = databricksWorkspaces,
             BlobStorageClients = blobStorageClients,
             Jobs = jobs,
             Tags = tags,

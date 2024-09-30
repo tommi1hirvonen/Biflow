@@ -154,6 +154,11 @@ public static class Extensions
                 equals new { Id = includeEndpoint ? (object?)qlik.QlikCloudClientId : false }
                 into qlik_
             from qlik in qlik_.DefaultIfEmpty()
+            join db in context.DatabricksWorkspaces
+                on new { Id = includeEndpoint ? (object?)((DbNotebookStepExecution)stepExec).DatabricksWorkspaceId : true }
+                equals new { Id = includeEndpoint ? (object?)db.WorkspaceId : false }
+                into db_
+            from db in db_.DefaultIfEmpty()
             join exe in context.Credentials
                 on new { Id = includeEndpoint ? (object?)((ExeStepExecution)stepExec).RunAsCredentialId : true }
                 equals new { Id = includeEndpoint ? (object?)exe.CredentialId : false }
@@ -174,6 +179,7 @@ public static class Extensions
                 function,
                 pipeline,
                 qlik,
+                db,
                 exe,
                 step);
 
@@ -209,6 +215,9 @@ public static class Extensions
                 case QlikStepExecution qlik:
                     qlik.SetClient(step.QlikStepClient);
                     break;
+                case DbNotebookStepExecution db:
+                    db.SetWorkspace(step.DatabricksWorkspace);
+                    break;
                 case ExeStepExecution exe:
                     exe.SetRunAsCredential(step.ExeStepCredential);
                     break;
@@ -234,5 +243,6 @@ file record StepExecutionProjection(
     FunctionApp? FunctionStepApp,
     PipelineClient? PipelineStepClient,
     QlikCloudClient? QlikStepClient,
+    DatabricksWorkspace? DatabricksWorkspace,
     Credential? ExeStepCredential,
     Step? Step);

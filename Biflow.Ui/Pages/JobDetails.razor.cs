@@ -32,6 +32,7 @@ public partial class JobDetails : ComponentBase, IDisposable
     private List<AppRegistration>? appRegistrations;
     private List<FunctionApp>? functionApps;
     private List<QlikCloudClient>? qlikCloudClients;
+    private List<DatabricksWorkspace>? databricksWorkspaces;
     private List<Credential>? credentials;
     private bool descriptionOpen;
     private Guid previousJobId;
@@ -87,6 +88,10 @@ public partial class JobDetails : ComponentBase, IDisposable
         qlikCloudClients = await context.QlikCloudClients
             .AsNoTracking()
             .OrderBy(c => c.QlikCloudClientName)
+            .ToListAsync(cts.Token);
+        databricksWorkspaces = await context.DatabricksWorkspaces
+            .AsNoTracking()
+            .OrderBy(w => w.WorkspaceName)
             .ToListAsync(cts.Token);
         credentials = await context.Credentials
             .AsNoTracking()

@@ -32,6 +32,8 @@ public partial class StepsList : ComponentBase
 
     [Parameter] public List<QlikCloudClient>? QlikCloudClients { get; set; }
 
+    [Parameter] public List<DatabricksWorkspace>? DatabricksWorkspaces { get; set; }
+
     [Parameter] public List<Credential>? Credentials { get; set; }
 
     [Parameter] public Guid? InitialStepId { get; set; }
@@ -105,6 +107,7 @@ public partial class StepsList : ComponentBase
         StepType.AgentJob => ((MsSqlConnections?.Count ?? 0) == 0, "No MS SQL connections defined"),
         StepType.Tabular => ((AsConnections?.Count ?? 0) == 0, "No Analysis Services connections defined"),
         StepType.Qlik => ((QlikCloudClients?.Count ?? 0) == 0, "No Qlik Cloud clients defined"),
+        StepType.DatabricksNotebook => ((DatabricksWorkspaces?.Count ?? 0) == 0, "No Databricks workspaces defined"),
         _ => (false, "")
     };
 

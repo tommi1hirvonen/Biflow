@@ -31,7 +31,8 @@ internal class StepExecutionAttemptEntityTypeConfiguration : IEntityTypeConfigur
             .HasValue<AgentJobStepExecutionAttempt>(StepType.AgentJob)
             .HasValue<TabularStepExecutionAttempt>(StepType.Tabular)
             .HasValue<EmailStepExecutionAttempt>(StepType.Email)
-            .HasValue<QlikStepExecutionAttempt>(StepType.Qlik);
+            .HasValue<QlikStepExecutionAttempt>(StepType.Qlik)
+            .HasValue<DbNotebookStepExecutionAttempt>(StepType.DatabricksNotebook);
 
         builder.Ignore(x => x.InfoMessages);
         builder.Ignore(x => x.WarningMessages);
