@@ -46,6 +46,13 @@ internal class DbNotebookStepExecutor(
         ArgumentNullException.ThrowIfNull(client);
 
         // Create run submit settings and the notebook task.
+
+        var cluster = ClusterAttributes
+            .GetNewClusterConfiguration()
+            .WithClusterMode(ClusterMode.SingleNode)
+            .WithNodeType("Standard_D4ds_v5")
+            .WithRuntimeVersion("15.4.x-scala2.12");
+
         var settings = new RunSubmitSettings
         {
             RunName = step.ExecutionId.ToString()
@@ -56,7 +63,8 @@ internal class DbNotebookStepExecutor(
             BaseParameters = parameters
         };
         int? timeoutSeconds = step.TimeoutMinutes > 0 ? Convert.ToInt32(step.TimeoutMinutes * 60.0) : null;
-        settings.AddTask(step.StepId.ToString(), task, timeoutSeconds: timeoutSeconds);
+        var taskSettings = settings.AddTask(step.StepId.ToString(), task, timeoutSeconds: timeoutSeconds)
+            .WithNewCluster(cluster);
 
         long runId;
         try
