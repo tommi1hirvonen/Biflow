@@ -27,7 +27,7 @@
                     <div class="input-group-text">
                         <SvgIcon Icon="FeatherIcon.Layers" />
                     </div>
-                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.DatabricksWorkspaceId">
+                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.DatabricksWorkspaceId" @bind-Value:after="OnWorkspaceChanged">
                         @foreach (var workspace in DatabricksWorkspaces ?? [])
                         {
                             <option value="@workspace.WorkspaceId">@workspace.WorkspaceName</option>
@@ -121,9 +121,17 @@
                     <label class="form-label mb-lg-0">Runtime version</label>
                 </div>
                 <div class="col-md-6">
-                    <div class="input-group input-group-sm">
-                        <InputText class="form-control form-control-sm" @bind-Value="newCluster.RuntimeVersion" />
-                    </div>
+                    
+                        <HxAutosuggest TValue="string"
+                                       TItem="(string Id, string Description)"
+                                       InputSize="InputSize.Small"
+                                       @bind-Value="newCluster.RuntimeVersion"
+                                       MinimumLength="0"
+                                       ValueSelector="item => item.Id"
+                                       TextSelector="item => item.Description"
+                                       ItemFromValueResolver="ResolveRuntimeVersionFromValueAsync"
+                                       DataProvider="ProvideRuntimeVersionSuggestionsAsync"/>
+                    
                 </div>
             </div>
 

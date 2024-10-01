@@ -38,5 +38,20 @@ public class DatabricksClientWrapper(DatabricksWorkspace workspace) : IDisposabl
         return objects;
     }
 
+    public Task<IDictionary<string, string>> GetRuntimeVersionsAsync(CancellationToken cancellationToken = default)
+    {
+        return Client.Clusters.ListSparkVersions(cancellationToken);
+    }
+
+    public Task GetNodeTypesAsync(CancellationToken cancellationToken = default)
+    {
+        return Client.Clusters.ListNodeTypes(cancellationToken);
+    }
+
+    public Task<IEnumerable<ClusterInfo>> GetClustersAsync(CancellationToken cancellationToken = default)
+    {
+        return Client.Clusters.List(cancellationToken);
+    }
+
     public void Dispose() => Client.Dispose();
 }

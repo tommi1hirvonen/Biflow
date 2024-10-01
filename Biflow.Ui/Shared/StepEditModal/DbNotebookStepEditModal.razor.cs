@@ -1,4 +1,5 @@
 ﻿using Biflow.Ui.Shared.StepEdit;
+using System.Globalization;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
@@ -7,6 +8,8 @@ public partial class DbNotebookStepEditModal : StepEditModal<DbNotebookStep>
     internal override string FormId => "dbnotebook_step_edit_form";
 
     private DbNotebookSelectOffcanvas? notebookSelectOffcanvas;
+
+    private (string Id, string Description)[]? runtimeVersions;
 
     protected override async Task<DbNotebookStep> GetExistingStepAsync(AppDbContext context, Guid stepId)
     {
@@ -54,5 +57,69 @@ public partial class DbNotebookStepEditModal : StepEditModal<DbNotebookStep>
     {
         ArgumentNullException.ThrowIfNull(Step);
         Step.NotebookPath = notebook;
+    }
+
+    private void OnWorkspaceChanged()
+    {
+        runtimeVersions = null;
+    }
+
+    private async Task<(string Id, string Description)> ResolveRuntimeVersionFromValueAsync(string? value)
+    {
+        if (runtimeVersions is null)
+        {
+            try
+            {
+                var workspace = DatabricksWorkspaces?.FirstOrDefault();
+                ArgumentNullException.ThrowIfNull(workspace);
+                using var client = workspace.CreateClient();
+                var runtimeVersions = await client.GetRuntimeVersionsAsync();
+                this.runtimeVersions = runtimeVersions.Select(v => (v.Key, v.Value)).ToArray();
+            }
+            catch (Exception ex)
+            {
+                Toaster.AddError("Error fetching available runtimes", ex.Message);
+                runtimeVersions = [];
+            }
+        }
+        return runtimeVersions.FirstOrDefault(v => v.Id == value);
+    }
+
+    private async Task<AutosuggestDataProviderResult<(string Id, string Description)>> ProvideRuntimeVersionSuggestionsAsync(
+        AutosuggestDataProviderRequest request)
+    {
+        if (runtimeVersions is null)
+        {
+            try
+            {
+                var workspace = DatabricksWorkspaces?.FirstOrDefault();
+                ArgumentNullException.ThrowIfNull(workspace);
+                using var client = workspace.CreateClient();
+                var runtimeVersions = await client.GetRuntimeVersionsAsync();
+                this.runtimeVersions = runtimeVersions.Select(v => (v.Key, v.Value)).ToArray();
+            }
+            catch (Exception ex)
+            {
+                Toaster.AddError("Error fetching available runtimes", ex.Message);
+                runtimeVersions = [];
+            }
+        }
+        
+        return new()
+        {
+            Data = runtimeVersions
+                .Where(v => v.Description.ContainsIgnoreCase(request.UserInput))
+                .OrderByDescending(v =>
+                {
+                    var span = v.Description.AsSpan();
+                    var index = span.IndexOf(' ');
+                    var version = index switch
+                    {
+                        > 0 when double.TryParse(span[0..index], NumberFormatInfo.InvariantInfo, out var num) => num,
+                        _ => 0
+                    };
+                    return version;
+                })
+        };
     }
 }
