@@ -376,6 +376,30 @@
                 </dd>
             }
         }
+        else if (StepExecutionAttempt.StepExecution is DbNotebookStepExecution dbn)
+        {
+            <dt class="col-sm-3">
+                Notebook path
+            </dt>
+            <dd class="col-sm-9">
+                @dbn.NotebookPath
+            </dd>
+            <dt class="col-sm-3">
+                Cluster configuration
+            </dt>
+            <dd class="col-sm-9">
+                <pre><code>@JsonSerializer.Serialize(dbn.ClusterConfiguration, JsonSerializerOptions)</code></pre>
+            </dd>
+            @if (StepExecutionAttempt is DbNotebookStepExecutionAttempt dbna)
+            {
+                <dt class="col-sm-3">
+                    Job run id
+                </dt>
+                <dd class="col-sm-9">
+                    @dbna.JobRunId
+                </dd>
+            }
+        }
         <dt class="col-sm-3">
             Info messages / outputs
         </dt>
@@ -489,4 +513,6 @@
 
     private bool showErrorStackTrace = false;
     private bool showWarningStackTrace = false;
+
+    private static JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
 }

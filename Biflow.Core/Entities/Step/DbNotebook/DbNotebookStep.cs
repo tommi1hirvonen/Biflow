@@ -34,6 +34,8 @@ public class DbNotebookStep : Step, IHasTimeout, IHasStepParameters<DbNotebookSt
     [JsonIgnore]
     public DatabricksWorkspace? DatabricksWorkspace { get; set; }
 
+    public ClusterConfiguration ClusterConfiguration { get; set; } = new NewClusterConfiguration();
+
     [ValidateComplexType]
     [JsonInclude]
     public IList<DbNotebookStepParameter> StepParameters { get; private set; } = new List<DbNotebookStepParameter>();

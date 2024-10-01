@@ -76,7 +76,7 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
     /// Called when the step is submitted.
     /// Invoking takes place after tags and other objects are mapped but before the step is saved.
     /// </summary>
-    protected virtual Task OnSubmitAsync(TStep step) => Task.CompletedTask;
+    protected virtual Task OnSubmitAsync(AppDbContext context, TStep step) => Task.CompletedTask;
 
     private async Task ResetContext()
     {
@@ -110,7 +110,7 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
             await MapExistingDataObjectsAsync(Step.DataObjects);
 
-            await OnSubmitAsync(Step);
+            await OnSubmitAsync(context, Step);
 
             // Save changes.
 

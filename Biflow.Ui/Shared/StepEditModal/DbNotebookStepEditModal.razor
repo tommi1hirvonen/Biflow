@@ -55,6 +55,153 @@
             </div>
         </div>
 
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-check-label mb-lg-0">Cluster</label>
+            </div>
+            <div class="col-md-6">
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="radio_existing_cluster"
+                           checked=@(Step.ClusterConfiguration is ExistingClusterConfiguration)
+                           @onchange="() => Step.ClusterConfiguration = new ExistingClusterConfiguration()">
+                    <label class="form-check-label fw-normal" for="radio_existing_cluster">Existing cluster</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="radio_new_cluster"
+                           checked=@(Step.ClusterConfiguration is NewClusterConfiguration)
+                           @onchange="() => Step.ClusterConfiguration = new NewClusterConfiguration()">
+                    <label class="form-check-label fw-normal" for="radio_new_cluster">New cluster</label>
+                </div>
+            </div>
+        </div>
+
+        @if (Step.ClusterConfiguration is ExistingClusterConfiguration existing)
+        {
+            <div class="row mt-3">
+                <div class="col-md-4 d-md-flex justify-content-end">
+                    <label class="form-label mb-lg-0">Cluster id</label>
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group input-group-sm">
+                        <InputText class="form-control form-control-sm" @bind-Value="existing.ClusterId" />
+                    </div>
+                </div>
+            </div>
+        }
+        else if (Step.ClusterConfiguration is NewClusterConfiguration newCluster)
+        {
+            <div class="row mt-3">
+                <div class="col-md-4 d-md-flex justify-content-end">
+                    <label class="form-check-label mb-lg-0">Mode</label>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check form-check-inline">
+                        <input type="radio" class="form-check-input" id="radio_cluster_mode_multi_auto"
+                               checked=@(newCluster.ClusterMode is AutoscaleMultiNodeClusterConfiguration)
+                               @onchange="() => newCluster.ClusterMode = new AutoscaleMultiNodeClusterConfiguration()">
+                        <label class="form-check-label fw-normal" for="radio_cluster_mode_multi_auto">Multi node, autoscale</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input type="radio" class="form-check-input" id="radio_cluster_mode_multi_fixed"
+                               checked=@(newCluster.ClusterMode is FixedMultiNodeClusterConfiguration)
+                               @onchange="() => newCluster.ClusterMode = new FixedMultiNodeClusterConfiguration()">
+                        <label class="form-check-label fw-normal" for="radio_cluster_mode_multi_fixed">Multi node, fixed</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input type="radio" class="form-check-input" id="radio_cluster_mode_single"
+                               checked=@(newCluster.ClusterMode is SingleNodeClusterConfiguration)
+                               @onchange="() => newCluster.ClusterMode = new SingleNodeClusterConfiguration()">
+                        <label class="form-check-label fw-normal" for="radio_cluster_mode_single">Single node</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-4 d-md-flex justify-content-end">
+                    <label class="form-label mb-lg-0">Runtime version</label>
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group input-group-sm">
+                        <InputText class="form-control form-control-sm" @bind-Value="newCluster.RuntimeVersion" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-4 d-md-flex justify-content-end">
+                    <label class="form-label mb-lg-0">Worker node type</label>
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group input-group-sm">
+                        <InputText class="form-control form-control-sm" @bind-Value="newCluster.NodeTypeId" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-4 d-md-flex justify-content-end">
+                    <label class="form-label mb-lg-0">Driver node type</label>
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group input-group-sm">
+                        <InputText class="form-control form-control-sm" @bind-Value="newCluster.DriverNodeTypeId" />
+                    </div>
+                    <div class="form-text">
+                        Optional. If not set, the driver node will use the same type as worker nodes.
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-4 d-md-flex justify-content-end">
+                    <label class="form-check-label mb-lg-0" for="dbnotebook_cluster_use_photon">
+                        Use Photon acceleration
+                    </label>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check form-check-inline">
+                        <input type="checkbox" class="form-check-input" id="dbnotebook_cluster_use_photon"
+                               checked=@newCluster.UsePhoton
+                               @bind-value="newCluster.UsePhoton">
+                    </div>
+                </div>
+            </div>
+
+            @if (newCluster.ClusterMode is FixedMultiNodeClusterConfiguration fix)
+            {
+                <div class="row mt-3">
+                    <div class="col-md-4 d-md-flex justify-content-end">
+                        <label class="form-label mb-lg-0">No of workers</label>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group input-group-sm">
+                            <InputNumber class="form-control form-control-sm" @bind-Value="fix.NumberOfWorkers" style="max-width: 5rem;" />
+                        </div>
+                    </div>
+                </div>
+            }
+            else if (newCluster.ClusterMode is AutoscaleMultiNodeClusterConfiguration auto)
+            {
+                <div class="row mt-3">
+                    <div class="col-md-4 d-md-flex justify-content-end">
+                        <label class="form-label mb-lg-0">No of workers</label>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="input-group input-group-sm">
+                            <div class="input-group-text small">
+                                Min
+                            </div>
+                            <InputNumber class="form-control form-control-sm" @bind-Value="auto.MinimumWorkers" style="max-width: 5rem;" />
+                            <div class="input-group-text small">
+                                Max
+                            </div>
+                            <InputNumber class="form-control form-control-sm" @bind-Value="auto.MaximumWorkers" style="max-width: 5rem;" />
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+
         <DbNotebookSelectOffcanvas @ref="notebookSelectOffcanvas" OnNotebookSelected="OnNotebookSelected" />
 
         <StepParametersEditor Step="Step" NewParameterDelegate="() => new() { Step = Step }" />

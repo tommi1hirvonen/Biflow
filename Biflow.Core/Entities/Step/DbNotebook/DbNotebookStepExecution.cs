@@ -19,6 +19,7 @@ public class DbNotebookStepExecution : StepExecution,
         ArgumentNullException.ThrowIfNull(step.DatabricksWorkspaceId);
 
         NotebookPath = step.NotebookPath;
+        ClusterConfiguration = step.ClusterConfiguration;
         DatabricksWorkspaceId = step.DatabricksWorkspaceId;
         TimeoutMinutes = step.TimeoutMinutes;
         StepExecutionParameters = step.StepParameters
@@ -29,6 +30,8 @@ public class DbNotebookStepExecution : StepExecution,
 
     [MaxLength(1000)]
     public string NotebookPath { get; private set; }
+
+    public ClusterConfiguration ClusterConfiguration { get; set; } = new NewClusterConfiguration();
 
     public Guid DatabricksWorkspaceId { get; private set; }
 

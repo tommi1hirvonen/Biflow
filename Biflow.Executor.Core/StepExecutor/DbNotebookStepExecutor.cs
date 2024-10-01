@@ -47,12 +47,6 @@ internal class DbNotebookStepExecutor(
 
         // Create run submit settings and the notebook task.
 
-        var cluster = ClusterAttributes
-            .GetNewClusterConfiguration()
-            .WithClusterMode(ClusterMode.SingleNode)
-            .WithNodeType("Standard_D4ds_v5")
-            .WithRuntimeVersion("15.4.x-scala2.12");
-
         var settings = new RunSubmitSettings
         {
             RunName = step.ExecutionId.ToString()
@@ -63,8 +57,35 @@ internal class DbNotebookStepExecutor(
             BaseParameters = parameters
         };
         int? timeoutSeconds = step.TimeoutMinutes > 0 ? Convert.ToInt32(step.TimeoutMinutes * 60.0) : null;
-        var taskSettings = settings.AddTask(step.StepId.ToString(), task, timeoutSeconds: timeoutSeconds)
-            .WithNewCluster(cluster);
+        var taskSettings = settings.AddTask(step.StepId.ToString(), task, timeoutSeconds: timeoutSeconds);
+
+        if (step.ClusterConfiguration is ExistingClusterConfiguration existing)
+        {
+            taskSettings.WithExistingClusterId(existing.ClusterId);
+        }
+        else if (step.ClusterConfiguration is NewClusterConfiguration newCluster)
+        {
+            var cluster = ClusterAttributes.GetNewClusterConfiguration();
+            cluster = newCluster.ClusterMode switch
+            {
+                SingleNodeClusterConfiguration single =>
+                    cluster.WithClusterMode(ClusterMode.SingleNode),
+                FixedMultiNodeClusterConfiguration fix =>
+                    cluster.WithClusterMode(ClusterMode.Standard).WithNumberOfWorkers(fix.NumberOfWorkers),
+                AutoscaleMultiNodeClusterConfiguration auto =>
+                    cluster.WithClusterMode(ClusterMode.Standard).WithAutoScale(auto.MinimumWorkers, auto.MaximumWorkers),
+                _ => throw new ArgumentException($"Unhandled new cluster configuration type {newCluster.ClusterMode.GetType()}")
+            };
+            cluster = cluster
+                .WithNodeType(newCluster.NodeTypeId, newCluster.DriverNodeTypeId)
+                .WithRuntimeVersion(newCluster.RuntimeVersion)
+                .WithRuntimeEngine(newCluster.UsePhoton ? RuntimeEngine.PHOTON : RuntimeEngine.STANDARD);
+            taskSettings.WithNewCluster(cluster);
+        }
+        else
+        {
+            throw new ArgumentException($"Unhandled cluster configuration type {step.ClusterConfiguration.GetType()}");
+        }
 
         long runId;
         try

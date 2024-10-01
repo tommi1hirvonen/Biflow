@@ -36,6 +36,14 @@ public partial class DbNotebookStepEditModal : StepEditModal<DbNotebookStep>
         };
     }
 
+    protected override Task OnSubmitAsync(AppDbContext context, DbNotebookStep step)
+    {
+        // Change tracking does not identify changes to cluster configuration.
+        // Tell the change tracker that the config has changed just in case.
+        context.Entry(step).Property(p => p.ClusterConfiguration).IsModified = true;
+        return Task.CompletedTask;
+    }
+
     private Task OpenNotebookSelectOffcanvas()
     {
         ArgumentNullException.ThrowIfNull(Step?.DatabricksWorkspaceId);

@@ -60,6 +60,7 @@ public class StepValidator : AsyncAbstractValidator<Step>
         RuleFor(step => step).SetInheritanceValidator(v =>
         {
             v.Add(new TabularStepValidator());
+            v.Add(new DbNotebookStepValidator());
         });
         When(step => step is IHasStepParameters, () =>
         {
@@ -98,5 +99,58 @@ file class TabularStepValidator : AbstractValidator<TabularStep>
         RuleFor(step => step)
             .Must(step => string.IsNullOrEmpty(step.TabularPartitionName) || !string.IsNullOrEmpty(step.TabularPartitionName) && !string.IsNullOrEmpty(step.TabularTableName))
             .WithMessage("Table name is required if partition name has been defined");
+    }
+}
+
+file class DbNotebookStepValidator : AbstractValidator<DbNotebookStep>
+{
+    public DbNotebookStepValidator()
+    {
+        RuleFor(step => step.ClusterConfiguration)
+            .SetInheritanceValidator(v =>
+            {
+                v.Add(new ExistingClusterValidator());
+                v.Add(new NewClusterValidator());
+            });
+    }
+}
+
+file class ExistingClusterValidator : AbstractValidator<ExistingClusterConfiguration>
+{
+    public ExistingClusterValidator()
+    {
+        RuleFor(c => c.ClusterId).NotEmpty();
+    }
+}
+
+file class NewClusterValidator : AbstractValidator<NewClusterConfiguration>
+{
+    public NewClusterValidator()
+    {
+        RuleFor(c => c.RuntimeVersion).NotEmpty();
+        RuleFor(c => c.NodeTypeId).NotEmpty();
+        RuleFor(c => c.ClusterMode)
+            .SetInheritanceValidator(v =>
+            {
+                v.Add(new FixedClusterValidator());
+                v.Add(new AutoClusterValidator());
+            });
+    }
+}
+
+file class FixedClusterValidator : AbstractValidator<FixedMultiNodeClusterConfiguration>
+{
+    public FixedClusterValidator()
+    {
+        RuleFor(c => c.NumberOfWorkers).GreaterThan(0);
+    }
+}
+
+file class AutoClusterValidator : AbstractValidator<AutoscaleMultiNodeClusterConfiguration>
+{
+    public AutoClusterValidator()
+    {
+        RuleFor(c => c.MaximumWorkers).GreaterThan(c => c.MinimumWorkers);
+        RuleFor(c => c.MinimumWorkers).GreaterThan(0);
     }
 }
