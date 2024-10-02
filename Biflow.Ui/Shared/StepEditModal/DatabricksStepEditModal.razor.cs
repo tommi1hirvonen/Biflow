@@ -50,18 +50,22 @@ public partial class DatabricksStepEditModal : StepEditModal<DatabricksStep>
         return Task.CompletedTask;
     }
 
-    private Task OpenNotebookSelectOffcanvas()
+    private Task OpenFileSelectOffcanvas()
     {
         ArgumentNullException.ThrowIfNull(Step?.DatabricksWorkspaceId);
         return fileSelectOffcanvas.LetAsync(x => x.ShowAsync(Step.DatabricksWorkspaceId));
     }
 
-    private void OnFileSelected(string notebook)
+    private void OnFileSelected(string filePath)
     {
         ArgumentNullException.ThrowIfNull(Step);
         if (Step.DatabricksStepSettings is DbNotebookStepSettings notebookSettings)
         {
-            notebookSettings.NotebookPath = notebook;
+            notebookSettings.NotebookPath = filePath;
+        }
+        else if (Step.DatabricksStepSettings is DbPythonFileStepSettings pythonSettings)
+        {
+            pythonSettings.FilePath = filePath;
         }
     }
 

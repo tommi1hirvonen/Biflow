@@ -33,10 +33,6 @@
                             <option value="@workspace.WorkspaceId">@workspace.WorkspaceName</option>
                         }
                     </InputSelect>
-                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="OpenNotebookSelectOffcanvas">
-                        <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
-                        Browse notebooks
-                    </HxButton>
                 </div>
             </div>
         </div>
@@ -72,6 +68,20 @@
                 </div>
             </div>
         </div>
+
+        @if (Step.DatabricksStepSettings is DbNotebookStepSettings or DbPythonFileStepSettings)
+        {
+            <div class="row mt-3">
+                <div class="col-md-4 d-md-flex justify-content-end">
+                </div>
+                <div class="col-md-6">
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="OpenFileSelectOffcanvas">
+                        <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
+                        Browse files
+                    </HxButton>
+                </div>
+            </div>
+        }
 
         @if (Step.DatabricksStepSettings is DbNotebookStepSettings notebookSettings)
         {
