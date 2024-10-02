@@ -215,7 +215,7 @@ public class Row
 
             return new(builder.ToString(), parameters, CommandType.Update);
         }
-        else if (_initialValues is not null)
+        else if (_initialValues is not null && ToBeDeleted && _parentTable.MasterDataTable.AllowDelete)
         {
             // Existing record to be deleted
             var builder = new StringBuilder();
@@ -234,7 +234,7 @@ public class Row
 
             return new(builder.ToString(), parameters, CommandType.Delete);
         }
-        else if (!ToBeDeleted)
+        else if (_initialValues is null && !ToBeDeleted && _parentTable.MasterDataTable.AllowInsert)
         {
             // New entity
             var parameters = new DynamicParameters();
