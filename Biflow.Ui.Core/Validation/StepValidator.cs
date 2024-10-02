@@ -106,12 +106,73 @@ file class DatabricksStepValidator : AbstractValidator<DatabricksStep>
 {
     public DatabricksStepValidator()
     {
-        RuleFor(step => step.ClusterConfiguration)
+        RuleFor(step => step.DatabricksStepSettings)
+            .SetValidator(new DatabricksStepSettingsValidator());
+    }
+}
+
+file class DatabricksStepSettingsValidator : AbstractValidator<DatabricksStepSettings>
+{
+    public DatabricksStepSettingsValidator()
+    {
+        RuleFor(settings => settings)
+            .SetInheritanceValidator(v =>
+            {
+                v.Add(new DbNotebookStepSettingsValidator());
+                v.Add(new DbPythonFileStepSettingsValidator());
+                v.Add(new DbPipelineStepSettingsValidator());
+                v.Add(new DbJobStepSettingsValidator());
+            });
+    }
+}
+
+file class DbNotebookStepSettingsValidator : AbstractValidator<DbNotebookStepSettings>
+{
+    public DbNotebookStepSettingsValidator()
+    {
+        RuleFor(settings => settings.NotebookPath).NotEmpty();
+        RuleFor(settings => settings.ClusterConfiguration)
             .SetInheritanceValidator(v =>
             {
                 v.Add(new ExistingClusterValidator());
                 v.Add(new NewClusterValidator());
             });
+    }
+}
+
+file class DbPythonFileStepSettingsValidator : AbstractValidator<DbPythonFileStepSettings>
+{
+    public DbPythonFileStepSettingsValidator()
+    {
+        RuleFor(settings => settings.FilePath).NotEmpty();
+        RuleFor(settings => settings.ClusterConfiguration)
+            .SetInheritanceValidator(v =>
+            {
+                v.Add(new ExistingClusterValidator());
+                v.Add(new NewClusterValidator());
+            });
+    }
+}
+
+file class DbPipelineStepSettingsValidator : AbstractValidator<DbPipelineStepSettings>
+{
+    public DbPipelineStepSettingsValidator()
+    {
+        RuleFor(settings => settings.PipelineId).NotEmpty();
+        RuleFor(settings => settings.ClusterConfiguration)
+            .SetInheritanceValidator(v =>
+            {
+                v.Add(new ExistingClusterValidator());
+                v.Add(new NewClusterValidator());
+            });
+    }
+}
+
+file class DbJobStepSettingsValidator : AbstractValidator<DbJobStepSettings>
+{
+    public DbJobStepSettingsValidator()
+    {
+        RuleFor(settings => settings.JobId).NotEmpty();
     }
 }
 

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Biflow.DataAccess.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20241001190936_ClusterConfiguration")]
-    partial class ClusterConfiguration
+    [Migration("20241002143951_DatabricksStep")]
+    partial class DatabricksStep
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -1674,6 +1674,27 @@ namespace Biflow.DataAccess.Migrations
                     b.HasDiscriminator().HasValue("AgentJob");
                 });
 
+            modelBuilder.Entity("Biflow.Core.Entities.DatabricksStep", b =>
+                {
+                    b.HasBaseType("Biflow.Core.Entities.Step");
+
+                    b.Property<string>("DatabricksStepSettings")
+                        .IsRequired()
+                        .HasMaxLength(-1)
+                        .IsUnicode(true)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("DatabricksWorkspaceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("TimeoutMinutes")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("float")
+                        .HasColumnName("TimeoutMinutes");
+
+                    b.HasDiscriminator().HasValue("Databricks");
+                });
+
             modelBuilder.Entity("Biflow.Core.Entities.DatasetStep", b =>
                 {
                     b.HasBaseType("Biflow.Core.Entities.Step");
@@ -1692,32 +1713,6 @@ namespace Biflow.DataAccess.Migrations
                         .HasColumnType("nvarchar(36)");
 
                     b.HasDiscriminator().HasValue("Dataset");
-                });
-
-            modelBuilder.Entity("Biflow.Core.Entities.DbNotebookStep", b =>
-                {
-                    b.HasBaseType("Biflow.Core.Entities.Step");
-
-                    b.Property<string>("ClusterConfiguration")
-                        .IsRequired()
-                        .HasMaxLength(-1)
-                        .IsUnicode(true)
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("DatabricksWorkspaceId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("NotebookPath")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<double>("TimeoutMinutes")
-                        .ValueGeneratedOnUpdateSometimes()
-                        .HasColumnType("float")
-                        .HasColumnName("TimeoutMinutes");
-
-                    b.HasDiscriminator().HasValue("DatabricksNotebook");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.EmailStep", b =>
@@ -1979,6 +1974,27 @@ namespace Biflow.DataAccess.Migrations
                     b.HasDiscriminator().HasValue("AgentJob");
                 });
 
+            modelBuilder.Entity("Biflow.Core.Entities.DatabricksStepExecution", b =>
+                {
+                    b.HasBaseType("Biflow.Core.Entities.StepExecution");
+
+                    b.Property<string>("DatabricksStepSettings")
+                        .IsRequired()
+                        .HasMaxLength(-1)
+                        .IsUnicode(true)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("DatabricksWorkspaceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("TimeoutMinutes")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("float")
+                        .HasColumnName("TimeoutMinutes");
+
+                    b.HasDiscriminator().HasValue("Databricks");
+                });
+
             modelBuilder.Entity("Biflow.Core.Entities.DatasetStepExecution", b =>
                 {
                     b.HasBaseType("Biflow.Core.Entities.StepExecution");
@@ -1997,30 +2013,6 @@ namespace Biflow.DataAccess.Migrations
                         .HasColumnType("nvarchar(36)");
 
                     b.HasDiscriminator().HasValue("Dataset");
-                });
-
-            modelBuilder.Entity("Biflow.Core.Entities.DbNotebookStepExecution", b =>
-                {
-                    b.HasBaseType("Biflow.Core.Entities.StepExecution");
-
-                    b.Property<string>("ClusterConfiguration")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("DatabricksWorkspaceId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("NotebookPath")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
-                    b.Property<double>("TimeoutMinutes")
-                        .ValueGeneratedOnUpdateSometimes()
-                        .HasColumnType("float")
-                        .HasColumnName("TimeoutMinutes");
-
-                    b.HasDiscriminator().HasValue("DatabricksNotebook");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.EmailStepExecution", b =>
@@ -2275,21 +2267,21 @@ namespace Biflow.DataAccess.Migrations
                     b.HasDiscriminator().HasValue("AgentJob");
                 });
 
-            modelBuilder.Entity("Biflow.Core.Entities.DatasetStepExecutionAttempt", b =>
-                {
-                    b.HasBaseType("Biflow.Core.Entities.StepExecutionAttempt");
-
-                    b.HasDiscriminator().HasValue("Dataset");
-                });
-
-            modelBuilder.Entity("Biflow.Core.Entities.DbNotebookStepExecutionAttempt", b =>
+            modelBuilder.Entity("Biflow.Core.Entities.DatabricksStepExecutionAttempt", b =>
                 {
                     b.HasBaseType("Biflow.Core.Entities.StepExecutionAttempt");
 
                     b.Property<long?>("JobRunId")
                         .HasColumnType("bigint");
 
-                    b.HasDiscriminator().HasValue("DatabricksNotebook");
+                    b.HasDiscriminator().HasValue("Databricks");
+                });
+
+            modelBuilder.Entity("Biflow.Core.Entities.DatasetStepExecutionAttempt", b =>
+                {
+                    b.HasBaseType("Biflow.Core.Entities.StepExecutionAttempt");
+
+                    b.HasDiscriminator().HasValue("Dataset");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.EmailStepExecutionAttempt", b =>
@@ -2376,7 +2368,7 @@ namespace Biflow.DataAccess.Migrations
                     b.HasDiscriminator().HasValue("Tabular");
                 });
 
-            modelBuilder.Entity("Biflow.Core.Entities.DbNotebookStepExecutionParameter", b =>
+            modelBuilder.Entity("Biflow.Core.Entities.DatabricksStepExecutionParameter", b =>
                 {
                     b.HasBaseType("Biflow.Core.Entities.StepExecutionParameterBase");
 
@@ -2441,7 +2433,7 @@ namespace Biflow.DataAccess.Migrations
                     b.HasDiscriminator().HasValue("Sql");
                 });
 
-            modelBuilder.Entity("Biflow.Core.Entities.DbNotebookStepParameter", b =>
+            modelBuilder.Entity("Biflow.Core.Entities.DatabricksStepParameter", b =>
                 {
                     b.HasBaseType("Biflow.Core.Entities.StepParameterBase");
 
@@ -3252,6 +3244,16 @@ namespace Biflow.DataAccess.Migrations
                     b.Navigation("Connection");
                 });
 
+            modelBuilder.Entity("Biflow.Core.Entities.DatabricksStep", b =>
+                {
+                    b.HasOne("Biflow.Core.Entities.DatabricksWorkspace", "DatabricksWorkspace")
+                        .WithMany("Steps")
+                        .HasForeignKey("DatabricksWorkspaceId")
+                        .IsRequired();
+
+                    b.Navigation("DatabricksWorkspace");
+                });
+
             modelBuilder.Entity("Biflow.Core.Entities.DatasetStep", b =>
                 {
                     b.HasOne("Biflow.Core.Entities.AppRegistration", "AppRegistration")
@@ -3260,16 +3262,6 @@ namespace Biflow.DataAccess.Migrations
                         .IsRequired();
 
                     b.Navigation("AppRegistration");
-                });
-
-            modelBuilder.Entity("Biflow.Core.Entities.DbNotebookStep", b =>
-                {
-                    b.HasOne("Biflow.Core.Entities.DatabricksWorkspace", "DatabricksWorkspace")
-                        .WithMany("Steps")
-                        .HasForeignKey("DatabricksWorkspaceId")
-                        .IsRequired();
-
-                    b.Navigation("DatabricksWorkspace");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.ExeStep", b =>
@@ -3369,9 +3361,9 @@ namespace Biflow.DataAccess.Migrations
                     b.Navigation("ResultCaptureJobParameter");
                 });
 
-            modelBuilder.Entity("Biflow.Core.Entities.DbNotebookStepExecutionParameter", b =>
+            modelBuilder.Entity("Biflow.Core.Entities.DatabricksStepExecutionParameter", b =>
                 {
-                    b.HasOne("Biflow.Core.Entities.DbNotebookStepExecution", "StepExecution")
+                    b.HasOne("Biflow.Core.Entities.DatabricksStepExecution", "StepExecution")
                         .WithMany("StepExecutionParameters")
                         .HasForeignKey("ExecutionId", "StepId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -3457,9 +3449,9 @@ namespace Biflow.DataAccess.Migrations
                     b.Navigation("StepExecution");
                 });
 
-            modelBuilder.Entity("Biflow.Core.Entities.DbNotebookStepParameter", b =>
+            modelBuilder.Entity("Biflow.Core.Entities.DatabricksStepParameter", b =>
                 {
-                    b.HasOne("Biflow.Core.Entities.DbNotebookStep", "Step")
+                    b.HasOne("Biflow.Core.Entities.DatabricksStep", "Step")
                         .WithMany("StepParameters")
                         .HasForeignKey("StepId")
                         .OnDelete(DeleteBehavior.ClientCascade)
@@ -3781,7 +3773,7 @@ namespace Biflow.DataAccess.Migrations
                     b.Navigation("PackageSteps");
                 });
 
-            modelBuilder.Entity("Biflow.Core.Entities.DbNotebookStep", b =>
+            modelBuilder.Entity("Biflow.Core.Entities.DatabricksStep", b =>
                 {
                     b.Navigation("StepParameters");
                 });
@@ -3821,7 +3813,7 @@ namespace Biflow.DataAccess.Migrations
                     b.Navigation("StepParameters");
                 });
 
-            modelBuilder.Entity("Biflow.Core.Entities.DbNotebookStepExecution", b =>
+            modelBuilder.Entity("Biflow.Core.Entities.DatabricksStepExecution", b =>
                 {
                     b.Navigation("StepExecutionParameters");
                 });

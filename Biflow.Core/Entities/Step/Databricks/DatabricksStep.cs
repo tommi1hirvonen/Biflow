@@ -14,7 +14,7 @@ public class DatabricksStep : Step, IHasTimeout, IHasStepParameters<DatabricksSt
         TimeoutMinutes = other.TimeoutMinutes;
         DatabricksWorkspaceId = other.DatabricksWorkspaceId;
         DatabricksWorkspace = other.DatabricksWorkspace;
-        NotebookPath = other.NotebookPath;
+        DatabricksStepSettings = other.DatabricksStepSettings;
         StepParameters = other.StepParameters
             .Select(p => new DatabricksStepParameter(p, this, targetJob))
             .ToList();
@@ -24,17 +24,13 @@ public class DatabricksStep : Step, IHasTimeout, IHasStepParameters<DatabricksSt
     [Range(0, 2880)] // 48 hours
     public double TimeoutMinutes { get; set; }
 
+    public DatabricksStepSettings DatabricksStepSettings { get; set; } = new DbNotebookStepSettings();
+
     [Required]
     public Guid DatabricksWorkspaceId { get; set; }
 
-    [MaxLength(1000)]
-    [Required]
-    public string NotebookPath { get; set; } = "";
-
     [JsonIgnore]
     public DatabricksWorkspace? DatabricksWorkspace { get; set; }
-
-    public ClusterConfiguration ClusterConfiguration { get; set; } = new NewClusterConfiguration();
 
     [ValidateComplexType]
     [JsonInclude]

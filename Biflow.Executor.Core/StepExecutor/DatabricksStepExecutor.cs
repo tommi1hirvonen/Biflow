@@ -47,58 +47,103 @@ internal class DatabricksStepExecutor(
 
         // Create run submit settings and the notebook task.
 
-        var settings = new RunSubmitSettings
-        {
-            RunName = step.ExecutionId.ToString()
-        };
-        var task = new NotebookTask
-        {
-            NotebookPath = step.NotebookPath,
-            BaseParameters = parameters
-        };
-        int? timeoutSeconds = step.TimeoutMinutes > 0 ? Convert.ToInt32(step.TimeoutMinutes * 60.0) : null;
-        var taskSettings = settings.AddTask(step.StepId.ToString(), task, timeoutSeconds: timeoutSeconds);
+        Task<long> startRunTask;
 
-        if (step.ClusterConfiguration is ExistingClusterConfiguration existing)
+        if (step.DatabricksStepSettings is DatabricksClusterStepSettings clusterStep)
         {
-            taskSettings.WithExistingClusterId(existing.ClusterId);
-        }
-        else if (step.ClusterConfiguration is NewClusterConfiguration newCluster)
-        {
-            var cluster = ClusterAttributes.GetNewClusterConfiguration();
-            cluster = newCluster.ClusterMode switch
+            var settings = new RunSubmitSettings { RunName = step.ExecutionId.ToString() };
+            var taskKey = step.StepId.ToString();
+            var taskSettings = clusterStep switch
             {
-                SingleNodeClusterConfiguration single =>
-                    cluster.WithClusterMode(ClusterMode.SingleNode),
-                FixedMultiNodeClusterConfiguration fix =>
-                    cluster.WithClusterMode(ClusterMode.Standard).WithNumberOfWorkers(fix.NumberOfWorkers),
-                AutoscaleMultiNodeClusterConfiguration auto =>
-                    cluster.WithClusterMode(ClusterMode.Standard).WithAutoScale(auto.MinimumWorkers, auto.MaximumWorkers),
-                _ => throw new ArgumentException($"Unhandled new cluster configuration type {newCluster.ClusterMode.GetType()}")
+                DbNotebookStepSettings notebook =>
+                    settings.AddTask(
+                        taskKey,
+                        new NotebookTask
+                        {
+                            NotebookPath = notebook.NotebookPath,
+                            BaseParameters = parameters
+                        }),
+                DbPythonFileStepSettings python =>
+                    settings.AddTask(
+                        taskKey,
+                        new SparkPythonTask
+                        {
+                            PythonFile = python.FilePath,
+                            Parameters = parameters.OrderBy(kvp => kvp.Key).Select(kvp => kvp.Value).ToList()
+                        }), 
+                DbPipelineStepSettings pipeline =>
+                    settings.AddTask(
+                        taskKey,
+                        new PipelineTask
+                        {
+                            PipelineId =  pipeline.PipelineId,
+                            FullRefresh = pipeline.PipelineFullRefresh
+                        }),
+                _ => throw new ArgumentException($"Unhandled step configuration type {clusterStep.GetType()}")
             };
-            cluster = cluster
-                .WithNodeType(newCluster.NodeTypeId, newCluster.DriverNodeTypeId)
-                .WithRuntimeVersion(newCluster.RuntimeVersion)
-                .WithRuntimeEngine(newCluster.UsePhoton ? RuntimeEngine.PHOTON : RuntimeEngine.STANDARD);
-            taskSettings.WithNewCluster(cluster);
+
+            if (clusterStep.ClusterConfiguration is ExistingClusterConfiguration existing)
+            {
+                taskSettings.WithExistingClusterId(existing.ClusterId);
+            }
+            else if (clusterStep.ClusterConfiguration is NewClusterConfiguration newCluster)
+            {
+                var cluster = ClusterAttributes.GetNewClusterConfiguration();
+                cluster = newCluster.ClusterMode switch
+                {
+                    SingleNodeClusterConfiguration single =>
+                        cluster.WithClusterMode(ClusterMode.SingleNode),
+                    FixedMultiNodeClusterConfiguration fix =>
+                        cluster.WithClusterMode(ClusterMode.Standard).WithNumberOfWorkers(fix.NumberOfWorkers),
+                    AutoscaleMultiNodeClusterConfiguration auto =>
+                        cluster.WithClusterMode(ClusterMode.Standard).WithAutoScale(auto.MinimumWorkers, auto.MaximumWorkers),
+                    _ => throw new ArgumentException($"Unhandled new cluster configuration type {newCluster.ClusterMode.GetType()}")
+                };
+                cluster = cluster
+                    .WithNodeType(newCluster.NodeTypeId, newCluster.DriverNodeTypeId)
+                    .WithRuntimeVersion(newCluster.RuntimeVersion)
+                    .WithRuntimeEngine(newCluster.UsePhoton ? RuntimeEngine.PHOTON : RuntimeEngine.STANDARD);
+                taskSettings.WithNewCluster(cluster);
+            }
+            else
+            {
+                throw new ArgumentException($"Unhandled cluster configuration type {clusterStep.ClusterConfiguration.GetType()}");
+            }
+
+            startRunTask = client.Jobs.RunSubmit(settings, cancellationToken: cancellationToken);
+        }
+        else if (step.DatabricksStepSettings is DbJobStepSettings dbJob)
+        {
+            startRunTask = client.Jobs.RunNow(dbJob.JobId, new() { JobParams = parameters }, cancellationToken: cancellationToken);
         }
         else
         {
-            throw new ArgumentException($"Unhandled cluster configuration type {step.ClusterConfiguration.GetType()}");
+            throw new ArgumentException($"Unhandled step configuration type {step.DatabricksStepSettings.GetType()}");
         }
 
         long runId;
         try
         {
-            runId = await client.Jobs.RunSubmit(settings);
+            runId = await startRunTask;
+        }
+        catch (OperationCanceledException ex)
+        {
+            attempt.AddWarning(ex);
+            return Result.Cancel;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error creating dbnotebook run for workspace {DatabricksWorkspaceId} and notebook {NotebookPath}",
-                step.ExecutionId, step, step.DatabricksWorkspaceId, step.NotebookPath);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error creating run for workspace {DatabricksWorkspaceId}",
+                step.ExecutionId, step, step.DatabricksWorkspaceId);
             attempt.AddError(ex, "Error starting notebook run");
             return Result.Failure;
         }
+
+        // Initialize timeout cancellation token source already here
+        // so that we can start the countdown immediately after the job run is started.
+        using var timeoutCts = step.TimeoutMinutes > 0
+            ? new CancellationTokenSource(TimeSpan.FromMinutes(step.TimeoutMinutes))
+            : new CancellationTokenSource();
 
         try
         {
@@ -117,19 +162,25 @@ internal class DatabricksStepExecutor(
         Run run;
         try
         {
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
             while (true)
             {
-                run = await GetRunWithRetriesAsync(client, step, runId, cancellationToken);
+                run = await GetRunWithRetriesAsync(client, step, runId, linkedCts.Token);
                 if (run.Status.State == RunStatusState.TERMINATED)
                 {
                     break;
                 }
-                await Task.Delay(_pollingIntervalMs, cancellationToken);
+                await Task.Delay(_pollingIntervalMs, linkedCts.Token);
             }
         }
         catch (OperationCanceledException ex)
         {
             await CancelAsync(client, step, attempt, runId);
+            if (timeoutCts.IsCancellationRequested)
+            {
+                attempt.AddError(ex, "Step execution timed out");
+                return Result.Failure;
+            }
             attempt.AddWarning(ex);
             return Result.Cancel;
         }

@@ -1,5 +1,4 @@
 ﻿using Biflow.Core.Interfaces;
-using System.ComponentModel.DataAnnotations;
 
 namespace Biflow.Core.Entities;
 
@@ -8,18 +7,15 @@ public class DatabricksStepExecution : StepExecution,
     IHasStepExecutionParameters<DatabricksStepExecutionParameter>,
     IHasStepExecutionAttempts<DatabricksStepExecutionAttempt>
 {
-    public DatabricksStepExecution(string stepName, string notebookPath) : base(stepName, StepType.Databricks)
+    public DatabricksStepExecution(string stepName) : base(stepName, StepType.Databricks)
     {
-        NotebookPath = notebookPath;
     }
 
     public DatabricksStepExecution(DatabricksStep step, Execution execution) : base(step, execution)
     {
-        ArgumentNullException.ThrowIfNull(step.NotebookPath);
         ArgumentNullException.ThrowIfNull(step.DatabricksWorkspaceId);
 
-        NotebookPath = step.NotebookPath;
-        ClusterConfiguration = step.ClusterConfiguration;
+        DatabricksStepSettings = step.DatabricksStepSettings;
         DatabricksWorkspaceId = step.DatabricksWorkspaceId;
         TimeoutMinutes = step.TimeoutMinutes;
         StepExecutionParameters = step.StepParameters
@@ -28,10 +24,7 @@ public class DatabricksStepExecution : StepExecution,
         AddAttempt(new DatabricksStepExecutionAttempt(this));
     }
 
-    [MaxLength(1000)]
-    public string NotebookPath { get; private set; }
-
-    public ClusterConfiguration ClusterConfiguration { get; set; } = new NewClusterConfiguration();
+    public DatabricksStepSettings DatabricksStepSettings { get; set; } = new DbNotebookStepSettings();
 
     public Guid DatabricksWorkspaceId { get; private set; }
 

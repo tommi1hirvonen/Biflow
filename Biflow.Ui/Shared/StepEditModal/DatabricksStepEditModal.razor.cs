@@ -46,7 +46,7 @@ public partial class DatabricksStepEditModal : StepEditModal<DatabricksStep>
     {
         // Change tracking does not identify changes to cluster configuration.
         // Tell the change tracker that the config has changed just in case.
-        context.Entry(step).Property(p => p.ClusterConfiguration).IsModified = true;
+        context.Entry(step).Property(p => p.DatabricksStepSettings).IsModified = true;
         return Task.CompletedTask;
     }
 
@@ -59,7 +59,10 @@ public partial class DatabricksStepEditModal : StepEditModal<DatabricksStep>
     private void OnNotebookSelected(string notebook)
     {
         ArgumentNullException.ThrowIfNull(Step);
-        Step.NotebookPath = notebook;
+        if (Step.DatabricksStepSettings is DbNotebookStepSettings notebookSettings)
+        {
+            notebookSettings.NotebookPath = notebook;
+        }
     }
 
     private void OnWorkspaceChanged()

@@ -376,19 +376,13 @@
                 </dd>
             }
         }
-        else if (StepExecutionAttempt.StepExecution is DatabricksStepExecution dbn)
+        else if (StepExecutionAttempt.StepExecution is DatabricksStepExecution db)
         {
             <dt class="col-sm-3">
-                Notebook path
+                Step settings
             </dt>
             <dd class="col-sm-9">
-                @dbn.NotebookPath
-            </dd>
-            <dt class="col-sm-3">
-                Cluster configuration
-            </dt>
-            <dd class="col-sm-9">
-                <pre><code>@JsonSerializer.Serialize(dbn.ClusterConfiguration, JsonSerializerOptions)</code></pre>
+                <pre><code>@JsonSerializer.Serialize(db.DatabricksStepSettings, JsonSerializerOptions)</code></pre>
             </dd>
             @if (StepExecutionAttempt is DatabricksStepExecutionAttempt dbna)
             {

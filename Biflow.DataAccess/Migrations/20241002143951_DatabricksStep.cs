@@ -6,24 +6,24 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Biflow.DataAccess.Migrations
 {
     /// <inheritdoc />
-    public partial class DatabricksNotebook : Migration
+    public partial class DatabricksStep : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.AddColumn<string>(
+                name: "DatabricksStepSettings",
+                schema: "app",
+                table: "Step",
+                type: "nvarchar(max)",
+                maxLength: -1,
+                nullable: true);
+
             migrationBuilder.AddColumn<Guid>(
                 name: "DatabricksWorkspaceId",
                 schema: "app",
                 table: "Step",
                 type: "uniqueidentifier",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "NotebookPath",
-                schema: "app",
-                table: "Step",
-                type: "nvarchar(1000)",
-                maxLength: 1000,
                 nullable: true);
 
             migrationBuilder.AddColumn<long>(
@@ -33,19 +33,19 @@ namespace Biflow.DataAccess.Migrations
                 type: "bigint",
                 nullable: true);
 
+            migrationBuilder.AddColumn<string>(
+                name: "DatabricksStepSettings",
+                schema: "app",
+                table: "ExecutionStep",
+                type: "nvarchar(max)",
+                maxLength: -1,
+                nullable: true);
+
             migrationBuilder.AddColumn<Guid>(
                 name: "DatabricksWorkspaceId",
                 schema: "app",
                 table: "ExecutionStep",
                 type: "uniqueidentifier",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "NotebookPath",
-                schema: "app",
-                table: "ExecutionStep",
-                type: "nvarchar(1000)",
-                maxLength: 1000,
                 nullable: true);
 
             migrationBuilder.CreateTable(
@@ -86,12 +86,12 @@ namespace Biflow.DataAccess.Migrations
                 schema: "app");
 
             migrationBuilder.DropColumn(
-                name: "DatabricksWorkspaceId",
+                name: "DatabricksStepSettings",
                 schema: "app",
                 table: "Step");
 
             migrationBuilder.DropColumn(
-                name: "NotebookPath",
+                name: "DatabricksWorkspaceId",
                 schema: "app",
                 table: "Step");
 
@@ -101,12 +101,12 @@ namespace Biflow.DataAccess.Migrations
                 table: "ExecutionStepAttempt");
 
             migrationBuilder.DropColumn(
-                name: "DatabricksWorkspaceId",
+                name: "DatabricksStepSettings",
                 schema: "app",
                 table: "ExecutionStep");
 
             migrationBuilder.DropColumn(
-                name: "NotebookPath",
+                name: "DatabricksWorkspaceId",
                 schema: "app",
                 table: "ExecutionStep");
         }
