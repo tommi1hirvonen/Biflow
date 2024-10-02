@@ -79,12 +79,18 @@
         {
             <div class="row mt-3">
                 <div class="col-md-4 d-md-flex justify-content-end">
-                    <label class="form-label mb-lg-0">Cluster id</label>
+                    <label class="form-label mb-lg-0"></label>
                 </div>
                 <div class="col-md-6">
-                    <div class="input-group input-group-sm">
-                        <InputText class="form-control form-control-sm" @bind-Value="existing.ClusterId" />
-                    </div>
+                    <HxAutosuggest TValue="string"
+                                   TItem="(string Id, string Description)"
+                                   InputSize="InputSize.Small"
+                                   @bind-Value="existing.ClusterId"
+                                   MinimumLength="0"
+                                   ValueSelector="item => item.Id"
+                                   TextSelector="item => item.Description"
+                                   ItemFromValueResolver="ResolveClusterFromValueAsync"
+                                   DataProvider="ProvideClusterSuggestionsAsync" />
                 </div>
             </div>
         }

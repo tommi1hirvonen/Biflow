@@ -11,6 +11,7 @@ public partial class DbNotebookStepEditModal : StepEditModal<DbNotebookStep>
 
     private (string Id, string Description)[]? runtimeVersions;
     private (string Id, string Description)[]? nodeTypes;
+    private (string Id, string Description)[]? clusters;
 
     protected override async Task<DbNotebookStep> GetExistingStepAsync(AppDbContext context, Guid stepId)
     {
@@ -64,6 +65,8 @@ public partial class DbNotebookStepEditModal : StepEditModal<DbNotebookStep>
     private void OnWorkspaceChanged()
     {
         runtimeVersions = null;
+        nodeTypes = null;
+        clusters = null;
     }
 
     private async Task<(string Id, string Description)> ResolveRuntimeVersionFromValueAsync(string? value)
@@ -149,7 +152,7 @@ public partial class DbNotebookStepEditModal : StepEditModal<DbNotebookStep>
         {
             try
             {
-                this.nodeTypes = await GetNodeTypesAsync();
+                nodeTypes = await GetNodeTypesAsync();
             }
             catch (Exception ex)
             {
@@ -167,7 +170,7 @@ public partial class DbNotebookStepEditModal : StepEditModal<DbNotebookStep>
         {
             try
             {
-                this.nodeTypes = await GetNodeTypesAsync();
+                nodeTypes = await GetNodeTypesAsync();
             }
             catch (Exception ex)
             {
@@ -179,6 +182,63 @@ public partial class DbNotebookStepEditModal : StepEditModal<DbNotebookStep>
         return new()
         {
             Data = nodeTypes
+                .Where(n => n.Description.ContainsIgnoreCase(request.UserInput))
+        };
+    }
+
+    private async Task<(string Id, string Description)[]> GetClustersAsync()
+    {
+        var workspace = DatabricksWorkspaces?.FirstOrDefault();
+        ArgumentNullException.ThrowIfNull(workspace);
+        using var client = workspace.CreateClient();
+        var clusters = await client.GetClustersAsync();
+        return clusters
+            .Where(c => c.ClusterSource == Microsoft.Azure.Databricks.Client.Models.ClusterSource.UI)
+            .Select(c =>
+            {
+                var memory = Convert.ToInt32(c.ClusterMemoryMb/ 1024);
+                var cores = Convert.ToInt32(c.ClusterCores);
+                return (c.ClusterId, $"{c.ClusterName} ({memory} GB, {cores} cores)");
+            })
+            .ToArray();
+    }
+
+    private async Task<(string Id, string Description)> ResolveClusterFromValueAsync(string? value)
+    {
+        if (clusters is null)
+        {
+            try
+            {
+                clusters = await GetClustersAsync();
+            }
+            catch (Exception ex)
+            {
+                Toaster.AddError("Error fetching available clusters", ex.Message);
+                clusters = [];
+            }
+        }
+        return clusters.FirstOrDefault(v => v.Id == value);
+    }
+
+    private async Task<AutosuggestDataProviderResult<(string Id, string Description)>> ProvideClusterSuggestionsAsync(
+        AutosuggestDataProviderRequest request)
+    {
+        if (clusters is null)
+        {
+            try
+            {
+                clusters = await GetNodeTypesAsync();
+            }
+            catch (Exception ex)
+            {
+                Toaster.AddError("Error fetching available clusters", ex.Message);
+                clusters = [];
+            }
+        }
+
+        return new()
+        {
+            Data = clusters
                 .Where(n => n.Description.ContainsIgnoreCase(request.UserInput))
         };
     }
