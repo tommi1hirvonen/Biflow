@@ -376,7 +376,7 @@
                 </dd>
             }
         }
-        else if (StepExecutionAttempt.StepExecution is DbNotebookStepExecution dbn)
+        else if (StepExecutionAttempt.StepExecution is DatabricksStepExecution dbn)
         {
             <dt class="col-sm-3">
                 Notebook path
@@ -390,7 +390,7 @@
             <dd class="col-sm-9">
                 <pre><code>@JsonSerializer.Serialize(dbn.ClusterConfiguration, JsonSerializerOptions)</code></pre>
             </dd>
-            @if (StepExecutionAttempt is DbNotebookStepExecutionAttempt dbna)
+            @if (StepExecutionAttempt is DatabricksStepExecutionAttempt dbna)
             {
                 <dt class="col-sm-3">
                     Job run id

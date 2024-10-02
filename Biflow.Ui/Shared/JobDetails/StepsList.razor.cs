@@ -107,7 +107,7 @@ public partial class StepsList : ComponentBase
         StepType.AgentJob => ((MsSqlConnections?.Count ?? 0) == 0, "No MS SQL connections defined"),
         StepType.Tabular => ((AsConnections?.Count ?? 0) == 0, "No Analysis Services connections defined"),
         StepType.Qlik => ((QlikCloudClients?.Count ?? 0) == 0, "No Qlik Cloud clients defined"),
-        StepType.DatabricksNotebook => ((DatabricksWorkspaces?.Count ?? 0) == 0, "No Databricks workspaces defined"),
+        StepType.Databricks => ((DatabricksWorkspaces?.Count ?? 0) == 0, "No Databricks workspaces defined"),
         _ => (false, "")
     };
 

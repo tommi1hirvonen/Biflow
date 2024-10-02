@@ -3,17 +3,17 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Biflow.Core.Entities;
 
-public class DbNotebookStepExecution : StepExecution,
+public class DatabricksStepExecution : StepExecution,
     IHasTimeout,
-    IHasStepExecutionParameters<DbNotebookStepExecutionParameter>,
-    IHasStepExecutionAttempts<DbNotebookStepExecutionAttempt>
+    IHasStepExecutionParameters<DatabricksStepExecutionParameter>,
+    IHasStepExecutionAttempts<DatabricksStepExecutionAttempt>
 {
-    public DbNotebookStepExecution(string stepName, string notebookPath) : base(stepName, StepType.DatabricksNotebook)
+    public DatabricksStepExecution(string stepName, string notebookPath) : base(stepName, StepType.Databricks)
     {
         NotebookPath = notebookPath;
     }
 
-    public DbNotebookStepExecution(DbNotebookStep step, Execution execution) : base(step, execution)
+    public DatabricksStepExecution(DatabricksStep step, Execution execution) : base(step, execution)
     {
         ArgumentNullException.ThrowIfNull(step.NotebookPath);
         ArgumentNullException.ThrowIfNull(step.DatabricksWorkspaceId);
@@ -23,9 +23,9 @@ public class DbNotebookStepExecution : StepExecution,
         DatabricksWorkspaceId = step.DatabricksWorkspaceId;
         TimeoutMinutes = step.TimeoutMinutes;
         StepExecutionParameters = step.StepParameters
-            .Select(p => new DbNotebookStepExecutionParameter(p, this))
+            .Select(p => new DatabricksStepExecutionParameter(p, this))
             .ToArray();
-        AddAttempt(new DbNotebookStepExecutionAttempt(this));
+        AddAttempt(new DatabricksStepExecutionAttempt(this));
     }
 
     [MaxLength(1000)]
@@ -37,13 +37,13 @@ public class DbNotebookStepExecution : StepExecution,
 
     public double TimeoutMinutes { get; private set; }
 
-    public IEnumerable<DbNotebookStepExecutionParameter> StepExecutionParameters { get; } = new List<DbNotebookStepExecutionParameter>();
+    public IEnumerable<DatabricksStepExecutionParameter> StepExecutionParameters { get; } = new List<DatabricksStepExecutionParameter>();
 
-    public override DbNotebookStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
+    public override DatabricksStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {
         var previous = StepExecutionAttempts.MaxBy(x => x.RetryAttemptIndex);
         ArgumentNullException.ThrowIfNull(previous);
-        var next = new DbNotebookStepExecutionAttempt((DbNotebookStepExecutionAttempt)previous, previous.RetryAttemptIndex + 1)
+        var next = new DatabricksStepExecutionAttempt((DatabricksStepExecutionAttempt)previous, previous.RetryAttemptIndex + 1)
         {
             ExecutionStatus = withStatus
         };

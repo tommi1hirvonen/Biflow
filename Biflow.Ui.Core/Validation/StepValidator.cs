@@ -60,7 +60,7 @@ public class StepValidator : AsyncAbstractValidator<Step>
         RuleFor(step => step).SetInheritanceValidator(v =>
         {
             v.Add(new TabularStepValidator());
-            v.Add(new DbNotebookStepValidator());
+            v.Add(new DatabricksStepValidator());
         });
         When(step => step is IHasStepParameters, () =>
         {
@@ -102,9 +102,9 @@ file class TabularStepValidator : AbstractValidator<TabularStep>
     }
 }
 
-file class DbNotebookStepValidator : AbstractValidator<DbNotebookStep>
+file class DatabricksStepValidator : AbstractValidator<DatabricksStep>
 {
-    public DbNotebookStepValidator()
+    public DatabricksStepValidator()
     {
         RuleFor(step => step.ClusterConfiguration)
             .SetInheritanceValidator(v =>

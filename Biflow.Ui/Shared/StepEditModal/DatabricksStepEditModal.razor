@@ -1,6 +1,6 @@
-﻿@inherits StepEditModal<DbNotebookStep>
+﻿@inherits StepEditModal<DatabricksStep>
 
-<StepEditModalTemplate Modal="this" TStep="DbNotebookStep">
+<StepEditModalTemplate Modal="this" TStep="DatabricksStep">
     @if (Step is not null)
     {
         <div class="row">
@@ -178,13 +178,13 @@
 
             <div class="row mt-3">
                 <div class="col-md-4 d-md-flex justify-content-end">
-                    <label class="form-check-label mb-lg-0" for="dbnotebook_cluster_use_photon">
+                            <label class="form-check-label mb-lg-0" for="databricks_cluster_use_photon">
                         Use Photon acceleration
                     </label>
                 </div>
                 <div class="col-md-6">
                     <div class="form-check form-check-inline">
-                        <input type="checkbox" class="form-check-input" id="dbnotebook_cluster_use_photon"
+                        <input type="checkbox" class="form-check-input" id="databricks_cluster_use_photon"
                                checked=@newCluster.UsePhoton
                                @bind-value="newCluster.UsePhoton">
                     </div>

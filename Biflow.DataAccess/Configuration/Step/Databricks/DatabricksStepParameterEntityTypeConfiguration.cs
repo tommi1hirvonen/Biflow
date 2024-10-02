@@ -1,8 +1,8 @@
 ﻿namespace Biflow.DataAccess.Configuration;
 
-internal class DbNotebookStepParameterEntityTypeConfiguration : IEntityTypeConfiguration<DbNotebookStepParameter>
+internal class DatabricksStepParameterEntityTypeConfiguration : IEntityTypeConfiguration<DatabricksStepParameter>
 {
-    public void Configure(EntityTypeBuilder<DbNotebookStepParameter> builder)
+    public void Configure(EntityTypeBuilder<DatabricksStepParameter> builder)
     {
         builder.HasOne(p => p.Step)
             .WithMany(p => p.StepParameters)

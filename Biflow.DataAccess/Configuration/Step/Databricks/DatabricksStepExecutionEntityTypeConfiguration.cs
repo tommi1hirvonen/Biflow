@@ -2,17 +2,14 @@
 
 namespace Biflow.DataAccess.Configuration;
 
-internal class DbNotebookStepEntityTypeConfiguration : IEntityTypeConfiguration<DbNotebookStep>
+internal class DatabricksStepExecutionEntityTypeConfiguration : IEntityTypeConfiguration<DatabricksStepExecution>
 {
-    public void Configure(EntityTypeBuilder<DbNotebookStep> builder)
+    public void Configure(EntityTypeBuilder<DatabricksStepExecution> builder)
     {
         builder.Property(x => x.TimeoutMinutes).HasColumnName("TimeoutMinutes");
         builder.Property(p => p.ClusterConfiguration).HasConversion(
             from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
             to => JsonSerializer.Deserialize<ClusterConfiguration?>(to, null as JsonSerializerOptions)
             ?? new NewClusterConfiguration());
-        builder.Property(p => p.ClusterConfiguration)
-            .HasMaxLength(-1)
-            .IsUnicode();
     }
 }

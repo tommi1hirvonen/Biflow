@@ -4,19 +4,19 @@ using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
-public class DbNotebookStep : Step, IHasTimeout, IHasStepParameters<DbNotebookStepParameter>
+public class DatabricksStep : Step, IHasTimeout, IHasStepParameters<DatabricksStepParameter>
 {
     [JsonConstructor]
-    public DbNotebookStep() : base(StepType.DatabricksNotebook) { }
+    public DatabricksStep() : base(StepType.Databricks) { }
 
-    private DbNotebookStep(DbNotebookStep other, Job? targetJob) : base(other, targetJob)
+    private DatabricksStep(DatabricksStep other, Job? targetJob) : base(other, targetJob)
     {
         TimeoutMinutes = other.TimeoutMinutes;
         DatabricksWorkspaceId = other.DatabricksWorkspaceId;
         DatabricksWorkspace = other.DatabricksWorkspace;
         NotebookPath = other.NotebookPath;
         StepParameters = other.StepParameters
-            .Select(p => new DbNotebookStepParameter(p, this, targetJob))
+            .Select(p => new DatabricksStepParameter(p, this, targetJob))
             .ToList();
     }
 
@@ -38,9 +38,9 @@ public class DbNotebookStep : Step, IHasTimeout, IHasStepParameters<DbNotebookSt
 
     [ValidateComplexType]
     [JsonInclude]
-    public IList<DbNotebookStepParameter> StepParameters { get; private set; } = new List<DbNotebookStepParameter>();
+    public IList<DatabricksStepParameter> StepParameters { get; private set; } = new List<DatabricksStepParameter>();
 
-    public override DbNotebookStep Copy(Job? targetJob = null) => new(this, targetJob);
+    public override DatabricksStep Copy(Job? targetJob = null) => new(this, targetJob);
 
-    public override StepExecution ToStepExecution(Execution execution) => new DbNotebookStepExecution(this, execution);
+    public override StepExecution ToStepExecution(Execution execution) => new DatabricksStepExecution(this, execution);
 }

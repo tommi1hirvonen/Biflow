@@ -3,9 +3,9 @@ using System.Globalization;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class DbNotebookStepEditModal : StepEditModal<DbNotebookStep>
+public partial class DatabricksStepEditModal : StepEditModal<DatabricksStep>
 {
-    internal override string FormId => "dbnotebook_step_edit_form";
+    internal override string FormId => "databricks_step_edit_form";
 
     private DbNotebookSelectOffcanvas? notebookSelectOffcanvas;
 
@@ -13,9 +13,9 @@ public partial class DbNotebookStepEditModal : StepEditModal<DbNotebookStep>
     private (string Id, string Description)[]? nodeTypes;
     private (string Id, string Description)[]? clusters;
 
-    protected override async Task<DbNotebookStep> GetExistingStepAsync(AppDbContext context, Guid stepId)
+    protected override async Task<DatabricksStep> GetExistingStepAsync(AppDbContext context, Guid stepId)
     {
-        var step = await context.DbNotebookSteps
+        var step = await context.DatabricksSteps
             .Include(step => step.Job).ThenInclude(job => job.JobParameters)
             .Include(step => step.StepParameters).ThenInclude(p => p.InheritFromJobParameter)
             .Include(step => step.StepParameters).ThenInclude(p => p.ExpressionParameters)
@@ -27,7 +27,7 @@ public partial class DbNotebookStepEditModal : StepEditModal<DbNotebookStep>
         return step;
     }
 
-    protected override DbNotebookStep CreateNewStep(Job job)
+    protected override DatabricksStep CreateNewStep(Job job)
     {
         var workspace = DatabricksWorkspaces?.FirstOrDefault();
         ArgumentNullException.ThrowIfNull(workspace);
@@ -42,7 +42,7 @@ public partial class DbNotebookStepEditModal : StepEditModal<DbNotebookStep>
         };
     }
 
-    protected override Task OnSubmitAsync(AppDbContext context, DbNotebookStep step)
+    protected override Task OnSubmitAsync(AppDbContext context, DatabricksStep step)
     {
         // Change tracking does not identify changes to cluster configuration.
         // Tell the change tracker that the config has changed just in case.

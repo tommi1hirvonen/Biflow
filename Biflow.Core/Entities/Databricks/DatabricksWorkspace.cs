@@ -22,7 +22,7 @@ public class DatabricksWorkspace
     public string ApiToken { get; set; } = "";
 
     [JsonIgnore]
-    public IEnumerable<DbNotebookStep> Steps { get; } = new List<DbNotebookStep>();
+    public IEnumerable<DatabricksStep> Steps { get; } = new List<DatabricksStep>();
 
     public DatabricksClientWrapper CreateClient() => new(this);
 }

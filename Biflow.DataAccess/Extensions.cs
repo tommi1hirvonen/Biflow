@@ -155,7 +155,7 @@ public static class Extensions
                 into qlik_
             from qlik in qlik_.DefaultIfEmpty()
             join db in context.DatabricksWorkspaces
-                on new { Id = includeEndpoint ? (object?)((DbNotebookStepExecution)stepExec).DatabricksWorkspaceId : true }
+                on new { Id = includeEndpoint ? (object?)((DatabricksStepExecution)stepExec).DatabricksWorkspaceId : true }
                 equals new { Id = includeEndpoint ? (object?)db.WorkspaceId : false }
                 into db_
             from db in db_.DefaultIfEmpty()
@@ -215,7 +215,7 @@ public static class Extensions
                 case QlikStepExecution qlik:
                     qlik.SetClient(step.QlikStepClient);
                     break;
-                case DbNotebookStepExecution db:
+                case DatabricksStepExecution db:
                     db.SetWorkspace(step.DatabricksWorkspace);
                     break;
                 case ExeStepExecution exe:

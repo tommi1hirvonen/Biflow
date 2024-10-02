@@ -42,7 +42,7 @@ public class AppDbContext : DbContext
     public DbSet<TabularStep> TabularSteps => Set<TabularStep>();
     public DbSet<EmailStep> EmailSteps => Set<EmailStep>();
     public DbSet<QlikStep> QlikSteps => Set<QlikStep>();
-    public DbSet<DbNotebookStep> DbNotebookSteps => Set<DbNotebookStep>();
+    public DbSet<DatabricksStep> DatabricksSteps => Set<DatabricksStep>();
     public DbSet<DataObject> DataObjects => Set<DataObject>();
     public DbSet<Execution> Executions => Set<Execution>();
     public DbSet<StepExecution> StepExecutions => Set<StepExecution>();

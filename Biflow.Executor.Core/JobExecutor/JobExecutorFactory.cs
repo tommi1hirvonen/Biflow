@@ -50,7 +50,7 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
             from pipeline in pipeline_.DefaultIfEmpty()
             join qlik in context.QlikCloudClients on ((QlikStepExecution)step).QlikCloudClientId equals qlik.QlikCloudClientId into qlik_
             from qlik in qlik_.DefaultIfEmpty()
-            join db in context.DatabricksWorkspaces on ((DbNotebookStepExecution)step).DatabricksWorkspaceId equals db.WorkspaceId into db_
+            join db in context.DatabricksWorkspaces on ((DatabricksStepExecution)step).DatabricksWorkspaceId equals db.WorkspaceId into db_
             from db in db_.DefaultIfEmpty()
             join exe in context.Credentials on ((ExeStepExecution)step).RunAsCredentialId equals exe.CredentialId into exe_
             from exe in exe_.DefaultIfEmpty()
@@ -100,7 +100,7 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
                 case QlikStepExecution qlik:
                     qlik.SetClient(step.qlik);
                     break;
-                case DbNotebookStepExecution db:
+                case DatabricksStepExecution db:
                     db.SetWorkspace(step.db);
                     break;
                 case ExeStepExecution exe:

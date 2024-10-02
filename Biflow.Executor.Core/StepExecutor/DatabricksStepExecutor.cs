@@ -7,21 +7,21 @@ using Polly;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-internal class DbNotebookStepExecutor(
-    ILogger<DbNotebookStepExecutor> logger,
+internal class DatabricksStepExecutor(
+    ILogger<DatabricksStepExecutor> logger,
     IOptionsMonitor<ExecutionOptions> options,
     IDbContextFactory<ExecutorDbContext> dbContextFactory)
-    : StepExecutor<DbNotebookStepExecution, DbNotebookStepExecutionAttempt>(logger, dbContextFactory)
+    : StepExecutor<DatabricksStepExecution, DatabricksStepExecutionAttempt>(logger, dbContextFactory)
 {
-    private readonly ILogger<DbNotebookStepExecutor> _logger = logger;
+    private readonly ILogger<DatabricksStepExecutor> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
 
     private const int MaxRefreshRetries = 3;
 
     protected override async Task<Result> ExecuteAsync(
-        DbNotebookStepExecution step,
-        DbNotebookStepExecutionAttempt attempt,
+        DatabricksStepExecution step,
+        DatabricksStepExecutionAttempt attempt,
         ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
@@ -158,7 +158,7 @@ internal class DbNotebookStepExecutor(
 
     private async Task<Run> GetRunWithRetriesAsync(
         DatabricksClient client,
-        DbNotebookStepExecution step,
+        DatabricksStepExecution step,
         long runId,
         CancellationToken cancellationToken)
     {
@@ -177,8 +177,8 @@ internal class DbNotebookStepExecutor(
 
     private async Task CancelAsync(
         DatabricksClient client,
-        DbNotebookStepExecution step,
-        DbNotebookStepExecutionAttempt attempt,
+        DatabricksStepExecution step,
+        DatabricksStepExecutionAttempt attempt,
         long runId)
     {
         _logger.LogInformation("{ExecutionId} {Step} Stopping run id {runId}", step.ExecutionId, step, runId);
