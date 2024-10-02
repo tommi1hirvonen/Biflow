@@ -13,6 +13,7 @@
                ValueSelector="l => l.Value is null ? default(TValue) : (TValue)l.Value"
                DataProvider="GetSuggestionsAsync"
                ItemFromValueResolver="ResolveItemFromValueAsync"
+               Enabled="!Disabled"
                autocomplete="off">
     <ItemTemplate Context="item">
         <span class="small">@item.DisplayValue</span>
@@ -25,6 +26,8 @@
     [Parameter] public EventCallback<TValue?> ValueChanged { get; set; }
 
     [Parameter] public IEnumerable<LookupValue> LookupValues { get; set; } = [];
+
+    [Parameter] public bool Disabled { get; set; }
 
     private Task<LookupValue?> ResolveItemFromValueAsync(TValue value)
     {
