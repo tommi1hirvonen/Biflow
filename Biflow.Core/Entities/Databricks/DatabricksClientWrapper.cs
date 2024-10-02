@@ -43,7 +43,7 @@ public class DatabricksClientWrapper(DatabricksWorkspace workspace) : IDisposabl
         return Client.Clusters.ListSparkVersions(cancellationToken);
     }
 
-    public Task GetNodeTypesAsync(CancellationToken cancellationToken = default)
+    public Task<IEnumerable<NodeType>> GetNodeTypesAsync(CancellationToken cancellationToken = default)
     {
         return Client.Clusters.ListNodeTypes(cancellationToken);
     }

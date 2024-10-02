@@ -121,17 +121,15 @@
                     <label class="form-label mb-lg-0">Runtime version</label>
                 </div>
                 <div class="col-md-6">
-                    
-                        <HxAutosuggest TValue="string"
-                                       TItem="(string Id, string Description)"
-                                       InputSize="InputSize.Small"
-                                       @bind-Value="newCluster.RuntimeVersion"
-                                       MinimumLength="0"
-                                       ValueSelector="item => item.Id"
-                                       TextSelector="item => item.Description"
-                                       ItemFromValueResolver="ResolveRuntimeVersionFromValueAsync"
-                                       DataProvider="ProvideRuntimeVersionSuggestionsAsync"/>
-                    
+                    <HxAutosuggest TValue="string"
+                                   TItem="(string Id, string Description)"
+                                   InputSize="InputSize.Small"
+                                   @bind-Value="newCluster.RuntimeVersion"
+                                   MinimumLength="0"
+                                   ValueSelector="item => item.Id"
+                                   TextSelector="item => item.Description"
+                                   ItemFromValueResolver="ResolveRuntimeVersionFromValueAsync"
+                                   DataProvider="ProvideRuntimeVersionSuggestionsAsync"/>
                 </div>
             </div>
 
@@ -140,9 +138,15 @@
                     <label class="form-label mb-lg-0">Worker node type</label>
                 </div>
                 <div class="col-md-6">
-                    <div class="input-group input-group-sm">
-                        <InputText class="form-control form-control-sm" @bind-Value="newCluster.NodeTypeId" />
-                    </div>
+                    <HxAutosuggest TValue="string"
+                                   TItem="(string Id, string Description)"
+                                   InputSize="InputSize.Small"
+                                   @bind-Value="newCluster.NodeTypeId"
+                                   MinimumLength="0"
+                                   ValueSelector="item => item.Id"
+                                   TextSelector="item => item.Description"
+                                   ItemFromValueResolver="ResolveNodeTypeFromValueAsync"
+                                   DataProvider="ProvideNodeTypeSuggestionsAsync" />
                 </div>
             </div>
 
@@ -151,9 +155,15 @@
                     <label class="form-label mb-lg-0">Driver node type</label>
                 </div>
                 <div class="col-md-6">
-                    <div class="input-group input-group-sm">
-                        <InputText class="form-control form-control-sm" @bind-Value="newCluster.DriverNodeTypeId" />
-                    </div>
+                    <HxAutosuggest TValue="string"
+                                   TItem="(string Id, string Description)"
+                                   InputSize="InputSize.Small"
+                                   @bind-Value="newCluster.DriverNodeTypeId"
+                                   MinimumLength="0"
+                                   ValueSelector="item => item.Id"
+                                   TextSelector="item => item.Description"
+                                   ItemFromValueResolver="ResolveNodeTypeFromValueAsync"
+                                   DataProvider="ProvideNodeTypeSuggestionsAsync" />
                     <div class="form-text">
                         Optional. If not set, the driver node will use the same type as worker nodes.
                     </div>

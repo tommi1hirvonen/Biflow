@@ -10,6 +10,7 @@ public partial class DbNotebookStepEditModal : StepEditModal<DbNotebookStep>
     private DbNotebookSelectOffcanvas? notebookSelectOffcanvas;
 
     private (string Id, string Description)[]? runtimeVersions;
+    private (string Id, string Description)[]? nodeTypes;
 
     protected override async Task<DbNotebookStep> GetExistingStepAsync(AppDbContext context, Guid stepId)
     {
@@ -111,6 +112,8 @@ public partial class DbNotebookStepEditModal : StepEditModal<DbNotebookStep>
                 .Where(v => v.Description.ContainsIgnoreCase(request.UserInput))
                 .OrderByDescending(v =>
                 {
+                    // Runtime version descriptions are in the format "15.4 LTS (includes Apache Spark 3.5.0, Scala 2.12)".
+                    // Get the index of the first space and try to extract the version number as double.
                     var span = v.Description.AsSpan();
                     var index = span.IndexOf(' ');
                     var version = index switch
@@ -120,6 +123,62 @@ public partial class DbNotebookStepEditModal : StepEditModal<DbNotebookStep>
                     };
                     return version;
                 })
+        };
+    }
+
+    private async Task<(string Id, string Description)[]> GetNodeTypesAsync()
+    {
+        var workspace = DatabricksWorkspaces?.FirstOrDefault();
+        ArgumentNullException.ThrowIfNull(workspace);
+        using var client = workspace.CreateClient();
+        var nodeTypes = await client.GetNodeTypesAsync();
+        return nodeTypes
+            .Select(n =>
+            {
+                var memory = Convert.ToInt32(n.MemoryMb / 1024);
+                var cores = Convert.ToInt32(n.NumCores);
+                return (n.NodeTypeId, $"{n.NodeTypeId} ({memory} GB, {cores} cores)");
+            })
+            .ToArray();
+    }
+
+    private async Task<(string Id, string Description)> ResolveNodeTypeFromValueAsync(string? value)
+    {
+        if (nodeTypes is null)
+        {
+            try
+            {
+                this.nodeTypes = await GetNodeTypesAsync();
+            }
+            catch (Exception ex)
+            {
+                Toaster.AddError("Error fetching available node types", ex.Message);
+                nodeTypes = [];
+            }
+        }
+        return nodeTypes.FirstOrDefault(v => v.Id == value);
+    }
+
+    private async Task<AutosuggestDataProviderResult<(string Id, string Description)>> ProvideNodeTypeSuggestionsAsync(
+        AutosuggestDataProviderRequest request)
+    {
+        if (nodeTypes is null)
+        {
+            try
+            {
+                this.nodeTypes = await GetNodeTypesAsync();
+            }
+            catch (Exception ex)
+            {
+                Toaster.AddError("Error fetching available node types", ex.Message);
+                nodeTypes = [];
+            }
+        }
+
+        return new()
+        {
+            Data = nodeTypes
+                .Where(n => n.Description.ContainsIgnoreCase(request.UserInput))
         };
     }
 }
