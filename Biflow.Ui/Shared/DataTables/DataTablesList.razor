@@ -171,13 +171,13 @@
                                     .Where(l => l.LookupTableId == table.DataTableId)
                                     .OrderBy(l => l.Table.DataTableName)
                                     .ThenBy(l => l.ColumnName)
-                                    .Select(l => $"[{l.Table.DataTableName}].[{l.ColumnName}]")
+                                    .Select(l => $"- [{l.Table.DataTableName}].[{l.ColumnName}]")
                                     .ToList();
                             }
                             @if (lookups.Any())
                             {
-                                var content = string.Join("\n", lookups);
-                                <HxPopover Trigger="PopoverTrigger.Hover" Content="@content">
+                                var content = string.Join("<br />", lookups);
+                                <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@content">
                                     <a href="javascript:void()" class="text-body">
                                         @lookups.Count() dependent lookup(s)
                                     </a>
