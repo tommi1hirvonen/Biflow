@@ -1,0 +1,71 @@
+﻿@using System.Globalization
+
+@if (Folder is not null && ExpandStatuses is not null)
+{
+    var files = Folder.Files
+        .Where(f => string.IsNullOrEmpty(FilterText) || f.Name.ContainsIgnoreCase(FilterText))
+        .OrderBy(f => f.Name)
+        .ToArray();
+    var folderExpanded = Folder.Depth == 0 || !string.IsNullOrEmpty(FilterText) || ExpandStatuses.GetValueOrDefault(Folder);
+    if (Folder.Depth > 0)
+    {
+        var folderPadding = $"{(Folder.Depth - 0.7).ToString("F2", CultureInfo.InvariantCulture)}rem;";
+        <div class="list-group-item list-group-item-action" style="cursor: pointer;" @onclick="() => ExpandStatuses[Folder] = !folderExpanded">
+            <div class="row">
+                <div class="col d-flex align-items-center small" style="padding-left: @(folderPadding)">
+                    @if (folderExpanded)
+                    {
+                        <SvgIcon Icon="FeatherIcon.ChevronDown" />
+                    }
+                    else
+                    {
+                        <SvgIcon Icon="FeatherIcon.ChevronRight" />
+                    }
+                    &nbsp;
+                    <SvgIcon Icon="FeatherIcon.Folder" />
+                    &nbsp;
+                    @Folder.Name
+                    <span class="ms-auto badge rounded-pill @(files.Length > 0 ? "bg-primary" : "bg-secondary")">
+                        @files.Length
+                    </span>
+                </div>
+            </div>
+        </div>
+    }
+    if (folderExpanded)
+    {
+        foreach (var folder in Folder.Folders.OrderBy(f => f.Name))
+        {
+            <DatabricksFolderListGroupItem Folder="folder"
+                                           ExpandStatuses="ExpandStatuses"
+                                           SelectedFile="SelectedFile"
+                                           OnFileSelected="OnFileSelected"
+                                           FilterText="@FilterText" />   
+        }
+        foreach (var file in files)
+        {
+            var filePadding = $"{(Folder.Depth + 1.4).ToString("F2", CultureInfo.InvariantCulture)}rem;";
+            <div class="list-group-item list-group-item-action small @(file == SelectedFile ? "bg-body" : null)" style="cursor: pointer;" @onclick="() => OnFileSelected.InvokeAsync(file)">
+                <div class="row">
+                    <div class="col d-flex align-items-center @(file == SelectedFile ? "fw-bold" : null)" style="padding-left: @(filePadding)">
+                        <SvgIcon Icon="FeatherIcon.File" />
+                        &nbsp;
+                        <HighlightableText Text="@file.Name" PartToHighlight="@FilterText" />
+                    </div>
+                </div>
+            </div>
+        }
+    }
+}
+
+@code {
+    [Parameter] public DatabricksFolder? Folder { get; set; }
+
+    [Parameter] public Dictionary<DatabricksFolder, bool>? ExpandStatuses { get; set; }
+
+    [Parameter] public DatabricksFile? SelectedFile { get; set; }
+
+    [Parameter] public EventCallback<DatabricksFile> OnFileSelected { get; set; }
+
+    [Parameter] public string FilterText { get; set; } = "";
+}

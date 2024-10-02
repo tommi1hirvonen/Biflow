@@ -7,7 +7,7 @@ public partial class DatabricksStepEditModal : StepEditModal<DatabricksStep>
 {
     internal override string FormId => "databricks_step_edit_form";
 
-    private DbNotebookSelectOffcanvas? notebookSelectOffcanvas;
+    private DatabricksFileSelectOffcanvas? fileSelectOffcanvas;
 
     private (string Id, string Description)[]? runtimeVersions;
     private (string Id, string Description)[]? nodeTypes;
@@ -53,10 +53,10 @@ public partial class DatabricksStepEditModal : StepEditModal<DatabricksStep>
     private Task OpenNotebookSelectOffcanvas()
     {
         ArgumentNullException.ThrowIfNull(Step?.DatabricksWorkspaceId);
-        return notebookSelectOffcanvas.LetAsync(x => x.ShowAsync(Step.DatabricksWorkspaceId));
+        return fileSelectOffcanvas.LetAsync(x => x.ShowAsync(Step.DatabricksWorkspaceId));
     }
 
-    private void OnNotebookSelected(string notebook)
+    private void OnFileSelected(string notebook)
     {
         ArgumentNullException.ThrowIfNull(Step);
         if (Step.DatabricksStepSettings is DbNotebookStepSettings notebookSettings)

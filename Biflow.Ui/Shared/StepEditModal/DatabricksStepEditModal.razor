@@ -300,7 +300,7 @@
             }
         }
 
-        <DbNotebookSelectOffcanvas @ref="notebookSelectOffcanvas" OnNotebookSelected="OnNotebookSelected" />
+        <DatabricksFileSelectOffcanvas @ref="fileSelectOffcanvas" OnFileSelected="OnFileSelected" />
 
         <StepParametersEditor Step="Step" NewParameterDelegate="() => new() { Step = Step }" />
     }

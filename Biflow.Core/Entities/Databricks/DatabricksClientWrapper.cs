@@ -23,6 +23,24 @@ public class DatabricksClientWrapper(DatabricksWorkspace workspace) : IDisposabl
         return jobs;
     }
 
+    public async Task<DatabricksFolder> GetWorkspaceAsync(CancellationToken cancellationToken = default)
+    {
+        var objects = await GetWorkspaceObjectsAsync(cancellationToken: cancellationToken);
+        var files = objects
+            .Where(o => o.ObjectType != ObjectType.DIRECTORY)
+            .Select(o =>
+            {
+                // The file paths are in format "/Users/john.doe@mydomain.com/Folder/file.py"
+                var pathComponents = o.Path.Split('/');
+                var folderComponents = pathComponents.Skip(1).SkipLast(1);
+                var folder = string.Join('/', folderComponents);
+                var file = new DatabricksFile(o.Path, pathComponents.Last(), folder);
+                return file;
+            });
+        var folder = DatabricksFolder.FromFiles(files);
+        return folder;
+    }
+
     public async Task<IEnumerable<ObjectInfo>> GetWorkspaceObjectsAsync(string path = "/", CancellationToken cancellationToken = default)
     {
         var objects = new List<ObjectInfo>();
@@ -31,6 +49,7 @@ public class DatabricksClientWrapper(DatabricksWorkspace workspace) : IDisposabl
             objects.Add(info);
             if (info.ObjectType == ObjectType.DIRECTORY)
             {
+                // Get subdirectory contents recursively.
                 var subObjects = await GetWorkspaceObjectsAsync(info.Path, cancellationToken: cancellationToken);
                 objects.AddRange(subObjects);
             }

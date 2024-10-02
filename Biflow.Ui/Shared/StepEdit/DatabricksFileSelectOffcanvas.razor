@@ -1,0 +1,112 @@
+﻿@inject ToasterService Toaster
+@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject IHttpClientFactory HttpClientFactory
+@inject ITokenService TokenService
+
+<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Large" Title="Select file">
+
+    <BodyTemplate>
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <SvgIcon Icon="FeatherIcon.Filter" />
+                    </div>
+                    <input type="search" class="form-control" @bind-value="filterText" @bind-value:event="oninput"
+                           placeholder="Filter by name" autocomplete="off" />
+                </div>
+            </div>
+        </div>
+        <div class="row mt-3" style="height: calc(100vh - 210px); overflow-y: scroll;">
+            <div class="col">
+                <div class="list-group">
+                    @if (root is null)
+                    {
+                        <div class="list-group-item text-center">
+                            <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                        </div>
+                    }
+                    else if (root.Files.Count() == 0 && root.Folders.Count() == 0)
+                    {
+                        <div class="list-group-item small">
+                            No files
+                        </div>
+                    }
+                    else
+                    {
+                        <DatabricksFolderListGroupItem Folder="root"
+                                                       ExpandStatuses="folderExpandedStates"
+                                                       SelectedFile="selectedFile"
+                                                       OnFileSelected="ToggleFile"
+                                                       FilterText="@filterText" />
+                    }
+                </div>
+            </div>
+
+        </div>
+    </BodyTemplate>
+
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectFileAsync"
+                  Enabled="selectedFile is not null">
+            Select
+        </HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
+@code {
+    [Parameter]
+    public EventCallback<string> OnFileSelected { get; set; }
+
+    private readonly Dictionary<DatabricksFolder, bool> folderExpandedStates = [];
+
+    private HxOffcanvas? offcanvas;
+    private DatabricksFolder? root;
+    private DatabricksFile? selectedFile;
+    private string filterText = string.Empty;
+
+    private async Task SelectFileAsync()
+    {
+        if (selectedFile is not null)
+        {
+            await OnFileSelected.InvokeAsync(selectedFile.Path);
+            await offcanvas.LetAsync(x => x.HideAsync());
+        }
+    }
+
+    public async Task ShowAsync(Guid workspaceId)
+    {
+        folderExpandedStates.Clear();
+        root = null;
+        selectedFile = null;
+        filterText = string.Empty;
+
+        await offcanvas.LetAsync(x => x.ShowAsync());
+
+        try
+        {
+            using var context = DbContextFactory.CreateDbContext();
+            var workspace = await context.DatabricksWorkspaces
+                .AsNoTrackingWithIdentityResolution()
+                .FirstAsync(w => w.WorkspaceId == workspaceId);
+            using var client = workspace.CreateClient();
+            root = await client.GetWorkspaceAsync();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error reading workspace content", ex.Message);
+        }
+    }
+
+    private void ToggleFile(DatabricksFile file)
+    {
+        if (selectedFile == file)
+        {
+            selectedFile = null;
+            return;
+        }
+        selectedFile = file;
+    }
+}
