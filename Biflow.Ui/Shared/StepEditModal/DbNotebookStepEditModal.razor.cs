@@ -15,11 +15,12 @@ public partial class DbNotebookStepEditModal : StepEditModal<DbNotebookStep>
     protected override async Task<DbNotebookStep> GetExistingStepAsync(AppDbContext context, Guid stepId)
     {
         var step = await context.DbNotebookSteps
-            .Include(step => step.Job)
+            .Include(step => step.Job).ThenInclude(job => job.JobParameters)
+            .Include(step => step.StepParameters).ThenInclude(p => p.InheritFromJobParameter)
+            .Include(step => step.StepParameters).ThenInclude(p => p.ExpressionParameters)
             .Include(step => step.Tags)
             .Include(step => step.Dependencies)
-            .Include(step => step.DataObjects)
-            .ThenInclude(s => s.DataObject)
+            .Include(step => step.DataObjects).ThenInclude(s => s.DataObject)
             .Include(step => step.ExecutionConditionParameters)
             .FirstAsync(step => step.StepId == stepId);
         return step;
