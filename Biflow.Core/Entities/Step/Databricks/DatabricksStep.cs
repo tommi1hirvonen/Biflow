@@ -39,4 +39,61 @@ public class DatabricksStep : Step, IHasTimeout, IHasStepParameters<DatabricksSt
     public override DatabricksStep Copy(Job? targetJob = null) => new(this, targetJob);
 
     public override StepExecution ToStepExecution(Execution execution) => new DatabricksStepExecution(this, execution);
+
+
+    // Convenience methods to change the Databricks step type while retaining common settings properties.
+
+    public void SetIsNotebook()
+    {
+        if (DatabricksStepSettings is DbNotebookStepSettings)
+        {
+            return;
+        }
+        var settings = new DbNotebookStepSettings();
+        if (DatabricksStepSettings is DatabricksClusterStepSettings cluster)
+        {
+            settings.ClusterConfiguration = cluster.ClusterConfiguration;
+        }
+        if (DatabricksStepSettings is DbPythonFileStepSettings python)
+        {
+            settings.NotebookPath = python.FilePath;
+        }
+        DatabricksStepSettings = settings;
+    }
+
+    public void SetIsPythonFile()
+    {
+        if (DatabricksStepSettings is DbPythonFileStepSettings)
+        {
+            return;
+        }
+        var settings = new DbPythonFileStepSettings();
+        if (DatabricksStepSettings is DatabricksClusterStepSettings cluster)
+        {
+            settings.ClusterConfiguration = cluster.ClusterConfiguration;
+        }
+        if (DatabricksStepSettings is DbNotebookStepSettings notebook)
+        {
+            settings.FilePath = notebook.NotebookPath;
+        }
+        DatabricksStepSettings = settings;
+    }
+
+    public void SetIsPipeline()
+    {
+        if (DatabricksStepSettings is DbPipelineStepSettings)
+        {
+            return;
+        }
+        DatabricksStepSettings = new DbPipelineStepSettings();
+    }
+
+    public void SetIsJob()
+    {
+        if (DatabricksStepSettings is DbJobStepSettings)
+        {
+            return;
+        }
+        DatabricksStepSettings = new DbJobStepSettings();
+    }
 }
