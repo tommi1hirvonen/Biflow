@@ -1,5 +1,6 @@
 ﻿using Microsoft.Azure.Databricks.Client;
 using Microsoft.Azure.Databricks.Client.Models;
+using System.Collections.Concurrent;
 
 namespace Biflow.Core.Entities;
 
@@ -55,18 +56,25 @@ public class DatabricksClientWrapper(DatabricksWorkspace workspace) : IDisposabl
 
     public async Task<IEnumerable<ObjectInfo>> GetWorkspaceObjectsAsync(string path = "/", CancellationToken cancellationToken = default)
     {
-        var objects = new List<ObjectInfo>();
-        foreach (var info in await Client.Workspace.List(path, cancellationToken: cancellationToken))
+        var result = new ConcurrentBag<ObjectInfo>();
+        var items = await Client.Workspace.List(path, cancellationToken: cancellationToken);
+        foreach (var item in items)
         {
-            objects.Add(info);
-            if (info.ObjectType == ObjectType.DIRECTORY)
-            {
-                // Get subdirectory contents recursively.
-                var subObjects = await GetWorkspaceObjectsAsync(info.Path, cancellationToken: cancellationToken);
-                objects.AddRange(subObjects);
-            }
+            result.Add(item);
         }
-        return objects;
+        // Concurrently and recursively fetch subfolder items.
+        await Parallel.ForEachAsync(
+            items.Where(i => i.ObjectType == ObjectType.DIRECTORY),
+            new ParallelOptions { CancellationToken = cancellationToken, MaxDegreeOfParallelism = 3 },
+            async (item, token) =>
+            {
+                var subItems = await GetWorkspaceObjectsAsync(item.Path, cancellationToken: token);
+                foreach (var subItem in subItems)
+                {
+                    result.Add(subItem);
+                }
+            });
+        return result.ToArray();
     }
 
     public Task<IDictionary<string, string>> GetRuntimeVersionsAsync(CancellationToken cancellationToken = default)
