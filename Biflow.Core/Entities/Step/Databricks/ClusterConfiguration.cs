@@ -9,6 +9,13 @@ public abstract class ClusterConfiguration;
 public class ExistingClusterConfiguration : ClusterConfiguration
 {
     public string ClusterId { get; set; } = "";
+
+    /// <summary>
+    /// The cluster name is stored only for audit purposes
+    /// so that it can be viewed in the execution logs
+    /// without having to navigate to the actual Databricks workspace.
+    /// </summary>
+    public string? ClusterName { get; set; }
 }
 
 public class NewClusterConfiguration : ClusterConfiguration

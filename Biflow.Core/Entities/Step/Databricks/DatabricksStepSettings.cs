@@ -27,12 +27,26 @@ public class DbPipelineStepSettings : DatabricksStepSettings
 {
     public string PipelineId { get; set; } = "";
 
+    /// <summary>
+    /// The pipeline name is stored only for audit purposes
+    /// so that it can be viewed in the execution logs
+    /// without having to navigate to the actual Databricks workspace.
+    /// </summary>
+    public string? PipelineName { get; set; }
+
     public bool PipelineFullRefresh { get; set; }
 }
 
 public class DbJobStepSettings : DatabricksStepSettings
 {
     public long JobId { get; set; }
+
+    /// <summary>
+    /// The job name is stored only for audit purposes
+    /// so that it can be viewed in the execution logs
+    /// without having to navigate to the actual Databricks workspace.
+    /// </summary>
+    public string? JobName { get; set; }
 
     public bool PipelineFullRefresh { get; set; }
 }

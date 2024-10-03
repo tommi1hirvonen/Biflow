@@ -47,6 +47,28 @@ public partial class DatabricksStepEditModal : StepEditModal<DatabricksStep>
 
     protected override Task OnSubmitAsync(AppDbContext context, DatabricksStep step)
     {
+        // Store the pipeline or job name only for audit purposes.
+        if (step.DatabricksStepSettings is DbPipelineStepSettings pipeline)
+        {
+            pipeline.PipelineName ??= pipelines
+                ?.FirstOrDefault(p => p.PipelineId == pipeline.PipelineId)
+                ?.Name;
+        }
+        else if (step.DatabricksStepSettings is DbJobStepSettings job)
+        {
+            job.JobName ??= dbJobs
+                ?.FirstOrDefault(j => j.JobId == job.JobId)
+                ?.JobName;
+        }
+
+        // Also store the cluster name if applicable.
+        if (step.DatabricksStepSettings is DatabricksClusterStepSettings { ClusterConfiguration: ExistingClusterConfiguration existing })
+        {
+            existing.ClusterName ??= clusters
+                ?.FirstOrDefault(c => c.Id == existing.ClusterId)
+                .Description;
+        }
+
         // Change tracking does not identify changes to cluster configuration.
         // Tell the change tracker that the config has changed just in case.
         context.Entry(step).Property(p => p.DatabricksStepSettings).IsModified = true;
@@ -300,12 +322,7 @@ public partial class DatabricksStepEditModal : StepEditModal<DatabricksStep>
         var clusters = await client.GetClustersAsync();
         return clusters
             .Where(c => c.ClusterSource == Microsoft.Azure.Databricks.Client.Models.ClusterSource.UI)
-            .Select(c =>
-            {
-                var memory = Convert.ToInt32(c.ClusterMemoryMb/ 1024);
-                var cores = Convert.ToInt32(c.ClusterCores);
-                return (c.ClusterId, $"{c.ClusterName} ({memory} GB, {cores} cores)");
-            })
+            .Select(c => (c.ClusterId, c.ClusterName))
             .ToArray();
     }
 
