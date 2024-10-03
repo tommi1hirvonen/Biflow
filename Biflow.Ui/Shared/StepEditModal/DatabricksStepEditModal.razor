@@ -37,6 +37,7 @@
             </div>
         </div>
 
+        // TODO Retain cluster configuration and notebook/Python file path between settings type changes.
         <div class="row mt-3">
             <div class="col-md-4 d-md-flex justify-content-end">
                 <label class="form-check-label mb-lg-0">Type</label>
@@ -111,6 +112,7 @@
         }
         else if (Step.DatabricksStepSettings is DbPipelineStepSettings pipeline)
         {
+            // TODO Implement autosuggest for pipelines.
             <div class="row mt-3">
                 <div class="col-md-4 d-md-flex justify-content-end">
                     <label class="form-label mb-lg-0">Pipeline id</label>
@@ -129,9 +131,15 @@
                     <label class="form-label mb-lg-0">Job id</label>
                 </div>
                 <div class="col-md-6">
-                    <div class="input-group input-group-sm">
-                        <InputNumber class="form-control form-control-sm" @bind-Value="job.JobId" />
-                    </div>
+                    <HxAutosuggest TValue="long"
+                                   TItem="DatabricksJob"
+                                   InputSize="InputSize.Small"
+                                   @bind-Value="job.JobId"
+                                   MinimumLength="0"
+                                   ValueSelector="item => item.JobId"
+                                   TextSelector="item => item.JobName"
+                                   ItemFromValueResolver="ResolveDbJobFromValueAsync"
+                                   DataProvider="ProvideDbJobSuggestionsAsync" />
                 </div>
             </div>
         }

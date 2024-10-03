@@ -20,6 +20,7 @@ public class DatabricksClientWrapper(DatabricksWorkspace workspace) : IDisposabl
         {
             jobs.Add(new(job.JobId, job.Settings.Name));
         }
+        jobs.SortBy(j => j.JobName);
         return jobs;
     }
 

@@ -12,6 +12,7 @@ public partial class DatabricksStepEditModal : StepEditModal<DatabricksStep>
     private (string Id, string Description)[]? runtimeVersions;
     private (string Id, string Description)[]? nodeTypes;
     private (string Id, string Description)[]? clusters;
+    private DatabricksJob[]? dbJobs;
 
     protected override async Task<DatabricksStep> GetExistingStepAsync(AppDbContext context, Guid stepId)
     {
@@ -74,6 +75,53 @@ public partial class DatabricksStepEditModal : StepEditModal<DatabricksStep>
         runtimeVersions = null;
         nodeTypes = null;
         clusters = null;
+        dbJobs = null;
+    }
+
+    private async Task<DatabricksJob?> ResolveDbJobFromValueAsync(long value)
+    {
+        if (dbJobs is null)
+        {
+            try
+            {
+                var workspace = DatabricksWorkspaces?.FirstOrDefault();
+                ArgumentNullException.ThrowIfNull(workspace);
+                using var client = workspace.CreateClient();
+                dbJobs = (await client.GetJobsAsync()).ToArray();
+            }
+            catch (Exception ex)
+            {
+                Toaster.AddError("Error fetching Databricks jobs", ex.Message);
+                dbJobs = [];
+            }
+        }
+        return dbJobs.FirstOrDefault(v => v.JobId == value);
+    }
+
+    private async Task<AutosuggestDataProviderResult<DatabricksJob>> ProvideDbJobSuggestionsAsync(
+        AutosuggestDataProviderRequest request)
+    {
+        if (dbJobs is null)
+        {
+            try
+            {
+                var workspace = DatabricksWorkspaces?.FirstOrDefault();
+                ArgumentNullException.ThrowIfNull(workspace);
+                using var client = workspace.CreateClient();
+                dbJobs = (await client.GetJobsAsync()).ToArray();
+            }
+            catch (Exception ex)
+            {
+                Toaster.AddError("Error fetching Databricks jobs", ex.Message);
+                dbJobs = [];
+            }
+        }
+
+        return new()
+        {
+            Data = dbJobs
+                .Where(n => n.JobName.ContainsIgnoreCase(request.UserInput))
+        };
     }
 
     private async Task<(string Id, string Description)> ResolveRuntimeVersionFromValueAsync(string? value)
@@ -234,7 +282,7 @@ public partial class DatabricksStepEditModal : StepEditModal<DatabricksStep>
         {
             try
             {
-                clusters = await GetNodeTypesAsync();
+                clusters = await GetClustersAsync();
             }
             catch (Exception ex)
             {
