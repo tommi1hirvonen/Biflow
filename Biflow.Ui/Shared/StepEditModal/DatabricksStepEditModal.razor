@@ -104,7 +104,7 @@
                 </div>
                 <div class="col-md-6">
                     <div class="input-group input-group-sm">
-                        <InputTextArea rows="2" class="form-control form-control-sm" @bind-Value="notebookSettings.NotebookPath" />
+                        <InputTextArea rows="2" class="form-control form-control-sm" autocomplete="off" @bind-Value="notebookSettings.NotebookPath" />
                     </div>
                 </div>
             </div>
@@ -117,7 +117,7 @@
                 </div>
                 <div class="col-md-6">
                     <div class="input-group input-group-sm">
-                        <InputTextArea rows="2" class="form-control form-control-sm" @bind-Value="python.FilePath" />
+                        <InputTextArea rows="2" class="form-control form-control-sm" autocomplete="off" @bind-Value="python.FilePath" />
                     </div>
                 </div>
             </div>
@@ -137,7 +137,14 @@
                                    ValueSelector="item => item.PipelineId"
                                    TextSelector="item => item.Name"
                                    ItemFromValueResolver="ResolvePipelineFromValueAsync"
-                                   DataProvider="ProvidePipelineSuggestionsAsync" />
+                                   DataProvider="ProvidePipelineSuggestionsAsync"
+                                   autocomplete="off">
+                        <EmptyTemplate>
+                            <div class="dropdown-item disabled">
+                                No pipelines
+                            </div>
+                        </EmptyTemplate>
+                    </HxAutosuggest>
                 </div>
             </div>
             <div class="row mt-3">
@@ -170,7 +177,14 @@
                                    ValueSelector="item => item.JobId"
                                    TextSelector="item => item.JobName"
                                    ItemFromValueResolver="ResolveDbJobFromValueAsync"
-                                   DataProvider="ProvideDbJobSuggestionsAsync" />
+                                   DataProvider="ProvideDbJobSuggestionsAsync"
+                                   autocomplete="off">
+                        <EmptyTemplate>
+                            <div class="dropdown-item disabled">
+                                No jobs
+                            </div>
+                        </EmptyTemplate>
+                    </HxAutosuggest>
                 </div>
             </div>
         }
@@ -212,7 +226,14 @@
                                        ValueSelector="item => item.Id"
                                        TextSelector="item => item.Description"
                                        ItemFromValueResolver="ResolveClusterFromValueAsync"
-                                       DataProvider="ProvideClusterSuggestionsAsync" />
+                                       DataProvider="ProvideClusterSuggestionsAsync"
+                                       autocomplete="off">
+                            <EmptyTemplate>
+                                <div class="dropdown-item disabled">
+                                    No clusters
+                                </div>
+                            </EmptyTemplate>
+                        </HxAutosuggest>
                     </div>
                 </div>
             }
@@ -257,7 +278,8 @@
                                        ValueSelector="item => item.Id"
                                        TextSelector="item => item.Description"
                                        ItemFromValueResolver="ResolveRuntimeVersionFromValueAsync"
-                                       DataProvider="ProvideRuntimeVersionSuggestionsAsync" />
+                                       DataProvider="ProvideRuntimeVersionSuggestionsAsync"
+                                       autocomplete="off" />
                     </div>
                 </div>
 
@@ -274,7 +296,8 @@
                                        ValueSelector="item => item.Id"
                                        TextSelector="item => item.Description"
                                        ItemFromValueResolver="ResolveNodeTypeFromValueAsync"
-                                       DataProvider="ProvideNodeTypeSuggestionsAsync" />
+                                       DataProvider="ProvideNodeTypeSuggestionsAsync"
+                                       autocomplete="off" />
                     </div>
                 </div>
 
@@ -292,7 +315,8 @@
                                        TextSelector="item => item.Description"
                                        ItemFromValueResolver="ResolveNodeTypeFromValueAsync"
                                        DataProvider="ProvideNodeTypeSuggestionsAsync"
-                                       Placeholder="Same as worker" />
+                                       Placeholder="Same as worker"
+                                       autocomplete="off" />
                         <div class="form-text">
                             Optional. If not set, the driver node will use the same type as worker nodes.
                         </div>
