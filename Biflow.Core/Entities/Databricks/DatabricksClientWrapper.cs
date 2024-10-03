@@ -24,6 +24,17 @@ public class DatabricksClientWrapper(DatabricksWorkspace workspace) : IDisposabl
         return jobs;
     }
 
+    public async Task<IEnumerable<Pipeline>> GetPipelinesAsync(CancellationToken cancellationToken = default)
+    {
+        var pipelines = new List<Pipeline>();
+        await foreach (var pipeline in Client.Pipelines.ListPageable(cancellationToken: cancellationToken))
+        {
+            pipelines.Add(pipeline);
+        }
+        pipelines.SortBy(p => p.Name);
+        return pipelines;
+    }
+
     public async Task<DatabricksFolder> GetWorkspaceAsync(CancellationToken cancellationToken = default)
     {
         var objects = await GetWorkspaceObjectsAsync(cancellationToken: cancellationToken);
