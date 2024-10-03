@@ -183,8 +183,10 @@ internal class DatabricksStepExecutor(
             return Result.Failure;
         }
 
-        var task = run.Tasks.FirstOrDefault();
-        if (task is not null)
+        // If the Databricks run was not a job run,
+        // try to get the output for the one task in the one-time triggered run submit.
+        if (step.DatabricksStepSettings is not DbJobStepSettings dbJobtask
+            && run.Tasks.FirstOrDefault() is RunTask task)
         {
             try
             {
@@ -204,7 +206,7 @@ internal class DatabricksStepExecutor(
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting Databricks step task output", step.ExecutionId, step);
+                _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting Databricks step task run output", step.ExecutionId, step);
                 attempt.AddWarning(ex, $"Error getting task run output");
             }
         }
