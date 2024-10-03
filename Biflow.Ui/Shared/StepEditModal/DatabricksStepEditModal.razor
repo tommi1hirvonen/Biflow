@@ -47,25 +47,37 @@
                     <input type="radio" class="form-check-input" id="radio_databricks_type_notebook"
                            checked=@(Step.DatabricksStepSettings is DbNotebookStepSettings)
                            @onchange="() => Step.SetIsNotebook()">
-                    <label class="form-check-label fw-normal" for="radio_databricks_type_notebook">Notebook</label>
+                    <label class="form-check-label fw-normal" for="radio_databricks_type_notebook">
+                        <SvgIcon Icon="LucideIcon.Notebook" />
+                        Notebook
+                    </label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_databricks_type_python"
                            checked=@(Step.DatabricksStepSettings is DbPythonFileStepSettings)
                            @onchange="() => Step.SetIsPythonFile()">
-                    <label class="form-check-label fw-normal" for="radio_databricks_type_python">Python file</label>
+                    <label class="form-check-label fw-normal" for="radio_databricks_type_python">
+                        <SvgIcon Icon="LucideIcon.FileCode" />
+                        Python file
+                    </label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_databricks_type_pipeline"
                            checked=@(Step.DatabricksStepSettings is DbPipelineStepSettings)
                            @onchange="() => Step.SetIsPipeline()">
-                    <label class="form-check-label fw-normal" for="radio_databricks_type_pipeline">Pipeline</label>
+                    <label class="form-check-label fw-normal" for="radio_databricks_type_pipeline">
+                        <SvgIcon Icon="FeatherIcon.Pipeline" />
+                        Pipeline
+                    </label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_databricks_type_job"
                            checked=@(Step.DatabricksStepSettings is DbJobStepSettings)
                            @onchange="() => Step.SetIsJob()">
-                    <label class="form-check-label fw-normal" for="radio_databricks_type_job">Job</label>
+                    <label class="form-check-label fw-normal" for="radio_databricks_type_job">
+                        <SvgIcon Icon="LucideIcon.Workflow" />
+                        Job
+                    </label>
                 </div>
             </div>
         </div>
