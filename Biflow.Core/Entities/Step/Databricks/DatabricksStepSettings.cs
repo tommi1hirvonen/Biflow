@@ -23,7 +23,7 @@ public class DbPythonFileStepSettings : DatabricksClusterStepSettings
     public string FilePath { get; set; } = "";
 }
 
-public class DbPipelineStepSettings : DatabricksClusterStepSettings
+public class DbPipelineStepSettings : DatabricksStepSettings
 {
     public string PipelineId { get; set; } = "";
 

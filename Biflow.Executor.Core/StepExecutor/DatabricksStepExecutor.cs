@@ -49,11 +49,16 @@ internal class DatabricksStepExecutor(
 
         Task<long> startRunTask;
 
-        if (step.DatabricksStepSettings is DatabricksClusterStepSettings clusterStep)
+        if (step.DatabricksStepSettings is DbJobStepSettings dbJob)
+        {
+            var runParams = new RunParameters { JobParams = parameters };
+            startRunTask = client.Jobs.RunNow(dbJob.JobId, runParams, cancellationToken: cancellationToken);
+        }
+        else
         {
             var settings = new RunSubmitSettings { RunName = step.ExecutionId.ToString() };
             var taskKey = step.StepId.ToString();
-            var taskSettings = clusterStep switch
+            var taskSettings = step.DatabricksStepSettings switch
             {
                 DbNotebookStepSettings notebook =>
                     settings.AddTask(
@@ -70,23 +75,23 @@ internal class DatabricksStepExecutor(
                         {
                             PythonFile = python.FilePath,
                             Parameters = parameters.OrderBy(kvp => kvp.Key).Select(kvp => kvp.Value).ToList()
-                        }), 
+                        }),
                 DbPipelineStepSettings pipeline =>
                     settings.AddTask(
                         taskKey,
                         new PipelineTask
                         {
-                            PipelineId =  pipeline.PipelineId,
+                            PipelineId = pipeline.PipelineId,
                             FullRefresh = pipeline.PipelineFullRefresh
                         }),
-                _ => throw new ArgumentException($"Unhandled step configuration type {clusterStep.GetType()}")
+                _ => throw new ArgumentException($"Unhandled step configuration type {step.DatabricksStepSettings.GetType()}")
             };
 
-            if (clusterStep.ClusterConfiguration is ExistingClusterConfiguration existing)
+            if (step.DatabricksStepSettings is DatabricksClusterStepSettings { ClusterConfiguration: ExistingClusterConfiguration existing })
             {
                 taskSettings.WithExistingClusterId(existing.ClusterId);
             }
-            else if (clusterStep.ClusterConfiguration is NewClusterConfiguration newCluster)
+            else if (step.DatabricksStepSettings is DatabricksClusterStepSettings { ClusterConfiguration: NewClusterConfiguration newCluster })
             {
                 var cluster = ClusterAttributes.GetNewClusterConfiguration();
                 cluster = newCluster.ClusterMode switch
@@ -105,20 +110,8 @@ internal class DatabricksStepExecutor(
                     .WithRuntimeEngine(newCluster.UsePhoton ? RuntimeEngine.PHOTON : RuntimeEngine.STANDARD);
                 taskSettings.WithNewCluster(cluster);
             }
-            else
-            {
-                throw new ArgumentException($"Unhandled cluster configuration type {clusterStep.ClusterConfiguration.GetType()}");
-            }
 
             startRunTask = client.Jobs.RunSubmit(settings, cancellationToken: cancellationToken);
-        }
-        else if (step.DatabricksStepSettings is DbJobStepSettings dbJob)
-        {
-            startRunTask = client.Jobs.RunNow(dbJob.JobId, new() { JobParams = parameters }, cancellationToken: cancellationToken);
-        }
-        else
-        {
-            throw new ArgumentException($"Unhandled step configuration type {step.DatabricksStepSettings.GetType()}");
         }
 
         long runId;

@@ -159,12 +159,6 @@ file class DbPipelineStepSettingsValidator : AbstractValidator<DbPipelineStepSet
     public DbPipelineStepSettingsValidator()
     {
         RuleFor(settings => settings.PipelineId).NotEmpty();
-        RuleFor(settings => settings.ClusterConfiguration)
-            .SetInheritanceValidator(v =>
-            {
-                v.Add(new ExistingClusterValidator());
-                v.Add(new NewClusterValidator());
-            });
     }
 }
 
