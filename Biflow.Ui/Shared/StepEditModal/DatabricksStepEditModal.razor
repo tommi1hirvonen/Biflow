@@ -1,4 +1,5 @@
 ﻿@inherits StepEditModal<DatabricksStep>
+@using Pipeline = Microsoft.Azure.Databricks.Client.Models.Pipeline
 
 <StepEditModalTemplate Modal="this" TStep="DatabricksStep">
     @if (Step is not null)
@@ -112,15 +113,20 @@
         }
         else if (Step.DatabricksStepSettings is DbPipelineStepSettings pipeline)
         {
-            // TODO Implement autosuggest for pipelines.
             <div class="row mt-3">
                 <div class="col-md-4 d-md-flex justify-content-end">
                     <label class="form-label mb-lg-0">Pipeline id</label>
                 </div>
                 <div class="col-md-6">
-                    <div class="input-group input-group-sm">
-                        <InputText class="form-control form-control-sm" @bind-Value="pipeline.PipelineId" />
-                    </div>
+                    <HxAutosuggest TValue="string"
+                                   TItem="Pipeline"
+                                   InputSize="InputSize.Small"
+                                   @bind-Value="pipeline.PipelineId"
+                                   MinimumLength="0"
+                                   ValueSelector="item => item.PipelineId"
+                                   TextSelector="item => item.Name"
+                                   ItemFromValueResolver="ResolvePipelineFromValueAsync"
+                                   DataProvider="ProvidePipelineSuggestionsAsync" />
                 </div>
             </div>
         }
@@ -260,7 +266,8 @@
                                        ValueSelector="item => item.Id"
                                        TextSelector="item => item.Description"
                                        ItemFromValueResolver="ResolveNodeTypeFromValueAsync"
-                                       DataProvider="ProvideNodeTypeSuggestionsAsync" />
+                                       DataProvider="ProvideNodeTypeSuggestionsAsync"
+                                       Placeholder="Same as worker" />
                         <div class="form-text">
                             Optional. If not set, the driver node will use the same type as worker nodes.
                         </div>

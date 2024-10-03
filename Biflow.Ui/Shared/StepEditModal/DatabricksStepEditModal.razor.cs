@@ -1,5 +1,6 @@
 ﻿using Biflow.Ui.Shared.StepEdit;
 using System.Globalization;
+using Pipeline = Microsoft.Azure.Databricks.Client.Models.Pipeline;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
@@ -13,6 +14,7 @@ public partial class DatabricksStepEditModal : StepEditModal<DatabricksStep>
     private (string Id, string Description)[]? nodeTypes;
     private (string Id, string Description)[]? clusters;
     private DatabricksJob[]? dbJobs;
+    private Pipeline[]? pipelines;
 
     protected override async Task<DatabricksStep> GetExistingStepAsync(AppDbContext context, Guid stepId)
     {
@@ -76,6 +78,55 @@ public partial class DatabricksStepEditModal : StepEditModal<DatabricksStep>
         nodeTypes = null;
         clusters = null;
         dbJobs = null;
+        pipelines = null;
+    }
+
+    private async Task<Pipeline?> ResolvePipelineFromValueAsync(string value)
+    {
+        if (pipelines is null)
+        {
+            try
+            {
+                var workspace = DatabricksWorkspaces?.FirstOrDefault();
+                ArgumentNullException.ThrowIfNull(workspace);
+                using var client = workspace.CreateClient();
+                var pipelines = await client.GetPipelinesAsync();
+                this.pipelines = pipelines.ToArray();
+            }
+            catch (Exception ex)
+            {
+                Toaster.AddError("Error fetching Databricks pipelines", ex.Message);
+                pipelines = [];
+            }
+        }
+        return pipelines.FirstOrDefault(v => v.PipelineId == value);
+    }
+
+    private async Task<AutosuggestDataProviderResult<Pipeline>> ProvidePipelineSuggestionsAsync(
+        AutosuggestDataProviderRequest request)
+    {
+        if (pipelines is null)
+        {
+            try
+            {
+                var workspace = DatabricksWorkspaces?.FirstOrDefault();
+                ArgumentNullException.ThrowIfNull(workspace);
+                using var client = workspace.CreateClient();
+                var pipelines = await client.GetPipelinesAsync();
+                this.pipelines = pipelines.ToArray();
+            }
+            catch (Exception ex)
+            {
+                Toaster.AddError("Error fetching Databricks pipelines", ex.Message);
+                pipelines = [];
+            }
+        }
+
+        return new()
+        {
+            Data = pipelines
+                .Where(n => n.Name.ContainsIgnoreCase(request.UserInput))
+        };
     }
 
     private async Task<DatabricksJob?> ResolveDbJobFromValueAsync(long value)
