@@ -183,21 +183,35 @@ internal class DatabricksStepExecutor(
             return Result.Failure;
         }
 
-        var message = $"""
-                Termination type: {run.Status.TerminationDetails.Type}
-                Termination code: {run.Status.TerminationDetails.Code}
-                Message: {run.Status.TerminationDetails.Message}
-                """;
-        if (run.Status.TerminationDetails.Type == RunTerminationType.SUCCESS)
+        var task = run.Tasks.FirstOrDefault();
+        if (task is not null)
         {
-            attempt.AddOutput(message);
-            return Result.Success;
+            try
+            {
+                var output = await client.Jobs.RunsGetOutput(task.RunId, cancellationToken);
+                if (!string.IsNullOrEmpty(output.Error))
+                {
+                    attempt.AddError(output.Error);
+                }
+                if (!string.IsNullOrEmpty(output.Logs))
+                {
+                    attempt.AddOutput(output.Logs[..Math.Min(500_000, output.Logs.Length)]);
+                    if (output.Logs.Length > 500_000)
+                    {
+                        attempt.AddOutput("Output has been truncated to first 500 000 characters.", insertFirst: true);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting Databricks step task output", step.ExecutionId, step);
+                attempt.AddWarning(ex, $"Error getting task run output");
+            }
         }
-        else
-        {
-            attempt.AddError(message);
-            return Result.Failure;
-        }
+
+        return run.Status.TerminationDetails.Type == RunTerminationType.SUCCESS
+            ? Result.Success
+            : Result.Failure;
     }
 
     private async Task<Run> GetRunWithRetriesAsync(
