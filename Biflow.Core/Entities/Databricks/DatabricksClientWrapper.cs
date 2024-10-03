@@ -27,13 +27,23 @@ public class DatabricksClientWrapper(DatabricksWorkspace workspace) : IDisposabl
 
     public async Task<IEnumerable<Pipeline>> GetPipelinesAsync(CancellationToken cancellationToken = default)
     {
-        var pipelines = new List<Pipeline>();
-        await foreach (var pipeline in Client.Pipelines.ListPageable(cancellationToken: cancellationToken))
+        var result = new List<Pipeline>();
+
+        // Manually paginate the results since using Client.Pipelines.ListPageable()
+        // throws when there are no pipelines in the workspace.
+        PipelinesList? pipelines = null;
+        do
         {
-            pipelines.Add(pipeline);
-        }
-        pipelines.SortBy(p => p.Name);
-        return pipelines;
+            pipelines = await Client.Pipelines.List(
+                maxResults: 100,
+                pageToken: pipelines?.NextPageToken,
+                cancellationToken: cancellationToken);
+            // pipelines.Pipelines can be null if there are no pipelines in the workspace.
+            // The NuGet library doesn't have nullable enabled so there are no warnings of dereferencing null.
+            result.AddRange(pipelines.Pipelines ?? []);
+        } while (!string.IsNullOrEmpty(pipelines.NextPageToken));
+        result.SortBy(p => p.Name);
+        return result;
     }
 
     public async Task<DatabricksFolder> GetWorkspaceAsync(CancellationToken cancellationToken = default)
