@@ -140,6 +140,20 @@
                                    DataProvider="ProvidePipelineSuggestionsAsync" />
                 </div>
             </div>
+            <div class="row mt-3">
+                <div class="col-md-4 d-md-flex justify-content-end">
+                    <label class="form-check-label mb-lg-0" for="databricks_pipeline_full_refresh">
+                        Full refresh
+                    </label>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check form-check-inline">
+                        <input type="checkbox" class="form-check-input" id="databricks_pipeline_full_refresh"
+                               checked=@pipeline.PipelineFullRefresh
+                               @bind-value="pipeline.PipelineFullRefresh">
+                    </div>
+                </div>
+            </div>
         }
         else if (Step.DatabricksStepSettings is DbJobStepSettings job)
         {
