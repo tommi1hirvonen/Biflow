@@ -47,6 +47,4 @@ public class DbJobStepSettings : DatabricksStepSettings
     /// without having to navigate to the actual Databricks workspace.
     /// </summary>
     public string? JobName { get; set; }
-
-    public bool PipelineFullRefresh { get; set; }
 }
