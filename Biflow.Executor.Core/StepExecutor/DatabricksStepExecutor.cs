@@ -142,9 +142,10 @@ internal class DatabricksStepExecutor(
         {
             using var context = _dbContextFactory.CreateDbContext();
             attempt.JobRunId = runId;
-            context.Attach(attempt);
-            context.Entry(attempt).Property(e => e.JobRunId).IsModified = true;
-            await context.SaveChangesAsync(CancellationToken.None);
+            await context.Set<DatabricksStepExecutionAttempt>()
+                .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+                .ExecuteUpdateAsync(x => x
+                    .SetProperty(p => p.JobRunId, attempt.JobRunId), CancellationToken.None);
         }
         catch (Exception ex)
         {

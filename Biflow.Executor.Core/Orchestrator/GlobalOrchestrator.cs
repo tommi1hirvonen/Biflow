@@ -135,10 +135,11 @@ internal class GlobalOrchestrator(
             foreach (var attempt in stepExecution.StepExecutionAttempts)
             {
                 attempt.ExecutionStatus = StepExecutionStatus.Queued;
-                dbContext.Attach(attempt);
-                dbContext.Entry(attempt).Property(p => p.ExecutionStatus).IsModified = true;
+                await dbContext.StepExecutionAttempts
+                    .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+                    .ExecuteUpdateAsync(x => x
+                        .SetProperty(p => p.ExecutionStatus, attempt.ExecutionStatus), CancellationToken.None);
             }
-            await dbContext.SaveChangesAsync();
         }
         catch (Exception ex)
         {
@@ -212,13 +213,21 @@ internal class GlobalOrchestrator(
         using var context = _dbContextFactory.CreateDbContext();
         foreach (var attempt in stepExecution.StepExecutionAttempts)
         {
-            context.Attach(attempt);
             attempt.StartedOn ??= DateTimeOffset.Now;
             attempt.EndedOn = DateTimeOffset.Now;
             attempt.StoppedBy = username;
             attempt.ExecutionStatus = StepExecutionStatus.Stopped;
+            await context.StepExecutionAttempts
+                .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+                .ExecuteUpdateAsync(x => x
+                    .SetProperty(p => p.ExecutionStatus, attempt.ExecutionStatus)
+                    .SetProperty(p => p.StartedOn, attempt.StartedOn)
+                    .SetProperty(p => p.EndedOn, attempt.EndedOn)
+                    .SetProperty(p => p.InfoMessages, attempt.InfoMessages)
+                    .SetProperty(p => p.WarningMessages, attempt.WarningMessages)
+                    .SetProperty(p => p.ErrorMessages, attempt.ErrorMessages)
+                    .SetProperty(p => p.StoppedBy, attempt.StoppedBy), CancellationToken.None);
         }
-        await context.SaveChangesAsync();
     }
 
     private async Task UpdateExecutionFailedAsync(Exception ex, StepExecution stepExecution)
@@ -234,8 +243,15 @@ internal class GlobalOrchestrator(
         attempt.EndedOn = DateTimeOffset.Now;
         // Place the error message first on the list.
         attempt.AddError(ex, $"Unhandled error caught in global orchestrator:\n\n{ex.Message}", insertFirst: true);
-        context.Attach(attempt).State = EntityState.Modified;
-        await context.SaveChangesAsync();
+        await context.StepExecutionAttempts
+                .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+                .ExecuteUpdateAsync(x => x
+                    .SetProperty(p => p.ExecutionStatus, attempt.ExecutionStatus)
+                    .SetProperty(p => p.StartedOn, attempt.StartedOn)
+                    .SetProperty(p => p.EndedOn, attempt.EndedOn)
+                    .SetProperty(p => p.InfoMessages, attempt.InfoMessages)
+                    .SetProperty(p => p.WarningMessages, attempt.WarningMessages)
+                    .SetProperty(p => p.ErrorMessages, attempt.ErrorMessages), CancellationToken.None);
     }
 
     private async Task UpdateStepAsync(StepExecution step, StepExecutionStatus status, string? errorMessage)
@@ -243,13 +259,20 @@ internal class GlobalOrchestrator(
         using var context = _dbContextFactory.CreateDbContext();
         foreach (var attempt in step.StepExecutionAttempts)
         {
-            context.Attach(attempt);
             attempt.ExecutionStatus = status;
             attempt.StartedOn = DateTimeOffset.Now;
             attempt.EndedOn = DateTimeOffset.Now;
             attempt.AddError(errorMessage);
+            await context.StepExecutionAttempts
+                .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+                .ExecuteUpdateAsync(x => x
+                    .SetProperty(p => p.ExecutionStatus, attempt.ExecutionStatus)
+                    .SetProperty(p => p.StartedOn, attempt.StartedOn)
+                    .SetProperty(p => p.EndedOn, attempt.EndedOn)
+                    .SetProperty(p => p.InfoMessages, attempt.InfoMessages)
+                    .SetProperty(p => p.WarningMessages, attempt.WarningMessages)
+                    .SetProperty(p => p.ErrorMessages, attempt.ErrorMessages), CancellationToken.None);
         }
-        await context.SaveChangesAsync();
     }
 
     private async Task AddMonitorsAsync(IEnumerable<StepExecutionMonitor> monitors)
@@ -258,7 +281,7 @@ internal class GlobalOrchestrator(
         {
             using var context = _dbContextFactory.CreateDbContext();
             var distinct = monitors
-                .DistinctBy(t => (t.ExecutionId, t.StepId, t.MonitoredExecutionId, t.MonitoredStepId, TrackingReason:t.MonitoringReason));
+                .DistinctBy(t => (t.ExecutionId, t.StepId, t.MonitoredExecutionId, t.MonitoredStepId, TrackingReason: t.MonitoringReason));
             context.StepExecutionMonitors.AddRange(distinct);
             await context.SaveChangesAsync();
         }

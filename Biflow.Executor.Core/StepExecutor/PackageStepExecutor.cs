@@ -303,9 +303,10 @@ internal class PackageStepExecutor(
         {
             using var context = _dbContextFactory.CreateDbContext();
             attempt.PackageOperationId = packageOperationId;
-            context.Attach(attempt);
-            context.Entry(attempt).Property(e => e.PackageOperationId).IsModified = true;
-            await context.SaveChangesAsync(cancellationToken);
+            await context.Set<PackageStepExecutionAttempt>()
+                .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+                .ExecuteUpdateAsync(x => x
+                    .SetProperty(p => p.PackageOperationId, attempt.PackageOperationId), CancellationToken.None);
         }
         catch (Exception ex)
         {

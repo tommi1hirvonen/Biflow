@@ -34,36 +34,32 @@ internal class StepExecutionAttemptEntityTypeConfiguration : IEntityTypeConfigur
             .HasValue<QlikStepExecutionAttempt>(StepType.Qlik)
             .HasValue<DatabricksStepExecutionAttempt>(StepType.Databricks);
 
-        builder.Ignore(x => x.InfoMessages);
-        builder.Ignore(x => x.WarningMessages);
-        builder.Ignore(x => x.ErrorMessages);
-
-        builder.Property<List<InfoMessage>>("_infoMessages")
+        builder.Property(x => x.InfoMessages)
             .HasColumnName("InfoMessages")
             .HasConversion(
             from => JsonSerializer.Serialize(from, IgnoreNullsOptions),
             to => JsonSerializer.Deserialize<List<InfoMessage>>(to, IgnoreNullsOptions) ?? new(),
-            new ValueComparer<List<InfoMessage>>(
+            new ValueComparer<IList<InfoMessage>>(
                 (x, y) => x != null && y != null && x.SequenceEqual(y),
                 x => x.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
                 x => x.ToList()));
 
-        builder.Property<List<WarningMessage>>("_warningMessages")
+        builder.Property(x => x.WarningMessages)
             .HasColumnName("WarningMessages")
             .HasConversion(
             from => JsonSerializer.Serialize(from, IgnoreNullsOptions),
             to => JsonSerializer.Deserialize<List<WarningMessage>>(to, IgnoreNullsOptions) ?? new(),
-            new ValueComparer<List<WarningMessage>>(
+            new ValueComparer<IList<WarningMessage>>(
                 (x, y) => x != null && y != null && x.SequenceEqual(y),
                 x => x.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
                 x => x.ToList()));
 
-        builder.Property<List<ErrorMessage>>("_errorMessages")
+        builder.Property(x => x.ErrorMessages)
             .HasColumnName("ErrorMessages")
             .HasConversion(
             from => JsonSerializer.Serialize(from, IgnoreNullsOptions),
             to => JsonSerializer.Deserialize<List<ErrorMessage>>(to, IgnoreNullsOptions) ?? new(),
-            new ValueComparer<List<ErrorMessage>>(
+            new ValueComparer<IList<ErrorMessage>>(
                 (x, y) => x != null && y != null && x.SequenceEqual(y),
                 x => x.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
                 x => x.ToList()));

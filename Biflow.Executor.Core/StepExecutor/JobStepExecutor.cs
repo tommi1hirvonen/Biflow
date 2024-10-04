@@ -85,9 +85,10 @@ internal class JobStepExecutor(
         {
             using var context = _dbContextFactory.CreateDbContext();
             attempt.ChildJobExecutionId = jobExecutionId;
-            context.Attach(attempt);
-            context.Entry(attempt).Property(p => p.ChildJobExecutionId).IsModified = true;
-            await context.SaveChangesAsync(CancellationToken.None);
+            await context.Set<JobStepExecutionAttempt>()
+                .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+                .ExecuteUpdateAsync(x => x
+                    .SetProperty(p => p.ChildJobExecutionId, attempt.ChildJobExecutionId), CancellationToken.None);
         }
         catch (Exception ex)
         {

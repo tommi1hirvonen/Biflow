@@ -68,9 +68,10 @@ internal class PipelineStepExecutor(
         {
             using var context = _dbContextFactory.CreateDbContext();
             attempt.PipelineRunId = runId;
-            context.Attach(attempt);
-            context.Entry(attempt).Property(e => e.PipelineRunId).IsModified = true;
-            await context.SaveChangesAsync(CancellationToken.None);
+            await context.Set<PipelineStepExecutionAttempt>()
+                .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+                .ExecuteUpdateAsync(x => x
+                    .SetProperty(p => p.PipelineRunId, attempt.PipelineRunId), CancellationToken.None);
         }
         catch (Exception ex)
         {

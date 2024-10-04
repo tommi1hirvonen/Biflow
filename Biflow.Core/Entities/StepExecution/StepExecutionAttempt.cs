@@ -28,10 +28,6 @@ public abstract class StepExecutionAttempt
         StepType = execution.StepType;
     }
 
-    private readonly List<ErrorMessage> _errorMessages = [];
-    private readonly List<WarningMessage> _warningMessages = [];
-    private readonly List<InfoMessage> _infoMessages = [];
-
     public Guid ExecutionId { get; private set; }
 
     public Guid StepId { get; private set; }
@@ -46,11 +42,11 @@ public abstract class StepExecutionAttempt
 
     public StepType StepType { get; }
 
-    public IEnumerable<ErrorMessage> ErrorMessages => _errorMessages;
+    public IList<ErrorMessage> ErrorMessages { get; private set; } = new List<ErrorMessage>();
 
-    public IEnumerable<WarningMessage> WarningMessages => _warningMessages;
+    public IList<WarningMessage> WarningMessages { get; private set; } = new List<WarningMessage>();
 
-    public IEnumerable<InfoMessage> InfoMessages => _infoMessages;    
+    public IList<InfoMessage> InfoMessages { get; private set; } = new List<InfoMessage>();
 
     [Display(Name = "Stopped by")]
     [MaxLength(250)]
@@ -73,18 +69,18 @@ public abstract class StepExecutionAttempt
         var error = new ErrorMessage(message, ex?.ToString());
         if (insertFirst)
         {
-            _errorMessages.Insert(0, error);
+            ErrorMessages.Insert(0, error);
         }
         else
         {
-            _errorMessages.Add(error);
+            ErrorMessages.Add(error);
         }
     }
 
     public void AddError(Exception ex)
     {
         var error = new ErrorMessage(ex.Message, ex.ToString());
-        _errorMessages.Add(error);
+        ErrorMessages.Add(error);
     }
 
     public void AddError(string? message)
@@ -92,20 +88,20 @@ public abstract class StepExecutionAttempt
         if (!string.IsNullOrEmpty(message))
         {
             var error = new ErrorMessage(message, null);
-            _errorMessages.Add(error);
+            ErrorMessages.Add(error);
         }
     }
 
     public void AddWarning(Exception? ex, string message)
     {
         var warning = new WarningMessage(message, ex?.ToString());
-        _warningMessages.Add(warning);
+        WarningMessages.Add(warning);
     }
 
     public void AddWarning(Exception ex)
     {
         var warning = new WarningMessage(ex.Message, ex.ToString());
-        _warningMessages.Add(warning);
+        WarningMessages.Add(warning);
     }
 
     public void AddWarning(string? message)
@@ -113,7 +109,7 @@ public abstract class StepExecutionAttempt
         if (!string.IsNullOrEmpty(message))
         {
             var warning = new WarningMessage(message, null);
-            _warningMessages.Add(warning);
+            WarningMessages.Add(warning);
         }
     }
 
@@ -124,11 +120,11 @@ public abstract class StepExecutionAttempt
             var info = new InfoMessage(message);
             if (insertFirst)
             {
-                _infoMessages.Insert(0, info);
+                InfoMessages.Insert(0, info);
             }
             else
             {
-                _infoMessages.Add(info);
+                InfoMessages.Add(info);
             }
         }
     }
