@@ -379,7 +379,10 @@
         // Do not show parameters for Databricks pipeline tasks.
         @if (Step.DatabricksStepSettings is DbNotebookStepSettings or DbPythonFileStepSettings or DbJobStepSettings)
         {
-            <StepParametersEditor Step="Step" NewParameterDelegate="() => new() { Step = Step }" />
+            <StepParametersEditor Step="Step"
+                                  NewParameterDelegate="() => new() { Step = Step }"
+                                  Title="@ParametersTitle"
+                                  InfoContent="@ParametersInfoContent" />
         }
     }
 </StepEditModalTemplate>

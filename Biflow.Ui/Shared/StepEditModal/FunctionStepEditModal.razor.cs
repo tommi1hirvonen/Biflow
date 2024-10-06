@@ -8,6 +8,16 @@ public partial class FunctionStepEditModal : StepEditModal<FunctionStep>
 
     internal override string FormId => "function_step_edit_form";
 
+    private const string ParametersInfoContent = """
+        <div>
+            <p>Use parameters to dynamically pass values to the function input (request body).</p>
+            <p>
+                Parameters are matched based on their names. For example, say you have defined a parameter named <code>@ModifiedSince</code> with a value of <code>2024-09-01</code>.
+                A request body like <code>{ "ModifiedSince": "@ModifiedSince" }</code> will become <code>{ "ModifiedSince": "2024-09-01" }</code>
+            </p>
+        </div>
+        """;
+
     private FunctionSelectOffcanvas? functionSelectOffcanvas;
     private CodeEditor? editor;
     private InputLanguage language = InputLanguage.Text;

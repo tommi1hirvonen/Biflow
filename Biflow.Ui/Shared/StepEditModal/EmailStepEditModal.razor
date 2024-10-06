@@ -41,6 +41,9 @@
             </div>
         </div>
 
-        <StepParametersEditor Step="Step" NewParameterDelegate="() => new() { Step = Step }" />
+        <StepParametersEditor Step="Step"
+                              NewParameterDelegate="() => new() { Step = Step }"
+                              Title="Parameters"
+                              InfoContent="@ParametersInfoContent"/>
     }
 </StepEditModalTemplate>

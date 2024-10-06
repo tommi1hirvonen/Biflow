@@ -56,6 +56,9 @@
         </div>
 
         <PipelineSelectOffcanvas @ref="pipelineSelectOffcanvas" OnPipelineSelected="OnPipelineSelected" />
-        <StepParametersEditor Step="Step" NewParameterDelegate="() => new() { Step = Step }" OnImportParameters="ImportParametersAsync" />
+        <StepParametersEditor Step="Step"
+                              NewParameterDelegate="() => new() { Step = Step }"
+                              OnImportParameters="ImportParametersAsync"
+                              Title="Pipeline parameters" />
     }
 </StepEditModalTemplate>

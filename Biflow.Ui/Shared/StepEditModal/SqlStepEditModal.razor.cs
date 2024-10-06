@@ -7,6 +7,16 @@ public partial class SqlStepEditModal : StepEditModal<SqlStep>
 {
     internal override string FormId => "sql_step_edit_form";
 
+    private const string ParametersInfoContent = """
+        <div>
+            <p>Use parameters to dynamically pass values to the SQL statement during execution.</p>
+            <p>
+                Parameters are matched based on their names. For example, say you have defined a parameter named <code>@MyStringParam</code> with a value of <code>Hello World!</code>.
+                A SQL statement like <code>exec MyProcedure @MyStringParam</code> will become <code>exec MyProcedure 'Hello World!'</code>
+            </p>
+        </div>
+        """;
+
     private StoredProcedureSelectOffcanvas? storedProcedureSelectModal;
     private CodeEditor? editor;
     

@@ -16,6 +16,22 @@ public partial class DatabricksStepEditModal : StepEditModal<DatabricksStep>
     private DatabricksJob[]? dbJobs;
     private Pipeline[]? pipelines;
 
+    private string ParametersTitle => Step?.DatabricksStepSettings switch
+    {
+        DbNotebookStepSettings => "Notebook parameters",
+        DbPythonFileStepSettings => "Command line arguments",
+        DbJobStepSettings => "Job run parameters",
+        _ => ""
+    };
+
+    private string ParametersInfoContent => Step?.DatabricksStepSettings switch
+    {
+        DbNotebookStepSettings => "<div><p>Use parameters to dynamically pass values to the notebook.</p><p>The parameters are passed as key-value pairs.</p></div>",
+        DbPythonFileStepSettings => "<div><p>Use parameters to dynamically pass command line arguments to the Python file task.</p><p>The parameters are ordered by their name and only the values are passed as arguments. Use the parameter name field to control the order in which values are provided as arguments.</p></div>",
+        DbJobStepSettings => "<div><p>Use parameters to dynamically pass values to the job run.</p><p>The parameters are passed as key-value pairs.</p></div>",
+        _ => ""
+    };
+
     protected override async Task<DatabricksStep> GetExistingStepAsync(AppDbContext context, Guid stepId)
     {
         var step = await context.DatabricksSteps

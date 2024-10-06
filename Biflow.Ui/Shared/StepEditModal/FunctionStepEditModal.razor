@@ -131,6 +131,9 @@
             </div>
         </div>
         
-        <StepParametersEditor Step="Step" NewParameterDelegate="() => new() { Step = Step }" />
+        <StepParametersEditor Step="Step" 
+                              NewParameterDelegate="() => new() { Step = Step }"
+                              Title="Request body parameters"
+                              InfoContent="@ParametersInfoContent" />
     }
 </StepEditModalTemplate>

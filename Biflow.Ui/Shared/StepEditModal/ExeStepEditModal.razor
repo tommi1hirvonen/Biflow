@@ -98,6 +98,9 @@
             </div>
         </div>
 
-        <StepParametersEditor Step="Step" NewParameterDelegate="() => new() { Step = Step }" />
+        <StepParametersEditor Step="Step"
+                              NewParameterDelegate="() => new() { Step = Step }"
+                              Title="Argument parameters"
+                              InfoContent="@ParametersInfoContent" />
     }
 </StepEditModalTemplate>
