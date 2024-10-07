@@ -169,6 +169,7 @@ public class SerializationTests(SerializationTestsFixture fixture) : IClassFixtu
             FunctionApps = fixture.FunctionApps,
             QlikCloudClients = fixture.QlikCloudClients,
             BlobStorageClients = fixture.BlobStorageClients,
+            DatabricksWorkspaces = fixture.DatabricksWorkspaces,
             Jobs = fixture.Jobs,
             Tags = fixture.Tags,
             DataObjects = fixture.DataObjects,

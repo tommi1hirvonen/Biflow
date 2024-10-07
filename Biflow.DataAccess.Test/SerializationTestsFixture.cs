@@ -17,6 +17,7 @@ public class SerializationTestsFixture(DatabaseFixture fixture) : IAsyncLifetime
     public FunctionApp[] FunctionApps { get; private set; } = [];
     public QlikCloudClient[] QlikCloudClients { get; private set; } = [];
     public BlobStorageClient[] BlobStorageClients { get; private set; } = [];
+    public DatabricksWorkspace[] DatabricksWorkspaces { get; private set; } = [];
     
     public Job[] Jobs { get; private set; } = [];
     public Step[] Steps { get; private set; } = [];
@@ -61,6 +62,10 @@ public class SerializationTestsFixture(DatabaseFixture fixture) : IAsyncLifetime
         BlobStorageClients = await context.BlobStorageClients
             .AsNoTracking()
             .OrderBy(b => b.BlobStorageClientId)
+            .ToArrayAsync();
+        DatabricksWorkspaces = await context.DatabricksWorkspaces
+            .AsNoTracking()
+            .OrderBy(w => w.WorkspaceId)
             .ToArrayAsync();
 
 
