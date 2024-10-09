@@ -36,6 +36,7 @@ Biflow is a powerful platform for easy business intelligence (BI) and data platf
   - Azure Synapse
   - Azure Functions
   - Azure Analysis Services
+  - Azure Databricks
 - Microsoft Power BI
 - Snowflake
 - Qlik Cloud
@@ -77,6 +78,9 @@ Currently supported step types:
 - Function
     - Invoke Azure Function App functions
     - Wait for durable functions to complete before step is considered completed
+- Databricks
+    - Run an Azure Databricks job, pipeline (Delta Live Table), notebook or Python file
+    - Use an existing cluster for notebooks and Python files or create a new cluster for each run.
 - Exe
     - Run locally stored executables (e.g. Python or PowerShell scripts)
 - Dataset
