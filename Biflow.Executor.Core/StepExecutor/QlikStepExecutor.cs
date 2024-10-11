@@ -72,11 +72,11 @@ internal class QlikStepExecutor(
         try
         {
             using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
-            attempt.ReloadId = reload.Id;
+            attempt.ReloadOrRunId = reload.Id;
             await context.Set<QlikStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
                 .ExecuteUpdateAsync(x => x
-                    .SetProperty(p => p.ReloadId, attempt.ReloadId), CancellationToken.None);
+                    .SetProperty(p => p.ReloadOrRunId, attempt.ReloadOrRunId), CancellationToken.None);
         }
         catch (Exception ex)
         {
@@ -157,11 +157,11 @@ internal class QlikStepExecutor(
         try
         {
             using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
-            attempt.ReloadId = run.Id;
+            attempt.ReloadOrRunId = run.Id;
             await context.Set<QlikStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
                 .ExecuteUpdateAsync(x => x
-                    .SetProperty(p => p.ReloadId, attempt.ReloadId), CancellationToken.None);
+                    .SetProperty(p => p.ReloadOrRunId, attempt.ReloadOrRunId), CancellationToken.None);
         }
         catch (Exception ex)
         {

@@ -51,6 +51,12 @@ namespace Biflow.DataAccess.Migrations
                 table: "ExecutionStep",
                 newName: "QlikCloudEnvironmentId");
 
+            migrationBuilder.RenameColumn(
+                name: "ReloadId",
+                schema: "app",
+                table: "ExecutionStepAttempt",
+                newName: "ReloadOrRunId");
+
             migrationBuilder.AddColumn<string>(
                 name: "QlikStepSettings",
                 schema: "app",
