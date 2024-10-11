@@ -33,38 +33,96 @@
                             <option value="@client.QlikCloudClientId">@client.QlikCloudClientName</option>
                         }
                     </InputSelect>
-                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenAppSelectOffcanvas">
-                        <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
-                        Browse apps
-                    </HxButton>
                 </div>
             </div>
         </div>
 
         <div class="row mt-3">
             <div class="col-md-4 d-md-flex justify-content-end">
-                <label class="form-label mb-lg-0">App id</label>
+                <label class="form-check-label mb-lg-0">Type</label>
             </div>
             <div class="col-md-6">
-                <div class="input-group input-group-sm">
-                    <div class="input-group-text">
-                        <SvgIcon Icon="LucideIcon.FilePieChart" />
-                    </div>
-                    <InputText class="form-control form-control-sm" @bind-Value="Step.AppId" @bind-Value:after="() => appName = string.Empty" />
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="radio_databricks_type_notebook"
+                           checked=@(Step.QlikStepSettings is QlikAppReloadSettings)
+                           @onchange="() => Step.QlikStepSettings = new QlikAppReloadSettings()">
+                    <label class="form-check-label fw-normal" for="radio_databricks_type_notebook">
+                        App reload
+                    </label>
                 </div>
-                <div class="form-text">
-                    @if (appName is null)
-                    {
-                        <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
-                        <span>Loading app name...</span>
-                    }
-                    else
-                    {
-                        <span>@appName</span>
-                    }
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="radio_databricks_type_python"
+                           checked=@(Step.QlikStepSettings is QlikAutomationRunSettings)
+                           @onchange="() => Step.QlikStepSettings = new QlikAutomationRunSettings()">
+                    <label class="form-check-label fw-normal" for="radio_databricks_type_python">
+                        Automation run
+                    </label>
                 </div>
             </div>
         </div>
+
+        @if (Step.QlikStepSettings is QlikAppReloadSettings reload)
+        {
+            <div class="row mt-3">
+                <div class="col-md-4 d-md-flex justify-content-end">
+                </div>
+                <div class="col-md-6">
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenAppSelectOffcanvas">
+                        <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
+                        Browse apps
+                    </HxButton>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-4 d-md-flex justify-content-end">
+                    <label class="form-label mb-lg-0">App</label>
+                </div>
+                <div class="col-md-6">
+                    <HxAutosuggest TValue="string"
+                                   TItem="QlikApp"
+                                   InputSize="InputSize.Small"
+                                   @bind-Value="reload.AppId"
+                                   MinimumLength="0"
+                                   ValueSelector="item => item.Id"
+                                   TextSelector="item => item.Name"
+                                   ItemFromValueResolver="ResolveAppFromValueAsync"
+                                   DataProvider="ProvideAppSuggestionsAsync"
+                                   autocomplete="off">
+                        <EmptyTemplate>
+                            <div class="dropdown-item disabled">
+                                No apps
+                            </div>
+                        </EmptyTemplate>
+                    </HxAutosuggest>
+                </div>
+            </div>
+        }
+        else if (Step.QlikStepSettings is QlikAutomationRunSettings run)
+        {
+            <div class="row mt-3">
+                <div class="col-md-4 d-md-flex justify-content-end">
+                    <label class="form-label mb-lg-0">Automation</label>
+                </div>
+                <div class="col-md-6">
+                    <HxAutosuggest TValue="string"
+                                   TItem="QlikAutomation"
+                                   InputSize="InputSize.Small"
+                                   @bind-Value="run.AutomationId"
+                                   MinimumLength="0"
+                                   ValueSelector="item => item.Id"
+                                   TextSelector="item => item.Name"
+                                   ItemFromValueResolver="ResolveAutomationFromValueAsync"
+                                   DataProvider="ProvideAutomationSuggestionsAsync"
+                                   autocomplete="off">
+                        <EmptyTemplate>
+                            <div class="dropdown-item disabled">
+                                No automations
+                            </div>
+                        </EmptyTemplate>
+                    </HxAutosuggest>
+                </div>
+            </div>
+        }
 
         <AppSelectOffcanvas @ref="appSelectOffcanvas" OnAppSelected="OnAppSelected" QlikClients="QlikClients" />
     }

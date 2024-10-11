@@ -1,26 +1,23 @@
 ﻿using Biflow.Core.Interfaces;
-using System.ComponentModel.DataAnnotations;
 
 namespace Biflow.Core.Entities;
 
 public class QlikStepExecution : StepExecution, IHasTimeout, IHasStepExecutionAttempts<QlikStepExecutionAttempt>
 {
-    public QlikStepExecution(string stepName, string appId, Guid qlikCloudClientId) : base(stepName, StepType.Qlik)
+    public QlikStepExecution(string stepName, Guid qlikCloudClientId) : base(stepName, StepType.Qlik)
     {
-        AppId = appId;
         QlikCloudClientId = qlikCloudClientId;
     }
 
     public QlikStepExecution(QlikStep step, Execution execution) : base(step, execution)
     {
-        AppId = step.AppId;
+        QlikStepSettings = step.QlikStepSettings;
         QlikCloudClientId = step.QlikCloudClientId;
         TimeoutMinutes = step.TimeoutMinutes;
         AddAttempt(new QlikStepExecutionAttempt(this));
     }
 
-    [MaxLength(36)]
-    public string AppId { get; private set; }
+    public QlikStepSettings QlikStepSettings { get; private set; } = new QlikAppReloadSettings();
 
     public Guid QlikCloudClientId { get; private set; }
 

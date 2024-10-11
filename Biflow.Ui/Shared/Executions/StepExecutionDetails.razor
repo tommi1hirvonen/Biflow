@@ -355,10 +355,10 @@
         else if (StepExecutionAttempt.StepExecution is QlikStepExecution qlik)
         {
             <dt class="col-sm-3">
-                App id
+                Step settings
             </dt>
             <dd class="col-sm-9">
-                @qlik.AppId
+                <pre><code>@JsonSerializer.Serialize(qlik.QlikStepSettings, JsonSerializerOptions)</code></pre>
             </dd>
             <dt class="col-sm-3">
                 Qlik Cloud Client id

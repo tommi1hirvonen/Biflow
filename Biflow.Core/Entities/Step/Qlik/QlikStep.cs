@@ -13,14 +13,12 @@ public class QlikStep : Step, IHasTimeout
 
     public QlikStep(QlikStep other, Job? targetJob) : base(other, targetJob)
     {
-        AppId = other.AppId;
+        QlikStepSettings = other.QlikStepSettings;
         QlikCloudClientId = other.QlikCloudClientId;
         QlikCloudClient = other.QlikCloudClient;
     }
 
-    [Required]
-    [MaxLength(36)]
-    public string AppId { get; set; } = "";
+    public QlikStepSettings QlikStepSettings { get; set; } = new QlikAppReloadSettings();
 
     [Required]
     public Guid QlikCloudClientId { get; set; }

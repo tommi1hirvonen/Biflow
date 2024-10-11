@@ -427,7 +427,7 @@ public class DatabaseFixture : IAsyncLifetime
             {
                 StepName = "Test step 12",
                 ExecutionPhase = 50,
-                AppId = "some-app-id",
+                QlikStepSettings = new QlikAppReloadSettings { AppId = "some-app-id"},
                 QlikCloudClient = qlikClient
             };
 
