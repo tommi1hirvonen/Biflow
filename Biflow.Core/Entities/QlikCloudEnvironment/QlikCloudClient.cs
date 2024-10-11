@@ -3,13 +3,13 @@ using System.Text.Json;
 
 namespace Biflow.Core.Entities;
 
-public class QlikCloudConnectedClient : IDisposable
+public class QlikCloudClient : IDisposable
 {
     private readonly HttpClient _httpClient;
 
     private static readonly JsonSerializerOptions DeserializerOptions = new() { PropertyNameCaseInsensitive = true };
 
-    public QlikCloudConnectedClient(QlikCloudClient qlikClient, IHttpClientFactory httpClientFactory)
+    public QlikCloudClient(QlikCloudEnvironment qlikClient, IHttpClientFactory httpClientFactory)
     {
         _httpClient = httpClientFactory.CreateClient();
         _httpClient.DefaultRequestHeaders.Authorization = new("Bearer", qlikClient.ApiToken);

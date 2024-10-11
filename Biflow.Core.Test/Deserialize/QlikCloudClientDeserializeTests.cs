@@ -5,19 +5,19 @@ namespace Biflow.Core.Test.Deserialize;
 
 public class QlikCloudClientDeserializeTests
 {
-    private static readonly QlikCloudClient client = CreateClient();
+    private static readonly QlikCloudEnvironment client = CreateClient();
 
     [Fact]
-    public void QlikCloudClientId_NotEmptyGuid() => Assert.NotEqual(client.QlikCloudClientId, Guid.Empty);
+    public void QlikCloudClientId_NotEmptyGuid() => Assert.NotEqual(client.QlikCloudEnvironmentId, Guid.Empty);
 
     [Fact]
     public void ApiToken_Empty() => Assert.Empty(client.ApiToken);
 
-    private static QlikCloudClient CreateClient()
+    private static QlikCloudEnvironment CreateClient()
     {
-        var client = new QlikCloudClient
+        var client = new QlikCloudEnvironment
         {
-            QlikCloudClientName = "Test",
+            QlikCloudEnvironmentName = "Test",
             EnvironmentUrl = "my_env_url",
             ApiToken = "api_token"
         };

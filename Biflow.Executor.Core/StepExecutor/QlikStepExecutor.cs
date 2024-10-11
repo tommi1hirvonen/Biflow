@@ -27,7 +27,7 @@ internal class QlikStepExecutor(
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
-        var client = step.GetClient()?.CreateConnectedClient(_httpClientFactory);
+        var client = step.GetEnvironment()?.CreateClient(_httpClientFactory);
         ArgumentNullException.ThrowIfNull(client);
 
         return step.QlikStepSettings switch
@@ -39,7 +39,7 @@ internal class QlikStepExecutor(
     }
 
     private async Task<Result> ReloadAppAsync(
-        QlikCloudConnectedClient client,
+        QlikCloudClient client,
         QlikStepExecution step,
         QlikStepExecutionAttempt attempt,
         QlikAppReloadSettings reloadSettings,
@@ -124,7 +124,7 @@ internal class QlikStepExecutor(
     }
 
     private async Task<Result> RunAutomationAsync(
-        QlikCloudConnectedClient client,
+        QlikCloudClient client,
         QlikStepExecution step,
         QlikStepExecutionAttempt attempt,
         QlikAutomationRunSettings runSettings,
@@ -209,7 +209,7 @@ internal class QlikStepExecutor(
     }
 
     private async Task CancelReloadAsync(
-        QlikCloudConnectedClient client,
+        QlikCloudClient client,
         QlikStepExecution step,
         QlikStepExecutionAttempt attempt,
         string reloadId)
@@ -226,7 +226,7 @@ internal class QlikStepExecutor(
     }
 
     private async Task CancelRunAsync(
-        QlikCloudConnectedClient client,
+        QlikCloudClient client,
         QlikStepExecution step,
         QlikStepExecutionAttempt attempt,
         string automationId,

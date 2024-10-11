@@ -21,7 +21,7 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     [Parameter] public IEnumerable<AppRegistration> AppRegistrations { get; set; } = [];
 
-    [Parameter] public IEnumerable<QlikCloudClient> QlikClients { get; set; } = [];
+    [Parameter] public IEnumerable<QlikCloudEnvironment> QlikClients { get; set; } = [];
 
     [Parameter] public IEnumerable<DatabricksWorkspace> DatabricksWorkspaces { get; set; } = [];
 

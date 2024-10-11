@@ -36,7 +36,7 @@ public partial class QlikStepEditModal : StepEditModal<QlikStep>
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
             TimeoutMinutes = 0,
-            QlikCloudClientId = client.QlikCloudClientId
+            QlikCloudEnvironmentId = client.QlikCloudEnvironmentId
         };
     }
 
@@ -75,7 +75,7 @@ public partial class QlikStepEditModal : StepEditModal<QlikStep>
     private Task OpenAppSelectOffcanvas()
     {
         ArgumentNullException.ThrowIfNull(Step);
-        return appSelectOffcanvas.LetAsync(x => x.ShowAsync(Step.QlikCloudClientId));
+        return appSelectOffcanvas.LetAsync(x => x.ShowAsync(Step.QlikCloudEnvironmentId));
     }
 
     private async Task<QlikApp?> ResolveAppFromValueAsync(string value)
@@ -86,7 +86,7 @@ public partial class QlikStepEditModal : StepEditModal<QlikStep>
             {
                 var workspace = QlikClients?.FirstOrDefault();
                 ArgumentNullException.ThrowIfNull(workspace);
-                using var client = workspace.CreateConnectedClient(HttpClientFactory);
+                using var client = workspace.CreateClient(HttpClientFactory);
                 var spaces = await client.GetAppsAsync();
                 apps = spaces.SelectMany(s => s.Apps).OrderBy(a => a.Name).ToArray();
             }
@@ -108,7 +108,7 @@ public partial class QlikStepEditModal : StepEditModal<QlikStep>
             {
                 var workspace = QlikClients?.FirstOrDefault();
                 ArgumentNullException.ThrowIfNull(workspace);
-                using var client = workspace.CreateConnectedClient(HttpClientFactory);
+                using var client = workspace.CreateClient(HttpClientFactory);
                 var spaces = await client.GetAppsAsync();
                 apps = spaces.SelectMany(s => s.Apps).OrderBy(a => a.Name).ToArray();
             }
@@ -134,7 +134,7 @@ public partial class QlikStepEditModal : StepEditModal<QlikStep>
             {
                 var workspace = QlikClients?.FirstOrDefault();
                 ArgumentNullException.ThrowIfNull(workspace);
-                using var client = workspace.CreateConnectedClient(HttpClientFactory);
+                using var client = workspace.CreateClient(HttpClientFactory);
                 var automations = await client.GetAutomationsAsync();
                 this.automations = automations.OrderBy(a => a.Name).ToArray();
             }
@@ -156,7 +156,7 @@ public partial class QlikStepEditModal : StepEditModal<QlikStep>
             {
                 var workspace = QlikClients?.FirstOrDefault();
                 ArgumentNullException.ThrowIfNull(workspace);
-                using var client = workspace.CreateConnectedClient(HttpClientFactory);
+                using var client = workspace.CreateClient(HttpClientFactory);
                 var automations = await client.GetAutomationsAsync();
                 this.automations = automations.OrderBy(a => a.Name).ToArray();
             }

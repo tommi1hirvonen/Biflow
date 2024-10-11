@@ -14,17 +14,17 @@ public class QlikStep : Step, IHasTimeout
     public QlikStep(QlikStep other, Job? targetJob) : base(other, targetJob)
     {
         QlikStepSettings = other.QlikStepSettings;
-        QlikCloudClientId = other.QlikCloudClientId;
-        QlikCloudClient = other.QlikCloudClient;
+        QlikCloudEnvironmentId = other.QlikCloudEnvironmentId;
+        QlikCloudEnvironment = other.QlikCloudEnvironment;
     }
 
     public QlikStepSettings QlikStepSettings { get; set; } = new QlikAppReloadSettings();
 
     [Required]
-    public Guid QlikCloudClientId { get; set; }
+    public Guid QlikCloudEnvironmentId { get; set; }
 
     [JsonIgnore]
-    public QlikCloudClient QlikCloudClient { get; set; } = null!;
+    public QlikCloudEnvironment QlikCloudEnvironment { get; set; } = null!;
 
     [Required]
     [Display(Name = "Timeout (min)")]

@@ -54,10 +54,10 @@ public class SerializationTests(SerializationTestsFixture fixture) : IClassFixtu
     public void Serialize_QlikCloudClients()
     {
         var json = JsonSerializer.Serialize(fixture.QlikCloudClients, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
-        var items = JsonSerializer.Deserialize<QlikCloudClient[]>(json, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
+        var items = JsonSerializer.Deserialize<QlikCloudEnvironment[]>(json, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
         Assert.NotNull(items);
         Assert.NotEmpty(items);
-        Assert.All(items, x => Assert.NotEqual(x.QlikCloudClientId, Guid.Empty));
+        Assert.All(items, x => Assert.NotEqual(x.QlikCloudEnvironmentId, Guid.Empty));
         Assert.All(items, x => Assert.Empty(x.ApiToken));
     }
 
@@ -167,7 +167,7 @@ public class SerializationTests(SerializationTestsFixture fixture) : IClassFixtu
             AppRegistrations = fixture.AppRegistrations,
             PipelineClients = fixture.PipelineClients,
             FunctionApps = fixture.FunctionApps,
-            QlikCloudClients = fixture.QlikCloudClients,
+            QlikCloudEnvironments = fixture.QlikCloudClients,
             BlobStorageClients = fixture.BlobStorageClients,
             DatabricksWorkspaces = fixture.DatabricksWorkspaces,
             Jobs = fixture.Jobs,

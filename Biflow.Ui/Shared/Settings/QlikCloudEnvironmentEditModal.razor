@@ -2,23 +2,23 @@
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHttpClientFactory HttpClientFactory
 
-<HxModal @ref="modal" Size="ModalSize.Large" Title="@(client?.QlikCloudClientId == Guid.Empty ? "New Qlik Cloud client" : "Edit " + client?.QlikCloudClientName)">
+<HxModal @ref="modal" Size="ModalSize.Large" Title="@(environment?.QlikCloudEnvironmentId == Guid.Empty ? "New Qlik Cloud environment" : "Edit " + environment?.QlikCloudEnvironmentName)">
     <BodyTemplate>
-        @if (client is not null)
+        @if (environment is not null)
         {
-            <EditForm id="qlik_cloud_client_edit_form" Model="client" OnValidSubmit="SubmitAsync">
+            <EditForm id="qlik_cloud_environment_edit_form" Model="environment" OnValidSubmit="SubmitAsync">
                 <div class="row">
                     <div class="col mx-3">
                         <DataAnnotationsValidator />
                         <ValidationSummary />
 
                         <div>
-                            <label class="form-label">Client name</label>
+                            <label class="form-label">Environment name</label>
                             <div class="input-group">
                                 <div class="input-group-text">
                                     <SvgIcon Icon="FeatherIcon.Edit3" />
                                 </div>
-                                <InputText class="form-control" @bind-Value="client.QlikCloudClientName"></InputText>
+                                <InputText class="form-control" @bind-Value="environment.QlikCloudEnvironmentName"></InputText>
                             </div>
                             
                         </div>
@@ -30,7 +30,7 @@
                                     <div class="input-group-text">
                                         <SvgIcon Icon="FeatherIcon.Link" />
                                     </div>
-                                    <InputText class="form-control" @bind-Value="client.EnvironmentUrl"></InputText>
+                                    <InputText class="form-control" @bind-Value="environment.EnvironmentUrl"></InputText>
                                 </div>
                                 <div class="form-text">e.g. https://mycompany.eu.qlikcloud.com</div>
                             </div>
@@ -43,7 +43,7 @@
                                     <div class="input-group-text">
                                         <SvgIcon Icon="FeatherIcon.Key" />
                                     </div>
-                                    <InputTextArea class="form-control form-control-sm" rows="6" @bind-Value="client.ApiToken"></InputTextArea>
+                                    <InputTextArea class="form-control form-control-sm" rows="6" @bind-Value="environment.ApiToken"></InputTextArea>
                                 </div>
                             </div>
                         </div>
@@ -74,38 +74,38 @@
         }
     </BodyTemplate>
     <FooterTemplate>
-        <HxSubmit form="qlik_cloud_client_edit_form" Color="ThemeColor.Success">@(client?.QlikCloudClientId == Guid.Empty ? "Add" : "Save")</HxSubmit>
+        <HxSubmit form="qlik_cloud_environment_edit_form" Color="ThemeColor.Success">@(environment?.QlikCloudEnvironmentId == Guid.Empty ? "Add" : "Save")</HxSubmit>
         <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>
 
 @code {
     [Parameter]
-    public EventCallback<QlikCloudClient> OnClientSubmit { get; set; }
+    public EventCallback<QlikCloudEnvironment> OnEnvironmentSubmit { get; set; }
 
     private HxModal? modal;
-    private QlikCloudClient? client;
+    private QlikCloudEnvironment? environment;
     private bool? connectionTestSuccess = null;
     private bool testingConnection = false;
 
-    public async Task ShowAsync(Guid clientId)
+    public async Task ShowAsync(Guid environmentId)
     {
-        client = null;
+        environment = null;
         await modal.LetAsync(x => x.ShowAsync());
-        if (clientId != Guid.Empty)
+        if (environmentId != Guid.Empty)
         {
             using var context = await DbContextFactory.CreateDbContextAsync();
-            client = await context.QlikCloudClients
+            environment = await context.QlikCloudEnvironments
                 .AsNoTrackingWithIdentityResolution()
                 .Include(c => c.Steps)
                 .ThenInclude(s => s.Job)
-                .FirstAsync(c => c.QlikCloudClientId == clientId);
+                .FirstAsync(c => c.QlikCloudEnvironmentId == environmentId);
         }
         else
         {
-            client = new()
+            environment = new()
             {
-                QlikCloudClientName = "",
+                QlikCloudEnvironmentName = "",
                 EnvironmentUrl = "",
                 ApiToken = ""
             };
@@ -114,13 +114,13 @@
 
     private async Task TestConnectionAsync()
     {
-        ArgumentNullException.ThrowIfNull(client);
+        ArgumentNullException.ThrowIfNull(environment);
         connectionTestSuccess = null;
         testingConnection = true;
         try
         {
-            using var connectedClient = client.CreateConnectedClient(HttpClientFactory);
-            await connectedClient.TestConnectionAsync();
+            using var client = environment.CreateClient(HttpClientFactory);
+            await client.TestConnectionAsync();
             connectionTestSuccess = true;
         }
         catch (Exception ex)
@@ -133,7 +133,7 @@
 
     private async Task SubmitAsync()
     {
-        await OnClientSubmit.InvokeAsync(client);
+        await OnEnvironmentSubmit.InvokeAsync(environment);
         await modal.LetAsync(x => x.HideAsync());
     }
 }

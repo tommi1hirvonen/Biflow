@@ -30,7 +30,7 @@ public partial class StepsList : ComponentBase
     
     [Parameter] public List<FunctionApp>? FunctionApps { get; set; }
 
-    [Parameter] public List<QlikCloudClient>? QlikCloudClients { get; set; }
+    [Parameter] public List<QlikCloudEnvironment>? QlikCloudClients { get; set; }
 
     [Parameter] public List<DatabricksWorkspace>? DatabricksWorkspaces { get; set; }
 

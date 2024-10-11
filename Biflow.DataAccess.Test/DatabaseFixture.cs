@@ -125,9 +125,9 @@ public class DatabaseFixture : IAsyncLifetime
                 FunctionAppKey = "somefunctionappkey"
             };
 
-            var qlikClient = new QlikCloudClient
+            var qlikClient = new QlikCloudEnvironment
             {
-                QlikCloudClientName = "Test Qlik Cloud Client",
+                QlikCloudEnvironmentName = "Test Qlik Cloud Client",
                 EnvironmentUrl = "https://test-qlik-url.com",
                 ApiToken = "some-api-token"
             };
@@ -428,7 +428,7 @@ public class DatabaseFixture : IAsyncLifetime
                 StepName = "Test step 12",
                 ExecutionPhase = 50,
                 QlikStepSettings = new QlikAppReloadSettings { AppId = "some-app-id"},
-                QlikCloudClient = qlikClient
+                QlikCloudEnvironment = qlikClient
             };
 
             var step13 = new TabularStep

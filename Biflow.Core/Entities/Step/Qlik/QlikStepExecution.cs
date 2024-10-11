@@ -4,22 +4,22 @@ namespace Biflow.Core.Entities;
 
 public class QlikStepExecution : StepExecution, IHasTimeout, IHasStepExecutionAttempts<QlikStepExecutionAttempt>
 {
-    public QlikStepExecution(string stepName, Guid qlikCloudClientId) : base(stepName, StepType.Qlik)
+    public QlikStepExecution(string stepName, Guid qlikCloudEnvironmentId) : base(stepName, StepType.Qlik)
     {
-        QlikCloudClientId = qlikCloudClientId;
+        QlikCloudEnvironmentId = qlikCloudEnvironmentId;
     }
 
     public QlikStepExecution(QlikStep step, Execution execution) : base(step, execution)
     {
         QlikStepSettings = step.QlikStepSettings;
-        QlikCloudClientId = step.QlikCloudClientId;
+        QlikCloudEnvironmentId = step.QlikCloudEnvironmentId;
         TimeoutMinutes = step.TimeoutMinutes;
         AddAttempt(new QlikStepExecutionAttempt(this));
     }
 
     public QlikStepSettings QlikStepSettings { get; private set; } = new QlikAppReloadSettings();
 
-    public Guid QlikCloudClientId { get; private set; }
+    public Guid QlikCloudEnvironmentId { get; private set; }
 
     public double TimeoutMinutes { get; private set; }
 
@@ -36,28 +36,28 @@ public class QlikStepExecution : StepExecution, IHasTimeout, IHasStepExecutionAt
     }
 
     /// <summary>
-    /// Get the <see cref="QlikCloudClient"/> entity associated with this <see cref="StepExecution"/>.
-    /// The method <see cref="SetClient(QlikCloudClient?)"/> will need to have been called first for the <see cref="QlikCloudClient"/> to be available.
+    /// Get the <see cref="QlikCloudEnvironment"/> entity associated with this <see cref="StepExecution"/>.
+    /// The method <see cref="SetEnvironment(QlikCloudEnvironment?)"/> will need to have been called first for the <see cref="QlikCloudEnvironment"/> to be available.
     /// </summary>
-    /// <returns><see cref="QlikCloudClient"/> if it was previously set using <see cref="SetClient(QlikCloudClient?)"/> with a non-null object; <see langword="null"/> otherwise.</returns>
-    public QlikCloudClient? GetClient() => _client;
+    /// <returns><see cref="QlikCloudEnvironment"/> if it was previously set using <see cref="SetEnvironment(QlikCloudEnvironment?)"/> with a non-null object; <see langword="null"/> otherwise.</returns>
+    public QlikCloudEnvironment? GetEnvironment() => _environment;
 
     /// <summary>
-    /// Set the private <see cref="QlikCloudClient"/> object used for containing a possible client reference.
-    /// It can be later accessed using <see cref="GetClient"/>.
+    /// Set the private <see cref="QlikCloudEnvironment"/> object used for containing a possible client reference.
+    /// It can be later accessed using <see cref="GetEnvironment"/>.
     /// </summary>
-    /// <param name="client"><see cref="QlikCloudClient"/> reference to store.
+    /// <param name="environment"><see cref="QlikCloudEnvironment"/> reference to store.
     /// The QlikCloudClientIds are compared and the value is set only if the ids match.</param>
-    public void SetClient(QlikCloudClient? client)
+    public void SetEnvironment(QlikCloudEnvironment? environment)
     {
-        if (client?.QlikCloudClientId == QlikCloudClientId)
+        if (environment?.QlikCloudEnvironmentId == QlikCloudEnvironmentId)
         {
-            _client = client;
+            _environment = environment;
         }
     }
 
     // Use a field excluded from the EF model to store the client reference.
     // This is to avoid generating a foreign key constraint on the ExecutionStep table caused by a navigation property.
     // Make it private with public method access so that it is not used in EF Include method calls by accident.
-    private QlikCloudClient? _client;
+    private QlikCloudEnvironment? _environment;
 }

@@ -65,9 +65,9 @@
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
-                <NavLink class="nav-link" href="settings/qlikcloudclients">
+                <NavLink class="nav-link" href="settings/qlikcloudenvironments">
                     <SvgIcon Icon="LucideIcon.ScatterChart" />
-                    Qlik Cloud Clients
+                    Qlik Cloud environments
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
@@ -143,10 +143,10 @@ else if (Page == "functionapps")
         <FunctionAppsList />
     </AuthorizeView>
 }
-else if (Page == "qlikcloudclients")
+else if (Page == "qlikcloudenvironments")
 {
     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
-        <QlikCloudClientsList />
+        <QlikCloudEnvironmentsList />
     </AuthorizeView>
 }
 else if (Page == "databricksworkspaces")

@@ -6,8 +6,8 @@
 
 <HxButton Color="ThemeColor.Success"
 @onclick="() => ShowEditModal(null)"
-          Enabled="clients is not null">
-    Add Qlik Cloud Client
+          Enabled="environments is not null">
+    Add Qlik Cloud environment
 </HxButton>
 
 <div class="card shadow-sm pt-2 my-4">
@@ -26,27 +26,27 @@
             </tr>
         </thead>
         <tbody>
-            @if (clients is null)
+            @if (environments is null)
             {
                 <tr><td colspan="5" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
-            else if (clients.Count == 0)
+            else if (environments.Count == 0)
             {
-                <tr><td colspan="5">No Qlik Cloud clients</td></tr>
+                <tr><td colspan="5">No Qlik Cloud environments</td></tr>
             }
             else
             {
-                @foreach (var client in clients.OrderBy(c => c.QlikCloudClientName))
+                @foreach (var environment in environments.OrderBy(c => c.QlikCloudEnvironmentName))
                 {
-                    var jobs = client.Steps.Select(s => s.Job).Distinct().Count();
-                    var steps = client.Steps.Count();
+                    var jobs = environment.Steps.Select(s => s.Job).Distinct().Count();
+                    var steps = environment.Steps.Count();
                     <tr>
                         <td class="align-middle">
-                            @client.QlikCloudClientName
+                            @environment.QlikCloudEnvironmentName
                         </td>
                         <td class="align-middle">
                             <HxButtonGroup Size="ButtonGroupSize.Small">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="() => ShowEditModal(client)">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="() => ShowEditModal(environment)">
                                     <SvgIcon Icon="FeatherIcon.Edit2" />
                                 </HxButton>
                                 <HxDropdownButtonGroup>
@@ -55,13 +55,13 @@
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
                                         <HxDropdownHeader>Delete?</HxDropdownHeader>
-                                        <HxDropdownItem @onclick="() => DeleteClientAsync(client)">Confirm</HxDropdownItem>
+                                        <HxDropdownItem @onclick="() => DeleteEnvironmentAsync(environment)">Confirm</HxDropdownItem>
                                     </HxDropdownMenu>
                                 </HxDropdownButtonGroup>
                             </HxButtonGroup>
                         </td>
                         <td class="align-middle">
-                            @client.EnvironmentUrl
+                            @environment.EnvironmentUrl
                         </td>
                         <td class="align-middle">
                             @(jobs > 0 ? $"{jobs} job(s)" : null)
@@ -70,7 +70,7 @@
                             <a class="text-body" href="javascript:void(0)"
                             @onclick="async () =>
                             {
-                                stepsClient = client;
+                                stepsEnvironment = environment;
                                 await stepsModal.LetAsync(x => x.ShowAsync());
                             }">
                                 @(steps > 0 ? $"{steps} step(s)" : null)
@@ -83,9 +83,9 @@
     </table>
 </div>
 
-<QlikCloudClientEditModal @ref="editModal" OnClientSubmit="OnClientSubmitAsync" />
+<QlikCloudEnvironmentEditModal @ref="editModal" OnEnvironmentSubmit="OnEnvironmentSubmitAsync" />
 
-<HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsClient?.QlikCloudClientName}")">
+<HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsEnvironment?.QlikCloudEnvironmentName}")">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -97,7 +97,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var step in stepsClient?.Steps
+                        @foreach (var step in stepsEnvironment?.Steps
                         .OrderBy(s => s.Job.JobName)
                         .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
                         {
@@ -123,52 +123,52 @@
 </HxModal>
 
 @code {
-    private List<QlikCloudClient>? clients;
-    private QlikCloudClientEditModal? editModal;
+    private List<QlikCloudEnvironment>? environments;
+    private QlikCloudEnvironmentEditModal? editModal;
 
-    private QlikCloudClient? stepsClient;
+    private QlikCloudEnvironment? stepsEnvironment;
     private HxModal? stepsModal;
 
     protected override async Task OnInitializedAsync()
     {
         using var context = await DbContextFactory.CreateDbContextAsync();
-        clients = await context.QlikCloudClients
+        environments = await context.QlikCloudEnvironments
             .AsNoTrackingWithIdentityResolution()
             .Include(c => c.Steps)
             .ThenInclude(s => s.Job)
             .ToListAsync();
     }
 
-    private async Task DeleteClientAsync(QlikCloudClient client)
+    private async Task DeleteEnvironmentAsync(QlikCloudEnvironment environment)
     {
         try
         {
-            await Mediator.SendAsync(new DeleteQlikCloudClientCommand(client.QlikCloudClientId));
-            clients?.Remove(client);
+            await Mediator.SendAsync(new DeleteQlikCloudEnvironmentCommand(environment.QlikCloudEnvironmentId));
+            environments?.Remove(environment);
         }
         catch (Exception ex)
         {
             var message = ex.InnerException?.Message ?? ex.Message;
-            Toaster.AddError("Error deleting Qlik Cloud client", message);
+            Toaster.AddError("Error deleting Qlik Cloud environment", message);
         }
     }
 
-    private async Task OnClientSubmitAsync(QlikCloudClient client)
+    private async Task OnEnvironmentSubmitAsync(QlikCloudEnvironment environment)
     {
-        if (client.QlikCloudClientId == Guid.Empty)
+        if (environment.QlikCloudEnvironmentId == Guid.Empty)
         {
-            await Mediator.SendAsync(new CreateQlikCloudClientCommand(client));
-            clients?.Add(client);
+            await Mediator.SendAsync(new CreateQlikCloudEnvironmentCommand(environment));
+            environments?.Add(environment);
         }
         else
         {
-            await Mediator.SendAsync(new UpdateQlikCloudClientCommand(client));
-            clients?.RemoveAll(c => c.QlikCloudClientId == client.QlikCloudClientId);
-            clients?.Add(client);
+            await Mediator.SendAsync(new UpdateQlikCloudEnvironmentCommand(environment));
+            environments?.RemoveAll(c => c.QlikCloudEnvironmentId == environment.QlikCloudEnvironmentId);
+            environments?.Add(environment);
         }
         StateHasChanged();
     }
 
-    private async Task ShowEditModal(QlikCloudClient? client) =>
-        await editModal.LetAsync(x => x.ShowAsync(client?.QlikCloudClientId?? Guid.Empty));
+    private async Task ShowEditModal(QlikCloudEnvironment? environment) =>
+        await editModal.LetAsync(x => x.ShowAsync(environment?.QlikCloudEnvironmentId?? Guid.Empty));
 }

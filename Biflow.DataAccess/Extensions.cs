@@ -149,9 +149,9 @@ public static class Extensions
                 equals new { Id = includeEndpoint ? (object?)pipeline.PipelineClientId : false }
                 into pipeline_
             from pipeline in pipeline_.DefaultIfEmpty()
-            join qlik in context.QlikCloudClients
-                on new { Id = includeEndpoint ? (object?)((QlikStepExecution)stepExec).QlikCloudClientId : true }
-                equals new { Id = includeEndpoint ? (object?)qlik.QlikCloudClientId : false }
+            join qlik in context.QlikCloudEnvironments
+                on new { Id = includeEndpoint ? (object?)((QlikStepExecution)stepExec).QlikCloudEnvironmentId : true }
+                equals new { Id = includeEndpoint ? (object?)qlik.QlikCloudEnvironmentId : false }
                 into qlik_
             from qlik in qlik_.DefaultIfEmpty()
             join db in context.DatabricksWorkspaces
@@ -213,7 +213,7 @@ public static class Extensions
                     pipeline.SetClient(step.PipelineStepClient);
                     break;
                 case QlikStepExecution qlik:
-                    qlik.SetClient(step.QlikStepClient);
+                    qlik.SetEnvironment(step.QlikStepClient);
                     break;
                 case DatabricksStepExecution db:
                     db.SetWorkspace(step.DatabricksWorkspace);
@@ -242,7 +242,7 @@ file record StepExecutionProjection(
     AppRegistration? DatasetStepAppRegistration,
     FunctionApp? FunctionStepApp,
     PipelineClient? PipelineStepClient,
-    QlikCloudClient? QlikStepClient,
+    QlikCloudEnvironment? QlikStepClient,
     DatabricksWorkspace? DatabricksWorkspace,
     Credential? ExeStepCredential,
     Step? Step);

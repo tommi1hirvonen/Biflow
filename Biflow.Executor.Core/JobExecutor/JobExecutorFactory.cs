@@ -48,7 +48,7 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
             from function in function_.DefaultIfEmpty()
             join pipeline in context.PipelineClients.Include(a => a.AppRegistration) on ((PipelineStepExecution)step).PipelineClientId equals pipeline.PipelineClientId into pipeline_
             from pipeline in pipeline_.DefaultIfEmpty()
-            join qlik in context.QlikCloudClients on ((QlikStepExecution)step).QlikCloudClientId equals qlik.QlikCloudClientId into qlik_
+            join qlik in context.QlikCloudEnvironments on ((QlikStepExecution)step).QlikCloudEnvironmentId equals qlik.QlikCloudEnvironmentId into qlik_
             from qlik in qlik_.DefaultIfEmpty()
             join db in context.DatabricksWorkspaces on ((DatabricksStepExecution)step).DatabricksWorkspaceId equals db.WorkspaceId into db_
             from db in db_.DefaultIfEmpty()
@@ -98,7 +98,7 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
                     pipeline.SetClient(step.pipeline);
                     break;
                 case QlikStepExecution qlik:
-                    qlik.SetClient(step.qlik);
+                    qlik.SetEnvironment(step.qlik);
                     break;
                 case DatabricksStepExecution db:
                     db.SetWorkspace(step.db);

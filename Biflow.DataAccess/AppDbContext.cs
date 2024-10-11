@@ -73,7 +73,7 @@ public class AppDbContext : DbContext
     public DbSet<ScheduleTag> ScheduleTags => Set<ScheduleTag>();
     public DbSet<MasterDataTable> MasterDataTables => Set<MasterDataTable>();
     public DbSet<MasterDataTableCategory> MasterDataTableCategories => Set<MasterDataTableCategory>();
-    public DbSet<QlikCloudClient> QlikCloudClients => Set<QlikCloudClient>();
+    public DbSet<QlikCloudEnvironment> QlikCloudEnvironments => Set<QlikCloudEnvironment>();
     public DbSet<DatabricksWorkspace> DatabricksWorkspaces => Set<DatabricksWorkspace>();
     public DbSet<StepDataObject> StepDataObjects => Set<StepDataObject>();
     public DbSet<BlobStorageClient> BlobStorageClients => Set<BlobStorageClient>();
