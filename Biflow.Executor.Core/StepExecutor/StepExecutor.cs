@@ -34,16 +34,21 @@ internal abstract class StepExecutor<TStep, TAttempt>(
                 // Update the historized ExecutionParameterValue with the ExecutionParameter's value.
                 foreach (var param in hasParameters.StepExecutionParameters.Where(p => p.InheritFromExecutionParameter is not null))
                 {
-                    context.Attach(param);
                     param.ExecutionParameterValue = param.InheritFromExecutionParameter?.ParameterValue ?? param.ExecutionParameterValue;
+                    await context.Set<StepExecutionParameterBase>()
+                        .Where(x => x.ExecutionId == param.ExecutionId && x.ParameterId == param.ParameterId)
+                        .ExecuteUpdateAsync(x => x
+                            .SetProperty(p => p.ExecutionParameterValue, param.ExecutionParameterValue));
                 }
                 // Also evaluate expressions and save the result to the step parameter's value property.
                 foreach (var param in hasParameters.StepExecutionParameters.Where(p => p.UseExpression))
                 {
-                    context.Attach(param);
                     param.ParameterValue = new(await param.EvaluateAsync());
+                    await context.Set<StepExecutionParameterBase>()
+                        .Where(x => x.ExecutionId == param.ExecutionId && x.ParameterId == param.ParameterId)
+                        .ExecuteUpdateAsync(x => x
+                            .SetProperty(p => p.ParameterValue, param.ParameterValue));
                 }
-                await context.SaveChangesAsync();
             }
             catch (Exception ex)
             {
@@ -60,10 +65,12 @@ internal abstract class StepExecutor<TStep, TAttempt>(
             using var context = _dbContextFactory.CreateDbContext();
             foreach (var param in stepExecution.ExecutionConditionParameters.Where(p => p.ExecutionParameter is not null))
             {
-                context.Attach(param);
                 param.ExecutionParameterValue = param.ExecutionParameter?.ParameterValue ?? param.ExecutionParameterValue;
+                await context.Set<StepExecutionConditionParameter>()
+                    .Where(x => x.ExecutionId == param.ExecutionId && x.ParameterId == param.ParameterId)
+                    .ExecuteUpdateAsync(x => x
+                        .SetProperty(p => p.ExecutionParameterValue, param.ExecutionParameterValue));
             }
-            await context.SaveChangesAsync();
         }
         catch (Exception ex)
         {
@@ -184,8 +191,19 @@ internal abstract class StepExecutor<TStep, TAttempt>(
         attempt.EndedOn = DateTimeOffset.Now;
         attempt.StoppedBy = username;
         attempt.ExecutionStatus = StepExecutionStatus.Stopped;
-        context.Attach(attempt).State = EntityState.Modified; // Full update to account for added messages
-        await context.SaveChangesAsync();
+        // Also account for possibly added messages.
+        await context.StepExecutionAttempts
+            .Where(x => x.ExecutionId == attempt.ExecutionId
+                        && x.StepId == attempt.StepId
+                        && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+            .ExecuteUpdateAsync(x => x
+                .SetProperty(p => p.InfoMessages, attempt.InfoMessages)
+                .SetProperty(p => p.WarningMessages, attempt.WarningMessages)
+                .SetProperty(p => p.ErrorMessages, attempt.ErrorMessages)
+                .SetProperty(p => p.ExecutionStatus, attempt.ExecutionStatus)
+                .SetProperty(p => p.StoppedBy, attempt.StoppedBy)
+                .SetProperty(p => p.StartedOn, attempt.StartedOn)
+                .SetProperty(p => p.EndedOn, attempt.EndedOn));
     }
 
     private async Task UpdateExecutionFailedAsync(StepExecutionAttempt attempt, StepExecutionStatus status)
@@ -194,44 +212,72 @@ internal abstract class StepExecutor<TStep, TAttempt>(
         attempt.ExecutionStatus = status;
         attempt.StartedOn ??= DateTimeOffset.Now;
         attempt.EndedOn = DateTimeOffset.Now;
-        context.Attach(attempt).State = EntityState.Modified; // Full update to account for added messages
-        await context.SaveChangesAsync();
+        // Also account for possibly added messages.
+        await context.StepExecutionAttempts
+            .Where(x => x.ExecutionId == attempt.ExecutionId
+                        && x.StepId == attempt.StepId
+                        && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+            .ExecuteUpdateAsync(x => x
+                .SetProperty(p => p.InfoMessages, attempt.InfoMessages)
+                .SetProperty(p => p.WarningMessages, attempt.WarningMessages)
+                .SetProperty(p => p.ErrorMessages, attempt.ErrorMessages)
+                .SetProperty(p => p.ExecutionStatus, attempt.ExecutionStatus)
+                .SetProperty(p => p.StartedOn, attempt.StartedOn)
+                .SetProperty(p => p.EndedOn, attempt.EndedOn));
     }
 
     private async Task UpdateExecutionSucceededAsync(StepExecutionAttempt attempt)
     {
         using var context = _dbContextFactory.CreateDbContext();
-        var status = !attempt.WarningMessages.Any()
+        attempt.ExecutionStatus = !attempt.WarningMessages.Any()
             ? StepExecutionStatus.Succeeded
             : StepExecutionStatus.Warning;
-
-        attempt.ExecutionStatus = status;
         attempt.EndedOn = DateTimeOffset.Now;
-        context.Attach(attempt).State = EntityState.Modified; // Full update to account for added messages
-        await context.SaveChangesAsync();
+        // Also account for possibly added messages.
+        await context.StepExecutionAttempts
+            .Where(x => x.ExecutionId == attempt.ExecutionId
+                        && x.StepId == attempt.StepId
+                        && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+            .ExecuteUpdateAsync(x => x
+                .SetProperty(p => p.InfoMessages, attempt.InfoMessages)
+                .SetProperty(p => p.WarningMessages, attempt.WarningMessages)
+                .SetProperty(p => p.ErrorMessages, attempt.ErrorMessages)
+                .SetProperty(p => p.ExecutionStatus, attempt.ExecutionStatus)
+                .SetProperty(p => p.EndedOn, attempt.EndedOn));
     }
 
     private async Task UpdateExecutionStoppedAsync(StepExecution stepExecution, string username)
     {
         using var context = _dbContextFactory.CreateDbContext();
+        var now = DateTimeOffset.Now;
         foreach (var attempt in stepExecution.StepExecutionAttempts)
         {
-            context.Attach(attempt);
             attempt.ExecutionStatus = StepExecutionStatus.Stopped;
-            attempt.StartedOn = DateTimeOffset.Now;
-            attempt.EndedOn = DateTimeOffset.Now;
+            attempt.StartedOn = now;
+            attempt.EndedOn = now;
             attempt.StoppedBy = username;
         }
-        await context.SaveChangesAsync();
+        await context.StepExecutionAttempts
+            .Where(x => x.ExecutionId == stepExecution.ExecutionId && x.StepId == stepExecution.StepId)
+            .ExecuteUpdateAsync(x => x
+                .SetProperty(p => p.ExecutionStatus, StepExecutionStatus.Stopped)
+                .SetProperty(p => p.StartedOn, now)
+                .SetProperty(p => p.EndedOn, now)
+                .SetProperty(p => p.StoppedBy, username));
     }
 
     private async Task UpdateExecutionRunningAsync(StepExecutionAttempt attempt)
     {
         using var context = _dbContextFactory.CreateDbContext();
-        context.Attach(attempt);
         attempt.StartedOn = DateTimeOffset.Now;
         attempt.ExecutionStatus = StepExecutionStatus.Running;
-        await context.SaveChangesAsync();
+        await context.StepExecutionAttempts
+            .Where(x => x.ExecutionId == attempt.ExecutionId
+                        && x.StepId == attempt.StepId
+                        && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+            .ExecuteUpdateAsync(x => x
+                .SetProperty(p => p.StartedOn, attempt.StartedOn)
+                .SetProperty(p => p.ExecutionStatus, attempt.ExecutionStatus));
     }
 
     private async Task UpdateExecutionSkippedAsync(StepExecution stepExecution, string infoMessage)
@@ -239,12 +285,19 @@ internal abstract class StepExecutor<TStep, TAttempt>(
         using var context = _dbContextFactory.CreateDbContext();
         foreach (var attempt in stepExecution.StepExecutionAttempts)
         {
-            context.Attach(attempt);
             attempt.ExecutionStatus = StepExecutionStatus.Skipped;
             attempt.StartedOn = DateTimeOffset.Now;
             attempt.EndedOn = DateTimeOffset.Now;
             attempt.AddOutput(infoMessage);
+            await context.StepExecutionAttempts
+                .Where(x => x.ExecutionId == stepExecution.ExecutionId
+                            && x.StepId == stepExecution.StepId
+                            && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+                .ExecuteUpdateAsync(x => x
+                    .SetProperty(p => p.ExecutionStatus, attempt.ExecutionStatus)
+                    .SetProperty(p => p.StartedOn, attempt.StartedOn)
+                    .SetProperty(p => p.EndedOn, attempt.EndedOn)
+                    .SetProperty(p => p.InfoMessages, attempt.InfoMessages));
         }
-        await context.SaveChangesAsync();
     }
 }

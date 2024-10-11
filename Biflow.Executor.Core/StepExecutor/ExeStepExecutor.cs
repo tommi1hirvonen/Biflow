@@ -82,9 +82,10 @@ internal class ExeStepExecutor(
         {
             using var context = _dbContextFactory.CreateDbContext();
             attempt.ExeProcessId = process.Id;
-            context.Attach(attempt);
-            context.Entry(attempt).Property(p => p.ExeProcessId).IsModified = true;
-            await context.SaveChangesAsync(CancellationToken.None);
+            await context.Set<ExeStepExecutionAttempt>()
+                .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+                .ExecuteUpdateAsync(x => x
+                    .SetProperty(p => p.ExeProcessId, attempt.ExeProcessId), CancellationToken.None);
         }
         catch (Exception ex)
         {

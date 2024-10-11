@@ -89,7 +89,7 @@
                         <span>
                             Execution mode:
                             &nbsp;
-                            <SvgIcon Icon="FeatherIcon.Layers" />
+                            <SvgIcon Icon="LucideIcon.Layers3" />
                             Execution phase
                         </span>
                     }
@@ -251,7 +251,7 @@
                                                         Tags
                                                     </HxDropdownItem>
                                                     <HxDropdownItem OnClick="() => batchEditExecPhaseModal.LetAsync(x => x.ShowAsync())">
-                                                        <SvgIcon Icon="FeatherIcon.Layers" />
+                                                        <SvgIcon Icon="LucideIcon.Layers3" />
                                                         Execution phase
                                                     </HxDropdownItem>
                                                     <HxDropdownItem OnClick="() => batchEditRetriesModal.LetAsync(x => x.ShowAsync())">
@@ -330,7 +330,7 @@
                                 </div>
                                 <div class="col-xl-2 col-sm-4 col-6 d-inline-flex align-items-center justify-content-start">
                                     <div class="justify-content-end @(Job.ExecutionMode == ExecutionMode.Dependency ? "text-body-tertiary" : "text-body")">
-                                        <SvgIcon Icon="FeatherIcon.Layers" />
+                                        <SvgIcon Icon="LucideIcon.Layers3" />
                                         <sup>@item.ExecutionPhase</sup>
                                     </div>
 
@@ -544,6 +544,7 @@
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        DatabricksWorkspaces="DatabricksWorkspaces"
         Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <TabularStepEditModal @ref="stepEditModals[StepType.Tabular]"
@@ -552,6 +553,7 @@
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        DatabricksWorkspaces="DatabricksWorkspaces"
         Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <EmailStepEditModal @ref="stepEditModals[StepType.Email]"
@@ -560,6 +562,7 @@
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        DatabricksWorkspaces="DatabricksWorkspaces"
         Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <AgentJobStepEditModal @ref="stepEditModals[StepType.AgentJob]"
@@ -568,6 +571,7 @@
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        DatabricksWorkspaces="DatabricksWorkspaces"
         Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <DatasetStepEditModal @ref="stepEditModals[StepType.Dataset]"
@@ -576,6 +580,7 @@
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        DatabricksWorkspaces="DatabricksWorkspaces"
         Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <ExeStepEditModal @ref="stepEditModals[StepType.Exe]"
@@ -584,6 +589,7 @@
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        DatabricksWorkspaces="DatabricksWorkspaces"
         Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <JobStepEditModal @ref="stepEditModals[StepType.Job]"
@@ -592,6 +598,7 @@
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        DatabricksWorkspaces="DatabricksWorkspaces"
         Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <FunctionStepEditModal @ref="stepEditModals[StepType.Function]"
@@ -601,6 +608,7 @@
         FunctionApps="FunctionApps"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        DatabricksWorkspaces="DatabricksWorkspaces"
         Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <PackageStepEditModal @ref="stepEditModals[StepType.Package]"
@@ -609,6 +617,7 @@
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        DatabricksWorkspaces="DatabricksWorkspaces"
         Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
     <PipelineStepEditModal @ref="stepEditModals[StepType.Pipeline]"
@@ -617,6 +626,7 @@
         AsConnections="AsConnections"
         AppRegistrations="AppRegistrations"
         QlikClients="QlikCloudClients"
+        DatabricksWorkspaces="DatabricksWorkspaces"
         Credentials="Credentials"
         PipelineClients="PipelineClients"
         OnStepSubmit="OnStepSubmit" />
@@ -626,6 +636,16 @@
         MsSqlConnections="MsSqlConnections"
         AsConnections="AsConnections"
         QlikClients="QlikCloudClients"
+        DatabricksWorkspaces="DatabricksWorkspaces"
+        Credentials="Credentials"
+        OnStepSubmit="OnStepSubmit" />
+    <DatabricksStepEditModal @ref="stepEditModals[StepType.Databricks]"
+        SqlConnections="SqlConnections"
+        MsSqlConnections="MsSqlConnections"
+        AsConnections="AsConnections"
+        AppRegistrations="AppRegistrations"
+        QlikClients="QlikCloudClients"
+        DatabricksWorkspaces="DatabricksWorkspaces"
         Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
 </AuthorizeView>

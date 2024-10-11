@@ -86,6 +86,8 @@
         </div>
         <StepParametersEditor Step="Step"
                               NewParameterDelegate="() => new() { Step = Step }"
-                              OnImportParameters="Connection is MsSqlConnection ? ImportParametersAsync : null" />
+                              OnImportParameters="Connection is MsSqlConnection ? ImportParametersAsync : null"
+                              Title="SQL parameters"
+                              InfoContent="@ParametersInfoContent" />
     }
 </StepEditModalTemplate>

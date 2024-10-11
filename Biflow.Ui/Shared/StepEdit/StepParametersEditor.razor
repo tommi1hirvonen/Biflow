@@ -4,16 +4,22 @@
 {
     <p />
     <h5>
-        Parameters
+        @Title
         &nbsp;
-        <HxPopover Placement="PopoverPlacement.Right" Trigger="PopoverTrigger.Hover" Html Sanitize="false"
-                    Content="@("<div><p>Use parameters to dynamically pass values to the step during execution.</p><p>Parameters are matched using their names. Let's say you have defined a parameter named <code>@MyStringParam</code> with a value of <code>Hello World!</code>. Using the parameter's name in the step's supported properties will replace the name with the parameter value during execution. For example, a SQL statement like <code>exec MyProcedure @MyStringParam</code> will become <code>exec MyProcedure 'Hello World!'</code></p></div>")">
-            <ChildContent>
-                <span style="cursor: pointer;">
-                    <SvgIcon Icon="FeatherIcon.Info" />
-                </span>
-            </ChildContent>
-        </HxPopover>
+        @if (!string.IsNullOrEmpty(InfoContent))
+        {
+            <HxPopover Placement="PopoverPlacement.Right"
+                       Trigger="PopoverTrigger.Hover"
+                       Html
+                       Sanitize="false"
+                       Content="@InfoContent">
+                <ChildContent>
+                    <span style="cursor: pointer;">
+                        <SvgIcon Icon="FeatherIcon.Info" />
+                    </span>
+                </ChildContent>
+            </HxPopover>
+        }
     </h5>
     <table id="parameters_table" class="table table-sm">
         <thead>
@@ -123,6 +129,10 @@
     [Parameter, EditorRequired] public Func<TParameter>? NewParameterDelegate { get; set; }
 
     [Parameter] public Func<Task>? OnImportParameters { get; set; }
+
+    [Parameter] public string? Title { get; set; }
+
+    [Parameter] public string? InfoContent { get; set; }
 
     private ExpressionEditOffcanvas<StepParameterBase>? expressionEditOffcanvas;
     private bool loadingParameters = false;

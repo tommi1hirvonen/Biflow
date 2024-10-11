@@ -97,9 +97,10 @@ internal class FunctionStepExecutor(
         {
             using var context = _dbContextFactory.CreateDbContext();
             attempt.FunctionInstanceId = startResponse.Id;
-            context.Attach(attempt);
-            context.Entry(attempt).Property(e => e.FunctionInstanceId).IsModified = true;
-            await context.SaveChangesAsync(CancellationToken.None);
+            await context.Set<FunctionStepExecutionAttempt>()
+                .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+                .ExecuteUpdateAsync(x => x
+                    .SetProperty(p => p.FunctionInstanceId, attempt.FunctionInstanceId), CancellationToken.None);
         }
         catch (Exception ex)
         {

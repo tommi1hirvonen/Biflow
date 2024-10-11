@@ -11,4 +11,6 @@ public class UserState
     public Dictionary<Guid, ExpandStatus> DataTableCategoryExpandStatuses { get; } = [];
 
     public VersionsPageState Versions { get; } = new();
+
+    public StepEditState StepEdit { get; } = new();
 }

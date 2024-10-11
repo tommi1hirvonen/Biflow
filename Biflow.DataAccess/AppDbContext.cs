@@ -42,6 +42,7 @@ public class AppDbContext : DbContext
     public DbSet<TabularStep> TabularSteps => Set<TabularStep>();
     public DbSet<EmailStep> EmailSteps => Set<EmailStep>();
     public DbSet<QlikStep> QlikSteps => Set<QlikStep>();
+    public DbSet<DatabricksStep> DatabricksSteps => Set<DatabricksStep>();
     public DbSet<DataObject> DataObjects => Set<DataObject>();
     public DbSet<Execution> Executions => Set<Execution>();
     public DbSet<StepExecution> StepExecutions => Set<StepExecution>();
@@ -72,7 +73,8 @@ public class AppDbContext : DbContext
     public DbSet<ScheduleTag> ScheduleTags => Set<ScheduleTag>();
     public DbSet<MasterDataTable> MasterDataTables => Set<MasterDataTable>();
     public DbSet<MasterDataTableCategory> MasterDataTableCategories => Set<MasterDataTableCategory>();
-    public DbSet<QlikCloudClient> QlikCloudClients => Set<QlikCloudClient>();
+    public DbSet<QlikCloudEnvironment> QlikCloudEnvironments => Set<QlikCloudEnvironment>();
+    public DbSet<DatabricksWorkspace> DatabricksWorkspaces => Set<DatabricksWorkspace>();
     public DbSet<StepDataObject> StepDataObjects => Set<StepDataObject>();
     public DbSet<BlobStorageClient> BlobStorageClients => Set<BlobStorageClient>();
     public DbSet<EnvironmentVersion> EnvironmentVersions => Set<EnvironmentVersion>();

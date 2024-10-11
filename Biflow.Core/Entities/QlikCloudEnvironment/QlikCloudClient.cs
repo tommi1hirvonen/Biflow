@@ -3,9 +3,13 @@ using System.Text.Json;
 
 namespace Biflow.Core.Entities;
 
-public class QlikCloudConnectedClient : IDisposable
+public class QlikCloudClient : IDisposable
 {
-    public QlikCloudConnectedClient(QlikCloudClient qlikClient, IHttpClientFactory httpClientFactory)
+    private readonly HttpClient _httpClient;
+
+    private static readonly JsonSerializerOptions DeserializerOptions = new() { PropertyNameCaseInsensitive = true };
+
+    public QlikCloudClient(QlikCloudEnvironment qlikClient, IHttpClientFactory httpClientFactory)
     {
         _httpClient = httpClientFactory.CreateClient();
         _httpClient.DefaultRequestHeaders.Authorization = new("Bearer", qlikClient.ApiToken);
@@ -14,10 +18,6 @@ public class QlikCloudConnectedClient : IDisposable
             : $"{qlikClient.EnvironmentUrl}/";
         _httpClient.BaseAddress = new Uri(url);
     }
-
-    private readonly HttpClient _httpClient;
-
-    private static readonly JsonSerializerOptions DeserializerOptions = new() { PropertyNameCaseInsensitive = true };
 
     public async Task TestConnectionAsync(CancellationToken cancellationToken = default)
     {
@@ -43,12 +43,36 @@ public class QlikCloudConnectedClient : IDisposable
         return reload;
     }
 
+    public async Task<QlikAutomationRun> RunAutomationAsync(string automationId, CancellationToken cancellationToken = default)
+    {
+        var postRunUrl = $"api/v1/automations/{automationId}/runs";
+        var message = new
+        {
+            context = "api"
+        };
+        var response = await _httpClient.PostAsJsonAsync(postRunUrl, message, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+        ArgumentNullException.ThrowIfNull(responseBody);
+        var run = JsonSerializer.Deserialize<QlikAutomationRun>(responseBody, DeserializerOptions)
+            ?? throw new ApplicationException("Run response was null");
+        return run;
+    }
+
     public async Task<QlikAppReload> GetReloadAsync(string reloadId, CancellationToken cancellationToken = default)
     {
         var getReloadUrl = $"api/v1/reloads/{reloadId}";
         var reload = await _httpClient.GetFromJsonAsync<QlikAppReload>(getReloadUrl, cancellationToken)
             ?? throw new ApplicationException("Reload response was null");
         return reload;
+    }
+
+    public async Task<QlikAutomationRun> GetRunAsync(string automationId, string runId, CancellationToken cancellationToken = default)
+    {
+        var getRunUrl = $"api/v1/automations/{automationId}/runs/{runId}";
+        var run = await _httpClient.GetFromJsonAsync<QlikAutomationRun>(getRunUrl, cancellationToken)
+            ?? throw new ApplicationException("Run response was null");
+        return run;
     }
 
     public async Task CancelReloadAsync(string reloadId, CancellationToken cancellationToken = default)
@@ -58,12 +82,27 @@ public class QlikCloudConnectedClient : IDisposable
         response.EnsureSuccessStatusCode();
     }
 
+    public async Task CancelRunAsync(string automationId, string runId, CancellationToken cancellationToken = default)
+    {
+        var cancelUrl = $"api/v1/automations/{automationId}/runs/{runId}/actions/stop";
+        var response = await _httpClient.PostAsync(cancelUrl , null, cancellationToken);
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task<string> GetAppNameAsync(string appId, CancellationToken cancellationToken = default)
     {
         var url = $"api/v1/apps/{appId}";
         var response = await _httpClient.GetFromJsonAsync<GetAppResponse>(url, cancellationToken);
         ArgumentNullException.ThrowIfNull(response);
         return response.Attributes.Name;
+    }
+
+    public async Task<string> GetAutomationNameAsync(string automationId, CancellationToken cancellationToken = default)
+    {
+        var url = $"api/v1/automations/{automationId}";
+        var response = await _httpClient.GetFromJsonAsync<QlikAutomation>(url, cancellationToken);
+        ArgumentNullException.ThrowIfNull(response);
+        return response.Name;
     }
 
     public async Task<IEnumerable<QlikSpace>> GetAppsAsync(CancellationToken cancellationToken = default)
@@ -97,6 +136,20 @@ public class QlikCloudConnectedClient : IDisposable
         return result;
     }
 
+    public async Task<IEnumerable<QlikAutomation>> GetAutomationsAsync(CancellationToken cancellationToken = default)
+    {
+        var url = "api/v1/automations?limit=200";
+        var items = new List<QlikAutomation>();
+        do
+        {
+            var response = await _httpClient.GetFromJsonAsync<GetAutomationsResponse>(url, cancellationToken);
+            ArgumentNullException.ThrowIfNull(response);
+            items.AddRange(response.Data);
+            url = response.Links.Next?.Href;
+        } while (url is not null);
+        return items;
+    }
+
     private static async Task<IEnumerable<SpaceData>> GetSpacesAsync(HttpClient httpClient, CancellationToken cancellationToken)
     {
         var url = "api/v1/spaces?limit=100";
@@ -126,6 +179,8 @@ public class QlikCloudConnectedClient : IDisposable
     private record GetSpacesResponse(SpaceData[] Data, Links Links);
 
     private record SpaceData(string Id, string Name);
+
+    private record GetAutomationsResponse(QlikAutomation[] Data, Links Links);
 
     private record Links(Link? Next);
 

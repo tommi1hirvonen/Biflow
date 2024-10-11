@@ -2,48 +2,48 @@
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHttpClientFactory HttpClientFactory
 
-<HxModal @ref="modal" Size="ModalSize.Large" Title="@(client?.QlikCloudClientId == Guid.Empty ? "New Qlik Cloud client" : "Edit " + client?.QlikCloudClientName)">
+<HxModal @ref="modal" Size="ModalSize.Large" Title="@(workspace?.WorkspaceId == Guid.Empty ? "New Databricks workspace" : "Edit " + workspace?.WorkspaceName)">
     <BodyTemplate>
-        @if (client is not null)
+        @if (workspace is not null)
         {
-            <EditForm id="qlik_cloud_client_edit_form" Model="client" OnValidSubmit="SubmitAsync">
+            <EditForm id="databricks_workspace_edit_form" Model="workspace" OnValidSubmit="SubmitAsync">
                 <div class="row">
                     <div class="col mx-3">
                         <DataAnnotationsValidator />
                         <ValidationSummary />
 
                         <div>
-                            <label class="form-label">Client name</label>
+                            <label class="form-label">Workspace name</label>
                             <div class="input-group">
                                 <div class="input-group-text">
                                     <SvgIcon Icon="FeatherIcon.Edit3" />
                                 </div>
-                                <InputText class="form-control" @bind-Value="client.QlikCloudClientName"></InputText>
+                                <InputText class="form-control" @bind-Value="workspace.WorkspaceName"></InputText>
                             </div>
-                            
+
                         </div>
 
                         <div class="row mt-3">
                             <div class="col-lg">
-                                <label class="form-label">Environment url</label>
+                                <label class="form-label">Workspace url</label>
                                 <div class="input-group">
                                     <div class="input-group-text">
                                         <SvgIcon Icon="FeatherIcon.Link" />
                                     </div>
-                                    <InputText class="form-control" @bind-Value="client.EnvironmentUrl"></InputText>
+                                    <InputText class="form-control" @bind-Value="workspace.WorkspaceUrl"></InputText>
                                 </div>
-                                <div class="form-text">e.g. https://mycompany.eu.qlikcloud.com</div>
+                                <div class="form-text">e.g. https://my-databricks.12.azuredatabricks.net</div>
                             </div>
                         </div>
 
                         <div class="row mt-3">
                             <div class="col-lg">
-                                <label class="form-label">API key</label>
+                                <label class="form-label">Token</label>
                                 <div class="input-group">
                                     <div class="input-group-text">
                                         <SvgIcon Icon="FeatherIcon.Key" />
                                     </div>
-                                    <InputTextArea class="form-control form-control-sm" rows="6" @bind-Value="client.ApiToken"></InputTextArea>
+                                    <InputTextArea class="form-control form-control-sm" rows="6" @bind-Value="workspace.ApiToken"></InputTextArea>
                                 </div>
                             </div>
                         </div>
@@ -68,59 +68,55 @@
                                 }
                             </div>
                         </div>
+
                     </div>
                 </div>
             </EditForm>
         }
     </BodyTemplate>
     <FooterTemplate>
-        <HxSubmit form="qlik_cloud_client_edit_form" Color="ThemeColor.Success">@(client?.QlikCloudClientId == Guid.Empty ? "Add" : "Save")</HxSubmit>
+        <HxSubmit form="databricks_workspace_edit_form" Color="ThemeColor.Success">@(workspace?.WorkspaceId == Guid.Empty ? "Add" : "Save")</HxSubmit>
         <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>
 
 @code {
     [Parameter]
-    public EventCallback<QlikCloudClient> OnClientSubmit { get; set; }
+    public EventCallback<DatabricksWorkspace> OnWorkspaceSubmit { get; set; }
 
     private HxModal? modal;
-    private QlikCloudClient? client;
+    private DatabricksWorkspace? workspace;
     private bool? connectionTestSuccess = null;
     private bool testingConnection = false;
 
-    public async Task ShowAsync(Guid clientId)
+    public async Task ShowAsync(Guid workspaceId)
     {
-        client = null;
+        workspace = null;
         await modal.LetAsync(x => x.ShowAsync());
-        if (clientId != Guid.Empty)
+        if (workspaceId != Guid.Empty)
         {
             using var context = await DbContextFactory.CreateDbContextAsync();
-            client = await context.QlikCloudClients
+            workspace = await context.DatabricksWorkspaces
                 .AsNoTrackingWithIdentityResolution()
                 .Include(c => c.Steps)
                 .ThenInclude(s => s.Job)
-                .FirstAsync(c => c.QlikCloudClientId == clientId);
+                .FirstAsync(d => d.WorkspaceId == workspaceId);
         }
         else
         {
-            client = new()
-            {
-                QlikCloudClientName = "",
-                EnvironmentUrl = "",
-                ApiToken = ""
-            };
+            workspace = new();
         }
     }
 
     private async Task TestConnectionAsync()
     {
-        ArgumentNullException.ThrowIfNull(client);
+        ArgumentNullException.ThrowIfNull(workspace);
         connectionTestSuccess = null;
         testingConnection = true;
         try
         {
-            using var connectedClient = client.CreateConnectedClient(HttpClientFactory);
-            await connectedClient.TestConnectionAsync();
+            using var client = workspace.CreateClient();
+            await client.TestConnectionAsync();
             connectionTestSuccess = true;
         }
         catch (Exception ex)
@@ -133,7 +129,7 @@
 
     private async Task SubmitAsync()
     {
-        await OnClientSubmit.InvokeAsync(client);
+        await OnWorkspaceSubmit.InvokeAsync(workspace);
         await modal.LetAsync(x => x.HideAsync());
     }
 }

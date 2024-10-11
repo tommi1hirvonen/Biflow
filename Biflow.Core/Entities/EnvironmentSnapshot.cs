@@ -40,7 +40,8 @@ public class EnvironmentSnapshot
     public required AppRegistration[] AppRegistrations { get; init; }
     public required PipelineClient[] PipelineClients { get; init; }
     public required FunctionApp[] FunctionApps { get; init; }
-    public required QlikCloudClient[] QlikCloudClients { get; init; }
+    public required QlikCloudEnvironment[] QlikCloudEnvironments { get; init; }
+    public required DatabricksWorkspace[] DatabricksWorkspaces { get; init; }
     public required BlobStorageClient[] BlobStorageClients { get; init; }
 
     public required MasterDataTableCategory[] DataTableCategories { get; init; }

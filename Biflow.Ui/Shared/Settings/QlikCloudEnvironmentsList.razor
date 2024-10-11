@@ -1,0 +1,174 @@
+﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject ToasterService Toaster
+@inject IMediator Mediator
+
+<PageTitle>Qlik Cloud Clients | Biflow</PageTitle>
+
+<HxButton Color="ThemeColor.Success"
+@onclick="() => ShowEditModal(null)"
+          Enabled="environments is not null">
+    Add Qlik Cloud environment
+</HxButton>
+
+<div class="card shadow-sm pt-2 my-4">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>
+                    Name
+                </th>
+                <th></th>
+                <th>
+                    Environment url
+                </th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (environments is null)
+            {
+                <tr><td colspan="5" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
+            }
+            else if (environments.Count == 0)
+            {
+                <tr><td colspan="5">No Qlik Cloud environments</td></tr>
+            }
+            else
+            {
+                @foreach (var environment in environments.OrderBy(c => c.QlikCloudEnvironmentName))
+                {
+                    var jobs = environment.Steps.Select(s => s.Job).Distinct().Count();
+                    var steps = environment.Steps.Count();
+                    <tr>
+                        <td class="align-middle">
+                            @environment.QlikCloudEnvironmentName
+                        </td>
+                        <td class="align-middle">
+                            <HxButtonGroup Size="ButtonGroupSize.Small">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="() => ShowEditModal(environment)">
+                                    <SvgIcon Icon="FeatherIcon.Edit2" />
+                                </HxButton>
+                                <HxDropdownButtonGroup>
+                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="delete">
+                                        <SvgIcon Icon="FeatherIcon.Trash2" />
+                                    </HxDropdownToggleButton>
+                                    <HxDropdownMenu>
+                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                        <HxDropdownItem @onclick="() => DeleteEnvironmentAsync(environment)">Confirm</HxDropdownItem>
+                                    </HxDropdownMenu>
+                                </HxDropdownButtonGroup>
+                            </HxButtonGroup>
+                        </td>
+                        <td class="align-middle">
+                            @environment.EnvironmentUrl
+                        </td>
+                        <td class="align-middle">
+                            @(jobs > 0 ? $"{jobs} job(s)" : null)
+                        </td>
+                        <td class="align-middle">
+                            <a class="text-body" href="javascript:void(0)"
+                            @onclick="async () =>
+                            {
+                                stepsEnvironment = environment;
+                                await stepsModal.LetAsync(x => x.ShowAsync());
+                            }">
+                                @(steps > 0 ? $"{steps} step(s)" : null)
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<QlikCloudEnvironmentEditModal @ref="editModal" OnEnvironmentSubmit="OnEnvironmentSubmitAsync" />
+
+<HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsEnvironment?.QlikCloudEnvironmentName}")">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Job</th>
+                            <th>Step</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var step in stepsEnvironment?.Steps
+                        .OrderBy(s => s.Job.JobName)
+                        .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
+                        {
+                            <tr>
+                                <td>
+                                    @step.Job.JobName
+                                </td>
+                                <td>
+                                    <StepTypeIcon StepType="step.StepType" />
+                                    &nbsp;
+                                    @step.StepName
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <button class="btn btn-secondary" @onclick="async () => await stepsModal.LetAsync(x => x.HideAsync())">Close</button>
+    </FooterTemplate>
+</HxModal>
+
+@code {
+    private List<QlikCloudEnvironment>? environments;
+    private QlikCloudEnvironmentEditModal? editModal;
+
+    private QlikCloudEnvironment? stepsEnvironment;
+    private HxModal? stepsModal;
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        environments = await context.QlikCloudEnvironments
+            .AsNoTrackingWithIdentityResolution()
+            .Include(c => c.Steps)
+            .ThenInclude(s => s.Job)
+            .ToListAsync();
+    }
+
+    private async Task DeleteEnvironmentAsync(QlikCloudEnvironment environment)
+    {
+        try
+        {
+            await Mediator.SendAsync(new DeleteQlikCloudEnvironmentCommand(environment.QlikCloudEnvironmentId));
+            environments?.Remove(environment);
+        }
+        catch (Exception ex)
+        {
+            var message = ex.InnerException?.Message ?? ex.Message;
+            Toaster.AddError("Error deleting Qlik Cloud environment", message);
+        }
+    }
+
+    private async Task OnEnvironmentSubmitAsync(QlikCloudEnvironment environment)
+    {
+        if (environment.QlikCloudEnvironmentId == Guid.Empty)
+        {
+            await Mediator.SendAsync(new CreateQlikCloudEnvironmentCommand(environment));
+            environments?.Add(environment);
+        }
+        else
+        {
+            await Mediator.SendAsync(new UpdateQlikCloudEnvironmentCommand(environment));
+            environments?.RemoveAll(c => c.QlikCloudEnvironmentId == environment.QlikCloudEnvironmentId);
+            environments?.Add(environment);
+        }
+        StateHasChanged();
+    }
+
+    private async Task ShowEditModal(QlikCloudEnvironment? environment) =>
+        await editModal.LetAsync(x => x.ShowAsync(environment?.QlikCloudEnvironmentId?? Guid.Empty));
+}

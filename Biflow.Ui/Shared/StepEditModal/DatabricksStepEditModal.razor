@@ -1,0 +1,388 @@
+﻿@inherits StepEditModal<DatabricksStep>
+@using Pipeline = Microsoft.Azure.Databricks.Client.Models.Pipeline
+
+<StepEditModalTemplate Modal="this" TStep="DatabricksStep">
+    @if (Step is not null)
+    {
+        <div class="row">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Timeout (min)</label>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <SvgIcon Icon="FeatherIcon.XOctagon" />
+                    </div>
+                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 5rem;"></InputNumber>
+                </div>
+                <span class="form-text">0 = indefinite</span>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                <label class="form-label mb-lg-0">Databricks workspace</label>
+            </div>
+            <div class="col-md-6 d-inline">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <SvgIcon Icon="FeatherIcon.Layers" />
+                    </div>
+                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.DatabricksWorkspaceId" @bind-Value:after="OnWorkspaceChanged">
+                        @foreach (var workspace in DatabricksWorkspaces ?? [])
+                        {
+                            <option value="@workspace.WorkspaceId">@workspace.WorkspaceName</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-check-label mb-lg-0">Type</label>
+            </div>
+            <div class="col-md-6">
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="radio_databricks_type_notebook"
+                           checked=@(Step.DatabricksStepSettings is DbNotebookStepSettings)
+                           @onchange="() => Step.SetIsNotebook()">
+                    <label class="form-check-label fw-normal" for="radio_databricks_type_notebook">
+                        <SvgIcon Icon="LucideIcon.Notebook" />
+                        Notebook
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="radio_databricks_type_python"
+                           checked=@(Step.DatabricksStepSettings is DbPythonFileStepSettings)
+                           @onchange="() => Step.SetIsPythonFile()">
+                    <label class="form-check-label fw-normal" for="radio_databricks_type_python">
+                        <SvgIcon Icon="LucideIcon.FileCode" />
+                        Python file
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="radio_databricks_type_pipeline"
+                           checked=@(Step.DatabricksStepSettings is DbPipelineStepSettings)
+                           @onchange="() => Step.SetIsPipeline()">
+                    <label class="form-check-label fw-normal" for="radio_databricks_type_pipeline">
+                        <SvgIcon Icon="FeatherIcon.Pipeline" />
+                        Pipeline
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="radio_databricks_type_job"
+                           checked=@(Step.DatabricksStepSettings is DbJobStepSettings)
+                           @onchange="() => Step.SetIsJob()">
+                    <label class="form-check-label fw-normal" for="radio_databricks_type_job">
+                        <SvgIcon Icon="LucideIcon.Workflow" />
+                        Job
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        @if (Step.DatabricksStepSettings is DbNotebookStepSettings or DbPythonFileStepSettings)
+        {
+            <div class="row mt-3">
+                <div class="col-md-4 d-md-flex justify-content-end">
+                </div>
+                <div class="col-md-6">
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="OpenFileSelectOffcanvas">
+                        <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
+                        Browse files
+                    </HxButton>
+                </div>
+            </div>
+        }
+
+        @if (Step.DatabricksStepSettings is DbNotebookStepSettings notebookSettings)
+        {
+            <div class="row mt-3">
+                <div class="col-md-4 d-md-flex justify-content-end">
+                    <label class="form-label mb-lg-0">Path</label>
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group input-group-sm">
+                        <InputTextArea rows="2" class="form-control form-control-sm" autocomplete="off" @bind-Value="notebookSettings.NotebookPath" />
+                    </div>
+                </div>
+            </div>
+        }
+        else if (Step.DatabricksStepSettings is DbPythonFileStepSettings python)
+        {
+            <div class="row mt-3">
+                <div class="col-md-4 d-md-flex justify-content-end">
+                    <label class="form-label mb-lg-0">Path</label>
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group input-group-sm">
+                        <InputTextArea rows="2" class="form-control form-control-sm" autocomplete="off" @bind-Value="python.FilePath" />
+                    </div>
+                </div>
+            </div>
+        }
+        else if (Step.DatabricksStepSettings is DbPipelineStepSettings pipeline)
+        {
+            <div class="row mt-3">
+                <div class="col-md-4 d-md-flex justify-content-end">
+                    <label class="form-label mb-lg-0">Pipeline</label>
+                </div>
+                <div class="col-md-6">
+                    <HxAutosuggest TValue="string"
+                                   TItem="Pipeline"
+                                   InputSize="InputSize.Small"
+                                   @bind-Value="pipeline.PipelineId"
+                                   MinimumLength="0"
+                                   ValueSelector="item => item.PipelineId"
+                                   TextSelector="item => item.Name"
+                                   ItemFromValueResolver="ResolvePipelineFromValueAsync"
+                                   DataProvider="ProvidePipelineSuggestionsAsync"
+                                   autocomplete="off">
+                        <EmptyTemplate>
+                            <div class="dropdown-item disabled">
+                                No pipelines
+                            </div>
+                        </EmptyTemplate>
+                    </HxAutosuggest>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-4 d-md-flex justify-content-end">
+                    <label class="form-check-label mb-lg-0" for="databricks_pipeline_full_refresh">
+                        Full refresh
+                    </label>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check form-check-inline">
+                        <input type="checkbox" class="form-check-input" id="databricks_pipeline_full_refresh"
+                               checked=@pipeline.PipelineFullRefresh
+                               @bind-value="pipeline.PipelineFullRefresh">
+                    </div>
+                </div>
+            </div>
+        }
+        else if (Step.DatabricksStepSettings is DbJobStepSettings job)
+        {
+            <div class="row mt-3">
+                <div class="col-md-4 d-md-flex justify-content-end">
+                    <label class="form-label mb-lg-0">Job</label>
+                </div>
+                <div class="col-md-6">
+                    <HxAutosuggest TValue="long"
+                                   TItem="DatabricksJob"
+                                   InputSize="InputSize.Small"
+                                   @bind-Value="job.JobId"
+                                   MinimumLength="0"
+                                   ValueSelector="item => item.JobId"
+                                   TextSelector="item => item.JobName"
+                                   ItemFromValueResolver="ResolveDbJobFromValueAsync"
+                                   DataProvider="ProvideDbJobSuggestionsAsync"
+                                   autocomplete="off">
+                        <EmptyTemplate>
+                            <div class="dropdown-item disabled">
+                                No jobs
+                            </div>
+                        </EmptyTemplate>
+                    </HxAutosuggest>
+                </div>
+            </div>
+        }
+        
+
+        @if (Step.DatabricksStepSettings is DatabricksClusterStepSettings clusterSettings)
+        {
+            <div class="row mt-3">
+                <div class="col-md-4 d-md-flex justify-content-end">
+                    <label class="form-check-label mb-lg-0">Cluster</label>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-check form-check-inline">
+                        <input type="radio" class="form-check-input" id="radio_existing_cluster"
+                               checked=@(clusterSettings.ClusterConfiguration is ExistingClusterConfiguration)
+                               @onchange="() => clusterSettings.ClusterConfiguration = new ExistingClusterConfiguration()">
+                        <label class="form-check-label fw-normal" for="radio_existing_cluster">Existing cluster</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input type="radio" class="form-check-input" id="radio_new_cluster"
+                               checked=@(clusterSettings.ClusterConfiguration is NewClusterConfiguration)
+                               @onchange="() => clusterSettings.ClusterConfiguration = new NewClusterConfiguration()">
+                        <label class="form-check-label fw-normal" for="radio_new_cluster">New cluster</label>
+                    </div>
+                </div>
+            </div>
+            @if (clusterSettings.ClusterConfiguration is ExistingClusterConfiguration existing)
+            {
+                <div class="row mt-3">
+                    <div class="col-md-4 d-md-flex justify-content-end">
+                        <label class="form-label mb-lg-0"></label>
+                    </div>
+                    <div class="col-md-6">
+                        <HxAutosuggest TValue="string"
+                                       TItem="(string Id, string Description)"
+                                       InputSize="InputSize.Small"
+                                       @bind-Value="existing.ClusterId"
+                                       MinimumLength="0"
+                                       ValueSelector="item => item.Id"
+                                       TextSelector="item => item.Description"
+                                       ItemFromValueResolver="ResolveClusterFromValueAsync"
+                                       DataProvider="ProvideClusterSuggestionsAsync"
+                                       autocomplete="off">
+                            <EmptyTemplate>
+                                <div class="dropdown-item disabled">
+                                    No clusters
+                                </div>
+                            </EmptyTemplate>
+                        </HxAutosuggest>
+                    </div>
+                </div>
+            }
+            else if (clusterSettings.ClusterConfiguration is NewClusterConfiguration newCluster)
+            {
+                <div class="row mt-3">
+                    <div class="col-md-4 d-md-flex justify-content-end">
+                        <label class="form-check-label mb-lg-0">Mode</label>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check form-check-inline">
+                            <input type="radio" class="form-check-input" id="radio_cluster_mode_multi_auto"
+                                   checked=@(newCluster.ClusterMode is AutoscaleMultiNodeClusterConfiguration)
+                                   @onchange="() => newCluster.ClusterMode = new AutoscaleMultiNodeClusterConfiguration()">
+                            <label class="form-check-label fw-normal" for="radio_cluster_mode_multi_auto">Multi node, autoscale</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input type="radio" class="form-check-input" id="radio_cluster_mode_multi_fixed"
+                                   checked=@(newCluster.ClusterMode is FixedMultiNodeClusterConfiguration)
+                                   @onchange="() => newCluster.ClusterMode = new FixedMultiNodeClusterConfiguration()">
+                            <label class="form-check-label fw-normal" for="radio_cluster_mode_multi_fixed">Multi node, fixed</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input type="radio" class="form-check-input" id="radio_cluster_mode_single"
+                                   checked=@(newCluster.ClusterMode is SingleNodeClusterConfiguration)
+                                   @onchange="() => newCluster.ClusterMode = new SingleNodeClusterConfiguration()">
+                            <label class="form-check-label fw-normal" for="radio_cluster_mode_single">Single node</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-4 d-md-flex justify-content-end">
+                        <label class="form-label mb-lg-0">Runtime version</label>
+                    </div>
+                    <div class="col-md-6">
+                        <HxAutosuggest TValue="string"
+                                       TItem="(string Id, string Description)"
+                                       InputSize="InputSize.Small"
+                                       @bind-Value="newCluster.RuntimeVersion"
+                                       MinimumLength="0"
+                                       ValueSelector="item => item.Id"
+                                       TextSelector="item => item.Description"
+                                       ItemFromValueResolver="ResolveRuntimeVersionFromValueAsync"
+                                       DataProvider="ProvideRuntimeVersionSuggestionsAsync"
+                                       autocomplete="off" />
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-4 d-md-flex justify-content-end">
+                        <label class="form-label mb-lg-0">Worker node type</label>
+                    </div>
+                    <div class="col-md-6">
+                        <HxAutosuggest TValue="string"
+                                       TItem="(string Id, string Description)"
+                                       InputSize="InputSize.Small"
+                                       @bind-Value="newCluster.NodeTypeId"
+                                       MinimumLength="0"
+                                       ValueSelector="item => item.Id"
+                                       TextSelector="item => item.Description"
+                                       ItemFromValueResolver="ResolveNodeTypeFromValueAsync"
+                                       DataProvider="ProvideNodeTypeSuggestionsAsync"
+                                       autocomplete="off" />
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-4 d-md-flex justify-content-end">
+                        <label class="form-label mb-lg-0">Driver node type</label>
+                    </div>
+                    <div class="col-md-6">
+                        <HxAutosuggest TValue="string"
+                                       TItem="(string Id, string Description)"
+                                       InputSize="InputSize.Small"
+                                       @bind-Value="newCluster.DriverNodeTypeId"
+                                       MinimumLength="0"
+                                       ValueSelector="item => item.Id"
+                                       TextSelector="item => item.Description"
+                                       ItemFromValueResolver="ResolveNodeTypeFromValueAsync"
+                                       DataProvider="ProvideNodeTypeSuggestionsAsync"
+                                       Placeholder="Same as worker"
+                                       autocomplete="off" />
+                        <div class="form-text">
+                            Optional. If not set, the driver node will use the same type as worker nodes.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-4 d-md-flex justify-content-end">
+                        <label class="form-check-label mb-lg-0" for="databricks_cluster_use_photon">
+                            Use Photon acceleration
+                        </label>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check form-check-inline">
+                            <input type="checkbox" class="form-check-input" id="databricks_cluster_use_photon"
+                                   checked=@newCluster.UsePhoton
+                                   @bind-value="newCluster.UsePhoton">
+                        </div>
+                    </div>
+                </div>
+
+                @if (newCluster.ClusterMode is FixedMultiNodeClusterConfiguration fix)
+                {
+                    <div class="row mt-3">
+                        <div class="col-md-4 d-md-flex justify-content-end">
+                            <label class="form-label mb-lg-0">No of workers</label>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group input-group-sm">
+                                <InputNumber class="form-control form-control-sm" @bind-Value="fix.NumberOfWorkers" style="max-width: 5rem;" />
+                            </div>
+                        </div>
+                    </div>
+                }
+                else if (newCluster.ClusterMode is AutoscaleMultiNodeClusterConfiguration auto)
+                {
+                    <div class="row mt-3">
+                        <div class="col-md-4 d-md-flex justify-content-end">
+                            <label class="form-label mb-lg-0">No of workers</label>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="input-group input-group-sm">
+                                <div class="input-group-text small">
+                                    Min
+                                </div>
+                                <InputNumber class="form-control form-control-sm" @bind-Value="auto.MinimumWorkers" style="max-width: 5rem;" />
+                                <div class="input-group-text small">
+                                    Max
+                                </div>
+                                <InputNumber class="form-control form-control-sm" @bind-Value="auto.MaximumWorkers" style="max-width: 5rem;" />
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        }
+
+        <DatabricksFileSelectOffcanvas @ref="fileSelectOffcanvas" OnFileSelected="OnFileSelected" />
+
+        // Do not show parameters for Databricks pipeline tasks.
+        @if (Step.DatabricksStepSettings is DbNotebookStepSettings or DbPythonFileStepSettings or DbJobStepSettings)
+        {
+            <StepParametersEditor Step="Step"
+                                  NewParameterDelegate="() => new() { Step = Step }"
+                                  Title="@ParametersTitle"
+                                  InfoContent="@ParametersInfoContent" />
+        }
+    }
+</StepEditModalTemplate>

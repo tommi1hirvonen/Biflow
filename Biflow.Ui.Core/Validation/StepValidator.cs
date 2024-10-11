@@ -60,6 +60,7 @@ public class StepValidator : AsyncAbstractValidator<Step>
         RuleFor(step => step).SetInheritanceValidator(v =>
         {
             v.Add(new TabularStepValidator());
+            v.Add(new DatabricksStepValidator());
         });
         When(step => step is IHasStepParameters, () =>
         {
@@ -98,5 +99,113 @@ file class TabularStepValidator : AbstractValidator<TabularStep>
         RuleFor(step => step)
             .Must(step => string.IsNullOrEmpty(step.TabularPartitionName) || !string.IsNullOrEmpty(step.TabularPartitionName) && !string.IsNullOrEmpty(step.TabularTableName))
             .WithMessage("Table name is required if partition name has been defined");
+    }
+}
+
+file class DatabricksStepValidator : AbstractValidator<DatabricksStep>
+{
+    public DatabricksStepValidator()
+    {
+        RuleFor(step => step.DatabricksStepSettings)
+            .SetValidator(new DatabricksStepSettingsValidator());
+    }
+}
+
+file class DatabricksStepSettingsValidator : AbstractValidator<DatabricksStepSettings>
+{
+    public DatabricksStepSettingsValidator()
+    {
+        RuleFor(settings => settings)
+            .SetInheritanceValidator(v =>
+            {
+                v.Add(new DbNotebookStepSettingsValidator());
+                v.Add(new DbPythonFileStepSettingsValidator());
+                v.Add(new DbPipelineStepSettingsValidator());
+                v.Add(new DbJobStepSettingsValidator());
+            });
+    }
+}
+
+file class DbNotebookStepSettingsValidator : AbstractValidator<DbNotebookStepSettings>
+{
+    public DbNotebookStepSettingsValidator()
+    {
+        RuleFor(settings => settings.NotebookPath).NotEmpty();
+        RuleFor(settings => settings.ClusterConfiguration)
+            .SetInheritanceValidator(v =>
+            {
+                v.Add(new ExistingClusterValidator());
+                v.Add(new NewClusterValidator());
+            });
+    }
+}
+
+file class DbPythonFileStepSettingsValidator : AbstractValidator<DbPythonFileStepSettings>
+{
+    public DbPythonFileStepSettingsValidator()
+    {
+        RuleFor(settings => settings.FilePath).NotEmpty();
+        RuleFor(settings => settings.ClusterConfiguration)
+            .SetInheritanceValidator(v =>
+            {
+                v.Add(new ExistingClusterValidator());
+                v.Add(new NewClusterValidator());
+            });
+    }
+}
+
+file class DbPipelineStepSettingsValidator : AbstractValidator<DbPipelineStepSettings>
+{
+    public DbPipelineStepSettingsValidator()
+    {
+        RuleFor(settings => settings.PipelineId).NotEmpty();
+    }
+}
+
+file class DbJobStepSettingsValidator : AbstractValidator<DbJobStepSettings>
+{
+    public DbJobStepSettingsValidator()
+    {
+        RuleFor(settings => settings.JobId).NotEmpty();
+    }
+}
+
+file class ExistingClusterValidator : AbstractValidator<ExistingClusterConfiguration>
+{
+    public ExistingClusterValidator()
+    {
+        RuleFor(c => c.ClusterId).NotEmpty();
+    }
+}
+
+file class NewClusterValidator : AbstractValidator<NewClusterConfiguration>
+{
+    public NewClusterValidator()
+    {
+        RuleFor(c => c.RuntimeVersion).NotEmpty();
+        RuleFor(c => c.NodeTypeId).NotEmpty();
+        RuleFor(c => c.ClusterMode)
+            .SetInheritanceValidator(v =>
+            {
+                v.Add(new FixedClusterValidator());
+                v.Add(new AutoClusterValidator());
+            });
+    }
+}
+
+file class FixedClusterValidator : AbstractValidator<FixedMultiNodeClusterConfiguration>
+{
+    public FixedClusterValidator()
+    {
+        RuleFor(c => c.NumberOfWorkers).GreaterThan(0);
+    }
+}
+
+file class AutoClusterValidator : AbstractValidator<AutoscaleMultiNodeClusterConfiguration>
+{
+    public AutoClusterValidator()
+    {
+        RuleFor(c => c.MaximumWorkers).GreaterThan(c => c.MinimumWorkers);
+        RuleFor(c => c.MinimumWorkers).GreaterThan(0);
     }
 }

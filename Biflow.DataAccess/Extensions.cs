@@ -149,11 +149,16 @@ public static class Extensions
                 equals new { Id = includeEndpoint ? (object?)pipeline.PipelineClientId : false }
                 into pipeline_
             from pipeline in pipeline_.DefaultIfEmpty()
-            join qlik in context.QlikCloudClients
-                on new { Id = includeEndpoint ? (object?)((QlikStepExecution)stepExec).QlikCloudClientId : true }
-                equals new { Id = includeEndpoint ? (object?)qlik.QlikCloudClientId : false }
+            join qlik in context.QlikCloudEnvironments
+                on new { Id = includeEndpoint ? (object?)((QlikStepExecution)stepExec).QlikCloudEnvironmentId : true }
+                equals new { Id = includeEndpoint ? (object?)qlik.QlikCloudEnvironmentId : false }
                 into qlik_
             from qlik in qlik_.DefaultIfEmpty()
+            join db in context.DatabricksWorkspaces
+                on new { Id = includeEndpoint ? (object?)((DatabricksStepExecution)stepExec).DatabricksWorkspaceId : true }
+                equals new { Id = includeEndpoint ? (object?)db.WorkspaceId : false }
+                into db_
+            from db in db_.DefaultIfEmpty()
             join exe in context.Credentials
                 on new { Id = includeEndpoint ? (object?)((ExeStepExecution)stepExec).RunAsCredentialId : true }
                 equals new { Id = includeEndpoint ? (object?)exe.CredentialId : false }
@@ -174,6 +179,7 @@ public static class Extensions
                 function,
                 pipeline,
                 qlik,
+                db,
                 exe,
                 step);
 
@@ -207,7 +213,10 @@ public static class Extensions
                     pipeline.SetClient(step.PipelineStepClient);
                     break;
                 case QlikStepExecution qlik:
-                    qlik.SetClient(step.QlikStepClient);
+                    qlik.SetEnvironment(step.QlikStepClient);
+                    break;
+                case DatabricksStepExecution db:
+                    db.SetWorkspace(step.DatabricksWorkspace);
                     break;
                 case ExeStepExecution exe:
                     exe.SetRunAsCredential(step.ExeStepCredential);
@@ -233,6 +242,7 @@ file record StepExecutionProjection(
     AppRegistration? DatasetStepAppRegistration,
     FunctionApp? FunctionStepApp,
     PipelineClient? PipelineStepClient,
-    QlikCloudClient? QlikStepClient,
+    QlikCloudEnvironment? QlikStepClient,
+    DatabricksWorkspace? DatabricksWorkspace,
     Credential? ExeStepCredential,
     Step? Step);

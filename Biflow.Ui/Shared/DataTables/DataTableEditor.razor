@@ -112,7 +112,7 @@
 
             <HxButton Color="ThemeColor.Success" Size="ButtonSize.Small"
                       CssClass="ms-3"
-                      Enabled="tableData is not null && tableData.IsEditable"
+                      Enabled="tableData is not null && tableData.IsEditable && (Table.AllowInsert || Table.AllowUpdate || Table.AllowDelete)"
                       OnClick="SaveChangesAsync">
                 <SvgIcon Icon="FeatherIcon.Save" />
                 Save changes
@@ -284,7 +284,7 @@
 
                                                 else if (datatype == typeof(short) && lookupValues is not null)
                                                 {
-                                                    <LookupAutosuggest TValue="short?" LookupValues="lookupValues" @bind-Value="row.ShortIndexer[column]" />
+                                                    <LookupAutosuggest TValue="short?" LookupValues="lookupValues" @bind-Value="row.ShortIndexer[column]" Disabled="@isLocked" />
                                                 }
                                                 else if (datatype == typeof(short))
                                                 {
@@ -293,7 +293,7 @@
 
                                                 else if (datatype == typeof(int) && lookupValues is not null)
                                                 {
-                                                    <LookupAutosuggest TValue="int?" LookupValues="lookupValues" @bind-Value="row.IntIndexer[column]" />
+                                                    <LookupAutosuggest TValue="int?" LookupValues="lookupValues" @bind-Value="row.IntIndexer[column]" Disabled="@isLocked" />
                                                 }
                                                 else if (datatype == typeof(int))
                                                 {
@@ -302,7 +302,7 @@
 
                                                 else if (datatype == typeof(long) && lookupValues is not null)
                                                 {
-                                                    <LookupAutosuggest TValue="long?" LookupValues="lookupValues" @bind-Value="row.LongIndexer[column]" />
+                                                    <LookupAutosuggest TValue="long?" LookupValues="lookupValues" @bind-Value="row.LongIndexer[column]" Disabled="@isLocked" />
                                                 }
                                                 else if (datatype == typeof(long))
                                                 {
@@ -311,7 +311,7 @@
 
                                                 else if (datatype == typeof(decimal) && lookupValues is not null)
                                                 {
-                                                    <LookupAutosuggest TValue="decimal?" LookupValues="lookupValues" @bind-Value="row.DecimalIndexer[column]" />
+                                                    <LookupAutosuggest TValue="decimal?" LookupValues="lookupValues" @bind-Value="row.DecimalIndexer[column]" Disabled="@isLocked" />
                                                 }
                                                 else if (datatype == typeof(decimal))
                                                 {
@@ -329,7 +329,7 @@
 
                                                 else if (datatype == typeof(string) && lookupValues is not null)
                                                 {
-                                                    <LookupAutosuggest TValue="string" LookupValues="lookupValues" @bind-Value="row.StringIndexer[column]" />
+                                                    <LookupAutosuggest TValue="string" LookupValues="lookupValues" @bind-Value="row.StringIndexer[column]" Disabled="@isLocked" />
                                                 }
                                                 else if (datatype == typeof(string))
                                                 {
@@ -348,7 +348,7 @@
 
                                                 else if (datatype == typeof(DateTime) && lookupValues is not null)
                                                 {
-                                                    <LookupAutosuggest TValue="DateTime?" LookupValues="lookupValues" @bind-Value="row.DateTimeIndexer[column]" />
+                                                    <LookupAutosuggest TValue="DateTime?" LookupValues="lookupValues" @bind-Value="row.DateTimeIndexer[column]" Disabled="@isLocked" />
                                                 }
                                                 else if (datatype == typeof(DateTime))
                                                 {
@@ -357,7 +357,7 @@
 
                                                 else if (datatype == typeof(DateOnly) && lookupValues is not null)
                                                 {
-                                                    <LookupAutosuggest TValue="DateOnly?" LookupValues="lookupValues" @bind-Value="row.DateIndexer[column]" />
+                                                    <LookupAutosuggest TValue="DateOnly?" LookupValues="lookupValues" @bind-Value="row.DateIndexer[column]" Disabled="@isLocked" />
                                                 }
                                                 else if (datatype == typeof(DateOnly))
                                                 {
@@ -366,7 +366,7 @@
 
                                                 else if (datatype == typeof(TimeOnly) && lookupValues is not null)
                                                 {
-                                                    <LookupAutosuggest TValue="TimeOnly?" LookupValues="lookupValues" @bind-Value="row.TimeIndexer[column]" />
+                                                    <LookupAutosuggest TValue="TimeOnly?" LookupValues="lookupValues" @bind-Value="row.TimeIndexer[column]" Disabled="@isLocked" />
                                                 }
                                                 else if (datatype == typeof(TimeOnly))
                                                 {
