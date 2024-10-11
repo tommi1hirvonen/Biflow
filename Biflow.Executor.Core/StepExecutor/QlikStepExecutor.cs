@@ -56,7 +56,7 @@ internal class QlikStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error starting app refresh");
+            _logger.LogError(ex, "Error starting app reload");
             attempt.AddError(ex, "Error starting app reload");
             return Result.Failure;
         }
@@ -90,18 +90,18 @@ internal class QlikStepExecutor(
             {
                 await Task.Delay(_pollingIntervalMs, linkedCts.Token);
                 reload = await client.GetReloadAsync(reload.Id, linkedCts.Token);
-                if (reload is { Status: QlikAppReloadStatus.Succeeded })
+                switch (reload.Status)
                 {
-                    attempt.AddOutput(reload.Log);
-                    return Result.Success;
+                    case QlikAppReloadStatus.Queued or QlikAppReloadStatus.Reloading:
+                        continue;
+                    case QlikAppReloadStatus.Succeeded:
+                        attempt.AddOutput(reload.Log);
+                        return Result.Success;
+                    default:
+                        attempt.AddOutput(reload.Log);
+                        attempt.AddError($"App reload reported status {reload.Status}");
+                        return Result.Failure;
                 }
-                else if (reload is { Status: QlikAppReloadStatus.Failed or QlikAppReloadStatus.Canceled or QlikAppReloadStatus.ExceededLimit })
-                {
-                    attempt.AddOutput(reload.Log);
-                    attempt.AddError($"Reload reported status {reload.Status}");
-                    return Result.Failure;
-                }
-                // Reload not finished => iterate again
             }
             catch (OperationCanceledException ex)
             {
@@ -117,7 +117,7 @@ internal class QlikStepExecutor(
             }
             catch (Exception ex)
             {
-                attempt.AddError(ex, "Error getting reload status");
+                attempt.AddError(ex, "Error getting app reload status");
                 return Result.Failure;
             }
         }
@@ -175,18 +175,16 @@ internal class QlikStepExecutor(
             {
                 await Task.Delay(_pollingIntervalMs, linkedCts.Token);
                 run = await client.GetRunAsync(runSettings.AutomationId, run.Id, linkedCts.Token);
-                if (run is { Status: QlikAutomationRunStatus.Finished or QlikAutomationRunStatus.FinishedWithWarnings })
+                switch (run.Status)
                 {
-                    //attempt.AddOutput(run.Log);
-                    return Result.Success;
+                    case QlikAutomationRunStatus.NotStarted or QlikAutomationRunStatus.Starting or QlikAutomationRunStatus.Running:
+                        continue;
+                    case QlikAutomationRunStatus.Finished or QlikAutomationRunStatus.FinishedWithWarnings:
+                        return Result.Success;
+                    default:
+                        attempt.AddError($"Automation run reported status {run.Status}");
+                        return Result.Failure;
                 }
-                else
-                {
-                    //attempt.AddOutput(run.Log);
-                    attempt.AddError($"Reload reported status {run.Status}");
-                    return Result.Failure;
-                }
-                // Run not finished => iterate again
             }
             catch (OperationCanceledException ex)
             {
@@ -202,7 +200,7 @@ internal class QlikStepExecutor(
             }
             catch (Exception ex)
             {
-                attempt.AddError(ex, "Error getting run status");
+                attempt.AddError(ex, "Error getting automation run status");
                 return Result.Failure;
             }
         }
@@ -220,8 +218,8 @@ internal class QlikStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error canceling reload", step.ExecutionId, step);
-            attempt.AddWarning(ex, "Error canceling reload");
+            _logger.LogError(ex, "{ExecutionId} {Step} Error canceling app reload", step.ExecutionId, step);
+            attempt.AddWarning(ex, "Error canceling app reload");
         }
     }
 
@@ -238,8 +236,8 @@ internal class QlikStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error canceling run", step.ExecutionId, step);
-            attempt.AddWarning(ex, "Error canceling run");
+            _logger.LogError(ex, "{ExecutionId} {Step} Error canceling automation run", step.ExecutionId, step);
+            attempt.AddWarning(ex, "Error canceling automation run");
         }
     }
 }
