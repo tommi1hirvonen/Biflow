@@ -361,15 +361,21 @@
                 <pre><code>@JsonSerializer.Serialize(qlik.QlikStepSettings, JsonSerializerOptions)</code></pre>
             </dd>
             <dt class="col-sm-3">
-                Qlik Cloud Client id
+                Qlik Cloud environment id
             </dt>
             <dd class="col-sm-9">
                 @qlik.QlikCloudEnvironmentId
             </dd>
             @if (StepExecutionAttempt is QlikStepExecutionAttempt qlik_)
             {
+                var reloadOrRun = qlik.QlikStepSettings switch
+                {
+                    QlikAppReloadSettings => "App reload id",
+                    QlikAutomationRunSettings => "Automation run id",
+                    _ => ""
+                };
                 <dt class="col-sm-3">
-                    Reload id
+                    @reloadOrRun
                 </dt>
                 <dd class="col-sm-9">
                     @qlik_.ReloadId
