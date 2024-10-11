@@ -13,8 +13,6 @@ public class DatabricksStepExecution : StepExecution,
 
     public DatabricksStepExecution(DatabricksStep step, Execution execution) : base(step, execution)
     {
-        ArgumentNullException.ThrowIfNull(step.DatabricksWorkspaceId);
-
         DatabricksStepSettings = step.DatabricksStepSettings;
         DatabricksWorkspaceId = step.DatabricksWorkspaceId;
         TimeoutMinutes = step.TimeoutMinutes;
