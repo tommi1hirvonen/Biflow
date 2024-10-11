@@ -182,6 +182,7 @@ internal class QlikStepExecutor(
                     case QlikAutomationRunStatus.Finished or QlikAutomationRunStatus.FinishedWithWarnings:
                         return Result.Success;
                     default:
+                        attempt.AddOutput(run.Error);
                         attempt.AddError($"Automation run reported status {run.Status}");
                         return Result.Failure;
                 }
