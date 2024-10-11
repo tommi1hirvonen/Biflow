@@ -86,7 +86,7 @@ Currently supported step types:
 - Dataset
     - Refresh datasets/semantic models published to Power BI Service workspaces
 - Qlik
-    - Reload apps in Qlik Cloud
+    - Reload apps and run automations in Qlik Cloud
 - Mail
     - Send emails as part of your workflows
 - Job
