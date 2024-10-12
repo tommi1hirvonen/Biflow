@@ -1,5 +1,6 @@
 ﻿@inherits StepEditModal<DatabricksStep>
 @using Pipeline = Microsoft.Azure.Databricks.Client.Models.Pipeline
+@using ClusterInfo = Microsoft.Azure.Databricks.Client.Models.ClusterInfo
 
 <StepEditModalTemplate Modal="this" TStep="DatabricksStep">
     @if (Step is not null)
@@ -219,12 +220,12 @@
                     </div>
                     <div class="col-md-6">
                         <HxAutosuggest TValue="string"
-                                       TItem="(string Id, string Description)"
+                                       TItem="ClusterInfo"
                                        InputSize="InputSize.Small"
                                        @bind-Value="existing.ClusterId"
                                        MinimumLength="0"
-                                       ValueSelector="item => item.Id"
-                                       TextSelector="item => item.Description"
+                                       ValueSelector="item => item.ClusterId"
+                                       TextSelector="item => item.ClusterName"
                                        ItemFromValueResolver="ResolveClusterFromValueAsync"
                                        DataProvider="ProvideClusterSuggestionsAsync"
                                        autocomplete="off">
