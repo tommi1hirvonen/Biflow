@@ -1,12 +1,11 @@
 ﻿using Biflow.Core.Entities;
-using System.Text.Json;
 using Xunit;
 
 namespace Biflow.Core.Test.Deserialize;
 
 public class MasterDataTableDeserializeTests
 {
-    private static readonly MasterDataTable table = GetDeserializedTable();
+    private static readonly MasterDataTable table = CreateTable();
 
     [Fact]
     public void Lookups_NotEmpty()
@@ -32,13 +31,6 @@ public class MasterDataTableDeserializeTests
         Assert.NotEmpty(table.ColumnOrder);
     }
 
-    private static MasterDataTable GetDeserializedTable()
-    {
-        var json = JsonSerializer.Serialize(CreateTable(), EnvironmentSnapshot.JsonSerializerOptions);
-        var table = JsonSerializer.Deserialize<MasterDataTable>(json, EnvironmentSnapshot.JsonSerializerOptions);
-        return table;
-    }
-
     private static MasterDataTable CreateTable()
     {
         var table = new MasterDataTable();
@@ -46,6 +38,6 @@ public class MasterDataTableDeserializeTests
         table.HiddenColumns.Add("Test");
         table.LockedColumns.Add("Test");
         table.ColumnOrder.Add("Test");
-        return table;
+        return table.JsonRoundtrip(EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
     }
 }

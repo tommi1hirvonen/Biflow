@@ -61,6 +61,9 @@ public class FunctionApp
 
     private AppRegistration _appRegistration = null!;
 
+    [Range(0, int.MaxValue)]
+    public int MaxConcurrentFunctionSteps { get; set; } = 0;
+
     [JsonIgnore]
     public IEnumerable<FunctionStep> Steps { get; } = new List<FunctionStep>();
 

@@ -13,7 +13,6 @@ else if (Step is not null && targetJob is not null)
     <p />
     <h5>
         Parameters
-
     </h5>
     <table id="parameters_table" class="table table-sm">
         <thead>
@@ -52,17 +51,33 @@ else if (Step is not null && targetJob is not null)
                     </td>
                     @if (param.InheritFromJobParameterId is not null)
                     {
+                        var t1 = targetParam.ParameterValue.ValueType;
+                        var t2 = param.InheritFromJobParameter?.ParameterValue.ValueType;
                         <td colspan="2">
-                            <InputSelect class="form-select form-select-sm"
-                                         @bind-Value:get="param.InheritFromJobParameterId"
-                                         @bind-Value:set="id => SetInheritFromJobParameter(true, param, id)">
-                                @foreach (var jobParam in availableJobParams)
+                            <div class="row align-items-center">
+                                <div class="col">
+                                    <InputSelect class="form-select form-select-sm"
+                                                 @bind-Value:get="param.InheritFromJobParameterId"
+                                                 @bind-Value:set="id => SetInheritFromJobParameter(true, param, id)">
+                                        @foreach (var jobParam in availableJobParams)
+                                        {
+                                            <option value="@jobParam.ParameterId">
+                                                @jobParam.DisplaySummary
+                                            </option>
+                                        }
+                                    </InputSelect>
+                                </div>
+                                @if (t1 != t2)
                                 {
-                                    <option value="@jobParam.ParameterId">
-                                        @jobParam.DisplaySummary
-                                    </option>
+                                    <div class="col-auto">
+                                        <HxTooltip Trigger="TooltipTrigger.Hover" Text="@($"Parameter value types do not match: {t1} vs {t2}")">
+                                            <span style="color: var(--bs-warning);">
+                                                <SvgIcon Icon="FeatherIcon.AlertCircle" />
+                                            </span>
+                                        </HxTooltip>
+                                    </div>
                                 }
-                            </InputSelect>
+                            </div>
                         </td>
                     }
                     else
@@ -182,7 +197,6 @@ else if (Step is not null)
     private Task OnParameterEdit(StepParameterBase parameter) => expressionEditOffcanvas.LetAsync(x => x.ShowAsync(parameter));
 
     private IEnumerable<JobParameter> GetAvailableJobParameters(StepParameterBase param) => JobParameters
-        .Where(p => p.ParameterValue.ValueType == param.ParameterValue.ValueType || p.UseExpression)
         .OrderBy(p => p.ParameterName);
 
     private void SetInheritFromJobParameter(bool inheritFromJob, StepParameterBase param, Guid? jobParameterId = null)

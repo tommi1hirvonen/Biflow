@@ -4,14 +4,14 @@ using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
-public class QlikCloudClient
+public class QlikCloudEnvironment
 {
     [JsonInclude]
-    public Guid QlikCloudClientId { get; private set; }
+    public Guid QlikCloudEnvironmentId { get; private set; }
 
     [Required]
     [MaxLength(250)]
-    public required string QlikCloudClientName { get; set; }
+    public required string QlikCloudEnvironmentName { get; set; }
 
     [Required]
     [MaxLength(4000)]
@@ -25,6 +25,6 @@ public class QlikCloudClient
     [JsonIgnore]
     public IEnumerable<QlikStep> Steps { get; } = new List<QlikStep>();
 
-    public QlikCloudConnectedClient CreateConnectedClient(IHttpClientFactory httpClientFactory) =>
+    public QlikCloudClient CreateClient(IHttpClientFactory httpClientFactory) =>
         new(this, httpClientFactory);
 }

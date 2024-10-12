@@ -33,7 +33,20 @@
                 <HxSpinner Color="ThemeColor.Secondary" CssClass="ms-4" />
             }
         </div>
-        <div class="col-xxl-auto mt-3 mt-xxl-0">
+    </div>
+    <div class="row mt-3 justify-content-between">
+        <div class="col-auto">
+            <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="simplified_json"
+                       checked=@simplifiedJson
+                       @onchange="args => SetSimplifiedJsonAsync((bool)args.Value!)">
+                <label class="form-check-label" for="simplified_json">Simplified JSON</label>
+                <HxPopover Trigger="PopoverTrigger.Hover" WrapperCssClass="ms-2" Content="Simplified JSON is easier for humans to read and is recommended for diff comparisons. JSON with object references preserved (non-simplified) includes additional metadata properties that add complexity and reduce readability but are required when deserializing and reverting snapshots.">
+                    <SvgIcon Icon="FeatherIcon.Info" />
+                </HxPopover>
+            </div>
+        </div>
+        <div class="col-auto">
             <div class="input-group input-group-sm">
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => diffEditor.LetAsync(x => x.GotoPreviousDiffAsync())" Spinner="false" Enabled="sourceVersionId >= 0 && targetVersionId >= 0">
                     <SvgIcon Icon="FeatherIcon.ChevronUp" />
@@ -71,6 +84,7 @@ else
     private int sourceVersionId = -1;
     private int targetVersionId = -1;
     private bool loading;
+    private bool simplifiedJson = true; // inverse of whether to show JSON with references preserved
 
     protected override async Task OnParametersSetAsync()
     {
@@ -82,9 +96,15 @@ else
         }
     }
 
+    private Task SetSimplifiedJsonAsync(bool simplifiedJson)
+    {
+        this.simplifiedJson = simplifiedJson;
+        return CompareAsync();
+    }
+
     private async Task CompareAsync()
     {
-        if (sourceVersionId < 0 || targetVersionId < 0)
+        if (sourceVersionId < 0 || targetVersionId < 0 || loading)
         {
             return;
         }
@@ -95,13 +115,13 @@ else
             using var context = await DbContextFactory.CreateDbContextAsync();
             var sourceVersion = sourceVersionId switch
             {
-                0 => await SnapshotBuilder.CreateAsync(),
-                _ => await context.EnvironmentVersions.Where(v => v.VersionId == sourceVersionId).Select(v => v.Snapshot).FirstOrDefaultAsync()
+                0 => (await SnapshotBuilder.CreateAsync()).ToJson(preserveReferences: !simplifiedJson),
+                _ => await context.EnvironmentVersions.Where(v => v.VersionId == sourceVersionId).Select(v => simplifiedJson ? v.Snapshot : v.SnapshotWithReferencesPreserved).FirstOrDefaultAsync()
             };
             var targetVersion = targetVersionId switch
             {
-                0 => await SnapshotBuilder.CreateAsync(),
-                _ => await context.EnvironmentVersions.Where(v => v.VersionId == targetVersionId).Select(v => v.Snapshot).FirstOrDefaultAsync()
+                0 => (await SnapshotBuilder.CreateAsync()).ToJson(preserveReferences: !simplifiedJson),
+                _ => await context.EnvironmentVersions.Where(v => v.VersionId == targetVersionId).Select(v => simplifiedJson ? v.Snapshot : v.SnapshotWithReferencesPreserved).FirstOrDefaultAsync()
             };
             await diffEditor.LetAsync(x => x.SetDiffEditor(sourceVersion, targetVersion, "json"));
         }

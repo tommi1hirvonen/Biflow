@@ -79,18 +79,23 @@ internal class SqlStepExecutor(
 
                 // Update the capture value.
                 using var context = _dbContextFactory.CreateDbContext();
-                context.Attach(step);
                 step.ResultCaptureJobParameterValue = new(result);
 
                 // Update the job execution parameter with the result value for following steps to use.
                 var param = step.Execution.ExecutionParameters.FirstOrDefault(p => p.ParameterId == step.ResultCaptureJobParameterId);
                 if (param is not null)
                 {
-                    context.Attach(param);
                     param.ParameterValue = new(result);
+                    await context.Set<ExecutionParameter>()
+                        .Where(x => x.ExecutionId == param.ExecutionId && x.ParameterId == param.ParameterId)
+                        .ExecuteUpdateAsync(x => x
+                            .SetProperty(p => p.ParameterValue, param.ParameterValue), CancellationToken.None);
                 }
 
-                await context.SaveChangesAsync(CancellationToken.None);
+                await context.Set<SqlStepExecution>()
+                    .Where(x => x.ExecutionId == step.ExecutionId && x.StepId == step.StepId)
+                    .ExecuteUpdateAsync(x => x
+                        .SetProperty(p => p.ResultCaptureJobParameterValue, step.ResultCaptureJobParameterValue), CancellationToken.None);
             }
             else
             {
@@ -152,18 +157,23 @@ internal class SqlStepExecutor(
 
                 // Update the capture value.
                 using var context = _dbContextFactory.CreateDbContext();
-                context.Attach(step);
                 step.ResultCaptureJobParameterValue = new(result);
 
                 // Update the job execution parameter with the result value for following steps to use.
                 var param = step.Execution.ExecutionParameters.FirstOrDefault(p => p.ParameterId == step.ResultCaptureJobParameterId);
                 if (param is not null)
                 {
-                    context.Attach(param);
                     param.ParameterValue = new(result);
+                    await context.Set<ExecutionParameter>()
+                        .Where(x => x.ExecutionId == param.ExecutionId && x.ParameterId == param.ParameterId)
+                        .ExecuteUpdateAsync(x => x
+                            .SetProperty(p => p.ParameterValue, param.ParameterValue), CancellationToken.None);
                 }
 
-                await context.SaveChangesAsync(CancellationToken.None);
+                await context.Set<SqlStepExecution>()
+                    .Where(x => x.ExecutionId == step.ExecutionId && x.StepId == step.StepId)
+                    .ExecuteUpdateAsync(x => x
+                        .SetProperty(p => p.ResultCaptureJobParameterValue, step.ResultCaptureJobParameterValue), CancellationToken.None);
             }
             else
             {

@@ -11,7 +11,7 @@ internal class OrchestrationObserver(
     IEnumerable<IOrchestrationTracker> orchestrationTrackers,
     ExtendedCancellationTokenSource cancellationTokenSource) : IOrchestrationObserver, IDisposable
 {
-    private readonly TaskCompletionSource<StepAction> _tcs = new();
+    private readonly TaskCompletionSource<OrchestratorAction> _tcs = new();
     private readonly ILogger _logger = logger;
     private readonly IStepExecutionListener _orchestrationListener = orchestrationListener;
     private readonly IEnumerable<IOrchestrationTracker> _orchestrationTrackers = orchestrationTrackers;
@@ -22,44 +22,90 @@ internal class OrchestrationObserver(
 
     public int Priority => StepExecution.ExecutionPhase;
 
-    public void Subscribe(IOrchestrationObservable provider)
-    {
-        _unsubscriber = provider.Subscribe(this);
-    }
-
-    public void Dispose()
-    {
-        _unsubscriber?.Dispose();
-        _unsubscriber = null;
-    }
-
-    public IEnumerable<StepExecutionMonitor> RegisterInitialUpdates(IEnumerable<OrchestrationUpdate> initialStatuses)
+    public IEnumerable<StepExecutionMonitor> RegisterInitialUpdates(
+        IEnumerable<OrchestrationUpdate> updates,
+        Action<StepExecution, IStepExecutionListener, ExtendedCancellationTokenSource> executeCallback)
     {
         try
         {
-            var monitors = initialStatuses.SelectMany(HandleUpdate)
-            .ToArray();
+            var monitors = updates
+                .SelectMany(HandleUpdateAndGetMonitors)
+                .ToArray();
+
             var action = GetStepAction();
-            if (action is not null)
+            if (action?.Value is ExecuteAction)
             {
+                // If the action was ExecuteAction already after registering initial updates, request execution.
+                executeCallback(StepExecution, _orchestrationListener, _cancellationTokenSource);
+            }
+            else if (action is not null)
+            {
+                // If the action was something else (fail, cancel), set the result and let the observer continue to WaitForProcessingAsync().
                 SetResult(action);
             }
+
             return monitors;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error while registering initial updates in orchestration observer");
-            var action = new Fail(StepExecutionStatus.Failed, $"Error while registering initial updates in orchestration observer");
+            var action = Actions.Fail(StepExecutionStatus.Failed, "Error while registering initial updates in orchestration observer");
             SetResult(action);
             return [];
         }   
     }
 
-    public IEnumerable<StepExecutionMonitor> OnUpdate(OrchestrationUpdate value)
+    public async Task WaitForProcessingAsync(
+        Func<StepExecution, OrchestratorAction, IStepExecutionListener, ExtendedCancellationTokenSource, Task> processCallback)
+    {
+        OrchestratorAction stepAction;
+        try
+        {
+            stepAction = await _tcs.Task.WaitAsync(_cancellationTokenSource.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            stepAction = Actions.Cancel;
+        }
+        await processCallback(StepExecution, stepAction, _orchestrationListener, _cancellationTokenSource);
+    }
+
+    public void Subscribe(IOrchestrationObservable provider)
+    {
+        // If the TaskCompletionSource result was set in RegisterInitialUpdates(),
+        // no need to subscribe.
+        if (_tcs.Task.IsCompleted)
+        {
+            return;
+        }
+
+        _unsubscriber = provider.Subscribe(this);
+    }
+
+    public void OnUpdate(OrchestrationUpdate value)
     {
         try
         {
-            var monitors = HandleUpdate(value);
+            HandleUpdate(value);
+            var action = GetStepAction();
+            if (action is not null)
+            {
+                SetResult(action);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while handling update in orchestration observer");
+            var action = Actions.Fail(StepExecutionStatus.Failed, $"Error while handling update in orchestration observer");
+            SetResult(action);
+        }
+    }
+
+    public IEnumerable<StepExecutionMonitor> OnIncomingStepExecutionUpdate(OrchestrationUpdate value)
+    {
+        try
+        {
+            var monitors = HandleUpdateAndGetMonitors(value);
             var action = GetStepAction();
             if (action is not null)
             {
@@ -70,81 +116,59 @@ internal class OrchestrationObserver(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error while handling update in orchestration observer");
-            var action = new Fail(StepExecutionStatus.Failed, $"Error while handling update in orchestration observer");
+            var action = Actions.Fail(StepExecutionStatus.Failed, $"Error while handling update in orchestration observer");
             SetResult(action);
             return [];
         }
     }
 
-    public async Task WaitForProcessingAsync(IStepReadyForProcessingListener stepReadyListener)
-    {
-        StepAction stepAction;
-        try
-        {
-            stepAction = await _tcs.Task.WaitAsync(_cancellationTokenSource.Token);
-        }
-        catch (OperationCanceledException)
-        {
-            stepAction = new Cancel();
-        }
-        await stepReadyListener.OnStepReadyForProcessingAsync(StepExecution, stepAction, _orchestrationListener, _cancellationTokenSource);
-    }
-
-    /// <summary>
-    /// Called multiple times in succession when the observer is registering
-    /// initial statuses of all steps from global orchestration.
-    /// After that it is called once whenever orchestration updates are provided.
-    /// </summary>
-    /// <param name="value"></param>
-    private IEnumerable<StepExecutionMonitor> HandleUpdate(OrchestrationUpdate value)
+    private IEnumerable<StepExecutionMonitor> HandleUpdateAndGetMonitors(OrchestrationUpdate value)
     {
         return _orchestrationTrackers.Select(t => t.HandleUpdate(value))
             .WhereNotNull()
             .ToArray();
     }
 
-    /// <summary>
-    /// Called once after HandleUpdate() has been called for all initial statuses.
-    /// After that it is called once every time after HandleUpdate() has been called.
-    /// </summary>
-    /// <returns>null if no action should be taken with the step at this time. Otherwise a valid StepAction should be provided.</returns>
-    private StepAction? GetStepAction()
+    private void HandleUpdate(OrchestrationUpdate value)
     {
         foreach (var tracker in _orchestrationTrackers)
         {
-            var action = tracker.GetStepAction();
-            if (FailOrNull(action) is Fail fail)
-            {
-                return fail;
-            }
-            if (CancelOrNull(action) is Cancel cancel)
-            {
-                return cancel;
-            }
-            if (action is null)
-            {
-                return null;
-            }
+            tracker.HandleUpdate(value);
         }
-        return new Execute();
     }
 
-    private static Fail? FailOrNull(StepAction? action) => action?
-        .Match<Fail?>(
-            (execute) => null,
-            (cancel) => null,
-            (fail) => fail);
+    private OrchestratorAction? GetStepAction()
+    {
+        // For each tracker, get the step action.
+        foreach (var tracker in _orchestrationTrackers)
+        {
+            var action = tracker.GetStepAction().Match<OrchestratorAction?>(
+                (WaitAction wait) => null,
+                (ExecuteAction execute) => execute,
+                (CancelAction cancel) => cancel,
+                (FailAction fail) => fail);
+            // If the action is one of fail, cancel or wait (null), break and return early.
+            if (action?.Value is FailAction or CancelAction or null)
+            {
+                return action;
+            }
+        }
 
-    private static Cancel? CancelOrNull(StepAction? action) => action?
-        .Match<Cancel?>(
-            (execute) => null,
-            (cancel) => cancel,
-            (fail) => null);
+        // All trackers have been iterated over and none reported fail, cancel or wait.
+        // The only remaining possibility then is to execute.
+        return Actions.Execute;
+    }
 
-    private void SetResult(StepAction action)
+    private void SetResult(OrchestratorAction action)
     {
         _unsubscriber?.Dispose();
         _unsubscriber = null;
         _tcs.TrySetResult(action);
+    }
+
+    public void Dispose()
+    {
+        _unsubscriber?.Dispose();
+        _unsubscriber = null;
     }
 }

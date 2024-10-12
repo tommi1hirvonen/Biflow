@@ -32,6 +32,12 @@ public partial class Credential
     private const int LOGON32_PROVIDER_DEFAULT = 0;
     private const int LOGON32_LOGON_INTERACTIVE = 2;
 
+    [JsonIgnore]
+    public IEnumerable<ExeStep> ExeSteps { get; private set; } = new List<ExeStep>();
+
+    [JsonIgnore]
+    public IEnumerable<MsSqlConnection> Connections { get; private set; } = new List<MsSqlConnection>();
+
     [SupportedOSPlatform("windows")]
     public Task RunImpersonatedAsync(Func<Task> func)
     {

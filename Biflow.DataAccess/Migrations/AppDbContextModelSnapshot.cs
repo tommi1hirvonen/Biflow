@@ -18,7 +18,7 @@ namespace Biflow.DataAccess.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("app")
-                .HasAnnotation("ProductVersion", "8.0.0")
+                .HasAnnotation("ProductVersion", "8.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -38,6 +38,8 @@ namespace Biflow.DataAccess.Migrations
 
                     b.Property<string>("Token")
                         .IsRequired()
+                        .HasMaxLength(-1)
+                        .IsUnicode(true)
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("AppRegistrationId", "ResourceUrl");
@@ -157,7 +159,7 @@ namespace Biflow.DataAccess.Migrations
                     b.ToTable("BlobStorageClient", "app");
                 });
 
-            modelBuilder.Entity("Biflow.Core.Entities.ConnectionInfoBase", b =>
+            modelBuilder.Entity("Biflow.Core.Entities.ConnectionBase", b =>
                 {
                     b.Property<Guid>("ConnectionId")
                         .ValueGeneratedOnAdd()
@@ -170,6 +172,8 @@ namespace Biflow.DataAccess.Migrations
 
                     b.Property<string>("ConnectionString")
                         .IsRequired()
+                        .HasMaxLength(-1)
+                        .IsUnicode(true)
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ConnectionType")
@@ -177,9 +181,6 @@ namespace Biflow.DataAccess.Migrations
                         .HasMaxLength(50)
                         .IsUnicode(false)
                         .HasColumnType("varchar(50)");
-
-                    b.Property<Guid?>("CredentialId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("ConnectionId");
 
@@ -235,6 +236,32 @@ namespace Biflow.DataAccess.Migrations
                         .IsUnique();
 
                     b.ToTable("DataObject", "app");
+                });
+
+            modelBuilder.Entity("Biflow.Core.Entities.DatabricksWorkspace", b =>
+                {
+                    b.Property<Guid>("WorkspaceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ApiToken")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<string>("WorkspaceName")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("WorkspaceUrl")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.HasKey("WorkspaceId");
+
+                    b.ToTable("DatabricksWorkspace", "app");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.Dependency", b =>
@@ -294,6 +321,12 @@ namespace Biflow.DataAccess.Migrations
                     b.Property<string>("Snapshot")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SnapshotWithReferencesPreserved")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("nvarchar(max)")
+                        .HasDefaultValue("");
 
                     b.HasKey("VersionId");
 
@@ -535,6 +568,9 @@ namespace Biflow.DataAccess.Migrations
                         .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
+
+                    b.Property<int>("MaxConcurrentFunctionSteps")
+                        .HasColumnType("int");
 
                     b.Property<string>("ResourceGroupName")
                         .IsRequired()
@@ -813,6 +849,9 @@ namespace Biflow.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("MaxConcurrentPipelineSteps")
+                        .HasColumnType("int");
+
                     b.Property<string>("PipelineClientName")
                         .IsRequired()
                         .HasMaxLength(250)
@@ -833,9 +872,9 @@ namespace Biflow.DataAccess.Migrations
                     b.UseTphMappingStrategy();
                 });
 
-            modelBuilder.Entity("Biflow.Core.Entities.QlikCloudClient", b =>
+            modelBuilder.Entity("Biflow.Core.Entities.QlikCloudEnvironment", b =>
                 {
-                    b.Property<Guid>("QlikCloudClientId")
+                    b.Property<Guid>("QlikCloudEnvironmentId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
@@ -849,14 +888,14 @@ namespace Biflow.DataAccess.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");
 
-                    b.Property<string>("QlikCloudClientName")
+                    b.Property<string>("QlikCloudEnvironmentName")
                         .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
 
-                    b.HasKey("QlikCloudClientId");
+                    b.HasKey("QlikCloudEnvironmentId");
 
-                    b.ToTable("QlikCloudClient", "app");
+                    b.ToTable("QlikCloudEnvironment", "app");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.Schedule", b =>
@@ -1056,11 +1095,21 @@ namespace Biflow.DataAccess.Migrations
                     b.Property<DateTimeOffset?>("EndedOn")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<string>("ErrorMessages")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("ErrorMessages");
+
                     b.Property<string>("ExecutionStatus")
                         .IsRequired()
                         .HasMaxLength(50)
                         .IsUnicode(false)
                         .HasColumnType("varchar(50)");
+
+                    b.Property<string>("InfoMessages")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("InfoMessages");
 
                     b.Property<DateTimeOffset?>("StartedOn")
                         .HasColumnType("datetimeoffset");
@@ -1075,17 +1124,7 @@ namespace Biflow.DataAccess.Migrations
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
 
-                    b.Property<string>("_errorMessages")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("ErrorMessages");
-
-                    b.Property<string>("_infoMessages")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("InfoMessages");
-
-                    b.Property<string>("_warningMessages")
+                    b.Property<string>("WarningMessages")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("WarningMessages");
@@ -1412,6 +1451,9 @@ namespace Biflow.DataAccess.Migrations
                         .IsUnicode(false)
                         .HasColumnType("varchar(254)");
 
+                    b.Property<DateTimeOffset?>("LastLoginOn")
+                        .HasColumnType("datetimeoffset");
+
                     b.Property<string>("LastModifiedBy")
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
@@ -1521,22 +1563,52 @@ namespace Biflow.DataAccess.Migrations
                     b.ToTable("StepTag", "app");
                 });
 
-            modelBuilder.Entity("Biflow.Core.Entities.AnalysisServicesConnectionInfo", b =>
+            modelBuilder.Entity("Biflow.Core.Entities.AnalysisServicesConnection", b =>
                 {
-                    b.HasBaseType("Biflow.Core.Entities.ConnectionInfoBase");
+                    b.HasBaseType("Biflow.Core.Entities.ConnectionBase");
+
+                    b.Property<Guid?>("CredentialId")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CredentialId");
 
                     b.HasDiscriminator().HasValue("AnalysisServices");
                 });
 
-            modelBuilder.Entity("Biflow.Core.Entities.SqlConnectionInfo", b =>
+            modelBuilder.Entity("Biflow.Core.Entities.MsSqlConnection", b =>
                 {
-                    b.HasBaseType("Biflow.Core.Entities.ConnectionInfoBase");
+                    b.HasBaseType("Biflow.Core.Entities.ConnectionBase");
+
+                    b.Property<Guid?>("CredentialId")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CredentialId");
 
                     b.Property<string>("ExecutePackagesAsLogin")
                         .HasMaxLength(128)
                         .HasColumnType("nvarchar(128)");
 
+                    b.Property<int>("MaxConcurrentPackageSteps")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaxConcurrentSqlSteps")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("int")
+                        .HasColumnName("MaxConcurrentSqlSteps");
+
                     b.HasDiscriminator().HasValue("Sql");
+                });
+
+            modelBuilder.Entity("Biflow.Core.Entities.SnowflakeConnection", b =>
+                {
+                    b.HasBaseType("Biflow.Core.Entities.ConnectionBase");
+
+                    b.Property<int>("MaxConcurrentSqlSteps")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("int")
+                        .HasColumnName("MaxConcurrentSqlSteps");
+
+                    b.HasDiscriminator().HasValue("Snowflake");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.DataFactory", b =>
@@ -1597,6 +1669,27 @@ namespace Biflow.DataAccess.Migrations
                         .HasColumnName("TimeoutMinutes");
 
                     b.HasDiscriminator().HasValue("AgentJob");
+                });
+
+            modelBuilder.Entity("Biflow.Core.Entities.DatabricksStep", b =>
+                {
+                    b.HasBaseType("Biflow.Core.Entities.Step");
+
+                    b.Property<string>("DatabricksStepSettings")
+                        .IsRequired()
+                        .HasMaxLength(-1)
+                        .IsUnicode(true)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("DatabricksWorkspaceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("TimeoutMinutes")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("float")
+                        .HasColumnName("TimeoutMinutes");
+
+                    b.HasDiscriminator().HasValue("Databricks");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.DatasetStep", b =>
@@ -1785,14 +1878,14 @@ namespace Biflow.DataAccess.Migrations
                 {
                     b.HasBaseType("Biflow.Core.Entities.Step");
 
-                    b.Property<string>("AppId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(36)");
-
-                    b.Property<Guid>("QlikCloudClientId")
+                    b.Property<Guid>("QlikCloudEnvironmentId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("QlikStepSettings")
+                        .IsRequired()
+                        .HasMaxLength(-1)
+                        .IsUnicode(true)
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<double>("TimeoutMinutes")
                         .ValueGeneratedOnUpdateSometimes()
@@ -1876,6 +1969,27 @@ namespace Biflow.DataAccess.Migrations
                         .HasColumnName("TimeoutMinutes");
 
                     b.HasDiscriminator().HasValue("AgentJob");
+                });
+
+            modelBuilder.Entity("Biflow.Core.Entities.DatabricksStepExecution", b =>
+                {
+                    b.HasBaseType("Biflow.Core.Entities.StepExecution");
+
+                    b.Property<string>("DatabricksStepSettings")
+                        .IsRequired()
+                        .HasMaxLength(-1)
+                        .IsUnicode(true)
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("DatabricksWorkspaceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("TimeoutMinutes")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("float")
+                        .HasColumnName("TimeoutMinutes");
+
+                    b.HasDiscriminator().HasValue("Databricks");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.DatasetStepExecution", b =>
@@ -2068,14 +2182,14 @@ namespace Biflow.DataAccess.Migrations
                 {
                     b.HasBaseType("Biflow.Core.Entities.StepExecution");
 
-                    b.Property<string>("AppId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(36)");
-
-                    b.Property<Guid>("QlikCloudClientId")
+                    b.Property<Guid>("QlikCloudEnvironmentId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("QlikStepSettings")
+                        .IsRequired()
+                        .HasMaxLength(-1)
+                        .IsUnicode(true)
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<double>("TimeoutMinutes")
                         .ValueGeneratedOnUpdateSometimes()
@@ -2148,6 +2262,16 @@ namespace Biflow.DataAccess.Migrations
                     b.HasBaseType("Biflow.Core.Entities.StepExecutionAttempt");
 
                     b.HasDiscriminator().HasValue("AgentJob");
+                });
+
+            modelBuilder.Entity("Biflow.Core.Entities.DatabricksStepExecutionAttempt", b =>
+                {
+                    b.HasBaseType("Biflow.Core.Entities.StepExecutionAttempt");
+
+                    b.Property<long?>("JobRunId")
+                        .HasColumnType("bigint");
+
+                    b.HasDiscriminator().HasValue("Databricks");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.DatasetStepExecutionAttempt", b =>
@@ -2241,6 +2365,13 @@ namespace Biflow.DataAccess.Migrations
                     b.HasDiscriminator().HasValue("Tabular");
                 });
 
+            modelBuilder.Entity("Biflow.Core.Entities.DatabricksStepExecutionParameter", b =>
+                {
+                    b.HasBaseType("Biflow.Core.Entities.StepExecutionParameterBase");
+
+                    b.HasDiscriminator().HasValue("DatabricksNotebook");
+                });
+
             modelBuilder.Entity("Biflow.Core.Entities.EmailStepExecutionParameter", b =>
                 {
                     b.HasBaseType("Biflow.Core.Entities.StepExecutionParameterBase");
@@ -2297,6 +2428,13 @@ namespace Biflow.DataAccess.Migrations
                     b.HasBaseType("Biflow.Core.Entities.StepExecutionParameterBase");
 
                     b.HasDiscriminator().HasValue("Sql");
+                });
+
+            modelBuilder.Entity("Biflow.Core.Entities.DatabricksStepParameter", b =>
+                {
+                    b.HasBaseType("Biflow.Core.Entities.StepParameterBase");
+
+                    b.HasDiscriminator().HasValue("DatabricksNotebook");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.EmailStepParameter", b =>
@@ -2504,15 +2642,6 @@ namespace Biflow.DataAccess.Migrations
                     b.Navigation("AppRegistration");
                 });
 
-            modelBuilder.Entity("Biflow.Core.Entities.ConnectionInfoBase", b =>
-                {
-                    b.HasOne("Biflow.Core.Entities.Credential", "Credential")
-                        .WithMany()
-                        .HasForeignKey("CredentialId");
-
-                    b.Navigation("Credential");
-                });
-
             modelBuilder.Entity("Biflow.Core.Entities.Dependency", b =>
                 {
                     b.HasOne("Biflow.Core.Entities.Step", "DependantOnStep")
@@ -2676,7 +2805,7 @@ namespace Biflow.DataAccess.Migrations
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.HasOne("Biflow.Core.Entities.SqlConnectionInfo", "Connection")
+                    b.HasOne("Biflow.Core.Entities.MsSqlConnection", "Connection")
                         .WithMany("DataTables")
                         .HasForeignKey("ConnectionId")
                         .IsRequired();
@@ -3084,14 +3213,42 @@ namespace Biflow.DataAccess.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Biflow.Core.Entities.AnalysisServicesConnection", b =>
+                {
+                    b.HasOne("Biflow.Core.Entities.Credential", "Credential")
+                        .WithMany()
+                        .HasForeignKey("CredentialId");
+
+                    b.Navigation("Credential");
+                });
+
+            modelBuilder.Entity("Biflow.Core.Entities.MsSqlConnection", b =>
+                {
+                    b.HasOne("Biflow.Core.Entities.Credential", "Credential")
+                        .WithMany("Connections")
+                        .HasForeignKey("CredentialId");
+
+                    b.Navigation("Credential");
+                });
+
             modelBuilder.Entity("Biflow.Core.Entities.AgentJobStep", b =>
                 {
-                    b.HasOne("Biflow.Core.Entities.SqlConnectionInfo", "Connection")
+                    b.HasOne("Biflow.Core.Entities.MsSqlConnection", "Connection")
                         .WithMany("AgentJobSteps")
                         .HasForeignKey("ConnectionId")
                         .IsRequired();
 
                     b.Navigation("Connection");
+                });
+
+            modelBuilder.Entity("Biflow.Core.Entities.DatabricksStep", b =>
+                {
+                    b.HasOne("Biflow.Core.Entities.DatabricksWorkspace", "DatabricksWorkspace")
+                        .WithMany("Steps")
+                        .HasForeignKey("DatabricksWorkspaceId")
+                        .IsRequired();
+
+                    b.Navigation("DatabricksWorkspace");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.DatasetStep", b =>
@@ -3107,7 +3264,7 @@ namespace Biflow.DataAccess.Migrations
             modelBuilder.Entity("Biflow.Core.Entities.ExeStep", b =>
                 {
                     b.HasOne("Biflow.Core.Entities.Credential", "RunAsCredential")
-                        .WithMany()
+                        .WithMany("ExeSteps")
                         .HasForeignKey("RunAsCredentialId");
 
                     b.Navigation("RunAsCredential");
@@ -3136,7 +3293,7 @@ namespace Biflow.DataAccess.Migrations
 
             modelBuilder.Entity("Biflow.Core.Entities.PackageStep", b =>
                 {
-                    b.HasOne("Biflow.Core.Entities.SqlConnectionInfo", "Connection")
+                    b.HasOne("Biflow.Core.Entities.MsSqlConnection", "Connection")
                         .WithMany("PackageSteps")
                         .HasForeignKey("ConnectionId")
                         .IsRequired();
@@ -3156,17 +3313,17 @@ namespace Biflow.DataAccess.Migrations
 
             modelBuilder.Entity("Biflow.Core.Entities.QlikStep", b =>
                 {
-                    b.HasOne("Biflow.Core.Entities.QlikCloudClient", "QlikCloudClient")
+                    b.HasOne("Biflow.Core.Entities.QlikCloudEnvironment", "QlikCloudEnvironment")
                         .WithMany("Steps")
-                        .HasForeignKey("QlikCloudClientId")
+                        .HasForeignKey("QlikCloudEnvironmentId")
                         .IsRequired();
 
-                    b.Navigation("QlikCloudClient");
+                    b.Navigation("QlikCloudEnvironment");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.SqlStep", b =>
                 {
-                    b.HasOne("Biflow.Core.Entities.SqlConnectionInfo", "Connection")
+                    b.HasOne("Biflow.Core.Entities.ConnectionBase", "Connection")
                         .WithMany("SqlSteps")
                         .HasForeignKey("ConnectionId")
                         .IsRequired();
@@ -3183,7 +3340,7 @@ namespace Biflow.DataAccess.Migrations
 
             modelBuilder.Entity("Biflow.Core.Entities.TabularStep", b =>
                 {
-                    b.HasOne("Biflow.Core.Entities.AnalysisServicesConnectionInfo", "Connection")
+                    b.HasOne("Biflow.Core.Entities.AnalysisServicesConnection", "Connection")
                         .WithMany("TabularSteps")
                         .HasForeignKey("ConnectionId")
                         .IsRequired();
@@ -3199,6 +3356,17 @@ namespace Biflow.DataAccess.Migrations
                         .OnDelete(DeleteBehavior.ClientCascade);
 
                     b.Navigation("ResultCaptureJobParameter");
+                });
+
+            modelBuilder.Entity("Biflow.Core.Entities.DatabricksStepExecutionParameter", b =>
+                {
+                    b.HasOne("Biflow.Core.Entities.DatabricksStepExecution", "StepExecution")
+                        .WithMany("StepExecutionParameters")
+                        .HasForeignKey("ExecutionId", "StepId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("StepExecution");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.EmailStepExecutionParameter", b =>
@@ -3276,6 +3444,17 @@ namespace Biflow.DataAccess.Migrations
                         .IsRequired();
 
                     b.Navigation("StepExecution");
+                });
+
+            modelBuilder.Entity("Biflow.Core.Entities.DatabricksStepParameter", b =>
+                {
+                    b.HasOne("Biflow.Core.Entities.DatabricksStep", "Step")
+                        .WithMany("StepParameters")
+                        .HasForeignKey("StepId")
+                        .OnDelete(DeleteBehavior.ClientCascade)
+                        .IsRequired();
+
+                    b.Navigation("Step");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.EmailStepParameter", b =>
@@ -3428,7 +3607,24 @@ namespace Biflow.DataAccess.Migrations
                     b.Navigation("Steps");
                 });
 
+            modelBuilder.Entity("Biflow.Core.Entities.ConnectionBase", b =>
+                {
+                    b.Navigation("SqlSteps");
+                });
+
+            modelBuilder.Entity("Biflow.Core.Entities.Credential", b =>
+                {
+                    b.Navigation("Connections");
+
+                    b.Navigation("ExeSteps");
+                });
+
             modelBuilder.Entity("Biflow.Core.Entities.DataObject", b =>
+                {
+                    b.Navigation("Steps");
+                });
+
+            modelBuilder.Entity("Biflow.Core.Entities.DatabricksWorkspace", b =>
                 {
                     b.Navigation("Steps");
                 });
@@ -3512,7 +3708,7 @@ namespace Biflow.DataAccess.Migrations
                     b.Navigation("Steps");
                 });
 
-            modelBuilder.Entity("Biflow.Core.Entities.QlikCloudClient", b =>
+            modelBuilder.Entity("Biflow.Core.Entities.QlikCloudEnvironment", b =>
                 {
                     b.Navigation("Steps");
                 });
@@ -3560,20 +3756,23 @@ namespace Biflow.DataAccess.Migrations
                     b.Navigation("Subscriptions");
                 });
 
-            modelBuilder.Entity("Biflow.Core.Entities.AnalysisServicesConnectionInfo", b =>
+            modelBuilder.Entity("Biflow.Core.Entities.AnalysisServicesConnection", b =>
                 {
                     b.Navigation("TabularSteps");
                 });
 
-            modelBuilder.Entity("Biflow.Core.Entities.SqlConnectionInfo", b =>
+            modelBuilder.Entity("Biflow.Core.Entities.MsSqlConnection", b =>
                 {
                     b.Navigation("AgentJobSteps");
 
                     b.Navigation("DataTables");
 
                     b.Navigation("PackageSteps");
+                });
 
-                    b.Navigation("SqlSteps");
+            modelBuilder.Entity("Biflow.Core.Entities.DatabricksStep", b =>
+                {
+                    b.Navigation("StepParameters");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.EmailStep", b =>
@@ -3609,6 +3808,11 @@ namespace Biflow.DataAccess.Migrations
             modelBuilder.Entity("Biflow.Core.Entities.SqlStep", b =>
                 {
                     b.Navigation("StepParameters");
+                });
+
+            modelBuilder.Entity("Biflow.Core.Entities.DatabricksStepExecution", b =>
+                {
+                    b.Navigation("StepExecutionParameters");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.EmailStepExecution", b =>

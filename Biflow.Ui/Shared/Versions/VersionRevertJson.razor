@@ -1,0 +1,215 @@
+﻿@using System.Text
+@implements IDisposable
+
+@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject IMediator Mediator
+@inject ToasterService Toaster
+
+<div class="row my-3">
+    <div class="col-auto">
+        <a class="btn btn-sm btn-auto" href="versions">
+            <SvgIcon Icon="FeatherIcon.ArrowLeft" />
+            Back
+        </a>
+    </div>
+    <div class="col-10 d-flex justify-content-center">
+        <div class="card d-flex justify-content-center shadow-sm w-100" style="max-width: 60rem;">
+            <div class="card-body mx-auto py-4" style="max-width: 50rem;">
+                <div class="row">
+                    <div class="col">
+                        <h5>Revert from JSON</h5>
+                        <hr />
+                        <VersionRevertInfo />
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col">
+                        <HxAlert Color="ThemeColor.Secondary">
+                            <div class="row g-2">
+                                <div class="col-auto">
+                                    <SvgIcon Icon="FeatherIcon.AlertCircle" />
+                                </div>
+                                <div class="col">
+                                    <p class="small">
+                                        The uploaded JSON file must include object reference metadata (<span class="font-monospace">$id</span>, <span class="font-monospace">$ref</span> and <span class="font-monospace">$values</span> properties). Please ensure the correct file which includes these JSON attributes (exported as <span class="font-monospace">snapshot_with_references.json</span>) is uploaded.
+                                    </p>
+                                    <a class="alert-link small" href="versions/help">Read more</a>
+                                </div>
+                            </div>
+                        </HxAlert>
+                    </div>
+                </div>
+                <div class="row mt-2 align-items-end">
+                    <div class="col" style="max-width: 40rem;">
+                        <div>
+                            <label for="json_file" class="form-label">Select snapshot JSON file to load</label>
+                            <InputFile id="json_file" class="form-control form-control-sm" disabled=@(revertTask is not null) OnChange="LoadFileAsync" />
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        @if (loadingFile)
+                        {
+                            <HxSpinner Color="ThemeColor.Secondary" />
+                        }
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col">
+                        @if (revertTask is null)
+                        {
+                            <HxDropdownButtonGroup>
+                                <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto text-danger me-3" Spinner="false">
+                                    <SvgIcon Icon="FeatherIcon.AlertCircle" />
+                                    Revert...
+                                </HxDropdownToggleButton>
+                                <HxDropdownMenu>
+                                    <HxDropdownItem OnClick="() => RevertAsync()">
+                                        Start
+                                    </HxDropdownItem>
+                                </HxDropdownMenu>
+                            </HxDropdownButtonGroup>
+                        }
+                    </div>
+                </div>
+                @if (revertTask is not null)
+                {
+                    <div class="row mt-3">
+                        <div class="col">
+                            <HxAlert Color="ThemeColor.Info">
+                                <p>
+                                    @if (revertTask is not null)
+                                    {
+                                        <HxSpinner Size="SpinnerSize.Small" Color="ThemeColor.None" />
+                                    }
+                                    <strong class="ms-1">
+                                        Version revert in progress
+                                    </strong>
+                                </p>
+                                <p>Please do not close or leave this page.</p>
+                                <span class="alert-link text-decoration-underline pointer" @onclick="CancelRevertTask">
+                                    Cancel
+                                </span>
+                            </HxAlert>
+                        </div>
+                    </div>
+                }
+                @if (result is not null)
+                {
+                    <div class="row mt-3">
+                        <div class="col">
+                            <HxAlert Color="result.Color">
+                                @if (result.Title is not null)
+                                {
+                                    <p><strong>@result.Title</strong></p>
+                                }
+                                @result.Message
+                            </HxAlert>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-1">
+
+    </div>
+</div>
+
+@code {
+    private EnvironmentSnapshot? snapshot;
+    private CancellationTokenSource cts = new();
+    private Task? revertTask;
+    private RevertResult? result;
+    private bool loadingFile = false;
+
+    private async Task LoadFileAsync(InputFileChangeEventArgs e)
+    {
+        loadingFile = true;
+
+        string json;
+        try
+        {
+            using var stream = e.File.OpenReadStream();
+            using var reader = new StreamReader(stream);
+            json = await reader.ReadToEndAsync(cts.Token);
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error reading snapshot file", ex.Message);
+            loadingFile = false;
+            return;
+        }
+
+        try
+        {
+            // Assume referencesPreserved = true, because only then is reverting of the snapshot supported.
+            snapshot = EnvironmentSnapshot.FromJson(json, referencesPreserved: true);
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error deserializing snapshot JSON", ex.Message);
+        }
+        finally
+        {
+            loadingFile = false;
+        }
+    }
+
+    private async Task RevertAsync()
+    {
+        if (revertTask is not null)
+        {
+            return;
+        }
+
+        ArgumentNullException.ThrowIfNull(snapshot);
+
+        try
+        {
+            result = null;
+            var command = new VersionRevertCommand(snapshot);
+            revertTask = Mediator.SendAsync(command, cts.Token);
+            StateHasChanged();
+            await revertTask;
+            result = new(ThemeColor.Success, null, "Version reverted successfully");
+        }
+        catch (OperationCanceledException)
+        {
+            cts.Dispose();
+            cts = new();
+            result = new(ThemeColor.Warning, null, "Revert was canceled");
+        }
+        catch (Exception ex)
+        {
+            var message = ex switch
+            {
+                { InnerException: not null } when ex.Message.ContainsIgnoreCase("see the inner exception") => ex.InnerException.Message,
+                _ => ex.Message
+            };
+            result = new(ThemeColor.Danger, "Error reverting version", message);
+        }
+        finally
+        {
+            revertTask = null;
+        }
+    }
+
+    private void CancelRevertTask()
+    {
+        if (revertTask is not null && !cts.IsCancellationRequested)
+        {
+            cts.Cancel();
+        }
+    }
+
+    public void Dispose()
+    {
+        if (!cts.IsCancellationRequested)
+        {
+            cts.Cancel();
+        }
+        cts.Dispose();
+    }
+
+    private record RevertResult(ThemeColor Color, string? Title, string? Message);
+}

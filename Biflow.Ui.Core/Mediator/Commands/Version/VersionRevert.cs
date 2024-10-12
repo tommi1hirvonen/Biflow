@@ -1,9 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace Biflow.Ui.Core;
 
-public record VersionRevertCommand(int VersionId) : IRequest;
+public record VersionRevertCommand(EnvironmentSnapshot Snapshot) : IRequest;
 
 internal class VersionRevertCommandHandler(
     IDbContextFactory<RevertDbContext> dbContextFactory,
@@ -15,15 +14,9 @@ internal class VersionRevertCommandHandler(
     {
         try
         {
+            var snapshot = request.Snapshot;
+
             using var context = dbContextFactory.CreateDbContext();
-            var snapshotJson = await context.EnvironmentVersions
-                .AsNoTracking()
-                .Where(v => v.VersionId == request.VersionId)
-                .Select(v => v.Snapshot)
-                .FirstOrDefaultAsync(cancellationToken)
-                ?? throw new NotFoundException<EnvironmentSnapshot>(request.VersionId);
-            var snapshot = JsonSerializer.Deserialize<EnvironmentSnapshot>(snapshotJson, EnvironmentSnapshot.JsonSerializerOptions);
-            ArgumentNullException.ThrowIfNull(snapshot);
 
             // Manually controlling transactions is allowed since RevertDbContext does not use retry-on-failure execution strategy.
             using var transaction = context.Database.BeginTransaction();
@@ -107,15 +100,27 @@ internal class VersionRevertCommandHandler(
                     ?.FunctionAppKey;
             }
 
-            var capturedQlikTokens = await context.QlikCloudClients
+            var capturedQlikTokens = await context.QlikCloudEnvironments
                 .AsNoTracking()
-                .Select(q => new { q.QlikCloudClientId, q.ApiToken })
+                .Select(q => new { q.QlikCloudEnvironmentId, q.ApiToken })
                 .ToArrayAsync(cancellationToken);
 
-            foreach (var qlik in snapshot.QlikCloudClients.Where(q => string.IsNullOrEmpty(q.ApiToken)))
+            foreach (var qlik in snapshot.QlikCloudEnvironments.Where(q => string.IsNullOrEmpty(q.ApiToken)))
             {
                 qlik.ApiToken = capturedQlikTokens
-                    .FirstOrDefault(q => q.QlikCloudClientId == qlik.QlikCloudClientId)
+                    .FirstOrDefault(q => q.QlikCloudEnvironmentId == qlik.QlikCloudEnvironmentId)
+                    ?.ApiToken ?? "";
+            }
+
+            var capturedDatabricksWorkspaceTokens = await context.DatabricksWorkspaces
+                .AsNoTracking()
+                .Select(w => new { w.WorkspaceId, w.ApiToken })
+                .ToArrayAsync(cancellationToken);
+
+            foreach (var workspace in snapshot.DatabricksWorkspaces.Where(w => string.IsNullOrEmpty(w.ApiToken)))
+            {
+                workspace.ApiToken = capturedDatabricksWorkspaceTokens
+                    .FirstOrDefault(w => w.WorkspaceId == workspace.WorkspaceId)
                     ?.ApiToken ?? "";
             }
 
@@ -177,7 +182,8 @@ internal class VersionRevertCommandHandler(
             await context.Connections.ExecuteDeleteAsync(cancellationToken);
             await context.PipelineClients.ExecuteDeleteAsync(cancellationToken);
             await context.FunctionApps.ExecuteDeleteAsync(cancellationToken);
-            await context.QlikCloudClients.ExecuteDeleteAsync(cancellationToken);
+            await context.QlikCloudEnvironments.ExecuteDeleteAsync(cancellationToken);
+            await context.DatabricksWorkspaces.ExecuteDeleteAsync(cancellationToken);
             await context.BlobStorageClients.ExecuteDeleteAsync(cancellationToken);
             await context.Credentials.ExecuteDeleteAsync(cancellationToken);
             await context.AppRegistrations.ExecuteDeleteAsync(cancellationToken);
@@ -194,7 +200,8 @@ internal class VersionRevertCommandHandler(
             context.Connections.AddRange(snapshot.Connections);
             context.PipelineClients.AddRange(snapshot.PipelineClients);
             context.FunctionApps.AddRange(snapshot.FunctionApps);
-            context.QlikCloudClients.AddRange(snapshot.QlikCloudClients);
+            context.QlikCloudEnvironments.AddRange(snapshot.QlikCloudEnvironments);
+            context.DatabricksWorkspaces.AddRange(snapshot.DatabricksWorkspaces);
             context.BlobStorageClients.AddRange(snapshot.BlobStorageClients);
             await context.SaveChangesAsync(cancellationToken);
 

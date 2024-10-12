@@ -44,9 +44,6 @@
                 </th>
                 <th></th>
                 <th></th>
-                <th>
-                    Connection string
-                </th>
                 <th></th>
                 <th></th>
             </tr>
@@ -54,11 +51,11 @@
         <tbody>
             @if (connections is null)
             {
-                <tr><td colspan="7" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
+                <tr><td colspan="5" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
             else if (connections.Count == 0)
             {
-                <tr><td colspan="7">No connections</td></tr>
+                <tr><td colspan="5">No connections</td></tr>
             }
             else
             {
@@ -66,6 +63,7 @@
                 {
                     var steps = connection.Steps.Count();
                     var jobs = connection.Steps.Select(s => s.JobId).Distinct().Count();
+                    
                     <tr>
                         <td class="align-middle">
                             @connection.ConnectionName
@@ -90,43 +88,32 @@
                                 </HxDropdownButtonGroup>
                             </HxButtonGroup>
                         </td>
-                        <td>
-                            <HxButtonGroup>
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
-                                            @onclick="() => showConnectionString[connection.ConnectionId] = !showConnectionString[connection.ConnectionId]">
-                                    @if (showConnectionString[connection.ConnectionId])
-                                    {
-                                        <SvgIcon Icon="FeatherIcon.EyeOff" />
-                                    }
-                                    else
-                                    {
-                                        <SvgIcon Icon="FeatherIcon.Eye" />
-                                    }
-                                </HxButton>
-                            </HxButtonGroup>
-                        </td>
-                        <td class="align-middle font-monospace small">
-                            @if (showConnectionString[connection.ConnectionId])
-                            {
-                                @connection.ConnectionString
-                            }
-                            else
-                            {
-                                <text>************************************************************</text>
-                            }
-                        </td>
                         <td class="align-middle">
                             @(jobs > 0 ? $"{jobs} job(s)" : null)
                         </td>
                         <td class="align-middle">
                             <a class="text-body" href="javascript:void(0)"
-                            @onclick="async () =>
-                            {
-                                stepsConnection = connection;
-                                await stepsModal.LetAsync(x => x.ShowAsync());
-                            }">
+                                @onclick="async () =>
+                                {
+                                    stepsConnection = connection;
+                                    await stepsModal.LetAsync(x => x.ShowAsync());
+                                }">
                                 @(steps > 0 ? $"{steps} step(s)" : null)
                             </a>
+                        </td>
+                        <td class="align-middle">
+                            @if (connection is MsSqlConnection ms)
+                            {
+                                var tables = ms.DataTables.Count();
+                                <a class="text-body" href="javascript:void(0)"
+                                   @onclick="async () =>
+                                    {
+                                        tablesConnection = ms;
+                                        await tablesModal.LetAsync(x => x.ShowAsync());
+                                    }">
+                                    @(tables > 0 ? $"{tables} data table(s)" : null)
+                                </a>
+                            }
                         </td>
                     </tr>
                 }
@@ -183,14 +170,50 @@
     </FooterTemplate>
 </HxModal>
 
+<HxModal @ref="tablesModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Data tables using {tablesConnection?.ConnectionName}")">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Category</th>
+                            <th>Data table</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var table in tablesConnection?.DataTables
+                            .OrderBy(t => t.Category?.CategoryName)
+                            .ThenBy(t => t.DataTableName) ?? Enumerable.Empty<MasterDataTable>())
+                        {
+                            <tr>
+                                <td>
+                                    @(table.Category?.CategoryName ?? "No category")
+                                </td>
+                                <td>
+                                    @table.DataTableName
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <button class="btn btn-secondary" @onclick="async () => await tablesModal.LetAsync(x => x.HideAsync())">Close</button>
+    </FooterTemplate>
+</HxModal>
+
 @code {
     private readonly Dictionary<ConnectionType, IConnectionEditModal?> connectionEditModals = [];
 
     private List<Credential> credentials = [];
     private List<ConnectionBase>? connections;
-    private Dictionary<Guid, bool> showConnectionString = [];
     private ConnectionBase? stepsConnection;
+    private MsSqlConnection? tablesConnection;
     private HxModal? stepsModal;
+    private HxModal? tablesModal;
 
     private static readonly (string Name, int Ordinal, string? Description, ConnectionType Type)[] ConnectionTypes =
         Enum.GetValues<ConnectionType>().Select(c =>
@@ -222,9 +245,10 @@
             .ThenInclude(step => step.Job)
             .Include(c => (c as AnalysisServicesConnection)!.TabularSteps)
             .ThenInclude(step => step.Job)
+            .Include(c => (c as MsSqlConnection)!.DataTables)
+            .ThenInclude(t => t.Category)
             .OrderBy(c => c.ConnectionName)
             .ToListAsync();
-        showConnectionString = connections.ToDictionary(key => key.ConnectionId, value => false);
     }
 
     private async Task DeleteConnection(ConnectionBase connection)
@@ -233,7 +257,6 @@
         {
             await Mediator.SendAsync(new DeleteConnectionCommand(connection.ConnectionId));
             connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
-            showConnectionString.Remove(connection.ConnectionId);
         }
         catch (Exception ex)
         {
@@ -248,7 +271,6 @@
         {
             await Mediator.SendAsync(new CreateConnectionCommand(connection));
             connections?.Add(connection);
-            showConnectionString[connection.ConnectionId] = false;
         }
         else
         {

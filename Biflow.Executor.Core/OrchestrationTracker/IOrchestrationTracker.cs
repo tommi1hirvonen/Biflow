@@ -6,5 +6,5 @@ internal interface IOrchestrationTracker
 {
     public StepExecutionMonitor? HandleUpdate(OrchestrationUpdate value);
 
-    public StepAction? GetStepAction();
+    public ObserverAction GetStepAction();
 }

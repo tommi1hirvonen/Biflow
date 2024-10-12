@@ -8,5 +8,6 @@ public enum ParameterType
     Pipeline,
     Exe,
     Function,
-    Email
+    Email,
+    DatabricksNotebook
 }

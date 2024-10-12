@@ -12,7 +12,14 @@ internal class TargetTracker(StepExecution stepExecution) : IOrchestrationTracke
 
     public StepExecutionMonitor? HandleUpdate(OrchestrationUpdate value)
     {
+        // If there are no targets for this step, no need to track steps.
+        if (_targets.Count == 0)
+        {
+            return null;
+        }
+
         var (step, status) = value;
+
         if ((step.StepId != stepExecution.StepId || step.ExecutionId != stepExecution.ExecutionId)
             && step.DataObjects.Any(o => o.ReferenceType == DataObjectReferenceType.Target && _targets.Contains(o.ObjectId)))
         {
@@ -26,11 +33,18 @@ internal class TargetTracker(StepExecution stepExecution) : IOrchestrationTracke
                 MonitoringReason = MonitoringReason.CommonTarget
             };
         }
+
         return null;
     }
 
-    public StepAction? GetStepAction()
+    public ObserverAction GetStepAction()
     {
+        // If there are no targets or no steps currently writing to the targets, return early.
+        if (_targets.Count == 0 || _writers.Count == 0)
+        {
+            return Actions.Execute;
+        }
+
         var targets = _writers
             .Where(w => w.Value == OrchestrationStatus.Running)
             .SelectMany(w => w.Key.DataObjects.Where(o => o.ReferenceType == DataObjectReferenceType.Target && _targets.Contains(o.ObjectId)))
@@ -39,14 +53,16 @@ internal class TargetTracker(StepExecution stepExecution) : IOrchestrationTracke
         var limits = stepExecution.DataObjects
             .Where(o => o.ReferenceType == DataObjectReferenceType.Target)
             .ToDictionary(o => o.ObjectId, o => o.DataObject.MaxConcurrentWrites);
+        
         foreach (var (target, count) in targets)
         {
             var limit = limits.GetValueOrDefault(target, 0);
             if (limit > 0 && count >= limit)
             {
-                return null;
+                return Actions.Wait;
             }
         }
-        return new Execute();
+
+        return Actions.Execute;
     }
 }

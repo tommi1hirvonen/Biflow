@@ -15,7 +15,7 @@
                         <select class="form-select form-select-sm" @bind="clientId">
                             @foreach (var client in QlikClients ?? [])
                             {
-                                <option value="@client.QlikCloudClientId">@client.QlikCloudClientName</option>
+                                <option value="@client.QlikCloudEnvironmentId">@client.QlikCloudEnvironmentName</option>
                             }
                         </select>
                     </div>
@@ -130,7 +130,7 @@
 
 @code {
     [Parameter]
-    public IEnumerable<QlikCloudClient>? QlikClients { get; set; }
+    public IEnumerable<QlikCloudEnvironment>? QlikClients { get; set; }
 
     [Parameter]
     public bool AllowClientChange { get; set; } = false;
@@ -153,7 +153,7 @@
         }
         else
         {
-            this.clientId = QlikClients?.FirstOrDefault()?.QlikCloudClientId ?? Guid.Empty;
+            this.clientId = QlikClients?.FirstOrDefault()?.QlikCloudEnvironmentId ?? Guid.Empty;
         }
 
         if (this.clientId == Guid.Empty)
@@ -181,9 +181,9 @@
 
         try
         {
-            var client = QlikClients?.FirstOrDefault(c => c.QlikCloudClientId == clientId);
+            var client = QlikClients?.FirstOrDefault(c => c.QlikCloudEnvironmentId == clientId);
             ArgumentNullException.ThrowIfNull(client);
-            using var connectedClient = client.CreateConnectedClient(HttpClientFactory);
+            using var connectedClient = client.CreateClient(HttpClientFactory);
             spaces = await connectedClient.GetAppsAsync();
         }
         catch (Exception ex)

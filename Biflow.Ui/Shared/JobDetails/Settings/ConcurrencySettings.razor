@@ -12,12 +12,12 @@
         <FluentValidationValidator Validator="JobValidator" />
 
         <div class="text-secondary">
-            <p>Define the maximum number of steps allowed to run at the same time. The default value is defined in the executer application's configuration file.</p>
+            <p>Define the maximum number of steps allowed to run at the same time in this job.</p>
             <p>You can fine-tune the level of concurrency by defining maximum parallel steps for each step type. The main max parallel steps setting is always respected, however. This means that step type based limits only apply when they are lower than the main value.</p>
         </div>
 
         <div>
-            <label class="form-label">Max parallel steps (0 = use default)</label>
+            <label class="form-label">Max parallel steps (0 = no limit)</label>
             <InputNumber class="form-control form-control-sm" style="max-width: 10rem;" @bind-Value="editJob.MaxParallelSteps"></InputNumber>
         </div>
 

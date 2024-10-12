@@ -29,7 +29,7 @@
                                 <div class="input-group-text">
                                     <SvgIcon Icon="FeatherIcon.Database" />
                                 </div>
-                                <InputTextArea class="form-control" rows="3" @bind-Value="connection.ConnectionString" style="font-family:monospace;"></InputTextArea>
+                                <InputTextArea class="form-control" rows="4" @bind-Value="connection.ConnectionString" style="font-family: monospace; font-size: 0.9em;"></InputTextArea>
                             </div>
                         </div>
 
@@ -50,6 +50,18 @@
                                 {
                                     <span class="badge bg-danger">Failed</span>
                                 }
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col">
+                                <label class="form-label">Max concurrent SQL step executions</label>
+                                <InputNumber class="form-control" style="max-width: 10rem;" @bind-Value="connection.MaxConcurrentSqlSteps"></InputNumber>
+                                <div class="form-text">
+                                    Limit the number of concurrently executing SQL steps across all executions for this connection.
+                                    <br />
+                                    0 = no limit
+                                </div>
                             </div>
                         </div>
                     </div>

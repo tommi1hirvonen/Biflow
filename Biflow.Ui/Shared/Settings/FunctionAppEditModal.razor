@@ -4,7 +4,7 @@
 @inject ITokenService TokenService
 @inject IJSRuntime JS
 
-<HxModal @ref="modal" Size="ModalSize.Large" OnClosed="() => connectionTestSuccess = null" Title="@(functionApp?.FunctionAppId == Guid.Empty ? "New Function App" : "Edit " + functionApp?.FunctionAppName)">
+<HxModal @ref="modal" Size="ModalSize.Large" OnClosed="() => connectionTestSuccess = null" Title="@(functionApp?.FunctionAppId == Guid.Empty ? "New Function App" : "Edit " + functionApp?.FunctionAppName)" Scrollable="true">
     
     <BodyTemplate>
         @if (functionApp is not null)
@@ -81,6 +81,18 @@
                                     <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
                                     Browse function app keys
                                 </HxButton>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col">
+                                <label class="form-label">Max concurrent function step executions</label>
+                                <InputNumber class="form-control" style="max-width: 10rem;" @bind-Value="functionApp.MaxConcurrentFunctionSteps"></InputNumber>
+                                <div class="form-text">
+                                    Limit the number of concurrently executing function steps across all executions for this Function App.
+                                    <br/>
+                                    0 = no limit
+                                </div>
                             </div>
                         </div>
 

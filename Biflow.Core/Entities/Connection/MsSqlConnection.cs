@@ -20,12 +20,19 @@ public class MsSqlConnection() : ConnectionBase(ConnectionType.Sql)
 
     private string? _executePackagesAsLogin;
 
+    [Range(0, int.MaxValue)]
+    public int MaxConcurrentSqlSteps { get; set; } = 0;
+
+    [Range(0, int.MaxValue)]
+    public int MaxConcurrentPackageSteps { get; set; } = 0;
+
     [JsonIgnore]
     public IEnumerable<AgentJobStep> AgentJobSteps { get; set; } = new List<AgentJobStep>();
 
     [JsonIgnore]
     public IEnumerable<PackageStep> PackageSteps { get; set; } = new List<PackageStep>();
 
+    [JsonIgnore]
     public override IEnumerable<Step> Steps => AgentJobSteps.Cast<Step>().Concat(PackageSteps).Concat(SqlSteps);
 
     [JsonIgnore]

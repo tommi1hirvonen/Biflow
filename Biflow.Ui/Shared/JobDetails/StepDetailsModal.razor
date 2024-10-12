@@ -182,6 +182,13 @@
                                     <td>@email.Body</td>
                                 </tr>
                             }
+                            else if (step is DatabricksStep db)
+                            {
+                                <tr>
+                                    <td>Settings</td>
+                                    <td><pre><code>@JsonSerializer.Serialize(db.DatabricksStepSettings, JsonSerializerOptions)</code></pre></td>
+                                </tr>
+                            }
                             <tr>
                                 <td>Execution condition</td>
                                 <td>
@@ -256,6 +263,8 @@
 @code {
     private HxModal? modal;
     private Step? step;
+
+    private static JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
 
     public async Task ShowAsync(Step step)
     {

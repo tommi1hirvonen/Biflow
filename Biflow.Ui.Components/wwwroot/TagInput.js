@@ -1,7 +1,7 @@
 
 const listener = function onClickListener(event) {
-    var elem = event.target;
-    var autosuggests = document.querySelectorAll('.taginput-wrapper');
+    const elem = event.target;
+    const autosuggests = document.querySelectorAll('.taginput-wrapper');
     if (!elem.closest('.taginput-wrapper')) {
         [].forEach.call(autosuggests, function (autosuggest) {
             autosuggest.dotNetObject.invokeMethodAsync('TagInput_Hide');
@@ -17,8 +17,8 @@ const listener = function onClickListener(event) {
 
 export function calculateShowUp(listWrapper) {
     listWrapper.classList.add('show');
-    let _vh = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
-    let space = _vh - listWrapper.getBoundingClientRect().bottom;
+    const _vh = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+    const space = _vh - listWrapper.getBoundingClientRect().bottom;
     if (space < 0) {
         return true;
     } else {

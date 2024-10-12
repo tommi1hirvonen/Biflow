@@ -65,15 +65,21 @@
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
-                <NavLink class="nav-link" href="settings/qlikcloudclients">
+                <NavLink class="nav-link" href="settings/qlikcloudenvironments">
                     <SvgIcon Icon="LucideIcon.ScatterChart" />
-                    Qlik Cloud Clients
+                    Qlik Cloud environments
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" href="settings/blobclients">
                     <SvgIcon Icon="LucideIcon.Container" />
                     Blob Storage Clients
+                </NavLink>
+            </li>
+            <li class="nav-item" role="presentation">
+                <NavLink class="nav-link" href="settings/databricksworkspaces">
+                    <SvgIcon Icon="LucideIcon.Layers3" />
+                    Databricks workspaces
                 </NavLink>
             </li>
         </ul>
@@ -137,10 +143,16 @@ else if (Page == "functionapps")
         <FunctionAppsList />
     </AuthorizeView>
 }
-else if (Page == "qlikcloudclients")
+else if (Page == "qlikcloudenvironments")
 {
     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
-        <QlikCloudClientsList />
+        <QlikCloudEnvironmentsList />
+    </AuthorizeView>
+}
+else if (Page == "databricksworkspaces")
+{
+    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
+        <DatabricksWorkspacesList />
     </AuthorizeView>
 }
 else if (Page == "blobclients")

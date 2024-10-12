@@ -74,13 +74,13 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
         {
             StepExecutionSortMode.StepAsc => filtered?.OrderBy(e => e.StepName),
             StepExecutionSortMode.StepDesc => filtered?.OrderByDescending(e => e.StepName),
-            StepExecutionSortMode.StartedAsc => filtered?.OrderBy(e => e.StartedOn is null).ThenBy(e => e.StartedOn),
-            StepExecutionSortMode.StartedDesc => filtered?.OrderByDescending(e => e.StartedOn),
+            StepExecutionSortMode.StartedAsc => filtered?.OrderBy(e => e.StartedOn is null).ThenBy(e => e.StartedOn).ThenBy(e => e.ExecutionPhase),
+            StepExecutionSortMode.StartedDesc => filtered?.OrderByDescending(e => e.StartedOn).ThenByDescending(e => e.ExecutionPhase),
             StepExecutionSortMode.EndedAsc => filtered?.OrderBy(e => e.EndedOn),
             StepExecutionSortMode.EndedDesc => filtered?.OrderByDescending(e => e.EndedOn),
             StepExecutionSortMode.DurationAsc => filtered?.OrderBy(e => e.ExecutionInSeconds).ThenByDescending(e => e.StartedOn),
             StepExecutionSortMode.DurationDesc => filtered?.OrderByDescending(e => e.ExecutionInSeconds).ThenByDescending(e => e.StartedOn),
-            _ => filtered?.OrderBy(e => e.StartedOn is null).ThenBy(e => e.StartedOn)
+            _ => filtered?.OrderBy(e => e.StartedOn is null).ThenBy(e => e.StartedOn).ThenBy(e => e.ExecutionPhase)
         };
     }
 

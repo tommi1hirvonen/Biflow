@@ -12,6 +12,7 @@ public readonly struct RoleTag(string role) : ITag
         Roles.Editor => TagColor.Purple,
         Roles.Operator => TagColor.Green,
         Roles.DataTableMaintainer => TagColor.Blue,
+        Roles.VersionManager => TagColor.Yellow,
         Roles.SettingsEditor => TagColor.Yellow,
         _ => TagColor.DarkGray
     };

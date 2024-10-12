@@ -25,7 +25,6 @@ public class DatabaseFixture : IAsyncLifetime
         {
             { "ConnectionStrings:AppDbContext", _connectionString },
             { "PollingIntervalMs", "5000" },
-            { "MaximumParallelSteps", "10" },
             { "EmailSettings:SmtpServer", "" },
             { "EmailSettings:EnableSsl", "true" },
             { "EmailSettings:Port", "587" },

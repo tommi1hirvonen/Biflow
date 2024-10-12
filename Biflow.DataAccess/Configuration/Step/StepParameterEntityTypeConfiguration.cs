@@ -29,7 +29,8 @@ internal class StepParameterEntityTypeConfiguration : IEntityTypeConfiguration<S
             .HasValue<ExeStepParameter>(ParameterType.Exe)
             .HasValue<FunctionStepParameter>(ParameterType.Function)
             .HasValue<PipelineStepParameter>(ParameterType.Pipeline)
-            .HasValue<EmailStepParameter>(ParameterType.Email);
+            .HasValue<EmailStepParameter>(ParameterType.Email)
+            .HasValue<DatabricksStepParameter>(ParameterType.DatabricksNotebook);
 
         builder.OwnsOne(s => s.Expression, ece =>
         {

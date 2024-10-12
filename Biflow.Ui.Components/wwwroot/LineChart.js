@@ -1,17 +1,17 @@
 export function draw(chartId, series, yAxisTitle, yMin, yStepSize, isDarkTheme) {
 
-    var datasets = JSON.parse(series);
+    const datasets = JSON.parse(series);
 
-    var chartElement = document.getElementById(chartId)
+    const chartElement = document.getElementById(chartId)
 
     // Check if chart already exists and destroy if so.
-    var chart = Chart.getChart(chartId)
+    let chart = Chart.getChart(chartId)
     if (chart) {
         chart.destroy();
     }
 
-    var gridColor = isDarkTheme ? '#393939' : '#e6e6e6';
-    var textColor = isDarkTheme ? '#aaaaaa' : '#666666';
+    const gridColor = isDarkTheme ? '#393939' : '#e6e6e6';
+    const textColor = isDarkTheme ? '#aaaaaa' : '#666666';
 
     chart = new Chart(chartElement, {
         type: 'line',

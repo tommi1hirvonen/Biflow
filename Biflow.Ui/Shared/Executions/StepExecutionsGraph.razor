@@ -76,7 +76,7 @@
                 })
                 .ToList();
             <Virtualize Context="group" Items="executions" ItemSize="32.5714f">
-                <div class="row border-top">
+                <div class="row border-top gantt-row">
                     <div class="col-xl-3 col-lg-4 col-5 text-end py-1">
                         <small>
                             @group.Key.StepName
@@ -112,7 +112,7 @@
                                         Monitors
                                     </DropdownMenuItem>
                                     <DropdownMenuItem @onclick="async () => await stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(execution.StepId))">
-                                        <SvgIcon Icon="LucideIcon.History" />
+                                        <SvgIcon Icon="FeatherIcon.Activity" />
                                         History
                                     </DropdownMenuItem>
                                     <DropdownMenuItem @onclick="@(() => NavigationManager.NavigateTo($"executions/{execution.ExecutionId}/graph/{execution.StepId}"))">
@@ -157,7 +157,7 @@
                                         Monitors
                                     </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(detailStep.StepId))">
-                                        <SvgIcon Icon="LucideIcon.History" />
+                                        <SvgIcon Icon="FeatherIcon.Activity" />
                                         History
                                     </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="@(() => NavigationManager.NavigateTo($"executions/{detailStep.ExecutionId}/graph/{detailStep.StepId}"))">

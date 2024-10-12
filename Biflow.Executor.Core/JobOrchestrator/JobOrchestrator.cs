@@ -2,23 +2,21 @@
 using Biflow.Executor.Core.OrchestrationTracker;
 using Biflow.Executor.Core.Orchestrator;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace Biflow.Executor.Core.JobOrchestrator;
 
-internal class JobOrchestrator : IJobOrchestrator
+internal class JobOrchestrator : IJobOrchestrator, IStepExecutionListener
 {
     private readonly ILogger<JobOrchestrator> _logger;
     private readonly IGlobalOrchestrator _globalOrchestrator;
     private readonly SemaphoreSlim _mainSemaphore;
     private readonly Dictionary<StepType, SemaphoreSlim> _stepTypeSemaphores;
-    private readonly Dictionary<ExecutionDataObject, SemaphoreSlim> _targetSemaphores;
     private readonly Execution _execution;
     private readonly Dictionary<StepExecution, ExtendedCancellationTokenSource> _cancellationTokenSources;
+    private readonly Dictionary<StepExecution, List<SemaphoreSlim>> _enteredSemaphores = [];
 
     public JobOrchestrator(
         ILogger<JobOrchestrator> logger,
-        IOptionsMonitor<ExecutionOptions> options,
         IGlobalOrchestrator globalOrchestrator,
         Execution execution)
     {
@@ -28,31 +26,18 @@ internal class JobOrchestrator : IJobOrchestrator
         _cancellationTokenSources = _execution.StepExecutions
             .ToDictionary(e => e, _ => new ExtendedCancellationTokenSource());
 
-        // If MaxParallelSteps was defined for the job, use that. Otherwise default to the value from configuration.
-        var maxParallelStepsMain = execution.MaxParallelSteps > 0 ? execution.MaxParallelSteps : options.CurrentValue.MaximumParallelSteps;
+        // If MaxParallelSteps was defined for the job, use that.
+        // Otherwise default to int.MaxValue, i.e. practically no upper limit.
+        var maxParallelStepsMain = execution.MaxParallelSteps > 0
+            ? execution.MaxParallelSteps
+            : int.MaxValue;
         _mainSemaphore = new SemaphoreSlim(maxParallelStepsMain, maxParallelStepsMain);
 
         // Create a Dictionary with max parallel steps for each step type.
-        _stepTypeSemaphores = Enum.GetValues<StepType>()
-            .ToDictionary(type => type, type =>
-            {
-                // Default to the main value of max parallel steps if the setting was not defined for the step type.
-                var typeConcurrency = execution.ExecutionConcurrencies.FirstOrDefault(c => c.StepType == type)?.MaxParallelSteps;
-                var maxParallelSteps = typeConcurrency > 0 ? (int)typeConcurrency : maxParallelStepsMain;
-                return new SemaphoreSlim(maxParallelSteps, maxParallelSteps);
-            });
-
-        // Create a Dictionary with max concurrent steps for each target.
-        // This allows only a predefined number of steps to write to the same target concurrently.
-        // This handles situations where the same job execution might start immediately writing to the
-        // same data object with two different steps (not handled by TargetTracker).
-        var targets = _execution.StepExecutions
-            .SelectMany(e => e.DataObjects)
-            .Where(d => d.ReferenceType == DataObjectReferenceType.Target)
-            .Select(t => t.DataObject)
-            .Where(t => t.MaxConcurrentWrites > 0)
-            .Distinct();
-        _targetSemaphores = targets.ToDictionary(t => t, t => new SemaphoreSlim(t.MaxConcurrentWrites, t.MaxConcurrentWrites));
+        _stepTypeSemaphores = execution.ExecutionConcurrencies
+            .Where(c => c.MaxParallelSteps > 0)
+            .DistinctBy(c => c.StepType)
+            .ToDictionary(c => c.StepType, c => new SemaphoreSlim(c.MaxParallelSteps, c.MaxParallelSteps));
     }
 
     public async Task RunAsync(CancellationToken cancellationToken)
@@ -60,17 +45,36 @@ internal class JobOrchestrator : IJobOrchestrator
         var observers = _execution.StepExecutions
             .Select(step =>
             {
-                var listener = new StepProcessingListener(this, step);
                 var duplicateTracker = new DuplicateExecutionTracker(step);
                 var targetTracker = new TargetTracker(step); // Handles target data object synchronization across job executions.
-                IEnumerable<IOrchestrationTracker> trackers = step.Execution.ExecutionMode switch
+
+                // The order in which trackers are enumerated in OrchestrationObserver matters.
+                // 1. Check for duplicate executions of the step
+                // 2. Check execution phases or dependencies or both, depending on the execution mode.
+                // 3. Check whether potential target data objects are already being written to or that their concurrency allows more steps to be executed.
+                IOrchestrationTracker[] trackers = step.Execution.ExecutionMode switch
                 {
                     ExecutionMode.ExecutionPhase => [duplicateTracker, new ExecutionPhaseTracker(step), targetTracker],
                     ExecutionMode.Dependency => [duplicateTracker, new DependencyTracker(step), targetTracker],
                     ExecutionMode.Hybrid => [duplicateTracker, new ExecutionPhaseTracker(step), new DependencyTracker(step), targetTracker],
-                    _ => throw new ApplicationException()
+                    _ => throw new ArgumentException($"Unsupported execution mode {step.Execution.ExecutionMode} for execution id {step.ExecutionId}")
                 };
-                var observer = new OrchestrationObserver(_logger, step, listener, trackers, _cancellationTokenSources[step]);
+
+                trackers = step switch
+                {
+                    FunctionStepExecution function => [.. trackers, new FunctionAppTracker(function)],
+                    SqlStepExecution or PackageStepExecution => [.. trackers, new SqlConnectionTracker(step)],
+                    PipelineStepExecution pipeline => [.. trackers, new PipelineClientTracker(pipeline)],
+                    _ => trackers
+                };
+
+                var observer = new OrchestrationObserver(
+                    logger: _logger,
+                    stepExecution: step,
+                    orchestrationListener: this,
+                    orchestrationTrackers: trackers,
+                    cancellationTokenSource: _cancellationTokenSources[step]);
+
                 return observer;
             })
             .ToList();
@@ -128,50 +132,38 @@ internal class JobOrchestrator : IJobOrchestrator
         }
     }
 
-    private class StepProcessingListener(JobOrchestrator instance, StepExecution stepExecution) : IStepExecutionListener
+    public async Task OnPreExecuteAsync(StepExecution stepExecution, ExtendedCancellationTokenSource cancellationTokenSource)
     {
-        private readonly JobOrchestrator _instance = instance;
-        private readonly StepExecution _stepExecution = stepExecution;
-        private readonly List<SemaphoreSlim> _enteredSemaphores = [];
+        var cancellationToken = cancellationTokenSource.Token;
 
-        public async Task OnPreExecuteAsync(ExtendedCancellationTokenSource cancellationTokenSource)
+        List<SemaphoreSlim> enteredSemaphores = [];
+        _enteredSemaphores[stepExecution] = enteredSemaphores;
+
+        // Wait until the semaphores can be entered and the step can be started.
+        // Start from the most detailed semaphores and move towards the main semaphore.
+        // Keep track of semaphores that have been entered. If the step is stopped/canceled
+        // while waiting to enter one of the semaphores, they can be released afterwards.
+
+        if (_stepTypeSemaphores.TryGetValue(stepExecution.StepType, out var stepTypeSemaphore))
         {
-            var cancellationToken = cancellationTokenSource.Token;
-
-            // Wait until the semaphores can be entered and the step can be started.
-            // Start from the most detailed semaphores and move towards the main semaphore.
-            // Keep track of semaphores that have been entered. If the step is stopped/canceled
-            // while waiting to enter one of the semaphores, they can be released afterwards.
-            var targets = _stepExecution.DataObjects
-                .Where(d => d.ReferenceType == DataObjectReferenceType.Target)
-                .Select(d => d.DataObject);
-            foreach (var target in targets)
-            {
-                // If the target has a max no of concurrent writes defined, wait until the target semaphore can be entered.
-                if (_instance._targetSemaphores.TryGetValue(target, out var semaphore))
-                {
-                    await semaphore.WaitAsync(cancellationToken);
-                    _enteredSemaphores.Add(semaphore);
-                }
-            }
-            var stepTypeSemaphore = _instance._stepTypeSemaphores[_stepExecution.StepType];
             await stepTypeSemaphore.WaitAsync(cancellationToken);
-            _enteredSemaphores.Add(stepTypeSemaphore);
-            await _instance._mainSemaphore.WaitAsync(cancellationToken);
-            _enteredSemaphores.Add(_instance._mainSemaphore);
+            enteredSemaphores.Add(stepTypeSemaphore);
         }
 
-        public Task OnPostExecuteAsync()
-        {
-            // Release the semaphores once to make room for new parallel executions.
-            foreach (var semaphore in _enteredSemaphores)
-            {
-                semaphore.Release();
-            }
-
-            _instance._logger.LogInformation("{ExecutionId} {step} Finished step execution", _instance._execution.ExecutionId, _stepExecution);
-            return Task.CompletedTask;
-        }
+        await _mainSemaphore.WaitAsync(cancellationToken);
+        enteredSemaphores.Add(_mainSemaphore);
     }
 
+    public Task OnPostExecuteAsync(StepExecution stepExecution)
+    {
+        foreach (var semaphore in _enteredSemaphores[stepExecution])
+        {
+            semaphore.Release();
+        }
+
+        _enteredSemaphores.Remove(stepExecution);
+
+        _logger.LogInformation("{ExecutionId} {step} Finished step execution", _execution.ExecutionId, stepExecution);
+        return Task.CompletedTask;
+    }
 }

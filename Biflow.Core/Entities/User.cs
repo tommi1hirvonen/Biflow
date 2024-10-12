@@ -34,6 +34,8 @@ public class User : IAuditable
     [MaxLength(250)]
     public string? LastModifiedBy { get; set; }
 
+    public DateTimeOffset? LastLoginOn { get; set; }
+
     public ICollection<Subscription> Subscriptions { get; } = new List<Subscription>();
 
     public ICollection<Job> Jobs { get; } = new List<Job>();
@@ -85,6 +87,18 @@ public class User : IAuditable
         else if (!enabled)
         {
             _roles.Remove(R.DataTableMaintainer);
+        }
+    }
+
+    public void SetIsVersionManager(bool enabled = true)
+    {
+        if (enabled && !_roles.Contains(R.Admin) && !_roles.Contains(R.VersionManager))
+        {
+            _roles.Add(R.VersionManager);
+        }
+        else if (!enabled)
+        {
+            _roles.Remove(R.VersionManager);
         }
     }
 }

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components.Server.Circuits;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Identity.Web;
 using Serilog;
+using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +24,8 @@ builder.Services.AddApplicationInsightsTelemetry();
 builder.Services.AddUiCoreServices(builder.Configuration);
 builder.Services.AddUiCoreAuthentication(builder.Configuration);
 builder.Services.AddValidationServices();
+
+builder.Services.AddLocalization();
 
 builder.Services.AddControllers(); // Needed for MicrosoftIdentityUI
 builder.Services.AddRazorComponents()
@@ -43,6 +46,9 @@ builder.Services.AddHxMessageBoxHost();
 SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
 SqlMapper.AddTypeHandler(new TimeOnlyTypeHandler());
 
+// Register Azure Key Vault provider for Always Encrypted.
+Biflow.DataAccess.Extensions.RegisterAzureKeyVaultColumnEncryptionKeyStoreProvider(builder.Configuration);
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -53,6 +59,17 @@ else
 {
     app.UseExceptionHandler("/Error");
 }
+
+var supportedCultures = CultureInfo
+    .GetCultures(CultureTypes.AllCultures)
+    .Select(c => c.Name)
+    .ToArray();
+var localizationOptions = new RequestLocalizationOptions()
+    .SetDefaultCulture("en-US")
+    .AddSupportedCultures(supportedCultures)
+    .AddSupportedUICultures(supportedCultures);
+
+app.UseRequestLocalization(localizationOptions);
 
 app.UseStaticFiles();
 app.UseAntiforgery();

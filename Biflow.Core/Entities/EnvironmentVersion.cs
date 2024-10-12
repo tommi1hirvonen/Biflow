@@ -10,6 +10,8 @@ public class EnvironmentVersion
 
     public required string Snapshot { get; init; }
 
+    public required string SnapshotWithReferencesPreserved { get; init; }
+
     public required DateTimeOffset CreatedOn { get; init; }
 
     [MaxLength(250)]

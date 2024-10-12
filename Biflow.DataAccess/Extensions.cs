@@ -1,4 +1,9 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Azure.Core;
+using Azure.Identity;
+using Microsoft.Data.SqlClient;
+using Microsoft.Data.SqlClient.AlwaysEncrypted.AzureKeyVaultProvider;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Biflow.DataAccess;
 
@@ -13,6 +18,46 @@ public static class Extensions
             lifetime: lifetime);
         services.Add(service);
         return services;
+    }
+
+    public static void RegisterAzureKeyVaultColumnEncryptionKeyStoreProvider(IConfiguration configuration)
+    {
+        TokenCredential? credential = null;
+
+        var section = configuration.GetSection("SqlColumnEncryptionAzureKeyVaultProvider");
+        if (section.Exists())
+        {
+            var useSystemAssignedManagedIdentity = section.GetValue("UseSystemAssignedManagedIdentity", false);
+            var userAssignedManagedIdentityClientId = section.GetValue<string?>("UserAssignedManagedIdentityClientId");
+            var spSection = section.GetSection("ServicePrincipal");
+            if (useSystemAssignedManagedIdentity)
+            {
+                credential = new ManagedIdentityCredential();
+            }
+            else if (userAssignedManagedIdentityClientId is not null)
+            {
+                credential = new ManagedIdentityCredential(userAssignedManagedIdentityClientId);
+            }
+            else if (spSection.Exists())
+            {
+                var tenantId = spSection.GetValue<string>("TenantId");
+                var clientId = spSection.GetValue<string>("ClientId");
+                var clientSecret = spSection.GetValue<string>("ClientSecret");
+                credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
+            }
+        }
+
+        if (credential is null)
+        {
+            return;
+        }
+
+        var keyVaultProvider = new SqlColumnEncryptionAzureKeyVaultProvider(credential);
+        var customProviders = new Dictionary<string, SqlColumnEncryptionKeyStoreProvider>(capacity: 1, comparer: StringComparer.OrdinalIgnoreCase)
+        {
+            { SqlColumnEncryptionAzureKeyVaultProvider.ProviderName, keyVaultProvider }
+        };
+        SqlConnection.RegisterColumnEncryptionKeyStoreProviders(customProviders: customProviders);
     }
 
     public static IServiceCollection AddDuplicatorServices(this IServiceCollection services)
@@ -104,11 +149,21 @@ public static class Extensions
                 equals new { Id = includeEndpoint ? (object?)pipeline.PipelineClientId : false }
                 into pipeline_
             from pipeline in pipeline_.DefaultIfEmpty()
-            join qlik in context.QlikCloudClients
-                on new { Id = includeEndpoint ? (object?)((QlikStepExecution)stepExec).QlikCloudClientId : true }
-                equals new { Id = includeEndpoint ? (object?)qlik.QlikCloudClientId : false }
+            join qlik in context.QlikCloudEnvironments
+                on new { Id = includeEndpoint ? (object?)((QlikStepExecution)stepExec).QlikCloudEnvironmentId : true }
+                equals new { Id = includeEndpoint ? (object?)qlik.QlikCloudEnvironmentId : false }
                 into qlik_
             from qlik in qlik_.DefaultIfEmpty()
+            join db in context.DatabricksWorkspaces
+                on new { Id = includeEndpoint ? (object?)((DatabricksStepExecution)stepExec).DatabricksWorkspaceId : true }
+                equals new { Id = includeEndpoint ? (object?)db.WorkspaceId : false }
+                into db_
+            from db in db_.DefaultIfEmpty()
+            join exe in context.Credentials
+                on new { Id = includeEndpoint ? (object?)((ExeStepExecution)stepExec).RunAsCredentialId : true }
+                equals new { Id = includeEndpoint ? (object?)exe.CredentialId : false }
+                into exe_
+            from exe in exe_.DefaultIfEmpty()
             join step in context.Steps
                 on new { Id = includeStep ? (object?)stepExec.StepId : true }
                 equals new { Id = includeStep ? (object?)step.StepId : false }
@@ -124,6 +179,8 @@ public static class Extensions
                 function,
                 pipeline,
                 qlik,
+                db,
+                exe,
                 step);
 
         var stepExecutions = await query2.ToArrayAsync();
@@ -156,7 +213,13 @@ public static class Extensions
                     pipeline.SetClient(step.PipelineStepClient);
                     break;
                 case QlikStepExecution qlik:
-                    qlik.SetClient(step.QlikStepClient);
+                    qlik.SetEnvironment(step.QlikStepClient);
+                    break;
+                case DatabricksStepExecution db:
+                    db.SetWorkspace(step.DatabricksWorkspace);
+                    break;
+                case ExeStepExecution exe:
+                    exe.SetRunAsCredential(step.ExeStepCredential);
                     break;
                 default:
                     break;
@@ -179,5 +242,7 @@ file record StepExecutionProjection(
     AppRegistration? DatasetStepAppRegistration,
     FunctionApp? FunctionStepApp,
     PipelineClient? PipelineStepClient,
-    QlikCloudClient? QlikStepClient,
+    QlikCloudEnvironment? QlikStepClient,
+    DatabricksWorkspace? DatabricksWorkspace,
+    Credential? ExeStepCredential,
     Step? Step);

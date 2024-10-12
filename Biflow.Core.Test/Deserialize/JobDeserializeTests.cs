@@ -1,12 +1,11 @@
 ﻿using Biflow.Core.Entities;
-using System.Text.Json;
 using Xunit;
 
 namespace Biflow.Core.Test.Deserialize;
 
 public class JobDeserializeTests
 {
-    private static readonly Job deserializedJob = GetDeserializedJob();
+    private static readonly Job deserializedJob = CreateJob();
 
     [Fact]
     public void Parameters_NotEmpty()
@@ -38,14 +37,6 @@ public class JobDeserializeTests
         Assert.NotEmpty(deserializedJob.Tags);
     }
 
-    private static Job GetDeserializedJob()
-    {
-        var json = JsonSerializer.Serialize(CreateJob(), EnvironmentSnapshot.JsonSerializerOptions);
-        var job = JsonSerializer.Deserialize<Job>(json, EnvironmentSnapshot.JsonSerializerOptions);
-        ArgumentNullException.ThrowIfNull(job);
-        return job;
-    }
-
     private static Job CreateJob()
     {
         var job = new Job
@@ -72,6 +63,6 @@ public class JobDeserializeTests
             StepName = "Test"
         });
         job.Tags.Add(new JobTag("Test"));
-        return job;
+        return job.JsonRoundtrip(EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
     }
 }

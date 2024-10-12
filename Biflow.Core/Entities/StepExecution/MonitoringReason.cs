@@ -5,5 +5,8 @@ public enum MonitoringReason
     Duplicate,
     UpstreamDependency,
     DownstreamDependency,
-    CommonTarget
+    CommonTarget,
+    CommonConnection,
+    CommonFunctionApp,
+    CommonPipelineClient
 }

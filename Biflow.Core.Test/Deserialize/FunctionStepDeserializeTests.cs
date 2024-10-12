@@ -1,31 +1,29 @@
 ﻿using Biflow.Core.Entities;
-using System.Text.Json;
 using Xunit;
 
 namespace Biflow.Core.Test.Deserialize;
 
 public class FunctionStepDeserializeTests
 {
-    private static readonly FunctionStep step = GetDeserializedStep();
+    private static readonly FunctionStep step = CreateStep();
 
     [Fact]
-    public void Parameters_NotEmpty()
-    {
-        Assert.NotEmpty(step.StepParameters);
-    }
+    public void Parameters_NotEmpty() => Assert.NotEmpty(step.StepParameters);
 
-    private static FunctionStep GetDeserializedStep()
-    {
-        var json = JsonSerializer.Serialize(CreateStep(), EnvironmentSnapshot.JsonSerializerOptions);
-        var step = JsonSerializer.Deserialize<FunctionStep>(json, EnvironmentSnapshot.JsonSerializerOptions);
-        ArgumentNullException.ThrowIfNull(step);
-        return step;
-    }
+    [Fact]
+    public void FunctionAppId_NotEmptyGuid() => Assert.NotEqual(step.FunctionAppId, Guid.Empty);
+
+    [Fact]
+    public void FunctionKey_Empty() => Assert.Empty(step.FunctionKey ?? "");
 
     private static FunctionStep CreateStep()
     {
-        var step = new FunctionStep();
+        var step = new FunctionStep
+        {
+            FunctionAppId = Guid.NewGuid(),
+            FunctionKey = "function_key"
+        };
         step.StepParameters.Add(new FunctionStepParameter());
-        return step;
+        return step.JsonRoundtrip(EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
     }
 }

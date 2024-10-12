@@ -5,5 +5,6 @@ internal class MsSqlConnectionEntityTypeConfiguration : IEntityTypeConfiguration
     public void Configure(EntityTypeBuilder<MsSqlConnection> builder)
     {
         builder.Property(x => x.CredentialId).HasColumnName("CredentialId");
+        builder.Property(x => x.MaxConcurrentSqlSteps).HasColumnName("MaxConcurrentSqlSteps");
     }
 }

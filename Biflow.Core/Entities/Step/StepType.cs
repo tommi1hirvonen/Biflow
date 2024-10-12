@@ -46,5 +46,9 @@ public enum StepType
     
     [Category("Other", 4)]
     [Description("Execute another job")]
-    Job
+    Job,
+
+    [Category("Transformation", 2)]
+    [Description("Run a Databricks notebook, Python file or job")]
+    Databricks
 }

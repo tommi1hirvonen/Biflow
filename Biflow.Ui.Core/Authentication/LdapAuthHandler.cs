@@ -56,7 +56,7 @@ internal class LdapAuthHandler(IConfiguration configuration, IMediator mediator)
         var results = searchResponse.Entries.Cast<SearchResultEntry>();
         if (!results.Any())
         {
-            return Enumerable.Empty<string>();
+            return [];
         }
 
         var rolesResponse = await _mediator.SendAsync(new UserRolesQuery(username));

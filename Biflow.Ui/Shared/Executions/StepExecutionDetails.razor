@@ -355,24 +355,48 @@
         else if (StepExecutionAttempt.StepExecution is QlikStepExecution qlik)
         {
             <dt class="col-sm-3">
-                App id
+                Step settings
             </dt>
             <dd class="col-sm-9">
-                @qlik.AppId
+                <pre><code>@JsonSerializer.Serialize(qlik.QlikStepSettings, JsonSerializerOptions)</code></pre>
             </dd>
             <dt class="col-sm-3">
-                Qlik Cloud Client id
+                Qlik Cloud environment id
             </dt>
             <dd class="col-sm-9">
-                @qlik.QlikCloudClientId
+                @qlik.QlikCloudEnvironmentId
             </dd>
             @if (StepExecutionAttempt is QlikStepExecutionAttempt qlik_)
             {
+                var reloadOrRun = qlik.QlikStepSettings switch
+                {
+                    QlikAppReloadSettings => "App reload id",
+                    QlikAutomationRunSettings => "Automation run id",
+                    _ => ""
+                };
                 <dt class="col-sm-3">
-                    Reload id
+                    @reloadOrRun
                 </dt>
                 <dd class="col-sm-9">
-                    @qlik_.ReloadId
+                    @qlik_.ReloadOrRunId
+                </dd>
+            }
+        }
+        else if (StepExecutionAttempt.StepExecution is DatabricksStepExecution db)
+        {
+            <dt class="col-sm-3">
+                Step settings
+            </dt>
+            <dd class="col-sm-9">
+                <pre><code>@JsonSerializer.Serialize(db.DatabricksStepSettings, JsonSerializerOptions)</code></pre>
+            </dd>
+            @if (StepExecutionAttempt is DatabricksStepExecutionAttempt dbna)
+            {
+                <dt class="col-sm-3">
+                    Job run id
+                </dt>
+                <dd class="col-sm-9">
+                    @dbna.JobRunId
                 </dd>
             }
         }
@@ -489,4 +513,6 @@
 
     private bool showErrorStackTrace = false;
     private bool showWarningStackTrace = false;
+
+    private static JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
 }

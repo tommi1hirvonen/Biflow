@@ -74,6 +74,10 @@ $navbar-gradient: #8F75DA;
     }
 }
 
+.hover-underline:hover {
+    text-decoration: underline;
+}
+
 // Change the light theme body background to be slightly darker than the default.
 [data-bs-theme="light"], [data-bs-theme="auto"] {
     .bg-body {
@@ -330,6 +334,18 @@ $statuses: (
     }
 }
 
+[data-bs-theme="dark"] {
+    .gantt-row:hover {
+        background-color: rgba(0, 0, 0, 0.2);
+    }
+}
+
+[data-bs-theme="light"], [data-bs-theme="auto"] {
+    .gantt-row:hover {
+        background-color: rgba(0, 0, 0, 0.075);
+    }
+}
+
 
 // Dependency graph
 .dependency-graph {
@@ -514,6 +530,10 @@ $dep-statuses: (
 
 .btn {
     .feather, .lucide {
+        margin-top: 2.5px;
+        margin-bottom: 1.75px;
+        margin-left: 1px;
+        margin-right: 1px;
         vertical-align: text-bottom;
     }
 }

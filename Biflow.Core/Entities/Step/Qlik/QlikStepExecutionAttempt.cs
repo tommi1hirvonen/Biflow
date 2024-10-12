@@ -16,5 +16,5 @@ public class QlikStepExecutionAttempt : StepExecutionAttempt
     public QlikStepExecutionAttempt(QlikStepExecution execution) : base(execution) { }
 
     [MaxLength(50)]
-    public string? ReloadId { get; set; }
+    public string? ReloadOrRunId { get; set; }
 }

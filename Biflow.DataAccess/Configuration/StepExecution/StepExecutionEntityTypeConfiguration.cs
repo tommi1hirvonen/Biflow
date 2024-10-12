@@ -18,7 +18,8 @@ internal class StepExecutionEntityTypeConfiguration : IEntityTypeConfiguration<S
             .HasValue<AgentJobStepExecution>(StepType.AgentJob)
             .HasValue<TabularStepExecution>(StepType.Tabular)
             .HasValue<EmailStepExecution>(StepType.Email)
-            .HasValue<QlikStepExecution>(StepType.Qlik);
+            .HasValue<QlikStepExecution>(StepType.Qlik)
+            .HasValue<DatabricksStepExecution>(StepType.Databricks);
 
         builder.OwnsOne(s => s.ExecutionConditionExpression, ece =>
         {

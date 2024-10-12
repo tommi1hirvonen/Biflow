@@ -1,0 +1,139 @@
+﻿@inject ToasterService Toaster
+@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject IHttpClientFactory HttpClientFactory
+
+<HxModal @ref="modal" Size="ModalSize.Large" Title="@(environment?.QlikCloudEnvironmentId == Guid.Empty ? "New Qlik Cloud environment" : "Edit " + environment?.QlikCloudEnvironmentName)">
+    <BodyTemplate>
+        @if (environment is not null)
+        {
+            <EditForm id="qlik_cloud_environment_edit_form" Model="environment" OnValidSubmit="SubmitAsync">
+                <div class="row">
+                    <div class="col mx-3">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div>
+                            <label class="form-label">Environment name</label>
+                            <div class="input-group">
+                                <div class="input-group-text">
+                                    <SvgIcon Icon="FeatherIcon.Edit3" />
+                                </div>
+                                <InputText class="form-control" @bind-Value="environment.QlikCloudEnvironmentName"></InputText>
+                            </div>
+                            
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-lg">
+                                <label class="form-label">Environment url</label>
+                                <div class="input-group">
+                                    <div class="input-group-text">
+                                        <SvgIcon Icon="FeatherIcon.Link" />
+                                    </div>
+                                    <InputText class="form-control" @bind-Value="environment.EnvironmentUrl"></InputText>
+                                </div>
+                                <div class="form-text">e.g. https://mycompany.eu.qlikcloud.com</div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-lg">
+                                <label class="form-label">API key</label>
+                                <div class="input-group">
+                                    <div class="input-group-text">
+                                        <SvgIcon Icon="FeatherIcon.Key" />
+                                    </div>
+                                    <InputTextArea class="form-control form-control-sm" rows="6" @bind-Value="environment.ApiToken"></InputTextArea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="TestConnectionAsync" Enabled="!testingConnection">
+                                    Test connection
+                                </HxButton>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col">
+                                @if (connectionTestSuccess == true)
+                                {
+                                    <span class="badge bg-success">Success</span>
+                                }
+                                else if (connectionTestSuccess == false)
+                                {
+                                    <span class="badge bg-danger">Failed</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </EditForm>
+        }
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxSubmit form="qlik_cloud_environment_edit_form" Color="ThemeColor.Success">@(environment?.QlikCloudEnvironmentId == Guid.Empty ? "Add" : "Save")</HxSubmit>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+    </FooterTemplate>
+</HxModal>
+
+@code {
+    [Parameter]
+    public EventCallback<QlikCloudEnvironment> OnEnvironmentSubmit { get; set; }
+
+    private HxModal? modal;
+    private QlikCloudEnvironment? environment;
+    private bool? connectionTestSuccess = null;
+    private bool testingConnection = false;
+
+    public async Task ShowAsync(Guid environmentId)
+    {
+        environment = null;
+        await modal.LetAsync(x => x.ShowAsync());
+        if (environmentId != Guid.Empty)
+        {
+            using var context = await DbContextFactory.CreateDbContextAsync();
+            environment = await context.QlikCloudEnvironments
+                .AsNoTrackingWithIdentityResolution()
+                .Include(c => c.Steps)
+                .ThenInclude(s => s.Job)
+                .FirstAsync(c => c.QlikCloudEnvironmentId == environmentId);
+        }
+        else
+        {
+            environment = new()
+            {
+                QlikCloudEnvironmentName = "",
+                EnvironmentUrl = "",
+                ApiToken = ""
+            };
+        }
+    }
+
+    private async Task TestConnectionAsync()
+    {
+        ArgumentNullException.ThrowIfNull(environment);
+        connectionTestSuccess = null;
+        testingConnection = true;
+        try
+        {
+            using var client = environment.CreateClient(HttpClientFactory);
+            await client.TestConnectionAsync();
+            connectionTestSuccess = true;
+        }
+        catch (Exception ex)
+        {
+            connectionTestSuccess = false;
+            Toaster.AddError("Connection test failed", ex.Message);
+        }
+        testingConnection = false;
+    }
+
+    private async Task SubmitAsync()
+    {
+        await OnEnvironmentSubmit.InvokeAsync(environment);
+        await modal.LetAsync(x => x.HideAsync());
+    }
+}

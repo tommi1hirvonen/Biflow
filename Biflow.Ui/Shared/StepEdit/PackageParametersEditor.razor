@@ -3,7 +3,21 @@
 @if (Step is not null)
 {
     <p />
-    <h5>Parameters</h5>
+    <h5>
+        Package parameters
+        &nbsp;
+        <HxPopover Placement="PopoverPlacement.Right"
+                   Trigger="PopoverTrigger.Hover"
+                   Html
+                   Sanitize="false"
+                   Content="@("<div><p>Use parameters to dynamically pass values to the package execution.</p><p>Parameters are matched based on their names and level (package/project).</p></div>")">
+            <ChildContent>
+                <span style="cursor: pointer;">
+                    <SvgIcon Icon="FeatherIcon.Info" />
+                </span>
+            </ChildContent>
+        </HxPopover>
+    </h5>
     <table id="parameters_table" class="table table-sm">
         <thead>
             <tr>

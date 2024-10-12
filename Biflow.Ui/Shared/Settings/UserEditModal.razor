@@ -30,7 +30,7 @@
                                     @onchange="@(e => model.User.SetIsAdmin())">
                                     <label class="form-check-label fw-normal" for="role_radio_admin">
                                         Admin
-                                        <HxPopover Trigger="PopoverTrigger.Hover" Content="Admins have full edit and execute rights to all jobs and access to global settings including users.">
+                                        <HxPopover Trigger="PopoverTrigger.Hover" Content="Admins have full edit and execute rights to all jobs, access to global settings including users and they can fully manage environment version snapshot, including reverting to previous snapshots.">
                                             <SvgIcon Icon="FeatherIcon.Info" />
                                         </HxPopover>
                                     </label>
@@ -41,7 +41,7 @@
                                     @onchange="@(e => model.User.SetIsEditor())">
                                     <label class="form-check-label fw-normal" for="role_radio_editor">
                                         Editor
-                                        <HxPopover Trigger="PopoverTrigger.Hover" Content="Editors have full edit and execute rights to all jobs.">
+                                        <HxPopover Trigger="PopoverTrigger.Hover" Content="Editors have full edit and execute rights to all jobs. Editors can also create environment version snapshots but not revert them.">
                                             <SvgIcon Icon="FeatherIcon.Info" />
                                         </HxPopover>
                                     </label>
@@ -73,6 +73,17 @@
                                 @if (!model.User.Roles.Contains(Roles.Admin))
                                 {
                                     <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="role_radio_version_manager"
+                                               checked=@model.User.Roles.Contains(Roles.VersionManager)
+                                               @onchange="@(e => model.User.SetIsVersionManager((bool)e.Value!))">
+                                        <label class="form-check-label fw-normal" for="role_radio_version_manager">
+                                            Version Manager
+                                            <HxPopover Trigger="PopoverTrigger.Hover" Content="Version managers can fully manage environment version snapshots, including reverting them.">
+                                                <SvgIcon Icon="FeatherIcon.Info" />
+                                            </HxPopover>
+                                        </label>
+                                    </div>
+                                    <div class="form-check mt-1">
                                         <input class="form-check-input" type="checkbox" id="role_radio_settings_editor"
                                                checked=@model.User.Roles.Contains(Roles.SettingsEditor)
                                                @onchange="@(e => model.User.SetIsSettingsEditor((bool)e.Value!))">

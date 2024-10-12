@@ -38,6 +38,24 @@
 <div class="row my-4">
     <div class="col">
         <ul class="list-group shadow-sm">
+            <li class="list-group-item list-group-header">
+                <div class="row fw-bold">
+                    <div class="col-3">
+                        Username
+                    </div>
+                    <div class="col-2">
+                    </div>
+                    <div class="col-3">
+                        Roles
+                    </div>
+                    <div class="col-2">
+                        Created on
+                    </div>
+                    <div class="col-2">
+                        Last login on
+                    </div>
+                </div>
+            </li>
             @if (users is null)
             {
                 <li class="list-group-item text-center"><HxSpinner Color="ThemeColor.Secondary" /></li>
@@ -55,8 +73,8 @@
                 foreach (var user in filteredUsers)
                 {
                     <li class="list-group-item list-group-item-action">
-                        <div class="row">
-                            <div class="col">
+                        <div class="row align-items-center">
+                            <div class="col-3">
                                 <HighlightableText Text="@user.Username" PartToHighlight="@usernameFilter" />
                                 <br/>
                                 <span class="small text-muted">@@: </span>
@@ -70,7 +88,7 @@
                                     <span class="small text-muted">@user.Email</span>
                                 }
                             </div>
-                            <div class="col-auto d-flex align-items-center">
+                            <div class="col-2 text-center">
                                 <HxButtonGroup>
                                     <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="edit" @onclick="async () => await ShowEditModalAsync(user)" title="Edit user">
                                         <SvgIcon Icon="FeatherIcon.Edit2" />
@@ -94,17 +112,18 @@
                                     </HxDropdownButtonGroup>
                                 </HxButtonGroup>
                             </div>
-                            <div class="col d-flex align-items-center">
+                            <div class="col-3">
                                 @foreach (var role in user.Roles.OrderBy(r => r))
                                 {
                                     var tag = new RoleTag(role);
                                     <TagBadge Tag="tag" CssClass="m-1" />
                                 }
                             </div>
-                            <div class="col">
-                                <span>Created on</span>
-                                <br/>
-                                <span>@user.CreatedOn.LocalDateTime</span>
+                            <div class="col-2 small">
+                                @user.CreatedOn.LocalDateTime
+                            </div>
+                            <div class="col-2 small">
+                                @user.LastLoginOn?.LocalDateTime
                             </div>
                         </div>
                     </li>

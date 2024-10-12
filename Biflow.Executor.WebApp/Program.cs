@@ -39,6 +39,9 @@ builder.Services.AddSwaggerGen(s =>
 });
 builder.Services.AddExecutorServices(builder.Configuration);
 
+// Register Azure Key Vault provider for Always Encrypted.
+Biflow.DataAccess.Extensions.RegisterAzureKeyVaultColumnEncryptionKeyStoreProvider(builder.Configuration);
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())

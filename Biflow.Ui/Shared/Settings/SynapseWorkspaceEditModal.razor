@@ -61,6 +61,18 @@
                                 }
                             </div>
                         </div>
+
+                        <div class="row mt-3">
+                            <div class="col">
+                                <label class="form-label">Max concurrent pipeline step executions</label>
+                                <InputNumber class="form-control" style="max-width: 10rem;" @bind-Value="synapseWorkspace.MaxConcurrentPipelineSteps"></InputNumber>
+                                <div class="form-text">
+                                    Limit the number of concurrently executing pipeline steps across all executions for this Synapse Workspace.
+                                    <br />
+                                    0 = no limit
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </EditForm>

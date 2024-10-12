@@ -1,5 +1,5 @@
 export function getPreferredTheme() {
-    var theme = localStorage.getItem('theme');
+    const theme = localStorage.getItem('theme');
     if (theme) {
         return theme;
     }
@@ -7,7 +7,7 @@ export function getPreferredTheme() {
 }
 
 export function setTheme(theme) {
-    var effectiveTheme;
+    let effectiveTheme;
     if (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches) {
         document.documentElement.setAttribute('data-bs-theme', 'dark');
         effectiveTheme = 'dark';
@@ -21,7 +21,7 @@ export function setTheme(theme) {
 
 export function setPreferredThemeChangedListener(dotnetObjectReference) {
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', async () => {
-        var theme = getPreferredTheme();
+        const theme = getPreferredTheme();
         if (theme === 'auto') {
             var effectiveTheme = setTheme(theme);
             await dotnetObjectReference.invokeMethodAsync("UpdateTheme", effectiveTheme);

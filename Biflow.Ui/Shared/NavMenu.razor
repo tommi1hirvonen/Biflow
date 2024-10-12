@@ -59,7 +59,7 @@
                 Subscriptions
             </NavLink>
         </li>
-        <AuthorizeView Roles="@($"{Roles.Admin}")">
+        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.VersionManager}, {Roles.Editor}")">
             <li class="nav-item">
                 <NavLink class="nav-link" href="versions" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
                     <SvgIcon Icon="FeatherIcon.Tool" />
