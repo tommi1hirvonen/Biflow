@@ -40,8 +40,6 @@
     <PackageVersion Include="Microsoft.Identity.Web.UI" Version="3.2.2" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageVersion Include="Microsoft.PowerBI.Api" Version="4.21.1" />
-    <PackageVersion Include="MSTest.TestAdapter" Version="3.6.1" />
-    <PackageVersion Include="MSTest.TestFramework" Version="3.6.1" />
     <PackageVersion Include="OneOf" Version="3.0.271" />
     <PackageVersion Include="OneOf.SourceGenerator" Version="3.0.271" />
     <PackageVersion Include="Polly" Version="8.4.2" />
