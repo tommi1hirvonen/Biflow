@@ -18,14 +18,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dapper" Version="2.1.35" />
-    <PackageReference Include="Microsoft.AnalysisServices.NetCore.retail.amd64" Version="19.84.1" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0-rc.1.24431.7" />
-    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.0-rc.1.24431.7" />
-    <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="9.0.0-rc.1.24431.7" />
-    <PackageReference Include="OneOf" Version="3.0.271" />
-    <PackageReference Include="OneOf.SourceGenerator" Version="3.0.271" />
-    <PackageReference Include="Polly" Version="8.4.1" />
+    <PackageReference Include="Dapper" />
+    <PackageReference Include="Microsoft.AnalysisServices.NetCore.retail.amd64" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
+    <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" />
+    <PackageReference Include="OneOf" />
+    <PackageReference Include="OneOf.SourceGenerator" />
+    <PackageReference Include="Polly" />
   </ItemGroup>
 
   <ItemGroup>

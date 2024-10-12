@@ -1,0 +1,69 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+  <ItemGroup>
+	<PackageVersion Include="Azure.Analytics.Synapse.Artifacts" Version="1.0.0-preview.19" />
+	<PackageVersion Include="Azure.Identity" Version="1.12.0" />
+	<PackageVersion Include="Azure.ResourceManager.DataFactory" Version="1.4.0" />
+	<PackageVersion Include="Azure.Storage.Blobs" Version="12.22.0" />
+	<PackageVersion Include="CodingSeb.ExpressionEvaluator" Version="1.4.40" />
+	<PackageVersion Include="Microsoft.AnalysisServices.NetCore.retail.amd64" Version="19.84.1" />
+	<PackageVersion Include="Microsoft.AspNetCore.Components.DataAnnotations.Validation" Version="3.2.0-rc1.20223.4" />
+	<PackageVersion Include="Microsoft.Azure.Databricks.Client" Version="2.6.0" />
+	<PackageVersion Include="Microsoft.Data.SqlClient" Version="5.2.2" />
+	<PackageVersion Include="Microsoft.Extensions.Http" Version="9.0.0-rc.1.24431.7" />
+	<PackageVersion Include="Microsoft.PowerBI.Api" Version="4.20.0" />
+	<PackageVersion Include="Quartz" Version="3.13.0" />
+	<PackageVersion Include="Snowflake.Data" Version="4.1.0" />
+	<PackageVersion Include="System.Linq.Async" Version="6.0.1" />
+
+	<PackageVersion Include="Microsoft.Data.SqlClient.AlwaysEncrypted.AzureKeyVaultProvider" Version="5.1.0" />
+	<PackageVersion Include="Microsoft.EntityFrameworkCore" Version="8.0.8" />
+	<PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.8" />
+	<PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.8" />
+
+	<PackageVersion Include="Dapper" Version="2.1.35" />
+	<PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.0-rc.1.24431.7" />
+	<PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.0-rc.1.24431.7" />
+	<PackageVersion Include="Microsoft.Extensions.Options.DataAnnotations" Version="9.0.0-rc.1.24431.7" />
+	<PackageVersion Include="OneOf" Version="3.0.271" />
+	<PackageVersion Include="OneOf.SourceGenerator" Version="3.0.271" />
+	<PackageVersion Include="Polly" Version="8.4.1" />
+
+	<PackageVersion Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
+	<PackageVersion Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.0-rc.1.24431.7" />
+	<PackageVersion Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.0-rc.1.24431.7" />
+	<PackageVersion Include="Serilog.AspNetCore" Version="8.0.2" />
+	<PackageVersion Include="Swashbuckle.AspNetCore" Version="6.8.0" />
+
+	<PackageVersion Include="Quartz.Extensions.DependencyInjection" Version="3.13.0" />
+	<PackageVersion Include="Quartz.Extensions.Hosting" Version="3.13.0" />
+
+	<PackageVersion Include="BlazorMonaco" Version="3.2.0" />
+	<PackageVersion Include="Havit.Blazor.Components.Web.Bootstrap" Version="4.6.14" />
+
+	<PackageVersion Include="FluentValidation" Version="11.10.0" />
+	<PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="9.0.0-rc.1.24452.1" />
+
+	<PackageVersion Include="BCrypt.Net-Next" Version="4.0.3" />
+	<PackageVersion Include="CronExpressionDescriptor" Version="2.36.0" />
+	<PackageVersion Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="9.0.0-rc.1.24452.1" />
+	<PackageVersion Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="9.0.0-rc.1.24452.1" />
+	<PackageVersion Include="Microsoft.Identity.Web" Version="3.2.0" />
+	<PackageVersion Include="Microsoft.Identity.Web.UI" Version="3.2.0" />
+	<PackageVersion Include="Scrutor" Version="5.0.0" />
+
+	<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" />
+	<PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
+
+	<PackageVersion Include="ClosedXML" Version="0.102.3" />
+
+	<PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.11.0" />
+	<PackageVersion Include="xunit" Version="2.9.0" />
+	<PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+	<PackageVersion Include="coverlet.collector" Version="6.0.2" />
+	<PackageVersion Include="MSTest.TestAdapter" Version="3.5.2" />
+	<PackageVersion Include="MSTest.TestFramework" Version="3.5.2" />
+  </ItemGroup>
+</Project>
