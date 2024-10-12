@@ -121,8 +121,8 @@ public class DbContextTests(DatabaseFixture fixture)
             .FirstAsync();
         var execution = await context.GetExecutionWithEntireGraphAsync(executionId, includeEndpoint: false, includeStep: false);
         Assert.NotNull(execution);
-        Assert.NotEmpty(execution.StepExecutions.OfType<SqlStepExecution>().Where(s => s.GetConnection() is null));
-        Assert.NotEmpty(execution.StepExecutions.Where(s => s.GetStep() is null));
+        Assert.Contains(execution.StepExecutions, x => x is SqlStepExecution sql && sql.GetConnection() is null);
+        Assert.Contains(execution.StepExecutions, x => x.GetStep() is null);
     }
 
     [Fact]
@@ -135,8 +135,8 @@ public class DbContextTests(DatabaseFixture fixture)
             .FirstAsync();
         var execution = await context.GetExecutionWithEntireGraphAsync(executionId, includeEndpoint: true, includeStep: true);
         Assert.NotNull(execution);
-        Assert.NotEmpty(execution.StepExecutions.OfType<SqlStepExecution>().Where(s => s.GetConnection() is not null));
-        Assert.NotEmpty(execution.StepExecutions.Where(s => s.GetStep() is not null));
+        Assert.Contains(execution.StepExecutions, x => x is SqlStepExecution sql && sql.GetConnection() is not null);
+        Assert.Contains(execution.StepExecutions, x => x.GetStep() is not null);
     }
 
     [Fact]
@@ -149,7 +149,7 @@ public class DbContextTests(DatabaseFixture fixture)
             .FirstAsync();
         var execution = await context.GetExecutionWithEntireGraphAsync(executionId, includeEndpoint: true, includeStep: true);
         Assert.NotNull(execution);
-        Assert.NotEmpty(execution.StepExecutions.Where(s => s.GetStep() is not null));
-        Assert.NotEmpty(execution.StepExecutions.OfType<ExeStepExecution>().Where(s => s.GetRunAsCredential() is not null));
+        Assert.Contains(execution.StepExecutions, x => x.GetStep() is not null);
+        Assert.Contains(execution.StepExecutions, x => x is ExeStepExecution exe && exe.GetRunAsCredential() is not null);
     }
 }
