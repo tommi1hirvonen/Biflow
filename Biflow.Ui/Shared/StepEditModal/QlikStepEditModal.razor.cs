@@ -80,6 +80,10 @@ public partial class QlikStepEditModal : StepEditModal<QlikStep>
 
     private async Task<QlikApp?> ResolveAppFromValueAsync(string value)
     {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
         if (apps is null)
         {
             try
@@ -87,13 +91,12 @@ public partial class QlikStepEditModal : StepEditModal<QlikStep>
                 var workspace = QlikClients?.FirstOrDefault();
                 ArgumentNullException.ThrowIfNull(workspace);
                 using var client = workspace.CreateClient(HttpClientFactory);
-                var spaces = await client.GetAppsAsync();
-                apps = spaces.SelectMany(s => s.Apps).OrderBy(a => a.Name).ToArray();
+                return await client.GetAppAsync(value);
             }
             catch (Exception ex)
             {
-                Toaster.AddError("Error fetching Qlik apps", ex.Message);
-                apps = [];
+                Toaster.AddError("Error fetching Qlik app", ex.Message);
+                return null;
             }
         }
         return apps.FirstOrDefault(a => a.Id == value);
@@ -128,6 +131,10 @@ public partial class QlikStepEditModal : StepEditModal<QlikStep>
 
     private async Task<QlikAutomation?> ResolveAutomationFromValueAsync(string value)
     {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
         if (automations is null)
         {
             try
@@ -135,13 +142,12 @@ public partial class QlikStepEditModal : StepEditModal<QlikStep>
                 var workspace = QlikClients?.FirstOrDefault();
                 ArgumentNullException.ThrowIfNull(workspace);
                 using var client = workspace.CreateClient(HttpClientFactory);
-                var automations = await client.GetAutomationsAsync();
-                this.automations = automations.OrderBy(a => a.Name).ToArray();
+                return await client.GetAutomationAsync(value);
             }
             catch (Exception ex)
             {
-                Toaster.AddError("Error fetching Qlik automations", ex.Message);
-                automations = [];
+                Toaster.AddError("Error fetching Qlik automation", ex.Message);
+                return null;
             }
         }
         return automations.FirstOrDefault(a => a.Id == value);

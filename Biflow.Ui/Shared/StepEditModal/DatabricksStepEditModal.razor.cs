@@ -1,6 +1,7 @@
 ﻿using Biflow.Ui.Shared.StepEdit;
 using System.Globalization;
 using Pipeline = Microsoft.Azure.Databricks.Client.Models.Pipeline;
+using ClusterInfo = Microsoft.Azure.Databricks.Client.Models.ClusterInfo;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
@@ -12,7 +13,7 @@ public partial class DatabricksStepEditModal : StepEditModal<DatabricksStep>
 
     private (string Id, string Description)[]? runtimeVersions;
     private (string Id, string Description)[]? nodeTypes;
-    private (string Id, string Description)[]? clusters;
+    private ClusterInfo[]? clusters;
     private DatabricksJob[]? dbJobs;
     private Pipeline[]? pipelines;
 
@@ -81,8 +82,8 @@ public partial class DatabricksStepEditModal : StepEditModal<DatabricksStep>
         if (step.DatabricksStepSettings is DatabricksClusterStepSettings { ClusterConfiguration: ExistingClusterConfiguration existing })
         {
             existing.ClusterName ??= clusters
-                ?.FirstOrDefault(c => c.Id == existing.ClusterId)
-                .Description;
+                ?.FirstOrDefault(c => c.ClusterId == existing.ClusterId)
+                ?.ClusterName;
         }
 
         // Change tracking does not identify changes to cluster configuration.
@@ -121,6 +122,10 @@ public partial class DatabricksStepEditModal : StepEditModal<DatabricksStep>
 
     private async Task<Pipeline?> ResolvePipelineFromValueAsync(string value)
     {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
         if (pipelines is null)
         {
             try
@@ -128,13 +133,12 @@ public partial class DatabricksStepEditModal : StepEditModal<DatabricksStep>
                 var workspace = DatabricksWorkspaces?.FirstOrDefault();
                 ArgumentNullException.ThrowIfNull(workspace);
                 using var client = workspace.CreateClient();
-                var pipelines = await client.GetPipelinesAsync();
-                this.pipelines = pipelines.ToArray();
+                return await client.GetPipelineAsync(value);
             }
             catch (Exception ex)
             {
-                Toaster.AddError("Error fetching Databricks pipelines", ex.Message);
-                pipelines = [];
+                Toaster.AddWarning("Error fetching Databricks pipeline", ex.Message);
+                return null;
             }
         }
         return pipelines.FirstOrDefault(v => v.PipelineId == value);
@@ -169,6 +173,10 @@ public partial class DatabricksStepEditModal : StepEditModal<DatabricksStep>
 
     private async Task<DatabricksJob?> ResolveDbJobFromValueAsync(long value)
     {
+        if (value <= 0)
+        {
+            return null;
+        }
         if (dbJobs is null)
         {
             try
@@ -176,12 +184,12 @@ public partial class DatabricksStepEditModal : StepEditModal<DatabricksStep>
                 var workspace = DatabricksWorkspaces?.FirstOrDefault();
                 ArgumentNullException.ThrowIfNull(workspace);
                 using var client = workspace.CreateClient();
-                dbJobs = (await client.GetJobsAsync()).ToArray();
+                return await client.GetJobAsync(value);
             }
             catch (Exception ex)
             {
-                Toaster.AddError("Error fetching Databricks jobs", ex.Message);
-                dbJobs = [];
+                Toaster.AddWarning("Error fetching Databricks job", ex.Message);
+                return null;
             }
         }
         return dbJobs.FirstOrDefault(v => v.JobId == value);
@@ -330,43 +338,45 @@ public partial class DatabricksStepEditModal : StepEditModal<DatabricksStep>
         };
     }
 
-    private async Task<(string Id, string Description)[]> GetClustersAsync()
+    private async Task<ClusterInfo?> ResolveClusterFromValueAsync(string? value)
     {
-        var workspace = DatabricksWorkspaces?.FirstOrDefault();
-        ArgumentNullException.ThrowIfNull(workspace);
-        using var client = workspace.CreateClient();
-        var clusters = await client.GetClustersAsync();
-        return clusters
-            .Where(c => c.ClusterSource == Microsoft.Azure.Databricks.Client.Models.ClusterSource.UI)
-            .Select(c => (c.ClusterId, c.ClusterName))
-            .ToArray();
-    }
-
-    private async Task<(string Id, string Description)> ResolveClusterFromValueAsync(string? value)
-    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
         if (clusters is null)
         {
             try
             {
-                clusters = await GetClustersAsync();
+                var workspace = DatabricksWorkspaces?.FirstOrDefault();
+                ArgumentNullException.ThrowIfNull(workspace);
+                using var client = workspace.CreateClient();
+                return await client.GetClusterAsync(value);
             }
             catch (Exception ex)
             {
-                Toaster.AddError("Error fetching available clusters", ex.Message);
-                clusters = [];
+                Toaster.AddWarning("Error fetching cluster information", ex.Message);
+                return null;
             }
         }
-        return clusters.FirstOrDefault(v => v.Id == value);
+        return clusters.FirstOrDefault(v => v.ClusterId == value);
     }
 
-    private async Task<AutosuggestDataProviderResult<(string Id, string Description)>> ProvideClusterSuggestionsAsync(
+    private async Task<AutosuggestDataProviderResult<ClusterInfo>> ProvideClusterSuggestionsAsync(
         AutosuggestDataProviderRequest request)
     {
         if (clusters is null)
         {
             try
             {
-                clusters = await GetClustersAsync();
+                var workspace = DatabricksWorkspaces?.FirstOrDefault();
+                ArgumentNullException.ThrowIfNull(workspace);
+                using var client = workspace.CreateClient();
+                var clusters = await client.GetClustersAsync();
+                this.clusters = clusters
+                    .Where(c => c.ClusterSource == Microsoft.Azure.Databricks.Client.Models.ClusterSource.UI)
+                    .OrderBy(c => c.ClusterName)
+                    .ToArray();
             }
             catch (Exception ex)
             {
@@ -378,7 +388,7 @@ public partial class DatabricksStepEditModal : StepEditModal<DatabricksStep>
         return new()
         {
             Data = clusters
-                .Where(n => n.Description.ContainsIgnoreCase(request.UserInput))
+                .Where(n => n.ClusterName.ContainsIgnoreCase(request.UserInput))
         };
     }
 }

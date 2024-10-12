@@ -25,6 +25,14 @@ public class DatabricksClientWrapper(DatabricksWorkspace workspace) : IDisposabl
         return jobs;
     }
 
+    public async Task<DatabricksJob?> GetJobAsync(long jobId, CancellationToken cancellationToken = default)
+    {
+        var job = await Client.Jobs.Get(jobId, cancellationToken);
+        return job is not null
+            ? new(job.JobId, job.Settings.Name)
+            : null;
+    }
+
     public async Task<IEnumerable<Pipeline>> GetPipelinesAsync(CancellationToken cancellationToken = default)
     {
         var result = new List<Pipeline>();
@@ -44,6 +52,11 @@ public class DatabricksClientWrapper(DatabricksWorkspace workspace) : IDisposabl
         } while (!string.IsNullOrEmpty(pipelines.NextPageToken));
         result.SortBy(p => p.Name);
         return result;
+    }
+
+    public Task<Pipeline?> GetPipelineAsync(string pipelineId, CancellationToken cancellationToken = default)
+    {
+        return Client.Pipelines.Get(pipelineId, cancellationToken);
     }
 
     public async Task<DatabricksFolder> GetWorkspaceAsync(CancellationToken cancellationToken = default)
@@ -100,6 +113,11 @@ public class DatabricksClientWrapper(DatabricksWorkspace workspace) : IDisposabl
     public Task<IEnumerable<ClusterInfo>> GetClustersAsync(CancellationToken cancellationToken = default)
     {
         return Client.Clusters.List(cancellationToken);
+    }
+
+    public Task<ClusterInfo?> GetClusterAsync(string clusterId, CancellationToken cancellationToken = default)
+    {
+        return Client.Clusters.Get(clusterId, cancellationToken);
     }
 
     public void Dispose() => Client.Dispose();

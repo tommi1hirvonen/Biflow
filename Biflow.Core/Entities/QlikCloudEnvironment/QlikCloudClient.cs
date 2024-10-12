@@ -89,20 +89,22 @@ public class QlikCloudClient : IDisposable
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<string> GetAppNameAsync(string appId, CancellationToken cancellationToken = default)
+    public async Task<QlikApp?> GetAppAsync(string appId, CancellationToken cancellationToken = default)
     {
         var url = $"api/v1/apps/{appId}";
         var response = await _httpClient.GetFromJsonAsync<GetAppResponse>(url, cancellationToken);
-        ArgumentNullException.ThrowIfNull(response);
-        return response.Attributes.Name;
+        return response is not null
+            ? new(response.Attributes.Id, response.Attributes.Name)
+            : null;
     }
 
-    public async Task<string> GetAutomationNameAsync(string automationId, CancellationToken cancellationToken = default)
+    public async Task<QlikAutomation?> GetAutomationAsync(string automationId, CancellationToken cancellationToken = default)
     {
         var url = $"api/v1/automations/{automationId}";
         var response = await _httpClient.GetFromJsonAsync<QlikAutomation>(url, cancellationToken);
-        ArgumentNullException.ThrowIfNull(response);
-        return response.Name;
+        return response is not null
+            ? new(response.Id, response.Name)
+            : null;
     }
 
     public async Task<IEnumerable<QlikSpace>> GetAppsAsync(CancellationToken cancellationToken = default)
@@ -168,7 +170,7 @@ public class QlikCloudClient : IDisposable
 
     private record GetAppResponse(GetAppResponseAttributes Attributes);
 
-    private record GetAppResponseAttributes(string Name);
+    private record GetAppResponseAttributes(string Id, string Name);
 
     private record GetItemsResponse(ItemData[] Data, Links Links);
 
