@@ -44,34 +44,30 @@ public class ExecutionConditionParameter : ParameterBase, IAsyncEvaluable
 
     public Guid? JobParameterId
     {
-        get => _jobParameterId;
+        get;
         set
         {
-            _jobParameterId = value;
-            if (_jobParameterId is not null)
+            field = value;
+            if (field is not null)
             {
                 ParameterValue = new();
             }
         }
     }
-
-    private Guid? _jobParameterId;
 
     [JsonIgnore]
     public JobParameter? JobParameter
     {
-        get => _jobParameter;
+        get;
         set
         {
-            _jobParameter = value;
-            if (_jobParameter is not null)
+            field = value;
+            if (field is not null)
             {
                 ParameterValue = new();
             }
         }
     }
-
-    private JobParameter? _jobParameter;
 
     public async Task<object?> EvaluateAsync()
     {

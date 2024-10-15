@@ -14,11 +14,9 @@ public class MsSqlConnection() : ConnectionBase(ConnectionType.Sql)
     [MaxLength(128)]
     public string? ExecutePackagesAsLogin
     {
-        get => _executePackagesAsLogin;
-        set => _executePackagesAsLogin = string.IsNullOrEmpty(value) ? null : value;
+        get;
+        set => field = string.IsNullOrEmpty(value) ? null : value;
     }
-
-    private string? _executePackagesAsLogin;
 
     [Range(0, int.MaxValue)]
     public int MaxConcurrentSqlSteps { get; set; } = 0;

@@ -53,7 +53,7 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
 
     public Guid? InheritFromJobParameterId
     {
-        get => _inheritFromJobParameterId;
+        get;
         set
         {
             if (value is not null)
@@ -61,16 +61,14 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
                 UseExpression = false;
                 ParameterValue = new();
             }
-            _inheritFromJobParameterId = value;
+            field = value;
         }
     }
-
-    private Guid? _inheritFromJobParameterId;
 
     [JsonIgnore]
     public JobParameter? InheritFromJobParameter
     {
-        get => _inheritFromJobParameter;
+        get;
         set
         {
             if (value is not null)
@@ -78,11 +76,9 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
                 UseExpression = false;
                 ParameterValue = new();
             }
-            _inheritFromJobParameter = value;
+            field = value;
         }
     }
-
-    private JobParameter? _inheritFromJobParameter;
 
     [ValidateComplexType]
     [JsonIgnore]

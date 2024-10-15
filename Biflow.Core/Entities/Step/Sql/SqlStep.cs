@@ -63,21 +63,19 @@ public class SqlStep : Step, IHasConnection, IHasTimeout, IHasStepParameters<Sql
     [JsonIgnore]
     public ConnectionBase Connection
     {
-        get => _connection;
+        get;
         set
         {
             if (value is MsSqlConnection or SnowflakeConnection)
             {
-                _connection = value;
+                field = value;
             }
             else
             {
                 throw new ArgumentException($"Unallowed connection type: {value.GetType().Name}. Connection must be of type {typeof(MsSqlConnection).Name} or {typeof(SnowflakeConnection).Name}.");
             }
         }
-    }
-
-    private ConnectionBase _connection = null!;
+    } = null!;
 
     [ValidateComplexType]
     [JsonInclude]

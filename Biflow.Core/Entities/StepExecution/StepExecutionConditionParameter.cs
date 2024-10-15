@@ -5,7 +5,7 @@ public class StepExecutionConditionParameter : ParameterBase
     public StepExecutionConditionParameter(string parameterName, ParameterValue parameterValue)
     {
         ParameterName = parameterName;
-        _parameterValue = parameterValue;
+        ParameterValue = parameterValue;
     }
 
     public StepExecutionConditionParameter(ExecutionConditionParameter parameter, StepExecution execution)
@@ -26,11 +26,9 @@ public class StepExecutionConditionParameter : ParameterBase
 
     public override ParameterValue ParameterValue
     {
-        get => ExecutionParameter is not null ? ExecutionParameterValue : _parameterValue;
-        set => _parameterValue = value;
-    }
-
-    private ParameterValue _parameterValue = new();
+        get => ExecutionParameter is not null ? ExecutionParameterValue : field;
+        set => field = value;
+    } = new();
 
     public Guid? ExecutionParameterId { get; set; }
 

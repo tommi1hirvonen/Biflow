@@ -67,11 +67,9 @@ public class Job : IAuditable
     [Display(Name = "Description")]
     public string? JobDescription
     {
-        get => _jobDescription;
-        set => _jobDescription = string.IsNullOrEmpty(value) ? null : value;
+        get;
+        set => field = string.IsNullOrEmpty(value) ? null : value;
     }
-
-    private string? _jobDescription;
 
     [Required]
     [Display(Name = "Use dependency mode")]

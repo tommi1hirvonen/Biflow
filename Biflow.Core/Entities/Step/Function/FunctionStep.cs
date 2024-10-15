@@ -42,11 +42,9 @@ public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepPa
     [Display(Name = "Function input")]
     public string? FunctionInput
     {
-        get => _functionInput;
-        set => _functionInput = string.IsNullOrEmpty(value) ? null : value;
+        get;
+        set => field = string.IsNullOrEmpty(value) ? null : value;
     }
-
-    private string? _functionInput;
 
     [Display(Name = "Is durable")]
     public bool FunctionIsDurable { get; set; }

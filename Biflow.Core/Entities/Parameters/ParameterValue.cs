@@ -106,14 +106,9 @@ public struct ParameterValue
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     private string? ValueString
     {
-        readonly get => _valueString;
-        set
-        {
-            _valueString = string.IsNullOrEmpty(value) ? null : value;
-        }
+        readonly get;
+        set => field = string.IsNullOrEmpty(value) ? null : value;
     }
-
-    private string? _valueString;
 
     public readonly T? GetValueOrDefault<T>() => Value is T value ? value : default;
 
