@@ -18,7 +18,7 @@ namespace Biflow.DataAccess.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("app")
-                .HasAnnotation("ProductVersion", "8.0.8")
+                .HasAnnotation("ProductVersion", "8.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -2344,7 +2344,7 @@ namespace Biflow.DataAccess.Migrations
                 {
                     b.HasBaseType("Biflow.Core.Entities.StepExecutionAttempt");
 
-                    b.Property<string>("ReloadId")
+                    b.Property<string>("ReloadOrRunId")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
