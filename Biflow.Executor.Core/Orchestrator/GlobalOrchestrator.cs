@@ -16,7 +16,9 @@ internal class GlobalOrchestrator(
     private readonly List<IOrchestrationObserver> _observers = [];
     private readonly Dictionary<StepExecution, OrchestrationStatus> _stepStatuses = [];
 
-    public async Task RegisterStepsAndObserversAsync(IEnumerable<IOrchestrationObserver> observers)
+    public async Task RegisterStepsAndObserversAsync(
+        IEnumerable<IOrchestrationObserver> observers,
+        IStepExecutionListener stepExecutionListener)
     {
         try
         {
@@ -29,45 +31,59 @@ internal class GlobalOrchestrator(
                 foreach (var observer in observers)
                 {
                     _stepStatuses[observer.StepExecution] = OrchestrationStatus.NotStarted;
+
                     // Existing observers will report back any new monitors caused by the new observers.
-                    var monitorsFromExistingObserver = _observers.ToArray() // Make a copy of the list as observers might unsubscribe during enumeration.
-                        .SelectMany(observer => observer.OnIncomingStepExecutionUpdate(new(observer.StepExecution, OrchestrationStatus.NotStarted)))
+                    var monitorsFromExistingObservers = _observers
+                        .ToArray() // Make a copy of the list as observers might unsubscribe during enumeration.
+                        .SelectMany(observer => 
+                        {
+                            var update = new OrchestrationUpdate(observer.StepExecution, OrchestrationStatus.NotStarted);
+                            return observer.OnIncomingStepExecutionUpdate(update);
+                        })
                         .ToArray();
-                    monitors.AddRange(monitorsFromExistingObserver);
+                    monitors.AddRange(monitorsFromExistingObservers);
                 }
 
-                // Local function to update the orchestration status and to execute the step.
-                // The function is not async, so UpdateStatus() will be called before the Task is returned.
-                void UpdateRunningAndExecute(StepExecution stepExecution, IStepExecutionListener listener, ExtendedCancellationTokenSource cts)
-                {
-                    // Update the status for observers that have already subscribed.
-                    UpdateStatus(stepExecution, OrchestrationStatus.Running);
-                    var task = ExecuteStepAsync(stepExecution, listener, cts);
-                    tasks.Add(task);
-                };
-
-                // Iterate over the new observers in priority order, register initial updates and capture the generated monitors.
+                // Iterate over the new observers in priority order,
+                // register initial updates and capture the generated monitors.
                 foreach (var observer in observers.OrderBy(o => o.Priority))
                 {
+                    // Recollect statuses as new steps can be started during iteration.
                     var statuses = _stepStatuses
                         .Select(s => new OrchestrationUpdate(s.Key, s.Value))
                         .ToArray();
-                    // New observers will report back any monitors added because of both previously and newly registered step executions.
-                    var monitorsFromNewObserver = observer.RegisterInitialUpdates(statuses, executeCallback: UpdateRunningAndExecute);
+
+                    // New observers will report back any monitors added because of
+                    // both previously registered step executions and because of step executions
+                    // from the same execution that may have already been started.
+                    var monitorsFromNewObserver = observer.RegisterInitialUpdates(
+                        updates: statuses,
+                        executeCallback: cts =>
+                        {
+                            // In case the observer immediately requests for execution,
+                            // update the status for observers that have already subscribed and start the execution.
+                            UpdateStatus(observer.StepExecution, OrchestrationStatus.Running);
+                            var task = ExecuteStepAsync(observer.StepExecution, stepExecutionListener, cts);
+                            tasks.Add(task);
+                        });
+
                     monitors.AddRange(monitorsFromNewObserver);
-                    // If the step was not started by the execute callback, wait until the observer requests processing.
+
+                    // If the step was not started by the execute callback when registering initial updates,
+                    // create a task to wait until the observer requests processing.
                     if (_stepStatuses[observer.StepExecution] == OrchestrationStatus.NotStarted)
                     {
-                        var waitTask = observer.WaitForProcessingAsync(processCallback: OnStepReadyForProcessingAsync);
+                        var waitTask = observer.WaitForProcessingAsync(processCallback: (stepAction, cts) =>
+                            OnStepReadyForProcessingAsync(observer.StepExecution, stepAction, stepExecutionListener, cts));
                         tasks.Add(waitTask);
                     }
                 }
 
                 // Tell the observers to subscribe to receive normal updates from the orchestrator
-                // after the previous lifecycle methods have been called.
+                // after all the previous observer lifecycle methods have been called.
                 foreach (var observer in observers)
                 {
-                    observer.Subscribe(this); // Calling Subscribe() will add the observer to the _observers List.
+                    observer.Subscribe(this); // Calling Subscribe() will effectively add the observer to the _observers List.
                 }
             }
             _ = AddMonitorsAsync(monitors);

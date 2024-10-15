@@ -19,7 +19,7 @@ internal interface IOrchestrationObserver
     /// <param name="updates"></param>
     public IEnumerable<StepExecutionMonitor> RegisterInitialUpdates(
         IEnumerable<OrchestrationUpdate> updates,
-        Action<StepExecution, IStepExecutionListener, ExtendedCancellationTokenSource> executeCallback);
+        Action<ExtendedCancellationTokenSource> executeCallback);
 
     /// <summary>
     /// Called after <see cref="RegisterInitialUpdates"/> if execute was not requested.
@@ -28,7 +28,7 @@ internal interface IOrchestrationObserver
     /// <param name="listener"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public Task WaitForProcessingAsync(Func<StepExecution, OrchestratorAction, IStepExecutionListener, ExtendedCancellationTokenSource, Task> processCallback);
+    public Task WaitForProcessingAsync(Func<OrchestratorAction, ExtendedCancellationTokenSource, Task> processCallback);
 
     /// <summary>
     /// Called after <see cref="WaitForProcessingAsync"/> if execution was not requested in <see cref="RegisterInitialUpdates"/>.

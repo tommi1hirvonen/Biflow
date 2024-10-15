@@ -7,13 +7,11 @@ namespace Biflow.Executor.Core.Orchestrator;
 internal class OrchestrationObserver(
     ILogger logger,
     StepExecution stepExecution,
-    IStepExecutionListener orchestrationListener,
     IEnumerable<IOrchestrationTracker> orchestrationTrackers,
     ExtendedCancellationTokenSource cancellationTokenSource) : IOrchestrationObserver, IDisposable
 {
     private readonly TaskCompletionSource<OrchestratorAction> _tcs = new();
     private readonly ILogger _logger = logger;
-    private readonly IStepExecutionListener _orchestrationListener = orchestrationListener;
     private readonly IEnumerable<IOrchestrationTracker> _orchestrationTrackers = orchestrationTrackers;
     private readonly ExtendedCancellationTokenSource _cancellationTokenSource = cancellationTokenSource;
     private IDisposable? _unsubscriber;
@@ -24,7 +22,7 @@ internal class OrchestrationObserver(
 
     public IEnumerable<StepExecutionMonitor> RegisterInitialUpdates(
         IEnumerable<OrchestrationUpdate> updates,
-        Action<StepExecution, IStepExecutionListener, ExtendedCancellationTokenSource> executeCallback)
+        Action<ExtendedCancellationTokenSource> executeCallback)
     {
         try
         {
@@ -36,7 +34,7 @@ internal class OrchestrationObserver(
             if (action?.Value is ExecuteAction)
             {
                 // If the action was ExecuteAction already after registering initial updates, request execution.
-                executeCallback(StepExecution, _orchestrationListener, _cancellationTokenSource);
+                executeCallback(_cancellationTokenSource);
             }
             else if (action is not null)
             {
@@ -56,7 +54,7 @@ internal class OrchestrationObserver(
     }
 
     public async Task WaitForProcessingAsync(
-        Func<StepExecution, OrchestratorAction, IStepExecutionListener, ExtendedCancellationTokenSource, Task> processCallback)
+        Func<OrchestratorAction, ExtendedCancellationTokenSource, Task> processCallback)
     {
         OrchestratorAction stepAction;
         try
@@ -67,7 +65,7 @@ internal class OrchestrationObserver(
         {
             stepAction = Actions.Cancel;
         }
-        await processCallback(StepExecution, stepAction, _orchestrationListener, _cancellationTokenSource);
+        await processCallback(stepAction, _cancellationTokenSource);
     }
 
     public void Subscribe(IOrchestrationObservable provider)
