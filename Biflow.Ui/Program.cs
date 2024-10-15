@@ -9,6 +9,8 @@ using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddServiceDefaults();
+
 builder.Services.AddWindowsService();
 builder.Services.AddSystemd();
 
@@ -77,6 +79,8 @@ app.UseCookiePolicy();
 app.MapControllers(); // Needed for MicrosoftIdentityUI
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+app.MapDefaultEndpoints();
 
 await app.EnsureAdminUserAsync();
 
