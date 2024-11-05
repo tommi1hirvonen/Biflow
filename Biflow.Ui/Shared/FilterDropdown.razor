@@ -12,7 +12,12 @@
         var badgeClass = FilterSet.Any() ? "bg-primary" : "bg-secondary";
         var itemsCount = Items?.Count() ?? 0;
         var badgeText = FilterSet.Any() ? $"{FilterSet.Count} / {itemsCount}" : itemsCount.ToString();
-        <HxDropdownToggleButton Size="ButtonSize" Color="ThemeColor.None" CssClass="@TitleCssClass" OnShown="OnDropdownShown" OnHidden="OnHidden">
+        <HxDropdownToggleButton Size="ButtonSize"
+                                Color="ThemeColor.None" 
+                                CssClass="@TitleCssClass" 
+                                OnShown="OnDropdownShown" 
+                                OnHidden="OnHidden"
+                                Enabled="Enabled">
             @TitleTemplate
             @if (ShowPill)
             {
@@ -42,7 +47,7 @@
                             <div class="form-check form-check-inline">
                                 <input type="radio" class="form-check-input" id="@($"_{componentInstanceId}_any_")"
                                 checked=@(Mode is FilterDropdownMode.Any)
-                                @onchange="() => ModeChanged.InvokeAsync(FilterDropdownMode.Any)">
+                                @onchange="() => SetMode(FilterDropdownMode.Any)">
                                 <label class="form-check-label fw-normal" for="@($"_{componentInstanceId}_any_")">
                                     Any
                                     <HxPopover Trigger="PopoverTrigger.Hover" Content="Match with any selected filter value" Html WrapperCssClass="d-inline-flex ms-1 mt-1 align-self-start">
@@ -53,7 +58,7 @@
                             <div class="form-check form-check-inline">
                                 <input type="radio" class="form-check-input" id="@($"_{componentInstanceId}_all_")"
                                 checked=@(Mode is FilterDropdownMode.All)
-                                @onchange="() => ModeChanged.InvokeAsync(FilterDropdownMode.All)">
+                                @onchange="() => SetMode(FilterDropdownMode.All)">
                                 <label class="form-check-label fw-normal" for="@($"_{componentInstanceId}_all_")">
                                     All
                                     <HxPopover Trigger="PopoverTrigger.Hover" Content="Match with all selected filter values" Html WrapperCssClass="d-inline-flex ms-1 mt-1 align-self-start">
@@ -168,6 +173,9 @@
     public bool ShowPill { get; set; } = true;
 
     [Parameter]
+    public bool Enabled { get; set; } = true;
+
+    [Parameter]
     public FilterDropdownMode Mode { get; set; } = FilterDropdownMode.None;
 
     [Parameter]
@@ -218,4 +226,9 @@
         OnChange.InvokeAsync();
     }
 
+    private void SetMode(FilterDropdownMode mode)
+    {
+        ModeChanged.InvokeAsync(mode);
+        OnChange.InvokeAsync();
+    }
 }
