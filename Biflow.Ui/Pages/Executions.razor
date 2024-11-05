@@ -164,6 +164,7 @@
                             IdSelector="t => t.TagId.ToString()"
                             TextSelector="t => t.TagName"
                             IsSearchable
+                            @bind-Mode="State.JobTagFilterMode"
                             OnChange="StateHasChanged">
                 <ItemTemplate Context="item">
                     <TagBadge Tag="item" />
@@ -291,6 +292,7 @@
                                 IdSelector="t => t.TagId.ToString()"
                                 TextSelector="t => t.TagName"
                                 IsSearchable
+                                @bind-Mode="State.StepTagFilterMode"
                                 OnChange="StateHasChanged">
                     <ItemTemplate Context="item">
                         <TagBadge Tag="item" />
