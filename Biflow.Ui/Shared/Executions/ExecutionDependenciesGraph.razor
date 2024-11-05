@@ -7,7 +7,7 @@
 }
 
 <div class="row align-items-end mb-3">
-    <div class="col-xl-5 col-lg-5 col-12">
+    <div class="col" style="max-width: 40rem;">
         <HxAutosuggest @bind-Value="dependencyGraphStepFilter"
                        @bind-Value:after="LoadGraphAsync"
                        DataProvider="ProvideSuggestions"
@@ -26,7 +26,7 @@
             </EmptyTemplate>
         </HxAutosuggest>
     </div>
-    <div class="col-lg-auto d-flex flex-row align-items-end">
+    <div class="col-xxl-auto mt-xxl-0 mt-3 d-flex flex-row align-items-end">
         <div class="form-group">
             <label class="form-label">Depth backwards</label>
             <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal backwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
