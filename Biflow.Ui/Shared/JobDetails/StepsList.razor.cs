@@ -58,13 +58,16 @@ public partial class StepsList : ComponentBase
     private bool showDetails = false;
     private bool initialStepModalShouldOpen = true;
     private StateFilter stateFilter = StateFilter.All;
+    private FilterDropdownMode tagsFilterMode = FilterDropdownMode.Any;
 
     private enum StateFilter { All, Enabled, Disabled }
 
     private IEnumerable<Step> FilteredSteps => Steps?
         .Where(step => stateFilter switch { StateFilter.Enabled => step.IsEnabled, StateFilter.Disabled => !step.IsEnabled, _ => true })
         .Where(step => stepNameFilter.Length == 0 || (step.StepName?.ContainsIgnoreCase(stepNameFilter) ?? false))
-        .Where(step => tagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName)))
+        .Where(step =>
+            (tagsFilterMode is FilterDropdownMode.Any && (tagsFilterSet.Count == 0 || tagsFilterSet.Any(tag => step.Tags.Any(t => t.TagName == tag.TagName))))
+            || (tagsFilterMode is FilterDropdownMode.All && tagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))))
         .Where(step => stepTypeFilter.Count == 0 || stepTypeFilter.Contains(step.StepType))
         .Where(step => connectionFilter.Count == 0 || step is IHasConnection conn && connectionFilter.Any(f => f.ConnectionId == conn.ConnectionId))
         .Where(step => advancedFiltersOffcanvas?.EvaluatePredicates(step) ?? true)
