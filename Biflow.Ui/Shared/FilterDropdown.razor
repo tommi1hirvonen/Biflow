@@ -28,13 +28,42 @@
                 <div class="row mb-2">
                     <div class="col">
                         <a href="javascript:void(0)"
-                           @onclick="SelectAll">Select all</a>
+                        @onclick="SelectAll">Select all</a>
                     </div>
                     <div class="col d-flex justify-content-end">
                         <a href="javascript:void(0)"
-                           @onclick="Reset">Reset</a>
+                        @onclick="Reset">Reset</a>
                     </div>
                 </div>
+                @if (Mode is FilterDropdownMode.All or FilterDropdownMode.Any)
+                {
+                    <div class="row mb-2">
+                        <div class="col">
+                            <div class="form-check form-check-inline">
+                                <input type="radio" class="form-check-input" id="@($"_{componentInstanceId}_any_")"
+                                checked=@(Mode is FilterDropdownMode.Any)
+                                @onchange="() => ModeChanged.InvokeAsync(FilterDropdownMode.Any)">
+                                <label class="form-check-label fw-normal" for="@($"_{componentInstanceId}_any_")">
+                                    Any
+                                    <HxPopover Trigger="PopoverTrigger.Hover" Content="Match with any of the selected filter values" Html WrapperCssClass="d-inline-flex ms-1 mt-1 align-self-start">
+                                        <SvgIcon Icon="FeatherIcon.Info" />
+                                    </HxPopover>
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input type="radio" class="form-check-input" id="@($"_{componentInstanceId}_all_")"
+                                checked=@(Mode is FilterDropdownMode.All)
+                                @onchange="() => ModeChanged.InvokeAsync(FilterDropdownMode.All)">
+                                <label class="form-check-label fw-normal" for="@($"_{componentInstanceId}_all_")">
+                                    All
+                                    <HxPopover Trigger="PopoverTrigger.Hover" Content="Match with all selected filter values" Html WrapperCssClass="d-inline-flex ms-1 mt-1 align-self-start">
+                                        <SvgIcon Icon="FeatherIcon.Info" />
+                                    </HxPopover>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                }
                 @if (IsSearchable)
                 {
                     <div class="row mb-2">
@@ -61,8 +90,8 @@
                             <div class="col">
                                 <div class="form-check form-check-inline">
                                     <input type="checkbox" class="form-check-input" id="@($"{componentInstanceId}_{id}")"
-                                           checked=@FilterSet.Contains(item)
-                                           @onchange="args => Toggle((bool)args.Value!, item)">
+                                    checked=@FilterSet.Contains(item)
+                                    @onchange="args => Toggle((bool)args.Value!, item)">
                                     <label class="form-check-label fw-normal" for="@($"{componentInstanceId}_{id}")">
                                         @if (ItemTemplate is not null)
                                         {
@@ -137,6 +166,12 @@
 
     [Parameter]
     public bool ShowPill { get; set; } = true;
+
+    [Parameter]
+    public FilterDropdownMode Mode { get; set; } = FilterDropdownMode.None;
+
+    [Parameter]
+    public EventCallback<FilterDropdownMode> ModeChanged { get; set; }
 
     private readonly Guid componentInstanceId = Guid.NewGuid();
     private bool renderItems = false;
