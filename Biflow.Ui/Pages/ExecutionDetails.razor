@@ -443,6 +443,7 @@
                                 .OrderBy(t => t.TagName) ?? Enumerable.Empty<TagProjection>()"
                             IdSelector="t => t.TagId.ToString()"
                             TextSelector="t => t.TagName"
+                            @bind-Mode="tagFilterMode"
                             OnChange="StateHasChanged">
                     <ItemTemplate Context="item">
                         <TagBadge Tag="item" />

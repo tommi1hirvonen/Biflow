@@ -1,4 +1,5 @@
-﻿using Biflow.Ui.Shared.Executions;
+﻿using Biflow.Ui.Shared;
+using Biflow.Ui.Shared.Executions;
 using System.Timers;
 
 namespace Biflow.Ui.Pages;
@@ -29,6 +30,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
     private readonly HashSet<TagProjection> tagFilter = [];
     private readonly HashSet<StepExecutionStatus> stepStatusFilter = [];
     private readonly HashSet<(string StepName, StepType StepType)> stepFilter = [];
+    private FilterDropdownMode tagFilterMode = FilterDropdownMode.Any;
     private Guid prevExecutionId;
     private Execution? execution;
     private IEnumerable<StepExecutionProjection>? stepProjections = null;
@@ -66,7 +68,9 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
     private IEnumerable<StepExecutionProjection>? GetOrderedExecutions()
     {
         var filtered = stepProjections
-            ?.Where(e => tagFilter.Count == 0 || e.StepTags.Any(t1 => tagFilter.Any(t2 => t1.TagId == t2.TagId)) == true)
+            ?.Where(e =>
+            (tagFilterMode is FilterDropdownMode.Any && (tagFilter.Count == 0 || tagFilter.Any(tag => e.StepTags.Any(t => t.TagName == tag.TagName))))
+            || (tagFilterMode is FilterDropdownMode.All && tagFilter.All(tag => e.StepTags.Any(t => t.TagName == tag.TagName))))
             .Where(e => stepStatusFilter.Count == 0 || stepStatusFilter.Contains(e.StepExecutionStatus))
             .Where(e => stepFilter.Count == 0 || stepFilter.Contains((e.StepName, e.StepType)))
             .Where(e => stepTypeFilter.Count == 0 || stepTypeFilter.Contains(e.StepType));
