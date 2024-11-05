@@ -58,13 +58,13 @@
                                 @if (reference == editReference)
                                 {
                                     <HxInputTags Delimiters="new()"
-                                                InputSize="InputSize.Small"
-                                                Placeholder="Add data attributes"
-                                                SuggestDelay="0"
-                                                SuggestMinimumLength="0"
-                                                DataProvider="GetDataAttributeSuggestionsAsync"
-                                                TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
-                                                @bind-Value="editReferenceAttributes" />
+                                    InputSize="InputSize.Small"
+                                    Placeholder="Add data attributes"
+                                    SuggestDelay="0"
+                                    SuggestMinimumLength="0"
+                                    DataProvider="GetDataAttributeSuggestionsAsync"
+                                    TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
+                                    @bind-Value="editReferenceAttributes" />
                                 }
                                 else
                                 {
@@ -79,7 +79,7 @@
                                         <TagBadge IsRemovable Tag="tag" CssClass="mx-1" OnRemoveClick="() => reference.DataAttributes.Remove(value)" />
                                     }
                                     <span class="data-attribute-edit bg-light-subtle border d-inline-flex align-items-center rounded small mx-1" title="Add data attributes"
-                                          @onclick="() => { editReference = reference; editReferenceAttributes = reference.DataAttributes.ToList(); }">
+                                    @onclick="() => { editReference = reference; editReferenceAttributes = reference.DataAttributes.ToList(); }">
                                         <SvgIcon Icon="FeatherIcon.Plus" />
                                     </span>
                                 }
@@ -108,26 +108,26 @@
                             @if (reference == editReference)
                             {
                                 <HxButton Size="ButtonSize.Small"
-                                          Color="ThemeColor.None"
-                                          CssClass="btn-auto text-success"
-                                          OnClick="() => { reference.DataAttributes.Clear(); reference.DataAttributes.AddRange(editReferenceAttributes); editReferenceAttributes.Clear(); editReference = null; }"
-                                          title="Done">
+                                Color="ThemeColor.None"
+                                CssClass="btn-auto text-success"
+                                OnClick="() => { reference.DataAttributes.Clear(); reference.DataAttributes.AddRange(editReferenceAttributes); editReferenceAttributes.Clear(); editReference = null; }"
+                                title="Done">
                                     <SvgIcon Icon="FeatherIcon.Check" />
                                 </HxButton>
                                 <HxButton Size="ButtonSize.Small"
-                                          Color="ThemeColor.None"
-                                          CssClass="btn-auto text-danger"
-                                          OnClick="() => { editReference = null; editReferenceAttributes.Clear(); }"
-                                          title="Discard">
+                                Color="ThemeColor.None"
+                                CssClass="btn-auto text-danger"
+                                OnClick="() => { editReference = null; editReferenceAttributes.Clear(); }"
+                                title="Discard">
                                     <SvgIcon Icon="FeatherIcon.X" />
                                 </HxButton>
                             }
                             else
                             {
                                 <HxButton Size="ButtonSize.Small"
-                                          Color="ThemeColor.None"
-                                          CssClass="btn-auto"
-                                          OnClick="() => references.Remove(reference)">
+                                Color="ThemeColor.None"
+                                CssClass="btn-auto"
+                                OnClick="() => references.Remove(reference)">
                                     <SvgIcon Icon="FeatherIcon.Delete" />
                                 </HxButton>
                             }
@@ -141,8 +141,8 @@
             <tr>
                 <td>
                     <input class="form-control form-control-sm font-monospace" type="text" autocomplete="off" placeholder="Uri"
-                            @bind="newObject.ObjectUri"
-                            @bind:event="oninput" />
+                    @bind="newObject.ObjectUri"
+                    @bind:event="oninput" />
                 </td>
                 <td colspan="2">
                     <HxButtonGroup Size="ButtonGroupSize.Small">
@@ -460,6 +460,7 @@
                 .SelectMany(a => a)
                 .Where(a => a.ContainsIgnoreCase(request.UserInput))
                 .Concat(current)
+                .Where(a => !editReferenceAttributes.Any(x => a == x))
                 .Distinct()
                 .ToArray()
         };
