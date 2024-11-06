@@ -5,15 +5,20 @@ using System.Data;
 
 namespace Biflow.Ui.Shared.Settings;
 
-public partial class UserEditModal : ComponentBase
+public partial class UserEditModal(
+    AuthenticationMethodResolver authenticationResolver,
+    IDbContextFactory<AppDbContext> dbContextFactory,
+    IMediator mediator,
+    ToasterService toaster,
+    IJSRuntime js) : ComponentBase
 {
-    [Inject] private AuthenticationMethodResolver AuthenticationResolver { get; set; } = null!;
-    [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
-    [Inject] private IMediator Mediator { get; set; } = null!;
-    [Inject] private ToasterService Toaster { get; set; } = null!;
-    [Inject] private IJSRuntime JS { get; set; } = null!;
-
     [Parameter] public EventCallback<User> OnUserSubmit { get; set; }
+
+    private readonly AuthenticationMethodResolver _authenticationResolver = authenticationResolver;
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
+    private readonly IMediator _mediator = mediator;
+    private readonly ToasterService _toaster = toaster;
+    private readonly IJSRuntime _js = js;
 
     private List<Job>? jobs;
     private List<MasterDataTable>? dataTables;
@@ -21,7 +26,7 @@ public partial class UserEditModal : ComponentBase
     private UserFormModel? model;
     private Guid previousUserId;
     private string currentUsername = "";
-    private UserFormModelValidator validator = new(Enumerable.Empty<string>());
+    private UserFormModelValidator validator = new([]);
     private AuthorizationPane currentPane = AuthorizationPane.Jobs;
 
     private bool IsNewUser => previousUserId == Guid.Empty;
@@ -66,22 +71,22 @@ public partial class UserEditModal : ComponentBase
         if (IsNewUser)
         {
             ArgumentNullException.ThrowIfNull(model.PasswordModel);
-            if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn && !model.PasswordModel.Password.Equals(model.PasswordModel.ConfirmPassword))
+            if (_authenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn && !model.PasswordModel.Password.Equals(model.PasswordModel.ConfirmPassword))
             {
-                Toaster.AddError("The two passwords do not match");
+                _toaster.AddError("The two passwords do not match");
                 return;
             }
 
             try
             {
-                await Mediator.SendAsync(new CreateUserCommand(model.User, model.PasswordModel));
+                await _mediator.SendAsync(new CreateUserCommand(model.User, model.PasswordModel));
                 await OnUserSubmit.InvokeAsync(model.User);
                 model = null;
                 await modal.LetAsync(x => x.HideAsync());
             }
             catch (Exception ex)
             {
-                Toaster.AddError("Error creating user", ex.Message);
+                _toaster.AddError("Error creating user", ex.Message);
             }
         }
         // Existing user
@@ -90,13 +95,13 @@ public partial class UserEditModal : ComponentBase
             try
             {
                 ArgumentNullException.ThrowIfNull(model);
-                await Mediator.SendAsync(new UpdateUserCommand(model.User));
+                await _mediator.SendAsync(new UpdateUserCommand(model.User));
                 await OnUserSubmit.InvokeAsync(model.User);
                 await modal.LetAsync(x => x.HideAsync());
             }
             catch (Exception ex)
             {
-                Toaster.AddError("Error updating user", ex.Message);
+                _toaster.AddError("Error updating user", ex.Message);
             }
         }
     }
@@ -106,7 +111,7 @@ public partial class UserEditModal : ComponentBase
         currentUsername = "";
         await modal.LetAsync(x => x.ShowAsync());
         previousUserId = userId ?? Guid.Empty;
-        using var context = DbFactory.CreateDbContext();
+        using var context = _dbContextFactory.CreateDbContext();
         if (userId is null)
         {
             var user = new User
@@ -141,7 +146,7 @@ public partial class UserEditModal : ComponentBase
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
-        var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        var confirmed = await _js.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
         if (!confirmed)
         {
             context.PreventNavigation();

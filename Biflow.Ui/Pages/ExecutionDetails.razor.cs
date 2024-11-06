@@ -5,15 +5,14 @@ using System.Timers;
 namespace Biflow.Ui.Pages;
 
 [Route("/executions/{ExecutionId:guid}/{Page}/{InitialStepId:guid?}")]
-public partial class ExecutionDetails : ComponentBase, IDisposable
+public partial class ExecutionDetails(
+    IDbContextFactory<AppDbContext> dbContextFactory,
+    ToasterService toaster,
+    IExecutorService executorService,
+    NavigationManager navigationManager,
+    IHxMessageBoxService confirmer,
+    IMediator mediator) : ComponentBase, IDisposable
 {
-    [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
-    [Inject] private ToasterService Toaster { get; set; } = null!;
-    [Inject] private IExecutorService ExecutorService { get; set; } = null!;
-    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
-    [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
-    [Inject] private IMediator Mediator { get; set; } = null!;
-
     [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
 
     [Parameter] public Guid ExecutionId { get; set; }
@@ -22,6 +21,12 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
 
     [Parameter] public Guid? InitialStepId { get; set; }
 
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
+    private readonly ToasterService _toaster = toaster;
+    private readonly IExecutorService _executorService = executorService;
+    private readonly NavigationManager _navigationManager = navigationManager;
+    private readonly IHxMessageBoxService _confirmer = confirmer;
+    private readonly IMediator _mediator = mediator;
     private readonly CancellationTokenSource cts = new();
 
     private const int TimerIntervalSeconds = 10;
@@ -144,7 +149,7 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             timer.Stop();
             loading = true;
             await InvokeAsync(StateHasChanged);
-            using var context = DbFactory.CreateDbContext();
+            using var context = _dbContextFactory.CreateDbContext();
 
             try
             {
@@ -223,20 +228,20 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
 
     private async Task StopJobExecutionAsync()
     {
-        if (!await Confirmer.ConfirmAsync("Stop execution", $"Are you sure you want to stop all running steps in this execution?"))
+        if (!await _confirmer.ConfirmAsync("Stop execution", $"Are you sure you want to stop all running steps in this execution?"))
         {
             return;
         }
 
         if (Stopping)
         {
-            Toaster.AddInformation("Execution is already stopping");
+            _toaster.AddInformation("Execution is already stopping");
             return;
         }
 
         if (execution is null)
         {
-            Toaster.AddError("Execution was null");
+            _toaster.AddError("Execution was null");
             return;
         }
 
@@ -248,17 +253,17 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
             var username = authState.User.Identity?.Name;
             ArgumentNullException.ThrowIfNull(username);
 
-            await ExecutorService.StopExecutionAsync(execution.ExecutionId, username);
-            Toaster.AddSuccess("Stop request sent successfully to the executor service");
+            await _executorService.StopExecutionAsync(execution.ExecutionId, username);
+            _toaster.AddSuccess("Stop request sent successfully to the executor service");
         }
         catch (TimeoutException)
         {
-            Toaster.AddError("Operation timed out", "The executor process may no longer be running");
+            _toaster.AddError("Operation timed out", "The executor process may no longer be running");
             stoppingExecutions.RemoveAll(id => id == ExecutionId);
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error stopping execution", ex.Message);
+            _toaster.AddError("Error stopping execution", ex.Message);
             stoppingExecutions.RemoveAll(id => id == ExecutionId);
         }
     }
@@ -272,31 +277,31 @@ public partial class ExecutionDetails : ComponentBase, IDisposable
                 execution.ExecutionStatus = status;
                 execution.StartedOn ??= DateTimeOffset.Now;
                 execution.EndedOn ??= DateTimeOffset.Now;
-                await Mediator.SendAsync(new UpdateExecutionCommand(execution));
+                await _mediator.SendAsync(new UpdateExecutionCommand(execution));
             }
-            Toaster.AddSuccess("Status updated successfully");
+            _toaster.AddSuccess("Status updated successfully");
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error updating status", ex.Message);
+            _toaster.AddError("Error updating status", ex.Message);
         }
     }
 
     private async Task DeleteExecutionAsync()
     {
-        if (!await Confirmer.ConfirmAsync("Delete execution?", "Deleting executions that might be running can lead to undefined behaviour of the executor service. Are you sure you want to delete this execution?"))
+        if (!await _confirmer.ConfirmAsync("Delete execution?", "Deleting executions that might be running can lead to undefined behaviour of the executor service. Are you sure you want to delete this execution?"))
         {
             return;
         }
         try
         {
-            await Mediator.SendAsync(new DeleteExecutionCommand(ExecutionId));
-            NavigationManager.NavigateTo("/executions");
-            Toaster.AddSuccess("Execution deleted successfully");
+            await _mediator.SendAsync(new DeleteExecutionCommand(ExecutionId));
+            _navigationManager.NavigateTo("/executions");
+            _toaster.AddSuccess("Execution deleted successfully");
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error deleting execution", ex.Message);
+            _toaster.AddError("Error deleting execution", ex.Message);
         }
     }
 

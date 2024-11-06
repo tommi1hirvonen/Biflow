@@ -2,9 +2,13 @@
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
+public partial class DatasetStepEditModal(
+    ITokenService tokenService,
+    ToasterService toaster,
+    IDbContextFactory<AppDbContext> dbContextFactory)
+    : StepEditModal<DatasetStep>(toaster, dbContextFactory)
 {
-    [Inject] private ITokenService TokenService { get; set; } = null!;
+    private readonly ITokenService _tokenService = tokenService;
 
     internal override string FormId => "dataset_step_edit_form";
 
@@ -25,7 +29,7 @@ public partial class DatasetStepEditModal : StepEditModal<DatasetStep>
         try
         {
             var appRegistration = AppRegistrations.First(a => a.AppRegistrationId == step.AppRegistrationId);
-            var datasetClient = appRegistration.CreateDatasetClient(TokenService);
+            var datasetClient = appRegistration.CreateDatasetClient(_tokenService);
             (datasetGroupName, datasetName) = appRegistration switch
             {
                 not null => (

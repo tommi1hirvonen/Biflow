@@ -1,10 +1,9 @@
 ﻿namespace Biflow.Ui.Shared.StepEditModal;
 
-public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable, IStepEditModal where TStep : Step
-{    
-    [Inject] protected ToasterService Toaster { get; set; } = null!;
-    [Inject] protected IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
-
+public abstract partial class StepEditModal<TStep>(
+    ToasterService toaster,
+    IDbContextFactory<AppDbContext> dbContextFactory) : ComponentBase, IDisposable, IStepEditModal where TStep : Step
+{
     [CascadingParameter] public Job? Job { get; set; }
 
     [CascadingParameter] public List<Step>? Steps { get; set; }
@@ -42,6 +41,10 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
     internal bool Saving { get; set; } = false;
 
     public IEnumerable<StepTag>? AllTags { get; private set; }
+
+    protected ToasterService Toaster { get; } = toaster;
+
+    protected IDbContextFactory<AppDbContext> DbContextFactory { get; } = dbContextFactory;
 
     private AppDbContext? context;
     private IEnumerable<DataObject>? dataObjects;

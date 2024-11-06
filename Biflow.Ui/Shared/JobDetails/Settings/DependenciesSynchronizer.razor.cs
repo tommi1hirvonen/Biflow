@@ -2,21 +2,22 @@
 
 namespace Biflow.Ui.Shared.JobDetails.Settings;
 
-public partial class DependenciesSynchronizer : ComponentBase
+public partial class DependenciesSynchronizer(
+    IDbContextFactory<AppDbContext> dbContextFactory,
+    ToasterService toaster,
+    IHxMessageBoxService confirmer,
+    IMediator mediator) : ComponentBase
 {
-    [Inject] private IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
-
-    [Inject] private ToasterService Toaster { get; set; } = null!;
-
-    [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
-
-    [Inject] private IMediator Mediator { get; set; } = null!;
-
     [CascadingParameter] public Job? Job { get; set; }
 
     [CascadingParameter(Name = "SortSteps")] public Action? SortSteps { get; set; }
 
     [CascadingParameter] public List<Step>? Steps { get; set; }
+
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
+    private readonly ToasterService _toaster = toaster;
+    private readonly IHxMessageBoxService _confirmer = confirmer;
+    private readonly IMediator _mediator = mediator;
 
     private List<Dependency>? dependenciesToAdd;
     private List<Dependency>? dependenciesToRemove;
@@ -24,7 +25,7 @@ public partial class DependenciesSynchronizer : ComponentBase
     private async Task CalculateChangesAsync()
     {
         if (Job is null) return;
-        using var context = DbContextFactory.CreateDbContext();
+        using var context = _dbContextFactory.CreateDbContext();
         var steps = await context.Steps
             .AsNoTrackingWithIdentityResolution()
             .Where(step => step.JobId == Job.JobId)
@@ -84,18 +85,18 @@ public partial class DependenciesSynchronizer : ComponentBase
             dependenciesToAdd = null;
             dependenciesToRemove = null;
             SortSteps?.Invoke();
-            Toaster.AddSuccess("Changes saved successfully");
+            _toaster.AddSuccess("Changes saved successfully");
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error saving changes", ex.Message);
+            _toaster.AddError("Error saving changes", ex.Message);
         }
     }
 
     private async Task AddDependencyAsync(Dependency dependency)
     {
         // Add dependency to database.
-        await Mediator.SendAsync(new CreateDependencyCommand(dependency));
+        await _mediator.SendAsync(new CreateDependencyCommand(dependency));
 
         // Add dependency to the step loaded into memory.
         var step = Steps?.FirstOrDefault(step => step.StepId == dependency.StepId);
@@ -113,7 +114,7 @@ public partial class DependenciesSynchronizer : ComponentBase
     private async Task RemoveDependencyAsync(Dependency dependency)
     {
         // Remove dependency from the database.
-        await Mediator.SendAsync(new DeleteDependencyCommand(dependency.StepId, dependency.DependantOnStepId));
+        await _mediator.SendAsync(new DeleteDependencyCommand(dependency.StepId, dependency.DependantOnStepId));
 
         // Remove dependency from step loaded into memory.
         var step = Steps?.FirstOrDefault(step => step.StepId == dependency.StepId);
@@ -129,7 +130,7 @@ public partial class DependenciesSynchronizer : ComponentBase
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
-        var confirmed = await Confirmer.ConfirmAsync("", "Discard unsaved changes?");
+        var confirmed = await _confirmer.ConfirmAsync("", "Discard unsaved changes?");
         if (!confirmed)
         {
             context.PreventNavigation();

@@ -2,14 +2,13 @@
 
 namespace Biflow.Ui.Shared.StepEdit;
 
-public partial class DbObjectExplorerOffcanvas : ComponentBase, IDisposable
+public partial class DbObjectExplorerOffcanvas(ToasterService toaster) : ComponentBase, IDisposable
 {
-    [Inject] public ToasterService Toaster { get; set; } = null!;
-
     [Parameter] public IEnumerable<ConnectionBase> Connections { get; set; } = [];
 
     [Parameter] public Action<(string, string, string, string), bool>? OnDbObjectSelected { get; set; }
 
+    private readonly ToasterService _toaster = toaster;
     private readonly SemaphoreSlim semaphore = new(1, 1);
 
     private Guid? connectionId;
@@ -56,7 +55,7 @@ public partial class DbObjectExplorerOffcanvas : ComponentBase, IDisposable
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error querying database objects", ex.Message);
+            _toaster.AddError("Error querying database objects", ex.Message);
         }
         finally
         {

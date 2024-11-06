@@ -2,7 +2,9 @@
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class AgentJobStepEditModal : StepEditModal<AgentJobStep>
+public partial class AgentJobStepEditModal(
+    ToasterService toaster, IDbContextFactory<AppDbContext> dbContextFactory)
+    : StepEditModal<AgentJobStep>(toaster, dbContextFactory)
 {
     private AgentJobSelectOffcanvas? agentJobSelectOffcanvas;
 

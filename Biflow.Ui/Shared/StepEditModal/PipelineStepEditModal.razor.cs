@@ -2,11 +2,15 @@
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
+public partial class PipelineStepEditModal(
+    ITokenService tokenService,
+    ToasterService toaster,
+    IDbContextFactory<AppDbContext> dbContextFactory)
+    : StepEditModal<PipelineStep>(toaster, dbContextFactory)
 {
     [Parameter] public IList<PipelineClient> PipelineClients { get; set; } = [];
 
-    [Inject] private ITokenService TokenService { get; set; } = null!;
+    private readonly ITokenService _tokenService = tokenService;
 
     internal override string FormId => "pipeline_step_edit_form";
 
@@ -51,7 +55,7 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
                 .AsNoTrackingWithIdentityResolution()
                 .Include(c => c.AppRegistration)
                 .FirstAsync(c => c.PipelineClientId == Step.PipelineClientId);
-            var pipelineClient = client.CreatePipelineClient(TokenService);
+            var pipelineClient = client.CreatePipelineClient(_tokenService);
             var parameters = await pipelineClient.GetPipelineParametersAsync(Step.PipelineName);
             if (!parameters.Any())
             {

@@ -1,6 +1,8 @@
 ﻿namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class EmailStepEditModal : StepEditModal<EmailStep>
+public partial class EmailStepEditModal(
+    ToasterService toaster, IDbContextFactory<AppDbContext> dbContextFactory)
+    : StepEditModal<EmailStep>(toaster, dbContextFactory)
 {
     internal override string FormId => "email_step_edit_form";
 

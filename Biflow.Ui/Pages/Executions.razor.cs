@@ -1,16 +1,14 @@
 ﻿namespace Biflow.Ui.Pages;
 
 [Route("/executions")]
-public partial class Executions : ComponentBase, IDisposable
+public partial class Executions(IMediator mediator, ToasterService toaster) : ComponentBase, IDisposable
 {
-    [Inject] private IMediator Mediator { get; set; } = null!;
-
-    [Inject] private ToasterService Toaster { get; set; } = null!;
-
     [CascadingParameter] UserState UserState { get; set; } = null!;
 
     private ExecutionsPageState State => UserState.Executions;
 
+    private readonly IMediator _mediator = mediator;
+    private readonly ToasterService _toaster = toaster;
     private readonly CancellationTokenSource cts = new();
     
     private bool loading = false;
@@ -96,13 +94,13 @@ public partial class Executions : ComponentBase, IDisposable
         if (!State.ShowSteps)
         {
             var request = new ExecutionsMonitoringQuery(State.FromDateTime, State.ToDateTime);
-            var response = await Mediator.SendAsync(request, cts.Token);
+            var response = await _mediator.SendAsync(request, cts.Token);
             executions = response.Executions;
         }
         else
         {
             var request = new StepExecutionsMonitoringQuery(State.FromDateTime, State.ToDateTime);
-            var response = await Mediator.SendAsync(request, cts.Token);
+            var response = await _mediator.SendAsync(request, cts.Token);
             stepExecutions = response.Executions;
         }
 
@@ -115,12 +113,12 @@ public partial class Executions : ComponentBase, IDisposable
         try
         {
             var command = new DeleteExecutionsCommand(deleteFrom, deleteTo);
-            await Mediator.SendAsync(command);
-            Toaster.AddSuccess("Executions deleted successfully");
+            await _mediator.SendAsync(command);
+            _toaster.AddSuccess("Executions deleted successfully");
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error deleting executions", ex.Message);
+            _toaster.AddError("Error deleting executions", ex.Message);
         }
     }
 

@@ -42,7 +42,7 @@ else
                 <EditForm EditContext="editContext" id="job_parameter_form" OnValidSubmit="SubmitParameters">
                     <ObjectGraphDataAnnotationsValidator />
                     <ValidationSummary />
-                    <FluentValidationValidator @ref="fluentJobValidator" Validator="JobValidator" />
+                    <FluentValidationValidator @ref="fluentJobValidator" Validator="_jobValidator" />
                     <table id="parameters_table" class="table">
                         <thead>
                             <tr>

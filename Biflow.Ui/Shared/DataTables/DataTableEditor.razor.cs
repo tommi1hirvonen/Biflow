@@ -6,16 +6,13 @@ using System.Text.RegularExpressions;
 
 namespace Biflow.Ui.Shared.DataTables;
 
-public partial class DataTableEditor : ComponentBase
+public partial class DataTableEditor(ToasterService toaster, IHxMessageBoxService messageBox, IJSRuntime js) : ComponentBase
 {
-    [Inject] private ToasterService Toaster { get; set; } = null!;
-    
-    [Inject] private IHxMessageBoxService MessageBox { get; set; } = null!;
-
-    [Inject] private IJSRuntime JS { get; set; } = null!;
-
     [Parameter] public MasterDataTable? Table { get; set; }
 
+    private readonly ToasterService _toaster = toaster;
+    private readonly IHxMessageBoxService _messageBox = messageBox;
+    private readonly IJSRuntime _js = js;
     private readonly List<(string Column, bool Descending)> orderBy = [];
     private readonly HashSet<string> columnSelections = [];
     private readonly Dictionary<Column, HashSet<object?>> quickFilters = [];
@@ -112,7 +109,7 @@ public partial class DataTableEditor : ComponentBase
     {
         if (tableData?.HasChanges == true && !discardChanges)
         {
-            var confirmed = await MessageBox.ConfirmAsync("Discard unsaved changes?");
+            var confirmed = await _messageBox.ConfirmAsync("Discard unsaved changes?");
             if (!confirmed)
             {
                 return;
@@ -124,7 +121,7 @@ public partial class DataTableEditor : ComponentBase
 
         if (Table is null)
         {
-            Toaster.AddError("Error loading data", $"Selected table was null.");
+            _toaster.AddError("Error loading data", $"Selected table was null.");
             return;
         }
 
@@ -135,7 +132,7 @@ public partial class DataTableEditor : ComponentBase
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error loading data", ex.Message);
+            _toaster.AddError("Error loading data", ex.Message);
         }
     }
 
@@ -143,7 +140,7 @@ public partial class DataTableEditor : ComponentBase
     {
         if (tableData is null)
         {
-            Toaster.AddError("Error saving changes", $"Table editor dataset object was null.");
+            _toaster.AddError("Error saving changes", $"Table editor dataset object was null.");
             return;
         }
 
@@ -167,12 +164,12 @@ public partial class DataTableEditor : ComponentBase
             {
                 message.Append("Deleted ").Append(deleted).Append(" record(s)").AppendLine();
             }
-            Toaster.AddSuccess("Changes saved", message.ToString());
+            _toaster.AddSuccess("Changes saved", message.ToString());
             tableData = await Table.LetAsync(x => x.LoadDataAsync(TopRows, filterSet)) ?? tableData;
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error saving changes", $"Error while committing changes to the database. No changes were made.{System.Environment.NewLine}{ex.Message}");
+            _toaster.AddError("Error saving changes", $"Error while committing changes to the database. No changes were made.{System.Environment.NewLine}{ex.Message}");
         }
     }
 
@@ -191,11 +188,11 @@ public partial class DataTableEditor : ComponentBase
             var tableName = Table is not null ? regex.Replace(Table.DataTableName, "") : "export";
             var fileName = $"{tableName}.xlsx";
             using var streamRef = new DotNetStreamReference(stream: stream);
-            await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+            await _js.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error exporting", ex.Message);
+            _toaster.AddError("Error exporting", ex.Message);
         }
         finally
         {
@@ -205,7 +202,7 @@ public partial class DataTableEditor : ComponentBase
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
-        var confirmed = await MessageBox.ConfirmAsync("", "Discard unsaved changes?");
+        var confirmed = await _messageBox.ConfirmAsync("", "Discard unsaved changes?");
         if (!confirmed)
         {
             context.PreventNavigation();

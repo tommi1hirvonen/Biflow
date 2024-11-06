@@ -4,12 +4,11 @@ using Biflow.Ui.Shared.StepsBatchEdit;
 
 namespace Biflow.Ui.Shared.JobDetails;
 
-public partial class StepsList : ComponentBase
+public partial class StepsList(
+    ToasterService toaster,
+    IHxMessageBoxService confirmer,
+    IMediator mediator) : ComponentBase
 {
-    [Inject] private ToasterService Toaster { get; set; } = null!;
-    [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
-    [Inject] private IMediator Mediator { get; set; } = null!;
-    
     [CascadingParameter] public Job? Job { get; set; }
     
     [CascadingParameter(Name = "SortSteps")] public Action? SortSteps { get; set; }
@@ -38,6 +37,9 @@ public partial class StepsList : ComponentBase
 
     [Parameter] public Guid? InitialStepId { get; set; }
 
+    private readonly ToasterService _toaster = toaster;
+    private readonly IHxMessageBoxService _confirmer = confirmer;
+    private readonly IMediator _mediator = mediator;
     private readonly HashSet<StepType> stepTypeFilter = [];
     private readonly Dictionary<StepType, IStepEditModal?> stepEditModals = [];
     private readonly HashSet<ConnectionBase> connectionFilter = [];
@@ -139,13 +141,13 @@ public partial class StepsList : ComponentBase
 
     private async Task DeleteSelectedSteps()
     {
-        if (!await Confirmer.ConfirmAsync("Delete steps", $"Are you sure you want to delete {selectedSteps.Count} steps?"))
+        if (!await _confirmer.ConfirmAsync("Delete steps", $"Are you sure you want to delete {selectedSteps.Count} steps?"))
         {
             return;
         }
         try
         {
-            await Mediator.SendAsync(new DeleteStepsCommand(selectedSteps));
+            await _mediator.SendAsync(new DeleteStepsCommand(selectedSteps));
             foreach (var step in selectedSteps)
             {
                 Steps?.Remove(step);
@@ -161,7 +163,7 @@ public partial class StepsList : ComponentBase
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error deleting step", ex.Message);
+            _toaster.AddError("Error deleting step", ex.Message);
         }
     }
 
@@ -170,26 +172,26 @@ public partial class StepsList : ComponentBase
         bool value = (bool)args.Value!;
         try
         {
-            await Mediator.SendAsync(new ToggleStepsCommand(step.StepId, value));
+            await _mediator.SendAsync(new ToggleStepsCommand(step.StepId, value));
             step.IsEnabled = value;
             var message = value ? "Step enabled" : "Step disabled";
-            Toaster.AddSuccess(message, 2500);
+            _toaster.AddSuccess(message, 2500);
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error toggling step", ex.Message);
+            _toaster.AddError("Error toggling step", ex.Message);
         }
     }
 
     private async Task DeleteStep(Step step)
     {
-        if (!await Confirmer.ConfirmAsync("Delete step", $"Are you sure you want to delete \"{step.StepName}\"?"))
+        if (!await _confirmer.ConfirmAsync("Delete step", $"Are you sure you want to delete \"{step.StepName}\"?"))
         {
             return;
         }
         try
         {
-            await Mediator.SendAsync(new DeleteStepsCommand(step.StepId));
+            await _mediator.SendAsync(new DeleteStepsCommand(step.StepId));
             Steps?.Remove(step);
             selectedSteps.Remove(step);
 
@@ -202,7 +204,7 @@ public partial class StepsList : ComponentBase
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error deleting step", ex.Message);
+            _toaster.AddError("Error deleting step", ex.Message);
         }
     }
 
@@ -268,7 +270,7 @@ public partial class StepsList : ComponentBase
             .ToArray();
         try
         {
-            await Mediator.SendAsync(new ToggleStepsCommand(steps, enabled));
+            await _mediator.SendAsync(new ToggleStepsCommand(steps, enabled));
             foreach (var step in steps)
             {
                 step.IsEnabled = enabled;
@@ -276,7 +278,7 @@ public partial class StepsList : ComponentBase
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error toggling steps", ex.Message);
+            _toaster.AddError("Error toggling steps", ex.Message);
         }
     }
 }

@@ -2,7 +2,9 @@
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class FunctionStepEditModal : StepEditModal<FunctionStep>
+public partial class FunctionStepEditModal(
+    ToasterService toaster, IDbContextFactory<AppDbContext> dbContextFactory)
+    : StepEditModal<FunctionStep>(toaster, dbContextFactory)
 {
     [Parameter] public IList<FunctionApp> FunctionApps { get; set; } = [];
 

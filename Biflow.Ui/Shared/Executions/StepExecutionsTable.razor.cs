@@ -2,46 +2,38 @@
 
 namespace Biflow.Ui.Shared.Executions;
 
-public partial class StepExecutionsTable : ComponentBase
+public partial class StepExecutionsTable(
+    ToasterService toaster,
+    IHxMessageBoxService confirmer,
+    IExecutorService executorService,
+    IDbContextFactory<AppDbContext> dbContextFactory,
+    NavigationManager navigationManager,
+    IMediator mediator,
+    IJSRuntime js) : ComponentBase
 {
-    [Inject] private ToasterService Toaster { get; set; } = null!;
-    
-    [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
-    
-    [Inject] private IExecutorService ExecutorService { get; set; } = null!;
-    
-    [Inject] private IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
-    
-    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
-    
-    [Inject] private IMediator Mediator { get; set; } = null!;
-    
-    [Inject] private IJSRuntime JS { get; set; } = null!;
+    [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
 
-    [CascadingParameter]
-    public Task<AuthenticationState>? AuthenticationState { get; set; }
+    [CascadingParameter] public StepExecutionMonitorsOffcanvas? StepExecutionMonitorsOffcanvas { get; set; }
 
-    [CascadingParameter]
-    public StepExecutionMonitorsOffcanvas? StepExecutionMonitorsOffcanvas { get; set; }
+    [Parameter] public IEnumerable<StepExecutionProjection>? Executions { get; set; }
 
-    [Parameter]
-    public IEnumerable<StepExecutionProjection>? Executions { get; set; }
+    [Parameter] public bool ShowDetailed { get; set; } = true;
 
-    [Parameter]
-    public bool ShowDetailed { get; set; } = true;
+    [Parameter] public Func<StepExecutionProjection, StepExecutionAttempt?>? DetailStepProvider { get; set; }
 
-    [Parameter]
-    public Func<StepExecutionProjection, StepExecutionAttempt?>? DetailStepProvider { get; set; }
+    [Parameter] public EventCallback OnStepsUpdated { get; set; }
 
-    [Parameter]
-    public EventCallback OnStepsUpdated { get; set; }
+    [Parameter] public EventCallback<StepExecutionSortMode> OnSortingChanged { get; set; }
 
-    [Parameter]
-    public EventCallback<StepExecutionSortMode> OnSortingChanged { get; set; }
+    [Parameter] public StepExecutionSortMode SortMode { get; set; }
 
-    [Parameter]
-    public StepExecutionSortMode SortMode { get; set; }
-
+    private readonly ToasterService _toaster = toaster;
+    private readonly IHxMessageBoxService _confirmer = confirmer;
+    private readonly IExecutorService _executorService = executorService;
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
+    private readonly NavigationManager _navigationManager = navigationManager;
+    private readonly IMediator _mediator = mediator;
+    private readonly IJSRuntime _js = js;
     private readonly HashSet<StepExecutionId> selectedSteps = [];
 
     private StepExecutionProjection? selectedStepExecution;
@@ -124,7 +116,7 @@ public partial class StepExecutionsTable : ComponentBase
             }
             else
             {
-                using var context = await DbContextFactory.CreateDbContextAsync();
+                using var context = await _dbContextFactory.CreateDbContextAsync();
                 detailStep = await context.StepExecutionAttempts
                     .AsNoTrackingWithIdentityResolution()
                     .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
@@ -148,7 +140,7 @@ public partial class StepExecutionsTable : ComponentBase
 
     private async Task StopStepExecutionAsync(Guid executionId, Guid stepId, string stepName)
     {
-        if (!await Confirmer.ConfirmAsync("Stop step execution", $"Are you sure you want to stop \"{stepName}\"?"))
+        if (!await _confirmer.ConfirmAsync("Stop step execution", $"Are you sure you want to stop \"{stepName}\"?"))
         {
             return;
         }
@@ -159,16 +151,16 @@ public partial class StepExecutionsTable : ComponentBase
             var username = authState.User.Identity?.Name;
             ArgumentNullException.ThrowIfNull(username);
 
-            await ExecutorService.StopExecutionAsync(executionId, stepId, username);
-            Toaster.AddSuccess("Stop request sent successfully to the executor service");
+            await _executorService.StopExecutionAsync(executionId, stepId, username);
+            _toaster.AddSuccess("Stop request sent successfully to the executor service");
         }
         catch (TimeoutException)
         {
-            Toaster.AddError("Operation timed out", "The executor process may no longer be running");
+            _toaster.AddError("Operation timed out", "The executor process may no longer be running");
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error stopping execution", ex.Message);
+            _toaster.AddError("Error stopping execution", ex.Message);
         }
     }
 
@@ -199,7 +191,7 @@ public partial class StepExecutionsTable : ComponentBase
 
     private async Task StopSelectedStepsAsync()
     {
-        if (!await Confirmer.ConfirmAsync("Stop steps", $"Stop selected {selectedSteps.Count} step(s)?"))
+        if (!await _confirmer.ConfirmAsync("Stop steps", $"Stop selected {selectedSteps.Count} step(s)?"))
         {
             return;
         }
@@ -241,7 +233,7 @@ public partial class StepExecutionsTable : ComponentBase
                     catch (Exception ex)
                     {
                         steps = steps.OrderByDescending(s => s.ExecutionPhase);
-                        Toaster.AddWarning("Error sorting steps", $"Steps could not be sorted for optimal cancellation: {ex.Message}");
+                        _toaster.AddWarning("Error sorting steps", $"Steps could not be sorted for optimal cancellation: {ex.Message}");
                     }
                 }
                 else
@@ -253,7 +245,7 @@ public partial class StepExecutionsTable : ComponentBase
                 {
                     try
                     {
-                        await ExecutorService.StopExecutionAsync(executionId, stepId, username);
+                        await _executorService.StopExecutionAsync(executionId, stepId, username);
                         successCount++;
                     }
                     catch (TimeoutException ex)
@@ -271,7 +263,7 @@ public partial class StepExecutionsTable : ComponentBase
             var distinctErrors = errorMessages.Distinct().ToArray();
             foreach (var error in distinctErrors)
             {
-                await JS.InvokeVoidAsync("console.error", error);
+                await _js.InvokeVoidAsync("console.error", error);
             }
 
             var errorMessage = distinctErrors.Length == 1
@@ -280,20 +272,20 @@ public partial class StepExecutionsTable : ComponentBase
 
             if (successCount > 0 && distinctErrors.Length > 0)
             {
-                Toaster.AddWarning("Error canceling some steps", errorMessage);
+                _toaster.AddWarning("Error canceling some steps", errorMessage);
             }
             else if (distinctErrors.Length > 0)
             {
-                Toaster.AddError("Error canceling steps", errorMessage);
+                _toaster.AddError("Error canceling steps", errorMessage);
             }
             else
             {
-                Toaster.AddSuccess("Cancellations requested successfully");
+                _toaster.AddSuccess("Cancellations requested successfully");
             }
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error canceling steps", ex.Message);
+            _toaster.AddError("Error canceling steps", ex.Message);
         }
     }
 
@@ -304,14 +296,14 @@ public partial class StepExecutionsTable : ComponentBase
             foreach (var step in selectedSteps)
             {
                 var command = new UpdateStepExecutionAttemptStatusCommand(step.ExecutionId, step.StepId, step.RetryAttemptIndex, status);
-                await Mediator.SendAsync(command);
+                await _mediator.SendAsync(command);
             }
-            Toaster.AddSuccess("Statuses updated successfully");
+            _toaster.AddSuccess("Statuses updated successfully");
             await OnStepsUpdated.InvokeAsync();
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error updating statuses", ex.Message);
+            _toaster.AddError("Error updating statuses", ex.Message);
         }
     }
 }

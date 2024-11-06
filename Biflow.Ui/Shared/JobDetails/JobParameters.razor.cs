@@ -3,21 +3,22 @@ using Microsoft.AspNetCore.Components.Routing;
 
 namespace Biflow.Ui.Shared.JobDetails;
 
-public partial class JobParameters : ComponentBase
+public partial class JobParameters(
+    IDbContextFactory<AppDbContext> dbContextFactory,
+    ToasterService toaster,
+    IHxMessageBoxService confirmer,
+    JobValidator jobValidator,
+    IMediator mediator) : ComponentBase
 {
-    [Inject] private IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
-    
-    [Inject] private ToasterService Toaster { get; set; } = null!;
-
-    [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
-
-    [Inject] private JobValidator JobValidator { get; set; } = null!;
-
-    [Inject] private IMediator Mediator { get; set; } = null!;
-
     [CascadingParameter] public Job? Job { get; set; }
 
     [CascadingParameter] public List<Step>? Steps { get; set; }
+
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
+    private readonly ToasterService _toaster = toaster;
+    private readonly IHxMessageBoxService _confirmer = confirmer;
+    private readonly JobValidator _jobValidator = jobValidator;
+    private readonly IMediator _mediator = mediator;
 
     private EditContext? editContext;
     private Job? editJob;
@@ -35,7 +36,7 @@ public partial class JobParameters : ComponentBase
             return;
         }
         loading = true;
-        using var context = DbContextFactory.CreateDbContext();
+        using var context = _dbContextFactory.CreateDbContext();
         editJob = await context.Jobs
             .Include(j => j.JobParameters)
             .ThenInclude(j => j.InheritingStepParameters)
@@ -67,18 +68,18 @@ public partial class JobParameters : ComponentBase
 
         try
         {
-            await Mediator.SendAsync(new UpdateJobParametersCommand(editJob));
+            await _mediator.SendAsync(new UpdateJobParametersCommand(editJob));
             hasChanges = false;
-            Toaster.AddSuccess("Job parameters updated successfully");
+            _toaster.AddSuccess("Job parameters updated successfully");
         }
         catch (DbUpdateConcurrencyException)
         {
-            Toaster.AddError("Concurrency error",
+            _toaster.AddError("Concurrency error",
                 "The job has been modified outside of this session. Reload the page to view the most recent settings.");
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error saving parameters", $"{ex.Message}\n{ex.InnerException?.Message}");
+            _toaster.AddError("Error saving parameters", $"{ex.Message}\n{ex.InnerException?.Message}");
         }
 
     }
@@ -88,7 +89,7 @@ public partial class JobParameters : ComponentBase
         var referencingSteps = GetInheritingSteps(parameter).Concat(GetCapturingSteps(parameter)).Concat(GetAssigningSteps(parameter));
         if (referencingSteps.Any())
         {
-            var confirmResult = await Confirmer.ConfirmAsync("This parameter has one or more referencing steps. Removing it can break these steps. Delete anyway?");
+            var confirmResult = await _confirmer.ConfirmAsync("This parameter has one or more referencing steps. Removing it can break these steps. Delete anyway?");
             if (!confirmResult)
             {
                 return;
@@ -105,7 +106,7 @@ public partial class JobParameters : ComponentBase
             return;
         }
 
-        var confirmed = await Confirmer.ConfirmAsync("", "Discard unsaved changes?");
+        var confirmed = await _confirmer.ConfirmAsync("", "Discard unsaved changes?");
         if (!confirmed)
         {
             context.PreventNavigation();

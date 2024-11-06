@@ -2,9 +2,13 @@
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class QlikStepEditModal : StepEditModal<QlikStep>
+public partial class QlikStepEditModal(
+    IHttpClientFactory httpClientFactory,
+    ToasterService toaster,
+    IDbContextFactory<AppDbContext> dbContextFactory)
+    : StepEditModal<QlikStep>(toaster, dbContextFactory)
 {
-    [Inject] private IHttpClientFactory HttpClientFactory { get; set; } = null!;
+    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     internal override string FormId => "qlik_step_edit_form";
 
@@ -90,7 +94,7 @@ public partial class QlikStepEditModal : StepEditModal<QlikStep>
             {
                 var workspace = QlikClients?.FirstOrDefault();
                 ArgumentNullException.ThrowIfNull(workspace);
-                using var client = workspace.CreateClient(HttpClientFactory);
+                using var client = workspace.CreateClient(_httpClientFactory);
                 return await client.GetAppAsync(value);
             }
             catch (Exception ex)
@@ -111,7 +115,7 @@ public partial class QlikStepEditModal : StepEditModal<QlikStep>
             {
                 var workspace = QlikClients?.FirstOrDefault();
                 ArgumentNullException.ThrowIfNull(workspace);
-                using var client = workspace.CreateClient(HttpClientFactory);
+                using var client = workspace.CreateClient(_httpClientFactory);
                 var spaces = await client.GetAppsAsync();
                 apps = spaces.SelectMany(s => s.Apps).OrderBy(a => a.Name).ToArray();
             }
@@ -141,7 +145,7 @@ public partial class QlikStepEditModal : StepEditModal<QlikStep>
             {
                 var workspace = QlikClients?.FirstOrDefault();
                 ArgumentNullException.ThrowIfNull(workspace);
-                using var client = workspace.CreateClient(HttpClientFactory);
+                using var client = workspace.CreateClient(_httpClientFactory);
                 return await client.GetAutomationAsync(value);
             }
             catch (Exception ex)
@@ -162,7 +166,7 @@ public partial class QlikStepEditModal : StepEditModal<QlikStep>
             {
                 var workspace = QlikClients?.FirstOrDefault();
                 ArgumentNullException.ThrowIfNull(workspace);
-                using var client = workspace.CreateClient(HttpClientFactory);
+                using var client = workspace.CreateClient(_httpClientFactory);
                 var automations = await client.GetAutomationsAsync();
                 this.automations = automations.OrderBy(a => a.Name).ToArray();
             }

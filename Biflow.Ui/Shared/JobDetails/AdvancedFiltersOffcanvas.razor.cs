@@ -4,11 +4,11 @@ public partial class AdvancedFiltersOffcanvas : ComponentBase
 {
     [Parameter] public EventCallback OnFiltersChanged { get; set; }
 
-    [Parameter] public IEnumerable<FunctionApp> FunctionApps { get; set; } = Enumerable.Empty<FunctionApp>();
+    [Parameter] public IEnumerable<FunctionApp> FunctionApps { get; set; } = [];
 
-    [Parameter] public IEnumerable<PipelineClient> PipelineClients { get; set; } = Enumerable.Empty<PipelineClient>();
+    [Parameter] public IEnumerable<PipelineClient> PipelineClients { get; set; } = [];
 
-    [Parameter] public IEnumerable<ConnectionBase> Connections { get; set; } = Enumerable.Empty<ConnectionBase>();
+    [Parameter] public IEnumerable<ConnectionBase> Connections { get; set; } = [];
 
     public string Description { get; private set; } = "";
     public string SqlStatement { get; private set; } = "";

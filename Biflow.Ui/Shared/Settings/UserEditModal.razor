@@ -117,7 +117,7 @@
                                 <InputText class="form-control" type="email" @bind-Value="model.User.Email"></InputText>
                             </div>
                         </div>
-                        @if (IsNewUser && AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn)
+                        @if (IsNewUser && _authenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn)
                         {
                             ArgumentNullException.ThrowIfNull(model.PasswordModel);
                             <div class="mt-3">

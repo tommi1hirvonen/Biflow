@@ -240,7 +240,7 @@
                             <SvgIcon Icon="FeatherIcon.Activity" />
                             History
                         </DropdownMenuItem>
-                        <DropdownMenuItem @onclick="@(() => NavigationManager.NavigateTo($"executions/{item.ExecutionId}/graph/{item.StepId}"))">
+                        <DropdownMenuItem @onclick="@(() => _navigationManager.NavigateTo($"executions/{item.ExecutionId}/graph/{item.StepId}"))">
                             <SvgIcon Icon="LucideIcon.Workflow" />
                             Dependencies
                         </DropdownMenuItem>
@@ -282,7 +282,7 @@
                                         <SvgIcon Icon="FeatherIcon.Activity" />
                                         History
                                     </HxButton>
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1" @onclick="@(() => NavigationManager.NavigateTo($"executions/{item.ExecutionId}/graph/{item.StepId}"))">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1" @onclick="@(() => _navigationManager.NavigateTo($"executions/{item.ExecutionId}/graph/{item.StepId}"))">
                                         <SvgIcon Icon="LucideIcon.Workflow" />
                                         Dependencies
                                     </HxButton>

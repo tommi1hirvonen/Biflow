@@ -8,21 +8,25 @@ using System.Text.Json;
 namespace Biflow.Ui.Pages;
 
 [Route("/jobs")]
-public partial class Jobs : ComponentBase, IDisposable
+public partial class Jobs(
+    IDbContextFactory<AppDbContext> dbContextFactory,
+    JobDuplicatorFactory jobDuplicatorFactory,
+    ToasterService toaster,
+    IHxMessageBoxService confirmer,
+    IMediator mediator,
+    IJSRuntime js) : ComponentBase, IDisposable
 {
-    [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
-    [Inject] private JobDuplicatorFactory JobDuplicatorFactory { get; set; } = null!;
-    [Inject] private ToasterService Toaster { get; set; } = null!;
-    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
-    [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
-    [Inject] private IMediator Mediator { get; set; } = null!;
-    [Inject] private IJSRuntime JS { get; set; } = null!;
-
     [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
     [CascadingParameter] public UserState UserState { get; set; } = new();
     [CascadingParameter] public ExecuteMultipleModal ExecuteMultipleModal { get; set; } = null!;
 
     private static readonly JsonSerializerOptions jsonOptions = new() { WriteIndented = true };
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
+    private readonly JobDuplicatorFactory _jobDuplicatorFactory = jobDuplicatorFactory;
+    private readonly ToasterService _toaster = toaster;
+    private readonly IHxMessageBoxService _confirmer = confirmer;
+    private readonly IMediator _mediator = mediator;
+    private readonly IJSRuntime _js = js;
     private readonly CancellationTokenSource cts = new();
 
     private List<Job>? jobs;    
@@ -90,7 +94,7 @@ public partial class Jobs : ComponentBase, IDisposable
 
     private async Task LoadJobsAsync()
     {
-        using var context = await Task.Run(DbFactory.CreateDbContext);
+        using var context = await Task.Run(_dbContextFactory.CreateDbContext);
         jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Include(job => job.Tags)
@@ -103,7 +107,7 @@ public partial class Jobs : ComponentBase, IDisposable
     private async Task LoadLastExecutionsAsync()
     {
         // Get each job's last execution.
-        using var context = await Task.Run(DbFactory.CreateDbContext);
+        using var context = await Task.Run(_dbContextFactory.CreateDbContext);
         var lastExecutions = await context.Executions
             .AsNoTrackingWithIdentityResolution()
             .Where(execution => context.Jobs.Any(j => j.JobId == execution.JobId) && execution.StartedOn != null)
@@ -121,7 +125,7 @@ public partial class Jobs : ComponentBase, IDisposable
 
     private async Task LoadStepsAsync()
     {
-        using var context = await Task.Run(DbFactory.CreateDbContext);
+        using var context = await Task.Run(_dbContextFactory.CreateDbContext);
         steps = await context.Steps
             .AsNoTracking()
             .Select(s => new StepProjection(s.JobId, s.StepName))
@@ -142,14 +146,14 @@ public partial class Jobs : ComponentBase, IDisposable
         bool value = (bool)args.Value!;
         try
         {
-            await Mediator.SendAsync(new ToggleJobCommand(job.JobId, value));
+            await _mediator.SendAsync(new ToggleJobCommand(job.JobId, value));
             job.IsEnabled = value;
             var message = value ? "Job enabled" : "Job disabled";
-            Toaster.AddSuccess(message, 2500);
+            _toaster.AddSuccess(message, 2500);
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error toggling job", ex.Message);
+            _toaster.AddError("Error toggling job", ex.Message);
         }
     }
 
@@ -159,14 +163,14 @@ public partial class Jobs : ComponentBase, IDisposable
         {
             foreach (var job in selectedJobs)
             {
-                await Mediator.SendAsync(new ToggleJobCommand(job.JobId, value));
+                await _mediator.SendAsync(new ToggleJobCommand(job.JobId, value));
                 job.IsEnabled = value;
             }
 
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error toggling job", ex.Message);
+            _toaster.AddError("Error toggling job", ex.Message);
         }
     }
 
@@ -192,7 +196,7 @@ public partial class Jobs : ComponentBase, IDisposable
     {
         try
         {
-            using var duplicator = await JobDuplicatorFactory.CreateAsync(job.JobId);
+            using var duplicator = await _jobDuplicatorFactory.CreateAsync(job.JobId);
             duplicator.Job.JobName = $"{duplicator.Job.JobName} – Copy";
             var createdJob = await duplicator.SaveJobAsync();
             jobs?.Add(createdJob);
@@ -200,17 +204,17 @@ public partial class Jobs : ComponentBase, IDisposable
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error copying job", ex.Message);
+            _toaster.AddError("Error copying job", ex.Message);
         }
     }
 
     private async Task DeleteJob(Job job)
     {
-        if (!await Confirmer.ConfirmAsync("Delete job", $"Are you sure you want to delete \"{job.JobName}\"?"))
+        if (!await _confirmer.ConfirmAsync("Delete job", $"Are you sure you want to delete \"{job.JobName}\"?"))
         {
             return;
         }
-        using (var context = await DbFactory.CreateDbContextAsync())
+        using (var context = await _dbContextFactory.CreateDbContextAsync())
         {
             var executingSteps = await context.JobSteps
                 .Where(s => s.JobToExecuteId == job.JobId)
@@ -226,7 +230,7 @@ public partial class Jobs : ComponentBase, IDisposable
                     {steps}
                     Removing the job will also remove these steps. Delete anyway?
                     """;
-                var confirmResult = await Confirmer.ConfirmAsync("", message);
+                var confirmResult = await _confirmer.ConfirmAsync("", message);
                 if (!confirmResult)
                 {
                     return;
@@ -235,23 +239,23 @@ public partial class Jobs : ComponentBase, IDisposable
         }
         try
         {
-            await Mediator.SendAsync(new DeleteJobCommand(job.JobId));
+            await _mediator.SendAsync(new DeleteJobCommand(job.JobId));
             jobs?.Remove(job);
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error deleting job", ex.Message);
+            _toaster.AddError("Error deleting job", ex.Message);
         }
     }
 
     private async Task DeleteSelectedJobsAsync()
     {
-        if (!await Confirmer.ConfirmAsync("Delete selected jobs", $"Delete {selectedJobs.Count} job(s)?"))
+        if (!await _confirmer.ConfirmAsync("Delete selected jobs", $"Delete {selectedJobs.Count} job(s)?"))
         {
             return;
         }
         var jobIds = selectedJobs.Select(j => j.JobId).ToArray();
-        using (var context = await DbFactory.CreateDbContextAsync())
+        using (var context = await _dbContextFactory.CreateDbContextAsync())
         {
             var executingSteps = await context.JobSteps
                 .Where(s => s.JobToExecuteId != null && jobIds.Contains((Guid)s.JobToExecuteId))
@@ -267,7 +271,7 @@ public partial class Jobs : ComponentBase, IDisposable
                     {steps}
                     Removing the jobs will also remove these steps. Delete anyway?
                     """;
-                var confirmResult = await Confirmer.ConfirmAsync("", message);
+                var confirmResult = await _confirmer.ConfirmAsync("", message);
                 if (!confirmResult)
                 {
                     return;
@@ -278,13 +282,13 @@ public partial class Jobs : ComponentBase, IDisposable
         {
             foreach (var job in selectedJobs)
             {
-                await Mediator.SendAsync(new DeleteJobCommand(job.JobId));
+                await _mediator.SendAsync(new DeleteJobCommand(job.JobId));
                 jobs?.Remove(job);
             }
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error deleting jobs", ex.Message);
+            _toaster.AddError("Error deleting jobs", ex.Message);
         }
         selectedJobs.Clear();
     }
@@ -306,24 +310,24 @@ public partial class Jobs : ComponentBase, IDisposable
     {
         try
         {
-            using var context = DbFactory.CreateDbContext();
+            using var context = _dbContextFactory.CreateDbContext();
             var steps = await context.Steps
                 .Select(s => new ValidationStep(s.Job.JobName, s.StepId, s.StepName, s.Dependencies.Select(d => d.DependantOnStepId).ToArray()))
                 .ToListAsync();
             var comparer = new TopologicalComparer<ValidationStep, Guid>(steps, s => s?.StepId ?? Guid.Empty, s => s.Dependencies);
             steps.Sort(comparer);
-            Toaster.AddSuccess("Validation successful");
+            _toaster.AddSuccess("Validation successful");
         }
         catch (CyclicDependencyException<ValidationStep> ex)
         {
             var cycles = ex.CyclicObjects.Select(c => c.Select(s => new { s.JobName, s.StepName }));
             var message = JsonSerializer.Serialize(cycles, jsonOptions);
-            _ = JS.InvokeVoidAsync("console.log", message).AsTask();
-            Toaster.AddError("Cyclic dependencies detected", "See browser console for detailed output.");
+            _ = _js.InvokeVoidAsync("console.log", message).AsTask();
+            _toaster.AddError("Cyclic dependencies detected", "See browser console for detailed output.");
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error validating dependencies", ex.Message);
+            _toaster.AddError("Error validating dependencies", ex.Message);
         }
     }
 

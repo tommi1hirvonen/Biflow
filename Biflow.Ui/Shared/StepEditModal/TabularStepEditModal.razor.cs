@@ -2,7 +2,9 @@
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class TabularStepEditModal : StepEditModal<TabularStep>
+public partial class TabularStepEditModal(
+    ToasterService toaster, IDbContextFactory<AppDbContext> dbContextFactory)
+    : StepEditModal<TabularStep>(toaster, dbContextFactory)
 {
     internal override string FormId => "tabular_step_edit_form";
 

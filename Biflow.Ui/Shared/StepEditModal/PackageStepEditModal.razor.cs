@@ -3,7 +3,9 @@ using Biflow.Ui.SqlMetadataExtensions;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class PackageStepEditModal : StepEditModal<PackageStep>
+public partial class PackageStepEditModal(
+    ToasterService toaster, IDbContextFactory<AppDbContext> dbContextFactory)
+    : StepEditModal<PackageStep>(toaster, dbContextFactory)
 {
     internal override string FormId => "package_step_edit_form";
 

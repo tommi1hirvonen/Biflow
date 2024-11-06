@@ -5,15 +5,18 @@ using System.Runtime.CompilerServices;
 
 namespace Biflow.Ui.Shared.DataTables;
 
-public partial class DataTableEditModal : ComponentBase, IDisposable
+public partial class DataTableEditModal(
+    ToasterService toaster,
+    IDbContextFactory<AppDbContext> dbContextFactory,
+    IJSRuntime js,
+    DataTableValidator dataTableValidator) : ComponentBase, IDisposable
 {
-    [Inject] private ToasterService Toaster { get; set; } = null!;
-    [Inject] private IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
-    [Inject] private IJSRuntime JS { get; set; } = null!;
-    [Inject] private DataTableValidator DataTableValidator { get; set; } = null!;
-
     [Parameter] public EventCallback<MasterDataTable> OnTableSubmitted { get; set; }
 
+    private readonly ToasterService _toaster = toaster;
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
+    private readonly IJSRuntime _js = js;
+    private readonly DataTableValidator _dataTableValidator = dataTableValidator;
     private readonly ConditionalWeakTable<MasterDataTableLookup, IEnumerable<string>> lookupColumns = [];
 
     private HxModal? modal;
@@ -35,7 +38,7 @@ public partial class DataTableEditModal : ComponentBase, IDisposable
         columnOrderSelected = "";
         await modal.LetAsync(x => x.ShowAsync());
         editContext?.Dispose();
-        editContext = DbContextFactory.CreateDbContext();
+        editContext = _dbContextFactory.CreateDbContext();
         connections = await editContext.MsSqlConnections
             .OrderBy(c => c.ConnectionName)
             .ToListAsync();
@@ -104,7 +107,7 @@ public partial class DataTableEditModal : ComponentBase, IDisposable
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error selecting lookup table", ex.Message);
+            _toaster.AddError("Error selecting lookup table", ex.Message);
         }
     }
 
@@ -171,7 +174,7 @@ public partial class DataTableEditModal : ComponentBase, IDisposable
 
         if (editTable.Lookups.Any(lookup => lookup.LookupTable.ConnectionId != editTable.ConnectionId))
         {
-            Toaster.AddError("Validation error", "All lookup tables must use the same connection as the main table.");
+            _toaster.AddError("Validation error", "All lookup tables must use the same connection as the main table.");
             return;
         }
 
@@ -192,17 +195,17 @@ public partial class DataTableEditModal : ComponentBase, IDisposable
         }
         catch (DbUpdateConcurrencyException)
         {
-            Toaster.AddError("Concurrency error", "The data table was modified outside of this session. Reload the page to view the most recent values.");
+            _toaster.AddError("Concurrency error", "The data table was modified outside of this session. Reload the page to view the most recent values.");
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error updating data table", ex.Message);
+            _toaster.AddError("Error updating data table", ex.Message);
         }
     }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
-        var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        var confirmed = await _js.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
         if (!confirmed)
         {
             context.PreventNavigation();
@@ -215,7 +218,7 @@ public partial class DataTableEditModal : ComponentBase, IDisposable
         columns = await editTable.GetColumnNamesAsync();
         if (!columns.Any())
         {
-            Toaster.AddWarning($"No columns found for table [{editTable.TargetSchemaName}].[{editTable.TargetTableName}]");
+            _toaster.AddWarning($"No columns found for table [{editTable.TargetSchemaName}].[{editTable.TargetTableName}]");
             return;
         }
         editTable.ColumnOrder.Clear();

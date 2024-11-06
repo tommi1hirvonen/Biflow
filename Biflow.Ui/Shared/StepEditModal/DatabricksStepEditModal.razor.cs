@@ -5,7 +5,9 @@ using ClusterInfo = Microsoft.Azure.Databricks.Client.Models.ClusterInfo;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class DatabricksStepEditModal : StepEditModal<DatabricksStep>
+public partial class DatabricksStepEditModal(
+    ToasterService toaster, IDbContextFactory<AppDbContext> dbContextFactory)
+    : StepEditModal<DatabricksStep>(toaster, dbContextFactory)
 {
     internal override string FormId => "databricks_step_edit_form";
 
@@ -94,7 +96,7 @@ public partial class DatabricksStepEditModal : StepEditModal<DatabricksStep>
 
     private Task OpenFileSelectOffcanvas()
     {
-        ArgumentNullException.ThrowIfNull(Step?.DatabricksWorkspaceId);
+        ArgumentNullException.ThrowIfNull(Step);
         return fileSelectOffcanvas.LetAsync(x => x.ShowAsync(Step.DatabricksWorkspaceId));
     }
 

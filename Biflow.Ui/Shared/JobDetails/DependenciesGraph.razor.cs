@@ -3,16 +3,12 @@ using Biflow.Ui.Shared.StepEditModal;
 
 namespace Biflow.Ui.Shared.JobDetails;
 
-public partial class DependenciesGraph : ComponentBase
+public partial class DependenciesGraph(
+    ToasterService toaster,
+    IDbContextFactory<AppDbContext> dbContextFactory,
+    IHxMessageBoxService confirmer,
+    IMediator mediator) : ComponentBase
 {
-    [Inject] private ToasterService Toaster { get; set; } = null!;
-    
-    [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
-    
-    [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
-    
-    [Inject] private IMediator Mediator { get; set; } = null!;
-
     [CascadingParameter] public Job? Job { get; set; }
 
     [CascadingParameter] public List<Step>? Steps { get; set; }
@@ -39,6 +35,10 @@ public partial class DependenciesGraph : ComponentBase
 
     [Parameter] public Guid? InitialStepId { get; set; }
 
+    private readonly ToasterService _toaster = toaster;
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
+    private readonly IHxMessageBoxService _confirmer = confirmer;
+    private readonly IMediator _mediator = mediator;
     private readonly Dictionary<StepType, IStepEditModal?> stepEditModals = [];
     private readonly HashSet<StepTag> tagsFilterSet = [];
 
@@ -103,7 +103,7 @@ public partial class DependenciesGraph : ComponentBase
         ArgumentNullException.ThrowIfNull(Job);
         ArgumentNullException.ThrowIfNull(dependencyGraph);
 
-        using var context = await DbFactory.CreateDbContextAsync();
+        using var context = await _dbContextFactory.CreateDbContextAsync();
         stepSlims = await context.Steps
             .AsNoTrackingWithIdentityResolution()
             .IgnoreQueryFilters()
@@ -267,13 +267,13 @@ public partial class DependenciesGraph : ComponentBase
         {
             ArgumentNullException.ThrowIfNull(Steps);
             var step = Steps.First(s => s.StepId == projection.StepId);
-            await Mediator.SendAsync(new ToggleStepsCommand(step.StepId, value));
+            await _mediator.SendAsync(new ToggleStepsCommand(step.StepId, value));
             step.IsEnabled = value;
             await LoadGraphAsync();
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error toggling step", ex.Message);
+            _toaster.AddError("Error toggling step", ex.Message);
         }
     }
 
@@ -283,13 +283,13 @@ public partial class DependenciesGraph : ComponentBase
         {
             ArgumentNullException.ThrowIfNull(Steps);
             var step = Steps.First(s => s.StepId == projection.StepId);
-            var result = await Confirmer.ConfirmAsync("", $"Are you sure you want to delete step \"{step.StepName}\"?");
+            var result = await _confirmer.ConfirmAsync("", $"Are you sure you want to delete step \"{step.StepName}\"?");
             if (!result)
             {
                 return;
             }
 
-            await Mediator.SendAsync(new DeleteStepsCommand(step.StepId));
+            await _mediator.SendAsync(new DeleteStepsCommand(step.StepId));
             Steps?.Remove(step);
             // Remove the deleted step from dependencies.
             foreach (var dependant in Steps?.Where(s => s.Dependencies.Any(d => d.DependantOnStepId == step.StepId)) ?? [])
@@ -303,7 +303,7 @@ public partial class DependenciesGraph : ComponentBase
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error deleting step", ex.Message);
+            _toaster.AddError("Error deleting step", ex.Message);
         }
     }
 
