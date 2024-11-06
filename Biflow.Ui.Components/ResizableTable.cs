@@ -4,7 +4,7 @@ using Microsoft.JSInterop;
 
 namespace Biflow.Ui.Components;
 
-public class ResizableTable : ComponentBase, IAsyncDisposable
+public class ResizableTable(IJSRuntime js) : ComponentBase, IAsyncDisposable
 {
     [Parameter] public RenderFragment? ChildContent { get; set; }
 
@@ -14,7 +14,7 @@ public class ResizableTable : ComponentBase, IAsyncDisposable
 
     [Parameter] public EventCallback<ResizableTableColumnWidth> ColumnWidthSet { get; set; }
 
-    [Inject] private IJSRuntime JS { get; set; } = null!;
+    private readonly IJSRuntime _js = js;
 
     private DotNetObjectReference<ResizableTable>? dotNetObject;
     private IJSObjectReference? jsObject;
@@ -43,7 +43,7 @@ public class ResizableTable : ComponentBase, IAsyncDisposable
     {
         if (firstRender)
         {
-            jsObject = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/ResizableTable.js");
+            jsObject = await _js.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/ResizableTable.js");
         }
         if (jsObject is not null && dotNetObject is not null)
         {

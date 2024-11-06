@@ -7,8 +7,6 @@ namespace Biflow.Ui.Components;
 
 public class FluentValidationValidator : ComponentBase
 {
-    [Inject] private IServiceProvider ServiceProvider { get; set; } = null!;
-
     [CascadingParameter] private EditContext? EditContext { get; set; }
 
     [Parameter, EditorRequired] public IValidator? Validator { get; set; }
