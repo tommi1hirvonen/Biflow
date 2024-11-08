@@ -10,4 +10,4 @@ public class TopologicalStepComparer(IEnumerable<Step> steps) : TopologicalCompa
         steps,
         step => step?.StepId ?? Guid.Empty,
         step => step.Dependencies.Select(d => d.DependantOnStepId),
-        Comparer<Step>.Create((x, y) => x.ExecutionPhase.CompareTo(y.ExecutionPhase)));
+        Comparer<Step>.Default);

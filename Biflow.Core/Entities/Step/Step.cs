@@ -160,7 +160,7 @@ public abstract class Step : IComparable, IAuditable
             int result = ExecutionPhase.CompareTo(other.ExecutionPhase);
             if (result == 0)
             {
-                return StepName?.CompareTo(other.StepName) ?? 0;
+                return StepName?.CompareTo(other.StepName) ?? -1;
             }
             else
             {

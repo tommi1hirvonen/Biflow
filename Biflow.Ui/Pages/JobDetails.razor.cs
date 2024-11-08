@@ -130,6 +130,16 @@ public partial class JobDetails(
                 var comparer = new TopologicalStepComparer(steps);
                 steps.Sort(comparer);
             }
+            if (job.ExecutionMode == ExecutionMode.Hybrid)
+            {
+                var topologicalComparer = new TopologicalStepComparer(steps);
+                var comparer = Comparer<Step>.Create((s1, s2) =>
+                {
+                    var result = s1.ExecutionPhase.CompareTo(s2.ExecutionPhase);
+                    return result != 0 ? result : topologicalComparer.Compare(s1, s2);
+                });
+                steps.Sort(comparer);
+            }
             else
             {
                 steps.Sort();
