@@ -42,7 +42,6 @@ public partial class StepsList(
     private readonly IMediator _mediator = mediator;
     private readonly HashSet<StepType> stepTypeFilter = [];
     private readonly Dictionary<StepType, IStepEditModal?> stepEditModals = [];
-    private readonly HashSet<ConnectionBase> connectionFilter = [];
     private readonly HashSet<StepTag> tagsFilterSet = [];
 
     private HashSet<Step> selectedSteps = [];
@@ -71,7 +70,6 @@ public partial class StepsList(
             (tagsFilterMode is FilterDropdownMode.Any && (tagsFilterSet.Count == 0 || tagsFilterSet.Any(tag => step.Tags.Any(t => t.TagName == tag.TagName))))
             || (tagsFilterMode is FilterDropdownMode.All && tagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))))
         .Where(step => stepTypeFilter.Count == 0 || stepTypeFilter.Contains(step.StepType))
-        .Where(step => connectionFilter.Count == 0 || step is IHasConnection conn && connectionFilter.Any(f => f.ConnectionId == conn.ConnectionId))
         .Where(step => advancedFiltersOffcanvas?.EvaluatePredicates(step) ?? true)
         ?? [];
 

@@ -4,6 +4,17 @@
             <div class="col">
 
                 <HxButtonGroup Size="ButtonGroupSize.Small">
+                    <FilterDropdown TItem="int"
+                                    FilterSet="executionPhasesFilter"
+                                    IdSelector="e => e.ToString()"
+                                    TextSelector="e => e.ToString()"
+                                    Items="ExecutionPhases"
+                                    OnChange="async () => await OnFiltersChanged.InvokeAsync()">
+                        <TitleTemplate>
+                            <SvgIcon Icon="LucideIcon.Layers3" />
+                            Execution phase
+                        </TitleTemplate>
+                    </FilterDropdown>
                     <FilterDropdown TItem="ConnectionBase"
                                     FilterSet="connectionsFilter"
                                     IdSelector="c => c.ConnectionId.ToString()"

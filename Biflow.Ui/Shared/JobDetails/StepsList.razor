@@ -140,13 +140,12 @@
                 </FilterDropdown>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => advancedFiltersOffcanvas.LetAsync(x => x.ShowAsync())">
                     <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
-                    Advanced filters
+                    More filters
                 </HxButton>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () =>
                     {
                         tagsFilterSet.Clear();
                         stepTypeFilter.Clear();
-                        connectionFilter.Clear();
                         stepNameFilter = string.Empty;
                         await advancedFiltersOffcanvas.LetAsync(x => x.ClearAsync());
                     }">
@@ -656,20 +655,26 @@
         ?.Concat(AsConnections ?? [])
         .Where(c => Steps?.OfType<IHasConnection>().Any(step => c.ConnectionId == step.ConnectionId) ?? false)
         .OrderBy(c => c.ConnectionName)
-        ?? Enumerable.Empty<ConnectionBase>();
+        .AsEnumerable() ?? [];
     var pipelineClients = PipelineClients
         ?.Where(c => Steps?.OfType<PipelineStep>().Any(step => c.PipelineClientId == step.PipelineClientId) ?? false)
-        ?? Enumerable.Empty<PipelineClient>();
+        ?? [];
     var functionApps = FunctionApps
         ?.Where(fa => Steps?.OfType<FunctionStep>().Any(step => fa.FunctionAppId == step.FunctionAppId) ?? false)
-        ?? Enumerable.Empty<FunctionApp>();
+        ?? [];
+    var executionPhases = Steps?
+        .Select(s => s.ExecutionPhase)
+        .Distinct()
+        .Order()
+        .AsEnumerable() ?? [];
 }
 
 <AdvancedFiltersOffcanvas @ref="advancedFiltersOffcanvas"
     OnFiltersChanged="StateHasChanged"
     Connections="connections"
     FunctionApps="functionApps"
-    PipelineClients="pipelineClients" />
+    PipelineClients="pipelineClients"
+    ExecutionPhases="executionPhases" />
 
 <StepDetailsModal @ref="stepDetailsModal" />
 

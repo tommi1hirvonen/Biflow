@@ -10,6 +10,8 @@ public partial class AdvancedFiltersOffcanvas : ComponentBase
 
     [Parameter] public IEnumerable<ConnectionBase> Connections { get; set; } = [];
 
+    [Parameter] public IEnumerable<int> ExecutionPhases { get; set; } = [];
+
     public string Description { get; private set; } = "";
     public string SqlStatement { get; private set; } = "";
     public string PackageFolder { get; private set; } = "";
@@ -24,12 +26,14 @@ public partial class AdvancedFiltersOffcanvas : ComponentBase
     private readonly HashSet<ConnectionBase> connectionsFilter = [];
     private readonly HashSet<FunctionApp> functionAppsFilter = [];
     private readonly HashSet<PipelineClient> pipelineClientsFilter = [];
+    private readonly HashSet<int> executionPhasesFilter = [];
     private readonly Dictionary<StepType, bool> expandedSections = [];
 
     private HxOffcanvas? offcanvas;
 
     public async Task ClearAsync()
     {
+        executionPhasesFilter.Clear();
         connectionsFilter.Clear();
         Description = "";
         SqlStatement = "";
@@ -47,6 +51,7 @@ public partial class AdvancedFiltersOffcanvas : ComponentBase
     }
 
     public bool EvaluatePredicates(Step step) =>
+        ExecutionPhasePredicate(step) &&
         DescriptionPredicate(step) &&
         SqlStatementPredicate(step) &&
         ConnectionsPredicate(step) &&
@@ -60,6 +65,9 @@ public partial class AdvancedFiltersOffcanvas : ComponentBase
         FunctionAppsPredicate(step) &&
         ExeFilePathPredicate(step) &&
         ExeArgumentsPredicate(step);
+
+    private bool ExecutionPhasePredicate(Step step) =>
+        executionPhasesFilter.Count == 0 || executionPhasesFilter.Contains(step.ExecutionPhase);
 
     private bool DescriptionPredicate(Step step) =>
         string.IsNullOrEmpty(Description) || (step.StepDescription?.ContainsIgnoreCase(Description) ?? false);
