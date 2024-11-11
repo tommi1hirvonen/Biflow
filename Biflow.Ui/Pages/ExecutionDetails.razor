@@ -378,9 +378,10 @@
                                 .Where(s => !stepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
                                     stepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible steps based on step status filter
                                 .Where(s => !stepTypeFilter.Any() || stepTypeFilter.Contains(s.StepType)) // Limit visible steps based on step type filter
-                                .Select(s => (s.StepName, s.StepType))
+                                .Select(s => (s.GetStep()?.StepName ?? s.StepName, s.StepType)) // use the step's name if available since it may have been changed after the execution
                                 .Distinct()
-                                .OrderBy(j => j) ?? Enumerable.Empty<(string, StepType)>()"
+                                .OrderBy(j => j)
+                                .AsEnumerable() ?? []"
                             OnChange="StateHasChanged"
                             IsSearchable="true">
                     <TitleTemplate>
@@ -401,7 +402,8 @@
                                 .Where(s => !stepFilter.Any() || stepFilter.Contains((s.StepName, s.StepType))) // Limit visible step types based on step filter
                                 .Select(s => s.StepType)
                                 .Distinct()
-                                .OrderBy(j => j) ?? Enumerable.Empty<StepType>()"
+                                .OrderBy(j => j)
+                                .AsEnumerable() ?? []"
                             OnChange="StateHasChanged">
                     <TitleTemplate>
                         <SvgIcon Icon="FeatherIcon.Tool" />
@@ -421,7 +423,8 @@
                                 .SelectMany(s => s.StepExecutionAttempts)
                                 .Select(e => e.ExecutionStatus)
                                 .Distinct()
-                                .OrderBy(s => s) ?? Enumerable.Empty<StepExecutionStatus>()"
+                                .OrderBy(s => s)
+                                .AsEnumerable() ?? []"
                             OnChange="StateHasChanged">
                     <TitleTemplate>
                         <SvgIcon Icon="FeatherIcon.AlertCircle" />
@@ -440,7 +443,8 @@
                                             stepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible tags based on step status filter
                                 .SelectMany(e => e.GetStep()?.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color)) ?? [])
                                 .Distinct()
-                                .OrderBy(t => t.TagName) ?? Enumerable.Empty<TagProjection>()"
+                                .OrderBy(t => t.TagName)
+                                .AsEnumerable() ?? []"
                             IdSelector="t => t.TagId.ToString()"
                             TextSelector="t => t.TagName"
                             @bind-Mode="tagFilterMode"
