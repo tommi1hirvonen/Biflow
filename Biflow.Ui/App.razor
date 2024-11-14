@@ -15,10 +15,10 @@
         This makes sure the correct theme is instantly applied before interactive theme components are ready to be used.
     *@
     <script src="/js/theme.js"></script> 
-    <link href="_content/Havit.Blazor.Components.Web.Bootstrap/defaults.css" rel="stylesheet" />
-    <link href="_content/Biflow.Ui.Components/defaults.css" rel="stylesheet" />
-    <link href="/css/bootstrap.custom.min.css" rel="stylesheet" />
-    <link href="BiflowUi.styles.css" rel="stylesheet" />
+    <link href="@Assets["_content/Havit.Blazor.Components.Web.Bootstrap/defaults.css"]" rel="stylesheet" />
+    <link href="@Assets["_content/Biflow.Ui.Components/defaults.css"]" rel="stylesheet" />
+    <link href="@Assets["/css/bootstrap.custom.min.css"]" rel="stylesheet" />
+    <link href="@Assets["BiflowUi.styles.css"]" rel="stylesheet" />
     <HeadOutlet @rendermode="PageRenderMode" />
 </head>
 <body class="bg-body">
@@ -43,23 +43,23 @@
         <button type="button" class="btn-close dismiss" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
-    <script src="/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="@Assets["/lib/bootstrap/js/bootstrap.bundle.min.js"]"></script>
 
     @*Used to draw the dependencies between different steps.*@
-    <script src="/lib/d3/d3.min.js"></script>
-    <script src="/lib/dagre-d3/dagre-d3.min.js"></script>
+    <script src="@Assets["/lib/d3/d3.min.js"]"></script>
+    <script src="@Assets["/lib/dagre-d3/dagre-d3.min.js"]"></script>
 
     @*Used to draw the dashboard page reports.*@
-    <script src="/lib/Chart.js/chart.min.js"></script>
-    <script src="/lib/moment.js/moment.min.js"></script>
-    <script src="/lib/chartjs-adapter-moment/chartjs-adapter-moment.min.js"></script>
+    <script src="@Assets["/lib/Chart.js/chart.min.js"]"></script>
+    <script src="@Assets["/lib/moment.js/moment.min.js"]"></script>
+    <script src="@Assets["/lib/chartjs-adapter-moment/chartjs-adapter-moment.min.js"]"></script>
 
     @*Used by the BlazorMonaco component*@
-    <script src="_content/BlazorMonaco/jsInterop.js"></script>
-    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
-    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
+    <script src="@Assets["_content/BlazorMonaco/jsInterop.js"]"></script>
+    <script src="@Assets["_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"]"></script>
+    <script src="@Assets["_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"]"></script>
 
-    <script src="/js/site.js"></script>
+    <script src="@Assets["/js/site.js"]"></script>
 
     @*Load Blazor scripts last to make sure any referenced JS functions have been loaded first.*@
     <script src="_framework/blazor.web.js"></script>

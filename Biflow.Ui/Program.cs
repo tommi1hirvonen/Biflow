@@ -73,7 +73,7 @@ var localizationOptions = new RequestLocalizationOptions()
 
 app.UseRequestLocalization(localizationOptions);
 
-app.UseStaticFiles();
+app.MapStaticAssets();
 app.UseAntiforgery();
 app.UseCookiePolicy();
 app.MapControllers(); // Needed for MicrosoftIdentityUI
