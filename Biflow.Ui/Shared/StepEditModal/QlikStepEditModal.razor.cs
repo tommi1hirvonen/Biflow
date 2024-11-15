@@ -16,6 +16,9 @@ public partial class QlikStepEditModal(
     private QlikApp[]? apps;
     private QlikAutomation[]? automations;
 
+    private QlikCloudEnvironment? CurrentEnvironment =>
+        QlikClients?.FirstOrDefault(c => c.QlikCloudEnvironmentId == Step?.QlikCloudEnvironmentId);
+
     protected override async Task<QlikStep> GetExistingStepAsync(AppDbContext context, Guid stepId)
     {
         var step = await context.QlikSteps
@@ -92,9 +95,9 @@ public partial class QlikStepEditModal(
         {
             try
             {
-                var workspace = QlikClients?.FirstOrDefault();
-                ArgumentNullException.ThrowIfNull(workspace);
-                using var client = workspace.CreateClient(_httpClientFactory);
+                var environment = CurrentEnvironment;
+                ArgumentNullException.ThrowIfNull(environment);
+                using var client = environment.CreateClient(_httpClientFactory);
                 return await client.GetAppAsync(value);
             }
             catch (Exception ex)
@@ -113,9 +116,9 @@ public partial class QlikStepEditModal(
         {
             try
             {
-                var workspace = QlikClients?.FirstOrDefault();
-                ArgumentNullException.ThrowIfNull(workspace);
-                using var client = workspace.CreateClient(_httpClientFactory);
+                var environment = CurrentEnvironment;
+                ArgumentNullException.ThrowIfNull(environment);
+                using var client = environment.CreateClient(_httpClientFactory);
                 var spaces = await client.GetAppsAsync();
                 apps = spaces.SelectMany(s => s.Apps).OrderBy(a => a.Name).ToArray();
             }
@@ -143,9 +146,9 @@ public partial class QlikStepEditModal(
         {
             try
             {
-                var workspace = QlikClients?.FirstOrDefault();
-                ArgumentNullException.ThrowIfNull(workspace);
-                using var client = workspace.CreateClient(_httpClientFactory);
+                var environment = CurrentEnvironment;
+                ArgumentNullException.ThrowIfNull(environment);
+                using var client = environment.CreateClient(_httpClientFactory);
                 return await client.GetAutomationAsync(value);
             }
             catch (Exception ex)
@@ -164,9 +167,9 @@ public partial class QlikStepEditModal(
         {
             try
             {
-                var workspace = QlikClients?.FirstOrDefault();
-                ArgumentNullException.ThrowIfNull(workspace);
-                using var client = workspace.CreateClient(_httpClientFactory);
+                var environment = CurrentEnvironment;
+                ArgumentNullException.ThrowIfNull(environment);
+                using var client = environment.CreateClient(_httpClientFactory);
                 var automations = await client.GetAutomationsAsync();
                 this.automations = automations.OrderBy(a => a.Name).ToArray();
             }
