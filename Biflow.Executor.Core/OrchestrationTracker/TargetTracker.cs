@@ -9,6 +9,9 @@ internal class TargetTracker(StepExecution stepExecution) : IOrchestrationTracke
         .Where(o => o.ReferenceType == DataObjectReferenceType.Target)
         .Select(o => o.ObjectId)
         .ToHashSet();
+    private readonly Dictionary<Guid, int> _limits = stepExecution.DataObjects
+        .Where(o => o.ReferenceType == DataObjectReferenceType.Target)
+        .ToDictionary(o => o.ObjectId, o => o.DataObject.MaxConcurrentWrites);
 
     public StepExecutionMonitor? HandleUpdate(OrchestrationUpdate value)
     {
@@ -50,13 +53,10 @@ internal class TargetTracker(StepExecution stepExecution) : IOrchestrationTracke
             .SelectMany(w => w.Key.DataObjects.Where(o => o.ReferenceType == DataObjectReferenceType.Target && _targets.Contains(o.ObjectId)))
             .GroupBy(o => o.ObjectId)
             .Select(g => (Target: g.Key, Count: g.Count()));
-        var limits = stepExecution.DataObjects
-            .Where(o => o.ReferenceType == DataObjectReferenceType.Target)
-            .ToDictionary(o => o.ObjectId, o => o.DataObject.MaxConcurrentWrites);
         
         foreach (var (target, count) in targets)
         {
-            var limit = limits.GetValueOrDefault(target, 0);
+            var limit = _limits.GetValueOrDefault(target, 0);
             if (limit > 0 && count >= limit)
             {
                 return Actions.Wait;
