@@ -17,13 +17,13 @@ internal class MasterDataTableEntityTypeConfiguration(AppDbContext context)
             .IsUnicode(false);
         builder.Property(x => x.TargetTableName)
             .IsUnicode(false);
-        builder.Property(x => x.LockedColumns)
+        builder.PrimitiveCollection(x => x.LockedColumns)
             .HasMaxLength(8000)
             .IsUnicode(false);
-        builder.Property(x => x.HiddenColumns)
+        builder.PrimitiveCollection(x => x.HiddenColumns)
             .HasMaxLength(8000)
             .IsUnicode(false);
-        builder.Property(x => x.ColumnOrder)
+        builder.PrimitiveCollection(x => x.ColumnOrder)
             .HasMaxLength(8000)
             .IsUnicode(false);
 
