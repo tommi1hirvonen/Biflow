@@ -182,11 +182,29 @@
                                     <td>@email.Body</td>
                                 </tr>
                             }
+                            else if (step is QlikStep qlik)
+                            {
+                                <tr>
+                                    <td>Settings</td>
+                                    <td><pre><code>@JsonSerializer.Serialize(qlik.QlikStepSettings, JsonSerializerOptions)</code></pre></td>
+                                </tr>
+                            }
                             else if (step is DatabricksStep db)
                             {
                                 <tr>
                                     <td>Settings</td>
                                     <td><pre><code>@JsonSerializer.Serialize(db.DatabricksStepSettings, JsonSerializerOptions)</code></pre></td>
+                                </tr>
+                            }
+                            else if (step is DbtStep dbt)
+                            {
+                                <tr>
+                                    <td>dbt job id</td>
+                                    <td>@dbt.DbtJobId</td>
+                                </tr>
+                                <tr>
+                                    <td>dbt job name</td>
+                                    <td>@dbt.DbtJobName</td>
                                 </tr>
                             }
                             <tr>

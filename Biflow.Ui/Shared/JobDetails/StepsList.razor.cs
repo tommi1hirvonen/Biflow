@@ -33,6 +33,8 @@ public partial class StepsList(
 
     [Parameter] public List<DatabricksWorkspace>? DatabricksWorkspaces { get; set; }
 
+    [Parameter] public List<DbtAccount>? DbtAccounts { get; set; }
+
     [Parameter] public List<Credential>? Credentials { get; set; }
 
     [Parameter] public Guid? InitialStepId { get; set; }
@@ -111,6 +113,7 @@ public partial class StepsList(
         StepType.Tabular => ((AsConnections?.Count ?? 0) == 0, "No Analysis Services connections defined"),
         StepType.Qlik => ((QlikCloudClients?.Count ?? 0) == 0, "No Qlik Cloud clients defined"),
         StepType.Databricks => ((DatabricksWorkspaces?.Count ?? 0) == 0, "No Databricks workspaces defined"),
+        StepType.Dbt => ((DbtAccounts?.Count ?? 0) == 0, "No dbt accounts defined"),
         _ => (false, "")
     };
 

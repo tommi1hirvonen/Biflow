@@ -18,6 +18,7 @@ public class SerializationTestsFixture(DatabaseFixture fixture) : IAsyncLifetime
     public QlikCloudEnvironment[] QlikCloudClients { get; private set; } = [];
     public BlobStorageClient[] BlobStorageClients { get; private set; } = [];
     public DatabricksWorkspace[] DatabricksWorkspaces { get; private set; } = [];
+    public DbtAccount[] DbtAccounts { get; private set; } = [];
     
     public Job[] Jobs { get; private set; } = [];
     public Step[] Steps { get; private set; } = [];

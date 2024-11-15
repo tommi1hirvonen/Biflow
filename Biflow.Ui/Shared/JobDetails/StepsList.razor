@@ -648,6 +648,16 @@
         DatabricksWorkspaces="DatabricksWorkspaces"
         Credentials="Credentials"
         OnStepSubmit="OnStepSubmit" />
+    <DbtStepEditModal @ref="stepEditModals[StepType.Dbt]"
+        SqlConnections="SqlConnections"
+        MsSqlConnections="MsSqlConnections"
+        AsConnections="AsConnections"
+        AppRegistrations="AppRegistrations"
+        QlikClients="QlikCloudClients"
+        DatabricksWorkspaces="DatabricksWorkspaces"
+        DbtAccounts="DbtAccounts"
+        Credentials="Credentials"
+        OnStepSubmit="OnStepSubmit" />
 </AuthorizeView>
 
 @{

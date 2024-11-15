@@ -1,0 +1,188 @@
+﻿@inject IDbContextFactory<AppDbContext> DbFactory
+@inject ToasterService Toaster
+@inject IMediator Mediator
+
+<style>
+    tr a {
+        text-decoration: none;
+    }
+
+    tr:hover a {
+        text-decoration: underline;
+    }
+</style>
+
+<PageTitle>dbt accounts | Biflow</PageTitle>
+
+<HxButton Color="ThemeColor.Success"
+          @onclick="() => ShowEditModalAsync(null)"
+          Enabled="accounts is not null">
+    Add account
+</HxButton>
+
+<div class="card shadow-sm pt-2 my-4">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>
+                    Name
+                </th>
+                <th></th>
+                <th>
+                    Base url
+                </th>
+                <th>Account id</th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (accounts is null)
+            {
+                <tr><td colspan="6" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
+            }
+            else if (accounts.Count == 0)
+            {
+                <tr><td colspan="6">No accounts</td></tr>
+            }
+            else
+            {
+                @foreach (var account in accounts.OrderBy(a => a.DbtAccountName))
+                {
+                    var jobs = account.Steps.Select(s => s.Job).Distinct().Count();
+                    var steps = account.Steps.Count();
+                    <tr>
+                        <td class="align-middle">
+                            @account.DbtAccountName
+                        </td>
+                        <td class="align-middle">
+                            <HxButtonGroup Size="ButtonGroupSize.Small">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="() => ShowEditModalAsync(account)">
+                                    <SvgIcon Icon="FeatherIcon.Edit2" />
+                                </HxButton>
+                                <HxDropdownButtonGroup>
+                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="delete">
+                                        <SvgIcon Icon="FeatherIcon.Trash2" />
+                                    </HxDropdownToggleButton>
+                                    <HxDropdownMenu>
+                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                        <HxDropdownItem @onclick="() => DeleteAccountAsync(account)">Confirm</HxDropdownItem>
+                                    </HxDropdownMenu>
+                                </HxDropdownButtonGroup>
+                            </HxButtonGroup>
+                        </td>
+                        <td class="align-middle">
+                            @account.ApiBaseUrl
+                        </td>
+                        <td class="align-middle">
+                            @account.AccountId
+                        </td>
+                        <td class="align-middle">
+                            @(jobs > 0 ? $"{jobs} job(s)" : null)
+                        </td>
+                        <td class="align-middle">
+                            <a class="text-body" href="javascript:void(0)"
+                               @onclick="async () =>
+                                {
+                                stepsAccount = account;
+                                await stepsModal.LetAsync(x => x.ShowAsync());
+                                }">
+                                @(steps > 0 ? $"{steps} step(s)" : null)
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<DbtAccountEditModal @ref="editModal" OnAccountSubmit="OnAccountSubmitAsync" />
+
+<HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsAccount?.DbtAccountName}")">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Job</th>
+                            <th>Step</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var step in stepsAccount?.Steps
+                        .OrderBy(s => s.Job.JobName)
+                        .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
+                        {
+                            <tr>
+                                <td>
+                                    @step.Job.JobName
+                                </td>
+                                <td>
+                                    <StepTypeIcon StepType="step.StepType" />
+                                    &nbsp;
+                                    @step.StepName
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <button class="btn btn-secondary" @onclick="async () => await stepsModal.LetAsync(x => x.HideAsync())">Close</button>
+    </FooterTemplate>
+</HxModal>
+
+@code {
+    private List<DbtAccount>? accounts;
+    private DbtAccountEditModal? editModal;
+    private DbtAccount? stepsAccount;
+    private HxModal? stepsModal;
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = await Task.Run<AppDbContext>(DbFactory.CreateDbContext);
+        accounts = await context.DbtAccounts
+            .AsNoTrackingWithIdentityResolution()
+            .Include(f => f.Steps)
+            .ThenInclude(step => step.Job)
+            .OrderBy(f => f.DbtAccountName)
+            .ToListAsync();
+    }
+
+    private async Task DeleteAccountAsync(DbtAccount account)
+    {
+        try
+        {
+            await Mediator.SendAsync(new DeleteDbtAccountCommand(account.DbtAccountId));
+            accounts?.Remove(account);
+        }
+        catch (Exception ex)
+        {
+            var message = ex.InnerException?.Message ?? ex.Message;
+            Toaster.AddError("Error deleting account", message);
+        }
+    }
+
+    private async Task OnAccountSubmitAsync(DbtAccount account)
+    {
+        if (account.DbtAccountId == Guid.Empty)
+        {
+            await Mediator.SendAsync(new CreateDbtAccountCommand(account));
+            accounts?.Add(account);
+        }
+        else
+        {
+            await Mediator.SendAsync(new UpdateDbtAccountCommand(account));
+            accounts?.RemoveAll(a => a.DbtAccountId == account.DbtAccountId);
+            accounts?.Add(account);
+        }
+        StateHasChanged();
+    }
+
+    private async Task ShowEditModalAsync(DbtAccount? account) =>
+        await editModal.LetAsync(x => x.ShowAsync(account?.DbtAccountId ?? Guid.Empty));
+}

@@ -38,6 +38,7 @@ public partial class JobDetails(
     private List<FunctionApp>? functionApps;
     private List<QlikCloudEnvironment>? qlikCloudClients;
     private List<DatabricksWorkspace>? databricksWorkspaces;
+    private List<DbtAccount>? dbtAccounts;
     private List<Credential>? credentials;
     private bool descriptionOpen;
     private Guid previousJobId;
@@ -97,6 +98,10 @@ public partial class JobDetails(
         databricksWorkspaces = await context.DatabricksWorkspaces
             .AsNoTracking()
             .OrderBy(w => w.WorkspaceName)
+            .ToListAsync(cts.Token);
+        dbtAccounts = await context.DbtAccounts
+            .AsNoTracking()
+            .OrderBy(a => a.DbtAccountName)
             .ToListAsync(cts.Token);
         credentials = await context.Credentials
             .AsNoTracking()

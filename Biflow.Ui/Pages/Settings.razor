@@ -82,6 +82,12 @@
                     Databricks workspaces
                 </NavLink>
             </li>
+            <li class="nav-item" role="presentation">
+                <NavLink class="nav-link" href="settings/dbtaccounts">
+                    <SvgIcon Icon="LucideIcon.Blocks" />
+                    dbt accounts
+                </NavLink>
+            </li>
         </ul>
     </AuthorizeView>
 </div>
@@ -153,6 +159,12 @@ else if (Page == "databricksworkspaces")
 {
     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
         <DatabricksWorkspacesList />
+    </AuthorizeView>
+}
+else if (Page == "dbtaccounts")
+{
+    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
+        <DbtAccountsList />
     </AuthorizeView>
 }
 else if (Page == "blobclients")

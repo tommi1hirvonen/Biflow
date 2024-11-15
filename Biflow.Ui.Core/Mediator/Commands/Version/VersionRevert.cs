@@ -124,6 +124,18 @@ internal class VersionRevertCommandHandler(
                     ?.ApiToken ?? "";
             }
 
+            var capturedDbtAccountTokens = await context.DbtAccounts
+                .AsNoTracking()
+                .Select(a => new { a.DbtAccountId, a.ApiToken })
+                .ToArrayAsync(cancellationToken);
+
+            foreach (var account in snapshot.DbtAccounts.Where(a => string.IsNullOrEmpty(a.ApiToken)))
+            {
+                account.ApiToken = capturedDbtAccountTokens
+                    .FirstOrDefault(a => a.DbtAccountId == account.DbtAccountId)
+                    ?.ApiToken ?? "";
+            }
+
             var capturedCredentials = await context.Credentials
                 .AsNoTracking()
                 .Select(c => new { c.CredentialId, c.Password })
@@ -184,6 +196,7 @@ internal class VersionRevertCommandHandler(
             await context.FunctionApps.ExecuteDeleteAsync(cancellationToken);
             await context.QlikCloudEnvironments.ExecuteDeleteAsync(cancellationToken);
             await context.DatabricksWorkspaces.ExecuteDeleteAsync(cancellationToken);
+            await context.DbtAccounts.ExecuteDeleteAsync(cancellationToken);
             await context.BlobStorageClients.ExecuteDeleteAsync(cancellationToken);
             await context.Credentials.ExecuteDeleteAsync(cancellationToken);
             await context.AppRegistrations.ExecuteDeleteAsync(cancellationToken);
@@ -202,6 +215,7 @@ internal class VersionRevertCommandHandler(
             context.FunctionApps.AddRange(snapshot.FunctionApps);
             context.QlikCloudEnvironments.AddRange(snapshot.QlikCloudEnvironments);
             context.DatabricksWorkspaces.AddRange(snapshot.DatabricksWorkspaces);
+            context.DbtAccounts.AddRange(snapshot.DbtAccounts);
             context.BlobStorageClients.AddRange(snapshot.BlobStorageClients);
             await context.SaveChangesAsync(cancellationToken);
 

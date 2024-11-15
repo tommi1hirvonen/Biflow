@@ -17,6 +17,7 @@ namespace Biflow.Core.Entities;
 [JsonDerivedType(typeof(SqlStep), nameof(StepType.Sql))]
 [JsonDerivedType(typeof(TabularStep), nameof(StepType.Tabular))]
 [JsonDerivedType(typeof(DatabricksStep), nameof(StepType.Databricks))]
+[JsonDerivedType(typeof(DbtStep), nameof(StepType.Dbt))]
 public abstract class Step : IComparable, IAuditable
 {
     public Step(StepType stepType)

@@ -400,6 +400,36 @@
                 </dd>
             }
         }
+        else if (StepExecutionAttempt.StepExecution is DbtStepExecution dbt)
+        {
+            <dt class="col-sm-3">
+                dbt account id
+            </dt>
+            <dd class="col-sm-9">
+                @dbt.DbtAccountId
+            </dd>
+            <dt class="col-sm-3">
+                dbt job id
+            </dt>
+            <dd class="col-sm-9">
+                @dbt.DbtJobId
+            </dd>
+            <dt class="col-sm-3">
+                dbt job name
+            </dt>
+            <dd class="col-sm-9">
+                @dbt.DbtJobName
+            </dd>
+            @if (StepExecutionAttempt is DbtStepExecutionAttempt dbta)
+            {
+                <dt class="col-sm-3">
+                    dbt job run id
+                </dt>
+                <dd class="col-sm-9">
+                    @dbta.DbtJobRunId
+                </dd>
+            }
+        }
         <dt class="col-sm-3">
             Info messages / outputs
         </dt>

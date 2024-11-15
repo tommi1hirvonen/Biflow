@@ -19,6 +19,7 @@ internal static class DuplicatorExtensions
         nameof(PipelineStep.PipelineClient),
         nameof(QlikStep.QlikCloudEnvironment),
         nameof(DatabricksStep.DatabricksWorkspace),
+        nameof(DbtStep.DbtAccount),
         nameof(SqlStep.ResultCaptureJobParameter)
     ];
 }

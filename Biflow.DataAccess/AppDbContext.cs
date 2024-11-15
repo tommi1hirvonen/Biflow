@@ -43,6 +43,7 @@ public class AppDbContext : DbContext
     public DbSet<EmailStep> EmailSteps => Set<EmailStep>();
     public DbSet<QlikStep> QlikSteps => Set<QlikStep>();
     public DbSet<DatabricksStep> DatabricksSteps => Set<DatabricksStep>();
+    public DbSet<DbtStep> DbtSteps => Set<DbtStep>();
     public DbSet<DataObject> DataObjects => Set<DataObject>();
     public DbSet<Execution> Executions => Set<Execution>();
     public DbSet<StepExecution> StepExecutions => Set<StepExecution>();
@@ -75,6 +76,7 @@ public class AppDbContext : DbContext
     public DbSet<MasterDataTableCategory> MasterDataTableCategories => Set<MasterDataTableCategory>();
     public DbSet<QlikCloudEnvironment> QlikCloudEnvironments => Set<QlikCloudEnvironment>();
     public DbSet<DatabricksWorkspace> DatabricksWorkspaces => Set<DatabricksWorkspace>();
+    public DbSet<DbtAccount> DbtAccounts => Set<DbtAccount>();
     public DbSet<StepDataObject> StepDataObjects => Set<StepDataObject>();
     public DbSet<BlobStorageClient> BlobStorageClients => Set<BlobStorageClient>();
     public DbSet<EnvironmentVersion> EnvironmentVersions => Set<EnvironmentVersion>();
