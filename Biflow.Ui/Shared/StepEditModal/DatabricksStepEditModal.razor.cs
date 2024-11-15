@@ -19,6 +19,9 @@ public partial class DatabricksStepEditModal(
     private DatabricksJob[]? dbJobs;
     private Pipeline[]? pipelines;
 
+    private DatabricksWorkspace? CurrentWorkspace =>
+        DatabricksWorkspaces?.FirstOrDefault(w => w.WorkspaceId == Step?.DatabricksWorkspaceId);
+
     private string ParametersTitle => Step?.DatabricksStepSettings switch
     {
         DbNotebookStepSettings => "Notebook parameters",
@@ -132,7 +135,7 @@ public partial class DatabricksStepEditModal(
         {
             try
             {
-                var workspace = DatabricksWorkspaces?.FirstOrDefault();
+                var workspace = CurrentWorkspace;
                 ArgumentNullException.ThrowIfNull(workspace);
                 using var client = workspace.CreateClient();
                 return await client.GetPipelineAsync(value);
@@ -153,7 +156,7 @@ public partial class DatabricksStepEditModal(
         {
             try
             {
-                var workspace = DatabricksWorkspaces?.FirstOrDefault();
+                var workspace = CurrentWorkspace;
                 ArgumentNullException.ThrowIfNull(workspace);
                 using var client = workspace.CreateClient();
                 var pipelines = await client.GetPipelinesAsync();
@@ -183,7 +186,7 @@ public partial class DatabricksStepEditModal(
         {
             try
             {
-                var workspace = DatabricksWorkspaces?.FirstOrDefault();
+                var workspace = CurrentWorkspace;
                 ArgumentNullException.ThrowIfNull(workspace);
                 using var client = workspace.CreateClient();
                 return await client.GetJobAsync(value);
@@ -204,7 +207,7 @@ public partial class DatabricksStepEditModal(
         {
             try
             {
-                var workspace = DatabricksWorkspaces?.FirstOrDefault();
+                var workspace = CurrentWorkspace;
                 ArgumentNullException.ThrowIfNull(workspace);
                 using var client = workspace.CreateClient();
                 dbJobs = (await client.GetJobsAsync()).ToArray();
@@ -229,7 +232,7 @@ public partial class DatabricksStepEditModal(
         {
             try
             {
-                var workspace = DatabricksWorkspaces?.FirstOrDefault();
+                var workspace = CurrentWorkspace;
                 ArgumentNullException.ThrowIfNull(workspace);
                 using var client = workspace.CreateClient();
                 var runtimeVersions = await client.GetRuntimeVersionsAsync();
@@ -251,7 +254,7 @@ public partial class DatabricksStepEditModal(
         {
             try
             {
-                var workspace = DatabricksWorkspaces?.FirstOrDefault();
+                var workspace = CurrentWorkspace;
                 ArgumentNullException.ThrowIfNull(workspace);
                 using var client = workspace.CreateClient();
                 var runtimeVersions = await client.GetRuntimeVersionsAsync();
@@ -286,7 +289,7 @@ public partial class DatabricksStepEditModal(
 
     private async Task<(string Id, string Description)[]> GetNodeTypesAsync()
     {
-        var workspace = DatabricksWorkspaces?.FirstOrDefault();
+        var workspace = CurrentWorkspace;
         ArgumentNullException.ThrowIfNull(workspace);
         using var client = workspace.CreateClient();
         var nodeTypes = await client.GetNodeTypesAsync();
@@ -350,7 +353,7 @@ public partial class DatabricksStepEditModal(
         {
             try
             {
-                var workspace = DatabricksWorkspaces?.FirstOrDefault();
+                var workspace = CurrentWorkspace;
                 ArgumentNullException.ThrowIfNull(workspace);
                 using var client = workspace.CreateClient();
                 return await client.GetClusterAsync(value);
@@ -371,7 +374,7 @@ public partial class DatabricksStepEditModal(
         {
             try
             {
-                var workspace = DatabricksWorkspaces?.FirstOrDefault();
+                var workspace = CurrentWorkspace;
                 ArgumentNullException.ThrowIfNull(workspace);
                 using var client = workspace.CreateClient();
                 var clusters = await client.GetClustersAsync();
