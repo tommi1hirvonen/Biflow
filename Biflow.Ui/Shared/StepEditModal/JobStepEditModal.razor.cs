@@ -13,7 +13,8 @@ public partial class JobStepEditModal(
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            JobToExecuteId = null
+            JobToExecuteId = null,
+            JobExecuteSynchronized = true
         };
 
     protected override async Task<JobStep> GetExistingStepAsync(AppDbContext context, Guid stepId)
