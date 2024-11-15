@@ -16,6 +16,7 @@ public class QlikStep : Step, IHasTimeout
         QlikStepSettings = other.QlikStepSettings;
         QlikCloudEnvironmentId = other.QlikCloudEnvironmentId;
         QlikCloudEnvironment = other.QlikCloudEnvironment;
+        TimeoutMinutes = other.TimeoutMinutes;
     }
 
     public QlikStepSettings QlikStepSettings { get; set; } = new QlikAppReloadSettings();
