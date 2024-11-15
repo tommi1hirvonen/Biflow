@@ -1,6 +1,5 @@
 ﻿@inject ToasterService Toaster
 @inject IDbContextFactory<AppDbContext> DbContextFactory
-@inject IHttpClientFactory HttpClientFactory
 
 <HxModal @ref="modal" Size="ModalSize.Large" Title="@(workspace?.WorkspaceId == Guid.Empty ? "New Databricks workspace" : "Edit " + workspace?.WorkspaceName)">
     <BodyTemplate>
