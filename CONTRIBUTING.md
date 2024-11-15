@@ -10,7 +10,7 @@ Visual Studio 2022 is recommended as the IDE for development.
 
 The following new or existing files/classes need to be added or edited when adding support for new step types. Other files and classes may also need to be updated or created if there are references from the new step to other classes or resources (e.g. app registrations, pipeline clients, function apps etc.).
 
-### Biflow.DataAccess
+### Biflow.Core
 
 **Add new classes**
 
@@ -33,59 +33,54 @@ The following new or existing files/classes need to be added or edited when addi
 
 **Update existing classes**
 
+- EnvironmentSnapshot
+  - Add any potential new endpoint collections to the environment snapshot. Take care not to serialize any sensitive data (use the JsonSensitive attribute for sensitive properties).
 - StepType
-  - Add a new enum value for the new step type
+  - Add enum value for new step type
   - Apply the `[Category]` and `[Description]` attributes to the new enum value.
-- SqlConnectionInfo
-  - If the new step type relies on a SQL connection, add navigation property from SqlConnectionInfo to a list of steps of the new type
+- Step
+  - Add JsonDerivedType attribute for the new step type
+- ParameterType
+
+### Biflow.DataAccess
+
+**Add new classes**
+
+- FooStepEntityTypeConfiguration
+- FooStepExecutionEntityTypeConfiguration
+- If FooStep supports parameters
+  - FooStepParameterEntityTypeConfiguration
+  - FooStepExecutionParameterEntityTypeConfiguration
+
+**Update existing classes**
+
 - AppDbContext
   - Add DbSet<> property for FooStep
-  - Add discriminator mapping for FooStepExecution
-  - Add discriminator mapping for FooStepExecutionAttempt
-  - Add discriminator mapping for FooStep
-  - If FooStep supports parameters
-    - Add discriminator mapping for FooStepParameter
-    - Add navigation property mapping between FooStep and FooStepParameter
-    - Add discriminator mapping for FooStepExecutionParameter
-    - Add navigation property mapping between FooStepExecution and FooStepExecutionParameter
+  - Add DbSet<> property for any potential new endpoints
+- StepEntityTypeConfiguration
+- StepExecutionEntityTypeConfiguration
+- StepExecutionAttemptEntityTypeConfiguration
+- If FooStep supports parameters
+  - StepParameterEntityTypeConfiguration
+  - StepExecutionParameterEntityTypeConfiguration
 - DuplicatorExtensions
     - Add potential new navigation paths that should be considered when copying steps and jobs.
-
-### Biflow.Database
-
-**Update existing tables**
-
-- Step
-  - Add new step type identifier to the step type check constraint
-  - Add new columns required by the new step type (based on FooStep class definition)
-- StepParameter (only if step supports parameters)
-  - Add new step type identifier to the parameter type check constraint
-  - Add possible new columns required by the new step type (based on FooStepParameter class definition)
-- ExecutionStep
-  - Add new step type identifier to the step type check constraint
-  - Add new columns required by the new step type (sames as in Step table)
-- ExecutionStepAttempt
-  - Add new step type identifier to the step type check constraint
-  - Add new columns required by the new step type (based on FooStepExecutionAttempt class)
-- ExecutionStepParameter (only if step supports parameters)
-  - Add new step type identifier to the parameter type check constraint
-  - Add possible new columns required by the new step type (same as in StepParameter table)
+- EnvironmentSnapshotBuilder
+  - Initialize potential new endpoint collections
+- Extensions
+  - Include new step type in execution graph query
 
 ### Biflow.Executor.Core
 
 **Add new classes**
 
 - FooStepExecutor
-  - Implements IStepExecutor<,>
+  - Inherits StepExecutor<FooStepExecution,FooStepExecutionAttempt>
 
 **Update existing classes**
 
 - JobExecutorFactory
   - Add possible new navigation property include statements to the initial execution load command.
-- Extensions
-  - Register new StepOrchestrator service using the new step executor class.
-- StepOrchestratorProvider
-  - Add mapping from FooStepExecution and FooStepExecutionAttempt to the appropriate step orchestrator and executor.
 
 ### Biflow.Ui
 
@@ -96,14 +91,21 @@ The following new or existing files/classes need to be added or edited when addi
 
 **Update existing classes**
 
-- StepTypeIconComponent
+- StepTypeIcon
   - Add case and icon implementation for FooStep step type
 - StepDetailsModal
   - Add properties for the new step type
-- StepExecutionDetailsComponent
+- StepExecutionDetails
   - Add properties for the new step type
-- StepsComponent
+- StepsList
   - Add new step type to IsStepTypeDisabled()
   - Add FooStepEditModal to the end of the component
-- DependenciesComponent
+- DependenciesGraph
   - Add FooStepEditModal to the end of the component
+
+### Biflow.Ui.Core
+
+**Update existing classes**
+
+- VersionRevert
+  - Include potential new endpoint collections when handling environment version snapshot reverts.
