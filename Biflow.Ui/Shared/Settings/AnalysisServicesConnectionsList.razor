@@ -4,15 +4,15 @@
 
 <style>
     tr a {
-    text-decoration: none;
+        text-decoration: none;
     }
 
     tr:hover a {
-    text-decoration: underline;
+        text-decoration: underline;
     }
 </style>
 
-<PageTitle>Snowflake | Biflow</PageTitle>
+<PageTitle>Analysis Services | Biflow</PageTitle>
 
 <HxButton Color="ThemeColor.Success" Enabled="connections is not null" OnClick="() => editModal.LetAsync(x => x.ShowAsync(Guid.Empty))">
     Add connection
@@ -71,7 +71,7 @@
                         </td>
                         <td class="align-middle">
                             <a class="text-body" href="javascript:void(0)"
-                            @onclick="async () =>
+                               @onclick="async () =>
                                 {
                                     stepsConnection = connection;
                                     await stepsModal.LetAsync(x => x.ShowAsync());
@@ -86,8 +86,9 @@
     </table>
 </div>
 
-<SnowflakeConnectionEditModal @ref="editModal"
-                              OnConnectionSubmit="OnConnectionSubmit" />
+<AnalysisServicesConnectionEditModal @ref="editModal"
+                                     Credentials="credentials"
+                                     OnConnectionSubmit="OnConnectionSubmit" />
 
 <HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsConnection?.ConnectionName}")">
     <BodyTemplate>
@@ -127,23 +128,29 @@
 </HxModal>
 
 @code {
-    private SnowflakeConnectionEditModal? editModal;
-    private List<SnowflakeConnection>? connections;
-    private SnowflakeConnection? stepsConnection;
+    private AnalysisServicesConnectionEditModal? editModal;
+    private List<AnalysisServicesConnection>? connections;
+    private List<Credential> credentials = [];
+    private AnalysisServicesConnection? stepsConnection;
     private HxModal? stepsModal;
 
     protected override async Task OnInitializedAsync()
     {
         using var context = await Task.Run<AppDbContext>(DbFactory.CreateDbContext);
-        connections = await context.SnowflakeConnections
+        credentials = await context.Credentials
+            .AsNoTracking()
+            .OrderBy(c => c.Domain)
+            .ThenBy(c => c.Username)
+            .ToListAsync();
+        connections = await context.AnalysisServicesConnections
             .AsNoTrackingWithIdentityResolution()
-            .Include(c => c.SqlSteps)
+            .Include(c => c.TabularSteps)
             .ThenInclude(step => step.Job)
             .OrderBy(c => c.ConnectionName)
             .ToListAsync();
     }
 
-    private async Task DeleteConnection(ConnectionBase connection)
+    private async Task DeleteConnection(AnalysisServicesConnection connection)
     {
         try
         {
@@ -157,7 +164,7 @@
         }
     }
 
-    private async Task OnConnectionSubmit(SnowflakeConnection connection)
+    private async Task OnConnectionSubmit(AnalysisServicesConnection connection)
     {
         if (connection.ConnectionId == Guid.Empty)
         {

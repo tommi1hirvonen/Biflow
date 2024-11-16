@@ -85,7 +85,7 @@
     public IEnumerable<Credential> Credentials { get; set; } = [];
 
     [Parameter]
-    public EventCallback<ConnectionBase> OnConnectionSubmit { get; set; }
+    public EventCallback<AnalysisServicesConnection> OnConnectionSubmit { get; set; }
 
     private AnalysisServicesConnection? connection;
     private HxModal? modal;

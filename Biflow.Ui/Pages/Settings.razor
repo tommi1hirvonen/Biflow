@@ -116,6 +116,13 @@
                     </NavLink>
                 </li>
                 <li class="nav-item">
+                    <NavLink class="nav-link" href="settings/integrations/analysisservices">
+                        <SvgIcon Icon="FeatherIcon.Box" />
+                        &nbsp;
+                        Analysis Services
+                    </NavLink>
+                </li>
+                <li class="nav-item">
                     <NavLink class="nav-link" href="settings/integrations/credentials">
                         <SvgIcon Icon="FeatherIcon.Key" />
                         &nbsp;
@@ -198,6 +205,10 @@
         else if (IntegrationsPage == "blobstorage")
         {
             <BlobClientsList />
+        }
+        else if (IntegrationsPage == "analysisservices")
+        {
+            <AnalysisServicesConnectionsList />
         }
         else if (IntegrationsPage == "credentials")
         {
