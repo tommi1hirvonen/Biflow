@@ -66,7 +66,7 @@ The focus of Biflow is ease-of-use. When set up, it should be fairly easy even f
 
 Currently supported step types:
 - Sql
-    - Run arbitrary SQL commands (e.g. stored procedures) on SQL Server, Azure SQL and Snowflake.
+    - Run arbitrary SQL commands (e.g. stored procedures) on SQL Server, Azure SQL, Fabric Data Warehouse and Snowflake.
     - Return scalar values and assign them to workflow parameters/variables
 - Package
     - Execute SQL Server Integration Services (SSIS) packages deployed to the SSIS catalogue
