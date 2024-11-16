@@ -109,7 +109,7 @@ file class DbtStepValidator : AbstractValidator<DbtStep>
     {
         RuleFor(step => step.DbtJob.Id)
             .NotEmpty()
-            .WithMessage("No dbt job was defined");
+            .WithMessage("No dbt job was set");
     }
 }
 

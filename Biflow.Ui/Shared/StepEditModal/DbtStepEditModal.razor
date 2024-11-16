@@ -50,7 +50,7 @@
 
         <div class="row mt-3">
             <div class="col-md-4 d-md-flex justify-content-end">
-                <label class="form-label mb-lg-0">Job name</label>
+                <label class="form-label mb-lg-0">Job</label>
             </div>
             <div class="col-md-6 d-inline">
                 <div class="input-group input-group-sm">
@@ -58,10 +58,34 @@
                 </div>
                 <div class="form-text">
                     Id: @Step.DbtJob.Id
-                    <br />
-                    Environment: @Step.DbtJob.EnvironmentName
-                    <br />
-                    Project: @Step.DbtJob.ProjectName
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Environment</label>
+            </div>
+            <div class="col-md-6 d-inline">
+                <div class="input-group input-group-sm">
+                    <input class="form-control form-control-sm" value="@Step.DbtJob.EnvironmentName" disabled />
+                </div>
+                <div class="form-text">
+                    Id: @Step.DbtJob.EnvironmentId
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Project</label>
+            </div>
+            <div class="col-md-6 d-inline">
+                <div class="input-group input-group-sm">
+                    <input class="form-control form-control-sm" value="@Step.DbtJob.ProjectName" disabled />
+                </div>
+                <div class="form-text">
+                    Id: @Step.DbtJob.ProjectId
                 </div>
             </div>
         </div>

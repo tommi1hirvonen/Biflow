@@ -24,14 +24,17 @@
 
                         <div class="row mt-3">
                             <div class="col-lg">
-                                <label class="form-label">Account base url</label>
+                                <label class="form-label">API base url</label>
                                 <div class="input-group">
                                     <div class="input-group-text">
                                         <SvgIcon Icon="FeatherIcon.Link" />
                                     </div>
                                     <InputText class="form-control" @bind-Value="account.ApiBaseUrl"></InputText>
                                 </div>
-                                <div class="form-text">e.g. https://ab123.us1.dbt.com/ (account prefix) or https://cloud.getdbt.com/ etc.</div>
+                                <div class="form-text">
+                                    The API base url can be found on your account settings page in dbt Cloud.<br/>
+                                    e.g. https://ab123.us1.dbt.com/
+                                </div>
                             </div>
                         </div>
 
@@ -41,6 +44,9 @@
                                     <label class="form-label">Account id</label>
                                     <div class="input-group">
                                         <InputText class="form-control" @bind-Value="account.AccountId"></InputText>
+                                    </div>
+                                    <div class="form-text">
+                                        The account id is an integer value which can be found on your account settings page in dbt Cloud.
                                     </div>
                                 </div>
                             </div>
