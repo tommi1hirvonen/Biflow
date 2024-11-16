@@ -199,10 +199,10 @@
                     {
                         <JobSchedulesList />
                     }
-                    else if (DetailsPage == "settings")
+                    else if (DetailsPage == "settings" || SettingsPage is not null)
                     {
                         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-                            <JobSettings />
+                            <JobSettings Page="@SettingsPage" />
                         </AuthorizeView>
                     }
                 </CascadingValue>

@@ -4,6 +4,7 @@ using System.Text.Json;
 namespace Biflow.Ui.Pages;
 
 [Route("/jobs/{Id:guid}/{DetailsPage}/{InitialStepId:guid?}")]
+[Route("/jobs/{Id:guid}/settings/{SettingsPage?}")]
 public partial class JobDetails(
     IDbContextFactory<AppDbContext> dbContextFactory,
     NavigationManager navigationManager,
@@ -13,6 +14,8 @@ public partial class JobDetails(
     IJSRuntime js) : ComponentBase, IDisposable
 {
     [Parameter] public string DetailsPage { get; set; } = "steps";
+
+    [Parameter] public string? SettingsPage { get; set; }
 
     [Parameter] public Guid Id { get; set; }
 
@@ -49,6 +52,11 @@ public partial class JobDetails(
         {
             previousJobId = Id;
             await OnInitializedAsync();
+        }
+
+        if (_navigationManager.Uri.EndsWith("settings") && SettingsPage is null)
+        {
+            _navigationManager.NavigateTo($"/jobs/{Id}/settings/general");
         }
     }
 
