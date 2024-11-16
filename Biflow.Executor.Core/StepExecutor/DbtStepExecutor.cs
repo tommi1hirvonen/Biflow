@@ -109,6 +109,11 @@ internal class DbtStepExecutor(
         var json = JsonSerializer.Serialize(run, JsonOptions);
         attempt.AddOutput(json);
 
+        if (run.Status == DbtJobRunStatus.Error)
+        {
+            attempt.AddError(run.StatusMessage);
+        }
+
         return run.Status == DbtJobRunStatus.Success
             ? Result.Success
             : Result.Failure;
