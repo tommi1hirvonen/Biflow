@@ -77,7 +77,7 @@
 
 @code {
     [Parameter]
-    public EventCallback<ConnectionBase> OnConnectionSubmit { get; set; }
+    public EventCallback<SnowflakeConnection> OnConnectionSubmit { get; set; }
 
     private SnowflakeConnection? connection;
     private HxModal? modal;

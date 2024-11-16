@@ -1,13 +1,21 @@
-﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
-@inject ToasterService Toaster
+﻿@inject IDbContextFactory<AppDbContext> DbFactory
 @inject IMediator Mediator
+@inject ToasterService Toaster
 
-<PageTitle>Qlik Cloud | Biflow</PageTitle>
+<style>
+    tr a {
+    text-decoration: none;
+    }
 
-<HxButton Color="ThemeColor.Success"
-@onclick="() => ShowEditModal(null)"
-          Enabled="environments is not null">
-    Add environment
+    tr:hover a {
+    text-decoration: underline;
+    }
+</style>
+
+<PageTitle>Snowflake | Biflow</PageTitle>
+
+<HxButton Color="ThemeColor.Success" Enabled="connections is not null" OnClick="() => editModal.LetAsync(x => x.ShowAsync(Guid.Empty))">
+    Add connection
 </HxButton>
 
 <div class="card shadow-sm pt-2 my-4">
@@ -18,35 +26,33 @@
                     Name
                 </th>
                 <th></th>
-                <th>
-                    Environment url
-                </th>
                 <th></th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
-            @if (environments is null)
+            @if (connections is null)
             {
-                <tr><td colspan="5" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
+                <tr><td colspan="4" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
-            else if (environments.Count == 0)
+            else if (connections.Count == 0)
             {
-                <tr><td colspan="5">No Qlik Cloud environments</td></tr>
+                <tr><td colspan="4">No connections</td></tr>
             }
             else
             {
-                @foreach (var environment in environments.OrderBy(c => c.QlikCloudEnvironmentName))
+                @foreach (var connection in connections.OrderBy(c => c.ConnectionName))
                 {
-                    var jobs = environment.Steps.Select(s => s.Job).Distinct().Count();
-                    var steps = environment.Steps.Count();
+                    var steps = connection.Steps.Count();
+                    var jobs = connection.Steps.Select(s => s.JobId).Distinct().Count();
+
                     <tr>
                         <td class="align-middle">
-                            @environment.QlikCloudEnvironmentName
+                            @connection.ConnectionName
                         </td>
                         <td class="align-middle">
-                            <HxButtonGroup Size="ButtonGroupSize.Small">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="() => ShowEditModal(environment)">
+                            <HxButtonGroup>
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="() => editModal.LetAsync(x => x.ShowAsync(connection.ConnectionId))">
                                     <SvgIcon Icon="FeatherIcon.Edit2" />
                                 </HxButton>
                                 <HxDropdownButtonGroup>
@@ -55,13 +61,10 @@
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
                                         <HxDropdownHeader>Delete?</HxDropdownHeader>
-                                        <HxDropdownItem @onclick="() => DeleteEnvironmentAsync(environment)">Confirm</HxDropdownItem>
+                                        <HxDropdownItem @onclick="() => DeleteConnection(connection)">Confirm</HxDropdownItem>
                                     </HxDropdownMenu>
                                 </HxDropdownButtonGroup>
                             </HxButtonGroup>
-                        </td>
-                        <td class="align-middle">
-                            @environment.EnvironmentUrl
                         </td>
                         <td class="align-middle">
                             @(jobs > 0 ? $"{jobs} job(s)" : null)
@@ -69,10 +72,10 @@
                         <td class="align-middle">
                             <a class="text-body" href="javascript:void(0)"
                             @onclick="async () =>
-                            {
-                                stepsEnvironment = environment;
-                                await stepsModal.LetAsync(x => x.ShowAsync());
-                            }">
+                                {
+                                    stepsConnection = connection;
+                                    await stepsModal.LetAsync(x => x.ShowAsync());
+                                }">
                                 @(steps > 0 ? $"{steps} step(s)" : null)
                             </a>
                         </td>
@@ -83,9 +86,10 @@
     </table>
 </div>
 
-<QlikCloudEnvironmentEditModal @ref="editModal" OnEnvironmentSubmit="OnEnvironmentSubmitAsync" />
+<SnowflakeConnectionEditModal @ref="editModal"
+                              OnConnectionSubmit="OnConnectionSubmit" />
 
-<HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsEnvironment?.QlikCloudEnvironmentName}")">
+<HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsConnection?.ConnectionName}")">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -97,7 +101,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var step in stepsEnvironment?.Steps
+                        @foreach (var step in stepsConnection?.Steps
                         .OrderBy(s => s.Job.JobName)
                         .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
                         {
@@ -123,52 +127,50 @@
 </HxModal>
 
 @code {
-    private List<QlikCloudEnvironment>? environments;
-    private QlikCloudEnvironmentEditModal? editModal;
-
-    private QlikCloudEnvironment? stepsEnvironment;
+    private SnowflakeConnectionEditModal? editModal;
+    private List<SnowflakeConnection>? connections;
+    private SnowflakeConnection? stepsConnection;
     private HxModal? stepsModal;
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = await DbContextFactory.CreateDbContextAsync();
-        environments = await context.QlikCloudEnvironments
+        using var context = await Task.Run<AppDbContext>(DbFactory.CreateDbContext);
+        connections = await context.SnowflakeConnections
             .AsNoTrackingWithIdentityResolution()
-            .Include(c => c.Steps)
-            .ThenInclude(s => s.Job)
+            .Include(c => (c as SnowflakeConnection)!.SqlSteps)
+            .ThenInclude(step => step.Job)
+            .OrderBy(c => c.ConnectionName)
             .ToListAsync();
     }
 
-    private async Task DeleteEnvironmentAsync(QlikCloudEnvironment environment)
+    private async Task DeleteConnection(ConnectionBase connection)
     {
         try
         {
-            await Mediator.SendAsync(new DeleteQlikCloudEnvironmentCommand(environment.QlikCloudEnvironmentId));
-            environments?.Remove(environment);
+            await Mediator.SendAsync(new DeleteConnectionCommand(connection.ConnectionId));
+            connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
         }
         catch (Exception ex)
         {
             var message = ex.InnerException?.Message ?? ex.Message;
-            Toaster.AddError("Error deleting Qlik Cloud environment", message);
+            Toaster.AddError("Error deleting connection", message);
         }
     }
 
-    private async Task OnEnvironmentSubmitAsync(QlikCloudEnvironment environment)
+    private async Task OnConnectionSubmit(SnowflakeConnection connection)
     {
-        if (environment.QlikCloudEnvironmentId == Guid.Empty)
+        if (connection.ConnectionId == Guid.Empty)
         {
-            await Mediator.SendAsync(new CreateQlikCloudEnvironmentCommand(environment));
-            environments?.Add(environment);
+            await Mediator.SendAsync(new CreateConnectionCommand(connection));
+            connections?.Add(connection);
         }
         else
         {
-            await Mediator.SendAsync(new UpdateQlikCloudEnvironmentCommand(environment));
-            environments?.RemoveAll(c => c.QlikCloudEnvironmentId == environment.QlikCloudEnvironmentId);
-            environments?.Add(environment);
+            await Mediator.SendAsync(new UpdateConnectionCommand(connection));
+            connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
+            connections?.Add(connection);
         }
+        connections?.Sort();
         StateHasChanged();
     }
-
-    private async Task ShowEditModal(QlikCloudEnvironment? environment) =>
-        await editModal.LetAsync(x => x.ShowAsync(environment?.QlikCloudEnvironmentId?? Guid.Empty));
 }

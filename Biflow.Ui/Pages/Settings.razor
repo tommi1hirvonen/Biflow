@@ -95,6 +95,13 @@
                     </NavLink>
                 </li>
                 <li class="nav-item">
+                    <NavLink class="nav-link" href="settings/integrations/snowflake">
+                        <SvgIcon Icon="LucideIcon.Snowflake" />
+                        &nbsp;
+                        Snowflake&reg;
+                    </NavLink>
+                </li>
+                <li class="nav-item">
                     <NavLink class="nav-link" href="settings/integrations/dbt">
                         <SvgIcon Icon="LucideIcon.Blocks" />
                         &nbsp;
@@ -179,6 +186,10 @@
         else if (IntegrationsPage == "databricks")
         {
             <DatabricksWorkspacesList />
+        }
+        else if (IntegrationsPage == "snowflake")
+        {
+            <SnowflakeConnectionsList />
         }
         else if (IntegrationsPage == "dbt")
         {

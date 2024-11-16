@@ -14,8 +14,8 @@
 
 <PageTitle>App registrations | Biflow</PageTitle>
 
-<HxButton Color="ThemeColor.Success" @onclick="async () => await ShowEditModalAsync(null)" IsDisabled="AppRegistrations is null">
-    Add App registration
+<HxButton Color="ThemeColor.Success" @onclick="async () => await ShowEditModalAsync(null)" Enabled="appRegistrations is not null">
+    Add app registration
 </HxButton>
 
 <div class="card shadow-sm pt-2 my-4">
