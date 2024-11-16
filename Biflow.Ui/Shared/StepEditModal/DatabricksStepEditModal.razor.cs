@@ -9,6 +9,8 @@ public partial class DatabricksStepEditModal(
     ToasterService toaster, IDbContextFactory<AppDbContext> dbContextFactory)
     : StepEditModal<DatabricksStep>(toaster, dbContextFactory)
 {
+    [Parameter] public IEnumerable<DatabricksWorkspace> DatabricksWorkspaces { get; set; } = [];
+
     internal override string FormId => "databricks_step_edit_form";
 
     private DatabricksFileSelectOffcanvas? fileSelectOffcanvas;

@@ -22,8 +22,6 @@ public abstract partial class StepEditModal<TStep>(
 
     [Parameter] public IEnumerable<QlikCloudEnvironment> QlikClients { get; set; } = [];
 
-    [Parameter] public IEnumerable<DatabricksWorkspace> DatabricksWorkspaces { get; set; } = [];    
-
     [Parameter] public IEnumerable<Credential> Credentials { get; set; } = [];
 
     internal abstract string FormId { get; }
