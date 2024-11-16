@@ -2,9 +2,10 @@
 @using Microsoft.AspNetCore.Localization
 
 @inject IHostEnvironment Env
+@inject ThemeService Theme
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="@CurrentTheme">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -74,6 +75,11 @@
         HttpContext.AcceptsInteractiveRouting()
         ? new InteractiveServerRenderMode(prerender: false)
         : null; // fall back to static server-side rendering
+
+    private string? CurrentTheme =>
+        PageRenderMode is not null
+        ? Theme.CurrentTheme.ToString().ToLower()
+        : null;
 
     protected override void OnInitialized()
     {
