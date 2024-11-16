@@ -4,33 +4,19 @@
 
 <style>
     tr a {
-        text-decoration: none;
+    text-decoration: none;
     }
-        
-        tr:hover a {
-            text-decoration: underline;
-        }
+
+    tr:hover a {
+    text-decoration: underline;
+    }
 </style>
 
-<PageTitle>Connections | Biflow</PageTitle>
+<PageTitle>MS SQL | Biflow</PageTitle>
 
-<HxDropdownButtonGroup>
-    <HxDropdownToggleButton Color="ThemeColor.Success" Enabled="connections is not null">
-        Add connection
-    </HxDropdownToggleButton>
-    <HxDropdownMenu>
-        <HxDropdownHeader>Connection type</HxDropdownHeader>
-        @foreach (var connectionType in ConnectionTypes)
-        {
-            var (name, _, desc, type) = connectionType;
-            <HxDropdownItem @onclick="async () => await ShowNewConnectionModalAsync(type)" title="@desc">
-                <ConnectionTypeIcon ConnectionType="type" />
-                @name
-            </HxDropdownItem>
-        }
-    </HxDropdownMenu>
-</HxDropdownButtonGroup>
-
+<HxButton Color="ThemeColor.Success" Enabled="connections is not null" OnClick="() => editModal.LetAsync(x => x.ShowAsync(Guid.Empty))">
+    Add connection
+</HxButton>
 
 <div class="card shadow-sm pt-2 my-4">
     <table class="table table-hover">
@@ -38,9 +24,6 @@
             <tr>
                 <th>
                     Name
-                </th>
-                <th>
-                    Type
                 </th>
                 <th></th>
                 <th></th>
@@ -55,7 +38,7 @@
             }
             else if (connections.Count == 0)
             {
-                <tr><td colspan="5">No connections</td></tr>
+                <tr><td colspan="5">No MS SQL connections</td></tr>
             }
             else
             {
@@ -63,18 +46,14 @@
                 {
                     var steps = connection.Steps.Count();
                     var jobs = connection.Steps.Select(s => s.JobId).Distinct().Count();
-                    
+                    var tables = connection.DataTables.Count();
                     <tr>
                         <td class="align-middle">
                             @connection.ConnectionName
                         </td>
                         <td class="align-middle">
-                            <ConnectionTypeIcon ConnectionType="connection.ConnectionType" />
-                            @connection.ConnectionType.GetCategory()?.Name
-                        </td>
-                        <td class="align-middle">
                             <HxButtonGroup>
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="async () => await ShowEditModalAsync(connection)">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="async () => await editModal.LetAsync(x => x.ShowAsync(connection.ConnectionId))">
                                     <SvgIcon Icon="FeatherIcon.Edit2" />
                                 </HxButton>
                                 <HxDropdownButtonGroup>
@@ -93,7 +72,7 @@
                         </td>
                         <td class="align-middle">
                             <a class="text-body" href="javascript:void(0)"
-                                @onclick="async () =>
+                            @onclick="async () =>
                                 {
                                     stepsConnection = connection;
                                     await stepsModal.LetAsync(x => x.ShowAsync());
@@ -102,18 +81,15 @@
                             </a>
                         </td>
                         <td class="align-middle">
-                            @if (connection is MsSqlConnection ms)
-                            {
-                                var tables = ms.DataTables.Count();
-                                <a class="text-body" href="javascript:void(0)"
-                                   @onclick="async () =>
-                                    {
-                                        tablesConnection = ms;
-                                        await tablesModal.LetAsync(x => x.ShowAsync());
-                                    }">
-                                    @(tables > 0 ? $"{tables} data table(s)" : null)
-                                </a>
-                            }
+                            
+                            <a class="text-body" href="javascript:void(0)"
+                            @onclick="async () =>
+                                {
+                                    tablesConnection = connection;
+                                    await tablesModal.LetAsync(x => x.ShowAsync());
+                                }">
+                                @(tables > 0 ? $"{tables} data table(s)" : null)
+                            </a>
                         </td>
                     </tr>
                 }
@@ -122,16 +98,9 @@
     </table>
 </div>
 
-<AnalysisServicesConnectionEditModal @ref="connectionEditModals[ConnectionType.AnalysisServices]"
-                                     Credentials="credentials"
-                                     OnConnectionSubmit="OnConnectionSubmit" />
-
-<MsSqlConnectionEditModal @ref="connectionEditModals[ConnectionType.Sql]"
+<MsSqlConnectionEditModal @ref="editModal"
                           Credentials="credentials"
                           OnConnectionSubmit="OnConnectionSubmit" />
-
-<SnowflakeConnectionEditModal @ref="connectionEditModals[ConnectionType.Snowflake]"
-                              OnConnectionSubmit="OnConnectionSubmit"/>
 
 <HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsConnection?.ConnectionName}")">
     <BodyTemplate>
@@ -146,8 +115,8 @@
                     </thead>
                     <tbody>
                         @foreach (var step in stepsConnection?.Steps
-                            .OrderBy(s => s.Job.JobName)
-                            .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
+                        .OrderBy(s => s.Job.JobName)
+                        .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
                         {
                             <tr>
                                 <td>
@@ -183,8 +152,8 @@
                     </thead>
                     <tbody>
                         @foreach (var table in tablesConnection?.DataTables
-                            .OrderBy(t => t.Category?.CategoryName)
-                            .ThenBy(t => t.DataTableName) ?? Enumerable.Empty<MasterDataTable>())
+                        .OrderBy(t => t.Category?.CategoryName)
+                        .ThenBy(t => t.DataTableName) ?? Enumerable.Empty<MasterDataTable>())
                         {
                             <tr>
                                 <td>
@@ -206,11 +175,10 @@
 </HxModal>
 
 @code {
-    private readonly Dictionary<ConnectionType, IConnectionEditModal?> connectionEditModals = [];
-
+    private MsSqlConnectionEditModal? editModal;
     private List<Credential> credentials = [];
-    private List<ConnectionBase>? connections;
-    private ConnectionBase? stepsConnection;
+    private List<MsSqlConnection>? connections;
+    private MsSqlConnection? stepsConnection;
     private MsSqlConnection? tablesConnection;
     private HxModal? stepsModal;
     private HxModal? tablesModal;
@@ -233,25 +201,21 @@
             .OrderBy(c => c.Domain)
             .ThenBy(c => c.Username)
             .ToListAsync();
-        connections = await context.Connections
+        connections = await context.MsSqlConnections
             .AsNoTrackingWithIdentityResolution()
-            .Include(c => (c as SnowflakeConnection)!.SqlSteps)
+            .Include(c => c.SqlSteps)
             .ThenInclude(step => step.Job)
-            .Include(c => (c as MsSqlConnection)!.SqlSteps)
+            .Include(c => c.PackageSteps)
             .ThenInclude(step => step.Job)
-            .Include(c => (c as MsSqlConnection)!.PackageSteps)
+            .Include(c => c.AgentJobSteps)
             .ThenInclude(step => step.Job)
-            .Include(c => (c as MsSqlConnection)!.AgentJobSteps)
-            .ThenInclude(step => step.Job)
-            .Include(c => (c as AnalysisServicesConnection)!.TabularSteps)
-            .ThenInclude(step => step.Job)
-            .Include(c => (c as MsSqlConnection)!.DataTables)
+            .Include(c => c.DataTables)
             .ThenInclude(t => t.Category)
             .OrderBy(c => c.ConnectionName)
             .ToListAsync();
     }
 
-    private async Task DeleteConnection(ConnectionBase connection)
+    private async Task DeleteConnection(MsSqlConnection connection)
     {
         try
         {
@@ -265,7 +229,7 @@
         }
     }
 
-    private async Task OnConnectionSubmit(ConnectionBase connection)
+    private async Task OnConnectionSubmit(MsSqlConnection connection)
     {
         if (connection.ConnectionId == Guid.Empty)
         {
@@ -281,20 +245,4 @@
         connections?.Sort();
         StateHasChanged();
     }
-
-    private async Task ShowEditModalAsync(ConnectionBase connection)
-    {
-        await OpenConnectionEditModalAsync(connection.ConnectionType, connection.ConnectionId);
-    }
-
-    private async Task ShowNewConnectionModalAsync(ConnectionType connectionType)
-    {
-        await OpenConnectionEditModalAsync(connectionType, Guid.Empty);
-    }
-
-    private async Task OpenConnectionEditModalAsync(ConnectionType connectionType, Guid connectionId)
-    {
-        await connectionEditModals[connectionType].LetAsync(x => x.ShowAsync(connectionId));
-    }
-
 }

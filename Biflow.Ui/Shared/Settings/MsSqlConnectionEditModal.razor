@@ -135,7 +135,7 @@
     public IEnumerable<Credential> Credentials { get; set; } = [];
 
     [Parameter]
-    public EventCallback<ConnectionBase> OnConnectionSubmit { get; set; }
+    public EventCallback<MsSqlConnection> OnConnectionSubmit { get; set; }
 
     private MsSqlConnection? connection;
     private HxModal? modal;
