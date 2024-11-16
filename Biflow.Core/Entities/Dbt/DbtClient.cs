@@ -33,20 +33,65 @@ public class DbtClient
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<IEnumerable<DbtJob>> GetJobsAsync(CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<DbtProject>> GetProjectsAsync(CancellationToken cancellationToken = default)
+    {
+        var projects = new List<DbtProject>();
+        var offset = 0;
+        bool go;
+        do
+        {
+            var url = $"api/v2/accounts/{_account.AccountId}/projects/?limit=100&order_by=id&offset={offset}";
+            var response = await _httpClient.GetFromJsonAsync<ProjectsResponse>(url, JsonOptions, cancellationToken);
+            ArgumentNullException.ThrowIfNull(response);
+            projects.AddRange(response.Data);
+            offset += response.Data.Length;
+            go = response.Data.Length > 0 && response.Extra.Pagination.TotalCount > projects.Count;
+        } while (go);
+        projects.SortBy(p => p.Name);
+        return projects;
+    }
+
+    public async Task<IEnumerable<DbtEnvironment>> GetEnvironmentsAsync(long? projectId, CancellationToken cancellationToken = default)
+    {
+        var environments = new List<DbtEnvironment>();
+        var offset = 0;
+        bool go;
+        do
+        {
+            var url = projectId switch
+            {
+                { } id => $"api/v2/accounts/{_account.AccountId}/environments/?limit=100&project_id={id}&order_by=id&offset={offset}",
+                _ => $"api/v2/accounts/{_account.AccountId}/environments/?limit=100&order_by=id&offset={offset}"
+            };
+            var response = await _httpClient.GetFromJsonAsync<EnvironmentsResponse>(url, JsonOptions, cancellationToken);
+            ArgumentNullException.ThrowIfNull(response);
+            environments.AddRange(response.Data);
+            offset += response.Data.Length;
+            go = response.Data.Length > 0 && response.Extra.Pagination.TotalCount > environments.Count;
+        } while (go);
+        environments.SortBy(p => p.Name);
+        return environments;
+    }
+
+    public async Task<IEnumerable<DbtJob>> GetJobsAsync(long? environmentId, CancellationToken cancellationToken = default)
     {
         var jobs = new List<DbtJob>();
         var offset = 0;
         bool go;
         do
         {
-            var url = $"api/v2/accounts/{_account.AccountId}/jobs/?limit=100&order_by=id&offset={offset}";
+            var url = environmentId switch
+            {
+                { } id => $"api/v2/accounts/{_account.AccountId}/jobs/?limit=100&environment_id={id}&order_by=id&offset={offset}",
+                _ => $"api/v2/accounts/{_account.AccountId}/jobs/?limit=100&order_by=id&offset={offset}"
+            };
             var response = await _httpClient.GetFromJsonAsync<JobsResponse>(url, JsonOptions, cancellationToken);
             ArgumentNullException.ThrowIfNull(response);
             jobs.AddRange(response.Data);
             offset += response.Data.Length;
             go = response.Data.Length > 0 && response.Extra.Pagination.TotalCount > jobs.Count;
         } while (go);
+        jobs.SortBy(p => p.Name);
         return jobs;
     }
 
@@ -88,6 +133,10 @@ public class DbtClient
         return runResponse.Data;
     }
 }
+
+file record ProjectsResponse(DbtProject[] Data, Extra Extra);
+
+file record EnvironmentsResponse(DbtEnvironment[] Data, Extra Extra);
 
 file record JobsResponse(DbtJob[] Data, Extra Extra);
 

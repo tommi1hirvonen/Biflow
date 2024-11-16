@@ -1,18 +1,17 @@
-﻿namespace Biflow.Ui.Shared.StepEditModal;
+﻿using Biflow.Ui.Shared.StepEdit;
+
+namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class DbtStepEditModal(
-    IHttpClientFactory httpClientFactory,
     ToasterService toaster,
     IDbContextFactory<AppDbContext> dbContextFactory)
     : StepEditModal<DbtStep>(toaster, dbContextFactory)
 {
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
-
     [Parameter] public IEnumerable<DbtAccount> DbtAccounts { get; set; } = [];
 
     internal override string FormId => "dbt_step_edit_form";
 
-    private DbtJob[]? dbtJobs;
+    private DbtJobSelectOffcanvas? jobSelectOffcanvas;
 
     private DbtAccount? CurrentAccount =>
         DbtAccounts?.FirstOrDefault(a => a.DbtAccountId == Step?.DbtAccountId);
@@ -45,59 +44,25 @@ public partial class DbtStepEditModal(
         };
     }
 
-    protected override Task OnSubmitAsync(AppDbContext context, DbtStep step)
+    private Task OpenJobSelectOffcanvas()
     {
-        step.DbtJobName ??= dbtJobs?.FirstOrDefault(j => j.Id == step.DbtJobId)?.Name;
-        return Task.CompletedTask;
+        var account = CurrentAccount;
+        ArgumentNullException.ThrowIfNull(account);
+        return jobSelectOffcanvas.LetAsync(x => x.ShowAsync(account));
     }
 
-    private async Task<DbtJob?> ResolveJobFromValueAsync(long value)
+    private void OnJobSelected((DbtProject, DbtEnvironment, DbtJob) selectedJob)
     {
-        if (value <= 0)
+        ArgumentNullException.ThrowIfNull(Step);
+        var (project, environment, job) = selectedJob;
+        Step.DbtJob = new()
         {
-            return null;
-        }
-        if (dbtJobs is null)
-        {
-            try
-            {
-                var account = CurrentAccount;
-                ArgumentNullException.ThrowIfNull(account);
-                var client = account.CreateClient(_httpClientFactory);
-                return await client.GetJobAsync(value);
-            }
-            catch (Exception ex)
-            {
-                Toaster.AddError("Error fetching dbt job", ex.Message);
-                return null;
-            }
-        }
-        return dbtJobs.FirstOrDefault(a => a.Id == value);
-    }
-
-    private async Task<AutosuggestDataProviderResult<DbtJob>> ProvideJobSuggestionsAsync(
-        AutosuggestDataProviderRequest request)
-    {
-        if (dbtJobs is null)
-        {
-            try
-            {
-                var account = CurrentAccount;
-                ArgumentNullException.ThrowIfNull(account);
-                var client = account.CreateClient(_httpClientFactory);
-                var dbtJobs = await client.GetJobsAsync();
-                this.dbtJobs = dbtJobs.OrderBy(a => a.Name).ToArray();
-            }
-            catch (Exception ex)
-            {
-                Toaster.AddError("Error fetching dbt jobs", ex.Message);
-                dbtJobs = [];
-            }
-        }
-
-        return new()
-        {
-            Data = dbtJobs.Where(n => n.Name.ContainsIgnoreCase(request.UserInput))
+            Id = job.Id,
+            Name = job.Name,
+            EnvironmentId = environment.Id,
+            EnvironmentName = environment.Name,
+            ProjectId = project.Id,
+            ProjectName = project.Name
         };
     }
 }

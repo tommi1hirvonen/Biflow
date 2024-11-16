@@ -37,7 +37,7 @@ internal class DbtStepExecutor(
         DbtJobRun run;
         try
         {
-            run = await client.TriggerJobRunAsync(step.DbtJobId, cancellationToken);
+            run = await client.TriggerJobRunAsync(step.DbtJob.Id, cancellationToken);
         }
         catch (OperationCanceledException)
         {

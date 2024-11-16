@@ -13,22 +13,21 @@ public class DbtStep : Step, IHasTimeout
 
     public DbtStep(DbtStep other, Job? targetJob) : base(other, targetJob)
     {
-        DbtJobId = other.DbtJobId;
-        DbtJobName = other.DbtJobName;
+        DbtJob = other.DbtJob;
         TimeoutMinutes = other.TimeoutMinutes;
         DbtAccountId = other.DbtAccountId;
         DbtAccount = other.DbtAccount;
     }
 
-    [Required]
-    public long DbtJobId { get; set; }
-
-    [MaxLength(500)]
-    public string? DbtJobName
+    public DbtJobDetails DbtJob { get; set; } = new()
     {
-        get;
-        set => field = value?[..int.Min(value.Length, 500)];
-    }
+        Id = 0,
+        Name = null, 
+        EnvironmentId = 0, 
+        EnvironmentName = null, 
+        ProjectId = 0,
+        ProjectName = null
+    };
 
     [Required]
     [Range(0, 2880)] // 48 hours

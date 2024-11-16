@@ -1,0 +1,215 @@
+﻿@inject IHttpClientFactory HttpClientFactory
+
+<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" Title="Select job">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <div class="list-group">
+                    <div class="list-group-item list-group-header fw-semibold">
+                        Projects
+                    </div>
+                    @if (projects is null)
+                    {
+                        <div class="list-group-item text-center">
+                            <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                        </div>
+                    }
+                    else if (projects.Count() == 0)
+                    {
+                        <div class="list-group-item small">
+                            No projects
+                        </div>
+                    }
+                    else
+                    {
+                        foreach (var project in projects)
+                        {
+                            var projectExpanded = projectExpandedStates.GetValueOrDefault(project);
+                            <div class="list-group-item list-group-item-action pointer" @onclick="() => ToggleProjectAsync(project)">
+                                <div class="row">
+                                    <div class="col d-flex align-items-center small">
+                                        @if (projectExpanded)
+                                        {
+                                            <SvgIcon Icon="FeatherIcon.ChevronDown" />
+                                        }
+                                        else
+                                        {
+                                            <SvgIcon Icon="FeatherIcon.ChevronRight" />
+                                        }
+                                        &nbsp;
+                                        @project.Name
+                                    </div>
+                                </div>
+                            </div>
+                            @if (projectExpanded)
+                            {
+                                var environments = projectEnvironments.GetValueOrDefault(project);
+                                <div class="list-group-item">
+                                    <div class="row">
+                                        <div class="col fw-semibold small" style="padding-left: 2.5rem;">
+                                            Environments
+                                        </div>
+                                    </div>
+                                </div>
+                                @if (environments is null)
+                                {
+                                    <div class="list-group-item">
+                                        <div class="row">
+                                            <div class="col small" style="padding-left: 2.5rem;">
+                                                <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                                else if (environments.Count() == 0)
+                                {
+                                    <div class="list-group-item">
+                                        <div class="row">
+                                            <div class="col small" style="padding-left: 2.5rem;">
+                                                No environments
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                                foreach (var environment in environments ?? [])
+                                {
+                                    var environmentExpanded = environmentExpandedStates.GetValueOrDefault(environment);
+                                    <div class="list-group-item list-group-item-action pointer" @onclick="() => ToggleEnvironmentAsync(environment)">
+                                        <div class="row">
+                                            <div class="col d-flex align-items-center small" style="padding-left: 2.5rem;">
+                                                @if (environmentExpanded)
+                                                {
+                                                    <SvgIcon Icon="FeatherIcon.ChevronDown" />
+                                                }
+                                                else
+                                                {
+                                                    <SvgIcon Icon="FeatherIcon.ChevronRight" />
+                                                }
+                                                &nbsp;
+                                                @environment.Name
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @if (environmentExpanded)
+                                    {
+                                        var jobs = environmentJobs.GetValueOrDefault(environment);
+                                        <div class="list-group-item">
+                                            <div class="row">
+                                                <div class="col fw-semibold small" style="padding-left: 4rem;">
+                                                    Jobs
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @if (jobs is null)
+                                        {
+                                            <div class="list-group-item">
+                                                <div class="row">
+                                                    <div class="col small" style="padding-left: 4rem;">
+                                                        <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                        else if (jobs.Count() == 0)
+                                        {
+                                            <div class="list-group-item">
+                                                <div class="row">
+                                                    <div class="col small" style="padding-left: 4rem;">
+                                                        No jobs
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                        foreach (var job in jobs ?? [])
+                                        {
+                                            var item = (project, environment, job);
+                                            var selected = item == selectedJob;
+                                            <div class="list-group-item list-group-item-action pointer @(selected ? "fw-bold bg-body" : null)" @onclick="() => selectedJob = item">
+                                                <div class="row">
+                                                    <div class="col small" style="padding-left: 4rem;">
+                                                        @job.Name
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Primary"
+        CssClass="me-3"
+        @onclick="SelectJobAsync"
+        Enabled="selectedJob is not null">
+            Select
+        </HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
+@code {
+    [Parameter]
+    public EventCallback<(DbtProject, DbtEnvironment, DbtJob)> OnJobSelected { get; set; }
+
+    private readonly Dictionary<DbtProject, bool> projectExpandedStates = [];
+    private readonly Dictionary<DbtProject, IEnumerable<DbtEnvironment>> projectEnvironments = [];
+    private readonly Dictionary<DbtEnvironment, bool> environmentExpandedStates = [];
+    private readonly Dictionary<DbtEnvironment, IEnumerable<DbtJob>> environmentJobs = [];
+
+
+    private HxOffcanvas? offcanvas;
+    private (DbtProject, DbtEnvironment, DbtJob)? selectedJob;
+    private DbtClient? client;
+    private IEnumerable<DbtProject>? projects;
+
+
+    public async Task ShowAsync(DbtAccount account)
+    {
+        selectedJob = null;
+        projects = null;
+        projectEnvironments.Clear();
+        projectExpandedStates.Clear();
+        environmentExpandedStates.Clear();
+        environmentJobs.Clear();
+        await offcanvas.LetAsync(x => x.ShowAsync());
+        client = account.CreateClient(HttpClientFactory);
+        projects = await client.GetProjectsAsync();
+    }
+
+    private async Task ToggleProjectAsync(DbtProject project)
+    {
+        var expanded = !projectExpandedStates.GetValueOrDefault(project);
+        projectExpandedStates[project] = expanded;
+        if (expanded && !projectEnvironments.ContainsKey(project))
+        {
+            ArgumentNullException.ThrowIfNull(client);
+            projectEnvironments[project] = await client.GetEnvironmentsAsync(project.Id);
+        }
+    }
+
+    private async Task ToggleEnvironmentAsync(DbtEnvironment environment)
+    {
+        var expanded = !environmentExpandedStates.GetValueOrDefault(environment);
+        environmentExpandedStates[environment] = expanded;
+        if (expanded && !environmentJobs.ContainsKey(environment))
+        {
+            ArgumentNullException.ThrowIfNull(client);
+            environmentJobs[environment] = await client.GetJobsAsync(environment.Id);
+        }
+    }
+
+    private async Task SelectJobAsync()
+    {
+        if (selectedJob is not { } job)
+        {
+            return;
+        }
+        await OnJobSelected.InvokeAsync(job);
+        await offcanvas.LetAsync(x => x.HideAsync());
+    }
+}

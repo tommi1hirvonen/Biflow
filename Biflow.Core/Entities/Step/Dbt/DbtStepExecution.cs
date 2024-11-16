@@ -1,5 +1,4 @@
 ﻿using Biflow.Core.Interfaces;
-using System.ComponentModel.DataAnnotations;
 
 namespace Biflow.Core.Entities;
 
@@ -11,21 +10,21 @@ public class DbtStepExecution : StepExecution, IHasTimeout, IHasStepExecutionAtt
 
     public DbtStepExecution(DbtStep step, Execution execution) : base(step, execution)
     {
-        DbtJobId = step.DbtJobId;
-        DbtJobName = step.DbtJobName;
+        DbtJob = step.DbtJob;
         TimeoutMinutes = step.TimeoutMinutes;
         DbtAccountId = step.DbtAccountId;
         AddAttempt(new DbtStepExecutionAttempt(this));
     }
 
-    public long DbtJobId { get; private set; }
-
-    [MaxLength(500)]
-    public string? DbtJobName
-    {
-        get;
-        private set => field = value?[..int.Min(value.Length, 500)];
-    }
+    public DbtJobDetails DbtJob { get; private set; } = new()
+     {
+         Id = 0,
+         Name = null,
+         EnvironmentId = 0,
+         EnvironmentName = null,
+         ProjectId = 0,
+         ProjectName = null
+     };
 
     public double TimeoutMinutes { get; private set; }
 

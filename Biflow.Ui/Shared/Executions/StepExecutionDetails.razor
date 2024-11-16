@@ -412,13 +412,37 @@
                 dbt job id
             </dt>
             <dd class="col-sm-9">
-                @dbt.DbtJobId
+                @dbt.DbtJob.Id
             </dd>
             <dt class="col-sm-3">
                 dbt job name
             </dt>
             <dd class="col-sm-9">
-                @dbt.DbtJobName
+                @dbt.DbtJob.Name
+            </dd>
+            <dt class="col-sm-3">
+                Environment id
+            </dt>
+            <dd class="col-sm-9">
+                @dbt.DbtJob.EnvironmentId
+            </dd>
+            <dt class="col-sm-3">
+                Environment name
+            </dt>
+            <dd class="col-sm-9">
+                @dbt.DbtJob.EnvironmentName
+            </dd>
+            <dt class="col-sm-3">
+                Project id
+            </dt>
+            <dd class="col-sm-9">
+                @dbt.DbtJob.ProjectId
+            </dd>
+            <dt class="col-sm-3">
+                Project name
+            </dt>
+            <dd class="col-sm-9">
+                @dbt.DbtJob.ProjectName
             </dd>
             @if (StepExecutionAttempt is DbtStepExecutionAttempt dbta)
             {

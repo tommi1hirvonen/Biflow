@@ -60,6 +60,7 @@ public class StepValidator : AsyncAbstractValidator<Step>
         RuleFor(step => step).SetInheritanceValidator(v =>
         {
             v.Add(new TabularStepValidator());
+            v.Add(new DbtStepValidator());
             v.Add(new DatabricksStepValidator());
         });
         When(step => step is IHasStepParameters, () =>
@@ -99,6 +100,16 @@ file class TabularStepValidator : AbstractValidator<TabularStep>
         RuleFor(step => step)
             .Must(step => string.IsNullOrEmpty(step.TabularPartitionName) || !string.IsNullOrEmpty(step.TabularPartitionName) && !string.IsNullOrEmpty(step.TabularTableName))
             .WithMessage("Table name is required if partition name has been defined");
+    }
+}
+
+file class DbtStepValidator : AbstractValidator<DbtStep>
+{
+    public DbtStepValidator()
+    {
+        RuleFor(step => step.DbtJob.Id)
+            .NotEmpty()
+            .WithMessage("No dbt job was defined");
     }
 }
 
