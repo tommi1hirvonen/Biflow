@@ -277,7 +277,7 @@ else if (builder is null)
     private IEnumerable<ITag> Tags => builder?.Steps
         .SelectMany(step => step.Tags)
         .DistinctBy(t => t.TagName)
-        .OrderBy(t => t.TagName)
+        .Order()
         ?? Enumerable.Empty<ITag>();
 
     private IEnumerable<ExecutionBuilderStep> StepsAvailableToExecute => builder?.Steps

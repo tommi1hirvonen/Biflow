@@ -156,7 +156,7 @@
                         .Where(e => State.ExecutionPredicates.Where(p => p != State.JobTagPredicate).All(p => p(e)))
                         .SelectMany(e => e.JobTags)
                 };
-                jobTags = jobTags?.Distinct().OrderBy(t => t.TagName).AsEnumerable() ?? [];
+                jobTags = jobTags?.Distinct().Order().AsEnumerable() ?? [];
             }
             <FilterDropdown TItem="TagProjection"
                             FilterSet="State.JobTagFilter"
@@ -287,7 +287,7 @@
                                    .Where(e => State.StepExecutionPredicates.Where(p => p != State.StepTagPredicate).All(p => p(e)))
                                    .SelectMany(e => e.StepTags)
                                    .Distinct()
-                                   .OrderBy(t => t.TagName)
+                                   .Order()
                                    .AsEnumerable() ?? []"
                                 IdSelector="t => t.TagId.ToString()"
                                 TextSelector="t => t.TagName"

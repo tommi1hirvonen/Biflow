@@ -19,4 +19,6 @@ public abstract class Tag(TagType tagType, string tagName) : ITag
     public TagColor Color { get; set; }
 
     public TagType TagType { get; private set; } = tagType;
+
+    public int SortOrder { get; set; }
 }

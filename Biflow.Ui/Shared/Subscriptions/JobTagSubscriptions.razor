@@ -121,7 +121,7 @@
                                     .SelectMany(s => s.Tags)
                                     .DistinctBy(t => t.TagId)
                                     .Where(t => !Subscriptions.Any(sub => t.TagId == sub.TagId && sub.JobId == j.JobId))
-                                    .OrderBy(t => t.TagName)
+                                    .Order()
                                     .ToArray();
                                 return (j, expanded, tags);
                             })

@@ -22,10 +22,10 @@
                 <div class="col">
                     <label class="form-label">Tags</label>
                     <TagInput TTag="JobTag"
-                              Items="allTags"
-                              AllowCustomValues
-                              SelectedItems="job.Tags"
-                              NewItemFromText="text => new JobTag(text) { Color = TagColor.DarkGray }" />
+                    Items="allTags"
+                    AllowCustomValues
+                    SelectedItems="job.Tags"
+                    NewItemFromText="text => new JobTag(text) { Color = TagColor.DarkGray }" />
                 </div>
             </div>
         </EditForm>
@@ -45,7 +45,7 @@
 
     private HxOffcanvas? offcanvas;
     private Job job = new();
-    private IEnumerable<JobTag> allTags = [];
+    private List<JobTag> allTags = [];
 
     private async Task OnSubmit()
     {
@@ -70,7 +70,8 @@
         try
         {
             using var context = await DbContextFactory.CreateDbContextAsync();
-            allTags = await context.JobTags.OrderBy(t => t.TagName).ToArrayAsync();
+            allTags = await context.JobTags.ToListAsync();
+            allTags.Sort();
             if (job is not null)
             {
                 this.job = await context.Jobs

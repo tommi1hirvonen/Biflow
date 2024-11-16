@@ -205,7 +205,7 @@ public partial class ExecutionDetails(
                     e.StepExecution.Execution.JobId,
                     job?.JobName ?? e.StepExecution.Execution.JobName,
                     e.StepExecution.ExecutionDependencies.Select(d => d.DependantOnStepId).ToArray(),
-                    e.StepExecution.GetStep()?.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color)).ToArray() ?? [],
+                    e.StepExecution.GetStep()?.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder)).ToArray() ?? [],
                     []))
                 .ToArray();
 

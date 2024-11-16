@@ -49,23 +49,23 @@
         .Select(s => (s.Job.JobId, s.Job.JobName))
         .Concat(State.JobFilter)
         .Distinct()
-        .OrderBy(j => j.JobName)
+        .Order()
         .AsEnumerable()
         ?? [];
     var filterJobTags = schedules?
         .Where(s => State.Predicates.Where(p => p != State.JobTagPredicate).All(p => p(s)))
         .SelectMany(s => s.Job.Tags)
-        .Select(t => new TagProjection(t.TagId, t.TagName, t.Color))
+        .Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder))
         .Concat(UserState.Jobs.TagFilter)
         .Distinct()
-        .OrderBy(t => t.TagName)
+        .Order()
         .AsEnumerable() ?? [];
     var filterScheduleTags = schedules?
         .Where(s => State.Predicates.Where(p => p != State.ScheduleTagPredicate).All(p => p(s)))
         .SelectMany(s => s.Tags)
-        .Select(t => new TagProjection(t.TagId, t.TagName, t.Color))
+        .Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder))
         .Distinct()
-        .OrderBy(t => t.TagName)
+        .Order()
         .AsEnumerable() ?? [];
 }
 

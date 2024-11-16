@@ -38,7 +38,7 @@ public abstract partial class StepEditModal<TStep>(
 
     internal bool Saving { get; set; } = false;
 
-    public IEnumerable<StepTag>? AllTags { get; private set; }
+    public List<StepTag>? AllTags { get; private set; }
 
     protected ToasterService Toaster { get; } = toaster;
 
@@ -158,7 +158,8 @@ public abstract partial class StepEditModal<TStep>(
         await Modal.LetAsync(x => x.ShowAsync());
         await ResetContext();
         ArgumentNullException.ThrowIfNull(context);
-        AllTags = await context.StepTags.OrderBy(t => t.TagName).ToListAsync();
+        AllTags = await context.StepTags.ToListAsync();
+        AllTags.Sort();
         // Use slim classes to only load selected columns from the db.
         // When loading all steps from the db, the number of steps may be very high.
         JobSlims = await context.Jobs

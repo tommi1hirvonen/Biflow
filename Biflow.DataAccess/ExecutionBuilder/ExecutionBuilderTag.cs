@@ -14,4 +14,6 @@ public class ExecutionBuilderTag : ITag
     public string TagName => _tag.TagName;
 
     public TagColor Color => _tag.Color;
+
+    public int SortOrder => _tag.SortOrder;
 }

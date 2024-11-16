@@ -67,10 +67,10 @@
             @{
                 var tags = jobs?
                     .SelectMany(j => j.Tags)
-                    .Select(t => new TagProjection(t.TagId, t.TagName, t.Color))
+                    .Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder))
                     .Concat(UserState.Jobs.TagFilter)
                     .Distinct()
-                    .OrderBy(t => t.TagName)
+                    .Order()
                     .AsEnumerable() ?? [];
             }
             <FilterDropdown TItem="TagProjection"
@@ -302,7 +302,7 @@
                                     </div>
                                     <div class="row">
                                         <div class="col">
-                                            @foreach (var tag in item.Tags.OrderBy(t => t.TagName))
+                                            @foreach (var tag in item.Tags.Order())
                                             {
                                                 <TagBadge Tag="tag" CssClass="m-1" />
                                             }

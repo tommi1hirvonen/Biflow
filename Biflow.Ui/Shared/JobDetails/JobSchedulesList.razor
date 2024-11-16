@@ -59,7 +59,7 @@
                             </div>
                             <div class="row">
                                 <div class="col">
-                                    @foreach (var tag in item.Tags.OrderBy(t => t.TagName))
+                                    @foreach (var tag in item.Tags.Order())
                                     {
                                         <TagBadge Tag="tag" CssClass="m-1" />
                                     }
@@ -104,7 +104,7 @@
                             {
                                 <span class="text-secondary">No tag filters</span>
                             }
-                            @foreach (var tag in item.TagFilter.OrderBy(t => t.TagName))
+                            @foreach (var tag in item.TagFilter.Order())
                             {
                                 <TagBadge Tag="tag" CssClass="m-1" />
                             }

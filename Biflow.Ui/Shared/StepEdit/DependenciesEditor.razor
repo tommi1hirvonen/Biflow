@@ -54,7 +54,7 @@
 
             <FilterDropdown TItem="StepTag"
                             FilterSet="tagFilter"
-                            Items="StepSlims.Values.SelectMany(step => step.Tags).DistinctBy(t => t.TagName).OrderBy(t => t.TagName)"
+                            Items="StepSlims.Values.SelectMany(step => step.Tags).DistinctBy(t => t.TagName).Order()"
                             IdSelector="t => t.TagId.ToString()"
                             TextSelector="t => t.TagName"
                             OnChange="StateHasChanged">

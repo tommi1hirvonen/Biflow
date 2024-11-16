@@ -88,7 +88,7 @@
                 @{
                     var tags = Tags
                         ?.Where(t => !Subscriptions.Any(s => t.TagId == s.TagId))
-                        .OrderBy(t => t.TagName)
+                        .Order()
                         .ToArray()
                         ?? Array.Empty<StepTag>();
                 }

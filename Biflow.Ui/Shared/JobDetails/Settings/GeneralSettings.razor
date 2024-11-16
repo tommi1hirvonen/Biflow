@@ -19,10 +19,10 @@
         <div style="max-width: 50rem;">
             <label class="form-label">Tags</label>
             <TagInput TTag="JobTag"
-                      Items="allTags"
-                      AllowCustomValues
-                      SelectedItems="editJob.Tags"
-                      NewItemFromText="text => new JobTag(text) { Color = TagColor.DarkGray }" />
+            Items="allTags"
+            AllowCustomValues
+            SelectedItems="editJob.Tags"
+            NewItemFromText="text => new JobTag(text) { Color = TagColor.DarkGray }" />
         </div>
         <div>
             <label class="form-label">Description</label>
@@ -70,7 +70,7 @@
     [CascadingParameter(Name = "OnJobUpdated")] public Action<Job>? OnJobUpdated { get; set; }
 
     private Job? editJob;
-    private IEnumerable<JobTag> allTags = [];
+    private List<JobTag> allTags = [];
 
     protected override async void OnParametersSet()
     {
@@ -80,7 +80,8 @@
         }
 
         using var context = await DbContextFactory.CreateDbContextAsync();
-        allTags = await context.JobTags.OrderBy(t => t.TagName).ToArrayAsync();
+        allTags = await context.JobTags.ToListAsync();
+        allTags.Sort();
         editJob = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Include(j => j.Tags)

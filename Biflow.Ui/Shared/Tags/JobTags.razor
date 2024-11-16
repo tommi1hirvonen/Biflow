@@ -19,6 +19,7 @@
                     <thead>
                         <tr>
                             <th>Tag</th>
+                            <th>Sort order</th>
                             <th></th>
                             <th></th>
                         </tr>
@@ -27,38 +28,45 @@
                         @if (tags is null)
                         {
                             <tr>
-                                <td colspan="3" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td>
+                                <td colspan="4" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td>
                             </tr>
                         }
                         else if (!tags.Any())
                         {
                             <tr>
-                                <td colspan="3" class="px-3">No job tags</td>
+                                <td colspan="4" class="px-3">No job tags</td>
                             </tr>
                         }
                         else
                         {
-                            foreach (var tag in tags)
+                            foreach (var tag in tags.Order())
                             {
                                 var jobs = tag.Jobs.Count();
                                 <tr>
                                     <td class="align-middle">
                                         <TagBadge Tag="tag" />
                                     </td>
+                                    <td class="align-middle">
+                                        @tag.SortOrder
+                                    </td>
                                     <td>
                                         <div class="btn-group">
                                             @*Dropdown to edit the tag's name*@
                                             <HxDropdownButtonGroup>
-                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => templateTag.TagName = tag.TagName">
+                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => SetTemplateTag(tag)">
                                                     <SvgIcon Icon="FeatherIcon.Edit3" />
                                                 </HxDropdownToggleButton>
                                                 <HxDropdownContent CssClass="p-4">
-                                                    <EditForm Model="templateTag" OnValidSubmit="async () => await UpdateTagNameAsync(tag)" Context="_context" style="min-width: 20rem;">
+                                                    <EditForm Model="templateTag" OnValidSubmit="async () => await UpdateTagAsync(tag)" Context="_context" style="min-width: 20rem; gap: 0.2rem;">
                                                         <DataAnnotationsValidator />
                                                         <ValidationSummary />
                                                         <div>
                                                             <label class="form-label">New name</label>
                                                             <InputText class="form-control form-control-sm" @bind-Value="templateTag.TagName" autocomplete="off"></InputText>
+                                                        </div>
+                                                        <div>
+                                                            <label class="form-label">Sort order</label>
+                                                            <InputNumber class="form-control form-control-sm" @bind-Value="templateTag.SortOrder" autocomplete="off"></InputNumber>
                                                         </div>
                                                         <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Success" CssClass="mt-3">Save</HxSubmit>
                                                     </EditForm>
@@ -171,6 +179,8 @@
 
     private IEnumerable<JobTag> UnusedTags => tags?
         .Where(t => !t.Jobs.Any())
+        .Order()
+        .AsEnumerable()
         ?? [];
 
     protected override async Task OnInitializedAsync()
@@ -179,7 +189,6 @@
         tags = await context.JobTags
             .AsNoTrackingWithIdentityResolution()
             .Include(t => t.Jobs)
-            .OrderBy(t => t.TagName)
             .ToListAsync();
     }
 
@@ -201,11 +210,18 @@
         await confirmDeleteModal.LetAsync(x => x.HideAsync());
     }
 
-    private async Task UpdateTagNameAsync(Tag tag)
+    private void SetTemplateTag(Tag tag)
+    {
+        templateTag.TagName = tag.TagName;
+        templateTag.SortOrder = tag.SortOrder;
+    }
+
+    private async Task UpdateTagAsync(Tag tag)
     {
         try
         {
             tag.TagName = templateTag.TagName;
+            tag.SortOrder = templateTag.SortOrder;
             await Mediator.SendAsync(new UpdateTagCommand(tag));
         }
         catch (DbUpdateConcurrencyException)

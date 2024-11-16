@@ -441,9 +441,9 @@
                                 .Where(s => !stepTypeFilter.Any() || stepTypeFilter.Contains(s.StepType)) // Limit visible tags based on step type filter
                                 .Where(s => !stepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
                                             stepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible tags based on step status filter
-                                .SelectMany(e => e.GetStep()?.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color)) ?? [])
+                                .SelectMany(e => e.GetStep()?.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder)) ?? [])
                                 .Distinct()
-                                .OrderBy(t => t.TagName)
+                                .Order()
                                 .AsEnumerable() ?? []"
                             IdSelector="t => t.TagId.ToString()"
                             TextSelector="t => t.TagName"

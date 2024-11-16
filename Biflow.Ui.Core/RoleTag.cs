@@ -16,4 +16,6 @@ public readonly struct RoleTag(string role) : ITag
         Roles.SettingsEditor => TagColor.Yellow,
         _ => TagColor.DarkGray
     };
+
+    public int SortOrder { get; } = 0;
 }

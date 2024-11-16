@@ -377,7 +377,7 @@
                                 </div>
 
                                 <div class="col-xl-4 d-flex flex-wrap align-items-center justify-content-xl-end">
-                                    @foreach (var tag in item.Tags.OrderBy(t => t.TagName))
+                                    @foreach (var tag in item.Tags.Order())
                                     {
                                         <TagBadge Tag="tag" CssClass="m-1" />
                                     }

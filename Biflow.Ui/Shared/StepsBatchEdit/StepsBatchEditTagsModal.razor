@@ -8,7 +8,7 @@
             <div class="col">
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_batch_edit_tags_add"
-                           checked=@(editMode == EditMode.Add)
+                    checked=@(editMode == EditMode.Add)
                     @onchange="() => SetEditMode(EditMode.Add)">
                     <label class="form-check-label" for="radio_batch_edit_tags_add">
                         Add
@@ -20,7 +20,7 @@
                 </div>
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_batch_edit_tags_remove"
-                           checked=@(editMode == EditMode.Remove)
+                    checked=@(editMode == EditMode.Remove)
                     @onchange="() => SetEditMode(EditMode.Remove)">
                     <label class="form-check-label" for="radio_batch_edit_tags_remove">
                         Remove
@@ -37,10 +37,10 @@
                 @if (steps is not null)
                 {
                     <TagInput TTag="StepTag"
-                              Items="allTags"
-                              SelectedItems="tags"
-                              AllowCustomValues="editMode == EditMode.Add"
-                              NewItemFromText="text => new StepTag(text) { Color = TagColor.DarkGray }" />
+                    Items="allTags"
+                    SelectedItems="tags"
+                    AllowCustomValues="editMode == EditMode.Add"
+                    NewItemFromText="text => new StepTag(text) { Color = TagColor.DarkGray }" />
                 }
                 else
                 {
@@ -67,7 +67,7 @@
     private HxModal? modal;
     private bool saving = false;
     private AppDbContext? context;
-    protected StepTag[]? allTags;
+    protected List<StepTag>? allTags;
     private List<StepTag> tags = [];
     private List<Step>? steps;
     private EditMode editMode = EditMode.Add;
@@ -88,7 +88,8 @@
             await context.DisposeAsync();
         }
         context = await DbContextFactory.CreateDbContextAsync();
-        allTags = await context.StepTags.OrderBy(t => t.TagName).ToArrayAsync();
+        allTags = await context.StepTags.ToListAsync();
+        allTags.Sort();
         var stepIds = SelectedSteps.Select(s => s.StepId).ToArray();
         steps = await JobDetails.BuildStepsQueryWithIncludes(context)
             .Where(s => stepIds.Contains(s.StepId))
@@ -118,7 +119,7 @@
             tags = steps?
                 .SelectMany(s => s.Tags)
                 .Distinct()
-                .OrderBy(t => t.TagName)
+                .Order()
                 .ToList() ?? new();
         }
     }

@@ -8,8 +8,8 @@
             <div class="col">
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_batch_edit_tags_add"
-                           checked=@(editMode == EditMode.Add)
-                           @onchange="() => SetEditMode(EditMode.Add)">
+                    checked=@(editMode == EditMode.Add)
+                    @onchange="() => SetEditMode(EditMode.Add)">
                     <label class="form-check-label" for="radio_batch_edit_tags_add">
                         Add
                         &nbsp;
@@ -20,8 +20,8 @@
                 </div>
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_batch_edit_tags_remove"
-                           checked=@(editMode == EditMode.Remove)
-                           @onchange="() => SetEditMode(EditMode.Remove)">
+                    checked=@(editMode == EditMode.Remove)
+                    @onchange="() => SetEditMode(EditMode.Remove)">
                     <label class="form-check-label" for="radio_batch_edit_tags_remove">
                         Remove
                         &nbsp;
@@ -37,10 +37,10 @@
                 @if (jobs is not null)
                 {
                     <TagInput TTag="JobTag"
-                              Items="allTags"
-                              SelectedItems="tags"
-                              AllowCustomValues="editMode == EditMode.Add"
-                              NewItemFromText="text => new JobTag(text) { Color = TagColor.DarkGray }" />
+                    Items="allTags"
+                    SelectedItems="tags"
+                    AllowCustomValues="editMode == EditMode.Add"
+                    NewItemFromText="text => new JobTag(text) { Color = TagColor.DarkGray }" />
                 }
                 else
                 {
@@ -88,7 +88,8 @@
             await context.DisposeAsync();
         }
         context = await DbContextFactory.CreateDbContextAsync();
-        allTags = await context.JobTags.OrderBy(t => t.TagName).ToListAsync();
+        allTags = await context.JobTags.ToListAsync();
+        allTags.Sort();
         var jobIds = SelectedJobs.Select(s => s.JobId).ToArray();
         jobs = await context.Jobs
             .Include(job => job.Tags)
@@ -120,7 +121,7 @@
             tags = jobs?
                 .SelectMany(s => s.Tags)
                 .Distinct()
-                .OrderBy(t => t.TagName)
+                .Order()
                 .ToList() ?? new();
         }
     }

@@ -14,9 +14,9 @@
     [Parameter] public string? Page { get; set; }
 
     private User? user;
-    private IEnumerable<JobProjection>? jobs;
-    private IEnumerable<StepTag>? tags;
-    private IEnumerable<StepProjection>? steps;
+    private List<JobProjection>? jobs;
+    private List<StepTag>? tags;
+    private List<StepProjection>? steps;
 
     protected override async Task OnInitializedAsync()
     {
@@ -33,7 +33,7 @@
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(job => job.JobName)
             .Select(j => new JobProjection(j.JobId, j.JobName, j.ExecutionMode))
-            .ToArrayAsync();
+            .ToListAsync();
         steps = await context.Steps
             .AsNoTrackingWithIdentityResolution()
             .Select(s => new StepProjection(
@@ -46,10 +46,10 @@
                 s.IsEnabled,
                 s.Tags.ToArray(),
                 s.Dependencies.Select(d => new DependencyProjection(d.StepId, d.DependantOnStepId, d.DependencyType)).ToArray()))
-            .ToArrayAsync();
+            .ToListAsync();
         tags = await context.StepTags
             .AsNoTrackingWithIdentityResolution()
-            .OrderBy(t => t.TagName)
-            .ToArrayAsync();
+            .ToListAsync();
+        tags.Sort();
     }
 }

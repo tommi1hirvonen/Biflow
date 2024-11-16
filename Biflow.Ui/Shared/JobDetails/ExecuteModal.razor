@@ -433,7 +433,8 @@
     private IEnumerable<ITag> Tags => builder?.Steps
         .SelectMany(step => step.Tags)
         .DistinctBy(t => t.TagName)
-        .OrderBy(t => t.TagName) ?? Enumerable.Empty<ITag>();
+        .Order()
+        .AsEnumerable() ?? [];
 
     private IEnumerable<ExecutionBuilderStep> StepsAvailableToExecute => builder?.Steps
         .Where(step => stateFilter switch { StateFilter.Enabled => step.IsEnabled, StateFilter.Disabled => !step.IsEnabled, _ => true })

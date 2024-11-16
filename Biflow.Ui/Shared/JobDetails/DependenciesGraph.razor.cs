@@ -70,7 +70,7 @@ public partial class DependenciesGraph(
     private IEnumerable<StepTag> Tags => Steps?
         .SelectMany(step => step.Tags)
         .DistinctBy(t => t.TagName)
-        .OrderBy(t => t.TagName)
+        .Order()
         .AsEnumerable()
         ?? [];
 
