@@ -60,45 +60,52 @@
                     </NavLink>
                 </li>
                 <li class="nav-item">
-                    <NavLink class="nav-link" href="settings/integrations/pipelineclients">
-                        <SvgIcon Icon="FeatherIcon.Pipeline" />
+                    <NavLink class="nav-link" href="settings/integrations/datafactory">
+                        <SvgIcon Icon="LucideIcon.Factory" />
                         &nbsp;
-                        Pipeline clients
+                        Azure Data Factory
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="settings/integrations/synapse">
+                        <SvgIcon Icon="FeatherIcon.Cpu" />
+                        &nbsp;
+                        Azure Synapse
                     </NavLink>
                 </li>
                 <li class="nav-item">
                     <NavLink class="nav-link" href="settings/integrations/functions">
                         <SvgIcon Icon="FeatherIcon.Zap" />
                         &nbsp;
-                        Function Apps
+                        Azure Functions
                     </NavLink>
                 </li>
                 <li class="nav-item">
                     <NavLink class="nav-link" href="settings/integrations/databricks">
                         <SvgIcon Icon="LucideIcon.Layers3" />
                         &nbsp;
-                        Databricks
-                    </NavLink>
-                </li>
-                <li class="nav-item">
-                    <NavLink class="nav-link" href="settings/integrations/dbt">
-                        <SvgIcon Icon="LucideIcon.Blocks" />
-                        &nbsp;
-                        dbt Cloud
-                    </NavLink>
-                </li>
-                <li class="nav-item">
-                    <NavLink class="nav-link" href="settings/integrations/qlikcloud">
-                        <SvgIcon Icon="LucideIcon.ScatterChart" />
-                        &nbsp;
-                        Qlik Cloud
+                        Azure Databricks
                     </NavLink>
                 </li>
                 <li class="nav-item">
                     <NavLink class="nav-link" href="settings/integrations/blobstorage">
                         <SvgIcon Icon="LucideIcon.Container" />
                         &nbsp;
-                        Blob Storage
+                        Azure Blob Storage
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="settings/integrations/dbt">
+                        <SvgIcon Icon="LucideIcon.Blocks" />
+                        &nbsp;
+                        dbt Cloud&trade;
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="settings/integrations/qlikcloud">
+                        <SvgIcon Icon="LucideIcon.ScatterChart" />
+                        &nbsp;
+                        Qlik Cloud&reg;
                     </NavLink>
                 </li>
                 <li class="nav-item">
@@ -153,9 +160,13 @@
         {
             <AppRegistrationsList />
         }
-        else if (IntegrationsPage == "pipelineclients")
+        else if (IntegrationsPage == "datafactory")
         {
-            <PipelineClientsList />
+            <DataFactoriesList />
+        }
+        else if (IntegrationsPage == "synapse")
+        {
+            <SynapseWorkspacesList />
         }
         else if (IntegrationsPage == "functions")
         {

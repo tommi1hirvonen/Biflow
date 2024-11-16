@@ -1,0 +1,180 @@
+﻿@inject IDbContextFactory<AppDbContext> DbFactory
+@inject ToasterService Toaster
+@inject IMediator Mediator
+
+<style>
+    tr a {
+        text-decoration: none;
+    }
+
+    tr:hover a {
+        text-decoration: underline;
+    }
+</style>
+
+<PageTitle>Synapse workspaces | Biflow</PageTitle>
+
+<HxButton Color="ThemeColor.Success" Enabled="workspaces is not null" @onclick="() => editModal.LetAsync(x => x.ShowAsync(Guid.Empty))">
+    Add workspace
+</HxButton>
+
+<div class="card shadow-sm pt-2 my-4">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>
+                    Name
+                </th>
+                <th></th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (workspaces is null)
+            {
+                <tr><td colspan="4" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
+            }
+            else if (workspaces.Count == 0)
+            {
+                <tr><td colspan="4">No workspaces</td></tr>
+            }
+            else
+            {
+                @foreach (var workspace in workspaces.OrderBy(p => p.PipelineClientName))
+                {
+                    var jobs = workspace.Steps.Select(s => s.Job).Distinct().Count();
+                    var steps = workspace.Steps.Count();
+                    <tr>
+                        <td class="align-middle">
+                            @workspace.PipelineClientName
+                        </td>
+                        <td class="align-middle">
+                            <HxButtonGroup>
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="() => editModal.LetAsync(x => x.ShowAsync(workspace.PipelineClientId))">
+                                    <SvgIcon Icon="FeatherIcon.Edit2" />
+                                </HxButton>
+                                <HxDropdownButtonGroup>
+                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="delete">
+                                        <SvgIcon Icon="FeatherIcon.Trash2" />
+                                    </HxDropdownToggleButton>
+                                    <HxDropdownMenu>
+                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                        <HxDropdownItem @onclick="() => DeleteWorkspaceAsync(workspace)">Confirm</HxDropdownItem>
+                                    </HxDropdownMenu>
+                                </HxDropdownButtonGroup>
+                            </HxButtonGroup>
+                        </td>
+                        <td class="align-middle">
+                            @(jobs > 0 ? $"{jobs} job(s)" : null)
+                        </td>
+                        <td class="align-middle">
+                            <a class="text-body" href="javascript:void(0)"
+                               @onclick="async () =>
+                            {
+                                stepsWorkspace = workspace;
+                                await stepsModal.LetAsync(x => x.ShowAsync());
+                            }">
+                                @(steps > 0 ? $"{steps} step(s)" : null)
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<SynapseWorkspaceEditModal @ref="editModal"
+                           AppRegistrations="appRegistrations"
+                           OnSynapseWorkspaceSubmit="OnWorkspaceSubmit" />
+
+<HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsWorkspace?.PipelineClientName}")">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <table class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Job</th>
+                            <th>Step</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var step in stepsWorkspace?.Steps
+                        .OrderBy(s => s.Job.JobName)
+                        .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
+                        {
+                            <tr>
+                                <td>
+                                    @step.Job.JobName
+                                </td>
+                                <td>
+                                    <StepTypeIcon StepType="step.StepType" />
+                                    &nbsp;
+                                    @step.StepName
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <button class="btn btn-secondary" @onclick="async () => await stepsModal.LetAsync(x => x.HideAsync())">Close</button>
+    </FooterTemplate>
+</HxModal>
+
+@code {
+    private SynapseWorkspaceEditModal? editModal;
+    private List<SynapseWorkspace>? workspaces;
+    private List<AppRegistration>? appRegistrations;
+    private SynapseWorkspace? stepsWorkspace;
+    private HxModal? stepsModal;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        using var context = await Task.Run<AppDbContext>(DbFactory.CreateDbContext);
+        workspaces = await context.SynapseWorkspaces
+            .AsNoTrackingWithIdentityResolution()
+            .Include(c => c.Steps)
+            .ThenInclude(step => step.Job)
+            .OrderBy(c => c.PipelineClientName)
+            .ToListAsync();
+        appRegistrations = await context.AppRegistrations
+            .AsNoTracking()
+            .OrderBy(ar => ar.AppRegistrationName)
+            .ToListAsync();
+    }
+
+    private async Task DeleteWorkspaceAsync(SynapseWorkspace workspace)
+    {
+        try
+        {
+            await Mediator.SendAsync(new DeletePipelineClientCommand(workspace.PipelineClientId));
+            workspaces?.Remove(workspace);
+        }
+        catch (Exception ex)
+        {
+            var message = ex.InnerException?.Message ?? ex.Message;
+            Toaster.AddError("Error deleting workspace", message);
+        }
+    }
+
+    private async Task OnWorkspaceSubmit(SynapseWorkspace workspace)
+    {
+        if (workspace.PipelineClientId == Guid.Empty)
+        {
+            await Mediator.SendAsync(new CreatePipelineClientCommand(workspace));
+            workspaces?.Add(workspace);
+        }
+        else
+        {
+            await Mediator.SendAsync(new UpdatePipelineClientCommand(workspace));
+            workspaces?.RemoveAll(df => df.PipelineClientId == workspace.PipelineClientId);
+            workspaces?.Add(workspace);
+        }
+        StateHasChanged();
+    }
+}
