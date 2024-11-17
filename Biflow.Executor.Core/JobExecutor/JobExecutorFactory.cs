@@ -10,7 +10,7 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
 
     public async Task<IJobExecutor> CreateAsync(Guid executionId, CancellationToken cancellationToken = default)
     {
-        using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         
         // Use tracking queries and let EF match the entities from the two separate queries.
         
@@ -111,8 +111,6 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
                     break;
                 case ExeStepExecution exe:
                     exe.SetRunAsCredential(step.exe);
-                    break;
-                default:
                     break;
             }
         }

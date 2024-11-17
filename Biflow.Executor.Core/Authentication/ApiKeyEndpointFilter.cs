@@ -22,7 +22,7 @@ public class ApiKeyEndpointFilter(
         }
 
         if (!context.HttpContext.Request.Headers.TryGetValue("x-api-key", out var requestApiKeyHeader)
-            || requestApiKeyHeader.FirstOrDefault() is not string requestApiKey)
+            || requestApiKeyHeader.FirstOrDefault() is not { } requestApiKey)
         {
             return new UnauthorizedResult("API key header (x-api-key) is missing");
         }
@@ -44,7 +44,7 @@ public class ApiKeyEndpointFilter(
             return await next(context);
         }
 
-        using var dbContext = _dbContextFactory.CreateDbContext();
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
         var apiKeyFromDb = await dbContext.ApiKeys
             .FirstOrDefaultAsync(k => k.Value == requestApiKey);
 
@@ -54,12 +54,10 @@ public class ApiKeyEndpointFilter(
                 return new UnauthorizedResult("Invalid API key");
             case { IsRevoked: true }:
                 return new UnauthorizedResult("API key has been revoked");
-            case var key when key.ValidTo < DateTimeOffset.Now:
+            case var _ when apiKeyFromDb.ValidTo < DateTimeOffset.Now:
                 return new UnauthorizedResult("API key has expired");
-            case var key when key.ValidFrom > DateTimeOffset.Now:
+            case var _ when apiKeyFromDb.ValidFrom > DateTimeOffset.Now:
                 return new UnauthorizedResult("Invalid API key");
-            default:
-                break;
         }
 
         // Valid API key found from database.

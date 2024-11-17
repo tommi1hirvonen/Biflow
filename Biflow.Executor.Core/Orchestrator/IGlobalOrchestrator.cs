@@ -3,6 +3,6 @@
 internal interface IGlobalOrchestrator : IOrchestrationObservable
 {
     public Task RegisterStepsAndObserversAsync(
-        IEnumerable<IOrchestrationObserver> observers,
+        ICollection<IOrchestrationObserver> observers,
         IStepExecutionListener stepExecutionListener);
 }

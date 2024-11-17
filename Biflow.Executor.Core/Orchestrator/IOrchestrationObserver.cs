@@ -17,6 +17,7 @@ internal interface IOrchestrationObserver
     /// Called once as the first lifecycle method to provide current snapshot of global orchestration step execution statuses.
     /// </summary>
     /// <param name="updates"></param>
+    /// <param name="executeCallback">callback to request immediate execution for the calling observer</param>
     public IEnumerable<StepExecutionMonitor> RegisterInitialUpdates(
         IEnumerable<OrchestrationUpdate> updates,
         Action<ExtendedCancellationTokenSource> executeCallback);
@@ -25,9 +26,7 @@ internal interface IOrchestrationObserver
     /// Called after <see cref="RegisterInitialUpdates"/> if execute was not requested.
     /// This method is designed to suspend/await for a long time until the observer is ready to push the step execution for processing.
     /// </summary>
-    /// <param name="listener"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
+    /// <param name="processCallback">callback to request processing for the calling observer</param>
     public Task WaitForProcessingAsync(Func<OrchestratorAction, ExtendedCancellationTokenSource, Task> processCallback);
 
     /// <summary>

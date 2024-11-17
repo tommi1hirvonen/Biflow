@@ -17,7 +17,7 @@ internal class GlobalOrchestrator(
     private readonly Dictionary<StepExecution, OrchestrationStatus> _stepStatuses = [];
 
     public async Task RegisterStepsAndObserversAsync(
-        IEnumerable<IOrchestrationObserver> observers,
+        ICollection<IOrchestrationObserver> observers,
         IStepExecutionListener stepExecutionListener)
     {
         try
@@ -31,15 +31,12 @@ internal class GlobalOrchestrator(
                 foreach (var observer in observers)
                 {
                     _stepStatuses[observer.StepExecution] = OrchestrationStatus.NotStarted;
+                    var update = new OrchestrationUpdate(observer.StepExecution, OrchestrationStatus.NotStarted);
 
                     // Existing observers will report back any new monitors caused by the new observers.
                     var monitorsFromExistingObservers = _observers
                         .ToArray() // Make a copy of the list as observers might unsubscribe during enumeration.
-                        .SelectMany(observer => 
-                        {
-                            var update = new OrchestrationUpdate(observer.StepExecution, OrchestrationStatus.NotStarted);
-                            return observer.OnIncomingStepExecutionUpdate(update);
-                        })
+                        .SelectMany(existingObserver => existingObserver.OnIncomingStepExecutionUpdate(update))
                         .ToArray();
                     monitors.AddRange(monitorsFromExistingObservers);
                 }
@@ -69,14 +66,17 @@ internal class GlobalOrchestrator(
 
                     monitors.AddRange(monitorsFromNewObserver);
 
+                    // If the step was started via the callback when registering initial updates, continue iteration.
+                    if (_stepStatuses[observer.StepExecution] != OrchestrationStatus.NotStarted)
+                    {
+                        continue;
+                    }
+                    
                     // If the step was not started by the execute callback when registering initial updates,
                     // create a task to wait until the observer requests processing.
-                    if (_stepStatuses[observer.StepExecution] == OrchestrationStatus.NotStarted)
-                    {
-                        var waitTask = observer.WaitForProcessingAsync(processCallback: (stepAction, cts) =>
-                            OnStepReadyForProcessingAsync(observer.StepExecution, stepAction, stepExecutionListener, cts));
-                        tasks.Add(waitTask);
-                    }
+                    var waitTask = observer.WaitForProcessingAsync(processCallback: (stepAction, cts) =>
+                        OnStepReadyForProcessingAsync(observer.StepExecution, stepAction, stepExecutionListener, cts));
+                    tasks.Add(waitTask);
                 }
 
                 // Tell the observers to subscribe to receive normal updates from the orchestrator
@@ -116,8 +116,8 @@ internal class GlobalOrchestrator(
             {
                 _observers.Add(observer);
             }
+            return new Unsubscriber(_observers, observer);
         }
-        return new Unsubscriber(_observers, observer);
     }
 
     private Task OnStepReadyForProcessingAsync(
@@ -126,12 +126,12 @@ internal class GlobalOrchestrator(
         IStepExecutionListener listener,
         ExtendedCancellationTokenSource cts) =>
         stepAction.Match(
-            async (ExecuteAction execute) =>
+            async (ExecuteAction _) =>
             {
                 UpdateStatus(stepExecution, OrchestrationStatus.Running);
                 await ExecuteStepAsync(stepExecution, listener, cts);
             },
-            async (CancelAction cancel) =>
+            async (CancelAction _) =>
             {
                 UpdateStatus(stepExecution, OrchestrationStatus.Failed);
                 await UpdateExecutionCancelledAsync(stepExecution, cts.Username);
@@ -144,10 +144,10 @@ internal class GlobalOrchestrator(
 
     private async Task ExecuteStepAsync(StepExecution stepExecution, IStepExecutionListener listener, ExtendedCancellationTokenSource cts)
     {
-        // Update the step's status to Queued.
+        // Update the step's status to 'Queued'.
         try
         {
-            using var dbContext = _dbContextFactory.CreateDbContext();
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
             foreach (var attempt in stepExecution.StepExecutionAttempts)
             {
                 attempt.ExecutionStatus = StepExecutionStatus.Queued;
@@ -162,7 +162,7 @@ internal class GlobalOrchestrator(
             _logger.LogError(ex, "{ExecutionId} {step} Error updating step execution's status to Queued", stepExecution.ExecutionId, stepExecution);
         }
 
-        bool result = false;
+        var result = false;
         try
         {
             await listener.OnPreExecuteAsync(stepExecution, cts);
@@ -207,7 +207,7 @@ internal class GlobalOrchestrator(
     {
         lock (_lock)
         {
-            if (status == OrchestrationStatus.Succeeded || status == OrchestrationStatus.Failed)
+            if (status is OrchestrationStatus.Succeeded or OrchestrationStatus.Failed)
             {
                 _stepStatuses.Remove(step);
             }
@@ -226,7 +226,7 @@ internal class GlobalOrchestrator(
 
     private async Task UpdateExecutionCancelledAsync(StepExecution stepExecution, string username)
     {
-        using var context = _dbContextFactory.CreateDbContext();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         foreach (var attempt in stepExecution.StepExecutionAttempts)
         {
             attempt.StartedOn ??= DateTimeOffset.Now;
@@ -253,7 +253,8 @@ internal class GlobalOrchestrator(
         {
             return;
         }
-        using var context = _dbContextFactory.CreateDbContext();
+
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         attempt.ExecutionStatus = StepExecutionStatus.Failed;
         attempt.StartedOn ??= DateTimeOffset.Now;
         attempt.EndedOn = DateTimeOffset.Now;
@@ -272,7 +273,7 @@ internal class GlobalOrchestrator(
 
     private async Task UpdateStepAsync(StepExecution step, StepExecutionStatus status, string? errorMessage)
     {
-        using var context = _dbContextFactory.CreateDbContext();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         foreach (var attempt in step.StepExecutionAttempts)
         {
             attempt.ExecutionStatus = status;
@@ -295,7 +296,7 @@ internal class GlobalOrchestrator(
     {
         try
         {
-            using var context = _dbContextFactory.CreateDbContext();
+            await using var context = await _dbContextFactory.CreateDbContextAsync();
             var distinct = monitors
                 .DistinctBy(t => (t.ExecutionId, t.StepId, t.MonitoredExecutionId, t.MonitoredStepId, TrackingReason: t.MonitoringReason));
             context.StepExecutionMonitors.AddRange(distinct);

@@ -30,7 +30,7 @@ internal abstract class StepExecutor<TStep, TAttempt>(
         {
             try
             {
-                using var context = _dbContextFactory.CreateDbContext();
+                await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
                 // Update the historized ExecutionParameterValue with the ExecutionParameter's value.
                 foreach (var param in hasParameters.StepExecutionParameters.Where(p => p.InheritFromExecutionParameter is not null))
                 {
@@ -38,7 +38,7 @@ internal abstract class StepExecutor<TStep, TAttempt>(
                     await context.Set<StepExecutionParameterBase>()
                         .Where(x => x.ExecutionId == param.ExecutionId && x.ParameterId == param.ParameterId)
                         .ExecuteUpdateAsync(x => x
-                            .SetProperty(p => p.ExecutionParameterValue, param.ExecutionParameterValue));
+                            .SetProperty(p => p.ExecutionParameterValue, param.ExecutionParameterValue), CancellationToken.None);
                 }
                 // Also evaluate expressions and save the result to the step parameter's value property.
                 foreach (var param in hasParameters.StepExecutionParameters.Where(p => p.UseExpression))
@@ -47,7 +47,7 @@ internal abstract class StepExecutor<TStep, TAttempt>(
                     await context.Set<StepExecutionParameterBase>()
                         .Where(x => x.ExecutionId == param.ExecutionId && x.ParameterId == param.ParameterId)
                         .ExecuteUpdateAsync(x => x
-                            .SetProperty(p => p.ParameterValue, param.ParameterValue));
+                            .SetProperty(p => p.ParameterValue, param.ParameterValue), CancellationToken.None);
                 }
             }
             catch (Exception ex)
@@ -62,14 +62,14 @@ internal abstract class StepExecutor<TStep, TAttempt>(
         // Update current values of job parameters to execution condition parameters.
         try
         {
-            using var context = _dbContextFactory.CreateDbContext();
+            await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             foreach (var param in stepExecution.ExecutionConditionParameters.Where(p => p.ExecutionParameter is not null))
             {
                 param.ExecutionParameterValue = param.ExecutionParameter?.ParameterValue ?? param.ExecutionParameterValue;
                 await context.Set<StepExecutionConditionParameter>()
                     .Where(x => x.ExecutionId == param.ExecutionId && x.ParameterId == param.ParameterId)
                     .ExecuteUpdateAsync(x => x
-                        .SetProperty(p => p.ExecutionParameterValue, param.ExecutionParameterValue));
+                        .SetProperty(p => p.ExecutionParameterValue, param.ExecutionParameterValue), CancellationToken.None);
             }
         }
         catch (Exception ex)
@@ -162,7 +162,7 @@ internal abstract class StepExecutor<TStep, TAttempt>(
                 // Add a new attempt, capture the return value and wait for the retry interval.
                 var nextExecution = (stepExecution as IHasStepExecutionAttempts<TAttempt>)
                     .AddAttempt(StepExecutionStatus.AwaitingRetry);
-                using (var context = _dbContextFactory.CreateDbContext())
+                await using (var context = await _dbContextFactory.CreateDbContextAsync())
                 {
                     context.Attach(nextExecution).State = EntityState.Added;
                     await context.SaveChangesAsync();
@@ -186,7 +186,7 @@ internal abstract class StepExecutor<TStep, TAttempt>(
     
     private async Task UpdateExecutionCancelledAsync(StepExecutionAttempt attempt, string username)
     {
-        using var context = _dbContextFactory.CreateDbContext();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         attempt.StartedOn ??= DateTimeOffset.Now;
         attempt.EndedOn = DateTimeOffset.Now;
         attempt.StoppedBy = username;
@@ -208,7 +208,7 @@ internal abstract class StepExecutor<TStep, TAttempt>(
 
     private async Task UpdateExecutionFailedAsync(StepExecutionAttempt attempt, StepExecutionStatus status)
     {
-        using var context = _dbContextFactory.CreateDbContext();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         attempt.ExecutionStatus = status;
         attempt.StartedOn ??= DateTimeOffset.Now;
         attempt.EndedOn = DateTimeOffset.Now;
@@ -228,7 +228,7 @@ internal abstract class StepExecutor<TStep, TAttempt>(
 
     private async Task UpdateExecutionSucceededAsync(StepExecutionAttempt attempt)
     {
-        using var context = _dbContextFactory.CreateDbContext();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         attempt.ExecutionStatus = !attempt.WarningMessages.Any()
             ? StepExecutionStatus.Succeeded
             : StepExecutionStatus.Warning;
@@ -248,7 +248,7 @@ internal abstract class StepExecutor<TStep, TAttempt>(
 
     private async Task UpdateExecutionStoppedAsync(StepExecution stepExecution, string username)
     {
-        using var context = _dbContextFactory.CreateDbContext();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         var now = DateTimeOffset.Now;
         foreach (var attempt in stepExecution.StepExecutionAttempts)
         {
@@ -268,7 +268,7 @@ internal abstract class StepExecutor<TStep, TAttempt>(
 
     private async Task UpdateExecutionRunningAsync(StepExecutionAttempt attempt)
     {
-        using var context = _dbContextFactory.CreateDbContext();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         attempt.StartedOn = DateTimeOffset.Now;
         attempt.ExecutionStatus = StepExecutionStatus.Running;
         await context.StepExecutionAttempts
@@ -282,7 +282,7 @@ internal abstract class StepExecutor<TStep, TAttempt>(
 
     private async Task UpdateExecutionSkippedAsync(StepExecution stepExecution, string infoMessage)
     {
-        using var context = _dbContextFactory.CreateDbContext();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         foreach (var attempt in stepExecution.StepExecutionAttempts)
         {
             attempt.ExecutionStatus = StepExecutionStatus.Skipped;

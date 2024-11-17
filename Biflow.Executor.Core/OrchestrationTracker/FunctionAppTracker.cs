@@ -15,9 +15,9 @@ internal class FunctionAppTracker(FunctionStepExecution stepExecution) : IOrches
             return null;
         }
 
-        var (step, status) = value;
+        var (otherStep, status) = value;
         
-        if (step is not FunctionStepExecution functionStep)
+        if (otherStep is not FunctionStepExecution functionStep)
         {
             return null;
         }
@@ -28,20 +28,21 @@ internal class FunctionAppTracker(FunctionStepExecution stepExecution) : IOrches
             return null;
         }
 
-        if (functionStep.FunctionAppId == stepExecution.FunctionAppId)
+        // The Function Apps are not the same.
+        if (functionStep.FunctionAppId != stepExecution.FunctionAppId)
         {
-            _others[functionStep] = status;
-            return new()
-            {
-                ExecutionId = stepExecution.ExecutionId,
-                StepId = stepExecution.StepId,
-                MonitoredExecutionId = step.ExecutionId,
-                MonitoredStepId = step.StepId,
-                MonitoringReason = MonitoringReason.CommonFunctionApp
-            };
+            return null;
         }
-
-        return null;
+        
+        _others[functionStep] = status;
+        return new()
+        {
+            ExecutionId = stepExecution.ExecutionId,
+            StepId = stepExecution.StepId,
+            MonitoredExecutionId = otherStep.ExecutionId,
+            MonitoredStepId = otherStep.StepId,
+            MonitoringReason = MonitoringReason.CommonFunctionApp
+        };
     }
 
     public ObserverAction GetStepAction()

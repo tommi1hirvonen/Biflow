@@ -16,7 +16,7 @@ public class ServiceApiKeyEndpointFilter(IConfiguration configuration) : IEndpoi
         }
 
         if (!context.HttpContext.Request.Headers.TryGetValue("x-api-key", out var requestApiKeyHeader)
-            || requestApiKeyHeader.FirstOrDefault() is not string requestApiKey)
+            || requestApiKeyHeader.FirstOrDefault() is not { } requestApiKey)
         {
             return new UnauthorizedResult("API key header (x-api-key) is missing");
         }

@@ -142,7 +142,7 @@ internal class OrchestrationObserver(
         foreach (var tracker in _orchestrationTrackers)
         {
             var action = tracker.GetStepAction().Match<OrchestratorAction?>(
-                (WaitAction wait) => null,
+                (WaitAction _) => null,
                 (ExecuteAction execute) => execute,
                 (CancelAction cancel) => cancel,
                 (FailAction fail) => fail);

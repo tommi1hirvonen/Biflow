@@ -8,14 +8,14 @@ internal class ExecutionPhaseTracker(StepExecution stepExecution) : IOrchestrati
 
     public StepExecutionMonitor? HandleUpdate(OrchestrationUpdate value)
     {
-        var (step, status) = value;
+        var (otherStep, status) = value;
 
         // Only track other steps in the same execution where the execution phase is lower.
-        if (stepExecution.ExecutionId == step.ExecutionId
-            && stepExecution.StepId != step.StepId
-            && stepExecution.ExecutionPhase > step.ExecutionPhase)
+        if (stepExecution.ExecutionId == otherStep.ExecutionId
+            && stepExecution.StepId != otherStep.StepId
+            && stepExecution.ExecutionPhase > otherStep.ExecutionPhase)
         {
-            _execution[step] = status;
+            _execution[otherStep] = status;
         }
 
         // Monitors are not reported with execution phase tracking.
@@ -41,7 +41,7 @@ internal class ExecutionPhaseTracker(StepExecution stepExecution) : IOrchestrati
             return Actions.Fail(StepExecutionStatus.Skipped, "Step was skipped because one or more steps failed and StopOnFirstError was set to true.");
         }
 
-        if (previousStepStatuses.All(status => status == OrchestrationStatus.Succeeded || status == OrchestrationStatus.Failed))
+        if (previousStepStatuses.All(status => status is OrchestrationStatus.Succeeded or OrchestrationStatus.Failed))
         {
             return Actions.Execute;
         }

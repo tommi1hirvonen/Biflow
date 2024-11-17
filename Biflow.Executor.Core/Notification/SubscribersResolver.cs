@@ -4,7 +4,7 @@ public class SubscribersResolver(ISubscriptionsProviderFactory subscriptionsProv
 {
     private readonly ISubscriptionsProviderFactory _subscriptionsProviderFactory = subscriptionsProviderFactory;
 
-    public async Task<IEnumerable<string>> ResolveSubscriberEmailsAsync(Execution execution)
+    public async Task<ICollection<string>> ResolveSubscriberEmailsAsync(Execution execution)
     {
         var provider = _subscriptionsProviderFactory.Create(execution);
 
@@ -27,7 +27,7 @@ public class SubscribersResolver(ISubscriptionsProviderFactory subscriptionsProv
         return allSubscribers;
     }
 
-    public async Task<IEnumerable<string>> ResolveLongRunningSubscriberEmailsAsync(Execution execution)
+    public async Task<ICollection<string>> ResolveLongRunningSubscriberEmailsAsync(Execution execution)
     {
         var provider = _subscriptionsProviderFactory.Create(execution);
 
@@ -59,21 +59,6 @@ public class SubscribersResolver(ISubscriptionsProviderFactory subscriptionsProv
         // Map tags to steps for tag based subscriptions
         var tagSteps = await provider.GetTagStepsAsync();
 
-        bool stepSubscriptionShouldAlert(AlertType alert, Guid stepId) => (alert, execution.StepExecutions.FirstOrDefault(s => s.StepId == stepId)?.ExecutionStatus) switch
-        {
-            (_, null) => false,
-            (AlertType.OnCompletion, _) => true,
-            (AlertType.OnFailure, StepExecutionStatus.Failed or StepExecutionStatus.Stopped or StepExecutionStatus.DependenciesFailed or StepExecutionStatus.Duplicate) => true,
-            (AlertType.OnSuccess, StepExecutionStatus.Succeeded or StepExecutionStatus.Warning) => true,
-            _ => false
-        };
-
-        bool tagSubscriptionShouldAlert(AlertType alert, Guid tagId) => tagSteps.TryGetValue(tagId, out var stepIds) switch
-        {
-            true => stepIds.Any(id => stepSubscriptionShouldAlert(alert, id)),
-            false => false
-        };
-
         var jobSubscriptions = await provider.GetJobSubscriptionsAsync();
         var stepSubscriptions = await provider.GetStepSubscriptionsAsync();
         var tagSubscriptions = await provider.GetTagSubscriptionsAsync();
@@ -83,19 +68,34 @@ public class SubscribersResolver(ISubscriptionsProviderFactory subscriptionsProv
             .Where(s => JobSubscriptionShouldAlert(execution, s.AlertType))
             .Select(s => s.User.Email ?? "");
         var stepSubscribers = stepSubscriptions
-            .Where(s => stepSubscriptionShouldAlert(s.AlertType, s.StepId))
+            .Where(s => StepSubscriptionShouldAlert(s.AlertType, s.StepId))
             .Select(s => s.User.Email ?? "");
         var tagSubscribers = tagSubscriptions
-            .Where(s => tagSubscriptionShouldAlert(s.AlertType, s.TagId))
+            .Where(s => TagSubscriptionShouldAlert(s.AlertType, s.TagId))
             .Select(s => s.User.Email ?? "");
         var jobTagSubscribers = jobTagSubscriptions
-            .Where(s => tagSubscriptionShouldAlert(s.AlertType, s.TagId))
+            .Where(s => TagSubscriptionShouldAlert(s.AlertType, s.TagId))
             .Select(s => s.User.Email ?? "");
 
         return jobSubscribers
             .Concat(stepSubscribers)
             .Concat(tagSubscribers)
             .Concat(jobTagSubscribers);
+
+        bool StepSubscriptionShouldAlert(AlertType alert, Guid stepId) => (alert, execution.StepExecutions.FirstOrDefault(s => s.StepId == stepId)?.ExecutionStatus) switch
+        {
+            (_, null) => false,
+            (AlertType.OnCompletion, _) => true,
+            (AlertType.OnFailure, StepExecutionStatus.Failed or StepExecutionStatus.Stopped or StepExecutionStatus.DependenciesFailed or StepExecutionStatus.Duplicate) => true,
+            (AlertType.OnSuccess, StepExecutionStatus.Succeeded or StepExecutionStatus.Warning) => true,
+            _ => false
+        };
+        
+        bool TagSubscriptionShouldAlert(AlertType alert, Guid tagId) => tagSteps.TryGetValue(tagId, out var stepIds) switch
+        {
+            true => stepIds.Any(id => StepSubscriptionShouldAlert(alert, id)),
+            false => false
+        };
     }
 
     private static bool JobSubscriptionShouldAlert(Execution execution, AlertType? alert) => (alert, execution.ExecutionStatus) switch
@@ -109,6 +109,6 @@ public class SubscribersResolver(ISubscriptionsProviderFactory subscriptionsProv
 
 public interface ISubscribersResolver
 {
-    public Task<IEnumerable<string>> ResolveLongRunningSubscriberEmailsAsync(Execution execution);
-    public Task<IEnumerable<string>> ResolveSubscriberEmailsAsync(Execution execution);
+    public Task<ICollection<string>> ResolveLongRunningSubscriberEmailsAsync(Execution execution);
+    public Task<ICollection<string>> ResolveSubscriberEmailsAsync(Execution execution);
 }

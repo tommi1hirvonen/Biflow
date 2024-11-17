@@ -25,20 +25,17 @@ internal class SqlStepExecutor(
         var connection = step.GetConnection();
         ArgumentNullException.ThrowIfNull(connection);
 
-        if (connection is MsSqlConnection mssql)
+        switch (connection)
         {
-            return ExecuteMsSqlAsync(step, attempt, mssql, cancellationToken);
-        }
-        else if (connection is SnowflakeConnection sf)
-        {
-            return ExecuteSnowflakeAsync(step, attempt, sf, cancellationToken);
-        }
-        else
-        {
-            _logger.LogError("Unsupported connection type: {connectionType}. Connection must be of type {msSqlType} or {snowFlakeType}.",
-                connection.GetType().Name, typeof(MsSqlConnection).Name, typeof(SnowflakeConnection).Name);
-            attempt.AddError($"Unsupported connection type: {connection.GetType().Name}. Connection must be of type {typeof(MsSqlConnection).Name} or {typeof(SnowflakeConnection).Name}.");
-            return Task.FromResult(Result.Failure);
+            case MsSqlConnection mssql:
+                return ExecuteMsSqlAsync(step, attempt, mssql, cancellationToken);
+            case SnowflakeConnection sf:
+                return ExecuteSnowflakeAsync(step, attempt, sf, cancellationToken);
+            default:
+                _logger.LogError("Unsupported connection type: {connectionType}. Connection must be of type {msSqlType} or {snowFlakeType}.",
+                    connection.GetType().Name, nameof(MsSqlConnection), nameof(SnowflakeConnection));
+                attempt.AddError($"Unsupported connection type: {connection.GetType().Name}. Connection must be of type {nameof(MsSqlConnection)} or {nameof(SnowflakeConnection)}.");
+                return Task.FromResult(Result.Failure);
         }
     }
 
@@ -57,8 +54,8 @@ internal class SqlStepExecutor(
         try
         {
             _logger.LogInformation("{ExecutionId} {Step} Starting SQL execution with MSSQL connector", step.ExecutionId, step);
-            using var connection = new SqlConnection(msSqlConnection.ConnectionString);
-            connection.InfoMessage += (s, e) => attempt.AddOutput(e.Message);
+            await using var connection = new SqlConnection(msSqlConnection.ConnectionString);
+            connection.InfoMessage += (_, eventArgs) => attempt.AddOutput(eventArgs.Message);
 
             var parameters = step.StepExecutionParameters
                 .ToDictionary(key => key.ParameterName, value => value.ParameterValue.Value);
@@ -78,7 +75,7 @@ internal class SqlStepExecutor(
                     () => connection.ExecuteScalarAsync(command));
 
                 // Update the capture value.
-                using var context = _dbContextFactory.CreateDbContext();
+                await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
                 step.ResultCaptureJobParameterValue = new(result);
 
                 // Update the job execution parameter with the result value for following steps to use.
@@ -137,7 +134,7 @@ internal class SqlStepExecutor(
         try
         {
             _logger.LogInformation("{ExecutionId} {Step} Starting SQL execution with Snowflake connector", step.ExecutionId, step);
-            using var connection = new SnowflakeDbConnection(sfConnection.ConnectionString);
+            await using var connection = new SnowflakeDbConnection(sfConnection.ConnectionString);
 
             var parameters = step.StepExecutionParameters
                 .ToDictionary(key => key.ParameterName, value => value.ParameterValue.Value);
@@ -156,7 +153,7 @@ internal class SqlStepExecutor(
                 var result = await connection.ExecuteScalarAsync(command);
 
                 // Update the capture value.
-                using var context = _dbContextFactory.CreateDbContext();
+                await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
                 step.ResultCaptureJobParameterValue = new(result);
 
                 // Update the job execution parameter with the result value for following steps to use.

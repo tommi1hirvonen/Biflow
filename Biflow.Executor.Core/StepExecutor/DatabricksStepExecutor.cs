@@ -42,7 +42,7 @@ internal class DatabricksStepExecutor(
             return Result.Failure;
         }
 
-        using var client = step.GetWorkspace()?.CreateClient()?.Client;
+        using var client = step.GetWorkspace()?.CreateClient().Client;
         ArgumentNullException.ThrowIfNull(client);
 
         // Create run submit settings and the notebook task.
@@ -87,28 +87,28 @@ internal class DatabricksStepExecutor(
                 _ => throw new ArgumentException($"Unhandled step configuration type {step.DatabricksStepSettings.GetType()}")
             };
 
-            if (step.DatabricksStepSettings is DatabricksClusterStepSettings { ClusterConfiguration: ExistingClusterConfiguration existing })
+            switch (step.DatabricksStepSettings)
             {
-                taskSettings.WithExistingClusterId(existing.ClusterId);
-            }
-            else if (step.DatabricksStepSettings is DatabricksClusterStepSettings { ClusterConfiguration: NewClusterConfiguration newCluster })
-            {
-                var cluster = ClusterAttributes.GetNewClusterConfiguration();
-                cluster = newCluster.ClusterMode switch
-                {
-                    SingleNodeClusterConfiguration single =>
-                        cluster.WithClusterMode(ClusterMode.SingleNode),
-                    FixedMultiNodeClusterConfiguration fix =>
-                        cluster.WithClusterMode(ClusterMode.Standard).WithNumberOfWorkers(fix.NumberOfWorkers),
-                    AutoscaleMultiNodeClusterConfiguration auto =>
-                        cluster.WithClusterMode(ClusterMode.Standard).WithAutoScale(auto.MinimumWorkers, auto.MaximumWorkers),
-                    _ => throw new ArgumentException($"Unhandled new cluster configuration type {newCluster.ClusterMode.GetType()}")
-                };
-                cluster = cluster
-                    .WithNodeType(newCluster.NodeTypeId, newCluster.DriverNodeTypeId)
-                    .WithRuntimeVersion(newCluster.RuntimeVersion)
-                    .WithRuntimeEngine(newCluster.UsePhoton ? RuntimeEngine.PHOTON : RuntimeEngine.STANDARD);
-                taskSettings.WithNewCluster(cluster);
+                case DatabricksClusterStepSettings { ClusterConfiguration: ExistingClusterConfiguration existing }:
+                    taskSettings.WithExistingClusterId(existing.ClusterId);
+                    break;
+                case DatabricksClusterStepSettings { ClusterConfiguration: NewClusterConfiguration newCluster }:
+                    var cluster = ClusterAttributes.GetNewClusterConfiguration();
+                    cluster = newCluster.ClusterMode switch
+                    {
+                        SingleNodeClusterConfiguration => cluster.WithClusterMode(ClusterMode.SingleNode),
+                        FixedMultiNodeClusterConfiguration @fixed =>
+                            cluster.WithClusterMode(ClusterMode.Standard).WithNumberOfWorkers(@fixed.NumberOfWorkers),
+                        AutoscaleMultiNodeClusterConfiguration auto =>
+                            cluster.WithClusterMode(ClusterMode.Standard).WithAutoScale(auto.MinimumWorkers, auto.MaximumWorkers),
+                        _ => throw new ArgumentException($"Unhandled new cluster configuration type {newCluster.ClusterMode.GetType()}")
+                    };
+                    cluster = cluster
+                        .WithNodeType(newCluster.NodeTypeId, newCluster.DriverNodeTypeId)
+                        .WithRuntimeVersion(newCluster.RuntimeVersion)
+                        .WithRuntimeEngine(newCluster.UsePhoton ? RuntimeEngine.PHOTON : RuntimeEngine.STANDARD);
+                    taskSettings.WithNewCluster(cluster);
+                    break;
             }
 
             startRunTask = client.Jobs.RunSubmit(settings, cancellationToken: cancellationToken);
@@ -140,7 +140,7 @@ internal class DatabricksStepExecutor(
 
         try
         {
-            using var context = _dbContextFactory.CreateDbContext();
+            await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.JobRunId = runId;
             await context.Set<DatabricksStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
@@ -183,33 +183,36 @@ internal class DatabricksStepExecutor(
             attempt.AddError(ex, "Error getting job run status");
             return Result.Failure;
         }
-
+        
+        if (step.DatabricksStepSettings is DbJobStepSettings || run.Tasks.FirstOrDefault() is not { } task)
+        {
+            return run.Status.TerminationDetails.Type == RunTerminationType.SUCCESS
+                ? Result.Success
+                : Result.Failure;
+        }
+        
         // If the Databricks run was not a job run,
         // try to get the output for the one task in the one-time triggered run submit.
-        if (step.DatabricksStepSettings is not DbJobStepSettings dbJobtask
-            && run.Tasks.FirstOrDefault() is RunTask task)
+        try
         {
-            try
+            var output = await client.Jobs.RunsGetOutput(task.RunId, cancellationToken);
+            if (!string.IsNullOrEmpty(output.Error))
             {
-                var output = await client.Jobs.RunsGetOutput(task.RunId, cancellationToken);
-                if (!string.IsNullOrEmpty(output.Error))
+                attempt.AddError(output.Error);
+            }
+            if (!string.IsNullOrEmpty(output.Logs))
+            {
+                attempt.AddOutput(output.Logs[..Math.Min(500_000, output.Logs.Length)]);
+                if (output.Logs.Length > 500_000)
                 {
-                    attempt.AddError(output.Error);
-                }
-                if (!string.IsNullOrEmpty(output.Logs))
-                {
-                    attempt.AddOutput(output.Logs[..Math.Min(500_000, output.Logs.Length)]);
-                    if (output.Logs.Length > 500_000)
-                    {
-                        attempt.AddOutput("Output has been truncated to first 500 000 characters.", insertFirst: true);
-                    }
+                    attempt.AddOutput("Output has been truncated to first 500 000 characters.", insertFirst: true);
                 }
             }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting Databricks step task run output", step.ExecutionId, step);
-                attempt.AddWarning(ex, $"Error getting task run output");
-            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting Databricks step task run output", step.ExecutionId, step);
+            attempt.AddWarning(ex, "Error getting task run output");
         }
 
         return run.Status.TerminationDetails.Type == RunTerminationType.SUCCESS
@@ -227,12 +230,12 @@ internal class DatabricksStepExecutor(
             .Handle<Exception>()
             .WaitAndRetryAsync(
             retryCount: MaxRefreshRetries,
-            sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_pollingIntervalMs),
-            onRetry: (ex, waitDuration) =>
+            sleepDurationProvider: _ => TimeSpan.FromMilliseconds(_pollingIntervalMs),
+            onRetry: (ex, _) =>
                 _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting run status for run id {runId}", step.ExecutionId, step, runId));
 
-        var (run, _) = await policy.ExecuteAsync((cancellationToken) =>
-            client.Jobs.RunsGet(runId, cancellationToken: cancellationToken), cancellationToken);
+        var (run, _) = await policy.ExecuteAsync(cancellation =>
+            client.Jobs.RunsGet(runId, cancellationToken: cancellation), cancellationToken);
         return run;
     }
 

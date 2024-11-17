@@ -54,7 +54,7 @@ internal static partial class WindowsExtensions
     {
         public void Persist(SafeHandle handle) => Persist(handle, AccessControlSections.Access);
 
-        new public void AddAccessRule(AccessRule rule) => base.AddAccessRule(rule);
+        public new void AddAccessRule(AccessRule rule) => base.AddAccessRule(rule);
 
         public override Type AccessRightType => throw new NotImplementedException();
 

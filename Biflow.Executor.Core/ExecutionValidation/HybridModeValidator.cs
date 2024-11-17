@@ -37,20 +37,20 @@ internal class HybridModeValidator(
             return false;
         }
 
-        if (!string.IsNullOrEmpty(illegalSteps))
+        if (string.IsNullOrEmpty(illegalSteps))
         {
-            var errorMessage = "Detected steps causing infinite wait in hybrid mode:\n" + illegalSteps;
-            await onValidationFailed(errorMessage);
-            return false;
+            return true;
         }
-
-        return true;
+        
+        var errorMessage = "Detected steps causing infinite wait in hybrid mode:\n" + illegalSteps;
+        await onValidationFailed(errorMessage);
+        return false;
     }
 
     private async Task<string?> ReadIllegalHybridModeStepsAsync(Guid jobId, CancellationToken cancellationToken)
     {
         // Checks for steps that cause infinite waiting in hybrid execution mode.
-        using var context = _dbContextFactory.CreateDbContext();
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         var steps = await context.Dependencies
             .AsNoTracking()
             .Where(d => d.Step.JobId == jobId)
