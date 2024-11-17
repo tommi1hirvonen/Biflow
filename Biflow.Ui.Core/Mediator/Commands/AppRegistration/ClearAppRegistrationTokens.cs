@@ -7,7 +7,7 @@ internal class ClearAppRegistrationTokensCommandHandler(IDbContextFactory<AppDbC
 {
     public async Task Handle(ClearAppRegistrationTokensCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var tokens = await context.AccessTokens
             .Where(t => t.AppRegistrationId == request.AppRegistrationId)
             .ToArrayAsync(cancellationToken);
@@ -16,6 +16,6 @@ internal class ClearAppRegistrationTokensCommandHandler(IDbContextFactory<AppDbC
             context.AccessTokens.Remove(token);
         }
         await context.SaveChangesAsync(cancellationToken);
-        tokenService.Clear();
+        await tokenService.ClearAsync(cancellationToken);
     }
 }
