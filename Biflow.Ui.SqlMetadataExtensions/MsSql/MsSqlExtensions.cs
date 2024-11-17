@@ -2,6 +2,7 @@
 using Dapper;
 using Microsoft.Data.SqlClient;
 using System.Text.RegularExpressions;
+using Microsoft.AnalysisServices.Tabular;
 
 namespace Biflow.Ui.SqlMetadataExtensions;
 
@@ -9,10 +10,10 @@ public static partial class MsSqlExtensions
 {
     public static async Task<SSISCatalog> GetCatalogPackagesAsync(this MsSqlConnection connection)
     {
-        using var sqlConnection = new SqlConnection(connection.ConnectionString);
+        await using var sqlConnection = new SqlConnection(connection.ConnectionString);
         var folders = new Dictionary<long, CatalogFolder>();
-        var rows = await connection.RunImpersonatedOrAsCurrentUserAsync(
-            () => sqlConnection.QueryAsync<CatalogFolder, CatalogProjectDto?, CatalogPackageDto?, CatalogParameter?, CatalogFolder>("""
+        await connection.RunImpersonatedOrAsCurrentUserAsync(() =>
+            sqlConnection.QueryAsync<CatalogFolder, CatalogProjectDto?, CatalogPackageDto?, CatalogParameter?, CatalogFolder>("""
                 SELECT
                     FolderId = [f].[folder_id],
                     FolderName = [f].[name],
@@ -64,30 +65,42 @@ public static partial class MsSqlExtensions
                         folderEntry = folder;
                         folders[folderEntry.FolderId] = folderEntry;
                     }
-                    if (project is not null)
+
+                    if (project is null)
                     {
-                        if (!folderEntry.Projects.TryGetValue(project.ProjectId, out var projectEntry))
-                        {
-                            projectEntry = new(project.ProjectId, project.ProjectName, folderEntry);
-                            folderEntry.Projects[projectEntry.ProjectId] = projectEntry;
-                        }
-                        if (package is not null)
-                        {
-                            if (!projectEntry.Packages.TryGetValue(package.PackageId, out var packageEntry))
-                            {
-                                packageEntry = new(package.PackageId, package.PackageName, projectEntry);
-                                projectEntry.Packages[packageEntry.PackageId] = packageEntry;
-                            }
-                            if (param is not null)
-                            {
-                                if (!packageEntry.Parameters.TryGetValue(param.ParameterId, out var paramEntry))
-                                {
-                                    paramEntry = param;
-                                    packageEntry.Parameters[paramEntry.ParameterId] = paramEntry;
-                                }
-                            }
-                        }
+                        return folderEntry;
                     }
+                    
+                    if (!folderEntry.Projects.TryGetValue(project.ProjectId, out var projectEntry))
+                    {
+                        projectEntry = new(project.ProjectId, project.ProjectName, folderEntry);
+                        folderEntry.Projects[projectEntry.ProjectId] = projectEntry;
+                    }
+
+                    if (package is null)
+                    {
+                        return folderEntry;
+                    }
+                    
+                    if (!projectEntry.Packages.TryGetValue(package.PackageId, out var packageEntry))
+                    {
+                        packageEntry = new(package.PackageId, package.PackageName, projectEntry);
+                        projectEntry.Packages[packageEntry.PackageId] = packageEntry;
+                    }
+
+                    if (param is null)
+                    {
+                        return folderEntry;
+                    }
+
+                    if (packageEntry.Parameters.TryGetValue(param.ParameterId, out var paramEntry))
+                    {
+                        return folderEntry;
+                    }
+                    
+                    paramEntry = param;
+                    packageEntry.Parameters[paramEntry.ParameterId] = paramEntry;
+                    
                     return folderEntry;
                 },
                 splitOn: "ProjectId,PackageId,ParameterId"));
@@ -101,7 +114,7 @@ public static partial class MsSqlExtensions
         string package,
         bool includeConnectionManagerParameters)
     {
-        using var sqlConnection = new SqlConnection(connection.ConnectionString);
+        await using var sqlConnection = new SqlConnection(connection.ConnectionString);
         return await connection.RunImpersonatedOrAsCurrentUserAsync(async () =>
         {
             var count = await sqlConnection.ExecuteScalarAsync<int>("""
@@ -181,8 +194,8 @@ public static partial class MsSqlExtensions
 
     public static async Task<IEnumerable<MsSqlStoredProcedure>> GetStoredProceduresAsync(this MsSqlConnection connection)
     {
-        using var sqlConnection = new SqlConnection(connection.ConnectionString);
-        var sql = """
+        await using var sqlConnection = new SqlConnection(connection.ConnectionString);
+        const string sql = """
             select
                 ProcedureId = a.object_id,
                 SchemaName = b.name,
@@ -199,8 +212,8 @@ public static partial class MsSqlExtensions
                 ParameterId
             """;
         var procedures = new Dictionary<int, MsSqlStoredProcedure>();
-        var data = await connection.RunImpersonatedOrAsCurrentUserAsync(
-            () => sqlConnection.QueryAsync<MsSqlStoredProcedure, MsSqlStoredProcedureParameter?, MsSqlStoredProcedure>(
+        await connection.RunImpersonatedOrAsCurrentUserAsync(() =>
+            sqlConnection.QueryAsync<MsSqlStoredProcedure, MsSqlStoredProcedureParameter?, MsSqlStoredProcedure>(
                 sql,
                 (proc, param) =>
                 {
@@ -221,26 +234,26 @@ public static partial class MsSqlExtensions
 
     public static async Task<MsSqlStoredProcedure?> GetStoredProcedureAsync(this MsSqlConnection connection, string? schema, string name)
     {
-        using var sqlConnection = new SqlConnection(connection.ConnectionString);
-        var sql = """
-            select
-                ProcedureId = a.object_id,
-                SchemaName = b.name,
-                ProcedureName = a.name,
-                ParameterId = c.parameter_id,
-                ParameterName = c.name,
-                ParameterType = TYPE_NAME(c.user_type_id)
-            from sys.procedures as a
-                inner join sys.schemas as b on a.schema_id = b.schema_id
-                left join sys.parameters as c on a.object_id = c.object_id
-            where b.name = @schema and a.name = @name
-            order by
-                ParameterId
-            """;
+        await using var sqlConnection = new SqlConnection(connection.ConnectionString);
+        const string sql = """
+           select
+               ProcedureId = a.object_id,
+               SchemaName = b.name,
+               ProcedureName = a.name,
+               ParameterId = c.parameter_id,
+               ParameterName = c.name,
+               ParameterType = TYPE_NAME(c.user_type_id)
+           from sys.procedures as a
+               inner join sys.schemas as b on a.schema_id = b.schema_id
+               left join sys.parameters as c on a.object_id = c.object_id
+           where b.name = @schema and a.name = @name
+           order by
+               ParameterId
+           """;
         MsSqlStoredProcedure? procedure = null;
         schema ??= "dbo";
-        var data = await connection.RunImpersonatedOrAsCurrentUserAsync(
-            () => sqlConnection.QueryAsync<MsSqlStoredProcedure, MsSqlStoredProcedureParameter?, MsSqlStoredProcedure>(
+        await connection.RunImpersonatedOrAsCurrentUserAsync(() =>
+            sqlConnection.QueryAsync<MsSqlStoredProcedure, MsSqlStoredProcedureParameter?, MsSqlStoredProcedure>(
                 sql,
                 (proc, param) =>
                 {
@@ -264,7 +277,7 @@ public static partial class MsSqlExtensions
         string schema,
         string procedure)
     {
-        using var sqlConnection = new SqlConnection(connection.ConnectionString);
+        await using var sqlConnection = new SqlConnection(connection.ConnectionString);
         return await connection.RunImpersonatedOrAsCurrentUserAsync(async () =>
         {
             var objectId = await sqlConnection.ExecuteScalarAsync<long?>("""
@@ -290,14 +303,14 @@ public static partial class MsSqlExtensions
             {
                 var type = param.Type switch
                 {
-                    string a when a.Contains("char") => ParameterValueType.String,
+                    { } a when a.Contains("char") => ParameterValueType.String,
                     "tinyint" or "smallint" => ParameterValueType.Int16,
                     "int" => ParameterValueType.Int32,
                     "bigint" => ParameterValueType.Int64,
                     "smallmoney" or "money" or "numeric" or "decimal" => ParameterValueType.Decimal,
                     "real" => ParameterValueType.Single,
                     "float" => ParameterValueType.Double,
-                    string d when d.Contains("date") => ParameterValueType.DateTime,
+                    { } d when d.Contains("date") => ParameterValueType.DateTime,
                     "bit" => ParameterValueType.Boolean,
                     _ => ParameterValueType.String
                 };
@@ -309,7 +322,7 @@ public static partial class MsSqlExtensions
 
     public static async Task<IEnumerable<(string AgentJobName, bool IsEnabled)>> GetAgentJobsAsync(this MsSqlConnection connection)
     {
-        using var sqlConnection = new SqlConnection(connection.ConnectionString);
+        await using var sqlConnection = new SqlConnection(connection.ConnectionString);
         var rows = await connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.QueryAsync<dynamic>("EXEC msdb.dbo.sp_help_job"));
         var agentJobs = rows.Select(r => ((string)r.name, ((short)r.enabled) > 0)).ToArray();
@@ -318,7 +331,7 @@ public static partial class MsSqlExtensions
 
     public static async Task<string?> GetProcedureDefinitionAsync(this MsSqlConnection connection, MsSqlStoredProcedure procedure)
     {
-        using var sqlConnection = new SqlConnection(connection.ConnectionString);
+        await using var sqlConnection = new SqlConnection(connection.ConnectionString);
         var definition = await connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.ExecuteScalarAsync<string>(
                 "SELECT OBJECT_DEFINITION(@ObjectId)",
@@ -357,7 +370,7 @@ public static partial class MsSqlExtensions
         var encodedReferencedSchemaFilter = referencedSchemaOperator == "=" ? referencedSchemaFilter : $"%{referencedSchemaFilter.EncodeForLike()}%";
         var encodedReferencedNameFilter = referencedNameOperator == "=" ? referencedNameFilter :  $"%{referencedNameFilter.EncodeForLike()}%";
 
-        using var sqlConnection = new SqlConnection(connection.ConnectionString);
+        await using var sqlConnection = new SqlConnection(connection.ConnectionString);
         var rows = await connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.QueryAsync<SqlReference>($"""
                 select distinct
@@ -399,7 +412,7 @@ public static partial class MsSqlExtensions
         string? schema,
         string name)
     {
-        using var sqlConnection = new SqlConnection(connection.ConnectionString);
+        await using var sqlConnection = new SqlConnection(connection.ConnectionString);
 
         schema ??= "[dbo]";
         var objectName = $"{schema}.[{name}]";
@@ -456,7 +469,14 @@ public static partial class MsSqlExtensions
                     ObjectName = objectName
                 }));
         return rows
-            .Select(r => new DbObjectReference(r.Item1, r.Item2, r.Item3, r.Item4, r.Item5))
+            .Select(r => new DbObjectReference
+            {
+                ServerName = r.Item1,
+                DatabaseName = r.Item2,
+                SchemaName = r.Item3,
+                ObjectName = r.Item4,
+                IsUnreliable = r.Item5
+            })
             .ToArray();
     }
 
@@ -465,7 +485,7 @@ public static partial class MsSqlExtensions
         string? schema,
         string name)
     {
-        using var sqlConnection = new SqlConnection(connection.ConnectionString);
+        await using var sqlConnection = new SqlConnection(connection.ConnectionString);
 
         schema ??= "[dbo]";
         var objectName = $"{schema}.[{name}]";
@@ -518,11 +538,18 @@ public static partial class MsSqlExtensions
                     is_unreliable
                 from cte
                 """, new
-                {
-                    ObjectName = objectName
-                }));
+            {
+                ObjectName = objectName
+            }));
         return rows
-            .Select(r => new DbObjectReference(r.Item1, r.Item2, r.Item3, r.Item4, r.Item5))
+            .Select(r => new DbObjectReference
+            {
+                ServerName = r.Item1,
+                DatabaseName = r.Item2,
+                SchemaName = r.Item3,
+                ObjectName = r.Item4,
+                IsUnreliable = r.Item5
+            })
             .ToArray();
     }
 
@@ -533,7 +560,7 @@ public static partial class MsSqlExtensions
         int? top = null,
         CancellationToken cancellationToken = default)
     {
-        using var sqlConnection = new SqlConnection(connection.ConnectionString);
+        await using var sqlConnection = new SqlConnection(connection.ConnectionString);
         var topTerm = top > 0 ? $"top {top}" : "";
         var schema = string.IsNullOrEmpty(schemaNameSearchTerm) ? null : $"%{schemaNameSearchTerm.EncodeForLike()}%";
         var name = string.IsNullOrEmpty(objectNameSearchTerm) ? null : $"%{objectNameSearchTerm.EncodeForLike()}%";
@@ -562,7 +589,7 @@ public static partial class MsSqlExtensions
 
     public static async Task<IEnumerable<DbTable>> GetDatabaseTablesAsync(this MsSqlConnection connection, CancellationToken cancellationToken = default)
     {
-        using var sqlConnection = new SqlConnection(connection.ConnectionString);
+        await using var sqlConnection = new SqlConnection(connection.ConnectionString);
         var command = new CommandDefinition("""
             select
                 [schema_name] = b.[name],
@@ -587,28 +614,23 @@ public static partial class MsSqlExtensions
         {
             return Task.Run(() =>
             {
-                using var server = new Microsoft.AnalysisServices.Tabular.Server();
+                using var server = new Server();
                 server.Connect(connection.ConnectionString);
                 var models = new List<AsModel>();
                 var asServer = new AsServer(server.Name, models);
                 var databases = server.Databases;
-                for (int dbi = 0; dbi < databases.Count; dbi++)
+                for (var dbi = 0; dbi < databases.Count; dbi++)
                 {
                     var database = databases[dbi];
                     var model = database.Model;
                     var tables = new List<AsTable>();
                     var asModel = new AsModel(database.Name, tables, asServer);
-                    for (int tbi = 0; tbi < model.Tables.Count; tbi++)
+                    foreach (var table in model.Tables)
                     {
-                        var table = model.Tables[tbi];
                         var partitions = new List<AsPartition>();
                         var asTable = new AsTable(table.Name, asModel, partitions);
-                        for (int pi = 0; pi < table.Partitions.Count; pi++)
-                        {
-                            var partition = table.Partitions[pi];
-                            var asPartition = new AsPartition(partition.Name, asTable);
-                            partitions.Add(asPartition);
-                        }
+                        partitions.AddRange(
+                            table.Partitions.Select(partition => new AsPartition(partition.Name, asTable)));
                         tables.Add(asTable);
                     }
                     models.Add(asModel);
@@ -662,23 +684,23 @@ public static partial class MsSqlExtensions
         return null;
     }
 
-    internal static string EncodeForLike(this string term) => term.Replace("[", "[[]").Replace("%", "[%]");
+    private static string EncodeForLike(this string term) => term.Replace("[", "[[]").Replace("%", "[%]");
 
     // Using the GeneratedRegex attributes we can create the regex already at compile time.
 
     // Can handle white space inside object names
-    [GeneratedRegex("EXEC(?:UTE)?[\\s*](\\[.*\\]).(\\[.*\\])", RegexOptions.IgnoreCase, "en-US")]
+    [GeneratedRegex(@"EXEC(?:UTE)?[\s*](\[.*\]).(\[.*\])", RegexOptions.IgnoreCase, "en-US")]
     private static partial Regex ProcedureWithSchemaWithBracketsRegex { get; }
 
     // No square brackets => no whitespace in object names
-    [GeneratedRegex("EXEC(?:UTE)?[\\s*](\\S*)\\.(\\S*)", RegexOptions.IgnoreCase, "en-US")]
+    [GeneratedRegex(@"EXEC(?:UTE)?[\s*](\S*)\.(\S*)", RegexOptions.IgnoreCase, "en-US")]
     private static partial Regex ProcedureWithSchemaWithoutBracketsRegex { get; }
 
     // Can handle white space inside object names
-    [GeneratedRegex("EXEC(?:UTE)?[\\s*](\\[.*\\])", RegexOptions.IgnoreCase, "en-US")]
+    [GeneratedRegex(@"EXEC(?:UTE)?[\s*](\[.*\])", RegexOptions.IgnoreCase, "en-US")]
     private static partial Regex ProcedureWithoutSchemaWithBracketsRegex { get; }
 
     // No square brackets => no whitespace in object names
-    [GeneratedRegex("EXEC(?:UTE)?[\\s*](\\S*)", RegexOptions.IgnoreCase, "en-US")]
+    [GeneratedRegex(@"EXEC(?:UTE)?[\s*](\S*)", RegexOptions.IgnoreCase, "en-US")]
     private static partial Regex ProcedureWithoutSchemaWithoutBracketsRegex { get; }
 }

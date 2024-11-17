@@ -3,7 +3,17 @@ using Biflow.Core.Interfaces;
 
 namespace Biflow.Ui.SqlMetadataExtensions;
 
-public record DbObjectReference(string ServerName, string DatabaseName, string SchemaName, string ObjectName, bool IsUnreliable) : IDataObject
+public class DbObjectReference : IDataObject
 {
-    public string ObjectUri { get; } = DataObject.CreateTableUri(ServerName, DatabaseName, SchemaName, ObjectName);
+    public required string ServerName { get; init; }
+    
+    public required string DatabaseName { get; init; }
+    
+    public required string SchemaName { get; init; }
+    
+    public required string ObjectName { get; init; }
+    
+    public required bool IsUnreliable { get; init; }
+    
+    public string ObjectUri => DataObject.CreateTableUri(ServerName, DatabaseName, SchemaName, ObjectName);
 }
