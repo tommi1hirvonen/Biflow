@@ -56,7 +56,7 @@ public class PackageStepExecution : StepExecution,
 
     public double TimeoutMinutes { get; private set; }
 
-    public string? PackagePath => PackageFolderName + "/" + PackageProjectName + "/" + PackageName;
+    public string PackagePath => PackageFolderName + "/" + PackageProjectName + "/" + PackageName;
 
     public IEnumerable<PackageStepExecutionParameter> StepExecutionParameters { get; } = new List<PackageStepExecutionParameter>();
 

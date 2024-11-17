@@ -59,7 +59,7 @@ public class AnalysisServicesConnection() : ConnectionBase(ConnectionType.Analys
 
     /// <summary>
     /// Runs the provided delegate with impersonation using the <see cref="Credential"/> property if <see cref="CredentialId"/> is <see langword="not null"/>.
-    /// Otherwise the delegate will be run without impersonation.
+    /// Otherwise, the delegate will be run without impersonation.
     /// If <see cref="CredentialId"/> is not null but <see cref="Credential"/> is null, <see cref="ArgumentNullException"/> will be thrown.
     /// </summary>
     /// <typeparam name="T"></typeparam>
@@ -67,11 +67,11 @@ public class AnalysisServicesConnection() : ConnectionBase(ConnectionType.Analys
     /// <returns><see cref="Task"/> of <typeparamref name="T"/> that completes when the delegate completes</returns>
     public Task<T> RunImpersonatedOrAsCurrentUserAsync<T>(Func<Task<T>> func)
     {
-        if (CredentialId is not null && OperatingSystem.IsWindows())
+        if (CredentialId is null || !OperatingSystem.IsWindows())
         {
-            ArgumentNullException.ThrowIfNull(Credential);
-            return Credential.RunImpersonatedAsync(func);
+            return func();
         }
-        return func();
+        ArgumentNullException.ThrowIfNull(Credential);
+        return Credential.RunImpersonatedAsync(func);
     }
 }

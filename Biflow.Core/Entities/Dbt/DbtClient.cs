@@ -108,7 +108,7 @@ public class DbtClient
         var request = new TriggerJobRunRequest("Triggered via API");
         var response = await _httpClient.PostAsJsonAsync(url, request, JsonOptions, cancellationToken);
         response.EnsureSuccessStatusCode();
-        using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
         var runResponse = JsonSerializer.Deserialize<JobRunResponse>(stream, JsonOptions);
         ArgumentNullException.ThrowIfNull(runResponse);
         return runResponse.Data;
@@ -127,7 +127,7 @@ public class DbtClient
         var url = $"api/v2/accounts/{_account.AccountId}/runs/{runId}/cancel/";
         var response = await _httpClient.PostAsync(url, null, cancellationToken);
         response.EnsureSuccessStatusCode();
-        using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
         var runResponse = JsonSerializer.Deserialize<JobRunResponse>(stream, JsonOptions);
         ArgumentNullException.ThrowIfNull(runResponse);
         return runResponse.Data;

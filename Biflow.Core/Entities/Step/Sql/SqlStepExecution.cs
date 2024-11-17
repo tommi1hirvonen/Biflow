@@ -1,5 +1,4 @@
 ﻿using Biflow.Core.Interfaces;
-using Newtonsoft.Json.Linq;
 using System.ComponentModel.DataAnnotations;
 
 namespace Biflow.Core.Entities;
@@ -58,7 +57,7 @@ public class SqlStepExecution : StepExecution,
     /// Get the <see cref="ConnectionBase"/> entity associated with this <see cref="StepExecution"/>.
     /// The method <see cref="SetConnection(ConnectionBase?)"/> will need to have been called first for the <see cref="ConnectionBase"/> to be available.
     /// </summary>
-    /// <returns><see cref="MsSqlConConnectionBasenection"/> if it was previously set using <see cref="SetConnection(ConnectionBase?)"/> with a non-null object; <see langword="null"/> otherwise.</returns>
+    /// <returns><see cref="ConnectionBase"/> if it was previously set using <see cref="SetConnection(ConnectionBase?)"/> with a non-null object; <see langword="null"/> otherwise.</returns>
     public ConnectionBase? GetConnection() => _connection;
 
     /// <summary>
@@ -69,9 +68,9 @@ public class SqlStepExecution : StepExecution,
     /// The ConnectionIds are compared and the value is set only if the ids match.</param>
     public void SetConnection(ConnectionBase? connection)
     {
-        if (!(connection is MsSqlConnection or SnowflakeConnection or null))
+        if (connection is not (MsSqlConnection or SnowflakeConnection or null))
         {
-            throw new ArgumentException($"Unallowed connection type: {connection?.GetType().Name}. Connection must be of type {typeof(MsSqlConnection).Name} or {typeof(SnowflakeConnection).Name}.");
+            throw new ArgumentException($"Illegal connection type: {connection.GetType().Name}. Connection must be of type {nameof(MsSqlConnection)} or {nameof(SnowflakeConnection)}.");
         }
         if (connection?.ConnectionId == ConnectionId)
         {

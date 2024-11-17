@@ -19,10 +19,10 @@ public class MsSqlConnection() : ConnectionBase(ConnectionType.Sql)
     }
 
     [Range(0, int.MaxValue)]
-    public int MaxConcurrentSqlSteps { get; set; } = 0;
+    public int MaxConcurrentSqlSteps { get; set; }
 
     [Range(0, int.MaxValue)]
-    public int MaxConcurrentPackageSteps { get; set; } = 0;
+    public int MaxConcurrentPackageSteps { get; set; }
 
     [JsonIgnore]
     public IEnumerable<AgentJobStep> AgentJobSteps { get; set; } = new List<AgentJobStep>();
@@ -69,12 +69,12 @@ public class MsSqlConnection() : ConnectionBase(ConnectionType.Sql)
     /// <returns><see cref="Task"/> that completes when the delegate completes</returns>
     public Task RunImpersonatedOrAsCurrentUserAsync(Func<Task> func)
     {
-        if (CredentialId is not null && OperatingSystem.IsWindows())
+        if (CredentialId is null || !OperatingSystem.IsWindows())
         {
-            ArgumentNullException.ThrowIfNull(Credential);
-            return Credential.RunImpersonatedAsync(func);
+            return func();
         }
-        return func();
+        ArgumentNullException.ThrowIfNull(Credential);
+        return Credential.RunImpersonatedAsync(func);
     }
 
     /// <summary>
@@ -87,11 +87,11 @@ public class MsSqlConnection() : ConnectionBase(ConnectionType.Sql)
     /// <returns><see cref="Task"/> of <typeparamref name="T"/> that completes when the delegate completes</returns>
     public Task<T> RunImpersonatedOrAsCurrentUserAsync<T>(Func<Task<T>> func)
     {
-        if (CredentialId is not null && OperatingSystem.IsWindows())
+        if (CredentialId is null || !OperatingSystem.IsWindows())
         {
-            ArgumentNullException.ThrowIfNull(Credential);
-            return Credential.RunImpersonatedAsync(func);
+            return func();
         }
-        return func();
+        ArgumentNullException.ThrowIfNull(Credential);
+        return Credential.RunImpersonatedAsync(func);
     }
 }

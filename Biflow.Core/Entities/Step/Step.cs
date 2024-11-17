@@ -86,11 +86,9 @@ public abstract class Step : IComparable, IAuditable
     [Display(Name = "Description")]
     public string? StepDescription
     {
-        get => _stepDescription;
-        set => _stepDescription = string.IsNullOrEmpty(value) ? null : value;
+        get;
+        set => field = string.IsNullOrEmpty(value) ? null : value;
     }
-
-    private string? _stepDescription;
 
     [Required]
     [Display(Name = "Execution phase")]

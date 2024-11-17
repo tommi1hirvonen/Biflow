@@ -7,7 +7,7 @@ namespace Biflow.Core.Entities;
 public class SnowflakeConnection() : ConnectionBase(ConnectionType.Snowflake)
 {
     [Range(0, int.MaxValue)]
-    public int MaxConcurrentSqlSteps { get; set; } = 0;
+    public int MaxConcurrentSqlSteps { get; set; }
 
     [JsonIgnore]
     public override IEnumerable<Step> Steps => SqlSteps;

@@ -27,12 +27,12 @@ public sealed class StepExecutionConditionParameter : ParameterBase
     public override ParameterValue ParameterValue
     {
         get => ExecutionParameter is not null ? ExecutionParameterValue : field;
-        set => field = value;
+        set;
     } = new();
 
     public Guid? ExecutionParameterId { get; set; }
 
-    public ParameterValue ExecutionParameterValue { get; set; } = new();
+    public ParameterValue ExecutionParameterValue { get; set; }
 
     public ExecutionParameter? ExecutionParameter { get; set; }
 
