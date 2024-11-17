@@ -1,8 +1,8 @@
 ﻿namespace Biflow.Ui.TableEditor;
 
-public class ValueFilter<T, U>(U initialOperator) : IFilter
+public class ValueFilter<T, TU>(TU initialOperator) : IFilter
     where T : struct
-    where U : notnull, Enum
+    where TU : Enum
 {
     public bool Enabled1 { get; set; }
 
@@ -12,7 +12,7 @@ public class ValueFilter<T, U>(U initialOperator) : IFilter
 
     public Enum Operator1 => TypedOperator1;
 
-    public U TypedOperator1 { get; set; } = initialOperator;
+    public TU TypedOperator1 { get; set; } = initialOperator;
 
     public bool Enabled2 { get; set; }
 
@@ -27,5 +27,5 @@ public class ValueFilter<T, U>(U initialOperator) : IFilter
 
     public Enum Operator2 => TypedOperator2;
 
-    public U TypedOperator2 { get; set; } = initialOperator;
+    public TU TypedOperator2 { get; set; } = initialOperator;
 }

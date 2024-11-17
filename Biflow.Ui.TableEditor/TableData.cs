@@ -19,7 +19,7 @@ public class TableData
     internal TableData(
         MasterDataTable masterDataTable,
         Column[] columns,
-        IEnumerable<IDictionary<string, object?>> data,
+        IDictionary<string, object?>[] data,
         bool hasMoreRows)
     {
         MasterDataTable = masterDataTable;
@@ -66,31 +66,32 @@ public class TableData
 
     public async Task<(int Inserted, int Updated, int Deleted)> SaveChangesAsync()
     {
-        var changes = _rows?
+        var changes = _rows
             .OrderByDescending(row => row.ToBeDeleted) // handle records to be deleted first
             .Select(row => row.GetChangeSqlCommand())
-            .OfType<RowChangeSqlCommand>();
+            .OfType<RowChangeSqlCommand>()
+            .ToArray();
 
-        if (changes is null || !changes.Any())
+        if (changes.Length == 0)
         {
             return (0, 0, 0);
         }
 
-        using var connection = new SqlConnection(MasterDataTable.Connection.ConnectionString);
+        await using var connection = new SqlConnection(MasterDataTable.Connection.ConnectionString);
         return await MasterDataTable.Connection.RunImpersonatedOrAsCurrentUserAsync(async () =>
         {
             await connection.OpenAsync();
-            using var transaction = await connection.BeginTransactionAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
             try
             {
-                foreach (var (command, parameters, type) in changes)
+                foreach (var (command, parameters, _) in changes)
                 {
                     await connection.ExecuteAsync(command, parameters, transaction);
                 }
                 await transaction.CommitAsync();
-                var inserted = changes.Where(c => c.CommandType == CommandType.Insert).Count();
-                var updated = changes.Where(c => c.CommandType == CommandType.Update).Count();
-                var deleted = changes.Where(c => c.CommandType == CommandType.Delete).Count();
+                var inserted = changes.Count(c => c.CommandType == CommandType.Insert);
+                var updated = changes.Count(c => c.CommandType == CommandType.Update);
+                var deleted = changes.Count(c => c.CommandType == CommandType.Delete);
                 return (inserted, updated, deleted);
             }
             catch (Exception)

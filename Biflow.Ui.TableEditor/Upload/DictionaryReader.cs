@@ -11,7 +11,9 @@ namespace Biflow.Ui.TableEditor;
 internal class DictionaryReader(IEnumerable<string> columns, ICollection<IDictionary<string, object?>> data) : IDataReader
 {
     private readonly IEnumerator<IDictionary<string, object?>> _enumerator = data.GetEnumerator();
-    private readonly IDictionary<string, int> _nameToIndexMap = columns.Select((c, i) => (c, i)).ToDictionary(key => key.c, value => value.i);
+    private readonly Dictionary<string, int> _nameToIndexMap = columns
+        .Select((c, i) => (c, i))
+        .ToDictionary(key => key.c, value => value.i);
     private bool _isOpen;
 
     public object this[string name] => _enumerator.Current[name] ?? DBNull.Value;
