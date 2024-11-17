@@ -1,11 +1,10 @@
 @using Biflow.Ui.Icons
-@using Microsoft.AspNetCore.Components.Web
 
 @namespace Biflow.Ui.Components
 
 @implements IDisposable
 
-<div @attributes=@InputAttributes class="toast @ToastClass show @CssClass @(hiding ? "fade-out" : null) @(Title is null ? "d-flex" : null)"
+<div @attributes="@InputAttributes" class="toast @ToastClass show @CssClass @(hiding ? "fade-out" : null) @(Title is null ? "d-flex" : null)"
      role="alert" aria-live="assertive" aria-atomic="true">
     @if (Title is not null)
     {

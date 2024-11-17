@@ -1,6 +1,3 @@
-@using Biflow.Core.Entities
-@using Microsoft.AspNetCore.Components.Web
-
 <span @attributes="InputAttributes" class="badge d-inline-flex align-items-center py-1 px-2 @BadgeCss @CssClass @(Selected ? "text-decoration-underline" : null)" @onclick="OnClick">
     @Text
     @if (IsRemovable)

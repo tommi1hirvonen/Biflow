@@ -8,7 +8,7 @@
 
 @inject IJSRuntime Js
 
-<div @ref="comboboxElement" @attributes=@InputAttributes class="@CssClass taginput-wrapper position-relative">
+<div @ref="comboboxElement" @attributes="@InputAttributes" class="@CssClass taginput-wrapper position-relative">
     @if (Label is not null)
     {
         <label for="@($"{id}_input")" class="form-label mb-0">@Label</label>

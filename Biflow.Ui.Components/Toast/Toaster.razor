@@ -4,7 +4,7 @@
 
 @inject ToasterService ToasterService
 
-<div @attributes=@InputAttributes class="toast-container position-fixed bottom-0 end-0 mb-4 me-3 @CssClass">
+<div @attributes="@InputAttributes" class="toast-container position-fixed bottom-0 end-0 mb-4 me-3 @CssClass">
 	@foreach (var message in messages)
 	{
 		<Toast @key="message.Key"
@@ -20,41 +20,44 @@
 					</div>
 				</div>
 			}
-			@if (message is ToastActionMessage action)
+			@switch (message)
 			{
-				var btnColor = action.ButtonColor switch
+				case ToastActionMessage action:
 				{
-					ButtonColor.Primary => "btn-primary",
-					ButtonColor.Secondary => "btn-secondary",
-					ButtonColor.Success => "btn-success",
-					ButtonColor.Info => "btn-info",
-					ButtonColor.Warning => "btn-warning",
-					ButtonColor.Danger => "btn-danger",
-					ButtonColor.Light => "btn-light",
-					ButtonColor.Dark => "btn-dark",
-					ButtonColor.Link => "btn-link",
-					_ => "",
-				};
-				<div class="row">
-					<div class="col">
-						<button type="button" class="btn @btnColor btn-sm" @onclick="action.ButtonAction">@action.ButtonText</button>
+					var btnColor = action.ButtonColor switch
+					{
+						ButtonColor.Primary => "btn-primary",
+						ButtonColor.Secondary => "btn-secondary",
+						ButtonColor.Success => "btn-success",
+						ButtonColor.Info => "btn-info",
+						ButtonColor.Warning => "btn-warning",
+						ButtonColor.Danger => "btn-danger",
+						ButtonColor.Light => "btn-light",
+						ButtonColor.Dark => "btn-dark",
+						ButtonColor.Link => "btn-link",
+						_ => ""
+					};
+					<div class="row">
+						<div class="col">
+							<button type="button" class="btn @btnColor btn-sm" @onclick="action.ButtonAction">@action.ButtonText</button>
+						</div>
 					</div>
-				</div>
-			}
-			else if (message is ToastTemplateMessage template)
-			{
-				@template.RenderFragment
+					break;
+				}
+				case ToastTemplateMessage template:
+					@template.RenderFragment
+					break;
 			}
 		</Toast>
 	}
 </div>
 
 @code {
-	[Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object> InputAttributes { get; set; } = new();
+	[Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object> InputAttributes { get; set; } = [];
 
     [Parameter] public string? CssClass { get; set; }
 
-	private List<ToastMessage> messages = new();
+	private List<ToastMessage> messages = [];
 
     protected override void OnInitialized()
     {

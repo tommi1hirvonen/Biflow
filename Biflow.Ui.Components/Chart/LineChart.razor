@@ -1,11 +1,8 @@
-@using Microsoft.JSInterop;
-@using System.Text.Json;
-
 @namespace Biflow.Ui.Components
 
 @implements IAsyncDisposable
 
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 @inject ThemeService Theme
 
 <canvas class="w-100" id="@canvasId" width="900" height="400"></canvas>
@@ -40,7 +37,7 @@
     {
         if (firstRender)
         {
-            jsObject = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/LineChart.js");
+            jsObject = await Js.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/LineChart.js");
             await AfterFirstRender.InvokeAsync();
         }
         if (jsObject is not null && shouldRender)
