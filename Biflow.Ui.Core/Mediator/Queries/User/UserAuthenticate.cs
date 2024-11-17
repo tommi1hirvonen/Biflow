@@ -14,13 +14,13 @@ internal class UserAuthenticateQueryHandler(
 {
     public async Task<UserAuthenticateQueryResponse> Handle(UserAuthenticateQuery request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var result = await context.Users
-            .Where(user => user.Username == request.Username)
-            .Select(user => new
+            .Where(u => u.Username == request.Username)
+            .Select(u => new
             {
-                PasswordHash = EF.Property<string>(user, "PasswordHash"),
-                User = user
+                PasswordHash = EF.Property<string>(u, "PasswordHash"),
+                User = u
             })
             .FirstOrDefaultAsync(cancellationToken);
         var (hash, user) = (result?.PasswordHash, result?.User);
@@ -35,22 +35,24 @@ internal class UserAuthenticateQueryHandler(
         {
             return new([]);
         }
-
-        // No last login or it was over an hour ago.
-        if (user.LastLoginOn is null || user.LastLoginOn is DateTimeOffset dto && dto.AddHours(1) < DateTimeOffset.UtcNow)
+        
+        // Last login was under an hour ago.
+        if (user.LastLoginOn is { } lastLogin && DateTime.UtcNow - lastLogin < TimeSpan.FromHours(1))
         {
-            // Update last login date and time.
+            return new(user.Roles);
+        }
+        
+        // Update last login date and time.
+        try
+        {
             user.LastLoginOn = DateTimeOffset.UtcNow;
-            try
-            {
-                await context.SaveChangesAsync(cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, "Error updating user last login date and time.");
-            }
+            await context.SaveChangesAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error updating user last login date and time.");
         }
 
-        return new(user.Roles ?? []);
+        return new(user.Roles);
     }
 }

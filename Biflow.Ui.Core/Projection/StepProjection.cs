@@ -17,27 +17,23 @@ public record StepProjection(
     public virtual bool Equals(StepProjection? other) =>
         other is not null && StepId == other.StepId;
 
-    public override int GetHashCode() => base.GetHashCode();
+    public override int GetHashCode() => StepId.GetHashCode();
 
     public int CompareTo(object? obj)
     {
-        if (obj is null) return 1;
-
-        if (obj is StepProjection other)
+        switch (obj)
         {
-            int result = ExecutionPhase.CompareTo(other.ExecutionPhase);
-            if (result == 0)
+            case null:
+                return 1;
+            case StepProjection other:
             {
-                return StepName?.CompareTo(other.StepName) ?? 0;
+                var result = ExecutionPhase.CompareTo(other.ExecutionPhase);
+                return result == 0
+                    ? StepName?.CompareTo(other.StepName) ?? 0
+                    : result;
             }
-            else
-            {
-                return result;
-            }
-        }
-        else
-        {
-            throw new ArgumentException("Object is not a Step");
+            default:
+                throw new ArgumentException("Object is not a Step");
         }
     }
 }

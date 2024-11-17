@@ -18,7 +18,7 @@ internal class ClaimsTransformer(IMemoryCache memoryCache, IMediator mediator) :
         {
             return principal;
         }
-        if (principal.Claims.Any(c => c.Type == ClaimTypes.Role && c.Issuer == Issuer))
+        if (principal.Claims.Any(c => c is { Type: ClaimTypes.Role, Issuer: Issuer }))
         {
             return principal;
         }

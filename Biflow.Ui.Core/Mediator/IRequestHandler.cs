@@ -1,6 +1,6 @@
 ﻿namespace Biflow.Ui.Core;
 
-internal interface IRequestHandler<TRequest> : IRequestHandler
+internal interface IRequestHandler<in TRequest> : IRequestHandler
     where TRequest : IRequest
 {
     public Task Handle(TRequest request, CancellationToken cancellationToken);
@@ -9,7 +9,7 @@ internal interface IRequestHandler<TRequest> : IRequestHandler
         Handle((TRequest)request, cancellationToken);
 }
 
-internal interface IRequestHandler<TRequest, TResponse> : IRequestHandler
+internal interface IRequestHandler<in TRequest, TResponse> : IRequestHandler
     where TRequest : IRequest<TResponse>
 {
     public Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken);

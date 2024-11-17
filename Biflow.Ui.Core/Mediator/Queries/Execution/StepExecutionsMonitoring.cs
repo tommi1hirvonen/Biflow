@@ -12,13 +12,13 @@ internal class StepExecutionsQueryHandler(IDbContextFactory<AppDbContext> dbCont
 {
     public async Task<StepExecutionsMonitoringQueryResponse> Handle(StepExecutionsMonitoringQuery request, CancellationToken cancellationToken)
     {
-        using var context = dbContextFactory.CreateDbContext();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var from = request.FromDateTime;
         var to = request.ToDateTime;
 
         var query = context.StepExecutionAttempts
-        .AsNoTracking()
-                .Where(e => e.StepExecution.Execution.CreatedOn <= to && e.EndedOn >= from);
+            .AsNoTracking()
+            .Where(e => e.StepExecution.Execution.CreatedOn <= to && e.EndedOn >= from);
 
         if (DateTime.Now >= from && DateTime.Now <= to)
         {

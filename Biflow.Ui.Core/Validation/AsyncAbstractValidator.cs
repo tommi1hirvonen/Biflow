@@ -5,7 +5,7 @@ namespace Biflow.Ui.Core;
 
 public abstract class AsyncAbstractValidator<T> : AbstractValidator<T>
 {
-    private Task<ValidationResult>? validateTask = null;
+    private Task<ValidationResult>? validateTask;
 
     public override Task<ValidationResult> ValidateAsync(ValidationContext<T> context, CancellationToken cancellation = default) =>
         validateTask = base.ValidateAsync(context, cancellation);

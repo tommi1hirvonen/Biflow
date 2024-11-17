@@ -12,7 +12,7 @@ internal class ExecutionsQueryHandler(IDbContextFactory<AppDbContext> dbContextF
 {
     public async Task<ExecutionsMonitoringQueryResponse> Handle(ExecutionsMonitoringQuery request, CancellationToken cancellationToken)
     {
-        using var context = dbContextFactory.CreateDbContext();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var from = request.FromDateTime;
         var to = request.ToDateTime;
 

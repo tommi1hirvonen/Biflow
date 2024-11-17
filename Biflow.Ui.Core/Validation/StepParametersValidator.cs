@@ -14,7 +14,7 @@ public class StepParametersValidator : AsyncAbstractValidator<IHasStepParameters
             .Must(parameters => parameters.ExpressionParameters.DistinctBy(p => p.ParameterName).Count() == parameters.ExpressionParameters.Count())
             .WithMessage("Expression parameter names must be unique");
         RuleForEach(step => step.StepParameters)
-            .CustomAsync(async (param, context, ct) =>
+            .CustomAsync(async (param, context, _) =>
             {
                 try
                 {

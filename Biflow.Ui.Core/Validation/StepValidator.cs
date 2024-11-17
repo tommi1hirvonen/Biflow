@@ -16,7 +16,7 @@ public class StepValidator : AsyncAbstractValidator<Step>
             .Must(HaveNoDuplicates)
             .WithMessage("Target object names must be unique");
         RuleFor(step => step.ExecutionConditionExpression)
-            .MustAsync(async (step, exp, ct) =>
+            .MustAsync(async (step, _, _) =>
             {
                 try
                 {
@@ -31,7 +31,7 @@ public class StepValidator : AsyncAbstractValidator<Step>
             .WithMessage("Incorrect execution condition expression return type")
             .When(step => !string.IsNullOrWhiteSpace(step.ExecutionConditionExpression.Expression));
         RuleFor(step => step.ExecutionConditionExpression)
-            .MustAsync(async (step, exp, ct) =>
+            .MustAsync(async (step, _, _) =>
             {
                 try
                 {
@@ -46,7 +46,7 @@ public class StepValidator : AsyncAbstractValidator<Step>
             .WithMessage("Error validating execution condition expression")
             .When(step => !string.IsNullOrWhiteSpace(step.ExecutionConditionExpression.Expression));
         RuleForEach(step => step.ExecutionConditionParameters)
-            .CustomAsync(async (param, context, ct) =>
+            .CustomAsync(async (param, context, _) =>
             {
                 try
                 {
@@ -66,7 +66,7 @@ public class StepValidator : AsyncAbstractValidator<Step>
         When(step => step is IHasStepParameters, () =>
         {
             // Built-in parameter names used in step expressions are reserved and cannot be used as user-defined parameter names.
-            var reservedParameterNames = new string[]
+            var reservedParameterNames = new[]
             {
                 ExpressionParameterNames.ExecutionId,
                 ExpressionParameterNames.JobId,
@@ -77,19 +77,19 @@ public class StepValidator : AsyncAbstractValidator<Step>
             {
                 RuleForEach(step => ((IHasStepParameters)step).StepParameters)
                     .Must(p => p.ExpressionParameters.All(ep => ep.ParameterName != reservedName))
-                    .WithMessage((step, stepParam) => $"Reserved expression parameter name {reservedName} in parameter {stepParam.ParameterName}");
+                    .WithMessage((_, stepParam) => $"Reserved expression parameter name {reservedName} in parameter {stepParam.ParameterName}");
             }
         });
     }
 
     private static bool HaveNoDuplicates(IEnumerable<DataObject> objects)
     {
-        var count = objects.Count();
-        var distinctCount = objects
+        var a = objects.ToArray();
+        var distinctCount = a
             .Select(o => o.ObjectUri)
             .Distinct()
             .Count();
-        return count == distinctCount;
+        return a.Length == distinctCount;
     }
 }
 

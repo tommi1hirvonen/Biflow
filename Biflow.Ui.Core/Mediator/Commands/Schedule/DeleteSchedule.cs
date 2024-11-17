@@ -9,8 +9,8 @@ internal class DeleteScheduleCommandHandler(
 {
     public async Task Handle(DeleteScheduleCommand request, CancellationToken cancellationToken)
     {
-        using var context = dbContextFactory.CreateDbContext();
-        using var transaction = context.Database.BeginTransaction();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
         try
         {
             var schedule = await context.Schedules
@@ -18,11 +18,11 @@ internal class DeleteScheduleCommandHandler(
             context.Schedules.Remove(schedule);
             await context.SaveChangesAsync(cancellationToken);
             await scheduler.RemoveScheduleAsync(schedule);
-            transaction.Commit();
+            await transaction.CommitAsync(cancellationToken);
         }
         catch
         {
-            transaction.Rollback();
+            await transaction.RollbackAsync(CancellationToken.None);
             throw;
         }
     }

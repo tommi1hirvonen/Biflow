@@ -59,7 +59,7 @@ internal class ExecutionsParallelQueryHandler(IDbContextFactory<AppDbContext> db
     private async Task<ExecutionProjection[]> GetExecutionsAsync(
         Expression<Func<Execution, bool>> predicate, CancellationToken cancellationToken)
     {
-        using var context = dbContextFactory.CreateDbContext();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var query = context.Executions
             .AsNoTracking()
             .AsSingleQuery()

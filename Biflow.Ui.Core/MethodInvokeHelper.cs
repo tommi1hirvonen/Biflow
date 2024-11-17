@@ -8,8 +8,6 @@ namespace Biflow.Ui.Core;
 /// </summary>
 public class MethodInvokeHelper(Action<string> action)
 {
-    private readonly Action<string> action = action;
-
     [JSInvokable]
     public void HelperInvokeCaller(string text)
     {

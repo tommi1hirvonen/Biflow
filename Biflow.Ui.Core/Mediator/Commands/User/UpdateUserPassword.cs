@@ -9,7 +9,7 @@ internal class UpdateUserPasswordCommandHandler(IDbContextFactory<AppDbContext> 
 {
     public async Task Handle(UpdateUserPasswordCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var oldHash = await context.Users
             .Where(u => u.Username == request.Username)
             .Select(u => EF.Property<string?>(u, "PasswordHash"))
@@ -23,7 +23,7 @@ internal class UpdateUserPasswordCommandHandler(IDbContextFactory<AppDbContext> 
         }
 
         var newHash = BC.HashPassword(request.NewPassword);
-        var affectedRows = await context.Users
+        await context.Users
             .Where(u => u.Username == request.Username)
             .ExecuteUpdateAsync(updates => updates
                 .SetProperty(u => EF.Property<string?>(u, "PasswordHash"), newHash), cancellationToken);

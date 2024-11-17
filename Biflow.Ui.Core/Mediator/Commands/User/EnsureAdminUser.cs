@@ -15,7 +15,7 @@ internal class EnsureAdminUserCommandHandler(IDbContextFactory<AppDbContext> dbC
 {
     public async Task Handle(EnsureAdminUserCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var user = new User
         {
             Username = request.Username,

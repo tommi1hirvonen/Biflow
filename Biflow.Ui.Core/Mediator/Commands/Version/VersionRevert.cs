@@ -7,7 +7,7 @@ public record VersionRevertCommand(EnvironmentSnapshot Snapshot) : IRequest;
 internal class VersionRevertCommandHandler(
     IDbContextFactory<RevertDbContext> dbContextFactory,
     ISchedulerService schedulerService,
-    ILogger<VersionRevertCommandHandler> loggger)
+    ILogger<VersionRevertCommandHandler> logger)
     : IRequestHandler<VersionRevertCommand>
 {
     public async Task Handle(VersionRevertCommand request, CancellationToken cancellationToken)
@@ -16,10 +16,10 @@ internal class VersionRevertCommandHandler(
         {
             var snapshot = request.Snapshot;
 
-            using var context = dbContextFactory.CreateDbContext();
+            await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
             // Manually controlling transactions is allowed since RevertDbContext does not use retry-on-failure execution strategy.
-            using var transaction = context.Database.BeginTransaction();
+            await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
 
 
             // Capture subscriptions, job and data table authorizations.
@@ -150,8 +150,18 @@ internal class VersionRevertCommandHandler(
 
             var capturedFunctionStepKeys = await context.FunctionSteps
                 .AsNoTracking()
+                .Where(s => !string.IsNullOrEmpty(s.FunctionKey))
                 .Select(s => new { s.StepId, s.FunctionKey })
                 .ToArrayAsync(cancellationToken);
+            
+            var functionSteps = snapshot.Jobs.SelectMany(j =>
+                j.Steps.OfType<FunctionStep>().Where(s => string.IsNullOrEmpty(s.FunctionKey)));
+            foreach (var step in functionSteps)
+            {
+                step.FunctionKey = capturedFunctionStepKeys
+                    .FirstOrDefault(s => s.StepId == step.StepId)
+                    ?.FunctionKey;
+            }
 
 
             // Delete all records for entities that are part of the revert process.
@@ -297,7 +307,7 @@ internal class VersionRevertCommandHandler(
         }
         catch (Exception ex)
         {
-            loggger.LogError(ex, "Error reverting version");
+            logger.LogError(ex, "Error reverting version");
             throw;
         }
     }

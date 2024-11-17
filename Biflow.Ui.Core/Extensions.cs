@@ -14,6 +14,7 @@ using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 using Quartz;
 using System.Runtime.CompilerServices;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using StartEnd = (System.DateTimeOffset? Start, System.DateTimeOffset? End);
 
 namespace Biflow.Ui.Core;
@@ -23,6 +24,7 @@ public static class Extensions
     /// <summary>
     /// Adds authentication services based on settings defined in configuration. Needs to be called after AddUiCoreServices().
     /// </summary>
+    /// <param name="services"/>
     /// <param name="configuration">Top level configuration object</param>
     /// <returns>The IServiceCollection passed as parameter</returns>
     /// <exception cref="ArgumentException">Thrown if an incorrect configuration is detected</exception>
@@ -30,53 +32,50 @@ public static class Extensions
     {
         var authentication = configuration.GetValue<string>("Authentication");
         AuthenticationMethod method;
-        if (authentication == "BuiltIn")
+        switch (authentication)
         {
-            services.AddScoped<IAuthHandler, BuiltInAuthHandler>();
-            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                .AddCookie(options =>
+            case "BuiltIn":
+                services.AddScoped<IAuthHandler, BuiltInAuthHandler>();
+                services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                    .AddCookie(options =>
+                    {
+                        options.LoginPath = "/login";
+                        options.ReturnUrlParameter = "redirectUrl";
+                    });
+                method = AuthenticationMethod.BuiltIn;
+                break;
+            case "Windows":
+                services.AddMemoryCache();
+                services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
+                services.AddAuthorizationBuilder()
+                    .SetFallbackPolicy(new AuthorizationPolicyBuilder().AddRequirements(new UserExistsRequirement()).Build());
+                services.AddScoped<IAuthorizationHandler, WindowsAuthorizationHandler>();
+                services.AddScoped<IClaimsTransformation, ClaimsTransformer>();
+                method = AuthenticationMethod.Windows;
+                break;
+            case "AzureAd":
+                services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
+                    .AddMicrosoftIdentityWebApp(configuration.GetSection("AzureAd"));
+                services.AddControllersWithViews().AddMicrosoftIdentityUI();
+                services.AddAuthorization(options =>
                 {
-                    options.LoginPath = "/login";
-                    options.ReturnUrlParameter = "redirectUrl";
+                    options.FallbackPolicy = options.DefaultPolicy;
                 });
-            method = AuthenticationMethod.BuiltIn;
-        }
-        else if (authentication == "Windows")
-        {
-            services.AddMemoryCache();
-            services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
-            services.AddAuthorizationBuilder()
-                .SetFallbackPolicy(new AuthorizationPolicyBuilder().AddRequirements(new UserExistsRequirement()).Build());
-            services.AddScoped<IAuthorizationHandler, WindowsAuthorizationHandler>();
-            services.AddScoped<IClaimsTransformation, ClaimsTransformer>();
-            method = AuthenticationMethod.Windows;
-        }
-        else if (authentication == "AzureAd")
-        {
-            services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
-                .AddMicrosoftIdentityWebApp(configuration.GetSection("AzureAd"));
-            services.AddControllersWithViews().AddMicrosoftIdentityUI();
-            services.AddAuthorization(options =>
-            {
-                options.FallbackPolicy = options.DefaultPolicy;
-            });
-            services.AddScoped<IClaimsTransformation, ClaimsTransformer>();
-            method = AuthenticationMethod.AzureAd;
-        }
-        else if (authentication == "Ldap")
-        {
-            services.AddScoped<IAuthHandler, LdapAuthHandler>();
-            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                .AddCookie(options =>
-                {
-                    options.LoginPath = "/login";
-                    options.ReturnUrlParameter = "redirectUrl";
-                });
-            method = AuthenticationMethod.Ldap;
-        }
-        else
-        {
-            throw new ArgumentException($"Invalid Authentication setting: {authentication}");
+                services.AddScoped<IClaimsTransformation, ClaimsTransformer>();
+                method = AuthenticationMethod.AzureAd;
+                break;
+            case "Ldap":
+                services.AddScoped<IAuthHandler, LdapAuthHandler>();
+                services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                    .AddCookie(options =>
+                    {
+                        options.LoginPath = "/login";
+                        options.ReturnUrlParameter = "redirectUrl";
+                    });
+                method = AuthenticationMethod.Ldap;
+                break;
+            default:
+                throw new ArgumentException($"Invalid Authentication setting: {authentication}");
         }
         services.AddSingleton(new AuthenticationMethodResolver(method));
         return services;
@@ -110,6 +109,7 @@ public static class Extensions
     /// <summary>
     /// Adds services that provide core functionality in the UI application
     /// </summary>
+    /// <param name="services"></param>
     /// <param name="configuration">Top level configuration object</param>
     /// <returns>The IServiceCollection passed as parameter</returns>
     /// <exception cref="ArgumentException">Thrown if an incorrect configuration is detected</exception>
@@ -131,39 +131,37 @@ public static class Extensions
         
         services.AddHttpClient();
 
-        services.AddSingleton(typeof(ITokenService), typeof(TokenService<ServiceDbContext>));
+        services.AddSingleton<ITokenService, TokenService<ServiceDbContext>>();
 
         var executorType = configuration.GetSection("Executor").GetValue<string>("Type");
         ExecutorMode executorMode;
-        if (executorType == "WebApp")
+        switch (executorType)
         {
-            services.AddSingleton<IExecutorService, WebAppExecutorService>();
-            executorMode = ExecutorMode.WebApp;
-        }
-        else if (executorType == "SelfHosted")
-        {
-            services.AddExecutorServices(configuration.GetSection("Executor").GetSection("SelfHosted"));
-            services.AddSingleton<IExecutorService, SelfHostedExecutorService>();
-            executorMode = ExecutorMode.SelfHosted;
-        }
-        else
-        {
-            throw new ArgumentException($"Error registering executor service. Incorrect executor type: {executorType}. Check appsettings.json.");
+            case "WebApp":
+                services.AddSingleton<IExecutorService, WebAppExecutorService>();
+                executorMode = ExecutorMode.WebApp;
+                break;
+            case "SelfHosted":
+                services.AddExecutorServices(configuration.GetSection("Executor").GetSection("SelfHosted"));
+                services.AddSingleton<IExecutorService, SelfHostedExecutorService>();
+                executorMode = ExecutorMode.SelfHosted;
+                break;
+            default:
+                throw new ArgumentException($"Error registering executor service. Incorrect executor type: {executorType}. Check appsettings.json.");
         }
 
         var schedulerType = configuration.GetSection("Scheduler").GetValue<string>("Type");
-        if (schedulerType == "WebApp")
+        switch (schedulerType)
         {
-            services.AddSingleton<ISchedulerService, WebAppSchedulerService>();
-        }
-        else if (schedulerType == "SelfHosted")
-        {
-            services.AddSchedulerServices<ExecutionJob>();
-            services.AddSingleton<ISchedulerService, SelfHostedSchedulerService>();
-        }
-        else
-        {
-            throw new ArgumentException($"Error registering scheduler service. Incorrect scheduler type: {schedulerType}. Check appsettings.json.");
+            case "WebApp":
+                services.AddSingleton<ISchedulerService, WebAppSchedulerService>();
+                break;
+            case "SelfHosted":
+                services.AddSchedulerServices<ExecutionJob>();
+                services.AddSingleton<ISchedulerService, SelfHostedSchedulerService>();
+                break;
+            default:
+                throw new ArgumentException($"Error registering scheduler service. Incorrect scheduler type: {schedulerType}. Check appsettings.json.");
         }
 
         services.AddSingleton(new ExecutorModeResolver(executorMode));
@@ -213,6 +211,7 @@ public static class Extensions
     /// <param name="currentItems">Current (old) items</param>
     /// <param name="newItems">New items</param>
     /// <param name="keyFunc">Delegate to get the key from item</param>
+    /// <param name="updateMatchingItemValues">call <see cref="PropertyValues.SetValues(object)"/> on matching items</param>
     public static void MergeCollections<T, TKey>(
         this DbContext context,
         ICollection<T> currentItems,
@@ -262,47 +261,32 @@ public static class Extensions
             currentItems.Add(item);
         }
     }
-
-    public static (double Offset, double Width) GetGanttGraphDimensions(this StepExecutionAttempt attempt)
-    {
-        var allAttempts = attempt.StepExecution.Execution.StepExecutions
-            .SelectMany(e => e.StepExecutionAttempts)
-            .Where(e => e.StartedOn != null);
-
-        return attempt.GetGanttGraphDimensions(allAttempts);
-    }
-
-    /// <summary>
-    /// Calculate Gantt graph dimensions for an execution attempt. The start and end time are compared to the list of all attempts provider as an argument.
-    /// The method assumes constant width of 100 for the Gantt graph.
-    /// </summary>
-    /// <param name="allAttempts">List of all execution attempts shown on the Gantt graph</param>
-    /// <returns>Offset (between 0 and 99) and width (between 1 and 100) of the element in the Gantt graph</returns>
-    public static (double Offset, double Width) GetGanttGraphDimensions(this StepExecutionAttempt attempt, IEnumerable<StepExecutionAttempt> allAttempts)
-        => (attempt.StartedOn, attempt.EndedOn).GetGanttGraphDimensions(allAttempts.Select(a => (a.StartedOn, a.EndedOn)));
-
-    public static (double Offset, double Width) GetGanttGraphDimensions(this Execution execution, IEnumerable<Execution> allExecutions)
-        => (execution.StartedOn, execution.EndedOn).GetGanttGraphDimensions(allExecutions.Select(e => (e.StartedOn, e.EndedOn)));
-
+    
     /// <summary>
     /// Calculate Gantt graph dimensions for a tuple of DateTimeOffsets (start and end time). The start and end time are compared to the list of all tuples provided as an argument.
     /// The method assumes constant width of 100 for the Gantt graph.
     /// </summary>
+    /// <param name="execution"></param>
     /// <param name="allExecutions">List of all executions (start and end times) shown on the Gantt graph</param>
     /// <returns>Offset (between 0 and 99) and width (between 1 and 100) of the element in the Gantt graph</returns>
     public static (double Offset, double Width) GetGanttGraphDimensions(this StartEnd execution, IEnumerable<StartEnd> allExecutions)
     {
-        if (!allExecutions.Any())
+        var executions = allExecutions.ToArray();
+        if (executions.Length == 0)
+        {
             return (0, 0);
+        }
 
-        var minTime = allExecutions.Min(e => e.Start?.LocalDateTime) ?? DateTime.Now;
-        var maxTime = allExecutions.Max(e => e.End?.LocalDateTime ?? DateTime.Now);
+        var minTime = executions.Min(e => e.Start?.LocalDateTime) ?? DateTime.Now;
+        var maxTime = executions.Max(e => e.End?.LocalDateTime ?? DateTime.Now);
 
         var minTicks = minTime.Ticks;
         var maxTicks = maxTime.Ticks;
 
         if (minTicks == maxTicks)
+        {
             return (0, 0);
+        }
 
         var startTicks = (execution.Start?.LocalDateTime ?? DateTime.Now).Ticks;
         var endTicks = (execution.End?.LocalDateTime ?? DateTime.Now).Ticks;
@@ -323,11 +307,13 @@ public static class Extensions
     public static decimal GetSuccessPercent(this Execution execution)
     {
         var successCount = execution.StepExecutions
-            ?.Count(step =>
-                step.StepExecutionAttempts?.Any(attempt =>
-                    attempt.ExecutionStatus == StepExecutionStatus.Succeeded || attempt.ExecutionStatus == StepExecutionStatus.Warning) ?? false) ?? 0;
-        var allCount = execution.StepExecutions?.Count ?? 0;
-        return allCount > 0 ? (decimal)successCount / allCount * 100 : 0;
+            .Count(step =>
+                step.StepExecutionAttempts.Any(attempt =>
+                    attempt.ExecutionStatus is StepExecutionStatus.Succeeded or StepExecutionStatus.Warning));
+        var allCount = execution.StepExecutions.Count;
+        return allCount > 0
+            ? (decimal)successCount / allCount * 100
+            : 0;
     }
 
     /// <summary>
@@ -336,23 +322,26 @@ public static class Extensions
     /// <returns>Progress percentage between 0 and 100 rounded to the nearest integer</returns>
     public static int GetProgressPercent(this Execution execution)
     {
-        var allCount = execution.StepExecutions?.Count ?? 0;
-        var completedCount = execution.StepExecutions?.Count(step =>
-            step.StepExecutionAttempts?.Any(att =>
-                att.ExecutionStatus == StepExecutionStatus.Succeeded ||
-                att.ExecutionStatus == StepExecutionStatus.Warning ||
-                att.ExecutionStatus == StepExecutionStatus.Failed ||
-                att.ExecutionStatus == StepExecutionStatus.Stopped ||
-                att.ExecutionStatus == StepExecutionStatus.Skipped ||
-                att.ExecutionStatus == StepExecutionStatus.Duplicate) ?? false) ?? 0;
-        return allCount > 0 ? (int)Math.Round(completedCount / (double)allCount * 100) : 0;
+        var allCount = execution.StepExecutions.Count;
+        var completedCount = execution.StepExecutions.Count(step =>
+            step.StepExecutionAttempts.Any(att =>
+                att.ExecutionStatus is StepExecutionStatus.Succeeded
+                    or StepExecutionStatus.Warning
+                    or StepExecutionStatus.Failed
+                    or StepExecutionStatus.Stopped
+                    or StepExecutionStatus.Skipped
+                    or StepExecutionStatus.Duplicate));
+        return allCount > 0
+            ? (int)Math.Round(completedCount / (double)allCount * 100)
+            : 0;
     }
 
     /// <summary>
     /// Get a string describing the schedule's underlying Cron expression
     /// </summary>
     /// <returns>Descriptive text if the Cron expression is valid. Otherwise an error message string is returned.</returns>
-    public static string GetScheduleDescription(this Schedule schedule) => GetCronExpressionDescription(schedule.CronExpression);
+    public static string GetScheduleDescription(this Schedule schedule) =>
+        GetCronExpressionDescription(schedule.CronExpression);
 
     /// <summary>
     /// Get a string describing a Cron expression
@@ -371,32 +360,33 @@ public static class Extensions
                 DayOfWeekStartIndexZero = false
             });
         }
-        else
-        {
-            return "Invalid Cron expression";
-        }
+
+        return "Invalid Cron expression";
     }
 
     /// <summary>
     /// Generates a sequence of DateTimes for when the schedule is triggered
     /// </summary>
-    /// <param name="schedule"><see cref="">Schedule</see> object whose Cron is used to parse DateTimes</param>
+    /// <param name="schedule"><see cref="Schedule"></see> object whose Cron is used to parse DateTimes</param>
     /// <param name="start">Optionally provide start time to filter generated sequence to only include DateTimes beyond a certain point. By default DateTimeOffset.UtcNow is used.</param>
     /// <returns></returns>
     public static IEnumerable<DateTime?> NextFireTimes(this Schedule schedule, DateTimeOffset? start = null)
     {
-        if (CronExpression.IsValidExpression(schedule.CronExpression))
+        if (!CronExpression.IsValidExpression(schedule.CronExpression))
         {
-            var cron = new CronExpression(schedule.CronExpression);
-            DateTimeOffset? dateTime = start ?? DateTimeOffset.UtcNow;
-            while (dateTime is not null)
+            yield break;
+        }
+        
+        var cron = new CronExpression(schedule.CronExpression);
+        DateTimeOffset? dateTime = start ?? DateTimeOffset.UtcNow;
+        while (dateTime is not null)
+        {
+            dateTime = cron.GetTimeAfter((DateTimeOffset)dateTime);
+            if (dateTime is null)
             {
-                dateTime = cron.GetTimeAfter((DateTimeOffset)dateTime);
-                if (dateTime is null)
-                    break;
-                else
-                    yield return dateTime.Value.LocalDateTime;
+                break;
             }
+            yield return dateTime.Value.LocalDateTime;
         }
     }
 
@@ -413,23 +403,25 @@ public static class Extensions
         {
             return false;
         }
+        
         if (after is null && before is null)
         {
             return true;
         }
+        
         var cron = new CronExpression(schedule.CronExpression);
         return (after, before) switch
         {
-            (DateTime a, DateTime b) => cron.GetTimeAfter(a) is DateTimeOffset dto && dto <= b,
-            (DateTime a, _) => cron.GetTimeAfter(a) is not null,
-            (_, DateTime b) => cron.GetTimeAfter(DateTimeOffset.MinValue) <= b,
+            ({ } a, { } b) => cron.GetTimeAfter(a) is { } dto && dto <= b,
+            ({ } a, _) => cron.GetTimeAfter(a) is not null,
+            (_, { } b) => cron.GetTimeAfter(DateTimeOffset.MinValue) <= b,
             _ => true
         };
     }
 
     public static string FormatPercentage(this decimal value, int decimalPlaces)
     {
-        return decimal.Round(value, decimalPlaces).ToString() + "%";
+        return decimal.Round(value, decimalPlaces) + "%";
     }
 
     /// <summary>
@@ -473,11 +465,13 @@ public static class Extensions
         _ => Task.CompletedTask
     };
 
-    public static async Task<R?> LetAsync<T, R>(this T? obj, Func<T, Task<R>> block) where R : class => obj switch
-    {
-        not null => await block(obj),
-        _ => null
-    };
+    public static async Task<TR?> LetAsync<T, TR>(this T? obj, Func<T, Task<TR>> block)
+        where TR : class =>
+        obj switch
+        {
+            not null => await block(obj),
+            _ => null
+        };
 
     public static TValue? GetValueOrDefault<TKey, TValue>(this ConditionalWeakTable<TKey, TValue> table, TKey key)
         where TKey : class
@@ -490,13 +484,13 @@ public static class Extensions
     public static TValue GetOrCreate<TKey, TValue>(this IDictionary<TKey, TValue> table, TKey key)
         where TValue : new()
     {
-        if (!table.TryGetValue(key, out var value))
+        if (table.TryGetValue(key, out var value))
         {
-            value = new TValue();
-            table[key] = value;
+            return value;
         }
+
+        value = new TValue();
+        table[key] = value;
         return value;
     }
-
-    
 }

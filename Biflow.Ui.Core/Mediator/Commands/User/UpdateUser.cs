@@ -7,18 +7,11 @@ internal class UpdateUserCommandHandler(IDbContextFactory<AppDbContext> dbContex
 {
     public async Task Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         
-        var query = context.Users.AsQueryable();
-
-        if (request.User.DataTables is not null)
-        {
-            query = query.Include(u => u.DataTables);
-        }
-        if (request.User.Jobs is not null)
-        {
-            query = query.Include(u => u.Jobs);
-        }
+        var query = context.Users
+            .Include(u => u.DataTables)
+            .Include(u => u.Jobs);
 
         var user = await query.FirstOrDefaultAsync(u => u.UserId == request.User.UserId, cancellationToken);
         if (user is null)
@@ -27,23 +20,18 @@ internal class UpdateUserCommandHandler(IDbContextFactory<AppDbContext> dbContex
         }
 
         context.Entry(user).CurrentValues.SetValues(request.User);
+        
+        context.MergeCollections(
+            user.DataTables,
+            request.User.DataTables,
+            d => d.DataTableId,
+            updateMatchingItemValues: false);
 
-        if (request.User.DataTables is not null)
-        {
-            context.MergeCollections(
-                user.DataTables,
-                request.User.DataTables,
-                d => d.DataTableId,
-                updateMatchingItemValues: false);
-        }
-        if (request.User.Jobs is not null)
-        {
-            context.MergeCollections(
-                user.Jobs,
-                request.User.Jobs,
-                j => j.JobId,
-                updateMatchingItemValues: false);
-        }
+        context.MergeCollections(
+            user.Jobs,
+            request.User.Jobs,
+            j => j.JobId,
+            updateMatchingItemValues: false);
 
         await context.SaveChangesAsync(cancellationToken);
     }

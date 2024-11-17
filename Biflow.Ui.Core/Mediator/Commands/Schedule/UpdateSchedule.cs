@@ -1,6 +1,4 @@
-﻿using Biflow.Core.Entities;
-
-namespace Biflow.Ui.Core;
+﻿namespace Biflow.Ui.Core;
 
 public record UpdateScheduleCommand(Schedule Schedule) : IRequest;
 
@@ -11,7 +9,7 @@ internal class UpdateScheduleCommandHandler(
 {
     public async Task Handle(UpdateScheduleCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         var stepTagIds = request.Schedule.TagFilter.Select(t => t.TagId).ToArray();
         var scheduleTagIds = request.Schedule.Tags.Select(t => t.TagId).ToArray();
@@ -38,7 +36,7 @@ internal class UpdateScheduleCommandHandler(
 
         // Synchronize step tags
         var stepTagsToAdd = request.Schedule.TagFilter
-            .Where(t1 => !scheduleFromDb.TagFilter.Any(t2 => t2.TagId == t1.TagId))
+            .Where(t1 => scheduleFromDb.TagFilter.All(t2 => t2.TagId != t1.TagId))
             .Select(t => t.TagId);
         foreach (var id in stepTagsToAdd)
         {
@@ -60,7 +58,7 @@ internal class UpdateScheduleCommandHandler(
 
         // Synchronize schedule tags
         var scheduleTagsToAdd = request.Schedule.Tags
-            .Where(t1 => !scheduleFromDb.Tags.Any(t2 => t2.TagId == t1.TagId))
+            .Where(t1 => scheduleFromDb.Tags.All(t2 => t2.TagId != t1.TagId))
             .Select(t => (t.TagId, t.TagName, t.Color));
         foreach (var (id, name, color) in scheduleTagsToAdd)
         {
@@ -76,16 +74,16 @@ internal class UpdateScheduleCommandHandler(
             scheduleFromDb.Tags.Remove(tag);
         }
 
-        using var transaction = context.Database.BeginTransaction();
+        await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
         await context.SaveChangesAsync(cancellationToken);
         try
         {
             await scheduler.UpdateScheduleAsync(request.Schedule);
-            transaction.Commit();
+            await transaction.CommitAsync(cancellationToken);
         }
         catch
         {
-            transaction.Rollback();
+            await transaction.RollbackAsync(CancellationToken.None);
             throw;
         }
     }
