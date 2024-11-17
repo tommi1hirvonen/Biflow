@@ -20,7 +20,7 @@ public partial class Jobs(
     [CascadingParameter] public UserState UserState { get; set; } = new();
     [CascadingParameter] public ExecuteMultipleModal ExecuteMultipleModal { get; set; } = null!;
 
-    private static readonly JsonSerializerOptions jsonOptions = new() { WriteIndented = true };
+    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
     private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
     private readonly JobDuplicatorFactory _jobDuplicatorFactory = jobDuplicatorFactory;
     private readonly ToasterService _toaster = toaster;
@@ -32,7 +32,7 @@ public partial class Jobs(
     private List<Job>? jobs;    
     private Dictionary<Guid, Execution>? lastExecutions;
     private List<StepProjection> steps = [];
-    private bool isLoading = false;
+    private bool isLoading;
     private JobEditModal? jobEditModal;
     private ExecuteModal? executeModal;
     private JobsBatchEditTagsModal? jobsBatchEditTagsModal;
@@ -94,7 +94,7 @@ public partial class Jobs(
 
     private async Task LoadJobsAsync()
     {
-        using var context = await Task.Run(_dbContextFactory.CreateDbContext);
+        await using var context = await Task.Run(_dbContextFactory.CreateDbContext);
         jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Include(job => job.Tags)
@@ -107,7 +107,7 @@ public partial class Jobs(
     private async Task LoadLastExecutionsAsync()
     {
         // Get each job's last execution.
-        using var context = await Task.Run(_dbContextFactory.CreateDbContext);
+        await using var context = await Task.Run(_dbContextFactory.CreateDbContext);
         var lastExecutions = await context.Executions
             .AsNoTrackingWithIdentityResolution()
             .Where(execution => context.Jobs.Any(j => j.JobId == execution.JobId) && execution.StartedOn != null)
@@ -125,7 +125,7 @@ public partial class Jobs(
 
     private async Task LoadStepsAsync()
     {
-        using var context = await Task.Run(_dbContextFactory.CreateDbContext);
+        await using var context = await Task.Run(_dbContextFactory.CreateDbContext);
         steps = await context.Steps
             .AsNoTracking()
             .Select(s => new StepProjection(s.JobId, s.StepName))
@@ -200,7 +200,7 @@ public partial class Jobs(
             duplicator.Job.JobName = $"{duplicator.Job.JobName} – Copy";
             var createdJob = await duplicator.SaveJobAsync();
             jobs?.Add(createdJob);
-            jobs = jobs?.OrderBy(job_ => job_.JobName).ToList();
+            jobs = jobs?.OrderBy(j => j.JobName).ToList();
         }
         catch (Exception ex)
         {
@@ -214,7 +214,8 @@ public partial class Jobs(
         {
             return;
         }
-        using (var context = await _dbContextFactory.CreateDbContextAsync())
+
+        await using (var context = await _dbContextFactory.CreateDbContextAsync())
         {
             var executingSteps = await context.JobSteps
                 .Where(s => s.JobToExecuteId == job.JobId)
@@ -255,7 +256,7 @@ public partial class Jobs(
             return;
         }
         var jobIds = selectedJobs.Select(j => j.JobId).ToArray();
-        using (var context = await _dbContextFactory.CreateDbContextAsync())
+        await using (var context = await _dbContextFactory.CreateDbContextAsync())
         {
             var executingSteps = await context.JobSteps
                 .Where(s => s.JobToExecuteId != null && jobIds.Contains((Guid)s.JobToExecuteId))
@@ -297,7 +298,7 @@ public partial class Jobs(
     {
         if (value)
         {
-            var jobsToAdd = jobs.Where(j => !selectedJobs.Contains(j)) ?? [];
+            var jobsToAdd = jobs.Where(j => !selectedJobs.Contains(j));
             foreach (var j in jobsToAdd) selectedJobs.Add(j);
         }
         else
@@ -310,18 +311,21 @@ public partial class Jobs(
     {
         try
         {
-            using var context = _dbContextFactory.CreateDbContext();
+            await using var context = await _dbContextFactory.CreateDbContextAsync();
             var steps = await context.Steps
                 .Select(s => new ValidationStep(s.Job.JobName, s.StepId, s.StepName, s.Dependencies.Select(d => d.DependantOnStepId).ToArray()))
                 .ToListAsync();
-            var comparer = new TopologicalComparer<ValidationStep, Guid>(steps, s => s?.StepId ?? Guid.Empty, s => s.Dependencies);
+            var comparer = new TopologicalComparer<ValidationStep, Guid>(
+                items: steps,
+                keySelector: s => s?.StepId ?? Guid.Empty,
+                dependenciesSelector: s => s.Dependencies);
             steps.Sort(comparer);
             _toaster.AddSuccess("Validation successful");
         }
         catch (CyclicDependencyException<ValidationStep> ex)
         {
             var cycles = ex.CyclicObjects.Select(c => c.Select(s => new { s.JobName, s.StepName }));
-            var message = JsonSerializer.Serialize(cycles, jsonOptions);
+            var message = JsonSerializer.Serialize(cycles, JsonOptions);
             _ = _js.InvokeVoidAsync("console.log", message).AsTask();
             _toaster.AddError("Cyclic dependencies detected", "See browser console for detailed output.");
         }

@@ -174,7 +174,7 @@
         await modal.LetAsync(x => x.ShowAsync());
         if (functionAppId != Guid.Empty)
         {
-            using var context = DbFactory.CreateDbContext();
+            await using var context = DbFactory.CreateDbContext();
             functionApp = await context.FunctionApps
                 .AsNoTrackingWithIdentityResolution()
                 .Include(f => f.Steps)

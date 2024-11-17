@@ -28,7 +28,7 @@ public partial class JobDetails(
     private readonly IMediator _mediator = mediator;
     private readonly IJSRuntime _js = js;
     private readonly CancellationTokenSource cts = new();
-    private static readonly JsonSerializerOptions jsonOptions = new() { WriteIndented = true };
+    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
     private Job? job;
     private List<Job> jobs = [];
@@ -76,7 +76,7 @@ public partial class JobDetails(
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         sqlConnections = await context.Connections
             .AsNoTracking()
             .Where(c => c.ConnectionType == ConnectionType.Sql || c.ConnectionType == ConnectionType.Snowflake)
@@ -118,7 +118,7 @@ public partial class JobDetails(
             .ToListAsync(cts.Token);
         job = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
-            .FirstAsync(job => job.JobId == Id, cts.Token);
+            .FirstAsync(j => j.JobId == Id, cts.Token);
         steps = await BuildStepsQueryWithIncludes(context)
             .Where(step => step.JobId == job.JobId)
             .AsNoTrackingWithIdentityResolution()
@@ -162,7 +162,7 @@ public partial class JobDetails(
         catch (CyclicDependencyException<Step> ex)
         {
             var cycles = ex.CyclicObjects.Select(c => c.Select(s => new { s.StepId, s.StepName, s.StepType }));
-            var message = JsonSerializer.Serialize(cycles, jsonOptions);
+            var message = JsonSerializer.Serialize(cycles, JsonOptions);
             _ = _js.InvokeVoidAsync("console.log", message).AsTask();
             _toaster.AddError("Error sorting steps", "Cyclic dependencies detected. See browser console for detailed output.");
         }
@@ -187,7 +187,7 @@ public partial class JobDetails(
         try
         {
             ArgumentNullException.ThrowIfNull(job);
-            using (var context1 = await _dbContextFactory.CreateDbContextAsync())
+            await using (var context1 = await _dbContextFactory.CreateDbContextAsync())
             {
                 var executingSteps = await context1.JobSteps
                     .Where(s => s.JobToExecuteId == job.JobId)

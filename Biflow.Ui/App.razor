@@ -85,7 +85,7 @@
     {
         var requestCulture = new RequestCulture(CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture);
         var cultureCookieValue = CookieRequestCultureProvider.MakeCookieValue(requestCulture);
-        HttpContext?.Response.Cookies.Append(
+        HttpContext.Response.Cookies.Append(
             CookieRequestCultureProvider.DefaultCookieName,
             cultureCookieValue);
     }

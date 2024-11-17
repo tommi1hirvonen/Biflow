@@ -187,7 +187,7 @@
         expandedStates.Clear();
         try
         {
-            using var context = DbContextFactory.CreateDbContext();
+            await using var context = DbContextFactory.CreateDbContext();
             var appRegistration = await context.AppRegistrations
                 .AsNoTracking()
                 .FirstAsync(r => r.AppRegistrationId == appRegistrationId);

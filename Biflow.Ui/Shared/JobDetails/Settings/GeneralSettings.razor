@@ -79,7 +79,7 @@
             return;
         }
 
-        using var context = await DbContextFactory.CreateDbContextAsync();
+        await using var context = await DbContextFactory.CreateDbContextAsync();
         allTags = await context.JobTags.ToListAsync();
         allTags.Sort();
         editJob = await context.Jobs

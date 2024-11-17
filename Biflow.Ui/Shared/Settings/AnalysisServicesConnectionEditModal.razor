@@ -124,7 +124,7 @@
         await modal.LetAsync(x => x.ShowAsync());
         if (connectionId != Guid.Empty)
         {
-            using var context = DbFactory.CreateDbContext();
+            await using var context = DbFactory.CreateDbContext();
             connection = await context.AnalysisServicesConnections
                 .AsNoTrackingWithIdentityResolution()
                 .Include(c => c.TabularSteps)

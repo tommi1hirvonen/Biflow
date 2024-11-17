@@ -129,7 +129,7 @@
         string json;
         try
         {
-            using var stream = e.File.OpenReadStream();
+            await using var stream = e.File.OpenReadStream();
             using var reader = new StreamReader(stream);
             json = await reader.ReadToEndAsync(cts.Token);
         }

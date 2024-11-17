@@ -41,7 +41,8 @@
             await modal.LetAsync(x => x.ShowAsync());
             return;
         }
-        using var context = await DbContextFactory.CreateDbContextAsync();
+
+        await using var context = await DbContextFactory.CreateDbContextAsync();
         this.category = await context.MasterDataTableCategories.FirstAsync(c => c.CategoryId == category.CategoryId);
         await modal.LetAsync(x => x.ShowAsync());
     }

@@ -171,7 +171,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        using var context = await DbContextFactory.CreateDbContextAsync();
+        await using var context = await DbContextFactory.CreateDbContextAsync();
         table = await context.MasterDataTables
             .Include(t => t.Category)
             .Include(t => t.Connection)

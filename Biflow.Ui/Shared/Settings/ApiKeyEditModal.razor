@@ -100,7 +100,7 @@
         await modal.LetAsync(x => x.ShowAsync());
         if (keyId != Guid.Empty)
         {
-            using var context = DbContextFactory.CreateDbContext();
+            await using var context = DbContextFactory.CreateDbContext();
             key = await context.ApiKeys
                 .AsNoTrackingWithIdentityResolution()
                 .FirstAsync(k => k.Id == keyId);

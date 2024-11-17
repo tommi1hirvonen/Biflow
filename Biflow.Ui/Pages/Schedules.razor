@@ -171,7 +171,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = await Task.Run(DbFactory.CreateDbContext);
+        await using var context = await Task.Run(DbFactory.CreateDbContext);
         jobs = await context.Jobs
             .Include(j => j.Tags)
             .OrderBy(job => job.JobName)

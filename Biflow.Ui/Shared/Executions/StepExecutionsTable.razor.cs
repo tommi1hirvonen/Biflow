@@ -116,7 +116,7 @@ public partial class StepExecutionsTable(
             }
             else
             {
-                using var context = await _dbContextFactory.CreateDbContextAsync();
+                await using var context = await _dbContextFactory.CreateDbContextAsync();
                 detailStep = await context.StepExecutionAttempts
                     .AsNoTrackingWithIdentityResolution()
                     .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")

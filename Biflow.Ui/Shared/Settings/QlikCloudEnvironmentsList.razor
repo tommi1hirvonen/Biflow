@@ -131,7 +131,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = await DbContextFactory.CreateDbContextAsync();
+        await using var context = await DbContextFactory.CreateDbContextAsync();
         environments = await context.QlikCloudEnvironments
             .AsNoTrackingWithIdentityResolution()
             .Include(c => c.Steps)

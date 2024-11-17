@@ -130,7 +130,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = await DbContextFactory.CreateDbContextAsync();
+        await using var context = await DbContextFactory.CreateDbContextAsync();
         keys = await context.ApiKeys
             .AsNoTracking()
             .ToListAsync();

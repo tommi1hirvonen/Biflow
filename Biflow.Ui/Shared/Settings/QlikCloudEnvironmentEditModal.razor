@@ -94,7 +94,7 @@
         await modal.LetAsync(x => x.ShowAsync());
         if (environmentId != Guid.Empty)
         {
-            using var context = await DbContextFactory.CreateDbContextAsync();
+            await using var context = await DbContextFactory.CreateDbContextAsync();
             environment = await context.QlikCloudEnvironments
                 .AsNoTrackingWithIdentityResolution()
                 .Include(c => c.Steps)

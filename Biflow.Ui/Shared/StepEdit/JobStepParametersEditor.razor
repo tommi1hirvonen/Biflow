@@ -171,7 +171,7 @@ else if (Step is not null)
 
         loading = true;
 
-        using var context = await DbContextFactory.CreateDbContextAsync();
+        await using var context = await DbContextFactory.CreateDbContextAsync();
         targetJob = await context.Jobs
             .Include(j => j.JobParameters)
             .FirstOrDefaultAsync(j => j.JobId == TargetJobId);

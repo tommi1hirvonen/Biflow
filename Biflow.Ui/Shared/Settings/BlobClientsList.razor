@@ -73,7 +73,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = await DbContextFactory.CreateDbContextAsync();
+        await using var context = await DbContextFactory.CreateDbContextAsync();
         blobClients = await context.BlobStorageClients
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(f => f.BlobStorageClientName)

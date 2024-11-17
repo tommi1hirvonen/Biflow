@@ -72,7 +72,7 @@
 
     public async Task ShowAsync(Guid dataObjectId)
     {
-        using var context = await DbContextFactory.CreateDbContextAsync();
+        await using var context = await DbContextFactory.CreateDbContextAsync();
         editObject = await context.DataObjects
             .Include(o => o.Steps)
             .ThenInclude(r => r.Step)

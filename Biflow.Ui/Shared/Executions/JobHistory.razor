@@ -205,7 +205,7 @@
 
     private async Task ReloadAsync()
     {
-        using var context = DbFactory.CreateDbContext();
+        await using var context = DbFactory.CreateDbContext();
         executions = await context.Executions
             .AsNoTracking()
             .AsSingleQuery()

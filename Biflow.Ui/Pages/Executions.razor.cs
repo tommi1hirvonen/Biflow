@@ -3,7 +3,7 @@
 [Route("/executions")]
 public partial class Executions(IMediator mediator, ToasterService toaster) : ComponentBase, IDisposable
 {
-    [CascadingParameter] UserState UserState { get; set; } = null!;
+    [CascadingParameter] public UserState UserState { get; set; } = null!;
 
     private ExecutionsPageState State => UserState.Executions;
 
@@ -11,7 +11,7 @@ public partial class Executions(IMediator mediator, ToasterService toaster) : Co
     private readonly ToasterService _toaster = toaster;
     private readonly CancellationTokenSource cts = new();
     
-    private bool loading = false;
+    private bool loading;
     private IEnumerable<ExecutionProjection>? executions;
     private IEnumerable<StepExecutionProjection>? stepExecutions;
     private Paginator<ExecutionProjection>? executionPaginator;
@@ -22,7 +22,7 @@ public partial class Executions(IMediator mediator, ToasterService toaster) : Co
 
     protected override async Task OnInitializedAsync()
     {
-        if (State.Preset is Preset preset)
+        if (State.Preset is { } preset)
         {
             (State.FromDateTime, State.ToDateTime) = GetPreset(preset);
         }
@@ -86,7 +86,7 @@ public partial class Executions(IMediator mediator, ToasterService toaster) : Co
         loading = true;
         StateHasChanged();
 
-        if (State.Preset is Preset preset)
+        if (State.Preset is { } preset)
         {
             (State.FromDateTime, State.ToDateTime) = GetPreset(preset);
         }

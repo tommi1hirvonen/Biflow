@@ -1,7 +1,4 @@
-﻿@using System.Security.Claims
-@using System.Security.Principal
-
-@inherits LayoutComponentBase
+﻿@inherits LayoutComponentBase
 
 @inject NavigationManager NavigationManager
 @inject IConfiguration Configuration
@@ -103,7 +100,7 @@
                                         <p>Authorization failed most likely because the authentication cookie expired. Please try logging out and logging in again.</p>
                                         <strong>@username</strong>
                                         <div class="d-grid mt-4 mb-3">
-                                            <a class="btn btn-primary" href="javascript:void()" @onclick="@(() => NavigationManager.NavigateTo("logout", forceLoad: true))">
+                                            <a class="btn btn-primary" href="javascript:void(0)" @onclick="@(() => NavigationManager.NavigateTo("logout", forceLoad: true))">
                                                 <SvgIcon Icon="FeatherIcon.LogOut" />
                                                 &nbsp;
                                                 Log out
@@ -126,9 +123,9 @@
 
     private readonly UserState userState = new();
 
-    private string? username = null;
+    private string? username;
     private bool collapseSidebar = true;
-    private string? schedulerServiceErrorMessage = null;
+    private string? schedulerServiceErrorMessage;
     private bool redirecting;
     private ExecuteMultipleModal? executeMultipleModal;
     private StepExecutionMonitorsOffcanvas? stepExecutionMonitorsOffcanvas;
@@ -157,7 +154,6 @@
                     ? "login"
                     : $"login?redirectUrl={redirectUrl}";
                 NavigationManager.NavigateTo(url, true);
-                return;
             }
         }
     }

@@ -49,7 +49,7 @@
     {
         if (clients is null)
         {
-            using var context = await DbContextFactory.CreateDbContextAsync();
+            await using var context = await DbContextFactory.CreateDbContextAsync();
             clients = await context.BlobStorageClients
                 .Include(c => c.AppRegistration)
                 .OrderBy(c => c.BlobStorageClientName)

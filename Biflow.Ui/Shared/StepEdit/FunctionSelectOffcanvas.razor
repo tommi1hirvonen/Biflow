@@ -109,7 +109,7 @@
 
         try
         {
-            using var context = DbContextFactory.CreateDbContext();
+            await using var context = DbContextFactory.CreateDbContext();
             var functionApp = await context.FunctionApps
                 .AsNoTrackingWithIdentityResolution()
                 .Include(fa => fa.AppRegistration)

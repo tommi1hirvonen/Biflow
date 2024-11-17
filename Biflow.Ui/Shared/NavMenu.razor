@@ -75,23 +75,24 @@
                 </NavLink>
             </li>
         </AuthorizeView>
-        @if (AuthenticationResolver.AuthenticationMethod is AuthenticationMethod.BuiltIn or AuthenticationMethod.Ldap)
+        @switch (AuthenticationResolver.AuthenticationMethod)
         {
-            <li class="nav-item mt-3">
-                <a class="nav-link" href="javascript:void()" @onclick="@(() => NavigationManager.NavigateTo("logout", forceLoad: true))">
-                    <SvgIcon Icon="FeatherIcon.LogOut" />
-                    Log out
-                </a>
-            </li>
-        }
-        else if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.AzureAd)
-        {
-            <li class="nav-item mt-3">
-                <a class="nav-link" href="javascript:void()" @onclick="@(() => NavigationManager.NavigateTo("MicrosoftIdentity/Account/SignOut", forceLoad: true))">
-                    <SvgIcon Icon="FeatherIcon.LogOut" />
-                    Log out
-                </a>
-            </li>
+            case AuthenticationMethod.BuiltIn or AuthenticationMethod.Ldap:
+                <li class="nav-item mt-3">
+                    <a class="nav-link" href="javascript:void(0)" @onclick="@(() => NavigationManager.NavigateTo("logout", forceLoad: true))">
+                        <SvgIcon Icon="FeatherIcon.LogOut" />
+                        Log out
+                    </a>
+                </li>
+                break;
+            case AuthenticationMethod.AzureAd:
+                <li class="nav-item mt-3">
+                    <a class="nav-link" href="javascript:void(0)" @onclick="@(() => NavigationManager.NavigateTo("MicrosoftIdentity/Account/SignOut", forceLoad: true))">
+                        <SvgIcon Icon="FeatherIcon.LogOut" />
+                        Log out
+                    </a>
+                </li>
+                break;
         }
     </ul>
 </nav>

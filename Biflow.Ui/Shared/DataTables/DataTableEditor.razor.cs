@@ -181,7 +181,7 @@ public partial class DataTableEditor(ToasterService toaster, IHxMessageBoxServic
             ArgumentNullException.ThrowIfNull(Table);
             var filterSet = filtered ? this.filterSet : null;
             var dataset = await Table.LoadDataAsync(filters: filterSet);
-            using var stream = dataset.GetExcelExportStream();
+            await using var stream = dataset.GetExcelExportStream();
 
             var regexSearch = new string(Path.GetInvalidFileNameChars());
             var regex = new Regex(string.Format("[{0}]", Regex.Escape(regexSearch)));

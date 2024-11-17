@@ -100,7 +100,7 @@
 
         try
         {
-            using var context = DbContextFactory.CreateDbContext();
+            await using var context = DbContextFactory.CreateDbContext();
             var workspace = await context.DatabricksWorkspaces
                 .AsNoTrackingWithIdentityResolution()
                 .FirstAsync(w => w.WorkspaceId == workspaceId);
@@ -122,8 +122,8 @@
         selectedFile = null;
         
         StateHasChanged();
-        
-        using var context = DbContextFactory.CreateDbContext();
+
+        await using var context = DbContextFactory.CreateDbContext();
         var workspace = await context.DatabricksWorkspaces
             .AsNoTrackingWithIdentityResolution()
             .FirstAsync(w => w.WorkspaceId == workspaceId);

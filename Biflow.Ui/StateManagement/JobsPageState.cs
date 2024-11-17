@@ -2,13 +2,13 @@
 
 public class JobsPageState
 {
-    public string JobNameFilter = "";
+    public string JobNameFilter { get; set; } = "";
 
-    public string StepNameFilter = "";
+    public string StepNameFilter { get; set; } = "";
 
-    public HashSet<ExecutionStatus> StatusFilter = [];
+    public HashSet<ExecutionStatus> StatusFilter { get; } = [];
 
-    public HashSet<TagProjection> TagFilter = [];
+    public HashSet<TagProjection> TagFilter { get; } = [];
 
     public StateFilter StateFilter { get; set; } = StateFilter.All;
 

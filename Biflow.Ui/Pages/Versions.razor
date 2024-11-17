@@ -71,7 +71,7 @@ else if (Page == "revertjson")
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = await DbContextFactory.CreateDbContextAsync();
+        await using var context = await DbContextFactory.CreateDbContextAsync();
         versions = await context.EnvironmentVersions
             .OrderByDescending(v => v.VersionId)
             .Select(v => new VersionProjection(v.VersionId, v.Description, v.CreatedOn, v.CreatedBy))

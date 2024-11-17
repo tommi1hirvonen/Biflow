@@ -25,7 +25,7 @@ public partial class DependenciesSynchronizer(
     private async Task CalculateChangesAsync()
     {
         if (Job is null) return;
-        using var context = _dbContextFactory.CreateDbContext();
+        await using var context = _dbContextFactory.CreateDbContext();
         var steps = await context.Steps
             .AsNoTrackingWithIdentityResolution()
             .Where(step => step.JobId == Job.JobId)

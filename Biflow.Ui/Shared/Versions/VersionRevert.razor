@@ -123,7 +123,7 @@
         if (VersionId is int versionId && versionId != previousVersionId)
         {
             previousVersionId = versionId;
-            using var context = DbContextFactory.CreateDbContext();
+            await using var context = DbContextFactory.CreateDbContext();
             version = await context.EnvironmentVersions
                 .FirstOrDefaultAsync(v => v.VersionId == versionId);
         }
@@ -140,7 +140,7 @@
         {
             result = null;
 
-            using var context = DbContextFactory.CreateDbContext();
+            await using var context = DbContextFactory.CreateDbContext();
             var snapshotJson = await context.EnvironmentVersions
                 .AsNoTracking()
                 .Where(v => v.VersionId == versionId)

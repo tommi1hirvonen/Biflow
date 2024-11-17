@@ -34,7 +34,7 @@
     </div>
     <div class="col-auto">
         <select class="form-select form-select-sm" @bind="selectedCulture" @bind:after="ApplySelectedCulture">
-            @foreach (var culture in supportedCultures)
+            @foreach (var culture in SupportedCultures)
             {
                 <option value="@culture">@culture.DisplayName</option>
             }
@@ -150,11 +150,12 @@
 @code {
     [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
 
-    private string? username = null;
+    private static readonly CultureInfo[] SupportedCultures = CultureInfo.GetCultures(CultureTypes.AllCultures);
+    
+    private string? username;
     private User? user;
     private PasswordModel passwordModel = new();
     private CultureInfo? selectedCulture;
-    private static CultureInfo[] supportedCultures = CultureInfo.GetCultures(CultureTypes.AllCultures);
 
     protected override async Task OnInitializedAsync()
     {
@@ -163,11 +164,11 @@
         ArgumentNullException.ThrowIfNull(AuthenticationState);
         var state = await AuthenticationState;
         username = state.User.Identity?.Name;
-        using var context = await Task.Run(DbFactory.CreateDbContext);
+        await using var context = await Task.Run(DbFactory.CreateDbContext);
         user = await context.Users
             .AsNoTrackingWithIdentityResolution()
-            .Include(user => user.Subscriptions)
-            .FirstAsync(user => user.Username == username);
+            .Include(u => u.Subscriptions)
+            .FirstAsync(u => u.Username == username);
     }
 
     private async Task SubmitEmail()
@@ -212,18 +213,20 @@
 
     private void ApplySelectedCulture()
     {
-        if (selectedCulture is not null && CultureInfo.CurrentCulture != selectedCulture)
+        if (selectedCulture is null || Equals(CultureInfo.CurrentCulture, selectedCulture))
         {
-            var uri = new Uri(NavigationManager.Uri)
-                .GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
-            var cultureEscaped = Uri.EscapeDataString(selectedCulture.Name);
-            var uriEscaped = Uri.EscapeDataString(uri);
-
-            // Navigate to the culture controller set endpoint which sets the culture cookie.
-            NavigationManager.NavigateTo(
-                $"Culture/Set?culture={cultureEscaped}&redirectUri={uriEscaped}",
-                forceLoad: true);
+            return;
         }
+        
+        var uri = new Uri(NavigationManager.Uri)
+            .GetComponents(UriComponents.PathAndQuery, UriFormat.Unescaped);
+        var cultureEscaped = Uri.EscapeDataString(selectedCulture.Name);
+        var uriEscaped = Uri.EscapeDataString(uri);
+
+        // Navigate to the culture controller set endpoint which sets the culture cookie.
+        NavigationManager.NavigateTo(
+            $"Culture/Set?culture={cultureEscaped}&redirectUri={uriEscaped}",
+            forceLoad: true);
     }
 
     private class PasswordModel

@@ -39,7 +39,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = await DbFactory.CreateDbContextAsync();
+        await using var context = await DbFactory.CreateDbContextAsync();
         users = await context.Users
             .AsNoTrackingWithIdentityResolution()
             .Include(u => u.Subscriptions)

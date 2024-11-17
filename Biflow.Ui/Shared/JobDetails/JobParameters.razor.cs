@@ -36,7 +36,7 @@ public partial class JobParameters(
             return;
         }
         loading = true;
-        using var context = _dbContextFactory.CreateDbContext();
+        await using var context = _dbContextFactory.CreateDbContext();
         editJob = await context.Jobs
             .Include(j => j.JobParameters)
             .ThenInclude(j => j.InheritingStepParameters)

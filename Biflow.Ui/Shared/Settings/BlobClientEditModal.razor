@@ -138,7 +138,7 @@
         await modal.LetAsync(x => x.ShowAsync());
         if (clientId != Guid.Empty)
         {
-            using var context = DbContextFactory.CreateDbContext();
+            await using var context = DbContextFactory.CreateDbContext();
             client = await context.BlobStorageClients
                 .AsNoTrackingWithIdentityResolution()
                 .Include(c => c.AppRegistration)

@@ -144,7 +144,7 @@
         await modal.LetAsync(x => x.ShowAsync());
         if (pipelineClientId != Guid.Empty)
         {
-            using var context = DbFactory.CreateDbContext();
+            await using var context = DbFactory.CreateDbContext();
             dataFactory = await context.DataFactories
                 .AsNoTrackingWithIdentityResolution()
                 .Include(df => df.Steps)

@@ -149,7 +149,7 @@
     {
         if (schedules is null && Job is not null)
         {
-            using var context = DbFactory.CreateDbContext();
+            await using var context = DbFactory.CreateDbContext();
             schedules = await context.Schedules
                 .AsNoTrackingWithIdentityResolution()
                 .Include(schedule => schedule.Tags)

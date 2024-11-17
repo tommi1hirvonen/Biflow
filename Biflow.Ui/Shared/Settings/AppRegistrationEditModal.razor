@@ -141,7 +141,7 @@
         await modal.LetAsync(x => x.ShowAsync());
         if (appRegistrationId != Guid.Empty)
         {
-            using var context = DbFactory.CreateDbContext();
+            await using var context = DbFactory.CreateDbContext();
             appRegistration = await context.AppRegistrations
                 .AsNoTrackingWithIdentityResolution()
                 .Include(app => app.Steps)

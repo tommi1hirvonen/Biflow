@@ -227,7 +227,7 @@
                 CreatedOn = DateTimeOffset.Now,
                 CreatedBy = username
             };
-            using var context = await DbContextFactory.CreateDbContextAsync();
+            await using var context = await DbContextFactory.CreateDbContextAsync();
             context.EnvironmentVersions.Add(version);
             await context.SaveChangesAsync();
             await createModal.LetAsync(x => x.HideAsync());
@@ -242,7 +242,7 @@
 
     private async Task OpenDetailsAsync(int versionId)
     {
-        using var context = await DbContextFactory.CreateDbContextAsync();
+        await using var context = await DbContextFactory.CreateDbContextAsync();
         detailsVersion = await context.EnvironmentVersions.FirstOrDefaultAsync(v => v.VersionId == versionId);
         await detailsOffcanvas.LetAsync(x => x.ShowAsync());
     }
@@ -251,7 +251,7 @@
     {
         try
         {
-            using var context = await DbContextFactory.CreateDbContextAsync();
+            await using var context = await DbContextFactory.CreateDbContextAsync();
             var version = await context.EnvironmentVersions.FirstOrDefaultAsync(v => v.VersionId == versionId);
             ArgumentNullException.ThrowIfNull(version);
 
@@ -268,8 +268,8 @@
 
                 foreach (var (name, content) in files)
                 {
-                    using var entryStream = zipArchive.CreateEntry(name).Open();
-                    using var entryStreamWriter = new StreamWriter(entryStream);
+                    await using var entryStream = zipArchive.CreateEntry(name).Open();
+                    await using var entryStreamWriter = new StreamWriter(entryStream);
                     await entryStreamWriter.WriteAsync(content);
                 }
             }

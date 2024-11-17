@@ -1,6 +1,5 @@
 ﻿using Biflow.Ui.Shared;
 using Biflow.Ui.Shared.Executions;
-using System.Timers;
 
 namespace Biflow.Ui.Pages;
 
@@ -38,10 +37,10 @@ public partial class ExecutionDetails(
     private FilterDropdownMode tagFilterMode = FilterDropdownMode.Any;
     private Guid prevExecutionId;
     private Execution? execution;
-    private IEnumerable<StepExecutionProjection>? stepProjections = null;
+    private IEnumerable<StepExecutionProjection>? stepProjections;
     private Job? job;
     private Schedule? schedule;
-    private bool loading = false;
+    private bool loading;
     private StepExecutionSortMode sortMode = StepExecutionSortMode.StartedAsc;
     private ExecutionParameterLineageOffcanvas? parameterLineageOffcanvas;
     private ExecutionDependenciesGraph? dependenciesGraph;
@@ -108,7 +107,7 @@ public partial class ExecutionDetails(
 
     protected override void OnInitialized()
     {
-        timer.Elapsed += async (object? source, ElapsedEventArgs e) =>
+        timer.Elapsed += async (_, _) =>
         {
             if (!AutoRefresh)
             {
@@ -149,7 +148,7 @@ public partial class ExecutionDetails(
             timer.Stop();
             loading = true;
             await InvokeAsync(StateHasChanged);
-            using var context = _dbContextFactory.CreateDbContext();
+            await using var context = await _dbContextFactory.CreateDbContextAsync();
 
             try
             {
@@ -210,7 +209,7 @@ public partial class ExecutionDetails(
                 .ToArray();
 
             loading = false;
-            if (AutoRefresh && (execution?.ExecutionStatus == ExecutionStatus.Running || execution?.ExecutionStatus == ExecutionStatus.NotStarted))
+            if (AutoRefresh && execution?.ExecutionStatus is ExecutionStatus.Running or ExecutionStatus.NotStarted)
             {
                 timer.Start();
             }
@@ -228,7 +227,7 @@ public partial class ExecutionDetails(
 
     private async Task StopJobExecutionAsync()
     {
-        if (!await _confirmer.ConfirmAsync("Stop execution", $"Are you sure you want to stop all running steps in this execution?"))
+        if (!await _confirmer.ConfirmAsync("Stop execution", "Are you sure you want to stop all running steps in this execution?"))
         {
             return;
         }

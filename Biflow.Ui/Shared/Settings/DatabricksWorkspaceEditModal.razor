@@ -94,7 +94,7 @@
         await modal.LetAsync(x => x.ShowAsync());
         if (workspaceId != Guid.Empty)
         {
-            using var context = await DbContextFactory.CreateDbContextAsync();
+            await using var context = await DbContextFactory.CreateDbContextAsync();
             workspace = await context.DatabricksWorkspaces
                 .AsNoTrackingWithIdentityResolution()
                 .Include(c => c.Steps)

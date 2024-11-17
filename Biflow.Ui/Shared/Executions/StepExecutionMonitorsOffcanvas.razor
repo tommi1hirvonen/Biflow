@@ -84,7 +84,7 @@
         stepExecution = step;
         StateHasChanged();
         await offcanvas.LetAsync(x => x.ShowAsync());
-        using var context = DbContextFactory.CreateDbContext();
+        await using var context = DbContextFactory.CreateDbContext();
         monitors = await context.StepExecutionMonitors
             .AsNoTrackingWithIdentityResolution()
             .IgnoreQueryFilters()

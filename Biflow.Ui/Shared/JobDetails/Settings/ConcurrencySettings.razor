@@ -98,7 +98,7 @@
             return;
         }
 
-        using var context = DbContextFactory.CreateDbContext();
+        await using var context = DbContextFactory.CreateDbContext();
         editJob = await context.Jobs
             .Include(j => j.JobConcurrencies)
             .FirstAsync(j => j.JobId == Job.JobId);

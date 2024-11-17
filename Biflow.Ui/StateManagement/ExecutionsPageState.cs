@@ -45,9 +45,9 @@ public class ExecutionsPageState
         ];
     }
 
-    public bool ShowSteps { get; set; } = false;
+    public bool ShowSteps { get; set; }
     
-    public bool ShowGraph { get; set; } = false;
+    public bool ShowGraph { get; set; }
 
     public Preset? Preset { get; set; } = StateManagement.Preset.OneHour;
 

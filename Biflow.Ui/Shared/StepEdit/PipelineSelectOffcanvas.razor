@@ -80,7 +80,7 @@
 
         try
         {
-            using var context = DbContextFactory.CreateDbContext();
+            await using var context = DbContextFactory.CreateDbContext();
             var client = await context.PipelineClients
                 .AsNoTrackingWithIdentityResolution()
                 .Include(c => c.AppRegistration)

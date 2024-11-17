@@ -50,7 +50,8 @@ public partial class PipelineStepEditModal(
                 Toaster.AddWarning("Pipeline name was empty");
                 return;
             }
-            using var context = await DbContextFactory.CreateDbContextAsync();
+
+            await using var context = await DbContextFactory.CreateDbContextAsync();
             var client = await context.PipelineClients
                 .AsNoTrackingWithIdentityResolution()
                 .Include(c => c.AppRegistration)

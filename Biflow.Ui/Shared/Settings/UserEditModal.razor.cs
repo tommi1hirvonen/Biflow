@@ -111,7 +111,7 @@ public partial class UserEditModal(
         currentUsername = "";
         await modal.LetAsync(x => x.ShowAsync());
         previousUserId = userId ?? Guid.Empty;
-        using var context = _dbContextFactory.CreateDbContext();
+        await using var context = _dbContextFactory.CreateDbContext();
         if (userId is null)
         {
             var user = new User

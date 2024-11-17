@@ -112,7 +112,7 @@ else
         try
         {
             loading = true;
-            using var context = await DbContextFactory.CreateDbContextAsync();
+            await using var context = await DbContextFactory.CreateDbContextAsync();
             var sourceVersion = sourceVersionId switch
             {
                 0 => (await SnapshotBuilder.CreateAsync()).ToJson(preserveReferences: !simplifiedJson),

@@ -148,7 +148,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = await Task.Run(DbFactory.CreateDbContext);
+        await using var context = await Task.Run(DbFactory.CreateDbContext);
         users = await context.Users
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(user => user.Username)

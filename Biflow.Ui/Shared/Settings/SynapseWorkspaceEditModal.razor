@@ -133,7 +133,7 @@
         await modal.LetAsync(x => x.ShowAsync());
         if (pipelineClientId != Guid.Empty)
         {
-            using var context = DbFactory.CreateDbContext();
+            await using var context = DbFactory.CreateDbContext();
             synapseWorkspace = await context.SynapseWorkspaces
                 .AsNoTrackingWithIdentityResolution()
                 .Include(s => s.Steps)

@@ -105,7 +105,7 @@ public partial class DependenciesGraph(
         ArgumentNullException.ThrowIfNull(Job);
         ArgumentNullException.ThrowIfNull(dependencyGraph);
 
-        using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         stepSlims = await context.Steps
             .AsNoTrackingWithIdentityResolution()
             .IgnoreQueryFilters()

@@ -96,9 +96,6 @@
                                         </a>
                                     </td>
                                     <td class="align-middle">
-                                        @{
-                                            var writersTitle = $"Steps writing to '{obj.ObjectUri}'";
-                                        }
                                         <a class="text-body" href="javascript:void(0)"
                                             @onclick="async () =>
                                             {
@@ -181,7 +178,7 @@
                         {
                             @foreach (var reader in stepsModalDataObject.Steps.Where(s => s.ReferenceType == referenceType)
                                 .OrderBy(r => r.Step.Job.JobName)
-                                .ThenBy(r => r.Step.StepName) ?? Enumerable.Empty<StepDataObject>())
+                                .ThenBy(r => r.Step.StepName))
                             {
                                 <tr>
                                     <td class="align-middle">
@@ -227,12 +224,11 @@
         .OrderBy(o => o.ObjectUri)
         ?? Enumerable.Empty<DataObject>();
 
-    private IEnumerable<DataObject> UnusedObjects =>
-        objects?.Where(t => !t.Steps.Any()) ?? Enumerable.Empty<DataObject>();
+    private IEnumerable<DataObject> UnusedObjects => objects?.Where(t => !t.Steps.Any()) ?? [];
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = await Task.Run(DbContextFactory.CreateDbContext);
+        await using var context = await Task.Run(DbContextFactory.CreateDbContext);
         objects = await context.DataObjects
             .Include(o => o.Steps)
             .ThenInclude(s => s.Step)
@@ -274,11 +270,9 @@
     private void OnDataObjectSubmitted(DataObject dataObject)
     {
         var toRemove = objects?.First(o => o.ObjectId == dataObject.ObjectId);
-        if (toRemove is not null)
-        {
-            objects?.Remove(toRemove);
-            objects?.Add(dataObject);
-        }
+        if (toRemove is null) return;
+        objects?.Remove(toRemove);
+        objects?.Add(dataObject);
     }
 
 }
