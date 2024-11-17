@@ -20,8 +20,8 @@ internal sealed class IconSourceGenerator : IIncrementalGenerator
     {
         var classes = context.SyntaxProvider
             .ForAttributeWithMetadataName(
-                fullyQualifiedMetadataName: typeof(GenerateIconsAttribute).FullName,
-                predicate: (syntaxNode, cancellationToken) => syntaxNode is ClassDeclarationSyntax,
+                fullyQualifiedMetadataName: typeof(GenerateIconsAttribute).FullName!,
+                predicate: (syntaxNode, _) => syntaxNode is ClassDeclarationSyntax,
                 transform: Transform)
             .Collect();
 
@@ -29,38 +29,35 @@ internal sealed class IconSourceGenerator : IIncrementalGenerator
             .Where(text => text.Path.EndsWith(".svg"))
             .Select((text, cancellationToken) => new IconData(text.Path, text.GetText(cancellationToken)?.ToString()))
             .Collect();
-
-        var classIconMatches = classes.Combine(icons);
-
+        
         context.RegisterSourceOutput(classes.Combine(icons), GenerateCode);
     }
 
     private static IconsClassData? Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
     {
-        if (context.Attributes.FirstOrDefault(a => a.AttributeClass?.Name == nameof(GenerateIconsAttribute)) is AttributeData data)
+        var generateIconsAttribute =
+            context.Attributes.FirstOrDefault(a => a.AttributeClass?.Name == nameof(GenerateIconsAttribute)); 
+        if (generateIconsAttribute is null)
         {
-            var cssClass = data.ConstructorArguments[0].Value?.ToString();
-            var pathSegments = data.ConstructorArguments[1].Values
-                .Select(v => v.Value?.ToString())
-                .ToArray();
-            var classDeclaration = (ClassDeclarationSyntax)context.TargetNode;
-            var @namespace = classDeclaration.GetNamespace();
-            var incorrectModifiers = true;
-            if (classDeclaration.Modifiers.Any(SyntaxKind.PublicKeyword)
-                && classDeclaration.Modifiers.Any(SyntaxKind.StaticKeyword)
-                && classDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword))
-            {
-                incorrectModifiers = false;
-            }
-            return new IconsClassData(
-                @namespace: @namespace,
-                className: context.TargetSymbol.Name,
-                cssClass: cssClass,
-                pathSegments: pathSegments,
-                incorrectModifiers: incorrectModifiers,
-                location: context.TargetSymbol.Locations.FirstOrDefault());
+            return null;
         }
-        return null;
+        
+        var cssClass = generateIconsAttribute.ConstructorArguments[0].Value?.ToString();
+        var pathSegments = generateIconsAttribute.ConstructorArguments[1].Values
+            .Select(v => v.Value?.ToString())
+            .ToArray();
+        var classDeclaration = (ClassDeclarationSyntax)context.TargetNode;
+        var @namespace = classDeclaration.GetNamespace();
+        var hasRequiredModifiers = classDeclaration.Modifiers.Any(SyntaxKind.PublicKeyword)
+                                   && classDeclaration.Modifiers.Any(SyntaxKind.StaticKeyword)
+                                   && classDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword);
+        return new IconsClassData(
+            @namespace: @namespace,
+            className: context.TargetSymbol.Name,
+            cssClass: cssClass,
+            pathSegments: pathSegments,
+            incorrectModifiers: !hasRequiredModifiers,
+            location: context.TargetSymbol.Locations.FirstOrDefault());
     }
 
     private static void GenerateCode(SourceProductionContext context, (ImmutableArray<IconsClassData?> Left, ImmutableArray<IconData> Right) tuple)
@@ -88,19 +85,23 @@ internal sealed class IconSourceGenerator : IIncrementalGenerator
 
             foreach (var iconData in icons.Where(g => g.IconPath.Contains(classData.IconsPath)))
             {
+                if (iconData.IconText is null)
+                {
+                    continue;
+                }
+                
                 var propertyName = iconData.IconName.GetPropertyNameFromIconName();
-
+        
                 var xml = XDocument.Parse(iconData.IconText);
-
                 if (classData.CssClass is { Length: > 0 } cssClass)
                 {
-                    if (xml.Root.Attributes("class").FirstOrDefault() is XAttribute attr)
+                    if (xml.Root?.Attributes("class").FirstOrDefault() is { } attr)
                     {
                         attr.Value = string.Join(" ", cssClass.Split(' ').Union(attr.Value.Split(' ')));
                     }
                     else
                     {
-                        xml.Root.Add(new XAttribute("class", classData.CssClass));
+                        xml.Root?.Add(new XAttribute("class", classData.CssClass));
                     }
                 }
 

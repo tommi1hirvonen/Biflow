@@ -1,5 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
+﻿using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Linq;
 
@@ -9,8 +8,9 @@ internal static class Extensions
 {
     public static string GetPropertyNameFromIconName(this string iconName)
     {
-        string[] segments = iconName.Split('-');
-        var propertyName = string.Join("", segments.Select(segment => segment.Substring(0, 1).ToUpper() + segment.Substring(1)));
+        var segments = iconName.Split('-');
+        var segmentsPascalCase = segments.Select(segment => segment.Substring(0, 1).ToUpper() + segment.Substring(1));
+        var propertyName = string.Join("", segmentsPascalCase);
         if (!SyntaxFacts.IsValidIdentifier(propertyName))
         {
             // e.g. "123" => "_123"
@@ -21,31 +21,30 @@ internal static class Extensions
 
     public static string GetNamespace(this BaseTypeDeclarationSyntax syntax)
     {
-        string @namespace = string.Empty;
-
-        SyntaxNode? potentialNamespaceParent = syntax.Parent;
-
-        while (potentialNamespaceParent != null &&
-                potentialNamespaceParent is not NamespaceDeclarationSyntax
-                && potentialNamespaceParent is not FileScopedNamespaceDeclarationSyntax)
+        var @namespace = string.Empty;
+        var potentialNamespaceParent = syntax.Parent;
+        while (potentialNamespaceParent != null
+               && potentialNamespaceParent is not NamespaceDeclarationSyntax
+               && potentialNamespaceParent is not FileScopedNamespaceDeclarationSyntax)
         {
             potentialNamespaceParent = potentialNamespaceParent.Parent;
         }
 
-        if (potentialNamespaceParent is BaseNamespaceDeclarationSyntax namespaceParent)
+        if (potentialNamespaceParent is not BaseNamespaceDeclarationSyntax namespaceParent)
         {
-            @namespace = namespaceParent.Name.ToString();
-
-            while (true)
+            return @namespace;
+        }
+        
+        @namespace = namespaceParent.Name.ToString();
+        while (true)
+        {
+            if (namespaceParent.Parent is not NamespaceDeclarationSyntax parent)
             {
-                if (namespaceParent.Parent is not NamespaceDeclarationSyntax parent)
-                {
-                    break;
-                }
-
-                @namespace = $"{namespaceParent.Name}.{@namespace}";
-                namespaceParent = parent;
+                break;
             }
+
+            @namespace = $"{namespaceParent.Name}.{@namespace}";
+            namespaceParent = parent;
         }
 
         return @namespace;

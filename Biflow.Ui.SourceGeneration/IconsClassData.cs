@@ -25,7 +25,7 @@ internal class IconsClassData(
 
     public Location? Location { get; } = location;
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         return obj is IconsClassData other &&
                Namespace == other.Namespace &&
@@ -45,7 +45,7 @@ internal class IconsClassData(
 
     public override int GetHashCode()
     {
-        int hashCode = -1494284360;
+        var hashCode = -1494284360;
         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Namespace);
         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(ClassName);
         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(IconsPath);
