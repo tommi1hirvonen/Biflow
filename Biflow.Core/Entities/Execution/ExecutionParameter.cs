@@ -2,7 +2,7 @@
 
 namespace Biflow.Core.Entities;
 
-public class ExecutionParameter : DynamicParameter
+public sealed class ExecutionParameter : DynamicParameter
 {
     public ExecutionParameter(string parameterName, ParameterValue parameterValue)
     {
@@ -26,7 +26,7 @@ public class ExecutionParameter : DynamicParameter
 
     public Guid ExecutionId { get; private set; }
 
-    public ParameterValue DefaultValue { get; private set; } = new();
+    public ParameterValue DefaultValue { get; private set; }
 
     public Execution Execution { get; private set; } = null!;
 
@@ -47,19 +47,20 @@ public class ExecutionParameter : DynamicParameter
         {
             return _evaluationResult;
         }
-        else if (UseExpression)
-        {
-            var parameters = new Dictionary<string, object?>
-            {
-                { ExpressionParameterNames.ExecutionId, ExecutionId },
-                { ExpressionParameterNames.JobId, Execution.JobId }
-            };
-            var result = await Expression.EvaluateAsync(parameters);
-            _evaluationResult = result;
-            _evaluated = true;
-            return result;
-        }
 
-        return ParameterValue.Value;
+        if (!UseExpression)
+        {
+            return ParameterValue.Value;
+        }
+        
+        var parameters = new Dictionary<string, object?>
+        {
+            { ExpressionParameterNames.ExecutionId, ExecutionId },
+            { ExpressionParameterNames.JobId, Execution.JobId }
+        };
+        var result = await Expression.EvaluateAsync(parameters);
+        _evaluationResult = result;
+        _evaluated = true;
+        return result;
     }
 }

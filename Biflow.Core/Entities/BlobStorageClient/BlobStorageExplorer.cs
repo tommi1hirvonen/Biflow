@@ -10,8 +10,8 @@ public class BlobStorageExplorer(BlobStorageClient client, ITokenService tokenSe
 
     public async Task<IEnumerable<BlobContainerItem>> GetContainersAsync(CancellationToken cancellationToken = default)
     {
-        var client = GetBlobServiceClient();
-        var containers = await client
+        var blobServiceClient = GetBlobServiceClient();
+        var containers = await blobServiceClient
             .GetBlobContainersAsync(cancellationToken: cancellationToken)
             .ToListAsync(cancellationToken);
         return containers;

@@ -13,12 +13,9 @@ public class EvaluationExpression
 
     internal Task<bool> EvaluateBooleanAsync(IDictionary<string, object?>? parameters = null)
     {
-        if (string.IsNullOrWhiteSpace(Expression))
-        {
-            return Task.FromResult(true);
-        }
-
-        return EvaluateAsync<bool>(parameters);
+        return string.IsNullOrWhiteSpace(Expression)
+            ? Task.FromResult(true)
+            : EvaluateAsync<bool>(parameters);
     }
 
     private Task<T> EvaluateAsync<T>(IDictionary<string, object?>? parameters = null)
@@ -31,7 +28,6 @@ public class EvaluationExpression
         };
         evaluator.Namespaces.Remove("System.IO");
         evaluator.Variables = parameters;
-        var result = evaluator.Evaluate<T>(Expression);
         return Task.Run(() => evaluator.Evaluate<T>(Expression));
     }
 

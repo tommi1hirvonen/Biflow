@@ -7,12 +7,12 @@ public interface IHasStepParameters<TParameter> : IHasStepParameters
 {
     public new IList<TParameter> StepParameters { get; }
 
-    IEnumerable<StepParameterBase> IHasStepParameters.StepParameters => StepParameters.Cast<StepParameterBase>();
+    IEnumerable<StepParameterBase> IHasStepParameters.StepParameters => StepParameters;
 }
 
 public interface IHasStepParameters : IHasParameters
 {
     public IEnumerable<StepParameterBase> StepParameters { get; }
 
-    IEnumerable<ParameterBase> IHasParameters.Parameters => StepParameters.Cast<ParameterBase>();
+    IEnumerable<ParameterBase> IHasParameters.Parameters => StepParameters;
 }

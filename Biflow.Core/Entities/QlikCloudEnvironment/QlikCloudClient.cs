@@ -21,14 +21,14 @@ public class QlikCloudClient : IDisposable
 
     public async Task TestConnectionAsync(CancellationToken cancellationToken = default)
     {
-        var url = "api/v1/spaces?limit=1";
+        const string url = "api/v1/spaces?limit=1";
         var response = await _httpClient.GetAsync(url, cancellationToken);
         response.EnsureSuccessStatusCode();
     }
 
     public async Task<QlikAppReload> ReloadAppAsync(string appId, CancellationToken cancellationToken = default)
     {
-        var postReloadUrl = "api/v1/reloads";
+        const string postReloadUrl = "api/v1/reloads";
         var message = new
         {
             appId,
@@ -109,7 +109,7 @@ public class QlikCloudClient : IDisposable
 
     public async Task<IEnumerable<QlikSpace>> GetAppsAsync(CancellationToken cancellationToken = default)
     {
-        var url = $"api/v1/items?limit=100&resourceType=app";
+        var url = "api/v1/items?limit=100&resourceType=app";
         var items = new List<ItemData>();
         do
         {

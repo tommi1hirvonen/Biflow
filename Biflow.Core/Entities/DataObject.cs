@@ -45,35 +45,39 @@ public partial class DataObject : IDataObject
         }
         if (ObjectUri.StartsWith("tabular://") && other.ObjectUri.StartsWith("tabular://"))
         {
-            var components = ObjectUri.Split('/') switch
+            var tabularComponents = ObjectUri.Split('/') switch
             {
                 [.. var prefix, ""] => prefix,
                 var x => x
             };
-            var otherComponents = other.ObjectUri.Split('/') switch
+            var otherTabularComponents = other.ObjectUri.Split('/') switch
             {
                 [.. var prefix, ""] => prefix,
                 var x => x
             };
-            return components.Zip(otherComponents).All(x => x.First == x.Second);
+            return tabularComponents
+                .Zip(otherTabularComponents)
+                .All(x => x.First == x.Second);
         }
-        if (ObjectUri.StartsWith("blob://") && other.ObjectUri.StartsWith("blob://"))
+
+        if (!ObjectUri.StartsWith("blob://") || !other.ObjectUri.StartsWith("blob://"))
         {
-            var components = ObjectUri.Split('/') switch
-            {
-                [.. var prefix, ""] => prefix,
-                var x => x
-            };
-            var otherComponents = other.ObjectUri.Split('/') switch
-            {
-                [.. var prefix, ""] => prefix,
-                var x => x
-            };
-            return components
-                .Zip(otherComponents)
-                .All(x => x.First == x.Second || WildcardMatch(x.First, x.Second) || WildcardMatch(x.Second, x.First));
+            return false;
         }
-        return false;
+        
+        var blobComponents = ObjectUri.Split('/') switch
+        {
+            [.. var prefix, ""] => prefix,
+            var x => x
+        };
+        var otherBlobComponents = other.ObjectUri.Split('/') switch
+        {
+            [.. var prefix, ""] => prefix,
+            var x => x
+        };
+        return blobComponents
+            .Zip(otherBlobComponents)
+            .All(x => x.First == x.Second || WildcardMatch(x.First, x.Second) || WildcardMatch(x.Second, x.First));
     }
 
     [JsonIgnore]
@@ -104,13 +108,14 @@ public partial class DataObject : IDataObject
             partition = NonAsciiCharsRegex.Replace(partition, Replacement);
             return $"tabular://{server}/{model}/{table}/{partition}";
         }
-        else if (table is not null)
-        {
-            table = NonAsciiCharsRegex.Replace(table, Replacement);
-            return $"tabular://{server}/{model}/{table}";
-        }
 
-        return $"tabular://{server}/{model}";
+        if (table is null)
+        {
+            return $"tabular://{server}/{model}";
+        }
+        
+        table = NonAsciiCharsRegex.Replace(table, Replacement);
+        return $"tabular://{server}/{model}/{table}";
     }
 
     public static string CreateQlikUri(string appName)

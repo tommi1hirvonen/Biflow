@@ -15,26 +15,25 @@ public interface ITag : IComparable<ITag>, IComparable
     int IComparable<ITag>.CompareTo(ITag? other)
     {
         if (other is null) return 1;
-        int result = SortOrder.CompareTo(other.SortOrder);
+        var result = SortOrder.CompareTo(other.SortOrder);
         return result == 0
-            ? TagName.CompareTo(other.TagName)
+            ? string.Compare(TagName, other.TagName, StringComparison.Ordinal)
             : result;
     }
 
     int IComparable.CompareTo(object? obj)
     {
-        if (obj is null) return 1;
-
-        if (obj is ITag other)
+        switch (obj)
         {
-            int result = SortOrder.CompareTo(other.SortOrder);
-            return result == 0
-                ? TagName.CompareTo(other.TagName)
-                : result;
-        }
-        else
-        {
-            throw new ArgumentException("Object is not an ITag");
+            case null:
+                return 1;
+            case ITag other:
+                var result = SortOrder.CompareTo(other.SortOrder);
+                return result == 0
+                    ? string.Compare(TagName, other.TagName, StringComparison.Ordinal)
+                    : result;
+            default:
+                throw new ArgumentException("Object is not an ITag");
         }
     }
 }

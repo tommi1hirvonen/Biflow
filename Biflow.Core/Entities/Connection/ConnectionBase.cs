@@ -29,7 +29,7 @@ public abstract class ConnectionBase(ConnectionType connectionType) : IComparabl
     public int CompareTo(object? obj) => obj switch
     {
         null => 1,
-        ConnectionBase connection => -connection.ConnectionName.CompareTo(ConnectionName),
+        ConnectionBase connection => -string.Compare(connection.ConnectionName, ConnectionName, StringComparison.Ordinal),
         _ => throw new ArgumentException("Object does not inherit from ConnectionInfoBase")
     };
 
@@ -37,7 +37,5 @@ public abstract class ConnectionBase(ConnectionType connectionType) : IComparabl
     public IEnumerable<SqlStep> SqlSteps { get; set; } = new List<SqlStep>();
 
     [JsonIgnore]
-    public virtual IEnumerable<Step> Steps { get => SqlSteps; }
-
-    public abstract Task TestConnectionAsync(CancellationToken cancellationToken = default);
+    public virtual IEnumerable<Step> Steps => SqlSteps;
 }

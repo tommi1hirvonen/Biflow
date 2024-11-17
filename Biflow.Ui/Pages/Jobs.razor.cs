@@ -348,9 +348,7 @@ public partial class Jobs(
         cts.Cancel();
         cts.Dispose();
     }
-
-    private class ExpandStatus { public bool IsExpanded { get; set; } = true; }
-
+    
     private record StepProjection(Guid JobId, string? StepName);
 
     private record ValidationStep(string JobName, Guid StepId, string? StepName, Guid[] Dependencies);

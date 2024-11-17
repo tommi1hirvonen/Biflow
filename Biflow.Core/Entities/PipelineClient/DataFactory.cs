@@ -33,7 +33,7 @@ public class DataFactory() : PipelineClient(PipelineClientType.DataFactory)
         var credential = new ClientSecretCredential(appRegistration.TenantId, appRegistration.ClientId, appRegistration.ClientSecret);
         var client = new ArmClient(credential);
         var dataFactory = GetDataFactoryResource(client);
-        var _ = await dataFactory.GetAsync();
+        _ = await dataFactory.GetAsync();
     }
 
     private DataFactoryResource GetDataFactoryResource(ArmClient client)

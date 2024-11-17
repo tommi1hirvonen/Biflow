@@ -1,5 +1,4 @@
 ﻿using Azure.Analytics.Synapse.Artifacts;
-using Azure.Analytics.Synapse.Artifacts.Models;
 using Biflow.Core.Interfaces;
 using SynapsePipelineClient = Azure.Analytics.Synapse.Artifacts.PipelineClient;
 
@@ -26,17 +25,14 @@ internal class SynapseWorkspaceClient(SynapseWorkspace synapse, ITokenService to
     {
         var token = new AzureTokenCredential(tokenService, synapse.AppRegistration, SynapseWorkspace.ResourceUrl);
         var pipelineClient = new SynapsePipelineClient(synapse.SynapseEndpoint, token);
-        var pipelineResources = new List<PipelineResource>();
-        await foreach (var pipeline in pipelineClient.GetPipelinesByWorkspaceAsync())
-        {
-            pipelineResources.Add(pipeline);
-        }
+        var pipelineResources = await pipelineClient.GetPipelinesByWorkspaceAsync().ToListAsync();
 
-        var pipelines = pipelineResources.Select(p =>
+        var pipelines = pipelineResources.Select(pipelineResource =>
         {
-            var folder = p.Folder?.Name;
-            var parameters = p.Parameters.ToDictionary(p => p.Key, p => (p.Value.Type.ToString(), p.Value.DefaultValue?.ToString()));
-            var pipeline = new PipelineInfo(p.Name, folder, parameters ?? []);
+            var folder = pipelineResource.Folder?.Name;
+            var parameters = pipelineResource.Parameters
+                .ToDictionary(p => p.Key, p => (p.Value.Type.ToString(), p.Value.DefaultValue?.ToString()));
+            var pipeline = new PipelineInfo(pipelineResource.Name, folder, parameters);
             return pipeline;
         });
 

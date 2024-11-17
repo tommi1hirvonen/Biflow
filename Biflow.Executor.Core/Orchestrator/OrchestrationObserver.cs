@@ -122,8 +122,9 @@ internal class OrchestrationObserver(
 
     private IEnumerable<StepExecutionMonitor> HandleUpdateAndGetMonitors(OrchestrationUpdate value)
     {
-        return _orchestrationTrackers.Select(t => t.HandleUpdate(value))
-            .WhereNotNull()
+        return _orchestrationTrackers
+            .Select(t => t.HandleUpdate(value))
+            .OfType<StepExecutionMonitor>()
             .ToArray();
     }
 

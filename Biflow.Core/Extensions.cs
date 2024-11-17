@@ -90,20 +90,9 @@ public static class Extensions
         }
     }
 
-    public static IEnumerable<T> WhereNotNull<T>(this IEnumerable<T?> enumerable)
-    {
-        foreach (var item in enumerable)
-        {
-            if (item is not null)
-            {
-                yield return item;
-            }
-        }
-    }
-
-    public static void SortBy<T, U>(this IList<T> list, Func<T, U> propertyDelegate) where U : IComparable =>
+    public static void SortBy<T, TU>(this IList<T> list, Func<T, TU> propertyDelegate) where TU : IComparable =>
         list.Sort((one, other) => propertyDelegate(one).CompareTo(propertyDelegate(other)));
 
-    public static void Sort<T>(this IList<T> list, Comparison<T> comparison) =>
+    private static void Sort<T>(this IList<T> list, Comparison<T> comparison) =>
         ArrayList.Adapter((IList)list).Sort(Comparer<T>.Create(comparison));
 }

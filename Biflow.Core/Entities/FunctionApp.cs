@@ -58,7 +58,7 @@ public class FunctionApp
     } = null!;
 
     [Range(0, int.MaxValue)]
-    public int MaxConcurrentFunctionSteps { get; set; } = 0;
+    public int MaxConcurrentFunctionSteps { get; set; }
 
     [JsonIgnore]
     public IEnumerable<FunctionStep> Steps { get; } = new List<FunctionStep>();

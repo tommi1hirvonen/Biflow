@@ -25,7 +25,7 @@ public abstract class PipelineClient(PipelineClientType type)
     public AppRegistration AppRegistration { get; set; } = null!;
 
     [Range(0, int.MaxValue)]
-    public int MaxConcurrentPipelineSteps { get; set; } = 0;
+    public int MaxConcurrentPipelineSteps { get; set; }
 
     [JsonIgnore]
     public IEnumerable<PipelineStep> Steps { get; } = new List<PipelineStep>();

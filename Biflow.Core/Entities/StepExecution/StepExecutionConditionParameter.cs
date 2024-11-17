@@ -1,6 +1,6 @@
 ﻿namespace Biflow.Core.Entities;
 
-public class StepExecutionConditionParameter : ParameterBase
+public sealed class StepExecutionConditionParameter : ParameterBase
 {
     public StepExecutionConditionParameter(string parameterName, ParameterValue parameterValue)
     {
@@ -40,7 +40,7 @@ public class StepExecutionConditionParameter : ParameterBase
 
     public override string DisplayValue => ExecutionParameter switch
     {
-        not null => $"{ExecutionParameter.DisplayValue?.ToString() ?? "null"} (inherited from execution parameter {ExecutionParameter.DisplayName})",
+        not null => $"{ExecutionParameter.DisplayValue} (inherited from execution parameter {ExecutionParameter.DisplayName})",
         _ => base.DisplayValue
     };
 

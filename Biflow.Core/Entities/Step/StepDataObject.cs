@@ -32,11 +32,8 @@ public class StepDataObject
             return false;
         }
 
-        if (DataAttributes.Count == 0 || other.DataAttributes.Count == 0 || DataAttributes.Any(other.DataAttributes.Contains))
-        {
-            return true;
-        }
-
-        return false;
+        return DataAttributes.Count == 0
+               || other.DataAttributes.Count == 0
+               || DataAttributes.Any(other.DataAttributes.Contains);
     }
 }

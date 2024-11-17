@@ -45,7 +45,7 @@ public class FunctionAppClient(FunctionApp app, ITokenService tokenService, IHtt
             }
             return (name, type, url);
         })
-        .Where(f => f.url is not null && f.type == "httpTrigger")
+        .Where(f => f.type == "httpTrigger")
         .Select(f => (f.name, f.url))
         .ToList();
 

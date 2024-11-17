@@ -2,11 +2,11 @@
 
 public interface IAuditable
 {
-    public DateTimeOffset CreatedOn { get; set; }
+    public DateTimeOffset CreatedOn { set; }
 
-    public string? CreatedBy { get; set; }
+    public string? CreatedBy { set; }
 
-    public DateTimeOffset LastModifiedOn { get; set; }
+    public DateTimeOffset LastModifiedOn { set; }
 
-    public string? LastModifiedBy { get; set;  }
+    public string? LastModifiedBy { set;  }
 }

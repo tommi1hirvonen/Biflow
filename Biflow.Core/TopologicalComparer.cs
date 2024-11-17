@@ -19,6 +19,7 @@ public class TopologicalComparer<TItem, TKey> : IComparer<TItem>
     /// <param name="items">Items to compare</param>
     /// <param name="keySelector">Delegate to fetch a unique key for an item</param>
     /// <param name="dependenciesSelector">Delegate to fetch dependencies for an item</param>
+    /// <param name="whenEqualComparer">comparer used if two items are topologically equivalent</param>
     /// <exception cref="CyclicDependencyException">If a cyclic dependency is detected and the DFS traversal cannot be completed</exception>
     public TopologicalComparer(
         IEnumerable<TItem> items,
@@ -37,8 +38,8 @@ public class TopologicalComparer<TItem, TKey> : IComparer<TItem>
 
     public int Compare(TItem? x, TItem? y)
     {
-        int xPos = Array.IndexOf(_topologicalList, _keySelector(x));
-        int yPos = Array.IndexOf(_topologicalList, _keySelector(y));
+        var xPos = Array.IndexOf(_topologicalList, _keySelector(x));
+        var yPos = Array.IndexOf(_topologicalList, _keySelector(y));
         if (xPos == yPos && _whenEqualComparer is not null)
         {
             return _whenEqualComparer.Compare(x, y);
@@ -49,7 +50,7 @@ public class TopologicalComparer<TItem, TKey> : IComparer<TItem>
     /// <summary>
     /// Orders an IEnumerable of TItem in a topological order based on their dependencies.
     /// </summary>
-    /// <param name="steps">IEnumerable of items to be ordered</param>
+    /// <param name="items">IEnumerable of items to be ordered</param>
     /// <returns>IEnumerable of TItem in topological order. InvalidOperationException will be thrown if cyclic dependencies are detected.</returns>
     /// <exception cref="CyclicDependencyException">If a cyclic dependency is detected and the DFS traversal cannot be completed</exception>
     private IEnumerable<TItem> InTopologicalOrder(TItem[] items)
@@ -84,7 +85,8 @@ public class TopologicalComparer<TItem, TKey> : IComparer<TItem>
         {
             return;
         }
-        else if (state == VisitState.Visiting)
+
+        if (state == VisitState.Visiting)
         {
             var newCycles = parents
                 .Concat([current])
@@ -97,7 +99,7 @@ public class TopologicalComparer<TItem, TKey> : IComparer<TItem>
             visited[key] = VisitState.Visiting;
             parents.Add(current);
             var dependencies = items
-                .Where(item => _dependenciesSelector(current).Any(key => key.Equals(_keySelector(item))))
+                .Where(item => _dependenciesSelector(current).Any(k => k.Equals(_keySelector(item))))
                 .ToArray();
             foreach (var dependency in dependencies)
             {

@@ -12,9 +12,9 @@ public class SnowflakeConnection() : ConnectionBase(ConnectionType.Snowflake)
     [JsonIgnore]
     public override IEnumerable<Step> Steps => SqlSteps;
 
-    public override async Task TestConnectionAsync(CancellationToken cancellationToken = default)
+    public async Task TestConnectionAsync(CancellationToken cancellationToken = default)
     {
-        using var connection = new SnowflakeDbConnection(ConnectionString);
+        await using var connection = new SnowflakeDbConnection(ConnectionString);
         await connection.OpenAsync(cancellationToken);
     }
 }

@@ -3,16 +3,17 @@ using Biflow.Core.Interfaces;
 
 namespace Biflow.Core.Entities;
 
-public abstract class StepExecutionParameterBase : DynamicParameter, IHasExpressionParameters<StepExecutionParameterExpressionParameter, ExecutionParameter>
+public abstract class StepExecutionParameterBase
+    : DynamicParameter, IHasExpressionParameters<StepExecutionParameterExpressionParameter, ExecutionParameter>
 {
-    public StepExecutionParameterBase(string parameterName, ParameterValue parameterValue, ParameterType parameterType)
+    protected StepExecutionParameterBase(string parameterName, ParameterValue parameterValue, ParameterType parameterType)
     {
         ParameterName = parameterName;
         ParameterValue = parameterValue;
         ParameterType = parameterType;
     }
 
-    public StepExecutionParameterBase(StepParameterBase parameter, StepExecution execution)
+    protected StepExecutionParameterBase(StepParameterBase parameter, StepExecution execution)
     {
         ExecutionId = execution.ExecutionId;
         StepId = parameter.StepId;
@@ -45,14 +46,14 @@ public abstract class StepExecutionParameterBase : DynamicParameter, IHasExpress
 
     public Guid? InheritFromExecutionParameterId { get; private set; }
 
-    public ParameterValue ExecutionParameterValue { get; set; } = new();
+    public ParameterValue ExecutionParameterValue { get; set; }
 
     public ExecutionParameter? InheritFromExecutionParameter { get; set; }
 
     public override bool UseExpression
     {
         get => InheritFromExecutionParameterId is null && InheritFromExecutionParameter is null && field;
-        set => field = value;
+        set;
     }
 
     public IEnumerable<StepExecutionParameterExpressionParameter> ExpressionParameters => _expressionParameters;
@@ -80,21 +81,24 @@ public abstract class StepExecutionParameterBase : DynamicParameter, IHasExpress
         {
             return EvaluationResult;
         }
-        else if (UseExpression)
-        {
-            var parameters = ExpressionParameters
-                .ToDictionary(key => key.ParameterName, value => value.InheritFromExecutionParameter.ParameterValue.Value);
-            parameters[ExpressionParameterNames.ExecutionId] = ExecutionId;
-            parameters[ExpressionParameterNames.JobId] = BaseStepExecution.Execution.JobId;
-            parameters[ExpressionParameterNames.StepId] = StepId;
-            parameters[ExpressionParameterNames.RetryAttemptIndex] = BaseStepExecution.StepExecutionAttempts.Select(e => e.RetryAttemptIndex).Max();
-            var result = await Expression.EvaluateAsync(parameters);
-            EvaluationResult = result;
-            Evaluated = true;
-            return result;
-        }
 
-        return ParameterValue.Value;
+        if (!UseExpression)
+        {
+            return ParameterValue.Value;
+        }
+        
+        var parameters = ExpressionParameters
+            .ToDictionary(key => key.ParameterName, value => value.InheritFromExecutionParameter.ParameterValue.Value);
+        parameters[ExpressionParameterNames.ExecutionId] = ExecutionId;
+        parameters[ExpressionParameterNames.JobId] = BaseStepExecution.Execution.JobId;
+        parameters[ExpressionParameterNames.StepId] = StepId;
+        parameters[ExpressionParameterNames.RetryAttemptIndex] =
+            BaseStepExecution.StepExecutionAttempts.Select(e => e.RetryAttemptIndex).Max();
+        var result = await Expression.EvaluateAsync(parameters);
+        EvaluationResult = result;
+        Evaluated = true;
+        return result;
+
     }
 
     public void AddExpressionParameter(ExecutionParameter jobParameter)
@@ -110,5 +114,6 @@ public abstract class StepExecutionParameterBase : DynamicParameter, IHasExpress
         _expressionParameters.Add(expressionParameter);
     }
 
-    public bool RemoveExpressionParameter(StepExecutionParameterExpressionParameter parameter) => _expressionParameters.Remove(parameter);
+    public void RemoveExpressionParameter(StepExecutionParameterExpressionParameter parameter) =>
+        _expressionParameters.Remove(parameter);
 }

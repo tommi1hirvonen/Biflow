@@ -26,7 +26,7 @@ public class NewClusterConfiguration : ClusterConfiguration
 
     public string RuntimeVersion { get; set; } = "";
 
-    public bool UsePhoton { get; set; } = false;
+    public bool UsePhoton { get; set; }
 
     public ClusterModeConfiguration ClusterMode { get; set; } = new AutoscaleMultiNodeClusterConfiguration();
 }

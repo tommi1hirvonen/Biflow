@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
-public class ExecutionConditionParameter : ParameterBase, IAsyncEvaluable
+public sealed class ExecutionConditionParameter : ParameterBase, IAsyncEvaluable
 {
     public ExecutionConditionParameter() { }
 
@@ -17,7 +17,9 @@ public class ExecutionConditionParameter : ParameterBase, IAsyncEvaluable
         ParameterValue = other.ParameterValue;
 
         // The target job is set, the JobParameter is not null and the target job has a parameter with a matching name.
-        if (job is not null && other.JobParameter is not null && job.JobParameters.FirstOrDefault(p => p.ParameterName == other.JobParameter.ParameterName) is JobParameter parameter)
+        if (job is not null
+            && other.JobParameter is not null
+            && job.JobParameters.FirstOrDefault(p => p.ParameterName == other.JobParameter.ParameterName) is { } parameter)
         {
             JobParameterId = parameter.ParameterId;
             JobParameter = parameter;
@@ -82,7 +84,7 @@ public class ExecutionConditionParameter : ParameterBase, IAsyncEvaluable
     [JsonIgnore]
     public override string DisplayValue => JobParameter switch
     {
-        not null => $"{JobParameter.DisplayValue?.ToString() ?? "null"} (inherited from job parameter {JobParameter.DisplayName})",
+        not null => $"{JobParameter.DisplayValue} (inherited from job parameter {JobParameter.DisplayName})",
         _ => base.DisplayValue
     };
 

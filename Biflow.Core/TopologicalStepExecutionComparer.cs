@@ -3,7 +3,7 @@
 namespace Biflow.Core;
 
 /// <summary>
-/// Convenience class inheriting TopologicalComparer<Step, Guid>.
+/// Convenience class inheriting <see cref="TopologicalComparer{TItem,TKey}"/>.
 /// Used to compare/sort steps based on their dependencies.
 /// </summary>
 public class TopologicalStepExecutionComparer(IEnumerable<StepExecution> steps) : TopologicalComparer<StepExecution, Guid>(

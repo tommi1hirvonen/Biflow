@@ -26,7 +26,11 @@ public class DatasetClient(AppRegistration appRegistration, ITokenService tokenS
         CancellationToken cancellationToken)
     {
         var client = await GetClientAsync();
-        var refreshes = await client.Datasets.GetRefreshHistoryInGroupAsync(Guid.Parse(groupId), datasetId, top: 1, cancellationToken);
+        var refreshes = await client.Datasets.GetRefreshHistoryInGroupAsync(
+            Guid.Parse(groupId),
+            datasetId,
+            top: 1,
+            cancellationToken);
         var refresh = refreshes.Value.FirstOrDefault();
         var status = refresh?.Status switch
         {
@@ -36,9 +40,7 @@ public class DatasetClient(AppRegistration appRegistration, ITokenService tokenS
             "Disabled" => DatasetRefreshStatus.Disabled,
             _ => throw new ApplicationException($"Unrecognized refresh status {refresh?.Status}")
         };
-        return refresh is not null
-            ? (status, refresh)
-            : (null, null);
+        return (status, refresh);
     }
 
     public async Task<IEnumerable<DatasetGroup>> GetAllDatasetsAsync()

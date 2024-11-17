@@ -18,7 +18,7 @@ public class ApiKey : IAuditable
 
     public DateTimeOffset ValidTo { get; set; }
 
-    public bool IsRevoked { get; set; } = false;
+    public bool IsRevoked { get; set; }
 
     public DateTimeOffset CreatedOn { get; set; }
 

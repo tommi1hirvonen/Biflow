@@ -33,7 +33,17 @@ public class Job : IAuditable
             .Select(s => (Orig: s, Copy: s.Copy(this)))
             .ToDictionary(x => x.Orig.StepId, x => x);
 
-        Dependency mapDependency(Step copy, Dependency dep)
+        Steps = mapping.Values
+            .Select(map =>
+            {
+                // Map dependencies from ids to new ids.
+                map.Copy.Dependencies.AddRange(map.Orig.Dependencies.Select(d => MapDependency(map.Copy, d)));
+                return map.Copy;
+            })
+            .ToList();
+        return;
+
+        Dependency MapDependency(Step copy, Dependency dep)
         {
             // Map the dependent step's id from an old value to a new value using the dictionary.
             // In case no matching key is found, it is likely a cross-job dependency => use the id as is.
@@ -45,15 +55,6 @@ public class Job : IAuditable
                 DependencyType = dep.DependencyType
             };
         }
-
-        Steps = mapping.Values
-            .Select(map =>
-            {
-                // Map dependencies from ids to new ids.
-                map.Copy.Dependencies.AddRange(map.Orig.Dependencies.Select(d => mapDependency(map.Copy, d)));
-                return map.Copy;
-            })
-            .ToList();
     }
 
     [JsonInclude]

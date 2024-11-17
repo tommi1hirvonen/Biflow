@@ -4,7 +4,7 @@ using Biflow.Core.Constants;
 
 namespace Biflow.Core.Entities;
 
-public class JobParameter : DynamicParameter
+public sealed class JobParameter : DynamicParameter
 {
     public JobParameter() { }
 
@@ -17,7 +17,7 @@ public class JobParameter : DynamicParameter
         ParameterValue = other.ParameterValue;
         UseExpression = other.UseExpression;
         Expression = new() { Expression = other.Expression.Expression };
-        job?.JobParameters?.Add(this);
+        job?.JobParameters.Add(this);
     }
 
     [Display(Name = "Job")]
@@ -43,15 +43,15 @@ public class JobParameter : DynamicParameter
 
     public override async Task<object?> EvaluateAsync()
     {
-        if (UseExpression)
+        if (!UseExpression)
         {
-            var parameters = new Dictionary<string, object?> {
-                { ExpressionParameterNames.ExecutionId, Guid.Empty },
-                { ExpressionParameterNames.JobId, JobId }
-            };
-            return await Expression.EvaluateAsync(parameters);
+            return ParameterValue.Value;
         }
+        var parameters = new Dictionary<string, object?> {
+            { ExpressionParameterNames.ExecutionId, Guid.Empty },
+            { ExpressionParameterNames.JobId, JobId }
+        };
+        return await Expression.EvaluateAsync(parameters);
 
-        return ParameterValue.Value;
     }
 }

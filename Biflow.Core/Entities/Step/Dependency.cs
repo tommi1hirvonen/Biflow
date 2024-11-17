@@ -45,8 +45,8 @@ public class Dependency : IAuditable
     public string? LastModifiedBy { get; set; }
 
     [JsonIgnore]
-    public bool IsCandidateForRemoval { get; set; } = false;
+    public bool IsCandidateForRemoval { get; set; }
 
     [JsonIgnore]
-    public bool IsNewAddition { get; set; } = false;
+    public bool IsNewAddition { get; set; }
 }
