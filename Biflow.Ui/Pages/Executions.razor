@@ -193,7 +193,7 @@
                             Items="schedules"
                             IsSearchable
                             IdSelector="s => s.ScheduleId.ToString()"
-                            TextSelector="s => s.ScheduleName"
+                            TextSelector="s => s.ScheduleName ?? string.Empty"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
                     <SvgIcon Icon="FeatherIcon.Calendar" />
@@ -341,7 +341,7 @@
         <Paginator @ref="executionPaginator"
                    TItem="ExecutionProjection"
                    Items="GetOrderedExecutions()"
-                   Context="executions"
+                   Context="pagedExecutions"
                    InitialPageSize="State.PageSize"
                    InitialPage="State.ExecutionsCurrentPage"
                    OnPageChanged="page => State.ExecutionsCurrentPage = page"
@@ -354,7 +354,9 @@
             </div>
 
             <div class="card shadow-sm pt-2 mt-1 my-3 table-responsive">
-                <JobExecutionsTable Executions="executions" OnExecutionsUpdated="LoadDataAsync" OnSortingChanged="StateHasChanged" />
+                <JobExecutionsTable Executions="pagedExecutions"
+                                    OnExecutionsUpdated="LoadDataAsync"
+                                    OnSortingChanged="StateHasChanged" />
             </div>
 
         </Paginator>

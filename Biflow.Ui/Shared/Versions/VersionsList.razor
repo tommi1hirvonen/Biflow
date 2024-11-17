@@ -1,5 +1,4 @@
-﻿@using System.Text
-@using System.IO.Compression
+﻿@using System.IO.Compression
 
 @implements IDisposable
 
@@ -82,10 +81,10 @@
                             }
                             else
                             {
-                                foreach (var version in pageItems)
+                                foreach (var version in pageItems ?? [])
                                 {
-                                    var description = version.Description?.Length > 100
-                                        ? $"{version.Description.Substring(0, 100)}..."
+                                    var versionDescription = version.Description?.Length > 100
+                                        ? $"{version.Description[..100]}..."
                                         : version.Description;
                                     <ContextMenuToggle ContainerHtmlTag="tr">
                                         <ChildContent Context="menu">
@@ -95,7 +94,7 @@
                                                 </span>
                                             </td>
                                             <td class="align-middle small">
-                                                @description
+                                                @versionDescription
                                             </td>
                                             <td class="align-middle">
                                                 @version.CreatedDateTime.LocalDateTime

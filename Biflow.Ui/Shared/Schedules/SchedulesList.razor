@@ -6,9 +6,9 @@
 @{
     var triggerText = (UserState.Schedules.TriggersAfter, UserState.Schedules.TriggersBefore) switch
     {
-        (DateTime a, DateTime b) => $"between {a} and {b}",
-        (DateTime a, _) => $"after {a}",
-        (_, DateTime b) => $"before {b}",
+        ({ } a, { } b) => $"between {a} and {b}",
+        ({ } a, _) => $"after {a}",
+        (_, { } b) => $"before {b}",
         _ => "any time"
     };
 }
@@ -129,7 +129,7 @@
 </AuthorizeView>
 
 @{
-    var count = VisibleSchedules?.Count() ?? 0;
+    var count = VisibleSchedules.Count();
     var selectedText = selectedSchedules.Count switch
     {
         1 => $"{selectedSchedules.Count} selected schedule",
@@ -229,7 +229,7 @@
                 }
                 else
                 {
-                    @foreach (var item in items)
+                    @foreach (var item in items ?? [])
                     {
                         <tr class="schedule-row @(item.IsEnabled ? null : "disabled")">
                             <td class="align-middle">
@@ -239,7 +239,7 @@
                                             <div class="form-check form-check me-0">
                                                 <input type="checkbox" class="form-check-input" id="select_schedule_@item.ScheduleId"
                                                        checked=@selectedSchedules.Contains(item)
-                                                       @onchange="args => { if (selectedSchedules.Contains(item)) selectedSchedules.Remove(item); else selectedSchedules.Add(item); }">
+                                                       @onchange="_ => { if (!selectedSchedules.Add(item)) selectedSchedules.Remove(item); }">
                                                 <label class="form-check-label" for="select_schedule_@item.ScheduleId"></label>
                                             </div>
                                         </div>
@@ -444,9 +444,9 @@
         ArgumentNullException.ThrowIfNull(Schedules);
 
         var job = Jobs.First(j => j.JobId == schedule.JobId);
-        if (job.Schedules.FirstOrDefault(s => s.ScheduleId == schedule.ScheduleId) is Schedule s)
+        if (job.Schedules.FirstOrDefault(s => s.ScheduleId == schedule.ScheduleId) is { } scheduleToRemove)
         {
-            job.Schedules.Remove(s);
+            job.Schedules.Remove(scheduleToRemove);
         }
         job.Schedules.Add(schedule);
         schedule.Job = job;
@@ -495,7 +495,7 @@
     {
         if (value)
         {
-            var schedulesToAdd = VisibleSchedules.Where(s => !selectedSchedules.Contains(s)) ?? [];
+            var schedulesToAdd = VisibleSchedules.Where(s => !selectedSchedules.Contains(s));
             foreach (var s in schedulesToAdd) selectedSchedules.Add(s);
         }
         else
@@ -530,10 +530,10 @@
         var statuses = jobs.Select(j =>
         {
             var jobName = Jobs?.FirstOrDefault(job => job.JobId.ToString().ToLower() == j.JobId.ToLower())?.JobName;
-            var schedules = j.Schedules.Select(s =>
+            var schedules = j.Schedules.Select(scheduleStatus =>
             {
-                var scheduleName = Schedules?.FirstOrDefault(sched => sched.ScheduleId.ToString().ToLower() == s.ScheduleId.ToLower())?.ScheduleName;
-                return new ScheduleStatus(s.ScheduleId, scheduleName, s.CronExpression, s.IsEnabled, s.IsRunning, s.DisallowConcurrentExecution);
+                var scheduleName = Schedules?.FirstOrDefault(s => s.ScheduleId.ToString().ToLower() == scheduleStatus.ScheduleId.ToLower())?.ScheduleName;
+                return new ScheduleStatus(scheduleStatus.ScheduleId, scheduleName, scheduleStatus.CronExpression, scheduleStatus.IsEnabled, scheduleStatus.IsRunning, scheduleStatus.DisallowConcurrentExecution);
             }).OrderBy(s => s.ScheduleName);
 
             return new JobStatus(j.JobId, jobName, schedules);

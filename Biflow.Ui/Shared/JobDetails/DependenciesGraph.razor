@@ -22,7 +22,7 @@
                        @bind-Value="stepFilter"
                        @bind-Value:after="LoadGraphAsync"
                        DataProvider="ProvideSuggestions"
-                       ItemFromValueResolver="v => Task.FromResult(stepSlims?.FirstOrDefault(s => s.StepId == v))"
+                       ItemFromValueResolver="v => Task.FromResult(stepSlims?.FirstOrDefault(s => s.StepId == v)!)"
                        ValueSelector="item => item.StepId"
                        TextSelector="@(item => item.StepName ?? "")"
                        MinimumLength="0"
@@ -75,37 +75,37 @@
                         <div class="col">
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" id="direction_radio_admin"
-                                checked=@(direction == DependencyGraphDirection.LeftToRight)
-                                @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.LeftToRight))">
+                                       checked=@(direction == DependencyGraphDirection.LeftToRight)
+                                       @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.LeftToRight))">
                                 <label class="form-check-label fw-normal" for="direction_radio_admin">
-                                    <SvgIcon Icon="FeatherIcon.ArrowRight" />
+                                    <SvgIcon Icon="FeatherIcon.ArrowRight"/>
                                     Left to right
                                 </label>
                             </div>
                             <div class="form-check mt-1">
                                 <input class="form-check-input" type="radio" id="direction_radio_editor"
-                                checked=@(direction == DependencyGraphDirection.RightToLeft)
-                                @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.RightToLeft))">
+                                       checked=@(direction == DependencyGraphDirection.RightToLeft)
+                                       @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.RightToLeft))">
                                 <label class="form-check-label fw-normal" for="direction_radio_editor">
-                                    <SvgIcon Icon="FeatherIcon.ArrowLeft" />
+                                    <SvgIcon Icon="FeatherIcon.ArrowLeft"/>
                                     Right to left
                                 </label>
                             </div>
                             <div class="form-check mt-1">
                                 <input class="form-check-input" type="radio" id="direction_radio_operator"
-                                checked=@(direction == DependencyGraphDirection.TopToBottom)
-                                @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.TopToBottom))">
+                                       checked=@(direction == DependencyGraphDirection.TopToBottom)
+                                       @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.TopToBottom))">
                                 <label class="form-check-label fw-normal" for="direction_radio_operator">
-                                    <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                                    <SvgIcon Icon="FeatherIcon.ArrowDown"/>
                                     Top to bottom
                                 </label>
                             </div>
                             <div class="form-check mt-1">
                                 <input class="form-check-input" type="radio" id="direction_radio_viewer"
-                                checked=@(direction == DependencyGraphDirection.BottomToTop)
-                                @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.BottomToTop))">
+                                       checked=@(direction == DependencyGraphDirection.BottomToTop)
+                                       @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.BottomToTop))">
                                 <label class="form-check-label fw-normal" for="direction_radio_viewer">
-                                    <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                                    <SvgIcon Icon="FeatherIcon.ArrowUp"/>
                                     Bottom to top
                                 </label>
                             </div>

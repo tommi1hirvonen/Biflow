@@ -8,27 +8,27 @@
 <HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" Title="@(schedule.ScheduleId == Guid.Empty ? "New schedule" : "Edit schedule")">
     <BodyTemplate>
         <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
-        <EditForm id="schedule_form" Model="schedule" OnValidSubmit="SubmitSchedule" Context="_context">
+        <EditForm id="schedule_form" Model="schedule" OnValidSubmit="SubmitSchedule">
             <div class="row">
                 <div class="col">
                     <DataAnnotationsValidator />
                     <div>
                         <label class="form-label">Job</label>
                         <HxAutosuggest Enabled="@(schedule.ScheduleId == Guid.Empty && Job is null)"
-                        TItem="Job"
-                        TValue="Guid"
-                        DataProvider="GetJobSuggestionsAsync"
-                        ItemFromValueResolver="jobId => Task.FromResult(Jobs.Append(Job).FirstOrDefault(j => j?.JobId == jobId))"
-                        ValueSelector="job => job.JobId"
-                        TextSelector="job => job.JobName"
-                        @bind-Value="schedule.JobId"
-                        Context="job"
-                        MinimumLength="0"
-                        Placeholder="Select job"
-                        autocomplete="off">
+                                       TItem="Job"
+                                       TValue="Guid"
+                                       DataProvider="GetJobSuggestionsAsync"
+                                       ItemFromValueResolver="jobId => Task.FromResult(Jobs.Append(Job).FirstOrDefault(j => j?.JobId == jobId)!)"
+                                       ValueSelector="job => job.JobId"
+                                       TextSelector="job => job.JobName"
+                                       @bind-Value="schedule.JobId"
+                                       Context="job"
+                                       MinimumLength="0"
+                                       Placeholder="Select job"
+                                       autocomplete="off">
                             <InputGroupStartTemplate>
                                 <div class="input-group-text">
-                                    <SvgIcon Icon="LucideIcon.ClipboardList" />
+                                    <SvgIcon Icon="LucideIcon.ClipboardList"/>
                                 </div>
                             </InputGroupStartTemplate>
                             <ItemTemplate>
@@ -197,10 +197,9 @@
         else if (scheduleId == Guid.Empty)
         {
             var jobId = Job?.JobId ?? Guid.Empty;
-            ArgumentNullException.ThrowIfNull(jobId);
             schedule = new()
             {
-                JobId = (Guid)jobId
+                JobId = jobId
             };
         }
 

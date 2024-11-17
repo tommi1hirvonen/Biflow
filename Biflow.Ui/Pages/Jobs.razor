@@ -202,7 +202,7 @@
                     <th class="align-middle d-flex align-items-center">
                         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                             <TriStateCheckbox CssClass="me-0"
-                                              Checked="@(selectedJobs.Count > 0 && listItems.Any() == true && count > 0)"
+                                              Checked="@(selectedJobs.Count > 0 && listItems.Any() && count > 0)"
                                               Indeterminate="@(selectedJobs.Any() && selectedJobs.Count != count)"
                                               CheckedChanged="value => ToggleJobsSelected(listItems.Select(i => i.Job), value)" />
                         </AuthorizeView>
@@ -279,7 +279,7 @@
                 }
                 else
                 {
-                    @foreach (var listItem in pageItems)
+                    @foreach (var listItem in pageItems ?? [])
                     {
                         var (item, lastExecution, schedule, nextStartTime) = listItem;
                         <ContextMenuToggle ContainerHtmlTag="tr" CssClass="@($"job-row {(item.IsEnabled ? null : "disabled")}")">
@@ -291,7 +291,7 @@
                                                 <div class="form-check form-check-inline me-0">
                                                     <input type="checkbox" class="form-check-input" id="select_job_@item.JobId"
                                                            checked=@selectedJobs.Contains(item)
-                                                           @onchange="args => { if (selectedJobs.Contains(item)) selectedJobs.Remove(item); else selectedJobs.Add(item); }">
+                                                           @onchange="_ => { if (!selectedJobs.Add(item)) selectedJobs.Remove(item); }">
                                                     <label class="form-check-label" for="select_job_@item.JobId"></label>
                                                 </div>
                                             </AuthorizeView>
@@ -319,7 +319,6 @@
                                             { CreatedBy: not null and { Length: > 0 } } => $"Created by: {lastExecution.CreatedBy}",
                                             _ => null
                                         };
-                                        var createdBy = lastExecution.ScheduleName ?? lastExecution.CreatedBy;
                                         <a class="text-body" href="@($"executions/{lastExecution.ExecutionId}/list")" title="@title">
                                             @lastExecution.StartedOn?.LocalDateTime
                                         </a>

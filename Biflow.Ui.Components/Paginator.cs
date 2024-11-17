@@ -35,7 +35,7 @@ public class Paginator<TItem> : ComponentBase, IPaginator
         }
     }
 
-    public IEnumerable<TItem>? PageItems => Items?
+    private IEnumerable<TItem>? PageItems => Items?
         .Skip(PageSize * (CurrentPage - 1))
         .Take(PageSize);
 
@@ -78,7 +78,7 @@ public class Paginator<TItem> : ComponentBase, IPaginator
         }
 
         // Set initial page only after items have been set.
-        // Otherwise the current page might be reset in the next step.
+        // Otherwise, the current page might be reset in the next step.
         if (InitialPage > 0 && !initialPageSet && itemsSet)
         {
             initialPageSet = true;

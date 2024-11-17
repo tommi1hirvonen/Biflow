@@ -26,7 +26,7 @@
                 <HxAutosuggest TItem="JobProjection"
                                TValue="Guid?"
                                DataProvider="GetSuggestionsAsync"
-                               ItemFromValueResolver="jobId => Task.FromResult(JobSlims.GetValueOrDefault(jobId ?? Guid.Empty))"
+                               ItemFromValueResolver="jobId => Task.FromResult(JobSlims.GetValueOrDefault(jobId ?? Guid.Empty)!)"
                                ValueSelector="job => job.JobId"
                                TextSelector="job => job.JobName"
                                @bind-Value="Step.JobToExecuteId"

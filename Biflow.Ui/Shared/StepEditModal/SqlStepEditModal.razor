@@ -28,7 +28,7 @@
                         <ConnectionTypeIcon ConnectionType="Connection.ConnectionType" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId" @bind-Value:after="StateHasChanged">
-                        @foreach (var connection in SqlConnections ?? [])
+                        @foreach (var connection in SqlConnections)
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }
@@ -53,7 +53,7 @@
                             Language="sql"
                             MinimapEnabled="false"
                             InitialValueExpression="() => Step?.SqlStatement"
-                            OnValueChanged="value => Step.SqlStatement = value"
+                            OnValueChanged="value => Step.SqlStatement = value ?? string.Empty"
                             Resize="CodeEditor.CodeEditorResize.Both"/>
             </div>
         </div>
@@ -75,7 +75,7 @@
                 }
                 <InputSelect class="form-select form-select-sm" @bind-Value="Step.ResultCaptureJobParameterId" disabled=@(Step.Job.JobParameters.Any() == false)>
                     <option value="">@noneOption</option>
-                    @foreach (var jobParam in Step.Job.JobParameters.OrderBy(p => p.ParameterName) ?? Enumerable.Empty<JobParameter>())
+                    @foreach (var jobParam in Step.Job.JobParameters.OrderBy(p => p.ParameterName))
                     {
                         <option value="@jobParam.ParameterId">
                             @jobParam.ParameterName (@jobParam.ParameterValue.ValueType = @jobParam.ParameterValue.Value)
