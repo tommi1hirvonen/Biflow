@@ -1,5 +1,4 @@
 @using Biflow.Core.Entities
-@using Biflow.Core.Interfaces
 @using Microsoft.AspNetCore.Components.Web
 
 <span @attributes="InputAttributes" class="badge d-inline-flex align-items-center py-1 px-2 @BadgeCss @CssClass @(Selected ? "text-decoration-underline" : null)" @onclick="OnClick">
@@ -41,5 +40,5 @@
         _ => null
     };
 
-    private string? BadgeCss => $"bg-{EffectiveColor}-subtle border border-{EffectiveColor}-subtle text-{EffectiveColor}-emphasis";
+    private string BadgeCss => $"bg-{EffectiveColor}-subtle border border-{EffectiveColor}-subtle text-{EffectiveColor}-emphasis";
 }

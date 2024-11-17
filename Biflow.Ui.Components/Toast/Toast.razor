@@ -74,7 +74,7 @@
         {
             return;
         }
-        cts.Cancel();
+        await cts.CancelAsync();
         hiding = true;
         StateHasChanged();
         await Task.Delay(300);

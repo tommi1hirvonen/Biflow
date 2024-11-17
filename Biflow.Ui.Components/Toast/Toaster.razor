@@ -1,5 +1,3 @@
-@using Microsoft.AspNetCore.Components.Web
-
 @namespace Biflow.Ui.Components
 
 @implements IDisposable
@@ -56,7 +54,7 @@
 
     [Parameter] public string? CssClass { get; set; }
 
-	private List<ToastMessage> messages = new List<ToastMessage>();
+	private List<ToastMessage> messages = new();
 
     protected override void OnInitialized()
     {

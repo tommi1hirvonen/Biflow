@@ -17,21 +17,23 @@
 
     private LineChartDataset? prevDataset;
 
-    private string canvasId = $"chart_{Guid.NewGuid().ToString()}";
-
+    private readonly string canvasId = $"chart_{Guid.NewGuid().ToString()}";
+    private readonly JsonSerializerOptions serializationOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+    
     private IJSObjectReference? jsObject;
-
-    private JsonSerializerOptions serializationOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-
     private bool shouldRender = false;
 
     protected override void OnParametersSet()
     {
-        if (Dataset is not null && Dataset != prevDataset)
+        if (Dataset is null || Dataset == prevDataset)
         {
-            prevDataset = Dataset;
-            shouldRender = true;
+            return;
         }
+        prevDataset = Dataset;
+        shouldRender = true;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

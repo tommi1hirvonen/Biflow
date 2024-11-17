@@ -5,7 +5,7 @@
 
 @implements IAsyncDisposable
 
-@inject IJSRuntime jsRuntime
+@inject IJSRuntime JsRuntime
 
 <div class="form-check form-check-inline @CssClass">
     <input @ref="_inputElement"
@@ -38,7 +38,7 @@
     {
         if (firstRender)
         {
-            jsObject = await jsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/TriStateCheckbox.js");
+            jsObject = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/TriStateCheckbox.js");
         }
         if (Indeterminate.HasValue && jsObject is not null)
         {

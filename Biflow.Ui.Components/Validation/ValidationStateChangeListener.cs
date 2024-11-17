@@ -28,12 +28,14 @@ public class ValidationStateChangeListener : ComponentBase, IDisposable
             _previousEditContext = CurrentEditContext;
         }
 
-        if (OnValidationStateChanged != _previousOnValidationStateChanged)
+        if (OnValidationStateChanged == _previousOnValidationStateChanged)
         {
-            _validationStateChangedHandler = (sender, eventArgs) => OnValidationStateChanged?.Invoke(CurrentEditContext.GetValidationMessages());
-            CurrentEditContext.OnValidationStateChanged += _validationStateChangedHandler;
-            _previousOnValidationStateChanged = OnValidationStateChanged;
+            return;
         }
+        
+        _validationStateChangedHandler = (_, _) => OnValidationStateChanged?.Invoke(CurrentEditContext.GetValidationMessages());
+        CurrentEditContext.OnValidationStateChanged += _validationStateChangedHandler;
+        _previousOnValidationStateChanged = OnValidationStateChanged;
     }
 
     public void Dispose()

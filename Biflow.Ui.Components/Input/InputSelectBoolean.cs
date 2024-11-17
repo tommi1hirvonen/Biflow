@@ -12,11 +12,9 @@ public class InputSelectBoolean : InputSelect<bool>
             validationErrorMessage = string.Empty;
             return true;
         }
-        else
-        {
-            result = default;
-            validationErrorMessage = "The chosen value is not a valid boolean.";
-            return false;
-        }
+
+        result = default;
+        validationErrorMessage = "The chosen value is not a valid boolean.";
+        return false;
     }
 }

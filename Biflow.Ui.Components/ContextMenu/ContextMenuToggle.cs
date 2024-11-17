@@ -22,9 +22,9 @@ public class ContextMenuToggle(ContextMenuService contextMenuService) : Componen
 
     [Parameter] public RenderFragment? MenuContent { get; set; }
 
-    [Parameter] public bool Disabled { get; set; } = false;
+    [Parameter] public bool Disabled { get; set; }
 
-    [Parameter] public bool AlsoOverrideOnClick { get; set; } = false;
+    [Parameter] public bool AlsoOverrideOnClick { get; set; }
 
     private readonly ContextMenuService _contextMenuService = contextMenuService;
 
