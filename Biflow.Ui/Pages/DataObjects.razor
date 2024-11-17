@@ -228,7 +228,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await using var context = await Task.Run(DbContextFactory.CreateDbContext);
+        await using var context = await DbContextFactory.CreateDbContextAsync();
         objects = await context.DataObjects
             .Include(o => o.Steps)
             .ThenInclude(s => s.Step)

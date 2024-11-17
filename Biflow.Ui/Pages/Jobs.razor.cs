@@ -94,7 +94,7 @@ public partial class Jobs(
 
     private async Task LoadJobsAsync()
     {
-        await using var context = await Task.Run(_dbContextFactory.CreateDbContext);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Include(job => job.Tags)
@@ -107,7 +107,7 @@ public partial class Jobs(
     private async Task LoadLastExecutionsAsync()
     {
         // Get each job's last execution.
-        await using var context = await Task.Run(_dbContextFactory.CreateDbContext);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         var lastExecutions = await context.Executions
             .AsNoTrackingWithIdentityResolution()
             .Where(execution => context.Jobs.Any(j => j.JobId == execution.JobId) && execution.StartedOn != null)
@@ -125,7 +125,7 @@ public partial class Jobs(
 
     private async Task LoadStepsAsync()
     {
-        await using var context = await Task.Run(_dbContextFactory.CreateDbContext);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         steps = await context.Steps
             .AsNoTracking()
             .Select(s => new StepProjection(s.JobId, s.StepName))

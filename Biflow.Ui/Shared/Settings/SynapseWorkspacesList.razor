@@ -135,7 +135,7 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        await using var context = await Task.Run<AppDbContext>(DbFactory.CreateDbContext);
+        await using var context = await DbFactory.CreateDbContextAsync();
         workspaces = await context.SynapseWorkspaces
             .AsNoTrackingWithIdentityResolution()
             .Include(c => c.Steps)

@@ -193,7 +193,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await using var context = await Task.Run(DbContextFactory.CreateDbContext);
+        await using var context = await DbContextFactory.CreateDbContextAsync();
         tags = await context.ScheduleTags
             .AsNoTrackingWithIdentityResolution()
             .Include(t => t.Schedules)

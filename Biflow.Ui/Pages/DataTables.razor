@@ -34,7 +34,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        await using var context = await Task.Run(DbContextFactory.CreateDbContext);
+        await using var context = await DbContextFactory.CreateDbContextAsync();
         _tables = await context.MasterDataTables
             .AsNoTrackingWithIdentityResolution()
             .Include(t => t.Category)

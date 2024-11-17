@@ -24,7 +24,7 @@
         var authState = await AuthenticationState;
         var username = authState.User.Identity?.Name;
 
-        await using var context = await Task.Run(DbFactory.CreateDbContext);
+        await using var context = await DbFactory.CreateDbContextAsync();
         user = await context.Users
             .AsNoTrackingWithIdentityResolution()
             .Include(user => user.Subscriptions)
