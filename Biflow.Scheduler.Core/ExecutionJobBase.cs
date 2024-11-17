@@ -26,7 +26,7 @@ public abstract class ExecutionJobBase(
             var jobId = Guid.Parse(jobKey.Group);
             try
             {
-                using var dbContext = _dbContextFactory.CreateDbContext();
+                await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
                 var isEnabled = await dbContext.Jobs
                     .AsNoTracking()
                     .Where(job => job.JobId == jobId)
@@ -50,12 +50,12 @@ public abstract class ExecutionJobBase(
 
                 using var builder = await _executionBuilderFactory.CreateAsync(jobId, scheduleId,
                     [
-                        context => step => step.IsEnabled,
-                        context => step =>
-                        // Schedule has no tag filters
-                        !context.Schedules.Any(sch => sch.ScheduleId == scheduleId && sch.TagFilter.Any()) ||
-                        // There's at least one match between the step's tags and the schedule's tags
-                        step.Tags.Any(t1 => context.Schedules.Any(sch => sch.ScheduleId == scheduleId && sch.TagFilter.Any(t2 => t1.TagId == t2.TagId)))
+                        _ => step => step.IsEnabled,
+                        ctx => step =>
+                            // Schedule has no tag filters
+                            !ctx.Schedules.Any(sch => sch.ScheduleId == scheduleId && sch.TagFilter.Any()) ||
+                            // There's at least one match between the step's tags and the schedule's tags
+                            step.Tags.Any(t1 => ctx.Schedules.Any(sch => sch.ScheduleId == scheduleId && sch.TagFilter.Any(t2 => t1.TagId == t2.TagId)))
                     ]);
                 ArgumentNullException.ThrowIfNull(builder);
                 builder.AddAll();

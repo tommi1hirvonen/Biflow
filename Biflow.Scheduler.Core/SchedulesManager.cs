@@ -70,8 +70,10 @@ internal class SchedulesManager<TJob> : BackgroundService, ISchedulesManager
         foreach (var triggerKey in  triggerKeys)
         {
             var detail = await _scheduler.GetTrigger(triggerKey, cancellationToken);
-            if (detail is not null && detail is ICronTrigger cron)
+            if (detail is ICronTrigger cron)
+            {
                 triggerDetails[triggerKey] = cron;
+            }
         }
 
         var jobStatuses = jobIds.Select(jobId =>
@@ -83,7 +85,7 @@ internal class SchedulesManager<TJob> : BackgroundService, ISchedulesManager
                     var scheduleId = key.Name; // Quartz job name maps to schedule id
                     var trigger = triggerKeys.First(t => t.Name == scheduleId); // Trigger name maps to schedule id
                     var isEnabled = triggerStates.TryGetValue(trigger, out var state) && state != TriggerState.Paused;
-                    var isRunning = runningSchedules.Any(r => r.JobDetail.Key == key);
+                    var isRunning = runningSchedules.Any(r => Equals(r.JobDetail.Key, key));
                     var disallowConcurrentExecution = jobDetails.TryGetValue(key, out var detail) && detail.ConcurrentExecutionDisallowed;
                     var cronExpression = triggerDetails.GetValueOrDefault(trigger)?.CronExpressionString;
                     return new ScheduleStatus(scheduleId, cronExpression, isEnabled, isRunning, disallowConcurrentExecution);
@@ -105,7 +107,7 @@ internal class SchedulesManager<TJob> : BackgroundService, ISchedulesManager
             List<Schedule> schedules;
             try
             {
-                using var context = _dbContextFactory.CreateDbContext();
+                await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
                 schedules = await context.Schedules
                     .AsNoTracking()
                     .ToListAsync(cancellationToken: cancellationToken);
@@ -239,7 +241,7 @@ internal class SchedulesManager<TJob> : BackgroundService, ISchedulesManager
 
     private class TriggerListener(ILogger logger) : ITriggerListener
     {
-        public string Name { get; } = "MisfireLoggingListener";
+        public string Name => "MisfireLoggingListener";
 
         public Task TriggerComplete(ITrigger trigger, IJobExecutionContext context, SchedulerInstruction triggerInstructionCode, CancellationToken cancellationToken = default) => Task.CompletedTask;
 
@@ -247,8 +249,8 @@ internal class SchedulesManager<TJob> : BackgroundService, ISchedulesManager
 
         public Task TriggerMisfired(ITrigger trigger, CancellationToken cancellationToken = default)
         {
-            var scheduleId = trigger.JobKey?.Name;
-            var jobId = trigger.JobKey?.Group;
+            var scheduleId = trigger.JobKey.Name;
+            var jobId = trigger.JobKey.Group;
             var cron = (trigger as ICronTrigger)?.CronExpressionString;
             logger.LogError("Schedule {scheduleId} for job {jobId} with cron '{cron}' misfired", scheduleId, jobId, cron);
             return Task.CompletedTask;

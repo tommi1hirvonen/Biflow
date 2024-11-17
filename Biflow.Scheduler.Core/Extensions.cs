@@ -14,6 +14,6 @@ public static class Extensions
         services.AddDbContextFactory<SchedulerDbContext>();
         services.AddExecutionBuilderFactory<SchedulerDbContext>();
         services.AddSingleton<ISchedulesManager, SchedulesManager<TExecutionJob>>();
-        services.AddHostedService(services => services.GetRequiredService<ISchedulesManager>());
+        services.AddHostedService(s => s.GetRequiredService<ISchedulesManager>());
     }
 }
