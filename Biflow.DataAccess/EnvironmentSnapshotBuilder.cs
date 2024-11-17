@@ -1,6 +1,4 @@
-﻿using System.Data;
-
-namespace Biflow.DataAccess;
+﻿namespace Biflow.DataAccess;
 
 public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContextFactory)
 {
@@ -8,7 +6,7 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
 
     public async Task<EnvironmentSnapshot> CreateAsync()
     {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         var connections = await context.Connections
             .OrderBy(c => c.ConnectionId)
@@ -48,8 +46,9 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
 
         // Load steps and schedules separately in order to be able to sort their navigation collections.
         // Because change tracking on the DbContext is enabled, the steps and schedules navigation collections
-        // on the jobs loaded previously will be automatically populated by EF Core.
-        var steps = await context.Steps
+        // on the jobs loaded previously will be automatically populated by EF Core
+        // even if the query results here are discarded.
+        _ = await context.Steps
             .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.ExpressionParameters)}")
             .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.InheritFromJobParameter)}")
             .Include(s => (s as JobStep)!.TagFilters.OrderBy(t => t.TagId))
@@ -59,7 +58,7 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
             .Include(s => s.ExecutionConditionParameters.OrderBy(p => p.ParameterId))
             .OrderBy(s => s.JobId).ThenBy(s => s.StepId)
             .ToArrayAsync();
-        var schedules = await context.Schedules
+        _ = await context.Schedules
             .Include(s => s.TagFilter.OrderBy(t => t.TagId))
             .Include(s => s.Tags.OrderBy(t => t.TagId))
             .OrderBy(s => s.JobId).ThenBy(s => s.ScheduleId)

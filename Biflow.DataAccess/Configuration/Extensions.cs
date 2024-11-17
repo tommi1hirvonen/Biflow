@@ -16,7 +16,10 @@ internal static class Extensions
                 e.GetParameters().SingleOrDefault()?.ParameterType.GetGenericTypeDefinition() == entityTypeConfigurationType);
 
         // Iterate types that are concrete classes.
-        foreach (var type in typeof(EntityTypeConfigurationEntryPoint).Assembly.GetTypes().Where(t => t.IsClass && !t.IsAbstract))
+        var configurationTypes = typeof(EntityTypeConfigurationEntryPoint).Assembly
+            .GetTypes()
+            .Where(t => t is { IsClass: true, IsAbstract: false });
+        foreach (var type in configurationTypes)
         {
             // Try and find the IEntityTypeConfigurations interface.
             var @interface = type

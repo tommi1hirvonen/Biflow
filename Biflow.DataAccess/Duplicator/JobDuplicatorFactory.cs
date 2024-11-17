@@ -11,10 +11,9 @@ public class JobDuplicatorFactory(IDbContextFactory<AppDbContext> dbContextFacto
             .Include(j => j.JobParameters)
             .Include(j => j.JobConcurrencies)
             .Include(j => j.Tags);
-        foreach (var include in DuplicatorExtensions.StepNavigationPaths.Skip(1))
-        {
-            query = query.Include($"{nameof(Job.Steps)}.{include}");
-        }
+        query = DuplicatorExtensions.StepNavigationPaths
+            .Skip(1)
+            .Aggregate(query, (current, include) => current.Include($"{nameof(Job.Steps)}.{include}"));
         var job = await query.FirstAsync(j => j.JobId == jobId);
         var copy = job.Copy();
         return new JobDuplicator(context, copy);

@@ -1,6 +1,5 @@
 ﻿using Biflow.DataAccess.Configuration;
 using Biflow.DataAccess.Convention;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.Extensions.Configuration;
@@ -113,7 +112,7 @@ public class AppDbContext : DbContext
         configurationBuilder.Conventions.Remove<SqlServerOnDeleteConvention>();
 
         // The model contains relatively many navigation properties compared to the data amounts being processed.
-        // Therefore it is better to skip creating indexes for all foreign keys / navigation properties.
+        // Therefore, it is better to skip creating indexes for all foreign keys / navigation properties.
         // Actually useful and needed indexes can be created explicitly.
         configurationBuilder.Conventions.Remove<ForeignKeyIndexConvention>();
     }
@@ -124,20 +123,18 @@ public class AppDbContext : DbContext
 
         foreach (var entry in ChangeTracker.Entries())
         {
-            if (entry.State == EntityState.Added && entry.Entity is IAuditable added)
+            switch (entry)
             {
-                added.CreatedOn = now;
-                added.CreatedBy = Username;
-                added.LastModifiedOn = now;
-                added.LastModifiedBy = Username;
-                continue;
-            }
-
-            if (entry.State == EntityState.Modified && entry.Entity is IAuditable modified)
-            {
-                modified.LastModifiedOn = now;
-                modified.LastModifiedBy = Username;
-                continue;
+                case { State: EntityState.Added, Entity: IAuditable added }:
+                    added.CreatedOn = now;
+                    added.CreatedBy = Username;
+                    added.LastModifiedOn = now;
+                    added.LastModifiedBy = Username;
+                    continue;
+                case { State: EntityState.Modified, Entity: IAuditable modified }:
+                    modified.LastModifiedOn = now;
+                    modified.LastModifiedBy = Username;
+                    break;
             }
         }
     }

@@ -230,16 +230,11 @@ public static class Extensions
                 case ExeStepExecution exe:
                     exe.SetRunAsCredential(step.ExeStepCredential);
                     break;
-                default:
-                    break;
             }
         }
 
         return execution;
     }
-
-    internal static bool EqualsIgnoreCase(this string text, string? compareTo) =>
-        string.Equals(text, compareTo, StringComparison.OrdinalIgnoreCase);
 }
 
 file record StepExecutionProjection(

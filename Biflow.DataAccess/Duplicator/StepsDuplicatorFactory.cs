@@ -11,12 +11,10 @@ public class StepsDuplicatorFactory(IDbContextFactory<AppDbContext> dbContextFac
     {
         var context = await _dbContextFactory.CreateDbContextAsync();
         var query = context.Steps.Where(s => stepIds.Contains(s.StepId));
-        foreach (var include in DuplicatorExtensions.StepNavigationPaths)
-        {
-            query = query.Include(include);
-        }
+        query = DuplicatorExtensions.StepNavigationPaths
+            .Aggregate(query, (current, include) => current.Include(include));
         var steps = await query.ToArrayAsync();
-        var targetJob = targetJobId is Guid id
+        var targetJob = targetJobId is { } id
             ? await context.Jobs.Include(j => j.JobParameters).FirstOrDefaultAsync(j => j.JobId == id)
             : null;
         var copies = steps.Select(s => s.Copy(targetJob)).ToList();

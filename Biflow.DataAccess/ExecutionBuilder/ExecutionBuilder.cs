@@ -1,6 +1,6 @@
 ﻿namespace Biflow.DataAccess;
 
-public partial class ExecutionBuilder : IDisposable
+public class ExecutionBuilder : IDisposable
 {
     private readonly AppDbContext _context;
     private readonly Step[] _steps;
@@ -14,7 +14,7 @@ public partial class ExecutionBuilder : IDisposable
         _createExecution = createExecution;
         _execution = _createExecution();
 
-        // Guard agains errors in TopologicalStepComparer when encountering cyclic dependencies.
+        // Guard against errors in TopologicalStepComparer when encountering cyclic dependencies.
         if (_execution.ExecutionMode == ExecutionMode.Dependency)
         {
             try
@@ -47,13 +47,13 @@ public partial class ExecutionBuilder : IDisposable
     public double TimeoutMinutes { get => _execution.TimeoutMinutes; set => _execution.TimeoutMinutes = value; }
 
     public IEnumerable<ExecutionBuilderStep> Steps =>
-        _builderSteps.Where(s => !_execution.StepExecutions.Any(e => s.StepId == e.StepId));
+        _builderSteps.Where(s => _execution.StepExecutions.All(e => s.StepId != e.StepId));
 
     public IEnumerable<ExecutionBuilderStepExecution> StepExecutions
     {
         get
         {
-            // Guard agains errors in TopologicalStepExecutionComparer when encountering cyclic dependencies.
+            // Guard against errors in TopologicalStepExecutionComparer when encountering cyclic dependencies.
             IEnumerable<StepExecution> steps;
             if (_execution.ExecutionMode == ExecutionMode.Dependency)
             {
@@ -108,19 +108,19 @@ public partial class ExecutionBuilder : IDisposable
 
     public void AddAll(Func<ExecutionBuilderStep, bool>? predicate = null)
     {
-        predicate ??= (_) => true;
+        predicate ??= _ => true;
         foreach (var step in Steps.Where(s => predicate(s)))
         {
             step.AddToExecution();
         }
     }
 
-    internal bool Add(Step step)
+    internal void Add(Step step)
     {
         // Step was already added.
         if (_execution.StepExecutions.Any(e => e.StepId == step.StepId))
         {
-            return false;
+            return;
         }
         // Step is not one of the provided steps.
         if (!_steps.Contains(step))
@@ -129,10 +129,9 @@ public partial class ExecutionBuilder : IDisposable
         }
         var stepExecution = step.ToStepExecution(_execution);
         _execution.StepExecutions.Add(stepExecution);
-        return true;
     }
 
-    internal bool Remove(StepExecution stepExecution) =>
+    internal void Remove(StepExecution stepExecution) =>
         _execution.StepExecutions.Remove(stepExecution);
 
     internal void AddWithDependencies(Step step, bool onlyOnSuccess) =>
@@ -144,7 +143,7 @@ public partial class ExecutionBuilder : IDisposable
         Add(step);
 
         // Get dependency ids.
-        List<Guid> dependencyStepIds = step.Dependencies
+        var dependencyStepIds = step.Dependencies
             .Where(d => d.DependencyType == DependencyType.OnSucceeded || !onlyOnSuccess)
             .Select(d => d.DependantOnStepId)
             .ToList();
@@ -154,8 +153,9 @@ public partial class ExecutionBuilder : IDisposable
         {
             return;
         }
+        
         // This step was already handled.
-        else if (processedSteps.Any(s => s.StepId == step.StepId))
+        if (processedSteps.Any(s => s.StepId == step.StepId))
         {
             return;
         }
@@ -163,17 +163,15 @@ public partial class ExecutionBuilder : IDisposable
         processedSteps.Add(step);
 
         // Get dependency steps based on ids. Only include enabled steps.
-        List<Step> dependencySteps = _steps
-            ?.Where(s => s.IsEnabled && dependencyStepIds.Any(id => s.StepId == id))
-            .ToList()
-            ?? [];
+        var dependencySteps = _steps
+            .Where(s => s.IsEnabled && dependencyStepIds.Any(id => s.StepId == id))
+            .ToList();
 
         // Loop through the dependencies and handle them recursively.
-        foreach (var depencyStep in dependencySteps)
+        foreach (var dependencyStep in dependencySteps)
         {
-            RecurseDependencies(depencyStep, processedSteps, onlyOnSuccess);
+            RecurseDependencies(dependencyStep, processedSteps, onlyOnSuccess);
         }
-
     }
 
     public void Dispose() => _context.Dispose();
