@@ -378,6 +378,7 @@ When implementing Always Encrypted, these columns are good candidates for encryp
 - [app].[QlikCloudClient].[ApiToken]
 - [app].[Step].[FunctionKey]
 - [app].[DatabricksWorkspace].[ApiToken]
+- [app].[DbtAccount].[ApiToken]
 
 Enabling Always Encrypted with secure enclave is not required.
 
