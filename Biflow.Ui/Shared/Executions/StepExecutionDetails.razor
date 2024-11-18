@@ -102,357 +102,346 @@
                 @timeout.TimeoutMinutes
             </dd>
         }
-        @if (StepExecutionAttempt.StepExecution is SqlStepExecution sql)
+        @switch (StepExecutionAttempt.StepExecution)
         {
-            <dt class="col-sm-3">
-                SQL statement
-            </dt>
-            <dd class="col-sm-9">
-                <pre><code>@sql.SqlStatement</code></pre>
-            </dd>
-            <dt class="col-sm-3">
-                Scalar result capture job parameter
-            </dt>
-            <dd class="col-sm-9">
-                @{
-                    var jobParam = sql.Execution.ExecutionParameters
-                        .FirstOrDefault(p => p.ParameterId == sql.ResultCaptureJobParameterId);
-                }
-                @(jobParam is not null ? $"{jobParam.ParameterName} ({jobParam.ParameterValue.ValueType})" : null)
-            </dd>
-            <dt class="col-sm-3">
-                Capture value
-            </dt>
-            <dd class="col-sm-9">
-                <pre><code style="white-space: pre-wrap;">@sql.ResultCaptureJobParameterValue.Value</code></pre>
-            </dd>
-        }
-        else if (StepExecutionAttempt.StepExecution is PackageStepExecution package)
-        {
-            <dt class="col-sm-3">
-                Package path
-            </dt>
-            <dd class="col-sm-9">
-                @package.PackagePath
-            </dd>
-            <dt class="col-sm-3">
-                32 bit mode
-            </dt>
-            <dd class="col-sm-9">
-                @package.ExecuteIn32BitMode
-            </dd>
-            <dt class="col-sm-3">
-                Execute as login
-            </dt>
-            <dd class="col-sm-9">
-                @package.ExecuteAsLogin
-            </dd>
-            <dt class="col-sm-3">
-                Operation id
-            </dt>
-            <dd class="col-sm-9">
-                @if (StepExecutionAttempt is PackageStepExecutionAttempt packageAttempt)
+            case SqlStepExecution sql:
+                <dt class="col-sm-3">
+                    SQL statement
+                </dt>
+                <dd class="col-sm-9">
+                    <pre><code>@sql.SqlStatement</code></pre>
+                </dd>
+                <dt class="col-sm-3">
+                    Scalar result capture job parameter
+                </dt>
+                <dd class="col-sm-9">
+                    @{
+                        var jobParam = sql.Execution.ExecutionParameters
+                            .FirstOrDefault(p => p.ParameterId == sql.ResultCaptureJobParameterId);
+                    }
+                    @(jobParam is not null ? $"{jobParam.ParameterName} ({jobParam.ParameterValue.ValueType})" : null)
+                </dd>
+                <dt class="col-sm-3">
+                    Capture value
+                </dt>
+                <dd class="col-sm-9">
+                    <pre><code style="white-space: pre-wrap;">@sql.ResultCaptureJobParameterValue.Value</code></pre>
+                </dd>
+                break;
+            case PackageStepExecution package:
+                <dt class="col-sm-3">
+                    Package path
+                </dt>
+                <dd class="col-sm-9">
+                    @package.PackagePath
+                </dd>
+                <dt class="col-sm-3">
+                    32 bit mode
+                </dt>
+                <dd class="col-sm-9">
+                    @package.ExecuteIn32BitMode
+                </dd>
+                <dt class="col-sm-3">
+                    Execute as login
+                </dt>
+                <dd class="col-sm-9">
+                    @package.ExecuteAsLogin
+                </dd>
+                <dt class="col-sm-3">
+                    Operation id
+                </dt>
+                <dd class="col-sm-9">
+                    @if (StepExecutionAttempt is PackageStepExecutionAttempt packageAttempt)
+                    {
+                        @packageAttempt.PackageOperationId
+                    }
+                </dd>
+                break;
+            case PipelineStepExecution pipeline:
+                <dt class="col-sm-3">
+                    Pipeline name
+                </dt>
+                <dd class="col-sm-9">
+                    @pipeline.PipelineName
+                </dd>
+                <dt class="col-sm-3">
+                    Pipeline run id
+                </dt>
+                <dd class="col-sm-9">
+                    @if (StepExecutionAttempt is PipelineStepExecutionAttempt pipelineAttempt)
+                    {
+                        @pipelineAttempt.PipelineRunId
+                    }
+                </dd>
+                <dt class="col-sm-3">
+                    Pipeline client id
+                </dt>
+                <dd class="col-sm-9">
+                    @pipeline.PipelineClientId
+                </dd>
+                break;
+            case ExeStepExecution exe:
+                <dt class="col-sm-3">
+                    File path
+                </dt>
+                <dd class="col-sm-9">
+                    @exe.ExeFileName
+                </dd>
+                <dt class="col-sm-3">
+                    Arguments
+                </dt>
+                <dd class="col-sm-9">
+                    @exe.ExeArguments
+                </dd>
+                <dt class="col-sm-3">
+                    Working directory
+                </dt>
+                <dd class="col-sm-9">
+                    @exe.ExeWorkingDirectory
+                </dd>
+                <dt class="col-sm-3">
+                    Run as
+                </dt>
+                <dd class="col-sm-9">
+                    @exe.RunAsUsername
+                </dd>
+                <dt class="col-sm-3">
+                    Success exit code
+                </dt>
+                <dd class="col-sm-9">
+                    @exe.ExeSuccessExitCode
+                </dd>
+                @if (StepExecutionAttempt is ExeStepExecutionAttempt exeAttempt)
                 {
-                    @packageAttempt.PackageOperationId
+                    <dt class="col-sm-3">
+                        Process id
+                    </dt>
+                    <dd class="col-sm-9">
+                        @exeAttempt.ExeProcessId
+                    </dd>
                 }
-            </dd>
-        }
-        else if (StepExecutionAttempt.StepExecution is PipelineStepExecution pipeline)
-        {
-            <dt class="col-sm-3">
-                Pipeline name
-            </dt>
-            <dd class="col-sm-9">
-                @pipeline.PipelineName
-            </dd>
-            <dt class="col-sm-3">
-                Pipeline run id
-            </dt>
-            <dd class="col-sm-9">
-                @if (StepExecutionAttempt is PipelineStepExecutionAttempt pipelineAttempt)
+                break;
+            case DatasetStepExecution dataset:
+                <dt class="col-sm-3">
+                    Group id
+                </dt>
+                <dd class="col-sm-9">
+                    @dataset.DatasetGroupId
+                </dd>
+                <dt class="col-sm-3">
+                    Dataset id
+                </dt>
+                <dd class="col-sm-9">
+                    @dataset.DatasetId
+                </dd>
+                <dt class="col-sm-3">
+                    Power BI Service id
+                </dt>
+                <dd class="col-sm-9">
+                    @dataset.AppRegistrationId
+                </dd>
+                break;
+            case FunctionStepExecution function:
+                <dt class="col-sm-3">
+                    Function url
+                </dt>
+                <dd class="col-sm-9">
+                    @function.FunctionUrl
+                </dd>
+                <dt class="col-sm-3">
+                    Function input
+                </dt>
+                <dd class="col-sm-9">
+                    <pre><code>@function.FunctionInput</code></pre>
+                </dd>
+                <dt class="col-sm-3">
+                    Is durable
+                </dt>
+                <dd class="col-sm-9">
+                    @function.FunctionIsDurable
+                </dd>
+                <dt class="col-sm-3">
+                    Function App id
+                </dt>
+                <dd class="col-sm-9">
+                    @function.FunctionAppId
+                </dd>
+                @if (StepExecutionAttempt is FunctionStepExecutionAttempt functionAttempt)
                 {
-                    @pipelineAttempt.PipelineRunId
+                    <dt class="col-sm-3">
+                        Instance id
+                    </dt>
+                    <dd class="col-sm-9">
+                        @functionAttempt.FunctionInstanceId
+                    </dd>
                 }
-            </dd>
-            <dt class="col-sm-3">
-                Pipeline client id
-            </dt>
-            <dd class="col-sm-9">
-                @pipeline.PipelineClientId
-            </dd>
-        }
-        else if (StepExecutionAttempt.StepExecution is ExeStepExecution exe)
-        {
-            <dt class="col-sm-3">
-                File path
-            </dt>
-            <dd class="col-sm-9">
-                @exe.ExeFileName
-            </dd>
-            <dt class="col-sm-3">
-                Arguments
-            </dt>
-            <dd class="col-sm-9">
-                @exe.ExeArguments
-            </dd>
-            <dt class="col-sm-3">
-                Working directory
-            </dt>
-            <dd class="col-sm-9">
-                @exe.ExeWorkingDirectory
-            </dd>
-            <dt class="col-sm-3">
-                Run as
-            </dt>
-            <dd class="col-sm-9">
-                @exe.RunAsUsername
-            </dd>
-
-            <dt class="col-sm-3">
-                Success exit code
-            </dt>
-            <dd class="col-sm-9">
-                @exe.ExeSuccessExitCode
-            </dd>
-            @if (StepExecutionAttempt is ExeStepExecutionAttempt exeAttempt)
-            {
+                break;
+            case AgentJobStepExecution agent:
                 <dt class="col-sm-3">
-                    Process id
+                    Agent job name
                 </dt>
                 <dd class="col-sm-9">
-                    @exeAttempt.ExeProcessId
+                    @agent.AgentJobName
                 </dd>
-            }
-        }
-        else if (StepExecutionAttempt.StepExecution is DatasetStepExecution dataset)
-        {
-            <dt class="col-sm-3">
-                Group id
-            </dt>
-            <dd class="col-sm-9">
-                @dataset.DatasetGroupId
-            </dd>
-            <dt class="col-sm-3">
-                Dataset id
-            </dt>
-            <dd class="col-sm-9">
-                @dataset.DatasetId
-            </dd>
-            <dt class="col-sm-3">
-                Power BI Service id
-            </dt>
-            <dd class="col-sm-9">
-                @dataset.AppRegistrationId
-            </dd>
-        }
-        else if (StepExecutionAttempt.StepExecution is FunctionStepExecution function)
-        {
-            <dt class="col-sm-3">
-                Function url
-            </dt>
-            <dd class="col-sm-9">
-                @function.FunctionUrl
-            </dd>
-            <dt class="col-sm-3">
-                Function input
-            </dt>
-            <dd class="col-sm-9">
-                <pre><code>@function.FunctionInput</code></pre>
-            </dd>
-            <dt class="col-sm-3">
-                Is durable
-            </dt>
-            <dd class="col-sm-9">
-                @function.FunctionIsDurable
-            </dd>
-            <dt class="col-sm-3">
-                Function App id
-            </dt>
-            <dd class="col-sm-9">
-                @function.FunctionAppId
-            </dd>
-            @if (StepExecutionAttempt is FunctionStepExecutionAttempt functionAttempt)
-            {
+                break;
+            case TabularStepExecution tabular:
                 <dt class="col-sm-3">
-                    Instance id
+                    Model name
                 </dt>
                 <dd class="col-sm-9">
-                    @functionAttempt.FunctionInstanceId
+                    @tabular.TabularModelName
                 </dd>
-            }
-        }
-        else if (StepExecutionAttempt.StepExecution is AgentJobStepExecution agent)
-        {
-            <dt class="col-sm-3">
-                Agent job name
-            </dt>
-            <dd class="col-sm-9">
-                @agent.AgentJobName
-            </dd>
-        }
-        else if (StepExecutionAttempt.StepExecution is TabularStepExecution tabular)
-        {
-            <dt class="col-sm-3">
-                Model name
-            </dt>
-            <dd class="col-sm-9">
-                @tabular.TabularModelName
-            </dd>
-            <dt class="col-sm-3">
-                Table name
-            </dt>
-            <dd class="col-sm-9">
-                @tabular.TabularTableName
-            </dd>
-            <dt class="col-sm-3">
-                Partition name
-            </dt>
-            <dd class="col-sm-9">
-                @tabular.TabularPartitionName
-            </dd>
-        }
-        else if (StepExecutionAttempt.StepExecution is EmailStepExecution email)
-        {
-            <dt class="col-sm-3">
-                Recipients
-            </dt>
-            <dd class="col-sm-9">
-                @email.Recipients
-            </dd>
-            <dt class="col-sm-3">
-                Subject
-            </dt>
-            <dd class="col-sm-9">
-                @email.Subject
-            </dd>
-            <dt class="col-sm-3">
-                Body
-            </dt>
-            <dd class="col-sm-9">
-                @email.Body
-            </dd>
-        }
-        else if (StepExecutionAttempt.StepExecution is JobStepExecution job)
-        {
-            <dt class="col-sm-3">
-                Synchronized
-            </dt>
-            <dd class="col-sm-9">
-                @job.JobExecuteSynchronized
-            </dd>
-            @if (StepExecutionAttempt is JobStepExecutionAttempt jobAttempt)
-            {
                 <dt class="col-sm-3">
-                    Child execution id
+                    Table name
                 </dt>
                 <dd class="col-sm-9">
-                    <a href="executions/@jobAttempt.ChildJobExecutionId/list">
-                        @jobAttempt.ChildJobExecutionId
-                    </a>
+                    @tabular.TabularTableName
                 </dd>
-            }
-        }
-        else if (StepExecutionAttempt.StepExecution is QlikStepExecution qlik)
-        {
-            <dt class="col-sm-3">
-                Step settings
-            </dt>
-            <dd class="col-sm-9">
-                <pre><code>@JsonSerializer.Serialize(qlik.QlikStepSettings, JsonSerializerOptions)</code></pre>
-            </dd>
-            <dt class="col-sm-3">
-                Qlik Cloud environment id
-            </dt>
-            <dd class="col-sm-9">
-                @qlik.QlikCloudEnvironmentId
-            </dd>
-            @if (StepExecutionAttempt is QlikStepExecutionAttempt qlikAttempt)
-            {
-                var reloadOrRun = qlik.QlikStepSettings switch
+                <dt class="col-sm-3">
+                    Partition name
+                </dt>
+                <dd class="col-sm-9">
+                    @tabular.TabularPartitionName
+                </dd>
+                break;
+            case EmailStepExecution email:
+                <dt class="col-sm-3">
+                    Recipients
+                </dt>
+                <dd class="col-sm-9">
+                    @email.Recipients
+                </dd>
+                <dt class="col-sm-3">
+                    Subject
+                </dt>
+                <dd class="col-sm-9">
+                    @email.Subject
+                </dd>
+                <dt class="col-sm-3">
+                    Body
+                </dt>
+                <dd class="col-sm-9">
+                    @email.Body
+                </dd>
+                break;
+            case JobStepExecution job:
+                <dt class="col-sm-3">
+                    Synchronized
+                </dt>
+                <dd class="col-sm-9">
+                    @job.JobExecuteSynchronized
+                </dd>
+                @if (StepExecutionAttempt is JobStepExecutionAttempt jobAttempt)
                 {
-                    QlikAppReloadSettings => "App reload id",
-                    QlikAutomationRunSettings => "Automation run id",
-                    _ => ""
-                };
+                    <dt class="col-sm-3">
+                        Child execution id
+                    </dt>
+                    <dd class="col-sm-9">
+                        <a href="executions/@jobAttempt.ChildJobExecutionId/list">
+                            @jobAttempt.ChildJobExecutionId
+                        </a>
+                    </dd>
+                }
+                break;
+            case QlikStepExecution qlik:
                 <dt class="col-sm-3">
-                    @reloadOrRun
+                    Step settings
                 </dt>
                 <dd class="col-sm-9">
-                    @qlikAttempt.ReloadOrRunId
+                    <pre><code>@JsonSerializer.Serialize(qlik.QlikStepSettings, JsonSerializerOptions)</code></pre>
                 </dd>
-            }
-        }
-        else if (StepExecutionAttempt.StepExecution is DatabricksStepExecution db)
-        {
-            <dt class="col-sm-3">
-                Step settings
-            </dt>
-            <dd class="col-sm-9">
-                <pre><code>@JsonSerializer.Serialize(db.DatabricksStepSettings, JsonSerializerOptions)</code></pre>
-            </dd>
-            @if (StepExecutionAttempt is DatabricksStepExecutionAttempt databricksAttempt)
-            {
                 <dt class="col-sm-3">
-                    Job run id
+                    Qlik Cloud environment id
                 </dt>
                 <dd class="col-sm-9">
-                    @databricksAttempt.JobRunId
+                    @qlik.QlikCloudEnvironmentId
                 </dd>
-            }
-        }
-        else if (StepExecutionAttempt.StepExecution is DbtStepExecution dbt)
-        {
-            <dt class="col-sm-3">
-                dbt account id
-            </dt>
-            <dd class="col-sm-9">
-                @dbt.DbtAccountId
-            </dd>
-            <dt class="col-sm-3">
-                dbt job id
-            </dt>
-            <dd class="col-sm-9">
-                @dbt.DbtJob.Id
-            </dd>
-            <dt class="col-sm-3">
-                dbt job name
-            </dt>
-            <dd class="col-sm-9">
-                @dbt.DbtJob.Name
-            </dd>
-            <dt class="col-sm-3">
-                Environment id
-            </dt>
-            <dd class="col-sm-9">
-                @dbt.DbtJob.EnvironmentId
-            </dd>
-            <dt class="col-sm-3">
-                Environment name
-            </dt>
-            <dd class="col-sm-9">
-                @dbt.DbtJob.EnvironmentName
-            </dd>
-            <dt class="col-sm-3">
-                Project id
-            </dt>
-            <dd class="col-sm-9">
-                @dbt.DbtJob.ProjectId
-            </dd>
-            <dt class="col-sm-3">
-                Project name
-            </dt>
-            <dd class="col-sm-9">
-                @dbt.DbtJob.ProjectName
-            </dd>
-            @if (StepExecutionAttempt is DbtStepExecutionAttempt dbtAttempt)
-            {
+                @if (StepExecutionAttempt is QlikStepExecutionAttempt qlikAttempt)
+                {
+                    var reloadOrRun = qlik.QlikStepSettings switch
+                    {
+                        QlikAppReloadSettings => "App reload id",
+                        QlikAutomationRunSettings => "Automation run id",
+                        _ => ""
+                    };
+                    <dt class="col-sm-3">
+                        @reloadOrRun
+                    </dt>
+                    <dd class="col-sm-9">
+                        @qlikAttempt.ReloadOrRunId
+                    </dd>
+                }
+                break;
+            case DatabricksStepExecution db:
                 <dt class="col-sm-3">
-                    dbt job run id
+                    Step settings
                 </dt>
                 <dd class="col-sm-9">
-                    @dbtAttempt.DbtJobRunId
+                    <pre><code>@JsonSerializer.Serialize(db.DatabricksStepSettings, JsonSerializerOptions)</code></pre>
                 </dd>
-            }
+                @if (StepExecutionAttempt is DatabricksStepExecutionAttempt databricksAttempt)
+                {
+                    <dt class="col-sm-3">
+                        Job run id
+                    </dt>
+                    <dd class="col-sm-9">
+                        @databricksAttempt.JobRunId
+                    </dd>
+                }
+                break;
+            case DbtStepExecution dbt:
+                <dt class="col-sm-3">
+                    dbt account id
+                </dt>
+                <dd class="col-sm-9">
+                    @dbt.DbtAccountId
+                </dd>
+                <dt class="col-sm-3">
+                    dbt job id
+                </dt>
+                <dd class="col-sm-9">
+                    @dbt.DbtJob.Id
+                </dd>
+                <dt class="col-sm-3">
+                    dbt job name
+                </dt>
+                <dd class="col-sm-9">
+                    @dbt.DbtJob.Name
+                </dd>
+                <dt class="col-sm-3">
+                    Environment id
+                </dt>
+                <dd class="col-sm-9">
+                    @dbt.DbtJob.EnvironmentId
+                </dd>
+                <dt class="col-sm-3">
+                    Environment name
+                </dt>
+                <dd class="col-sm-9">
+                    @dbt.DbtJob.EnvironmentName
+                </dd>
+                <dt class="col-sm-3">
+                    Project id
+                </dt>
+                <dd class="col-sm-9">
+                    @dbt.DbtJob.ProjectId
+                </dd>
+                <dt class="col-sm-3">
+                    Project name
+                </dt>
+                <dd class="col-sm-9">
+                    @dbt.DbtJob.ProjectName
+                </dd>
+                @if (StepExecutionAttempt is DbtStepExecutionAttempt dbtAttempt)
+                {
+                    <dt class="col-sm-3">
+                        dbt job run id
+                    </dt>
+                    <dd class="col-sm-9">
+                        @dbtAttempt.DbtJobRunId
+                    </dd>
+                }
+                break;
         }
         <dt class="col-sm-3">
             Info messages / outputs
