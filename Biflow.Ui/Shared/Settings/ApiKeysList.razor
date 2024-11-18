@@ -6,7 +6,7 @@
 
 <HxButton Color="ThemeColor.Success"
           @onclick="() => ShowEditModal(null)"
-          Enabled="keys is not null">
+          Enabled="_keys is not null">
     Generate key
 </HxButton>
 
@@ -31,17 +31,17 @@
             </tr>
         </thead>
         <tbody>
-            @if (keys is null)
+            @if (_keys is null)
             {
                 <tr><td colspan="5" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
-            else if (keys.Count == 0)
+            else if (_keys.Count == 0)
             {
                 <tr><td colspan="5">No API keys</td></tr>
             }
             else
             {
-                @foreach (var key in keys.OrderBy(k => k.Name))
+                @foreach (var key in _keys.OrderBy(k => k.Name))
                 {
                     <tr>
                         <td class="align-middle">
@@ -77,7 +77,7 @@
                                     pending
                                 </span>
                             }
-                            else if (key.ValidTo.Subtract(DateTimeOffset.Now).Days is int days and <= 30)
+                            else if (key.ValidTo.Subtract(DateTimeOffset.Now).Days is var days and <= 30)
                             {
                                 <span class="badge d-inline-flex align-items-center py-1 px-2 bg-warning-subtle border border-warning-subtle text-warning-emphasis" title="API key expires in @days days">
                                     expiring
@@ -122,16 +122,16 @@
     </table>
 </div>
 
-<ApiKeyEditModal @ref="keyEditModal" OnApiKeySubmit="OnApiKeySubmitAsync" />
+<ApiKeyEditModal @ref="_keyEditModal" OnApiKeySubmit="OnApiKeySubmitAsync" />
 
 @code {
-    private List<ApiKey>? keys;
-    private ApiKeyEditModal? keyEditModal;
+    private List<ApiKey>? _keys;
+    private ApiKeyEditModal? _keyEditModal;
 
     protected override async Task OnInitializedAsync()
     {
         await using var context = await DbContextFactory.CreateDbContextAsync();
-        keys = await context.ApiKeys
+        _keys = await context.ApiKeys
             .AsNoTracking()
             .ToListAsync();
     }
@@ -141,7 +141,7 @@
         try
         {
             await Mediator.SendAsync(new DeleteApiKeyCommand(key.Id));
-            keys?.Remove(key);
+            _keys?.Remove(key);
         }
         catch (Exception ex)
         {
@@ -168,17 +168,16 @@
         if (key.Id == Guid.Empty)
         {
             await Mediator.SendAsync(new CreateApiKeyCommand(key));
-            keys?.Add(key);
         }
         else
         {
             await Mediator.SendAsync(new UpdateApiKeyCommand(key));
-            keys?.RemoveAll(k => k.Id == key.Id);
-            keys?.Add(key);
+            _keys?.RemoveAll(k => k.Id == key.Id);
         }
+        _keys?.Add(key);
         StateHasChanged();
     }
 
     private async Task ShowEditModal(ApiKey? key) =>
-        await keyEditModal.LetAsync(x => x.ShowAsync(key?.Id ?? Guid.Empty));
+        await _keyEditModal.LetAsync(x => x.ShowAsync(key?.Id ?? Guid.Empty));
 }

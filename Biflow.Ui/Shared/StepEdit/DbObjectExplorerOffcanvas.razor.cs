@@ -9,49 +9,49 @@ public partial class DbObjectExplorerOffcanvas(ToasterService toaster) : Compone
     [Parameter] public Action<(string, string, string, string), bool>? OnDbObjectSelected { get; set; }
 
     private readonly ToasterService _toaster = toaster;
-    private readonly SemaphoreSlim semaphore = new(1, 1);
+    private readonly SemaphoreSlim _semaphore = new(1, 1);
 
-    private Guid? connectionId;
-    private HxOffcanvas? offcanvas;
-    private IEnumerable<DbObject>? databaseObjects;
-    private string schemaSearchTerm = string.Empty;
-    private string nameSearchTerm = string.Empty;
-    private CancellationTokenSource cts = new();
-    private Task<IEnumerable<DbObject>>? queryTask;
+    private Guid? _connectionId;
+    private HxOffcanvas? _offcanvas;
+    private IEnumerable<DbObject>? _databaseObjects;
+    private string _schemaSearchTerm = string.Empty;
+    private string _nameSearchTerm = string.Empty;
+    private CancellationTokenSource _cts = new();
+    private Task<IEnumerable<DbObject>>? _queryTask;
 
-    private bool Loading => queryTask is not null;
+    private bool Loading => _queryTask is not null;
 
     private async Task RunQueryAsync()
     {
-        if (schemaSearchTerm.Length < 2 && nameSearchTerm.Length < 2)
+        if (_schemaSearchTerm.Length < 2 && _nameSearchTerm.Length < 2)
         {
             return;
         }
 
-        // If another query task is alerady running, cancel it, wait for its completion and continue with a new query.
-        if (queryTask is not null && !cts.IsCancellationRequested)
+        // If another query task is already running, cancel it, wait for its completion and continue with a new query.
+        if (_queryTask is not null && !_cts.IsCancellationRequested)
         {
-            cts.Cancel();
+            await _cts.CancelAsync();
         }
 
         try
         {
-            await semaphore.WaitAsync();
-            Guid connectionId = this.connectionId ?? throw new ArgumentNullException(nameof(connectionId), "Connection id was null");
+            await _semaphore.WaitAsync();
+            Guid connectionId = _connectionId ?? throw new ArgumentNullException(nameof(connectionId), "Connection id was null");
             var connection = Connections.First(c => c.ConnectionId == connectionId);
-            queryTask = connection switch
+            _queryTask = connection switch
             {
-                MsSqlConnection ms => ms.GetDatabaseObjectsAsync(schemaSearchTerm, nameSearchTerm, 50, cts.Token),
-                SnowflakeConnection sf => sf.GetDatabaseObjectsAsync(schemaSearchTerm, nameSearchTerm, 50, cts.Token),
+                MsSqlConnection ms => ms.GetDatabaseObjectsAsync(_schemaSearchTerm, _nameSearchTerm, 50, _cts.Token),
+                SnowflakeConnection sf => sf.GetDatabaseObjectsAsync(_schemaSearchTerm, _nameSearchTerm, 50, _cts.Token),
                 _ => throw new ArgumentException($"Unsupported connection type {connection.GetType().Name}")
             };
             StateHasChanged();
-            databaseObjects = await queryTask;
+            _databaseObjects = await _queryTask;
         }
         catch (OperationCanceledException)
         {
-            cts.Dispose();
-            cts = new();
+            _cts.Dispose();
+            _cts = new();
         }
         catch (Exception ex)
         {
@@ -59,41 +59,38 @@ public partial class DbObjectExplorerOffcanvas(ToasterService toaster) : Compone
         }
         finally
         {
-            queryTask = null;
-            semaphore.Release();
+            _queryTask = null;
+            _semaphore.Release();
         }
     }
 
     private async Task CloseAsync()
     {
-        if (queryTask is not null && !cts.IsCancellationRequested)
+        if (_queryTask is not null && !_cts.IsCancellationRequested)
         {
-            cts.Cancel();
-            cts = new();
+            await _cts.CancelAsync();
+            _cts = new();
         }
-        await offcanvas.LetAsync(x => x.HideAsync());
+        await _offcanvas.LetAsync(x => x.HideAsync());
     }
 
     private async Task SelectDbObjectAsync((string Server, string Database, string Schema, string Name) dbObject, bool commit)
     {
-        await offcanvas.LetAsync(x => x.HideAsync());
-        if (OnDbObjectSelected is not null)
-        {
-            OnDbObjectSelected(dbObject, commit);
-        }
+        await _offcanvas.LetAsync(x => x.HideAsync());
+        OnDbObjectSelected?.Invoke(dbObject, commit);
     }
 
     public async Task ShowAsync(Guid? connectionId)
     {
-        databaseObjects = null;
-        schemaSearchTerm = "";
-        nameSearchTerm = "";
-        this.connectionId = connectionId ?? Connections.FirstOrDefault()?.ConnectionId;
-        await offcanvas.LetAsync(x => x.ShowAsync());
+        _databaseObjects = null;
+        _schemaSearchTerm = "";
+        _nameSearchTerm = "";
+        _connectionId = connectionId ?? Connections.FirstOrDefault()?.ConnectionId;
+        await _offcanvas.LetAsync(x => x.ShowAsync());
     }
 
     public void Dispose()
     {
-        cts.Dispose();
+        _cts.Dispose();
     }
 }

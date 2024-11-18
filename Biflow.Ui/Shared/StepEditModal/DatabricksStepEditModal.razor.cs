@@ -13,16 +13,16 @@ public partial class DatabricksStepEditModal(
 
     internal override string FormId => "databricks_step_edit_form";
 
-    private DatabricksFileSelectOffcanvas? fileSelectOffcanvas;
+    private DatabricksFileSelectOffcanvas? _fileSelectOffcanvas;
 
-    private (string Id, string Description)[]? runtimeVersions;
-    private (string Id, string Description)[]? nodeTypes;
-    private ClusterInfo[]? clusters;
-    private DatabricksJob[]? dbJobs;
-    private Pipeline[]? pipelines;
+    private (string Id, string Description)[]? _runtimeVersions;
+    private (string Id, string Description)[]? _nodeTypes;
+    private ClusterInfo[]? _clusters;
+    private DatabricksJob[]? _dbJobs;
+    private Pipeline[]? _pipelines;
 
     private DatabricksWorkspace? CurrentWorkspace =>
-        DatabricksWorkspaces?.FirstOrDefault(w => w.WorkspaceId == Step?.DatabricksWorkspaceId);
+        DatabricksWorkspaces.FirstOrDefault(w => w.WorkspaceId == Step?.DatabricksWorkspaceId);
 
     private string ParametersTitle => Step?.DatabricksStepSettings switch
     {
@@ -56,7 +56,7 @@ public partial class DatabricksStepEditModal(
 
     protected override DatabricksStep CreateNewStep(Job job)
     {
-        var workspace = DatabricksWorkspaces?.FirstOrDefault();
+        var workspace = DatabricksWorkspaces.FirstOrDefault();
         ArgumentNullException.ThrowIfNull(workspace);
         return new()
         {
@@ -71,26 +71,25 @@ public partial class DatabricksStepEditModal(
 
     protected override Task OnSubmitAsync(AppDbContext context, DatabricksStep step)
     {
-        // Store the pipeline or job name only for audit purposes.
-        if (step.DatabricksStepSettings is DbPipelineStepSettings pipeline)
+        switch (step.DatabricksStepSettings)
         {
-            pipeline.PipelineName ??= pipelines
-                ?.FirstOrDefault(p => p.PipelineId == pipeline.PipelineId)
-                ?.Name;
-        }
-        else if (step.DatabricksStepSettings is DbJobStepSettings job)
-        {
-            job.JobName ??= dbJobs
-                ?.FirstOrDefault(j => j.JobId == job.JobId)
-                ?.JobName;
-        }
-
-        // Also store the cluster name if applicable.
-        if (step.DatabricksStepSettings is DatabricksClusterStepSettings { ClusterConfiguration: ExistingClusterConfiguration existing })
-        {
-            existing.ClusterName ??= clusters
-                ?.FirstOrDefault(c => c.ClusterId == existing.ClusterId)
-                ?.ClusterName;
+            // Store the pipeline or job name only for audit purposes.
+            case DbPipelineStepSettings pipeline:
+                pipeline.PipelineName ??= _pipelines
+                    ?.FirstOrDefault(p => p.PipelineId == pipeline.PipelineId)
+                    ?.Name;
+                break;
+            case DbJobStepSettings job:
+                job.JobName ??= _dbJobs
+                    ?.FirstOrDefault(j => j.JobId == job.JobId)
+                    ?.JobName;
+                break;
+            // Also store the cluster name if applicable.
+            case DatabricksClusterStepSettings { ClusterConfiguration: ExistingClusterConfiguration existing }:
+                existing.ClusterName ??= _clusters
+                    ?.FirstOrDefault(c => c.ClusterId == existing.ClusterId)
+                    ?.ClusterName;
+                break;
         }
 
         // Change tracking does not identify changes to cluster configuration.
@@ -102,29 +101,30 @@ public partial class DatabricksStepEditModal(
     private Task OpenFileSelectOffcanvas()
     {
         ArgumentNullException.ThrowIfNull(Step);
-        return fileSelectOffcanvas.LetAsync(x => x.ShowAsync(Step.DatabricksWorkspaceId));
+        return _fileSelectOffcanvas.LetAsync(x => x.ShowAsync(Step.DatabricksWorkspaceId));
     }
 
     private void OnFileSelected(string filePath)
     {
         ArgumentNullException.ThrowIfNull(Step);
-        if (Step.DatabricksStepSettings is DbNotebookStepSettings notebookSettings)
+        switch (Step.DatabricksStepSettings)
         {
-            notebookSettings.NotebookPath = filePath;
-        }
-        else if (Step.DatabricksStepSettings is DbPythonFileStepSettings pythonSettings)
-        {
-            pythonSettings.FilePath = filePath;
+            case DbNotebookStepSettings notebookSettings:
+                notebookSettings.NotebookPath = filePath;
+                break;
+            case DbPythonFileStepSettings pythonSettings:
+                pythonSettings.FilePath = filePath;
+                break;
         }
     }
 
     private void OnWorkspaceChanged()
     {
-        runtimeVersions = null;
-        nodeTypes = null;
-        clusters = null;
-        dbJobs = null;
-        pipelines = null;
+        _runtimeVersions = null;
+        _nodeTypes = null;
+        _clusters = null;
+        _dbJobs = null;
+        _pipelines = null;
     }
 
     private async Task<Pipeline?> ResolvePipelineFromValueAsync(string value)
@@ -133,48 +133,52 @@ public partial class DatabricksStepEditModal(
         {
             return null;
         }
-        if (pipelines is null)
+
+        if (_pipelines is not null)
         {
-            try
-            {
-                var workspace = CurrentWorkspace;
-                ArgumentNullException.ThrowIfNull(workspace);
-                using var client = workspace.CreateClient();
-                return await client.GetPipelineAsync(value);
-            }
-            catch (Exception ex)
-            {
-                Toaster.AddWarning("Error fetching Databricks pipeline", ex.Message);
-                return null;
-            }
+            return _pipelines.FirstOrDefault(v => v.PipelineId == value);
         }
-        return pipelines.FirstOrDefault(v => v.PipelineId == value);
+        
+        try
+        {
+            var workspace = CurrentWorkspace;
+            ArgumentNullException.ThrowIfNull(workspace);
+            using var client = workspace.CreateClient();
+            return await client.GetPipelineAsync(value);
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddWarning("Error fetching Databricks pipeline", ex.Message);
+            return null;
+        }
     }
 
     private async Task<AutosuggestDataProviderResult<Pipeline>> ProvidePipelineSuggestionsAsync(
         AutosuggestDataProviderRequest request)
     {
-        if (pipelines is null)
+        if (_pipelines is not null)
+            return new()
+            {
+                Data = _pipelines.Where(n => n.Name.ContainsIgnoreCase(request.UserInput))
+            };
+        
+        try
         {
-            try
-            {
-                var workspace = CurrentWorkspace;
-                ArgumentNullException.ThrowIfNull(workspace);
-                using var client = workspace.CreateClient();
-                var pipelines = await client.GetPipelinesAsync();
-                this.pipelines = pipelines.ToArray();
-            }
-            catch (Exception ex)
-            {
-                Toaster.AddError("Error fetching Databricks pipelines", ex.Message);
-                pipelines = [];
-            }
+            var workspace = CurrentWorkspace;
+            ArgumentNullException.ThrowIfNull(workspace);
+            using var client = workspace.CreateClient();
+            var pipelines = await client.GetPipelinesAsync();
+            _pipelines = pipelines.ToArray();
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error fetching Databricks pipelines", ex.Message);
+            _pipelines = [];
         }
 
         return new()
         {
-            Data = pipelines
-                .Where(n => n.Name.ContainsIgnoreCase(request.UserInput))
+            Data = _pipelines.Where(n => n.Name.ContainsIgnoreCase(request.UserInput))
         };
     }
 
@@ -184,75 +188,82 @@ public partial class DatabricksStepEditModal(
         {
             return null;
         }
-        if (dbJobs is null)
+
+        if (_dbJobs is not null)
         {
-            try
-            {
-                var workspace = CurrentWorkspace;
-                ArgumentNullException.ThrowIfNull(workspace);
-                using var client = workspace.CreateClient();
-                return await client.GetJobAsync(value);
-            }
-            catch (Exception ex)
-            {
-                Toaster.AddWarning("Error fetching Databricks job", ex.Message);
-                return null;
-            }
+            return _dbJobs.FirstOrDefault(v => v.JobId == value);
         }
-        return dbJobs.FirstOrDefault(v => v.JobId == value);
+        
+        try
+        {
+            var workspace = CurrentWorkspace;
+            ArgumentNullException.ThrowIfNull(workspace);
+            using var client = workspace.CreateClient();
+            return await client.GetJobAsync(value);
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddWarning("Error fetching Databricks job", ex.Message);
+            return null;
+        }
     }
 
     private async Task<AutosuggestDataProviderResult<DatabricksJob>> ProvideDbJobSuggestionsAsync(
         AutosuggestDataProviderRequest request)
     {
-        if (dbJobs is null)
+        if (_dbJobs is not null)
+            return new()
+            {
+                Data = _dbJobs.Where(n => n.JobName.ContainsIgnoreCase(request.UserInput))
+            };
+        
+        try
         {
-            try
-            {
-                var workspace = CurrentWorkspace;
-                ArgumentNullException.ThrowIfNull(workspace);
-                using var client = workspace.CreateClient();
-                dbJobs = (await client.GetJobsAsync()).ToArray();
-            }
-            catch (Exception ex)
-            {
-                Toaster.AddError("Error fetching Databricks jobs", ex.Message);
-                dbJobs = [];
-            }
+            var workspace = CurrentWorkspace;
+            ArgumentNullException.ThrowIfNull(workspace);
+            using var client = workspace.CreateClient();
+            _dbJobs = (await client.GetJobsAsync()).ToArray();
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error fetching Databricks jobs", ex.Message);
+            _dbJobs = [];
         }
 
         return new()
         {
-            Data = dbJobs
-                .Where(n => n.JobName.ContainsIgnoreCase(request.UserInput))
+            Data = _dbJobs.Where(n => n.JobName.ContainsIgnoreCase(request.UserInput))
         };
     }
 
     private async Task<(string Id, string Description)> ResolveRuntimeVersionFromValueAsync(string? value)
     {
-        if (runtimeVersions is null)
+        if (_runtimeVersions is not null)
         {
-            try
-            {
-                var workspace = CurrentWorkspace;
-                ArgumentNullException.ThrowIfNull(workspace);
-                using var client = workspace.CreateClient();
-                var runtimeVersions = await client.GetRuntimeVersionsAsync();
-                this.runtimeVersions = runtimeVersions.Select(v => (v.Key, v.Value)).ToArray();
-            }
-            catch (Exception ex)
-            {
-                Toaster.AddError("Error fetching available runtimes", ex.Message);
-                runtimeVersions = [];
-            }
+            return _runtimeVersions.FirstOrDefault(v => v.Id == value);
         }
-        return runtimeVersions.FirstOrDefault(v => v.Id == value);
+        
+        try
+        {
+            var workspace = CurrentWorkspace;
+            ArgumentNullException.ThrowIfNull(workspace);
+            using var client = workspace.CreateClient();
+            var runtimeVersions = await client.GetRuntimeVersionsAsync();
+            _runtimeVersions = runtimeVersions.Select(v => (v.Key, v.Value)).ToArray();
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error fetching available runtimes", ex.Message);
+            _runtimeVersions = [];
+        }
+        
+        return _runtimeVersions.FirstOrDefault(v => v.Id == value);
     }
 
     private async Task<AutosuggestDataProviderResult<(string Id, string Description)>> ProvideRuntimeVersionSuggestionsAsync(
         AutosuggestDataProviderRequest request)
     {
-        if (runtimeVersions is null)
+        if (_runtimeVersions is null)
         {
             try
             {
@@ -260,18 +271,18 @@ public partial class DatabricksStepEditModal(
                 ArgumentNullException.ThrowIfNull(workspace);
                 using var client = workspace.CreateClient();
                 var runtimeVersions = await client.GetRuntimeVersionsAsync();
-                this.runtimeVersions = runtimeVersions.Select(v => (v.Key, v.Value)).ToArray();
+                _runtimeVersions = runtimeVersions.Select(v => (v.Key, v.Value)).ToArray();
             }
             catch (Exception ex)
             {
                 Toaster.AddError("Error fetching available runtimes", ex.Message);
-                runtimeVersions = [];
+                _runtimeVersions = [];
             }
         }
         
         return new()
         {
-            Data = runtimeVersions
+            Data = _runtimeVersions
                 .Where(v => v.Description.ContainsIgnoreCase(request.UserInput))
                 .OrderByDescending(v =>
                 {
@@ -307,41 +318,46 @@ public partial class DatabricksStepEditModal(
 
     private async Task<(string Id, string Description)> ResolveNodeTypeFromValueAsync(string? value)
     {
-        if (nodeTypes is null)
+        if (_nodeTypes is not null)
         {
-            try
-            {
-                nodeTypes = await GetNodeTypesAsync();
-            }
-            catch (Exception ex)
-            {
-                Toaster.AddError("Error fetching available node types", ex.Message);
-                nodeTypes = [];
-            }
+            return _nodeTypes.FirstOrDefault(v => v.Id == value);
         }
-        return nodeTypes.FirstOrDefault(v => v.Id == value);
+        
+        try
+        {
+            _nodeTypes = await GetNodeTypesAsync();
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error fetching available node types", ex.Message);
+            _nodeTypes = [];
+        }
+        
+        return _nodeTypes.FirstOrDefault(v => v.Id == value);
     }
 
     private async Task<AutosuggestDataProviderResult<(string Id, string Description)>> ProvideNodeTypeSuggestionsAsync(
         AutosuggestDataProviderRequest request)
     {
-        if (nodeTypes is null)
+        if (_nodeTypes is not null)
+            return new()
+            {
+                Data = _nodeTypes.Where(n => n.Description.ContainsIgnoreCase(request.UserInput))
+            };
+        
+        try
         {
-            try
-            {
-                nodeTypes = await GetNodeTypesAsync();
-            }
-            catch (Exception ex)
-            {
-                Toaster.AddError("Error fetching available node types", ex.Message);
-                nodeTypes = [];
-            }
+            _nodeTypes = await GetNodeTypesAsync();
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error fetching available node types", ex.Message);
+            _nodeTypes = [];
         }
 
         return new()
         {
-            Data = nodeTypes
-                .Where(n => n.Description.ContainsIgnoreCase(request.UserInput))
+            Data = _nodeTypes.Where(n => n.Description.ContainsIgnoreCase(request.UserInput))
         };
     }
 
@@ -351,51 +367,55 @@ public partial class DatabricksStepEditModal(
         {
             return null;
         }
-        if (clusters is null)
+
+        if (_clusters is not null)
         {
-            try
-            {
-                var workspace = CurrentWorkspace;
-                ArgumentNullException.ThrowIfNull(workspace);
-                using var client = workspace.CreateClient();
-                return await client.GetClusterAsync(value);
-            }
-            catch (Exception ex)
-            {
-                Toaster.AddWarning("Error fetching cluster information", ex.Message);
-                return null;
-            }
+            return _clusters.FirstOrDefault(v => v.ClusterId == value);
         }
-        return clusters.FirstOrDefault(v => v.ClusterId == value);
+        
+        try
+        {
+            var workspace = CurrentWorkspace;
+            ArgumentNullException.ThrowIfNull(workspace);
+            using var client = workspace.CreateClient();
+            return await client.GetClusterAsync(value);
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddWarning("Error fetching cluster information", ex.Message);
+            return null;
+        }
     }
 
     private async Task<AutosuggestDataProviderResult<ClusterInfo>> ProvideClusterSuggestionsAsync(
         AutosuggestDataProviderRequest request)
     {
-        if (clusters is null)
+        if (_clusters is not null)
+            return new()
+            {
+                Data = _clusters.Where(n => n.ClusterName.ContainsIgnoreCase(request.UserInput))
+            };
+        
+        try
         {
-            try
-            {
-                var workspace = CurrentWorkspace;
-                ArgumentNullException.ThrowIfNull(workspace);
-                using var client = workspace.CreateClient();
-                var clusters = await client.GetClustersAsync();
-                this.clusters = clusters
-                    .Where(c => c.ClusterSource == Microsoft.Azure.Databricks.Client.Models.ClusterSource.UI)
-                    .OrderBy(c => c.ClusterName)
-                    .ToArray();
-            }
-            catch (Exception ex)
-            {
-                Toaster.AddError("Error fetching available clusters", ex.Message);
-                clusters = [];
-            }
+            var workspace = CurrentWorkspace;
+            ArgumentNullException.ThrowIfNull(workspace);
+            using var client = workspace.CreateClient();
+            var clusters = await client.GetClustersAsync();
+            _clusters = clusters
+                .Where(c => c.ClusterSource == Microsoft.Azure.Databricks.Client.Models.ClusterSource.UI)
+                .OrderBy(c => c.ClusterName)
+                .ToArray();
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error fetching available clusters", ex.Message);
+            _clusters = [];
         }
 
         return new()
         {
-            Data = clusters
-                .Where(n => n.ClusterName.ContainsIgnoreCase(request.UserInput))
+            Data = _clusters.Where(n => n.ClusterName.ContainsIgnoreCase(request.UserInput))
         };
     }
 }

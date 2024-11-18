@@ -3,7 +3,7 @@
 @implements IDisposable
 
 @inject ThemeService ThemeService
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 
 @{
     var resize = Resize switch
@@ -18,7 +18,7 @@
     @($"#{editorId} {{ height: {InitialHeight}; resize: {resize}; overflow: hidden; }}")
 </style>
 
-<StandaloneCodeEditor @ref="editor"
+<StandaloneCodeEditor @ref="_editor"
                       Id="@editorId"
                       ConstructionOptions="GetEditorOptions"
                       OnDidChangeModelContent="OnDidChangeModelContent"
@@ -38,37 +38,37 @@
 
     [Parameter] public bool MinimapEnabled { get; set; } = true;
 
-    [Parameter] public bool ReadOnly { get; set; } = false;
+    [Parameter] public bool ReadOnly { get; set; }
 
     [Parameter] public CodeEditorResize Resize { get; set; } = CodeEditorResize.Vertical;
 
     [Parameter] public int? FontSize { get; set; }
-
-    private StandaloneCodeEditor? editor { get; set; }
-    private readonly string editorId = $"_{Guid.NewGuid().ToString()}"; // prefix with underscode as html id cannot start with a number
-
+    
+    private readonly string editorId = $"_{Guid.NewGuid().ToString()}"; // prefix with underscore as html id cannot start with a number
+    private StandaloneCodeEditor? _editor;
+    
     public enum CodeEditorResize { Vertical, Horizontal, Both }
 
     public Task SetValueAsync(string? value)
     {
-        ArgumentNullException.ThrowIfNull(editor);
-        return editor.SetValue(value);
+        ArgumentNullException.ThrowIfNull(_editor);
+        return _editor.SetValue(value);
     }
 
-    public async Task<string?> GetValueAsync()
+    private async Task<string?> GetValueAsync()
     {
-        ArgumentNullException.ThrowIfNull(editor);
-        var model = await editor.GetModel();
+        ArgumentNullException.ThrowIfNull(_editor);
+        var model = await _editor.GetModel();
         var value = await model.GetValue(EndOfLinePreference.TextDefined, false);
         return value;
     }
 
     public async Task SetLanguageAsync(string language)
     {
-        ArgumentNullException.ThrowIfNull(editor);
+        ArgumentNullException.ThrowIfNull(_editor);
         var value = await GetValueAsync();
-        var model = await Global.CreateModel(JS, value, language);
-        await editor.SetModel(model);
+        var model = await Global.CreateModel(Js, value, language);
+        await _editor.SetModel(model);
     }
 
     protected override void OnInitialized()
@@ -84,7 +84,7 @@
                 { "editor.background", "#212529" }
             }
         };
-        Global.DefineTheme(JS, "custom-dark", darkTheme);
+        Global.DefineTheme(Js, "custom-dark", darkTheme);
     }
 
     private StandaloneEditorConstructionOptions GetEditorOptions(StandaloneCodeEditor editor) => new()
@@ -104,7 +104,7 @@
         {
             Theme = theme == Theme.Dark ? "vs-dark" : "vs"
         };
-        editor?.UpdateOptions(options);
+        _editor?.UpdateOptions(options);
     }
 
     private async Task OnDidChangeModelContent(ModelContentChangedEvent e)

@@ -12,12 +12,12 @@ public partial class QlikStepEditModal(
 
     internal override string FormId => "qlik_step_edit_form";
 
-    private AppSelectOffcanvas? appSelectOffcanvas;
-    private QlikApp[]? apps;
-    private QlikAutomation[]? automations;
+    private AppSelectOffcanvas? _appSelectOffcanvas;
+    private QlikApp[]? _apps;
+    private QlikAutomation[]? _automations;
 
     private QlikCloudEnvironment? CurrentEnvironment =>
-        QlikClients?.FirstOrDefault(c => c.QlikCloudEnvironmentId == Step?.QlikCloudEnvironmentId);
+        QlikClients.FirstOrDefault(c => c.QlikCloudEnvironmentId == Step?.QlikCloudEnvironmentId);
 
     protected override async Task<QlikStep> GetExistingStepAsync(AppDbContext context, Guid stepId)
     {
@@ -34,7 +34,7 @@ public partial class QlikStepEditModal(
 
     protected override QlikStep CreateNewStep(Job job)
     {
-        var client = QlikClients?.FirstOrDefault();
+        var client = QlikClients.FirstOrDefault();
         ArgumentNullException.ThrowIfNull(client);
         return new()
         {
@@ -52,13 +52,13 @@ public partial class QlikStepEditModal(
         // Store the app and automation names only for audit purposes.
         if (step.QlikStepSettings is QlikAppReloadSettings reload)
         {
-            reload.AppName ??= apps
+            reload.AppName ??= _apps
                 ?.FirstOrDefault(a => a.Id == reload.AppId)
                 ?.Name;
         }
         else if (step.QlikStepSettings is QlikAutomationRunSettings run)
         {
-            run.AutomationName ??= automations
+            run.AutomationName ??= _automations
                 ?.FirstOrDefault(a => a.Id == run.AutomationId)
                 ?.Name;
         }
@@ -82,7 +82,7 @@ public partial class QlikStepEditModal(
     private Task OpenAppSelectOffcanvas()
     {
         ArgumentNullException.ThrowIfNull(Step);
-        return appSelectOffcanvas.LetAsync(x => x.ShowAsync(Step.QlikCloudEnvironmentId));
+        return _appSelectOffcanvas.LetAsync(x => x.ShowAsync(Step.QlikCloudEnvironmentId));
     }
 
     private async Task<QlikApp?> ResolveAppFromValueAsync(string value)
@@ -91,7 +91,7 @@ public partial class QlikStepEditModal(
         {
             return null;
         }
-        if (apps is null)
+        if (_apps is null)
         {
             try
             {
@@ -106,13 +106,13 @@ public partial class QlikStepEditModal(
                 return null;
             }
         }
-        return apps.FirstOrDefault(a => a.Id == value);
+        return _apps.FirstOrDefault(a => a.Id == value);
     }
 
     private async Task<AutosuggestDataProviderResult<QlikApp>> ProvideAppSuggestionsAsync(
         AutosuggestDataProviderRequest request)
     {
-        if (apps is null)
+        if (_apps is null)
         {
             try
             {
@@ -120,18 +120,18 @@ public partial class QlikStepEditModal(
                 ArgumentNullException.ThrowIfNull(environment);
                 using var client = environment.CreateClient(_httpClientFactory);
                 var spaces = await client.GetAppsAsync();
-                apps = spaces.SelectMany(s => s.Apps).OrderBy(a => a.Name).ToArray();
+                _apps = spaces.SelectMany(s => s.Apps).OrderBy(a => a.Name).ToArray();
             }
             catch (Exception ex)
             {
                 Toaster.AddError("Error fetching Qlik apps", ex.Message);
-                apps = [];
+                _apps = [];
             }
         }
 
         return new()
         {
-            Data = apps
+            Data = _apps
                 .Where(n => n.Name.ContainsIgnoreCase(request.UserInput))
         };
     }
@@ -142,7 +142,7 @@ public partial class QlikStepEditModal(
         {
             return null;
         }
-        if (automations is null)
+        if (_automations is null)
         {
             try
             {
@@ -157,13 +157,13 @@ public partial class QlikStepEditModal(
                 return null;
             }
         }
-        return automations.FirstOrDefault(a => a.Id == value);
+        return _automations.FirstOrDefault(a => a.Id == value);
     }
 
     private async Task<AutosuggestDataProviderResult<QlikAutomation>> ProvideAutomationSuggestionsAsync(
         AutosuggestDataProviderRequest request)
     {
-        if (automations is null)
+        if (_automations is null)
         {
             try
             {
@@ -171,18 +171,18 @@ public partial class QlikStepEditModal(
                 ArgumentNullException.ThrowIfNull(environment);
                 using var client = environment.CreateClient(_httpClientFactory);
                 var automations = await client.GetAutomationsAsync();
-                this.automations = automations.OrderBy(a => a.Name).ToArray();
+                this._automations = automations.OrderBy(a => a.Name).ToArray();
             }
             catch (Exception ex)
             {
                 Toaster.AddError("Error fetching Qlik automations", ex.Message);
-                automations = [];
+                _automations = [];
             }
         }
 
         return new()
         {
-            Data = automations
+            Data = _automations
                 .Where(n => n.Name.ContainsIgnoreCase(request.UserInput))
         };
     }

@@ -2,14 +2,14 @@
 
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 
-<HxModal @ref="modal" Title="Edit execution phase">
+<HxModal @ref="_modal" Title="Edit execution phase">
     <BodyTemplate>
         <div class="row">
             <div class="col">
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_batch_edit_exec_phase_abs"
-                           checked=@(editMode == EditMode.Absolute)
-                    @onchange="() => editMode = EditMode.Absolute">
+                           checked=@(_editMode == EditMode.Absolute)
+                    @onchange="() => _editMode = EditMode.Absolute">
                     <label class="form-check-label" for="radio_batch_edit_exec_phase_abs">
                         Absolute
                         &nbsp;
@@ -20,8 +20,8 @@
                 </div>
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_batch_edit_exec_phase_shift"
-                           checked=@(editMode == EditMode.Shift)
-                    @onchange="() => editMode = EditMode.Shift">
+                           checked=@(_editMode == EditMode.Shift)
+                    @onchange="() => _editMode = EditMode.Shift">
                     <label class="form-check-label" for="radio_batch_edit_exec_phase_shift">
                         Shift
                         &nbsp;
@@ -34,9 +34,9 @@
         </div>
         <div class="row mt-3">
             <div class="col">
-                @if (steps is not null)
+                @if (_steps is not null)
                 {
-                    <input class="form-control" type="number" placeholder="Execution phase" @bind-value="executionPhase" />
+                    <input class="form-control" type="number" placeholder="Execution phase" @bind-value="_executionPhase" />
                 }
                 else
                 {
@@ -56,15 +56,15 @@
 </HxModal>
 
 @code {
-    [Parameter] public IEnumerable<Step> SelectedSteps { get; set; } = Enumerable.Empty<Step>();
+    [Parameter] public IEnumerable<Step> SelectedSteps { get; set; } = [];
 
     [Parameter] public EventCallback<IEnumerable<Step>> OnStepsSubmit { get; set; }
 
-    private HxModal? modal;
-    private AppDbContext? context;
-    private List<Step>? steps;
-    private EditMode editMode = EditMode.Absolute;
-    private int? executionPhase;
+    private HxModal? _modal;
+    private AppDbContext? _context;
+    private List<Step>? _steps;
+    private EditMode _editMode = EditMode.Absolute;
+    private int? _executionPhase;
 
     private enum EditMode { Absolute, Shift }
 
@@ -75,33 +75,33 @@
             return;
         }
 
-        await modal.LetAsync(x => x.ShowAsync());
+        await _modal.LetAsync(x => x.ShowAsync());
 
-        if (context is not null)
+        if (_context is not null)
         {
-            await context.DisposeAsync();
+            await _context.DisposeAsync();
         }
-        context = await DbContextFactory.CreateDbContextAsync();
+        _context = await DbContextFactory.CreateDbContextAsync();
         var stepIds = SelectedSteps.Select(s => s.StepId).ToArray();
-        steps = await JobDetails.BuildStepsQueryWithIncludes(context)
+        _steps = await JobDetails.BuildStepsQueryWithIncludes(_context)
             .Where(s => stepIds.Contains(s.StepId))
             .ToListAsync();
     }
 
     private async Task CloseAsync()
     {
-        editMode = EditMode.Absolute;
-        executionPhase = null;
-        await modal.LetAsync(x => x.HideAsync());
+        _editMode = EditMode.Absolute;
+        _executionPhase = null;
+        await _modal.LetAsync(x => x.HideAsync());
     }
 
     private async Task SubmitStepsAsync()
     {
-        ArgumentNullException.ThrowIfNull(steps);
-        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(_steps);
+        ArgumentNullException.ThrowIfNull(_context);
 
         int executionPhase;
-        if (this.executionPhase is int i)
+        if (_executionPhase is { } i)
         {
             executionPhase = i;
         }
@@ -110,9 +110,9 @@
             return;
         }
 
-        foreach (var step in steps)
+        foreach (var step in _steps)
         {
-            step.ExecutionPhase = editMode switch
+            step.ExecutionPhase = _editMode switch
             {
                 EditMode.Absolute => executionPhase,
                 EditMode.Shift => step.ExecutionPhase + executionPhase,
@@ -120,10 +120,10 @@
             };
         }
 
-        await context.SaveChangesAsync();
-        await OnStepsSubmit.InvokeAsync(steps);
+        await _context.SaveChangesAsync();
+        await OnStepsSubmit.InvokeAsync(_steps);
         await CloseAsync();
     }
 
-    public void Dispose() => context?.Dispose();
+    public void Dispose() => _context?.Dispose();
 }

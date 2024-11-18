@@ -13,7 +13,7 @@
             Step id
         </dt>
         <dd class="col-sm-9">
-            @if (StepExecutionAttempt.StepExecution.GetStep() is Step step)
+            @if (StepExecutionAttempt.StepExecution.GetStep() is { } step)
             {
                 <a href="jobs/@StepExecutionAttempt.StepExecution.Execution.JobId/steps/@step.StepId">
                     @step.StepId
@@ -116,7 +116,7 @@
             <dd class="col-sm-9">
                 @{
                     var jobParam = sql.Execution.ExecutionParameters
-                        .FirstOrDefault(p => p?.ParameterId == sql.ResultCaptureJobParameterId);
+                        .FirstOrDefault(p => p.ParameterId == sql.ResultCaptureJobParameterId);
                 }
                 @(jobParam is not null ? $"{jobParam.ParameterName} ({jobParam.ParameterValue.ValueType})" : null)
             </dd>
@@ -151,9 +151,9 @@
                 Operation id
             </dt>
             <dd class="col-sm-9">
-                @if (StepExecutionAttempt is PackageStepExecutionAttempt package__)
+                @if (StepExecutionAttempt is PackageStepExecutionAttempt packageAttempt)
                 {
-                    @package__.PackageOperationId
+                    @packageAttempt.PackageOperationId
                 }
             </dd>
         }
@@ -169,9 +169,9 @@
                 Pipeline run id
             </dt>
             <dd class="col-sm-9">
-                @if (StepExecutionAttempt is PipelineStepExecutionAttempt pipeline__)
+                @if (StepExecutionAttempt is PipelineStepExecutionAttempt pipelineAttempt)
                 {
-                    @pipeline__.PipelineRunId
+                    @pipelineAttempt.PipelineRunId
                 }
             </dd>
             <dt class="col-sm-3">
@@ -214,13 +214,13 @@
             <dd class="col-sm-9">
                 @exe.ExeSuccessExitCode
             </dd>
-            @if (StepExecutionAttempt is ExeStepExecutionAttempt exe_)
+            @if (StepExecutionAttempt is ExeStepExecutionAttempt exeAttempt)
             {
                 <dt class="col-sm-3">
                     Process id
                 </dt>
                 <dd class="col-sm-9">
-                    @exe_.ExeProcessId
+                    @exeAttempt.ExeProcessId
                 </dd>
             }
         }
@@ -271,13 +271,13 @@
             <dd class="col-sm-9">
                 @function.FunctionAppId
             </dd>
-            @if (StepExecutionAttempt is FunctionStepExecutionAttempt function_)
+            @if (StepExecutionAttempt is FunctionStepExecutionAttempt functionAttempt)
             {
                 <dt class="col-sm-3">
                     Instance id
                 </dt>
                 <dd class="col-sm-9">
-                    @function_.FunctionInstanceId
+                    @functionAttempt.FunctionInstanceId
                 </dd>
             }
         }
@@ -340,14 +340,14 @@
             <dd class="col-sm-9">
                 @job.JobExecuteSynchronized
             </dd>
-            @if (StepExecutionAttempt is JobStepExecutionAttempt job_)
+            @if (StepExecutionAttempt is JobStepExecutionAttempt jobAttempt)
             {
                 <dt class="col-sm-3">
                     Child execution id
                 </dt>
                 <dd class="col-sm-9">
-                    <a href="executions/@job_.ChildJobExecutionId/list">
-                        @job_.ChildJobExecutionId
+                    <a href="executions/@jobAttempt.ChildJobExecutionId/list">
+                        @jobAttempt.ChildJobExecutionId
                     </a>
                 </dd>
             }
@@ -366,7 +366,7 @@
             <dd class="col-sm-9">
                 @qlik.QlikCloudEnvironmentId
             </dd>
-            @if (StepExecutionAttempt is QlikStepExecutionAttempt qlik_)
+            @if (StepExecutionAttempt is QlikStepExecutionAttempt qlikAttempt)
             {
                 var reloadOrRun = qlik.QlikStepSettings switch
                 {
@@ -378,7 +378,7 @@
                     @reloadOrRun
                 </dt>
                 <dd class="col-sm-9">
-                    @qlik_.ReloadOrRunId
+                    @qlikAttempt.ReloadOrRunId
                 </dd>
             }
         }
@@ -390,13 +390,13 @@
             <dd class="col-sm-9">
                 <pre><code>@JsonSerializer.Serialize(db.DatabricksStepSettings, JsonSerializerOptions)</code></pre>
             </dd>
-            @if (StepExecutionAttempt is DatabricksStepExecutionAttempt dbna)
+            @if (StepExecutionAttempt is DatabricksStepExecutionAttempt databricksAttempt)
             {
                 <dt class="col-sm-3">
                     Job run id
                 </dt>
                 <dd class="col-sm-9">
-                    @dbna.JobRunId
+                    @databricksAttempt.JobRunId
                 </dd>
             }
         }
@@ -444,13 +444,13 @@
             <dd class="col-sm-9">
                 @dbt.DbtJob.ProjectName
             </dd>
-            @if (StepExecutionAttempt is DbtStepExecutionAttempt dbta)
+            @if (StepExecutionAttempt is DbtStepExecutionAttempt dbtAttempt)
             {
                 <dt class="col-sm-3">
                     dbt job run id
                 </dt>
                 <dd class="col-sm-9">
-                    @dbta.DbtJobRunId
+                    @dbtAttempt.DbtJobRunId
                 </dd>
             }
         }
@@ -475,7 +475,7 @@
                     @error.Message
                 </code>
                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-                    @if (showErrorStackTrace && !string.IsNullOrWhiteSpace(error.Exception))
+                    @if (_showErrorStackTrace && !string.IsNullOrWhiteSpace(error.Exception))
                     {
                         <br />
                         <code class="text-body" style="white-space: pre-wrap; display: block;">@error.Exception</code>
@@ -483,11 +483,11 @@
                 </AuthorizeView>
             }
             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-                @if (!showErrorStackTrace && StepExecutionAttempt.ErrorMessages.Any(e => !string.IsNullOrEmpty(e.Exception)))
+                @if (!_showErrorStackTrace && StepExecutionAttempt.ErrorMessages.Any(e => !string.IsNullOrEmpty(e.Exception)))
                 {
                     <div class="mt-2">
                         <small>
-                            <a class="text-secondary" href="javascript:void(0);" @onclick="() => showErrorStackTrace = true">
+                            <a class="text-secondary" href="javascript:void(0);" @onclick="() => _showErrorStackTrace = true">
                                 Stack trace available
                             </a>
                         </small>
@@ -505,7 +505,7 @@
                     @warning.Message
                 </code>
                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-                    @if (showWarningStackTrace && !string.IsNullOrWhiteSpace(warning.Exception))
+                    @if (_showWarningStackTrace && !string.IsNullOrWhiteSpace(warning.Exception))
                     {
                         <br />
                         <code class="text-body" style="white-space: pre-wrap; display: block;">@warning.Exception</code>
@@ -517,8 +517,7 @@
     <h6>Execution condition parameters</h6>
     <dl class="row">
         @{
-            var executionConditionParameters = StepExecutionAttempt.StepExecution.ExecutionConditionParameters
-                ?? Enumerable.Empty<StepExecutionConditionParameter>();
+            var executionConditionParameters = StepExecutionAttempt.StepExecution.ExecutionConditionParameters;
         }
         @foreach (var param in executionConditionParameters.OrderBy(p => p.ParameterName))
         {
@@ -535,7 +534,7 @@
         <h6>Parameters</h6>
         <dl class="row">
             @{
-                var parameters = hasParams.StepExecutionParameters ?? Enumerable.Empty<StepExecutionParameterBase>();
+                var parameters = hasParams.StepExecutionParameters;
             }
             @foreach (var param in parameters.OrderBy(p => p.ParameterName))
             {
@@ -563,10 +562,10 @@
     public StepExecutionAttempt? StepExecutionAttempt { get; set; }
 
     [Parameter]
-    public bool ShowExtraDetails { get; set; } = false;
+    public bool ShowExtraDetails { get; set; }
 
-    private bool showErrorStackTrace = false;
-    private bool showWarningStackTrace = false;
+    private bool _showErrorStackTrace = false;
+    private bool _showWarningStackTrace = false;
 
-    private static JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
 }

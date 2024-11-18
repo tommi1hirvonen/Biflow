@@ -1,7 +1,7 @@
 ﻿@inject ToasterService Toaster
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 
-<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Large" Title="Select file">
+<HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Large" Title="Select file">
 
     <BodyTemplate>
         <div class="row justify-content-between">
@@ -10,7 +10,7 @@
                     <div class="input-group-text">
                         <SvgIcon Icon="FeatherIcon.Filter" />
                     </div>
-                    <input type="search" class="form-control" @bind-value="filterText" @bind-value:event="oninput"
+                    <input type="search" class="form-control" @bind-value="_filterText" @bind-value:event="oninput"
                            placeholder="Filter by name" autocomplete="off" />
                 </div>
             </div>
@@ -24,13 +24,13 @@
         <div class="row mt-3" style="height: calc(100vh - 210px); overflow-y: scroll;">
             <div class="col">
                 <div class="list-group">
-                    @if (root is null)
+                    @if (_root is null)
                     {
                         <div class="list-group-item text-center">
                             <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
                         </div>
                     }
-                    else if (root.Files.Count() == 0 && root.Folders.Count() == 0)
+                    else if (!_root.Files.Any() && !_root.Folders.Any())
                     {
                         <div class="list-group-item small">
                             No files
@@ -38,11 +38,11 @@
                     }
                     else
                     {
-                        <DatabricksFolderListGroupItem Folder="root"
-                                                       ExpandStatuses="folderExpandedStates"
-                                                       SelectedFile="selectedFile"
+                        <DatabricksFolderListGroupItem Folder="_root"
+                                                       ExpandStatuses="_folderExpandedStates"
+                                                       SelectedFile="_selectedFile"
                                                        OnFileSelected="ToggleFile"
-                                                       FilterText="@filterText" />
+                                                       FilterText="@_filterText" />
                     }
                 </div>
             </div>
@@ -52,10 +52,10 @@
 
     <FooterTemplate>
         <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectFileAsync"
-                  Enabled="selectedFile is not null">
+                  Enabled="_selectedFile is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
@@ -64,49 +64,49 @@
 
     [Parameter] public EventCallback<string> OnFileSelected { get; set; }
 
-    private readonly Dictionary<DatabricksFolder, bool> folderExpandedStates = [];
+    private readonly Dictionary<DatabricksFolder, bool> _folderExpandedStates = [];
 
-    private HxOffcanvas? offcanvas;
-    private DatabricksFolder? root;
-    private DatabricksFile? selectedFile;
-    private string filterText = string.Empty;
-    private Guid workspaceId;
+    private HxOffcanvas? _offcanvas;
+    private DatabricksFolder? _root;
+    private DatabricksFile? _selectedFile;
+    private string _filterText = string.Empty;
+    private Guid _workspaceId;
 
     private async Task SelectFileAsync()
     {
-        if (selectedFile is not null)
+        if (_selectedFile is not null)
         {
-            await OnFileSelected.InvokeAsync(selectedFile.Path);
-            await offcanvas.LetAsync(x => x.HideAsync());
+            await OnFileSelected.InvokeAsync(_selectedFile.Path);
+            await _offcanvas.LetAsync(x => x.HideAsync());
         }
     }
 
     public async Task ShowAsync(Guid workspaceId)
     {
-        this.workspaceId = workspaceId;
-        folderExpandedStates.Clear();
-        root = null;
-        selectedFile = null;
-        filterText = string.Empty;
+        _workspaceId = workspaceId;
+        _folderExpandedStates.Clear();
+        _root = null;
+        _selectedFile = null;
+        _filterText = string.Empty;
 
-        await offcanvas.LetAsync(x => x.ShowAsync());
+        await _offcanvas.LetAsync(x => x.ShowAsync());
 
         if (UserState.StepEdit.DatabricksWorkspaceFolders.TryGetValue(workspaceId, out var folder))
         {
-            root = folder;
+            _root = folder;
             StateHasChanged();
             return;
         }
 
         try
         {
-            await using var context = DbContextFactory.CreateDbContext();
+            await using var context = await DbContextFactory.CreateDbContextAsync();
             var workspace = await context.DatabricksWorkspaces
                 .AsNoTrackingWithIdentityResolution()
                 .FirstAsync(w => w.WorkspaceId == workspaceId);
             using var client = workspace.CreateClient();
-            root = await client.GetWorkspaceAsync();
-            UserState.StepEdit.DatabricksWorkspaceFolders[workspaceId] = root;
+            _root = await client.GetWorkspaceAsync();
+            UserState.StepEdit.DatabricksWorkspaceFolders[workspaceId] = _root;
             StateHasChanged();
         }
         catch (Exception ex)
@@ -117,28 +117,28 @@
 
     private async Task LoadWorkspaceAsync()
     {
-        folderExpandedStates.Clear();
-        root = null;
-        selectedFile = null;
+        _folderExpandedStates.Clear();
+        _root = null;
+        _selectedFile = null;
         
         StateHasChanged();
 
-        await using var context = DbContextFactory.CreateDbContext();
+        await using var context = await DbContextFactory.CreateDbContextAsync();
         var workspace = await context.DatabricksWorkspaces
             .AsNoTrackingWithIdentityResolution()
-            .FirstAsync(w => w.WorkspaceId == workspaceId);
+            .FirstAsync(w => w.WorkspaceId == _workspaceId);
         using var client = workspace.CreateClient();
-        root = await client.GetWorkspaceAsync();
-        UserState.StepEdit.DatabricksWorkspaceFolders[workspaceId] = root;
+        _root = await client.GetWorkspaceAsync();
+        UserState.StepEdit.DatabricksWorkspaceFolders[_workspaceId] = _root;
     }
 
     private void ToggleFile(DatabricksFile file)
     {
-        if (selectedFile == file)
+        if (_selectedFile == file)
         {
-            selectedFile = null;
+            _selectedFile = null;
             return;
         }
-        selectedFile = file;
+        _selectedFile = file;
     }
 }

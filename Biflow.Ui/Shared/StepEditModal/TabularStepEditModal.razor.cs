@@ -8,7 +8,7 @@ public partial class TabularStepEditModal(
 {
     internal override string FormId => "tabular_step_edit_form";
 
-    private AnalysisServicesObjectSelectOffcanvas? offcanvas;
+    private AnalysisServicesObjectSelectOffcanvas? _offcanvas;
 
     protected override TabularStep CreateNewStep(Job job) =>
         new()

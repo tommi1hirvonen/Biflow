@@ -1,11 +1,11 @@
-﻿<HxOffcanvas @ref="offcanvas" Backdrop="OffcanvasBackdrop.False" Size="OffcanvasSize.Regular" ScrollingEnabled="true" Title="Advanced filters">
+﻿<HxOffcanvas @ref="_offcanvas" Backdrop="OffcanvasBackdrop.False" Size="OffcanvasSize.Regular" ScrollingEnabled="true" Title="Advanced filters">
     <BodyTemplate>
         <div class="row">
             <div class="col">
 
                 <HxButtonGroup Size="ButtonGroupSize.Small">
                     <FilterDropdown TItem="int"
-                                    FilterSet="executionPhasesFilter"
+                                    FilterSet="_executionPhasesFilter"
                                     IdSelector="e => e.ToString()"
                                     TextSelector="e => e.ToString()"
                                     Items="ExecutionPhases"
@@ -16,7 +16,7 @@
                         </TitleTemplate>
                     </FilterDropdown>
                     <FilterDropdown TItem="ConnectionBase"
-                                    FilterSet="connectionsFilter"
+                                    FilterSet="_connectionsFilter"
                                     IdSelector="c => c.ConnectionId.ToString()"
                                     TextSelector="c => c.ConnectionName"
                                     Items="Connections"
@@ -42,14 +42,14 @@
                 </div>
                 <hr />
                 @{
-                    var sqlExpanded = expandedSections.GetValueOrDefault(StepType.Sql);
-                    var packageExpanded = expandedSections.GetValueOrDefault(StepType.Package);
-                    var pipelineExpanded = expandedSections.GetValueOrDefault(StepType.Pipeline);
-                    var functionExpanded = expandedSections.GetValueOrDefault(StepType.Function);
-                    var exeExpanded = expandedSections.GetValueOrDefault(StepType.Exe);
+                    var sqlExpanded = _expandedSections.GetValueOrDefault(StepType.Sql);
+                    var packageExpanded = _expandedSections.GetValueOrDefault(StepType.Package);
+                    var pipelineExpanded = _expandedSections.GetValueOrDefault(StepType.Pipeline);
+                    var functionExpanded = _expandedSections.GetValueOrDefault(StepType.Function);
+                    var exeExpanded = _expandedSections.GetValueOrDefault(StepType.Exe);
                 }
 
-                <h6 class="mt-3 d-flex align-items-center" style="cursor: pointer;" @onclick="() => expandedSections[StepType.Sql] = !sqlExpanded">
+                <h6 class="mt-3 d-flex align-items-center" style="cursor: pointer;" @onclick="() => _expandedSections[StepType.Sql] = !sqlExpanded">
                     @if (sqlExpanded)
                     {
                         <SvgIcon Icon="FeatherIcon.ChevronDown" />
@@ -77,7 +77,7 @@
                 }
                 <hr />
 
-                <h6 class="mt-3 d-flex align-items-center" style="cursor: pointer;" @onclick="() => expandedSections[StepType.Package] = !packageExpanded">
+                <h6 class="mt-3 d-flex align-items-center" style="cursor: pointer;" @onclick="() => _expandedSections[StepType.Package] = !packageExpanded">
                     @if (packageExpanded)
                     {
                         <SvgIcon Icon="FeatherIcon.ChevronDown" />
@@ -121,7 +121,7 @@
                 }
                 <hr />
 
-                <h6 class="mt-3 d-flex align-items-center" style="cursor: pointer;" @onclick="() => expandedSections[StepType.Pipeline] = !pipelineExpanded">
+                <h6 class="mt-3 d-flex align-items-center" style="cursor: pointer;" @onclick="() => _expandedSections[StepType.Pipeline] = !pipelineExpanded">
                     @if (pipelineExpanded)
                     {
                         <SvgIcon Icon="FeatherIcon.ChevronDown" />
@@ -153,7 +153,7 @@
                                             Items="PipelineClients"
                                             TextSelector="fa => fa.PipelineClientName"
                                             IdSelector="fa => fa.PipelineClientId.ToString()"
-                                            FilterSet="pipelineClientsFilter"
+                                            FilterSet="_pipelineClientsFilter"
                                             OnChange="async () => await OnFiltersChanged.InvokeAsync()">
                                 <TitleTemplate>
                                     Pipeline client
@@ -164,7 +164,7 @@
                 }
                 <hr />
 
-                <h6 class="mt-3 d-flex align-items-center" style="cursor: pointer;" @onclick="() => expandedSections[StepType.Function] = !functionExpanded">
+                <h6 class="mt-3 d-flex align-items-center" style="cursor: pointer;" @onclick="() => _expandedSections[StepType.Function] = !functionExpanded">
                     @if (functionExpanded)
                     {
                         <SvgIcon Icon="FeatherIcon.ChevronDown" />
@@ -205,7 +205,7 @@
                                             Items="FunctionApps"
                                             TextSelector="fa => fa.FunctionAppName"
                                             IdSelector="fa => fa.FunctionAppId.ToString()"
-                                            FilterSet="functionAppsFilter"
+                                            FilterSet="_functionAppsFilter"
                                             OnChange="async () => await OnFiltersChanged.InvokeAsync()">
                                 <TitleTemplate>
                                     Function app
@@ -216,7 +216,7 @@
                 }
                 <hr />
 
-                <h6 class="mt-3 d-flex align-items-center" style="cursor: pointer;" @onclick="() => expandedSections[StepType.Exe] = !exeExpanded">
+                <h6 class="mt-3 d-flex align-items-center" style="cursor: pointer;" @onclick="() => _expandedSections[StepType.Exe] = !exeExpanded">
                     @if (exeExpanded)
                     {
                         <SvgIcon Icon="FeatherIcon.ChevronDown" />
@@ -254,6 +254,6 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
     </FooterTemplate>
 </HxOffcanvas>

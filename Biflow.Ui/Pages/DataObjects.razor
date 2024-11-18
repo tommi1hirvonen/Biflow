@@ -25,7 +25,7 @@
             <div class="input-group-text">
                 <SvgIcon Icon="FeatherIcon.Search" />
             </div>
-            <input type="search" class="form-control" @bind-value="searchTerm" @bind-value:event="oninput" placeholder="Search" style="max-width: 30rem;" />
+            <input type="search" class="form-control" @bind-value="_searchTerm" @bind-value:event="oninput" placeholder="Search" style="max-width: 30rem;" />
         </div>
     </div>
 </div>
@@ -45,13 +45,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (objects is null)
+                        @if (_objects is null)
                         {
                             <tr>
                                 <td colspan="8" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td>
                             </tr>
                         }
-                        else if (!objects.Any())
+                        else if (!_objects.Any())
                         {
                             <tr>
                                 <td colspan="8" class="px-3">No data objects</td>
@@ -66,11 +66,11 @@
                                 }
                                 <tr>
                                     
-                                    <td class="align-middle font-monospace"><HighlightableText Text="@obj.ObjectUri" PartToHighlight="@searchTerm" /></td>
+                                    <td class="align-middle font-monospace"><HighlightableText Text="@obj.ObjectUri" PartToHighlight="@_searchTerm" /></td>
                                     <td class="align-middle">@obj.MaxConcurrentWrites</td>
                                     <td>
                                         <div class="btn-group">
-                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => editOffcanvas.LetAsync(x => x.ShowAsync(obj.ObjectId))">
+                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => _editOffcanvas.LetAsync(x => x.ShowAsync(obj.ObjectId))">
                                                 <SvgIcon Icon="FeatherIcon.Edit2" />
                                             </HxButton>
                                             <HxDropdownButtonGroup>
@@ -88,9 +88,9 @@
                                         <a class="text-body" href="javascript:void(0)"
                                             @onclick="async () =>
                                             {
-                                                referenceType = DataObjectReferenceType.Source;
-                                                stepsModalDataObject = obj;
-                                                await referencesModal.LetAsync(x => x.ShowAsync());
+                                                _referenceType = DataObjectReferenceType.Source;
+                                                _stepsModalDataObject = obj;
+                                                await _referencesModal.LetAsync(x => x.ShowAsync());
                                             }">
                                             @(readers > 0 ? $"{readers} reader(s)" : null)
                                         </a>
@@ -99,9 +99,9 @@
                                         <a class="text-body" href="javascript:void(0)"
                                             @onclick="async () =>
                                             {
-                                                referenceType = DataObjectReferenceType.Target;
-                                                stepsModalDataObject = obj;
-                                                await referencesModal.LetAsync(x => x.ShowAsync());
+                                                _referenceType = DataObjectReferenceType.Target;
+                                                _stepsModalDataObject = obj;
+                                                await _referencesModal.LetAsync(x => x.ShowAsync());
                                             }">
                                             @(writers > 0 ? $"{writers} writer(s)" : null)
                                         </a>
@@ -116,9 +116,9 @@
     </div>
 </div>
 
-<DataObjectEditOffcanvas @ref="editOffcanvas" OnDataObjectSubmitted="OnDataObjectSubmitted" />
+<DataObjectEditOffcanvas @ref="_editOffcanvas" OnDataObjectSubmitted="OnDataObjectSubmitted" />
 
-<HxModal @ref="confirmDeleteModal" Size="ModalSize.ExtraLarge" Title="Delete data objects">
+<HxModal @ref="_confirmDeleteModal" Size="ModalSize.ExtraLarge" Title="Delete data objects">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -148,19 +148,19 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await confirmDeleteModal.LetAsync(x => x.HideAsync())">Cancel</button>
+        <button class="btn btn-secondary" @onclick="async () => await _confirmDeleteModal.LetAsync(x => x.HideAsync())">Cancel</button>
         <button class="btn btn-danger" @onclick="DeleteUnusedDatabaseObjectsAsync">Delete</button>
     </FooterTemplate>
 </HxModal>
 
-<HxModal @ref="referencesModal" Size="ModalSize.Large" Scrollable="true">
+<HxModal @ref="_referencesModal" Size="ModalSize.Large" Scrollable="true">
     <BodyTemplate>
         @{
-            var title = referenceType switch { DataObjectReferenceType.Source => "reading from", _ => "writing to" };
+            var title = _referenceType switch { DataObjectReferenceType.Source => "reading from", _ => "writing to" };
         }
         <div class="row">
             <div class="col">
-                Steps @title <span class="font-monospace">@stepsModalDataObject?.ObjectUri</span>
+                Steps @title <span class="font-monospace">@_stepsModalDataObject?.ObjectUri</span>
             </div>
         </div>
         <div class="row">
@@ -174,9 +174,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (stepsModalDataObject is not null)
+                        @if (_stepsModalDataObject is not null)
                         {
-                            @foreach (var reader in stepsModalDataObject.Steps.Where(s => s.ReferenceType == referenceType)
+                            @foreach (var reader in _stepsModalDataObject.Steps.Where(s => s.ReferenceType == _referenceType)
                                 .OrderBy(r => r.Step.Job.JobName)
                                 .ThenBy(r => r.Step.StepName))
                             {
@@ -205,31 +205,31 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await referencesModal.LetAsync(x => x.HideAsync())">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await _referencesModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
 @code {
-    private List<DataObject>? objects;
-    private DataObjectEditOffcanvas? editOffcanvas;
-    private HxModal? confirmDeleteModal;
-    private HxModal? referencesModal;
-    private DataObjectReferenceType referenceType;
-    private DataObject? stepsModalDataObject;
-    private string searchTerm = string.Empty;
+    private List<DataObject>? _objects;
+    private DataObjectEditOffcanvas? _editOffcanvas;
+    private HxModal? _confirmDeleteModal;
+    private HxModal? _referencesModal;
+    private DataObjectReferenceType _referenceType;
+    private DataObject? _stepsModalDataObject;
+    private string _searchTerm = string.Empty;
 
     private IEnumerable<DataObject> FilteredObjects =>
-        objects?
-        .Where(o => !searchTerm.Any() || o.ObjectUri.ContainsIgnoreCase(searchTerm))
+        _objects?
+        .Where(o => !_searchTerm.Any() || o.ObjectUri.ContainsIgnoreCase(_searchTerm))
         .OrderBy(o => o.ObjectUri)
         ?? Enumerable.Empty<DataObject>();
 
-    private IEnumerable<DataObject> UnusedObjects => objects?.Where(t => !t.Steps.Any()) ?? [];
+    private IEnumerable<DataObject> UnusedObjects => _objects?.Where(t => !t.Steps.Any()) ?? [];
 
     protected override async Task OnInitializedAsync()
     {
         await using var context = await DbContextFactory.CreateDbContextAsync();
-        objects = await context.DataObjects
+        _objects = await context.DataObjects
             .Include(o => o.Steps)
             .ThenInclude(s => s.Step)
             .ThenInclude(s => s.Job)
@@ -244,20 +244,20 @@
             return;
         }
 
-        await confirmDeleteModal.LetAsync(x => x.ShowAsync());
+        await _confirmDeleteModal.LetAsync(x => x.ShowAsync());
     }
 
     private async Task DeleteUnusedDatabaseObjectsAsync()
     {
         var response = await Mediator.SendAsync(new DeleteUnusedDataObjectsCommand());
-        objects?.RemoveAll(o => response.DeletedDataObjects.Any(r => r.ObjectId == o.ObjectId));
-        await confirmDeleteModal.LetAsync(x => x.HideAsync());
+        _objects?.RemoveAll(o => response.DeletedDataObjects.Any(r => r.ObjectId == o.ObjectId));
+        await _confirmDeleteModal.LetAsync(x => x.HideAsync());
     }
 
     private async Task DeleteDatabaseObject(DataObject obj)
     {
         await Mediator.SendAsync(new DeleteDataObjectCommand(obj.ObjectId));
-        objects?.Remove(obj);
+        _objects?.Remove(obj);
     }
 
     private async Task DeleteReferenceAsync(StepDataObject reference)
@@ -269,10 +269,10 @@
 
     private void OnDataObjectSubmitted(DataObject dataObject)
     {
-        var toRemove = objects?.First(o => o.ObjectId == dataObject.ObjectId);
+        var toRemove = _objects?.First(o => o.ObjectId == dataObject.ObjectId);
         if (toRemove is null) return;
-        objects?.Remove(toRemove);
-        objects?.Add(dataObject);
+        _objects?.Remove(toRemove);
+        _objects?.Add(dataObject);
     }
 
 }

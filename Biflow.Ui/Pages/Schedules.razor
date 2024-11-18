@@ -3,8 +3,6 @@
 @implements IDisposable
 
 @inject IDbContextFactory<AppDbContext> DbFactory
-@inject ToasterService Toaster
-@inject ISchedulerService SchedulerService
 
 <style>
     tr a {
@@ -44,7 +42,7 @@
 </div>
 
 @{
-    var filterJobs = schedules?
+    var filterJobs = _schedules?
         .Where(s => State.Predicates.Where(p => p != State.JobPredicate).All(p => p(s)))
         .Select(s => (s.Job.JobId, s.Job.JobName))
         .Concat(State.JobFilter)
@@ -52,7 +50,7 @@
         .Order()
         .AsEnumerable()
         ?? [];
-    var filterJobTags = schedules?
+    var filterJobTags = _schedules?
         .Where(s => State.Predicates.Where(p => p != State.JobTagPredicate).All(p => p(s)))
         .SelectMany(s => s.Job.Tags)
         .Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder))
@@ -60,7 +58,7 @@
         .Distinct()
         .Order()
         .AsEnumerable() ?? [];
-    var filterScheduleTags = schedules?
+    var filterScheduleTags = _schedules?
         .Where(s => State.Predicates.Where(p => p != State.ScheduleTagPredicate).All(p => p(s)))
         .SelectMany(s => s.Tags)
         .Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder))
@@ -142,17 +140,17 @@
     </div>
 </div>
 
-@if (Component is null)
+@switch (Component)
 {
-    <SchedulesList Schedules="schedules" Jobs="jobs" FilteredSchedules="FilteredSchedules" OnSchedulesChanged="StateHasChanged" />
-}
-else if (Component == "graph")
-{
-    <SchedulesGraph Schedules="schedules" FilteredSchedules="FilteredSchedules" OnSchedulesChanged="StateHasChanged" />
-}
-else
-{
-    <p>No component to display with component parameter @Component</p>
+    case null:
+        <SchedulesList Schedules="_schedules" Jobs="_jobs" FilteredSchedules="FilteredSchedules" OnSchedulesChanged="StateHasChanged" />
+        break;
+    case "graph":
+        <SchedulesGraph Schedules="_schedules" FilteredSchedules="FilteredSchedules" OnSchedulesChanged="StateHasChanged" />
+        break;
+    default:
+        <p>No component to display with component parameter @Component</p>
+        break;
 }
 
 @code {
@@ -162,33 +160,33 @@ else
 
     private SchedulesPageState State => UserState.Schedules;
 
-    private readonly CancellationTokenSource cts = new();
+    private readonly CancellationTokenSource _cts = new();
 
-    private List<Job>? jobs;
-    private List<Schedule>? schedules;
+    private List<Job>? _jobs;
+    private List<Schedule>? _schedules;
 
-    private IEnumerable<Schedule>? FilteredSchedules => schedules?.Where(s => State.Predicates.All(p => p(s)));
+    private IEnumerable<Schedule>? FilteredSchedules => _schedules?.Where(s => State.Predicates.All(p => p(s)));
 
     protected override async Task OnInitializedAsync()
     {
         await using var context = await DbFactory.CreateDbContextAsync();
-        jobs = await context.Jobs
+        _jobs = await context.Jobs
             .Include(j => j.Tags)
             .OrderBy(job => job.JobName)
-            .ToListAsync(cts.Token);
-        schedules = await context.Schedules
+            .ToListAsync(_cts.Token);
+        _schedules = await context.Schedules
             .Include(schedule => schedule.Job)
             .ThenInclude(j => j.Tags)
             .Include(schedule => schedule.Tags)
             .Include(schedule => schedule.TagFilter)
             .OrderBy(schedule => schedule.Job.JobName)
             .ThenBy(schedule => schedule.ScheduleName)
-            .ToListAsync(cts.Token);
+            .ToListAsync(_cts.Token);
     }
 
     public void Dispose()
     {
-        cts.Cancel();
-        cts.Dispose();
+        _cts.Cancel();
+        _cts.Dispose();
     }
 }

@@ -34,11 +34,11 @@ public partial class StepExecutionsTable(
     private readonly NavigationManager _navigationManager = navigationManager;
     private readonly IMediator _mediator = mediator;
     private readonly IJSRuntime _js = js;
-    private readonly HashSet<StepExecutionId> selectedSteps = [];
+    private readonly HashSet<StepExecutionId> _selectedSteps = [];
 
-    private StepExecutionProjection? selectedStepExecution;
-    private StepHistoryOffcanvas? stepHistoryOffcanvas;
-    private StepExecutionAttempt? detailStep;
+    private StepExecutionProjection? _selectedStepExecution;
+    private StepHistoryOffcanvas? _stepHistoryOffcanvas;
+    private StepExecutionAttempt? _detailStep;
 
     private record StepExecutionId(Guid ExecutionId, Guid StepId, int RetryAttemptIndex);
 
@@ -101,23 +101,23 @@ public partial class StepExecutionsTable(
     {
         // If the selected execution is the same that was previously selected, set to null
         // => hides step execution details component.
-        if (selectedStepExecution == execution)
+        if (_selectedStepExecution == execution)
         {
-            selectedStepExecution = null;
-            detailStep = null;
+            _selectedStepExecution = null;
+            _detailStep = null;
         }
         else
         {
-            selectedStepExecution = execution;
+            _selectedStepExecution = execution;
 
             if (DetailStepProvider is not null)
             {
-                detailStep = DetailStepProvider(execution);
+                _detailStep = DetailStepProvider(execution);
             }
             else
             {
                 await using var context = await _dbContextFactory.CreateDbContextAsync();
-                detailStep = await context.StepExecutionAttempts
+                _detailStep = await context.StepExecutionAttempts
                     .AsNoTrackingWithIdentityResolution()
                     .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
                     .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
@@ -128,10 +128,10 @@ public partial class StepExecutionsTable(
                     .ThenInclude(e => e.ExecutionConditionParameters)
                     .ThenInclude(e => e.ExecutionParameter)
                     .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId && e.StepId == execution.StepId && e.RetryAttemptIndex == execution.RetryAttemptIndex);
-                if (detailStep is not null)
+                if (_detailStep is not null)
                 {
-                    var step = await context.Steps.FirstOrDefaultAsync(s => s.StepId == detailStep.StepId);
-                    detailStep.StepExecution.SetStep(step);
+                    var step = await context.Steps.FirstOrDefaultAsync(s => s.StepId == _detailStep.StepId);
+                    _detailStep.StepExecution.SetStep(step);
                 }
             }
         }
@@ -167,9 +167,9 @@ public partial class StepExecutionsTable(
     private void ToggleStepSelected(StepExecutionProjection step)
     {
         var id = new StepExecutionId(step.ExecutionId, step.StepId, step.RetryAttemptIndex);
-        if (!selectedSteps.Remove(id))
+        if (!_selectedSteps.Remove(id))
         {
-            selectedSteps.Add(id);
+            _selectedSteps.Add(id);
         }
     }
 
@@ -179,19 +179,19 @@ public partial class StepExecutionsTable(
         {
             var stepsToAdd = Executions?
                 .Select(s => new StepExecutionId(s.ExecutionId, s.StepId, s.RetryAttemptIndex))
-                .Where(s => !selectedSteps.Contains(s))
+                .Where(s => !_selectedSteps.Contains(s))
                 ?? [];
-            foreach (var s in stepsToAdd) selectedSteps.Add(s);
+            foreach (var s in stepsToAdd) _selectedSteps.Add(s);
         }
         else
         {
-            selectedSteps.Clear();
+            _selectedSteps.Clear();
         }
     }
 
     private async Task StopSelectedStepsAsync()
     {
-        if (!await _confirmer.ConfirmAsync("Stop steps", $"Stop selected {selectedSteps.Count} step(s)?"))
+        if (!await _confirmer.ConfirmAsync("Stop steps", $"Stop selected {_selectedSteps.Count} step(s)?"))
         {
             return;
         }
@@ -204,7 +204,7 @@ public partial class StepExecutionsTable(
             var username = authState.User.Identity?.Name;
             ArgumentNullException.ThrowIfNull(username);
 
-            var executions = selectedSteps
+            var executions = _selectedSteps
                 .Select(s =>
                 {
                     var step = Executions.First(e => e.ExecutionId == s.ExecutionId && e.StepId == s.StepId);
@@ -227,7 +227,8 @@ public partial class StepExecutionsTable(
                     try
                     {
                         var comparer = new TopologicalComparer<(Guid, Guid StepId, int, Guid[] Dependencies), Guid>(
-                            steps, s => s.StepId, s => s.Dependencies);
+                            steps,
+                            s => s.StepId, s => s.Dependencies);
                         steps = steps.OrderByDescending(s => s, comparer);
                     }
                     catch (Exception ex)
@@ -293,9 +294,14 @@ public partial class StepExecutionsTable(
     {
         try
         {
-            foreach (var step in selectedSteps)
+            var commands = from step in _selectedSteps
+                           select new UpdateStepExecutionAttemptStatusCommand(
+                               step.ExecutionId,
+                               step.StepId,
+                               step.RetryAttemptIndex, 
+                               status);
+            foreach (var command in commands)
             {
-                var command = new UpdateStepExecutionAttemptStatusCommand(step.ExecutionId, step.StepId, step.RetryAttemptIndex, status);
                 await _mediator.SendAsync(command);
             }
             _toaster.AddSuccess("Statuses updated successfully");

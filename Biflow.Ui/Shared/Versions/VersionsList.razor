@@ -5,12 +5,12 @@
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject EnvironmentSnapshotBuilder SnapshotBuilder
 @inject ToasterService Toaster
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 @inject ThemeService ThemeService
 
 <div class="row justify-content-between">
     <div class="col d-flex align-items-start">
-        <HxButton Color="ThemeColor.Success" OnClick="() => createModal.LetAsync(x => x.ShowAsync())">
+        <HxButton Color="ThemeColor.Success" OnClick="() => _createModal.LetAsync(x => x.ShowAsync())">
             Create version
         </HxButton>
         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.VersionManager}")">
@@ -22,7 +22,7 @@
     
 </div>
 
-<Paginator @ref="paginator"
+<Paginator @ref="_paginator"
            Items="Versions"
            Context="pageItems"
            InitialPageSize="UserState.Versions.PageSize"
@@ -44,7 +44,7 @@
             </HxAlert>
         </div>
         <div class="col-xxl mt-3 mt-xxl-0 d-flex justify-content-end">
-            <PaginationControls Paginator="paginator" />
+            <PaginationControls Paginator="_paginator" />
         </div>
     </div>
 
@@ -141,14 +141,14 @@
 
 </Paginator>
 
-<HxOffcanvas @ref="detailsOffcanvas" Size="OffcanvasSize.Large" Title="@($"Version {detailsVersion?.VersionId}")">
+<HxOffcanvas @ref="_detailsOffcanvas" Size="OffcanvasSize.Large" Title="@($"Version {_detailsVersion?.VersionId}")">
     <BodyTemplate>
         <div class="row justify-content-between">
             <div class="col-auto">
                 <div class="form-check">
                     <input type="checkbox" class="form-check-input" id="simplified_json"
-                           checked=@simplifiedJson
-                           @onchange="args => simplifiedJson = (bool)args.Value!">
+                           checked=@_simplifiedJson
+                           @onchange="args => _simplifiedJson = (bool)args.Value!">
                     <label class="form-check-label" for="simplified_json">Simplified JSON</label>
                     <HxPopover Trigger="PopoverTrigger.Hover" WrapperCssClass="ms-2" Content="Simplified JSON is easier for humans to read and is recommended for diff comparisons. JSON with object references preserved (non-simplified) includes additional metadata properties that add complexity and reduce readability but are required when deserializing and reverting snapshots.">
                         <SvgIcon Icon="FeatherIcon.Info" />
@@ -165,18 +165,18 @@
         <div class="row mt-3">
             <div class="col small font-monospace">
                 <pre style="max-height: calc(100vh - 160px);">
-                    @(simplifiedJson ? detailsVersion?.Snapshot : detailsVersion?.SnapshotWithReferencesPreserved)
+                    @(_simplifiedJson ? _detailsVersion?.Snapshot : _detailsVersion?.SnapshotWithReferencesPreserved)
                 </pre>
             </div>
         </div>
     </BodyTemplate>
 </HxOffcanvas>
 
-<HxModal @ref="createModal" Title="Create new version snapshot" Size="ModalSize.Large" Scrollable="true">
+<HxModal @ref="_createModal" Title="Create new version snapshot" Size="ModalSize.Large" Scrollable="true">
     <BodyTemplate>
         <div class="row">
             <div class="col">
-                <textarea class="form-control form-control-sm" @bind="description" rows="5" placeholder="Version description" />
+                <textarea class="form-control form-control-sm" @bind="_description" rows="5" placeholder="Version description"></textarea>
             </div>
         </div>
     </BodyTemplate>
@@ -184,7 +184,7 @@
         <HxButton Color="ThemeColor.Success" OnClick="CreateVersionAsync">
             Save
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" OnClick="() => createModal.LetAsync(x => x.HideAsync())">
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" OnClick="() => _createModal.LetAsync(x => x.HideAsync())">
             Cancel
         </HxButton>
     </FooterTemplate>
@@ -197,12 +197,12 @@
 
     [Parameter] public IList<VersionProjection>? Versions { get; set; }
 
-    private Paginator<VersionProjection>? paginator;
-    private HxOffcanvas? detailsOffcanvas;
-    private EnvironmentVersion? detailsVersion;
-    private HxModal? createModal;
-    private string? description;
-    private bool simplifiedJson = true; // inverse of whether to show JSON with references preserved
+    private Paginator<VersionProjection>? _paginator;
+    private HxOffcanvas? _detailsOffcanvas;
+    private EnvironmentVersion? _detailsVersion;
+    private HxModal? _createModal;
+    private string? _description;
+    private bool _simplifiedJson = true; // inverse of whether to show JSON with references preserved
 
     protected override void OnInitialized()
     {
@@ -223,15 +223,15 @@
             {
                 Snapshot = snapshot.ToJson(preserveReferences: false),
                 SnapshotWithReferencesPreserved = snapshot.ToJson(preserveReferences: true),
-                Description = description,
+                Description = _description,
                 CreatedOn = DateTimeOffset.Now,
                 CreatedBy = username
             };
             await using var context = await DbContextFactory.CreateDbContextAsync();
             context.EnvironmentVersions.Add(version);
             await context.SaveChangesAsync();
-            await createModal.LetAsync(x => x.HideAsync());
-            description = null;
+            await _createModal.LetAsync(x => x.HideAsync());
+            _description = null;
             Versions?.Insert(0, new(version.VersionId, version.Description, version.CreatedOn, version.CreatedBy));
         }
         catch (Exception ex)
@@ -243,8 +243,8 @@
     private async Task OpenDetailsAsync(int versionId)
     {
         await using var context = await DbContextFactory.CreateDbContextAsync();
-        detailsVersion = await context.EnvironmentVersions.FirstOrDefaultAsync(v => v.VersionId == versionId);
-        await detailsOffcanvas.LetAsync(x => x.ShowAsync());
+        _detailsVersion = await context.EnvironmentVersions.FirstOrDefaultAsync(v => v.VersionId == versionId);
+        await _detailsOffcanvas.LetAsync(x => x.ShowAsync());
     }
 
     private async Task DownloadAsync(int versionId)
@@ -279,7 +279,7 @@
             var bytes = zipArchiveStream.ToArray();
             using var stream = new MemoryStream(bytes);
             using var streamRef = new DotNetStreamReference(stream: stream);
-            await JS.InvokeVoidAsync("downloadFileFromStream", filename, streamRef);
+            await Js.InvokeVoidAsync("downloadFileFromStream", filename, streamRef);
         }
         catch (Exception ex)
         {
@@ -291,8 +291,8 @@
     {
         try
         {
-            var text = simplifiedJson ? detailsVersion?.Snapshot : detailsVersion?.SnapshotWithReferencesPreserved;
-            await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
+            var text = _simplifiedJson ? _detailsVersion?.Snapshot : _detailsVersion?.SnapshotWithReferencesPreserved;
+            await Js.InvokeVoidAsync("navigator.clipboard.writeText", text);
             Toaster.AddInformation("Value copied to clipboard");
         }
         catch (Exception ex)

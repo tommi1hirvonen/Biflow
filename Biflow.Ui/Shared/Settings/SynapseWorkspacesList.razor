@@ -14,7 +14,7 @@
 
 <PageTitle>Synapse workspaces | Biflow</PageTitle>
 
-<HxButton Color="ThemeColor.Success" Enabled="workspaces is not null" @onclick="() => editModal.LetAsync(x => x.ShowAsync(Guid.Empty))">
+<HxButton Color="ThemeColor.Success" Enabled="_workspaces is not null" @onclick="() => _editModal.LetAsync(x => x.ShowAsync(Guid.Empty))">
     Add workspace
 </HxButton>
 
@@ -31,17 +31,17 @@
             </tr>
         </thead>
         <tbody>
-            @if (workspaces is null)
+            @if (_workspaces is null)
             {
                 <tr><td colspan="4" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
-            else if (workspaces.Count == 0)
+            else if (_workspaces.Count == 0)
             {
                 <tr><td colspan="4">No Synapse workspaces</td></tr>
             }
             else
             {
-                @foreach (var workspace in workspaces.OrderBy(p => p.PipelineClientName))
+                @foreach (var workspace in _workspaces.OrderBy(p => p.PipelineClientName))
                 {
                     var jobs = workspace.Steps.Select(s => s.Job).Distinct().Count();
                     var steps = workspace.Steps.Count();
@@ -51,7 +51,7 @@
                         </td>
                         <td class="align-middle">
                             <HxButtonGroup>
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="() => editModal.LetAsync(x => x.ShowAsync(workspace.PipelineClientId))">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="() => _editModal.LetAsync(x => x.ShowAsync(workspace.PipelineClientId))">
                                     <SvgIcon Icon="FeatherIcon.Edit2" />
                                 </HxButton>
                                 <HxDropdownButtonGroup>
@@ -72,8 +72,8 @@
                             <a class="text-body" href="javascript:void(0)"
                                @onclick="async () =>
                             {
-                                stepsWorkspace = workspace;
-                                await stepsModal.LetAsync(x => x.ShowAsync());
+                                _stepsWorkspace = workspace;
+                                await _stepsModal.LetAsync(x => x.ShowAsync());
                             }">
                                 @(steps > 0 ? $"{steps} step(s)" : null)
                             </a>
@@ -85,11 +85,11 @@
     </table>
 </div>
 
-<SynapseWorkspaceEditModal @ref="editModal"
-                           AppRegistrations="appRegistrations"
+<SynapseWorkspaceEditModal @ref="_editModal"
+                           AppRegistrations="_appRegistrations"
                            OnSynapseWorkspaceSubmit="OnWorkspaceSubmit" />
 
-<HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsWorkspace?.PipelineClientName}")">
+<HxModal @ref="_stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {_stepsWorkspace?.PipelineClientName}")">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -101,7 +101,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var step in stepsWorkspace?.Steps
+                        @foreach (var step in _stepsWorkspace?.Steps
                         .OrderBy(s => s.Job.JobName)
                         .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
                         {
@@ -122,27 +122,27 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await stepsModal.LetAsync(x => x.HideAsync())">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await _stepsModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
 @code {
-    private SynapseWorkspaceEditModal? editModal;
-    private List<SynapseWorkspace>? workspaces;
-    private List<AppRegistration>? appRegistrations;
-    private SynapseWorkspace? stepsWorkspace;
-    private HxModal? stepsModal;
+    private SynapseWorkspaceEditModal? _editModal;
+    private List<SynapseWorkspace>? _workspaces;
+    private List<AppRegistration>? _appRegistrations;
+    private SynapseWorkspace? _stepsWorkspace;
+    private HxModal? _stepsModal;
 
     protected override async Task OnParametersSetAsync()
     {
         await using var context = await DbFactory.CreateDbContextAsync();
-        workspaces = await context.SynapseWorkspaces
+        _workspaces = await context.SynapseWorkspaces
             .AsNoTrackingWithIdentityResolution()
             .Include(c => c.Steps)
             .ThenInclude(step => step.Job)
             .OrderBy(c => c.PipelineClientName)
             .ToListAsync();
-        appRegistrations = await context.AppRegistrations
+        _appRegistrations = await context.AppRegistrations
             .AsNoTracking()
             .OrderBy(ar => ar.AppRegistrationName)
             .ToListAsync();
@@ -153,7 +153,7 @@
         try
         {
             await Mediator.SendAsync(new DeletePipelineClientCommand(workspace.PipelineClientId));
-            workspaces?.Remove(workspace);
+            _workspaces?.Remove(workspace);
         }
         catch (Exception ex)
         {
@@ -167,14 +167,13 @@
         if (workspace.PipelineClientId == Guid.Empty)
         {
             await Mediator.SendAsync(new CreatePipelineClientCommand(workspace));
-            workspaces?.Add(workspace);
         }
         else
         {
             await Mediator.SendAsync(new UpdatePipelineClientCommand(workspace));
-            workspaces?.RemoveAll(df => df.PipelineClientId == workspace.PipelineClientId);
-            workspaces?.Add(workspace);
+            _workspaces?.RemoveAll(df => df.PipelineClientId == workspace.PipelineClientId);
         }
+        _workspaces?.Add(workspace);
         StateHasChanged();
     }
 }

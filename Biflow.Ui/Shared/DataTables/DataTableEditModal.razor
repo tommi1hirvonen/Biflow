@@ -1,37 +1,37 @@
 ﻿@{
-    var title = editTable switch
+    var title = _editTable switch
     {
-        not null => editTable.DataTableId != Guid.Empty ? $"Edit {editTable.DataTableName}" : "New data table",
+        not null => _editTable.DataTableId != Guid.Empty ? $"Edit {_editTable.DataTableName}" : "New data table",
         null => ""
     };
 }
 
-<HxModal @ref="modal" Fullscreen="ModalFullscreen.XxlDown" Size="ModalSize.ExtraLarge" Title="@title" Scrollable="true">
+<HxModal @ref="_modal" Fullscreen="ModalFullscreen.XxlDown" Size="ModalSize.ExtraLarge" Title="@title" Scrollable="true">
     <BodyTemplate>
-        @if (editTable is not null && categories is not null)
+        @if (_editTable is not null && _categories is not null)
         {
-            <EditForm id="table_edit_form" Model="editTable" OnValidSubmit="SubmitEditTableAsync">
+            <EditForm id="table_edit_form" Model="_editTable" OnValidSubmit="SubmitEditTableAsync">
                 <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
                 <div class="row">
                      <div class="col">
                          <ul class="nav nav-tabs mb-3">
                              <li class="nav-item">
-                                 <span class="nav-link @(currentView == TableEditView.Settings ? "active" : null)"
-                                 @onclick="() => currentView = TableEditView.Settings">
+                                 <span class="nav-link @(_currentView == TableEditView.Settings ? "active" : null)"
+                                 @onclick="() => _currentView = TableEditView.Settings">
                                      <SvgIcon Icon="FeatherIcon.Settings" />
                                      Settings
                                  </span>
                              </li>
                              <li class="nav-item">
-                                 <span class="nav-link @(currentView == TableEditView.ColumnOrder ? "active" : null)"
-                                 @onclick="() => currentView = TableEditView.ColumnOrder">
+                                 <span class="nav-link @(_currentView == TableEditView.ColumnOrder ? "active" : null)"
+                                 @onclick="() => _currentView = TableEditView.ColumnOrder">
                                      <SvgIcon Icon="FeatherIcon.Columns" />
                                      Column Order
                                  </span>
                              </li>
                              <li class="nav-item">
-                                 <span class="nav-link @(currentView == TableEditView.Lookups ? "active" : null)"
-                                 @onclick="() => currentView = TableEditView.Lookups">
+                                 <span class="nav-link @(_currentView == TableEditView.Lookups ? "active" : null)"
+                                 @onclick="() => _currentView = TableEditView.Lookups">
                                      <SvgIcon Icon="FeatherIcon.Search" />
                                      Lookup Columns
                                  </span>
@@ -42,14 +42,14 @@
                          <FluentValidationValidator Validator="_dataTableValidator" />
                      </div>
                 </div>
-                 @if (currentView == TableEditView.Settings)
+                 @if (_currentView == TableEditView.Settings)
                 {
                     <div class="row">
                         <div class="col-md-4 d-md-flex align-items-center justify-content-end">
                             <label class="form-label mb-lg-0">Data table name</label>
                         </div>
                         <div class="col-md-6">
-                            <InputText form="" class="form-control form-control-sm" autocomplete="off" @bind-Value="editTable.DataTableName" />
+                            <InputText form="" class="form-control form-control-sm" autocomplete="off" @bind-Value="_editTable.DataTableName" />
                         </div>
                     </div>
 
@@ -58,9 +58,9 @@
                             <label class="form-label mb-lg-0">Category</label>
                         </div>
                         <div class="col-md-6">
-                            <InputSelect class="form-select form-select-sm" @bind-Value="editTable.CategoryId">
+                            <InputSelect class="form-select form-select-sm" @bind-Value="_editTable.CategoryId">
                                 <option value="">No category</option>
-                                @foreach (var cat in categories)
+                                @foreach (var cat in _categories)
                                 {
                                     <option value="@cat.CategoryId">@cat.CategoryName</option>
                                 }
@@ -75,16 +75,16 @@
                         <div class="col-md-6">
                             <div class="input-group input-group-sm">
                                 <select class="form-select form-select-sm" @onchange="ConnectionChanged">
-                                    @foreach (var connection in connections ?? Enumerable.Empty<MsSqlConnection>())
+                                    @foreach (var connection in _connections ?? [])
                                     {
                                         <option value="@connection.ConnectionId"
-                                                selected="@(connection.ConnectionId == editTable.Connection.ConnectionId)">
+                                                selected="@(connection.ConnectionId == _editTable.Connection.ConnectionId)">
                                             @connection.ConnectionName
                                         </option>
                                     }
                                 </select>
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
-                                          OnClick="async () => await offcanvas.LetAsync(x => x.ShowAsync(editTable.Connection))">
+                                          OnClick="async () => await _offcanvas.LetAsync(x => x.ShowAsync(_editTable.Connection))">
                                     <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
                                     Select table
                                 </HxButton>
@@ -98,8 +98,8 @@
                         </div>
                         <div class="col-md-6">
                             <div class="input-group input-group-sm">
-                                <InputText class="form-control form-control-sm" disabled placeholder="Schema" autocomplete="off" @bind-Value="editTable.TargetSchemaName" />
-                                <InputText class="form-control form-control-sm" disabled placeholder="Table" autocomplete="off" @bind-Value="editTable.TargetTableName" />
+                                <InputText class="form-control form-control-sm" disabled placeholder="Schema" autocomplete="off" @bind-Value="_editTable.TargetSchemaName" />
+                                <InputText class="form-control form-control-sm" disabled placeholder="Table" autocomplete="off" @bind-Value="_editTable.TargetTableName" />
                             </div>
                         </div>
                     </div>
@@ -109,7 +109,7 @@
                             <label class="form-label mb-lg-0">Description</label>
                         </div>
                         <div class="col-md-6">
-                            <InputTextArea class="form-control form-control-sm" rows="4" @bind-Value="editTable.DataTableDescription" />
+                            <InputTextArea class="form-control form-control-sm" rows="4" @bind-Value="_editTable.DataTableDescription" />
                         </div>
                     </div>
 
@@ -120,20 +120,20 @@
                         <div class="col-md-6">
                             <div class="form-check form-check-inline">
                                 <input type="checkbox" class="form-check-input" id="allow_insert"
-                                       checked=@editTable.AllowInsert
-                                       @bind-value="editTable.AllowInsert">
+                                       checked=@_editTable.AllowInsert
+                                       @bind-value="_editTable.AllowInsert">
                                 <label class="form-check-label" for="allow_insert">Allow insert</label>
                             </div>
                             <div class="form-check form-check-inline">
                                 <input type="checkbox" class="form-check-input" id="allow_delete"
-                                       checked=@editTable.AllowDelete
-                                       @bind-value="editTable.AllowDelete">
+                                       checked=@_editTable.AllowDelete
+                                       @bind-value="_editTable.AllowDelete">
                                 <label class="form-check-label" for="allow_delete">Allow delete</label>
                             </div>
                             <div class="form-check form-check-inline">
                                 <input type="checkbox" class="form-check-input" id="allow_update"
-                                       checked=@editTable.AllowUpdate
-                                       @bind-value="editTable.AllowUpdate">
+                                       checked=@_editTable.AllowUpdate
+                                       @bind-value="_editTable.AllowUpdate">
                                 <label class="form-check-label" for="allow_update">Allow update</label>
                             </div>
                         </div>
@@ -146,8 +146,8 @@
                         <div class="col-md-6">
                             <div class="form-check form-check-inline">
                                 <input type="checkbox" class="form-check-input" id="allow_import"
-                                       checked=@editTable.AllowImport
-                                       @bind-value="editTable.AllowImport">
+                                       checked=@_editTable.AllowImport
+                                       @bind-value="_editTable.AllowImport">
                                 <label class="form-check-label" for="allow_import">Allow import</label>
                             </div>
                         </div>
@@ -169,11 +169,11 @@
                                         SuggestMinimumLength="0"
                                         TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
                                         DataProvider="GetLockedColumnSuggestions"
-                                        @bind-Value="editTable.LockedColumns" />
+                                        @bind-Value="_editTable.LockedColumns" />
                             <div class="form-check form-check-inline mt-1">
                                 <input type="checkbox" class="form-check-input" id="locked_columns_exclude"
-                                       checked=@editTable.LockedColumnsExcludeMode
-                                       @bind-value="editTable.LockedColumnsExcludeMode">
+                                       checked=@_editTable.LockedColumnsExcludeMode
+                                       @bind-value="_editTable.LockedColumnsExcludeMode">
                                 <label class="form-check-label" for="locked_columns_exclude">
                                     Exclude mode
                                     <HxPopover Trigger="PopoverTrigger.Hover" Content="When enabled, columns not listed will be locked.">
@@ -200,11 +200,11 @@
                                          SuggestMinimumLength="0"
                                          TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
                                          DataProvider="GetHiddenColumnSuggestions"
-                                         @bind-Value="editTable.HiddenColumns" />
+                                         @bind-Value="_editTable.HiddenColumns" />
                         </div>
                     </div>
                 }
-                else if (currentView == TableEditView.ColumnOrder)
+                else if (_currentView == TableEditView.ColumnOrder)
                 {
                     <div class="row justify-content-center">
                         <div class="col-auto mx-4">
@@ -231,16 +231,16 @@
                             </div> 
                         </div>
                         <div class="col-auto">
-                            @if (!editTable?.ColumnOrder.Any() ?? false)
+                            @if (!_editTable?.ColumnOrder.Any() ?? false)
                             {
                                 <span class="text-muted"><em>Import columns to define column ordering</em></span>
                             }
                             <ul class="list-group list-group-numbered">
-                                @foreach (var column in editTable?.ColumnOrder ?? Enumerable.Empty<string>())
+                                @foreach (var column in _editTable?.ColumnOrder ?? Enumerable.Empty<string>())
                                 {
-                                    <li class="list-group-item list-group-item-action @(column == columnOrderSelected ? "active" : null)"
+                                    <li class="list-group-item list-group-item-action @(column == _columnOrderSelected ? "active" : null)"
                                         style="cursor: pointer;"
-                                        @onclick="() => columnOrderSelected = columnOrderSelected != column ? column : string.Empty">
+                                        @onclick="() => _columnOrderSelected = _columnOrderSelected != column ? column : string.Empty">
                                         @column
                                     </li>
                                 }
@@ -248,12 +248,12 @@
                         </div>
                     </div>
                 }
-                else if (currentView == TableEditView.Lookups)
+                else if (_currentView == TableEditView.Lookups)
                 {
                     <div class="row">
                         <div class="col">
-                            <button type="button" class="btn btn-sm btn-auto @(string.IsNullOrEmpty(editTable.TargetSchemaName) || string.IsNullOrEmpty(editTable.TargetTableName) ? "disabled" : null)"
-                            @onclick="() => editTable.Lookups.Add(new())">
+                            <button type="button" class="btn btn-sm btn-auto @(string.IsNullOrEmpty(_editTable.TargetSchemaName) || string.IsNullOrEmpty(_editTable.TargetTableName) ? "disabled" : null)"
+                            @onclick="() => _editTable.Lookups.Add(new())">
                                 <SvgIcon Icon="FeatherIcon.Plus" />
                                 Add lookup
                             </button>
@@ -271,7 +271,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @if (!editTable.Lookups.Any())
+                            @if (!_editTable.Lookups.Any())
                             {
                                 <tr>
                                     <td colspan="6">No lookups</td>
@@ -279,7 +279,7 @@
                             }
                             else
                             {
-                                foreach (var lookup in editTable.Lookups)
+                                foreach (var lookup in _editTable.Lookups)
                                 {
                                     <tr>
                                         <td>
@@ -345,7 +345,7 @@
                                         </td>
                                         <td>
                                             <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" title="Delete lookup"
-                                                      OnClick="() => { editTable.Lookups.Remove(lookup); StateHasChanged(); }">
+                                                      OnClick="() => { _editTable.Lookups.Remove(lookup); StateHasChanged(); }">
                                                 <SvgIcon Icon="FeatherIcon.Delete" />
                                             </HxButton>
                                         </td>
@@ -357,7 +357,7 @@
                 }
             </EditForm>
 
-            <DatabaseTableSelectOffcanvas @ref="offcanvas" OnTableSelected="OnTableSelected" />
+            <DatabaseTableSelectOffcanvas @ref="_offcanvas" OnTableSelected="OnTableSelected" />
         }
         else
         {

@@ -8,19 +8,19 @@
                 All executions
             </a>
             <span>&nbsp;/&nbsp;</span>
-            @if (job is not null)
+            @if (_job is not null)
             {
                 <strong>
-                    <a href="@($"jobs/{job.JobId}/steps")">
-                        @job.JobName
+                    <a href="@($"jobs/{_job.JobId}/steps")">
+                        @_job.JobName
                     </a>
                 </strong>   
             }
             else
             {
-                <strong>@execution?.JobName</strong>
+                <strong>@_execution?.JobName</strong>
             }
-            <span>&nbsp;/&nbsp;@execution?.ExecutionId</span>
+            <span>&nbsp;/&nbsp;@_execution?.ExecutionId</span>
         </div>
     </div>
 </div>
@@ -29,44 +29,44 @@
     <div class="col">
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <a class="nav-link @(execution is null ? "disabled" : null) @(ShowReport == Report.List ? "active" : null)" href="executions/@ExecutionId/list">
+                <a class="nav-link @(_execution is null ? "disabled" : null) @(ShowReport == Report.List ? "active" : null)" href="executions/@ExecutionId/list">
                     <SvgIcon Icon="FeatherIcon.List" />
                     List
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link @(execution is null ? "disabled" : null) @(ShowReport == Report.Gantt ? "active" : null)" href="executions/@ExecutionId/gantt">
+                <a class="nav-link @(_execution is null ? "disabled" : null) @(ShowReport == Report.Gantt ? "active" : null)" href="executions/@ExecutionId/gantt">
                     <SvgIcon Icon="LucideIcon.BarChartHorizontal" />
                     Gantt
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link @(execution is null ? "disabled" : null) @(ShowReport == Report.Graph ? "active" : null)" href="executions/@ExecutionId/graph">
+                <a class="nav-link @(_execution is null ? "disabled" : null) @(ShowReport == Report.Graph ? "active" : null)" href="executions/@ExecutionId/graph">
                     <SvgIcon Icon="LucideIcon.Workflow" />
                     Graph
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link @(execution is null ? "disabled" : null) @(ShowReport == Report.ExecutionDetails ? "active" : null)" href="executions/@ExecutionId/executiondetails">
+                <a class="nav-link @(_execution is null ? "disabled" : null) @(ShowReport == Report.ExecutionDetails ? "active" : null)" href="executions/@ExecutionId/executiondetails">
                     <SvgIcon Icon="FeatherIcon.Info" />
                     Execution details
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link @(execution is null ? "disabled" : null) @(ShowReport == Report.Parameters ? "active" : null)" href="executions/@ExecutionId/parameters">
+                <a class="nav-link @(_execution is null ? "disabled" : null) @(ShowReport == Report.Parameters ? "active" : null)" href="executions/@ExecutionId/parameters">
                     <SvgIcon Icon="FeatherIcon.AtSign" />
                     Parameters
                 </a>
             </li>
             <li class="nav-item ms-auto" role="presentation">
-                <a class="nav-link @(execution is null ? "disabled" : null) @(ShowReport == Report.History ? "active" : null) @(loading ? "disabled" : null)" href="executions/@ExecutionId/history">
+                <a class="nav-link @(_execution is null ? "disabled" : null) @(ShowReport == Report.History ? "active" : null) @(_loading ? "disabled" : null)" href="executions/@ExecutionId/history">
                     <SvgIcon Icon="FeatherIcon.Activity" />
                     History
                 </a>
             </li>
             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link @(execution is null ? "disabled" : null) @(ShowReport == Report.Rerun ? "active" : null) @(loading ? "disabled" : null)" href="executions/@ExecutionId/rerun">
+                    <a class="nav-link @(_execution is null ? "disabled" : null) @(ShowReport == Report.Rerun ? "active" : null) @(_loading ? "disabled" : null)" href="executions/@ExecutionId/rerun">
                         <SvgIcon Icon="FeatherIcon.Repeat" />
                         Rerun
                     </a>
@@ -80,7 +80,7 @@
 {
     <div class="row mt-3 @(ShowReport == Report.List || ShowReport == Report.Gantt ? "sticky-top bg-body" : null)">
         <div class="col-auto align-self-center">
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!loading">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!_loading">
                 <SvgIcon Icon="FeatherIcon.RefreshCw" />
                 Refresh
             </HxButton>
@@ -94,7 +94,7 @@
             </label>
         </div>
         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-            @if (execution is not null && execution.ExecutionStatus == ExecutionStatus.Running)
+            @if (_execution is not null && _execution.ExecutionStatus == ExecutionStatus.Running)
             {
                 <div class="col-auto align-self-center">
                     <HxDropdownButtonGroup>
@@ -111,64 +111,65 @@
         <div class="col-auto">
             <dl class="mx-1">
                 <dt>Started</dt>
-                <dd>@execution?.StartedOn?.LocalDateTime</dd>
+                <dd>@_execution?.StartedOn?.LocalDateTime</dd>
             </dl>
         </div>
         <div class="col-auto">
             <dl class="mx-1">
                 <dt>Ended</dt>
-                <dd>@execution?.EndedOn?.LocalDateTime</dd>
+                <dd>@_execution?.EndedOn?.LocalDateTime</dd>
             </dl>
         </div>
         <div class="col-auto">
             <dl class="mx-1">
                 <dt>Duration</dt>
-                <dd>@execution?.GetDurationInReadableFormat()</dd>
+                <dd>@_execution?.GetDurationInReadableFormat()</dd>
             </dl>
         </div>
         <div class="col-lg mb-3">
             <div class="d-flex justify-content-between">
                 <span class="fw-bold">Progress</span>
-                <span class="small align-self-end">@($"{execution?.GetProgressPercent() ?? 0}%")</span>
-                <span><JobExecutionStatusBadge ExecutionStatus="@execution?.ExecutionStatus" /></span>
+                <span class="small align-self-end">@($"{_execution?.GetProgressPercent() ?? 0}%")</span>
+                <span><JobExecutionStatusBadge ExecutionStatus="@_execution?.ExecutionStatus" /></span>
             </div>
-            <div class="progress mt-1 @execution?.ExecutionStatus.ToString().ToLower()" style="height: 8px;">
-                <div class="progress-bar" style="width: @($"{execution?.GetProgressPercent() ?? 0}%");" />
+            <div class="progress mt-1 @_execution?.ExecutionStatus.ToString().ToLower()" style="height: 8px;">
+                <div class="progress-bar" style="width: @($"{_execution?.GetProgressPercent() ?? 0}%");"></div>
             </div>
         </div>
     </div>
 }
 
-@if (ShowReport == Report.ExecutionDetails)
+@switch (ShowReport)
 {
-    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-        <div class="row">
-            <div class="col">
-                <HxButtonGroup Size="ButtonGroupSize.Small">
-                    <HxDropdownButtonGroup>
-                        <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                            Mark status as
-                        </HxDropdownToggleButton>
-                        <HxDropdownMenu>
-                            @foreach (var status in Enum.GetValues<ExecutionStatus>())
-                            {
-                                <HxDropdownItem OnClick="() => UpdateExecutionStatusAsync(status)">
-                                    <JobExecutionStatusBadge ExecutionStatus="status" />
-                                </HxDropdownItem>
-                            }
-                        </HxDropdownMenu>
-                    </HxDropdownButtonGroup>
-                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger" OnClick="DeleteExecutionAsync">
-                        Delete...
-                    </HxButton>
-                </HxButtonGroup>
+    case Report.ExecutionDetails:
+        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+            <div class="row">
+                <div class="col">
+                    <HxButtonGroup Size="ButtonGroupSize.Small">
+                        <HxDropdownButtonGroup>
+                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                                Mark status as
+                            </HxDropdownToggleButton>
+                            <HxDropdownMenu>
+                                @foreach (var status in Enum.GetValues<ExecutionStatus>())
+                                {
+                                    <HxDropdownItem OnClick="() => UpdateExecutionStatusAsync(status)">
+                                        <JobExecutionStatusBadge ExecutionStatus="status" />
+                                    </HxDropdownItem>
+                                }
+                            </HxDropdownMenu>
+                        </HxDropdownButtonGroup>
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger" OnClick="DeleteExecutionAsync">
+                            Delete...
+                        </HxButton>
+                    </HxButtonGroup>
+                </div>
             </div>
-        </div>
-    </AuthorizeView>
-    <div class="card shadow-sm pt-2 mb-4 mt-3">
-        <table class="table table-hover">
-            <tbody>
-                @if (execution is null)
+        </AuthorizeView>
+        <div class="card shadow-sm pt-2 mb-4 mt-3">
+            <table class="table table-hover">
+                <tbody>
+                @if (_execution is null)
                 {
                     <tr>
                         <td class="text-center">
@@ -180,53 +181,53 @@
                 {
                     <tr>
                         <td class="fw-bold w-25">Execution id</td>
-                        <td>@execution.ExecutionId</td>
+                        <td>@_execution.ExecutionId</td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Job id</td>
                         <td>
-                            @if (job is not null)
+                            @if (_job is not null)
                             {
-                                <a href="@($"jobs/{job.JobId}/steps")">@job.JobId</a>
+                                <a href="@($"jobs/{_job.JobId}/steps")">@_job.JobId</a>
                             }
                             else
                             {
-                                @execution.JobId
+                                @_execution.JobId
                             }
                         </td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Created</td>
-                        <td>@execution.CreatedOn.LocalDateTime</td>
+                        <td>@_execution.CreatedOn.LocalDateTime</td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Started</td>
-                        <td>@execution.StartedOn?.LocalDateTime</td>
+                        <td>@_execution.StartedOn?.LocalDateTime</td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Ended</td>
-                        <td>@execution.EndedOn?.LocalDateTime</td>
+                        <td>@_execution.EndedOn?.LocalDateTime</td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Duration</td>
-                        <td>@execution.GetDurationInReadableFormat()</td>
+                        <td>@_execution.GetDurationInReadableFormat()</td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Status</td>
-                        <td><JobExecutionStatusBadge ExecutionStatus="@execution.ExecutionStatus" /></td>
+                        <td><JobExecutionStatusBadge ExecutionStatus="@_execution.ExecutionStatus" /></td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Number of steps</td>
-                        <td>@execution.StepExecutions.Count</td>
+                        <td>@_execution.StepExecutions.Count</td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Success percent</td>
-                        <td>@execution.GetSuccessPercent().FormatPercentage(0)</td>
+                        <td>@_execution.GetSuccessPercent().FormatPercentage(0)</td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Created by</td>
                         <td>
-                            @if (execution.ParentExecution is StepExecutionAttemptReference parent)
+                            @if (_execution.ParentExecution is { } parent)
                             {
                                 var json = JsonSerializer.Serialize(parent);
                                 // Replace execution id in json with a link to the parent execution's details.
@@ -235,99 +236,103 @@
                                     @((MarkupString)jsonWithLink)
                                 </small>
                             }
-                            else if (!string.IsNullOrEmpty(execution.CreatedBy))
-                            {
-                                <text>@execution.CreatedBy (user)</text>
+                            else {if (!string.IsNullOrEmpty(_execution.CreatedBy))
+                                {
+                                    @:@_execution.CreatedBy (user)
+                                }
                             }
                         </td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Schedule</td>
                         <td>
-                            @if (schedule is not null)
+                            @if (_schedule is not null)
                             {
-                                <text>@schedule.ScheduleName (@schedule.GetScheduleDescription())</text>
+                                @:@_schedule.ScheduleName (@_schedule.GetScheduleDescription())
                             }
-                            else if (!string.IsNullOrEmpty(execution.ScheduleName))
-                            {
-                                <text>@execution.ScheduleName (removed schedule, @Biflow.Ui.Core.Extensions.GetCronExpressionDescription(execution.CronExpression))</text>
-                            }
-                            else if (execution.ScheduleId is not null)
-                            {
-                                <text>Removed schedule (name not available)</text>
+                            else {if (!string.IsNullOrEmpty(_execution.ScheduleName))
+                                {
+                                    @:@_execution.ScheduleName (removed schedule, @Core.Extensions.GetCronExpressionDescription(_execution.CronExpression))
+                                }
+                                else if (_execution.ScheduleId is not null)
+                                {
+                                    @:Removed schedule (name not available)
+                                }
                             }
                         </td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Executor PID</td>
-                        <td>@execution.ExecutorProcessId</td>
+                        <td>@_execution.ExecutorProcessId</td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Execution mode</td>
                         <td>
-                            @if (execution.ExecutionMode == ExecutionMode.Dependency)
+                            @if (_execution.ExecutionMode == ExecutionMode.Dependency)
                             {
                                 <span>
                                     <SvgIcon Icon="LucideIcon.Workflow" />
                                     Dependency mode
                                 </span>
                             }
-                            else if (execution.ExecutionMode == ExecutionMode.Hybrid)
-                            {
-                                <span>
-                                    <SvgIcon Icon="LucideIcon.Workflow" />
-                                    Hybrid mode
-                                </span>
-                            }
-                            else if (execution.ExecutionMode == ExecutionMode.ExecutionPhase)
-                            {
-                                <span>
-                                    <SvgIcon Icon="LucideIcon.Layers3" />
-                                    Execution phase
-                                </span>
+                            else {if (_execution.ExecutionMode == ExecutionMode.Hybrid)
+                                {
+                                    <span>
+                                        <SvgIcon Icon="LucideIcon.Workflow" />
+                                        Hybrid mode
+                                    </span>
+                                }
+                                else if (_execution.ExecutionMode == ExecutionMode.ExecutionPhase)
+                                {
+                                    <span>
+                                        <SvgIcon Icon="LucideIcon.Layers3" />
+                                        Execution phase
+                                    </span>
+                                }
                             }
                         </td>
                     </tr>
-                    @if (execution.ExecutionMode is ExecutionMode.ExecutionPhase or ExecutionMode.Hybrid)
+                    if (_execution.ExecutionMode is ExecutionMode.ExecutionPhase or ExecutionMode.Hybrid)
                     {
                         <tr>
                             <td class="fw-bold">Stop on first error</td>
-                            <td>@execution.StopOnFirstError</td>
+                            <td>@_execution.StopOnFirstError</td>
                         </tr>
                     }
                     <tr>
                         <td class="fw-bold">Max parallel steps</td>
-                        <td>@execution.MaxParallelSteps</td>
+                        <td>@_execution.MaxParallelSteps</td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Timeout (min)</td>
-                        <td>@execution.TimeoutMinutes</td>
+                        <td>@_execution.TimeoutMinutes</td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Overtime notification limit (min)</td>
-                        <td>@execution.OvertimeNotificationLimitMinutes</td>
+                        <td>@_execution.OvertimeNotificationLimitMinutes</td>
                     </tr>
                 }
-            </tbody>
-        </table>
-    </div>
-}
-
-@if (ShowReport == Report.Parameters)
-{
-    <div class="card shadow-sm pt-2 mb-4 mt-3 table-responsive">
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Default value</th>
-                    <th>Actual value</th>
-                    <th>Datatype</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (execution is null)
+                </tbody>
+            </table>
+        </div>
+        
+        break;
+        
+    case Report.Parameters:
+    
+        <div class="card shadow-sm pt-2 mb-4 mt-3 table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Default value</th>
+                        <th>Actual value</th>
+                        <th>Datatype</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @if (_execution is null)
                 {
                     <tr>
                         <td colspan="5" class="text-center">
@@ -335,182 +340,169 @@
                         </td>
                     </tr>
                 }
-                else if (!execution.ExecutionParameters.Any())
-                {
-                    <tr>
-                        <td colspan="5">No parameters</td>
-                    </tr>
-                }
-                else
-                {
-                    foreach (var param in execution.ExecutionParameters.OrderBy(p => p.ParameterName))
+                else {if (!_execution.ExecutionParameters.Any())
                     {
                         <tr>
-                            <td>@param.DisplayName</td>
-                            <td class="font-monospace">@param.DefaultValue.Value</td>
-                            <td class="font-monospace">@param.DisplayValue</td>
-                            <td>@param.DisplayValueType</td>
-                            <td class="small">
-                                <a class="link-body-emphasis" style="cursor: pointer;" @onclick="() => parameterLineageOffcanvas.LetAsync(x => x.ShowAsync(param))">
-                                    Show lineage
-                                </a>
-                            </td>
+                            <td colspan="5">No parameters</td>
                         </tr>
                     }
+                    else
+                    {
+                        foreach (var param in _execution.ExecutionParameters.OrderBy(p => p.ParameterName))
+                        {
+                            <tr>
+                                <td>@param.DisplayName</td>
+                                <td class="font-monospace">@param.DefaultValue.Value</td>
+                                <td class="font-monospace">@param.DisplayValue</td>
+                                <td>@param.DisplayValueType</td>
+                                <td class="small">
+                                    <a class="link-body-emphasis" style="cursor: pointer;" @onclick="() => _parameterLineageOffcanvas.LetAsync(x => x.ShowAsync(param))">
+                                        Show lineage
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    }
                 }
-            </tbody>
-        </table>
-    </div>
-}
-
-@if (ShowReport == Report.List || ShowReport == Report.Gantt)
-{
-    <div class="row mt-1">
-        <div class="col d-inline">
-            <SvgIcon Icon="FeatherIcon.Filter" />
-            <span class="me-3">Filter</span>
-
-            <HxButtonGroup Size="ButtonGroupSize.Small">
-                <FilterDropdown TItem="(string StepName, StepType StepType)"
-                            FilterSet="stepFilter"
-                            Items="execution?.StepExecutions
-                                .Where(s => !tagFilter.Any() || s.GetStep()?.Tags.Any(t1 => tagFilter.Any(t2 => t1.TagId == t2.TagId)) == true) // Limit visible steps based on tag filter
-                                .Where(s => !stepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
-                                    stepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible steps based on step status filter
-                                .Where(s => !stepTypeFilter.Any() || stepTypeFilter.Contains(s.StepType)) // Limit visible steps based on step type filter
-                                .Select(s => (s.GetStep()?.StepName ?? s.StepName, s.StepType)) // use the step's name if available since it may have been changed after the execution
-                                .Distinct()
-                                .OrderBy(j => j)
-                                .AsEnumerable() ?? []"
-                            OnChange="StateHasChanged"
-                            IsSearchable="true">
-                    <TitleTemplate>
-                        <SvgIcon Icon="LucideIcon.ListChecks" />
-                        Step
-                    </TitleTemplate>
-                    <ItemTemplate Context="item">
-                        <StepTypeIcon StepType="item.StepType" />
-                        @item.StepName
-                    </ItemTemplate>
-                </FilterDropdown>
-                <FilterDropdown TItem="StepType"
-                            FilterSet="stepTypeFilter"
-                            Items="execution?.StepExecutions
-                                .Where(s => !tagFilter.Any() || s.GetStep()?.Tags.Any(t1 => tagFilter.Any(t2 => t1.TagId == t2.TagId)) == true) // Limit visible step types based on tag filter
-                                .Where(s => !stepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
-                                    stepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible step types based on step status filter
-                                .Where(s => !stepFilter.Any() || stepFilter.Contains((s.StepName, s.StepType))) // Limit visible step types based on step filter
-                                .Select(s => s.StepType)
-                                .Distinct()
-                                .OrderBy(j => j)
-                                .AsEnumerable() ?? []"
-                            OnChange="StateHasChanged">
-                    <TitleTemplate>
-                        <SvgIcon Icon="FeatherIcon.Tool" />
-                        Step type
-                    </TitleTemplate>
-                    <ItemTemplate Context="item">
-                        <StepTypeIcon StepType="item" />
-                        @item.ToString()
-                    </ItemTemplate>
-                </FilterDropdown>
-                <FilterDropdown TItem="StepExecutionStatus"
-                            FilterSet="stepStatusFilter"
-                            Items="execution?.StepExecutions
-                                .Where(s => !tagFilter.Any() || s.GetStep()?.Tags.Any(t1 => tagFilter.Any(t2 => t1.TagId == t2.TagId)) == true) // Limit visible step statuses based on tag filter
-                                .Where(s => !stepFilter.Any() || stepFilter.Contains((s.StepName, s.StepType))) // Limit visible step statuses based on step filter
-                                .Where(s => !stepTypeFilter.Any() || stepTypeFilter.Contains(s.StepType)) // Limit visible step statuses based on step type filter
-                                .SelectMany(s => s.StepExecutionAttempts)
-                                .Select(e => e.ExecutionStatus)
-                                .Distinct()
-                                .OrderBy(s => s)
-                                .AsEnumerable() ?? []"
-                            OnChange="StateHasChanged">
-                    <TitleTemplate>
-                        <SvgIcon Icon="FeatherIcon.AlertCircle" />
-                        Status
-                    </TitleTemplate>
-                    <ItemTemplate Context="item">
-                        <StepExecutionStatusBadge ExecutionStatus="item" />
-                    </ItemTemplate>
-                </FilterDropdown>
-                <FilterDropdown TItem="TagProjection"
-                            FilterSet="tagFilter"
-                            Items="execution?.StepExecutions
-                                .Where(s => !stepFilter.Any() || stepFilter.Contains((s.StepName, s.StepType))) // Limit visible tags based on step filter
-                                .Where(s => !stepTypeFilter.Any() || stepTypeFilter.Contains(s.StepType)) // Limit visible tags based on step type filter
-                                .Where(s => !stepStatusFilter.Any() || s.StepExecutionAttempts.Any(att =>
-                                            stepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible tags based on step status filter
-                                .SelectMany(e => e.GetStep()?.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder)) ?? [])
-                                .Distinct()
-                                .Order()
-                                .AsEnumerable() ?? []"
-                            IdSelector="t => t.TagId.ToString()"
-                            TextSelector="t => t.TagName"
-                            @bind-Mode="tagFilterMode"
-                            OnChange="StateHasChanged">
-                    <ItemTemplate Context="item">
-                        <TagBadge Tag="item" />
-                    </ItemTemplate>
-                    <TitleTemplate>
-                        <SvgIcon Icon="FeatherIcon.Tag" />
-                        Tag
-                    </TitleTemplate>
-                </FilterDropdown>
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
-                      @onclick="() => { stepStatusFilter.Clear(); stepFilter.Clear(); stepTypeFilter.Clear(); tagFilter.Clear(); }">
-                    <SvgIcon Icon="FeatherIcon.X" />
-                    Reset
-                </HxButton>
-            </HxButtonGroup>
+                </tbody>
+            </table>
         </div>
-    </div>
+        
+        break;
+    
+    case Report.List or Report.Gantt:
+    
+        <div class="row mt-1">
+            <div class="col d-inline">
+                <SvgIcon Icon="FeatherIcon.Filter"/>
+                <span class="me-3">Filter</span>
+
+                <HxButtonGroup Size="ButtonGroupSize.Small">
+                    <FilterDropdown TItem="(string StepName, StepType StepType)"
+                                    FilterSet="_stepFilter"
+                                    Items="_execution?.StepExecutions.Where(s => !_tagFilter.Any() || s.GetStep()?.Tags.Any(t1 => _tagFilter.Any(t2 => t1.TagId == t2.TagId)) == true) // Limit visible steps based on tag filter
+                                        .Where(s => !_stepStatusFilter.Any() || s.StepExecutionAttempts.Any(att => _stepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible steps based on step status filter
+                                        .Where(s => !_stepTypeFilter.Any() || _stepTypeFilter.Contains(s.StepType)) // Limit visible steps based on step type filter
+                                        .Select(s => (s.GetStep()?.StepName ?? s.StepName, s.StepType)) // use the step's name if available since it may have been changed after the execution
+                                        .Distinct().OrderBy(j => j).AsEnumerable() ?? []"
+                                    OnChange="StateHasChanged"
+                                    IsSearchable="true">
+                        <TitleTemplate>
+                            <SvgIcon Icon="LucideIcon.ListChecks"/>
+                            Step
+                        </TitleTemplate>
+                        <ItemTemplate Context="item">
+                            <StepTypeIcon StepType="item.StepType"/>
+                            @item.StepName
+                        </ItemTemplate>
+                    </FilterDropdown>
+                    <FilterDropdown TItem="StepType"
+                                    FilterSet="_stepTypeFilter"
+                                    Items="_execution?.StepExecutions.Where(s => !_tagFilter.Any() || s.GetStep()?.Tags.Any(t1 => _tagFilter.Any(t2 => t1.TagId == t2.TagId)) == true) // Limit visible step types based on tag filter
+                                        .Where(s => !_stepStatusFilter.Any() || s.StepExecutionAttempts.Any(att => _stepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible step types based on step status filter
+                                        .Where(s => !_stepFilter.Any() || _stepFilter.Contains((s.StepName, s.StepType))) // Limit visible step types based on step filter
+                                        .Select(s => s.StepType).Distinct().OrderBy(j => j).AsEnumerable() ?? []"
+                                    OnChange="StateHasChanged">
+                        <TitleTemplate>
+                            <SvgIcon Icon="FeatherIcon.Tool"/>
+                            Step type
+                        </TitleTemplate>
+                        <ItemTemplate Context="item">
+                            <StepTypeIcon StepType="item"/>
+                            @item.ToString()
+                        </ItemTemplate>
+                    </FilterDropdown>
+                    <FilterDropdown TItem="StepExecutionStatus"
+                                    FilterSet="_stepStatusFilter"
+                                    Items="_execution?.StepExecutions.Where(s => !_tagFilter.Any() || s.GetStep()?.Tags.Any(t1 => _tagFilter.Any(t2 => t1.TagId == t2.TagId)) == true) // Limit visible step statuses based on tag filter
+                                        .Where(s => !_stepFilter.Any() || _stepFilter.Contains((s.StepName, s.StepType))) // Limit visible step statuses based on step filter
+                                        .Where(s => !_stepTypeFilter.Any() || _stepTypeFilter.Contains(s.StepType)) // Limit visible step statuses based on step type filter
+                                        .SelectMany(s => s.StepExecutionAttempts).Select(e => e.ExecutionStatus).Distinct().OrderBy(s => s).AsEnumerable() ?? []"
+                                    OnChange="StateHasChanged">
+                        <TitleTemplate>
+                            <SvgIcon Icon="FeatherIcon.AlertCircle"/>
+                            Status
+                        </TitleTemplate>
+                        <ItemTemplate Context="item">
+                            <StepExecutionStatusBadge ExecutionStatus="item"/>
+                        </ItemTemplate>
+                    </FilterDropdown>
+                    <FilterDropdown TItem="TagProjection"
+                                    FilterSet="_tagFilter"
+                                    Items="_execution?.StepExecutions.Where(s => !_stepFilter.Any() || _stepFilter.Contains((s.StepName, s.StepType))) // Limit visible tags based on step filter
+                                        .Where(s => !_stepTypeFilter.Any() || _stepTypeFilter.Contains(s.StepType)) // Limit visible tags based on step type filter
+                                        .Where(s => !_stepStatusFilter.Any() || s.StepExecutionAttempts.Any(att => _stepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible tags based on step status filter
+                                        .SelectMany(e => e.GetStep()?.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder)) ?? []).Distinct().Order().AsEnumerable() ?? []"
+                                    IdSelector="t => t.TagId.ToString()"
+                                    TextSelector="t => t.TagName"
+                                    @bind-Mode="_tagFilterMode"
+                                    OnChange="StateHasChanged">
+                        <ItemTemplate Context="item">
+                            <TagBadge Tag="item"/>
+                        </ItemTemplate>
+                        <TitleTemplate>
+                            <SvgIcon Icon="FeatherIcon.Tag"/>
+                            Tag
+                        </TitleTemplate>
+                    </FilterDropdown>
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
+                              @onclick="() => { _stepStatusFilter.Clear(); _stepFilter.Clear(); _stepTypeFilter.Clear(); _tagFilter.Clear(); }">
+                        <SvgIcon Icon="FeatherIcon.X"/>
+                        Reset
+                    </HxButton>
+                </HxButtonGroup>
+            </div>
+        </div>
+    
+        break;
 }
 
 @{
     var detailStepProvider = (StepExecutionProjection e) =>
-        execution?.StepExecutions
-            .SelectMany(e => e.StepExecutionAttempts)
-            ?.FirstOrDefault(x => x.ExecutionId == e.ExecutionId && x.StepId == e.StepId && x.RetryAttemptIndex == e.RetryAttemptIndex);
+        _execution?.StepExecutions
+            .SelectMany(s => s.StepExecutionAttempts)
+            .FirstOrDefault(x => x.ExecutionId == e.ExecutionId && x.StepId == e.StepId && x.RetryAttemptIndex == e.RetryAttemptIndex);
 }
 
-@if (ShowReport == Report.List)
+@switch (ShowReport)
 {
-    
-    <div class="card shadow-sm mt-3 pt-2 table-responsive mb-4">
-        <StepExecutionsTable
-            ShowDetailed="false"
-            Executions="GetOrderedExecutions()"
-            SortMode="sortMode"
-            OnSortingChanged="sortMode => { this.sortMode = sortMode; StateHasChanged(); }"
-            DetailStepProvider="detailStepProvider"
-            OnStepsUpdated="LoadData" />
-    </div>
-}
-else if (ShowReport == Report.Gantt)
-{
-    <div class="card shadow-sm mt-3 pt-3 mb-4">
-        <StepExecutionsGraph Executions="GetOrderedExecutions()"
-                             DetailStepProvider="detailStepProvider"
-                             SortMode="sortMode"
-                             OnSortingChanged="sortMode => { this.sortMode = sortMode; StateHasChanged(); }" />
-    </div>
-}
-else if (ShowReport == Report.Graph && execution is not null)
-{
-    <ExecutionDependenciesGraph @ref="dependenciesGraph" Execution="execution" InitialStepId="InitialStepId" />
-}
-else if (ShowReport == Report.Rerun)
-{
-    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-            <RerunBuilder Execution="execution" />
-    </AuthorizeView>
-}
-else if (ShowReport == Report.History && execution is not null)
-{
-    <div class="mt-3">
-        <JobHistory JobId="execution.JobId" />
-    </div>
+    case Report.List:
+        <div class="card shadow-sm mt-3 pt-2 table-responsive mb-4">
+            <StepExecutionsTable
+                ShowDetailed="false"
+                Executions="GetOrderedExecutions()"
+                SortMode="_sortMode"
+                OnSortingChanged="sortMode => { _sortMode = sortMode; StateHasChanged(); }"
+                DetailStepProvider="detailStepProvider"
+                OnStepsUpdated="LoadData" />
+        </div>
+        break;
+    case Report.Gantt:
+        <div class="card shadow-sm mt-3 pt-3 mb-4">
+            <StepExecutionsGraph Executions="GetOrderedExecutions()"
+                                 DetailStepProvider="detailStepProvider"
+                                 SortMode="_sortMode"
+                                 OnSortingChanged="sortMode => { _sortMode = sortMode; StateHasChanged(); }" />
+        </div>
+        break;
+    case Report.Graph when _execution is not null:
+        <ExecutionDependenciesGraph @ref="_dependenciesGraph" Execution="_execution" InitialStepId="InitialStepId" />
+        break;
+    case Report.Rerun:
+        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+            <RerunBuilder Execution="_execution" />
+        </AuthorizeView>
+        break;
+    case Report.History when _execution is not null:
+        <div class="mt-3">
+            <JobHistory JobId="_execution.JobId" />
+        </div>
+        break;
+    case Report.ExecutionDetails:
+    case Report.Parameters:
+        break;
+    default:
+        throw new ArgumentOutOfRangeException();
 }
 
-<ExecutionParameterLineageOffcanvas @ref="parameterLineageOffcanvas" />
+<ExecutionParameterLineageOffcanvas @ref="_parameterLineageOffcanvas" />

@@ -1,6 +1,6 @@
 ﻿@inject ToasterService Toaster
 
-<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" Title="Select package">
+<HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Regular" Title="Select package">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -8,20 +8,20 @@
                     <div class="input-group-text">
                         <SvgIcon Icon="FeatherIcon.Search" />
                     </div>
-                    <input type="search" class="form-control form-control-sm" placeholder="Search packages" @bind-value="filterText" @bind-value:event="oninput" />
+                    <input type="search" class="form-control form-control-sm" placeholder="Search packages" @bind-value="_filterText" @bind-value:event="oninput" />
                 </div>
             </div>
         </div>
         <div class="row mt-3" style="height: calc(100vh - 210px); overflow-y: scroll;">
             <div class="col">
                 <div class="list-group">
-                    @if (catalog is null)
+                    @if (_catalog is null)
                     {
                         <div class="list-group-item text-center">
                             <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
                         </div>
                     }
-                    else if (catalog.Folders.Count == 0)
+                    else if (_catalog.Folders.Count == 0)
                     {
                         <div class="list-group-item small">
                             No folders
@@ -29,14 +29,14 @@
                     }
                     else
                     {
-                        var folders = catalog.Folders.Values
-                            .Where(f => string.IsNullOrEmpty(filterText) || f.Projects.Values.SelectMany(pr => pr.Packages.Values).Any(p => p.PackageName.ContainsIgnoreCase(filterText)))
+                        var folders = _catalog.Folders.Values
+                            .Where(f => string.IsNullOrEmpty(_filterText) || f.Projects.Values.SelectMany(pr => pr.Packages.Values).Any(p => p.PackageName.ContainsIgnoreCase(_filterText)))
                             .OrderBy(f => f.FolderName);
                         foreach (var folder in folders)
                         {
-                            var folderExpanded = !string.IsNullOrEmpty(filterText) || folderExpandedStates.GetValueOrDefault(folder);
+                            var folderExpanded = !string.IsNullOrEmpty(_filterText) || _folderExpandedStates.GetValueOrDefault(folder);
                             var projects = folder.Projects.Values
-                                .Where(pr => string.IsNullOrEmpty(filterText) || pr.Packages.Values.Any(pa => pa.PackageName.ContainsIgnoreCase(filterText)))
+                                .Where(pr => string.IsNullOrEmpty(_filterText) || pr.Packages.Values.Any(pa => pa.PackageName.ContainsIgnoreCase(_filterText)))
                                 .OrderBy(pr => pr.ProjectName)
                                 .ToArray();
                             <div class="list-group-item list-group-item-action d-flex align-items-center small" style="cursor: pointer;" @onclick="() => ToggleFolder(folder)">
@@ -56,81 +56,85 @@
                                     @projects.Length
                                 </span>
                             </div>
-                            @if (folderExpanded)
+                            @if (!folderExpanded)
                             {
-                                if (folder.Projects.Count == 0)
-                                {
-                                    <div class="list-group-item small" style="padding-left: 2rem;">
-                                        No projects
-                                    </div>
-                                }
-                                foreach (var project in projects)
-                                {
-                                    var projectExpanded = !string.IsNullOrEmpty(filterText) || projectExpandedStates.GetValueOrDefault(project);
-                                    var packages = project.Packages.Values
-                                        .Where(p => string.IsNullOrEmpty(filterText) || p.PackageName.ContainsIgnoreCase(filterText))
-                                        .OrderBy(p => p.PackageName)
-                                        .ToArray();
-                                    <div class="list-group-item list-group-item-action d-flex align-items-center small" style="cursor: pointer; padding-left: 2rem;" @onclick="() => ToggleProject(project)">
-                                        @if (projectExpanded)
-                                        {
-                                            <SvgIcon Icon="FeatherIcon.ChevronDown" />
-                                        }
-                                        else
-                                        {
-                                            <SvgIcon Icon="FeatherIcon.ChevronRight" />
-                                        }
-                                        &nbsp;
-                                        <SvgIcon Icon="FeatherIcon.Briefcase" />
-                                        &nbsp;
-                                        @project.ProjectName
-                                        <span class="ms-auto badge rounded-pill @(packages.Length > 0 ? "bg-primary" : "bg-secondary")">
-                                            @packages.Length
-                                        </span>
-                                    </div>
+                                continue;
+                            }
+                            
+                            if (folder.Projects.Count == 0)
+                            {
+                                <div class="list-group-item small" style="padding-left: 2rem;">
+                                    No projects
+                                </div>
+                            }
+                            foreach (var project in projects)
+                            {
+                                var projectExpanded = !string.IsNullOrEmpty(_filterText) || _projectExpandedStates.GetValueOrDefault(project);
+                                var packages = project.Packages.Values
+                                    .Where(p => string.IsNullOrEmpty(_filterText) || p.PackageName.ContainsIgnoreCase(_filterText))
+                                    .OrderBy(p => p.PackageName)
+                                    .ToArray();
+                                <div class="list-group-item list-group-item-action d-flex align-items-center small" style="cursor: pointer; padding-left: 2rem;" @onclick="() => ToggleProject(project)">
                                     @if (projectExpanded)
                                     {
-                                        if(project.Packages.Count == 0)
-                                        {
-                                            <div class="list-group-item small" style="padding-left: 3rem;">
-                                                No packages
-                                            </div>
-                                        }
-                                        foreach (var package in packages)
-                                        {
-                                            var parameters = package.Parameters.Values
-                                                .Where(p => !p.ConnectionManagerParameter || showConnectionManagerParameters)
-                                                .OrderBy(p => p.ProjectParameter)
-                                                .ThenBy(p => p.ParameterName);
-                                            <div class="list-group-item list-group-item-action small @(package == selectedPackage ? "bg-body" : null)" style="cursor: pointer;" @onclick="() => TogglePackage(package)">
-                                                <div class="row" style="padding-left: 3rem;">
-                                                    <div class="col d-flex align-items-center @(package == selectedPackage ? "fw-bold" : null)">
-                                                        <SvgIcon Icon="FeatherIcon.Package" />
-                                                        &nbsp;
-                                                        <HighlightableText Text="@package.PackageName" PartToHighlight="@filterText" />
-                                                    </div>
-                                                </div>
-                                                @if (package == selectedPackage && parameters.Any())
-                                                {
-                                                    <div class="row mt-3">
-                                                        <div class="col">
-                                                            <h6 class="mx-2">Parameters</h6>
-                                                            <dl class="row mx-3">
-                                                                @foreach (var param in parameters)
-                                                                {
-                                                                    var prefix = param.ProjectParameter ? "$Project::" : "$Package::";
-                                                                    var defaultValue = param.DefaultValue ?? param.DesignDefaultValue;
-                                                                    <dt>@prefix@param.ParameterName (@param.ParameterType)</dt>
-                                                                    <dd>@defaultValue</dd>
-                                                                }
-                                                            </dl>
-                                                        </div>
-                                                    </div>
-                                                }
-                                            </div>
-
-                                        }
+                                        <SvgIcon Icon="FeatherIcon.ChevronDown" />
                                     }
+                                    else
+                                    {
+                                        <SvgIcon Icon="FeatherIcon.ChevronRight" />
+                                    }
+                                    &nbsp;
+                                    <SvgIcon Icon="FeatherIcon.Briefcase" />
+                                    &nbsp;
+                                    @project.ProjectName
+                                    <span class="ms-auto badge rounded-pill @(packages.Length > 0 ? "bg-primary" : "bg-secondary")">
+                                        @packages.Length
+                                    </span>
+                                </div>
+                                if (!projectExpanded)
+                                {
+                                    continue;
+                                }
+
+                                if(project.Packages.Count == 0)
+                                {
+                                    <div class="list-group-item small" style="padding-left: 3rem;">
+                                        No packages
+                                    </div>
+                                }
+                                foreach (var package in packages)
+                                {
+                                    var parameters = package.Parameters.Values
+                                        .Where(p => !p.ConnectionManagerParameter || _showConnectionManagerParameters)
+                                        .OrderBy(p => p.ProjectParameter)
+                                        .ThenBy(p => p.ParameterName);
+                                    <div class="list-group-item list-group-item-action small @(package == _selectedPackage ? "bg-body" : null)" style="cursor: pointer;" @onclick="() => TogglePackage(package)">
+                                        <div class="row" style="padding-left: 3rem;">
+                                            <div class="col d-flex align-items-center @(package == _selectedPackage ? "fw-bold" : null)">
+                                                <SvgIcon Icon="FeatherIcon.Package" />
+                                                &nbsp;
+                                                <HighlightableText Text="@package.PackageName" PartToHighlight="@_filterText" />
+                                            </div>
+                                        </div>
+                                        @if (package == _selectedPackage && parameters.Any())
+                                        {
+                                            <div class="row mt-3">
+                                                <div class="col">
+                                                    <h6 class="mx-2">Parameters</h6>
+                                                    <dl class="row mx-3">
+                                                        @foreach (var param in parameters)
+                                                        {
+                                                            var prefix = param.ProjectParameter ? "$Project::" : "$Package::";
+                                                            var defaultValue = param.DefaultValue ?? param.DesignDefaultValue;
+                                                            <dt>@prefix@(param.ParameterName) (@param.ParameterType)</dt>
+                                                            <dd>@defaultValue</dd>
+                                                        }
+                                                    </dl>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+
                                 }
                             }
                         }
@@ -142,15 +146,15 @@
 
     <FooterTemplate>
         <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectPackageAsync"
-                  Enabled="selectedPackage is not null">
+                  Enabled="_selectedPackage is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
         
             <div class="form-check ms-auto d-flex align-items-center">
                 <input type="checkbox" class="form-check-input" id="show_connection_manager_parameters"
-                   checked=@showConnectionManagerParameters
-                   @onchange="args => showConnectionManagerParameters = (bool)args.Value!">
+                   checked=@_showConnectionManagerParameters
+                   @onchange="args => _showConnectionManagerParameters = (bool)args.Value!">
                 <label class="form-check-label fw-normal ms-2" for="show_connection_manager_parameters">Show connection manager parameters</label>
             </div>
     </FooterTemplate>
@@ -160,59 +164,59 @@
     [Parameter]
     public EventCallback<CatalogPackage> OnPackageSelected { get; set; }
 
-    private readonly Dictionary<CatalogFolder, bool> folderExpandedStates = [];
-    private readonly Dictionary<CatalogProject, bool> projectExpandedStates = [];
+    private readonly Dictionary<CatalogFolder, bool> _folderExpandedStates = [];
+    private readonly Dictionary<CatalogProject, bool> _projectExpandedStates = [];
 
-    private HxOffcanvas? offcanvas;
-    private SSISCatalog? catalog;
-    private string filterText = string.Empty;
-    private CatalogPackage? selectedPackage;
-    private bool showConnectionManagerParameters = false;
+    private HxOffcanvas? _offcanvas;
+    private SSISCatalog? _catalog;
+    private string _filterText = string.Empty;
+    private CatalogPackage? _selectedPackage;
+    private bool _showConnectionManagerParameters = false;
 
     private async Task SelectPackageAsync()
     {
-        if (selectedPackage is not null)
+        if (_selectedPackage is not null)
         {
-            await OnPackageSelected.InvokeAsync(selectedPackage);
-            await offcanvas.LetAsync(x => x.HideAsync());
+            await OnPackageSelected.InvokeAsync(_selectedPackage);
+            await _offcanvas.LetAsync(x => x.HideAsync());
         }
     }
 
     private void ToggleFolder(CatalogFolder folder)
     {
-        var folderExpanded = folderExpandedStates.GetValueOrDefault(folder);
-        folderExpandedStates[folder] = !folderExpanded;
+        var folderExpanded = _folderExpandedStates.GetValueOrDefault(folder);
+        _folderExpandedStates[folder] = !folderExpanded;
     }
 
     private void ToggleProject(CatalogProject project)
     {
-        var projectExpanded = projectExpandedStates.GetValueOrDefault(project);
-        projectExpandedStates[project] = !projectExpanded;
+        var projectExpanded = _projectExpandedStates.GetValueOrDefault(project);
+        _projectExpandedStates[project] = !projectExpanded;
     }
 
     private void TogglePackage(CatalogPackage package)
     {
-        if (selectedPackage == package)
+        if (_selectedPackage == package)
         {
-            selectedPackage = null;
+            _selectedPackage = null;
             return;
         }
-        selectedPackage = package;
+        _selectedPackage = package;
     }
 
     public async Task ShowAsync(MsSqlConnection connection)
     {
-        folderExpandedStates.Clear();
-        projectExpandedStates.Clear();
-        catalog = null;
-        selectedPackage = null;
-        filterText = string.Empty;
+        _folderExpandedStates.Clear();
+        _projectExpandedStates.Clear();
+        _catalog = null;
+        _selectedPackage = null;
+        _filterText = string.Empty;
 
-        await offcanvas.LetAsync(x => x.ShowAsync());
+        await _offcanvas.LetAsync(x => x.ShowAsync());
         
         try
         {
-            catalog = await connection.GetCatalogPackagesAsync();
+            _catalog = await connection.GetCatalogPackagesAsync();
             StateHasChanged();
         }
         catch (Exception ex)

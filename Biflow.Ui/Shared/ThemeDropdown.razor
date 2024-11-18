@@ -2,7 +2,7 @@
 
 @inject ThemeService ThemeService
 
-<ThemeManager @ref="themeManager" />
+<ThemeManager @ref="_themeManager" />
 
 <HxDropdownButtonGroup CssClass="ms-auto">
     <HxDropdownToggleButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="m-1 text-white" style="text-decoration: none;">
@@ -31,19 +31,19 @@
         </li>
         <li class="dropdown-item @(!ThemeService.IsAuto && ThemeService.CurrentTheme == Theme.Light ? "active" : null)"
             role="button"
-        @onclick="() => themeManager!.ToggleThemeAsync(Theme.Light)">
+        @onclick="() => _themeManager!.ToggleThemeAsync(Theme.Light)">
             <SvgIcon Icon="FeatherIcon.Sun" />
             Light
         </li>
         <li class="dropdown-item @(!ThemeService.IsAuto && ThemeService.CurrentTheme == Theme.Dark ? "active" : null)"
             role="button"
-        @onclick="() => themeManager!.ToggleThemeAsync(Theme.Dark)">
+        @onclick="() => _themeManager!.ToggleThemeAsync(Theme.Dark)">
             <SvgIcon Icon="FeatherIcon.Moon" />
             Dark
         </li>
         <li class="dropdown-item @(ThemeService.IsAuto ? "active" : null)"
             role="button"
-        @onclick="() => themeManager!.ToggleThemeAutoAsync()">
+        @onclick="() => _themeManager!.ToggleThemeAutoAsync()">
             <SvgIcon Icon="LucideIcon.Contrast" />
             Auto
         </li>
@@ -51,7 +51,7 @@
 </HxDropdownButtonGroup>
 
 @code {
-    private ThemeManager? themeManager;
+    private ThemeManager? _themeManager;
 
     protected override void OnInitialized()
     {

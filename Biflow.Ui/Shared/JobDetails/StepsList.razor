@@ -55,7 +55,7 @@
                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                     <HxButton Color="ThemeColor.Primary"
                               Enabled="Steps is not null && Job is not null && Jobs is not null"
-                              @onclick="() => Job.LetAsync(j => executeModal.LetAsync(m => m.ShowAsync(j.JobId, selectedSteps)))">
+                              @onclick="() => Job.LetAsync(j => _executeModal.LetAsync(m => m.ShowAsync(j.JobId, _selectedSteps)))">
                         <SvgIcon Icon="FeatherIcon.Play" />
                         Execute...
                     </HxButton>
@@ -106,13 +106,13 @@
                 <div class="input-group-text">
                     <SvgIcon Icon="FeatherIcon.Search" />
                 </div>
-                <DebounceTextInput type="search" class="form-control" @bind-Value="stepNameFilter" placeholder="Search by name" style="min-width: 18rem; max-width: 18rem;" />
+                <DebounceTextInput type="search" class="form-control" @bind-Value="_stepNameFilter" placeholder="Search by name" style="min-width: 18rem; max-width: 18rem;" />
             </div>
         </div>
         <div class="col-auto mt-3">
             <HxButtonGroup Size="ButtonGroupSize.Small">
                 <FilterDropdown TItem="StepType"
-                                FilterSet="stepTypeFilter"
+                                FilterSet="_stepTypeFilter"
                                 Items="Steps?.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
                                 OnChange="StateHasChanged">
                     <TitleTemplate>
@@ -125,12 +125,12 @@
                     </ItemTemplate>
                 </FilterDropdown>
                 <FilterDropdown TItem="StepTag"
-                                FilterSet="tagsFilterSet"
+                                FilterSet="_tagsFilterSet"
                                 Items="Tags"
                                 IdSelector="tag => tag.TagId.ToString()"
                                 TextSelector="tag => tag.TagName"
                                 IsSearchable
-                                @bind-Mode="tagsFilterMode"
+                                @bind-Mode="_tagsFilterMode"
                                 OnChange="StateHasChanged">
                     <TitleTemplate>
                         <SvgIcon Icon="FeatherIcon.Tag" />
@@ -140,16 +140,16 @@
                         <TagBadge Tag="item" />
                     </ItemTemplate>
                 </FilterDropdown>
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => advancedFiltersOffcanvas.LetAsync(x => x.ShowAsync())">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => _advancedFiltersOffcanvas.LetAsync(x => x.ShowAsync())">
                     <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
                     More filters
                 </HxButton>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () =>
                     {
-                        tagsFilterSet.Clear();
-                        stepTypeFilter.Clear();
-                        stepNameFilter = string.Empty;
-                        await advancedFiltersOffcanvas.LetAsync(x => x.ClearAsync());
+                        _tagsFilterSet.Clear();
+                        _stepTypeFilter.Clear();
+                        _stepNameFilter = string.Empty;
+                        await _advancedFiltersOffcanvas.LetAsync(x => x.ClearAsync());
                     }">
                     <SvgIcon Icon="FeatherIcon.X" />
                     Clear
@@ -159,28 +159,28 @@
          <div class="col-auto mt-3">
              <div class="form-check form-check-inline">
                  <input type="radio" class="form-check-input" id="radio_all"
-                        checked=@(stateFilter == StateFilter.All)
-                        @onchange="() => stateFilter = StateFilter.All">
+                        checked=@(_stateFilter == StateFilter.All)
+                        @onchange="() => _stateFilter = StateFilter.All">
                  <label class="form-check-label" for="radio_all">All</label>
              </div>
              <div class="form-check form-check-inline">
                  <input type="radio" class="form-check-input" id="radio_enabled"
-                        checked=@(stateFilter == StateFilter.Enabled)
-                        @onchange="() => stateFilter = StateFilter.Enabled">
+                        checked=@(_stateFilter == StateFilter.Enabled)
+                        @onchange="() => _stateFilter = StateFilter.Enabled">
                  <label class="form-check-label" for="radio_enabled">Enabled</label>
              </div>
              <div class="form-check form-check-inline">
                  <input type="radio" class="form-check-input" id="radio_disabled"
-                        checked=@(stateFilter == StateFilter.Disabled)
-                        @onchange="() => stateFilter = StateFilter.Disabled">
+                        checked=@(_stateFilter == StateFilter.Disabled)
+                        @onchange="() => _stateFilter = StateFilter.Disabled">
                  <label class="form-check-label" for="radio_disabled">Disabled</label>
              </div>
          </div>
          <div class="col-auto mt-3">
              <div class="form-check">
                  <input type="checkbox" class="form-check-input" id="show_details"
-                        checked=@showDetails
-                        @onchange="args => showDetails = (bool)args.Value!">
+                        checked=@_showDetails
+                        @onchange="args => _showDetails = (bool)args.Value!">
                  <label class="form-check-label" for="show_details">Show details</label>
              </div>
          </div>
@@ -202,7 +202,7 @@
                 else
                 {
                     var count = FilteredSteps.Count();
-                    var disabledCount = FilteredSteps.Where(s => !s.IsEnabled).Count();
+                    var disabledCount = FilteredSteps.Count(s => !s.IsEnabled);
                     var countText = Steps.Count switch
                     {
                         0 => "No steps",
@@ -211,20 +211,20 @@
                         _ => string.Empty
                     };
                     var disabledCountText = disabledCount switch { 0 => "No disabled steps", 1 => "1 disabled step", _ => $"{disabledCount} disabled steps" };
-                    var selectedText = selectedSteps.Count switch { 1 => $"{selectedSteps.Count} selected step", > 1 => $"{selectedSteps.Count} selected steps", _ => "" };
+                    var selectedText = _selectedSteps.Count switch { 1 => $"{_selectedSteps.Count} selected step", > 1 => $"{_selectedSteps.Count} selected steps", _ => "" };
                     <li class="list-group-item list-group-header">
                         <div class="row align-items-center" style="min-height: 31px;">
                             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                                 <div class="col text-muted d-flex align-items-center">
-                                    <TriStateCheckbox Checked="@(selectedSteps.Count > 0 && Steps.Any() && count > 0)"
-                                                      Indeterminate="@(selectedSteps.Any() && selectedSteps.Count != count)"
+                                    <TriStateCheckbox Checked="@(_selectedSteps.Count > 0 && Steps.Any() && count > 0)"
+                                                      Indeterminate="@(_selectedSteps.Any() && _selectedSteps.Count != count)"
                                                       CheckedChanged="ToggleAllStepsSelected" />
                                     <div class="fw-bold small">@selectedText</div>
                                 </div>
                             </AuthorizeView>
                             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                                 <div class="col">
-                                    @if (selectedSteps.Any())
+                                    @if (_selectedSteps.Any())
                                     {
                                         <div class="btn-group">
                                             <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" title="Delete selected steps"
@@ -233,7 +233,7 @@
                                                 Delete...
                                             </HxButton>
                                             <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" title="Copy selected steps"
-                                                      @onclick="() => stepsCopyOffcanvas.LetAsync(x => x.ShowAsync(Job, selectedSteps))">
+                                                      @onclick="() => _stepsCopyOffcanvas.LetAsync(x => x.ShowAsync(Job, _selectedSteps))">
                                                 <SvgIcon Icon="FeatherIcon.Copy" />
                                                 Copy...
                                             </HxButton>
@@ -244,23 +244,23 @@
                                                 </HxDropdownToggleButton>
                                                 <HxDropdownMenu Alignment="DropdownMenuAlignment.End">
                                                     <HxDropdownHeader>Batch edit</HxDropdownHeader>
-                                                    <HxDropdownItem OnClick="() => batchEditRenameModal.LetAsync(x => x.ShowAsync())">
+                                                    <HxDropdownItem OnClick="() => _batchEditRenameModal.LetAsync(x => x.ShowAsync())">
                                                         <SvgIcon Icon="FeatherIcon.Edit3" />
                                                         Name
                                                     </HxDropdownItem>
-                                                    <HxDropdownItem OnClick="() => batchEditTagsModal.LetAsync(x => x.ShowAsync())">
+                                                    <HxDropdownItem OnClick="() => _batchEditTagsModal.LetAsync(x => x.ShowAsync())">
                                                         <SvgIcon Icon="FeatherIcon.Tag" />
                                                         Tags
                                                     </HxDropdownItem>
-                                                    <HxDropdownItem OnClick="() => batchEditExecPhaseModal.LetAsync(x => x.ShowAsync())">
+                                                    <HxDropdownItem OnClick="() => _batchEditExecPhaseModal.LetAsync(x => x.ShowAsync())">
                                                         <SvgIcon Icon="LucideIcon.Layers3" />
                                                         Execution phase
                                                     </HxDropdownItem>
-                                                    <HxDropdownItem OnClick="() => batchEditRetriesModal.LetAsync(x => x.ShowAsync())">
+                                                    <HxDropdownItem OnClick="() => _batchEditRetriesModal.LetAsync(x => x.ShowAsync())">
                                                         <SvgIcon Icon="FeatherIcon.Repeat" />
                                                         Retry attempts
                                                     </HxDropdownItem>
-                                                    <HxDropdownItem OnClick="() => batchEditRetryIntervalModal.LetAsync(x => x.ShowAsync())">
+                                                    <HxDropdownItem OnClick="() => _batchEditRetryIntervalModal.LetAsync(x => x.ShowAsync())">
                                                         <SvgIcon Icon="FeatherIcon.Clock" />
                                                         Retry interval
                                                     </HxDropdownItem>
@@ -282,7 +282,7 @@
                                  @countText
                             </div>
                             <div class="col text-muted text-end fw-bold small">
-                                @if (stateFilter == StateFilter.All)
+                                @if (_stateFilter == StateFilter.All)
                                 {
                                     @disabledCountText
                                 }
@@ -311,8 +311,8 @@
                                     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                                         <div class="form-check me-2">
                                             <input type="checkbox" class="form-check-input" id="select_step_@item.StepId"
-                                                   checked=@selectedSteps.Contains(item)
-                                           @onchange="args => { if (selectedSteps.Contains(item)) selectedSteps.Remove(item); else selectedSteps.Add(item); }">
+                                                   checked=@_selectedSteps.Contains(item)
+                                           @onchange="_ => { if (!_selectedSteps.Add(item)) _selectedSteps.Remove(item); }">
                                             <label class="form-check-label" for="select_step_@item.StepId"></label>
                                         </div>
                                     </AuthorizeView>
@@ -320,13 +320,13 @@
                                         <a class="text-body" href="javascript:void(0)" @onclick="() => ShowEditModal(item)">
                                             <StepTypeIcon StepType="@item.StepType" />
                                             &nbsp;
-                                            <HighlightableText Text="@item.StepName" PartToHighlight="@stepNameFilter" />
+                                            <HighlightableText Text="@item.StepName" PartToHighlight="@_stepNameFilter" />
                                         </a>
                                     </AuthorizeView>
                                     <AuthorizeView Roles="@($"{Roles.Operator}, {Roles.Viewer}")">
                                         <span>
                                             <StepTypeIcon StepType="@item.StepType" />
-                                            <HighlightableText Text="@item.StepName" PartToHighlight="@stepNameFilter" />
+                                            <HighlightableText Text="@item.StepName" PartToHighlight="@_stepNameFilter" />
                                         </span>
                                     </AuthorizeView>
                                 </div>
@@ -345,8 +345,8 @@
                                     }
 
                                     @if (item.ExecutionConditionParameters.Any(p => p.JobParameterId is not null)
-                                   || item is IHasStepParameters hasParams && hasParams.StepParameters.Any(p => p.InheritFromJobParameterId is not null || p.ExpressionParameters.Any(ep => ep.InheritFromJobParameter is not null))
-                                   || item is SqlStep sql && sql.ResultCaptureJobParameterId is not null)
+                                         || item is IHasStepParameters hasParams && hasParams.StepParameters.Any(p => p.InheritFromJobParameterId is not null || p.ExpressionParameters.Any(ep => ep.InheritFromJobParameter is not null))
+                                         || item is SqlStep { ResultCaptureJobParameterId: not null })
                                     {
                                         <div title="Step uses job parameters" class="text-body ms-3">
                                             <SvgIcon Icon="FeatherIcon.AtSign" />
@@ -385,49 +385,49 @@
                                     }
                                 </div>
                             </div>
-                            @if (showDetails || !string.IsNullOrEmpty(advancedFiltersOffcanvas?.Description))
+                            @if (_showDetails || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.Description))
                             {
                                 <div class="row">
                                     <div class="col text-truncate">
-                                        <small class="text-secondary"><em><HighlightableText Text="@item.StepDescription" PartToHighlight="@advancedFiltersOffcanvas?.Description" /></em></small>
+                                        <small class="text-secondary"><em><HighlightableText Text="@item.StepDescription" PartToHighlight="@_advancedFiltersOffcanvas?.Description" /></em></small>
                                     </div>
                                 </div>
                             }
-                            @if ((showDetails || !string.IsNullOrEmpty(advancedFiltersOffcanvas?.SqlStatement)) && item is SqlStep sqlStep)
+                            @if ((_showDetails || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.SqlStatement)) && item is SqlStep sqlStep)
                             {
                                 <div class="row">
                                     <div class="col text-truncate">
-                                        <small class="text-secondary font-monospace"><HighlightableText Text="@sqlStep.SqlStatement" PartToHighlight="@advancedFiltersOffcanvas?.SqlStatement" /></small>
+                                        <small class="text-secondary font-monospace"><HighlightableText Text="@sqlStep.SqlStatement" PartToHighlight="@_advancedFiltersOffcanvas?.SqlStatement" /></small>
                                     </div>
                                 </div>
                             }
-                            @if ((showDetails || !string.IsNullOrEmpty(advancedFiltersOffcanvas?.PackageFolder)
-                           || !string.IsNullOrEmpty(advancedFiltersOffcanvas?.PackageProject)
-                           || !string.IsNullOrEmpty(advancedFiltersOffcanvas?.PackageName)) && item is PackageStep package)
-                            {
-                                <div class="row">
-                                    <div class="col text-truncate">
-                                        <small class="text-secondary">
-                                            <HighlightableText Text="@package.PackageFolderName" PartToHighlight="@advancedFiltersOffcanvas?.PackageFolder" />
-                                            \
-                                            <HighlightableText Text="@package.PackageProjectName" PartToHighlight="@advancedFiltersOffcanvas?.PackageProject" />
-                                            \
-                                            <HighlightableText Text="@package.PackageName" PartToHighlight="@advancedFiltersOffcanvas?.PackageName" />
-                                        </small>
-                                    </div>
-                                </div>
-                            }
-                            @if ((showDetails || !string.IsNullOrEmpty(advancedFiltersOffcanvas?.PipelineName)) && item is PipelineStep pipeline)
+                            @if ((_showDetails || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.PackageFolder)
+                           || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.PackageProject)
+                           || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.PackageName)) && item is PackageStep package)
                             {
                                 <div class="row">
                                     <div class="col text-truncate">
                                         <small class="text-secondary">
-                                            <HighlightableText Text="@pipeline.PipelineName" PartToHighlight="@advancedFiltersOffcanvas?.PipelineName" />
+                                            <HighlightableText Text="@package.PackageFolderName" PartToHighlight="@_advancedFiltersOffcanvas?.PackageFolder" />
+                                            \
+                                            <HighlightableText Text="@package.PackageProjectName" PartToHighlight="@_advancedFiltersOffcanvas?.PackageProject" />
+                                            \
+                                            <HighlightableText Text="@package.PackageName" PartToHighlight="@_advancedFiltersOffcanvas?.PackageName" />
                                         </small>
                                     </div>
                                 </div>
                             }
-                            @if (showDetails && item is AgentJobStep agentJob)
+                            @if ((_showDetails || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.PipelineName)) && item is PipelineStep pipeline)
+                            {
+                                <div class="row">
+                                    <div class="col text-truncate">
+                                        <small class="text-secondary">
+                                            <HighlightableText Text="@pipeline.PipelineName" PartToHighlight="@_advancedFiltersOffcanvas?.PipelineName" />
+                                        </small>
+                                    </div>
+                                </div>
+                            }
+                            @if (_showDetails && item is AgentJobStep agentJob)
                             {
                                 <div class="row">
                                     <div class="col text-truncate">
@@ -435,29 +435,29 @@
                                     </div>
                                 </div>
                             }
-                            @if ((showDetails || !string.IsNullOrEmpty(advancedFiltersOffcanvas?.ExeFilePath)
-                           || !string.IsNullOrEmpty(advancedFiltersOffcanvas?.ExeArguments)) && item is ExeStep exe)
+                            @if ((_showDetails || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.ExeFilePath)
+                           || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.ExeArguments)) && item is ExeStep exe)
                             {
                                 <div class="row">
                                     <div class="col text-truncate">
                                         <small class="text-secondary">
-                                            <HighlightableText Text="@exe.ExeFileName" PartToHighlight="@advancedFiltersOffcanvas?.ExeFilePath" />
-                                            <HighlightableText Text="@exe.ExeArguments" PartToHighlight="@advancedFiltersOffcanvas?.ExeArguments" />
+                                            <HighlightableText Text="@exe.ExeFileName" PartToHighlight="@_advancedFiltersOffcanvas?.ExeFilePath" />
+                                            <HighlightableText Text="@exe.ExeArguments" PartToHighlight="@_advancedFiltersOffcanvas?.ExeArguments" />
                                         </small>
                                     </div>
                                 </div>
                             }
-                            @if ((showDetails || !string.IsNullOrEmpty(advancedFiltersOffcanvas?.FunctionUrl)) && item is FunctionStep function)
+                            @if ((_showDetails || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.FunctionUrl)) && item is FunctionStep function)
                             {
                                 <div class="row">
                                     <div class="col text-truncate">
                                         <small class="text-secondary">
-                                            <HighlightableText Text="@function.FunctionUrl" PartToHighlight="@advancedFiltersOffcanvas?.FunctionUrl" />
+                                            <HighlightableText Text="@function.FunctionUrl" PartToHighlight="@_advancedFiltersOffcanvas?.FunctionUrl" />
                                         </small>
                                     </div>
                                 </div>
                             }
-                            @if (showDetails && item is TabularStep tabular)
+                            @if (_showDetails && item is TabularStep tabular)
                             {
                                 var tableText = string.IsNullOrEmpty(tabular.TabularTableName) ? null : $" \\ {tabular.TabularTableName}";
                                 var partitionText = string.IsNullOrEmpty(tabular.TabularPartitionName) ? null : $" \\ {tabular.TabularPartitionName}";
@@ -478,12 +478,12 @@
                                     <SvgIcon Icon="FeatherIcon.Edit2" />
                                     Edit
                                 </DropdownMenuItem>
-                                <DropdownMenuItem @onclick="() => stepsCopyOffcanvas.LetAsync(x => x.ShowAsync(Job, [item]))">
+                                <DropdownMenuItem @onclick="() => _stepsCopyOffcanvas.LetAsync(x => x.ShowAsync(Job, [item]))">
                                     <SvgIcon Icon="FeatherIcon.Copy" />
                                     Copy...
                                 </DropdownMenuItem>
                             </AuthorizeView>
-                            <DropdownMenuItem @onclick="() => stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
+                            <DropdownMenuItem @onclick="() => _stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
                                 <SvgIcon Icon="FeatherIcon.Activity" />
                                 History
                             </DropdownMenuItem>
@@ -491,7 +491,7 @@
                                 <SvgIcon Icon="LucideIcon.Workflow" />
                                 Dependencies
                             </DropdownMenuLink>
-                            <DropdownMenuItem @onclick="() => stepDetailsModal.LetAsync(x => x.ShowAsync(item))">
+                            <DropdownMenuItem @onclick="() => _stepDetailsModal.LetAsync(x => x.ShowAsync(item))">
                                 <SvgIcon Icon="FeatherIcon.Info" />
                                 Details
                             </DropdownMenuItem>
@@ -510,31 +510,31 @@
 }
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-    <StepsCopyOffcanvas @ref="stepsCopyOffcanvas"
+    <StepsCopyOffcanvas @ref="_stepsCopyOffcanvas"
                         Jobs="Jobs"
                         OnStepsCopied="OnStepsCopied" />
 
-    <StepsBatchEditTagsModal @ref="batchEditTagsModal"
-                             SelectedSteps="selectedSteps"
+    <StepsBatchEditTagsModal @ref="_batchEditTagsModal"
+                             SelectedSteps="_selectedSteps"
                              OnStepsSubmit="OnStepsSubmit" />
 
-    <StepsBatchEditExecPhaseModal @ref="batchEditExecPhaseModal"
-                                  SelectedSteps="selectedSteps"
+    <StepsBatchEditExecPhaseModal @ref="_batchEditExecPhaseModal"
+                                  SelectedSteps="_selectedSteps"
                                   OnStepsSubmit="OnStepsSubmit" />
 
-    <StepsBatchEditRenameModal @ref="batchEditRenameModal"
-                               SelectedSteps="selectedSteps"
+    <StepsBatchEditRenameModal @ref="_batchEditRenameModal"
+                               SelectedSteps="_selectedSteps"
                                OnStepsSubmit="OnStepsSubmit" />
 
-    <StepsBatchEditRetriesModal @ref="batchEditRetriesModal"
-                                SelectedSteps="selectedSteps"
+    <StepsBatchEditRetriesModal @ref="_batchEditRetriesModal"
+                                SelectedSteps="_selectedSteps"
                                 OnStepsSubmit="OnStepsSubmit" />
 
-    <StepsBatchEditRetryIntervalModal @ref="batchEditRetryIntervalModal"
-                                      SelectedSteps="selectedSteps"
+    <StepsBatchEditRetryIntervalModal @ref="_batchEditRetryIntervalModal"
+                                      SelectedSteps="_selectedSteps"
                                       OnStepsSubmit="OnStepsSubmit" />
 
-    <SqlStepEditModal @ref="stepEditModals[StepType.Sql]"
+    <SqlStepEditModal @ref="_stepEditModals[StepType.Sql]"
                       SqlConnections="SqlConnections"
                       MsSqlConnections="MsSqlConnections"
                       AsConnections="AsConnections"
@@ -542,7 +542,7 @@
                       QlikClients="QlikCloudClients"
                       Credentials="Credentials"
                       OnStepSubmit="OnStepSubmit" />
-    <TabularStepEditModal @ref="stepEditModals[StepType.Tabular]"
+    <TabularStepEditModal @ref="_stepEditModals[StepType.Tabular]"
                           SqlConnections="SqlConnections"
                           MsSqlConnections="MsSqlConnections"
                           AsConnections="AsConnections"
@@ -550,7 +550,7 @@
                           QlikClients="QlikCloudClients"
                           Credentials="Credentials"
                           OnStepSubmit="OnStepSubmit" />
-    <EmailStepEditModal @ref="stepEditModals[StepType.Email]"
+    <EmailStepEditModal @ref="_stepEditModals[StepType.Email]"
                         SqlConnections="SqlConnections"
                         MsSqlConnections="MsSqlConnections"
                         AsConnections="AsConnections"
@@ -558,7 +558,7 @@
                         QlikClients="QlikCloudClients"
                         Credentials="Credentials"
                         OnStepSubmit="OnStepSubmit" />
-    <AgentJobStepEditModal @ref="stepEditModals[StepType.AgentJob]"
+    <AgentJobStepEditModal @ref="_stepEditModals[StepType.AgentJob]"
                            SqlConnections="SqlConnections"
                            MsSqlConnections="MsSqlConnections"
                            AsConnections="AsConnections"
@@ -566,7 +566,7 @@
                            QlikClients="QlikCloudClients"
                            Credentials="Credentials"
                            OnStepSubmit="OnStepSubmit" />
-    <DatasetStepEditModal @ref="stepEditModals[StepType.Dataset]"
+    <DatasetStepEditModal @ref="_stepEditModals[StepType.Dataset]"
                           SqlConnections="SqlConnections"
                           MsSqlConnections="MsSqlConnections"
                           AsConnections="AsConnections"
@@ -574,7 +574,7 @@
                           QlikClients="QlikCloudClients"
                           Credentials="Credentials"
                           OnStepSubmit="OnStepSubmit" />
-    <ExeStepEditModal @ref="stepEditModals[StepType.Exe]"
+    <ExeStepEditModal @ref="_stepEditModals[StepType.Exe]"
                       SqlConnections="SqlConnections"
                       MsSqlConnections="MsSqlConnections"
                       AsConnections="AsConnections"
@@ -582,7 +582,7 @@
                       QlikClients="QlikCloudClients"
                       Credentials="Credentials"
                       OnStepSubmit="OnStepSubmit" />
-    <JobStepEditModal @ref="stepEditModals[StepType.Job]"
+    <JobStepEditModal @ref="_stepEditModals[StepType.Job]"
                       SqlConnections="SqlConnections"
                       MsSqlConnections="MsSqlConnections"
                       AsConnections="AsConnections"
@@ -590,7 +590,7 @@
                       QlikClients="QlikCloudClients"
                       Credentials="Credentials"
                       OnStepSubmit="OnStepSubmit" />
-    <FunctionStepEditModal @ref="stepEditModals[StepType.Function]"
+    <FunctionStepEditModal @ref="_stepEditModals[StepType.Function]"
                            SqlConnections="SqlConnections"
                            MsSqlConnections="MsSqlConnections"
                            AsConnections="AsConnections"
@@ -599,7 +599,7 @@
                            QlikClients="QlikCloudClients"
                            Credentials="Credentials"
                            OnStepSubmit="OnStepSubmit" />
-    <PackageStepEditModal @ref="stepEditModals[StepType.Package]"
+    <PackageStepEditModal @ref="_stepEditModals[StepType.Package]"
                           SqlConnections="SqlConnections"
                           MsSqlConnections="MsSqlConnections"
                           AsConnections="AsConnections"
@@ -607,7 +607,7 @@
                           QlikClients="QlikCloudClients"
                           Credentials="Credentials"
                           OnStepSubmit="OnStepSubmit" />
-    <PipelineStepEditModal @ref="stepEditModals[StepType.Pipeline]"
+    <PipelineStepEditModal @ref="_stepEditModals[StepType.Pipeline]"
                            SqlConnections="SqlConnections"
                            MsSqlConnections="MsSqlConnections"
                            AsConnections="AsConnections"
@@ -616,7 +616,7 @@
                            Credentials="Credentials"
                            PipelineClients="PipelineClients"
                            OnStepSubmit="OnStepSubmit" />
-    <QlikStepEditModal @ref="stepEditModals[StepType.Qlik]"
+    <QlikStepEditModal @ref="_stepEditModals[StepType.Qlik]"
                        AppRegistrations="AppRegistrations"
                        SqlConnections="SqlConnections"
                        MsSqlConnections="MsSqlConnections"
@@ -624,7 +624,7 @@
                        QlikClients="QlikCloudClients"
                        Credentials="Credentials"
                        OnStepSubmit="OnStepSubmit" />
-    <DatabricksStepEditModal @ref="stepEditModals[StepType.Databricks]"
+    <DatabricksStepEditModal @ref="_stepEditModals[StepType.Databricks]"
                              SqlConnections="SqlConnections"
                              MsSqlConnections="MsSqlConnections"
                              AsConnections="AsConnections"
@@ -633,7 +633,7 @@
                              DatabricksWorkspaces="DatabricksWorkspaces"
                              Credentials="Credentials"
                              OnStepSubmit="OnStepSubmit" />
-    <DbtStepEditModal @ref="stepEditModals[StepType.Dbt]"
+    <DbtStepEditModal @ref="_stepEditModals[StepType.Dbt]"
                       SqlConnections="SqlConnections"
                       MsSqlConnections="MsSqlConnections"
                       AsConnections="AsConnections"
@@ -663,17 +663,17 @@
         .AsEnumerable() ?? [];
 }
 
-<AdvancedFiltersOffcanvas @ref="advancedFiltersOffcanvas"
+<AdvancedFiltersOffcanvas @ref="_advancedFiltersOffcanvas"
     OnFiltersChanged="StateHasChanged"
     Connections="connections"
     FunctionApps="functionApps"
     PipelineClients="pipelineClients"
     ExecutionPhases="executionPhases" />
 
-<StepDetailsModal @ref="stepDetailsModal" />
+<StepDetailsModal @ref="_stepDetailsModal" />
 
-<StepHistoryOffcanvas @ref="stepHistoryOffcanvas" />
+<StepHistoryOffcanvas @ref="_stepHistoryOffcanvas" />
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-    <ExecuteModal @ref="executeModal" />
+    <ExecuteModal @ref="_executeModal" />
 </AuthorizeView>

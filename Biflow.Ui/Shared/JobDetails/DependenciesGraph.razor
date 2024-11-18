@@ -19,10 +19,10 @@
     <div class="col" style="max-width: 40rem;">
         <HxAutosuggest TValue="Guid?"
                        TItem="StepProjection"
-                       @bind-Value="stepFilter"
+                       @bind-Value="_stepFilter"
                        @bind-Value:after="LoadGraphAsync"
                        DataProvider="ProvideSuggestions"
-                       ItemFromValueResolver="v => Task.FromResult(stepSlims?.FirstOrDefault(s => s.StepId == v)!)"
+                       ItemFromValueResolver="v => Task.FromResult(_stepSlims?.FirstOrDefault(s => s.StepId == v)!)"
                        ValueSelector="item => item.StepId"
                        TextSelector="@(item => item.StepName ?? "")"
                        MinimumLength="0"
@@ -49,7 +49,7 @@
                     </span>
                 </ChildContent>
             </HxPopover>
-            <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthBackwards" disabled=@(stepFilter is null) style="max-width: 9rem;" />
+            <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthBackwards" disabled=@(_stepFilter is null) style="max-width: 9rem;" />
         </div>
         <div class="form-group ms-3">
             <label class="form-label">Depth forwards</label>
@@ -60,7 +60,7 @@
                     </span>
                 </ChildContent>
             </HxPopover>
-            <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthForwards" disabled=@(stepFilter is null) style="max-width: 9rem;" />
+            <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthForwards" disabled=@(_stepFilter is null) style="max-width: 9rem;" />
         </div>
         <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="mx-3">
             <HxButton CssClass="btn-auto" Size="ButtonSize.Small" Color="ThemeColor.None" OnClick="LoadGraphAsync">
@@ -75,8 +75,8 @@
                         <div class="col">
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" id="direction_radio_admin"
-                                       checked=@(direction == DependencyGraphDirection.LeftToRight)
-                                       @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.LeftToRight))">
+                                       checked=@(_direction == DependencyGraphDirection.LeftToRight)
+                                       @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.LeftToRight))">
                                 <label class="form-check-label fw-normal" for="direction_radio_admin">
                                     <SvgIcon Icon="FeatherIcon.ArrowRight"/>
                                     Left to right
@@ -84,8 +84,8 @@
                             </div>
                             <div class="form-check mt-1">
                                 <input class="form-check-input" type="radio" id="direction_radio_editor"
-                                       checked=@(direction == DependencyGraphDirection.RightToLeft)
-                                       @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.RightToLeft))">
+                                       checked=@(_direction == DependencyGraphDirection.RightToLeft)
+                                       @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.RightToLeft))">
                                 <label class="form-check-label fw-normal" for="direction_radio_editor">
                                     <SvgIcon Icon="FeatherIcon.ArrowLeft"/>
                                     Right to left
@@ -93,8 +93,8 @@
                             </div>
                             <div class="form-check mt-1">
                                 <input class="form-check-input" type="radio" id="direction_radio_operator"
-                                       checked=@(direction == DependencyGraphDirection.TopToBottom)
-                                       @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.TopToBottom))">
+                                       checked=@(_direction == DependencyGraphDirection.TopToBottom)
+                                       @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.TopToBottom))">
                                 <label class="form-check-label fw-normal" for="direction_radio_operator">
                                     <SvgIcon Icon="FeatherIcon.ArrowDown"/>
                                     Top to bottom
@@ -102,8 +102,8 @@
                             </div>
                             <div class="form-check mt-1">
                                 <input class="form-check-input" type="radio" id="direction_radio_viewer"
-                                       checked=@(direction == DependencyGraphDirection.BottomToTop)
-                                       @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.BottomToTop))">
+                                       checked=@(_direction == DependencyGraphDirection.BottomToTop)
+                                       @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.BottomToTop))">
                                 <label class="form-check-label fw-normal" for="direction_radio_viewer">
                                     <SvgIcon Icon="FeatherIcon.ArrowUp"/>
                                     Bottom to top
@@ -115,15 +115,15 @@
             </HxDropdownButtonGroup>
         </HxButtonGroup>
         <FilterDropdown TItem="StepTag"
-                        FilterSet="tagsFilterSet"
+                        FilterSet="_tagsFilterSet"
                         Items="Tags"
                         IdSelector="tag => tag.TagId.ToString()"
                         TextSelector="tag => tag.TagName"
                         IsSearchable
-                        @bind-Mode="tagsFilterMode"
+                        @bind-Mode="_tagsFilterMode"
                         OnChange="LoadGraphAsync"
-                        ShowPill="stepFilter is null"
-                        Enabled="stepFilter is null">
+                        ShowPill="_stepFilter is null"
+                        Enabled="_stepFilter is null">
             <TitleTemplate>
                 <SvgIcon Icon="FeatherIcon.Tag" />
                 Tags
@@ -138,9 +138,9 @@
 
 @if (Job is not null)
 {
-    <DependencyGraph @ref="dependencyGraph"
+    <DependencyGraph @ref="_dependencyGraph"
     TItem="StepProjection"
-    ItemFromNodeIdSelector="nodeId => stepSlims?.FirstOrDefault(s => s.StepId.ToString() == nodeId)"
+    ItemFromNodeIdSelector="nodeId => _stepSlims?.FirstOrDefault(s => s.StepId.ToString() == nodeId)"
     AfterRender="LoadGraphAsync"
     CssClass="dependency-graph">
         <ContextMenuTemplate Context="step">
@@ -151,7 +151,7 @@
                 </h6>
             </li>
             <li>
-                <span class="dropdown-item" role="button" @onclick="async () => { stepFilter = step.StepId; await LoadGraphAsync();}">
+                <span class="dropdown-item" role="button" @onclick="async () => { _stepFilter = step.StepId; await LoadGraphAsync();}">
                     <SvgIcon Icon="FeatherIcon.Filter" />
                     Limit graph to this
                 </span>
@@ -199,7 +199,7 @@
                 </li>
             }
             <li>
-                <span class="dropdown-item" role="button" @onclick="() => stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
+                <span class="dropdown-item" role="button" @onclick="() => _stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
                     <SvgIcon Icon="FeatherIcon.Activity" />
                     History
                 </span>
@@ -208,10 +208,10 @@
     </DependencyGraph>
 }
 
-<StepHistoryOffcanvas @ref="stepHistoryOffcanvas" />
+<StepHistoryOffcanvas @ref="_stepHistoryOffcanvas" />
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-    <SqlStepEditModal @ref="stepEditModals[StepType.Sql]"
+    <SqlStepEditModal @ref="_stepEditModals[StepType.Sql]"
                       SqlConnections="SqlConnections"
                       MsSqlConnections="MsSqlConnections"
                       AsConnections="AsConnections"
@@ -219,7 +219,7 @@
                       QlikClients="QlikCloudClients"
                       Credentials="Credentials"
                       OnStepSubmit="OnStepSubmit" />
-    <TabularStepEditModal @ref="stepEditModals[StepType.Tabular]"
+    <TabularStepEditModal @ref="_stepEditModals[StepType.Tabular]"
                           SqlConnections="SqlConnections"
                           MsSqlConnections="MsSqlConnections"
                           AsConnections="AsConnections"
@@ -227,7 +227,7 @@
                           QlikClients="QlikCloudClients"
                           Credentials="Credentials"
                           OnStepSubmit="OnStepSubmit" />
-    <DatasetStepEditModal @ref="stepEditModals[StepType.Dataset]"
+    <DatasetStepEditModal @ref="_stepEditModals[StepType.Dataset]"
                           SqlConnections="SqlConnections"
                           MsSqlConnections="MsSqlConnections"
                           AsConnections="AsConnections"
@@ -235,7 +235,7 @@
                           QlikClients="QlikCloudClients"
                           Credentials="Credentials"
                           OnStepSubmit="OnStepSubmit" />
-    <ExeStepEditModal @ref="stepEditModals[StepType.Exe]"
+    <ExeStepEditModal @ref="_stepEditModals[StepType.Exe]"
                       SqlConnections="SqlConnections"
                       MsSqlConnections="MsSqlConnections"
                       AsConnections="AsConnections"
@@ -243,14 +243,14 @@
                       QlikClients="QlikCloudClients"
                       Credentials="Credentials"
                       OnStepSubmit="OnStepSubmit" />
-    <JobStepEditModal @ref="stepEditModals[StepType.Job]"
+    <JobStepEditModal @ref="_stepEditModals[StepType.Job]"
                       SqlConnections="SqlConnections"
                       MsSqlConnections="MsSqlConnections"
                       AsConnections="AsConnections"
                       AppRegistrations="AppRegistrations"
                       QlikClients="QlikCloudClients"
                       OnStepSubmit="OnStepSubmit" />
-    <PackageStepEditModal @ref="stepEditModals[StepType.Package]"
+    <PackageStepEditModal @ref="_stepEditModals[StepType.Package]"
                           SqlConnections="SqlConnections"
                           MsSqlConnections="MsSqlConnections"
                           AsConnections="AsConnections"
@@ -258,7 +258,7 @@
                           QlikClients="QlikCloudClients"
                           Credentials="Credentials"
                           OnStepSubmit="OnStepSubmit" />
-    <PipelineStepEditModal @ref="stepEditModals[StepType.Pipeline]"
+    <PipelineStepEditModal @ref="_stepEditModals[StepType.Pipeline]"
                            SqlConnections="SqlConnections"
                            MsSqlConnections="MsSqlConnections"
                            AsConnections="AsConnections"
@@ -267,7 +267,7 @@
                            PipelineClients="PipelineClients"
                            Credentials="Credentials"
                            OnStepSubmit="OnStepSubmit" />
-    <FunctionStepEditModal @ref="stepEditModals[StepType.Function]"
+    <FunctionStepEditModal @ref="_stepEditModals[StepType.Function]"
                            SqlConnections="SqlConnections"
                            MsSqlConnections="MsSqlConnections"
                            AsConnections="AsConnections"
@@ -276,7 +276,7 @@
                            FunctionApps="FunctionApps"
                            Credentials="Credentials"
                            OnStepSubmit="OnStepSubmit" />
-    <AgentJobStepEditModal @ref="stepEditModals[StepType.AgentJob]"
+    <AgentJobStepEditModal @ref="_stepEditModals[StepType.AgentJob]"
                            SqlConnections="SqlConnections"
                            MsSqlConnections="MsSqlConnections"
                            AsConnections="AsConnections"
@@ -284,7 +284,7 @@
                            QlikClients="QlikCloudClients"
                            Credentials="Credentials"
                            OnStepSubmit="OnStepSubmit" />
-    <EmailStepEditModal @ref="stepEditModals[StepType.Email]"
+    <EmailStepEditModal @ref="_stepEditModals[StepType.Email]"
                         SqlConnections="SqlConnections"
                         MsSqlConnections="MsSqlConnections"
                         AsConnections="AsConnections"
@@ -292,7 +292,7 @@
                         QlikClients="QlikCloudClients"
                         Credentials="Credentials"
                         OnStepSubmit="OnStepSubmit" />
-    <QlikStepEditModal @ref="stepEditModals[StepType.Qlik]"
+    <QlikStepEditModal @ref="_stepEditModals[StepType.Qlik]"
                        SqlConnections="SqlConnections"
                        MsSqlConnections="MsSqlConnections"
                        AsConnections="AsConnections"
@@ -300,7 +300,7 @@
                        QlikClients="QlikCloudClients"
                        Credentials="Credentials"
                        OnStepSubmit="OnStepSubmit" />
-    <DatabricksStepEditModal @ref="stepEditModals[StepType.Databricks]"
+    <DatabricksStepEditModal @ref="_stepEditModals[StepType.Databricks]"
                              SqlConnections="SqlConnections"
                              MsSqlConnections="MsSqlConnections"
                              AsConnections="AsConnections"
@@ -309,7 +309,7 @@
                              DatabricksWorkspaces="DatabricksWorkspaces"
                              Credentials="Credentials"
                              OnStepSubmit="OnStepSubmit" />
-    <DbtStepEditModal @ref="stepEditModals[StepType.Dbt]"
+    <DbtStepEditModal @ref="_stepEditModals[StepType.Dbt]"
                       SqlConnections="SqlConnections"
                       MsSqlConnections="MsSqlConnections"
                       AsConnections="AsConnections"

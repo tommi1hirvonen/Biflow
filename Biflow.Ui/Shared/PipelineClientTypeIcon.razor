@@ -7,6 +7,8 @@
     case PipelineClientType.Synapse:
         <SvgIcon Icon="FeatherIcon.Cpu" />
         break;
+    default:
+        throw new ArgumentOutOfRangeException();
 }
 
 @code {

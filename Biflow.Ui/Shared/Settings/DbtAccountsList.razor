@@ -16,7 +16,7 @@
 
 <HxButton Color="ThemeColor.Success"
           @onclick="() => ShowEditModalAsync(null)"
-          Enabled="accounts is not null">
+          Enabled="_accounts is not null">
     Add account
 </HxButton>
 
@@ -37,17 +37,17 @@
             </tr>
         </thead>
         <tbody>
-            @if (accounts is null)
+            @if (_accounts is null)
             {
                 <tr><td colspan="6" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
-            else if (accounts.Count == 0)
+            else if (_accounts.Count == 0)
             {
                 <tr><td colspan="6">No dbt Cloud accounts</td></tr>
             }
             else
             {
-                @foreach (var account in accounts.OrderBy(a => a.DbtAccountName))
+                @foreach (var account in _accounts.OrderBy(a => a.DbtAccountName))
                 {
                     var jobs = account.Steps.Select(s => s.Job).Distinct().Count();
                     var steps = account.Steps.Count();
@@ -84,8 +84,8 @@
                             <a class="text-body" href="javascript:void(0)"
                                @onclick="async () =>
                                 {
-                                stepsAccount = account;
-                                await stepsModal.LetAsync(x => x.ShowAsync());
+                                _stepsAccount = account;
+                                await _stepsModal.LetAsync(x => x.ShowAsync());
                                 }">
                                 @(steps > 0 ? $"{steps} step(s)" : null)
                             </a>
@@ -97,9 +97,9 @@
     </table>
 </div>
 
-<DbtAccountEditModal @ref="editModal" OnAccountSubmit="OnAccountSubmitAsync" />
+<DbtAccountEditModal @ref="_editModal" OnAccountSubmit="OnAccountSubmitAsync" />
 
-<HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsAccount?.DbtAccountName}")">
+<HxModal @ref="_stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {_stepsAccount?.DbtAccountName}")">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -111,7 +111,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var step in stepsAccount?.Steps
+                        @foreach (var step in _stepsAccount?.Steps
                         .OrderBy(s => s.Job.JobName)
                         .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
                         {
@@ -132,20 +132,20 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await stepsModal.LetAsync(x => x.HideAsync())">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await _stepsModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
 @code {
-    private List<DbtAccount>? accounts;
-    private DbtAccountEditModal? editModal;
-    private DbtAccount? stepsAccount;
-    private HxModal? stepsModal;
+    private List<DbtAccount>? _accounts;
+    private DbtAccountEditModal? _editModal;
+    private DbtAccount? _stepsAccount;
+    private HxModal? _stepsModal;
 
     protected override async Task OnInitializedAsync()
     {
         await using var context = await DbFactory.CreateDbContextAsync();
-        accounts = await context.DbtAccounts
+        _accounts = await context.DbtAccounts
             .AsNoTrackingWithIdentityResolution()
             .Include(f => f.Steps)
             .ThenInclude(step => step.Job)
@@ -158,7 +158,7 @@
         try
         {
             await Mediator.SendAsync(new DeleteDbtAccountCommand(account.DbtAccountId));
-            accounts?.Remove(account);
+            _accounts?.Remove(account);
         }
         catch (Exception ex)
         {
@@ -172,17 +172,16 @@
         if (account.DbtAccountId == Guid.Empty)
         {
             await Mediator.SendAsync(new CreateDbtAccountCommand(account));
-            accounts?.Add(account);
         }
         else
         {
             await Mediator.SendAsync(new UpdateDbtAccountCommand(account));
-            accounts?.RemoveAll(a => a.DbtAccountId == account.DbtAccountId);
-            accounts?.Add(account);
+            _accounts?.RemoveAll(a => a.DbtAccountId == account.DbtAccountId);
         }
+        _accounts?.Add(account);
         StateHasChanged();
     }
 
     private async Task ShowEditModalAsync(DbtAccount? account) =>
-        await editModal.LetAsync(x => x.ShowAsync(account?.DbtAccountId ?? Guid.Empty));
+        await _editModal.LetAsync(x => x.ShowAsync(account?.DbtAccountId ?? Guid.Empty));
 }

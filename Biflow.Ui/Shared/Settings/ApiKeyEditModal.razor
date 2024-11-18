@@ -1,18 +1,18 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject ToasterService Toaster
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 
-<HxModal @ref="modal" Size="ModalSize.Regular" Title="@(key?.Id == Guid.Empty ? "New API key" : "Edit API key")">
+<HxModal @ref="_modal" Size="ModalSize.Regular" Title="@(_key?.Id == Guid.Empty ? "New API key" : "Edit API key")">
     <BodyTemplate>
-        @if (key is not null)
+        @if (_key is not null)
         {
             <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
-            <EditForm Model="key" id="api_key_edit_form" OnValidSubmit="SubmitApiKeyAsync">
+            <EditForm Model="_key" id="api_key_edit_form" OnValidSubmit="SubmitApiKeyAsync">
                 <div class="row">
                     <div class="col mx-3">
                         <DataAnnotationsValidator />
                         <ValidationSummary />
-                        <FluentValidationValidator Validator="validator" />
+                        <FluentValidationValidator Validator="_validator" />
 
                         <div class="row">
                             <div class="col">
@@ -21,14 +21,14 @@
                                     <div class="input-group-text">
                                         <SvgIcon Icon="FeatherIcon.Edit3" />
                                     </div>
-                                    <InputText class="form-control form-control-sm" @bind-Value="key.Name"></InputText>
+                                    <InputText class="form-control form-control-sm" @bind-Value="_key.Name"></InputText>
                                 </div>
                             </div>
                         </div>
 
                         @{
-                            var keyDisplayValue = key.Id == Guid.Empty
-                                ? key.Value
+                            var keyDisplayValue = _key.Id == Guid.Empty
+                                ? _key.Value
                                 : new string('*', 64);
                         }
                         <div class="row mt-3">
@@ -39,7 +39,7 @@
                                         <SvgIcon Icon="FeatherIcon.Key" />
                                     </div>
                                     <textarea class="form-control form-control-sm font-monospace" disabled value="@keyDisplayValue" rows="3"></textarea>
-                                    @if (key.Id == Guid.Empty)
+                                    @if (_key.Id == Guid.Empty)
                                     {
                                         <div class="form-text">Copy and save the API key someplace secure. You won't be able to view it in the UI after saving.</div>
                                         <a class="small" href="javascript:void(0)" @onclick="CopyToClipboard">Copy to clipboard</a>
@@ -55,7 +55,7 @@
                                     <div class="input-group-text">
                                         <SvgIcon Icon="FeatherIcon.Calendar" />
                                     </div>
-                                    <InputDate class="form-control form-control-sm" Type="InputDateType.DateTimeLocal" @bind-Value="@key.ValidFrom" />
+                                    <InputDate class="form-control form-control-sm" Type="InputDateType.DateTimeLocal" @bind-Value="@_key.ValidFrom" />
                                 </div>
                             </div>
                             <div class="col">
@@ -64,7 +64,7 @@
                                     <div class="input-group-text">
                                         <SvgIcon Icon="FeatherIcon.Calendar" />
                                     </div>
-                                    <InputDate class="form-control form-control-sm" Type="InputDateType.DateTimeLocal" @bind-Value="@key.ValidTo" />
+                                    <InputDate class="form-control form-control-sm" Type="InputDateType.DateTimeLocal" @bind-Value="@_key.ValidTo" />
                                 </div>
                             </div>
                         </div>
@@ -75,39 +75,39 @@
         }
     </BodyTemplate>
     <FooterTemplate>
-        <HxSubmit form="api_key_edit_form" Color="ThemeColor.Success">@(key?.Id == Guid.Empty ? "Create" : "Save")</HxSubmit>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxSubmit form="api_key_edit_form" Color="ThemeColor.Success">@(_key?.Id == Guid.Empty ? "Create" : "Save")</HxSubmit>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>
 
 @code {
     [Parameter] public EventCallback<ApiKey> OnApiKeySubmit { get; set; }
 
-    private readonly ApiKeyValidator validator = new();
+    private readonly ApiKeyValidator _validator = new();
 
-    private ApiKey? key;
-    private HxModal? modal;
+    private ApiKey? _key;
+    private HxModal? _modal;
 
     private async Task SubmitApiKeyAsync()
     {
-        await OnApiKeySubmit.InvokeAsync(key);
-        await modal.LetAsync(x => x.HideAsync());
+        await OnApiKeySubmit.InvokeAsync(_key);
+        await _modal.LetAsync(x => x.HideAsync());
     }
 
     public async Task ShowAsync(Guid keyId)
     {
-        key = null;
-        await modal.LetAsync(x => x.ShowAsync());
+        _key = null;
+        await _modal.LetAsync(x => x.ShowAsync());
         if (keyId != Guid.Empty)
         {
-            await using var context = DbContextFactory.CreateDbContext();
-            key = await context.ApiKeys
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+            _key = await context.ApiKeys
                 .AsNoTrackingWithIdentityResolution()
                 .FirstAsync(k => k.Id == keyId);
         }
         else
         {
-            key = new()
+            _key = new()
             {
                 ValidFrom = DateTimeOffset.Now,
                 ValidTo = DateTimeOffset.Now.AddYears(1)
@@ -119,7 +119,7 @@
     {
         try
         {
-            await JS.InvokeVoidAsync("navigator.clipboard.writeText", key?.Value);
+            await Js.InvokeVoidAsync("navigator.clipboard.writeText", _key?.Value);
             Toaster.AddInformation("Key value copied to clipboard");
         }
         catch (Exception ex)
@@ -130,7 +130,7 @@
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
-        var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        var confirmed = await Js.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
         if (!confirmed)
         {
             context.PreventNavigation();

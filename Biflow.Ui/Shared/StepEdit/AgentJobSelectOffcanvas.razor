@@ -1,6 +1,6 @@
 ﻿@inject ToasterService Toaster
 
-<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select Agent job">
+<HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select Agent job">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -9,7 +9,7 @@
                         <SvgIcon Icon="FeatherIcon.Filter" />
                     </span>
                     <input type="text" class="form-control form-control-sm" autocomplete="off" placeholder="Name"
-                           @bind-value="filterTextName" @bind-value:event="oninput" />
+                           @bind-value="_filterTextName" @bind-value:event="oninput" />
                 </div>
             </div>
         </div>
@@ -27,13 +27,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (agentJobs is null)
+                        @if (_agentJobs is null)
                         {
                             <tr>
                                 <td colspan="2" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td>
                             </tr>
                         }
-                        else if (!agentJobs.Any())
+                        else if (!_agentJobs.Any())
                         {
                             <tr>
                                 <td colspan="2">No Agent jobs</td>
@@ -41,15 +41,15 @@
                         }
                         else
                         {
-                            foreach (var job in agentJobs
-                                .Where(aj => aj.AgentJobName.ContainsIgnoreCase(filterTextName))
+                            foreach (var job in _agentJobs
+                                .Where(aj => aj.AgentJobName.ContainsIgnoreCase(_filterTextName))
                                 .OrderBy(aj => aj.AgentJobName))
                             {
                                 <tr style="cursor: pointer;"
-                                    @onclick="() => selectedAgentJob = job.AgentJobName"
-                                    class="@(job.AgentJobName == selectedAgentJob ? "bg-body-tertiary fw-bold" : null)">
+                                    @onclick="() => _selectedAgentJob = job.AgentJobName"
+                                    class="@(job.AgentJobName == _selectedAgentJob ? "bg-body-tertiary fw-bold" : null)">
                                     <td>
-                                        <HighlightableText Text="@job.AgentJobName" PartToHighlight="@filterTextName" />
+                                        <HighlightableText Text="@job.AgentJobName" PartToHighlight="@_filterTextName" />
                                     </td>
                                     <td>
                                         <div class="form-check form-switch">
@@ -68,10 +68,10 @@
 
     <FooterTemplate>
         <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectAgentJob"
-                  Enabled="selectedAgentJob is not null">
+                  Enabled="_selectedAgentJob is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
@@ -82,34 +82,34 @@
     [Parameter]
     public EventCallback<string> OnAgentJobSelected { get; set; }
 
-    private HxOffcanvas? offcanvas;
-    private IEnumerable<(string AgentJobName, bool IsEnabled)>? agentJobs;
-    private string filterTextName = string.Empty;
-    private string? selectedAgentJob;
+    private HxOffcanvas? _offcanvas;
+    private IEnumerable<(string AgentJobName, bool IsEnabled)>? _agentJobs;
+    private string _filterTextName = string.Empty;
+    private string? _selectedAgentJob;
 
     private async Task SelectAgentJob()
     {
-        if (selectedAgentJob is not null)
+        if (_selectedAgentJob is not null)
         {
-            await OnAgentJobSelected.InvokeAsync(selectedAgentJob);
-            await offcanvas.LetAsync(x => x.HideAsync());
+            await OnAgentJobSelected.InvokeAsync(_selectedAgentJob);
+            await _offcanvas.LetAsync(x => x.HideAsync());
         }
     }
 
     public void OnClosed()
     {
-        agentJobs = null;
-        selectedAgentJob = null;
-        filterTextName = string.Empty;
+        _agentJobs = null;
+        _selectedAgentJob = null;
+        _filterTextName = string.Empty;
     }
 
     public async Task ShowAsync()
     {
-        await offcanvas.LetAsync(x => x.ShowAsync());
+        await _offcanvas.LetAsync(x => x.ShowAsync());
         if (Connection is null) return;
         try
         {
-            agentJobs = await Connection.GetAgentJobsAsync();
+            _agentJobs = await Connection.GetAgentJobsAsync();
             StateHasChanged();
         }
         catch (Exception ex)

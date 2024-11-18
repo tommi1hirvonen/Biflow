@@ -28,7 +28,7 @@
                         <SvgIcon Icon="FeatherIcon.Database" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId">
-                        @foreach (var connection in MsSqlConnections ?? [])
+                        @foreach (var connection in MsSqlConnections)
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }
@@ -111,7 +111,7 @@
             </div>
         </div>
 
-        <PackageSelectOffcanvas @ref="packageSelectOffcanvas" OnPackageSelected="OnPackageSelected" />
+        <PackageSelectOffcanvas @ref="_packageSelectOffcanvas" OnPackageSelected="OnPackageSelected" />
 
         <PackageParametersEditor Step="Step" Connection="Connection" />
     }

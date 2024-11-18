@@ -6,7 +6,7 @@
 
 <HxButton Color="ThemeColor.Success"
           @onclick="() => ShowEditModal(null)"
-          Enabled="blobClients is not null">
+          Enabled="_blobClients is not null">
     Add Blob Storage
 </HxButton>
 
@@ -22,17 +22,17 @@
             </tr>
         </thead>
         <tbody>
-            @if (blobClients is null)
+            @if (_blobClients is null)
             {
                 <tr><td colspan="3" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
-            else if (blobClients.Count == 0)
+            else if (_blobClients.Count == 0)
             {
                 <tr><td colspan="3">No Blob Storage clients</td></tr>
             }
             else
             {
-                @foreach (var client in blobClients.OrderBy(c => c.BlobStorageClientName))
+                @foreach (var client in _blobClients.OrderBy(c => c.BlobStorageClientName))
                 {
                     <tr>
                         <td class="align-middle">
@@ -64,21 +64,21 @@
     </table>
 </div>
 
-<BlobClientEditModal @ref="blobClientEditModal" AppRegistrations="appRegistrations" OnBlobClientSubmit="OnBlobClientSubmitAsync" />
+<BlobClientEditModal @ref="_blobClientEditModal" AppRegistrations="_appRegistrations" OnBlobClientSubmit="OnBlobClientSubmitAsync" />
 
 @code {
-    private List<BlobStorageClient>? blobClients;
-    private List<AppRegistration>? appRegistrations;
-    private BlobClientEditModal? blobClientEditModal;
+    private List<BlobStorageClient>? _blobClients;
+    private List<AppRegistration>? _appRegistrations;
+    private BlobClientEditModal? _blobClientEditModal;
 
     protected override async Task OnInitializedAsync()
     {
         await using var context = await DbContextFactory.CreateDbContextAsync();
-        blobClients = await context.BlobStorageClients
+        _blobClients = await context.BlobStorageClients
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(f => f.BlobStorageClientName)
             .ToListAsync();
-        appRegistrations = await context.AppRegistrations
+        _appRegistrations = await context.AppRegistrations
             .AsNoTracking()
             .OrderBy(ar => ar.AppRegistrationName)
             .ToListAsync();
@@ -89,7 +89,7 @@
         try
         {
             await Mediator.SendAsync(new DeleteBlobStorageClientCommand(client.BlobStorageClientId));
-            blobClients?.Remove(client);
+            _blobClients?.Remove(client);
         }
         catch (Exception ex)
         {
@@ -103,17 +103,17 @@
         if (client.BlobStorageClientId == Guid.Empty)
         {
             await Mediator.SendAsync(new CreateBlobStorageClientCommand(client));
-            blobClients?.Add(client);
+            _blobClients?.Add(client);
         }
         else
         {
             await Mediator.SendAsync(new UpdateBlobStorageClientCommand(client));
-            blobClients?.RemoveAll(b => b.BlobStorageClientId == client.BlobStorageClientId);
-            blobClients?.Add(client);
+            _blobClients?.RemoveAll(b => b.BlobStorageClientId == client.BlobStorageClientId);
+            _blobClients?.Add(client);
         }
         StateHasChanged();
     }
 
     private async Task ShowEditModal(BlobStorageClient? blobClient) =>
-        await blobClientEditModal.LetAsync(x => x.ShowAsync(blobClient?.BlobStorageClientId ?? Guid.Empty));
+        await _blobClientEditModal.LetAsync(x => x.ShowAsync(blobClient?.BlobStorageClientId ?? Guid.Empty));
 }

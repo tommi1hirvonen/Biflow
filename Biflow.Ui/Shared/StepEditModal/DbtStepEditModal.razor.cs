@@ -11,10 +11,10 @@ public partial class DbtStepEditModal(
 
     internal override string FormId => "dbt_step_edit_form";
 
-    private DbtJobSelectOffcanvas? jobSelectOffcanvas;
+    private DbtJobSelectOffcanvas? _jobSelectOffcanvas;
 
     private DbtAccount? CurrentAccount =>
-        DbtAccounts?.FirstOrDefault(a => a.DbtAccountId == Step?.DbtAccountId);
+        DbtAccounts.FirstOrDefault(a => a.DbtAccountId == Step?.DbtAccountId);
 
     protected override async Task<DbtStep> GetExistingStepAsync(AppDbContext context, Guid stepId)
     {
@@ -31,7 +31,7 @@ public partial class DbtStepEditModal(
 
     protected override DbtStep CreateNewStep(Job job)
     {
-        var client = DbtAccounts?.FirstOrDefault();
+        var client = DbtAccounts.FirstOrDefault();
         ArgumentNullException.ThrowIfNull(client);
         return new()
         {
@@ -48,7 +48,7 @@ public partial class DbtStepEditModal(
     {
         var account = CurrentAccount;
         ArgumentNullException.ThrowIfNull(account);
-        return jobSelectOffcanvas.LetAsync(x => x.ShowAsync(account));
+        return _jobSelectOffcanvas.LetAsync(x => x.ShowAsync(account));
     }
 
     private void OnJobSelected((DbtProject, DbtEnvironment, DbtJob) selectedJob)

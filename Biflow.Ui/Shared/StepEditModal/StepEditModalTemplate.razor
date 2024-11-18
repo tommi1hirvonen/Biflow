@@ -1,8 +1,13 @@
 ﻿@typeparam TStep where TStep : Step 
 
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 @inject StepValidator StepValidator
 @inject StepParametersValidator StepParametersValidator
+
+@if (Modal is null)
+{
+    return;
+}
 
 @*Set pt-0 for modal body (BodyCssClass). The DependenciesEditComponent has a sticky-top element that should be placed at the top without any padding*@
 <HxModal @ref="Modal.Modal"
@@ -17,7 +22,7 @@
         {
             <div class="row mt-3">
                 <div class="col mx-3">
-                    <EditForm @ref="editForm" id="@Modal.FormId" Model="Modal.Step" OnValidSubmit="SubmitAsync">
+                    <EditForm @ref="_editForm" id="@Modal.FormId" Model="Modal.Step" OnValidSubmit="SubmitAsync">
                         <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
                         <div class="row">
                             <div class="col">
@@ -75,15 +80,15 @@
                                 <ObjectGraphDataAnnotationsValidator />
                                 <ValidationSummary />
                                 <ValidationStateChangeListener OnValidationStateChanged="OnValidationStateChanged" />
-                                <FluentValidationValidator @ref="fluentStepValidator" Validator="StepValidator" />
+                                <FluentValidationValidator @ref="_fluentStepValidator" Validator="StepValidator" />
                                 @if (Modal.Step is IHasStepParameters)
                                 {
-                                    <FluentValidationValidator @ref="fluentStepParametersValidator" Validator="StepParametersValidator" />
+                                    <FluentValidationValidator @ref="_fluentStepParametersValidator" Validator="StepParametersValidator" />
                                 }
                             </div>
                         </div>
 
-                        <CascadingValue Value="fluentStepValidator" Name="StepValidator">
+                        <CascadingValue Value="_fluentStepValidator" Name="StepValidator">
                             @if (Modal.CurrentView == StepEditModalView.Dependencies)
                             {
                                 @if (Modal.Steps is not null && Modal.StepSlims is not null && Modal.JobSlims is not null)
@@ -191,7 +196,7 @@
                                     </div>
                                 </div>
 
-                                <CascadingValue Value="fluentStepParametersValidator" Name="StepParametersValidator">
+                                <CascadingValue Value="_fluentStepParametersValidator" Name="StepParametersValidator">
                                     <div class="row">
                                         <div class="col">
                                             @ChildContent
@@ -245,8 +250,8 @@
                     </EditForm>
                 </div>
             </div>
-            <SqlReferenceExplorerOffcanvas @ref="sqlReferenceOffcanvas" Connections="Modal.MsSqlConnections" />
-            <SqlDefinitionExplorerOffcanvas @ref="sqlDefinitionOffcanvas" Connections="Modal.SqlConnections" />
+            <SqlReferenceExplorerOffcanvas @ref="_sqlReferenceOffcanvas" Connections="Modal.MsSqlConnections" />
+            <SqlDefinitionExplorerOffcanvas @ref="_sqlDefinitionOffcanvas" Connections="Modal.SqlConnections" />
         }
         else
         {
@@ -261,20 +266,20 @@
     <FooterTemplate>
         <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="me-auto">
             <HxButton CssClass="btn-auto" Size="ButtonSize.Small" title="Explore database module definitions (e.g. stored procedures)"
-                      @onclick="async () => await sqlDefinitionOffcanvas.LetAsync(x => x.ShowAsync(Connection?.ConnectionId, SqlStatement))">
+                      @onclick="async () => await _sqlDefinitionOffcanvas.LetAsync(x => x.ShowAsync(Connection?.ConnectionId, SqlStatement))">
                 <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
                 SQL definition explorer
             </HxButton>
             <HxButton CssClass="btn-auto" Size="ButtonSize.Small" title="Explore references between database objects"
-                      @onclick="async () => await sqlReferenceOffcanvas.LetAsync(x => x.ShowAsync(Connection?.ConnectionId, SqlStatement))">
+                      @onclick="async () => await _sqlReferenceOffcanvas.LetAsync(x => x.ShowAsync(Connection?.ConnectionId, SqlStatement))">
                 <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
                 SQL reference explorer
             </HxButton>
         </HxButtonGroup>
 
-        @if (validationErrors.Any())
+        @if (_validationErrors.Any())
         {
-            var errors = string.Join("<br />", validationErrors.Select(e => $"- {e}"));
+            var errors = string.Join("<br />", _validationErrors.Select(e => $"- {e}"));
             <div class="me-auto ms-3">
                 <HxPopover Content="@errors" Html Trigger="PopoverTrigger.Hover" Placement="PopoverPlacement.Top">
                     <span class="border border-danger text-danger small rounded py-1 px-2">
@@ -296,16 +301,16 @@
 </HxModal>
 
 @code {
-    [Parameter] public StepEditModal<TStep> Modal { get; set; } = null!;
+    [Parameter] public StepEditModal<TStep>? Modal { get; set; }
 
     [Parameter] public RenderFragment? ChildContent { get; set; }
 
-    private FluentValidationValidator? fluentStepValidator;
-    private FluentValidationValidator? fluentStepParametersValidator;
-    private SqlReferenceExplorerOffcanvas? sqlReferenceOffcanvas;
-    private SqlDefinitionExplorerOffcanvas? sqlDefinitionOffcanvas;
-    private EditForm? editForm;
-    private IEnumerable<string> validationErrors = [];
+    private FluentValidationValidator? _fluentStepValidator;
+    private FluentValidationValidator? _fluentStepParametersValidator;
+    private SqlReferenceExplorerOffcanvas? _sqlReferenceOffcanvas;
+    private SqlDefinitionExplorerOffcanvas? _sqlDefinitionOffcanvas;
+    private EditForm? _editForm;
+    private IEnumerable<string> _validationErrors = [];
 
     private string? SqlStatement => Modal?.Step switch
     {
@@ -321,7 +326,7 @@
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
-        var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        var confirmed = await Js.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
         if (!confirmed)
         {
             context.PreventNavigation();
@@ -330,21 +335,23 @@
 
     private void OnValidationStateChanged(IEnumerable<string> errors)
     {
-        validationErrors = errors;
+        _validationErrors = errors;
         StateHasChanged();
     }
 
     private void OnClosed()
     {
-        validationErrors = [];
+        ArgumentNullException.ThrowIfNull(Modal);
+        _validationErrors = [];
         Modal.OnClosed();
     }
 
     private async Task SubmitAsync()
     {
-        ArgumentNullException.ThrowIfNull(fluentStepValidator);
+        ArgumentNullException.ThrowIfNull(Modal);
+        ArgumentNullException.ThrowIfNull(_fluentStepValidator);
         await StepValidator.WaitForValidateAsync();
-        if (editForm!.EditContext!.GetValidationMessages().Any())
+        if (_editForm!.EditContext!.GetValidationMessages().Any())
         {
             return;
         }

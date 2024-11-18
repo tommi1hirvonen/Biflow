@@ -13,66 +13,59 @@ public partial class DataTableEditor(ToasterService toaster, IHxMessageBoxServic
     private readonly ToasterService _toaster = toaster;
     private readonly IHxMessageBoxService _messageBox = messageBox;
     private readonly IJSRuntime _js = js;
-    private readonly List<(string Column, bool Descending)> orderBy = [];
-    private readonly HashSet<string> columnSelections = [];
-    private readonly Dictionary<Column, HashSet<object?>> quickFilters = [];
-    private readonly Dictionary<string, string> columnWidths = [];
+    private readonly List<(string Column, bool Descending)> _orderBy = [];
+    private readonly HashSet<string> _columnSelections = [];
+    private readonly Dictionary<Column, HashSet<object?>> _quickFilters = [];
+    private readonly Dictionary<string, string> _columnWidths = [];
 
-    private TableData? tableData;
-    private FilterSet? filterSet;
-    private FilterSetOffcanvas? filterSetOffcanvas;
-    private HxOffcanvas? tableInfoOffcanvas;
-    private bool editModeEnabled = true;
-    private bool exporting = false;
-    private bool discardChanges = false; // used to prevent double confirmation when switching tables
-    private bool initialLoad;
+    private TableData? _tableData;
+    private FilterSet? _filterSet;
+    private FilterSetOffcanvas? _filterSetOffcanvas;
+    private HxOffcanvas? _tableInfoOffcanvas;
+    private bool _editModeEnabled = true;
+    private bool _exporting = false;
+    private bool _discardChanges = false; // used to prevent double confirmation when switching tables
+    private bool _initialLoad;
 
     private int TopRows
     {
-        get => _topRows;
-        set => _topRows = value > 0 ? value : _topRows;
-    }
-
-    private int _topRows = 100;
+        get;
+        set => field = value > 0 ? value : field;
+    } = 100;
 
     private bool IsColumnSelected(string column) =>
-        columnSelections is null || columnSelections.Count == 0 || columnSelections.Contains(column);
+        _columnSelections.Count == 0 || _columnSelections.Contains(column);
 
     protected override Task OnParametersSetAsync()
     {
-        if (Table is not null && !initialLoad)
+        if (Table is null || _initialLoad)
         {
-            initialLoad = true;
-            return ReloadDataAsync();
+            return Task.CompletedTask;
         }
-        return Task.CompletedTask;
+        _initialLoad = true;
+        return ReloadDataAsync();
     }
 
     private Row[]? GetOrderedRowRecords()
     {
-        if (tableData is null || quickFilters is null)
+        if (_tableData is null)
         {
             return null;
         }
-        var rows = tableData.Rows
-            .Where(r =>  quickFilters.All(f => f.Value.Count == 0 || f.Value.Contains(LookupValueOrValue(r, f.Key))))
+        var rows = _tableData.Rows
+            .Where(r =>  _quickFilters.All(f => f.Value.Count == 0 || f.Value.Contains(LookupValueOrValue(r, f.Key))))
             .OrderBy(r => !r.StickToTop);
-        foreach (var orderBy in orderBy)
+        foreach (var orderBy in _orderBy)
         {
-            var column = tableData.Columns.First(c => c.Name == orderBy.Column);
-            if (orderBy.Descending)
-            {
-                rows = rows.ThenByDescending(row => LookupValueOrValue(row, column));
-            }
-            else
-            {
-                rows = rows.ThenBy(row => LookupValueOrValue(row, column));
-            }
+            var column = _tableData.Columns.First(c => c.Name == orderBy.Column);
+            rows = orderBy.Descending
+                ? rows.ThenByDescending(row => LookupValueOrValue(row, column))
+                : rows.ThenBy(row => LookupValueOrValue(row, column));
         }
         return [.. rows];
     }
 
-    private IEnumerable<object?> GetColumnValues(Column column) => tableData?.Rows
+    private IEnumerable<object?> GetColumnValues(Column column) => _tableData?.Rows
         .Select(row => LookupValueOrValue(row, column))
         .Distinct()
         .OrderBy(row => row?.ToString())
@@ -89,25 +82,25 @@ public partial class DataTableEditor(ToasterService toaster, IHxMessageBoxServic
     private void ToggleOrderBy(string column)
     {
         // ascending (false) => descending (true) => removed
-        var index = orderBy.FindIndex(o => o.Column == column);
+        var index = _orderBy.FindIndex(o => o.Column == column);
         if (index >= 0)
         {
-            var orderBy = this.orderBy[index];
-            this.orderBy.Remove(orderBy);
+            var orderBy = _orderBy[index];
+            _orderBy.Remove(orderBy);
             if (!orderBy.Descending)
             {
-                this.orderBy.Insert(index, (column, true));
+                _orderBy.Insert(index, (column, true));
             }
         }
         else
         {
-            orderBy.Insert(0, (column, false));
+            _orderBy.Insert(0, (column, false));
         }
     }
 
     private async Task ReloadDataAsync()
     {
-        if (tableData?.HasChanges == true && !discardChanges)
+        if (_tableData?.HasChanges == true && !_discardChanges)
         {
             var confirmed = await _messageBox.ConfirmAsync("Discard unsaved changes?");
             if (!confirmed)
@@ -115,8 +108,8 @@ public partial class DataTableEditor(ToasterService toaster, IHxMessageBoxServic
                 return;
             }
         }
-        discardChanges = false;
-        tableData = null;
+        _discardChanges = false;
+        _tableData = null;
         StateHasChanged();
 
         if (Table is null)
@@ -127,8 +120,8 @@ public partial class DataTableEditor(ToasterService toaster, IHxMessageBoxServic
 
         try
         {
-            tableData = await Table.LoadDataAsync(TopRows, filterSet);
-            filterSet ??= tableData.EmptyFilterSet;
+            _tableData = await Table.LoadDataAsync(TopRows, _filterSet);
+            _filterSet ??= _tableData.EmptyFilterSet;
         }
         catch (Exception ex)
         {
@@ -138,7 +131,7 @@ public partial class DataTableEditor(ToasterService toaster, IHxMessageBoxServic
 
     private async Task SaveChangesAsync()
     {
-        if (tableData is null)
+        if (_tableData is null)
         {
             _toaster.AddError("Error saving changes", $"Table editor dataset object was null.");
             return;
@@ -146,15 +139,16 @@ public partial class DataTableEditor(ToasterService toaster, IHxMessageBoxServic
 
         try
         {
-            var (inserted, updated, deleted) = await tableData.SaveChangesAsync();
+            var (inserted, updated, deleted) = await _tableData.SaveChangesAsync();
             var message = new StringBuilder();
-            if (inserted == 0 && updated == 0 && deleted == 0)
+            switch (inserted)
             {
-                message.Append("No changes detected");
-            }
-            if (inserted > 0)
-            {
-                message.Append("Inserted ").Append(inserted).Append(" record(s)").AppendLine();
+                case 0 when updated == 0 && deleted == 0:
+                    message.Append("No changes detected");
+                    break;
+                case > 0:
+                    message.Append("Inserted ").Append(inserted).Append(" record(s)").AppendLine();
+                    break;
             }
             if (updated > 0)
             {
@@ -165,26 +159,26 @@ public partial class DataTableEditor(ToasterService toaster, IHxMessageBoxServic
                 message.Append("Deleted ").Append(deleted).Append(" record(s)").AppendLine();
             }
             _toaster.AddSuccess("Changes saved", message.ToString());
-            tableData = await Table.LetAsync(x => x.LoadDataAsync(TopRows, filterSet)) ?? tableData;
+            _tableData = await Table.LetAsync(x => x.LoadDataAsync(TopRows, _filterSet)) ?? _tableData;
         }
         catch (Exception ex)
         {
-            _toaster.AddError("Error saving changes", $"Error while committing changes to the database. No changes were made.{System.Environment.NewLine}{ex.Message}");
+            _toaster.AddError("Error saving changes", $"Error while committing changes to the database. No changes were made.{Environment.NewLine}{ex.Message}");
         }
     }
 
     private async Task DownloadExportAsync(bool filtered)
     {
-        exporting = true;
+        _exporting = true;
         try
         {
             ArgumentNullException.ThrowIfNull(Table);
-            var filterSet = filtered ? this.filterSet : null;
+            var filterSet = filtered ? _filterSet : null;
             var dataset = await Table.LoadDataAsync(filters: filterSet);
             await using var stream = dataset.GetExcelExportStream();
 
             var regexSearch = new string(Path.GetInvalidFileNameChars());
-            var regex = new Regex(string.Format("[{0}]", Regex.Escape(regexSearch)));
+            var regex = new Regex($"[{Regex.Escape(regexSearch)}]");
             var tableName = Table is not null ? regex.Replace(Table.DataTableName, "") : "export";
             var fileName = $"{tableName}.xlsx";
             using var streamRef = new DotNetStreamReference(stream: stream);
@@ -196,7 +190,7 @@ public partial class DataTableEditor(ToasterService toaster, IHxMessageBoxServic
         }
         finally
         {
-            exporting = false;
+            _exporting = false;
         }
     }
 
@@ -207,6 +201,6 @@ public partial class DataTableEditor(ToasterService toaster, IHxMessageBoxServic
         {
             context.PreventNavigation();
         }
-        discardChanges = true;
+        _discardChanges = true;
     }
 }

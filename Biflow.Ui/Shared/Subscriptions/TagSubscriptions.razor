@@ -3,7 +3,7 @@
 
 <div class="row">
     <div class="col">
-        <HxButton Color="ThemeColor.Success" OnClick="() => selectTagOffcanvas.LetAsync(x => x.ShowAsync())">
+        <HxButton Color="ThemeColor.Success" OnClick="() => _selectTagOffcanvas.LetAsync(x => x.ShowAsync())">
             Add subscription
         </HxButton>
     </div>
@@ -33,7 +33,8 @@
                     var subscriptions = User.Subscriptions
                         .OfType<TagSubscription>()
                         .Select(s => (Subscription: s, Tag: Tags.FirstOrDefault(t => t.TagId == s.TagId)))
-                        .OrderBy(s => s.Tag?.TagName);
+                        .OrderBy(s => s.Tag?.TagName)
+                        .ToArray();
                     @if (!subscriptions.Any())
                     {
                         <tr>
@@ -49,22 +50,22 @@
                             <td>
                                 <div>
                                     <div class="form-check form-check-inline">
-                                        <input type="radio" class="form-check-input" id="@(sub.SubscriptionId.ToString() + "_failure")"
+                                        <input type="radio" class="form-check-input" id="@(sub.SubscriptionId + "_failure")"
                                                checked=@(sub.AlertType == AlertType.OnFailure)
                                         @onchange="() => ToggleSubscription(sub, AlertType.OnFailure)">
-                                        <label class="form-check-label" for="@(sub.SubscriptionId.ToString() + "_failure")">On failure</label>
+                                        <label class="form-check-label" for="@(sub.SubscriptionId + "_failure")">On failure</label>
                                     </div>
                                     <div class="form-check form-check-inline">
-                                        <input type="radio" class="form-check-input" id="@(sub.SubscriptionId.ToString() + "_success")"
+                                        <input type="radio" class="form-check-input" id="@(sub.SubscriptionId + "_success")"
                                                checked=@(sub.AlertType == AlertType.OnSuccess)
                                         @onchange="() => ToggleSubscription(sub, AlertType.OnSuccess)">
-                                        <label class="form-check-label" for="@(sub.SubscriptionId.ToString() + "_success")">On success</label>
+                                        <label class="form-check-label" for="@(sub.SubscriptionId + "_success")">On success</label>
                                     </div>
                                     <div class="form-check form-check-inline">
-                                        <input type="radio" class="form-check-input" id="@(sub.SubscriptionId.ToString() + "_completion")"
+                                        <input type="radio" class="form-check-input" id="@(sub.SubscriptionId + "_completion")"
                                                checked=@(sub.AlertType == AlertType.OnCompletion)
                                         @onchange="() => ToggleSubscription(sub, AlertType.OnCompletion)">
-                                        <label class="form-check-label" for="@(sub.SubscriptionId.ToString() + "_completion")">On completion</label>
+                                        <label class="form-check-label" for="@(sub.SubscriptionId + "_completion")">On completion</label>
                                     </div>
                                 </div>
                             </td>
@@ -81,16 +82,16 @@
     </div>
 </div>
 
-<HxOffcanvas @ref="selectTagOffcanvas" Title="Select tag" Backdrop="OffcanvasBackdrop.False">
+<HxOffcanvas @ref="_selectTagOffcanvas" Title="Select tag" Backdrop="OffcanvasBackdrop.False">
     <BodyTemplate>
         <div class="row">
             <div class="col d-flex flex-wrap">
                 @{
                     var tags = Tags
-                        ?.Where(t => !Subscriptions.Any(s => t.TagId == s.TagId))
+                        ?.Where(t => Subscriptions.All(s => t.TagId != s.TagId))
                         .Order()
                         .ToArray()
-                        ?? Array.Empty<StepTag>();
+                        ?? [];
                 }
                 @if (!tags.Any())
                 {
@@ -104,7 +105,7 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" OnClick="() => selectTagOffcanvas.LetAsync(x => x.HideAsync())" Spinner="false">
+        <HxButton Color="ThemeColor.Secondary" OnClick="() => _selectTagOffcanvas.LetAsync(x => x.HideAsync())" Spinner="false">
             Close
         </HxButton>
     </FooterTemplate>
@@ -120,10 +121,9 @@
     [Parameter]
     public EventCallback OnSubscriptionCountChanged { get; set; }
 
-    private HxOffcanvas? selectTagOffcanvas;
+    private HxOffcanvas? _selectTagOffcanvas;
 
-    private IEnumerable<TagSubscription> Subscriptions =>
-        User?.Subscriptions.OfType<TagSubscription>() ?? Enumerable.Empty<TagSubscription>();
+    private IEnumerable<TagSubscription> Subscriptions => User?.Subscriptions.OfType<TagSubscription>() ?? [];
 
     private async Task AddSubscriptionAsync(Guid tagId)
     {

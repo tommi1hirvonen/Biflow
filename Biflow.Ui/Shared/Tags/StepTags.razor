@@ -15,7 +15,7 @@
     <div class="col">
         <div class="card shadow-sm">
             <div class="card-body px-0">
-                <EditForm id="tag_edit_form" Model="template" OnValidSubmit="UpdateTagAsync">
+                <EditForm id="tag_edit_form" Model="_template" OnValidSubmit="UpdateTagAsync">
                     <table class="table table-sm table-hover">
                         <thead>
                             <tr>
@@ -28,13 +28,13 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @if (tags is null)
+                            @if (_tags is null)
                             {
                                 <tr>
                                     <td colspan="6" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td>
                                 </tr>
                             }
-                            else if (!tags.Any())
+                            else if (!_tags.Any())
                             {
                                 <tr>
                                     <td colspan="6" class="px-3">No step tags</td>
@@ -42,19 +42,19 @@
                             }
                             else
                             {
-                                foreach (var tag in tags.Order())
+                                foreach (var tag in _tags.Order())
                                 {
                                     var jobs = tag.Steps.Select(s => s.Job).Distinct().Count();
                                     var steps = tag.Steps.Count();
                                     var schedules = tag.Schedules.Count();
                                     <tr>
-                                        @if (editTag?.TagId == tag.TagId)
+                                        @if (_editTag?.TagId == tag.TagId)
                                         {
                                             <td class="align-middle">
-                                                <InputText class="form-control form-control-sm" @bind-Value="template.TagName" />
+                                                <InputText class="form-control form-control-sm" @bind-Value="_template.TagName" />
                                             </td>
                                             <td class="align-middle">
-                                                <InputNumber class="form-control form-control-sm" @bind-Value="template.SortOrder" style="max-width: 8rem;" />
+                                                <InputNumber class="form-control form-control-sm" @bind-Value="_template.SortOrder" style="max-width: 8rem;" />
                                             </td>
                                         }
                                         else
@@ -68,12 +68,12 @@
                                         }
                                         <td>
                                             <div class="btn-group">
-                                                @if (editTag?.TagId == tag.TagId)
+                                                @if (_editTag?.TagId == tag.TagId)
                                                 {
                                                     <HxSubmit FormId="tag_edit_form" Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-success" title="Submit">
                                                         <SvgIcon Icon="FeatherIcon.Check" />
                                                     </HxSubmit>
-                                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => editTag = null" title="Cancel">
+                                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => _editTag = null" title="Cancel">
                                                         <SvgIcon Icon="FeatherIcon.X" />
                                                     </HxButton>
                                                 }
@@ -123,7 +123,7 @@
     </div>
 </div>
 
-<HxModal @ref="confirmDeleteModal" Size="ModalSize.Regular" Title="Delete tags">
+<HxModal @ref="_confirmDeleteModal" Size="ModalSize.Regular" Title="Delete tags">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -140,12 +140,12 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await confirmDeleteModal.LetAsync(x => x.HideAsync())">Cancel</button>
+        <button class="btn btn-secondary" @onclick="async () => await _confirmDeleteModal.LetAsync(x => x.HideAsync())">Cancel</button>
         <button class="btn btn-danger" @onclick="DeleteUnusedTagsAsync">Delete</button>
     </FooterTemplate>
 </HxModal>
 
-<HxModal @ref="manageModal" Size="ModalSize.Large" Title="@($"Edit tag {manageTag?.TagName}")" Scrollable="true">
+<HxModal @ref="_manageModal" Size="ModalSize.Large" Title="@($"Edit tag {_manageTag?.TagName}")" Scrollable="true">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -158,7 +158,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var step in manageTag?.Steps
+                        @foreach (var step in _manageTag?.Steps
                         .OrderBy(s => s.Job.JobName)
                         .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
                         {
@@ -186,11 +186,11 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await manageModal.LetAsync(x => x.HideAsync())">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await _manageModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
-<HxModal @ref="schedulesModal" Size="ModalSize.ExtraLarge" Title="@($"Schedules using {schedulesModalTag?.TagName}")">
+<HxModal @ref="_schedulesModal" Size="ModalSize.ExtraLarge" Title="@($"Schedules using {_schedulesModalTag?.TagName}")">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -205,7 +205,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var schedule in schedulesModalTag?.Schedules
+                        @foreach (var schedule in _schedulesModalTag?.Schedules
                         .OrderBy(s => s.Job.JobName) ?? Enumerable.Empty<Schedule>())
                         {
                             <tr>
@@ -235,21 +235,21 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await schedulesModal.LetAsync(x => x.HideAsync())">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await _schedulesModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
 @code {
-    private List<StepTag>? tags;
-    private HxModal? confirmDeleteModal;
-    private HxModal? manageModal;
-    private HxModal? schedulesModal;
-    private StepTag? manageTag;
-    private StepTag? schedulesModalTag;
-    private StepTag template = new("");
-    private StepTag? editTag;
+    private List<StepTag>? _tags;
+    private HxModal? _confirmDeleteModal;
+    private HxModal? _manageModal;
+    private HxModal? _schedulesModal;
+    private StepTag? _manageTag;
+    private StepTag? _schedulesModalTag;
+    private StepTag _template = new("");
+    private StepTag? _editTag;
 
-    private IEnumerable<StepTag> UnusedTags => tags?
+    private IEnumerable<StepTag> UnusedTags => _tags?
         .Where(t => !t.Steps.Any())
         .Where(t => !t.Schedules.Any())
         .Where(t => !t.JobSteps.Any())
@@ -262,7 +262,7 @@
     protected override async Task OnInitializedAsync()
     {
         await using var context = await DbContextFactory.CreateDbContextAsync();
-        tags = await context.StepTags
+        _tags = await context.StepTags
             .AsNoTrackingWithIdentityResolution()
             .Include(t => t.Steps)
             .ThenInclude(t => t.Job)
@@ -282,32 +282,32 @@
             return;
         }
 
-        await confirmDeleteModal.LetAsync(x => x.ShowAsync());
+        await _confirmDeleteModal.LetAsync(x => x.ShowAsync());
     }
 
     private async Task DeleteUnusedTagsAsync()
     {
         var response = await Mediator.SendAsync(new DeleteUnusedStepTagsCommand());
-        tags?.RemoveAll(t => response.DeletedTags.Any(d => d.TagId == t.TagId));
-        await confirmDeleteModal.LetAsync(x => x.HideAsync());
+        _tags?.RemoveAll(t => response.DeletedTags.Any(d => d.TagId == t.TagId));
+        await _confirmDeleteModal.LetAsync(x => x.HideAsync());
     }
 
     private void SetEditTag(StepTag tag)
     {
-        template = new StepTag(tag.TagName) { SortOrder = tag.SortOrder };
-        editTag = tag;
+        _template = new StepTag(tag.TagName) { SortOrder = tag.SortOrder };
+        _editTag = tag;
     }
 
     private async Task UpdateTagAsync()
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(editTag);
-            editTag.TagName = template.TagName;
-            editTag.SortOrder = template.SortOrder;
-            await Mediator.SendAsync(new UpdateTagCommand(editTag));
-            editTag = null;
-            template = new("");
+            ArgumentNullException.ThrowIfNull(_editTag);
+            _editTag.TagName = _template.TagName;
+            _editTag.SortOrder = _template.SortOrder;
+            await Mediator.SendAsync(new UpdateTagCommand(_editTag));
+            _editTag = null;
+            _template = new("");
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -322,17 +322,17 @@
     private async Task DeleteTag(StepTag tag)
     {
         await Mediator.SendAsync(new DeleteTagCommand(tag.TagId));
-        tags?.Remove(tag);
+        _tags?.Remove(tag);
     }
 
     private async Task DeleteStepTag(Step step)
     {
-        if (manageTag is null)
+        if (_manageTag is null)
         {
             return;
         }
-        await Mediator.SendAsync(new DeleteStepTagCommand(step.StepId, manageTag.TagId));
-        manageTag.Steps.Remove(step);
+        await Mediator.SendAsync(new DeleteStepTagCommand(step.StepId, _manageTag.TagId));
+        _manageTag.Steps.Remove(step);
     }
 
     private async Task SetTagColorAsync(StepTag tag, TagColor color)
@@ -343,13 +343,13 @@
 
     private async Task ShowEditModalAsync(StepTag tag)
     {
-        manageTag = tag;
-        await manageModal.LetAsync(x => x.ShowAsync());
+        _manageTag = tag;
+        await _manageModal.LetAsync(x => x.ShowAsync());
     }
 
     private async Task ShowSchedulesModalAsync(StepTag tag)
     {
-        schedulesModalTag = tag;
-        await schedulesModal.LetAsync(x => x.ShowAsync());
+        _schedulesModalTag = tag;
+        await _schedulesModal.LetAsync(x => x.ShowAsync());
     }
 }

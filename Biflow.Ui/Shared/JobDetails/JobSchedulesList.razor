@@ -11,7 +11,7 @@
 <PageTitle>@Job?.JobName | Schedules | Biflow</PageTitle>
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-    <HxButton Color="ThemeColor.Success" @onclick="async () => await editModal.LetAsync(x => x.ShowAsync(Guid.Empty))">
+    <HxButton Color="ThemeColor.Success" @onclick="async () => await _editModal.LetAsync(x => x.ShowAsync(Guid.Empty))">
         Add schedule
     </HxButton>
 </AuthorizeView>
@@ -38,17 +38,17 @@
             </tr>
         </thead>
         <tbody>
-            @if (schedules is null)
+            @if (_schedules is null)
             {
                 <tr><td colspan="6" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
-            else if (schedules.Count == 0)
+            else if (_schedules.Count == 0)
             {
                 <tr><td colspan="6">No schedules</td></tr>
             }
             else
             {
-                @foreach (var item in schedules.OrderBy(s => s.ScheduleName))
+                @foreach (var item in _schedules.OrderBy(s => s.ScheduleName))
                 {
                     <tr class="schedule-row small @(item.IsEnabled ? null : "disabled")">
                         <td class="align-middle">
@@ -113,7 +113,7 @@
                             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                                 <HxButtonGroup Size="ButtonGroupSize.Small">
                                     <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto"
-                                              @onclick="async () => await editModal.LetAsync(x => x.ShowAsync(item.ScheduleId))">
+                                              @onclick="async () => await _editModal.LetAsync(x => x.ShowAsync(item.ScheduleId))">
                                         <SvgIcon Icon="FeatherIcon.Edit2" />
                                     </HxButton>
                                     <HxDropdownButtonGroup>
@@ -136,21 +136,21 @@
 </div>
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-    <ScheduleEditModal @ref="editModal" Job="Job" OnSubmit="OnScheduleSubmit" />
+    <ScheduleEditModal @ref="_editModal" Job="Job" OnSubmit="OnScheduleSubmit" />
 </AuthorizeView>
 
 @code {
     [CascadingParameter] public Job? Job { get; set; }
 
-    private List<Schedule>? schedules;
-    private ScheduleEditModal? editModal;
+    private List<Schedule>? _schedules;
+    private ScheduleEditModal? _editModal;
 
     protected override async Task OnParametersSetAsync()
     {
-        if (schedules is null && Job is not null)
+        if (_schedules is null && Job is not null)
         {
-            await using var context = DbFactory.CreateDbContext();
-            schedules = await context.Schedules
+            await using var context = await DbFactory.CreateDbContextAsync();
+            _schedules = await context.Schedules
                 .AsNoTrackingWithIdentityResolution()
                 .Include(schedule => schedule.Tags)
                 .Include(schedule => schedule.TagFilter)
@@ -178,8 +178,8 @@
 
     private void OnScheduleSubmit(Schedule schedule)
     {
-        schedules?.RemoveAll(s => s.ScheduleId == schedule.ScheduleId);
-        schedules?.Add(schedule);
+        _schedules?.RemoveAll(s => s.ScheduleId == schedule.ScheduleId);
+        _schedules?.Add(schedule);
     }
 
     private async Task DeleteSchedule(Schedule schedule)
@@ -187,12 +187,11 @@
         try
         {
             await Mediator.SendAsync(new DeleteScheduleCommand(schedule.ScheduleId));
-            schedules?.Remove(schedule);
+            _schedules?.Remove(schedule);
         }
         catch (Exception ex)
         {
             Toaster.AddError("Error deleting schedule", ex.Message);
         }
     }
-
 }

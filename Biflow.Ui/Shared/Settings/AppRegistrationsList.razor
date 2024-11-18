@@ -14,7 +14,7 @@
 
 <PageTitle>App registrations | Biflow</PageTitle>
 
-<HxButton Color="ThemeColor.Success" @onclick="async () => await ShowEditModalAsync(null)" Enabled="appRegistrations is not null">
+<HxButton Color="ThemeColor.Success" @onclick="async () => await ShowEditModalAsync(null)" Enabled="_appRegistrations is not null">
     Add app registration
 </HxButton>
 
@@ -36,17 +36,17 @@
             </tr>
         </thead>
         <tbody>
-            @if (appRegistrations is null)
+            @if (_appRegistrations is null)
             {
                 <tr><td colspan="7" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
-            else if (appRegistrations.Count == 0)
+            else if (_appRegistrations.Count == 0)
             {
                 <tr><td colspan="7">No app registrations</td></tr>
             }
             else
             {
-                @foreach (var app in appRegistrations.OrderBy(a => a.AppRegistrationName))
+                @foreach (var app in _appRegistrations.OrderBy(a => a.AppRegistrationName))
                 {
                     var jobs = app.Steps.Select(s => s.Job).Distinct().Count();
                     var steps = app.Steps.Count();
@@ -91,8 +91,8 @@
                             <a class="text-body" href="javascript:void(0)"
                                 @onclick="async () =>
                                 {
-                                    stepsAppRegistration = app;
-                                    await stepsModal.LetAsync(x => x.ShowAsync());
+                                    _stepsAppRegistration = app;
+                                    await _stepsModal.LetAsync(x => x.ShowAsync());
                                 }">
                                 @(steps > 0 ? $"{steps} step(s)" : null)
                             </a>
@@ -100,8 +100,8 @@
                         <td>
                             <a class="text-body" href="javascript:void(0)" @onclick="async () =>
                                 {
-                                    pipelineClientsAppRegistration = app;
-                                    await pipelineClientsModal.LetAsync(x => x.ShowAsync());
+                                    _pipelineClientsAppRegistration = app;
+                                    await _pipelineClientsModal.LetAsync(x => x.ShowAsync());
                                 }">
                                 @(pipelineClients > 0 ? $"{pipelineClients} pipeline client(s)" : null)
                             </a>
@@ -109,8 +109,8 @@
                         <td>
                             <a class="text-body" href="javascript:void(0)" @onclick="async () =>
                                 {
-                                    functionAppsAppRegistration = app;
-                                    await functionAppsModal.LetAsync(x => x.ShowAsync());
+                                    _functionAppsAppRegistration = app;
+                                    await _functionAppsModal.LetAsync(x => x.ShowAsync());
                                 }">
                                 @(functionApps > 0 ? $"{functionApps} Function App(s)" : null)
                             </a>
@@ -122,9 +122,9 @@
     </table>
 </div>
 
-<AppRegistrationEditModal @ref="appRegistrationEditModal" OnAppRegistrationSubmit="OnAppRegistrationSubmit" />
+<AppRegistrationEditModal @ref="_appRegistrationEditModal" OnAppRegistrationSubmit="OnAppRegistrationSubmit" />
 
-<HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsAppRegistration?.AppRegistrationName}")">
+<HxModal @ref="_stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {_stepsAppRegistration?.AppRegistrationName}")">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -136,7 +136,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var step in stepsAppRegistration?.Steps
+                        @foreach (var step in _stepsAppRegistration?.Steps
                             .OrderBy(s => s.Job.JobName)
                             .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
                         {
@@ -157,11 +157,11 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await stepsModal.LetAsync(x => x.HideAsync())">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await _stepsModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
-<HxModal @ref="pipelineClientsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Pipeline clients using {stepsAppRegistration?.AppRegistrationName}")">
+<HxModal @ref="_pipelineClientsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Pipeline clients using {_stepsAppRegistration?.AppRegistrationName}")">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -173,7 +173,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var client in pipelineClientsAppRegistration?.PipelineClients
+                        @foreach (var client in _pipelineClientsAppRegistration?.PipelineClients
                             .OrderBy(c => c.PipelineClientName) ?? Enumerable.Empty<PipelineClient>())
                         {
                             <tr>
@@ -191,11 +191,11 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await pipelineClientsModal.LetAsync(x => x.HideAsync())">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await _pipelineClientsModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
-<HxModal @ref="functionAppsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Function Apps using {stepsAppRegistration?.AppRegistrationName}")">
+<HxModal @ref="_functionAppsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Function Apps using {_stepsAppRegistration?.AppRegistrationName}")">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -208,7 +208,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var functionApp in functionAppsAppRegistration?.FunctionApps
+                        @foreach (var functionApp in _functionAppsAppRegistration?.FunctionApps
                             .OrderBy(fa => fa.FunctionAppName) ?? Enumerable.Empty<FunctionApp>())
                         {
                             <tr>
@@ -229,24 +229,24 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await functionAppsModal.LetAsync(x => x.HideAsync())">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await _functionAppsModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
 @code {
-    private List<AppRegistration>? appRegistrations;
-    private AppRegistrationEditModal? appRegistrationEditModal;
-    private AppRegistration? stepsAppRegistration;
-    private HxModal? stepsModal;
-    private AppRegistration? pipelineClientsAppRegistration;
-    private HxModal? pipelineClientsModal;
-    private AppRegistration? functionAppsAppRegistration;
-    private HxModal? functionAppsModal;
+    private List<AppRegistration>? _appRegistrations;
+    private AppRegistrationEditModal? _appRegistrationEditModal;
+    private AppRegistration? _stepsAppRegistration;
+    private HxModal? _stepsModal;
+    private AppRegistration? _pipelineClientsAppRegistration;
+    private HxModal? _pipelineClientsModal;
+    private AppRegistration? _functionAppsAppRegistration;
+    private HxModal? _functionAppsModal;
 
     protected override async Task OnInitializedAsync()
     {
         await using var context = await DbFactory.CreateDbContextAsync();
-        appRegistrations = await context.AppRegistrations
+        _appRegistrations = await context.AppRegistrations
             .AsNoTrackingWithIdentityResolution()
             .Include(app => app.Steps)
             .ThenInclude(step => step.Job)
@@ -261,7 +261,7 @@
         try
         {
             await Mediator.SendAsync(new DeleteAppRegistrationCommand(appRegistration.AppRegistrationId));
-            appRegistrations?.Remove(appRegistration);
+            _appRegistrations?.Remove(appRegistration);
         }
         catch (Exception ex)
         {
@@ -275,14 +275,13 @@
         if (appRegistration.AppRegistrationId == Guid.Empty)
         {
             await Mediator.SendAsync(new CreateAppRegistrationCommand(appRegistration));
-            appRegistrations?.Add(appRegistration);
         }
         else
         {
             await Mediator.SendAsync(new UpdateAppRegistrationCommand(appRegistration));
-            appRegistrations?.RemoveAll(a => a.AppRegistrationId == appRegistration.AppRegistrationId);
-            appRegistrations?.Add(appRegistration);
+            _appRegistrations?.RemoveAll(a => a.AppRegistrationId == appRegistration.AppRegistrationId);
         }
+        _appRegistrations?.Add(appRegistration);
         StateHasChanged();
     }
 
@@ -293,6 +292,6 @@
 
     private async Task ShowEditModalAsync(AppRegistration? appRegistration)
     {
-        await appRegistrationEditModal.LetAsync(x => x.ShowAsync(appRegistration?.AppRegistrationId ?? Guid.Empty));
+        await _appRegistrationEditModal.LetAsync(x => x.ShowAsync(appRegistration?.AppRegistrationId ?? Guid.Empty));
     }
 }

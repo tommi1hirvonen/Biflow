@@ -14,7 +14,7 @@
 
 <PageTitle>Snowflake | Biflow</PageTitle>
 
-<HxButton Color="ThemeColor.Success" Enabled="connections is not null" OnClick="() => editModal.LetAsync(x => x.ShowAsync(Guid.Empty))">
+<HxButton Color="ThemeColor.Success" Enabled="_connections is not null" OnClick="() => _editModal.LetAsync(x => x.ShowAsync(Guid.Empty))">
     Add connection
 </HxButton>
 
@@ -31,17 +31,17 @@
             </tr>
         </thead>
         <tbody>
-            @if (connections is null)
+            @if (_connections is null)
             {
                 <tr><td colspan="4" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
-            else if (connections.Count == 0)
+            else if (_connections.Count == 0)
             {
                 <tr><td colspan="4">No Snowflake connections</td></tr>
             }
             else
             {
-                @foreach (var connection in connections.OrderBy(c => c.ConnectionName))
+                @foreach (var connection in _connections.OrderBy(c => c.ConnectionName))
                 {
                     var steps = connection.Steps.Count();
                     var jobs = connection.Steps.Select(s => s.JobId).Distinct().Count();
@@ -52,7 +52,7 @@
                         </td>
                         <td class="align-middle">
                             <HxButtonGroup>
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="() => editModal.LetAsync(x => x.ShowAsync(connection.ConnectionId))">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="() => _editModal.LetAsync(x => x.ShowAsync(connection.ConnectionId))">
                                     <SvgIcon Icon="FeatherIcon.Edit2" />
                                 </HxButton>
                                 <HxDropdownButtonGroup>
@@ -73,8 +73,8 @@
                             <a class="text-body" href="javascript:void(0)"
                             @onclick="async () =>
                                 {
-                                    stepsConnection = connection;
-                                    await stepsModal.LetAsync(x => x.ShowAsync());
+                                    _stepsConnection = connection;
+                                    await _stepsModal.LetAsync(x => x.ShowAsync());
                                 }">
                                 @(steps > 0 ? $"{steps} step(s)" : null)
                             </a>
@@ -86,10 +86,10 @@
     </table>
 </div>
 
-<SnowflakeConnectionEditModal @ref="editModal"
+<SnowflakeConnectionEditModal @ref="_editModal"
                               OnConnectionSubmit="OnConnectionSubmit" />
 
-<HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsConnection?.ConnectionName}")">
+<HxModal @ref="_stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {_stepsConnection?.ConnectionName}")">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -101,7 +101,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var step in stepsConnection?.Steps
+                        @foreach (var step in _stepsConnection?.Steps
                         .OrderBy(s => s.Job.JobName)
                         .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
                         {
@@ -122,20 +122,20 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await stepsModal.LetAsync(x => x.HideAsync())">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await _stepsModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
 @code {
-    private SnowflakeConnectionEditModal? editModal;
-    private List<SnowflakeConnection>? connections;
-    private SnowflakeConnection? stepsConnection;
-    private HxModal? stepsModal;
+    private SnowflakeConnectionEditModal? _editModal;
+    private List<SnowflakeConnection>? _connections;
+    private SnowflakeConnection? _stepsConnection;
+    private HxModal? _stepsModal;
 
     protected override async Task OnInitializedAsync()
     {
         await using var context = await DbFactory.CreateDbContextAsync();
-        connections = await context.SnowflakeConnections
+        _connections = await context.SnowflakeConnections
             .AsNoTrackingWithIdentityResolution()
             .Include(c => c.SqlSteps)
             .ThenInclude(step => step.Job)
@@ -148,7 +148,7 @@
         try
         {
             await Mediator.SendAsync(new DeleteConnectionCommand(connection.ConnectionId));
-            connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
+            _connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
         }
         catch (Exception ex)
         {
@@ -162,15 +162,14 @@
         if (connection.ConnectionId == Guid.Empty)
         {
             await Mediator.SendAsync(new CreateConnectionCommand(connection));
-            connections?.Add(connection);
         }
         else
         {
             await Mediator.SendAsync(new UpdateConnectionCommand(connection));
-            connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
-            connections?.Add(connection);
+            _connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
         }
-        connections?.Sort();
+        _connections?.Add(connection);
+        _connections?.Sort();
         StateHasChanged();
     }
 }

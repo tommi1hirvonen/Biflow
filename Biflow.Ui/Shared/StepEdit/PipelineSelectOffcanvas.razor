@@ -2,7 +2,7 @@
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject ITokenService TokenService
 
-<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" Title="Select pipeline">
+<HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Regular" Title="Select pipeline">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -10,20 +10,20 @@
                     <div class="input-group-text">
                         <SvgIcon Icon="FeatherIcon.Search" />
                     </div>
-                    <input type="search" class="form-control form-control-sm" placeholder="Search pipelines" @bind-value="filterText" @bind-value:event="oninput" />
+                    <input type="search" class="form-control form-control-sm" placeholder="Search pipelines" @bind-value="_filterText" @bind-value:event="oninput" />
                 </div>
             </div>
         </div>
         <div class="row mt-3" style="height: calc(100vh - 210px); overflow-y: scroll;">
             <div class="col">
                 <div class="list-group">
-                    @if (root is null)
+                    @if (_root is null)
                     {
                         <div class="list-group-item text-center">
                             <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
                         </div>
                     }
-                    else if (root.Pipelines.Count() == 0 && root.Folders.Count() == 0)
+                    else if (!_root.Pipelines.Any() && !_root.Folders.Any())
                     {
                         <div class="list-group-item small">
                             No pipelines
@@ -32,11 +32,11 @@
                     else
                     {
                         <PipelineFolderListGroupItem
-                            Folder="root"
-                            ExpandStatuses="folderExpandedStates"
-                            SelectedPipeline="selectedPipeline"
+                            Folder="_root"
+                            ExpandStatuses="_folderExpandedStates"
+                            SelectedPipeline="_selectedPipeline"
                             OnPipelineSelected="TogglePipeline"
-                            FilterText="@filterText" />
+                            FilterText="@_filterText" />
                     }
                 </div>
             </div>
@@ -45,10 +45,10 @@
 
     <FooterTemplate>
         <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectPipelineAsync"
-                  Enabled="selectedPipeline is not null">
+                  Enabled="_selectedPipeline is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
@@ -56,37 +56,37 @@
     [Parameter]
     public EventCallback<string> OnPipelineSelected { get; set; }
 
-    private readonly Dictionary<PipelineFolder, bool> folderExpandedStates = [];
+    private readonly Dictionary<PipelineFolder, bool> _folderExpandedStates = [];
 
-    private HxOffcanvas? offcanvas;
-    private PipelineFolder? root;
-    private string filterText = string.Empty;
-    private PipelineInfo? selectedPipeline;
+    private HxOffcanvas? _offcanvas;
+    private PipelineFolder? _root;
+    private string _filterText = string.Empty;
+    private PipelineInfo? _selectedPipeline;
 
     private async Task SelectPipelineAsync()
     {
-        await OnPipelineSelected.InvokeAsync(selectedPipeline?.Name);
-        await offcanvas.LetAsync(x => x.HideAsync());
+        await OnPipelineSelected.InvokeAsync(_selectedPipeline?.Name);
+        await _offcanvas.LetAsync(x => x.HideAsync());
     }
 
     public async Task ShowAsync(Guid pipelineClientId)
     {
-        folderExpandedStates.Clear();
-        root = null;
-        selectedPipeline = null;
-        filterText = string.Empty;
+        _folderExpandedStates.Clear();
+        _root = null;
+        _selectedPipeline = null;
+        _filterText = string.Empty;
 
-        await offcanvas.LetAsync(x => x.ShowAsync());
+        await _offcanvas.LetAsync(x => x.ShowAsync());
 
         try
         {
-            await using var context = DbContextFactory.CreateDbContext();
+            await using var context = await DbContextFactory.CreateDbContextAsync();
             var client = await context.PipelineClients
                 .AsNoTrackingWithIdentityResolution()
                 .Include(c => c.AppRegistration)
                 .FirstAsync(c => c.PipelineClientId == pipelineClientId);
             var pipelineClient = client.CreatePipelineClient(TokenService);
-            root = await pipelineClient.GetPipelinesAsync();
+            _root = await pipelineClient.GetPipelinesAsync();
             StateHasChanged();
         }
         catch (Exception ex)
@@ -97,11 +97,11 @@
 
     private void TogglePipeline(PipelineInfo pipeline)
     {
-        if (selectedPipeline == pipeline)
+        if (_selectedPipeline == pipeline)
         {
-            selectedPipeline = null;
+            _selectedPipeline = null;
             return;
         }
-        selectedPipeline = pipeline;
+        _selectedPipeline = pipeline;
     }
 }

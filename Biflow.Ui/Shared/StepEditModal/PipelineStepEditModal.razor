@@ -28,7 +28,7 @@
                         <SvgIcon Icon="LucideIcon.Factory" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.PipelineClientId">
-                        @foreach (var client in PipelineClients ?? Enumerable.Empty<PipelineClient>())
+                        @foreach (var client in PipelineClients)
                         {
                             <option value="@client.PipelineClientId">@client.PipelineClientName</option>
                         }
@@ -55,7 +55,7 @@
             </div>
         </div>
 
-        <PipelineSelectOffcanvas @ref="pipelineSelectOffcanvas" OnPipelineSelected="OnPipelineSelected" />
+        <PipelineSelectOffcanvas @ref="_pipelineSelectOffcanvas" OnPipelineSelected="OnPipelineSelected" />
         <StepParametersEditor Step="Step"
                               NewParameterDelegate="() => new() { Step = Step }"
                               OnImportParameters="ImportParametersAsync"

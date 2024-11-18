@@ -20,14 +20,14 @@ public partial class FunctionStepEditModal(
         </div>
         """;
 
-    private FunctionSelectOffcanvas? functionSelectOffcanvas;
-    private CodeEditor? editor;
-    private InputLanguage language = InputLanguage.Text;
+    private FunctionSelectOffcanvas? _functionSelectOffcanvas;
+    private CodeEditor? _editor;
+    private InputLanguage _language = InputLanguage.Text;
 
     private Task OpenFunctionSelectOffcanvas()
     {
         ArgumentNullException.ThrowIfNull(Step?.FunctionAppId);
-        return functionSelectOffcanvas.LetAsync(x => x.ShowAsync(Step.FunctionAppId));
+        return _functionSelectOffcanvas.LetAsync(x => x.ShowAsync(Step.FunctionAppId));
     }
 
     private void OnFunctionSelected(string functionUrl)
@@ -38,27 +38,27 @@ public partial class FunctionStepEditModal(
 
     protected override async Task OnModalShownAsync(FunctionStep step)
     {
-        language = InputLanguage.Text;
-        if (editor is not null)
+        _language = InputLanguage.Text;
+        if (_editor is not null)
         {
             try
             {
-                await editor.SetValueAsync(step.FunctionInput);
+                await _editor.SetValueAsync(step.FunctionInput);
             }
-            catch { }
+            catch { /* ignored */ }
         }
     }
 
     private Task SetLanguageAsync(InputLanguage language)
     {
-        this.language = language;
-        ArgumentNullException.ThrowIfNull(editor);
-        var lang = this.language switch
+        _language = language;
+        ArgumentNullException.ThrowIfNull(_editor);
+        var inputLanguage = _language switch
         {
             InputLanguage.Json => "json",
             _ => ""
         };
-        return editor.SetLanguageAsync(lang);
+        return _editor.SetLanguageAsync(inputLanguage);
     }
 
     protected override Task<FunctionStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>

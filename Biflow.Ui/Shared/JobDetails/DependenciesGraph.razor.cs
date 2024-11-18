@@ -41,72 +41,63 @@ public partial class DependenciesGraph(
     private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
     private readonly IHxMessageBoxService _confirmer = confirmer;
     private readonly IMediator _mediator = mediator;
-    private readonly Dictionary<StepType, IStepEditModal?> stepEditModals = [];
-    private readonly HashSet<StepTag> tagsFilterSet = [];
+    private readonly Dictionary<StepType, IStepEditModal?> _stepEditModals = [];
+    private readonly HashSet<StepTag> _tagsFilterSet = [];
 
-    private FilterDropdownMode tagsFilterMode = FilterDropdownMode.Any;
-    private DependencyGraph<StepProjection>? dependencyGraph;
-    private StepHistoryOffcanvas? stepHistoryOffcanvas;
-    private Guid? stepFilter;
-    private DependencyGraphDirection direction = DependencyGraphDirection.LeftToRight;
-    private List<StepProjection>? stepSlims;
+    private FilterDropdownMode _tagsFilterMode = FilterDropdownMode.Any;
+    private DependencyGraph<StepProjection>? _dependencyGraph;
+    private StepHistoryOffcanvas? _stepHistoryOffcanvas;
+    private Guid? _stepFilter;
+    private DependencyGraphDirection _direction = DependencyGraphDirection.LeftToRight;
+    private List<StepProjection>? _stepSlims;
 
     private int FilterDepthBackwards
     {
-        get => _filterDepthBackwards;
-        set => _filterDepthBackwards = value >= 0 ? value : _filterDepthBackwards;
+        get;
+        set => field = value >= 0 ? value : field;
     }
-
-    private int _filterDepthBackwards;
 
     private int FilterDepthForwards
     {
-        get => _filterDepthForwards;
-        set => _filterDepthForwards = value >= 0 ? value : _filterDepthForwards;
+        get;
+        set => field = value >= 0 ? value : field;
     }
 
-    private int _filterDepthForwards;
-
     private IEnumerable<StepTag> Tags => Steps?
-        .SelectMany(step => step.Tags)
-        .DistinctBy(t => t.TagName)
-        .Order()
-        .AsEnumerable()
-        ?? [];
+         .SelectMany(step => step.Tags)
+         .DistinctBy(t => t.TagName)
+         .Order()
+         .AsEnumerable() ?? [];
 
     private Func<StepProjection, bool> TagFilterPredicate => step =>
-        (tagsFilterMode is FilterDropdownMode.Any && (tagsFilterSet.Count == 0 || tagsFilterSet.Any(tag => step.Tags.Any(t => t.TagName == tag.TagName))))
-        || (tagsFilterMode is FilterDropdownMode.All && tagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName)));
+        (_tagsFilterMode is FilterDropdownMode.Any && (_tagsFilterSet.Count == 0 || _tagsFilterSet.Any(tag => step.Tags.Any(t => t.TagName == tag.TagName))))
+        || (_tagsFilterMode is FilterDropdownMode.All && _tagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName)));
 
     protected override void OnAfterRender(bool firstRender)
     {
-        if (firstRender)
-        {
-            if (InitialStepId is Guid filterStepId)
-            {
-                stepFilter = filterStepId;
-                StateHasChanged();
-            }
-        }
+        if (!firstRender) return;
+        if (InitialStepId is not { } filterStepId) return;
+        _stepFilter = filterStepId;
+        StateHasChanged();
     }
 
     private Task SetDirectionAsync(DependencyGraphDirection direction)
     {
-        if (this.direction == direction)
+        if (_direction == direction)
         {
             return Task.CompletedTask;
         }
-        this.direction = direction;
+        _direction = direction;
         return LoadGraphAsync();
     }
 
     private async Task LoadGraphAsync()
     {
         ArgumentNullException.ThrowIfNull(Job);
-        ArgumentNullException.ThrowIfNull(dependencyGraph);
+        ArgumentNullException.ThrowIfNull(_dependencyGraph);
 
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        stepSlims = await context.Steps
+        _stepSlims = await context.Steps
             .AsNoTrackingWithIdentityResolution()
             .IgnoreQueryFilters()
             .Where(s => s.JobId == Job.JobId
@@ -126,9 +117,9 @@ public partial class DependenciesGraph(
 
         List<DependencyGraphNode> nodes;
         List<DependencyGraphEdge> edges;
-        if (stepFilter is null)
+        if (_stepFilter is null)
         {
-            var steps = stepSlims.Where(TagFilterPredicate).ToArray();
+            var steps = _stepSlims.Where(TagFilterPredicate).ToArray();
             nodes = steps
                 .Where(TagFilterPredicate)
                 .Select(step => new DependencyGraphNode(
@@ -149,21 +140,21 @@ public partial class DependenciesGraph(
         }
         else
         {
-            var startStep = stepSlims.FirstOrDefault(s => s.StepId == stepFilter);
+            var startStep = _stepSlims.FirstOrDefault(s => s.StepId == _stepFilter);
             if (startStep is not null)
             {
-                var steps = RecurseDependenciesBackward(startStep, stepSlims, [], 0);
+                var steps = RecurseDependenciesBackward(startStep, _stepSlims, [], 0);
                 steps.Remove(startStep);
-                steps = RecurseDependenciesForward(startStep, stepSlims, steps, 0);
+                steps = RecurseDependenciesForward(startStep, _stepSlims, steps, 0);
 
                 nodes = steps.Select(step => new DependencyGraphNode(
                     Id: step.StepId.ToString(),
                     Name: step.StepName ?? "",
-                    CssClass: $"{(step.IsEnabled ? "enabled" : "disabled")} {(step.JobId != Job.JobId ? "external" : "internal")} {(step.StepId == stepFilter ? "selected" : null)}",
+                    CssClass: $"{(step.IsEnabled ? "enabled" : "disabled")} {(step.JobId != Job.JobId ? "external" : "internal")} {(step.StepId == _stepFilter ? "selected" : null)}",
                     TooltipText: $"{step.StepType}",
                     EnableOnClick: true
                 )).ToList();
-                edges = stepSlims
+                edges = _stepSlims
                     .SelectMany(step => step.Dependencies)
                     .Where(d => steps.Any(s => d.DependentOnStepId == s.StepId) && steps.Any(s => d.StepId == s.StepId)) // only include dependencies whose step is included
                     .Select(dep => new DependencyGraphEdge(
@@ -178,7 +169,7 @@ public partial class DependenciesGraph(
             }
         }
 
-        await dependencyGraph.DrawAsync(nodes, edges, direction);
+        await _dependencyGraph.DrawAsync(nodes, edges, _direction);
     }
 
     private List<StepProjection> RecurseDependenciesBackward(StepProjection step, List<StepProjection> allSteps, List<StepProjection> processedSteps, int depth)
@@ -192,22 +183,21 @@ public partial class DependenciesGraph(
 
         if (depth++ > FilterDepthBackwards && FilterDepthBackwards > 0)
         {
-            depth--;
             return processedSteps;
         }
 
         processedSteps.Add(step);
 
         // Get dependency steps.
-        List<StepProjection> dependencySteps = allSteps.Where(s => step.Dependencies.Any(d => d.DependentOnStepId == s.StepId)).ToList();
+        var dependencySteps = allSteps
+            .Where(s => step.Dependencies.Any(d => d.DependentOnStepId == s.StepId))
+            .ToList();
 
         // Loop through the dependencies and handle them recursively.
-        foreach (var depencyStep in dependencySteps)
+        foreach (var dependencyStep in dependencySteps)
         {
-            RecurseDependenciesBackward(depencyStep, allSteps, processedSteps, depth);
+            RecurseDependenciesBackward(dependencyStep, allSteps, processedSteps, depth);
         }
-
-        depth--;
 
         return processedSteps;
     }
@@ -221,36 +211,35 @@ public partial class DependenciesGraph(
 
         if (depth++ > FilterDepthForwards && FilterDepthForwards > 0)
         {
-            depth--;
             return processedSteps;
         }
 
         processedSteps.Add(step);
 
-        List<StepProjection> dependencySteps = allSteps.Where(s => s.Dependencies.Any(d => d.DependentOnStepId == step.StepId)).ToList();
+        var dependencySteps = allSteps
+            .Where(s => s.Dependencies.Any(d => d.DependentOnStepId == step.StepId))
+            .ToList();
 
-        foreach (var depencyStep in dependencySteps)
+        foreach (var dependencyStep in dependencySteps)
         {
-            RecurseDependenciesForward(depencyStep, allSteps, processedSteps, depth);
+            RecurseDependenciesForward(dependencyStep, allSteps, processedSteps, depth);
         }
-
-        depth--;
 
         return processedSteps;
     }
 
     private Task OpenStepEditModalAsync(StepProjection step) =>
-        stepEditModals[step.StepType].LetAsync(x => x.ShowAsync(step.StepId, StepEditModalView.Dependencies));
+        _stepEditModals[step.StepType].LetAsync(x => x.ShowAsync(step.StepId, StepEditModalView.Dependencies));
 
     private async Task OnStepSubmit(Step step)
     {
         ArgumentNullException.ThrowIfNull(Steps);
 
         var index = Steps.FindIndex(s => s.StepId == step.StepId);
-        if (index is int i and >= 0)
+        if (index >= 0)
         {
-            Steps.RemoveAt(i);
-            Steps.Insert(i, step);
+            Steps.RemoveAt(index);
+            Steps.Insert(index, step);
         }
         else
         {
@@ -311,8 +300,8 @@ public partial class DependenciesGraph(
 
     private Task<AutosuggestDataProviderResult<StepProjection>> ProvideSuggestions(AutosuggestDataProviderRequest request)
     {
-        ArgumentNullException.ThrowIfNull(stepSlims);
-        var filteredModules = stepSlims.Where(s => s.StepName?.ContainsIgnoreCase(request.UserInput) ?? false);
+        ArgumentNullException.ThrowIfNull(_stepSlims);
+        var filteredModules = _stepSlims.Where(s => s.StepName?.ContainsIgnoreCase(request.UserInput) ?? false);
         return Task.FromResult(new AutosuggestDataProviderResult<StepProjection>
         {
             Data = filteredModules

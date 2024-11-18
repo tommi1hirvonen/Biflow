@@ -1,6 +1,6 @@
 ﻿
 @typeparam TJobParameter where TJobParameter : ParameterBase
-@typeparam TExpressionParameter where TExpressionParameter : IExpressionParameter<TJobParameter>
+@typeparam TExpressionParameter where TExpressionParameter : class, IExpressionParameter<TJobParameter>
 
 @if (StepParameter is null)
 {

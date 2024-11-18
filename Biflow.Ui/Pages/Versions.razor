@@ -2,7 +2,6 @@
 
 @attribute [Authorize(Roles = $"{Roles.Admin}, {Roles.VersionManager}, {Roles.Editor}")]
 
-@inject NavigationManager NavigationManager
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 
 <PageTitle>Versions | Biflow</PageTitle>
@@ -37,29 +36,28 @@
     </div>
 }
 
-@if (Page is null)
+
+@switch (Page)
 {
-    <VersionsList Versions="versions" />   
-}
-else if (Page == "compare")
-{
-    <VersionsCompare Versions="versions" InitialSourceVersionId="VersionId" />
-}
-else if (Page == "help")
-{
-    <VersionsHelp />
-}
-else if (Page == "revert")
-{
-    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.VersionManager}")">
-        <VersionRevert VersionId="VersionId" />
-    </AuthorizeView>
-}
-else if (Page == "revertjson")
-{
-    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.VersionManager}")">
-        <VersionRevertJson />
-    </AuthorizeView>
+    case null:
+        <VersionsList Versions="_versions" />
+        break;
+    case "compare":
+        <VersionsCompare Versions="_versions" InitialSourceVersionId="VersionId" />
+        break;
+    case "help":
+        <VersionsHelp />
+        break;
+    case "revert":
+        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.VersionManager}")">
+            <VersionRevert VersionId="VersionId" />
+        </AuthorizeView>
+        break;
+    case "revertjson":
+        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.VersionManager}")">
+            <VersionRevertJson />
+        </AuthorizeView>
+        break;
 }
 
 @code {
@@ -67,12 +65,12 @@ else if (Page == "revertjson")
 
     [Parameter] public int? VersionId { get; set; }
 
-    private IList<VersionProjection>? versions;
+    private IList<VersionProjection>? _versions;
 
     protected override async Task OnInitializedAsync()
     {
         await using var context = await DbContextFactory.CreateDbContextAsync();
-        versions = await context.EnvironmentVersions
+        _versions = await context.EnvironmentVersions
             .OrderByDescending(v => v.VersionId)
             .Select(v => new VersionProjection(v.VersionId, v.Description, v.CreatedOn, v.CreatedBy))
             .ToListAsync();

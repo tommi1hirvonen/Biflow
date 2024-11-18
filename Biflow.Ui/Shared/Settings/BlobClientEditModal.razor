@@ -1,5 +1,5 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 @inject ToasterService Toaster
 @inject ITokenService TokenService
 
@@ -25,7 +25,7 @@
                                     <input class="form-check-input" type="radio" id="connection_method_radio_app_registration"
                                            checked=@(client.ConnectionMethod == BlobStorageConnectionMethod.AppRegistration)
                                            disabled=@(!AppRegistrations?.Any() ?? true)
-                                           @onchange="@(e => client.UseAppRegistration(AppRegistrations!.First(), client.StorageAccountUrl ?? ""))">
+                                           @onchange="@(_ => client.UseAppRegistration(AppRegistrations!.First(), client.StorageAccountUrl ?? ""))">
                                     <label class="form-check-label fw-normal" for="connection_method_radio_app_registration">
                                         App registration
                                         <HxPopover Trigger="PopoverTrigger.Hover" Content="Use an app registration to authenticate against the Blob Storage account. The account url also needs to be provided. It is most likely in the format https://<accountname>.blob.core.windows.net/">
@@ -36,7 +36,7 @@
                                 <div class="form-check mt-1">
                                     <input class="form-check-input" type="radio" id="connection_method_radio_connection_string"
                                            checked=@(client.ConnectionMethod == BlobStorageConnectionMethod.ConnectionString)
-                                           @onchange="@(e => client.UseConnectionString(client.ConnectionString ?? ""))">
+                                           @onchange="@(_ => client.UseConnectionString(client.ConnectionString ?? ""))">
                                     <label class="form-check-label fw-normal" for="connection_method_radio_connection_string">
                                         Connection string
                                         <HxPopover Trigger="PopoverTrigger.Hover" Content="Use a connection string to authenticate against the Blob Storage account. The connection string may contain either an account key or a SAS token.">
@@ -47,7 +47,7 @@
                                 <div class="form-check mt-1">
                                     <input class="form-check-input" type="radio" id="connection_method_radio_url"
                                            checked=@(client.ConnectionMethod == BlobStorageConnectionMethod.Url)
-                                           @onchange="@(e => client.UseUrl(client.StorageAccountUrl ?? ""))">
+                                           @onchange="@(_ => client.UseUrl(client.StorageAccountUrl ?? ""))">
                                     <label class="form-check-label fw-normal" for="connection_method_radio_url">
                                         URL
                                         <HxPopover Trigger="PopoverTrigger.Hover" Content="Use a URL containing a SAS token to authenticate against the Blob Storage account.">
@@ -98,13 +98,14 @@
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="TestConnection" Enabled="!testingConnection">
                                     Test connection
                                 </HxButton>
-                                @if (connectionTestSuccess == true)
+                                @switch (connectionTestSuccess)
                                 {
-                                    <span class="badge bg-success ms-3">Success</span>
-                                }
-                                else if (connectionTestSuccess == false)
-                                {
-                                    <span class="badge bg-danger ms-3">Failed</span>
+                                    case true:
+                                        <span class="badge bg-success ms-3">Success</span>
+                                        break;
+                                    case false:
+                                        <span class="badge bg-danger ms-3">Failed</span>
+                                        break;
                                 }
                             </div>
                         </div>
@@ -138,7 +139,7 @@
         await modal.LetAsync(x => x.ShowAsync());
         if (clientId != Guid.Empty)
         {
-            await using var context = DbContextFactory.CreateDbContext();
+            await using var context = await DbContextFactory.CreateDbContextAsync();
             client = await context.BlobStorageClients
                 .AsNoTrackingWithIdentityResolution()
                 .Include(c => c.AppRegistration)
@@ -180,7 +181,7 @@
 
     private void UrlChanged(string? url)
     {
-        if (client?.ConnectionMethod == BlobStorageConnectionMethod.AppRegistration && client.AppRegistration is not null)
+        if (client is { ConnectionMethod: BlobStorageConnectionMethod.AppRegistration, AppRegistration: not null })
         {
             client.UseAppRegistration(client.AppRegistration, url ?? "");
         }
@@ -201,7 +202,7 @@
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
-        var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        var confirmed = await Js.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
         if (!confirmed)
         {
             context.PreventNavigation();

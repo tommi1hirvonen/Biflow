@@ -6,7 +6,7 @@
 
 <HxButton Color="ThemeColor.Success"
 @onclick="() => ShowEditModal(null)"
-          Enabled="environments is not null">
+          Enabled="_environments is not null">
     Add environment
 </HxButton>
 
@@ -26,17 +26,17 @@
             </tr>
         </thead>
         <tbody>
-            @if (environments is null)
+            @if (_environments is null)
             {
                 <tr><td colspan="5" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
-            else if (environments.Count == 0)
+            else if (_environments.Count == 0)
             {
                 <tr><td colspan="5">No Qlik Cloud environments</td></tr>
             }
             else
             {
-                @foreach (var environment in environments.OrderBy(c => c.QlikCloudEnvironmentName))
+                @foreach (var environment in _environments.OrderBy(c => c.QlikCloudEnvironmentName))
                 {
                     var jobs = environment.Steps.Select(s => s.Job).Distinct().Count();
                     var steps = environment.Steps.Count();
@@ -70,8 +70,8 @@
                             <a class="text-body" href="javascript:void(0)"
                             @onclick="async () =>
                             {
-                                stepsEnvironment = environment;
-                                await stepsModal.LetAsync(x => x.ShowAsync());
+                                _stepsEnvironment = environment;
+                                await _stepsModal.LetAsync(x => x.ShowAsync());
                             }">
                                 @(steps > 0 ? $"{steps} step(s)" : null)
                             </a>
@@ -83,9 +83,9 @@
     </table>
 </div>
 
-<QlikCloudEnvironmentEditModal @ref="editModal" OnEnvironmentSubmit="OnEnvironmentSubmitAsync" />
+<QlikCloudEnvironmentEditModal @ref="_editModal" OnEnvironmentSubmit="OnEnvironmentSubmitAsync" />
 
-<HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsEnvironment?.QlikCloudEnvironmentName}")">
+<HxModal @ref="_stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {_stepsEnvironment?.QlikCloudEnvironmentName}")">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -97,7 +97,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var step in stepsEnvironment?.Steps
+                        @foreach (var step in _stepsEnvironment?.Steps
                         .OrderBy(s => s.Job.JobName)
                         .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
                         {
@@ -118,21 +118,20 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await stepsModal.LetAsync(x => x.HideAsync())">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await _stepsModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
 @code {
-    private List<QlikCloudEnvironment>? environments;
-    private QlikCloudEnvironmentEditModal? editModal;
-
-    private QlikCloudEnvironment? stepsEnvironment;
-    private HxModal? stepsModal;
+    private List<QlikCloudEnvironment>? _environments;
+    private QlikCloudEnvironmentEditModal? _editModal;
+    private QlikCloudEnvironment? _stepsEnvironment;
+    private HxModal? _stepsModal;
 
     protected override async Task OnInitializedAsync()
     {
         await using var context = await DbContextFactory.CreateDbContextAsync();
-        environments = await context.QlikCloudEnvironments
+        _environments = await context.QlikCloudEnvironments
             .AsNoTrackingWithIdentityResolution()
             .Include(c => c.Steps)
             .ThenInclude(s => s.Job)
@@ -144,7 +143,7 @@
         try
         {
             await Mediator.SendAsync(new DeleteQlikCloudEnvironmentCommand(environment.QlikCloudEnvironmentId));
-            environments?.Remove(environment);
+            _environments?.Remove(environment);
         }
         catch (Exception ex)
         {
@@ -158,17 +157,16 @@
         if (environment.QlikCloudEnvironmentId == Guid.Empty)
         {
             await Mediator.SendAsync(new CreateQlikCloudEnvironmentCommand(environment));
-            environments?.Add(environment);
         }
         else
         {
             await Mediator.SendAsync(new UpdateQlikCloudEnvironmentCommand(environment));
-            environments?.RemoveAll(c => c.QlikCloudEnvironmentId == environment.QlikCloudEnvironmentId);
-            environments?.Add(environment);
+            _environments?.RemoveAll(c => c.QlikCloudEnvironmentId == environment.QlikCloudEnvironmentId);
         }
+        _environments?.Add(environment);
         StateHasChanged();
     }
 
     private async Task ShowEditModal(QlikCloudEnvironment? environment) =>
-        await editModal.LetAsync(x => x.ShowAsync(environment?.QlikCloudEnvironmentId?? Guid.Empty));
+        await _editModal.LetAsync(x => x.ShowAsync(environment?.QlikCloudEnvironmentId?? Guid.Empty));
 }

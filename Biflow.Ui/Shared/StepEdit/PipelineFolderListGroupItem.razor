@@ -32,46 +32,48 @@
             </div>
         </div>
     }
-    @if (folderExpanded)
+    @if (!folderExpanded)
     {
-        @foreach (var pipeline in pipelines)
-        {
-            var pipelinePadding = $"{(Folder.Depth + 1.4).ToString("F2", CultureInfo.InvariantCulture)}rem;";
-            <div class="list-group-item list-group-item-action small @(pipeline == SelectedPipeline ? "bg-body" : null)" style="cursor: pointer;" @onclick="() => OnPipelineSelected.InvokeAsync(pipeline)">
-                <div class="row">
-                    <div class="col d-flex align-items-center @(pipeline == SelectedPipeline ? "fw-bold" : null)" style="padding-left: @(pipelinePadding)">
-                        <SvgIcon Icon="FeatherIcon.Pipeline" />
-                        &nbsp;
-                        <HighlightableText Text="@pipeline.Name" PartToHighlight="@FilterText" />
+        return;
+    }
+
+    @foreach (var pipeline in pipelines)
+    {
+        var pipelinePadding = $"{(Folder.Depth + 1.4).ToString("F2", CultureInfo.InvariantCulture)}rem;";
+        <div class="list-group-item list-group-item-action small @(pipeline == SelectedPipeline ? "bg-body" : null)" style="cursor: pointer;" @onclick="() => OnPipelineSelected.InvokeAsync(pipeline)">
+            <div class="row">
+                <div class="col d-flex align-items-center @(pipeline == SelectedPipeline ? "fw-bold" : null)" style="padding-left: @(pipelinePadding)">
+                    <SvgIcon Icon="FeatherIcon.Pipeline" />
+                    &nbsp;
+                    <HighlightableText Text="@pipeline.Name" PartToHighlight="@FilterText" />
+                </div>
+            </div>
+            @if (pipeline == SelectedPipeline && pipeline.Parameters.Any())
+            {
+                <div class="row mt-3">
+                    <div class="col">
+                        <h6 class="mx-2">Parameters</h6>
+                        <dl class="row mx-3">
+                            @foreach (var param in pipeline.Parameters)
+                            {
+                                var defaultValue = param.Value.DefaultValue;
+                                var defaultValueText = defaultValue is not null ? $"({defaultValue})" : null;
+                                <dt class="col-sm-6">@param.Key</dt>
+                                <dd class="col-sm-6">@param.Value.Type @defaultValueText</dd>
+                            }
+                        </dl>
                     </div>
                 </div>
-                @if (pipeline == SelectedPipeline && pipeline.Parameters.Any())
-                {
-                    <div class="row mt-3">
-                        <div class="col">
-                            <h6 class="mx-2">Parameters</h6>
-                            <dl class="row mx-3">
-                                @foreach (var param in pipeline.Parameters)
-                                {
-                                    var defaultValue = param.Value.DefaultValue;
-                                    var defaultValueText = defaultValue is not null ? $"({defaultValue})" : null;
-                                    <dt class="col-sm-6">@param.Key</dt>
-                                    <dd class="col-sm-6">@param.Value.Type @defaultValueText</dd>
-                                }
-                            </dl>
-                        </div>
-                    </div>
-                }
-            </div>
-        }
-        @foreach (var folder in Folder.Folders.OrderBy(f => f.Name))
-        {
-            <PipelineFolderListGroupItem Folder="folder"
-                                         ExpandStatuses="ExpandStatuses"
-                                         SelectedPipeline="SelectedPipeline"
-                                         OnPipelineSelected="OnPipelineSelected"
-                                         FilterText="@FilterText" />
-        }
+            }
+        </div>
+    }
+    @foreach (var folder in Folder.Folders.OrderBy(f => f.Name))
+    {
+        <PipelineFolderListGroupItem Folder="folder"
+                                     ExpandStatuses="ExpandStatuses"
+                                     SelectedPipeline="SelectedPipeline"
+                                     OnPipelineSelected="OnPipelineSelected"
+                                     FilterText="@FilterText" />
     }
 }
 

@@ -1,6 +1,6 @@
 ﻿@inject ToasterService Toaster
 
-<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select stored procedure">
+<HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select stored procedure">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -9,9 +9,9 @@
                         <SvgIcon Icon="FeatherIcon.Filter" />
                     </span>
                     <input type="text" class="form-control form-control-sm" autocomplete="off" placeholder="Schema"
-                           @bind-value="filterTextSchema" @bind-value:event="oninput" />
+                           @bind-value="_filterTextSchema" @bind-value:event="oninput" />
                     <input type="text" class="form-control form-control-sm" autocomplete="off" placeholder="Name"
-                           @bind-value="filterTextName" @bind-value:event="oninput" />
+                           @bind-value="_filterTextName" @bind-value:event="oninput" />
                 </div>
             </div>
         </div>
@@ -26,11 +26,11 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (procedures is null)
+                        @if (_procedures is null)
                         {
                             <tr><td class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                         }
-                        else if (procedures.Count() == 0)
+                        else if (!_procedures.Any())
                         {
                             <tr><td>No stored procedures</td></tr>
                         }
@@ -39,31 +39,32 @@
                             foreach (var proc in ProceduresFiltered)
                             {
                                 <tr style="cursor: pointer;"
-                                    @onclick="() => selectedProcedure = proc"
-                                    class="@(proc == selectedProcedure ? "bg-body-tertiary fw-bold" : null)">
+                                    @onclick="() => _selectedProcedure = proc"
+                                    class="@(Equals(proc, _selectedProcedure) ? "bg-body-tertiary fw-bold" : null)">
                                     <td class="small">
-                                        <HighlightableText Text="@(proc.QuotedSchemaName)" PartToHighlight="@filterTextSchema" />.<HighlightableText Text="@(proc.QuotedProcedureName)" PartToHighlight="@filterTextName" />@proc.ArgumentSignature
+                                        <HighlightableText Text="@(proc.QuotedSchemaName)" PartToHighlight="@_filterTextSchema" />.<HighlightableText Text="@(proc.QuotedProcedureName)" PartToHighlight="@_filterTextName" />@proc.ArgumentSignature
                                     </td>
                                 </tr>
-                                @if (proc == selectedProcedure && proc.Parameters.Any())
+                                @if (!Equals(proc, _selectedProcedure) || !proc.Parameters.Any())
                                 {
-                                    <tr class="no-hover">
-                                        <td colspan="2" class="bg-body-tertiary">
-                                            <div class="row">
-                                                <div class="col">
-                                                    <h6 class="mx-2">Parameters</h6>
-                                                    <dl class="row mx-3 small">
-                                                        @foreach (var param in proc.Parameters)
-                                                        {
-                                                            <dt class="col-sm-6">@param.ParameterName</dt>
-                                                            <dd class="col-sm-6">@param.ParameterType</dd>
-                                                        }
-                                                    </dl>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                    continue;
                                 }
+                                <tr class="no-hover">
+                                    <td colspan="2" class="bg-body-tertiary">
+                                        <div class="row">
+                                            <div class="col">
+                                                <h6 class="mx-2">Parameters</h6>
+                                                <dl class="row mx-3 small">
+                                                    @foreach (var param in proc.Parameters)
+                                                    {
+                                                        <dt class="col-sm-6">@param.ParameterName</dt>
+                                                        <dd class="col-sm-6">@param.ParameterType</dd>
+                                                    }
+                                                </dl>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
                             }
                         }
                     </tbody>
@@ -74,10 +75,10 @@
 
     <FooterTemplate>
         <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectProcedure"
-                  Enabled="selectedProcedure is not null">
+                  Enabled="_selectedProcedure is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
@@ -85,42 +86,42 @@
     [Parameter]
     public EventCallback<IStoredProcedure> OnProcedureSelected { get; set; }
 
-    private HxOffcanvas? offcanvas;
-    private IEnumerable<IStoredProcedure>? procedures;
-    private string filterTextName = string.Empty;
-    private string filterTextSchema = string.Empty;
-    private IStoredProcedure? selectedProcedure;
+    private HxOffcanvas? _offcanvas;
+    private IEnumerable<IStoredProcedure>? _procedures;
+    private string _filterTextName = string.Empty;
+    private string _filterTextSchema = string.Empty;
+    private IStoredProcedure? _selectedProcedure;
 
-    private IEnumerable<IStoredProcedure> ProceduresFiltered => procedures?
-        .Where(proc => proc.QuotedSchemaName.ContainsIgnoreCase(filterTextSchema))
-        .Where(proc => proc.QuotedProcedureName.ContainsIgnoreCase(filterTextName))
+    private IEnumerable<IStoredProcedure> ProceduresFiltered => _procedures?
+        .Where(proc => proc.QuotedSchemaName.ContainsIgnoreCase(_filterTextSchema))
+        .Where(proc => proc.QuotedProcedureName.ContainsIgnoreCase(_filterTextName))
         .OrderBy(proc => proc.SchemaName)
         .ThenBy(proc => proc.ProcedureName)
         .AsEnumerable() ?? [];
 
     private async Task SelectProcedure()
     {
-        if (selectedProcedure is not null)
+        if (_selectedProcedure is not null)
         {
-            await OnProcedureSelected.InvokeAsync(selectedProcedure);
-            await offcanvas.LetAsync(x => x.HideAsync());
+            await OnProcedureSelected.InvokeAsync(_selectedProcedure);
+            await _offcanvas.LetAsync(x => x.HideAsync());
         }
     }
 
     public void OnClosed()
     {
-        procedures = null;
-        selectedProcedure = null;
-        filterTextSchema = string.Empty;
-        filterTextName = string.Empty;
+        _procedures = null;
+        _selectedProcedure = null;
+        _filterTextSchema = string.Empty;
+        _filterTextName = string.Empty;
     }
 
     public async Task ShowAsync(ConnectionBase connection)
     {
-        await offcanvas.LetAsync(x => x.ShowAsync());
+        await _offcanvas.LetAsync(x => x.ShowAsync());
         try
         {
-            procedures = connection switch
+            _procedures = connection switch
             {
                 MsSqlConnection ms => await ms.GetStoredProceduresAsync(),
                 SnowflakeConnection sf => await sf.GetStoredProceduresAsync(),

@@ -24,11 +24,11 @@
             <HxMessageBoxHost />
         </div>
         <Toaster />
-        <SchedulerStatusResolver OnStatusMessageResolved="message => schedulerServiceErrorMessage = message" />
+        <SchedulerStatusResolver OnStatusMessageResolved="message => _schedulerServiceErrorMessage = message" />
         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")" Context="auth2">
-            <ExecuteMultipleModal @ref="executeMultipleModal" />
+            <ExecuteMultipleModal @ref="_executeMultipleModal" />
         </AuthorizeView>
-        <StepExecutionMonitorsOffcanvas @ref="stepExecutionMonitorsOffcanvas" />
+        <StepExecutionMonitorsOffcanvas @ref="_stepExecutionMonitorsOffcanvas" />
         <header>
             <nav class="navbar navbar-dark navbar-custom sticky-top flex-lg-nowrap navbar-expand-lg p-0 shadow bg-gradient-primary">
                 <span class="navbar-brand navbar-brand-bg fw-bold ps-4 py-2 fs-4 me-0">biflow</span>
@@ -56,15 +56,15 @@
                             Self-hosted executor should only be used for development/testing.
                         </HxAlert>
                     }
-                    @if (schedulerServiceErrorMessage is not null)
+                    @if (_schedulerServiceErrorMessage is not null)
                     {
                         <HxAlert Color="ThemeColor.Warning" Dismissible>
-                            @schedulerServiceErrorMessage
+                            @_schedulerServiceErrorMessage
                         </HxAlert>
                     }
-                    <CascadingValue Value="userState">
-                        <CascadingValue Value="executeMultipleModal">
-                            <CascadingValue Value="stepExecutionMonitorsOffcanvas">
+                    <CascadingValue Value="_userState">
+                        <CascadingValue Value="_executeMultipleModal">
+                            <CascadingValue Value="_stepExecutionMonitorsOffcanvas">
                                 @Body
                             </CascadingValue>
                         </CascadingValue>
@@ -74,7 +74,7 @@
         </div>
     </Authorized>
     <NotAuthorized>
-        @if (!redirecting)
+        @if (!_redirecting)
         {
             <div class="container">
                 <div class="row">
@@ -86,7 +86,7 @@
                                     @if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.AzureAd)
                                     {
                                         <p>Sorry, you are not authorized to access the site with this account.</p>
-                                        <strong>@username</strong>
+                                        <strong>@_username</strong>
                                         <div class="d-grid mt-4 mb-3">
                                             <a class="btn btn-primary" href="MicrosoftIdentity/Account/SignOut">
                                                 <SvgIcon Icon="FeatherIcon.LogOut" />
@@ -98,7 +98,7 @@
                                     else if (AuthenticationResolver.AuthenticationMethod != AuthenticationMethod.Windows)
                                     {
                                         <p>Authorization failed most likely because the authentication cookie expired. Please try logging out and logging in again.</p>
-                                        <strong>@username</strong>
+                                        <strong>@_username</strong>
                                         <div class="d-grid mt-4 mb-3">
                                             <a class="btn btn-primary" href="javascript:void(0)" @onclick="@(() => NavigationManager.NavigateTo("logout", forceLoad: true))">
                                                 <SvgIcon Icon="FeatherIcon.LogOut" />
@@ -121,16 +121,16 @@
     [CascadingParameter]
     protected Task<AuthenticationState>? AuthState { get; set; }
 
-    private readonly UserState userState = new();
+    private readonly UserState _userState = new();
 
-    private string? username;
-    private bool collapseSidebar = true;
-    private string? schedulerServiceErrorMessage;
-    private bool redirecting;
-    private ExecuteMultipleModal? executeMultipleModal;
-    private StepExecutionMonitorsOffcanvas? stepExecutionMonitorsOffcanvas;
+    private string? _username;
+    private bool _collapseSidebar = true;
+    private string? _schedulerServiceErrorMessage;
+    private bool _redirecting;
+    private ExecuteMultipleModal? _executeMultipleModal;
+    private StepExecutionMonitorsOffcanvas? _stepExecutionMonitorsOffcanvas;
 
-    private string? SidebarClass => collapseSidebar ? "collapse" : null;
+    private string? SidebarClass => _collapseSidebar ? "collapse" : null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -141,13 +141,13 @@
 
         var state = await AuthState;
         var identity = state.User.Identity;
-        username = identity?.Name;
+        _username = identity?.Name;
 
         if (AuthenticationResolver.AuthenticationMethod is AuthenticationMethod.BuiltIn or AuthenticationMethod.Ldap)
         {
             if (identity is null || !identity.IsAuthenticated)
             {
-                redirecting = true;
+                _redirecting = true;
 
                 var redirectUrl = Uri.EscapeDataString(NavigationManager.ToBaseRelativePath(NavigationManager.Uri));
                 var url = string.IsNullOrEmpty(redirectUrl)
@@ -160,13 +160,13 @@
 
     private void ToggleSidebar()
     {
-        collapseSidebar = !collapseSidebar;
+        _collapseSidebar = !_collapseSidebar;
     }
 
     private async Task CollapseSidebar()
     {
         // Do not instantly close the sidebar, as this might look "funky" to the user.
         await Task.Delay(100);
-        collapseSidebar = true;
+        _collapseSidebar = true;
     }
 }

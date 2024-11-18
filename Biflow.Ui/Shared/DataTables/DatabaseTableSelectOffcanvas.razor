@@ -1,6 +1,6 @@
 ﻿@inject ToasterService Toaster
 
-<HxOffcanvas @ref="offcanvas" Title="Select table" Size="OffcanvasSize.Large" OnClosed="OnClosed" ScrollingEnabled="true">
+<HxOffcanvas @ref="_offcanvas" Title="Select table" Size="OffcanvasSize.Large" OnClosed="OnClosed" ScrollingEnabled="true">
     <BodyTemplate>
         <div class="row">
             <div class="col-2">
@@ -11,8 +11,8 @@
                     <div class="input-group-text">
                         <SvgIcon Icon="FeatherIcon.Filter" />
                     </div>
-                    <input type="search" class="form-control" @bind-value="schemaFilter" @bind-value:event="oninput" placeholder="Schema" />
-                    <input type="search" class="form-control" @bind-value="tableFilter" @bind-value:event="oninput" placeholder="Table" />
+                    <input type="search" class="form-control" @bind-value="_schemaFilter" @bind-value:event="oninput" placeholder="Schema" />
+                    <input type="search" class="form-control" @bind-value="_tableFilter" @bind-value:event="oninput" placeholder="Table" />
                 </div>
             </div>
         </div>
@@ -27,13 +27,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (tables is null)
+                        @if (_tables is null)
                         {
                             <tr>
                                 <td colspan="3" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td>
                             </tr>
                         }
-                        else if (!tables.Any())
+                        else if (!_tables.Any())
                         {
                             <tr>
                                 <td colspan="3">No tables</td>
@@ -43,10 +43,10 @@
                         {
                             @foreach (var table in FilteredTables)
                             {
-                                var className = selectedTable?.Equals(table) ?? false ? "bg-body-tertiary fw-bold" : null;
-                                <tr class="@className" style="cursor: pointer;" @onclick="() => selectedTable = table">
-                                    <td><HighlightableText Text="@table.Schema" PartToHighlight="@schemaFilter" /></td>
-                                    <td><HighlightableText Text="@table.Table" PartToHighlight="@tableFilter" /></td>
+                                var className = _selectedTable?.Equals(table) ?? false ? "bg-body-tertiary fw-bold" : null;
+                                <tr class="@className" style="cursor: pointer;" @onclick="() => _selectedTable = table">
+                                    <td><HighlightableText Text="@table.Schema" PartToHighlight="@_schemaFilter" /></td>
+                                    <td><HighlightableText Text="@table.Table" PartToHighlight="@_tableFilter" /></td>
                                     <td class="@(table.HasPrimaryKey ? null : "text-danger")">@table.HasPrimaryKey</td>
                                 </tr>
                             }
@@ -57,10 +57,10 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectTableAsync" Enabled="selectedTable is not null">
+        <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectTableAsync" Enabled="_selectedTable is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">
             Cancel
         </HxButton>
     </FooterTemplate>
@@ -69,51 +69,51 @@
 @code {
     [Parameter] public EventCallback<DatabaseTableSelectedResult> OnTableSelected { get; set; }
 
-    private HxOffcanvas? offcanvas;
-    private MsSqlConnection? connection;
-    private IEnumerable<DbTable>? tables;
-    private DbTable? selectedTable;
-    private string schemaFilter = string.Empty;
-    private string tableFilter = string.Empty;
+    private HxOffcanvas? _offcanvas;
+    private MsSqlConnection? _connection;
+    private IEnumerable<DbTable>? _tables;
+    private DbTable? _selectedTable;
+    private string _schemaFilter = string.Empty;
+    private string _tableFilter = string.Empty;
 
     private IEnumerable<DbTable> FilteredTables =>
-        tables?
-        .Where(o => o.Schema.ContainsIgnoreCase(schemaFilter))
-        .Where(o => o.Table.ContainsIgnoreCase(tableFilter))
-        ?? Enumerable.Empty<DbTable>();
+        _tables?
+        .Where(o => o.Schema.ContainsIgnoreCase(_schemaFilter))
+        .Where(o => o.Table.ContainsIgnoreCase(_tableFilter))
+        ?? [];
 
     private async Task SelectTableAsync()
     {
-        if (selectedTable is null)
+        if (_selectedTable is null)
         {
             return;
         }
-        await OnTableSelected.InvokeAsync(new (selectedTable.Schema, selectedTable.Table));
-        await offcanvas.LetAsync(x => x.HideAsync());
+        await OnTableSelected.InvokeAsync(new (_selectedTable.Schema, _selectedTable.Table));
+        await _offcanvas.LetAsync(x => x.HideAsync());
     }
 
     private void OnClosed()
     {
-        selectedTable = null;
-        schemaFilter = "";
-        tableFilter = "";
+        _selectedTable = null;
+        _schemaFilter = "";
+        _tableFilter = "";
     }
 
     public async Task ShowAsync(MsSqlConnection connection)
     {
-        if (this.connection != connection)
+        if (_connection != connection)
         {
-            tables = null;
-            this.connection = connection;
+            _tables = null;
+            _connection = connection;
             try
             {
-                tables = await connection.GetDatabaseTablesAsync();
+                _tables = await connection.GetDatabaseTablesAsync();
             }
             catch (Exception ex)
             {
                 Toaster.AddError("Error loading tables", ex.Message);
             }
         }
-        await offcanvas.LetAsync(x => x.ShowAsync());
+        await _offcanvas.LetAsync(x => x.ShowAsync());
     }
 }

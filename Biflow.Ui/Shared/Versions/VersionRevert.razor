@@ -16,19 +16,19 @@
             <div class="card-body mx-auto py-4" style="max-width: 50rem;">
                 <h5>Version revert</h5>
                 <hr />
-                @if (version is not null)
+                @if (_version is not null)
                 {
                     <div class="row">
                         <div class="col">
                             <dl>
                                 <dt>Version id</dt>
-                                <dd>@version.VersionId</dd>
+                                <dd>@_version.VersionId</dd>
                                 <dt>Description</dt>
-                                <dd>@version.Description</dd>
+                                <dd>@_version.Description</dd>
                                 <dt>Created on</dt>
-                                <dd>@version.CreatedOn</dd>
+                                <dd>@_version.CreatedOn</dd>
                                 <dt>Created by</dt>
-                                <dd>@version.CreatedBy</dd>
+                                <dd>@_version.CreatedBy</dd>
                             </dl>
                         </div>
                     </div>
@@ -40,7 +40,7 @@
                     </div>
                     <div class="row mt-3">
                         <div class="col">
-                            @if (revertTask is null)
+                            @if (_revertTask is null)
                             {
                                 <HxDropdownButtonGroup>
                                     <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto text-danger me-3" Spinner="false">
@@ -48,7 +48,7 @@
                                         Revert...
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
-                                        <HxDropdownItem OnClick="() => RevertAsync(version.VersionId)">
+                                        <HxDropdownItem OnClick="() => RevertAsync(_version.VersionId)">
                                             Start
                                         </HxDropdownItem>
                                     </HxDropdownMenu>
@@ -56,13 +56,13 @@
                             }
                         </div>
                     </div>
-                    @if (revertTask is not null)
+                    @if (_revertTask is not null)
                     {
                         <div class="row mt-2">
                             <div class="col">
                                 <HxAlert Color="ThemeColor.Info">
                                     <p>
-                                        @if (revertTask is not null)
+                                        @if (_revertTask is not null)
                                         {
                                             <HxSpinner Size="SpinnerSize.Small" Color="ThemeColor.None" />
                                         }
@@ -78,16 +78,16 @@
                             </div>
                         </div>
                     }
-                    @if (result is not null)
+                    @if (_result is not null)
                     {
                         <div class="row mt-3">
                             <div class="col">
-                                <HxAlert Color="result.Color">
-                                    @if (result.Title is not null)
+                                <HxAlert Color="_result.Color">
+                                    @if (_result.Title is not null)
                                     {
-                                        <p><strong>@result.Title</strong></p>
+                                        <p><strong>@_result.Title</strong></p>
                                     }
-                                    @result.Message
+                                    @_result.Message
                                 </HxAlert>
                             </div>
                         </div>
@@ -112,55 +112,55 @@
 @code {
     [Parameter] public int? VersionId { get; set; }
 
-    private int previousVersionId;
-    private EnvironmentVersion? version;
-    private CancellationTokenSource cts = new();
-    private Task? revertTask;
-    private RevertResult? result;
+    private int _previousVersionId;
+    private EnvironmentVersion? _version;
+    private CancellationTokenSource _cts = new();
+    private Task? _revertTask;
+    private RevertResult? _result;
 
     protected override async Task OnParametersSetAsync()
     {
-        if (VersionId is int versionId && versionId != previousVersionId)
+        if (VersionId is { } versionId && versionId != _previousVersionId)
         {
-            previousVersionId = versionId;
-            await using var context = DbContextFactory.CreateDbContext();
-            version = await context.EnvironmentVersions
+            _previousVersionId = versionId;
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+            _version = await context.EnvironmentVersions
                 .FirstOrDefaultAsync(v => v.VersionId == versionId);
         }
     }
 
     private async Task RevertAsync(int versionId)
     {
-        if (revertTask is not null)
+        if (_revertTask is not null)
         {
             return;
         }
 
         try
         {
-            result = null;
+            _result = null;
 
-            await using var context = DbContextFactory.CreateDbContext();
+            await using var context = await DbContextFactory.CreateDbContextAsync();
             var snapshotJson = await context.EnvironmentVersions
                 .AsNoTracking()
                 .Where(v => v.VersionId == versionId)
                 .Select(v => v.SnapshotWithReferencesPreserved)
-                .FirstOrDefaultAsync(cts.Token)
+                .FirstOrDefaultAsync(_cts.Token)
                 ?? throw new NotFoundException<EnvironmentSnapshot>(versionId);
             var snapshot = EnvironmentSnapshot.FromJson(snapshotJson, referencesPreserved: true);
             ArgumentNullException.ThrowIfNull(snapshot);
 
             var command = new VersionRevertCommand(snapshot);
-            revertTask = Mediator.SendAsync(command, cts.Token);
+            _revertTask = Mediator.SendAsync(command, _cts.Token);
             StateHasChanged();
-            await revertTask;
-            result = new(ThemeColor.Success, null, "Version reverted successfully");
+            await _revertTask;
+            _result = new(ThemeColor.Success, null, "Version reverted successfully");
         }
         catch (OperationCanceledException)
         {
-            cts.Dispose();
-            cts = new();
-            result = new(ThemeColor.Warning, null, "Revert was canceled");
+            _cts.Dispose();
+            _cts = new();
+            _result = new(ThemeColor.Warning, null, "Revert was canceled");
         }
         catch (Exception ex)
         {
@@ -169,29 +169,29 @@
                 { InnerException: not null } when ex.Message.ContainsIgnoreCase("see the inner exception") => ex.InnerException.Message,
                 _ => ex.Message
             };
-            result = new(ThemeColor.Danger, "Error reverting version", message);
+            _result = new(ThemeColor.Danger, "Error reverting version", message);
         }
         finally
         {
-            revertTask = null;
+            _revertTask = null;
         }
     }
 
     private void CancelRevertTask()
     {
-        if (revertTask is not null && !cts.IsCancellationRequested)
+        if (_revertTask is not null && !_cts.IsCancellationRequested)
         {
-            cts.Cancel();
+            _cts.Cancel();
         }
     }
 
     public void Dispose()
     {
-        if (!cts.IsCancellationRequested)
+        if (!_cts.IsCancellationRequested)
         {
-            cts.Cancel();
+            _cts.Cancel();
         }
-        cts.Dispose();
+        _cts.Dispose();
     }
 
     private record RevertResult(ThemeColor Color, string? Title, string? Message);

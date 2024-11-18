@@ -2,15 +2,15 @@
 @inject ToasterService Toaster
 @inject IHttpClientFactory HttpClientFactory
 @inject ITokenService TokenService
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 
-<HxModal @ref="modal" Size="ModalSize.Large" OnClosed="() => connectionTestSuccess = null" Title="@(functionApp?.FunctionAppId == Guid.Empty ? "New Function App" : "Edit " + functionApp?.FunctionAppName)" Scrollable="true">
+<HxModal @ref="_modal" Size="ModalSize.Large" OnClosed="() => _connectionTestSuccess = null" Title="@(_functionApp?.FunctionAppId == Guid.Empty ? "New Function App" : "Edit " + _functionApp?.FunctionAppName)" Scrollable="true">
     
     <BodyTemplate>
-        @if (functionApp is not null)
+        @if (_functionApp is not null)
         {
             <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
-            <EditForm Model="functionApp" id="function_app_edit_form" OnValidSubmit="SubmitFunctionApp">
+            <EditForm Model="_functionApp" id="function_app_edit_form" OnValidSubmit="SubmitFunctionApp">
                 <div class="row">
                     <div class="col mx-3">
                         <DataAnnotationsValidator />
@@ -18,13 +18,13 @@
 
                         <div>
                             <label class="form-label">Function App name</label>
-                            <InputText class="form-control" @bind-Value="functionApp.FunctionAppName"></InputText>
+                            <InputText class="form-control" @bind-Value="_functionApp.FunctionAppName"></InputText>
                         </div>
 
                         <div class="row mt-3">
                             <div class="col-lg-6">
                                 <label class="form-label">App registration</label>
-                                <InputSelect class="form-select" @bind-Value:get="functionApp.AppRegistrationId" @bind-Value:set="AppRegistrationChanged">
+                                <InputSelect class="form-select" @bind-Value:get="_functionApp.AppRegistrationId" @bind-Value:set="AppRegistrationChanged">
                                     @foreach (var app in AppRegistrations ?? Enumerable.Empty<AppRegistration>())
                                     {
                                         <option value="@app.AppRegistrationId">@app.AppRegistrationName</option>
@@ -36,31 +36,31 @@
                         <div class="row mt-3">
                             <div class="col-lg">
                                 <label class="form-label">Subscription id</label>
-                                <InputText class="form-control" @bind-Value="functionApp.SubscriptionId"></InputText>
+                                <InputText class="form-control" @bind-Value="_functionApp.SubscriptionId"></InputText>
                             </div>
                         </div>
 
                         <div class="row mt-3">
                             <div class="col-lg">
                                 <label class="form-label">Resource group name</label>
-                                <InputText class="form-control" @bind-Value="functionApp.ResourceGroupName"></InputText>
+                                <InputText class="form-control" @bind-Value="_functionApp.ResourceGroupName"></InputText>
                             </div>
                             <div class="col-lg">
                                 <label class="form-label">Resource name</label>
-                                <InputText class="form-control" @bind-Value="functionApp.ResourceName"></InputText>
+                                <InputText class="form-control" @bind-Value="_functionApp.ResourceName"></InputText>
                             </div>
                         </div>
 
                         <div class="row my-3">
                             <div class="col">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="TestConnection" Enabled="!testingConnection">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="TestConnection" Enabled="!_testingConnection">
                                     Test connection
                                 </HxButton>
-                                @if (connectionTestSuccess == true)
+                                @if (_connectionTestSuccess == true)
                                 {
                                     <span class="badge bg-success ms-3">Success</span>
                                 }
-                                else if (connectionTestSuccess == false)
+                                else if (_connectionTestSuccess == false)
                                 {
                                     <span class="badge bg-danger ms-3">Failed</span>
                                 }
@@ -70,7 +70,7 @@
                         <div class="row">
                             <div class="col-lg">
                                 <label class="form-label">Function App key</label>
-                                <InputText class="form-control" @bind-Value="functionApp.FunctionAppKey"></InputText>
+                                <InputText class="form-control" @bind-Value="_functionApp.FunctionAppKey"></InputText>
                                 <div class="form-text">Optionally set a Function App key to be used for all function invocations by default.</div>
                             </div>
                         </div>
@@ -87,7 +87,7 @@
                         <div class="row mt-3">
                             <div class="col">
                                 <label class="form-label">Max concurrent function step executions</label>
-                                <InputNumber class="form-control" style="max-width: 10rem;" @bind-Value="functionApp.MaxConcurrentFunctionSteps"></InputNumber>
+                                <InputNumber class="form-control" style="max-width: 10rem;" @bind-Value="_functionApp.MaxConcurrentFunctionSteps"></InputNumber>
                                 <div class="form-text">
                                     Limit the number of concurrently executing function steps across all executions for this Function App.
                                     <br/>
@@ -96,7 +96,7 @@
                             </div>
                         </div>
 
-                        <FunctionAppKeySelectOffcanvas @ref="keySelectOffcanvas" FunctionApp="functionApp" OnKeySelected="OnKeySelected" />
+                        <FunctionAppKeySelectOffcanvas @ref="_keySelectOffcanvas" FunctionApp="_functionApp" OnKeySelected="OnKeySelected" />
 
                     </div>
                 </div>
@@ -105,8 +105,8 @@
     </BodyTemplate>
     
     <FooterTemplate>
-        <HxSubmit form="function_app_edit_form" Color="ThemeColor.Success">@(functionApp?.FunctionAppId == Guid.Empty ? "Add" : "Save")</HxSubmit>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxSubmit form="function_app_edit_form" Color="ThemeColor.Success">@(_functionApp?.FunctionAppId == Guid.Empty ? "Add" : "Save")</HxSubmit>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>
 
@@ -117,65 +117,65 @@
     [Parameter]
     public List<AppRegistration>? AppRegistrations { get; set; }
 
-    private FunctionApp? functionApp;
-    private HxModal? modal;
-    private bool? connectionTestSuccess = null;
-    private bool testingConnection = false;
-    private FunctionAppKeySelectOffcanvas? keySelectOffcanvas;
+    private FunctionApp? _functionApp;
+    private HxModal? _modal;
+    private bool? _connectionTestSuccess = null;
+    private bool _testingConnection = false;
+    private FunctionAppKeySelectOffcanvas? _keySelectOffcanvas;
 
     private void AppRegistrationChanged(Guid id)
     {
         var appRegistration = AppRegistrations?.FirstOrDefault(a => a.AppRegistrationId == id);
-        if (appRegistration is not null && functionApp is not null)
+        if (appRegistration is not null && _functionApp is not null)
         {
-            functionApp.AppRegistration = appRegistration;
+            _functionApp.AppRegistration = appRegistration;
         }
     }
 
     private void OnKeySelected(string key)
     {
-        if (functionApp is not null)
-            functionApp.FunctionAppKey = key;
+        if (_functionApp is not null)
+            _functionApp.FunctionAppKey = key;
     }
 
     private async Task OpenKeySelectOffcanvasAsync()
     {
-        await keySelectOffcanvas.LetAsync(x => x.ShowAsync());
+        await _keySelectOffcanvas.LetAsync(x => x.ShowAsync());
     }
 
     private async Task SubmitFunctionApp()
     {
-        await OnFunctionAppSubmit.InvokeAsync(functionApp);
-        await modal.LetAsync(x => x.HideAsync());
+        await OnFunctionAppSubmit.InvokeAsync(_functionApp);
+        await _modal.LetAsync(x => x.HideAsync());
     }
 
     private async Task TestConnection()
     {
-        connectionTestSuccess = null;
-        testingConnection = true;
+        _connectionTestSuccess = null;
+        _testingConnection = true;
         try
         {
-            if (functionApp is not null) await functionApp.CreateClient(TokenService, HttpClientFactory).TestConnection();
-            connectionTestSuccess = true;
+            if (_functionApp is not null) await _functionApp.CreateClient(TokenService, HttpClientFactory).TestConnection();
+            _connectionTestSuccess = true;
         }
         catch (Exception ex)
         {
-            connectionTestSuccess = false;
+            _connectionTestSuccess = false;
             Toaster.AddError("Connection test failed", ex.Message);
         }
-        testingConnection = false;
+        _testingConnection = false;
     }
 
     public async Task ShowAsync(Guid functionAppId)
     {
         ArgumentNullException.ThrowIfNull(AppRegistrations);
-        functionApp = null;
-        connectionTestSuccess = null;
-        await modal.LetAsync(x => x.ShowAsync());
+        _functionApp = null;
+        _connectionTestSuccess = null;
+        await _modal.LetAsync(x => x.ShowAsync());
         if (functionAppId != Guid.Empty)
         {
-            await using var context = DbFactory.CreateDbContext();
-            functionApp = await context.FunctionApps
+            await using var context = await DbFactory.CreateDbContextAsync();
+            _functionApp = await context.FunctionApps
                 .AsNoTrackingWithIdentityResolution()
                 .Include(f => f.Steps)
                 .ThenInclude(step => step.Job)
@@ -186,7 +186,7 @@
         {
             var appRegistration = AppRegistrations?.FirstOrDefault();
             ArgumentNullException.ThrowIfNull(appRegistration);
-            functionApp = new()
+            _functionApp = new()
             {
                 AppRegistration = appRegistration
             };
@@ -195,7 +195,7 @@
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
-        var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        var confirmed = await Js.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
         if (!confirmed)
         {
             context.PreventNavigation();

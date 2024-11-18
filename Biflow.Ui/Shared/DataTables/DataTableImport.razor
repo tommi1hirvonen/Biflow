@@ -1,9 +1,9 @@
-﻿@using System.Data;
-@using System.Text;
+﻿@using System.Text;
+
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject ToasterService Toaster
 
-@if (table is null)
+@if (_table is null)
 {
     <div class="row mt-5">
         <div class="col">
@@ -20,12 +20,12 @@
                 All data tables
             </a>
             <span>&nbsp;/&nbsp;</span>
-            @if (table.Category is not null)
+            @if (_table.Category is not null)
             {
-                <span>@table.Category.CategoryName /&nbsp;</span>
+                <span>@_table.Category.CategoryName /&nbsp;</span>
             }
-            <a href="datatables/edit/@table.DataTableId">
-                @table.DataTableName
+            <a href="datatables/edit/@_table.DataTableId">
+                @_table.DataTableName
             </a>
             <span>&nbsp;/</span>
             <strong>Import data</strong>
@@ -33,7 +33,7 @@
     </div>
 </div>
 
-@if (!table.AllowImport)
+@if (!_table.AllowImport)
 {
     <div class="row mt-3">
         <div class="col">
@@ -48,15 +48,15 @@
 <div class="row mt-3">
     <div class="col" style="max-width: 40rem;">
         <div>
-            <label for="formFile" class="form-label">Select Excel file to import</label>
-            <InputFile @ref="inputFile" class="form-control form-control-sm" OnChange="LoadFileAsync" />
+            <label for="import_file_input" class="form-label">Select Excel file to import</label>
+            <InputFile id="import_file_input" @ref="_inputFile" class="form-control form-control-sm" OnChange="LoadFileAsync" />
         </div>
     </div>
 </div>
 
 <div class="row align-items-center mt-3">
     <div class="col-auto">
-        <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="UploadAsync" Enabled="upload is not null">
+        <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="UploadAsync" Enabled="_upload is not null">
             <SvgIcon Icon="FeatherIcon.Save" />
             Save
         </HxButton>
@@ -66,8 +66,8 @@
     </div>
     <div class="col-auto">
         <div>
-            <select @bind="uploadType" class="form-select form-select-sm">
-                @foreach (var type in uploadTypes)
+            <select @bind="_uploadType" class="form-select form-select-sm">
+                @foreach (var type in _uploadTypes)
                 {
                     <option value="@type">@type</option>
                 }
@@ -78,18 +78,18 @@
 
 @{
     var columns =
-        upload?.Columns
-        ?? builder?.Columns.Where(c => !c.IsHidden && !c.IsLocked || c.IsPrimaryKey)
-        ?? Enumerable.Empty<Column>();
+        _upload?.Columns
+        ?? _builder?.Columns.Where(c => c is { IsHidden: false, IsLocked: false } || c.IsPrimaryKey)
+        ?? [];
 }
 
 <div class="row mt-4">
     <div class="col">
         <div class="card shadow-sm">
             <div class="card-body px-0">
-                @if (upload is not null)
+                @if (_upload is not null)
                 {
-                    <small class="text-secondary px-3">@upload.Data.Count record(s)</small>
+                    <small class="text-secondary px-3">@_upload.Data.Count record(s)</small>
                 }
                 <table class="table table-sm">
                     <thead>
@@ -104,13 +104,13 @@
                                             <SvgIcon Icon="FeatherIcon.Key" />
                                         </span>
                                     }
-                                    @if (column.IsLocked && !column.IsPrimaryKey)
+                                    @if (column is { IsLocked: true, IsPrimaryKey: false })
                                     {
                                         <span class="ms-2 text-warning" title="Locked column excluded from final import">
                                             <SvgIcon Icon="FeatherIcon.Lock" />
                                         </span>
                                     }
-                                    @if (column.IsHidden && !column.IsPrimaryKey)
+                                    @if (column is { IsHidden: true, IsPrimaryKey: false })
                                     {
                                         <span class="ms-2 text-warning" title="Hidden column excluded from final import">
                                             <SvgIcon Icon="FeatherIcon.EyeOff" />
@@ -121,13 +121,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (upload is null)
+                        @if (_upload is null)
                         {
                             var count = columns.Count();
                             var colspan = count > 0 ? count : 1;
                             <tr>
-                                <td colspan="@colspan" class="@(loading ? "text-center" : null)">
-                                    @if (loading)
+                                <td colspan="@colspan" class="@(_loading ? "text-center" : null)">
+                                    @if (_loading)
                                     {
                                         <HxSpinner Color="ThemeColor.Secondary" />
                                     }
@@ -140,9 +140,9 @@
                         }
                         else
                         {
-                            <Virtualize Items="upload.Data" Context="row" SpacerElement="tr"> 
+                            <Virtualize Items="_upload.Data" Context="row" SpacerElement="tr"> 
                                 <tr>
-                                    @foreach (var column in upload.Columns)
+                                    @foreach (var column in _upload.Columns)
                                     {
                                         <td>@row[column.Name]</td>
                                     }
@@ -161,18 +161,18 @@
     [Parameter]
     public Guid? TableId { get; set; }
 
-    private MasterDataTable? table;
-    private InputFile? inputFile;
-    private bool loading = false;
-    private List<UploadType> uploadTypes = new();
-    private UploadType uploadType;
-    private UploadBuilder? builder;
-    private Upload? upload;
+    private MasterDataTable? _table;
+    private InputFile? _inputFile;
+    private bool _loading = false;
+    private List<UploadType> _uploadTypes = new();
+    private UploadType _uploadType;
+    private UploadBuilder? _builder;
+    private Upload? _upload;
 
     protected override async Task OnParametersSetAsync()
     {
         await using var context = await DbContextFactory.CreateDbContextAsync();
-        table = await context.MasterDataTables
+        _table = await context.MasterDataTables
             .Include(t => t.Category)
             .Include(t => t.Connection)
             .ThenInclude(c => c.Credential)
@@ -181,36 +181,36 @@
         // Protect users against an incorrect upload type selection by filtering them
         // based on what is allowed with the current data table.
         var uploadTypes = new List<UploadType>();
-        if (table.AllowInsert)
+        if (_table.AllowInsert)
         {
             uploadTypes.Add(UploadType.Upsert);
             uploadTypes.Add(UploadType.InsertNew);
         }
         uploadTypes.Add(UploadType.UpdateExisting);
-        if (table.AllowDelete)
+        if (_table.AllowDelete)
         {
             uploadTypes.Add(UploadType.DeleteMissing);
         }
-        if (table.AllowInsert && table.AllowDelete)
+        if (_table.AllowInsert && _table.AllowDelete)
         {
             uploadTypes.Add(UploadType.Full);
         }
-        this.uploadTypes = uploadTypes;
-        uploadType = this.uploadTypes.First();
+        _uploadTypes = uploadTypes;
+        _uploadType = _uploadTypes.First();
 
-        builder = await UploadBuilder.FromTableAsync(table);
+        _builder = await UploadBuilder.FromTableAsync(_table);
     }
 
     private async Task LoadFileAsync(InputFileChangeEventArgs e)
     {
-        loading = true;
+        _loading = true;
         try
         {
-            ArgumentNullException.ThrowIfNull(builder);
+            ArgumentNullException.ThrowIfNull(_builder);
             using var stream = new MemoryStream();
             await e.File.OpenReadStream().CopyToAsync(stream);
             stream.Position = 0;
-            upload = builder.BuildFromExcelStream(stream);
+            _upload = _builder.BuildFromExcelStream(stream);
         }
         catch (Exception ex)
         {
@@ -218,28 +218,29 @@
         }
         finally
         {
-            loading = false;
+            _loading = false;
         }
     }
 
     private async Task UploadAsync()
     {
-        if (upload is null)
+        if (_upload is null)
         {
             Toaster.AddError("Upload object was null");
             return;
         }
         try
         {
-            var (inserted, updated, deleted) = await upload.SaveUploadToDbAsync(uploadType);
+            var (inserted, updated, deleted) = await _upload.SaveUploadToDbAsync(_uploadType);
             var message = new StringBuilder();
-            if (inserted == 0 && updated == 0 && deleted == 0)
+            switch (inserted)
             {
-                message.Append("No changes detected");
-            }
-            if (inserted > 0)
-            {
-                message.Append("Inserted ").Append(inserted).Append(" record(s)").AppendLine();
+                case 0 when updated == 0 && deleted == 0:
+                    message.Append("No changes detected");
+                    break;
+                case > 0:
+                    message.Append("Inserted ").Append(inserted).Append(" record(s)").AppendLine();
+                    break;
             }
             if (updated > 0)
             {

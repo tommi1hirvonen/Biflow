@@ -26,24 +26,24 @@ public partial class ExecutionDetails(
     private readonly NavigationManager _navigationManager = navigationManager;
     private readonly IHxMessageBoxService _confirmer = confirmer;
     private readonly IMediator _mediator = mediator;
-    private readonly CancellationTokenSource cts = new();
+    private readonly CancellationTokenSource _cts = new();
 
     private const int TimerIntervalSeconds = 10;
-    private readonly System.Timers.Timer timer = new(TimeSpan.FromSeconds(TimerIntervalSeconds)) { AutoReset = false };
-    private readonly HashSet<StepType> stepTypeFilter = [];
-    private readonly HashSet<TagProjection> tagFilter = [];
-    private readonly HashSet<StepExecutionStatus> stepStatusFilter = [];
-    private readonly HashSet<(string StepName, StepType StepType)> stepFilter = [];
-    private FilterDropdownMode tagFilterMode = FilterDropdownMode.Any;
-    private Guid prevExecutionId;
-    private Execution? execution;
-    private IEnumerable<StepExecutionProjection>? stepProjections;
-    private Job? job;
-    private Schedule? schedule;
-    private bool loading;
-    private StepExecutionSortMode sortMode = StepExecutionSortMode.StartedAsc;
-    private ExecutionParameterLineageOffcanvas? parameterLineageOffcanvas;
-    private ExecutionDependenciesGraph? dependenciesGraph;
+    private readonly System.Timers.Timer _timer = new(TimeSpan.FromSeconds(TimerIntervalSeconds)) { AutoReset = false };
+    private readonly HashSet<StepType> _stepTypeFilter = [];
+    private readonly HashSet<TagProjection> _tagFilter = [];
+    private readonly HashSet<StepExecutionStatus> _stepStatusFilter = [];
+    private readonly HashSet<(string StepName, StepType StepType)> _stepFilter = [];
+    private FilterDropdownMode _tagFilterMode = FilterDropdownMode.Any;
+    private Guid _prevExecutionId;
+    private Execution? _execution;
+    private IEnumerable<StepExecutionProjection>? _stepProjections;
+    private Job? _job;
+    private Schedule? _schedule;
+    private bool _loading;
+    private StepExecutionSortMode _sortMode = StepExecutionSortMode.StartedAsc;
+    private ExecutionParameterLineageOffcanvas? _parameterLineageOffcanvas;
+    private ExecutionDependenciesGraph? _dependenciesGraph;
 
     // Maintain a list of executions that are being stopped.
     // This same component instance can be used to switch between different job executions.
@@ -57,10 +57,10 @@ public partial class ExecutionDetails(
         set
         {
             _autoRefresh = value;
-            timer.Stop();
+            _timer.Stop();
             if (_autoRefresh)
             {
-                timer.Start();
+                _timer.Start();
             }
         }
     }
@@ -71,14 +71,14 @@ public partial class ExecutionDetails(
 
     private IEnumerable<StepExecutionProjection>? GetOrderedExecutions()
     {
-        var filtered = stepProjections
+        var filtered = _stepProjections
             ?.Where(e =>
-            (tagFilterMode is FilterDropdownMode.Any && (tagFilter.Count == 0 || tagFilter.Any(tag => e.StepTags.Any(t => t.TagName == tag.TagName))))
-            || (tagFilterMode is FilterDropdownMode.All && tagFilter.All(tag => e.StepTags.Any(t => t.TagName == tag.TagName))))
-            .Where(e => stepStatusFilter.Count == 0 || stepStatusFilter.Contains(e.StepExecutionStatus))
-            .Where(e => stepFilter.Count == 0 || stepFilter.Contains((e.StepName, e.StepType)))
-            .Where(e => stepTypeFilter.Count == 0 || stepTypeFilter.Contains(e.StepType));
-        return sortMode switch
+            (_tagFilterMode is FilterDropdownMode.Any && (_tagFilter.Count == 0 || _tagFilter.Any(tag => e.StepTags.Any(t => t.TagName == tag.TagName))))
+            || (_tagFilterMode is FilterDropdownMode.All && _tagFilter.All(tag => e.StepTags.Any(t => t.TagName == tag.TagName))))
+            .Where(e => _stepStatusFilter.Count == 0 || _stepStatusFilter.Contains(e.StepExecutionStatus))
+            .Where(e => _stepFilter.Count == 0 || _stepFilter.Contains((e.StepName, e.StepType)))
+            .Where(e => _stepTypeFilter.Count == 0 || _stepTypeFilter.Contains(e.StepType));
+        return _sortMode switch
         {
             StepExecutionSortMode.StepAsc => filtered?.OrderBy(e => e.StepName),
             StepExecutionSortMode.StepDesc => filtered?.OrderByDescending(e => e.StepName),
@@ -107,7 +107,7 @@ public partial class ExecutionDetails(
 
     protected override void OnInitialized()
     {
-        timer.Elapsed += async (_, _) =>
+        _timer.Elapsed += async (_, _) =>
         {
             if (!AutoRefresh)
             {
@@ -119,8 +119,8 @@ public partial class ExecutionDetails(
             }
             else
             {
-                timer.Stop();
-                timer.Start();
+                _timer.Stop();
+                _timer.Start();
             }
         };
     }
@@ -133,11 +133,11 @@ public partial class ExecutionDetails(
 
     protected override async Task OnParametersSetAsync()
     {
-        if (ExecutionId == prevExecutionId)
+        if (ExecutionId == _prevExecutionId)
         {
             return;
         }
-        prevExecutionId = ExecutionId;
+        _prevExecutionId = ExecutionId;
         await LoadData();
     }
 
@@ -145,8 +145,8 @@ public partial class ExecutionDetails(
     {
         if (ExecutionId != Guid.Empty)
         {
-            timer.Stop();
-            loading = true;
+            _timer.Stop();
+            _loading = true;
             await InvokeAsync(StateHasChanged);
             await using var context = await _dbContextFactory.CreateDbContextAsync();
 
@@ -166,17 +166,17 @@ public partial class ExecutionDetails(
                 join step in context.Steps.Include(s => s.Tags) on exec.StepId equals step.StepId into es
                 from step in es.DefaultIfEmpty()
                 select new { exec, step }
-                ).ToArrayAsync(cts.Token);
+                ).ToArrayAsync(_cts.Token);
                 foreach (var item in stepExecutions)
                 {
                     item.exec.SetStep(item.step);
                 }
-                execution = stepExecutions.FirstOrDefault()?.exec.Execution;
-                job = execution is not null
-                    ? await context.Jobs.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(j => j.JobId == execution.JobId, cts.Token)
+                _execution = stepExecutions.FirstOrDefault()?.exec.Execution;
+                _job = _execution is not null
+                    ? await context.Jobs.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(j => j.JobId == _execution.JobId, _cts.Token)
                     : null;
-                schedule = execution?.ScheduleId is not null
-                    ? await context.Schedules.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(s => s.ScheduleId == execution.ScheduleId, cts.Token)
+                _schedule = _execution?.ScheduleId is not null
+                    ? await context.Schedules.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(s => s.ScheduleId == _execution.ScheduleId, _cts.Token)
                     : null;
             }
             catch (OperationCanceledException)
@@ -184,7 +184,7 @@ public partial class ExecutionDetails(
                 return;
             }
 
-            stepProjections = execution?.StepExecutions
+            _stepProjections = _execution?.StepExecutions
                 .SelectMany(e => e.StepExecutionAttempts)
                 .Select(e => new StepExecutionProjection(
                     e.StepExecution.ExecutionId,
@@ -202,25 +202,25 @@ public partial class ExecutionDetails(
                     e.StepExecution.Execution.ScheduleId,
                     e.StepExecution.Execution.ScheduleName,
                     e.StepExecution.Execution.JobId,
-                    job?.JobName ?? e.StepExecution.Execution.JobName,
+                    _job?.JobName ?? e.StepExecution.Execution.JobName,
                     e.StepExecution.ExecutionDependencies.Select(d => d.DependantOnStepId).ToArray(),
                     e.StepExecution.GetStep()?.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder)).ToArray() ?? [],
                     []))
                 .ToArray();
 
-            loading = false;
-            if (AutoRefresh && execution?.ExecutionStatus is ExecutionStatus.Running or ExecutionStatus.NotStarted)
+            _loading = false;
+            if (AutoRefresh && _execution?.ExecutionStatus is ExecutionStatus.Running or ExecutionStatus.NotStarted)
             {
-                timer.Start();
+                _timer.Start();
             }
             else
             {
                 AutoRefresh = false;
             }
             await InvokeAsync(StateHasChanged);
-            if (ShowReport == Report.Graph && dependenciesGraph is not null)
+            if (ShowReport == Report.Graph && _dependenciesGraph is not null)
             {
-                await InvokeAsync(dependenciesGraph.LoadGraphAsync);
+                await InvokeAsync(_dependenciesGraph.LoadGraphAsync);
             }
         }
     }
@@ -238,7 +238,7 @@ public partial class ExecutionDetails(
             return;
         }
 
-        if (execution is null)
+        if (_execution is null)
         {
             _toaster.AddError("Execution was null");
             return;
@@ -252,7 +252,7 @@ public partial class ExecutionDetails(
             var username = authState.User.Identity?.Name;
             ArgumentNullException.ThrowIfNull(username);
 
-            await _executorService.StopExecutionAsync(execution.ExecutionId, username);
+            await _executorService.StopExecutionAsync(_execution.ExecutionId, username);
             _toaster.AddSuccess("Stop request sent successfully to the executor service");
         }
         catch (TimeoutException)
@@ -271,12 +271,12 @@ public partial class ExecutionDetails(
     {
         try
         {
-            if (execution is not null)
+            if (_execution is not null)
             {
-                execution.ExecutionStatus = status;
-                execution.StartedOn ??= DateTimeOffset.Now;
-                execution.EndedOn ??= DateTimeOffset.Now;
-                await _mediator.SendAsync(new UpdateExecutionCommand(execution));
+                _execution.ExecutionStatus = status;
+                _execution.StartedOn ??= DateTimeOffset.Now;
+                _execution.EndedOn ??= DateTimeOffset.Now;
+                await _mediator.SendAsync(new UpdateExecutionCommand(_execution));
             }
             _toaster.AddSuccess("Status updated successfully");
         }
@@ -306,9 +306,9 @@ public partial class ExecutionDetails(
 
     public void Dispose()
     {
-        timer.Stop();
-        timer.Dispose();
-        cts.Cancel();
-        cts.Dispose();
+        _timer.Stop();
+        _timer.Dispose();
+        _cts.Cancel();
+        _cts.Dispose();
     }
 }

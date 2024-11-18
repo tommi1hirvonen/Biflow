@@ -92,10 +92,10 @@
                         }
                         @foreach (var execution in group)
                         {
-                            (var offset, var width) = (execution.StartedOn, execution.EndedOn)
+                            var (offset, width) = (execution.StartedOn, execution.EndedOn)
                                 .GetGanttGraphDimensions(Executions.Select(e => (e.StartedOn, e.EndedOn)));
                             <ContextMenuToggle ContainerHtmlTag="div"
-                                               CssClass="@($"progress hover {(execution == selectedStepExecution ? "active" : null)} {execution.StepExecutionStatus.ToString().ToLower()}")"
+                                               CssClass="@($"progress hover {(execution == _selectedStepExecution ? "active" : null)} {execution.StepExecutionStatus.ToString().ToLower()}")"
                                                title="@($"{execution.StepExecutionStatus}, {execution.ExecutionInSeconds?.SecondsToReadableFormat()}")"
                                                style="@($"cursor: pointer; position: absolute; width: {width.ToString("F10", CultureInfo.InvariantCulture)}%; left: {offset.ToString("F10", CultureInfo.InvariantCulture)}%;")"
                                                @onclick="() => ToggleSelectedStepExecutionAsync(execution)">
@@ -111,7 +111,7 @@
                                         <SvgIcon Icon="LucideIcon.Monitor" />
                                         Monitors
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem @onclick="async () => await stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(execution.StepId))">
+                                    <DropdownMenuItem @onclick="async () => await _stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(execution.StepId))">
                                         <SvgIcon Icon="FeatherIcon.Activity" />
                                         History
                                     </DropdownMenuItem>
@@ -133,9 +133,9 @@
                         }
                     </div>
                 </div>
-                @if (selectedStepExecution is not null && group.Contains(selectedStepExecution))
+                @if (_selectedStepExecution is not null && group.Contains(_selectedStepExecution))
                 {
-                    if (detailStep is null)
+                    if (_detailStep is null)
                     {
                         <div class="row bg-body-tertiary">
                             <div class="col text-center">
@@ -148,26 +148,26 @@
                         <div class="row bg-body-tertiary">
                             <div class="col">
                                 <HxButtonGroup CssClass="mb-3 mt-2 ms-2">
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => ToggleSelectedStepExecutionAsync(selectedStepExecution)">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => ToggleSelectedStepExecutionAsync(_selectedStepExecution)">
                                         <SvgIcon Icon="FeatherIcon.X" />
                                         Close
                                     </HxButton>
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await StepExecutionMonitorsOffcanvas.LetAsync(x => x.ShowAsync(selectedStepExecution))">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await StepExecutionMonitorsOffcanvas.LetAsync(x => x.ShowAsync(_selectedStepExecution))">
                                         <SvgIcon Icon="LucideIcon.Monitor" />
                                         Monitors
                                     </HxButton>
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(detailStep.StepId))">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await _stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(_detailStep.StepId))">
                                         <SvgIcon Icon="FeatherIcon.Activity" />
                                         History
                                     </HxButton>
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="@(() => NavigationManager.NavigateTo($"executions/{detailStep.ExecutionId}/graph/{detailStep.StepId}"))">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="@(() => NavigationManager.NavigateTo($"executions/{_detailStep.ExecutionId}/graph/{_detailStep.StepId}"))">
                                         <SvgIcon Icon="LucideIcon.Workflow" />
                                         Dependencies
                                     </HxButton>
                                     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-                                        @if (detailStep.CanBeStopped)
+                                        @if (_detailStep.CanBeStopped)
                                         {
-                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger" @onclick="async () => await StopStepExecutionAsync(detailStep.ExecutionId, detailStep.StepId, detailStep.StepExecution.StepName)">
+                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger" @onclick="async () => await StopStepExecutionAsync(_detailStep.ExecutionId, _detailStep.StepId, _detailStep.StepExecution.StepName)">
                                                 <SvgIcon Icon="FeatherIcon.XOctagon" />
                                                 Stop...
                                             </HxButton>
@@ -175,7 +175,7 @@
                                     </AuthorizeView>
                                 </HxButtonGroup>
 
-                                <StepExecutionDetails StepExecutionAttempt="detailStep" ShowExtraDetails />
+                                <StepExecutionDetails StepExecutionAttempt="_detailStep" ShowExtraDetails />
                         </div>
                     </div>
                     }
@@ -185,7 +185,7 @@
     </div>
 </div>
 
-<StepHistoryOffcanvas @ref="stepHistoryOffcanvas" />
+<StepHistoryOffcanvas @ref="_stepHistoryOffcanvas" />
 
 @code {
     [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
@@ -202,9 +202,9 @@
 
     private const int Columns = 12;
 
-    private StepExecutionProjection? selectedStepExecution;
-    private StepHistoryOffcanvas? stepHistoryOffcanvas;
-    private StepExecutionAttempt? detailStep;
+    private StepExecutionProjection? _selectedStepExecution;
+    private StepHistoryOffcanvas? _stepHistoryOffcanvas;
+    private StepExecutionAttempt? _detailStep;
 
     private void SetSortMode(StepExecutionSortMode sort)
     {
@@ -213,23 +213,23 @@
 
     private async Task ToggleSelectedStepExecutionAsync(StepExecutionProjection execution)
     {
-        if (selectedStepExecution == execution)
+        if (_selectedStepExecution == execution)
         {
-            selectedStepExecution = null;
-            detailStep = null;
+            _selectedStepExecution = null;
+            _detailStep = null;
         }
         else
         {
-            selectedStepExecution = execution;
+            _selectedStepExecution = execution;
 
             if (DetailStepProvider is not null)
             {
-                detailStep = DetailStepProvider(execution);
+                _detailStep = DetailStepProvider(execution);
             }
             else
             {
                 await using var context = await DbContextFactory.CreateDbContextAsync();
-                detailStep = await context.StepExecutionAttempts
+                _detailStep = await context.StepExecutionAttempts
                     .AsNoTrackingWithIdentityResolution()
                     .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
                     .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
@@ -241,10 +241,10 @@
                     .ThenInclude(e => e.ExecutionParameter)
                     .Include(e => e.StepExecution)
                     .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId && e.StepId == execution.StepId && e.RetryAttemptIndex == execution.RetryAttemptIndex);
-                if (detailStep is not null)
+                if (_detailStep is not null)
                 {
-                    var step = await context.Steps.FirstOrDefaultAsync(s => s.StepId == detailStep.StepId);
-                    detailStep.StepExecution.SetStep(step);
+                    var step = await context.Steps.FirstOrDefaultAsync(s => s.StepId == _detailStep.StepId);
+                    _detailStep.StepExecution.SetStep(step);
                 }
             }
         }
@@ -277,8 +277,14 @@
         }
     }
 
-    private DateTime MinTime => Executions?.Any() ?? false ? Executions.Min(e => e.StartedOn?.LocalDateTime) ?? DateTime.Now : DateTime.Now;
-    private DateTime MaxTime => Executions?.Any() ?? false ? Executions.Max(e => e.EndedOn?.LocalDateTime ?? DateTime.Now) : DateTime.Now;
+    private DateTime MinTime =>
+        Executions?.Any() ?? false
+            ? Executions.Min(e => e.StartedOn?.LocalDateTime) ?? DateTime.Now
+            : DateTime.Now;
+    private DateTime MaxTime =>
+        Executions?.Any() ?? false
+            ? Executions.Max(e => e.EndedOn?.LocalDateTime ?? DateTime.Now)
+            : DateTime.Now;
     private long MinTicks => MinTime.Ticks;
     private long MaxTicks => MaxTime.Ticks;
 

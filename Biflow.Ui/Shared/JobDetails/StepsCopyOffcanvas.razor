@@ -1,17 +1,17 @@
-﻿@inject StepsDuplicatorFactory factory
+﻿@inject StepsDuplicatorFactory DuplicatorFactory
 @inject ToasterService Toaster
 
-<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Small" Title="Copy steps" Backdrop="OffcanvasBackdrop.False">
+<HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Small" Title="Copy steps" Backdrop="OffcanvasBackdrop.False">
     <BodyTemplate>
-        @if (currentJob is not null)
+        @if (_currentJob is not null)
         {
             <div class="row">
                 <div class="col">
                     <label class="form-label">Target job</label>
-                    <select class="form-select" @bind="targetJobId">
+                    <select class="form-select" @bind="_targetJobId">
                         @foreach (var job in Jobs.OrderBy(j => j.JobName))
                         {
-                            var jobName = job.JobId == currentJob?.JobId ? $"{job.JobName} (this)" : job.JobName;
+                            var jobName = job.JobId == _currentJob?.JobId ? $"{job.JobName} (this)" : job.JobName;
                             <option value="@job.JobId">
                                 @jobName
                             </option>
@@ -26,7 +26,7 @@
                             <tr><th>Steps</th></tr>
                         </thead>
                         <tbody>
-                            @foreach (var step in steps.OrderBy(s => s.StepName))
+                            @foreach (var step in _steps.OrderBy(s => s.StepName))
                             {
                                 <tr>
                                     <td>
@@ -43,10 +43,10 @@
         }
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Success" Enabled="steps.Any()" OnClick="CopyAsync">
+        <HxButton Color="ThemeColor.Success" Enabled="_steps.Any()" OnClick="CopyAsync">
             Copy
         </HxButton>
-        <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" OnClick="() => offcanvas.LetAsync(x => x.HideAsync())">
+        <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" OnClick="() => _offcanvas.LetAsync(x => x.HideAsync())">
             Cancel
         </HxButton>
     </FooterTemplate>
@@ -55,28 +55,28 @@
 @code {
     [Parameter] public EventCallback<IEnumerable<Step>> OnStepsCopied { get; set; }
 
-    [Parameter] public IEnumerable<Job> Jobs { get; set; } = Enumerable.Empty<Job>();
+    [Parameter] public IEnumerable<Job> Jobs { get; set; } = [];
 
-    private HxOffcanvas? offcanvas;
-    private Job? currentJob;
-    private Guid targetJobId;
-    private IEnumerable<Step> steps = Enumerable.Empty<Step>();
+    private HxOffcanvas? _offcanvas;
+    private Job? _currentJob;
+    private Guid _targetJobId;
+    private IEnumerable<Step> _steps = [];
 
     public async Task ShowAsync(Job currentJob, IEnumerable<Step> steps)
     {
-        this.currentJob = currentJob;
-        targetJobId = currentJob.JobId;
-        this.steps = steps;
-        await offcanvas.LetAsync(x => x.ShowAsync());
+        _currentJob = currentJob;
+        _targetJobId = currentJob.JobId;
+        _steps = steps;
+        await _offcanvas.LetAsync(x => x.ShowAsync());
     }
 
     private async Task CopyAsync()
     {
         try
         {
-            var stepIds = steps.Select(s => s.StepId).ToArray();
-            using var duplicator = await factory.CreateAsync(stepIds, targetJobId);
-            if (targetJobId == currentJob?.JobId)
+            var stepIds = _steps.Select(s => s.StepId).ToArray();
+            using var duplicator = await DuplicatorFactory.CreateAsync(stepIds, _targetJobId);
+            if (_targetJobId == _currentJob?.JobId)
             {
                 foreach (var step in duplicator.Steps)
                 {
@@ -86,7 +86,7 @@
             var copies = await duplicator.SaveStepsAsync();
             Toaster.AddSuccess("Step(s) copied successfully");
             await OnStepsCopied.InvokeAsync(copies);
-            await offcanvas.LetAsync(x => x.HideAsync());
+            await _offcanvas.LetAsync(x => x.HideAsync());
         }
         catch (Exception ex)
         {

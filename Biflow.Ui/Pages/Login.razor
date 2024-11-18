@@ -22,9 +22,9 @@
                     <h5 class="card-header">Log in</h5>
                     <div class="card-body">
                         <EditForm id="form-login" Model="LoginModel" method="post" class="form-horizontal" OnValidSubmit="LoginAsync" FormName="login">
-                            @if (!string.IsNullOrEmpty(errorMessage))
+                            @if (!string.IsNullOrEmpty(_errorMessage))
                             {
-                                <span class="text-danger">@errorMessage</span>
+                                <span class="text-danger">@_errorMessage</span>
                             }
                             <DataAnnotationsValidator />
                             <div class="form-group mt-3">
@@ -32,7 +32,7 @@
                                     <span class="input-group-text">
                                         <SvgIcon Icon="FeatherIcon.User" />
                                     </span>
-                                    <InputText class="form-control" id="input-username" placeholder="Username" @bind-Value="LoginModel!.Username" />
+                                    <InputText class="form-control" id="input-username" placeholder="Username" @bind-Value="LoginModel.Username" />
                                 </div>
                                 <ValidationMessage For="() => LoginModel.Username" />
                             </div>
@@ -41,7 +41,7 @@
                                     <div class="input-group-text">
                                         <SvgIcon Icon="FeatherIcon.Key" />
                                     </div>
-                                    <InputText type="password" class="form-control" placeholder="Password" @bind-Value="LoginModel!.Password" />
+                                    <InputText type="password" class="form-control" placeholder="Password" @bind-Value="LoginModel.Password" />
                                 </div>
                                 <ValidationMessage For="() => LoginModel.Password" />
                             </div>
@@ -64,7 +64,7 @@
     (() => {        
         document.getElementById('input-username').focus();
         
-        document.getElementById('form-login').addEventListener('submit', function (event) {
+        document.getElementById('form-login').addEventListener('submit', function (_) {
             document.getElementById('button-login').setAttribute('disabled', 'true');
         });
     })();
@@ -77,7 +77,7 @@
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = null!;
 
-    private string? errorMessage = null;
+    private string? _errorMessage;
 
     private async Task LoginAsync()
     {
@@ -101,22 +101,22 @@
         }
         catch (InvalidCredentialException)
         {
-            errorMessage = "Invalid username or password";
+            _errorMessage = "Invalid username or password";
             return;
         }
         catch (AuthenticationException ex)
         {
-            errorMessage = ex.Message;
+            _errorMessage = ex.Message;
             return;
         }
         catch
         {
-            errorMessage = "Login error";
+            _errorMessage = "Login error";
             return;
         }
 
         if (HttpContext.Request.Query.TryGetValue("redirectUrl", out var redirectUrlValues)
-            && redirectUrlValues.FirstOrDefault() is not null and { Length: > 0 } redirectUrl)
+            && redirectUrlValues.FirstOrDefault() is { Length: > 0 } redirectUrl)
         {
             if (redirectUrl[0] == '/')
             {

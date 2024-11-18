@@ -3,7 +3,6 @@
 
 @attribute [Authorize(Roles = $"{Roles.Admin}, {Roles.SettingsEditor}")]
 
-@inject IConfiguration Configuration
 @inject NavigationManager NavigationManager
 
 <h4>Settings</h4>
@@ -133,90 +132,83 @@
         </div>
     }
     <div class="col">
-        @if (Page == "users")
+        @switch (Page)
         {
-            <AuthorizeView Roles="@(Roles.Admin)">
-                <Authorized>
-                    <UsersList />
-                </Authorized>
-                <NotAuthorized>
-                    <Unauthorized />
-                </NotAuthorized>
-            </AuthorizeView>
-        }
-        else if (Page == "subscriptions")
-        {
-            <AuthorizeView Roles="@(Roles.Admin)">
-                <Authorized>
-                    <AllSubscriptions />
-                </Authorized>
-                <NotAuthorized>
-                    <Unauthorized />
-                </NotAuthorized>
-            </AuthorizeView>
-        }
-        else if (Page == "apikeys")
-        {
-            <AuthorizeView Roles="@Roles.Admin">
-                <Authorized>
-                    <ApiKeysList />
-                </Authorized>
-                <NotAuthorized>
-                    <Unauthorized />
-                </NotAuthorized>
-            </AuthorizeView>
-        }
-        else if (IntegrationsPage == "mssql")
-        {
-            <MsSqlConnectionsList />
-        }
-        else if (IntegrationsPage == "appregistrations")
-        {
-            <AppRegistrationsList />
-        }
-        else if (IntegrationsPage == "datafactory")
-        {
-            <DataFactoriesList />
-        }
-        else if (IntegrationsPage == "synapse")
-        {
-            <SynapseWorkspacesList />
-        }
-        else if (IntegrationsPage == "functions")
-        {
-            <FunctionAppsList />
-        }
-        else if (IntegrationsPage == "qlikcloud")
-        {
-            <QlikCloudEnvironmentsList />
-        }
-        else if (IntegrationsPage == "databricks")
-        {
-            <DatabricksWorkspacesList />
-        }
-        else if (IntegrationsPage == "snowflake")
-        {
-            <SnowflakeConnectionsList />
-        }
-        else if (IntegrationsPage == "dbt")
-        {
-            <DbtAccountsList />
-        }
-        else if (IntegrationsPage == "blobstorage")
-        {
-            <BlobClientsList />
-        }
-        else if (IntegrationsPage == "analysisservices")
-        {
-            <AnalysisServicesConnectionsList />
-        }
-        else if (IntegrationsPage == "credentials")
-        {
-            <CredentialsList />
-        }
-        else
-        {
-            <p>Sorry, nothing at this address.</p>
+            case "users":
+                <AuthorizeView Roles="@(Roles.Admin)">
+                    <Authorized>
+                        <UsersList />
+                    </Authorized>
+                    <NotAuthorized>
+                        <Unauthorized />
+                    </NotAuthorized>
+                </AuthorizeView>
+                break;
+            case "subscriptions":
+                <AuthorizeView Roles="@(Roles.Admin)">
+                    <Authorized>
+                        <AllSubscriptions />
+                    </Authorized>
+                    <NotAuthorized>
+                        <Unauthorized />
+                    </NotAuthorized>
+                </AuthorizeView>
+                break;
+            case "apikeys":
+                <AuthorizeView Roles="@Roles.Admin">
+                    <Authorized>
+                        <ApiKeysList />
+                    </Authorized>
+                    <NotAuthorized>
+                        <Unauthorized />
+                    </NotAuthorized>
+                </AuthorizeView>
+                break;
+            default:
+            
+                switch (IntegrationsPage)
+                {
+                    case "mssql":
+                        <MsSqlConnectionsList />
+                        break;
+                    case "appregistrations":
+                        <AppRegistrationsList />
+                        break;
+                    case "datafactory":
+                        <DataFactoriesList />
+                        break;
+                    case "synapse":
+                        <SynapseWorkspacesList />
+                        break;
+                    case "functions":
+                        <FunctionAppsList />
+                        break;
+                    case "qlikcloud":
+                        <QlikCloudEnvironmentsList />
+                        break;
+                    case "databricks":
+                        <DatabricksWorkspacesList />
+                        break;
+                    case "snowflake":
+                        <SnowflakeConnectionsList />
+                        break;
+                    case "dbt":
+                        <DbtAccountsList />
+                        break;
+                    case "blobstorage":
+                        <BlobClientsList />
+                        break;
+                    case "analysisservices":
+                        <AnalysisServicesConnectionsList />
+                        break;
+                    case "credentials":
+                        <CredentialsList />
+                        break;
+                    default:
+                        <p>Sorry, nothing at this address.</p>
+                        break;
+                }
+                break;
         }
     </div>
 </div>

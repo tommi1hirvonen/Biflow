@@ -9,23 +9,21 @@ public partial class PackageStepEditModal(
 {
     internal override string FormId => "package_step_edit_form";
 
-    private PackageSelectOffcanvas? packageSelectOffcanvas;
-
-    private MsSqlConnection Connection
+    private PackageSelectOffcanvas? _packageSelectOffcanvas;
+    
+    private MsSqlConnection? Connection
     {
         get
         {
-            if (_connection is null || _connection.ConnectionId != Step?.ConnectionId)
+            if (field is null || field.ConnectionId != Step?.ConnectionId)
             {
-                _connection = MsSqlConnections
-                    .FirstOrDefault(c => c.ConnectionId == Step?.ConnectionId)
-                    ?? MsSqlConnections.First();
+                field = MsSqlConnections
+                            .FirstOrDefault(c => c.ConnectionId == Step?.ConnectionId)
+                        ?? MsSqlConnections.First();
             }
-            return _connection;
+            return field;
         }
     }
-
-    private MsSqlConnection? _connection = null;
 
     protected override PackageStep CreateNewStep(Job job) =>
         new()
@@ -54,8 +52,9 @@ public partial class PackageStepEditModal(
 
     private Task OpenPackageSelectOffcanvas()
     {
-        ArgumentNullException.ThrowIfNull(Step?.ConnectionId);
-        return packageSelectOffcanvas.LetAsync(x => x.ShowAsync(Connection));
+        var connection = Connection;
+        ArgumentNullException.ThrowIfNull(connection);
+        return _packageSelectOffcanvas.LetAsync(x => x.ShowAsync(connection));
     }
 
     private void OnPackageSelected(CatalogPackage package)

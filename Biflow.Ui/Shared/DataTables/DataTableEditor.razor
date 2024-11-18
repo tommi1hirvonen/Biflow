@@ -25,15 +25,15 @@
             <HxButtonGroup Size="ButtonGroupSize.Small">
 
                 <HxButton Color="ThemeColor.None" Size="ButtonSize.Small"
-                          Enabled="filterSet is not null"
-                          CssClass="@(filterSet?.Filters.Values.Any(v => v.Enabled1) ?? false ? "fw-bold btn-auto" : "btn-auto")"
-                          OnClick="async () => await filterSetOffcanvas.LetAsync(x => x.ShowAsync())">
+                          Enabled="_filterSet is not null"
+                          CssClass="@(_filterSet?.Filters.Values.Any(v => v.Enabled1) ?? false ? "fw-bold btn-auto" : "btn-auto")"
+                          OnClick="async () => await _filterSetOffcanvas.LetAsync(x => x.ShowAsync())">
                     <SvgIcon Icon="FeatherIcon.Filter" />
                     Query filters
                 </HxButton>
 
-                <FilterDropdown FilterSet="columnSelections"
-                                Items="tableData?.Columns.Select(c => c.Name) ?? Enumerable.Empty<string>()"
+                <FilterDropdown FilterSet="_columnSelections"
+                                Items="_tableData?.Columns.Select(c => c.Name) ?? []"
                                 OnChange="StateHasChanged">
                     <TitleTemplate>
                         <SvgIcon Icon="FeatherIcon.Columns" />
@@ -63,7 +63,7 @@
                 </HxDropdownButtonGroup>
 
                 <HxDropdownButtonGroup>
-                    <HxDropdownToggleButton Spinner="exporting" Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" Enabled="!exporting">
+                    <HxDropdownToggleButton Spinner="_exporting" Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" Enabled="!_exporting">
                         <SvgIcon Icon="FeatherIcon.Download" />
                         Export
                     </HxDropdownToggleButton>
@@ -81,7 +81,7 @@
                 </HxDropdownButtonGroup>
 
                 @{
-                    var isNotEditable = !tableData?.IsEditable ?? true;
+                    var isNotEditable = !_tableData?.IsEditable ?? true;
                     var importDisabled = isNotEditable || !Table.AllowImport;
                 }
                 <a class="btn btn-sm btn-auto @(importDisabled ? "disabled" : null)" href="/datatables/import/@Table.DataTableId">
@@ -91,7 +91,7 @@
 
                 <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small"
                           Enabled="!string.IsNullOrEmpty(Table.DataTableDescription)"
-                          OnClick="async () => await tableInfoOffcanvas.LetAsync(x => x.ShowAsync())">
+                          OnClick="async () => await _tableInfoOffcanvas.LetAsync(x => x.ShowAsync())">
                     <SvgIcon Icon="FeatherIcon.Info" />
                     Table info
                 </HxButton>
@@ -112,7 +112,7 @@
 
             <HxButton Color="ThemeColor.Success" Size="ButtonSize.Small"
                       CssClass="ms-3"
-                      Enabled="tableData is not null && tableData.IsEditable && (Table.AllowInsert || Table.AllowUpdate || Table.AllowDelete)"
+                      Enabled="_tableData is not null && _tableData.IsEditable && (Table.AllowInsert || Table.AllowUpdate || Table.AllowDelete)"
                       OnClick="SaveChangesAsync">
                 <SvgIcon Icon="FeatherIcon.Save" />
                 Save changes
@@ -121,8 +121,8 @@
             @if (Table.AllowInsert)
             {
                 <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small"
-                      Enabled="tableData is not null && tableData.IsEditable"
-                      OnClick="() => tableData?.AddRow()">
+                      Enabled="_tableData is not null && _tableData.IsEditable"
+                      OnClick="() => _tableData?.AddRow()">
                     <SvgIcon Icon="FeatherIcon.Plus" />
                     Add record
                 </HxButton>
@@ -134,16 +134,16 @@
             <div class="col-auto align-items-center">
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="editmode_radio"
-                           disabled="@(!tableData?.IsEditable ?? true)"
-                           checked="@(editModeEnabled)"
-                           @onchange="() => { editModeEnabled = true; }">
+                           disabled="@(!_tableData?.IsEditable ?? true)"
+                           checked="@(_editModeEnabled)"
+                           @onchange="() => { _editModeEnabled = true; }">
                     <label class="form-check-label" for="editmode_radio">Edit mode</label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="viewmode_radio"
-                           disabled="@(!tableData?.IsEditable ?? true)"
-                           checked="@(!editModeEnabled)"
-                           @onchange="() => { editModeEnabled = false; }">
+                           disabled="@(!_tableData?.IsEditable ?? true)"
+                           checked="@(!_editModeEnabled)"
+                           @onchange="() => { _editModeEnabled = false; }">
                     <label class="form-check-label" for="viewmode_radio">View mode</label>
                 </div>
             </div>
@@ -162,7 +162,7 @@
                 {
                     <span class="px-3">
                         <small class="text-secondary">@rows.Length record(s)</small>
-                        @if (tableData?.HasMoreRows ?? false)
+                        @if (_tableData?.HasMoreRows ?? false)
                         {
                             <span class="text-warning ms-2" style="cursor: pointer;">
                                 <HxPopover Trigger="PopoverTrigger.Hover" Content="Table contains more records with applied filters than is currently shown. Increase row limit to show more records.">
@@ -172,21 +172,21 @@
                         }
                     </span>
                 }
-                @if (!tableData?.IsEditable ?? false)
+                @if (!_tableData?.IsEditable ?? false)
                 {
                     <small class="text-secondary px-3">Table is not editable</small>
                 }
-                @if (tableData is not null && rows is not null)
+                @if (_tableData is not null && rows is not null)
                 {
-                    var columns = tableData.Columns
+                    var columns = _tableData.Columns
                         .Where(c => IsColumnSelected(c.Name) && !c.IsHidden)
                         .OrderBy(c => !Table.ColumnOrder.Contains(c.Name))
                         .ThenBy(c => Table.ColumnOrder.IndexOf(c.Name));
-                    @if (tableData.HasChanges)
+                    @if (_tableData.HasChanges)
                     {
                         <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
                     }
-                    <ResizableTable CssClass="table-sm" ColumnWidthSet="x => columnWidths[x.ColumnHeaderElementId] = x.Width">
+                    <ResizableTable CssClass="table-sm" ColumnWidthSet="x => _columnWidths[x.ColumnHeaderElementId] = x.Width">
                         <thead>
                             <tr>
                                 @foreach (var column in columns)
@@ -197,9 +197,9 @@
                                     var bytes = Encoding.UTF8.GetBytes(column.Name);
                                     var hash = MD5.HashData(bytes);
                                     var id = Convert.ToHexString(hash);
-                                    var width = columnWidths.GetValueOrDefault(id) is string s ? $"width: {s};" : null;
-                                    var orderBy = this.orderBy.FirstOrDefault(o => o.Column == column.Name);
-                                    var filterSet = quickFilters.GetOrCreate(column);
+                                    var width = _columnWidths.GetValueOrDefault(id) is { } s ? $"width: {s};" : null;
+                                    var orderBy = _orderBy.FirstOrDefault(o => o.Column == column.Name);
+                                    var filterSet = _quickFilters.GetOrCreate(column);
                                     <th id="@id" class="fw-normal" title="@column.DbDatatypeDescription" style="@width">
                                         <div class="row g-0">
                                             <div class="col d-flex">
@@ -254,7 +254,7 @@
                                         
                                     </th>
                                 }
-                                @if (tableData.IsEditable && editModeEnabled)
+                                @if (_tableData.IsEditable && _editModeEnabled)
                                 {
                                     <th></th>    
                                 }
@@ -270,7 +270,7 @@
                                         var datatype = columnInfo.Datatype;
                                         var lookupValues = columnInfo.Lookup?.Values;
                                         <td>
-                                            @if (tableData.IsEditable && editModeEnabled)
+                                            @if (_tableData.IsEditable && _editModeEnabled)
                                             {
                                                 @if (!columnInfo.IsEditable)
                                                 {
@@ -384,7 +384,7 @@
                                             }
                                         </td>
                                     }
-                                    @if (tableData.IsEditable && editModeEnabled)
+                                    @if (_tableData.IsEditable && _editModeEnabled)
                                     {
                                         <td>
                                             <div class="btn-group btn-group-sm">
@@ -393,7 +393,7 @@
                                                 </button>
                                                 @if (Table.AllowInsert)
                                                 {
-                                                    <button class="btn btn-sm btn-auto" @onclick="() => tableData.AddRow(row)" title="Copy record">
+                                                    <button class="btn btn-sm btn-auto" @onclick="() => _tableData.AddRow(row)" title="Copy record">
                                                         <SvgIcon Icon="FeatherIcon.Copy" />
                                                     </button>
                                                 }
@@ -421,7 +421,7 @@
     </div>
 </div>
 
-<HxOffcanvas @ref="tableInfoOffcanvas" Title="@Table?.DataTableName" Size="OffcanvasSize.Small" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true">
+<HxOffcanvas @ref="_tableInfoOffcanvas" Title="@Table?.DataTableName" Size="OffcanvasSize.Small" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true">
     <BodyTemplate>
         <p>
             @Table?.DataTableDescription
@@ -429,4 +429,4 @@
     </BodyTemplate>
 </HxOffcanvas>
 
-<FilterSetOffcanvas @ref="filterSetOffcanvas" Filters="filterSet" />
+<FilterSetOffcanvas @ref="_filterSetOffcanvas" Filters="_filterSet" />

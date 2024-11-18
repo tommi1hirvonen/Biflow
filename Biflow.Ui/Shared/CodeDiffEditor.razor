@@ -3,7 +3,7 @@
 @implements IDisposable
 
 @inject ThemeService ThemeService
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 
 @{
     var resize = Resize switch
@@ -18,7 +18,7 @@
     @($"#{editorId} {{ height: {InitialHeight}; resize: {resize}; overflow: hidden; }}")
 </style>
 
-<StandaloneDiffEditor @ref="editor"
+<StandaloneDiffEditor @ref="_editor"
                       Id="@editorId"
                       ConstructionOptions="GetEditorOptions"
                       CssClass="border" />
@@ -32,18 +32,18 @@
     [Parameter] public CodeEditorResize Resize { get; set; } = CodeEditorResize.Vertical;
 
     [Parameter] public int? FontSize { get; set; }
-
-    private StandaloneDiffEditor? editor { get; set; }
-    private readonly string editorId = $"_{Guid.NewGuid().ToString()}"; // prefix with underscode as html id cannot start with a number
-
+    
+    private readonly string editorId = $"_{Guid.NewGuid().ToString()}"; // prefix with underscore as html id cannot start with a number
+    private StandaloneDiffEditor? _editor;
+    
     public enum CodeEditorResize { Vertical, Horizontal, Both }
 
     public async Task SetDiffEditor(string? original, string? modified, string language)
     {
-        ArgumentNullException.ThrowIfNull(editor);
-        var originalModel = await Global.CreateModel(JS, original, language);
-        var modifiedModel = await Global.CreateModel(JS, modified, language);
-        await editor.SetModel(new()
+        ArgumentNullException.ThrowIfNull(_editor);
+        var originalModel = await Global.CreateModel(Js, original, language);
+        var modifiedModel = await Global.CreateModel(Js, modified, language);
+        await _editor.SetModel(new()
         {
             Original = originalModel,
             Modified = modifiedModel
@@ -63,7 +63,7 @@
                 { "editor.background", "#212529" }
             }
         };
-        Global.DefineTheme(JS, "custom-dark", darkTheme);
+        Global.DefineTheme(Js, "custom-dark", darkTheme);
     }
 
     private StandaloneDiffEditorConstructionOptions GetEditorOptions(StandaloneDiffEditor editor) => new()
@@ -78,12 +78,12 @@
 
     public async Task GotoPreviousDiffAsync()
     {
-        await JS.InvokeVoidAsync("diffNavigationPrevious", editorId);
+        await Js.InvokeVoidAsync("diffNavigationPrevious", editorId);
     }
 
     public async Task GotoNextDiffAsync()
     {
-        await JS.InvokeVoidAsync("diffNavigationNext", editorId);
+        await Js.InvokeVoidAsync("diffNavigationNext", editorId);
     }
 
     private void OnThemeChanged(Theme theme, bool isAuto)
@@ -92,8 +92,8 @@
         {
             Theme = theme == Theme.Dark ? "vs-dark" : "vs"
         };
-        editor?.OriginalEditor.UpdateOptions(options);
-        editor?.ModifiedEditor.UpdateOptions(options);
+        _editor?.OriginalEditor.UpdateOptions(options);
+        _editor?.ModifiedEditor.UpdateOptions(options);
     }
 
     public void Dispose()

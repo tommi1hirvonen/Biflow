@@ -2,7 +2,7 @@
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject ITokenService TokenService
 
-<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" Title="Select dataset">
+<HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Regular" Title="Select dataset">
     <BodyTemplate>
         @if (AllowAppRegistrationChange)
         {
@@ -13,7 +13,7 @@
                         <div class="input-group-text">
                             <SvgIcon Icon="FeatherIcon.Globe" />
                         </div>
-                        <select class="form-select form-select-sm" @bind="appRegistrationId">
+                        <select class="form-select form-select-sm" @bind="_appRegistrationId">
                             @foreach (var appRegistration in AppRegistrations ?? [])
                             {
                                 <option value="@appRegistration.AppRegistrationId">@appRegistration.AppRegistrationName</option>
@@ -35,7 +35,7 @@
                     <div class="input-group-text">
                         <SvgIcon Icon="FeatherIcon.Search" />
                     </div>
-                    <input type="search" class="form-control form-control-sm" placeholder="Search datasets" @bind-value="filterText" @bind-value:event="oninput" />
+                    <input type="search" class="form-control form-control-sm" placeholder="Search datasets" @bind-value="_filterText" @bind-value:event="oninput" />
                 </div>
             </div>
         </div>
@@ -47,13 +47,13 @@
         <div class="row mt-3" style="@style">
             <div class="col">
                 <div class="list-group">
-                    @if (datasets is null)
+                    @if (_datasets is null)
                     {
                         <div class="list-group-item text-center">
                             <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
                         </div>
                     }
-                    else if (datasets.Count() == 0)
+                    else if (!_datasets.Any())
                     {
                         <div class="list-group-item small">
                             No workspaces
@@ -61,8 +61,8 @@
                     }
                     else
                     {
-                        var filteredGroups = datasets
-                            .Where(g => string.IsNullOrEmpty(filterText) || g.Datasets.Any(d => d.DatasetName.ContainsIgnoreCase(filterText)))
+                        var filteredGroups = _datasets
+                            .Where(g => string.IsNullOrEmpty(_filterText) || g.Datasets.Any(d => d.DatasetName.ContainsIgnoreCase(_filterText)))
                             .OrderBy(d => d.Name)
                             .ToArray();
                         if (filteredGroups.Length == 0)
@@ -74,11 +74,11 @@
                         foreach (var group in filteredGroups)
                         {
                             var datasets = group.Datasets
-                                .Where(d => string.IsNullOrEmpty(filterText) || d.DatasetName.ContainsIgnoreCase(filterText))
+                                .Where(d => string.IsNullOrEmpty(_filterText) || d.DatasetName.ContainsIgnoreCase(_filterText))
                                 .OrderBy(d => d.DatasetName)
                                 .ToArray();
-                            var expanded = !string.IsNullOrEmpty(filterText) || expandedStates.GetValueOrDefault(group);
-                            <div class="list-group-item list-group-item-action" style="cursor: pointer;" @onclick="() => expandedStates[group] = !expanded">
+                            var expanded = !string.IsNullOrEmpty(_filterText) || _expandedStates.GetValueOrDefault(group);
+                            <div class="list-group-item list-group-item-action" style="cursor: pointer;" @onclick="() => _expandedStates[group] = !expanded">
                                 <div class="row">
                                     <div class="col d-flex align-items-center small">
                                         @if (expanded)
@@ -103,12 +103,12 @@
                             {
                                 foreach (var dataset in datasets)
                                 {
-                                    <div class="list-group-item list-group-item-action @(dataset == selectedDataset ? "fw-bold bg-body" : null)" style="cursor: pointer;" @onclick="() => selectedDataset = dataset">
+                                    <div class="list-group-item list-group-item-action @(dataset == _selectedDataset ? "fw-bold bg-body" : null)" style="cursor: pointer;" @onclick="() => _selectedDataset = dataset">
                                         <div class="row">
                                             <div class="col d-flex align-items-center ps-5 small">
                                                 <SvgIcon Icon="LucideIcon.FileBarChart2" />
                                                 &nbsp;
-                                                <HighlightableText Text="@dataset.DatasetName" PartToHighlight="@filterText" />
+                                                <HighlightableText Text="@dataset.DatasetName" PartToHighlight="@_filterText" />
                                             </div>
                                         </div>
                                     </div>
@@ -123,10 +123,10 @@
 
     <FooterTemplate>
         <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectDatasetAsync"
-                  Enabled="selectedDataset is not null">
+                  Enabled="_selectedDataset is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
@@ -138,61 +138,61 @@
     public EventCallback<Dataset> OnDatasetSelected { get; set; }
 
     [Parameter]
-    public bool AllowAppRegistrationChange { get; set; } = false;
+    public bool AllowAppRegistrationChange { get; set; }
 
-    private readonly Dictionary<DatasetGroup, bool> expandedStates = [];
+    private readonly Dictionary<DatasetGroup, bool> _expandedStates = [];
 
-    private Guid appRegistrationId;
-    private HxOffcanvas? offcanvas;
-    private IEnumerable<DatasetGroup>? datasets;
-    private Dataset? selectedDataset;
-    private string filterText = "";
+    private Guid _appRegistrationId;
+    private HxOffcanvas? _offcanvas;
+    private IEnumerable<DatasetGroup>? _datasets;
+    private Dataset? _selectedDataset;
+    private string _filterText = "";
 
     private async Task SelectDatasetAsync()
     {
-        if (selectedDataset is null)
+        if (_selectedDataset is null)
         {
             return;
         }
-        await OnDatasetSelected.InvokeAsync(selectedDataset);
-        await offcanvas.LetAsync(x => x.HideAsync());
+        await OnDatasetSelected.InvokeAsync(_selectedDataset);
+        await _offcanvas.LetAsync(x => x.HideAsync());
     }
 
     public async Task ShowAsync(Guid? appRegistrationId = null)
     {
-        filterText = "";
-        if (appRegistrationId is Guid id)
+        _filterText = "";
+        if (appRegistrationId is { } id)
         {
-            this.appRegistrationId = id;
+            _appRegistrationId = id;
         }
         else
         {
-            this.appRegistrationId = AppRegistrations?.FirstOrDefault()?.AppRegistrationId ?? Guid.Empty;
+            _appRegistrationId = AppRegistrations?.FirstOrDefault()?.AppRegistrationId ?? Guid.Empty;
         }
 
-        if (this.appRegistrationId == Guid.Empty)
+        if (_appRegistrationId == Guid.Empty)
         {
             Toaster.AddWarning("No app registrations found");
             return;
         }
 
-        await offcanvas.LetAsync(x => x.ShowAsync());
+        await _offcanvas.LetAsync(x => x.ShowAsync());
         await LoadAsync();
     }
 
     private async Task LoadAsync()
     {
-        datasets = null;
-        selectedDataset = null;
-        expandedStates.Clear();
+        _datasets = null;
+        _selectedDataset = null;
+        _expandedStates.Clear();
         try
         {
-            await using var context = DbContextFactory.CreateDbContext();
+            await using var context = await DbContextFactory.CreateDbContextAsync();
             var appRegistration = await context.AppRegistrations
                 .AsNoTracking()
-                .FirstAsync(r => r.AppRegistrationId == appRegistrationId);
+                .FirstAsync(r => r.AppRegistrationId == _appRegistrationId);
             var client = appRegistration.CreateDatasetClient(TokenService);
-            datasets = await client.GetAllDatasetsAsync();
+            _datasets = await client.GetAllDatasetsAsync();
             StateHasChanged();
         }
         catch (Exception ex)

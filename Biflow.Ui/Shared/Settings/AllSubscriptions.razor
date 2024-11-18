@@ -8,10 +8,10 @@
             <div class="input-group-text">
                 <SvgIcon Icon="FeatherIcon.User" />
             </div>
-            <select class="form-select" @bind="userId" @bind:after="() => user = users?.FirstOrDefault(u => u.UserId == userId)">
-                @if (users is not null)
+            <select class="form-select" @bind="_userId" @bind:after="() => _user = _users?.FirstOrDefault(u => u.UserId == _userId)">
+                @if (_users is not null)
                 {
-                    @foreach (var user in users.OrderBy(u => u.Username))
+                    @foreach (var user in _users.OrderBy(u => u.Username))
                     {
                         <option value="@user.UserId">@user.Username</option>
                     }
@@ -21,7 +21,7 @@
     </div>
 </div>
 
-<UserSubscriptions User="user" Jobs="jobs" Steps="steps" Tags="tags">
+<UserSubscriptions User="_user" Jobs="_jobs" Steps="_steps" Tags="_tags">
     <MissingEmailAlertTemplate Context="user">
         <span>
             Email address for account <strong>@user.Username</strong> was not set. Go to the <a class="alert-link" href="settings/users">Users page</a> to enter a valid email address for the user.
@@ -30,28 +30,28 @@
 </UserSubscriptions>
 
 @code {
-    private IEnumerable<JobProjection>? jobs;
-    private List<StepTag>? tags;
-    private IEnumerable<StepProjection>? steps;
-    private Guid? userId;
-    private User? user;
-    private IEnumerable<User>? users;
+    private IEnumerable<JobProjection>? _jobs;
+    private List<StepTag>? _tags;
+    private IEnumerable<StepProjection>? _steps;
+    private Guid? _userId;
+    private User? _user;
+    private IEnumerable<User>? _users;
 
     protected override async Task OnInitializedAsync()
     {
         await using var context = await DbFactory.CreateDbContextAsync();
-        users = await context.Users
+        _users = await context.Users
             .AsNoTrackingWithIdentityResolution()
             .Include(u => u.Subscriptions)
             .ToArrayAsync();
-        user = users.OrderBy(u => u.Username).FirstOrDefault();
-        userId = user?.UserId;
-        jobs = await context.Jobs
+        _user = _users.OrderBy(u => u.Username).FirstOrDefault();
+        _userId = _user?.UserId;
+        _jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(job => job.JobName)
             .Select(j => new JobProjection(j.JobId, j.JobName, j.ExecutionMode))
             .ToArrayAsync();
-        steps = await context.Steps
+        _steps = await context.Steps
             .AsNoTrackingWithIdentityResolution()
             .Select(s => new StepProjection(
                 s.StepId,
@@ -64,9 +64,9 @@
                 s.Tags.ToArray(),
                 s.Dependencies.Select(d => new DependencyProjection(d.StepId, d.DependantOnStepId, d.DependencyType)).ToArray()))
             .ToArrayAsync();
-        tags = await context.StepTags
+        _tags = await context.StepTags
             .AsNoTrackingWithIdentityResolution()
             .ToListAsync();
-        tags.Sort();
+        _tags.Sort();
     }
 }

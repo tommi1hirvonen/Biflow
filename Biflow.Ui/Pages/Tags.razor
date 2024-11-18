@@ -38,17 +38,17 @@
     </ul>
 </div>
 
-@if (Page == "step")
+@switch (Page)
 {
-    <StepTags />
-}
-else if (Page == "job")
-{
-    <JobTags />
-}
-else if (Page == "schedule")
-{
-    <ScheduleTags />
+    case "step":
+        <StepTags />
+        break;
+    case "job":
+        <JobTags />
+        break;
+    case "schedule":
+        <ScheduleTags />
+        break;
 }
 
 @code {

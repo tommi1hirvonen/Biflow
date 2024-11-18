@@ -4,7 +4,8 @@
     <TargetFramework>net9.0</TargetFramework>
     <UserSecretsId>8cf96230-2050-421c-964f-7a7832beccca</UserSecretsId>
 	<Nullable>enable</Nullable>
-	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <LangVersion>preview</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	<!-- Allow NuGet warnings to remain as warnings -->
 	<WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
 	<ImplicitUsings>enable</ImplicitUsings>

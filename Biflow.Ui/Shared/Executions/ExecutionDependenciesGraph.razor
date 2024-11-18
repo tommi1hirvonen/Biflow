@@ -8,7 +8,7 @@
 
 <div class="row align-items-end mb-3">
     <div class="col" style="max-width: 40rem;">
-        <HxAutosuggest @bind-Value="dependencyGraphStepFilter"
+        <HxAutosuggest @bind-Value="_dependencyGraphStepFilter"
                        @bind-Value:after="LoadGraphAsync"
                        DataProvider="ProvideSuggestions"
                        TextSelector="TextSelector"
@@ -36,7 +36,7 @@
                      </span>
                  </ChildContent>
              </HxPopover>
-             <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthBackwards" disabled=@(dependencyGraphStepFilter is null) style="max-width: 9rem;" />
+             <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthBackwards" disabled=@(_dependencyGraphStepFilter is null) style="max-width: 9rem;" />
          </div>
          <div class="form-group ms-3">
              <label class="form-label">Depth forwards</label>
@@ -47,7 +47,7 @@
                      </span>
                  </ChildContent>
              </HxPopover>
-             <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthForwards" disabled=@(dependencyGraphStepFilter is null) style="max-width: 9rem;" />
+             <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthForwards" disabled=@(_dependencyGraphStepFilter is null) style="max-width: 9rem;" />
          </div>
         <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="ms-3">
             <HxButton CssClass="btn-auto" Size="ButtonSize.Small" Color="ThemeColor.None" OnClick="LoadGraphAsync">
@@ -62,8 +62,8 @@
                         <div class="col">
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" id="direction_radio_admin"
-                                       checked=@(direction == DependencyGraphDirection.LeftToRight)
-                                       @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.LeftToRight))">
+                                       checked=@(_direction == DependencyGraphDirection.LeftToRight)
+                                       @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.LeftToRight))">
                                 <label class="form-check-label fw-normal" for="direction_radio_admin">
                                     <SvgIcon Icon="FeatherIcon.ArrowRight" />
                                     Left to right
@@ -71,8 +71,8 @@
                             </div>
                             <div class="form-check mt-1">
                                 <input class="form-check-input" type="radio" id="direction_radio_editor"
-                                       checked=@(direction == DependencyGraphDirection.RightToLeft)
-                                       @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.RightToLeft))">
+                                       checked=@(_direction == DependencyGraphDirection.RightToLeft)
+                                       @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.RightToLeft))">
                                 <label class="form-check-label fw-normal" for="direction_radio_editor">
                                     <SvgIcon Icon="FeatherIcon.ArrowLeft" />
                                     Right to left
@@ -80,8 +80,8 @@
                             </div>
                             <div class="form-check mt-1">
                                 <input class="form-check-input" type="radio" id="direction_radio_operator"
-                                       checked=@(direction == DependencyGraphDirection.TopToBottom)
-                                       @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.TopToBottom))">
+                                       checked=@(_direction == DependencyGraphDirection.TopToBottom)
+                                       @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.TopToBottom))">
                                 <label class="form-check-label fw-normal" for="direction_radio_operator">
                                     <SvgIcon Icon="FeatherIcon.ArrowDown" />
                                     Top to bottom
@@ -89,8 +89,8 @@
                             </div>
                             <div class="form-check mt-1">
                                 <input class="form-check-input" type="radio" id="direction_radio_viewer"
-                                       checked=@(direction == DependencyGraphDirection.BottomToTop)
-                                       @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.BottomToTop))">
+                                       checked=@(_direction == DependencyGraphDirection.BottomToTop)
+                                       @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.BottomToTop))">
                                 <label class="form-check-label fw-normal" for="direction_radio_viewer">
                                     <SvgIcon Icon="FeatherIcon.ArrowUp" />
                                     Bottom to top
@@ -106,7 +106,7 @@
 
  @if (Execution is not null)
 {
-    <DependencyGraph @ref="dependencyGraph"
+    <DependencyGraph @ref="_dependencyGraph"
                      TItem="StepExecution"
                      ItemFromNodeIdSelector="ItemFromNodeId"
                      AfterRender="LoadGraphAsync"
@@ -119,7 +119,7 @@
                 </h6>
             </li>
             <li>
-                <span class="dropdown-item" role="button" @onclick="async () => { dependencyGraphStepFilter = step; await LoadGraphAsync(); }">
+                <span class="dropdown-item" role="button" @onclick="async () => { _dependencyGraphStepFilter = step; await LoadGraphAsync(); }">
                     <SvgIcon Icon="FeatherIcon.Filter" />
                     Limit graph to this
                 </span>
@@ -133,7 +133,7 @@
                     </span>
                 </li>
                 <li>
-                    <span class="dropdown-item" role="button" @onclick="() => stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
+                    <span class="dropdown-item" role="button" @onclick="() => _stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
                         <SvgIcon Icon="FeatherIcon.Activity" />
                         History
                     </span>
@@ -152,6 +152,6 @@
     </DependencyGraph>
 }
 
-<StepExecutionDetailsOffcanvas @ref="stepExecutionDetailsOffcanvas" />
+<StepExecutionDetailsOffcanvas @ref="_stepExecutionDetailsOffcanvas" />
 
-<StepHistoryOffcanvas @ref="stepHistoryOffcanvas" />
+<StepHistoryOffcanvas @ref="_stepHistoryOffcanvas" />

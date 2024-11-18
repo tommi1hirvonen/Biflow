@@ -28,7 +28,7 @@
                         <SvgIcon Icon="LucideIcon.Blocks" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.DbtAccountId">
-                        @foreach (var account in DbtAccounts ?? [])
+                        @foreach (var account in DbtAccounts)
                         {
                             <option value="@account.DbtAccountId">@account.DbtAccountName</option>
                         }
@@ -90,6 +90,6 @@
             </div>
         </div>
 
-        <DbtJobSelectOffcanvas @ref="jobSelectOffcanvas" OnJobSelected="OnJobSelected" />
+        <DbtJobSelectOffcanvas @ref="_jobSelectOffcanvas" OnJobSelected="OnJobSelected" />
     }
 </StepEditModalTemplate>

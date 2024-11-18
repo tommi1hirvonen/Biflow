@@ -9,16 +9,16 @@ public partial class Executions(IMediator mediator, ToasterService toaster) : Co
 
     private readonly IMediator _mediator = mediator;
     private readonly ToasterService _toaster = toaster;
-    private readonly CancellationTokenSource cts = new();
+    private readonly CancellationTokenSource _cts = new();
     
-    private bool loading;
-    private IEnumerable<ExecutionProjection>? executions;
-    private IEnumerable<StepExecutionProjection>? stepExecutions;
-    private Paginator<ExecutionProjection>? executionPaginator;
-    private Paginator<StepExecutionProjection>? stepExecutionPaginator;
-    private HxOffcanvas? deleteOffcanvas;
-    private DateTime deleteFrom = new(2000, 1, 1);
-    private DateTime deleteTo = DateTime.Now.AddYears(-1);
+    private bool _loading;
+    private IEnumerable<ExecutionProjection>? _executions;
+    private IEnumerable<StepExecutionProjection>? _stepExecutions;
+    private Paginator<ExecutionProjection>? _executionPaginator;
+    private Paginator<StepExecutionProjection>? _stepExecutionPaginator;
+    private HxOffcanvas? _deleteOffcanvas;
+    private DateTime _deleteFrom = new(2000, 1, 1);
+    private DateTime _deleteTo = DateTime.Now.AddYears(-1);
 
     protected override async Task OnInitializedAsync()
     {
@@ -31,7 +31,7 @@ public partial class Executions(IMediator mediator, ToasterService toaster) : Co
 
     private IEnumerable<ExecutionProjection>? GetOrderedExecutions()
     {
-        var filtered = executions?.Where(e => State.ExecutionPredicates.All(p => p(e)));
+        var filtered = _executions?.Where(e => State.ExecutionPredicates.All(p => p(e)));
         return UserState.Executions.ExecutionSortMode switch
         {
             ExecutionSortMode.CreatedDesc => filtered?.OrderByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
@@ -49,7 +49,7 @@ public partial class Executions(IMediator mediator, ToasterService toaster) : Co
 
     private IEnumerable<StepExecutionProjection>? GetOrderedStepExecutions()
     {
-        var filtered = stepExecutions?.Where(e => State.StepExecutionPredicates.All(p => p(e)));
+        var filtered = _stepExecutions?.Where(e => State.StepExecutionPredicates.All(p => p(e)));
         return UserState.Executions.StepExecutionSortMode switch
         {
             StepExecutionSortMode.CreatedDesc => filtered?.OrderByDescending(e => e.CreatedOn).ThenByDescending(e => e.StartedOn),
@@ -69,21 +69,21 @@ public partial class Executions(IMediator mediator, ToasterService toaster) : Co
 
     private async Task ShowExecutionsAsync()
     {
-        executions = null;
+        _executions = null;
         State.ShowSteps = false;
         await LoadDataAsync();
     }
 
     private async Task ShowStepExecutionsAsync()
     {
-        executions = null;
+        _executions = null;
         State.ShowSteps = true;
         await LoadDataAsync();
     }
 
     private async Task LoadDataAsync()
     {
-        loading = true;
+        _loading = true;
         StateHasChanged();
 
         if (State.Preset is { } preset)
@@ -94,17 +94,17 @@ public partial class Executions(IMediator mediator, ToasterService toaster) : Co
         if (!State.ShowSteps)
         {
             var request = new ExecutionsMonitoringQuery(State.FromDateTime, State.ToDateTime);
-            var response = await _mediator.SendAsync(request, cts.Token);
-            executions = response.Executions;
+            var response = await _mediator.SendAsync(request, _cts.Token);
+            _executions = response.Executions;
         }
         else
         {
             var request = new StepExecutionsMonitoringQuery(State.FromDateTime, State.ToDateTime);
-            var response = await _mediator.SendAsync(request, cts.Token);
-            stepExecutions = response.Executions;
+            var response = await _mediator.SendAsync(request, _cts.Token);
+            _stepExecutions = response.Executions;
         }
 
-        loading = false;
+        _loading = false;
         StateHasChanged();
     }
 
@@ -112,7 +112,7 @@ public partial class Executions(IMediator mediator, ToasterService toaster) : Co
     {
         try
         {
-            var command = new DeleteExecutionsCommand(deleteFrom, deleteTo);
+            var command = new DeleteExecutionsCommand(_deleteFrom, _deleteTo);
             await _mediator.SendAsync(command);
             _toaster.AddSuccess("Executions deleted successfully");
         }
@@ -178,7 +178,7 @@ public partial class Executions(IMediator mediator, ToasterService toaster) : Co
 
     public void Dispose()
     {
-        cts.Cancel();
-        cts.Dispose();
+        _cts.Cancel();
+        _cts.Dispose();
     }
 }

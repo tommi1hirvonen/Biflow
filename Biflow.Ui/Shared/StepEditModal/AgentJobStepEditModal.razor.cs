@@ -6,25 +6,23 @@ public partial class AgentJobStepEditModal(
     ToasterService toaster, IDbContextFactory<AppDbContext> dbContextFactory)
     : StepEditModal<AgentJobStep>(toaster, dbContextFactory)
 {
-    private AgentJobSelectOffcanvas? agentJobSelectOffcanvas;
+    private AgentJobSelectOffcanvas? _agentJobSelectOffcanvas;
 
     internal override string FormId => "agent_job_step_edit_form";
-
-    private MsSqlConnection Connection
+    
+    private MsSqlConnection? Connection
     {
         get
         {
-            if (_connection is null || _connection.ConnectionId != Step?.ConnectionId)
+            if (field is null || field.ConnectionId != Step?.ConnectionId)
             {
-                _connection = MsSqlConnections
-                    .FirstOrDefault(c => c.ConnectionId == Step?.ConnectionId)
-                    ?? MsSqlConnections.First();
+                field = MsSqlConnections
+                            .FirstOrDefault(c => c.ConnectionId == Step?.ConnectionId)
+                        ?? MsSqlConnections.First();
             }
-            return _connection;
+            return field;
         }
     }
-
-    private MsSqlConnection? _connection = null;
 
     protected override AgentJobStep CreateNewStep(Job job) =>
         new()
@@ -46,7 +44,7 @@ public partial class AgentJobStepEditModal(
         .Include(step => step.ExecutionConditionParameters)
         .FirstAsync(step => step.StepId == stepId);
 
-    private Task OpenAgentJobSelectOffcanvas() => agentJobSelectOffcanvas.LetAsync(x => x.ShowAsync());
+    private Task OpenAgentJobSelectOffcanvas() => _agentJobSelectOffcanvas.LetAsync(x => x.ShowAsync());
 
     private void OnAgentJobSelected(string agentJobName)
     {

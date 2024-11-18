@@ -28,12 +28,12 @@
                         <SvgIcon Icon="FeatherIcon.Database" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId">
-                        @foreach (var connection in AsConnections ?? Enumerable.Empty<AnalysisServicesConnection>())
+                        @foreach (var connection in AsConnections)
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }
                     </InputSelect>
-                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await offcanvas.LetAsync(x => x.ShowAsync(Step?.ConnectionId))">
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await _offcanvas.LetAsync(x => x.ShowAsync(Step?.ConnectionId))">
                         <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
                         Browse models
                     </HxButton>
@@ -86,6 +86,6 @@
             </div>
         </div>
 
-        <AnalysisServicesObjectSelectOffcanvas @ref="offcanvas" OnObjectSelected="OnAnalysisServicesObjectSelected" />
+        <AnalysisServicesObjectSelectOffcanvas @ref="_offcanvas" OnObjectSelected="OnAnalysisServicesObjectSelected" />
     }
 </StepEditModalTemplate>

@@ -1,6 +1,6 @@
-﻿<HxModal @ref="modal" Size="ModalSize.Large" Title="@step?.StepName">
+﻿<HxModal @ref="_modal" Size="ModalSize.Large" Title="@_step?.StepName">
     <BodyTemplate>
-        @if (step is not null)
+        @if (_step is not null)
         {
             <div class="row">
                 <div class="col">
@@ -8,44 +8,44 @@
                         <tbody>
                             <tr>
                                 <td>Step name</td>
-                                <td>@step.StepName</td>
+                                <td>@_step.StepName</td>
                             </tr>
                             <tr>
                                 <td>Step id</td>
-                                <td>@step.StepId</td>
+                                <td>@_step.StepId</td>
                             </tr>
                             <tr>
                                 <td>Description</td>
-                                <td>@step.StepDescription</td>
+                                <td>@_step.StepDescription</td>
                             </tr>
                             <tr>
                                 <td>Execution phase</td>
-                                <td>@step.ExecutionPhase</td>
+                                <td>@_step.ExecutionPhase</td>
                             </tr>
                             <tr>
                                 <td>Step type</td>
-                                <td>@step.StepType</td>
+                                <td>@_step.StepType</td>
                             </tr>
                             <tr>
                                 <td>Retry attempts</td>
-                                <td>@step.RetryAttempts</td>
+                                <td>@_step.RetryAttempts</td>
                             </tr>
                             <tr>
                                 <td>Retry interval (min)</td>
-                                <td>@step.RetryIntervalMinutes</td>
+                                <td>@_step.RetryIntervalMinutes</td>
                             </tr>
                             <tr>
                                 <td>Duplicate execution behaviour</td>
-                                <td>@step.DuplicateExecutionBehaviour</td>
+                                <td>@_step.DuplicateExecutionBehaviour</td>
                             </tr>
-                            @if (step is IHasTimeout timeout)
+                            @if (_step is IHasTimeout timeout)
                             {
                                 <tr>
                                     <td>Timeout (min)</td>
                                     <td>@timeout.TimeoutMinutes</td>
                                 </tr>
                             }
-                            @if (step is SqlStep sql)
+                            @if (_step is SqlStep sql)
                             {
                                 <tr>
                                     <td>SQL statement</td>
@@ -54,14 +54,14 @@
                                     </td>
                                 </tr>
                             }
-                            else if (step is PipelineStep pipeline)
+                            else if (_step is PipelineStep pipeline)
                             {
                                 <tr>
                                     <td>Pipeline name</td>
                                     <td>@pipeline.PipelineName</td>
                                 </tr>
                             }
-                            else if (step is JobStep job)
+                            else if (_step is JobStep job)
                             {
                                 <tr>
                                     <td>Job to execute</td>
@@ -72,7 +72,7 @@
                                     <td>@job.JobExecuteSynchronized</td>
                                 </tr>
                             }
-                            else if (step is ExeStep exe)
+                            else if (_step is ExeStep exe)
                             {
                                 <tr>
                                     <td>File path</td>
@@ -91,7 +91,7 @@
                                     <td>@exe.ExeSuccessExitCode</td>
                                 </tr>
                             }
-                            else if (step is DatasetStep dataset)
+                            else if (_step is DatasetStep dataset)
                             {
                                 <tr>
                                     <td>Group id</td>
@@ -102,7 +102,7 @@
                                     <td>@dataset.DatasetId</td>
                                 </tr>
                             }
-                            else if (step is PackageStep package)
+                            else if (_step is PackageStep package)
                             {
                                 <tr>
                                     <td>Package folder</td>
@@ -130,7 +130,7 @@
                                     <td>@package.ExecuteAsLogin</td>
                                 </tr>
                             }
-                            else if (step is FunctionStep function)
+                            else if (_step is FunctionStep function)
                             {
                                 <tr>
                                     <td>Function url</td>
@@ -145,14 +145,14 @@
                                     <td>@function.FunctionAppId</td>
                                 </tr>
                             }
-                            else if (step is AgentJobStep agent)
+                            else if (_step is AgentJobStep agent)
                             {
                                 <tr>
                                     <td>Agent job name</td>
                                     <td>@agent.AgentJobName</td>
                                 </tr>
                             }
-                            else if (step is TabularStep tabular)
+                            else if (_step is TabularStep tabular)
                             {
                                 <tr>
                                     <td>Model name</td>
@@ -167,7 +167,7 @@
                                     <td>@tabular.TabularPartitionName</td>
                                 </tr>
                             }
-                            else if (step is EmailStep email)
+                            else if (_step is EmailStep email)
                             {
                                 <tr>
                                     <td>Recipients</td>
@@ -182,21 +182,21 @@
                                     <td>@email.Body</td>
                                 </tr>
                             }
-                            else if (step is QlikStep qlik)
+                            else if (_step is QlikStep qlik)
                             {
                                 <tr>
                                     <td>Settings</td>
                                     <td><pre><code>@JsonSerializer.Serialize(qlik.QlikStepSettings, JsonSerializerOptions)</code></pre></td>
                                 </tr>
                             }
-                            else if (step is DatabricksStep db)
+                            else if (_step is DatabricksStep db)
                             {
                                 <tr>
                                     <td>Settings</td>
                                     <td><pre><code>@JsonSerializer.Serialize(db.DatabricksStepSettings, JsonSerializerOptions)</code></pre></td>
                                 </tr>
                             }
-                            else if (step is DbtStep dbt)
+                            else if (_step is DbtStep dbt)
                             {
                                 <tr>
                                     <td>dbt job id</td>
@@ -226,7 +226,7 @@
                             <tr>
                                 <td>Execution condition</td>
                                 <td>
-                                    <pre class="my-0"><code>@step.ExecutionConditionExpression.Expression</code></pre>
+                                    <pre class="my-0"><code>@_step.ExecutionConditionExpression.Expression</code></pre>
                                 </td>
                             </tr>
                         </tbody>
@@ -240,13 +240,13 @@
                     <table class="table table-sm">
                         <tbody class="border-top">
                             @{
-                                var executionConditionParameters = step.ExecutionConditionParameters ?? Enumerable.Empty<ExecutionConditionParameter>();
+                                var executionConditionParameters = _step.ExecutionConditionParameters;
                             }
                             @if (!executionConditionParameters.Any())
                             {
                                 <tr><td class="small">No execution condition parameters</td></tr>
                             }
-                            @foreach (var param in step.ExecutionConditionParameters ?? Enumerable.Empty<ExecutionConditionParameter>())
+                            @foreach (var param in _step.ExecutionConditionParameters)
                             {
                                 <tr>
                                     <td class="fw-bold w-25">
@@ -262,7 +262,7 @@
                 </div>
             </div>
 
-            @if (step is IHasStepParameters hasParams)
+            @if (_step is IHasStepParameters hasParams)
             {
                 <h6>Parameters</h6>
                 <div class="row">
@@ -289,23 +289,21 @@
     </BodyTemplate>
     
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await modal.LetAsync(x => x.HideAsync())">Close</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _modal.LetAsync(x => x.HideAsync())">Close</HxButton>
     </FooterTemplate>
 </HxModal>
 
 
 @code {
-    private HxModal? modal;
-    private Step? step;
+    private HxModal? _modal;
+    private Step? _step;
 
-    private static JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
 
     public async Task ShowAsync(Step step)
     {
-        this.step = step;
+        _step = step;
         StateHasChanged();
-        await modal.LetAsync(x => x.ShowAsync());
+        await _modal.LetAsync(x => x.ShowAsync());
     }
-
-    public Task HideAsync() => modal.LetAsync(x => x.HideAsync());
 }

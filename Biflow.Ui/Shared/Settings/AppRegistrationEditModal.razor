@@ -1,14 +1,14 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbFactory
 @inject ToasterService Toaster
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 @inject ITokenService TokenService
 
-<HxModal @ref="modal" Size="ModalSize.Large" OnClosed="() => connectionTestSuccess = null" Title="@(appRegistration?.AppRegistrationId == Guid.Empty ? "New App registration" : "Edit " + appRegistration?.AppRegistrationName)">
+<HxModal @ref="_modal" Size="ModalSize.Large" OnClosed="() => _connectionTestSuccess = null" Title="@(_appRegistration?.AppRegistrationId == Guid.Empty ? "New App registration" : "Edit " + _appRegistration?.AppRegistrationName)">
     <BodyTemplate>
-        @if (appRegistration is not null)
+        @if (_appRegistration is not null)
         {
             <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
-            <EditForm Model="appRegistration" id="pbi_edit_form" OnValidSubmit="SubmitAppRegistration">
+            <EditForm Model="_appRegistration" id="pbi_edit_form" OnValidSubmit="SubmitAppRegistration">
                 <div class="row">
                     <div class="col mx-3">
                         <DataAnnotationsValidator />
@@ -17,31 +17,31 @@
                         <div class="row">
                             <div class="col">
                                 <label class="form-label">App registration name</label>
-                                <InputText class="form-control" @bind-Value="appRegistration.AppRegistrationName"></InputText>
+                                <InputText class="form-control" @bind-Value="_appRegistration.AppRegistrationName"></InputText>
                             </div>
                         </div>
 
                         <div class="row mt-3">
                             <div class="col">
                                 <label class="form-label">Tenant id</label>
-                                <InputText class="form-control" @bind-Value="appRegistration.TenantId"></InputText>
+                                <InputText class="form-control" @bind-Value="_appRegistration.TenantId"></InputText>
                             </div>
                         </div>
 
                         <div class="row mt-3">
                             <div class="col">
                                 <label class="form-label">Client id</label>
-                                <InputText class="form-control" @bind-Value="appRegistration.ClientId"></InputText>
+                                <InputText class="form-control" @bind-Value="_appRegistration.ClientId"></InputText>
                             </div>
                             <div class="col-lg">
                                 <label class="form-label">Client secret</label>
-                                <InputText class="form-control" @bind-Value="appRegistration.ClientSecret"></InputText>
+                                <InputText class="form-control" @bind-Value="_appRegistration.ClientSecret"></InputText>
                             </div>
                         </div>
 
                         <div class="row mt-3">
                             <div class="col">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="TestConnection" Enabled="!testingConnection">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="TestConnection" Enabled="!_testingConnection">
                                     Test connection
                                 </HxButton>
                             </div>
@@ -49,20 +49,21 @@
 
                         <div class="row mt-3">
                             <div class="col">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="TestPowerBIAccess" Enabled="!testingConnection">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="TestPowerBiAccess" Enabled="!_testingConnection">
                                     Test Power BI access
                                 </HxButton>
                             </div>
                         </div>
                         <div class="row mt-2">
                             <div class="col">
-                                @if (connectionTestSuccess == true)
+                                @switch (_connectionTestSuccess)
                                 {
-                                    <span class="badge bg-success">Success</span>
-                                }
-                                else if (connectionTestSuccess == false)
-                                {
-                                    <span class="badge bg-danger">Failed</span>
+                                    case true:
+                                        <span class="badge bg-success">Success</span>
+                                        break;
+                                    case false:
+                                        <span class="badge bg-danger">Failed</span>
+                                        break;
                                 }
                             </div>
                         </div>
@@ -72,8 +73,8 @@
         }
     </BodyTemplate>
     <FooterTemplate>
-        <HxSubmit form="pbi_edit_form" Color="ThemeColor.Success">@(appRegistration?.AppRegistrationId == Guid.Empty ? "Create" : "Save")</HxSubmit>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxSubmit form="pbi_edit_form" Color="ThemeColor.Success">@(_appRegistration?.AppRegistrationId == Guid.Empty ? "Create" : "Save")</HxSubmit>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate> 
 </HxModal>
 
@@ -81,68 +82,68 @@
     [Parameter]
     public EventCallback<AppRegistration> OnAppRegistrationSubmit { get; set; }
 
-    private AppRegistration? appRegistration;
-    private HxModal? modal;
-    private bool? connectionTestSuccess = null;
-    private bool testingConnection = false;
+    private AppRegistration? _appRegistration;
+    private HxModal? _modal;
+    private bool? _connectionTestSuccess = null;
+    private bool _testingConnection = false;
 
     private async Task SubmitAppRegistration()
     {
-        await OnAppRegistrationSubmit.InvokeAsync(appRegistration);
-        await modal.LetAsync(x => x.HideAsync());
+        await OnAppRegistrationSubmit.InvokeAsync(_appRegistration);
+        await _modal.LetAsync(x => x.HideAsync());
     }
 
     private async Task TestConnection()
     {
-        connectionTestSuccess = null;
-        testingConnection = true;
+        _connectionTestSuccess = null;
+        _testingConnection = true;
         try
         {
-            if (appRegistration?.TenantId is null || appRegistration.ClientId is null || appRegistration.ClientSecret is null)
+            if (_appRegistration?.TenantId is null || _appRegistration.ClientId is null || _appRegistration.ClientSecret is null)
             {
-                throw new ArgumentNullException("One or more of the App registration properties needed for connection testing was null");
+                throw new ArgumentException("One or more of the app registration properties needed for connection testing was null");
             }
-            await (appRegistration?.TestConnection() ?? Task.CompletedTask);
-            connectionTestSuccess = true;
+            await (_appRegistration?.TestConnection() ?? Task.CompletedTask);
+            _connectionTestSuccess = true;
         }
         catch (Exception ex)
         {
-            connectionTestSuccess = false;
+            _connectionTestSuccess = false;
             Toaster.AddError("Connection test failed", ex.Message);
         }
-        testingConnection = false;
+        _testingConnection = false;
     }
 
-    private async Task TestPowerBIAccess()
+    private async Task TestPowerBiAccess()
     {
-        connectionTestSuccess = null;
-        testingConnection = true;
+        _connectionTestSuccess = null;
+        _testingConnection = true;
         try
         {
-            if (appRegistration?.TenantId is null || appRegistration.ClientId is null || appRegistration.ClientSecret is null)
+            if (_appRegistration?.TenantId is null || _appRegistration.ClientId is null || _appRegistration.ClientSecret is null)
             {
-                throw new ArgumentNullException("One or more of the App registration properties needed for connection testing was null");
+                throw new ArgumentException("One or more of the App registration properties needed for connection testing was null");
             }
-            await (appRegistration?.TestPowerBIConnection() ?? Task.CompletedTask);
-            connectionTestSuccess = true;
+            await (_appRegistration?.TestPowerBIConnection() ?? Task.CompletedTask);
+            _connectionTestSuccess = true;
         }
         catch (Exception ex)
         {
-            connectionTestSuccess = false;
+            _connectionTestSuccess = false;
             Toaster.AddError("Connection test failed", ex.Message);
         }
-        testingConnection = false;
+        _testingConnection = false;
     }
 
     public async Task ShowAsync(Guid appRegistrationId)
     {
-        appRegistration = null;
-        connectionTestSuccess = null;
-        await modal.LetAsync(x => x.ShowAsync());
+        _appRegistration = null;
+        _connectionTestSuccess = null;
+        await _modal.LetAsync(x => x.ShowAsync());
         if (appRegistrationId != Guid.Empty)
         {
-            await using var context = DbFactory.CreateDbContext();
-            appRegistration = await context.AppRegistrations
+            await using var context = await DbFactory.CreateDbContextAsync();
+            _appRegistration = await context.AppRegistrations
                 .AsNoTrackingWithIdentityResolution()
                 .Include(app => app.Steps)
                 .ThenInclude(step => step.Job)
@@ -152,13 +153,13 @@
         }
         else
         {
-            appRegistration = new();
+            _appRegistration = new();
         }
     }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
-        var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        var confirmed = await Js.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
         if (!confirmed)
         {
             context.PreventNavigation();

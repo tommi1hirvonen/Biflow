@@ -1,5 +1,5 @@
 ﻿
-<HxOffcanvas @ref="offcanvas" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true" Title="Filters">
+<HxOffcanvas @ref="_offcanvas" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true" Title="Filters">
     <BodyTemplate>
         @if (Filters is not null)
         {
@@ -390,7 +390,7 @@
 @code {
     [Parameter] public FilterSet? Filters { get; set; }
 
-    private HxOffcanvas? offcanvas;
+    private HxOffcanvas? _offcanvas;
 
-    public Task ShowAsync() => offcanvas.LetAsync(x => x.ShowAsync());
+    public Task ShowAsync() => _offcanvas.LetAsync(x => x.ShowAsync());
 }

@@ -24,9 +24,12 @@
             </div>
             <div class="col-md-6 d-inline">
                 <div class="input-group input-group-sm">
-                    <div class="input-group-text">
-                        <ConnectionTypeIcon ConnectionType="Connection.ConnectionType" />
-                    </div>
+                    @if (Connection is { } c)
+                    {
+                        <div class="input-group-text">
+                            <ConnectionTypeIcon ConnectionType="c.ConnectionType"/>
+                        </div>    
+                    }
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId" @bind-Value:after="StateHasChanged">
                         @foreach (var connection in SqlConnections)
                         {
@@ -34,7 +37,7 @@
                         }
                     </InputSelect>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenStoredProcedureSelectModal">
-                        <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
+                        <SvgIcon Icon="FeatherIcon.MoreHorizontal"/>
                         Stored procedures
                     </HxButton>
                 </div>

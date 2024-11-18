@@ -1,7 +1,6 @@
 ﻿using Biflow.Ui.Core.Validation;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.JSInterop;
-using System.Data;
 
 namespace Biflow.Ui.Shared.Settings;
 
@@ -20,58 +19,58 @@ public partial class UserEditModal(
     private readonly ToasterService _toaster = toaster;
     private readonly IJSRuntime _js = js;
 
-    private List<Job>? jobs;
-    private List<MasterDataTable>? dataTables;
-    private HxModal? modal;
-    private UserFormModel? model;
-    private Guid previousUserId;
-    private string currentUsername = "";
-    private UserFormModelValidator validator = new([]);
-    private AuthorizationPane currentPane = AuthorizationPane.Jobs;
+    private List<Job>? _jobs;
+    private List<MasterDataTable>? _dataTables;
+    private HxModal? _modal;
+    private UserFormModel? _model;
+    private Guid _previousUserId;
+    private string _currentUsername = "";
+    private UserFormModelValidator _validator = new([]);
+    private AuthorizationPane _currentPane = AuthorizationPane.Jobs;
 
-    private bool IsNewUser => previousUserId == Guid.Empty;
+    private bool IsNewUser => _previousUserId == Guid.Empty;
 
     private void ToggleJobAuthorization(ChangeEventArgs args, Job job)
     {
-        ArgumentNullException.ThrowIfNull(model);
+        ArgumentNullException.ThrowIfNull(_model);
         var enabled = (bool)args.Value!;
         if (enabled)
         {
-            model.User.Jobs.Add(job);
+            _model.User.Jobs.Add(job);
         }
         else
         {
-            model.User.Jobs.Remove(job);
+            _model.User.Jobs.Remove(job);
         }
     }
 
     private void ToggleDataTableAuthorization(ChangeEventArgs args, MasterDataTable table)
     {
-        ArgumentNullException.ThrowIfNull(model);
+        ArgumentNullException.ThrowIfNull(_model);
         var enabled = (bool)args.Value!;
         if (enabled)
         {
-            model.User.DataTables.Add(table);
+            _model.User.DataTables.Add(table);
         }
         else
         {
-            model.User.DataTables.Remove(table);
+            _model.User.DataTables.Remove(table);
         }
     }
 
     private void OnClosed()
     {
-        model = null;
+        _model = null;
     }
 
     private async Task SubmitUser()
     {
-        ArgumentNullException.ThrowIfNull(model);
+        ArgumentNullException.ThrowIfNull(_model);
         // New user
         if (IsNewUser)
         {
-            ArgumentNullException.ThrowIfNull(model.PasswordModel);
-            if (_authenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn && !model.PasswordModel.Password.Equals(model.PasswordModel.ConfirmPassword))
+            ArgumentNullException.ThrowIfNull(_model.PasswordModel);
+            if (_authenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn && !_model.PasswordModel.Password.Equals(_model.PasswordModel.ConfirmPassword))
             {
                 _toaster.AddError("The two passwords do not match");
                 return;
@@ -79,10 +78,10 @@ public partial class UserEditModal(
 
             try
             {
-                await _mediator.SendAsync(new CreateUserCommand(model.User, model.PasswordModel));
-                await OnUserSubmit.InvokeAsync(model.User);
-                model = null;
-                await modal.LetAsync(x => x.HideAsync());
+                await _mediator.SendAsync(new CreateUserCommand(_model.User, _model.PasswordModel));
+                await OnUserSubmit.InvokeAsync(_model.User);
+                _model = null;
+                await _modal.LetAsync(x => x.HideAsync());
             }
             catch (Exception ex)
             {
@@ -94,10 +93,10 @@ public partial class UserEditModal(
         {
             try
             {
-                ArgumentNullException.ThrowIfNull(model);
-                await _mediator.SendAsync(new UpdateUserCommand(model.User));
-                await OnUserSubmit.InvokeAsync(model.User);
-                await modal.LetAsync(x => x.HideAsync());
+                ArgumentNullException.ThrowIfNull(_model);
+                await _mediator.SendAsync(new UpdateUserCommand(_model.User));
+                await OnUserSubmit.InvokeAsync(_model.User);
+                await _modal.LetAsync(x => x.HideAsync());
             }
             catch (Exception ex)
             {
@@ -108,17 +107,17 @@ public partial class UserEditModal(
 
     public async Task ShowAsync(Guid? userId)
     {
-        currentUsername = "";
-        await modal.LetAsync(x => x.ShowAsync());
-        previousUserId = userId ?? Guid.Empty;
-        await using var context = _dbContextFactory.CreateDbContext();
+        _currentUsername = "";
+        await _modal.LetAsync(x => x.ShowAsync());
+        _previousUserId = userId ?? Guid.Empty;
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         if (userId is null)
         {
             var user = new User
             {
                 Username = ""
             };
-            model = new(user, new());
+            _model = new(user, new());
         }
         else
         {
@@ -126,22 +125,22 @@ public partial class UserEditModal(
                 .Include(u => u.Jobs)
                 .Include(u => u.DataTables)
                 .FirstAsync(user => user.UserId == userId);
-            currentUsername = user.Username;
-            model = new(user, null); // no password model for existing users
+            _currentUsername = user.Username;
+            _model = new(user, null); // no password model for existing users
         }
-        jobs = await context.Jobs
+        _jobs = await context.Jobs
             .OrderBy(j => j.JobName)
             .ToListAsync();
-        dataTables = await context.MasterDataTables
+        _dataTables = await context.MasterDataTables
             .Include(t => t.Category)
             .OrderBy(t => t.DataTableName)
             .ToListAsync();
         var reservedUsernames = await context.Users
             .AsNoTracking()
-            .Where(u => u.Username != model.User.Username)
+            .Where(u => u.Username != _model.User.Username)
             .Select(u => u.Username)
             .ToArrayAsync();
-        validator = new(reservedUsernames);
+        _validator = new(reservedUsernames);
     }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)

@@ -39,7 +39,7 @@
                 </HxButton>
             </HxButtonGroup>
             <HxDropdownButtonGroup CssClass="ms-3">
-                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" Enabled="!loading">
+                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" Enabled="!_loading">
                     <SvgIcon Icon="FeatherIcon.Bookmark" />
                     @if (!string.IsNullOrEmpty(State.PresetText))
                     {
@@ -74,13 +74,13 @@
                 </HxDropdownMenu>
             </HxDropdownButtonGroup>
 
-            <HxSubmit FormId="executions_form" Size="ButtonSize.Small" Color="ThemeColor.Primary" Spinner="loading" Enabled="!loading" CssClass="ms-3">
+            <HxSubmit FormId="executions_form" Size="ButtonSize.Small" Color="ThemeColor.Primary" Spinner="_loading" Enabled="!_loading" CssClass="ms-3">
                 <SvgIcon Icon="FeatherIcon.RefreshCw" />
                 Refresh
             </HxSubmit>
 
             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto ms-auto" OnClick="() => deleteOffcanvas.LetAsync(x => x.ShowAsync())">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto ms-auto" OnClick="() => _deleteOffcanvas.LetAsync(x => x.ShowAsync())">
                     <SvgIcon Icon="FeatherIcon.Trash2" />
                     Delete...
                 </HxButton>
@@ -125,12 +125,12 @@
 
         <HxButtonGroup Size="ButtonGroupSize.Small">
             @{
-                IEnumerable<string>? jobNames = State.ShowSteps switch
+                var jobNames = State.ShowSteps switch
                 {
-                    true => stepExecutions?
+                    true => _stepExecutions?
                         .Where(e => State.StepExecutionPredicates.Where(p => p != State.JobPredicate).All(p => p(e)))
                         .Select(e => e.JobName),
-                    false => executions?
+                    false => _executions?
                         .Where(e => State.ExecutionPredicates.Where(p => p != State.JobPredicate).All(p => p(e)))
                         .Select(e => e.JobName)
                 };
@@ -147,12 +147,12 @@
                 </TitleTemplate>
             </FilterDropdown>
             @{
-                IEnumerable<TagProjection>? jobTags = State.ShowSteps switch
+                var jobTags = State.ShowSteps switch
                 {
-                    true => stepExecutions?
+                    true => _stepExecutions?
                         .Where(e => State.StepExecutionPredicates.Where(p => p != State.JobTagPredicate).All(p => p(e)))
                         .SelectMany(e => e.JobTags),
-                    false => executions?
+                    false => _executions?
                         .Where(e => State.ExecutionPredicates.Where(p => p != State.JobTagPredicate).All(p => p(e)))
                         .SelectMany(e => e.JobTags)
                 };
@@ -175,13 +175,13 @@
                     </TitleTemplate>
             </FilterDropdown>
             @{
-                IEnumerable<ScheduleProjection>? schedules = State.ShowSteps switch
+                var schedules = State.ShowSteps switch
                 {
-                    true => stepExecutions?
+                    true => _stepExecutions?
                         .Where(e => State.StepExecutionPredicates.Where(p => p != State.SchedulePredicate).All(p => p(e)))
                         .Where(e => e.ScheduleId is not null)
                         .Select(e => new ScheduleProjection((Guid)e.ScheduleId!, e.ScheduleName)),
-                    false => executions?
+                    false => _executions?
                         .Where(e => State.ExecutionPredicates.Where(p => p != State.SchedulePredicate).All(p => p(e)))
                         .Where(e => e.ScheduleId is not null)
                         .Select(e => new ScheduleProjection((Guid)e.ScheduleId!, e.ScheduleName))
@@ -205,7 +205,7 @@
             {
                 <FilterDropdown TItem="(string StepName, StepType StepType)"
                                 FilterSet="State.StepFilter"
-                                Items="stepExecutions?
+                                Items="_stepExecutions?
                                    .Where(e => State.StepExecutionPredicates.Where(p => p != State.StepPredicate).All(p => p(e)))
                                    .Select(s => (s.StepName, s.StepType))
                                    .Distinct()
@@ -224,7 +224,7 @@
                 </FilterDropdown>
                 <FilterDropdown TItem="StepType"
                                 FilterSet="State.StepTypeFilter"
-                                Items="stepExecutions?
+                                Items="_stepExecutions?
                                    .Where(e => State.StepExecutionPredicates.Where(p => p != State.StepTypePredicate).All(p => p(e)))
                                    .Select(s => s.StepType)
                                    .Distinct()
@@ -246,7 +246,7 @@
             {
                 <FilterDropdown TItem="ExecutionStatus"
                                 FilterSet="State.JobStatusFilter"
-                                Items="executions?
+                                Items="_executions?
                                    .Where(e => State.ExecutionPredicates.Where(p => p != State.JobStatusPredicate).All(p => p(e)))
                                    .Select(e => e.ExecutionStatus)
                                    .Distinct()
@@ -266,7 +266,7 @@
             {
                 <FilterDropdown TItem="StepExecutionStatus"
                                 FilterSet="State.StepStatusFilter"
-                                Items="stepExecutions?
+                                Items="_stepExecutions?
                                    .Where(e => State.StepExecutionPredicates.Where(p => p != State.StepStatusPredicate).All(p => p(e)))
                                    .Select(e => e.StepExecutionStatus)
                                    .Distinct()
@@ -283,7 +283,7 @@
                 </FilterDropdown>
                 <FilterDropdown TItem="TagProjection"
                                 FilterSet="State.StepTagFilter"
-                                Items="stepExecutions?
+                                Items="_stepExecutions?
                                    .Where(e => State.StepExecutionPredicates.Where(p => p != State.StepTagPredicate).All(p => p(e)))
                                    .SelectMany(e => e.StepTags)
                                    .Distinct()
@@ -338,7 +338,7 @@
 {
     if (!State.ShowSteps)
     {
-        <Paginator @ref="executionPaginator"
+        <Paginator @ref="_executionPaginator"
                    TItem="ExecutionProjection"
                    Items="GetOrderedExecutions()"
                    Context="pagedExecutions"
@@ -349,7 +349,7 @@
 
             <div class="row sticky-top mt-1 py-2 bg-body" style="z-index: 999;">
                 <div class="col d-flex justify-content-end">
-                    <PaginationControls Paginator="executionPaginator" />
+                    <PaginationControls Paginator="_executionPaginator" />
                 </div>
             </div>
 
@@ -363,7 +363,7 @@
     }
     else
     {
-        <Paginator @ref="stepExecutionPaginator"
+        <Paginator @ref="_stepExecutionPaginator"
                    TItem="StepExecutionProjection"
                    Items="GetOrderedStepExecutions()"
                    Context="stepExecutions"
@@ -374,7 +374,7 @@
 
             <div class="row sticky-top mt-1 py-2 bg-body" style="z-index: 999;">
                 <div class="col d-flex justify-content-end">
-                    <PaginationControls Paginator="stepExecutionPaginator" />
+                    <PaginationControls Paginator="_stepExecutionPaginator" />
                 </div>
             </div>
 
@@ -407,7 +407,7 @@ else
 }
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-    <HxOffcanvas @ref="deleteOffcanvas" Size="OffcanvasSize.Small" Title="Delete executions" Backdrop="OffcanvasBackdrop.False">
+    <HxOffcanvas @ref="_deleteOffcanvas" Size="OffcanvasSize.Small" Title="Delete executions" Backdrop="OffcanvasBackdrop.False">
         <BodyTemplate>
             <div class="row">
                 <div class="col-3 d-flex justify-content-end">
@@ -418,7 +418,7 @@ else
                         <div class="input-group-text">
                             <SvgIcon Icon="FeatherIcon.Calendar" />
                         </div>
-                        <input @bind="deleteFrom"
+                        <input @bind="_deleteFrom"
                                @bind:format="yyyy-MM-ddTHH:mm:ss"
                                class="form-control form-control-sm"
                                type="datetime-local">
@@ -434,7 +434,7 @@ else
                         <div class="input-group-text">
                             <SvgIcon Icon="FeatherIcon.Calendar" />
                         </div>
-                        <input @bind="deleteTo"
+                        <input @bind="_deleteTo"
                                @bind:format="yyyy-MM-ddTHH:mm:ss"
                                class="form-control form-control-sm"
                                type="datetime-local">
@@ -451,7 +451,7 @@ else
             </div>
         </BodyTemplate>
         <FooterTemplate>
-            <HxButton Color="ThemeColor.Secondary" OnClick="() => deleteOffcanvas.LetAsync(x => x.HideAsync())">
+            <HxButton Color="ThemeColor.Secondary" OnClick="() => _deleteOffcanvas.LetAsync(x => x.HideAsync())">
                 Close
             </HxButton>
         </FooterTemplate>

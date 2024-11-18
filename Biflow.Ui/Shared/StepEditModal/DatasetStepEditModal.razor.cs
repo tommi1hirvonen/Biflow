@@ -12,17 +12,17 @@ public partial class DatasetStepEditModal(
 
     internal override string FormId => "dataset_step_edit_form";
 
-    private DatasetSelectOffcanvas? datasetSelectOffcanvas;
-    private string? datasetGroupName;
-    private string? datasetName;
+    private DatasetSelectOffcanvas? _datasetSelectOffcanvas;
+    private string? _datasetGroupName;
+    private string? _datasetName;
 
     private void OnDatasetSelected(Dataset dataset)
     {
         ArgumentNullException.ThrowIfNull(Step);
-        (Step.DatasetGroupId, datasetGroupName, Step.DatasetId, datasetName) = dataset;
+        (Step.DatasetGroupId, _datasetGroupName, Step.DatasetId, _datasetName) = dataset;
     }
 
-    private Task OpenDatasetSelectOffcanvas() => datasetSelectOffcanvas.LetAsync(x => x.ShowAsync(Step?.AppRegistrationId));
+    private Task OpenDatasetSelectOffcanvas() => _datasetSelectOffcanvas.LetAsync(x => x.ShowAsync(Step?.AppRegistrationId));
 
     protected override async Task OnModalShownAsync(DatasetStep step)
     {
@@ -30,7 +30,7 @@ public partial class DatasetStepEditModal(
         {
             var appRegistration = AppRegistrations.First(a => a.AppRegistrationId == step.AppRegistrationId);
             var datasetClient = appRegistration.CreateDatasetClient(_tokenService);
-            (datasetGroupName, datasetName) = appRegistration switch
+            (_datasetGroupName, _datasetName) = appRegistration switch
             {
                 not null => (
                     await datasetClient.GetGroupNameAsync(step.DatasetGroupId),
@@ -41,7 +41,7 @@ public partial class DatasetStepEditModal(
         }
         catch
         {
-            (datasetGroupName, datasetName) = ("", "");
+            (_datasetGroupName, _datasetName) = ("", "");
         }
         finally
         {
@@ -51,7 +51,7 @@ public partial class DatasetStepEditModal(
 
     protected override async Task<DatasetStep> GetExistingStepAsync(AppDbContext context, Guid stepId)
     {
-        (datasetGroupName, datasetName) = (null, null);
+        (_datasetGroupName, _datasetName) = (null, null);
         var step = await context.DatasetSteps
             .Include(step => step.Job)
             .Include(step => step.Tags)
@@ -66,7 +66,7 @@ public partial class DatasetStepEditModal(
 
     protected override DatasetStep CreateNewStep(Job job)
     {
-        (datasetGroupName, datasetName) = ("", "");
+        (_datasetGroupName, _datasetName) = ("", "");
         return new()
         {
             JobId = job.JobId,

@@ -22,19 +22,17 @@ public partial class SqlStepEditModal(
     private StoredProcedureSelectOffcanvas? storedProcedureSelectModal;
     private CodeEditor? editor;
     
-    private ConnectionBase Connection
+    private ConnectionBase? Connection
     {
         get
         {
-            if (_connection is null || _connection.ConnectionId != Step?.ConnectionId)
+            if (field is null || field.ConnectionId != Step?.ConnectionId)
             {
-                _connection = SqlConnections.FirstOrDefault(c => c.ConnectionId == Step?.ConnectionId) ?? SqlConnections.First();
+                field = SqlConnections.FirstOrDefault(c => c.ConnectionId == Step?.ConnectionId) ?? SqlConnections.First();
             }
-            return _connection;
+            return field;
         }
     }
-
-    private ConnectionBase? _connection = null;
 
     protected override Task<SqlStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>
         context.SqlSteps
@@ -59,7 +57,7 @@ public partial class SqlStepEditModal(
             {
                 await editor.SetValueAsync(step.SqlStatement);
             }
-            catch { }
+            catch { /* ignored */ }
         }
     }
 
@@ -73,7 +71,12 @@ public partial class SqlStepEditModal(
             ConnectionId = SqlConnections.First().ConnectionId
         };
 
-    private Task OpenStoredProcedureSelectModal() => storedProcedureSelectModal.LetAsync(x => x.ShowAsync(Connection));
+    private Task OpenStoredProcedureSelectModal()
+    {
+        var connection = Connection;
+        ArgumentNullException.ThrowIfNull(connection);
+        return storedProcedureSelectModal.LetAsync(x => x.ShowAsync(connection));
+    }
 
     private async Task ImportParametersAsync()
     {
@@ -84,7 +87,7 @@ public partial class SqlStepEditModal(
             if (Connection is MsSqlConnection msSql)
             {
                 var procedure = MsSqlExtensions.ParseStoredProcedureFromSqlStatement(Step.SqlStatement);
-                if (procedure is null || procedure.Value.ProcedureName is null || Step.ConnectionId == Guid.Empty)
+                if (procedure?.ProcedureName is null || Step.ConnectionId == Guid.Empty)
                 {
                     Toaster.AddWarning("Stored procedure could not be parsed from SQL statement");
                     return;
@@ -110,7 +113,7 @@ public partial class SqlStepEditModal(
             }
             else
             {
-                throw new ArgumentException($"Unsupported connection type: {Connection.GetType().Name}");
+                throw new ArgumentException($"Unsupported connection type: {Connection?.GetType().Name}");
             }
         }
         catch (Exception ex)

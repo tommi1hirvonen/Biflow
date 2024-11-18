@@ -2,11 +2,11 @@
 @inject IMediator Mediator
 @inject ToasterService Toaster
 
-<HxModal @ref="offcanvas" Size="ModalSize.Large">
+<HxModal @ref="_offcanvas" Size="ModalSize.Large">
     <BodyTemplate>
-        @if (editObject is not null)
+        @if (_editObject is not null)
         {
-            <EditForm id="data_object_edit" Model="editObject" OnValidSubmit="SubmitDataObjectAsync">
+            <EditForm id="data_object_edit" Model="_editObject" OnValidSubmit="SubmitDataObjectAsync">
                 <DataAnnotationsValidator />
                 <ValidationSummary />
                 <div class="row">
@@ -16,7 +16,7 @@
                             <div class="input-group-text">
                                 <SvgIcon Icon="FeatherIcon.Link" />
                             </div>
-                            <InputText class="form-control form-control-sm font-monospace" autocomplete="off" @bind-Value="editObject.ObjectUri" />
+                            <InputText class="form-control form-control-sm font-monospace" autocomplete="off" @bind-Value="_editObject.ObjectUri" />
                         </div>
                     </div>
                 </div>
@@ -27,7 +27,7 @@
                             <div class="input-group-text">
                                 <SvgIcon Icon="FeatherIcon.Sliders" />
                             </div>
-                            <InputNumber style="max-width: 10rem;" class="form-control form-control-sm" @bind-Value="editObject.MaxConcurrentWrites" />
+                            <InputNumber style="max-width: 10rem;" class="form-control form-control-sm" @bind-Value="_editObject.MaxConcurrentWrites" />
                         </div>
                     </div>
                 </div>
@@ -38,7 +38,7 @@
         <HxSubmit FormId="data_object_edit" Color="ThemeColor.Success">
             Save
         </HxSubmit>
-        <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" OnClick="() => offcanvas.LetAsync(x => x.HideAsync())">
+        <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" OnClick="() => _offcanvas.LetAsync(x => x.HideAsync())">
             Cancel
         </HxButton>
     </FooterTemplate>
@@ -47,18 +47,18 @@
 @code {
     [Parameter] public EventCallback<DataObject> OnDataObjectSubmitted { get; set; }
 
-    private HxModal? offcanvas;
-    private DataObject? editObject;
+    private HxModal? _offcanvas;
+    private DataObject? _editObject;
 
     private async Task SubmitDataObjectAsync()
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(editObject);
-            await Mediator.SendAsync(new UpdateDataObjectCommand(editObject));
-            await offcanvas.LetAsync(x => x.HideAsync());
-            await OnDataObjectSubmitted.InvokeAsync(editObject);
-            editObject = null;
+            ArgumentNullException.ThrowIfNull(_editObject);
+            await Mediator.SendAsync(new UpdateDataObjectCommand(_editObject));
+            await _offcanvas.LetAsync(x => x.HideAsync());
+            await OnDataObjectSubmitted.InvokeAsync(_editObject);
+            _editObject = null;
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -73,11 +73,11 @@
     public async Task ShowAsync(Guid dataObjectId)
     {
         await using var context = await DbContextFactory.CreateDbContextAsync();
-        editObject = await context.DataObjects
+        _editObject = await context.DataObjects
             .Include(o => o.Steps)
             .ThenInclude(r => r.Step)
             .ThenInclude(s => s.Job)
             .FirstAsync(o => o.ObjectId == dataObjectId);
-        await offcanvas.LetAsync(x => x.ShowAsync());
+        await _offcanvas.LetAsync(x => x.ShowAsync());
     }
 }

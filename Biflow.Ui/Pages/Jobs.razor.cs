@@ -27,18 +27,18 @@ public partial class Jobs(
     private readonly IHxMessageBoxService _confirmer = confirmer;
     private readonly IMediator _mediator = mediator;
     private readonly IJSRuntime _js = js;
-    private readonly CancellationTokenSource cts = new();
+    private readonly CancellationTokenSource _cts = new();
 
-    private List<Job>? jobs;    
-    private Dictionary<Guid, Execution>? lastExecutions;
-    private List<StepProjection> steps = [];
-    private bool isLoading;
-    private JobEditModal? jobEditModal;
-    private ExecuteModal? executeModal;
-    private JobsBatchEditTagsModal? jobsBatchEditTagsModal;
-    private Paginator<ListItem>? paginator;
-    private HashSet<Job> selectedJobs = [];
-    private JobHistoryOffcanvas? jobHistoryOffcanvas;
+    private List<Job>? _jobs;    
+    private Dictionary<Guid, Execution>? _lastExecutions;
+    private List<StepProjection> _steps = [];
+    private bool _isLoading;
+    private JobEditModal? _jobEditModal;
+    private ExecuteModal? _executeModal;
+    private JobsBatchEditTagsModal? _jobsBatchEditTagsModal;
+    private Paginator<ListItem>? _paginator;
+    private HashSet<Job> _selectedJobs = [];
+    private JobHistoryOffcanvas? _jobHistoryOffcanvas;
 
     private record ListItem(Job Job, Execution? LastExecution, Schedule? NextSchedule, DateTime? NextExecution);
 
@@ -56,15 +56,15 @@ public partial class Jobs(
         var statusFilter = UserState.Jobs.StatusFilter;
         var tagFilter = UserState.Jobs.TagFilter;
 
-        var items = jobs?
+        var items = _jobs?
             .Where(j => stateFilter switch { StateFilter.Enabled => j.IsEnabled, StateFilter.Disabled => !j.IsEnabled, _ => true })
             .Where(j => string.IsNullOrEmpty(jobNameFilter) || j.JobName.ContainsIgnoreCase(jobNameFilter))
-            .Where(j => string.IsNullOrEmpty(stepNameFilter) || steps.Any(s => s.JobId == j.JobId && (s.StepName?.ContainsIgnoreCase(stepNameFilter) ?? false)))
+            .Where(j => string.IsNullOrEmpty(stepNameFilter) || _steps.Any(s => s.JobId == j.JobId && (s.StepName?.ContainsIgnoreCase(stepNameFilter) ?? false)))
             .Select(j =>
             {
                 var schedule = GetNextSchedule(j);
                 var nextExecution = schedule?.NextFireTimes().FirstOrDefault();
-                return new ListItem(j, lastExecutions?.GetValueOrDefault(j.JobId), schedule, nextExecution);
+                return new ListItem(j, _lastExecutions?.GetValueOrDefault(j.JobId), schedule, nextExecution);
             })
             .Where(j => statusFilter.Count == 0 || j.LastExecution is not null && statusFilter.Contains(j.LastExecution.ExecutionStatus))
             .Where(j => tagFilter.Count == 0 || j.Job.Tags.Any(t1 => tagFilter.Any(t2 => t1.TagId == t2.TagId)))
@@ -83,24 +83,24 @@ public partial class Jobs(
 
     private async Task LoadDataAsync()
     {
-        isLoading = true;
+        _isLoading = true;
         await Task.WhenAll(
             LoadJobsAsync(),
             LoadLastExecutionsAsync(),
             LoadStepsAsync());
-        isLoading = false;
+        _isLoading = false;
         StateHasChanged();
     }
 
     private async Task LoadJobsAsync()
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        jobs = await context.Jobs
+        _jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Include(job => job.Tags)
             .Include(job => job.Schedules)
             .OrderBy(job => job.JobName)
-            .ToListAsync(cts.Token);
+            .ToListAsync(_cts.Token);
         StateHasChanged();
     }
 
@@ -118,18 +118,18 @@ public partial class Jobs(
                 Key = key,
                 Execution = context.Executions.Where(execution => execution.JobId == key).OrderByDescending(e => e.CreatedOn).First()
             })
-            .ToListAsync(cts.Token);
-        this.lastExecutions = lastExecutions.ToDictionary(e => e.Key, e => e.Execution);
+            .ToListAsync(_cts.Token);
+        _lastExecutions = lastExecutions.ToDictionary(e => e.Key, e => e.Execution);
         StateHasChanged();
     }
 
     private async Task LoadStepsAsync()
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        steps = await context.Steps
+        _steps = await context.Steps
             .AsNoTracking()
             .Select(s => new StepProjection(s.JobId, s.StepName))
-            .ToListAsync(cts.Token);
+            .ToListAsync(_cts.Token);
     }
 
     private static Schedule? GetNextSchedule(Job job)
@@ -143,7 +143,7 @@ public partial class Jobs(
 
     private async Task ToggleEnabled(ChangeEventArgs args, Job job)
     {
-        bool value = (bool)args.Value!;
+        var value = (bool)args.Value!;
         try
         {
             await _mediator.SendAsync(new ToggleJobCommand(job.JobId, value));
@@ -161,7 +161,7 @@ public partial class Jobs(
     {
         try
         {
-            foreach (var job in selectedJobs)
+            foreach (var job in _selectedJobs)
             {
                 await _mediator.SendAsync(new ToggleJobCommand(job.JobId, value));
                 job.IsEnabled = value;
@@ -178,18 +178,18 @@ public partial class Jobs(
     {
         foreach (var job in jobs.ToArray())
         {
-            var index = this.jobs?.FindIndex(j => j.JobId == job.JobId);
-            if (index is int i and >= 0)
+            var index = _jobs?.FindIndex(j => j.JobId == job.JobId);
+            if (index is { } i and >= 0)
             {
-                this.jobs?.RemoveAt(i);
-                this.jobs?.Insert(i, job);
+                _jobs?.RemoveAt(i);
+                _jobs?.Insert(i, job);
             }
             else
             {
-                this.jobs?.Add(job);
+                _jobs?.Add(job);
             }
         }
-        selectedJobs = jobs.ToHashSet();
+        _selectedJobs = jobs.ToHashSet();
     }
 
     private async Task CopyJob(Job job)
@@ -199,8 +199,8 @@ public partial class Jobs(
             using var duplicator = await _jobDuplicatorFactory.CreateAsync(job.JobId);
             duplicator.Job.JobName = $"{duplicator.Job.JobName} – Copy";
             var createdJob = await duplicator.SaveJobAsync();
-            jobs?.Add(createdJob);
-            jobs = jobs?.OrderBy(j => j.JobName).ToList();
+            _jobs?.Add(createdJob);
+            _jobs = _jobs?.OrderBy(j => j.JobName).ToList();
         }
         catch (Exception ex)
         {
@@ -241,7 +241,7 @@ public partial class Jobs(
         try
         {
             await _mediator.SendAsync(new DeleteJobCommand(job.JobId));
-            jobs?.Remove(job);
+            _jobs?.Remove(job);
         }
         catch (Exception ex)
         {
@@ -251,11 +251,11 @@ public partial class Jobs(
 
     private async Task DeleteSelectedJobsAsync()
     {
-        if (!await _confirmer.ConfirmAsync("Delete selected jobs", $"Delete {selectedJobs.Count} job(s)?"))
+        if (!await _confirmer.ConfirmAsync("Delete selected jobs", $"Delete {_selectedJobs.Count} job(s)?"))
         {
             return;
         }
-        var jobIds = selectedJobs.Select(j => j.JobId).ToArray();
+        var jobIds = _selectedJobs.Select(j => j.JobId).ToArray();
         await using (var context = await _dbContextFactory.CreateDbContextAsync())
         {
             var executingSteps = await context.JobSteps
@@ -281,29 +281,29 @@ public partial class Jobs(
         }
         try
         {
-            foreach (var job in selectedJobs)
+            foreach (var job in _selectedJobs)
             {
                 await _mediator.SendAsync(new DeleteJobCommand(job.JobId));
-                jobs?.Remove(job);
+                _jobs?.Remove(job);
             }
         }
         catch (Exception ex)
         {
             _toaster.AddError("Error deleting jobs", ex.Message);
         }
-        selectedJobs.Clear();
+        _selectedJobs.Clear();
     }
 
     private void ToggleJobsSelected(IEnumerable<Job> jobs, bool value)
     {
         if (value)
         {
-            var jobsToAdd = jobs.Where(j => !selectedJobs.Contains(j));
-            foreach (var j in jobsToAdd) selectedJobs.Add(j);
+            var jobsToAdd = jobs.Where(j => !_selectedJobs.Contains(j));
+            foreach (var j in jobsToAdd) _selectedJobs.Add(j);
         }
         else
         {
-            selectedJobs.Clear();
+            _selectedJobs.Clear();
         }
     }
 
@@ -337,20 +337,20 @@ public partial class Jobs(
 
     private void OnJobSubmitted(Job job)
     {
-        var remove = jobs?.FirstOrDefault(j => j.JobId == job.JobId);
+        var remove = _jobs?.FirstOrDefault(j => j.JobId == job.JobId);
         if (remove is not null)
         {
             job.Schedules.AddRange(remove.Schedules);
-            jobs?.Remove(remove);
+            _jobs?.Remove(remove);
         }
-        jobs?.Add(job);
-        jobs?.SortBy(x => x.JobName);
+        _jobs?.Add(job);
+        _jobs?.SortBy(x => x.JobName);
     }
 
     public void Dispose()
     {
-        cts.Cancel();
-        cts.Dispose();
+        _cts.Cancel();
+        _cts.Dispose();
     }
     
     private record StepProjection(Guid JobId, string? StepName);

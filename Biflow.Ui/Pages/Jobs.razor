@@ -9,13 +9,13 @@
                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                     <HxButton Color="ThemeColor.Success"
                               CssClass="me-3 mt-3"
-                              OnClick="() => jobEditModal.LetAsync(x => x.ShowAsync())"
+                              OnClick="() => _jobEditModal.LetAsync(x => x.ShowAsync())"
                               Spinner="false"
-                              Enabled="jobs is not null">
+                              Enabled="_jobs is not null">
                         Add job
                     </HxButton>
                 </AuthorizeView>
-                <HxButton Color="ThemeColor.Primary" @onclick="LoadLastExecutionsAsync" Enabled="!isLoading" Spinner="isLoading" CssClass="mt-3">
+                <HxButton Color="ThemeColor.Primary" @onclick="LoadLastExecutionsAsync" Enabled="!_isLoading" Spinner="_isLoading" CssClass="mt-3">
                     <SvgIcon Icon="FeatherIcon.RefreshCw" />
                     Refresh
                 </HxButton>
@@ -54,7 +54,7 @@
         <HxButtonGroup Size="ButtonGroupSize.Small">
             <FilterDropdown TItem="ExecutionStatus"
                             FilterSet="UserState.Jobs.StatusFilter"
-                            Items="lastExecutions?.Values.Select(e => e.ExecutionStatus).Concat(UserState.Jobs.StatusFilter).Distinct().OrderBy(s => s).AsEnumerable() ?? []"
+                            Items="_lastExecutions?.Values.Select(e => e.ExecutionStatus).Concat(UserState.Jobs.StatusFilter).Distinct().OrderBy(s => s).AsEnumerable() ?? []"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
                     <SvgIcon Icon="FeatherIcon.Info" />
@@ -65,7 +65,7 @@
                 </ItemTemplate>
             </FilterDropdown>
             @{
-                var tags = jobs?
+                var tags = _jobs?
                     .SelectMany(j => j.Tags)
                     .Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder))
                     .Concat(UserState.Jobs.TagFilter)
@@ -125,15 +125,15 @@
 @{
     var listItems = GetListItems().ToArray();
     var count = listItems.Count();
-    var selectedText = selectedJobs.Count switch
+    var selectedText = _selectedJobs.Count switch
     {
-        1 => $"{selectedJobs.Count} selected job",
-        > 1 => $"{selectedJobs.Count} selected jobs",
+        1 => $"{_selectedJobs.Count} selected job",
+        > 1 => $"{_selectedJobs.Count} selected jobs",
         _ => ""
     };
 }
 
-<Paginator @ref="paginator"
+<Paginator @ref="_paginator"
            Items="listItems"
            Context="pageItems"
            InitialPageSize="UserState.Jobs.PageSize"
@@ -144,13 +144,13 @@
     <div class="row justify-content-xl-between sticky-top mt-1 py-2 bg-body" style="z-index: 999;">
          <div class="col">
             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")" Context="auth1">
-                @if (selectedJobs.Count > 0)
+                @if (_selectedJobs.Count > 0)
                 {
                     <HxButtonGroup Size="ButtonGroupSize.Small">
                         <HxButton Size="ButtonSize.Small"
                                   Color="ThemeColor.None"
                                   CssClass="btn-auto"
-                                  OnClick="() => ExecuteMultipleModal.LetAsync(x => x.ShowAsync(selectedJobs))">
+                                  OnClick="() => ExecuteMultipleModal.LetAsync(x => x.ShowAsync(_selectedJobs))">
                             <SvgIcon Icon="FeatherIcon.Play" />
                             Execute...
                         </HxButton>
@@ -177,7 +177,7 @@
                                     </HxDropdownItem>
                                 </HxDropdownMenu>
                             </HxDropdownButtonGroup>
-                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" Spinner="false" @onclick="() => jobsBatchEditTagsModal.LetAsync(x => x.ShowAsync())">
+                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" Spinner="false" @onclick="() => _jobsBatchEditTagsModal.LetAsync(x => x.ShowAsync())">
                                 <SvgIcon Icon="FeatherIcon.Tag" />
                                 Edit tags
                             </HxButton>
@@ -191,7 +191,7 @@
             </AuthorizeView>
         </div>
         <div class="col-xl-auto mt-xl-0 mt-3 d-flex justify-content-end">
-            <PaginationControls Paginator="paginator" />
+            <PaginationControls Paginator="_paginator" />
         </div>
     </div>
 
@@ -202,8 +202,8 @@
                     <th class="align-middle d-flex align-items-center">
                         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                             <TriStateCheckbox CssClass="me-0"
-                                              Checked="@(selectedJobs.Count > 0 && listItems.Any() && count > 0)"
-                                              Indeterminate="@(selectedJobs.Any() && selectedJobs.Count != count)"
+                                              Checked="@(_selectedJobs.Count > 0 && listItems.Any() && count > 0)"
+                                              Indeterminate="@(_selectedJobs.Any() && _selectedJobs.Count != count)"
                                               CheckedChanged="value => ToggleJobsSelected(listItems.Select(i => i.Job), value)" />
                         </AuthorizeView>
                         @if (!string.IsNullOrEmpty(selectedText))
@@ -261,7 +261,7 @@
                 </tr>
             </thead>
             <tbody>
-                @if (jobs is null)
+                @if (_jobs is null)
                 {
                     <tr>
                         <td colspan="5" class="text-center">
@@ -269,7 +269,7 @@
                         </td>
                     </tr>
                 }
-                else if (!jobs.Any())
+                else if (!_jobs.Any())
                 {
                     <tr>
                         <td colspan="5">
@@ -290,8 +290,8 @@
                                             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                                                 <div class="form-check form-check-inline me-0">
                                                     <input type="checkbox" class="form-check-input" id="select_job_@item.JobId"
-                                                           checked=@selectedJobs.Contains(item)
-                                                           @onchange="_ => { if (!selectedJobs.Add(item)) selectedJobs.Remove(item); }">
+                                                           checked=@_selectedJobs.Contains(item)
+                                                           @onchange="_ => { if (!_selectedJobs.Add(item)) _selectedJobs.Remove(item); }">
                                                     <label class="form-check-label" for="select_job_@item.JobId"></label>
                                                 </div>
                                             </AuthorizeView>
@@ -364,7 +364,7 @@
                                     @item.JobName
                                 </DropdownMenuHeader>
                                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-                                    <DropdownMenuItem @onclick="() => jobEditModal.LetAsync(x => x.ShowAsync(item))">
+                                    <DropdownMenuItem @onclick="() => _jobEditModal.LetAsync(x => x.ShowAsync(item))">
                                         <SvgIcon Icon="FeatherIcon.Edit2" />
                                         Edit
                                     </DropdownMenuItem>
@@ -373,7 +373,7 @@
                                         Copy
                                     </DropdownMenuItem>
                                 </AuthorizeView>
-                                <DropdownMenuItem @onclick="@(() => jobHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.JobId)))">
+                                <DropdownMenuItem @onclick="@(() => _jobHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.JobId)))">
                                     <SvgIcon Icon="FeatherIcon.Activity" />
                                     History
                                 </DropdownMenuItem>
@@ -382,7 +382,7 @@
                                     Schedules
                                 </DropdownMenuLink>
                                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-                                    <DropdownMenuItem @onclick="() => executeModal.LetAsync(x => x.ShowAsync(item.JobId))">
+                                    <DropdownMenuItem @onclick="() => _executeModal.LetAsync(x => x.ShowAsync(item.JobId))">
                                         <SvgIcon Icon="FeatherIcon.Play" />
                                         Execute...
                                     </DropdownMenuItem>
@@ -402,18 +402,18 @@
     </div>
 </Paginator>
 
-<JobHistoryOffcanvas @ref="jobHistoryOffcanvas" />
+<JobHistoryOffcanvas @ref="_jobHistoryOffcanvas" />
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-    <JobEditModal @ref="jobEditModal" OnJobSubmitted="OnJobSubmitted" />
+    <JobEditModal @ref="_jobEditModal" OnJobSubmitted="OnJobSubmitted" />
 </AuthorizeView>
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-    <ExecuteModal @ref="executeModal" />
+    <ExecuteModal @ref="_executeModal" />
 </AuthorizeView>
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-    <JobsBatchEditTagsModal @ref="jobsBatchEditTagsModal"
+    <JobsBatchEditTagsModal @ref="_jobsBatchEditTagsModal"
                             OnJobsSubmit="OnJobsSubmit"
-                            SelectedJobs="selectedJobs" />
+                            SelectedJobs="_selectedJobs" />
 </AuthorizeView>
