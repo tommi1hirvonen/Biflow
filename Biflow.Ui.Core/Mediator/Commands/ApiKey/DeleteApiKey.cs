@@ -7,7 +7,7 @@ internal class DeleteApiKeyCommandHandler(IDbContextFactory<AppDbContext> dbCont
 {
     public async Task Handle(DeleteApiKeyCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var key = await context.ApiKeys
             .FirstOrDefaultAsync(k => k.Id == request.ApiKeyId, cancellationToken);
         if (key is not null)

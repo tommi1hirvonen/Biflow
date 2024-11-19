@@ -7,7 +7,7 @@ internal class UpdateApiKeyCommandHandler(IDbContextFactory<AppDbContext> dbCont
 {
     public async Task Handle(UpdateApiKeyCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var key = await context.ApiKeys
             .FirstOrDefaultAsync(k => k.Id == request.ApiKey.Id, cancellationToken)
             ?? throw new NotFoundException<ApiKey>(request.ApiKey.Id);

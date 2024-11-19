@@ -6,7 +6,7 @@ internal class DeleteTagCommandHandler(IDbContextFactory<AppDbContext> dbContext
 {
     public async Task Handle(DeleteTagCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var tagToRemove = await context.Tags.FirstOrDefaultAsync(t => t.TagId == request.TagId, cancellationToken);
         if (tagToRemove is not null)
         {

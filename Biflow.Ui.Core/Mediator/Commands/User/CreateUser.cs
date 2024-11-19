@@ -11,7 +11,7 @@ internal class CreateUserCommandHandler(
 {
     public async Task Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         
         var jobIds = request.User.Jobs
             .Select(j => j.JobId)

@@ -7,7 +7,7 @@ internal class CreateDbtAccountCommandHandler(IDbContextFactory<AppDbContext> db
 {
     public async Task Handle(CreateDbtAccountCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         context.DbtAccounts.Add(request.Account);
         await context.SaveChangesAsync(cancellationToken);
     }

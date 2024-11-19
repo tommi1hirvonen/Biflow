@@ -6,7 +6,7 @@ internal class UpdateConnectionCommandHandler(IDbContextFactory<AppDbContext> db
 {
     public async Task Handle(UpdateConnectionCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         context.Attach(request.Connection).State = EntityState.Modified;
         await context.SaveChangesAsync(cancellationToken);
     }

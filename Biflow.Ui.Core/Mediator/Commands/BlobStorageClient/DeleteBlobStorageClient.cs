@@ -7,7 +7,7 @@ internal class DeleteBlobStorageClientCommandHandler(IDbContextFactory<AppDbCont
 {
     public async Task Handle(DeleteBlobStorageClientCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var client = await context.BlobStorageClients
             .FirstOrDefaultAsync(p => p.BlobStorageClientId == request.BlobStorageClientId, cancellationToken);
         if (client is not null)

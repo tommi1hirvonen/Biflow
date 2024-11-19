@@ -7,7 +7,7 @@ internal class DeleteDataTableCategoryCommandHandler(IDbContextFactory<AppDbCont
 {
     public async Task Handle(DeleteDataTableCategoryCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var category = await context.MasterDataTableCategories
             .FirstOrDefaultAsync(c => c.CategoryId == request.CategoryId, cancellationToken);
         if (category is not null)

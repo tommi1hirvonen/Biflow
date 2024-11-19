@@ -9,7 +9,7 @@ internal class DeleteUnusedScheduleTagsCommandHandler(IDbContextFactory<AppDbCon
 {
     public async Task<DeleteUnusedScheduleTagsResponse> Handle(DeleteUnusedScheduleTagsCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var tags = await context.ScheduleTags
             .Where(t => !t.Schedules.Any())
             .ToArrayAsync(cancellationToken);

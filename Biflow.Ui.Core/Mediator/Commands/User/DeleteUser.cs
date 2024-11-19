@@ -6,7 +6,7 @@ internal class DeleteUserCommandHandler(IDbContextFactory<AppDbContext> dbContex
 {
     public async Task Handle(DeleteUserCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var user = await context.Users.FirstOrDefaultAsync(u => u.UserId == request.UserId, cancellationToken);
         if (user is not null)
         {

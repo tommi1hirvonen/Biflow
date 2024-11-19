@@ -7,7 +7,7 @@ internal class ToggleJobEnabledCommandHandler(IDbContextFactory<AppDbContext> db
 {
     public async Task Handle(ToggleJobEnabledCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         await context.Jobs
             .Where(job => job.JobId == request.JobId)
             .ExecuteUpdateAsync(x => x.SetProperty(job => job.IsEnabled, request.IsEnabled), cancellationToken);

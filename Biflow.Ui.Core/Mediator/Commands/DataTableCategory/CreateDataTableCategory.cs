@@ -7,7 +7,7 @@ internal class CreateDataTableCategoryCommandHandler(IDbContextFactory<AppDbCont
 {
     public async Task Handle(CreateDataTableCategoryCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         context.MasterDataTableCategories.Add(request.Category);
         await context.SaveChangesAsync(cancellationToken);
     }

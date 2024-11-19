@@ -7,7 +7,7 @@ internal class UpdateJobParametersCommandHandler(IDbContextFactory<AppDbContext>
 {
     public async Task Handle(UpdateJobParametersCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var job = await context.Jobs
             .Include(j => j.JobParameters).ThenInclude(p => p.InheritingStepParameters)
             .Include(j => j.JobParameters).ThenInclude(p => p.CapturingSteps)

@@ -6,7 +6,7 @@ internal class CreateDependencyCommandHandler(IDbContextFactory<AppDbContext> db
 {
     public async Task Handle(CreateDependencyCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var exists = await context.Dependencies
             .AnyAsync(d => d.StepId == request.Dependency.StepId && d.DependantOnStepId == request.Dependency.DependantOnStepId,
                 cancellationToken);

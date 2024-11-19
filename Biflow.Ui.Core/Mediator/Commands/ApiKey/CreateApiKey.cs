@@ -7,7 +7,7 @@ internal class CreateApiKeyCommandHandler(IDbContextFactory<AppDbContext> dbCont
 {
     public async Task Handle(CreateApiKeyCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         context.ApiKeys.Add(request.ApiKey);
         await context.SaveChangesAsync(cancellationToken);
     }

@@ -7,7 +7,7 @@ internal class UpdateStepExecutionAttemptsCommandHandler(IDbContextFactory<AppDb
 {
     public async Task Handle(UpdateStepExecutionAttemptsCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         foreach (var attempt in request.Attempts)
         {
             context.Attach(attempt).State = EntityState.Modified;

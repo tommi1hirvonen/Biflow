@@ -9,8 +9,8 @@ internal class ToggleScheduleCommandHandler(
 {
     public async Task Handle(ToggleScheduleCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        using var transaction = context.Database.BeginTransaction();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var transaction = context.Database.BeginTransaction();
         var schedule = await context.Schedules
             .FirstAsync(s => s.ScheduleId == request.ScheduleId, cancellationToken);
         schedule.IsEnabled = request.IsEnabled;

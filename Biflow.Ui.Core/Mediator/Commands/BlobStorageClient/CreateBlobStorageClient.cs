@@ -7,7 +7,7 @@ internal class CreateBlobStorageClientCommandHandler(IDbContextFactory<AppDbCont
 {
     public async Task Handle(CreateBlobStorageClientCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         context.BlobStorageClients.Add(request.Client);
         if (request.Client.AppRegistration is not null)
         {

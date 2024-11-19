@@ -7,8 +7,8 @@ internal class DeleteExecutionCommandHandler(IDbContextFactory<ServiceDbContext>
 {
     public async Task Handle(DeleteExecutionCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        using var transaction = context.Database.BeginTransaction();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var transaction = context.Database.BeginTransaction();
         try
         {
             // Specify delete commands with joins for tables that do not have cascade deleted enabled.

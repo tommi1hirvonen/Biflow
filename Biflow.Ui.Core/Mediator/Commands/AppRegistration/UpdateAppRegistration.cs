@@ -7,7 +7,7 @@ internal class UpdateAppRegistrationCommandHandler(IDbContextFactory<AppDbContex
 {
     public async Task Handle(UpdateAppRegistrationCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         context.Attach(request.AppRegistration).State = EntityState.Modified;
         await context.SaveChangesAsync(cancellationToken);
     }

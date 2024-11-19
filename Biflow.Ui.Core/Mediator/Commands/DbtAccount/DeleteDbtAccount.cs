@@ -7,7 +7,7 @@ internal class DeleteDbtAccountCommandHandler(IDbContextFactory<AppDbContext> db
 {
     public async Task Handle(DeleteDbtAccountCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var account = await context.DbtAccounts
             .FirstOrDefaultAsync(a => a.DbtAccountId == request.DbtAccountId, cancellationToken);
         if (account is not null)

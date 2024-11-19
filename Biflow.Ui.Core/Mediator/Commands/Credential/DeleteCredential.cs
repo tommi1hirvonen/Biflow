@@ -7,7 +7,7 @@ internal class DeleteCredentialCommandHandler(IDbContextFactory<AppDbContext> db
 {
     public async Task Handle(DeleteCredentialCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var cred = await context.Credentials
             .FirstOrDefaultAsync(c => c.CredentialId == request.CredentialId, cancellationToken);
         if (cred is not null)

@@ -62,7 +62,7 @@ internal class StepExecutionsParallelQueryHandler(IDbContextFactory<AppDbContext
     private async Task<StepExecutionProjection[]> GetExecutionsAsync(
         Expression<Func<StepExecutionAttempt, bool>> predicate, CancellationToken cancellationToken)
     {
-        using var context = dbContextFactory.CreateDbContext();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var query = context.StepExecutionAttempts
             .AsNoTracking()
             .AsSingleQuery()

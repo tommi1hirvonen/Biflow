@@ -9,7 +9,7 @@ internal class DeleteUnusedDataObjectsCommandHandler(IDbContextFactory<AppDbCont
 {
     public async Task<DeleteUnusedDataObjectsResponse> Handle(DeleteUnusedDataObjectsCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var unused = await context.DataObjects
             .Where(d => !d.Steps.Any())
             .ToArrayAsync(cancellationToken);

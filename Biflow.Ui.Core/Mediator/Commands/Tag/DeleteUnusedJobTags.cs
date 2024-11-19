@@ -9,7 +9,7 @@ internal class DeleteUnusedJobTagsCommandHandler(IDbContextFactory<AppDbContext>
 {
     public async Task<DeleteUnusedJobTagsResponse> Handle(DeleteUnusedJobTagsCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var tags = await context.JobTags
             .Where(t => !t.Jobs.Any())
             .ToArrayAsync(cancellationToken);

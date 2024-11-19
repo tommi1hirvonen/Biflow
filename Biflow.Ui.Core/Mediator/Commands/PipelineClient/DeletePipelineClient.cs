@@ -7,7 +7,7 @@ internal class DeletePipelineClientCommandHandler(IDbContextFactory<AppDbContext
 {
     public async Task Handle(DeletePipelineClientCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var client = await context.PipelineClients
             .FirstOrDefaultAsync(p => p.PipelineClientId == request.PipelineClientId, cancellationToken);
         if (client is not null)

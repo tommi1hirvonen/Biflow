@@ -7,7 +7,7 @@ internal class UpdateUserEmailCommandHandler(IDbContextFactory<AppDbContext> dbC
 {
     public async Task Handle(UpdateUserEmailCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         await context.Users
             .Where(u => u.UserId == request.UserId)
             .ExecuteUpdateAsync(x => x.SetProperty(u => u.Email, request.Email), cancellationToken);

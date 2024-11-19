@@ -7,7 +7,7 @@ internal class CreateDatabricksWorkspaceCommandHandler(IDbContextFactory<AppDbCo
 {
     public async Task Handle(CreateDatabricksWorkspaceCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         context.DatabricksWorkspaces.Add(request.Workspace);
         await context.SaveChangesAsync(cancellationToken);
     }

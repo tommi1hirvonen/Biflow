@@ -9,7 +9,7 @@ internal class DeleteUnusedStepTagsCommandHandler(IDbContextFactory<AppDbContext
 {
     public async Task<DeleteUnusedStepTagsResponse> Handle(DeleteUnusedStepTagsCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var tags = await context.StepTags
             .Where(t => !t.Steps.Any())
             .Where(t => !t.Schedules.Any())

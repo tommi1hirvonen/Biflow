@@ -7,7 +7,7 @@ internal class DeleteSubscriptionCommandHandler(IDbContextFactory<AppDbContext> 
 {
     public async Task Handle(DeleteSubscriptionCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var sub = await context.Subscriptions
             .FirstOrDefaultAsync(s => s.SubscriptionId == request.SubscriptionId, cancellationToken);
         if (sub is not null)

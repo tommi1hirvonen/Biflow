@@ -9,10 +9,10 @@ internal class DeleteJobCommandHandler(
 {
     public async Task Handle(DeleteJobCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         
         // Manually controlling transactions is allowed since AppDbContext does not use retry-on-failure execution strategy.
-        using var transaction = context.Database.BeginTransaction();
+        await using var transaction = context.Database.BeginTransaction();
         
         var jobToRemove = await context.Jobs
             .Include(j => j.JobParameters)

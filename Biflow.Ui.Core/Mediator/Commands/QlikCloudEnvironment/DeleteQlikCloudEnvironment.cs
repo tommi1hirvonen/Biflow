@@ -6,7 +6,7 @@ internal class DeleteQlikCloudEnvironmentCommandHandler(IDbContextFactory<AppDbC
 {
     public async Task Handle(DeleteQlikCloudEnvironmentCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var environment = await context.QlikCloudEnvironments
             .FirstOrDefaultAsync(c => c.QlikCloudEnvironmentId == request.QlikCloudEnvironmentId, cancellationToken);
         if (environment is not null)
