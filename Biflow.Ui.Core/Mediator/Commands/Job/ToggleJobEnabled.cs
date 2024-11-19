@@ -1,11 +1,11 @@
 ﻿namespace Biflow.Ui.Core;
 
-public record ToggleJobCommand(Guid JobId, bool IsEnabled) : IRequest;
+public record ToggleJobEnabledCommand(Guid JobId, bool IsEnabled) : IRequest;
 
-internal class ToggleJobCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
-    : IRequestHandler<ToggleJobCommand>
+internal class ToggleJobEnabledCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+    : IRequestHandler<ToggleJobEnabledCommand>
 {
-    public async Task Handle(ToggleJobCommand request, CancellationToken cancellationToken)
+    public async Task Handle(ToggleJobEnabledCommand request, CancellationToken cancellationToken)
     {
         using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         await context.Jobs

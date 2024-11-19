@@ -231,7 +231,7 @@ public partial class JobDetails(
         {
             var enabled = (bool)args.Value!;
             ArgumentNullException.ThrowIfNull(_job);
-            await _mediator.SendAsync(new ToggleJobCommand(_job.JobId, enabled));
+            await _mediator.SendAsync(new ToggleJobEnabledCommand(_job.JobId, enabled));
             _job.IsEnabled = enabled;
             var message = _job.IsEnabled ? "Job enabled successfully" : "Job disabled successfully";
             _toaster.AddSuccess(message);

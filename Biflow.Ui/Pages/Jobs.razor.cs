@@ -162,7 +162,7 @@ public partial class Jobs(
         var value = (bool)args.Value!;
         try
         {
-            await _mediator.SendAsync(new ToggleJobCommand(job.JobId, value));
+            await _mediator.SendAsync(new ToggleJobEnabledCommand(job.JobId, value));
             job.IsEnabled = value;
             var message = value ? "Job enabled" : "Job disabled";
             _toaster.AddSuccess(message, 2500);
@@ -179,7 +179,7 @@ public partial class Jobs(
         {
             foreach (var job in _selectedJobs)
             {
-                await _mediator.SendAsync(new ToggleJobCommand(job.JobId, value));
+                await _mediator.SendAsync(new ToggleJobEnabledCommand(job.JobId, value));
                 job.IsEnabled = value;
             }
 
