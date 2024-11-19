@@ -98,6 +98,8 @@ public class Job : IAuditable
     [Required]
     [Display(Name = "Enabled")]
     public bool IsEnabled { get; set; } = true;
+    
+    public bool IsPinned { get; set; }
 
     [ValidateComplexType]
     [JsonInclude]

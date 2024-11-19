@@ -210,32 +210,34 @@
                         {
                             <div class="text-muted small fw-normal me-3">@selectedText</div>
                         }
-                        <span class="sortable" @onclick="() => UserState.Jobs.SortMode = UserState.Jobs.SortMode == JobSortMode.NameAsc ? JobSortMode.NameDesc : JobSortMode.NameAsc">
+                        <span class="sortable" @onclick="UserState.Jobs.ToggleSortName">
                             Job
                         </span>
                         <span class="ms-2">
-                            @if (UserState.Jobs.SortMode == JobSortMode.NameAsc)
+                            @switch (UserState.Jobs.SortMode)
                             {
-                                <SvgIcon Icon="FeatherIcon.ArrowUp" />
-                            }
-                            else if (UserState.Jobs.SortMode == JobSortMode.NameDesc)
-                            {
-                                <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                                case JobSortMode.NameAsc:
+                                    <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                                    break;
+                                case JobSortMode.NameDesc:
+                                    <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                                    break;
                             }
                         </span>
                     </th>
                     <th>
-                        <span class="sortable" @onclick="() => UserState.Jobs.SortMode = UserState.Jobs.SortMode == JobSortMode.LastExecAsc ? JobSortMode.LastExecDesc : JobSortMode.LastExecAsc">
+                        <span class="sortable" @onclick="UserState.Jobs.ToggleSortLastExec">
                             Last execution
                         </span>
                         <span class="ms-2">
-                            @if (UserState.Jobs.SortMode == JobSortMode.LastExecAsc)
+                            @switch (UserState.Jobs.SortMode)
                             {
-                                <SvgIcon Icon="FeatherIcon.ArrowUp" />
-                            }
-                            else if (UserState.Jobs.SortMode == JobSortMode.LastExecDesc)
-                            {
-                                <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                                case JobSortMode.LastExecAsc:
+                                    <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                                    break;
+                                case JobSortMode.LastExecDesc:
+                                    <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                                    break;
                             }
                         </span>
                     </th>
@@ -243,20 +245,22 @@
                         Status
                     </th>
                     <th>
-                        <span class="sortable" @onclick="() => UserState.Jobs.SortMode = UserState.Jobs.SortMode == JobSortMode.NextExecAsc ? JobSortMode.NextExecDesc : JobSortMode.NextExecAsc">
+                        <span class="sortable" @onclick="UserState.Jobs.ToggleSortNextExec">
                             Next execution
                         </span>
                         <span class="ms-2">
-                            @if (UserState.Jobs.SortMode == JobSortMode.NextExecAsc)
+                            @switch (UserState.Jobs.SortMode)
                             {
-                                <SvgIcon Icon="FeatherIcon.ArrowUp" />
-                            }
-                            else if (UserState.Jobs.SortMode == JobSortMode.NextExecDesc)
-                            {
-                                <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                                case JobSortMode.NextExecAsc:
+                                    <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                                    break;
+                                case JobSortMode.NextExecDesc:
+                                    <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                                    break;
                             }
                         </span>
                     </th>
+                    <th></th>
                     <th></th>
                 </tr>
             </thead>
@@ -264,7 +268,7 @@
                 @if (_jobs is null)
                 {
                     <tr>
-                        <td colspan="5" class="text-center">
+                        <td colspan="6" class="text-center">
                             <HxSpinner Color="ThemeColor.Secondary" />
                         </td>
                     </tr>
@@ -272,7 +276,7 @@
                 else if (!_jobs.Any())
                 {
                     <tr>
-                        <td colspan="5">
+                        <td colspan="6">
                             No jobs
                         </td>
                     </tr>
@@ -315,8 +319,8 @@
                                     {
                                         var title = lastExecution switch
                                         {
-                                            { ScheduleName: not null and { Length: > 0 } } => $"Scheduled by: {lastExecution.ScheduleName}",
-                                            { CreatedBy: not null and { Length: > 0 } } => $"Created by: {lastExecution.CreatedBy}",
+                                            { ScheduleName.Length: > 0 } => $"Scheduled by: {lastExecution.ScheduleName}",
+                                            { CreatedBy.Length: > 0 } => $"Created by: {lastExecution.CreatedBy}",
                                             _ => null
                                         };
                                         <a class="text-body" href="@($"executions/{lastExecution.ExecutionId}/list")" title="@title">
@@ -358,12 +362,32 @@
                                         </AuthorizeView>
                                     </div>
                                 </td>
+                                <td class="align-middle">
+                                    <div class="d-inline-flex align-items-center" title="Pinned job">
+                                        @if (item.IsPinned)
+                                        {
+                                            <SvgIcon Icon="LucideIcon.Pin" />
+                                        }
+                                    </div>
+                                </td>
                             </ChildContent>
                             <MenuContent>
                                 <DropdownMenuHeader>
                                     @item.JobName
                                 </DropdownMenuHeader>
                                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+                                    <DropdownMenuItem @onclick="() => TogglePinned(item)">
+                                        @if (item.IsPinned)
+                                        {
+                                            <SvgIcon Icon="LucideIcon.PinOff"/>
+                                            <span>Unpin</span>
+                                        }
+                                        else
+                                        {
+                                            <SvgIcon Icon="LucideIcon.Pin"/>
+                                            <span>Pin</span>
+                                        }
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem @onclick="() => _jobEditModal.LetAsync(x => x.ShowAsync(item))">
                                         <SvgIcon Icon="FeatherIcon.Edit2" />
                                         Edit

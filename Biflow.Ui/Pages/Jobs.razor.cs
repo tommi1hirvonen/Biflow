@@ -71,6 +71,7 @@ public partial class Jobs(
             ?? [];
         return sortMode switch
         {
+            JobSortMode.Pinned => items.OrderBy(i => !i.Job.IsPinned).ThenBy(i => i.Job.JobName),
             JobSortMode.NameAsc => items.OrderBy(i => i.Job.JobName),
             JobSortMode.NameDesc => items.OrderByDescending(i => i.Job.JobName),
             JobSortMode.LastExecAsc => items.OrderBy(i => i.LastExecution?.StartedOn is null).ThenBy(i => i.LastExecution?.StartedOn?.LocalDateTime),
@@ -139,6 +140,21 @@ public partial class Jobs(
             .Select(s => new { Schedule = s, NextFireTime = s.NextFireTimes().FirstOrDefault() })
             .MinBy(s => s.NextFireTime);
         return schedule?.Schedule;
+    }
+
+    private async Task TogglePinned(Job job)
+    {
+        try
+        {
+            await _mediator.SendAsync(new ToggleJobPinnedCommand(job.JobId, !job.IsPinned));
+            job.IsPinned = !job.IsPinned;
+            var message = job.IsPinned ? "Job pinned" : "Job unpinned";
+            _toaster.AddSuccess(message, 2500);
+        }
+        catch (Exception ex)
+        {
+            _toaster.AddError("Error pinning/unpinning job", ex.Message);
+        }
     }
 
     private async Task ToggleEnabled(ChangeEventArgs args, Job job)

@@ -2,6 +2,7 @@
 
 public enum JobSortMode
 {
+    Pinned,
     NameAsc,
     NameDesc,
     LastExecAsc,
