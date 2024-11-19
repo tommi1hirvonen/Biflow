@@ -25,7 +25,7 @@ public class SqlStepFixture(DatabaseFixture fixture) : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         SqlStep = (SqlStep)await context.Steps
             .Include($"{nameof(IHasConnection.Connection)}")
             .Include($"{nameof(IHasStepParameters.StepParameters)}")

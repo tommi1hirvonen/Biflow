@@ -120,7 +120,7 @@ public class SerializationTests(SerializationTestsFixture fixture) : IClassFixtu
     public void Serialize_Tags()
     {
         var json = JsonSerializer.Serialize(fixture.Tags, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
-        var items = JsonSerializer.Deserialize<StepTag[]>(json, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
+        var items = JsonSerializer.Deserialize<Tag[]>(json, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
         Assert.NotNull(items);
         Assert.NotEmpty(items);
         Assert.All(items, x => Assert.NotEqual(x.TagId, Guid.Empty));

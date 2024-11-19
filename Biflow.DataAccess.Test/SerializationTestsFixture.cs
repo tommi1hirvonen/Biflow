@@ -22,9 +22,8 @@ public class SerializationTestsFixture(DatabaseFixture fixture) : IAsyncLifetime
     
     public Job[] Jobs { get; private set; } = [];
     public Step[] Steps { get; private set; } = [];
-    public Schedule[] Schedules { get; private set; } = [];
 
-    public StepTag[] Tags { get; private set; } = [];
+    public Tag[] Tags { get; private set; } = [];
     public DataObject[] DataObjects {  get; private set; } = [];
 
     public MasterDataTable[] DataTables { get; private set; } = [];
@@ -34,7 +33,7 @@ public class SerializationTestsFixture(DatabaseFixture fixture) : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await dbContextFactory.CreateDbContextAsync();
 
         Connections = await context.Connections
             .AsNoTracking()
@@ -68,6 +67,10 @@ public class SerializationTestsFixture(DatabaseFixture fixture) : IAsyncLifetime
             .AsNoTracking()
             .OrderBy(w => w.WorkspaceId)
             .ToArrayAsync();
+        DbtAccounts = await context.DbtAccounts
+            .AsNoTracking()
+            .OrderBy(d => d.DbtAccountId)
+            .ToArrayAsync();
 
 
         Jobs = await context.Jobs
@@ -88,7 +91,7 @@ public class SerializationTestsFixture(DatabaseFixture fixture) : IAsyncLifetime
             .Include(s => s.ExecutionConditionParameters)
             .OrderBy(s => s.JobId).ThenBy(s => s.StepId)
             .ToArrayAsync();
-        Schedules = await context.Schedules
+        var schedules = await context.Schedules
             .AsNoTracking()
             .Include(s => s.TagFilter)
             .Include(s => s.Tags)
@@ -98,7 +101,7 @@ public class SerializationTestsFixture(DatabaseFixture fixture) : IAsyncLifetime
         foreach (var job in Jobs)
         {
             job.Steps.AddRange(Steps.Where(s => s.JobId == job.JobId));
-            job.Schedules.AddRange(Schedules.Where(s => s.JobId == job.JobId));
+            job.Schedules.AddRange(schedules.Where(s => s.JobId == job.JobId));
         }
 
         Tags = await context.StepTags

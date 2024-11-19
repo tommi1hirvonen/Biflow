@@ -13,7 +13,7 @@ public class StepsDuplicatorTests(DatabaseFixture fixture)
     [Fact]
     public async Task StepsDuplicatorProducesExpected()
     {
-        using var dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
         var step = (SqlStep)await dbContext.Steps
             .AsNoTracking()
             .Include(s => (s as SqlStep)!.StepParameters)

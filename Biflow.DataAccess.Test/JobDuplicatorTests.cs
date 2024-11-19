@@ -12,7 +12,7 @@ public class JobDuplicatorTests(DatabaseFixture fixture)
     [Fact]
     public async Task JobDuplicatorProducesExpected()
     {
-        using var dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
         var job1 = await dbContext.Jobs
             .AsNoTracking()
             .Include(j => j.Steps)

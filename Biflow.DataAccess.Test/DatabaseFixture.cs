@@ -10,16 +10,15 @@ namespace Biflow.DataAccess.Test;
 
 public class DatabaseFixture : IAsyncLifetime
 {
-    private static readonly string _connectionString =
+    private const string ConnectionString = 
         "Data Source=localhost;Database=BiflowTest;Integrated Security=sspi;Encrypt=true;TrustServerCertificate=true;";
-    private static readonly SemaphoreSlim _semaphore = new(1, 1);
+
+    private static readonly SemaphoreSlim Semaphore = new(1, 1);
     private static bool _databaseInitialized;
-    private readonly ITokenService _tokenService;
-    private readonly IHttpClientFactory _httpClientFactory;
 
-    public string Username { get; } = "testuser";
+    public static string Username => "testuser";
 
-    public string Role { get; } = "Admin";
+    private static string Role => "Admin";
 
     public IDbContextFactory<AppDbContext> DbContextFactory { get; }
 
@@ -34,7 +33,7 @@ public class DatabaseFixture : IAsyncLifetime
         var userService = new MockUserService(Username, Role);   
         var settings = new Dictionary<string, string?>
         {
-            { "ConnectionStrings:AppDbContext", _connectionString }
+            { "ConnectionStrings:AppDbContext", ConnectionString }
         };
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(settings)
@@ -50,14 +49,12 @@ public class DatabaseFixture : IAsyncLifetime
             .BuildServiceProvider();
         var dbContextFactory = services.GetRequiredService<IDbContextFactory<AppDbContext>>();
         var executionBuilderFactory = services.GetRequiredService<IExecutionBuilderFactory<AppDbContext>>();
-        var jobDuplicatoryFactory = services.GetRequiredService<JobDuplicatorFactory>();
-        var stepsDuplicatoryFactory = services.GetRequiredService<StepsDuplicatorFactory>();
+        var jobDuplicatorFactory = services.GetRequiredService<JobDuplicatorFactory>();
+        var stepsDuplicatorFactory = services.GetRequiredService<StepsDuplicatorFactory>();
         DbContextFactory = dbContextFactory;
         ExecutionBuilderFactory = executionBuilderFactory;
-        JobDuplicatorFactory = jobDuplicatoryFactory;
-        StepsDuplicatorFactory = stepsDuplicatoryFactory;
-        _tokenService = services.GetRequiredService<ITokenService>();
-        _httpClientFactory = services.GetRequiredService<IHttpClientFactory>();
+        JobDuplicatorFactory = jobDuplicatorFactory;
+        StepsDuplicatorFactory = stepsDuplicatorFactory;
     }
 
     public Task DisposeAsync() => Task.CompletedTask;
@@ -66,7 +63,7 @@ public class DatabaseFixture : IAsyncLifetime
     {
         try
         {
-            await _semaphore.WaitAsync(); // Synchronize access
+            await Semaphore.WaitAsync(); // Synchronize access
 
             if (_databaseInitialized)
             {
@@ -82,7 +79,7 @@ public class DatabaseFixture : IAsyncLifetime
             var sqlConnection = new MsSqlConnection
             {
                 ConnectionName = "Test SQL connection",
-                ConnectionString = _connectionString
+                ConnectionString = ConnectionString
             };
 
             var asConnection = new AnalysisServicesConnection
@@ -130,6 +127,20 @@ public class DatabaseFixture : IAsyncLifetime
                 QlikCloudEnvironmentName = "Test Qlik Cloud Client",
                 EnvironmentUrl = "https://test-qlik-url.com",
                 ApiToken = "some-api-token"
+            };
+
+            var dbtAccount = new DbtAccount
+            {
+                DbtAccountName = "Test dbt account",
+                ApiBaseUrl = "https://test-dbt.com",
+                ApiToken = "some-api-key"
+            };
+
+            var databricksWorkspace = new DatabricksWorkspace
+            {
+                WorkspaceName = "Test databricks workspace",
+                WorkspaceUrl = "https://test-databricks.com",
+                ApiToken = "some-api-key"
             };
 
             var blobClient1 = new BlobStorageClient
@@ -420,7 +431,7 @@ public class DatabaseFixture : IAsyncLifetime
                 FunctionApp = functionApp,
                 FunctionInput = "test-input",
                 FunctionKey = "some-key",
-                FunctionUrl = "http://function-url.com/test-function"
+                FunctionUrl = "https://function-url.com/test-function"
             };
 
             var step12 = new QlikStep
@@ -549,7 +560,19 @@ public class DatabaseFixture : IAsyncLifetime
             table2.Lookups.Add(lookup);
             #endregion
 
-            context.AddRange(job1, job2, schedule1, schedule2, blobClient1, blobClient2, blobClient3, table1, table2, apiKey);
+            context.AddRange(
+                job1,
+                job2,
+                schedule1,
+                schedule2,
+                blobClient1,
+                blobClient2,
+                blobClient3,
+                dbtAccount,
+                databricksWorkspace,
+                table1,
+                table2,
+                apiKey);
             await context.SaveChangesAsync();
 
             #region EXECUTIONS
@@ -558,7 +581,10 @@ public class DatabaseFixture : IAsyncLifetime
             executionBuilder1.AddAll();
             await executionBuilder1.SaveExecutionAsync();
 
-            using var executionBuilder2 = await ExecutionBuilderFactory.CreateAsync(job2.JobId, schedule1.ScheduleId, [ctx => step => step.IsEnabled]);
+            using var executionBuilder2 = await ExecutionBuilderFactory.CreateAsync(
+                job2.JobId,
+                schedule1.ScheduleId,
+                [_ => step => step.IsEnabled]);
             ArgumentNullException.ThrowIfNull(executionBuilder2);
             executionBuilder2.AddAll();
             await executionBuilder2.SaveExecutionAsync();
@@ -568,7 +594,7 @@ public class DatabaseFixture : IAsyncLifetime
         }
         finally
         {
-            _semaphore.Release();
+            Semaphore.Release();
         }
     }
 }
