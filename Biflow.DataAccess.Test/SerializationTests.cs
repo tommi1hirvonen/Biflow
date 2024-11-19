@@ -62,6 +62,17 @@ public class SerializationTests(SerializationTestsFixture fixture) : IClassFixtu
     }
 
     [Fact]
+    public void Serialize_DbtAccounts()
+    {
+        var json = JsonSerializer.Serialize(fixture.DbtAccounts, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
+        var items = JsonSerializer.Deserialize<DbtAccount[]>(json, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
+        Assert.NotNull(items);
+        Assert.NotEmpty(items);
+        Assert.All(items, x => Assert.NotEqual(x.DbtAccountId, Guid.Empty));
+        Assert.All(items, x => Assert.Empty(x.ApiToken));
+    }
+
+    [Fact]
     public void Serialize_BlobStorageClients()
     {
         var json = JsonSerializer.Serialize(fixture.BlobStorageClients, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
