@@ -9,6 +9,8 @@ $btn-border-radius-sm: .4rem;
 $btn-font-weight: 500;
 
 $nav-underline-gap: 0.5rem;
+$nav-pills-link-active-bg: var(--bs-primary-bg-subtle);
+$nav-pills-link-active-color: var(--bs-emphasis-color);
 
 @import "../lib/bootstrap/scss/bootstrap";
 
