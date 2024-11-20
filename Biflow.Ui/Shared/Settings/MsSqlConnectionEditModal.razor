@@ -29,7 +29,13 @@
                                 </div>
                                 <InputTextArea class="form-control" rows="4" @bind-Value="_connection.ConnectionString" style="font-family: monospace; font-size: 0.9em;"></InputTextArea>
                             </div>
-                            <div class="form-text">MARS must be enabled in the connection string (MultipleActiveResultSets=true)</div>
+                            <div class="form-text">
+                                Provide connection strings with syntax targeting Microsoft.Data.SqlClient.
+                                <br />
+                                <a target="_blank" href="https://learn.microsoft.com/en-us/dotnet/api/microsoft.data.sqlclient.sqlconnection.connectionstring?view=sqlclient-dotnet-core-5.2#remarks">Connection string reference</a>
+                                <br />
+                                <a target="_blank" href="https://learn.microsoft.com/en-us/sql/connect/ado-net/sql/azure-active-directory-authentication?view=sql-server-ver16">Entra authentication</a> is also supported.
+                            </div>
                         </div>
 
                         <div class=" row mt-3">
@@ -46,6 +52,9 @@
                                         </option>
                                     }
                                 </InputSelect>
+                                <div class="form-text">
+                                    Impersonation is supported only when orchestration services are running on Windows.
+                                </div>
                             </div>
                         </div>
 
