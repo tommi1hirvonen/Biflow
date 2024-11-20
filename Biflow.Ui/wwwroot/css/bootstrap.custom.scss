@@ -516,7 +516,6 @@ $main-padding-left-px: ($sidebar-width + $main-padding) * 1px;
     z-index: 100; /* Behind the navbar */
     padding: 55px 0 0; /* Height of navbar */
     background-color: var(--bs-body-bg);
-    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15);
 }
 
 // Empty space between top bar and navigation menu with smaller screens (in case there are buttons on the top bar)

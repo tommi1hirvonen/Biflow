@@ -166,7 +166,7 @@
                 </div>
             </div>
         </AuthorizeView>
-        <div class="card shadow-sm pt-2 mb-4 mt-3">
+        <div class="card pt-2 mb-4 mt-3">
             <table class="table table-hover">
                 <tbody>
                 @if (_execution is null)
@@ -320,7 +320,7 @@
         
     case Report.Parameters:
     
-        <div class="card shadow-sm pt-2 mb-4 mt-3 table-responsive">
+        <div class="card pt-2 mb-4 mt-3 table-responsive">
             <table class="table table-hover">
                 <thead>
                     <tr>
@@ -467,7 +467,7 @@
 @switch (ShowReport)
 {
     case Report.List:
-        <div class="card shadow-sm mt-3 pt-2 table-responsive mb-4">
+        <div class="card mt-3 pt-2 table-responsive mb-4">
             <StepExecutionsTable
                 ShowDetailed="false"
                 Executions="GetOrderedExecutions()"
@@ -478,7 +478,7 @@
         </div>
         break;
     case Report.Gantt:
-        <div class="card shadow-sm mt-3 pt-3 mb-4">
+        <div class="card mt-3 pt-3 mb-4">
             <StepExecutionsGraph Executions="GetOrderedExecutions()"
                                  DetailStepProvider="detailStepProvider"
                                  SortMode="_sortMode"
