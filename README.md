@@ -39,8 +39,8 @@ Biflow is a powerful platform for easy business intelligence (BI) and data platf
   - Azure Databricks
 - Microsoft Power BI
 - Snowflake
-- dbt Cloud
-- Qlik Cloud
+- dbt Cloud&trade;
+- Qlik Cloud&reg;
 
 The focus of Biflow is ease-of-use. When set up, it should be fairly easy even for relatively non-technical people to start authoring, scheduling, executing and monitoring workflows via the web user interface. Biflow enables intelligent management of even large and complex workflows.
 
@@ -83,13 +83,13 @@ Currently supported step types:
     - Run an Azure Databricks job, pipeline (Delta Live Table), notebook or Python file
     - Use an existing cluster for notebooks and Python files or create a new cluster for each run.
 - Dbt
-    - Run a job in dbt Cloud
+    - Run a job in dbt Cloud&trade;
 - Exe
     - Run locally stored executables (e.g. Python or PowerShell scripts)
 - Dataset
     - Refresh datasets/semantic models published to Power BI Service workspaces
 - Qlik
-    - Reload apps and run automations in Qlik Cloud
+    - Reload apps and run automations in Qlik Cloud&reg;
 - Mail
     - Send emails as part of your workflows
 - Job
