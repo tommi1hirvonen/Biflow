@@ -550,10 +550,15 @@ $main-padding-left-px: ($sidebar-width + $main-padding) * 1px;
 .sidebar .nav-link {
     font-size: 15px;
     color: var(--bs-body-color);
-    padding-left: 15px;
+    padding-left: 10px;
     padding-right: 10px;
-    padding-top: 8px;
-    padding-bottom: 8px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    border-radius: 8px;
+    margin-left: 8px;
+    margin-right: 8px;
+    margin-bottom: 2px;
+    margin-top: 2px;
 }
 
 .sidebar .nav-link svg {
@@ -570,14 +575,14 @@ $main-padding-left-px: ($sidebar-width + $main-padding) * 1px;
     color: var(--bs-emphasis-color);
 }
 
-.sidebar .nav-link.active, .sidebar .nav-link:hover {
+.sidebar .nav-link:hover {
     background-color: var(--bs-secondary-bg);
     color: var(--bs-emphasis-color);
 }
 
 .sidebar .nav-link.active {
-    border-left: 5px solid $primary;
-    padding-left: 10px;
+    background-color: var(--bs-primary-bg-subtle);
+    color: var(--bs-emphasis-color);
 }
 
 .sidebar-heading {
