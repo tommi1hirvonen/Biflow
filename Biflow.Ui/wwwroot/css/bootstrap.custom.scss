@@ -8,6 +8,8 @@ $btn-border-radius: .5rem;
 $btn-border-radius-sm: .4rem;
 $btn-font-weight: 500;
 
+$nav-underline-gap: 0.5rem;
+
 @import "../lib/bootstrap/scss/bootstrap";
 
 $body-bg-dark-custom: shade-color($dark, 15%);
@@ -170,15 +172,14 @@ tr .btn-auto, .list-group-item .btn-auto {
 }
 
 // Nav links
-.nav.nav-tabs .nav-item .nav-link {
-    border-radius: 0;
-    border: none;
+.nav.nav-underline .nav-item .nav-link {
+    padding-left: 8px;
+    padding-right: 8px;
 }
 
-.nav.nav-tabs .nav-item .nav-link.active {
+.nav.nav-underline .nav-item .nav-link.active {
     font-weight: 500;
-    background-color: transparent;
-    border-bottom: 4px solid $primary;
+    border-bottom: 3px solid $primary;
 }
 
 // Table
@@ -554,7 +555,7 @@ $main-padding-left-px: ($sidebar-width + $main-padding) * 1px;
     padding-right: 10px;
     padding-top: 7px;
     padding-bottom: 7px;
-    border-radius: 8px;
+    border-radius: 0.375rem;
     margin-left: 8px;
     margin-right: 8px;
     margin-bottom: 2px;

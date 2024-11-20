@@ -17,7 +17,7 @@
                 _builder.StepExecutions.Sum(e => e.Parameters.Count()),
                 _builder.Parameters.Count());
             string BadgeClass(int? count) => count > 0 ? "bg-primary" : "bg-secondary";
-            <ul class="nav nav-tabs mt-2" role="tablist">
+            <ul class="nav nav-underline mt-2" role="tablist">
                 <li class="nav-item" role="presentation">
                     <a class="nav-link @(_activeView == View.Steps ? "active" : null)" @onclick="() => _activeView = View.Steps" style="cursor: pointer;">
                         Steps
