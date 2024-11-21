@@ -204,9 +204,6 @@
                     case "credentials":
                         <CredentialsList />
                         break;
-                    default:
-                        <p>Sorry, nothing at this address.</p>
-                        break;
                 }
                 break;
         }
@@ -223,11 +220,9 @@
         if (NavigationManager.Uri.EndsWith("integrations") && IntegrationsPage is null)
         {
             NavigationManager.NavigateTo("settings/integrations/mssql");
+            return;
         }
-    }
-
-    protected override void OnInitialized()
-    {
+        
         if (Page is not null || IntegrationsPage is not null)
         {
             return;
