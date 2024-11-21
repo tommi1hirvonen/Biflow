@@ -1,6 +1,9 @@
-﻿@inject IDbContextFactory<AppDbContext> DbFactory
+﻿@implements IDisposable
+
+@inject IDbContextFactory<AppDbContext> DbFactory
 @inject ToasterService Toaster
 @inject IMediator Mediator
+@inject ThemeService ThemeService
 
 <style>
     tr a {
@@ -14,9 +17,41 @@
 
 <PageTitle>Data Factories | Biflow</PageTitle>
 
-<HxButton Color="ThemeColor.Success" Enabled="_dataFactories is not null" @onclick="() => _editModal.LetAsync(x => x.ShowAsync(Guid.Empty))">
-    Add Data Factory
-</HxButton>
+@if (_appRegistrations is not null && !_appRegistrations.Any())
+{
+    <div class="row">
+        <div class="col">
+            <HxAlert Color="ThemeColor.Warning" CssClass="small py-2">
+                No app registrations were added.
+                Create an <a class="alert-link" href="settings/integrations/appregistrations">app registration</a> in order to add Data Factories.
+            </HxAlert>
+        </div>
+    </div>
+}
+
+<div class="row flex-row-reverse justify-content-between align-items-end g-3">
+    <div class="col-auto">
+        <HxAlert Color="ThemeService.CurrentTheme == Theme.Light ? ThemeColor.Light : ThemeColor.Dark"
+                 CssClass="small py-2 mb-0"
+                 style="max-width: 40rem;">
+            <div class="row g-3">
+                <div class="col-auto">
+                    <SvgIcon Icon="FeatherIcon.Info" />
+                </div>
+                <div class="col">
+                    Adding Data Factories enables you to create pipeline steps to run Data Factory pipelines as part of your jobs.
+                </div>
+            </div>
+        </HxAlert>
+    </div>
+    <div class="col-auto">
+        <HxButton Color="ThemeColor.Success"
+                  Enabled="_dataFactories is not null && _appRegistrations is not null && _appRegistrations.Any()"
+                  @onclick="() => _editModal.LetAsync(x => x.ShowAsync(Guid.Empty))">
+            Add Data Factory
+        </HxButton>
+    </div>
+</div>
 
 <div class="card pt-2 my-4">
     <table class="table table-hover">
@@ -132,8 +167,14 @@
     private List<AppRegistration>? _appRegistrations;
     private DataFactory? _stepsDataFactory;
     private HxModal? _stepsModal;
+    
+    protected override void OnInitialized() => ThemeService.OnThemeChanged += OnThemeChanged;
+    
+    public void Dispose() => ThemeService.OnThemeChanged -= OnThemeChanged;
+    
+    private void OnThemeChanged(Theme theme, bool isAuto) => StateHasChanged();
 
-    protected override async Task OnParametersSetAsync()
+    protected override async Task OnInitializedAsync()
     {
         await using var context = await DbFactory.CreateDbContextAsync();
         _dataFactories = await context.DataFactories
