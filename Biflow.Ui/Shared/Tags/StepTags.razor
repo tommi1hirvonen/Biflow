@@ -85,6 +85,15 @@
                                                 }
                                                 <HxDropdownButtonGroup>
                                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                                                        <SvgIcon Icon="FeatherIcon.Trash2" />
+                                                    </HxDropdownToggleButton>
+                                                    <HxDropdownMenu>
+                                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                                        <HxDropdownItem @onclick="async () => await DeleteTag(tag)">Confirm</HxDropdownItem>
+                                                    </HxDropdownMenu>
+                                                </HxDropdownButtonGroup>
+                                                <HxDropdownButtonGroup>
+                                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
                                                         @tag.Color
                                                     </HxDropdownToggleButton>
                                                     <HxDropdownMenu>
