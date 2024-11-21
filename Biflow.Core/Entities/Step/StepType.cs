@@ -13,7 +13,7 @@ public enum StepType
     Pipeline,
     
     [Category("Integration", 1)]
-    [Description("Azure Function")]
+    [Description("Azure HTTP Function")]
     Function,
     
     [Category("Transformation", 2)]
@@ -25,11 +25,11 @@ public enum StepType
     Tabular,
     
     [Category("Reporting", 3)]
-    [Description("Power BI dataset refresh")]
+    [Description("Power BI semantic model refresh")]
     Dataset,
     
     [Category("Reporting", 3)]
-    [Description("Qlik Cloud app reload")]
+    [Description("Qlik Cloud app reload or automation run")]
     Qlik,
     
     [Category("Other", 4)]
@@ -49,7 +49,7 @@ public enum StepType
     Job,
 
     [Category("Transformation", 2)]
-    [Description("Run a Databricks notebook, Python file or job")]
+    [Description("Run a Databricks job, notebook, Python file or pipeline")]
     Databricks,
 
     [Category("Transformation", 2)]
