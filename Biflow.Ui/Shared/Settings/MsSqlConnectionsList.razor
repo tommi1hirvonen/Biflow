@@ -1,6 +1,9 @@
-﻿@inject IDbContextFactory<AppDbContext> DbFactory
+﻿@implements IDisposable
+
+@inject IDbContextFactory<AppDbContext> DbFactory
 @inject IMediator Mediator
 @inject ToasterService Toaster
+@inject ThemeService ThemeService
 
 <style>
     tr a {
@@ -14,9 +17,29 @@
 
 <PageTitle>MS SQL | Biflow</PageTitle>
 
-<HxButton Color="ThemeColor.Success" Enabled="_connections is not null" OnClick="() => _editModal.LetAsync(x => x.ShowAsync(Guid.Empty))">
-    Add connection
-</HxButton>
+<div class="row flex-row-reverse justify-content-between align-items-end g-3">
+    <div class="col-auto">
+        <HxAlert Color="ThemeService.CurrentTheme == Theme.Light ? ThemeColor.Light : ThemeColor.Dark"
+                 CssClass="small py-2 mb-0"
+                 style="max-width: 40rem;">
+            <div class="row g-3">
+                <div class="col-auto">
+                    <SvgIcon Icon="FeatherIcon.Info" />
+                </div>
+                <div class="col">
+                    MS SQL connections can be used in SQL steps to run arbitrary SQL statements on SQL Server, Azure SQL, Azure Synapse and Fabric Data Warehouse.
+                    <br/>
+                    MS SQL connections also allow you to add <a class="alert-link" href="datatables">data tables</a>.
+                </div>
+            </div>
+        </HxAlert>
+    </div>
+    <div class="col-auto">
+        <HxButton Color="ThemeColor.Success" Enabled="_connections is not null" OnClick="() => _editModal.LetAsync(x => x.ShowAsync(Guid.Empty))">
+            Add connection
+        </HxButton>
+    </div>
+</div>
 
 <div class="card pt-2 my-4">
     <table class="table table-hover">
@@ -192,6 +215,12 @@
         })
         .OrderBy(c => c.ordinal)
         .ToArray();
+    
+    protected override void OnInitialized() => ThemeService.OnThemeChanged += OnThemeChanged;
+
+    public void Dispose() => ThemeService.OnThemeChanged -= OnThemeChanged;
+    
+    private void OnThemeChanged(Theme theme, bool isAuto) => StateHasChanged();
 
     protected override async Task OnInitializedAsync()
     {

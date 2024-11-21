@@ -1,6 +1,9 @@
-﻿@inject IDbContextFactory<AppDbContext> DbFactory
+﻿@implements IDisposable
+
+@inject IDbContextFactory<AppDbContext> DbFactory
 @inject ToasterService Toaster
 @inject IMediator Mediator
+@inject ThemeService ThemeService
 
 <style>
     tr a {
@@ -14,9 +17,27 @@
 
 <PageTitle>App registrations | Biflow</PageTitle>
 
-<HxButton Color="ThemeColor.Success" @onclick="async () => await ShowEditModalAsync(null)" Enabled="_appRegistrations is not null">
-    Add app registration
-</HxButton>
+<div class="row flex-row-reverse justify-content-between align-items-end g-3">
+    <div class="col-auto">
+        <HxAlert Color="ThemeService.CurrentTheme == Theme.Light ? ThemeColor.Light : ThemeColor.Dark"
+                 CssClass="small py-2 mb-0"
+                 style="max-width: 40rem;">
+            <div class="row g-3">
+                <div class="col-auto">
+                    <SvgIcon Icon="FeatherIcon.Info" />
+                </div>
+                <div class="col">
+                    App registrations allow you to create Power BI semantic model refresh steps. They also enable you to add integrations for Data Factories, Synapse workspaces and Function Apps.
+                </div>
+            </div>
+        </HxAlert>
+    </div>
+    <div class="col-auto">
+        <HxButton Color="ThemeColor.Success" @onclick="async () => await ShowEditModalAsync(null)" Enabled="_appRegistrations is not null">
+            Add app registration
+        </HxButton>
+    </div>
+</div>
 
 <div class="card pt-2 my-4">
     <table class="table table-hover">
@@ -242,6 +263,12 @@
     private HxModal? _pipelineClientsModal;
     private AppRegistration? _functionAppsAppRegistration;
     private HxModal? _functionAppsModal;
+    
+    protected override void OnInitialized() => ThemeService.OnThemeChanged += OnThemeChanged;
+    
+    public void Dispose() => ThemeService.OnThemeChanged -= OnThemeChanged;
+    
+    private void OnThemeChanged(Theme theme, bool isAuto) => StateHasChanged();
 
     protected override async Task OnInitializedAsync()
     {
