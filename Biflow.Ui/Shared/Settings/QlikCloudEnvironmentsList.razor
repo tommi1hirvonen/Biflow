@@ -1,14 +1,35 @@
-﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
+﻿@implements IDisposable
+
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject ToasterService Toaster
 @inject IMediator Mediator
+@inject ThemeService ThemeService
 
 <PageTitle>Qlik Cloud | Biflow</PageTitle>
 
-<HxButton Color="ThemeColor.Success"
-@onclick="() => ShowEditModal(null)"
-          Enabled="_environments is not null">
-    Add environment
-</HxButton>
+<div class="row flex-row-reverse justify-content-between align-items-end g-3">
+    <div class="col-auto">
+        <HxAlert Color="ThemeService.CurrentTheme == Theme.Light ? ThemeColor.Light : ThemeColor.Dark"
+                 CssClass="small py-2 mb-0"
+                 style="max-width: 50rem;">
+            <div class="row g-3">
+                <div class="col-auto">
+                    <SvgIcon Icon="FeatherIcon.Info" />
+                </div>
+                <div class="col">
+                    Add Qlik Cloud&reg; environments to run app reloads and automations in your Qlik Cloud environment.  
+                </div>
+            </div>
+        </HxAlert>
+    </div>
+    <div class="col-auto">
+        <HxButton Color="ThemeColor.Success"
+                  @onclick="() => ShowEditModal(null)"
+                  Enabled="_environments is not null">
+            Add environment
+        </HxButton>
+    </div>
+</div>
 
 <div class="card pt-2 my-4">
     <table class="table table-hover">
@@ -127,6 +148,12 @@
     private QlikCloudEnvironmentEditModal? _editModal;
     private QlikCloudEnvironment? _stepsEnvironment;
     private HxModal? _stepsModal;
+    
+    protected override void OnInitialized() => ThemeService.OnThemeChanged += OnThemeChanged;
+    
+    public void Dispose() => ThemeService.OnThemeChanged -= OnThemeChanged;
+
+    private void OnThemeChanged(Theme theme, bool isAuto) => StateHasChanged();
 
     protected override async Task OnInitializedAsync()
     {

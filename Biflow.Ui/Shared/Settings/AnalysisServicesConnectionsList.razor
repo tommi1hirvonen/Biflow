@@ -1,6 +1,9 @@
-﻿@inject IDbContextFactory<AppDbContext> DbFactory
+﻿@implements IDisposable
+
+@inject IDbContextFactory<AppDbContext> DbFactory
 @inject IMediator Mediator
 @inject ToasterService Toaster
+@inject ThemeService ThemeService
 
 <style>
     tr a {
@@ -14,9 +17,31 @@
 
 <PageTitle>Analysis Services | Biflow</PageTitle>
 
-<HxButton Color="ThemeColor.Success" Enabled="_connections is not null" OnClick="() => _editModal.LetAsync(x => x.ShowAsync(Guid.Empty))">
-    Add connection
-</HxButton>
+<div class="row flex-row-reverse justify-content-between align-items-end g-3">
+    <div class="col-auto">
+        <HxAlert Color="ThemeService.CurrentTheme == Theme.Light ? ThemeColor.Light : ThemeColor.Dark"
+                 CssClass="small py-2 mb-0"
+                 style="max-width: 35rem;">
+            <div class="row g-3">
+                <div class="col-auto">
+                    <SvgIcon Icon="FeatherIcon.Info" />
+                </div>
+                <div class="col">
+                    Add Analysis Services connections to create tabular steps to process tabular models on SQL Server Analysis Services and Azure Analysis Services.
+                    <br/>
+                    Only Analysis Services instances running in tabular mode are supported.
+                </div>
+            </div>
+        </HxAlert>
+    </div>
+    <div class="col-auto">
+        <HxButton Color="ThemeColor.Success" 
+                  Enabled="_connections is not null" 
+                  OnClick="() => _editModal.LetAsync(x => x.ShowAsync(Guid.Empty))">
+            Add connection
+        </HxButton>
+    </div>
+</div>
 
 <div class="card pt-2 my-4">
     <table class="table table-hover">
@@ -133,6 +158,12 @@
     private List<Credential> _credentials = [];
     private AnalysisServicesConnection? _stepsConnection;
     private HxModal? _stepsModal;
+    
+    protected override void OnInitialized() => ThemeService.OnThemeChanged += OnThemeChanged;
+    
+    public void Dispose() => ThemeService.OnThemeChanged -= OnThemeChanged;
+
+    private void OnThemeChanged(Theme theme, bool isAuto) => StateHasChanged();
 
     protected override async Task OnInitializedAsync()
     {

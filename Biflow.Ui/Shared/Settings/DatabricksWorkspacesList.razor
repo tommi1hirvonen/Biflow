@@ -1,6 +1,9 @@
-﻿@inject IDbContextFactory<AppDbContext> DbFactory
+﻿@implements IDisposable
+
+@inject IDbContextFactory<AppDbContext> DbFactory
 @inject ToasterService Toaster
 @inject IMediator Mediator
+@inject ThemeService ThemeService
 
 <style>
     tr a {
@@ -14,11 +17,31 @@
 
 <PageTitle>Databricks Workspaces | Biflow</PageTitle>
 
-<HxButton Color="ThemeColor.Success"
-          @onclick="() => ShowEditModalAsync(null)"
-          Enabled="_workspaces is not null">
-    Add workspace
-</HxButton>
+<div class="row flex-row-reverse justify-content-between align-items-end g-3">
+    <div class="col-auto">
+        <HxAlert Color="ThemeService.CurrentTheme == Theme.Light ? ThemeColor.Light : ThemeColor.Dark"
+                 CssClass="small py-2 mb-0"
+                 style="max-width: 35rem;">
+            <div class="row g-3">
+                <div class="col-auto">
+                    <SvgIcon Icon="FeatherIcon.Info" />
+                </div>
+                <div class="col">
+                    Add Databricks workspaces to create steps to run Databricks jobs, notebooks, Python files and pipelines in your Databricks workspace.
+                    <br/>
+                    Currently, only Azure Databricks workspaces are supported.
+                </div>
+            </div>
+        </HxAlert>
+    </div>
+    <div class="col-auto">
+        <HxButton Color="ThemeColor.Success"
+                  @onclick="() => ShowEditModalAsync(null)"
+                  Enabled="_workspaces is not null">
+            Add workspace
+        </HxButton>
+    </div>
+</div>
 
 <div class="card pt-2 my-4">
     <table class="table table-hover">
@@ -137,6 +160,12 @@
     private DatabricksWorkspaceEditModal? _editModal;
     private DatabricksWorkspace? _stepsWorkspace;
     private HxModal? _stepsModal;
+    
+    protected override void OnInitialized() => ThemeService.OnThemeChanged += OnThemeChanged;
+    
+    public void Dispose() => ThemeService.OnThemeChanged -= OnThemeChanged;
+
+    private void OnThemeChanged(Theme theme, bool isAuto) => StateHasChanged();
 
     protected override async Task OnInitializedAsync()
     {
