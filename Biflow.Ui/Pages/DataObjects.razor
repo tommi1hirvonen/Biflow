@@ -5,6 +5,7 @@
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject ToasterService Toaster
 @inject IMediator Mediator
+@inject IHxMessageBoxService Confirmer
 
 <PageTitle>Data objects | Biflow</PageTitle>
 
@@ -64,49 +65,50 @@
                                     var readers = obj.Steps.Count(s => s.ReferenceType == DataObjectReferenceType.Source);
                                     var writers = obj.Steps.Count(s => s.ReferenceType == DataObjectReferenceType.Target);
                                 }
-                                <tr>
-                                    
-                                    <td class="align-middle font-monospace"><HighlightableText Text="@obj.ObjectUri" PartToHighlight="@_searchTerm" /></td>
-                                    <td class="align-middle">@obj.MaxConcurrentWrites</td>
-                                    <td>
-                                        <div class="btn-group">
-                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => _editOffcanvas.LetAsync(x => x.ShowAsync(obj.ObjectId))">
-                                                <SvgIcon Icon="LucideIcon.Pen" />
-                                            </HxButton>
-                                            <HxDropdownButtonGroup>
-                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                                    <SvgIcon Icon="LucideIcon.Trash2" />
-                                                </HxDropdownToggleButton>
-                                                <HxDropdownMenu>
-                                                    <HxDropdownHeader>Delete?</HxDropdownHeader>
-                                                    <HxDropdownItem @onclick="async () => await DeleteDatabaseObject(obj)">Confirm</HxDropdownItem>
-                                                </HxDropdownMenu>
-                                            </HxDropdownButtonGroup>
-                                        </div>
-                                    </td>
-                                    <td class="align-middle">
-                                        <a class="text-body" href="javascript:void(0)"
-                                            @onclick="async () =>
-                                            {
-                                                _referenceType = DataObjectReferenceType.Source;
-                                                _stepsModalDataObject = obj;
-                                                await _referencesModal.LetAsync(x => x.ShowAsync());
-                                            }">
-                                            @(readers > 0 ? $"{readers} reader(s)" : null)
-                                        </a>
-                                    </td>
-                                    <td class="align-middle">
-                                        <a class="text-body" href="javascript:void(0)"
-                                            @onclick="async () =>
-                                            {
-                                                _referenceType = DataObjectReferenceType.Target;
-                                                _stepsModalDataObject = obj;
-                                                await _referencesModal.LetAsync(x => x.ShowAsync());
-                                            }">
-                                            @(writers > 0 ? $"{writers} writer(s)" : null)
-                                        </a>
-                                    </td>
-                                </tr>
+                                <ContextMenuToggle ContainerHtmlTag="tr">
+                                    <ChildContent>
+                                        <td class="align-middle font-monospace"><HighlightableText Text="@obj.ObjectUri" PartToHighlight="@_searchTerm"/></td>
+                                        <td class="align-middle">@obj.MaxConcurrentWrites</td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => _editOffcanvas.LetAsync(x => x.ShowAsync(obj.ObjectId))">
+                                                    <SvgIcon Icon="LucideIcon.Pen"/>
+                                                </HxButton>
+                                                <HxDropdownButtonGroup>
+                                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                                                        <SvgIcon Icon="LucideIcon.Trash2"/>
+                                                    </HxDropdownToggleButton>
+                                                    <HxDropdownMenu>
+                                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                                        <HxDropdownItem @onclick="async () => await DeleteDataObject(obj)">Confirm</HxDropdownItem>
+                                                    </HxDropdownMenu>
+                                                </HxDropdownButtonGroup>
+                                            </div>
+                                        </td>
+                                        <td class="align-middle">
+                                            <a class="text-body" href="javascript:void(0)"
+                                               @onclick="async () => { _referenceType = DataObjectReferenceType.Source; _stepsModalDataObject = obj; await _referencesModal.LetAsync(x => x.ShowAsync()); }">
+                                                @(readers > 0 ? $"{readers} reader(s)" : null)
+                                            </a>
+                                        </td>
+                                        <td class="align-middle">
+                                            <a class="text-body" href="javascript:void(0)"
+                                               @onclick="async () => { _referenceType = DataObjectReferenceType.Target; _stepsModalDataObject = obj; await _referencesModal.LetAsync(x => x.ShowAsync()); }">
+                                                @(writers > 0 ? $"{writers} writer(s)" : null)
+                                            </a>
+                                        </td>
+                                    </ChildContent>
+                                    <MenuContent>
+                                        <DropdownMenuItem @onclick="() => _editOffcanvas.LetAsync(x => x.ShowAsync(obj.ObjectId))">
+                                            <SvgIcon Icon="LucideIcon.Pen" />
+                                            Edit
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem @onclick="() => ConfirmAndDeleteDataObject(obj)">
+                                            <SvgIcon Icon="LucideIcon.Trash2" />
+                                            Delete...
+                                        </DropdownMenuItem>
+                                    </MenuContent>
+                                </ContextMenuToggle>
                             </Virtualize>
                         }
                     </tbody>
@@ -149,7 +151,7 @@
     </BodyTemplate>
     <FooterTemplate>
         <button class="btn btn-secondary" @onclick="async () => await _confirmDeleteModal.LetAsync(x => x.HideAsync())">Cancel</button>
-        <button class="btn btn-danger" @onclick="DeleteUnusedDatabaseObjectsAsync">Delete</button>
+        <button class="btn btn-danger" @onclick="DeleteUnusedDataObjectsAsync">Delete</button>
     </FooterTemplate>
 </HxModal>
 
@@ -247,14 +249,23 @@
         await _confirmDeleteModal.LetAsync(x => x.ShowAsync());
     }
 
-    private async Task DeleteUnusedDatabaseObjectsAsync()
+    private async Task DeleteUnusedDataObjectsAsync()
     {
         var response = await Mediator.SendAsync(new DeleteUnusedDataObjectsCommand());
         _objects?.RemoveAll(o => response.DeletedDataObjects.Any(r => r.ObjectId == o.ObjectId));
         await _confirmDeleteModal.LetAsync(x => x.HideAsync());
     }
 
-    private async Task DeleteDatabaseObject(DataObject obj)
+    private async Task ConfirmAndDeleteDataObject(DataObject obj)
+    {
+        if (!await Confirmer.ConfirmAsync("Delete data object", $"Are you sure you want to delete\n \"{obj.ObjectUri}\"?"))
+        {
+            return;
+        }
+        await DeleteDataObject(obj);
+    }
+
+    private async Task DeleteDataObject(DataObject obj)
     {
         await Mediator.SendAsync(new DeleteDataObjectCommand(obj.ObjectId));
         _objects?.Remove(obj);
@@ -274,5 +285,4 @@
         _objects?.Remove(toRemove);
         _objects?.Add(dataObject);
     }
-
 }
