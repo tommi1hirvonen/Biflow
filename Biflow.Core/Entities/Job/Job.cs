@@ -30,14 +30,14 @@ public class Job : IAuditable
         // While creating copies of steps,
         // also create a mapping dictionary to map dependencies based on old step ids.
         var mapping = other.Steps
-            .Select(s => (Orig: s, Copy: s.Copy(this)))
-            .ToDictionary(x => x.Orig.StepId, x => x);
+            .Select(s => (Original: s, Copy: s.Copy(this)))
+            .ToDictionary(x => x.Original.StepId, x => x);
 
         Steps = mapping.Values
             .Select(map =>
             {
                 // Map dependencies from ids to new ids.
-                map.Copy.Dependencies.AddRange(map.Orig.Dependencies.Select(d => MapDependency(map.Copy, d)));
+                map.Copy.Dependencies.AddRange(map.Original.Dependencies.Select(d => MapDependency(map.Copy, d)));
                 return map.Copy;
             })
             .ToList();
