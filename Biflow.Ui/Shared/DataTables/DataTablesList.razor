@@ -1,6 +1,7 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject ToasterService Toaster
 @inject IMediator Mediator
+@inject IHxMessageBoxService Confirmer
 
 <h4>Data tables</h4>
 
@@ -106,101 +107,138 @@
             {
                 continue;
             }
-            <li class="list-group-item list-group-header fw-bold py-1">
-                <div class="row align-items-center">
-                    <div class="col my-1">
-                        @if (state.IsExpanded)
-                        {
-                            <span class="pointer hover-underline" title="Collapse" @onclick="() => state.IsExpanded = false">
-                                <SvgIcon Icon="LucideIcon.ChevronDown" />
-                                @(category?.CategoryName ?? "No category")
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="pointer hover-underline" title="Expand" @onclick="() => state.IsExpanded = true">
-                                <SvgIcon Icon="LucideIcon.ChevronRight" />
-                                @(category?.CategoryName ?? "No category")
-                            </span>
-                        }
+            <ContextMenuToggle ContainerHtmlTag="li" CssClass="list-group-item list-group-header fw-bold py-1" Disabled="category is null">
+                <ChildContent Context="_">
+                    <div class="row align-items-center">
+                        <div class="col my-1">
+                            @if (state.IsExpanded)
+                            {
+                                <span class="pointer hover-underline" title="Collapse" @onclick="() => state.IsExpanded = false">
+                                    <SvgIcon Icon="LucideIcon.ChevronDown"/>
+                                    @(category?.CategoryName ?? "No category")
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="pointer hover-underline" title="Expand" @onclick="() => state.IsExpanded = true">
+                                    <SvgIcon Icon="LucideIcon.ChevronRight"/>
+                                    @(category?.CategoryName ?? "No category")
+                                </span>
+                            }
+                        </div>
+                        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.DataTableMaintainer}")">
+                            @if (category is not null)
+                            {
+                                <div class="col-auto">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
+                                              OnClick="() => _categoryEditModal.LetAsync(x => x.ShowAsync(category))">
+                                        <SvgIcon Icon="LucideIcon.Pen"/>
+                                    </HxButton>
+                                    <HxDropdownButtonGroup>
+                                        <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                                            <SvgIcon Icon="LucideIcon.Trash2"/>
+                                        </HxDropdownToggleButton>
+                                        <HxDropdownMenu>
+                                            <HxDropdownHeader>Delete category?</HxDropdownHeader>
+                                            <HxDropdownItem @onclick="() => DeleteCategoryAsync(category)">Confirm</HxDropdownItem>
+                                        </HxDropdownMenu>
+                                    </HxDropdownButtonGroup>
+                                </div>
+                            }
+                        </AuthorizeView>
                     </div>
-                    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.DataTableMaintainer}")">
-                        @if (category is not null)
-                        {
-                            <div class="col-auto">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
-                                        OnClick="() => _categoryEditModal.LetAsync(x => x.ShowAsync(category))">
-                                    <SvgIcon Icon="LucideIcon.Pen" />
-                                </HxButton>
-                                <HxDropdownButtonGroup>
-                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                        <SvgIcon Icon="LucideIcon.Trash2" />
-                                    </HxDropdownToggleButton>
-                                    <HxDropdownMenu>
-                                        <HxDropdownHeader>Delete category?</HxDropdownHeader>
-                                        <HxDropdownItem @onclick="() => DeleteCategoryAsync(category)">Confirm</HxDropdownItem>
-                                    </HxDropdownMenu>
-                                </HxDropdownButtonGroup>
-                            </div>
-                        }                      
-                    </AuthorizeView>
-                </div>
-            </li>
+                </ChildContent>
+                <MenuContent>
+                    @if (category is not null)
+                    {
+                        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.DataTableMaintainer}")">
+                            <DropdownMenuHeader>
+                                @category.CategoryName
+                            </DropdownMenuHeader>
+                            <DropdownMenuItem @onclick="() => _categoryEditModal.LetAsync(x => x.ShowAsync(category))">
+                                <SvgIcon Icon="LucideIcon.Pen" />
+                                Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem @onclick="() => ConfirmAndDeleteCategoryAsync(category)">
+                                <SvgIcon Icon="LucideIcon.Trash2" />
+                                Delete...
+                            </DropdownMenuItem>
+                        </AuthorizeView>
+                    }
+                </MenuContent>
+            </ContextMenuToggle>
             @if (!state.IsExpanded && !filtersApplied)
             {
                 continue;
             }
             foreach (var table in tables)
             {
-                <li class="list-group-item list-group-item-action py-1">
-                    <div class="row align-items-center">
-                        <div class="col my-1">
-                            <a href="datatables/edit/@table.DataTableId" class="text-body ms-5">
-                                <HighlightableText PartToHighlight="@_tableNameFilter" Text="@table.DataTableName" />
-                            </a>
-                        </div>
-                        <div class="col">
-                            <HighlightableText PartToHighlight="@_targetTableNameFilter" Text="@($"{table.TargetSchemaName}.{table.TargetTableName}")" />
-                        </div>
-                        <div class="col">
-                            @{
-                                var lookups = Tables
-                                    .SelectMany(t => t.Lookups)
-                                    .Where(l => l.LookupTableId == table.DataTableId)
-                                    .OrderBy(l => l.Table.DataTableName)
-                                    .ThenBy(l => l.ColumnName)
-                                    .Select(l => $"- [{l.Table.DataTableName}].[{l.ColumnName}]")
-                                    .ToList();
-                            }
-                            @if (lookups.Any())
-                            {
-                                var content = string.Join("<br />", lookups);
-                                <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@content">
-                                    <a href="javascript:void(0)" class="text-body">
-                                        @lookups.Count() dependent lookup(s)
-                                    </a>
-                                </HxPopover>
-                            }
-                        </div>
-                        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.DataTableMaintainer}")">
-                            <div class="col-auto">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
-                                            OnClick="async () => await _editModal.LetAsync(x => x.SetEditContextAsync(table))">
-                                    <SvgIcon Icon="LucideIcon.Pen" />
-                                </HxButton>
-                                <HxDropdownButtonGroup>
-                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                        <SvgIcon Icon="LucideIcon.Trash2" />
-                                    </HxDropdownToggleButton>
-                                    <HxDropdownMenu>
-                                        <HxDropdownHeader>Delete table?</HxDropdownHeader>
-                                        <HxDropdownItem @onclick="async () => await DeleteTableAsync(table)">Confirm</HxDropdownItem>
-                                    </HxDropdownMenu>
-                                </HxDropdownButtonGroup>
+                <ContextMenuToggle ContainerHtmlTag="li" CssClass="list-group-item list-group-item-action py-1">
+                    <ChildContent Context="_">
+                        <div class="row align-items-center">
+                            <div class="col my-1">
+                                <a href="datatables/edit/@table.DataTableId" class="text-body ms-5">
+                                    <HighlightableText PartToHighlight="@_tableNameFilter" Text="@table.DataTableName"/>
+                                </a>
                             </div>
+                            <div class="col">
+                                <HighlightableText PartToHighlight="@_targetTableNameFilter" Text="@($"{table.TargetSchemaName}.{table.TargetTableName}")"/>
+                            </div>
+                            <div class="col">
+                                @{
+                                    var lookups = Tables
+                                        .SelectMany(t => t.Lookups)
+                                        .Where(l => l.LookupTableId == table.DataTableId)
+                                        .OrderBy(l => l.Table.DataTableName)
+                                        .ThenBy(l => l.ColumnName)
+                                        .Select(l => $"- [{l.Table.DataTableName}].[{l.ColumnName}]")
+                                        .ToList();
+                                }
+                                @if (lookups.Any())
+                                {
+                                    var content = string.Join("<br />", lookups);
+                                    <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@content">
+                                        <a href="javascript:void(0)" class="text-body">
+                                            @lookups.Count() dependent lookup(s)
+                                        </a>
+                                    </HxPopover>
+                                }
+                            </div>
+                            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.DataTableMaintainer}")">
+                                <div class="col-auto">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
+                                              OnClick="async () => await _editModal.LetAsync(x => x.SetEditContextAsync(table))">
+                                        <SvgIcon Icon="LucideIcon.Pen"/>
+                                    </HxButton>
+                                    <HxDropdownButtonGroup>
+                                        <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                                            <SvgIcon Icon="LucideIcon.Trash2"/>
+                                        </HxDropdownToggleButton>
+                                        <HxDropdownMenu>
+                                            <HxDropdownHeader>Delete table?</HxDropdownHeader>
+                                            <HxDropdownItem @onclick="async () => await DeleteTableAsync(table)">Confirm</HxDropdownItem>
+                                        </HxDropdownMenu>
+                                    </HxDropdownButtonGroup>
+                                </div>
+                            </AuthorizeView>
+                        </div>
+                    </ChildContent>
+                    <MenuContent>
+                        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.DataTableMaintainer}")">
+                            <DropdownMenuHeader>
+                                @table.DataTableName
+                            </DropdownMenuHeader>
+                            <DropdownMenuItem @onclick="() => _editModal.LetAsync(x => x.SetEditContextAsync(table))">
+                                <SvgIcon Icon="LucideIcon.Pen" />
+                                Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem @onclick="() => ConfirmAndDeleteTableAsync(table)">
+                                <SvgIcon Icon="LucideIcon.Trash2" />
+                                Delete...
+                            </DropdownMenuItem>
                         </AuthorizeView>
-                    </div>
-                </li>
+                    </MenuContent>
+                </ContextMenuToggle>
             }
         }
     }
@@ -248,6 +286,15 @@
         }
     }
 
+    private async Task ConfirmAndDeleteTableAsync(MasterDataTable table)
+    {
+        if (!await Confirmer.ConfirmAsync("Delete data table", $"Are you sure you want to delete \"{table.DataTableName}\"?"))
+        {
+            return;
+        }
+        await DeleteTableAsync(table);
+    }
+
     private async Task DeleteTableAsync(MasterDataTable table)
     {
         try
@@ -262,6 +309,15 @@
         }
     }
 
+    private async Task ConfirmAndDeleteCategoryAsync(MasterDataTableCategory category)
+    {
+        if (!await Confirmer.ConfirmAsync("Delete category", $"Are you sure you want to delete \"{category.CategoryName}\"?"))
+        {
+            return;
+        }
+        await DeleteCategoryAsync(category);
+    }
+    
     private async Task DeleteCategoryAsync(MasterDataTableCategory category)
     {
         try
