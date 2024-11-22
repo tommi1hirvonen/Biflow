@@ -11,7 +11,7 @@
             <label class="form-label">Name</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    <SvgIcon Icon="FeatherIcon.Edit3" />
+                    <SvgIcon Icon="LucideIcon.PenLine" />
                 </div>
                 <InputText class="form-control" @bind-Value="_editJob.JobName" autocomplete="off" style="max-width: 50rem;"></InputText>
             </div>
@@ -28,7 +28,7 @@
             <label class="form-label">Description</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    <SvgIcon Icon="FeatherIcon.BookOpen" />
+                    <SvgIcon Icon="LucideIcon.BookOpen" />
                 </div>
                 <InputTextArea class="form-control form-control-sm" @bind-Value="_editJob.JobDescription" rows="5" style="max-width: 50rem;"></InputTextArea>
             </div>
@@ -37,7 +37,7 @@
             <label class="form-label">Timeout (min, 0 = indefinite)</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    <SvgIcon Icon="FeatherIcon.XOctagon" />
+                    <SvgIcon Icon="LucideIcon.OctagonX" />
                 </div>
                 <InputNumber class="form-control form-control-sm" style="max-width: 10rem;" @bind-Value="_editJob.TimeoutMinutes"></InputNumber>
             </div>
@@ -47,7 +47,7 @@
             <label class="form-label">Overtime notification limit (min, 0 = indefinite)</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    <SvgIcon Icon="FeatherIcon.Bell" />
+                    <SvgIcon Icon="LucideIcon.Bell" />
                 </div>
                 <InputNumber class="form-control form-control-sm" style="max-width: 10rem;" @bind-Value="_editJob.OvertimeNotificationLimitMinutes"></InputNumber>
             </div>
@@ -56,7 +56,7 @@
         <div class="row">
             <div class="col">
                 <HxSubmit Color="ThemeColor.Success">
-                    <SvgIcon Icon="FeatherIcon.Save" />
+                    <SvgIcon Icon="LucideIcon.Save" />
                     Save
                 </HxSubmit>
             </div>

@@ -72,7 +72,7 @@ else if (Step is not null && _targetJob is not null)
                                     <div class="col-auto">
                                         <HxTooltip Trigger="TooltipTrigger.Hover" Text="@($"Parameter value types do not match: {t1} vs {t2}")">
                                             <span style="color: var(--bs-warning);">
-                                                <SvgIcon Icon="FeatherIcon.AlertCircle" />
+                                                <SvgIcon Icon="LucideIcon.CircleAlert" />
                                             </span>
                                         </HxTooltip>
                                     </div>
@@ -99,7 +99,7 @@ else if (Step is not null && _targetJob is not null)
                     <td>
                         <HxButtonGroup Size="ButtonGroupSize.Small">
                             <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="() => Step.StepParameters.Remove(param)">
-                                <SvgIcon Icon="FeatherIcon.Delete" />
+                                <SvgIcon Icon="LucideIcon.Delete" />
                             </HxButton>
                         </HxButtonGroup>
                     </td>
@@ -110,7 +110,7 @@ else if (Step is not null && _targetJob is not null)
     </table>
     <HxDropdownButtonGroup>
         <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" Enabled="AvailableTargetParameters.Any()">
-            <SvgIcon Icon="FeatherIcon.Plus" />
+            <SvgIcon Icon="LucideIcon.Plus" />
             Add parameter
         </HxDropdownToggleButton>
         <HxDropdownMenu>

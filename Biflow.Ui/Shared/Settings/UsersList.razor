@@ -15,7 +15,7 @@
         <div class="btn-toolbar" role="toolbar">
             <div class="input-group me-3">
                 <div class="input-group-text">
-                    <SvgIcon Icon="FeatherIcon.Search" />
+                    <SvgIcon Icon="LucideIcon.Search" />
                 </div>
                 <input type="search" class="form-control" @bind-value="_usernameFilter" @bind-value:event="oninput" placeholder="Search by username" style="max-width: 25rem;" />
             </div>
@@ -91,19 +91,19 @@
                             <div class="col-2 text-center">
                                 <HxButtonGroup>
                                     <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="edit" @onclick="async () => await ShowEditModalAsync(user)" title="Edit user">
-                                        <SvgIcon Icon="FeatherIcon.Edit2" />
+                                        <SvgIcon Icon="LucideIcon.Pen" />
                                     </HxButton>
 
                                     @if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn)
                                     {
                                         <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="Change password" @onclick="() => _resetPasswordModal.LetAsync(x => x.ShowAsync(user.Username))" title="Reset password">
-                                            <SvgIcon Icon="FeatherIcon.Key" />
+                                            <SvgIcon Icon="LucideIcon.Key" />
                                         </HxButton>
                                     }
 
                                     <HxDropdownButtonGroup>
                                         <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="delete" title="Delete user">
-                                            <SvgIcon Icon="FeatherIcon.Trash2" />
+                                            <SvgIcon Icon="LucideIcon.Trash2" />
                                         </HxDropdownToggleButton>
                                         <HxDropdownMenu>
                                             <HxDropdownHeader>Delete?</HxDropdownHeader>

@@ -57,7 +57,7 @@
 <div class="row align-items-center mt-3">
     <div class="col-auto">
         <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="UploadAsync" Enabled="_upload is not null">
-            <SvgIcon Icon="FeatherIcon.Save" />
+            <SvgIcon Icon="LucideIcon.Save" />
             Save
         </HxButton>
     </div>
@@ -101,19 +101,19 @@
                                     @if (column.IsPrimaryKey)
                                     {
                                         <span class="ms-2" title="Primary key column">
-                                            <SvgIcon Icon="FeatherIcon.Key" />
+                                            <SvgIcon Icon="LucideIcon.Key" />
                                         </span>
                                     }
                                     @if (column is { IsLocked: true, IsPrimaryKey: false })
                                     {
                                         <span class="ms-2 text-warning" title="Locked column excluded from final import">
-                                            <SvgIcon Icon="FeatherIcon.Lock" />
+                                            <SvgIcon Icon="LucideIcon.Lock" />
                                         </span>
                                     }
                                     @if (column is { IsHidden: true, IsPrimaryKey: false })
                                     {
                                         <span class="ms-2 text-warning" title="Hidden column excluded from final import">
-                                            <SvgIcon Icon="FeatherIcon.EyeOff" />
+                                            <SvgIcon Icon="LucideIcon.EyeOff" />
                                         </span>
                                     }
                                 </th>

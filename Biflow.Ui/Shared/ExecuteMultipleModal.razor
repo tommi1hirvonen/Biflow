@@ -41,7 +41,7 @@
                                                   CssClass="btn-auto"
                                                   OnClick="() => _jobs.Remove(job)"
                                                   title="Remove from list of jobs to run">
-                                            <SvgIcon Icon="FeatherIcon.Delete" />
+                                            <SvgIcon Icon="LucideIcon.Delete" />
                                         </HxButton>
                                     }
                                     else if (_responses.TryGetValue(job, out var response))
@@ -50,7 +50,7 @@
                                         {
                                             <div class="text-success">
                                                 <span class="text-success">
-                                                    <SvgIcon Icon="FeatherIcon.CheckCircle" />
+                                                    <SvgIcon Icon="LucideIcon.CircleCheck" />
                                                 </span>
                                                 @if (response.Execution is not null)
                                                 {
@@ -63,7 +63,7 @@
                                         else
                                         {
                                             <div class="text-danger">
-                                                <SvgIcon Icon="FeatherIcon.AlertOctagon" />
+                                                <SvgIcon Icon="LucideIcon.OctagonAlert" />
                                                 <HxPopover Content="@(response.Exception?.ToString() ?? string.Empty)" Trigger="PopoverTrigger.Hover">
                                                     <span class=" ms-1 small text-decoration-underline text-primary pointer">
                                                         Show error
@@ -90,7 +90,7 @@
             <div class="col mr-auto">
                 <HxDropdownButtonGroup AutoClose="DropdownAutoClose.Outside">
                     <HxDropdownToggleButton Color="ThemeColor.Secondary">
-                        <SvgIcon Icon="FeatherIcon.Bell" />
+                        <SvgIcon Icon="LucideIcon.Bell" />
                         Notifications
                     </HxDropdownToggleButton>
                     <HxDropdownContent>
@@ -142,7 +142,7 @@
                       CssClass="ml-5"
                       Enabled="_jobs.Count > 0"
                       @onclick="ExecuteAsync">
-                <SvgIcon Icon="FeatherIcon.Play" />
+                <SvgIcon Icon="LucideIcon.Play" />
                 Execute
             </HxButton>
             <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _modal.LetAsync(x => x.HideAsync())">
@@ -152,7 +152,7 @@
         else if (_state == State.Starting)
         {
             <HxButton Color="ThemeColor.Secondary" @onclick="_cts.Cancel">
-                <SvgIcon Icon="FeatherIcon.X" />
+                <SvgIcon Icon="LucideIcon.X" />
                 Cancel
             </HxButton>
         }

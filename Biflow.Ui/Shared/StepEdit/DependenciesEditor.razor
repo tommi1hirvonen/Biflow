@@ -43,7 +43,7 @@
                             Items="Steps.Select(s => s.StepType).Distinct().OrderBy(t => t)"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
-                    <SvgIcon Icon="FeatherIcon.Tool" />
+                    <SvgIcon Icon="LucideIcon.Wrench" />
                     Step type
                 </TitleTemplate>
                 <ItemTemplate Context="item">
@@ -59,7 +59,7 @@
                             TextSelector="t => t.TagName"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
-                    <SvgIcon Icon="FeatherIcon.Tag" />
+                    <SvgIcon Icon="LucideIcon.Tag" />
                     Tags
                 </TitleTemplate>
                 <ItemTemplate Context="tag">
@@ -70,7 +70,7 @@
     </div>
     <div class="input-group input-group-sm col">
         <div class="input-group-text rounded-left">
-            <SvgIcon Icon="FeatherIcon.Search" />
+            <SvgIcon Icon="LucideIcon.Search" />
         </div>
         <input type="search" style="max-width: 25rem;" class="form-control" @bind-value="_dependenciesFilterText" @bind-value:event="oninput" placeholder="Search" autocomplete="off" />
     </div>    
@@ -155,10 +155,10 @@
                                     @{
                                         var (className, icon) = dependency.DependencyType switch
                                         {
-                                            DependencyType.OnSucceeded => ("text-success", FeatherIcon.CheckCircle),
-                                            DependencyType.OnCompleted => ("text-primary", FeatherIcon.ArrowRight),
-                                            DependencyType.OnFailed => ("text-danger", FeatherIcon.AlertOctagon),
-                                            _ => ("text-secondary", FeatherIcon.HelpCircle)
+                                            DependencyType.OnSucceeded => ("text-success", LucideIcon.CircleCheck),
+                                            DependencyType.OnCompleted => ("text-primary", LucideIcon.MoveRight),
+                                            DependencyType.OnFailed => ("text-danger", LucideIcon.OctagonAlert),
+                                            _ => ("text-secondary", LucideIcon.CircleHelp)
                                         };
                                     }
                                     <span class="@className">
@@ -175,7 +175,7 @@
                                 </td>
                                 <td class="align-middle">
                                     <HxButton Size="ButtonSize.Small" CssClass="btn-auto" OnClick="() => RemoveDependency(step)">
-                                        <SvgIcon Icon="FeatherIcon.Delete" />
+                                        <SvgIcon Icon="LucideIcon.Delete" />
                                     </HxButton>
                                 </td>
                             </tr>

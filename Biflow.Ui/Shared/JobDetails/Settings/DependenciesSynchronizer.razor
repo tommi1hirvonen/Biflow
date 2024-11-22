@@ -7,7 +7,7 @@
 <div class="row mt-3">
     <div class="col">
         <HxButton Size="ButtonSize.Regular" Color="ThemeColor.Primary" OnClick="CalculateChangesAsync">
-            <SvgIcon Icon="FeatherIcon.RefreshCw" />
+            <SvgIcon Icon="LucideIcon.RefreshCw" />
             Calculate changes
         </HxButton>
     </div>
@@ -76,10 +76,10 @@
                                 @{
                                     var (className, icon) = dep.DependencyType switch
                                     {
-                                        DependencyType.OnSucceeded => ("text-success", FeatherIcon.CheckCircle),
-                                        DependencyType.OnCompleted => ("text-primary", FeatherIcon.ArrowRight),
-                                        DependencyType.OnFailed => ("text-danger", FeatherIcon.AlertOctagon),
-                                        _ => ("text-secondary", FeatherIcon.HelpCircle)
+                                        DependencyType.OnSucceeded => ("text-success", LucideIcon.CircleCheck),
+                                        DependencyType.OnCompleted => ("text-primary", LucideIcon.MoveRight),
+                                        DependencyType.OnFailed => ("text-danger", LucideIcon.OctagonAlert),
+                                        _ => ("text-secondary", LucideIcon.CircleHelp)
                                     };
                                 }
                                 <span class="@className">
@@ -99,12 +99,12 @@
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None"
                                               title="Commit this modification"
                                               CssClass="btn-auto text-success" OnClick="async () => await commitTask()">
-                                        <SvgIcon Icon="FeatherIcon.Check" />
+                                        <SvgIcon Icon="LucideIcon.Check" />
                                     </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None"
                                               title="Discard this modification"
                                               CssClass="btn-auto text-danger" OnClick="() => discardAction()">
-                                        <SvgIcon Icon="FeatherIcon.X" />
+                                        <SvgIcon Icon="LucideIcon.X" />
                                     </HxButton>
                                 </HxButtonGroup>
                             </td>
@@ -128,7 +128,7 @@
     <div class="row mt-3">
         <div class="col">
             <HxButton Color="ThemeColor.Success" OnClick="CommitAllAsync">
-                <SvgIcon Icon="FeatherIcon.Check" />
+                <SvgIcon Icon="LucideIcon.Check" />
                 Commit all
             </HxButton>
         </div>

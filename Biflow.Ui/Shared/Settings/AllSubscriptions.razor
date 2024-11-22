@@ -6,7 +6,7 @@
     <div class="col-auto">
         <div class="input-group">
             <div class="input-group-text">
-                <SvgIcon Icon="FeatherIcon.User" />
+                <SvgIcon Icon="LucideIcon.User" />
             </div>
             <select class="form-select" @bind="_userId" @bind:after="() => _user = _users?.FirstOrDefault(u => u.UserId == _userId)">
                 @if (_users is not null)

@@ -30,7 +30,7 @@
         <ul class="nav nav-underline" role="tablist">
             <li class="nav-item" role="presentation">
                 <a class="nav-link @(_execution is null ? "disabled" : null) @(ShowReport == Report.List ? "active" : null)" href="executions/@ExecutionId/list">
-                    <SvgIcon Icon="FeatherIcon.List" />
+                    <SvgIcon Icon="LucideIcon.List" />
                     List
                 </a>
             </li>
@@ -48,26 +48,26 @@
             </li>
             <li class="nav-item" role="presentation">
                 <a class="nav-link @(_execution is null ? "disabled" : null) @(ShowReport == Report.ExecutionDetails ? "active" : null)" href="executions/@ExecutionId/executiondetails">
-                    <SvgIcon Icon="FeatherIcon.Info" />
+                    <SvgIcon Icon="LucideIcon.Info" />
                     Execution details
                 </a>
             </li>
             <li class="nav-item" role="presentation">
                 <a class="nav-link @(_execution is null ? "disabled" : null) @(ShowReport == Report.Parameters ? "active" : null)" href="executions/@ExecutionId/parameters">
-                    <SvgIcon Icon="FeatherIcon.AtSign" />
+                    <SvgIcon Icon="LucideIcon.AtSign" />
                     Parameters
                 </a>
             </li>
             <li class="nav-item ms-auto" role="presentation">
                 <a class="nav-link @(_execution is null ? "disabled" : null) @(ShowReport == Report.History ? "active" : null) @(_loading ? "disabled" : null)" href="executions/@ExecutionId/history">
-                    <SvgIcon Icon="FeatherIcon.Activity" />
+                    <SvgIcon Icon="LucideIcon.Activity" />
                     History
                 </a>
             </li>
             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                 <li class="nav-item" role="presentation">
                     <a class="nav-link @(_execution is null ? "disabled" : null) @(ShowReport == Report.Rerun ? "active" : null) @(_loading ? "disabled" : null)" href="executions/@ExecutionId/rerun">
-                        <SvgIcon Icon="FeatherIcon.Repeat" />
+                        <SvgIcon Icon="LucideIcon.Repeat" />
                         Rerun
                     </a>
                 </li>
@@ -81,7 +81,7 @@
     <div class="row mt-3 @(ShowReport == Report.List || ShowReport == Report.Gantt ? "sticky-top bg-body" : null)">
         <div class="col-auto align-self-center">
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" @onclick="LoadData" Enabled="!_loading">
-                <SvgIcon Icon="FeatherIcon.RefreshCw" />
+                <SvgIcon Icon="LucideIcon.RefreshCw" />
                 Refresh
             </HxButton>
         </div>
@@ -101,7 +101,7 @@
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.None"
                                   CssClass="@(Stopping ? "btn-auto disabled text-danger" : "btn-auto text-danger")"
                                   OnClick="StopJobExecutionAsync">
-                            <SvgIcon Icon="FeatherIcon.XOctagon" />
+                            <SvgIcon Icon="LucideIcon.OctagonX" />
                             Stop all...
                         </HxButton>
                     </HxDropdownButtonGroup>
@@ -374,7 +374,7 @@
     
         <div class="row mt-1">
             <div class="col d-inline">
-                <SvgIcon Icon="FeatherIcon.Filter"/>
+                <SvgIcon Icon="LucideIcon.Filter"/>
                 <span class="me-3">Filter</span>
 
                 <HxButtonGroup Size="ButtonGroupSize.Small">
@@ -404,7 +404,7 @@
                                         .Select(s => s.StepType).Distinct().OrderBy(j => j).AsEnumerable() ?? []"
                                     OnChange="StateHasChanged">
                         <TitleTemplate>
-                            <SvgIcon Icon="FeatherIcon.Tool"/>
+                            <SvgIcon Icon="LucideIcon.Wrench"/>
                             Step type
                         </TitleTemplate>
                         <ItemTemplate Context="item">
@@ -420,7 +420,7 @@
                                         .SelectMany(s => s.StepExecutionAttempts).Select(e => e.ExecutionStatus).Distinct().OrderBy(s => s).AsEnumerable() ?? []"
                                     OnChange="StateHasChanged">
                         <TitleTemplate>
-                            <SvgIcon Icon="FeatherIcon.AlertCircle"/>
+                            <SvgIcon Icon="LucideIcon.CircleAlert"/>
                             Status
                         </TitleTemplate>
                         <ItemTemplate Context="item">
@@ -441,13 +441,13 @@
                             <TagBadge Tag="item"/>
                         </ItemTemplate>
                         <TitleTemplate>
-                            <SvgIcon Icon="FeatherIcon.Tag"/>
+                            <SvgIcon Icon="LucideIcon.Tag"/>
                             Tag
                         </TitleTemplate>
                     </FilterDropdown>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
                               @onclick="() => { _stepStatusFilter.Clear(); _stepFilter.Clear(); _stepTypeFilter.Clear(); _tagFilter.Clear(); }">
-                        <SvgIcon Icon="FeatherIcon.X"/>
+                        <SvgIcon Icon="LucideIcon.X"/>
                         Reset
                     </HxButton>
                 </HxButtonGroup>

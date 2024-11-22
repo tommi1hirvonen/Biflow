@@ -31,7 +31,7 @@ else if (_builder is null)
             <div class="col-auto mt-3">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Filter" />
+                        <SvgIcon Icon="LucideIcon.Filter" />
                     </div>
                     <input type="search" class="form-control" @bind-value="_stepNameFilter" @bind-value:event="oninput"
                             placeholder="Filter by name" autocomplete="off" style="min-width: 15rem; max-width: 15rem;" />
@@ -44,7 +44,7 @@ else if (_builder is null)
                                     Items="_builder?.Steps.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
                                     OnChange="StateHasChanged">
                         <TitleTemplate>
-                            <SvgIcon Icon="FeatherIcon.Tool" />
+                            <SvgIcon Icon="LucideIcon.Wrench" />
                             Step type
                         </TitleTemplate>
                         <ItemTemplate Context="item">
@@ -60,7 +60,7 @@ else if (_builder is null)
                                     IsSearchable
                                     OnChange="StateHasChanged">
                             <TitleTemplate>
-                                <SvgIcon Icon="FeatherIcon.Tag" />
+                                <SvgIcon Icon="LucideIcon.Tag" />
                                 Tags
                             </TitleTemplate>
                             <ItemTemplate Context="item">
@@ -72,7 +72,7 @@ else if (_builder is null)
                                     Items="Statuses"
                                     OnChange="StateHasChanged">
                         <TitleTemplate>
-                            <SvgIcon Icon="FeatherIcon.Info" />
+                            <SvgIcon Icon="LucideIcon.Info" />
                             Status
                         </TitleTemplate>
                         <ItemTemplate Context="item">
@@ -81,7 +81,7 @@ else if (_builder is null)
                     </FilterDropdown>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
                                 @onclick="() => { _tagFilter.Clear(); stepTypeFilter.Clear(); statusFilter.Clear(); _stepNameFilter = string.Empty; }">
-                        <SvgIcon Icon="FeatherIcon.X" />
+                        <SvgIcon Icon="LucideIcon.X" />
                         Clear
                     </HxButton>
                 </HxButtonGroup>
@@ -117,11 +117,11 @@ else if (_builder is null)
                     @*Add all available AND enabled steps that have not yet been added to selected steps. Also filter based on current filter text.*@
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
                                 @onclick="() => _builder.AddAll(s => StepsAvailableToExecute.Any(available => s.StepId == available.StepId))">
-                        <SvgIcon Icon="FeatherIcon.ChevronsRight" />
+                        <SvgIcon Icon="LucideIcon.ChevronsRight" />
                         Select all
                     </HxButton>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" @onclick="() => _builder?.Clear()">
-                        <SvgIcon Icon="FeatherIcon.ChevronsLeft" />
+                        <SvgIcon Icon="LucideIcon.ChevronsLeft" />
                         Deselect all
                     </HxButton>
                 </HxButtonGroup>
@@ -129,7 +129,7 @@ else if (_builder is null)
                 <div class="col-auto ms-auto mt-3">
                     <HxDropdownButtonGroup AutoClose="DropdownAutoClose.Outside" CssClass="ms-auto">
                         <HxDropdownToggleButton Color="ThemeColor.Secondary" Size="ButtonSize.Small" Enabled="_builder is not null">
-                            <SvgIcon Icon="FeatherIcon.Bell" />
+                            <SvgIcon Icon="LucideIcon.Bell" />
                             Notifications
                         </HxDropdownToggleButton>
                         <HxDropdownContent>
@@ -183,7 +183,7 @@ else if (_builder is null)
             <div class="col-auto ms-auto mt-3">
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Primary" @onclick="Execute"
                             Enabled="(_builder?.StepExecutions.Any() ?? false) && !_startingExecution" Spinner="_startingExecution">
-                    <SvgIcon Icon="FeatherIcon.Play" />
+                    <SvgIcon Icon="LucideIcon.Play" />
                     Execute
                 </HxButton>
             </div>

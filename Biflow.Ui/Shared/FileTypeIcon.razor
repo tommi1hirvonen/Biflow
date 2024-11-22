@@ -11,6 +11,6 @@
         { } xml when xml.EndsWith(".xml") => LucideIcon.FileCode,
         { } xls when xls.EndsWith(".xlsx") || xls.EndsWith(".xls") || xls.EndsWith(".xlsm") || xls.EndsWith(".csv") => LucideIcon.FileSpreadsheet,
         { } txt when txt.EndsWith(".txt") => LucideIcon.FileText,
-        _ => FeatherIcon.File
+        _ => LucideIcon.File
     };
 }

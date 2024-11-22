@@ -15,14 +15,14 @@
     </div>
     <div class="col-auto">
         <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="ReloadAsync">
-            <SvgIcon Icon="FeatherIcon.RefreshCw" />
+            <SvgIcon Icon="LucideIcon.RefreshCw" />
             Refresh
         </HxButton>
     </div>
     <div class="col-auto">
         <HxButtonGroup Size="ButtonGroupSize.Small">
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(_showChart ? null : "active")" OnClick="() => _showChart = false">
-                <SvgIcon Icon="FeatherIcon.List" />
+                <SvgIcon Icon="LucideIcon.List" />
                 List
             </HxButton>
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(_showChart ? "active" : null)" OnClick="() => _showChart = true">

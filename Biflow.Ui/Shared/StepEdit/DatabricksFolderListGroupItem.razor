@@ -15,14 +15,14 @@
                 <div class="col d-flex align-items-center small" style="padding-left: @(folderPadding)">
                     @if (folderExpanded)
                     {
-                        <SvgIcon Icon="FeatherIcon.ChevronDown" />
+                        <SvgIcon Icon="LucideIcon.ChevronDown" />
                     }
                     else
                     {
-                        <SvgIcon Icon="FeatherIcon.ChevronRight" />
+                        <SvgIcon Icon="LucideIcon.ChevronRight" />
                     }
                     &nbsp;
-                    <SvgIcon Icon="FeatherIcon.Folder" />
+                    <SvgIcon Icon="LucideIcon.Folder" />
                     &nbsp;
                     @Folder.Name
                     <span class="ms-auto badge rounded-pill @(files.Length > 0 ? "bg-primary" : "bg-secondary")">
@@ -48,7 +48,7 @@
             <div class="list-group-item list-group-item-action small @(file == SelectedFile ? "bg-body" : null)" style="cursor: pointer;" @onclick="() => OnFileSelected.InvokeAsync(file)">
                 <div class="row">
                     <div class="col d-flex align-items-center @(file == SelectedFile ? "fw-bold" : null)" style="padding-left: @(filePadding)">
-                        <SvgIcon Icon="FeatherIcon.File" />
+                        <SvgIcon Icon="LucideIcon.File" />
                         &nbsp;
                         <HighlightableText Text="@file.Name" PartToHighlight="@FilterText" />
                     </div>

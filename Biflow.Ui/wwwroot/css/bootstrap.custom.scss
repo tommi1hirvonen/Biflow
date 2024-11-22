@@ -463,35 +463,19 @@ $dep-statuses: (
     fill: $danger;
 }
 
-
-// Feather icons
-.feather {
-    width: 16px;
-    height: 16px;
-}
-
-.feather-sm .feather {
-    width: 14px;
-    height: 14px;
-}
-
-.tag-remove .feather {
-    width: 14px;
-    height: 14px;
-}
-
-.tag-remove:hover {
-    cursor: pointer;
-}
-
 // Lucide icons
 .lucide {
     width: 16px;
     height: 16px;
 }
 
+.lucide-sm .lucide {
+    width: 14px;
+    height: 14px;
+}
+
 .btn {
-    .feather, .lucide {
+    .lucide {
         margin-top: 2.5px;
         margin-bottom: 1.75px;
         margin-left: 1px;

@@ -12,7 +12,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.XOctagon" />
+                        <SvgIcon Icon="LucideIcon.OctagonX" />
                     </div>
                     <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 5rem;"></InputNumber>
                 </div>
@@ -27,7 +27,7 @@
             <div class="col-md-6 d-inline">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Layers" />
+                        <SvgIcon Icon="LucideIcon.Layers" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.DatabricksWorkspaceId" @bind-Value:after="OnWorkspaceChanged">
                         @foreach (var workspace in DatabricksWorkspaces)
@@ -67,7 +67,7 @@
                            checked=@(Step.DatabricksStepSettings is DbPipelineStepSettings)
                            @onchange="() => Step.SetIsPipeline()">
                     <label class="form-check-label fw-normal" for="radio_databricks_type_pipeline">
-                        <SvgIcon Icon="FeatherIcon.Pipeline" />
+                        <SvgIcon Icon="LucideIcon.Pipeline" />
                         Pipeline
                     </label>
                 </div>
@@ -90,7 +90,7 @@
                 </div>
                 <div class="col-md-6">
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="OpenFileSelectOffcanvas">
-                        <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
+                        <SvgIcon Icon="LucideIcon.Ellipsis" />
                         Browse files
                     </HxButton>
                 </div>

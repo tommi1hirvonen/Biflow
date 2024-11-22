@@ -42,20 +42,20 @@
                        @onchange="args => SetSimplifiedJsonAsync((bool)args.Value!)">
                 <label class="form-check-label" for="simplified_json">Simplified JSON</label>
                 <HxPopover Trigger="PopoverTrigger.Hover" WrapperCssClass="ms-2" Content="Simplified JSON is easier for humans to read and is recommended for diff comparisons. JSON with object references preserved (non-simplified) includes additional metadata properties that add complexity and reduce readability but are required when deserializing and reverting snapshots.">
-                    <SvgIcon Icon="FeatherIcon.Info" />
+                    <SvgIcon Icon="LucideIcon.Info" />
                 </HxPopover>
             </div>
         </div>
         <div class="col-auto">
             <div class="input-group input-group-sm">
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => _diffEditor.LetAsync(x => x.GotoPreviousDiffAsync())" Spinner="false" Enabled="_sourceVersionId >= 0 && _targetVersionId >= 0">
-                    <SvgIcon Icon="FeatherIcon.ChevronUp" />
+                    <SvgIcon Icon="LucideIcon.ChevronUp" />
                 </HxButton>
                 <div class="input-group-text">
                     Navigate diffs
                 </div>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => _diffEditor.LetAsync(x => x.GotoNextDiffAsync())" Spinner="false" Enabled="_sourceVersionId >= 0 && _targetVersionId >= 0">
-                    <SvgIcon Icon="FeatherIcon.ChevronDown" />
+                    <SvgIcon Icon="LucideIcon.ChevronDown" />
                 </HxButton>
             </div>
         </div>

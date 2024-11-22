@@ -16,18 +16,18 @@
 
     private (string Color, Svg Icon) Badge => ExecutionStatus switch
     {
-        StepExecutionStatus.Succeeded => ("success", FeatherIcon.CheckCircle),
-        StepExecutionStatus.Warning => ("warning", FeatherIcon.AlertTriangle),
-        StepExecutionStatus.Failed => ("danger", FeatherIcon.AlertOctagon),
-        StepExecutionStatus.Stopped => ("warning", FeatherIcon.XOctagon),
-        StepExecutionStatus.Duplicate => ("warning", FeatherIcon.AlertTriangle),
-        StepExecutionStatus.Retry => ("warning", FeatherIcon.Repeat),
-        StepExecutionStatus.AwaitingRetry => ("secondary", FeatherIcon.Clock),
-        StepExecutionStatus.Running => ("primary", FeatherIcon.Play),
-        StepExecutionStatus.Skipped => ("secondary", FeatherIcon.SkipForward),
-        StepExecutionStatus.DependenciesFailed => ("warning", FeatherIcon.AlertCircle),
-        StepExecutionStatus.Queued => ("secondary", FeatherIcon.Clock),
-        StepExecutionStatus.NotStarted => ("secondary", FeatherIcon.Info),
-        _ => ("", FeatherIcon.HelpCircle)
+        StepExecutionStatus.Succeeded => ("success", LucideIcon.CircleCheck),
+        StepExecutionStatus.Warning => ("warning", LucideIcon.TriangleAlert),
+        StepExecutionStatus.Failed => ("danger", LucideIcon.OctagonAlert),
+        StepExecutionStatus.Stopped => ("warning", LucideIcon.OctagonX),
+        StepExecutionStatus.Duplicate => ("warning", LucideIcon.TriangleAlert),
+        StepExecutionStatus.Retry => ("warning", LucideIcon.Repeat),
+        StepExecutionStatus.AwaitingRetry => ("secondary", LucideIcon.Clock),
+        StepExecutionStatus.Running => ("primary", LucideIcon.Play),
+        StepExecutionStatus.Skipped => ("secondary", LucideIcon.SkipForward),
+        StepExecutionStatus.DependenciesFailed => ("warning", LucideIcon.CircleAlert),
+        StepExecutionStatus.Queued => ("secondary", LucideIcon.Clock),
+        StepExecutionStatus.NotStarted => ("secondary", LucideIcon.Info),
+        _ => ("", LucideIcon.CircleHelp)
     };
 } 

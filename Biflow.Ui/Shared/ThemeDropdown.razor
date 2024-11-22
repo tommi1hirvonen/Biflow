@@ -15,13 +15,13 @@
         else if (ThemeService.CurrentTheme == Theme.Dark)
         {
             <span class="me-1">
-                <SvgIcon Icon="FeatherIcon.Moon" />
+                <SvgIcon Icon="LucideIcon.Moon" />
             </span>
         }
         else
         {
             <span class="me-1">
-                <SvgIcon Icon="FeatherIcon.Sun" />
+                <SvgIcon Icon="LucideIcon.Sun" />
             </span>
         }
     </HxDropdownToggleButton>
@@ -32,13 +32,13 @@
         <li class="dropdown-item @(!ThemeService.IsAuto && ThemeService.CurrentTheme == Theme.Light ? "active" : null)"
             role="button"
         @onclick="() => _themeManager!.ToggleThemeAsync(Theme.Light)">
-            <SvgIcon Icon="FeatherIcon.Sun" />
+            <SvgIcon Icon="LucideIcon.Sun" />
             Light
         </li>
         <li class="dropdown-item @(!ThemeService.IsAuto && ThemeService.CurrentTheme == Theme.Dark ? "active" : null)"
             role="button"
         @onclick="() => _themeManager!.ToggleThemeAsync(Theme.Dark)">
-            <SvgIcon Icon="FeatherIcon.Moon" />
+            <SvgIcon Icon="LucideIcon.Moon" />
             Dark
         </li>
         <li class="dropdown-item @(ThemeService.IsAuto ? "active" : null)"

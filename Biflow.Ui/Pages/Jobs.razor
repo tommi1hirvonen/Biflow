@@ -16,7 +16,7 @@
                     </HxButton>
                 </AuthorizeView>
                 <HxButton Color="ThemeColor.Primary" @onclick="LoadLastExecutionsAsync" Enabled="!_isLoading" Spinner="_isLoading" CssClass="mt-3">
-                    <SvgIcon Icon="FeatherIcon.RefreshCw" />
+                    <SvgIcon Icon="LucideIcon.RefreshCw" />
                     Refresh
                 </HxButton>
             </div>
@@ -24,7 +24,7 @@
     <div class="col-auto text-end d-flex align-items-end">
         <HxPopover Placement="PopoverPlacement.Left" Trigger="PopoverTrigger.Hover" Content="Validate all steps for potential cyclic dependencies, also accounting for cross-job dependencies between steps.">
             <HxButton Color="ThemeColor.None" CssClass="btn-auto me-3" Size="ButtonSize.Small" OnClick="ValidateAllStepDependenciesAsync">
-                <SvgIcon Icon="FeatherIcon.Check" />
+                <SvgIcon Icon="LucideIcon.Check" />
                 Validate dependencies
             </HxButton>
         </HxPopover>
@@ -33,7 +33,7 @@
                    Content="@("<p>Jobs are collections of steps that can be orchestrated to run in a specific order.</p><p>Jobs can have multiple schedules that trigger the job and its steps to be executed. Authorized users can edit these schedules or execute jobs manually.</p>")"
                    Html>
             <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto mt-3">
-                <SvgIcon Icon="FeatherIcon.HelpCircle" />
+                <SvgIcon Icon="LucideIcon.CircleHelp" />
             </HxButton>
         </HxPopover>
     </div>
@@ -43,7 +43,7 @@
     <div class="col-xxl-5 col-xl-6 col-md-7 col-sm-8">
         <div class="input-group input-group-sm me-3">
             <div class="input-group-text">
-                <SvgIcon Icon="FeatherIcon.Filter" />
+                <SvgIcon Icon="LucideIcon.Filter" />
             </div>
             <DebounceTextInput type="search" class="form-control" @bind-Value="UserState.Jobs.JobNameFilter" placeholder="Filter by job name" />
             <DebounceTextInput type="search" class="form-control" @bind-Value="UserState.Jobs.StepNameFilter" placeholder="Filter by step name" />
@@ -57,7 +57,7 @@
                             Items="_lastExecutions?.Values.Select(e => e.ExecutionStatus).Concat(UserState.Jobs.StatusFilter).Distinct().OrderBy(s => s).AsEnumerable() ?? []"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
-                    <SvgIcon Icon="FeatherIcon.Info" />
+                    <SvgIcon Icon="LucideIcon.Info" />
                     Status
                 </TitleTemplate>
                 <ItemTemplate Context="item">
@@ -79,7 +79,7 @@
                             IdSelector="t => t.TagId.ToString()"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
-                    <SvgIcon Icon="FeatherIcon.Tag" />
+                    <SvgIcon Icon="LucideIcon.Tag" />
                     Tag
                 </TitleTemplate>
                 <ItemTemplate Context="item">
@@ -94,7 +94,7 @@
                     UserState.Jobs.StepNameFilter = string.Empty;
                     UserState.Jobs.StateFilter = StateFilter.All;
                 }">
-                <SvgIcon Icon="FeatherIcon.X" />
+                <SvgIcon Icon="LucideIcon.X" />
                 Clear
             </HxButton>
         </HxButtonGroup>
@@ -151,13 +151,13 @@
                                   Color="ThemeColor.None"
                                   CssClass="btn-auto"
                                   OnClick="() => ExecuteMultipleModal.LetAsync(x => x.ShowAsync(_selectedJobs))">
-                            <SvgIcon Icon="FeatherIcon.Play" />
+                            <SvgIcon Icon="LucideIcon.Play" />
                             Execute...
                         </HxButton>
                         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")" Context="auth2">
                             <HxDropdownButtonGroup>
                                 <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                    <SvgIcon Icon="FeatherIcon.ToggleRight" />
+                                    <SvgIcon Icon="LucideIcon.ToggleRight" />
                                     Enable
                                 </HxDropdownToggleButton>
                                 <HxDropdownMenu>
@@ -168,7 +168,7 @@
                             </HxDropdownButtonGroup>
                             <HxDropdownButtonGroup>
                                 <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                    <SvgIcon Icon="FeatherIcon.ToggleLeft" />
+                                    <SvgIcon Icon="LucideIcon.ToggleLeft" />
                                     Disable
                                 </HxDropdownToggleButton>
                                 <HxDropdownMenu>
@@ -178,11 +178,11 @@
                                 </HxDropdownMenu>
                             </HxDropdownButtonGroup>
                             <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" Spinner="false" @onclick="() => _jobsBatchEditTagsModal.LetAsync(x => x.ShowAsync())">
-                                <SvgIcon Icon="FeatherIcon.Tag" />
+                                <SvgIcon Icon="LucideIcon.Tag" />
                                 Edit tags
                             </HxButton>
                             <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="DeleteSelectedJobsAsync">
-                                <SvgIcon Icon="FeatherIcon.Trash2" />
+                                <SvgIcon Icon="LucideIcon.Trash2" />
                                 Delete...
                             </HxButton>
                         </AuthorizeView>
@@ -217,10 +217,10 @@
                             @switch (UserState.Jobs.SortMode)
                             {
                                 case JobSortMode.NameAsc:
-                                    <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                                    <SvgIcon Icon="LucideIcon.MoveUp" />
                                     break;
                                 case JobSortMode.NameDesc:
-                                    <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                                    <SvgIcon Icon="LucideIcon.MoveDown" />
                                     break;
                             }
                         </span>
@@ -233,10 +233,10 @@
                             @switch (UserState.Jobs.SortMode)
                             {
                                 case JobSortMode.LastExecAsc:
-                                    <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                                    <SvgIcon Icon="LucideIcon.MoveUp" />
                                     break;
                                 case JobSortMode.LastExecDesc:
-                                    <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                                    <SvgIcon Icon="LucideIcon.MoveDown" />
                                     break;
                             }
                         </span>
@@ -252,10 +252,10 @@
                             @switch (UserState.Jobs.SortMode)
                             {
                                 case JobSortMode.NextExecAsc:
-                                    <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                                    <SvgIcon Icon="LucideIcon.MoveUp" />
                                     break;
                                 case JobSortMode.NextExecDesc:
-                                    <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                                    <SvgIcon Icon="LucideIcon.MoveDown" />
                                     break;
                             }
                         </span>
@@ -351,7 +351,7 @@
                                                 <label class="form-check-label" for="enabled_@item.JobId"></label>
                                             </div>
                                             <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" Spinner="false" CssClass="btn-auto" @onclick="e => menu.ShowContextMenuAsync(e)">
-                                                <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
+                                                <SvgIcon Icon="LucideIcon.Ellipsis" />
                                             </HxButton>
                                         </AuthorizeView>
                                         <AuthorizeView Roles="@($"{Roles.Operator}, {Roles.Viewer}")">
@@ -389,31 +389,31 @@
                                         }
                                     </DropdownMenuItem>
                                     <DropdownMenuItem @onclick="() => _jobEditModal.LetAsync(x => x.ShowAsync(item))">
-                                        <SvgIcon Icon="FeatherIcon.Edit2" />
+                                        <SvgIcon Icon="LucideIcon.Pen" />
                                         Edit
                                     </DropdownMenuItem>
                                     <DropdownMenuItem @onclick="() => CopyJob(item)">
-                                        <SvgIcon Icon="FeatherIcon.Copy" />
+                                        <SvgIcon Icon="LucideIcon.Copy" />
                                         Copy
                                     </DropdownMenuItem>
                                 </AuthorizeView>
                                 <DropdownMenuItem @onclick="@(() => _jobHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.JobId)))">
-                                    <SvgIcon Icon="FeatherIcon.Activity" />
+                                    <SvgIcon Icon="LucideIcon.Activity" />
                                     History
                                 </DropdownMenuItem>
                                 <DropdownMenuLink href="@($"jobs/{item.JobId}/schedules")">
-                                    <SvgIcon Icon="FeatherIcon.Calendar" />
+                                    <SvgIcon Icon="LucideIcon.Calendar" />
                                     Schedules
                                 </DropdownMenuLink>
                                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                                     <DropdownMenuItem @onclick="() => _executeModal.LetAsync(x => x.ShowAsync(item.JobId))">
-                                        <SvgIcon Icon="FeatherIcon.Play" />
+                                        <SvgIcon Icon="LucideIcon.Play" />
                                         Execute...
                                     </DropdownMenuItem>
                                 </AuthorizeView>
                                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                                     <DropdownMenuItem @onclick="() => DeleteJob(item)">
-                                        <SvgIcon Icon="FeatherIcon.Trash2" />
+                                        <SvgIcon Icon="LucideIcon.Trash2" />
                                         Delete...
                                     </DropdownMenuItem>
                                 </AuthorizeView>

@@ -23,7 +23,7 @@
                       CssClass="btn-auto"
                       Size="ButtonSize.Small"
                       @onclick="() => _descriptionOpen = !_descriptionOpen">
-                <SvgIcon Icon="FeatherIcon.Info" />
+                <SvgIcon Icon="LucideIcon.Info" />
                 &nbsp;
                 @if (_descriptionOpen)
                 {
@@ -43,7 +43,7 @@
                 @*Dropdown to delete the current job*@
                 <HxDropdownButtonGroup CssClass="ms-3">
                     <HxDropdownToggleButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto text-danger">
-                        <SvgIcon Icon="FeatherIcon.Trash2" />
+                        <SvgIcon Icon="LucideIcon.Trash2" />
                         Delete
                     </HxDropdownToggleButton>
                     <HxDropdownMenu CssClass="dropdown-menu-xl-right">
@@ -105,7 +105,7 @@
             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                 <li class="nav-item" role="presentation">
                     <NavLink class="nav-link" href="@($"jobs/{_job?.JobId}/parameters")">
-                        <SvgIcon Icon="FeatherIcon.AtSign" />
+                        <SvgIcon Icon="LucideIcon.AtSign" />
                         Parameters
                     </NavLink>
                 </li>
@@ -124,13 +124,13 @@
             </li>
             <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" href="@($"jobs/{_job?.JobId}/schedules")">
-                    <SvgIcon Icon="FeatherIcon.Calendar" />
+                    <SvgIcon Icon="LucideIcon.Calendar" />
                     Schedules
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" href="@($"jobs/{_job?.JobId}/history")">
-                    <SvgIcon Icon="FeatherIcon.Activity" />
+                    <SvgIcon Icon="LucideIcon.Activity" />
                     History
                 </NavLink>
             </li>

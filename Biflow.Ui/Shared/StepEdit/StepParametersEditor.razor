@@ -15,7 +15,7 @@
                        Content="@InfoContent">
                 <ChildContent>
                     <span style="cursor: pointer;">
-                        <SvgIcon Icon="FeatherIcon.Info" />
+                        <SvgIcon Icon="LucideIcon.Info" />
                     </span>
                 </ChildContent>
             </HxPopover>
@@ -88,7 +88,7 @@
                                       CssClass="btn-auto"
                                       Size="ButtonSize.Small"
                                       @onclick="async () => { Step.StepParameters.Remove(param); await ParametersValidator.LetAsync(x => x.ValidateAsync()); }">
-                                <SvgIcon Icon="FeatherIcon.Delete" />
+                                <SvgIcon Icon="LucideIcon.Delete" />
                             </HxButton>
                         </HxButtonGroup>
                     </td>
@@ -99,13 +99,13 @@
     </table>
     <HxButtonGroup Size="ButtonGroupSize.Small">
         <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="AddParameter">
-            <SvgIcon Icon="FeatherIcon.Plus" />
+            <SvgIcon Icon="LucideIcon.Plus" />
             Add parameter
         </HxButton>
         @if (OnImportParameters is not null)
         {
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="ImportParametersAsync" Spinner="_loadingParameters" Enabled="!_loadingParameters">
-                <SvgIcon Icon="FeatherIcon.AtSign" />
+                <SvgIcon Icon="LucideIcon.AtSign" />
                 Import parameters
             </HxButton>
         }

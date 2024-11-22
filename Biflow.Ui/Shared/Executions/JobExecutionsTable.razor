@@ -26,7 +26,7 @@
                           CssClass="btn-auto text-danger"
                           Enabled="enabled"
                           OnClick="StopSelectedExecutionsAsync">
-                    <SvgIcon Icon="FeatherIcon.XOctagon" />
+                    <SvgIcon Icon="LucideIcon.OctagonX" />
                     Stop...
                 </HxButton>
                 <HxDropdownButtonGroup>
@@ -43,7 +43,7 @@
                     </HxDropdownMenu>
                 </HxDropdownButtonGroup>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="_selectedExecutions.Clear">
-                    <SvgIcon Icon="FeatherIcon.X" />
+                    <SvgIcon Icon="LucideIcon.X" />
                     Cancel
                 </HxButton>
             </HxButtonGroup>
@@ -71,11 +71,11 @@
                 <span class="ms-2">
                     @if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.JobAsc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                        <SvgIcon Icon="LucideIcon.MoveUp" />
                     }
                     else if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.JobDesc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                        <SvgIcon Icon="LucideIcon.MoveDown" />
                     }
                 </span>
             </th>
@@ -89,11 +89,11 @@
                 <span class="ms-2">
                     @if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.StartedAsc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                        <SvgIcon Icon="LucideIcon.MoveUp" />
                     }
                     else if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.StartedDesc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                        <SvgIcon Icon="LucideIcon.MoveDown" />
                     }
                 </span>
             </th>
@@ -104,11 +104,11 @@
                 <span class="ms-2">
                     @if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.EndedAsc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                        <SvgIcon Icon="LucideIcon.MoveUp" />
                     }
                     else if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.EndedDesc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                        <SvgIcon Icon="LucideIcon.MoveDown" />
                     }
                 </span>
             </th>
@@ -119,11 +119,11 @@
                 <span class="ms-2">
                     @if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.DurationAsc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                        <SvgIcon Icon="LucideIcon.MoveUp" />
                     }
                     else if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.DurationDesc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                        <SvgIcon Icon="LucideIcon.MoveDown" />
                     }
                 </span>
             </th>
@@ -195,14 +195,14 @@
                             @item.JobName
                         </DropdownMenuHeader>
                         <DropdownMenuItem @onclick="async () => await _jobHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.JobId))">
-                            <SvgIcon Icon="FeatherIcon.Activity" />
+                            <SvgIcon Icon="LucideIcon.Activity" />
                             History
                         </DropdownMenuItem>
                         @if (item.ExecutionStatus == ExecutionStatus.Running)
                         {
                             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                                 <DropdownMenuItem @onclick="() => StopExecutionAsync(item)">
-                                    <SvgIcon Icon="FeatherIcon.XOctagon" />
+                                    <SvgIcon Icon="LucideIcon.OctagonX" />
                                     Stop...
                                 </DropdownMenuItem>
                             </AuthorizeView>

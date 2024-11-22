@@ -10,7 +10,7 @@
             <div class="col-md-6 d-inline">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Globe" />
+                        <SvgIcon Icon="LucideIcon.Globe" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.AppRegistrationId">
                         @foreach (var app in AppRegistrations)
@@ -19,7 +19,7 @@
                         }
                     </InputSelect>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenDatasetSelectOffcanvas">
-                        <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
+                        <SvgIcon Icon="LucideIcon.Ellipsis" />
                         Browse datasets
                     </HxButton>
                 </div>
@@ -33,7 +33,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Folder" />
+                        <SvgIcon Icon="LucideIcon.Folder" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.DatasetGroupId"
                                @bind-Value:after="() => _datasetGroupName = string.Empty"></InputText>

@@ -35,7 +35,7 @@
             <HxAlert Color="ThemeService.CurrentTheme == Theme.Light ? ThemeColor.Light : ThemeColor.Dark" CssClass="small py-2 mb-0">
                 <div class="row g-3">
                     <div class="col-auto">
-                        <SvgIcon Icon="FeatherIcon.Info" />
+                        <SvgIcon Icon="LucideIcon.Info" />
                     </div>
                     <div class="col">
                         Environment versions are point-in-time snapshots of the environment configuration stored as a single JSON object. <a class="alert-link" href="versions/help">Read more</a>
@@ -104,7 +104,7 @@
                                             </td>
                                             <td>
                                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" Spinner="false" CssClass="btn-auto" @onclick="e => menu.ShowContextMenuAsync(e)">
-                                                    <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
+                                                    <SvgIcon Icon="LucideIcon.Ellipsis" />
                                                 </HxButton>
                                             </td>
                                         </ChildContent>
@@ -115,7 +115,7 @@
                                                 Show JSON
                                             </DropdownMenuItem>
                                             <DropdownMenuItem @onclick="() => DownloadAsync(version.VersionId)">
-                                                <SvgIcon Icon="FeatherIcon.Download" />
+                                                <SvgIcon Icon="LucideIcon.Download" />
                                                 Download JSON
                                             </DropdownMenuItem>
                                             <DropdownMenuLink href="@($"versions/compare/{version.VersionId}")">
@@ -151,7 +151,7 @@
                            @onchange="args => _simplifiedJson = (bool)args.Value!">
                     <label class="form-check-label" for="simplified_json">Simplified JSON</label>
                     <HxPopover Trigger="PopoverTrigger.Hover" WrapperCssClass="ms-2" Content="Simplified JSON is easier for humans to read and is recommended for diff comparisons. JSON with object references preserved (non-simplified) includes additional metadata properties that add complexity and reduce readability but are required when deserializing and reverting snapshots.">
-                        <SvgIcon Icon="FeatherIcon.Info" />
+                        <SvgIcon Icon="LucideIcon.Info" />
                     </HxPopover>
                 </div>
             </div>

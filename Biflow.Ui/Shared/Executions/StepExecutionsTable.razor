@@ -20,7 +20,7 @@
                           CssClass="btn-auto text-danger"
                           Enabled="enabled"
                           OnClick="StopSelectedStepsAsync">
-                    <SvgIcon Icon="FeatherIcon.XOctagon" />
+                    <SvgIcon Icon="LucideIcon.OctagonX" />
                     Stop...
                 </HxButton>
                 <HxDropdownButtonGroup>
@@ -37,7 +37,7 @@
                     </HxDropdownMenu>
                 </HxDropdownButtonGroup>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="_selectedSteps.Clear">
-                    <SvgIcon Icon="FeatherIcon.X" />
+                    <SvgIcon Icon="LucideIcon.X" />
                     Cancel
                 </HxButton>
             </HxButtonGroup>
@@ -67,11 +67,11 @@
                     <span class="ms-2">
                         @if (SortMode == StepExecutionSortMode.JobAsc)
                         {
-                            <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                            <SvgIcon Icon="LucideIcon.MoveUp" />
                         }
                         else if (SortMode == StepExecutionSortMode.JobDesc)
                         {
-                            <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                            <SvgIcon Icon="LucideIcon.MoveDown" />
                         }
                     </span>
                 </th>
@@ -96,11 +96,11 @@
                 <span class="ms-2">
                     @if (SortMode == StepExecutionSortMode.StepAsc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                        <SvgIcon Icon="LucideIcon.MoveUp" />
                     }
                     else if (SortMode == StepExecutionSortMode.StepDesc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                        <SvgIcon Icon="LucideIcon.MoveDown" />
                     }
                 </span>
             </th>
@@ -114,11 +114,11 @@
                 <span class="ms-2">
                     @if (SortMode == StepExecutionSortMode.StartedAsc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                        <SvgIcon Icon="LucideIcon.MoveUp" />
                     }
                     else if (SortMode == StepExecutionSortMode.StartedDesc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                        <SvgIcon Icon="LucideIcon.MoveDown" />
                     }
                 </span>
             </th>
@@ -129,11 +129,11 @@
                 <span class="ms-2">
                     @if (SortMode == StepExecutionSortMode.EndedAsc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                        <SvgIcon Icon="LucideIcon.MoveUp" />
                     }
                     else if (SortMode == StepExecutionSortMode.EndedDesc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                        <SvgIcon Icon="LucideIcon.MoveDown" />
                     }
                 </span>
             </th>
@@ -144,11 +144,11 @@
                 <span class="ms-2">
                     @if (SortMode == StepExecutionSortMode.DurationAsc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                        <SvgIcon Icon="LucideIcon.MoveUp" />
                     }
                     else if (SortMode == StepExecutionSortMode.DurationDesc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                        <SvgIcon Icon="LucideIcon.MoveDown" />
                     }
                 </span>
             </th>
@@ -237,7 +237,7 @@
                             Monitors
                         </DropdownMenuItem>
                         <DropdownMenuItem @onclick="async () => await _stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
-                            <SvgIcon Icon="FeatherIcon.Activity" />
+                            <SvgIcon Icon="LucideIcon.Activity" />
                             History
                         </DropdownMenuItem>
                         <DropdownMenuItem @onclick="@(() => _navigationManager.NavigateTo($"executions/{item.ExecutionId}/graph/{item.StepId}"))">
@@ -248,7 +248,7 @@
                             @if (item.CanBeStopped)
                             {
                                 <DropdownMenuItem @onclick="async () => await StopStepExecutionAsync(item.ExecutionId, item.StepId, item.StepName)">
-                                    <SvgIcon Icon="FeatherIcon.XOctagon" />
+                                    <SvgIcon Icon="LucideIcon.OctagonX" />
                                     Stop...
                                 </DropdownMenuItem>
                             }
@@ -271,7 +271,7 @@
                             <td colspan="7" class="px-3">
                                 <HxButtonGroup CssClass="mb-3 mt-1 ms-2">
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1" @onclick="() => ToggleSelectedStepExecutionAsync(_selectedStepExecution)">
-                                        <SvgIcon Icon="FeatherIcon.X" />
+                                        <SvgIcon Icon="LucideIcon.X" />
                                         Close
                                     </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1" @onclick="async () => await StepExecutionMonitorsOffcanvas.LetAsync(x => x.ShowAsync(item))">
@@ -279,7 +279,7 @@
                                         Monitors
                                     </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1" @onclick="async () => await _stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
-                                        <SvgIcon Icon="FeatherIcon.Activity" />
+                                        <SvgIcon Icon="LucideIcon.Activity" />
                                         History
                                     </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1" @onclick="@(() => _navigationManager.NavigateTo($"executions/{item.ExecutionId}/graph/{item.StepId}"))">
@@ -291,7 +291,7 @@
                                         {
                                             <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1 text-danger"
                                                       @onclick="async () => await StopStepExecutionAsync(item.ExecutionId, item.StepId, item.StepName)">
-                                                <SvgIcon Icon="FeatherIcon.XOctagon" />
+                                                <SvgIcon Icon="LucideIcon.OctagonX" />
                                                 Stop...
                                             </HxButton>
                                         }

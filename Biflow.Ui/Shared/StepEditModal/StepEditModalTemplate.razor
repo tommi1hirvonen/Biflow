@@ -30,21 +30,21 @@
                                     <li class="nav-item">
                                         <span class="nav-link @(Modal.CurrentView == StepEditModalView.Settings ? "active" : null)"
                                               @onclick="() => Modal.CurrentView = StepEditModalView.Settings">
-                                            <SvgIcon Icon="FeatherIcon.Settings" />
+                                            <SvgIcon Icon="LucideIcon.Settings" />
                                             Settings
                                         </span>
                                     </li>
                                     <li class="nav-item">
                                         <span class="nav-link @(Modal.CurrentView == StepEditModalView.Targets ? "active" : null)"
                                               @onclick="() => Modal.CurrentView = StepEditModalView.Targets">
-                                            <SvgIcon Icon="FeatherIcon.Download" />
+                                            <SvgIcon Icon="LucideIcon.Download" />
                                             Targets
                                         </span>
                                     </li>
                                     <li class="nav-item">
                                         <span class="nav-link @(Modal.CurrentView == StepEditModalView.Sources ? "active" : null)"
                                               @onclick="() => Modal.CurrentView = StepEditModalView.Sources">
-                                            <SvgIcon Icon="FeatherIcon.Share" />
+                                            <SvgIcon Icon="LucideIcon.Share" />
                                             Sources
                                         </span>
                                     </li>
@@ -58,14 +58,14 @@
                                     <li class="nav-item">
                                         <span class="nav-link @(Modal.CurrentView == StepEditModalView.Condition ? "active" : null)"
                                           @onclick="() => Modal.CurrentView = StepEditModalView.Condition">
-                                            <SvgIcon Icon="FeatherIcon.CheckSquare" />
+                                            <SvgIcon Icon="LucideIcon.SquareCheck" />
                                             Condition
                                             @if (!string.IsNullOrWhiteSpace(Modal.Step.ExecutionConditionExpression.Expression))
                                             {
                                                 <HxTooltip Trigger="TooltipTrigger.Hover" Text="Execution condition enabled">
                                                     <span style="color: var(--bs-warning);">
                                                         &nbsp;
-                                                        <SvgIcon Icon="FeatherIcon.Info" />
+                                                        <SvgIcon Icon="LucideIcon.Info" />
                                                     </span>
                                                 </HxTooltip>
                                             }
@@ -112,7 +112,7 @@
                                     <div class="col-md-6">
                                         <div class="input-group input-group-sm">
                                             <div class="input-group-text">
-                                                <SvgIcon Icon="FeatherIcon.Edit3" />
+                                                <SvgIcon Icon="LucideIcon.PenLine" />
                                             </div>
                                             <InputText class="form-control form-control-sm" @bind-Value="Modal.Step.StepName"></InputText>
                                         </div>
@@ -137,7 +137,7 @@
                                     <div class="col-md-6">
                                         <div class="input-group input-group-sm">
                                             <div class="input-group-text">
-                                                <SvgIcon Icon="FeatherIcon.BookOpen" />
+                                                <SvgIcon Icon="LucideIcon.BookOpen" />
                                             </div>
                                             <InputTextArea class="form-control form-control-sm" @bind-Value="Modal.Step.StepDescription" rows="3"></InputTextArea>
                                         </div>
@@ -161,7 +161,7 @@
                                         <label class="form-label mb-lg-0">
                                             Duplicate execution behaviour
                                             <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@DuplicateBehaviourPopoverContent">
-                                                <SvgIcon Icon="FeatherIcon.Info" />
+                                                <SvgIcon Icon="LucideIcon.Info" />
                                             </HxPopover>
                                         </label>
                                     </div>
@@ -181,13 +181,13 @@
                                     <div class="col-md-6">
                                         <div class="input-group input-group-sm">
                                             <div class="input-group-text">
-                                                <SvgIcon Icon="FeatherIcon.Repeat" />
+                                                <SvgIcon Icon="LucideIcon.Repeat" />
                                                 &nbsp;
                                                 Attempts
                                             </div>
                                             <InputNumber class="form-control form-control-sm" @bind-Value="Modal.Step.RetryAttempts" style="max-width: 5rem;"></InputNumber>
                                             <div class="input-group-text">
-                                                <SvgIcon Icon="FeatherIcon.Clock" />
+                                                <SvgIcon Icon="LucideIcon.Clock" />
                                                 &nbsp;
                                                 Interval (min)
                                             </div>
@@ -267,12 +267,12 @@
         <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="me-auto">
             <HxButton CssClass="btn-auto" Size="ButtonSize.Small" title="Explore database module definitions (e.g. stored procedures)"
                       @onclick="async () => await _sqlDefinitionOffcanvas.LetAsync(x => x.ShowAsync(Connection?.ConnectionId, SqlStatement))">
-                <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
+                <SvgIcon Icon="LucideIcon.Ellipsis" />
                 SQL definition explorer
             </HxButton>
             <HxButton CssClass="btn-auto" Size="ButtonSize.Small" title="Explore references between database objects"
                       @onclick="async () => await _sqlReferenceOffcanvas.LetAsync(x => x.ShowAsync(Connection?.ConnectionId, SqlStatement))">
-                <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
+                <SvgIcon Icon="LucideIcon.Ellipsis" />
                 SQL reference explorer
             </HxButton>
         </HxButtonGroup>
@@ -283,7 +283,7 @@
             <div class="me-auto ms-3">
                 <HxPopover Content="@errors" Html Trigger="PopoverTrigger.Hover" Placement="PopoverPlacement.Top">
                     <span class="border border-danger text-danger small rounded py-1 px-2">
-                        <SvgIcon Icon="FeatherIcon.AlertOctagon" />
+                        <SvgIcon Icon="LucideIcon.OctagonAlert" />
                         Validation errors
                     </span>
                 </HxPopover>

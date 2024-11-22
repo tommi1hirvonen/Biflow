@@ -28,7 +28,7 @@
                           Enabled="_filterSet is not null"
                           CssClass="@(_filterSet?.Filters.Values.Any(v => v.Enabled1) ?? false ? "fw-bold btn-auto" : "btn-auto")"
                           OnClick="async () => await _filterSetOffcanvas.LetAsync(x => x.ShowAsync())">
-                    <SvgIcon Icon="FeatherIcon.Filter" />
+                    <SvgIcon Icon="LucideIcon.Filter" />
                     Query filters
                 </HxButton>
 
@@ -36,7 +36,7 @@
                                 Items="_tableData?.Columns.Select(c => c.Name) ?? []"
                                 OnChange="StateHasChanged">
                     <TitleTemplate>
-                        <SvgIcon Icon="FeatherIcon.Columns" />
+                        <SvgIcon Icon="LucideIcon.Columns3" />
                         Columns
                     </TitleTemplate>
                 </FilterDropdown>
@@ -64,7 +64,7 @@
 
                 <HxDropdownButtonGroup>
                     <HxDropdownToggleButton Spinner="_exporting" Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" Enabled="!_exporting">
-                        <SvgIcon Icon="FeatherIcon.Download" />
+                        <SvgIcon Icon="LucideIcon.Download" />
                         Export
                     </HxDropdownToggleButton>
                     <HxDropdownMenu>
@@ -85,14 +85,14 @@
                     var importDisabled = isNotEditable || !Table.AllowImport;
                 }
                 <a class="btn btn-sm btn-auto @(importDisabled ? "disabled" : null)" href="/datatables/import/@Table.DataTableId">
-                    <SvgIcon Icon="FeatherIcon.Upload" />
+                    <SvgIcon Icon="LucideIcon.Upload" />
                     Import
                 </a>
 
                 <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small"
                           Enabled="!string.IsNullOrEmpty(Table.DataTableDescription)"
                           OnClick="async () => await _tableInfoOffcanvas.LetAsync(x => x.ShowAsync())">
-                    <SvgIcon Icon="FeatherIcon.Info" />
+                    <SvgIcon Icon="LucideIcon.Info" />
                     Table info
                 </HxButton>
 
@@ -106,7 +106,7 @@
         <HxButtonToolbar>
             <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small"
                       OnClick="async () => await ReloadDataAsync()">
-                <SvgIcon Icon="FeatherIcon.RefreshCw" />
+                <SvgIcon Icon="LucideIcon.RefreshCw" />
                 Reload
             </HxButton>
 
@@ -114,7 +114,7 @@
                       CssClass="ms-3"
                       Enabled="_tableData is not null && _tableData.IsEditable && (Table.AllowInsert || Table.AllowUpdate || Table.AllowDelete)"
                       OnClick="SaveChangesAsync">
-                <SvgIcon Icon="FeatherIcon.Save" />
+                <SvgIcon Icon="LucideIcon.Save" />
                 Save changes
             </HxButton>
 
@@ -123,7 +123,7 @@
                 <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small"
                       Enabled="_tableData is not null && _tableData.IsEditable"
                       OnClick="() => _tableData?.AddRow()">
-                    <SvgIcon Icon="FeatherIcon.Plus" />
+                    <SvgIcon Icon="LucideIcon.Plus" />
                     Add record
                 </HxButton>
             }
@@ -166,7 +166,7 @@
                         {
                             <span class="text-warning ms-2" style="cursor: pointer;">
                                 <HxPopover Trigger="PopoverTrigger.Hover" Content="Table contains more records with applied filters than is currently shown. Increase row limit to show more records.">
-                                    <SvgIcon Icon="FeatherIcon.AlertCircle" />
+                                    <SvgIcon Icon="LucideIcon.CircleAlert" />
                                 </HxPopover>
                             </span>
                         }
@@ -207,7 +207,7 @@
                                                 @if (column.IsPrimaryKey)
                                                 {
                                                     <span class="ms-2" title="Primary key column">
-                                                        <SvgIcon Icon="FeatherIcon.Key" />
+                                                        <SvgIcon Icon="LucideIcon.Key" />
                                                     </span>
                                                 }
                                                 @if (column.IsComputed)
@@ -221,11 +221,11 @@
                                                     <span class="ms-2">
                                                         @if (orderBy.Descending)
                                                         {
-                                                            <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                                                            <SvgIcon Icon="LucideIcon.MoveUp" />
                                                         }
                                                         else
                                                         {
-                                                            <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                                                            <SvgIcon Icon="LucideIcon.MoveDown" />
                                                         }
                                                     </span>
                                                 }
@@ -245,7 +245,7 @@
                                                                     IsSearchable
                                                                     CssClass="position-static">
                                                         <TitleTemplate>
-                                                            <SvgIcon Icon="FeatherIcon.Filter" />
+                                                            <SvgIcon Icon="LucideIcon.Filter" />
                                                         </TitleTemplate>
                                                     </FilterDropdown>
                                                 </div>
@@ -394,13 +394,13 @@
                                                 @if (Table.AllowInsert)
                                                 {
                                                     <button class="btn btn-sm btn-auto" @onclick="() => _tableData.AddRow(row)" title="Copy record">
-                                                        <SvgIcon Icon="FeatherIcon.Copy" />
+                                                        <SvgIcon Icon="LucideIcon.Copy" />
                                                     </button>
                                                 }
                                                 @if (Table.AllowDelete)
                                                 {
                                                     <button class="btn btn-sm btn-auto btn-delete-record" @onclick="row.Delete" title="Delete record">
-                                                        <SvgIcon Icon="FeatherIcon.Delete" />
+                                                        <SvgIcon Icon="LucideIcon.Delete" />
                                                     </button>
                                                 }
                                             </div>

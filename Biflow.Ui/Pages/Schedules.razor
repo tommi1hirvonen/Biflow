@@ -27,7 +27,7 @@
         <ul class="nav nav-underline" role="tablist">
             <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" Match="NavLinkMatch.All" href="@($"schedules")">
-                    <SvgIcon Icon="FeatherIcon.List" />
+                    <SvgIcon Icon="LucideIcon.List" />
                     List
                 </NavLink>
             </li>
@@ -69,7 +69,7 @@
 
 <div class="row">
     <div class="col-auto d-flex align-items-center">
-        <SvgIcon Icon="FeatherIcon.Filter" />
+        <SvgIcon Icon="LucideIcon.Filter" />
         &nbsp;
         Filters
     </div>
@@ -95,7 +95,7 @@
                             TextSelector="t => t.TagName"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
-                    <SvgIcon Icon="FeatherIcon.Tag" />
+                    <SvgIcon Icon="LucideIcon.Tag" />
                     Job tag
                 </TitleTemplate>
                 <ItemTemplate Context="item">
@@ -109,7 +109,7 @@
                             TextSelector="t => t.TagName"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
-                    <SvgIcon Icon="FeatherIcon.Tag" />
+                    <SvgIcon Icon="LucideIcon.Tag" />
                     Schedule tag
                 </TitleTemplate>
                 <ItemTemplate Context="item">
@@ -120,7 +120,7 @@
                       Color="ThemeColor.None" 
                       CssClass="btn-auto" 
                       OnClick="State.Clear">
-                <SvgIcon Icon="FeatherIcon.X" />
+                <SvgIcon Icon="LucideIcon.X" />
                 Clear
             </HxButton>
         </HxButtonGroup>
@@ -128,7 +128,7 @@
     <div class="col">
         <div class="input-group input-group-sm">
             <div class="input-group-text">
-                <SvgIcon Icon="FeatherIcon.Search" />
+                <SvgIcon Icon="LucideIcon.Search" />
             </div>
             <input type="search"
                    class="form-control form-control-sm"

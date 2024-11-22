@@ -103,18 +103,18 @@
                                         @execution.JobName
                                     </DropdownMenuHeader>
                                     <DropdownMenuLink href="@($"executions/{execution.ExecutionId}/list")">
-                                        <SvgIcon Icon="FeatherIcon.ArrowRight" />
+                                        <SvgIcon Icon="LucideIcon.MoveRight" />
                                         Go to details
                                     </DropdownMenuLink>
                                     <DropdownMenuItem @onclick="async () => await _jobHistoryOffcanvas.LetAsync(x => x.ShowAsync(execution.JobId))">
-                                        <SvgIcon Icon="FeatherIcon.Activity" />
+                                        <SvgIcon Icon="LucideIcon.Activity" />
                                         History
                                     </DropdownMenuItem>
                                     @if (execution.ExecutionStatus == ExecutionStatus.Running)
                                     {
                                         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                                             <DropdownMenuItem @onclick="() => StopExecutionAsync(execution)">
-                                                <SvgIcon Icon="FeatherIcon.XOctagon" />
+                                                <SvgIcon Icon="LucideIcon.OctagonX" />
                                                 Stop...
                                             </DropdownMenuItem>
                                         </AuthorizeView>

@@ -16,11 +16,11 @@ else
         <div class="col">
             <HxButtonToolbar>
                 <HxSubmit form="job_parameter_form" Color="ThemeColor.Success">
-                    <SvgIcon Icon="FeatherIcon.Save" />
+                    <SvgIcon Icon="LucideIcon.Save" />
                     Save
                 </HxSubmit>
                 <HxButton Color="ThemeColor.Secondary" CssClass="ms-3" @onclick="AddParameter">
-                    <SvgIcon Icon="FeatherIcon.Plus" />
+                    <SvgIcon Icon="LucideIcon.Plus" />
                     Add parameter
                 </HxButton>
             </HxButtonToolbar>
@@ -30,7 +30,7 @@ else
                         Content="@("<p>Job parameters can be passed to steps that support parameterization.</p><p>Use job parameters to define common parameters across all steps.</p><p>SQL steps can even edit job parameter values during execution.</p>")"
                 Html>
                 <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto">
-                    <SvgIcon Icon="FeatherIcon.HelpCircle" />
+                    <SvgIcon Icon="LucideIcon.CircleHelp" />
                 </HxButton>
             </HxPopover>
         </div>
@@ -98,7 +98,7 @@ else
                                     <td>
                                         <HxButtonGroup Size="ButtonGroupSize.Small">
                                             <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto" @onclick="() => RemoveParameter(param)">
-                                                <SvgIcon Icon="FeatherIcon.Delete" />
+                                                <SvgIcon Icon="LucideIcon.Delete" />
                                             </HxButton>
                                         </HxButtonGroup>
                                     </td>
@@ -130,7 +130,7 @@ else
             Inheriting steps
             <HxPopover Content="Steps in this job that have parameters whose value is inheriting the job parameter value"
                        Trigger="PopoverTrigger.Hover">
-                <SvgIcon Icon="FeatherIcon.Info" />
+                <SvgIcon Icon="LucideIcon.Info" />
             </HxPopover>
         </h6>
         <table class="table table-sm">
@@ -165,7 +165,7 @@ else
             Capturing steps
             <HxPopover Content="Steps in this job that are capturing their return value and saving it to the job parameter"
                        Trigger="PopoverTrigger.Hover">
-                <SvgIcon Icon="FeatherIcon.Info" />
+                <SvgIcon Icon="LucideIcon.Info" />
             </HxPopover>
         </h6>
         <table class="table table-sm">
@@ -200,7 +200,7 @@ else
             Assigning steps
             <HxPopover Content="Steps in other jobs that are launching this job and assigning values to the job parameter"
                        Trigger="PopoverTrigger.Hover">
-                <SvgIcon Icon="FeatherIcon.Info" />
+                <SvgIcon Icon="LucideIcon.Info" />
             </HxPopover>
         </h6>
         <table class="table table-sm">
@@ -242,7 +242,7 @@ else
             Execution conditions
             <HxPopover Content="Steps whose execution condition parameters are referencing this job parameter"
                        Trigger="PopoverTrigger.Hover">
-                <SvgIcon Icon="FeatherIcon.Info" />
+                <SvgIcon Icon="LucideIcon.Info" />
             </HxPopover>
         </h6>
         <table class="table table-sm">

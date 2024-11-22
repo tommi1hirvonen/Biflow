@@ -11,7 +11,7 @@
                     <label class="form-label">App registration</label>
                     <div class="input-group input-group-sm">
                         <div class="input-group-text">
-                            <SvgIcon Icon="FeatherIcon.Globe" />
+                            <SvgIcon Icon="LucideIcon.Globe" />
                         </div>
                         <select class="form-select form-select-sm" @bind="_appRegistrationId">
                             @foreach (var appRegistration in AppRegistrations ?? [])
@@ -23,7 +23,7 @@
                 </div>
                 <div class="col-auto">
                     <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="LoadAsync">
-                        <SvgIcon Icon="FeatherIcon.RefreshCw" />
+                        <SvgIcon Icon="LucideIcon.RefreshCw" />
                         Refresh
                     </HxButton>
                 </div>
@@ -33,7 +33,7 @@
             <div class="col">
                 <div class="input-group">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Search" />
+                        <SvgIcon Icon="LucideIcon.Search" />
                     </div>
                     <input type="search" class="form-control form-control-sm" placeholder="Search datasets" @bind-value="_filterText" @bind-value:event="oninput" />
                 </div>
@@ -83,14 +83,14 @@
                                     <div class="col d-flex align-items-center small">
                                         @if (expanded)
                                         {
-                                            <SvgIcon Icon="FeatherIcon.ChevronDown" />
+                                            <SvgIcon Icon="LucideIcon.ChevronDown" />
                                         }
                                         else
                                         {
-                                            <SvgIcon Icon="FeatherIcon.ChevronRight" />
+                                            <SvgIcon Icon="LucideIcon.ChevronRight" />
                                         }
                                         &nbsp;
-                                        <SvgIcon Icon="FeatherIcon.Folder" />
+                                        <SvgIcon Icon="LucideIcon.Folder" />
                                         &nbsp;
                                         @group.Name
                                         <span class="ms-auto badge rounded-pill @(datasets.Length > 0 ? "bg-primary" : "bg-secondary")">

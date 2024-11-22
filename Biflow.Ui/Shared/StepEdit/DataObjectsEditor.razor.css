@@ -2,12 +2,12 @@
     padding: 0.2rem;
 }
 
-::deep span.data-attribute-edit .feather {
+::deep span.data-attribute-edit .lucide {
     width: 14px;
     height: 14px;
     cursor: pointer;
 }
 
-    ::deep span.data-attribute-edit .feather:hover {
+    ::deep span.data-attribute-edit .lucide:hover {
         filter: brightness(140%);
     }

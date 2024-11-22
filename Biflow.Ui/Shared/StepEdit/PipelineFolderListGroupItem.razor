@@ -15,14 +15,14 @@
                 <div class="col d-flex align-items-center small" style="padding-left: @(folderPadding)">
                     @if (folderExpanded)
                     {
-                        <SvgIcon Icon="FeatherIcon.ChevronDown" />
+                        <SvgIcon Icon="LucideIcon.ChevronDown" />
                     }
                     else
                     {
-                        <SvgIcon Icon="FeatherIcon.ChevronRight" />
+                        <SvgIcon Icon="LucideIcon.ChevronRight" />
                     }
                     &nbsp;
-                    <SvgIcon Icon="FeatherIcon.Folder" />
+                    <SvgIcon Icon="LucideIcon.Folder" />
                     &nbsp;
                     @Folder.Name
                     <span class="ms-auto badge rounded-pill @(pipelines.Length > 0 ? "bg-primary" : "bg-secondary")">
@@ -43,7 +43,7 @@
         <div class="list-group-item list-group-item-action small @(pipeline == SelectedPipeline ? "bg-body" : null)" style="cursor: pointer;" @onclick="() => OnPipelineSelected.InvokeAsync(pipeline)">
             <div class="row">
                 <div class="col d-flex align-items-center @(pipeline == SelectedPipeline ? "fw-bold" : null)" style="padding-left: @(pipelinePadding)">
-                    <SvgIcon Icon="FeatherIcon.Pipeline" />
+                    <SvgIcon Icon="LucideIcon.Pipeline" />
                     &nbsp;
                     <HighlightableText Text="@pipeline.Name" PartToHighlight="@FilterText" />
                 </div>

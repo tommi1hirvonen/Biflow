@@ -13,7 +13,7 @@
                    Content="@("<div><p>Use parameters to dynamically pass values to the package execution.</p><p>Parameters are matched based on their names and level (package/project).</p></div>")">
             <ChildContent>
                 <span style="cursor: pointer;">
-                    <SvgIcon Icon="FeatherIcon.Info" />
+                    <SvgIcon Icon="LucideIcon.Info" />
                 </span>
             </ChildContent>
         </HxPopover>
@@ -93,7 +93,7 @@
                                       Size="ButtonSize.Small"
                                       CssClass="btn-auto"
                                       @onclick="async () => { Step.StepParameters.Remove(param); await ParametersValidator.LetAsync(x => x.ValidateAsync()); }">
-                                <SvgIcon Icon="FeatherIcon.Delete" />
+                                <SvgIcon Icon="LucideIcon.Delete" />
                             </HxButton>
                         </HxButtonGroup>
                     </td>
@@ -103,12 +103,12 @@
     </table>
     <HxButtonGroup Size="ButtonGroupSize.Small">
         <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="AddParameter">
-            <SvgIcon Icon="FeatherIcon.Plus" />
+            <SvgIcon Icon="LucideIcon.Plus" />
             Add parameter
         </HxButton>
         <HxDropdownButtonGroup>
             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" Spinner="_loadingParameters" Enabled="!_loadingParameters">
-                <SvgIcon Icon="FeatherIcon.AtSign" />
+                <SvgIcon Icon="LucideIcon.AtSign" />
                 Import parameters
             </HxDropdownToggleButton>
             <HxDropdownMenu>

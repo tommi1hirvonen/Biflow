@@ -5,7 +5,7 @@
 <div class="row mt-3">
     <div class="col">
         <button class="btn btn-secondary" @onclick="OpenConfirmDeleteModalAsync">
-            <SvgIcon Icon="FeatherIcon.Trash2" />
+            <SvgIcon Icon="LucideIcon.Trash2" />
             Delete unused...
         </button>
     </div>
@@ -71,21 +71,21 @@
                                                 @if (_editTag?.TagId == tag.TagId)
                                                 {
                                                     <HxSubmit FormId="tag_edit_form" Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-success" title="Submit">
-                                                        <SvgIcon Icon="FeatherIcon.Check" />
+                                                        <SvgIcon Icon="LucideIcon.Check" />
                                                     </HxSubmit>
                                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => _editTag = null" title="Cancel">
-                                                        <SvgIcon Icon="FeatherIcon.X" />
+                                                        <SvgIcon Icon="LucideIcon.X" />
                                                     </HxButton>
                                                 }
                                                 else
                                                 {
                                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => SetEditTag(tag)">
-                                                        <SvgIcon Icon="FeatherIcon.Edit3" />
+                                                        <SvgIcon Icon="LucideIcon.PenLine" />
                                                     </HxButton>
                                                 }
                                                 <HxDropdownButtonGroup>
                                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                                        <SvgIcon Icon="FeatherIcon.Trash2" />
+                                                        <SvgIcon Icon="LucideIcon.Trash2" />
                                                     </HxDropdownToggleButton>
                                                     <HxDropdownMenu>
                                                         <HxDropdownHeader>Delete?</HxDropdownHeader>
@@ -183,7 +183,7 @@
                                 <td class="align-middle">
                                     <div class="btn-group">
                                         <button class="btn btn-sm btn-auto" @onclick="async () => await DeleteStepTag(step)">
-                                            <SvgIcon Icon="FeatherIcon.Delete" />
+                                            <SvgIcon Icon="LucideIcon.Delete" />
                                         </button>
                                     </div>
                                 </td>

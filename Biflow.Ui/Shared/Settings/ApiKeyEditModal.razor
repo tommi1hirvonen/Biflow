@@ -19,7 +19,7 @@
                                 <label class="form-label">Name</label>
                                 <div class="input-group input-group-sm">
                                     <div class="input-group-text">
-                                        <SvgIcon Icon="FeatherIcon.Edit3" />
+                                        <SvgIcon Icon="LucideIcon.PenLine" />
                                     </div>
                                     <InputText class="form-control form-control-sm" @bind-Value="_key.Name"></InputText>
                                 </div>
@@ -36,7 +36,7 @@
                                 <label class="form-label">API key</label>
                                 <div class="input-group input-group-sm">
                                     <div class="input-group-text">
-                                        <SvgIcon Icon="FeatherIcon.Key" />
+                                        <SvgIcon Icon="LucideIcon.Key" />
                                     </div>
                                     <textarea class="form-control form-control-sm font-monospace" disabled value="@keyDisplayValue" rows="3"></textarea>
                                     @if (_key.Id == Guid.Empty)
@@ -53,7 +53,7 @@
                                 <label class="form-label">Valid from</label>
                                 <div class="input-group input-group-sm">
                                     <div class="input-group-text">
-                                        <SvgIcon Icon="FeatherIcon.Calendar" />
+                                        <SvgIcon Icon="LucideIcon.Calendar" />
                                     </div>
                                     <InputDate class="form-control form-control-sm" Type="InputDateType.DateTimeLocal" @bind-Value="@_key.ValidFrom" />
                                 </div>
@@ -62,7 +62,7 @@
                                 <label class="form-label">Valid to</label>
                                 <div class="input-group input-group-sm">
                                     <div class="input-group-text">
-                                        <SvgIcon Icon="FeatherIcon.Calendar" />
+                                        <SvgIcon Icon="LucideIcon.Calendar" />
                                     </div>
                                     <InputDate class="form-control form-control-sm" Type="InputDateType.DateTimeLocal" @bind-Value="@_key.ValidTo" />
                                 </div>

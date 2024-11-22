@@ -39,8 +39,8 @@
                                                     &nbsp;
                                                     @stepType                                                    
                                                 </button>
-                                                <HxPopover Trigger="PopoverTrigger.Hover" Content="@popoverContent" Html WrapperCssClass="d-inline-flex ms-1 mt-1 align-self-start feather-sm text-muted">
-                                                    <SvgIcon Icon="FeatherIcon.Info" />
+                                                <HxPopover Trigger="PopoverTrigger.Hover" Content="@popoverContent" Html WrapperCssClass="d-inline-flex ms-1 mt-1 align-self-start lucide-sm text-muted">
+                                                    <SvgIcon Icon="LucideIcon.Info" />
                                                 </HxPopover>
                                                 stepTypeIndex++;
                                             }
@@ -56,7 +56,7 @@
                     <HxButton Color="ThemeColor.Primary"
                               Enabled="Steps is not null && Job is not null && Jobs is not null"
                               @onclick="() => Job.LetAsync(j => _executeModal.LetAsync(m => m.ShowAsync(j.JobId, _selectedSteps)))">
-                        <SvgIcon Icon="FeatherIcon.Play" />
+                        <SvgIcon Icon="LucideIcon.Play" />
                         Execute...
                     </HxButton>
                 </AuthorizeView>
@@ -104,7 +104,7 @@
         <div class="col-auto mt-3">
             <div class="input-group input-group-sm">
                 <div class="input-group-text">
-                    <SvgIcon Icon="FeatherIcon.Search" />
+                    <SvgIcon Icon="LucideIcon.Search" />
                 </div>
                 <DebounceTextInput type="search" class="form-control" @bind-Value="_stepNameFilter" placeholder="Search by name" style="min-width: 18rem; max-width: 18rem;" />
             </div>
@@ -116,7 +116,7 @@
                                 Items="Steps?.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
                                 OnChange="StateHasChanged">
                     <TitleTemplate>
-                        <SvgIcon Icon="FeatherIcon.Tool" />
+                        <SvgIcon Icon="LucideIcon.Wrench" />
                         Step type
                     </TitleTemplate>
                     <ItemTemplate Context="item">
@@ -133,7 +133,7 @@
                                 @bind-Mode="_tagsFilterMode"
                                 OnChange="StateHasChanged">
                     <TitleTemplate>
-                        <SvgIcon Icon="FeatherIcon.Tag" />
+                        <SvgIcon Icon="LucideIcon.Tag" />
                         Tags
                     </TitleTemplate>
                     <ItemTemplate Context="item">
@@ -141,7 +141,7 @@
                     </ItemTemplate>
                 </FilterDropdown>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => _advancedFiltersOffcanvas.LetAsync(x => x.ShowAsync())">
-                    <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
+                    <SvgIcon Icon="LucideIcon.Ellipsis" />
                     More filters
                 </HxButton>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () =>
@@ -151,7 +151,7 @@
                         _stepNameFilter = string.Empty;
                         await _advancedFiltersOffcanvas.LetAsync(x => x.ClearAsync());
                     }">
-                    <SvgIcon Icon="FeatherIcon.X" />
+                    <SvgIcon Icon="LucideIcon.X" />
                     Clear
                 </HxButton>
             </HxButtonGroup>
@@ -229,27 +229,27 @@
                                         <div class="btn-group">
                                             <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" title="Delete selected steps"
                                                       @onclick="DeleteSelectedSteps">
-                                                <SvgIcon Icon="FeatherIcon.Trash2" />
+                                                <SvgIcon Icon="LucideIcon.Trash2" />
                                                 Delete...
                                             </HxButton>
                                             <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" title="Copy selected steps"
                                                       @onclick="() => _stepsCopyOffcanvas.LetAsync(x => x.ShowAsync(Job, _selectedSteps))">
-                                                <SvgIcon Icon="FeatherIcon.Copy" />
+                                                <SvgIcon Icon="LucideIcon.Copy" />
                                                 Copy...
                                             </HxButton>
                                             <HxDropdownButtonGroup>
                                                 <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
-                                                    <SvgIcon Icon="FeatherIcon.Edit2" />
+                                                    <SvgIcon Icon="LucideIcon.Pen" />
                                                     Edit
                                                 </HxDropdownToggleButton>
                                                 <HxDropdownMenu Alignment="DropdownMenuAlignment.End">
                                                     <HxDropdownHeader>Batch edit</HxDropdownHeader>
                                                     <HxDropdownItem OnClick="() => _batchEditRenameModal.LetAsync(x => x.ShowAsync())">
-                                                        <SvgIcon Icon="FeatherIcon.Edit3" />
+                                                        <SvgIcon Icon="LucideIcon.PenLine" />
                                                         Name
                                                     </HxDropdownItem>
                                                     <HxDropdownItem OnClick="() => _batchEditTagsModal.LetAsync(x => x.ShowAsync())">
-                                                        <SvgIcon Icon="FeatherIcon.Tag" />
+                                                        <SvgIcon Icon="LucideIcon.Tag" />
                                                         Tags
                                                     </HxDropdownItem>
                                                     <HxDropdownItem OnClick="() => _batchEditExecPhaseModal.LetAsync(x => x.ShowAsync())">
@@ -257,19 +257,19 @@
                                                         Execution phase
                                                     </HxDropdownItem>
                                                     <HxDropdownItem OnClick="() => _batchEditRetriesModal.LetAsync(x => x.ShowAsync())">
-                                                        <SvgIcon Icon="FeatherIcon.Repeat" />
+                                                        <SvgIcon Icon="LucideIcon.Repeat" />
                                                         Retry attempts
                                                     </HxDropdownItem>
                                                     <HxDropdownItem OnClick="() => _batchEditRetryIntervalModal.LetAsync(x => x.ShowAsync())">
-                                                        <SvgIcon Icon="FeatherIcon.Clock" />
+                                                        <SvgIcon Icon="LucideIcon.Clock" />
                                                         Retry interval
                                                     </HxDropdownItem>
                                                     <HxDropdownItem OnClick="() => ToggleSelectedStepsEnabledAsync(false)">
-                                                        <SvgIcon Icon="FeatherIcon.ToggleLeft" />
+                                                        <SvgIcon Icon="LucideIcon.ToggleLeft" />
                                                         Disable
                                                     </HxDropdownItem>
                                                     <HxDropdownItem OnClick="() => ToggleSelectedStepsEnabledAsync(true)">
-                                                        <SvgIcon Icon="FeatherIcon.ToggleRight" />
+                                                        <SvgIcon Icon="LucideIcon.ToggleRight" />
                                                         Enable
                                                     </HxDropdownItem>
                                                 </HxDropdownMenu>
@@ -339,7 +339,7 @@
                                     @if (item.RetryAttempts > 0)
                                     {
                                         <div title="Step has @item.RetryAttempts retry attempts" class="text-body ms-3">
-                                            <SvgIcon Icon="FeatherIcon.Repeat" />
+                                            <SvgIcon Icon="LucideIcon.Repeat" />
                                             <sup>@item.RetryAttempts</sup>
                                         </div>
                                     }
@@ -349,14 +349,14 @@
                                          || item is SqlStep { ResultCaptureJobParameterId: not null })
                                     {
                                         <div title="Step uses job parameters" class="text-body ms-3">
-                                            <SvgIcon Icon="FeatherIcon.AtSign" />
+                                            <SvgIcon Icon="LucideIcon.AtSign" />
                                         </div>
                                     }
 
                                     @if (!string.IsNullOrWhiteSpace(item.ExecutionConditionExpression.Expression))
                                     {
                                         <div title="Execution condition enabled" class="text-body ms-3">
-                                            <SvgIcon Icon="FeatherIcon.CheckSquare" />
+                                            <SvgIcon Icon="LucideIcon.SquareCheck" />
                                         </div>
                                     }
                                 </div>
@@ -374,7 +374,7 @@
                                         </div>
                                     </AuthorizeView>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" Spinner="false" CssClass="btn-auto" @onclick="e => menu.ShowContextMenuAsync(e)">
-                                        <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
+                                        <SvgIcon Icon="LucideIcon.Ellipsis" />
                                     </HxButton>
                                 </div>
 
@@ -475,16 +475,16 @@
                             </DropdownMenuHeader>
                             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                                 <DropdownMenuItem @onclick="() => ShowEditModal(item)">
-                                    <SvgIcon Icon="FeatherIcon.Edit2" />
+                                    <SvgIcon Icon="LucideIcon.Pen" />
                                     Edit
                                 </DropdownMenuItem>
                                 <DropdownMenuItem @onclick="() => _stepsCopyOffcanvas.LetAsync(x => x.ShowAsync(Job, [item]))">
-                                    <SvgIcon Icon="FeatherIcon.Copy" />
+                                    <SvgIcon Icon="LucideIcon.Copy" />
                                     Copy...
                                 </DropdownMenuItem>
                             </AuthorizeView>
                             <DropdownMenuItem @onclick="() => _stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
-                                <SvgIcon Icon="FeatherIcon.Activity" />
+                                <SvgIcon Icon="LucideIcon.Activity" />
                                 History
                             </DropdownMenuItem>
                             <DropdownMenuLink href="@($"jobs/{Job?.JobId}/graph/{item.StepId}")">
@@ -492,12 +492,12 @@
                                 Dependencies
                             </DropdownMenuLink>
                             <DropdownMenuItem @onclick="() => _stepDetailsModal.LetAsync(x => x.ShowAsync(item))">
-                                <SvgIcon Icon="FeatherIcon.Info" />
+                                <SvgIcon Icon="LucideIcon.Info" />
                                 Details
                             </DropdownMenuItem>
                             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                                 <DropdownMenuItem @onclick="() => DeleteStep(item)">
-                                    <SvgIcon Icon="FeatherIcon.Trash2" />
+                                    <SvgIcon Icon="LucideIcon.Trash2" />
                                     Delete...
                                 </DropdownMenuItem>
                             </AuthorizeView>

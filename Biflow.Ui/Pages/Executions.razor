@@ -27,7 +27,7 @@
                 @onclick="() => State.ShowGraph = false"
                 Spinner="false"
                 CssClass="@(!State.ShowGraph ? "active" : null)">
-                    <SvgIcon Icon="FeatherIcon.List" />
+                    <SvgIcon Icon="LucideIcon.List" />
                     List
                 </HxButton>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
@@ -40,7 +40,7 @@
             </HxButtonGroup>
             <HxDropdownButtonGroup CssClass="ms-3">
                 <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" Enabled="!_loading">
-                    <SvgIcon Icon="FeatherIcon.Bookmark" />
+                    <SvgIcon Icon="LucideIcon.Bookmark" />
                     @if (!string.IsNullOrEmpty(State.PresetText))
                     {
                         <span class="ms-1">Presets:</span>
@@ -75,13 +75,13 @@
             </HxDropdownButtonGroup>
 
             <HxSubmit FormId="executions_form" Size="ButtonSize.Small" Color="ThemeColor.Primary" Spinner="_loading" Enabled="!_loading" CssClass="ms-3">
-                <SvgIcon Icon="FeatherIcon.RefreshCw" />
+                <SvgIcon Icon="LucideIcon.RefreshCw" />
                 Refresh
             </HxSubmit>
 
             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto ms-auto" OnClick="() => _deleteOffcanvas.LetAsync(x => x.ShowAsync())">
-                    <SvgIcon Icon="FeatherIcon.Trash2" />
+                    <SvgIcon Icon="LucideIcon.Trash2" />
                     Delete...
                 </HxButton>
             </AuthorizeView>
@@ -95,7 +95,7 @@
             <label class="me-3">From</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    <SvgIcon Icon="FeatherIcon.Calendar" />
+                    <SvgIcon Icon="LucideIcon.Calendar" />
                 </div>
                 <input @bind="State.FromDateTime"
                        @bind:format="yyyy-MM-ddTHH:mm:ss"
@@ -106,7 +106,7 @@
             <label class="mx-3">To</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    <SvgIcon Icon="FeatherIcon.Calendar" />
+                    <SvgIcon Icon="LucideIcon.Calendar" />
                 </div>
                 <input @bind="State.ToDateTime"
                        @bind:format="yyyy-MM-ddTHH:mm:ss"
@@ -120,7 +120,7 @@
 
 <div class="row mt-3">
     <div class="col-auto d-inline">
-        <SvgIcon Icon="FeatherIcon.Filter" />
+        <SvgIcon Icon="LucideIcon.Filter" />
         <span class="me-3">Filters</span>
 
         <HxButtonGroup Size="ButtonGroupSize.Small">
@@ -170,7 +170,7 @@
                     <TagBadge Tag="item" />
                 </ItemTemplate>
                 <TitleTemplate>
-                        <SvgIcon Icon="FeatherIcon.Tag" />
+                        <SvgIcon Icon="LucideIcon.Tag" />
                         Job tag
                     </TitleTemplate>
             </FilterDropdown>
@@ -196,7 +196,7 @@
                             TextSelector="s => s.ScheduleName ?? string.Empty"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
-                    <SvgIcon Icon="FeatherIcon.Calendar" />
+                    <SvgIcon Icon="LucideIcon.Calendar" />
                     Schedule
                 </TitleTemplate>
             </FilterDropdown>
@@ -232,7 +232,7 @@
                                    .AsEnumerable() ?? []"
                                 OnChange="StateHasChanged">
                     <TitleTemplate>
-                        <SvgIcon Icon="FeatherIcon.Tool" />
+                        <SvgIcon Icon="LucideIcon.Wrench" />
                         Step type
                     </TitleTemplate>
                     <ItemTemplate Context="item">
@@ -254,7 +254,7 @@
                                    .AsEnumerable() ?? []"
                                 OnChange="StateHasChanged">
                     <TitleTemplate>
-                        <SvgIcon Icon="FeatherIcon.AlertCircle" />
+                        <SvgIcon Icon="LucideIcon.CircleAlert" />
                         Status
                     </TitleTemplate>
                     <ItemTemplate Context="item">
@@ -274,7 +274,7 @@
                                    .AsEnumerable() ?? []"
                                 OnChange="StateHasChanged">
                     <TitleTemplate>
-                        <SvgIcon Icon="FeatherIcon.AlertCircle" />
+                        <SvgIcon Icon="LucideIcon.CircleAlert" />
                         Status
                     </TitleTemplate>
                     <ItemTemplate Context="item">
@@ -298,7 +298,7 @@
                         <TagBadge Tag="item" />
                     </ItemTemplate>
                     <TitleTemplate>
-                        <SvgIcon Icon="FeatherIcon.Tag" />
+                        <SvgIcon Icon="LucideIcon.Tag" />
                         Step tag
                     </TitleTemplate>
                 </FilterDropdown>
@@ -307,7 +307,7 @@
 
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
                 @onclick="State.Clear">
-                <SvgIcon Icon="FeatherIcon.X" />
+                <SvgIcon Icon="LucideIcon.X" />
                 Reset
             </HxButton>
         </HxButtonGroup>
@@ -416,7 +416,7 @@ else
                 <div class="col-9">
                     <div class="input-group">
                         <div class="input-group-text">
-                            <SvgIcon Icon="FeatherIcon.Calendar" />
+                            <SvgIcon Icon="LucideIcon.Calendar" />
                         </div>
                         <input @bind="_deleteFrom"
                                @bind:format="yyyy-MM-ddTHH:mm:ss"
@@ -432,7 +432,7 @@ else
                 <div class="col-9">
                     <div class="input-group">
                         <div class="input-group-text">
-                            <SvgIcon Icon="FeatherIcon.Calendar" />
+                            <SvgIcon Icon="LucideIcon.Calendar" />
                         </div>
                         <input @bind="_deleteTo"
                                @bind:format="yyyy-MM-ddTHH:mm:ss"
@@ -444,7 +444,7 @@ else
             <div class="row mt-4">
                 <div class="col d-flex justify-content-end">
                     <HxButton Color="ThemeColor.Danger" OnClick="DeleteExecutionsAsync">
-                        <SvgIcon Icon="FeatherIcon.Trash2" />
+                        <SvgIcon Icon="LucideIcon.Trash2" />
                         Delete
                     </HxButton>
                 </div>

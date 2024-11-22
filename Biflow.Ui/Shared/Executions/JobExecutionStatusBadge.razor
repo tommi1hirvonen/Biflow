@@ -17,13 +17,13 @@
 
     private (string Color, Svg Icon) Badge => ExecutionStatus switch
     {
-        ES.Succeeded => ("success", FeatherIcon.CheckCircle),
-        ES.Failed => ("danger", FeatherIcon.AlertOctagon),
-        ES.Warning => ("warning", FeatherIcon.AlertTriangle),
-        ES.Stopped => ("warning", FeatherIcon.XOctagon),
-        ES.Suspended => ("warning", FeatherIcon.AlertTriangle),
-        ES.Running => ("primary", FeatherIcon.Play),
-        ES.NotStarted => ("secondary", FeatherIcon.Clock),
-        _ => ("", FeatherIcon.HelpCircle)
+        ES.Succeeded => ("success", LucideIcon.CircleCheck),
+        ES.Failed => ("danger", LucideIcon.OctagonAlert),
+        ES.Warning => ("warning", LucideIcon.TriangleAlert),
+        ES.Stopped => ("warning", LucideIcon.OctagonX),
+        ES.Suspended => ("warning", LucideIcon.TriangleAlert),
+        ES.Running => ("primary", LucideIcon.Play),
+        ES.NotStarted => ("secondary", LucideIcon.Clock),
+        _ => ("", LucideIcon.CircleHelp)
     };
 }

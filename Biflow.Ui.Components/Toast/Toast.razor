@@ -91,10 +91,10 @@
 
     private Svg Icon => Color switch
     {
-        ComponentColor.Success => FeatherIcon.CheckCircle,
-        ComponentColor.Warning => FeatherIcon.AlertTriangle,
-        ComponentColor.Danger => FeatherIcon.AlertOctagon,
-        _ => FeatherIcon.Info
+        ComponentColor.Success => LucideIcon.CircleCheck,
+        ComponentColor.Warning => LucideIcon.TriangleAlert,
+        ComponentColor.Danger => LucideIcon.OctagonAlert,
+        _ => LucideIcon.Info
     };
 
     public void Dispose() => cts.Dispose();

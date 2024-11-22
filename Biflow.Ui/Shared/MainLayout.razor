@@ -33,7 +33,7 @@
             <nav class="navbar navbar-dark navbar-custom sticky-top flex-lg-nowrap navbar-expand-lg p-0 bg-gradient-primary">
                 <span class="navbar-brand navbar-brand-bg fw-bold ps-4 py-2 fs-4 me-0">biflow</span>
                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="my-1 mx-3 d-lg-none text-white" OnClick="ToggleSidebar">
-                    <SvgIcon Icon="FeatherIcon.Menu" />
+                    <SvgIcon Icon="LucideIcon.Menu" />
                     Menu
                 </HxButton>
                 <ThemeDropdown />
@@ -89,7 +89,7 @@
                                         <strong>@_username</strong>
                                         <div class="d-grid mt-4 mb-3">
                                             <a class="btn btn-primary" href="MicrosoftIdentity/Account/SignOut">
-                                                <SvgIcon Icon="FeatherIcon.LogOut" />
+                                                <SvgIcon Icon="LucideIcon.LogOut" />
                                                 &nbsp;
                                                 Sign out
                                             </a>
@@ -101,7 +101,7 @@
                                         <strong>@_username</strong>
                                         <div class="d-grid mt-4 mb-3">
                                             <a class="btn btn-primary" href="javascript:void(0)" @onclick="@(() => NavigationManager.NavigateTo("logout", forceLoad: true))">
-                                                <SvgIcon Icon="FeatherIcon.LogOut" />
+                                                <SvgIcon Icon="LucideIcon.LogOut" />
                                                 &nbsp;
                                                 Log out
                                             </a>

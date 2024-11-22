@@ -47,7 +47,7 @@
             <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal backwards when drawing the lineage graph starting from the filtered node.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
                 <ChildContent>
                     <span style="cursor: pointer;">
-                        <SvgIcon Icon="FeatherIcon.Info" />
+                        <SvgIcon Icon="LucideIcon.Info" />
                     </span>
                 </ChildContent>
             </HxPopover>
@@ -58,7 +58,7 @@
             <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal forwards when drawing the lineage graph starting from the filtered node.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
                 <ChildContent>
                     <span style="cursor: pointer;">
-                        <SvgIcon Icon="FeatherIcon.Info" />
+                        <SvgIcon Icon="LucideIcon.Info" />
                     </span>
                 </ChildContent>
             </HxPopover>
@@ -80,7 +80,7 @@
                                        checked=@(_direction == DependencyGraphDirection.LeftToRight)
                                        @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.LeftToRight))">
                                 <label class="form-check-label fw-normal" for="direction_radio_admin">
-                                    <SvgIcon Icon="FeatherIcon.ArrowRight" />
+                                    <SvgIcon Icon="LucideIcon.MoveRight" />
                                     Left to right
                                 </label>
                             </div>
@@ -89,7 +89,7 @@
                                        checked=@(_direction == DependencyGraphDirection.RightToLeft)
                                        @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.RightToLeft))">
                                 <label class="form-check-label fw-normal" for="direction_radio_editor">
-                                    <SvgIcon Icon="FeatherIcon.ArrowLeft" />
+                                    <SvgIcon Icon="LucideIcon.MoveLeft" />
                                     Right to left
                                 </label>
                             </div>
@@ -98,7 +98,7 @@
                                        checked=@(_direction == DependencyGraphDirection.TopToBottom)
                                        @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.TopToBottom))">
                                 <label class="form-check-label fw-normal" for="direction_radio_operator">
-                                    <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                                    <SvgIcon Icon="LucideIcon.MoveDown" />
                                     Top to bottom
                                 </label>
                             </div>
@@ -107,7 +107,7 @@
                                        checked=@(_direction == DependencyGraphDirection.BottomToTop)
                                        @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.BottomToTop))">
                                 <label class="form-check-label fw-normal" for="direction_radio_viewer">
-                                    <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                                    <SvgIcon Icon="LucideIcon.MoveUp" />
                                     Bottom to top
                                 </label>
                             </div>
@@ -129,7 +129,7 @@
         <ContextMenuTemplate Context="node">
             <li>
                 <span class="dropdown-item" role="button" @onclick="async () => { _filterNode = node; await LoadGraphAsync();}">
-                    <SvgIcon Icon="FeatherIcon.Filter" />
+                    <SvgIcon Icon="LucideIcon.Filter" />
                     Limit graph to this
                 </span>
             </li>

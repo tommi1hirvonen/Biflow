@@ -9,7 +9,7 @@
             <div class="col-auto">
                 <div class="input-group">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Database" />
+                        <SvgIcon Icon="LucideIcon.Database" />
                     </div>
                     <select class="form-select form-select-sm" @bind="_connectionId">
                         @foreach (var connection in Connections)
@@ -21,11 +21,11 @@
             </div>
             <div class="col-auto">
                 <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="RunQueryAsync">
-                    <SvgIcon Icon="FeatherIcon.RefreshCw" />
+                    <SvgIcon Icon="LucideIcon.RefreshCw" />
                     Run query
                 </HxButton>
                 <HxButton Color="ThemeColor.Secondary" Size="ButtonSize.Small" CssClass="ms-3" OnClick="ClearFilters">
-                    <SvgIcon Icon="FeatherIcon.X" />
+                    <SvgIcon Icon="LucideIcon.X" />
                     Clear filters
                 </HxButton>
             </div>
