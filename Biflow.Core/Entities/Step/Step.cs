@@ -29,7 +29,7 @@ public abstract class Step : IComparable, IAuditable
     /// Used to initialize properties based on another <see cref="Step"/> and optionally on another <see cref="Job"/>
     /// </summary>
     /// <param name="other"><see cref="Step"/> used as a base to initialize the generated object's properties</param>
-    /// <param name="job">Optionally provide a <see cref="Job"/> to swith the generated <see cref="Step"/>'s target job</param>
+    /// <param name="job">Optionally provide a <see cref="Job"/> to switch the generated <see cref="Step"/>'s target job</param>
     protected Step(Step other, Job? job)
     {
         StepId = Guid.NewGuid();
@@ -58,12 +58,12 @@ public abstract class Step : IComparable, IAuditable
             })
             .ToList();
         Tags = other.Tags.ToList();
-        Dependencies = job is null || other.JobId == job.JobId // If step is being copied to the same job, duplicate dependencies.
-            ? other.Dependencies.Select(d => new Dependency(d, this)).ToList()
-            : [];
         ExecutionConditionParameters = other.ExecutionConditionParameters
             .Select(p => new ExecutionConditionParameter(p, this, job))
             .ToList();
+        // Skip copying dependencies.
+        // This is use case specific and potentially requires mapping between ids
+        // and thus cannot be easily done in the constructor.
     }
 
     [Required]

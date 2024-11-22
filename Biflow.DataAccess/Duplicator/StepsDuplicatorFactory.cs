@@ -4,10 +4,24 @@ public class StepsDuplicatorFactory(IDbContextFactory<AppDbContext> dbContextFac
 {
     private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
 
-    public Task<StepsDuplicator> CreateAsync(Guid stepId, Guid? targetJobId = null) =>
+    /// <summary>
+    /// Asynchronously creates a <see cref="StepsDuplicator"/> to copy selected steps
+    /// </summary>
+    /// <param name="stepId">id of the step that should be copied</param>
+    /// <param name="targetJobId">id of the target job of the copy operation, or null
+    /// if the target job is the same as the source</param>
+    /// <returns><see cref="StepsDuplicator"/> which includes a copy of the step provided as argument</returns>
+    public Task<StepsDuplicator> CreateAsync(Guid stepId, Guid? targetJobId) =>
         CreateAsync([stepId], targetJobId);
-
-    public async Task<StepsDuplicator> CreateAsync(Guid[] stepIds, Guid? targetJobId = null)
+    
+    /// <summary>
+    /// Asynchronously creates a <see cref="StepsDuplicator"/> to copy selected steps
+    /// </summary>
+    /// <param name="stepIds">ids of the steps that should be copied</param>
+    /// <param name="targetJobId">id of the target job of the copy operation, or null
+    /// if the target job is the same as the source</param>
+    /// <returns><see cref="StepsDuplicator"/> which includes copies of the steps provided as argument</returns>
+    public async Task<StepsDuplicator> CreateAsync(Guid[] stepIds, Guid? targetJobId)
     {
         var context = await _dbContextFactory.CreateDbContextAsync();
         var query = context.Steps.Where(s => stepIds.Contains(s.StepId));
@@ -17,7 +31,41 @@ public class StepsDuplicatorFactory(IDbContextFactory<AppDbContext> dbContextFac
         var targetJob = targetJobId is { } id
             ? await context.Jobs.Include(j => j.JobParameters).FirstOrDefaultAsync(j => j.JobId == id)
             : null;
-        var copies = steps.Select(s => s.Copy(targetJob)).ToList();
+        
+        // While creating copies of steps,
+        // also create a mapping dictionary to map dependencies based on old step ids.
+        var mapping = steps
+            .Select(s => (Original: s, Copy: s.Copy(targetJob)))
+            .ToDictionary(x => x.Original.StepId, x => x);
+        var copies = mapping.Values
+            .Select(map =>
+            {
+                // Map dependencies from ids to new ids.
+                var dependencies = map.Original.Dependencies
+                    .Select(d => MapDependency(map.Copy, d))
+                    .OfType<Dependency>();
+                map.Copy.Dependencies.AddRange(dependencies);
+                return map.Copy;
+            })
+            .ToList();
+        
         return new StepsDuplicator(context, copies);
+        
+        Dependency? MapDependency(Step copy, Dependency dep)
+        {
+            // Map the dependent step's id from an old value to a new value using the dictionary.
+            // In case no matching key is found, the dependency is not included in the steps that are copied.
+            if (!mapping.TryGetValue(dep.DependantOnStepId, out var map))
+            {
+                return null;
+            }
+            
+            return new Dependency
+            {
+                StepId = copy.StepId,
+                DependantOnStepId = map.Copy.StepId,
+                DependencyType = dep.DependencyType
+            };
+        }
     }
 }
