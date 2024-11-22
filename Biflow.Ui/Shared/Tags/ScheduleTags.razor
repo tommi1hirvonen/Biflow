@@ -90,13 +90,16 @@
                                                 </HxDropdownButtonGroup>
                                                 <HxDropdownButtonGroup>
                                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                                        @tag.Color
+                                                        <SvgIcon Icon="LucideIcon.Palette" />
                                                     </HxDropdownToggleButton>
                                                     <HxDropdownMenu>
                                                         <HxDropdownHeader>Tag color</HxDropdownHeader>
                                                         @foreach (var color in Enum.GetValues<TagColor>())
                                                         {
-                                                            <HxDropdownItem OnClick="async () => await SetTagColorAsync(tag, color)">@color</HxDropdownItem>
+                                                            var colorTag = new ColorTag(color.ToString(), color);
+                                                            <HxDropdownItem OnClick="async () => await SetTagColorAsync(tag, color)">
+                                                                <TagBadge Tag="colorTag" />
+                                                            </HxDropdownItem>
                                                         }
                                                     </HxDropdownMenu>
                                                 </HxDropdownButtonGroup>
