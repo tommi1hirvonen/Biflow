@@ -3,9 +3,9 @@
 @inject ToasterService Toaster
 @inject JobValidator JobValidator
 
-@if (editJob is not null)
+@if (_editJob is not null)
 {
-    <EditForm id="job_concurrency_form" Model="editJob" OnValidSubmit="OnSubmit">
+    <EditForm id="job_concurrency_form" Model="_editJob" OnValidSubmit="OnSubmit">
 
         <ObjectGraphDataAnnotationsValidator />
         <ValidationSummary />
@@ -18,23 +18,23 @@
 
         <div>
             <label class="form-label">Max parallel steps (0 = no limit)</label>
-            <InputNumber class="form-control form-control-sm" style="max-width: 10rem;" @bind-Value="editJob.MaxParallelSteps"></InputNumber>
+            <InputNumber class="form-control form-control-sm" style="max-width: 10rem;" @bind-Value="_editJob.MaxParallelSteps"></InputNumber>
         </div>
 
         <div class="row mt-3">
             <div class="col">
                 <HxDropdownButtonGroup>
                     <HxDropdownToggleButton Color="ThemeColor.Secondary" Size="ButtonSize.Small">
-                        <SvgIcon Icon="FeatherIcon.Plus" />
+                        <SvgIcon Icon="LucideIcon.Plus" />
                         Add step type
                     </HxDropdownToggleButton>
                     <HxDropdownMenu>
                         <HxDropdownHeader>
                             Step type
                         </HxDropdownHeader>
-                        @foreach (var stepType in Enum.GetValues<StepType>().Where(type => !editJob.JobConcurrencies.Any(c => c.StepType == type)))
+                        @foreach (var stepType in Enum.GetValues<StepType>().Where(type => _editJob.JobConcurrencies.All(c => c.StepType != type)))
                         {
-                            <HxDropdownItem @onclick="() => editJob.JobConcurrencies.Add(new JobConcurrency { StepType = stepType })">
+                            <HxDropdownItem @onclick="() => _editJob.JobConcurrencies.Add(new JobConcurrency { StepType = stepType })">
                                 <StepTypeIcon StepType="stepType" />
                                 @stepType
                             </HxDropdownItem>
@@ -53,7 +53,7 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var concur in editJob.JobConcurrencies.OrderBy(c => c.StepType))
+                @foreach (var concur in _editJob.JobConcurrencies.OrderBy(c => c.StepType))
                 {
                     <tr>
                         <td class="align-middle">
@@ -65,8 +65,8 @@
                         </td>
                         <td>
                             <HxButtonGroup Size="ButtonGroupSize.Small">
-                                <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto" @onclick="() => editJob.JobConcurrencies.Remove(concur)">
-                                    <SvgIcon Icon="FeatherIcon.Delete" />
+                                <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto" @onclick="() => _editJob.JobConcurrencies.Remove(concur)">
+                                    <SvgIcon Icon="LucideIcon.Delete" />
                                 </HxButton>
                             </HxButtonGroup>
                         </td>
@@ -78,7 +78,7 @@
         <div class="row">
             <div class="col">
                 <HxSubmit Color="ThemeColor.Success">
-                    <SvgIcon Icon="FeatherIcon.Save" />
+                    <SvgIcon Icon="LucideIcon.Save" />
                     Save
                 </HxSubmit>
             </div>
@@ -89,7 +89,7 @@
 @code {
     [CascadingParameter] Job? Job { get; set; }
 
-    private Job? editJob;
+    private Job? _editJob;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -98,18 +98,18 @@
             return;
         }
 
-        using var context = DbContextFactory.CreateDbContext();
-        editJob = await context.Jobs
+        await using var context = await DbContextFactory.CreateDbContextAsync();
+        _editJob = await context.Jobs
             .Include(j => j.JobConcurrencies)
             .FirstAsync(j => j.JobId == Job.JobId);
     }
 
     private async Task OnSubmit()
     {
-        ArgumentNullException.ThrowIfNull(editJob);
+        ArgumentNullException.ThrowIfNull(_editJob);
         try
         {
-            await Mediator.SendAsync(new UpdateJobConcurrenciesCommand(editJob));
+            await Mediator.SendAsync(new UpdateJobConcurrenciesCommand(_editJob));
             Toaster.AddSuccess("Concurrency settings saved successfully");
         }
         catch (DbUpdateConcurrencyException)
@@ -121,6 +121,5 @@
         {
             Toaster.AddError("Error saving concurrency settings", $"{ex.Message}\n{ex.InnerException?.Message}");
         }
-
     }
 }

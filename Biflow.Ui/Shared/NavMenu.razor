@@ -1,11 +1,11 @@
 ﻿@inject AuthenticationMethodResolver AuthenticationResolver
 @inject NavigationManager NavigationManager
 
-<nav class="sidebar @ClassString" style="z-index: 1040;">
+<nav class="sidebar border-end @ClassString" style="z-index: 1040;">
     <ul class="nav flex-column pt-3">
         <li class="nav-item">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All" @onclick="NavLinkClick">
-                <SvgIcon Icon="FeatherIcon.Home" />
+                <SvgIcon Icon="LucideIcon.House" />
                 Home
             </NavLink>
         </li>
@@ -17,52 +17,52 @@
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="schedules" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
-                <SvgIcon Icon="FeatherIcon.Calendar" />
+                <SvgIcon Icon="LucideIcon.Calendar" />
                 Schedules
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="executions" @onclick="NavLinkClick">
-                <SvgIcon Icon="FeatherIcon.Activity" />
+                <SvgIcon Icon="LucideIcon.Activity" />
                 Executions
             </NavLink>
         </li>
         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
             <li class="nav-item">
                 <NavLink class="nav-link" href="tags" @onclick="NavLinkClick" Match="NavLinkMatch.Prefix">
-                    <SvgIcon Icon="FeatherIcon.Tag" />
+                    <SvgIcon Icon="LucideIcon.Tag" />
                     Tags
                 </NavLink>
             </li>
             <li class="nav-item">
                 <NavLink class="nav-link" href="dataobjects" @onclick="NavLinkClick">
-                    <SvgIcon Icon="FeatherIcon.Table" />
-                    Data Objects
+                    <SvgIcon Icon="LucideIcon.Table2" />
+                    Data objects
                 </NavLink>
             </li>
         </AuthorizeView>
         <li class="nav-item">
             <NavLink class="nav-link" href="datatables" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
                 <SvgIcon Icon="LucideIcon.Table" />
-                Data Tables
+                Data tables
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="account" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
-                <SvgIcon Icon="FeatherIcon.User" />
+                <SvgIcon Icon="LucideIcon.User" />
                 Account
             </NavLink>
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="subscriptions" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
-                <SvgIcon Icon="FeatherIcon.Mail" />
+                <SvgIcon Icon="LucideIcon.Mail" />
                 Subscriptions
             </NavLink>
         </li>
         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.VersionManager}, {Roles.Editor}")">
             <li class="nav-item">
                 <NavLink class="nav-link" href="versions" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
-                    <SvgIcon Icon="FeatherIcon.Tool" />
+                    <SvgIcon Icon="LucideIcon.Wrench" />
                     Versions
                 </NavLink>
             </li>
@@ -70,28 +70,29 @@
         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
             <li class="nav-item">
                 <NavLink class="nav-link" href="settings" Match="NavLinkMatch.Prefix" @onclick="NavLinkClick">
-                    <SvgIcon Icon="FeatherIcon.Settings" />
+                    <SvgIcon Icon="LucideIcon.Settings" />
                     Settings
                 </NavLink>
             </li>
         </AuthorizeView>
-        @if (AuthenticationResolver.AuthenticationMethod is AuthenticationMethod.BuiltIn or AuthenticationMethod.Ldap)
+        @switch (AuthenticationResolver.AuthenticationMethod)
         {
-            <li class="nav-item mt-3">
-                <a class="nav-link" href="javascript:void()" @onclick="@(() => NavigationManager.NavigateTo("logout", forceLoad: true))">
-                    <SvgIcon Icon="FeatherIcon.LogOut" />
-                    Log out
-                </a>
-            </li>
-        }
-        else if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.AzureAd)
-        {
-            <li class="nav-item mt-3">
-                <a class="nav-link" href="javascript:void()" @onclick="@(() => NavigationManager.NavigateTo("MicrosoftIdentity/Account/SignOut", forceLoad: true))">
-                    <SvgIcon Icon="FeatherIcon.LogOut" />
-                    Log out
-                </a>
-            </li>
+            case AuthenticationMethod.BuiltIn or AuthenticationMethod.Ldap:
+                <li class="nav-item mt-3">
+                    <a class="nav-link" href="javascript:void(0)" @onclick="@(() => NavigationManager.NavigateTo("logout", forceLoad: true))">
+                        <SvgIcon Icon="LucideIcon.LogOut" />
+                        Log out
+                    </a>
+                </li>
+                break;
+            case AuthenticationMethod.AzureAd:
+                <li class="nav-item mt-3">
+                    <a class="nav-link" href="javascript:void(0)" @onclick="@(() => NavigationManager.NavigateTo("MicrosoftIdentity/Account/SignOut", forceLoad: true))">
+                        <SvgIcon Icon="LucideIcon.LogOut" />
+                        Log out
+                    </a>
+                </li>
+                break;
         }
     </ul>
 </nav>
@@ -103,13 +104,13 @@
     [Parameter]
     public EventCallback OnNavLinkClick { get; set; }
 
-    private bool collapseNavMenu = true;
+    private bool _collapseNavMenu = true;
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private string? NavMenuCssClass => _collapseNavMenu ? "collapse" : null;
 
     private void ToggleNavMenu()
     {
-        collapseNavMenu = !collapseNavMenu;
+        _collapseNavMenu = !_collapseNavMenu;
     }
 
     private async Task NavLinkClick()

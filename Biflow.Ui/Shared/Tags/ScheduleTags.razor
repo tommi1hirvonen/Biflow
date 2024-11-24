@@ -5,7 +5,7 @@
 <div class="row mt-3">
     <div class="col">
         <button class="btn btn-secondary" @onclick="OpenConfirmDeleteModalAsync">
-            <SvgIcon Icon="FeatherIcon.Trash2" />
+            <SvgIcon Icon="LucideIcon.Trash2" />
             Delete unused...
         </button>
     </div>
@@ -13,96 +13,115 @@
 
 <div class="row my-4">
     <div class="col">
-        <div class="card shadow-sm">
+        <div class="card">
             <div class="card-body px-0">
-                <table class="table table-sm table-hover">
-                    <thead>
-                        <tr>
-                            <th>Tag</th>
-                            <th></th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (tags is null)
-                        {
+                <EditForm id="tag_edit_form" Model="_template" OnValidSubmit="UpdateTagAsync">
+                    <table class="table table-sm table-hover">
+                        <thead>
                             <tr>
-                                <td colspan="3" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td>
+                                <th>Tag</th>
+                                <th>Sort order</th>
+                                <th></th>
+                                <th></th>
                             </tr>
-                        }
-                        else if (!tags.Any())
-                        {
-                            <tr>
-                                <td colspan="3" class="px-3">No schedule tags</td>
-                            </tr>
-                        }
-                        else
-                        {
-                            foreach (var tag in tags)
+                        </thead>
+                        <tbody>
+                            @if (_tags is null)
                             {
-                                var schedules = tag.Schedules.Count();
                                 <tr>
-                                    <td class="align-middle">
-                                        <TagBadge Tag="tag" />
-                                    </td>
-                                    <td>
-                                        <div class="btn-group">
-                                            @*Dropdown to edit the tag's name*@
-                                            <HxDropdownButtonGroup>
-                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => templateTag.TagName = tag.TagName">
-                                                    <SvgIcon Icon="FeatherIcon.Edit3" />
-                                                </HxDropdownToggleButton>
-                                                <HxDropdownContent CssClass="p-4">
-                                                    <EditForm Model="templateTag" OnValidSubmit="async () => await UpdateTagNameAsync(tag)" Context="_context" style="min-width: 20rem;">
-                                                        <DataAnnotationsValidator />
-                                                        <ValidationSummary />
-                                                        <div>
-                                                            <label class="form-label">New name</label>
-                                                            <InputText class="form-control form-control-sm" @bind-Value="templateTag.TagName" autocomplete="off"></InputText>
-                                                        </div>
-                                                        <HxSubmit Size="ButtonSize.Small" Color="ThemeColor.Success" CssClass="mt-3">Save</HxSubmit>
-                                                    </EditForm>
-                                                </HxDropdownContent>
-                                            </HxDropdownButtonGroup>
-                                            <HxDropdownButtonGroup>
-                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                                    <SvgIcon Icon="FeatherIcon.Trash2" />
-                                                </HxDropdownToggleButton>
-                                                <HxDropdownMenu>
-                                                    <HxDropdownHeader>Delete?</HxDropdownHeader>
-                                                    <HxDropdownItem @onclick="async () => await DeleteTag(tag)">Confirm</HxDropdownItem>
-                                                </HxDropdownMenu>
-                                            </HxDropdownButtonGroup>
-                                            <HxDropdownButtonGroup>
-                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                                    @tag.Color
-                                                </HxDropdownToggleButton>
-                                                <HxDropdownMenu>
-                                                    <HxDropdownHeader>Tag color</HxDropdownHeader>
-                                                    @foreach (var color in Enum.GetValues<TagColor>())
-                                                    {
-                                                        <HxDropdownItem OnClick="async () => await SetTagColorAsync(tag, color)">@color</HxDropdownItem>
-                                                    }
-                                                </HxDropdownMenu>
-                                            </HxDropdownButtonGroup>
-                                        </div>
-                                    </td>
-                                    <td class="align-middle">
-                                        <a class="text-body" href="javascript:void(0)" @onclick="async () => await ShowEditModalAsync(tag)">
-                                            @(schedules > 0 ? $"{schedules} schedule(s)" : null)
-                                        </a>
-                                    </td>
+                                    <td colspan="4" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td>
                                 </tr>
                             }
-                        }
-                    </tbody>
-                </table>
+                            else if (!_tags.Any())
+                            {
+                                <tr>
+                                    <td colspan="4" class="px-3">No schedule tags</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                foreach (var tag in _tags.Order())
+                                {
+                                    var schedules = tag.Schedules.Count();
+                                    <tr>
+                                        @if (_editTag?.TagId == tag.TagId)
+                                        {
+                                            <td class="align-middle">
+                                                <InputText class="form-control form-control-sm" @bind-Value="_template.TagName" />
+                                            </td>
+                                            <td class="align-middle">
+                                                <InputNumber class="form-control form-control-sm" @bind-Value="_template.SortOrder" style="max-width: 8rem;" />
+                                            </td>
+                                        }
+                                        else
+                                        {
+                                            <td class="align-middle">
+                                                <TagBadge Tag="tag" />
+                                            </td>
+                                            <td class="align-middle">
+                                                @tag.SortOrder
+                                            </td>
+                                        }
+                                        <td>
+                                            <div class="btn-group">
+                                                @if (_editTag?.TagId == tag.TagId)
+                                                {
+                                                    <HxSubmit FormId="tag_edit_form" Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-success" title="Submit">
+                                                        <SvgIcon Icon="LucideIcon.Check" />
+                                                    </HxSubmit>
+                                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => _editTag = null" title="Cancel">
+                                                        <SvgIcon Icon="LucideIcon.X" />
+                                                    </HxButton>
+                                                }
+                                                else
+                                                {
+                                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => SetEditTag(tag)">
+                                                        <SvgIcon Icon="LucideIcon.PenLine" />
+                                                    </HxButton>
+                                                }
+                                                <HxDropdownButtonGroup>
+                                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                                                        <SvgIcon Icon="LucideIcon.Trash2" />
+                                                    </HxDropdownToggleButton>
+                                                    <HxDropdownMenu>
+                                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                                        <HxDropdownItem @onclick="async () => await DeleteTag(tag)">Confirm</HxDropdownItem>
+                                                    </HxDropdownMenu>
+                                                </HxDropdownButtonGroup>
+                                                <HxDropdownButtonGroup>
+                                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                                                        <SvgIcon Icon="LucideIcon.Palette" />
+                                                    </HxDropdownToggleButton>
+                                                    <HxDropdownMenu>
+                                                        <HxDropdownHeader>Tag color</HxDropdownHeader>
+                                                        @foreach (var color in Enum.GetValues<TagColor>())
+                                                        {
+                                                            var colorTag = new ColorTag(color.ToString(), color);
+                                                            <HxDropdownItem OnClick="async () => await SetTagColorAsync(tag, color)">
+                                                                <TagBadge Tag="colorTag" />
+                                                            </HxDropdownItem>
+                                                        }
+                                                    </HxDropdownMenu>
+                                                </HxDropdownButtonGroup>
+                                            </div>
+                                        </td>
+                                        <td class="align-middle">
+                                            <a class="text-body" href="javascript:void(0)" @onclick="async () => await ShowEditModalAsync(tag)">
+                                                @(schedules > 0 ? $"{schedules} schedule(s)" : null)
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </EditForm>
             </div>
         </div>
     </div>
 </div>
 
-<HxModal @ref="confirmDeleteModal" Size="ModalSize.Regular" Title="Delete tags">
+<HxModal @ref="_confirmDeleteModal" Size="ModalSize.Regular" Title="Delete tags">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -119,12 +138,12 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await confirmDeleteModal.LetAsync(x => x.HideAsync())">Cancel</button>
+        <button class="btn btn-secondary" @onclick="async () => await _confirmDeleteModal.LetAsync(x => x.HideAsync())">Cancel</button>
         <button class="btn btn-danger" @onclick="DeleteUnusedTagsAsync">Delete</button>
     </FooterTemplate>
 </HxModal>
 
-<HxModal @ref="editModal" Size="ModalSize.Large" Title="@($"Edit tag {editTag?.TagName}")" Scrollable="true">
+<HxModal @ref="_manageModal" Size="ModalSize.Large" Title="@($"Edit tag {_manageTag?.TagName}")" Scrollable="true">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -136,7 +155,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var schedule in editTag?.Schedules.OrderBy(j => j.ScheduleName).AsEnumerable() ?? [])
+                        @foreach (var schedule in _manageTag?.Schedules.OrderBy(j => j.ScheduleName).AsEnumerable() ?? [])
                         {
                             <tr>
                                 <td class="align-middle">
@@ -145,7 +164,7 @@
                                 <td class="align-middle">
                                     <div class="btn-group">
                                         <button class="btn btn-sm btn-auto" @onclick="async () => await DeleteScheduleTag(schedule)">
-                                            <SvgIcon Icon="FeatherIcon.Delete" />
+                                            <SvgIcon Icon="LucideIcon.Delete" />
                                         </button>
                                     </div>
                                 </td>
@@ -157,29 +176,30 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await editModal.LetAsync(x => x.HideAsync())">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await _manageModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
 @code {
-    private readonly ScheduleTag templateTag = new(string.Empty);
+    private List<ScheduleTag>? _tags;
+    private HxModal? _confirmDeleteModal;
+    private HxModal? _manageModal;
+    private ScheduleTag? _manageTag;
+    private ScheduleTag _template = new("");
+    private ScheduleTag? _editTag;
 
-    private List<ScheduleTag>? tags;
-    private HxModal? confirmDeleteModal;
-    private HxModal? editModal;
-    private ScheduleTag? editTag;
-
-    private IEnumerable<ScheduleTag> UnusedTags => tags?
+    private IEnumerable<ScheduleTag> UnusedTags => _tags?
         .Where(t => !t.Schedules.Any())
+        .Order()
+        .AsEnumerable()
         ?? [];
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = await Task.Run(DbContextFactory.CreateDbContext);
-        tags = await context.ScheduleTags
+        await using var context = await DbContextFactory.CreateDbContextAsync();
+        _tags = await context.ScheduleTags
             .AsNoTrackingWithIdentityResolution()
             .Include(t => t.Schedules)
-            .OrderBy(t => t.TagName)
             .ToListAsync();
     }
 
@@ -191,22 +211,32 @@
             return;
         }
 
-        await confirmDeleteModal.LetAsync(x => x.ShowAsync());
+        await _confirmDeleteModal.LetAsync(x => x.ShowAsync());
     }
 
     private async Task DeleteUnusedTagsAsync()
     {
         var response = await Mediator.SendAsync(new DeleteUnusedScheduleTagsCommand());
-        tags?.RemoveAll(t => response.DeletedTags.Any(d => d.TagId == t.TagId));
-        await confirmDeleteModal.LetAsync(x => x.HideAsync());
+        _tags?.RemoveAll(t => response.DeletedTags.Any(d => d.TagId == t.TagId));
+        await _confirmDeleteModal.LetAsync(x => x.HideAsync());
     }
 
-    private async Task UpdateTagNameAsync(Tag tag)
+    private void SetEditTag(ScheduleTag tag)
+    {
+        _template = new ScheduleTag(tag.TagName) { SortOrder = tag.SortOrder };
+        _editTag = tag;
+    }
+
+    private async Task UpdateTagAsync()
     {
         try
         {
-            tag.TagName = templateTag.TagName;
-            await Mediator.SendAsync(new UpdateTagCommand(tag));
+            ArgumentNullException.ThrowIfNull(_editTag);
+            _editTag.TagName = _template.TagName;
+            _editTag.SortOrder = _template.SortOrder;
+            await Mediator.SendAsync(new UpdateTagCommand(_editTag));
+            _editTag = null;
+            _template = new("");
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -221,17 +251,17 @@
     private async Task DeleteTag(ScheduleTag tag)
     {
         await Mediator.SendAsync(new DeleteTagCommand(tag.TagId));
-        tags?.Remove(tag);
+        _tags?.Remove(tag);
     }
 
     private async Task DeleteScheduleTag(Schedule schedule)
     {
-        if (editTag is null)
+        if (_manageTag is null)
         {
             return;
         }
-        await Mediator.SendAsync(new DeleteScheduleTagCommand(schedule.ScheduleId, editTag.TagId));
-        editTag.Schedules.Remove(schedule);
+        await Mediator.SendAsync(new DeleteScheduleTagCommand(schedule.ScheduleId, _manageTag.TagId));
+        _manageTag.Schedules.Remove(schedule);
     }
 
     private async Task SetTagColorAsync(Tag tag, TagColor color)
@@ -242,7 +272,7 @@
 
     private async Task ShowEditModalAsync(ScheduleTag tag)
     {
-        editTag = tag;
-        await editModal.LetAsync(x => x.ShowAsync());
+        _manageTag = tag;
+        await _manageModal.LetAsync(x => x.ShowAsync());
     }
 }

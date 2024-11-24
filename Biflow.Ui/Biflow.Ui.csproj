@@ -1,10 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <UserSecretsId>8cf96230-2050-421c-964f-7a7832beccca</UserSecretsId>
 	<Nullable>enable</Nullable>
-	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <LangVersion>preview</LangVersion>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	<!-- Allow NuGet warnings to remain as warnings -->
 	<WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
 	<ImplicitUsings>enable</ImplicitUsings>
@@ -28,15 +29,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BlazorMonaco" Version="3.2.0" />
-    <PackageReference Include="Havit.Blazor.Components.Web.Bootstrap" Version="4.6.12" />
-    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="8.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.0" />
-    <PackageReference Include="Serilog.AspNetCore" Version="8.0.2" />
+    <PackageReference Include="BlazorMonaco" />
+    <PackageReference Include="Havit.Blazor.Components.Web.Bootstrap" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
+    <PackageReference Include="Serilog.AspNetCore" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Biflow.Aspire.ServiceDefaults\Biflow.Aspire.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Biflow.DataAccess\Biflow.DataAccess.csproj" />
     <ProjectReference Include="..\Biflow.Executor.Core\Biflow.Executor.Core.csproj" />
     <ProjectReference Include="..\Biflow.Scheduler.Core\Biflow.Scheduler.Core.csproj" />

@@ -1,16 +1,16 @@
 ﻿@inject ToasterService Toaster
 @inject IMediator Mediator
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 
 <div class="row">
     <div class="col">
-        <HxButton Color="ThemeColor.Success" OnClick="() => selectStepOffcanvas.LetAsync(x => x.ShowAsync())">
+        <HxButton Color="ThemeColor.Success" OnClick="() => _selectStepOffcanvas.LetAsync(x => x.ShowAsync())">
             Add subscription
         </HxButton>
     </div>
 </div>
 
-<div class="card shadow-sm mt-3">
+<div class="card mt-3">
     <div class="card-body px-0">
         <table class="table table-hover">
             <thead>
@@ -43,7 +43,8 @@
                             return (sub, job, step);
                         })
                         .OrderBy(s => s.job?.JobName)
-                        .ThenBy(s => s.step?.StepName);
+                        .ThenBy(s => s.step?.StepName)
+                        .ToArray();
                     @if (!subscriptions.Any())
                     {
                         <tr>
@@ -84,7 +85,7 @@
                             </td>
                             <td>
                                 <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto" title="Remove subscription" OnClick="() => RemoveSubscriptionAsync(sub)">
-                                    <SvgIcon Icon="FeatherIcon.Delete" />
+                                    <SvgIcon Icon="LucideIcon.Delete" />
                                 </HxButton>
                             </td>
                         </tr>
@@ -95,15 +96,15 @@
     </div>
 </div>
 
-<HxOffcanvas @ref="selectStepOffcanvas" Title="Select step" Backdrop="OffcanvasBackdrop.False">
+<HxOffcanvas @ref="_selectStepOffcanvas" Title="Select step" Backdrop="OffcanvasBackdrop.False">
     <BodyTemplate>
         <div class="row">
             <div class="col">
                 <div class="input-group">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Search" />
+                        <SvgIcon Icon="LucideIcon.Search" />
                     </div>
-                    <input type="search" class="form-control form-control-sm" placeholder="Search jobs" @bind-value="jobSearchTerm" @bind-value:event="oninput" />
+                    <input type="search" class="form-control form-control-sm" placeholder="Search jobs" @bind-value="_jobSearchTerm" @bind-value:event="oninput" />
                 </div>
             </div>
         </div>
@@ -111,15 +112,15 @@
             <div class="col">
                 <div class="input-group">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Search" />
+                        <SvgIcon Icon="LucideIcon.Search" />
                     </div>
-                    <input type="search" class="form-control form-control-sm" placeholder="Search steps" @bind-value="stepSearchTerm" @bind-value:event="oninput" />
+                    <input type="search" class="form-control form-control-sm" placeholder="Search steps" @bind-value="_stepSearchTerm" @bind-value:event="oninput" />
                 </div>
             </div>
             <div class="col-auto">
-                <FilterDropdown FilterSet="stepTypeFilter" Items="Steps?.Select(s => s.StepType).Distinct()" OnChange="StateHasChanged">
+                <FilterDropdown FilterSet="_stepTypeFilter" Items="Steps?.Select(s => s.StepType).Distinct()" OnChange="StateHasChanged">
                     <TitleTemplate>
-                        <SvgIcon Icon="FeatherIcon.Tool" />
+                        <SvgIcon Icon="LucideIcon.Wrench" />
                         Step type
                     </TitleTemplate>
                     <ItemTemplate Context="item">
@@ -135,28 +136,28 @@
                     @if (Steps is not null && Jobs is not null)
                     {
                         var jobs = Jobs
-                            .Where(j => string.IsNullOrEmpty(jobSearchTerm) || j.JobName.ContainsIgnoreCase(jobSearchTerm))
+                            .Where(j => string.IsNullOrEmpty(_jobSearchTerm) || j.JobName.ContainsIgnoreCase(_jobSearchTerm))
                             .OrderBy(j => j.JobName)
                             .Select(j =>
                             {
-                                var expanded = jobExpandState.GetValueOrDefault(j.JobId);
+                                var expanded = _jobExpandState.GetValueOrDefault(j.JobId);
                                 var availableSteps = GetAvailableSteps(j);
                                 return (j, expanded, availableSteps);
                             })
                             .Where(j => j.availableSteps.Length > 0);
                         @foreach (var (job, expanded, availableSteps) in jobs)
                         {
-                            <div class="list-group-item" style="cursor: pointer;" @onclick="() => jobExpandState[job.JobId] = !expanded">
+                            <div class="list-group-item" style="cursor: pointer;" @onclick="() => _jobExpandState[job.JobId] = !expanded">
                                 <h6>
                                     @if (expanded)
                                     {
-                                        <SvgIcon Icon="FeatherIcon.ChevronDown" />
+                                        <SvgIcon Icon="LucideIcon.ChevronDown" />
                                     }
                                     else
                                     {
-                                        <SvgIcon Icon="FeatherIcon.ChevronRight" />
+                                        <SvgIcon Icon="LucideIcon.ChevronRight" />
                                     }
-                                    <HighlightableText Text="@job.JobName" PartToHighlight="@jobSearchTerm" />
+                                    <HighlightableText Text="@job.JobName" PartToHighlight="@_jobSearchTerm" />
                                 </h6>
                             </div>
                             @if (expanded)
@@ -165,7 +166,7 @@
                                 {
                                     <div class="ps-5 list-group-item list-group-item-action" @onclick="() => AddSubscriptionAsync(step.StepId)" style="cursor: pointer;">
                                         <StepTypeIcon StepType="step.StepType" />
-                                        <HighlightableText Text="@step.StepName" PartToHighlight="@stepSearchTerm" />
+                                        <HighlightableText Text="@step.StepName" PartToHighlight="@_stepSearchTerm" />
                                     </div>
                                 }
                             }
@@ -176,7 +177,7 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" OnClick="() => selectStepOffcanvas.LetAsync(x => x.HideAsync())" Spinner="false">
+        <HxButton Color="ThemeColor.Secondary" OnClick="() => _selectStepOffcanvas.LetAsync(x => x.HideAsync())" Spinner="false">
             Close
         </HxButton>
     </FooterTemplate>
@@ -195,16 +196,15 @@
     [Parameter]
     public EventCallback OnSubscriptionCountChanged { get; set; }
 
-    private readonly HashSet<StepType> stepTypeFilter = [];
-    private readonly Dictionary<Guid, bool> jobExpandState = [];
-    private static readonly JsonSerializerOptions jsonOptions = new JsonSerializerOptions { WriteIndented = true };
+    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+    private readonly HashSet<StepType> _stepTypeFilter = [];
+    private readonly Dictionary<Guid, bool> _jobExpandState = [];
 
-    private HxOffcanvas? selectStepOffcanvas;
-    private string stepSearchTerm = "";
-    private string jobSearchTerm = "";
+    private HxOffcanvas? _selectStepOffcanvas;
+    private string _stepSearchTerm = "";
+    private string _jobSearchTerm = "";
 
-    private IEnumerable<StepSubscription> Subscriptions =>
-        User?.Subscriptions.OfType<StepSubscription>() ?? Enumerable.Empty<StepSubscription>();
+    private IEnumerable<StepSubscription> Subscriptions => User?.Subscriptions.OfType<StepSubscription>() ?? [];
 
     private StepProjection[] GetAvailableSteps(JobProjection job)
     {
@@ -226,8 +226,8 @@
             }
             catch (CyclicDependencyException ex)
             {
-                var message = JsonSerializer.Serialize(ex.CyclicObjects, jsonOptions);
-                JS.InvokeVoidAsync("console.log", message);
+                var message = JsonSerializer.Serialize(ex.CyclicObjects, JsonOptions);
+                Js.InvokeVoidAsync("console.log", message);
                 Toaster.AddError("Error sorting steps", "Cyclic dependencies detected. See browser console for detailed output.");
             }
             catch (Exception ex)
@@ -237,9 +237,9 @@
         }
 
         return steps
-            .Where(s => string.IsNullOrEmpty(stepSearchTerm) || (s.StepName?.ContainsIgnoreCase(stepSearchTerm) ?? false))
-            .Where(s => !stepTypeFilter.Any() || stepTypeFilter.Contains(s.StepType))
-            .Where(s => !Subscriptions.Any(sub => s.StepId == sub.StepId))
+            .Where(s => string.IsNullOrEmpty(_stepSearchTerm) || (s.StepName?.ContainsIgnoreCase(_stepSearchTerm) ?? false))
+            .Where(s => !_stepTypeFilter.Any() || _stepTypeFilter.Contains(s.StepType))
+            .Where(s => Subscriptions.All(sub => s.StepId != sub.StepId))
             .OrderBy(s => s, comparer)
             .ToArray();
     }

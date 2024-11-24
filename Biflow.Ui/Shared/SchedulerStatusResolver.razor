@@ -11,11 +11,11 @@
             try
             {
                 var status = await SchedulerService.GetStatusAsync();
-                var message = status.Match(
-                    (Success success) => null as string,
-                    (AuthorizationError error1) => "Authorization failed when getting scheduler service status. Check the scheduler service auth configuration.",
-                    (SchedulerError error2) => "Scheduler service reported internal error. Check the scheduler service log for details.",
-                    (UndefinedError error3) => "Undefined error getting scheduler service status. Make sure the service is configured and running correctly.");
+                var message = status.Match<string?>(
+                    (Success _) => null,
+                    (AuthorizationError _) => "Authorization failed when getting scheduler service status. Check the scheduler service auth configuration.",
+                    (SchedulerError _) => "Scheduler service reported internal error. Check the scheduler service log for details.",
+                    (UndefinedError _) => "Undefined error getting scheduler service status. Make sure the service is configured and running correctly.");
                 if (message is not null)
                 {
                     await OnStatusMessageResolved.InvokeAsync(message);
@@ -23,7 +23,7 @@
             }
             catch
             {
-                await OnStatusMessageResolved.InvokeAsync($"Error getting scheduler service status. Make sure the service is configured and running correctly.");
+                await OnStatusMessageResolved.InvokeAsync("Error getting scheduler service status. Make sure the service is configured and running correctly.");
             }
         }
     }

@@ -62,6 +62,17 @@ public class SerializationTests(SerializationTestsFixture fixture) : IClassFixtu
     }
 
     [Fact]
+    public void Serialize_DbtAccounts()
+    {
+        var json = JsonSerializer.Serialize(fixture.DbtAccounts, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
+        var items = JsonSerializer.Deserialize<DbtAccount[]>(json, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
+        Assert.NotNull(items);
+        Assert.NotEmpty(items);
+        Assert.All(items, x => Assert.NotEqual(x.DbtAccountId, Guid.Empty));
+        Assert.All(items, x => Assert.Empty(x.ApiToken));
+    }
+
+    [Fact]
     public void Serialize_BlobStorageClients()
     {
         var json = JsonSerializer.Serialize(fixture.BlobStorageClients, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
@@ -109,7 +120,7 @@ public class SerializationTests(SerializationTestsFixture fixture) : IClassFixtu
     public void Serialize_Tags()
     {
         var json = JsonSerializer.Serialize(fixture.Tags, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
-        var items = JsonSerializer.Deserialize<StepTag[]>(json, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
+        var items = JsonSerializer.Deserialize<Tag[]>(json, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
         Assert.NotNull(items);
         Assert.NotEmpty(items);
         Assert.All(items, x => Assert.NotEqual(x.TagId, Guid.Empty));
@@ -170,6 +181,7 @@ public class SerializationTests(SerializationTestsFixture fixture) : IClassFixtu
             QlikCloudEnvironments = fixture.QlikCloudClients,
             BlobStorageClients = fixture.BlobStorageClients,
             DatabricksWorkspaces = fixture.DatabricksWorkspaces,
+            DbtAccounts = fixture.DbtAccounts,
             Jobs = fixture.Jobs,
             Tags = fixture.Tags,
             DataObjects = fixture.DataObjects,

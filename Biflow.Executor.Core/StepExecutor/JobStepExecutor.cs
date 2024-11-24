@@ -32,11 +32,16 @@ internal class JobStepExecutor(
                 true => step.TagFilters.Select(t => t.TagId).ToArray(),
                 _ => null
             };
-            using var builder = await _executionBuilderFactory.CreateAsync(step.JobToExecuteId, createdBy: null, parent: executionAttempt,
+            using var builder = await _executionBuilderFactory.CreateAsync(
+                step.JobToExecuteId,
+                createdBy: null,
+                parent: executionAttempt,
+                predicates:
                 [
-                    context => step => step.IsEnabled,
-                    context => step => tagIds == null || step.Tags.Any(t => tagIds.Contains(t.TagId))
-                ]);
+                    _ => s => s.IsEnabled,
+                    _ => s => tagIds == null || s.Tags.Any(t => tagIds.Contains(t.TagId))
+                ],
+                CancellationToken.None);
             ArgumentNullException.ThrowIfNull(builder);
             builder.AddAll();
             builder.Notify = step.Execution.Notify;
@@ -53,7 +58,6 @@ internal class JobStepExecutor(
             if (step.StepExecutionParameters.Any())
             {
                 var parameters = step.StepExecutionParameters
-                    .Cast<JobStepExecutionParameter>()
                     .Join(builder.Parameters,
                     stepParam => stepParam.AssignToJobParameterId,
                     jobParam => jobParam.ParameterId,
@@ -66,7 +70,7 @@ internal class JobStepExecutor(
                 }
             }
             
-            var execution = await builder.SaveExecutionAsync();
+            var execution = await builder.SaveExecutionAsync(CancellationToken.None);
             if (execution is null)
             {
                 attempt.AddWarning("Child job execution contained no steps");
@@ -83,7 +87,7 @@ internal class JobStepExecutor(
 
         try
         {
-            using var context = _dbContextFactory.CreateDbContext();
+            await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.ChildJobExecutionId = jobExecutionId;
             await context.Set<JobStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
@@ -98,7 +102,7 @@ internal class JobStepExecutor(
             
         try
         {
-            await _executionManager.StartExecutionAsync(jobExecutionId);
+            await _executionManager.StartExecutionAsync(jobExecutionId, CancellationToken.None);
         }
         catch (Exception ex)
         {
@@ -107,53 +111,53 @@ internal class JobStepExecutor(
             return Result.Failure;
         }
 
-        if (step.JobExecuteSynchronized)
+        if (!step.JobExecuteSynchronized)
         {
-            try
-            {
-                await _executionManager.WaitForTaskCompleted(jobExecutionId, cancellationToken);
-            }
-            catch (OperationCanceledException ex)
-            {
-                _executionManager.CancelExecution(jobExecutionId, cancellationTokenSource.Username);
-                attempt.AddWarning(ex);
-                return Result.Cancel;
-            }
-
-            try
-            {
-                using var context = _dbContextFactory.CreateDbContext();
-                var status = await context.Executions
-                    .Where(e => e.ExecutionId == jobExecutionId)
-                    .Select(e => e.ExecutionStatus)
-                    .FirstAsync();
-                
-                if (status is ExecutionStatus.Succeeded or ExecutionStatus.Warning)
-                {
-                    return Result.Success;
-                }
-
-                var error = status switch
-                {
-                    ExecutionStatus.Failed => "Sub-execution failed",
-                    ExecutionStatus.Stopped => "Sub-execution was stopped",
-                    ExecutionStatus.Suspended => "Sub-execution was suspended",
-                    ExecutionStatus.NotStarted => "Sub-execution failed to start",
-                    ExecutionStatus.Running => $"Sub-execution was finished but its status was reported as {status} after finishing",
-                    _ => "Unhandled sub-execution status",
-                };
-                attempt.AddError(error);
-                return Result.Failure;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{ExecutionId} {Step} Error getting sub-execution status for execution id {executionId}", step.ExecutionId, step, jobExecutionId);
-                attempt.AddError(ex, "Error getting sub-execution status");
-                return Result.Failure;
-            }
+            return Result.Success;
+        }
+        
+        try
+        {
+            await _executionManager.WaitForTaskCompleted(jobExecutionId, cancellationToken);
+        }
+        catch (OperationCanceledException ex)
+        {
+            _executionManager.CancelExecution(jobExecutionId, cancellationTokenSource.Username);
+            attempt.AddWarning(ex);
+            return Result.Cancel;
         }
 
-        return Result.Success;
+        try
+        {
+            await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+            var status = await context.Executions
+                .Where(e => e.ExecutionId == jobExecutionId)
+                .Select(e => e.ExecutionStatus)
+                .FirstAsync(CancellationToken.None);
+            
+            if (status is ExecutionStatus.Succeeded or ExecutionStatus.Warning)
+            {
+                return Result.Success;
+            }
+
+            var error = status switch
+            {
+                ExecutionStatus.Failed => "Sub-execution failed",
+                ExecutionStatus.Stopped => "Sub-execution was stopped",
+                ExecutionStatus.Suspended => "Sub-execution was suspended",
+                ExecutionStatus.NotStarted => "Sub-execution failed to start",
+                ExecutionStatus.Running => $"Sub-execution was finished but its status was reported as {status} after finishing",
+                _ => "Unhandled sub-execution status",
+            };
+            attempt.AddError(error);
+            return Result.Failure;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "{ExecutionId} {Step} Error getting sub-execution status for execution id {executionId}", step.ExecutionId, step, jobExecutionId);
+            attempt.AddError(ex, "Error getting sub-execution status");
+            return Result.Failure;
+        }
     }
 
 }

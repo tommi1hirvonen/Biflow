@@ -1,6 +1,9 @@
-﻿@inject IDbContextFactory<AppDbContext> DbFactory
+﻿@implements IDisposable
+
+@inject IDbContextFactory<AppDbContext> DbFactory
 @inject ToasterService Toaster
 @inject IMediator Mediator
+@inject ThemeService ThemeService
 
 <style>
     tr a {
@@ -14,13 +17,33 @@
 
 <PageTitle>Databricks Workspaces | Biflow</PageTitle>
 
-<HxButton Color="ThemeColor.Success"
-          @onclick="() => ShowEditModalAsync(null)"
-          Enabled="workspaces is not null">
-    Add workspace
-</HxButton>
+<div class="row flex-row-reverse justify-content-between align-items-end g-3">
+    <div class="col-auto">
+        <HxAlert Color="ThemeService.CurrentTheme == Theme.Light ? ThemeColor.Light : ThemeColor.Dark"
+                 CssClass="small py-2 mb-0"
+                 style="max-width: 35rem;">
+            <div class="row g-3">
+                <div class="col-auto">
+                    <SvgIcon Icon="LucideIcon.Info" />
+                </div>
+                <div class="col">
+                    Add Databricks workspaces to create steps to run Databricks jobs, notebooks, Python files and pipelines in your Databricks workspace.
+                    <br/>
+                    Currently, only Azure Databricks workspaces are supported.
+                </div>
+            </div>
+        </HxAlert>
+    </div>
+    <div class="col-auto">
+        <HxButton Color="ThemeColor.Success"
+                  @onclick="() => ShowEditModalAsync(null)"
+                  Enabled="_workspaces is not null">
+            Add workspace
+        </HxButton>
+    </div>
+</div>
 
-<div class="card shadow-sm pt-2 my-4">
+<div class="card pt-2 my-4">
     <table class="table table-hover">
         <thead>
             <tr>
@@ -36,17 +59,17 @@
             </tr>
         </thead>
         <tbody>
-            @if (workspaces is null)
+            @if (_workspaces is null)
             {
                 <tr><td colspan="5" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
-            else if (workspaces.Count == 0)
+            else if (_workspaces.Count == 0)
             {
-                <tr><td colspan="5">No workspaces</td></tr>
+                <tr><td colspan="5">No Databricks workspaces</td></tr>
             }
             else
             {
-                @foreach (var workspace in workspaces.OrderBy(w => w.WorkspaceName))
+                @foreach (var workspace in _workspaces.OrderBy(w => w.WorkspaceName))
                 {
                     var jobs = workspace.Steps.Select(s => s.Job).Distinct().Count();
                     var steps = workspace.Steps.Count();
@@ -57,11 +80,11 @@
                         <td class="align-middle">
                             <HxButtonGroup Size="ButtonGroupSize.Small">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="() => ShowEditModalAsync(workspace)">
-                                    <SvgIcon Icon="FeatherIcon.Edit2" />
+                                    <SvgIcon Icon="LucideIcon.Pen" />
                                 </HxButton>
                                 <HxDropdownButtonGroup>
                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="delete">
-                                        <SvgIcon Icon="FeatherIcon.Trash2" />
+                                        <SvgIcon Icon="LucideIcon.Trash2" />
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
                                         <HxDropdownHeader>Delete?</HxDropdownHeader>
@@ -80,8 +103,8 @@
                             <a class="text-body" href="javascript:void(0)"
                                @onclick="async () =>
                                 {
-                                stepsWorkspace = workspace;
-                                await stepsModal.LetAsync(x => x.ShowAsync());
+                                _stepsWorkspace = workspace;
+                                await _stepsModal.LetAsync(x => x.ShowAsync());
                                 }">
                                 @(steps > 0 ? $"{steps} step(s)" : null)
                             </a>
@@ -93,9 +116,9 @@
     </table>
 </div>
 
-<DatabricksWorkspaceEditModal @ref="editModal" OnWorkspaceSubmit="OnWorkspaceSubmitAsync" />
+<DatabricksWorkspaceEditModal @ref="_editModal" OnWorkspaceSubmit="OnWorkspaceSubmitAsync" />
 
-<HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsWorkspace?.WorkspaceName}")">
+<HxModal @ref="_stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {_stepsWorkspace?.WorkspaceName}")">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -107,7 +130,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var step in stepsWorkspace?.Steps
+                        @foreach (var step in _stepsWorkspace?.Steps
                             .OrderBy(s => s.Job.JobName)
                             .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
                         {
@@ -128,20 +151,26 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await stepsModal.LetAsync(x => x.HideAsync())">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await _stepsModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
 @code {
-    private List<DatabricksWorkspace>? workspaces;
-    private DatabricksWorkspaceEditModal? editModal;
-    private DatabricksWorkspace? stepsWorkspace;
-    private HxModal? stepsModal;
+    private List<DatabricksWorkspace>? _workspaces;
+    private DatabricksWorkspaceEditModal? _editModal;
+    private DatabricksWorkspace? _stepsWorkspace;
+    private HxModal? _stepsModal;
+    
+    protected override void OnInitialized() => ThemeService.OnThemeChanged += OnThemeChanged;
+    
+    public void Dispose() => ThemeService.OnThemeChanged -= OnThemeChanged;
+
+    private void OnThemeChanged(Theme theme, bool isAuto) => StateHasChanged();
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = await Task.Run<AppDbContext>(DbFactory.CreateDbContext);
-        workspaces = await context.DatabricksWorkspaces
+        await using var context = await DbFactory.CreateDbContextAsync();
+        _workspaces = await context.DatabricksWorkspaces
             .AsNoTrackingWithIdentityResolution()
             .Include(f => f.Steps)
             .ThenInclude(step => step.Job)
@@ -154,7 +183,7 @@
         try
         {
             await Mediator.SendAsync(new DeleteDatabricksWorkspaceCommand(workspace.WorkspaceId));
-            workspaces?.Remove(workspace);
+            _workspaces?.Remove(workspace);
         }
         catch (Exception ex)
         {
@@ -168,17 +197,16 @@
         if (workspace.WorkspaceId == Guid.Empty)
         {
             await Mediator.SendAsync(new CreateDatabricksWorkspaceCommand(workspace));
-            workspaces?.Add(workspace);
         }
         else
         {
             await Mediator.SendAsync(new UpdateDatabricksWorkspaceCommand(workspace));
-            workspaces?.RemoveAll(w => w.WorkspaceId == workspace.WorkspaceId);
-            workspaces?.Add(workspace);
+            _workspaces?.RemoveAll(w => w.WorkspaceId == workspace.WorkspaceId);
         }
+        _workspaces?.Add(workspace);
         StateHasChanged();
     }
 
     private async Task ShowEditModalAsync(DatabricksWorkspace? workspace) =>
-        await editModal.LetAsync(x => x.ShowAsync(workspace?.WorkspaceId ?? Guid.Empty));
+        await _editModal.LetAsync(x => x.ShowAsync(workspace?.WorkspaceId ?? Guid.Empty));
 }

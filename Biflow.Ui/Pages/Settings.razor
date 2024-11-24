@@ -1,198 +1,233 @@
-﻿@page "/settings/{Page?}"
+﻿@page "/settings/{Page?}/"
+@page "/settings/integrations/{IntegrationsPage?}"
 
 @attribute [Authorize(Roles = $"{Roles.Admin}, {Roles.SettingsEditor}")]
 
-@inject IConfiguration Configuration
 @inject NavigationManager NavigationManager
 
 <h4>Settings</h4>
 
 <div class="mt-3 mb-4">
     <AuthorizeView Roles="@(Roles.Admin)">
-        <ul class="nav nav-tabs border-bottom-0" role="tablist">
-    
-                <li class="nav-item" role="presentation">
-                    <NavLink class="nav-link" href="settings/users" Match="NavLinkMatch.All">
-                        <SvgIcon Icon="FeatherIcon.Users" />
-                        Users
-                    </NavLink>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <NavLink class="nav-link" href="settings/subscriptions">
-                        <SvgIcon Icon="FeatherIcon.Mail" />
-                        Subscriptions
-                    </NavLink>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <NavLink class="nav-link" href="settings/apikeys">
-                        <SvgIcon Icon="LucideIcon.GlobeLock" />
-                        API keys
-                    </NavLink>
-                </li>
-    
-        </ul>
-    </AuthorizeView>
-    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
-        <ul class="nav nav-tabs" role="tablist">
+        <ul class="nav nav-underline" role="tablist">
             <li class="nav-item" role="presentation">
-                <NavLink class="nav-link" href="settings/connections">
-                    <SvgIcon Icon="FeatherIcon.Database" />
-                    Connections
+                <NavLink class="nav-link" href="settings/integrations">
+                    <SvgIcon Icon="LucideIcon.Unplug" />
+                    Integrations
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
-                <NavLink class="nav-link" href="settings/credentials">
-                    <SvgIcon Icon="FeatherIcon.Key" />
-                    Credentials
+                <NavLink class="nav-link" href="settings/users" Match="NavLinkMatch.All">
+                    <SvgIcon Icon="LucideIcon.Users" />
+                    Users
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
-                <NavLink class="nav-link" href="settings/appregistrations">
-                    <SvgIcon Icon="FeatherIcon.Globe" />
-                    App registrations
+                <NavLink class="nav-link" href="settings/subscriptions">
+                    <SvgIcon Icon="LucideIcon.Mail" />
+                    Subscriptions
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
-                <NavLink class="nav-link" href="settings/pipelineclients">
-                    <SvgIcon Icon="FeatherIcon.Pipeline" />
-                    Pipeline clients
-                </NavLink>
-            </li>
-            <li class="nav-item" role="presentation">
-                <NavLink class="nav-link" href="settings/functionapps">
-                    <SvgIcon Icon="FeatherIcon.Zap" />
-                    Function Apps
-                </NavLink>
-            </li>
-            <li class="nav-item" role="presentation">
-                <NavLink class="nav-link" href="settings/qlikcloudenvironments">
-                    <SvgIcon Icon="LucideIcon.ScatterChart" />
-                    Qlik Cloud environments
-                </NavLink>
-            </li>
-            <li class="nav-item" role="presentation">
-                <NavLink class="nav-link" href="settings/blobclients">
-                    <SvgIcon Icon="LucideIcon.Container" />
-                    Blob Storage Clients
-                </NavLink>
-            </li>
-            <li class="nav-item" role="presentation">
-                <NavLink class="nav-link" href="settings/databricksworkspaces">
-                    <SvgIcon Icon="LucideIcon.Layers3" />
-                    Databricks workspaces
+                <NavLink class="nav-link" href="settings/apikeys">
+                    <SvgIcon Icon="LucideIcon.GlobeLock" />
+                    API keys
                 </NavLink>
             </li>
         </ul>
     </AuthorizeView>
+
 </div>
 
-@if (Page == "users")
-{
-    <AuthorizeView Roles="@(Roles.Admin)">
-        <Authorized>
-            <UsersList />
-        </Authorized>
-        <NotAuthorized>
-            <Unauthorized />
-        </NotAuthorized>
-    </AuthorizeView>
-}
-else if (Page == "subscriptions")
-{
-    <AuthorizeView Roles="@(Roles.Admin)">
-        <Authorized>
-            <AllSubscriptions />
-        </Authorized>
-        <NotAuthorized>
-            <Unauthorized />
-        </NotAuthorized>
-    </AuthorizeView>
-}
-else if (Page == "apikeys")
-{
-    <AuthorizeView Roles="@Roles.Admin">
-        <Authorized>
-            <ApiKeysList />
-        </Authorized>
-        <NotAuthorized>
-            <Unauthorized />
-        </NotAuthorized>
-    </AuthorizeView>
-}
-else if (Page == "connections")
-{
-    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
-        <ConnectionsList />
-    </AuthorizeView>
-}
-else if (Page == "appregistrations")
-{
-    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
-        <AppRegistrationsList />
-    </AuthorizeView>
-}
-else if (Page == "pipelineclients")
-{
-    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
-        <PipelineClientsList />
-    </AuthorizeView>
-}
-else if (Page == "functionapps")
-{
-    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
-        <FunctionAppsList />
-    </AuthorizeView>
-}
-else if (Page == "qlikcloudenvironments")
-{
-    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
-        <QlikCloudEnvironmentsList />
-    </AuthorizeView>
-}
-else if (Page == "databricksworkspaces")
-{
-    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
-        <DatabricksWorkspacesList />
-    </AuthorizeView>
-}
-else if (Page == "blobclients")
-{
-    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
-        <BlobClientsList />
-    </AuthorizeView>
-}
-else if (Page == "credentials")
-{
-    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.SettingsEditor}")">
-        <CredentialsList />
-    </AuthorizeView>
-}
-else
-{
-    <p>Sorry, nothing at this address.</p>
-}
+<div class="row">
+    @if (IntegrationsPage is not null)
+    {
+        <div class="col-auto">
+            <ul class="nav flex-column nav-pills small" style="gap: 0.4rem;">
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="settings/integrations/mssql">
+                        <SvgIcon Icon="LucideIcon.Database" />
+                        &nbsp;
+                        MS SQL connections
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="settings/integrations/appregistrations">
+                        <SvgIcon Icon="LucideIcon.Globe" />
+                        &nbsp;
+                        App registrations
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="settings/integrations/datafactory">
+                        <SvgIcon Icon="LucideIcon.Factory" />
+                        &nbsp;
+                        Azure Data Factory
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="settings/integrations/synapse">
+                        <SvgIcon Icon="LucideIcon.Cpu" />
+                        &nbsp;
+                        Azure Synapse
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="settings/integrations/functions">
+                        <SvgIcon Icon="LucideIcon.Zap" />
+                        &nbsp;
+                        Azure Functions
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="settings/integrations/databricks">
+                        <SvgIcon Icon="LucideIcon.Layers3" />
+                        &nbsp;
+                        Azure Databricks
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="settings/integrations/blobstorage">
+                        <SvgIcon Icon="LucideIcon.Container" />
+                        &nbsp;
+                        Azure Blob Storage
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="settings/integrations/snowflake">
+                        <SvgIcon Icon="LucideIcon.Snowflake" />
+                        &nbsp;
+                        Snowflake
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="settings/integrations/dbt">
+                        <SvgIcon Icon="LucideIcon.Blocks" />
+                        &nbsp;
+                        dbt Cloud&trade;
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="settings/integrations/qlikcloud">
+                        <SvgIcon Icon="LucideIcon.ScatterChart" />
+                        &nbsp;
+                        Qlik Cloud&reg;
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="settings/integrations/analysisservices">
+                        <SvgIcon Icon="LucideIcon.Box" />
+                        &nbsp;
+                        Analysis Services
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="settings/integrations/credentials">
+                        <SvgIcon Icon="LucideIcon.Key" />
+                        &nbsp;
+                        Credentials
+                    </NavLink>
+                </li>
+            </ul>
+        </div>
+    }
+    <div class="col">
+        @switch (Page)
+        {
+            case "users":
+                <AuthorizeView Roles="@(Roles.Admin)">
+                    <Authorized>
+                        <UsersList />
+                    </Authorized>
+                    <NotAuthorized>
+                        <Unauthorized />
+                    </NotAuthorized>
+                </AuthorizeView>
+                break;
+            case "subscriptions":
+                <AuthorizeView Roles="@(Roles.Admin)">
+                    <Authorized>
+                        <AllSubscriptions />
+                    </Authorized>
+                    <NotAuthorized>
+                        <Unauthorized />
+                    </NotAuthorized>
+                </AuthorizeView>
+                break;
+            case "apikeys":
+                <AuthorizeView Roles="@Roles.Admin">
+                    <Authorized>
+                        <ApiKeysList />
+                    </Authorized>
+                    <NotAuthorized>
+                        <Unauthorized />
+                    </NotAuthorized>
+                </AuthorizeView>
+                break;
+            default:
+            
+                switch (IntegrationsPage)
+                {
+                    case "mssql":
+                        <MsSqlConnectionsList />
+                        break;
+                    case "appregistrations":
+                        <AppRegistrationsList />
+                        break;
+                    case "datafactory":
+                        <DataFactoriesList />
+                        break;
+                    case "synapse":
+                        <SynapseWorkspacesList />
+                        break;
+                    case "functions":
+                        <FunctionAppsList />
+                        break;
+                    case "qlikcloud":
+                        <QlikCloudEnvironmentsList />
+                        break;
+                    case "databricks":
+                        <DatabricksWorkspacesList />
+                        break;
+                    case "snowflake":
+                        <SnowflakeConnectionsList />
+                        break;
+                    case "dbt":
+                        <DbtAccountsList />
+                        break;
+                    case "blobstorage":
+                        <BlobClientsList />
+                        break;
+                    case "analysisservices":
+                        <AnalysisServicesConnectionsList />
+                        break;
+                    case "credentials":
+                        <CredentialsList />
+                        break;
+                }
+                break;
+        }
+    </div>
+</div>
 
 @code {
-    [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
-
     [Parameter] public string? Page { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    [Parameter] public string? IntegrationsPage { get; set; }
+
+    protected override void OnParametersSet()
     {
-        if (Page is not null)
+        if (NavigationManager.Uri.EndsWith("integrations") && IntegrationsPage is null)
+        {
+            NavigationManager.NavigateTo("settings/integrations/mssql");
+            return;
+        }
+        
+        if (Page is not null || IntegrationsPage is not null)
         {
             return;
         }
 
-        ArgumentNullException.ThrowIfNull(AuthenticationState);
-        var authState = await AuthenticationState;
-
-        if (authState.User.IsInRole(Roles.Admin))
-        {
-            NavigationManager.NavigateTo("settings/users");
-            return;
-        }
-
-        NavigationManager.NavigateTo("settings/connections");
+        NavigationManager.NavigateTo("settings/integrations/mssql");
     }
 }

@@ -17,18 +17,19 @@ namespace Biflow.Core.Entities;
 [JsonDerivedType(typeof(SqlStep), nameof(StepType.Sql))]
 [JsonDerivedType(typeof(TabularStep), nameof(StepType.Tabular))]
 [JsonDerivedType(typeof(DatabricksStep), nameof(StepType.Databricks))]
+[JsonDerivedType(typeof(DbtStep), nameof(StepType.Dbt))]
 public abstract class Step : IComparable, IAuditable
 {
-    public Step(StepType stepType)
+    protected Step(StepType stepType)
     {
         StepType = stepType;
     }
 
     /// <summary>
-    /// Used to initialize properties based on another <see cref="Step"/> and optionally on another <see cref="Models.Job"/>
+    /// Used to initialize properties based on another <see cref="Step"/> and optionally on another <see cref="Job"/>
     /// </summary>
     /// <param name="other"><see cref="Step"/> used as a base to initialize the generated object's properties</param>
-    /// <param name="job">Optionally provide a <see cref="Models.Job"/> to swith the generated <see cref="Step"/>'s target job</param>
+    /// <param name="job">Optionally provide a <see cref="Job"/> to switch the generated <see cref="Step"/>'s target job</param>
     protected Step(Step other, Job? job)
     {
         StepId = Guid.NewGuid();
@@ -57,12 +58,12 @@ public abstract class Step : IComparable, IAuditable
             })
             .ToList();
         Tags = other.Tags.ToList();
-        Dependencies = job is null || other.JobId == job.JobId // If step is being copied to the same job, duplicate dependencies.
-            ? other.Dependencies.Select(d => new Dependency(d, this)).ToList()
-            : [];
         ExecutionConditionParameters = other.ExecutionConditionParameters
             .Select(p => new ExecutionConditionParameter(p, this, job))
             .ToList();
+        // Skip copying dependencies.
+        // This is use case specific and potentially requires mapping between ids
+        // and thus cannot be easily done in the constructor.
     }
 
     [Required]
@@ -85,11 +86,9 @@ public abstract class Step : IComparable, IAuditable
     [Display(Name = "Description")]
     public string? StepDescription
     {
-        get => _stepDescription;
-        set => _stepDescription = string.IsNullOrEmpty(value) ? null : value;
+        get;
+        set => field = string.IsNullOrEmpty(value) ? null : value;
     }
-
-    private string? _stepDescription;
 
     [Required]
     [Display(Name = "Execution phase")]
@@ -153,23 +152,17 @@ public abstract class Step : IComparable, IAuditable
 
     public int CompareTo(object? obj)
     {
-        if (obj is null) return 1;
-
-        if (obj is Step other)
+        switch (obj)
         {
-            int result = ExecutionPhase.CompareTo(other.ExecutionPhase);
-            if (result == 0)
-            {
-                return StepName?.CompareTo(other.StepName) ?? 0;
-            }
-            else
-            {
-                return result;
-            }
-        }
-        else
-        {
-            throw new ArgumentException("Object is not a Step");
+            case null:
+                return 1;
+            case Step other:
+                var result = ExecutionPhase.CompareTo(other.ExecutionPhase);
+                return result == 0
+                    ? StepName?.CompareTo(other.StepName) ?? -1
+                    : result;
+            default:
+                throw new ArgumentException("Object is not a Step");
         }
     }
 

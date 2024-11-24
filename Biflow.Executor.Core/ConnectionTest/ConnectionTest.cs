@@ -4,7 +4,7 @@ internal class ConnectionTest(IDbContextFactory<ExecutorDbContext> dbContextFact
 {
     public async Task RunAsync()
     {
-        using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await dbContextFactory.CreateDbContextAsync();
         await context.Database.OpenConnectionAsync();
         await context.Database.CloseConnectionAsync();
     }

@@ -14,21 +14,24 @@ internal class DuplicateExecutionTracker(StepExecution stepExecution) : IOrchest
             return null;
         }
 
-        var (step, status) = value;
-        // Keep track of the same step being possibly executed in a different execution.
-        if (step.StepId == stepExecution.StepId && step.ExecutionId != stepExecution.ExecutionId)
+        var (otherStep, status) = value;
+        
+        // The step is different or it is the same execution.
+        if (otherStep.StepId != stepExecution.StepId || otherStep.ExecutionId == stepExecution.ExecutionId)
         {
-            _duplicates[step] = status;
-            return new()
-            {
-                ExecutionId = stepExecution.ExecutionId,
-                StepId = stepExecution.StepId,
-                MonitoredExecutionId = step.ExecutionId,
-                MonitoredStepId = step.StepId,
-                MonitoringReason = MonitoringReason.Duplicate
-            };
+            return null;
         }
-        return null;
+        
+        // Keep track of the same step being possibly executed in a different execution.
+        _duplicates[otherStep] = status;
+        return new()
+        {
+            ExecutionId = stepExecution.ExecutionId,
+            StepId = stepExecution.StepId,
+            MonitoredExecutionId = otherStep.ExecutionId,
+            MonitoredStepId = otherStep.StepId,
+            MonitoringReason = MonitoringReason.Duplicate
+        };
     }
 
     public ObserverAction GetStepAction()
@@ -39,21 +42,17 @@ internal class DuplicateExecutionTracker(StepExecution stepExecution) : IOrchest
             return Actions.Execute;
         }
 
-        // There are duplicates and the duplicate behaviour is defined as Fail.
-        if (stepExecution.DuplicateExecutionBehaviour == DuplicateExecutionBehaviour.Fail
-            && _duplicates.Any(d => d.Value == OrchestrationStatus.Running))
+        return stepExecution.DuplicateExecutionBehaviour switch
         {
-            return Actions.Fail(StepExecutionStatus.Duplicate);
-        }
-
-        // There are duplicates and the duplicate behaviour is defined as Wait.
-        if (stepExecution.DuplicateExecutionBehaviour == DuplicateExecutionBehaviour.Wait
-            && _duplicates.Any(d => d.Value == OrchestrationStatus.Running))
-        {
-            return Actions.Wait;
-        }
-
-        // No duplicates or the duplicate behaviour is Allow.
-        return Actions.Execute;
+            // There are duplicates and the duplicate behaviour is defined as Fail.
+            DuplicateExecutionBehaviour.Fail when _duplicates.Any(d => d.Value == OrchestrationStatus.Running) =>
+                Actions.Fail(StepExecutionStatus.Duplicate),
+            // There are duplicates and the duplicate behaviour is defined as Wait.
+            DuplicateExecutionBehaviour.Wait when _duplicates.Any(d => d.Value == OrchestrationStatus.Running) =>
+                Actions.Wait,
+            // No duplicates or the duplicate behaviour is Allow.
+            _ =>
+                Actions.Execute
+        };
     }
 }

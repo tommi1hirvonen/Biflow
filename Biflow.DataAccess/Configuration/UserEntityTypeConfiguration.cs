@@ -13,7 +13,7 @@ internal class UserEntityTypeConfiguration : IEntityTypeConfiguration<User>
             .WithOne(subscription => subscription.User);
 
         builder.Ignore(x => x.Roles);
-        builder.Property("_roles")
+        builder.PrimitiveCollection("_roles")
             .HasColumnName("Roles")
             .HasMaxLength(500)
             .IsUnicode(false);

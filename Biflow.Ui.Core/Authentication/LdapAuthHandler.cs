@@ -26,11 +26,9 @@ internal class LdapAuthHandler(IConfiguration configuration, IMediator mediator)
         ArgumentNullException.ThrowIfNull(userstore);
 
         var ldap = new LdapDirectoryIdentifier(server, port);
-        using var connection = new LdapConnection(ldap)
-        {
-            AuthType = AuthType.Basic,
-            Credential = new(username, password)
-        };
+        using var connection = new LdapConnection(ldap);
+        connection.AuthType = AuthType.Basic;
+        connection.Credential = new(username, password);
         connection.SessionOptions.ProtocolVersion = 3;
         connection.SessionOptions.SecureSocketLayer = useSsl;
         try

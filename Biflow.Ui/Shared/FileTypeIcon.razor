@@ -7,10 +7,10 @@
 
     private Svg Icon => Filename switch
     {
-        string json when json.EndsWith(".json") => LucideIcon.FileJson,
-        string xml when xml.EndsWith(".xml") => LucideIcon.FileCode,
-        string xls when xls.EndsWith(".xlsx") || xls.EndsWith(".xls") || xls.EndsWith(".xlsm") || xls.EndsWith(".csv") => LucideIcon.FileSpreadsheet,
-        string txt when txt.EndsWith(".txt") => LucideIcon.FileText,
-        _ => FeatherIcon.File
+        { } json when json.EndsWith(".json") => LucideIcon.FileJson,
+        { } xml when xml.EndsWith(".xml") => LucideIcon.FileCode,
+        { } xls when xls.EndsWith(".xlsx") || xls.EndsWith(".xls") || xls.EndsWith(".xlsm") || xls.EndsWith(".csv") => LucideIcon.FileSpreadsheet,
+        { } txt when txt.EndsWith(".txt") => LucideIcon.FileText,
+        _ => LucideIcon.File
     };
 }

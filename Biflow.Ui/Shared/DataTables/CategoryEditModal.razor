@@ -3,17 +3,17 @@
 @inject IMediator Mediator
 
 @{
-    var title = category.CategoryId == Guid.Empty ? "New category" : $"Edit {category.CategoryName}";
+    var title = _category.CategoryId == Guid.Empty ? "New category" : $"Edit {_category.CategoryName}";
 }
 
-<HxOffcanvas @ref="modal" Title="@title" Size="OffcanvasSize.Regular">
+<HxOffcanvas @ref="_modal" Title="@title" Size="OffcanvasSize.Regular">
     <BodyTemplate>
-        <EditForm id="category_edit_form" Model="category" OnValidSubmit="SubmitAsync">
+        <EditForm id="category_edit_form" Model="_category" OnValidSubmit="SubmitAsync">
             <DataAnnotationsValidator />
             <ValidationSummary />
             <div>
                 <label class="form-label">Category name</label>
-                <InputText class="form-control" @bind-Value="category.CategoryName"></InputText>
+                <InputText class="form-control" @bind-Value="_category.CategoryName"></InputText>
             </div>
         </EditForm>
     </BodyTemplate>
@@ -21,7 +21,7 @@
         <HxSubmit FormId="category_edit_form" Color="ThemeColor.Success">
             Save
         </HxSubmit>
-        <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" OnClick="() => modal.LetAsync(x => x.HideAsync())" Spinner="false">
+        <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" OnClick="() => _modal.LetAsync(x => x.HideAsync())" Spinner="false">
             Cancel
         </HxButton>
     </FooterTemplate>
@@ -30,32 +30,33 @@
 @code {
     [Parameter] public EventCallback<MasterDataTableCategory> OnCategorySubmitted { get; set; }
 
-    private HxOffcanvas? modal;
-    private MasterDataTableCategory category = new();
+    private HxOffcanvas? _modal;
+    private MasterDataTableCategory _category = new();
 
     public async Task ShowAsync(MasterDataTableCategory? category = null)
     {
         if (category is null)
         {
-            this.category = new();
-            await modal.LetAsync(x => x.ShowAsync());
+            _category = new();
+            await _modal.LetAsync(x => x.ShowAsync());
             return;
         }
-        using var context = await DbContextFactory.CreateDbContextAsync();
-        this.category = await context.MasterDataTableCategories.FirstAsync(c => c.CategoryId == category.CategoryId);
-        await modal.LetAsync(x => x.ShowAsync());
+
+        await using var context = await DbContextFactory.CreateDbContextAsync();
+        _category = await context.MasterDataTableCategories.FirstAsync(c => c.CategoryId == category.CategoryId);
+        await _modal.LetAsync(x => x.ShowAsync());
     }
 
     public async Task SubmitAsync()
     {
         try
         {
-            IRequest command = category.CategoryId == Guid.Empty
-                ? new CreateDataTableCategoryCommand(category)
-                : new UpdateDataTableCategoryCommand(category);
+            IRequest command = _category.CategoryId == Guid.Empty
+                ? new CreateDataTableCategoryCommand(_category)
+                : new UpdateDataTableCategoryCommand(_category);
             await Mediator.SendAsync(command);
-            await OnCategorySubmitted.InvokeAsync(category);
-            await modal.LetAsync(x => x.HideAsync());
+            await OnCategorySubmitted.InvokeAsync(_category);
+            await _modal.LetAsync(x => x.HideAsync());
         }
         catch (Exception ex)
         {

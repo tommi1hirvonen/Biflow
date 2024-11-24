@@ -1,11 +1,11 @@
 ﻿namespace Biflow.Core.Entities;
 
-public class StepExecutionConditionParameter : ParameterBase
+public sealed class StepExecutionConditionParameter : ParameterBase
 {
     public StepExecutionConditionParameter(string parameterName, ParameterValue parameterValue)
     {
         ParameterName = parameterName;
-        _parameterValue = parameterValue;
+        ParameterValue = parameterValue;
     }
 
     public StepExecutionConditionParameter(ExecutionConditionParameter parameter, StepExecution execution)
@@ -26,15 +26,13 @@ public class StepExecutionConditionParameter : ParameterBase
 
     public override ParameterValue ParameterValue
     {
-        get => ExecutionParameter is not null ? ExecutionParameterValue : _parameterValue;
-        set => _parameterValue = value;
-    }
-
-    private ParameterValue _parameterValue = new();
+        get => ExecutionParameter is not null ? ExecutionParameterValue : field;
+        set;
+    } = new();
 
     public Guid? ExecutionParameterId { get; set; }
 
-    public ParameterValue ExecutionParameterValue { get; set; } = new();
+    public ParameterValue ExecutionParameterValue { get; set; }
 
     public ExecutionParameter? ExecutionParameter { get; set; }
 
@@ -42,7 +40,7 @@ public class StepExecutionConditionParameter : ParameterBase
 
     public override string DisplayValue => ExecutionParameter switch
     {
-        not null => $"{ExecutionParameter.DisplayValue?.ToString() ?? "null"} (inherited from execution parameter {ExecutionParameter.DisplayName})",
+        not null => $"{ExecutionParameter.DisplayValue} (inherited from execution parameter {ExecutionParameter.DisplayName})",
         _ => base.DisplayValue
     };
 

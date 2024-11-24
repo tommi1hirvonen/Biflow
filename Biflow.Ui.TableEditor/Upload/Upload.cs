@@ -1,5 +1,4 @@
-﻿using Biflow.Core;
-using System.Data;
+﻿using System.Data;
 
 namespace Biflow.Ui.TableEditor;
 
@@ -27,7 +26,7 @@ public class Upload
 
     public async Task<(int Inserted, int Updated, int Deleted)> SaveUploadToDbAsync(UploadType uploadType)
     {
-        using var connection = new SqlConnection(_table.Connection.ConnectionString);
+        await using var connection = new SqlConnection(_table.Connection.ConnectionString);
         return await _table.Connection.RunImpersonatedOrAsCurrentUserAsync(async () =>
         {
             await connection.OpenAsync();
@@ -101,8 +100,8 @@ public class Upload
             throw new InvalidOperationException("Insert operation rejected because the table does not allow inserts. No changes were made.");
         }
         var quotedInsertColumns = _columns
-            .Where(c => !c.IsIdentity && !c.IsComputed)
-            .Where(c => !c.IsLocked && !c.IsHidden || c.IsPrimaryKey)
+            .Where(c => c is { IsIdentity: false, IsComputed: false })
+            .Where(c => c is { IsLocked: false, IsHidden: false } || c.IsPrimaryKey)
             .Select(c => c.Name.QuoteName())
             .ToArray();
         if (quotedInsertColumns.Length == 0)
@@ -125,7 +124,7 @@ public class Upload
     private async Task<int> ExecuteUpdateAsync(SqlConnection connection, IDbTransaction transaction)
     {
         var quotedUpdateColumns = _columns
-            .Where(c => !c.IsComputed && !c.IsPrimaryKey && !c.IsIdentity && !c.IsLocked && !c.IsHidden)
+            .Where(c => c is { IsComputed: false, IsPrimaryKey: false, IsIdentity: false, IsLocked: false, IsHidden: false })
             .Select(c => c.Name.QuoteName())
             .ToArray();
         if (quotedUpdateColumns.Length == 0)

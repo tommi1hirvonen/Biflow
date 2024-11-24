@@ -2,15 +2,19 @@
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
+public partial class PipelineStepEditModal(
+    ITokenService tokenService,
+    ToasterService toaster,
+    IDbContextFactory<AppDbContext> dbContextFactory)
+    : StepEditModal<PipelineStep>(toaster, dbContextFactory)
 {
     [Parameter] public IList<PipelineClient> PipelineClients { get; set; } = [];
 
-    [Inject] private ITokenService TokenService { get; set; } = null!;
+    private readonly ITokenService _tokenService = tokenService;
 
     internal override string FormId => "pipeline_step_edit_form";
 
-    private PipelineSelectOffcanvas? pipelineSelectOffcanvas;
+    private PipelineSelectOffcanvas? _pipelineSelectOffcanvas;
 
     protected override PipelineStep CreateNewStep(Job job) =>
         new()
@@ -46,12 +50,13 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
                 Toaster.AddWarning("Pipeline name was empty");
                 return;
             }
-            using var context = await DbContextFactory.CreateDbContextAsync();
+
+            await using var context = await DbContextFactory.CreateDbContextAsync();
             var client = await context.PipelineClients
                 .AsNoTrackingWithIdentityResolution()
                 .Include(c => c.AppRegistration)
                 .FirstAsync(c => c.PipelineClientId == Step.PipelineClientId);
-            var pipelineClient = client.CreatePipelineClient(TokenService);
+            var pipelineClient = client.CreatePipelineClient(_tokenService);
             var parameters = await pipelineClient.GetPipelineParametersAsync(Step.PipelineName);
             if (!parameters.Any())
             {
@@ -77,7 +82,7 @@ public partial class PipelineStepEditModal : StepEditModal<PipelineStep>
     private Task OpenPipelineSelectOffcanvas()
     {
         ArgumentNullException.ThrowIfNull(Step?.PipelineClientId);
-        return pipelineSelectOffcanvas.LetAsync(x => x.ShowAsync(Step.PipelineClientId));
+        return _pipelineSelectOffcanvas.LetAsync(x => x.ShowAsync(Step.PipelineClientId));
     }
 
     private void OnPipelineSelected(string pipelineName)

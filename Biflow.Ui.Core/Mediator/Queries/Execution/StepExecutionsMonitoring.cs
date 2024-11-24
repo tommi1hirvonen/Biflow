@@ -12,13 +12,13 @@ internal class StepExecutionsQueryHandler(IDbContextFactory<AppDbContext> dbCont
 {
     public async Task<StepExecutionsMonitoringQueryResponse> Handle(StepExecutionsMonitoringQuery request, CancellationToken cancellationToken)
     {
-        using var context = dbContextFactory.CreateDbContext();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var from = request.FromDateTime;
         var to = request.ToDateTime;
 
         var query = context.StepExecutionAttempts
-        .AsNoTracking()
-                .Where(e => e.StepExecution.Execution.CreatedOn <= to && e.EndedOn >= from);
+            .AsNoTracking()
+            .Where(e => e.StepExecution.Execution.CreatedOn <= to && e.EndedOn >= from);
 
         if (DateTime.Now >= from && DateTime.Now <= to)
         {
@@ -68,8 +68,8 @@ internal class StepExecutionsQueryHandler(IDbContextFactory<AppDbContext> dbCont
                 e.StepExecution.Execution.JobId,
                 job.JobName ?? e.StepExecution.Execution.JobName,
                 step.Dependencies.Select(d => d.DependantOnStepId).ToArray(),
-                step.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color)).ToArray(),
-                job.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color)).ToArray()
+                step.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder)).ToArray(),
+                job.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder)).ToArray()
             )).ToArrayAsync(cancellationToken);
 
         return new StepExecutionsMonitoringQueryResponse(executions);

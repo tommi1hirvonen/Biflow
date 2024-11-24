@@ -10,7 +10,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.XOctagon" />
+                        <SvgIcon Icon="LucideIcon.OctagonX" />
                     </div>
                     <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 5rem;"></InputNumber>
                 </div>
@@ -25,16 +25,16 @@
             <div class="col-md-6 d-inline">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Zap" />
+                        <SvgIcon Icon="LucideIcon.Zap" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.FunctionAppId">
-                        @foreach (var app in FunctionApps ?? Enumerable.Empty<FunctionApp>())
+                        @foreach (var app in FunctionApps)
                         {
                             <option value="@app.FunctionAppId">@app.FunctionAppName</option>
                         }
                     </InputSelect>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenFunctionSelectOffcanvas">
-                        <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
+                        <SvgIcon Icon="LucideIcon.Ellipsis" />
                         Browse functions
                     </HxButton>
                 </div>
@@ -48,7 +48,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Code" />
+                        <SvgIcon Icon="LucideIcon.Code" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.FunctionUrl"></InputText>
                 </div>
@@ -62,12 +62,12 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Key" />
+                        <SvgIcon Icon="LucideIcon.Key" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.FunctionKey"></InputText>
                 </div>
                 @{
-                    var functionAppKey = FunctionApps?.FirstOrDefault(app => app.FunctionAppId == Step.FunctionAppId)?.FunctionAppKey;
+                    var functionAppKey = FunctionApps.FirstOrDefault(app => app.FunctionAppId == Step.FunctionAppId)?.FunctionAppKey;
                 }
                 @if (functionAppKey is null)
                 {
@@ -80,7 +80,7 @@
             </div>
         </div>
 
-        <FunctionSelectOffcanvas @ref="functionSelectOffcanvas" OnFunctionSelected="OnFunctionSelected" />
+        <FunctionSelectOffcanvas @ref="_functionSelectOffcanvas" OnFunctionSelected="OnFunctionSelected" />
 
         <div class="row mt-3">
             <div class="col-md-4 d-md-flex justify-content-end">
@@ -102,7 +102,7 @@
         </div>
         <div class="row justify-content-center">
             <div class="col-md-10">
-                <CodeEditor @ref="editor"
+                <CodeEditor @ref="_editor"
                             Language=""
                             MinimapEnabled="false"
                             InitialValueExpression="() => Step.FunctionInput"
@@ -118,13 +118,13 @@
             <div class="col-md-6">
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_function_input_raw"
-                           checked=@(language == InputLanguage.Text)
+                           checked=@(_language == InputLanguage.Text)
                            @onchange="() => SetLanguageAsync(InputLanguage.Text)">
                     <label class="form-check-label fw-normal" for="radio_function_input_raw">Text</label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_function_input_json"
-                           checked=@(language == InputLanguage.Json)
+                           checked=@(_language == InputLanguage.Json)
                            @onchange="() => SetLanguageAsync(InputLanguage.Json)">
                     <label class="form-check-label fw-normal" for="radio_function_input_json">JSON</label>
                 </div>

@@ -10,7 +10,7 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
 
     public async Task<IJobExecutor> CreateAsync(Guid executionId, CancellationToken cancellationToken = default)
     {
-        using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         
         // Use tracking queries and let EF match the entities from the two separate queries.
         
@@ -52,6 +52,8 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
             from qlik in qlik_.DefaultIfEmpty()
             join db in context.DatabricksWorkspaces on ((DatabricksStepExecution)step).DatabricksWorkspaceId equals db.WorkspaceId into db_
             from db in db_.DefaultIfEmpty()
+            join dbt in context.DbtAccounts on ((DbtStepExecution)step).DbtAccountId equals dbt.DbtAccountId into dbt_
+            from dbt in dbt_.DefaultIfEmpty()
             join exe in context.Credentials on ((ExeStepExecution)step).RunAsCredentialId equals exe.CredentialId into exe_
             from exe in exe_.DefaultIfEmpty()
             select new
@@ -66,6 +68,7 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
                 pipeline,
                 qlik,
                 db,
+                dbt,
                 exe
             };
 
@@ -103,10 +106,11 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
                 case DatabricksStepExecution db:
                     db.SetWorkspace(step.db);
                     break;
+                case DbtStepExecution dbt:
+                    dbt.SetAccount(step.dbt);
+                    break;
                 case ExeStepExecution exe:
                     exe.SetRunAsCredential(step.exe);
-                    break;
-                default:
                     break;
             }
         }

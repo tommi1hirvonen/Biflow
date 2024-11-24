@@ -4,10 +4,8 @@ using Microsoft.AspNetCore.Components.Web;
 
 namespace Biflow.Ui.Components;
 
-public class ContextMenuToggle : ComponentBase
+public class ContextMenuToggle(ContextMenuService contextMenuService) : ComponentBase
 {
-    [Inject] private ContextMenuService ContextMenuService { get; set; } = null!;
-
     [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? InputAttributes { get; set; }
 
     [Parameter] public string? CssClass { get; set; }
@@ -24,9 +22,11 @@ public class ContextMenuToggle : ComponentBase
 
     [Parameter] public RenderFragment? MenuContent { get; set; }
 
-    [Parameter] public bool Disabled { get; set; } = false;
+    [Parameter] public bool Disabled { get; set; }
 
-    [Parameter] public bool AlsoOverrideOnClick { get; set; } = false;
+    [Parameter] public bool AlsoOverrideOnClick { get; set; }
+
+    private readonly ContextMenuService _contextMenuService = contextMenuService;
 
     private bool isShowing;
 
@@ -57,7 +57,7 @@ public class ContextMenuToggle : ComponentBase
         }
         isShowing = true;
         StateHasChanged();
-        await ContextMenuService.ShowContextMenuAsync(e, MenuContent);
+        await _contextMenuService.ShowContextMenuAsync(e, MenuContent);
         isShowing = false;
         StateHasChanged();
     }

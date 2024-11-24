@@ -1,5 +1,5 @@
 ﻿
-<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Large" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true" Title="Search database tables & views">
+<HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Large" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true" Title="Search database tables & views">
     <BodyTemplate>
         <div class="row">
             <div class="col-sm-2">
@@ -8,10 +8,10 @@
             <div class="col-auto">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Database" />
+                        <SvgIcon Icon="LucideIcon.Database" />
                     </div>
-                    <select class="form-select form-select-sm" @bind="connectionId">
-                        @foreach (var connection in Connections ?? [])
+                    <select class="form-select form-select-sm" @bind="_connectionId">
+                        @foreach (var connection in Connections)
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }
@@ -26,10 +26,10 @@
             <div class="col-sm-8">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Search" />
+                        <SvgIcon Icon="LucideIcon.Search" />
                     </div>
-                    <DebounceTextInput @bind-Value="schemaSearchTerm" @bind-Value:after="RunQueryAsync" class="form-control form-control-sm" type="search" placeholder="Schema" />
-                    <DebounceTextInput @bind-Value="nameSearchTerm" @bind-Value:after="RunQueryAsync" class="form-control form-control-sm" type="search" placeholder="Name" />
+                    <DebounceTextInput @bind-Value="_schemaSearchTerm" @bind-Value:after="RunQueryAsync" class="form-control form-control-sm" type="search" placeholder="Schema" />
+                    <DebounceTextInput @bind-Value="_nameSearchTerm" @bind-Value:after="RunQueryAsync" class="form-control form-control-sm" type="search" placeholder="Name" />
                 </div>
             </div>
             <div class="col-sm-2">
@@ -51,7 +51,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (databaseObjects is null)
+                        @if (_databaseObjects is null)
                         {
                             <tr>
                                 <td colspan="3" class="text-center">
@@ -59,7 +59,7 @@
                                 </td>
                             </tr>
                         }
-                        else if (!databaseObjects.Any())
+                        else if (!_databaseObjects.Any())
                         {
                             <tr>
                                 <td colspan="3" class="text-center">
@@ -67,17 +67,17 @@
                                 </td>
                             </tr>
                         }
-                        @foreach (var dbObject in databaseObjects ?? Enumerable.Empty<DbObject>())
+                        @foreach (var dbObject in _databaseObjects ?? [])
                         {
                             var tuple = (dbObject.Server, dbObject.Database, dbObject.Schema, dbObject.Object);
                             <tr style="cursor: pointer;" @onclick="() => SelectDbObjectAsync(tuple, true)">
-                                <td class="align-middle"><HighlightableText Text="@dbObject.Schema" PartToHighlight="@schemaSearchTerm" /></td>
-                                <td class="align-middle"><HighlightableText Text="@dbObject.Object" PartToHighlight="@nameSearchTerm" /></td>
+                                <td class="align-middle"><HighlightableText Text="@dbObject.Schema" PartToHighlight="@_schemaSearchTerm" /></td>
+                                <td class="align-middle"><HighlightableText Text="@dbObject.Object" PartToHighlight="@_nameSearchTerm" /></td>
                                 <td class="align-middle">@dbObject.Type</td>
                                 <td>
                                     <HxButtonGroup Size="ButtonGroupSize.Small">
                                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => SelectDbObjectAsync(tuple, false)" title="Edit before adding">
-                                            <SvgIcon Icon="FeatherIcon.Edit2" />
+                                            <SvgIcon Icon="LucideIcon.Pen" />
                                         </HxButton>
                                     </HxButtonGroup>
                                 </td>

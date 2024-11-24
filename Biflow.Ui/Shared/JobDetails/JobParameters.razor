@@ -1,6 +1,6 @@
 ﻿<PageTitle>@Job?.JobName | Parameters | Biflow</PageTitle>
 
-@if (editJob is null || Steps is null)
+@if (_editJob is null || Steps is null)
 {
     <div class="row mt-3">
         <div class="col text-center">
@@ -16,11 +16,11 @@ else
         <div class="col">
             <HxButtonToolbar>
                 <HxSubmit form="job_parameter_form" Color="ThemeColor.Success">
-                    <SvgIcon Icon="FeatherIcon.Save" />
+                    <SvgIcon Icon="LucideIcon.Save" />
                     Save
                 </HxSubmit>
                 <HxButton Color="ThemeColor.Secondary" CssClass="ms-3" @onclick="AddParameter">
-                    <SvgIcon Icon="FeatherIcon.Plus" />
+                    <SvgIcon Icon="LucideIcon.Plus" />
                     Add parameter
                 </HxButton>
             </HxButtonToolbar>
@@ -30,7 +30,7 @@ else
                         Content="@("<p>Job parameters can be passed to steps that support parameterization.</p><p>Use job parameters to define common parameters across all steps.</p><p>SQL steps can even edit job parameter values during execution.</p>")"
                 Html>
                 <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto">
-                    <SvgIcon Icon="FeatherIcon.HelpCircle" />
+                    <SvgIcon Icon="LucideIcon.CircleHelp" />
                 </HxButton>
             </HxPopover>
         </div>
@@ -38,11 +38,11 @@ else
     
     <div class="row my-4">
         <div class="col">
-            <div class="card shadow-sm">
-                <EditForm EditContext="editContext" id="job_parameter_form" OnValidSubmit="SubmitParameters">
+            <div class="card">
+                <EditForm EditContext="_editContext" id="job_parameter_form" OnValidSubmit="SubmitParameters">
                     <ObjectGraphDataAnnotationsValidator />
                     <ValidationSummary />
-                    <FluentValidationValidator @ref="fluentJobValidator" Validator="JobValidator" />
+                    <FluentValidationValidator @ref="_fluentJobValidator" Validator="_jobValidator" />
                     <table id="parameters_table" class="table">
                         <thead>
                             <tr>
@@ -62,11 +62,11 @@ else
                             </tr>
                         </thead>
                         <tbody>
-                            @if (!editJob?.JobParameters?.Any() ?? true)
+                            @if (!_editJob?.JobParameters.Any() ?? true)
                             {
                                 <tr><td colspan="5">No parameters</td></tr>
                             }
-                            @foreach (var param in editJob?.JobParameters ?? Enumerable.Empty<JobParameter>())
+                            @foreach (var param in _editJob?.JobParameters ?? Enumerable.Empty<JobParameter>())
                             {
                                 var referenceCount = GetInheritingSteps(param)
                                     .Concat(GetCapturingSteps(param))
@@ -78,11 +78,11 @@ else
                                         <InputText class="form-control form-control-sm"
                                                    @bind-Value="param.ParameterName"
                                                    placeholder="Name"
-                                                   @bind-Value:after="() => fluentJobValidator.LetAsync(x => x.ValidateAsync())" />
+                                                   @bind-Value:after="() => _fluentJobValidator.LetAsync(x => x.ValidateAsync())" />
                                     </td>
                                     <DynamicParameterEditor Parameter="param"
                                                             TParameter="JobParameter"
-                                                            OnParameterEdit="p => expressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))">
+                                                            OnParameterEdit="p => _expressionEditOffcanvas.LetAsync(x => x.ShowAsync(p))">
                                         <StaticEditTemplate>
                                             <ParameterTypeValueEditor Parameter="param" />
                                         </StaticEditTemplate>
@@ -90,7 +90,7 @@ else
                                     <td>
                                         @if (referenceCount > 0)
                                         {
-                                            <a class="text-body" href="javascript:void()" @onclick="() => ShowReferencingStepsAsync(param)">
+                                            <a class="text-body" href="javascript:void(0)" @onclick="() => ShowReferencingStepsAsync(param)">
                                                 @referenceCount step(s)
                                             </a>
                                         }
@@ -98,7 +98,7 @@ else
                                     <td>
                                         <HxButtonGroup Size="ButtonGroupSize.Small">
                                             <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto" @onclick="() => RemoveParameter(param)">
-                                                <SvgIcon Icon="FeatherIcon.Delete" />
+                                                <SvgIcon Icon="LucideIcon.Delete" />
                                             </HxButton>
                                         </HxButtonGroup>
                                     </td>
@@ -112,7 +112,7 @@ else
     </div>
 }
 
-<ExpressionEditOffcanvas @ref="expressionEditOffcanvas" TParameter="JobParameter" OnExpressionChanged="StateHasChanged">
+<ExpressionEditOffcanvas @ref="_expressionEditOffcanvas" TParameter="JobParameter" OnExpressionChanged="StateHasChanged">
     <div class="row mt-3">
         <div class="col text-secondary small">
             Job parameter expressions have the following built-in variables automatically available. They can be used to access the internal ids during execution.
@@ -124,13 +124,13 @@ else
     </div>
 </ExpressionEditOffcanvas>
 
-<HxOffcanvas @ref="referencingStepsOffcanvas" Title="@($"Steps referencing {referencingSteps.Parameter.ParameterName}")" Backdrop="OffcanvasBackdrop.False">
+<HxOffcanvas @ref="_referencingStepsOffcanvas" Title="@($"Steps referencing {_referencingSteps.Parameter.ParameterName}")" Backdrop="OffcanvasBackdrop.False">
     <BodyTemplate>
         <h6>
             Inheriting steps
             <HxPopover Content="Steps in this job that have parameters whose value is inheriting the job parameter value"
                        Trigger="PopoverTrigger.Hover">
-                <SvgIcon Icon="FeatherIcon.Info" />
+                <SvgIcon Icon="LucideIcon.Info" />
             </HxPopover>
         </h6>
         <table class="table table-sm">
@@ -142,13 +142,13 @@ else
                 </tr>
             </thead>
             <tbody>
-                @if (!referencingSteps.InheritingSteps.Any())
+                @if (!_referencingSteps.InheritingSteps.Any())
                 {
                     <tr><td class="text-muted">No inheriting steps</td></tr>
                 }
                 else
                 {
-                    foreach (var step in referencingSteps.InheritingSteps)
+                    foreach (var step in _referencingSteps.InheritingSteps)
                     {
                         <tr>
                             <td>
@@ -165,7 +165,7 @@ else
             Capturing steps
             <HxPopover Content="Steps in this job that are capturing their return value and saving it to the job parameter"
                        Trigger="PopoverTrigger.Hover">
-                <SvgIcon Icon="FeatherIcon.Info" />
+                <SvgIcon Icon="LucideIcon.Info" />
             </HxPopover>
         </h6>
         <table class="table table-sm">
@@ -177,13 +177,13 @@ else
                 </tr>
             </thead>
             <tbody>
-                @if (!referencingSteps.CapturingSteps.Any())
+                @if (!_referencingSteps.CapturingSteps.Any())
                 {
                     <tr><td class="text-muted">No capturing steps</td></tr>
                 }
                 else
                 {
-                    foreach (var step in referencingSteps.CapturingSteps)
+                    foreach (var step in _referencingSteps.CapturingSteps)
                     {
                         <tr>
                             <td>
@@ -200,7 +200,7 @@ else
             Assigning steps
             <HxPopover Content="Steps in other jobs that are launching this job and assigning values to the job parameter"
                        Trigger="PopoverTrigger.Hover">
-                <SvgIcon Icon="FeatherIcon.Info" />
+                <SvgIcon Icon="LucideIcon.Info" />
             </HxPopover>
         </h6>
         <table class="table table-sm">
@@ -215,13 +215,13 @@ else
                 </tr>
             </thead>
             <tbody>
-                @if (!referencingSteps.AssigningSteps.Any())
+                @if (!_referencingSteps.AssigningSteps.Any())
                 {
                     <tr><td class="text-muted" colspan="2">No assigning steps</td></tr>
                 }
                 else
                 {
-                    foreach (var step in referencingSteps.AssigningSteps)
+                    foreach (var step in _referencingSteps.AssigningSteps)
                     {
                         <tr>
                             <td>
@@ -242,7 +242,7 @@ else
             Execution conditions
             <HxPopover Content="Steps whose execution condition parameters are referencing this job parameter"
                        Trigger="PopoverTrigger.Hover">
-                <SvgIcon Icon="FeatherIcon.Info" />
+                <SvgIcon Icon="LucideIcon.Info" />
             </HxPopover>
         </h6>
         <table class="table table-sm">
@@ -254,13 +254,13 @@ else
                 </tr>
             </thead>
             <tbody>
-                @if (!referencingSteps.ExecutionConditionSteps.Any())
+                @if (!_referencingSteps.ExecutionConditionSteps.Any())
                 {
                     <tr><td class="text-muted" colspan="2">No execution conditions</td></tr>
                 }
                 else
                 {
-                    foreach (var step in referencingSteps.ExecutionConditionSteps)
+                    foreach (var step in _referencingSteps.ExecutionConditionSteps)
                     {
                         <tr>
                             <td>
@@ -275,7 +275,7 @@ else
         </table>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" OnClick="() => referencingStepsOffcanvas.LetAsync(x => x.HideAsync())" Spinner="false">
+        <HxButton Color="ThemeColor.Secondary" OnClick="() => _referencingStepsOffcanvas.LetAsync(x => x.HideAsync())" Spinner="false">
             Close
         </HxButton>
     </FooterTemplate>

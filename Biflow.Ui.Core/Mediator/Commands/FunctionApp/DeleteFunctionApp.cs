@@ -7,7 +7,7 @@ internal class DeleteFunctionAppCommandHandler(IDbContextFactory<AppDbContext> d
 {
     public async Task Handle(DeleteFunctionAppCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var client = await context.FunctionApps
             .FirstOrDefaultAsync(p => p.FunctionAppId == request.FunctionAppId, cancellationToken);
         if (client is not null)

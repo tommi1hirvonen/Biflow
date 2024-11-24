@@ -2,44 +2,44 @@
 @inject IMediator Mediator
 @inject ToasterService Toaster
 
-@if (editJob is not null)
+@if (_editJob is not null)
 {
-    <EditForm Model="editJob" OnValidSubmit="UpdateJob" Context="_context">
+    <EditForm Model="_editJob" OnValidSubmit="UpdateJob">
         <DataAnnotationsValidator />
         <ValidationSummary />
         <div>
             <label class="form-label">Name</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    <SvgIcon Icon="FeatherIcon.Edit3" />
+                    <SvgIcon Icon="LucideIcon.PenLine" />
                 </div>
-                <InputText class="form-control" @bind-Value="editJob.JobName" autocomplete="off" style="max-width: 50rem;"></InputText>
+                <InputText class="form-control" @bind-Value="_editJob.JobName" autocomplete="off" style="max-width: 50rem;"></InputText>
             </div>
         </div>
         <div style="max-width: 50rem;">
             <label class="form-label">Tags</label>
             <TagInput TTag="JobTag"
-                      Items="allTags"
+                      Items="_allTags"
                       AllowCustomValues
-                      SelectedItems="editJob.Tags"
-                      NewItemFromText="text => new JobTag(text) { Color = TagColor.DarkGray }" />
+                      SelectedItems="_editJob.Tags"
+                      NewItemFromText="text => new JobTag(text) { Color = TagColor.DarkGray }"/>
         </div>
         <div>
             <label class="form-label">Description</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    <SvgIcon Icon="FeatherIcon.BookOpen" />
+                    <SvgIcon Icon="LucideIcon.BookOpen" />
                 </div>
-                <InputTextArea class="form-control form-control-sm" @bind-Value="editJob.JobDescription" rows="5" style="max-width: 50rem;"></InputTextArea>
+                <InputTextArea class="form-control form-control-sm" @bind-Value="_editJob.JobDescription" rows="5" style="max-width: 50rem;"></InputTextArea>
             </div>
         </div>
         <div>
             <label class="form-label">Timeout (min, 0 = indefinite)</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    <SvgIcon Icon="FeatherIcon.XOctagon" />
+                    <SvgIcon Icon="LucideIcon.OctagonX" />
                 </div>
-                <InputNumber class="form-control form-control-sm" style="max-width: 10rem;" @bind-Value="editJob.TimeoutMinutes"></InputNumber>
+                <InputNumber class="form-control form-control-sm" style="max-width: 10rem;" @bind-Value="_editJob.TimeoutMinutes"></InputNumber>
             </div>
             <div class="form-text">If the job's execution exceeds the timeout limit, the execution will be stopped in its entirety.</div>
         </div>
@@ -47,16 +47,16 @@
             <label class="form-label">Overtime notification limit (min, 0 = indefinite)</label>
             <div class="input-group">
                 <div class="input-group-text">
-                    <SvgIcon Icon="FeatherIcon.Bell" />
+                    <SvgIcon Icon="LucideIcon.Bell" />
                 </div>
-                <InputNumber class="form-control form-control-sm" style="max-width: 10rem;" @bind-Value="editJob.OvertimeNotificationLimitMinutes"></InputNumber>
+                <InputNumber class="form-control form-control-sm" style="max-width: 10rem;" @bind-Value="_editJob.OvertimeNotificationLimitMinutes"></InputNumber>
             </div>
             <div class="form-text">If the job's execution exceeds the overtime limit, an email is automatically sent to users who have subscribed to this job's overtime notifications.</div>
         </div>
         <div class="row">
             <div class="col">
                 <HxSubmit Color="ThemeColor.Success">
-                    <SvgIcon Icon="FeatherIcon.Save" />
+                    <SvgIcon Icon="LucideIcon.Save" />
                     Save
                 </HxSubmit>
             </div>
@@ -69,19 +69,19 @@
 
     [CascadingParameter(Name = "OnJobUpdated")] public Action<Job>? OnJobUpdated { get; set; }
 
-    private Job? editJob;
-    private IEnumerable<JobTag> allTags = [];
+    private Job? _editJob;
+    private List<JobTag> _allTags = [];
 
-    protected override async void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
         if (Job is null || Job.JobId == Guid.Empty)
         {
             return;
         }
-
-        using var context = await DbContextFactory.CreateDbContextAsync();
-        allTags = await context.JobTags.OrderBy(t => t.TagName).ToArrayAsync();
-        editJob = await context.Jobs
+        await using var context = await DbContextFactory.CreateDbContextAsync();
+        _allTags = await context.JobTags.ToListAsync();
+        _allTags.Sort();
+        _editJob = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Include(j => j.Tags)
             .FirstAsync(j => j.JobId == Job.JobId);
@@ -92,10 +92,10 @@
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(editJob);
-            await Mediator.SendAsync(new UpdateJobCommand(editJob));
+            ArgumentNullException.ThrowIfNull(_editJob);
+            await Mediator.SendAsync(new UpdateJobCommand(_editJob));
             Toaster.AddSuccess("Job settings saved successfully");
-            OnJobUpdated?.Invoke(editJob);
+            OnJobUpdated?.Invoke(_editJob);
         }
         catch (DbUpdateConcurrencyException)
         {

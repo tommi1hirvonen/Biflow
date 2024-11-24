@@ -9,41 +9,44 @@ internal class DependencyTracker(StepExecution stepExecution) : IOrchestrationTr
 
     public StepExecutionMonitor? HandleUpdate(OrchestrationUpdate value)
     {
-        var (step, status) = value;
+        var (otherStep, status) = value;
 
         // Step cannot depend on itself. If the StepIds match, return early.
-        if (step.StepId == stepExecution.StepId)
+        if (otherStep.StepId == stepExecution.StepId)
         {
             return null;
         }
 
         // Keep track of steps that this step depends on.
-        if (stepExecution.ExecutionDependencies.Any(d => d.DependantOnStepId == step.StepId))
+        if (stepExecution.ExecutionDependencies.Any(d => d.DependantOnStepId == otherStep.StepId))
         {
-            _dependencies[step] = status;
+            _dependencies[otherStep] = status;
             return new()
             {
                 ExecutionId = stepExecution.ExecutionId,
                 StepId = stepExecution.StepId,
-                MonitoredExecutionId = step.ExecutionId,
-                MonitoredStepId = step.StepId,
+                MonitoredExecutionId = otherStep.ExecutionId,
+                MonitoredStepId = otherStep.StepId,
                 MonitoringReason = MonitoringReason.UpstreamDependency
             };
         }
-        // Keep track of steps that depend on this step.
-        else if (step.ExecutionDependencies.Any(d => d.DependantOnStepId == stepExecution.StepId))
+        
+        // No dependencies from the other step to this step.
+        if (otherStep.ExecutionDependencies.All(d => d.DependantOnStepId != stepExecution.StepId))
         {
-            _dependsOnThis[step] = status;
-            return new()
-            {
-                ExecutionId = stepExecution.ExecutionId,
-                StepId = stepExecution.StepId,
-                MonitoredExecutionId = step.ExecutionId,
-                MonitoredStepId = step.StepId,
-                MonitoringReason = MonitoringReason.DownstreamDependency
-            };
+            return null;
         }
-        return null;
+        
+        // Keep track of steps that depend on this step.
+        _dependsOnThis[otherStep] = status;
+        return new()
+        {
+            ExecutionId = stepExecution.ExecutionId,
+            StepId = stepExecution.StepId,
+            MonitoredExecutionId = otherStep.ExecutionId,
+            MonitoredStepId = otherStep.StepId,
+            MonitoringReason = MonitoringReason.DownstreamDependency
+        };
     }
 
     public ObserverAction GetStepAction()
@@ -73,14 +76,15 @@ internal class DependencyTracker(StepExecution stepExecution) : IOrchestrationTr
         // If there are any on-success dependencies, which have been marked as failed
         // OR
         // if there are any on-failed dependencies, which have been marked as succeeded, skip this step.
-        if (onSucceeded.Any(d1 => dependencyStatuses.Any(d2 => d2.Status == OrchestrationStatus.Failed && d2.StepId == d1)) ||
-            onFailed.Any(d1 => dependencyStatuses.Any(d2 => d2.Status == OrchestrationStatus.Succeeded && d2.StepId == d1)))
+        if (onSucceeded.Any(d1 => dependencyStatuses.Any(d2 => d2.Status == OrchestrationStatus.Failed && d2.StepId == d1))
+            || onFailed.Any(d1 => dependencyStatuses.Any(d2 => d2.Status == OrchestrationStatus.Succeeded && d2.StepId == d1)))
         {
             return Actions.Fail(StepExecutionStatus.DependenciesFailed);
         }
+        
         // No reason to skip this step.
         // If all the step's dependencies have been completed (success or failure), the step can be executed.
-        else if (_dependencies.All(d => d.Value == OrchestrationStatus.Succeeded || d.Value == OrchestrationStatus.Failed))
+        if (_dependencies.All(d => d.Value is OrchestrationStatus.Succeeded or OrchestrationStatus.Failed))
         {
             return Actions.Execute;
         }

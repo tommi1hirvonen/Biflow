@@ -6,7 +6,7 @@ internal class UpdateTagCommandHandler(IDbContextFactory<AppDbContext> dbContext
 {
     public async Task Handle(UpdateTagCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         context.Attach(request.Tag).State = EntityState.Modified;
         await context.SaveChangesAsync(cancellationToken);
     }

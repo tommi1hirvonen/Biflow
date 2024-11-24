@@ -1,23 +1,23 @@
 ﻿@inject ToasterService Toaster
 @inject IExecutorService ExecutorService
 @inject IHxMessageBoxService Confirmer
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 @inject IMediator Mediator
 
 @{
     var count = Executions?.Count() ?? 0;
-    var selectedText = selectedExecutions.Count switch
+    var selectedText = _selectedExecutions.Count switch
     {
-        1 => $"{selectedExecutions.Count} selected execution",
-        > 1 => $"{selectedExecutions.Count} selected executions",
+        1 => $"{_selectedExecutions.Count} selected execution",
+        > 1 => $"{_selectedExecutions.Count} selected executions",
         _ => ""
     };
 }
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-    @if (selectedExecutions.Count > 0)
+    @if (_selectedExecutions.Count > 0)
     {
-        var executions = selectedExecutions.Select(id => Executions?.FirstOrDefault(e => e.ExecutionId == id));
+        var executions = _selectedExecutions.Select(id => Executions?.FirstOrDefault(e => e.ExecutionId == id));
         var enabled = executions.Any(e => e?.ExecutionStatus == ExecutionStatus.Running);
         <HoverBox Header="@selectedText">
             <HxButtonGroup Size="ButtonGroupSize.Small">
@@ -26,7 +26,7 @@
                           CssClass="btn-auto text-danger"
                           Enabled="enabled"
                           OnClick="StopSelectedExecutionsAsync">
-                    <SvgIcon Icon="FeatherIcon.XOctagon" />
+                    <SvgIcon Icon="LucideIcon.OctagonX" />
                     Stop...
                 </HxButton>
                 <HxDropdownButtonGroup>
@@ -42,8 +42,8 @@
                         }
                     </HxDropdownMenu>
                 </HxDropdownButtonGroup>
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="selectedExecutions.Clear">
-                    <SvgIcon Icon="FeatherIcon.X" />
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="_selectedExecutions.Clear">
+                    <SvgIcon Icon="LucideIcon.X" />
                     Cancel
                 </HxButton>
             </HxButtonGroup>
@@ -57,8 +57,8 @@
             <th>
                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                     <TriStateCheckbox CssClass="me-0"
-                                      Checked="@(selectedExecutions.Count > 0 && count > 0)"
-                                      Indeterminate="@(selectedExecutions.Any() && selectedExecutions.Count != count)"
+                                      Checked="@(_selectedExecutions.Count > 0 && count > 0)"
+                                      Indeterminate="@(_selectedExecutions.Any() && _selectedExecutions.Count != count)"
                                       CheckedChanged="value => ToggleExecutionsSelected(value)" />
                 </AuthorizeView>
                 @if (!string.IsNullOrEmpty(selectedText))
@@ -71,11 +71,11 @@
                 <span class="ms-2">
                     @if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.JobAsc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                        <SvgIcon Icon="LucideIcon.MoveUp" />
                     }
                     else if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.JobDesc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                        <SvgIcon Icon="LucideIcon.MoveDown" />
                     }
                 </span>
             </th>
@@ -89,11 +89,11 @@
                 <span class="ms-2">
                     @if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.StartedAsc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                        <SvgIcon Icon="LucideIcon.MoveUp" />
                     }
                     else if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.StartedDesc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                        <SvgIcon Icon="LucideIcon.MoveDown" />
                     }
                 </span>
             </th>
@@ -104,11 +104,11 @@
                 <span class="ms-2">
                     @if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.EndedAsc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                        <SvgIcon Icon="LucideIcon.MoveUp" />
                     }
                     else if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.EndedDesc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                        <SvgIcon Icon="LucideIcon.MoveDown" />
                     }
                 </span>
             </th>
@@ -119,11 +119,11 @@
                 <span class="ms-2">
                     @if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.DurationAsc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                        <SvgIcon Icon="LucideIcon.MoveUp" />
                     }
                     else if (UserState.Executions.ExecutionSortMode == ExecutionSortMode.DurationDesc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                        <SvgIcon Icon="LucideIcon.MoveDown" />
                     }
                 </span>
             </th>
@@ -161,9 +161,9 @@
                             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")" Context="auth">
                                 <div class="form-check form-check-inline me-0">
                                     <input type="checkbox" class="form-check-input" id="@checkBoxId"
-                                           checked=@selectedExecutions.Contains(item.ExecutionId)
+                                           checked=@_selectedExecutions.Contains(item.ExecutionId)
                                            @onclick:stopPropagation="true"
-                                           @onchange="args => ToggleExecutionSelected(item)">
+                                           @onchange="_ => ToggleExecutionSelected(item)">
                                     <label class="form-check-label" for="@checkBoxId"></label>
                                 </div>
                             </AuthorizeView>
@@ -194,15 +194,15 @@
                         <DropdownMenuHeader>
                             @item.JobName
                         </DropdownMenuHeader>
-                        <DropdownMenuItem @onclick="async () => await jobHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.JobId))">
-                            <SvgIcon Icon="FeatherIcon.Activity" />
+                        <DropdownMenuItem @onclick="async () => await _jobHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.JobId))">
+                            <SvgIcon Icon="LucideIcon.Activity" />
                             History
                         </DropdownMenuItem>
                         @if (item.ExecutionStatus == ExecutionStatus.Running)
                         {
                             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                                 <DropdownMenuItem @onclick="() => StopExecutionAsync(item)">
-                                    <SvgIcon Icon="FeatherIcon.XOctagon" />
+                                    <SvgIcon Icon="LucideIcon.OctagonX" />
                                     Stop...
                                 </DropdownMenuItem>
                             </AuthorizeView>
@@ -214,7 +214,7 @@
     </tbody>
 </table>
 
-<JobHistoryOffcanvas @ref="jobHistoryOffcanvas" />
+<JobHistoryOffcanvas @ref="_jobHistoryOffcanvas" />
 
 @code {
     [CascadingParameter]
@@ -232,8 +232,8 @@
     [Parameter]
     public EventCallback OnSortingChanged { get; set; }
 
-    private JobHistoryOffcanvas? jobHistoryOffcanvas;
-    private HashSet<Guid> selectedExecutions = [];
+    private JobHistoryOffcanvas? _jobHistoryOffcanvas;
+    private HashSet<Guid> _selectedExecutions = [];
 
     private void ToggleJobSortMode()
     {
@@ -281,13 +281,9 @@
 
     private void ToggleExecutionSelected(ExecutionProjection execution)
     {
-        if (selectedExecutions.Contains(execution.ExecutionId))
+        if (!_selectedExecutions.Add(execution.ExecutionId))
         {
-            selectedExecutions.Remove(execution.ExecutionId);
-        }
-        else
-        {
-            selectedExecutions.Add(execution.ExecutionId);
+            _selectedExecutions.Remove(execution.ExecutionId);
         }
     }
 
@@ -296,14 +292,14 @@
         if (value)
         {
             var toAdd = Executions?
-                .Where(e => !selectedExecutions.Contains(e.ExecutionId))
+                .Where(e => !_selectedExecutions.Contains(e.ExecutionId))
                 .Select(e => e.ExecutionId)
                 ?? [];
-            foreach (var e in toAdd) selectedExecutions.Add(e);
+            foreach (var e in toAdd) _selectedExecutions.Add(e);
         }
         else
         {
-            selectedExecutions.Clear();
+            _selectedExecutions.Clear();
         }
     }
 
@@ -331,7 +327,7 @@
 
     private async Task StopSelectedExecutionsAsync()
     {
-        if (!await Confirmer.ConfirmAsync("Stop executions", $"Are you sure you want to stop all running steps in the selected {selectedExecutions.Count} execution(s)?"))
+        if (!await Confirmer.ConfirmAsync("Stop executions", $"Are you sure you want to stop all running steps in the selected {_selectedExecutions.Count} execution(s)?"))
         {
             return;
         }
@@ -347,16 +343,18 @@
             var successCount = 0;
             var errorMessages = new List<string>();
 
-            foreach (var executionId in selectedExecutions)
+            var selectedExecutions =
+                from id in _selectedExecutions
+                select Executions.FirstOrDefault(e => e.ExecutionId == id);
+            foreach (var execution in selectedExecutions)
             {
-                var execution = Executions.FirstOrDefault(e => e.ExecutionId == executionId);
                 if (execution is null || execution.ExecutionStatus != ExecutionStatus.Running)
                 {
                     continue;
                 }
                 try
                 {
-                    await ExecutorService.StopExecutionAsync(executionId, username);
+                    await ExecutorService.StopExecutionAsync(execution.ExecutionId, username);
                     successCount++;
                 }
                 catch (TimeoutException ex)
@@ -373,7 +371,7 @@
             var distinctErrors = errorMessages.Distinct().ToArray();
             foreach (var error in distinctErrors)
             {
-                await JS.InvokeVoidAsync("console.error", error);
+                await Js.InvokeVoidAsync("console.error", error);
             }
 
             var errorMessage = distinctErrors.Length == 1
@@ -403,7 +401,7 @@
     {
         try
         {
-            var command = new UpdateExecutionStatusCommand([.. selectedExecutions], status);
+            var command = new UpdateExecutionStatusCommand([.. _selectedExecutions], status);
             await Mediator.SendAsync(command);
             Toaster.AddSuccess("Statuses updated successfully");
             await OnExecutionsUpdated.InvokeAsync();

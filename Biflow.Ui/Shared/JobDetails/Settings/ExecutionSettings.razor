@@ -59,7 +59,7 @@
         try
         {
             ArgumentNullException.ThrowIfNull(Job);
-            using var context = DbFactory.CreateDbContext();
+            await using var context = await DbFactory.CreateDbContextAsync();
             Job.ExecutionMode = value;
             await context.Jobs
                 .Where(j => j.JobId == Job.JobId)
@@ -86,7 +86,7 @@
         {
             var stopOnFirstError = (bool)args.Value!;
             ArgumentNullException.ThrowIfNull(Job);
-            using var context = DbFactory.CreateDbContext();
+            await using var context = await DbFactory.CreateDbContextAsync();
             Job.StopOnFirstError = stopOnFirstError;
             await context.Jobs
                 .Where(j => j.JobId == Job.JobId)

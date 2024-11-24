@@ -19,13 +19,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (keys is null)
+                        @if (_keys is null)
                         {
                             <tr>
                                 <td colspan="2" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td>
                             </tr>
                         }
-                        else if (keys.Count == 0)
+                        else if (_keys.Count == 0)
                         {
                             <tr>
                                 <td colspan="2">No keys</td>
@@ -33,11 +33,11 @@
                         }
                         else
                         {
-                            foreach (var key in keys)
+                            foreach (var key in _keys)
                             {
                                 <tr style="cursor: pointer;"
-                                    @onclick="() => selectedKey = key.Key"
-                                    class="@(key.Key == selectedKey ? "bg-body-tertiary fw-bold" : null)">
+                                    @onclick="() => _selectedKey = key.Key"
+                                    class="@(key.Key == _selectedKey ? "bg-body-tertiary fw-bold" : null)">
                                     <td>
                                         <small>
                                             @key.Type
@@ -60,7 +60,7 @@
 
     <FooterTemplate>
         <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectKey"
-                  Enabled="selectedKey is not null">
+                  Enabled="_selectedKey is not null">
             Select
         </HxButton>
         <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await Offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
@@ -77,22 +77,22 @@
     [Parameter]
     public EventCallback<string> OnKeySelected { get; set; }
 
-    private List<(string Type, string Key)>? keys;
-    private string? selectedKey;
+    private List<(string Type, string Key)>? _keys;
+    private string? _selectedKey;
 
     private async Task SelectKey()
     {
-        if (selectedKey is not null)
+        if (_selectedKey is not null)
         {
-            await OnKeySelected.InvokeAsync(selectedKey);
+            await OnKeySelected.InvokeAsync(_selectedKey);
             await Offcanvas.LetAsync(x => x.HideAsync());
         }
     }
 
     public void OnClosed()
     {
-        keys = null;
-        selectedKey = null;
+        _keys = null;
+        _selectedKey = null;
     }
 
     public async Task ShowAsync()
@@ -101,7 +101,7 @@
         if (FunctionApp is null) return;
         try
         {
-            keys = await FunctionApp
+            _keys = await FunctionApp
                 .CreateClient(TokenService, HttpClientFactory)
                 .GetHostKeysAsync();
             StateHasChanged();

@@ -20,14 +20,13 @@ public class PackageStepExecution : StepExecution,
         ArgumentNullException.ThrowIfNull(step.PackageFolderName);
         ArgumentNullException.ThrowIfNull(step.PackageProjectName);
         ArgumentNullException.ThrowIfNull(step.PackageName);
-        ArgumentNullException.ThrowIfNull(step.ConnectionId);
 
         PackageFolderName = step.PackageFolderName;
         PackageProjectName = step.PackageProjectName;
         PackageName = step.PackageName;
         ExecuteIn32BitMode = step.ExecuteIn32BitMode;
         ExecuteAsLogin = step.ExecuteAsLogin;
-        ConnectionId = (Guid)step.ConnectionId;
+        ConnectionId = step.ConnectionId;
         TimeoutMinutes = step.TimeoutMinutes;
         StepExecutionParameters = step.StepParameters
             .Select(p => new PackageStepExecutionParameter(p, this))
@@ -57,7 +56,7 @@ public class PackageStepExecution : StepExecution,
 
     public double TimeoutMinutes { get; private set; }
 
-    public string? PackagePath => PackageFolderName + "/" + PackageProjectName + "/" + PackageName;
+    public string PackagePath => PackageFolderName + "/" + PackageProjectName + "/" + PackageName;
 
     public IEnumerable<PackageStepExecutionParameter> StepExecutionParameters { get; } = new List<PackageStepExecutionParameter>();
 

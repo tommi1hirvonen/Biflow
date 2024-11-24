@@ -12,5 +12,5 @@ public interface IHasExpressionParameters<TExpressionParameter, TJobParameter>
 
     public void AddExpressionParameter(TJobParameter jobParameter);
 
-    public bool RemoveExpressionParameter(TExpressionParameter parameter);
+    public void RemoveExpressionParameter(TExpressionParameter parameter);
 }

@@ -16,7 +16,7 @@ public class StepParameterExpressionParameter : IAsyncEvaluable, IExpressionPara
         ParameterName = other.ParameterName;
 
         // The target job is set and the target job has a parameter with a matching name.
-        if (job is not null && job.JobParameters.FirstOrDefault(p => p.ParameterName == other.InheritFromJobParameter.ParameterName) is JobParameter parameter)
+        if (job?.JobParameters.FirstOrDefault(p => p.ParameterName == other.InheritFromJobParameter.ParameterName) is { } parameter)
         {
             InheritFromJobParameterId = parameter.ParameterId;
             InheritFromJobParameter = parameter;

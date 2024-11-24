@@ -6,7 +6,7 @@ internal class DeleteConnectionCommandHandler(IDbContextFactory<AppDbContext> db
 {
     public async Task Handle(DeleteConnectionCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var connection = await context.Connections
             .FirstOrDefaultAsync(c => c.ConnectionId == request.ConnectionId, cancellationToken);
         if (connection is not null)

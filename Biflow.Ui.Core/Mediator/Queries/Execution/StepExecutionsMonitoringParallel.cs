@@ -62,7 +62,7 @@ internal class StepExecutionsParallelQueryHandler(IDbContextFactory<AppDbContext
     private async Task<StepExecutionProjection[]> GetExecutionsAsync(
         Expression<Func<StepExecutionAttempt, bool>> predicate, CancellationToken cancellationToken)
     {
-        using var context = dbContextFactory.CreateDbContext();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var query = context.StepExecutionAttempts
             .AsNoTracking()
             .AsSingleQuery()
@@ -91,8 +91,8 @@ internal class StepExecutionsParallelQueryHandler(IDbContextFactory<AppDbContext
                 e.StepExecution.Execution.JobId,
                 job.JobName ?? e.StepExecution.Execution.JobName,
                 step.Dependencies.Select(d => d.DependantOnStepId).ToArray(),
-                step.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color)).ToArray(),
-                job.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color)).ToArray()
+                step.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder)).ToArray(),
+                job.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder)).ToArray()
             )).ToArrayAsync(cancellationToken);
     }
 }

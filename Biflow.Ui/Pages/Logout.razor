@@ -3,6 +3,8 @@
 @using Microsoft.AspNetCore.Authentication
 @using Microsoft.AspNetCore.Authentication.Cookies
 
+@attribute [ExcludeFromInteractiveRouting]
+
 @page "/logout"
 
 @inject NavigationManager NavigationManager

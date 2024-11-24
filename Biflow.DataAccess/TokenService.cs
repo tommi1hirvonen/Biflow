@@ -10,55 +10,59 @@ public class TokenService<TDbContext>(IDbContextFactory<TDbContext> dbContextFac
     private readonly SemaphoreSlim _semaphore = new(1, 1); // Synchronize access by setting initial and max values to 1
     private readonly Dictionary<Guid, Dictionary<string, (string Token, DateTimeOffset ExpiresOn)>> _accessTokens = [];
 
-    public async Task<(string Token, DateTimeOffset ExpiresOn)> GetTokenAsync(AppRegistration appRegistration, string resourceUrl)
+    public async Task<(string Token, DateTimeOffset ExpiresOn)> GetTokenAsync(
+        AppRegistration appRegistration,
+        string resourceUrl,
+        CancellationToken cancellationToken = default)
     {
-        await _semaphore.WaitAsync();
+        await _semaphore.WaitAsync(cancellationToken);
         try
         {
             // If the token can be found in the dictionary and it is valid.
-            if (_accessTokens.TryGetValue(appRegistration.AppRegistrationId, out var tokens)
-                && tokens is not null && tokens.TryGetValue(resourceUrl, out var token) && token.ExpiresOn >= DateTimeOffset.Now.AddMinutes(5))
+            if (_accessTokens.TryGetValue(appRegistration.AppRegistrationId, out var cachedTokens)
+                && cachedTokens.TryGetValue(resourceUrl, out var cachedToken)
+                && cachedToken.ExpiresOn >= DateTimeOffset.Now.AddMinutes(5))
             {
-                return (token.Token, token.ExpiresOn);
+                return (cachedToken.Token, cachedToken.ExpiresOn);
             }
             else
             {
-                Core.Entities.AccessToken resultToken;
-
-                using var context = _dbContextFactory.CreateDbContext();
+                await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
                 var accessToken = await context.AccessTokens
-                    .FirstOrDefaultAsync(at => at.AppRegistrationId == appRegistration.AppRegistrationId && at.ResourceUrl == resourceUrl);
-
-                // If the token was set in database and it is valid, use that.
-                if (accessToken is not null && accessToken.ExpiresOn >= DateTimeOffset.Now.AddMinutes(5))
+                    .FirstOrDefaultAsync(at =>
+                            at.AppRegistrationId == appRegistration.AppRegistrationId && at.ResourceUrl == resourceUrl,
+                        cancellationToken);
+                
+                // If the token was set, but it's no longer valid => get new token from API and update the token.
+                if (accessToken is not null && accessToken.ExpiresOn < DateTimeOffset.Now.AddMinutes(5)) // 5 min safety margin
                 {
-                    resultToken = accessToken;
-                }
-                // If the token was set but it's no longer valid => get new token from API and update the token in database.
-                else if (accessToken is not null)
-                {
-                    (accessToken.Token, accessToken.ExpiresOn) = await GetTokenFromApiAsync(appRegistration, resourceUrl);
-                    await context.SaveChangesAsync();
-                    resultToken = accessToken;
+                    (accessToken.Token, accessToken.ExpiresOn) = await GetTokenFromApiAsync(
+                        appRegistration,
+                        resourceUrl,
+                        cancellationToken);
+                    await context.SaveChangesAsync(cancellationToken);
                 }
                 // Token was not set => create new token from API.
-                else
+                else if (accessToken is null)
                 {
-                    (var token_, var expiresOn_) = await GetTokenFromApiAsync(appRegistration, resourceUrl);
-                    accessToken = new Core.Entities.AccessToken(appRegistration.AppRegistrationId, resourceUrl, token_, expiresOn_);
-                    context.Add(accessToken);
-                    await context.SaveChangesAsync();
-                    resultToken = accessToken;
+                    var (token, expiresOn) = await GetTokenFromApiAsync(appRegistration, resourceUrl, cancellationToken);
+                    accessToken = new Core.Entities.AccessToken(
+                        appRegistration.AppRegistrationId,
+                        resourceUrl,
+                        token,
+                        expiresOn);
+                    context.AccessTokens.Add(accessToken);
+                    await context.SaveChangesAsync(cancellationToken);
                 }
 
-                if (!_accessTokens.TryGetValue(appRegistration.AppRegistrationId, out var value))
+                if (cachedTokens is null)
                 {
-                    value = [];
-                    _accessTokens[appRegistration.AppRegistrationId] = value;
+                    cachedTokens = [];
+                    _accessTokens[appRegistration.AppRegistrationId] = cachedTokens;
                 }
 
-                value[resourceUrl] = (resultToken.Token, resultToken.ExpiresOn);
-                return (resultToken.Token, resultToken.ExpiresOn);
+                cachedTokens[resourceUrl] = (accessToken.Token, accessToken.ExpiresOn);
+                return (accessToken.Token, accessToken.ExpiresOn);
             }
         }
         finally
@@ -67,17 +71,27 @@ public class TokenService<TDbContext>(IDbContextFactory<TDbContext> dbContextFac
         }
     }
 
-    private static async Task<(string Token, DateTimeOffset ExpiresOn)> GetTokenFromApiAsync(AppRegistration appRegistration, string resourceUrl)
+    private static async Task<(string Token, DateTimeOffset ExpiresOn)> GetTokenFromApiAsync(
+        AppRegistration appRegistration,
+        string resourceUrl,
+        CancellationToken cancellationToken = default)
     {
         var credential = new ClientSecretCredential(appRegistration.TenantId, appRegistration.ClientId, appRegistration.ClientSecret);
         var context = new TokenRequestContext([resourceUrl]);
-        var token = await credential.GetTokenAsync(context);
+        var token = await credential.GetTokenAsync(context, cancellationToken);
         return (token.Token, token.ExpiresOn);
     }
 
-    public void Clear()
+    public async Task ClearAsync(CancellationToken cancellationToken = default)
     {
-        _accessTokens.Clear();
+        await _semaphore.WaitAsync(cancellationToken);
+        try
+        {
+            _accessTokens.Clear();
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
     }
-
 }

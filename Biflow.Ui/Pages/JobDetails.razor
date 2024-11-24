@@ -13,19 +13,19 @@
                 All jobs
             </a>
             <span>&nbsp;/&nbsp;</span>
-            <strong>@job?.JobName</strong>
+            <strong>@_job?.JobName</strong>
         </div>
     </div>
-    @if (!string.IsNullOrWhiteSpace(job?.JobDescription))
+    @if (!string.IsNullOrWhiteSpace(_job?.JobDescription))
     {
         <div class="col-auto">
             <HxButton Color="ThemeColor.None"
                       CssClass="btn-auto"
                       Size="ButtonSize.Small"
-                      @onclick="() => descriptionOpen = !descriptionOpen">
-                <SvgIcon Icon="FeatherIcon.Info" />
+                      @onclick="() => _descriptionOpen = !_descriptionOpen">
+                <SvgIcon Icon="LucideIcon.Info" />
                 &nbsp;
-                @if (descriptionOpen)
+                @if (_descriptionOpen)
                 {
                     <span>Hide description</span>
                 }
@@ -43,7 +43,7 @@
                 @*Dropdown to delete the current job*@
                 <HxDropdownButtonGroup CssClass="ms-3">
                     <HxDropdownToggleButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto text-danger">
-                        <SvgIcon Icon="FeatherIcon.Trash2" />
+                        <SvgIcon Icon="LucideIcon.Trash2" />
                         Delete
                     </HxDropdownToggleButton>
                     <HxDropdownMenu CssClass="dropdown-menu-xl-right">
@@ -56,33 +56,33 @@
 
         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
             <div class="form-check form-switch">
-                <input type="checkbox" class="form-check-input" id="job_enabled_toggle" checked="@(job?.IsEnabled ?? false ? "checked" : null)" @onchange="ToggleJobEnabled">
+                <input type="checkbox" class="form-check-input" id="job_enabled_toggle" checked="@(_job?.IsEnabled ?? false ? "checked" : null)" @onchange="ToggleJobEnabled">
                 <label class="form-check-label" for="job_enabled_toggle">Enabled</label>
             </div>
         </AuthorizeView>
 
         <AuthorizeView Roles="@($"{Roles.Operator}, {Roles.Viewer}")">
             <div class="form-check form-switch">
-                <input type="checkbox" class="form-check-input" disabled id="job_enabled_toggle" checked="@(job?.IsEnabled ?? false ? "checked" : null)">
+                <input type="checkbox" class="form-check-input" disabled id="job_enabled_toggle" checked="@(_job?.IsEnabled ?? false ? "checked" : null)">
                 <label class="form-check-label" for="job_enabled_toggle">Enabled</label>
             </div>
         </AuthorizeView>
     </div>
 </div>
 
-@if (descriptionOpen && !string.IsNullOrWhiteSpace(job?.JobDescription))
+@if (_descriptionOpen && !string.IsNullOrWhiteSpace(_job?.JobDescription))
 {
     <div class="row mt-3">
         <div class="col-auto border rounded" style="max-height: 110px; overflow-y: auto;">
-            <small class="text-secondary" style="white-space: pre-line;">@job?.JobDescription</small>
+            <small class="text-secondary" style="white-space: pre-line;">@_job?.JobDescription</small>
         </div>
     </div>
 }
 
-@if (job is not null)
+@if (_job is not null)
 {
     <div class="row mt-3">
-        @if (!job.IsEnabled)
+        @if (!_job.IsEnabled)
         {
             <div class="col-auto">
                 <div class="alert alert-warning mb-0" role="alert">
@@ -95,48 +95,48 @@
 
 <div class="row mt-3 mb-4">
     <div class="col">
-        <ul class="nav nav-tabs" role="tablist">
+        <ul class="nav nav-underline" role="tablist">
             <li class="nav-item" role="presentation">
-                <NavLink class="nav-link" href="@($"jobs/{job?.JobId}/steps")">
+                <NavLink class="nav-link" href="@($"jobs/{_job?.JobId}/steps")">
                     <SvgIcon Icon="LucideIcon.ListChecks" />
                     Steps
                 </NavLink>
             </li>
             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                 <li class="nav-item" role="presentation">
-                    <NavLink class="nav-link" href="@($"jobs/{job?.JobId}/parameters")">
-                        <SvgIcon Icon="FeatherIcon.AtSign" />
+                    <NavLink class="nav-link" href="@($"jobs/{_job?.JobId}/parameters")">
+                        <SvgIcon Icon="LucideIcon.AtSign" />
                         Parameters
                     </NavLink>
                 </li>
             </AuthorizeView>
             <li class="nav-item" role="presentation">
-                <NavLink class="nav-link" href="@($"jobs/{job?.JobId}/graph")">
+                <NavLink class="nav-link" href="@($"jobs/{_job?.JobId}/graph")">
                     <SvgIcon Icon="LucideIcon.Workflow" />
                     Graph
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
-                <NavLink class="nav-link" href="@($"jobs/{job?.JobId}/lineage")">
+                <NavLink class="nav-link" href="@($"jobs/{_job?.JobId}/lineage")">
                     <SvgIcon Icon="LucideIcon.Network" />
                     Lineage
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
-                <NavLink class="nav-link" href="@($"jobs/{job?.JobId}/schedules")">
-                    <SvgIcon Icon="FeatherIcon.Calendar" />
+                <NavLink class="nav-link" href="@($"jobs/{_job?.JobId}/schedules")">
+                    <SvgIcon Icon="LucideIcon.Calendar" />
                     Schedules
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
-                <NavLink class="nav-link" href="@($"jobs/{job?.JobId}/history")">
-                    <SvgIcon Icon="FeatherIcon.Activity" />
+                <NavLink class="nav-link" href="@($"jobs/{_job?.JobId}/history")">
+                    <SvgIcon Icon="LucideIcon.Activity" />
                     History
                 </NavLink>
             </li>
             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                 <li class="nav-item" role="presentation">
-                    <NavLink class="nav-link" href="@($"jobs/{job?.JobId}/settings")">
+                    <NavLink class="nav-link" href="@($"jobs/{_job?.JobId}/settings")">
                         <SvgIcon Icon="LucideIcon.Settings2" />
                         Settings
                     </NavLink>
@@ -146,23 +146,24 @@
     </div>    
 </div>
 
-<CascadingValue Value="job">
-    <CascadingValue Value="steps" IsFixed>
-        <CascadingValue Value="jobs" IsFixed>
+<CascadingValue Value="_job">
+    <CascadingValue Value="_steps" IsFixed>
+        <CascadingValue Value="_jobs" IsFixed>
             <CascadingValue Value="OnJobUpdated" Name="OnJobUpdated" IsFixed>
                 <CascadingValue Value="SortSteps" Name="SortSteps" IsFixed>
 
                     @* Leave steps component rendered but only update the visibility css class. This way rendering is quicker when returning to the component. *@
                     <div class="@(DetailsPage == "steps" ? null : "d-none")">
-                        <StepsList SqlConnections="sqlConnections"
-                                   MsSqlConnections="msSqlConnections"
-                                   AsConnections="asConnections"
-                                   PipelineClients="pipelineClients"
-                                   AppRegistrations="appRegistrations"
-                                   FunctionApps="functionApps"
-                                   QlikCloudClients="qlikCloudClients"
-                                   DatabricksWorkspaces="databricksWorkspaces"
-                                   Credentials="credentials"
+                        <StepsList SqlConnections="_sqlConnections"
+                                   MsSqlConnections="_msSqlConnections"
+                                   AsConnections="_asConnections"
+                                   PipelineClients="_pipelineClients"
+                                   AppRegistrations="_appRegistrations"
+                                   FunctionApps="_functionApps"
+                                   QlikCloudClients="_qlikCloudClients"
+                                   DatabricksWorkspaces="_databricksWorkspaces"
+                                   DbtAccounts="_dbtAccounts"
+                                   Credentials="_credentials"
                                    InitialStepId="@(DetailsPage == "steps" ? InitialStepId : null)" />
                     </div>
 
@@ -172,22 +173,23 @@
                             <JobParameters />
                         </AuthorizeView>
                     }
-                    else if (DetailsPage == "history" && job is not null)
+                    else if (DetailsPage == "history" && _job is not null)
                     {
-                        <JobHistory JobId="job.JobId" JobName="@job.JobName" />
+                        <JobHistory JobId="_job.JobId" JobName="@_job.JobName" />
                     }
                     else if (DetailsPage == "graph")
                     {
-                        <DependenciesGraph SqlConnections="sqlConnections"
-                                           MsSqlConnections="msSqlConnections"
-                                           AsConnections="asConnections"
-                                           PipelineClients="pipelineClients"
-                                           AppRegistrations="appRegistrations"
-                                           FunctionApps="functionApps"
+                        <DependenciesGraph SqlConnections="_sqlConnections"
+                                           MsSqlConnections="_msSqlConnections"
+                                           AsConnections="_asConnections"
+                                           PipelineClients="_pipelineClients"
+                                           AppRegistrations="_appRegistrations"
+                                           FunctionApps="_functionApps"
                                            InitialStepId="InitialStepId"
-                                           QlikCloudClients="qlikCloudClients"
-                                           DatabricksWorkspaces="databricksWorkspaces"
-                                           Credentials="credentials" />
+                                           QlikCloudClients="_qlikCloudClients"
+                                           DatabricksWorkspaces="_databricksWorkspaces"
+                                           DbtAccounts="_dbtAccounts"
+                                           Credentials="_credentials" />
                     }
                     else if (DetailsPage == "lineage")
                     {
@@ -197,10 +199,10 @@
                     {
                         <JobSchedulesList />
                     }
-                    else if (DetailsPage == "settings")
+                    else if (DetailsPage == "settings" || SettingsPage is not null)
                     {
                         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-                            <JobSettings />
+                            <JobSettings Page="@SettingsPage" />
                         </AuthorizeView>
                     }
                 </CascadingValue>

@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
-public class ExecutionConditionParameter : ParameterBase, IAsyncEvaluable
+public sealed class ExecutionConditionParameter : ParameterBase, IAsyncEvaluable
 {
     public ExecutionConditionParameter() { }
 
@@ -17,7 +17,9 @@ public class ExecutionConditionParameter : ParameterBase, IAsyncEvaluable
         ParameterValue = other.ParameterValue;
 
         // The target job is set, the JobParameter is not null and the target job has a parameter with a matching name.
-        if (job is not null && other.JobParameter is not null && job.JobParameters.FirstOrDefault(p => p.ParameterName == other.JobParameter.ParameterName) is JobParameter parameter)
+        if (job is not null
+            && other.JobParameter is not null
+            && job.JobParameters.FirstOrDefault(p => p.ParameterName == other.JobParameter.ParameterName) is { } parameter)
         {
             JobParameterId = parameter.ParameterId;
             JobParameter = parameter;
@@ -44,34 +46,30 @@ public class ExecutionConditionParameter : ParameterBase, IAsyncEvaluable
 
     public Guid? JobParameterId
     {
-        get => _jobParameterId;
+        get;
         set
         {
-            _jobParameterId = value;
-            if (_jobParameterId is not null)
+            field = value;
+            if (field is not null)
             {
                 ParameterValue = new();
             }
         }
     }
-
-    private Guid? _jobParameterId;
 
     [JsonIgnore]
     public JobParameter? JobParameter
     {
-        get => _jobParameter;
+        get;
         set
         {
-            _jobParameter = value;
-            if (_jobParameter is not null)
+            field = value;
+            if (field is not null)
             {
                 ParameterValue = new();
             }
         }
     }
-
-    private JobParameter? _jobParameter;
 
     public async Task<object?> EvaluateAsync()
     {
@@ -86,7 +84,7 @@ public class ExecutionConditionParameter : ParameterBase, IAsyncEvaluable
     [JsonIgnore]
     public override string DisplayValue => JobParameter switch
     {
-        not null => $"{JobParameter.DisplayValue?.ToString() ?? "null"} (inherited from job parameter {JobParameter.DisplayName})",
+        not null => $"{JobParameter.DisplayValue} (inherited from job parameter {JobParameter.DisplayName})",
         _ => base.DisplayValue
     };
 

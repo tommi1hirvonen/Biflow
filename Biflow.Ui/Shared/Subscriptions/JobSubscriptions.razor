@@ -3,13 +3,13 @@
 
 <div class="row">
     <div class="col">
-        <HxButton Color="ThemeColor.Success" OnClick="() => selectJobOffcanvas.LetAsync(x => x.ShowAsync())">
+        <HxButton Color="ThemeColor.Success" OnClick="() => _selectJobOffcanvas.LetAsync(x => x.ShowAsync())">
             Add subscription
         </HxButton>
     </div>
 </div>
 
-<div class="card shadow-sm mt-3">
+<div class="card mt-3">
     <div class="card-body px-0">
         <table class="table table-hover">
             <thead>
@@ -33,7 +33,8 @@
                     var subscriptions = User.Subscriptions
                         .OfType<JobSubscription>()
                         .Select(s => (Subscription: s, Job: Jobs.FirstOrDefault(j => j.JobId == s.JobId)))
-                        .OrderBy(s => s.Job?.JobName);
+                        .OrderBy(s => s.Job?.JobName)
+                        .ToArray();
                     @if (!subscriptions.Any())
                     {
                         <tr>
@@ -49,40 +50,40 @@
                             <td>
                                 <div>
                                     <div class="form-check form-check-inline">
-                                        <input type="radio" class="form-check-input" id="@(sub.SubscriptionId.ToString() + "_none")"
+                                        <input type="radio" class="form-check-input" id="@(sub.SubscriptionId + "_none")"
                                                checked=@(sub.AlertType is null)
                                         @onchange="() => ToggleSubscription(sub, null)">
-                                        <label class="form-check-label" for="@(sub.SubscriptionId.ToString() + "_none")">None</label>
+                                        <label class="form-check-label" for="@(sub.SubscriptionId + "_none")">None</label>
                                     </div>
                                     <div class="form-check form-check-inline">
-                                        <input type="radio" class="form-check-input" id="@(sub.SubscriptionId.ToString() + "_failure")"
+                                        <input type="radio" class="form-check-input" id="@(sub.SubscriptionId + "_failure")"
                                                checked=@(sub.AlertType == AlertType.OnFailure)
                                         @onchange="() => ToggleSubscription(sub, AlertType.OnFailure)">
-                                        <label class="form-check-label" for="@(sub.SubscriptionId.ToString() + "_failure")">On failure</label>
+                                        <label class="form-check-label" for="@(sub.SubscriptionId + "_failure")">On failure</label>
                                     </div>
                                     <div class="form-check form-check-inline">
-                                        <input type="radio" class="form-check-input" id="@(sub.SubscriptionId.ToString() + "_success")"
+                                        <input type="radio" class="form-check-input" id="@(sub.SubscriptionId + "_success")"
                                                checked=@(sub.AlertType == AlertType.OnSuccess)
                                         @onchange="() => ToggleSubscription(sub, AlertType.OnSuccess)">
-                                        <label class="form-check-label" for="@(sub.SubscriptionId.ToString() + "_success")">On success</label>
+                                        <label class="form-check-label" for="@(sub.SubscriptionId + "_success")">On success</label>
                                     </div>
                                     <div class="form-check form-check-inline">
-                                        <input type="radio" class="form-check-input" id="@(sub.SubscriptionId.ToString() + "_completion")"
+                                        <input type="radio" class="form-check-input" id="@(sub.SubscriptionId + "_completion")"
                                                checked=@(sub.AlertType == AlertType.OnCompletion)
                                         @onchange="() => ToggleSubscription(sub, AlertType.OnCompletion)">
-                                        <label class="form-check-label" for="@(sub.SubscriptionId.ToString() + "_completion")">On completion</label>
+                                        <label class="form-check-label" for="@(sub.SubscriptionId + "_completion")">On completion</label>
                                     </div>
                                     <div class="form-check form-check-inline">
-                                        <input type="checkbox" class="form-check-input" id="@(sub.SubscriptionId.ToString() + "_overtime")"
-                                               checked=@(sub.NotifyOnOvertime == true)
+                                        <input type="checkbox" class="form-check-input" id="@(sub.SubscriptionId + "_overtime")"
+                                               checked=@(sub.NotifyOnOvertime)
                                         @onchange="args => ToggleSubscription(sub, (bool)args.Value!)">
-                                        <label class="form-check-label" for="@(sub.SubscriptionId.ToString() + "_overtime")">On overtime</label>
+                                        <label class="form-check-label" for="@(sub.SubscriptionId + "_overtime")">On overtime</label>
                                     </div>
                                 </div>
                             </td>
                             <td>
                                 <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto" title="Remove subscription" OnClick="() => RemoveSubscriptionAsync(sub)">
-                                    <SvgIcon Icon="FeatherIcon.Delete" />
+                                    <SvgIcon Icon="LucideIcon.Delete" />
                                 </HxButton>
                             </td>
                         </tr>
@@ -93,15 +94,15 @@
     </div>
 </div>
 
-<HxOffcanvas @ref="selectJobOffcanvas" Title="Select job" Backdrop="OffcanvasBackdrop.False">
+<HxOffcanvas @ref="_selectJobOffcanvas" Title="Select job" Backdrop="OffcanvasBackdrop.False">
     <BodyTemplate>
         <div class="row">
             <div class="col">
                 <div class="input-group">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Search" />
+                        <SvgIcon Icon="LucideIcon.Search" />
                     </div>
-                    <input type="search" class="form-control form-control-sm" placeholder="Search jobs" @bind-value="jobSearchTerm" @bind-value:event="oninput" />
+                    <input type="search" class="form-control form-control-sm" placeholder="Search jobs" @bind-value="_jobSearchTerm" @bind-value:event="oninput" />
                 </div>
             </div>
         </div>
@@ -110,15 +111,15 @@
                 <div class="list-group">
                     @{
                         var jobs = Jobs?
-                            .Where(j => string.IsNullOrEmpty(jobSearchTerm) || j.JobName.ContainsIgnoreCase(jobSearchTerm))
-                            .Where(j => !Subscriptions.Any(s => j.JobId == s.JobId))
+                            .Where(j => string.IsNullOrEmpty(_jobSearchTerm) || j.JobName.ContainsIgnoreCase(_jobSearchTerm))
+                            .Where(j => Subscriptions.All(s => j.JobId != s.JobId))
                             .OrderBy(j => j.JobName)
                             .AsEnumerable() ?? [];
                     }
                     @foreach (var job in jobs)
                     {
                         <div class="list-group-item list-group-item-action" @onclick="() => AddSubscriptionAsync(job.JobId)" style="cursor: pointer;">
-                            <HighlightableText Text="@job.JobName" PartToHighlight="@jobSearchTerm" />
+                            <HighlightableText Text="@job.JobName" PartToHighlight="@_jobSearchTerm" />
                         </div>
                     }
                 </div>
@@ -126,7 +127,7 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" OnClick="() => selectJobOffcanvas.LetAsync(x => x.HideAsync())" Spinner="false">
+        <HxButton Color="ThemeColor.Secondary" OnClick="() => _selectJobOffcanvas.LetAsync(x => x.HideAsync())" Spinner="false">
             Close
         </HxButton>
     </FooterTemplate>
@@ -142,11 +143,10 @@
     [Parameter]
     public EventCallback OnSubscriptionCountChanged { get; set; }
 
-    private HxOffcanvas? selectJobOffcanvas;
-    private string jobSearchTerm = "";
+    private HxOffcanvas? _selectJobOffcanvas;
+    private string _jobSearchTerm = "";
 
-    private IEnumerable<JobSubscription> Subscriptions =>
-        User?.Subscriptions.OfType<JobSubscription>() ?? Enumerable.Empty<JobSubscription>();
+    private IEnumerable<JobSubscription> Subscriptions => User?.Subscriptions.OfType<JobSubscription>() ?? [];
 
     private async Task RemoveSubscriptionAsync(Subscription subscription)
     {

@@ -7,8 +7,6 @@ namespace Biflow.Ui.Components;
 
 public class FluentValidationValidator : ComponentBase
 {
-    [Inject] private IServiceProvider ServiceProvider { get; set; } = null!;
-
     [CascadingParameter] private EditContext? EditContext { get; set; }
 
     [Parameter, EditorRequired] public IValidator? Validator { get; set; }
@@ -66,7 +64,7 @@ public class FluentValidationValidator : ComponentBase
             return;
         }
 
-        var propertiesToValidate = new string[] { fieldIdentifier.FieldName };
+        var propertiesToValidate = new[] { fieldIdentifier.FieldName };
         var fluentValidationContext =
             new ValidationContext<object>(
                 instanceToValidate: fieldIdentifier.Model,
@@ -84,7 +82,7 @@ public class FluentValidationValidator : ComponentBase
         ArgumentNullException.ThrowIfNull(EditContext);
         ArgumentNullException.ThrowIfNull(_validationMessageStore);
 
-        foreach (ValidationFailure error in validationResult.Errors)
+        foreach (var error in validationResult.Errors)
         {
             var fieldIdentifier = new FieldIdentifier(model, error.PropertyName);
             _validationMessageStore.Add(fieldIdentifier, error.ErrorMessage);

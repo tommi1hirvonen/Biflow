@@ -7,7 +7,7 @@ internal class DeleteDependencyCommandHandler(IDbContextFactory<AppDbContext> db
 {
     public async Task Handle(DeleteDependencyCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         await context.Dependencies
             .Where(d => d.StepId == request.StepId && d.DependantOnStepId == request.DependentOnStepId)
             .ExecuteDeleteAsync(cancellationToken);

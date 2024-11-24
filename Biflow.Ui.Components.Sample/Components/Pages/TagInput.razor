@@ -39,18 +39,18 @@
                                      Items="tags3"
                                      SelectedItems="selected3"
                                      AllowCustomValues
-                                     NewItemFromText="text => new Tag(Guid.NewGuid(), text, TagColor.DarkGray)" />
+                                     NewItemFromText="text => new Tag(Guid.NewGuid(), text, TagColor.DarkGray, 0)" />
 
 @code {
-    private List<string> tags = ["economy", "politics", "sports", "domestic", "abroad", "food", "health", "art"];
+    private readonly List<string> tags = ["economy", "politics", "sports", "domestic", "abroad", "food", "health", "art"];
 
-    private List<string> tags2 = ["economy", "politics", "sports", "domestic", "abroad", "food", "health", "art"];
+    private readonly List<string> tags2 = ["economy", "politics", "sports", "domestic", "abroad", "food", "health", "art"];
 
-    private List<string> selected = ["sports", "health"];
+    private readonly List<string> selected = ["sports", "health"];
 
-    private List<string> selected2 = ["food", "art"];
+    private readonly List<string> selected2 = ["food", "art"];
 
-    private TagColor GetTagColor(string text) => text switch
+    private static TagColor GetTagColor(string text) => text switch
     {
         "politics" => TagColor.Red,
         "sports" => TagColor.Green,
@@ -58,13 +58,11 @@
         _ => TagColor.DarkGray
     };
 
-    private List<Tag> tags3 = Enum.GetValues<TagColor>()
-        .Select(color => new Tag(Guid.NewGuid(), color.ToString().ToLower(), color))
+    private readonly List<Tag> tags3 = Enum.GetValues<TagColor>()
+        .Select(color => new Tag(Guid.NewGuid(), color.ToString().ToLower(), color, 0))
         .ToList();
 
-    private List<Tag> selected3 = [];
-
-    private Tag NewTagDelegate(string text) => new(Guid.NewGuid(), text, TagColor.LightGray);
-
-    private record Tag(Guid TagId, string TagName, TagColor Color) : ITag;
+    private readonly List<Tag> selected3 = [];
+    
+    private record Tag(Guid TagId, string TagName, TagColor Color, int SortOrder) : ITag;
 }

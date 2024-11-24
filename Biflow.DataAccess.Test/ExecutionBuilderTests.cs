@@ -12,7 +12,7 @@ public class ExecutionBuilderTests(DatabaseFixture fixture)
     [Fact]
     public async Task TestBuildingExecution()
     {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         var job = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .FirstAsync(j => j.JobName == "Test job 1");
@@ -30,7 +30,7 @@ public class ExecutionBuilderTests(DatabaseFixture fixture)
     [Fact]
     public async Task TestBuildingExecutionWithJobStep()
     {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         var job = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .FirstAsync(j => j.JobName == "Test job 2");
@@ -48,7 +48,7 @@ public class ExecutionBuilderTests(DatabaseFixture fixture)
     [Fact]
     public async Task TestBuildingExecutionWithSchedule()
     {
-        using var ctx = await _dbContextFactory.CreateDbContextAsync();
+        await using var ctx = await _dbContextFactory.CreateDbContextAsync();
         var schedule = await ctx.Schedules
             .AsNoTracking()
             .FirstAsync(s => s.ScheduleName == "Test schedule 1");
@@ -73,7 +73,7 @@ public class ExecutionBuilderTests(DatabaseFixture fixture)
     [Fact]
     public async Task TestBuildingExecutionWithScheduleWithTags()
     {
-        using var ctx = await _dbContextFactory.CreateDbContextAsync();
+        await using var ctx = await _dbContextFactory.CreateDbContextAsync();
         var schedule = await ctx.Schedules
             .AsNoTracking()
             .FirstAsync(s => s.ScheduleName == "Test schedule 2");

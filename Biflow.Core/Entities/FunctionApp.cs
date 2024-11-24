@@ -21,11 +21,9 @@ public class FunctionApp
     [JsonSensitive]
     public string? FunctionAppKey
     {
-        get => _functionAppKey;
-        set => _functionAppKey = string.IsNullOrEmpty(value) ? null : value;
+        get;
+        set => field = string.IsNullOrEmpty(value) ? null : value;
     }
-
-    private string? _functionAppKey;
 
     [Required]
     [Display(Name = "Subscription id")]
@@ -51,18 +49,16 @@ public class FunctionApp
     [JsonIgnore]
     public AppRegistration AppRegistration
     {
-        get => _appRegistration;
+        get;
         set
         {
-            _appRegistration = value;
+            field = value;
             AppRegistrationId = value.AppRegistrationId;
         }
-    }
-
-    private AppRegistration _appRegistration = null!;
+    } = null!;
 
     [Range(0, int.MaxValue)]
-    public int MaxConcurrentFunctionSteps { get; set; } = 0;
+    public int MaxConcurrentFunctionSteps { get; set; }
 
     [JsonIgnore]
     public IEnumerable<FunctionStep> Steps { get; } = new List<FunctionStep>();

@@ -22,11 +22,11 @@ public class ExecutionBuilderStep
 
     public int ExecutionPhase => _step.ExecutionPhase;
 
-    public bool HasDependencies => _step.Dependencies.Any();
+    public bool HasDependencies => _step.Dependencies.Count != 0;
 
     public IEnumerable<ITag> Tags { get; }
 
-    public bool AddToExecution() => _builder.Add(_step);
+    public void AddToExecution() => _builder.Add(_step);
 
     public void AddWithDependencies(bool onlyOnSuccess = true) =>
         _builder.AddWithDependencies(_step, onlyOnSuccess);

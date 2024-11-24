@@ -10,7 +10,6 @@ public class Row
     private readonly string[] _primaryKeyColumns;
 
     private ObservableDictionary<string, object?> _values;
-    private bool _valuesChanged = false;
 
     public IDictionary<string, object?> Values => _values;
 
@@ -33,9 +32,9 @@ public class Row
 
     public bool IsNewRow { get; }
 
-    public bool StickToTop { get; } = false;
+    public bool StickToTop { get; }
 
-    public bool HasChanges => _valuesChanged;
+    public bool HasChanges { get; private set; }
 
     public Row(Row other) : this(other._parentTable, other.IsUpdateable, other.Values.ToDictionary())
     {
@@ -59,9 +58,11 @@ public class Row
     {
         _parentTable = tableData;
         _initialValues = initialValues;
-        _values = _initialValues is not null ? new(_initialValues, OnValuesChanged) : new(OnValuesChanged);
+        _values = _initialValues is not null
+            ? new(_initialValues, OnValuesChanged)
+            : new(OnValuesChanged);
         _upsertableColumns = _parentTable.Columns
-            .Where(c => !c.IsIdentity && !c.IsComputed)
+            .Where(c => c is { IsIdentity: false, IsComputed: false })
             .Select(c => c.Name)
             .ToArray();
         _primaryKeyColumns = _parentTable.Columns
@@ -86,43 +87,44 @@ public class Row
         DateIndexer = new(Values);
         TimeIndexer = new(Values);
 
-        if (_initialValues is null)
+        if (_initialValues is not null)
         {
-            foreach (var column in _parentTable.Columns)
+            return;
+        }
+        foreach (var column in _parentTable.Columns)
+        {
+            if (column.IsIdentity)
             {
-                if (column.IsIdentity)
-                {
-                    Values[column.Name] = default;
-                }
+                Values[column.Name] = default;
+            }
+            else
+            {
+                if (column.Datatype == typeof(byte))
+                    ByteIndexer[column.Name] = 0;
+                else if (column.Datatype == typeof(short))
+                    ShortIndexer[column.Name] = 0;
+                else if (column.Datatype == typeof(int))
+                    IntIndexer[column.Name] = 0;
+                else if (column.Datatype == typeof(long))
+                    LongIndexer[column.Name] = 0;
+                else if (column.Datatype == typeof(decimal))
+                    DecimalIndexer[column.Name] = 0;
+                else if (column.Datatype == typeof(double))
+                    DoubleIndexer[column.Name] = 0;
+                else if (column.Datatype == typeof(float))
+                    FloatIndexer[column.Name] = 0;
+                else if (column.Datatype == typeof(string))
+                    StringIndexer[column.Name] = null;
+                else if (column.Datatype == typeof(bool))
+                    BooleanIndexer[column.Name] = false;
+                else if (column.Datatype == typeof(DateTime))
+                    DateTimeIndexer[column.Name] = DateTime.Now;
+                else if (column.Datatype == typeof(DateOnly))
+                    DateIndexer[column.Name] = DateOnly.FromDateTime(DateTime.Now);
+                else if (column.Datatype == typeof(TimeOnly))
+                    TimeIndexer[column.Name] = TimeOnly.FromDateTime(DateTime.Now);
                 else
-                {
-                    if (column.Datatype == typeof(byte))
-                        ByteIndexer[column.Name] = 0;
-                    else if (column.Datatype == typeof(short))
-                        ShortIndexer[column.Name] = 0;
-                    else if (column.Datatype == typeof(int))
-                        IntIndexer[column.Name] = 0;
-                    else if (column.Datatype == typeof(long))
-                        LongIndexer[column.Name] = 0;
-                    else if (column.Datatype == typeof(decimal))
-                        DecimalIndexer[column.Name] = 0;
-                    else if (column.Datatype == typeof(double))
-                        DoubleIndexer[column.Name] = 0;
-                    else if (column.Datatype == typeof(float))
-                        FloatIndexer[column.Name] = 0;
-                    else if (column.Datatype == typeof(string))
-                        StringIndexer[column.Name] = null;
-                    else if (column.Datatype == typeof(bool))
-                        BooleanIndexer[column.Name] = false;
-                    else if (column.Datatype == typeof(DateTime))
-                        DateTimeIndexer[column.Name] = DateTime.Now;
-                    else if (column.Datatype == typeof(DateOnly))
-                        DateIndexer[column.Name] = DateOnly.FromDateTime(DateTime.Now);
-                    else if (column.Datatype == typeof(TimeOnly))
-                        TimeIndexer[column.Name] = TimeOnly.FromDateTime(DateTime.Now);
-                    else
-                        Values[column.Name] = default;
-                }
+                    Values[column.Name] = default;
             }
         }
     }
@@ -133,7 +135,7 @@ public class Row
     private void OnValuesChanged()
     {
         _parentTable.HasChanges = true;
-        _valuesChanged = Values.Any(HasChanged);
+        HasChanges = Values.Any(HasChanged);
     }
 
     public void RevertChanges()
@@ -156,7 +158,7 @@ public class Row
         DateTimeIndexer = new(Values);
         DateIndexer = new(Values);
         TimeIndexer = new(Values);
-        _valuesChanged = false;
+        HasChanges = false;
     }
 
     public void Delete()
@@ -172,8 +174,6 @@ public class Row
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="schema"></param>
-    /// <param name="table"></param>
     /// <returns>null if there are no pending changes</returns>
     internal RowChangeSqlCommand? GetChangeSqlCommand()
     {
@@ -264,7 +264,8 @@ public class Row
 
     private bool HasChanged(KeyValuePair<string, object?> field) => _initialValues switch
     {
-        not null => _upsertableColumns.Any(c => c == field.Key) && field.Value?.ToString() != _initialValues[field.Key]?.ToString(),
+        not null => _upsertableColumns.Any(c => c == field.Key)
+                    && field.Value?.ToString() != _initialValues[field.Key]?.ToString(),
         _ => false
     };
         

@@ -7,7 +7,7 @@ internal class UpdateExecutionStatusCommandHandler(IDbContextFactory<AppDbContex
 {
     public async Task Handle(UpdateExecutionStatusCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var executions = await context.Executions
             .Where(e => request.ExecutionIds.Contains(e.ExecutionId))
             .ToArrayAsync(cancellationToken);

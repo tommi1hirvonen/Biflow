@@ -1,17 +1,17 @@
 ﻿@{
     var count = Executions?.Count() ?? 0;
-    var selectedText = selectedSteps.Count switch
+    var selectedText = _selectedSteps.Count switch
     {
-        1 => $"{selectedSteps.Count} selected step",
-        > 1 => $"{selectedSteps.Count} selected steps",
+        1 => $"{_selectedSteps.Count} selected step",
+        > 1 => $"{_selectedSteps.Count} selected steps",
         _ => ""
     };
 }
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-    @if (selectedSteps.Count > 0)
+    @if (_selectedSteps.Count > 0)
     {
-        var executions = selectedSteps.Select(id => Executions?.FirstOrDefault(e => e.ExecutionId == id.ExecutionId && e.StepId == id.StepId && e.RetryAttemptIndex == id.RetryAttemptIndex));
+        var executions = _selectedSteps.Select(id => Executions?.FirstOrDefault(e => e.ExecutionId == id.ExecutionId && e.StepId == id.StepId && e.RetryAttemptIndex == id.RetryAttemptIndex));
         var enabled = executions.Any(e => e?.CanBeStopped == true);
         <HoverBox Header="@selectedText">
             <HxButtonGroup Size="ButtonGroupSize.Small">
@@ -20,7 +20,7 @@
                           CssClass="btn-auto text-danger"
                           Enabled="enabled"
                           OnClick="StopSelectedStepsAsync">
-                    <SvgIcon Icon="FeatherIcon.XOctagon" />
+                    <SvgIcon Icon="LucideIcon.OctagonX" />
                     Stop...
                 </HxButton>
                 <HxDropdownButtonGroup>
@@ -36,8 +36,8 @@
                         }
                     </HxDropdownMenu>
                 </HxDropdownButtonGroup>
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="selectedSteps.Clear">
-                    <SvgIcon Icon="FeatherIcon.X" />
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="_selectedSteps.Clear">
+                    <SvgIcon Icon="LucideIcon.X" />
                     Cancel
                 </HxButton>
             </HxButtonGroup>
@@ -53,8 +53,8 @@
                 <th>
                     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                         <TriStateCheckbox CssClass="me-0"
-                                          Checked="@(selectedSteps.Count > 0 && count > 0)"
-                                          Indeterminate="@(selectedSteps.Any() && selectedSteps.Count != count)"
+                                          Checked="@(_selectedSteps.Count > 0 && count > 0)"
+                                          Indeterminate="@(_selectedSteps.Any() && _selectedSteps.Count != count)"
                                           CheckedChanged="value => ToggleStepsSelected(value)" />
                     </AuthorizeView>
                     @if (!string.IsNullOrEmpty(selectedText))
@@ -67,11 +67,11 @@
                     <span class="ms-2">
                         @if (SortMode == StepExecutionSortMode.JobAsc)
                         {
-                            <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                            <SvgIcon Icon="LucideIcon.MoveUp" />
                         }
                         else if (SortMode == StepExecutionSortMode.JobDesc)
                         {
-                            <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                            <SvgIcon Icon="LucideIcon.MoveDown" />
                         }
                     </span>
                 </th>
@@ -81,8 +81,8 @@
                 {
                     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                         <TriStateCheckbox CssClass="me-0"
-                                          Checked="@(selectedSteps.Count > 0 && count > 0)"
-                                          Indeterminate="@(selectedSteps.Any() && selectedSteps.Count != count)"
+                                          Checked="@(_selectedSteps.Count > 0 && count > 0)"
+                                          Indeterminate="@(_selectedSteps.Any() && _selectedSteps.Count != count)"
                                           CheckedChanged="value => ToggleStepsSelected(value)" />
                     </AuthorizeView>
                     @if (!string.IsNullOrEmpty(selectedText))
@@ -96,11 +96,11 @@
                 <span class="ms-2">
                     @if (SortMode == StepExecutionSortMode.StepAsc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                        <SvgIcon Icon="LucideIcon.MoveUp" />
                     }
                     else if (SortMode == StepExecutionSortMode.StepDesc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                        <SvgIcon Icon="LucideIcon.MoveDown" />
                     }
                 </span>
             </th>
@@ -114,11 +114,11 @@
                 <span class="ms-2">
                     @if (SortMode == StepExecutionSortMode.StartedAsc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                        <SvgIcon Icon="LucideIcon.MoveUp" />
                     }
                     else if (SortMode == StepExecutionSortMode.StartedDesc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                        <SvgIcon Icon="LucideIcon.MoveDown" />
                     }
                 </span>
             </th>
@@ -129,11 +129,11 @@
                 <span class="ms-2">
                     @if (SortMode == StepExecutionSortMode.EndedAsc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                        <SvgIcon Icon="LucideIcon.MoveUp" />
                     }
                     else if (SortMode == StepExecutionSortMode.EndedDesc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                        <SvgIcon Icon="LucideIcon.MoveDown" />
                     }
                 </span>
             </th>
@@ -144,11 +144,11 @@
                 <span class="ms-2">
                     @if (SortMode == StepExecutionSortMode.DurationAsc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                        <SvgIcon Icon="LucideIcon.MoveUp" />
                     }
                     else if (SortMode == StepExecutionSortMode.DurationDesc)
                     {
-                        <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                        <SvgIcon Icon="LucideIcon.MoveDown" />
                     }
                 </span>
             </th>
@@ -173,7 +173,7 @@
                 var id = new StepExecutionId(item.ExecutionId, item.StepId, item.RetryAttemptIndex);
                 var checkBoxId = $"select_step_{item.StepId}_{item.RetryAttemptIndex}";
                 <ContextMenuToggle ContainerHtmlTag="tr"
-                                   CssClass="@(selectedStepExecution == item ? "bg-body-tertiary" : null)"
+                                   CssClass="@(_selectedStepExecution == item ? "bg-body-tertiary" : null)"
                                    CssClassDelegate="@(open => open ? "bg-body-tertiary" : null)"
                                    style="cursor: pointer;"
                                    @onclick="async () => await ToggleSelectedStepExecutionAsync(item)">
@@ -184,7 +184,7 @@
                                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")" Context="auth">
                                     <div class="form-check form-check-inline me-0">
                                         <input type="checkbox" class="form-check-input" id="@checkBoxId"
-                                               checked=@selectedSteps.Contains(id)
+                                               checked=@_selectedSteps.Contains(id)
                                                @onclick:stopPropagation="true"
                                                @onchange="args => ToggleStepSelected(item)">
                                         <label class="form-check-label" for="@checkBoxId"></label>
@@ -199,7 +199,7 @@
                                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")" Context="auth">
                                     <div class="form-check form-check-inline me-0">
                                         <input type="checkbox" class="form-check-input" id="@checkBoxId"
-                                               checked=@selectedSteps.Contains(id)
+                                               checked=@_selectedSteps.Contains(id)
                                                @onclick:stopPropagation="true"
                                                @onchange="args => ToggleStepSelected(item)">
                                         <label class="form-check-label" for="@checkBoxId"></label>
@@ -236,11 +236,11 @@
                             <SvgIcon Icon="LucideIcon.Monitor" />
                             Monitors
                         </DropdownMenuItem>
-                        <DropdownMenuItem @onclick="async () => await stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
-                            <SvgIcon Icon="FeatherIcon.Activity" />
+                        <DropdownMenuItem @onclick="async () => await _stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
+                            <SvgIcon Icon="LucideIcon.Activity" />
                             History
                         </DropdownMenuItem>
-                        <DropdownMenuItem @onclick="@(() => NavigationManager.NavigateTo($"executions/{item.ExecutionId}/graph/{item.StepId}"))">
+                        <DropdownMenuItem @onclick="@(() => _navigationManager.NavigateTo($"executions/{item.ExecutionId}/graph/{item.StepId}"))">
                             <SvgIcon Icon="LucideIcon.Workflow" />
                             Dependencies
                         </DropdownMenuItem>
@@ -248,16 +248,16 @@
                             @if (item.CanBeStopped)
                             {
                                 <DropdownMenuItem @onclick="async () => await StopStepExecutionAsync(item.ExecutionId, item.StepId, item.StepName)">
-                                    <SvgIcon Icon="FeatherIcon.XOctagon" />
+                                    <SvgIcon Icon="LucideIcon.OctagonX" />
                                     Stop...
                                 </DropdownMenuItem>
                             }
                         </AuthorizeView>
                     </MenuContent>
                 </ContextMenuToggle>
-                @if (selectedStepExecution == item)
+                @if (_selectedStepExecution == item)
                 {
-                    if (detailStep is null)
+                    if (_detailStep is null)
                     {
                         <tr>
                             <td colspan="7" class="text-center">
@@ -270,35 +270,35 @@
                         <tr class="table-borderless no-hover bg-body-tertiary">
                             <td colspan="7" class="px-3">
                                 <HxButtonGroup CssClass="mb-3 mt-1 ms-2">
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1" @onclick="() => ToggleSelectedStepExecutionAsync(selectedStepExecution)">
-                                        <SvgIcon Icon="FeatherIcon.X" />
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1" @onclick="() => ToggleSelectedStepExecutionAsync(_selectedStepExecution)">
+                                        <SvgIcon Icon="LucideIcon.X" />
                                         Close
                                     </HxButton>
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1" @onclick="async () => await StepExecutionMonitorsOffcanvas.LetAsync(x => x.ShowAsync(item))">
                                         <SvgIcon Icon="LucideIcon.Monitor" />
                                         Monitors
                                     </HxButton>
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1" @onclick="async () => await stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
-                                        <SvgIcon Icon="FeatherIcon.Activity" />
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1" @onclick="async () => await _stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
+                                        <SvgIcon Icon="LucideIcon.Activity" />
                                         History
                                     </HxButton>
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1" @onclick="@(() => NavigationManager.NavigateTo($"executions/{item.ExecutionId}/graph/{item.StepId}"))">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1" @onclick="@(() => _navigationManager.NavigateTo($"executions/{item.ExecutionId}/graph/{item.StepId}"))">
                                         <SvgIcon Icon="LucideIcon.Workflow" />
                                         Dependencies
                                     </HxButton>
                                     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-                                        @if (detailStep.CanBeStopped)
+                                        @if (_detailStep.CanBeStopped)
                                         {
                                             <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto border-1 text-danger"
                                                       @onclick="async () => await StopStepExecutionAsync(item.ExecutionId, item.StepId, item.StepName)">
-                                                <SvgIcon Icon="FeatherIcon.XOctagon" />
+                                                <SvgIcon Icon="LucideIcon.OctagonX" />
                                                 Stop...
                                             </HxButton>
                                         }
                                     </AuthorizeView>
                                 </HxButtonGroup>
 
-                                <StepExecutionDetails StepExecutionAttempt="detailStep" />
+                                <StepExecutionDetails StepExecutionAttempt="_detailStep" />
                             </td>
                         </tr>
                     }
@@ -308,4 +308,4 @@
     </tbody>
 </table>
 
-<StepHistoryOffcanvas @ref="stepHistoryOffcanvas" />
+<StepHistoryOffcanvas @ref="_stepHistoryOffcanvas" />

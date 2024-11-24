@@ -12,7 +12,7 @@
 
 <div class="row align-items-end mb-3">
     <div class="col-xl-7 col-lg-9 col-12">
-        <HxAutosuggest @bind-Value="filterNode"
+        <HxAutosuggest @bind-Value="_filterNode"
                        @bind-Value:after="LoadGraphAsync"
                        TItem="INode"
                        TValue="INode"
@@ -47,22 +47,22 @@
             <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal backwards when drawing the lineage graph starting from the filtered node.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
                 <ChildContent>
                     <span style="cursor: pointer;">
-                        <SvgIcon Icon="FeatherIcon.Info" />
+                        <SvgIcon Icon="LucideIcon.Info" />
                     </span>
                 </ChildContent>
             </HxPopover>
-            <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthBackwards" disabled=@(filterNode is null) style="max-width: 9rem;" />
+            <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthBackwards" disabled=@(_filterNode is null) style="max-width: 9rem;" />
         </div>
         <div class="form-group ms-3">
             <label class="form-label">Depth forwards</label>
             <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal forwards when drawing the lineage graph starting from the filtered node.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
                 <ChildContent>
                     <span style="cursor: pointer;">
-                        <SvgIcon Icon="FeatherIcon.Info" />
+                        <SvgIcon Icon="LucideIcon.Info" />
                     </span>
                 </ChildContent>
             </HxPopover>
-            <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthForwards" disabled=@(filterNode is null) style="max-width: 9rem;" />
+            <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthForwards" disabled=@(_filterNode is null) style="max-width: 9rem;" />
         </div>
         <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="ms-3">
             <HxButton CssClass="btn-auto" Size="ButtonSize.Small" Color="ThemeColor.None" OnClick="LoadGraphAsync">
@@ -77,37 +77,37 @@
                         <div class="col">
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" id="direction_radio_admin"
-                                       checked=@(direction == DependencyGraphDirection.LeftToRight)
-                                       @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.LeftToRight))">
+                                       checked=@(_direction == DependencyGraphDirection.LeftToRight)
+                                       @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.LeftToRight))">
                                 <label class="form-check-label fw-normal" for="direction_radio_admin">
-                                    <SvgIcon Icon="FeatherIcon.ArrowRight" />
+                                    <SvgIcon Icon="LucideIcon.MoveRight" />
                                     Left to right
                                 </label>
                             </div>
                             <div class="form-check mt-1">
                                 <input class="form-check-input" type="radio" id="direction_radio_editor"
-                                       checked=@(direction == DependencyGraphDirection.RightToLeft)
-                                       @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.RightToLeft))">
+                                       checked=@(_direction == DependencyGraphDirection.RightToLeft)
+                                       @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.RightToLeft))">
                                 <label class="form-check-label fw-normal" for="direction_radio_editor">
-                                    <SvgIcon Icon="FeatherIcon.ArrowLeft" />
+                                    <SvgIcon Icon="LucideIcon.MoveLeft" />
                                     Right to left
                                 </label>
                             </div>
                             <div class="form-check mt-1">
                                 <input class="form-check-input" type="radio" id="direction_radio_operator"
-                                       checked=@(direction == DependencyGraphDirection.TopToBottom)
-                                       @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.TopToBottom))">
+                                       checked=@(_direction == DependencyGraphDirection.TopToBottom)
+                                       @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.TopToBottom))">
                                 <label class="form-check-label fw-normal" for="direction_radio_operator">
-                                    <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                                    <SvgIcon Icon="LucideIcon.MoveDown" />
                                     Top to bottom
                                 </label>
                             </div>
                             <div class="form-check mt-1">
                                 <input class="form-check-input" type="radio" id="direction_radio_viewer"
-                                       checked=@(direction == DependencyGraphDirection.BottomToTop)
-                                       @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.BottomToTop))">
+                                       checked=@(_direction == DependencyGraphDirection.BottomToTop)
+                                       @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.BottomToTop))">
                                 <label class="form-check-label fw-normal" for="direction_radio_viewer">
-                                    <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                                    <SvgIcon Icon="LucideIcon.MoveUp" />
                                     Bottom to top
                                 </label>
                             </div>
@@ -121,15 +121,15 @@
 
 @if (Job is not null)
 {
-    <DependencyGraph @ref="dependencyGraph"
+    <DependencyGraph @ref="_dependencyGraph"
                      TItem="INode"
                      AfterRender="LoadGraphAsync"
-                     ItemFromNodeIdSelector="nodeId => graphNodes.FirstOrDefault(node => node.Id == nodeId)"
+                     ItemFromNodeIdSelector="nodeId => _graphNodes.FirstOrDefault(node => node.Id == nodeId)"
                      CssClass="dependency-graph">
         <ContextMenuTemplate Context="node">
             <li>
-                <span class="dropdown-item" role="button" @onclick="async () => { filterNode = node; await LoadGraphAsync();}">
-                    <SvgIcon Icon="FeatherIcon.Filter" />
+                <span class="dropdown-item" role="button" @onclick="async () => { _filterNode = node; await LoadGraphAsync();}">
+                    <SvgIcon Icon="LucideIcon.Filter" />
                     Limit graph to this
                 </span>
             </li>
@@ -142,34 +142,30 @@
 
     [CascadingParameter] public List<Step>? Steps { get; set; }
 
-    private DependencyGraph<INode>? dependencyGraph;
-    private INode? filterNode;
-    private List<INode> graphNodes = [];
-    private DependencyGraphDirection direction = DependencyGraphDirection.LeftToRight;
+    private DependencyGraph<INode>? _dependencyGraph;
+    private INode? _filterNode;
+    private List<INode> _graphNodes = [];
+    private DependencyGraphDirection _direction = DependencyGraphDirection.LeftToRight;
 
     private int FilterDepthBackwards
     {
-        get => _filterDepthBackwards;
-        set => _filterDepthBackwards = value >= 0 ? value : _filterDepthBackwards;
+        get;
+        set => field = value >= 0 ? value : field;
     }
-
-    private int _filterDepthBackwards;
 
     private int FilterDepthForwards
     {
-        get => _filterDepthForwards;
-        set => _filterDepthForwards = value >= 0 ? value : _filterDepthForwards;
+        get;
+        set => field = value >= 0 ? value : field;
     }
-
-    private int _filterDepthForwards;
 
     private Task SetDirectionAsync(DependencyGraphDirection direction)
     {
-        if (this.direction == direction)
+        if (_direction == direction)
         {
             return Task.CompletedTask;
         }
-        this.direction = direction;
+        _direction = direction;
         return LoadGraphAsync();
     }
 
@@ -177,7 +173,7 @@
     {
         ArgumentNullException.ThrowIfNull(Job);
         ArgumentNullException.ThrowIfNull(Steps);
-        ArgumentNullException.ThrowIfNull(dependencyGraph);
+        ArgumentNullException.ThrowIfNull(_dependencyGraph);
 
         var uris = Steps
             .SelectMany(step => step.DataObjects)
@@ -190,7 +186,7 @@
             var node = new DependencyGraphNode(
                 Id: step.StepId.ToString(),
                 Name: step.StepName ?? "",
-                CssClass: $"{(step.IsEnabled ? "enabled" : "disabled")} internal {(filterNode?.Id == step.StepId.ToString() ? "selected" : null)}",
+                CssClass: $"{(step.IsEnabled ? "enabled" : "disabled")} internal {(_filterNode?.Id == step.StepId.ToString() ? "selected" : null)}",
                 TooltipText: step.StepType.ToString(),
                 EnableOnClick: true
             );
@@ -201,7 +197,7 @@
             var node = new DependencyGraphNode(
                 Id: uri,
                 Name: uri,
-                CssClass: $"font-monospace internal {(filterNode?.Id == uri ? "selected" : null)}",
+                CssClass: $"font-monospace internal {(_filterNode?.Id == uri ? "selected" : null)}",
                 TooltipText: "Data object",
                 EnableOnClick: true,
                 Rounded: false
@@ -209,18 +205,18 @@
             return new DataNode(uri, uri, node, uri) as INode;
         });
 
-        graphNodes = stepNodes
+        _graphNodes = stepNodes
             .Concat(dataNodes)
             .ToList();
 
         // Replace filterNode with a new reference from graphNodes so that it has the selected css class.
-        filterNode = graphNodes.FirstOrDefault(n => n.Id == filterNode?.Id) ?? filterNode;
+        _filterNode = _graphNodes.FirstOrDefault(n => n.Id == _filterNode?.Id) ?? _filterNode;
 
         List<DependencyGraphNode> nodes;
         List<DependencyGraphEdge> edges;
-        if (filterNode is null)
+        if (_filterNode is null)
         {
-            nodes = graphNodes.Select(n => n.Node).ToList();
+            nodes = _graphNodes.Select(n => n.Node).ToList();
             edges = Steps
                 .SelectMany(step =>
                 {
@@ -238,9 +234,9 @@
         }
         else
         {
-            var iNodes = RecurseDependenciesBackward(filterNode, graphNodes, new(), 0);
-            iNodes.Remove(filterNode);
-            iNodes = RecurseDependenciesForward(filterNode, graphNodes, iNodes, 0);
+            var iNodes = RecurseDependenciesBackward(_filterNode, _graphNodes, new(), 0);
+            iNodes.Remove(_filterNode);
+            iNodes = RecurseDependenciesForward(_filterNode, _graphNodes, iNodes, 0);
             nodes = iNodes.Select(n => n.Node).ToList();
             edges = Steps
                 .SelectMany(step =>
@@ -260,7 +256,7 @@
                 .ToList();
         }
 
-        await dependencyGraph.DrawAsync(nodes, edges, direction);
+        await _dependencyGraph.DrawAsync(nodes, edges, _direction);
     }
 
     private List<INode> RecurseDependenciesBackward(INode node, List<INode> allNodes, List<INode> processedNodes, int depth)
@@ -276,13 +272,12 @@
 
         if (depth++ > FilterDepthBackwards && FilterDepthBackwards > 0)
         {
-            depth--;
             return processedNodes;
         }
 
         processedNodes.Add(node);
 
-        List<INode> dependencyNodes = node switch
+        var dependencyNodes = node switch
         {
             StepNode step => allNodes
                 .OfType<DataNode>()
@@ -298,12 +293,10 @@
         };
 
         // Loop through the dependencies and handle them recursively.
-        foreach (var depencyNode in dependencyNodes)
+        foreach (var dependencyNode in dependencyNodes)
         {
-            RecurseDependenciesBackward(depencyNode, allNodes, processedNodes, depth);
+            RecurseDependenciesBackward(dependencyNode, allNodes, processedNodes, depth);
         }
-
-        depth--;
 
         return processedNodes;
     }
@@ -319,13 +312,12 @@
 
         if (depth++ > FilterDepthForwards && FilterDepthForwards > 0)
         {
-            depth--;
             return processedNodes;
         }
 
         processedNodes.Add(node);
 
-        List<INode> dependencyNodes = node switch
+        var dependencyNodes = node switch
         {
             StepNode step => allNodes
                 .OfType<DataNode>()
@@ -340,12 +332,10 @@
             _ => []
         };
 
-        foreach (var depencyNode in dependencyNodes)
+        foreach (var dependencyNode in dependencyNodes)
         {
-            RecurseDependenciesForward(depencyNode, allNodes, processedNodes, depth);
+            RecurseDependenciesForward(dependencyNode, allNodes, processedNodes, depth);
         }
-
-        depth--;
 
         return processedNodes;
     }
@@ -354,7 +344,7 @@
     {
         return Task.FromResult(new AutosuggestDataProviderResult<INode>
         {
-            Data = graphNodes.Where(n => n.Name.ContainsIgnoreCase(request.UserInput))
+            Data = _graphNodes.Where(n => n.Name.ContainsIgnoreCase(request.UserInput))
         });
     }
 

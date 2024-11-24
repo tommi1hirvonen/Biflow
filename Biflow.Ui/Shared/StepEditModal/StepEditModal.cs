@@ -1,10 +1,9 @@
 ﻿namespace Biflow.Ui.Shared.StepEditModal;
 
-public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable, IStepEditModal where TStep : Step
-{    
-    [Inject] protected ToasterService Toaster { get; set; } = null!;
-    [Inject] protected IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
-
+public abstract class StepEditModal<TStep>(
+    ToasterService toaster,
+    IDbContextFactory<AppDbContext> dbContextFactory) : ComponentBase, IDisposable, IStepEditModal where TStep : Step
+{
     [CascadingParameter] public Job? Job { get; set; }
 
     [CascadingParameter] public List<Step>? Steps { get; set; }
@@ -23,8 +22,6 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     [Parameter] public IEnumerable<QlikCloudEnvironment> QlikClients { get; set; } = [];
 
-    [Parameter] public IEnumerable<DatabricksWorkspace> DatabricksWorkspaces { get; set; } = [];
-
     [Parameter] public IEnumerable<Credential> Credentials { get; set; } = [];
 
     internal abstract string FormId { get; }
@@ -39,20 +36,24 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     internal Dictionary<Guid, StepProjection>? StepSlims { get; set; }
 
-    internal bool Saving { get; set; } = false;
+    internal bool Saving { get; set; }
 
-    public IEnumerable<StepTag>? AllTags { get; private set; }
+    public List<StepTag>? AllTags { get; private set; }
 
-    private AppDbContext? context;
-    private IEnumerable<DataObject>? dataObjects;
+    protected ToasterService Toaster { get; } = toaster;
+
+    protected IDbContextFactory<AppDbContext> DbContextFactory { get; } = dbContextFactory;
+
+    private AppDbContext? _context;
+    private IEnumerable<DataObject>? _dataObjects;
 
     protected virtual Task OnModalShownAsync(TStep step) => Task.CompletedTask;
 
     public async Task<IEnumerable<DataObject>> GetDataObjectsAsync()
     {
-        ArgumentNullException.ThrowIfNull(context);
-        dataObjects ??= await context.DataObjects.ToListAsync();
-        return dataObjects;
+        ArgumentNullException.ThrowIfNull(_context);
+        _dataObjects ??= await _context.DataObjects.ToListAsync();
+        return _dataObjects;
     }
 
     /// <summary>
@@ -80,17 +81,17 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
     private async Task ResetContext()
     {
-        if (context is not null)
-            await context.DisposeAsync();
+        if (_context is not null)
+            await _context.DisposeAsync();
 
-        context = await DbContextFactory.CreateDbContextAsync();
+        _context = await DbContextFactory.CreateDbContextAsync();
     }
 
     internal void OnClosed()
     {
         Step = null;
         AllTags = null;
-        dataObjects = null;
+        _dataObjects = null;
         JobSlims = null;
         StepSlims = null;
     }
@@ -101,7 +102,7 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
         try
         {
-            ArgumentNullException.ThrowIfNull(context);
+            ArgumentNullException.ThrowIfNull(_context);
             if (Step is null)
             {
                 Toaster.AddError("Error submitting step", "Step was null");
@@ -110,18 +111,18 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
 
             await MapExistingDataObjectsAsync(Step.DataObjects);
 
-            await OnSubmitAsync(context, Step);
+            await OnSubmitAsync(_context, Step);
 
             // Save changes.
 
             // New step
             if (Step.StepId == Guid.Empty)
             {
-                context.Steps.Add(Step);
+                _context.Steps.Add(Step);
             }
             // If the Step was an existing Step, the context has been tracking its changes.
             // => No need to attach it to the context separately.
-            await context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
 
             await OnStepSubmit.InvokeAsync(Step);
             await Modal.LetAsync(x => x.HideAsync());
@@ -156,15 +157,16 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
         CurrentView = startView;
         await Modal.LetAsync(x => x.ShowAsync());
         await ResetContext();
-        ArgumentNullException.ThrowIfNull(context);
-        AllTags = await context.StepTags.OrderBy(t => t.TagName).ToListAsync();
+        ArgumentNullException.ThrowIfNull(_context);
+        AllTags = await _context.StepTags.ToListAsync();
+        AllTags.Sort();
         // Use slim classes to only load selected columns from the db.
         // When loading all steps from the db, the number of steps may be very high.
-        JobSlims = await context.Jobs
+        JobSlims = await _context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Select(j => new JobProjection(j.JobId, j.JobName, j.ExecutionMode))
             .ToDictionaryAsync(j => j.JobId);
-        StepSlims = await context.Steps
+        StepSlims = await _context.Steps
             .AsNoTrackingWithIdentityResolution()
             .Select(s => new StepProjection(
                 s.StepId,
@@ -179,11 +181,11 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
             .ToDictionaryAsync(s => s.StepId);
         if (stepId != Guid.Empty)
         {
-            Step = await GetExistingStepAsync(context, stepId);
+            Step = await GetExistingStepAsync(_context, stepId);
         }
         else if (stepId == Guid.Empty && Job is not null)
         {
-            var job = await context.Jobs.Include(j => j.JobParameters).FirstAsync(j => j.JobId == Job.JobId);
+            var job = await _context.Jobs.Include(j => j.JobParameters).FirstAsync(j => j.JobId == Job.JobId);
             Step = CreateNewStep(job);
         }
         StateHasChanged();
@@ -191,5 +193,5 @@ public abstract partial class StepEditModal<TStep> : ComponentBase, IDisposable,
             await OnModalShownAsync(Step);
     }
 
-    public virtual void Dispose() => context?.Dispose();
+    public virtual void Dispose() => _context?.Dispose();
 }

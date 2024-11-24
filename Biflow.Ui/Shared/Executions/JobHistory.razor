@@ -11,21 +11,21 @@
 <div class="row">
     <div class="col-auto d-inline-flex align-items-center">
         <label>No of executions</label>
-        <input @bind-value="maxExecutions" class="form-control form-control-sm ms-3" type="number" style="max-width: 5rem;">
+        <input @bind-value="_maxExecutions" class="form-control form-control-sm ms-3" type="number" style="max-width: 5rem;">
     </div>
     <div class="col-auto">
         <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="ReloadAsync">
-            <SvgIcon Icon="FeatherIcon.RefreshCw" />
+            <SvgIcon Icon="LucideIcon.RefreshCw" />
             Refresh
         </HxButton>
     </div>
     <div class="col-auto">
         <HxButtonGroup Size="ButtonGroupSize.Small">
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(showChart ? null : "active")" OnClick="() => showChart = false">
-                <SvgIcon Icon="FeatherIcon.List" />
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(_showChart ? null : "active")" OnClick="() => _showChart = false">
+                <SvgIcon Icon="LucideIcon.List" />
                 List
             </HxButton>
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(showChart ? "active" : null)" OnClick="() => showChart = true">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary" CssClass="@(_showChart ? "active" : null)" OnClick="() => _showChart = true">
                 <SvgIcon Icon="LucideIcon.LineChart" />
                 Chart
             </HxButton>
@@ -34,19 +34,19 @@
     <div class="col-auto align-items-center d-flex">
         <div class="form-check form-check-inline">
             <input type="radio" class="form-check-input" id="radio_scheduled"
-                    checked=@(startTypeFilter == StartType.Scheduled)
+                    checked=@(_startTypeFilter == StartType.Scheduled)
                     @onchange="() => SetStartTypeFilter(StartType.Scheduled)">
             <label class="form-check-label" for="radio_scheduled">Scheduled</label>
         </div>
         <div class="form-check form-check-inline ms-2">
             <input type="radio" class="form-check-input" id="radio_manual"
-                    checked=@(startTypeFilter == StartType.Manual)
+                    checked=@(_startTypeFilter == StartType.Manual)
                     @onchange="() => SetStartTypeFilter(StartType.Manual)">
             <label class="form-check-label" for="radio_manual">Manual</label>
         </div>
         <div class="form-check form-check-inline ms-2">
             <input type="radio" class="form-check-input" id="radio_all"
-                   checked=@(startTypeFilter == StartType.All)
+                   checked=@(_startTypeFilter == StartType.All)
                     @onchange="() => SetStartTypeFilter(StartType.All)">
             <label class="form-check-label" for="radio_all">All</label>
         </div>
@@ -55,12 +55,12 @@
 
 <div class="row mt-1">
     <div class="col">
-        <small class="text-muted">Actual no of executions: @executions?.Count()</small>
+        <small class="text-muted">Actual no of executions: @_executions?.Count()</small>
     </div>
 </div>
 
-<div class="card shadow-sm pt-2 mb-4 mt-3 table-responsive">
-    @if (!showChart)
+<div class="card pt-2 mb-4 mt-3 table-responsive">
+    @if (!_showChart)
     {
         <table class="table table-sm table-hover">
             <thead>
@@ -97,7 +97,7 @@
                 @{
                     var executions = FilteredExecutions.ToArray();
                 }
-                @if (this.executions is null)
+                @if (_executions is null)
                 {
                     <tr><td colspan="6" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                 }
@@ -106,7 +106,7 @@
                     <tr>
                         <td colspan="6">
                             @{
-                                RenderFragment renderFragment = startTypeFilter switch
+                                RenderFragment renderFragment = _startTypeFilter switch
                                 {
                                     StartType.All => @<span>No executions</span>,
                                     StartType.Scheduled => @<span>No <strong>scheduled</strong> executions</span>,
@@ -158,7 +158,7 @@
     else
     {
         <div class="mx-3 mb-3">
-            <LineChart Dataset="dataset" />
+            <LineChart Dataset="_dataset" />
         </div>
     }
     
@@ -171,27 +171,27 @@
 
     private const int DefaultMaxExecutions = 50;
 
-    private readonly CancellationTokenSource cts = new();
+    private readonly CancellationTokenSource _cts = new();
 
-    private IEnumerable<ExecutionProjection>? executions;
-    private int maxExecutions = DefaultMaxExecutions;
-    private StartType startTypeFilter = StartType.All;
-    private bool showChart = false;
-    private LineChartDataset? dataset;
+    private IEnumerable<ExecutionProjection>? _executions;
+    private int _maxExecutions = DefaultMaxExecutions;
+    private StartType _startTypeFilter = StartType.All;
+    private bool _showChart = false;
+    private LineChartDataset? _dataset;
 
     private IEnumerable<ExecutionProjection> FilteredExecutions =>
-        executions?
-        .Where(e => startTypeFilter == StartType.All ||
-                    startTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
-                    startTypeFilter == StartType.Manual && e.ScheduleId is null)
-        ?? Enumerable.Empty<ExecutionProjection>();
+        _executions?
+        .Where(e => _startTypeFilter == StartType.All ||
+                    _startTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
+                    _startTypeFilter == StartType.Manual && e.ScheduleId is null)
+        ?? [];
 
-    public double AverageDurationInSeconds =>
+    private double AverageDurationInSeconds =>
         (int)(FilteredExecutions.Where(e => e.ExecutionStatus == ExecutionStatus.Succeeded).Average(e => e.ExecutionInSeconds) ?? 0);
 
     protected override async Task OnParametersSetAsync()
     {
-        if (executions is null && JobId != Guid.Empty)
+        if (_executions is null && JobId != Guid.Empty)
         {
             await ReloadAsync();
         }
@@ -199,19 +199,19 @@
 
     private void SetStartTypeFilter(StartType startType)
     {
-        startTypeFilter = startType;
+        _startTypeFilter = startType;
         CalculateChartDataset();
     }
 
     private async Task ReloadAsync()
     {
-        using var context = DbFactory.CreateDbContext();
-        executions = await context.Executions
+        await using var context = await DbFactory.CreateDbContextAsync();
+        _executions = await context.Executions
             .AsNoTracking()
             .AsSingleQuery()
             .Where(e => e.JobId == JobId)
             .OrderByDescending(e => e.CreatedOn)
-            .Take(maxExecutions)
+            .Take(_maxExecutions)
             .Select(e => new ExecutionProjection(
                 e.ExecutionId,
                 e.JobId,
@@ -225,7 +225,7 @@
                 e.ExecutionStatus,
                 e.StepExecutions.Count(),
                 Array.Empty<TagProjection>()))
-            .ToArrayAsync(cts.Token);
+            .ToArrayAsync(_cts.Token);
         CalculateChartDataset();
         StateHasChanged();
     }
@@ -241,12 +241,12 @@
         {
             new("Avg. duration", dataPoints)
         };
-        dataset = new LineChartDataset(series, "min", 0);
+        _dataset = new LineChartDataset(series, "min", 0);
     }
 
     public void Dispose()
     {
-        cts.Cancel();
-        cts.Dispose();
+        _cts.Cancel();
+        _cts.Dispose();
     }
 }

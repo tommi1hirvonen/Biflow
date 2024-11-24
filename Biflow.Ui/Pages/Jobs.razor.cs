@@ -8,33 +8,37 @@ using System.Text.Json;
 namespace Biflow.Ui.Pages;
 
 [Route("/jobs")]
-public partial class Jobs : ComponentBase, IDisposable
+public partial class Jobs(
+    IDbContextFactory<AppDbContext> dbContextFactory,
+    JobDuplicatorFactory jobDuplicatorFactory,
+    ToasterService toaster,
+    IHxMessageBoxService confirmer,
+    IMediator mediator,
+    IJSRuntime js) : ComponentBase, IDisposable
 {
-    [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
-    [Inject] private JobDuplicatorFactory JobDuplicatorFactory { get; set; } = null!;
-    [Inject] private ToasterService Toaster { get; set; } = null!;
-    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
-    [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
-    [Inject] private IMediator Mediator { get; set; } = null!;
-    [Inject] private IJSRuntime JS { get; set; } = null!;
-
     [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
     [CascadingParameter] public UserState UserState { get; set; } = new();
     [CascadingParameter] public ExecuteMultipleModal ExecuteMultipleModal { get; set; } = null!;
 
-    private static readonly JsonSerializerOptions jsonOptions = new() { WriteIndented = true };
-    private readonly CancellationTokenSource cts = new();
+    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
+    private readonly JobDuplicatorFactory _jobDuplicatorFactory = jobDuplicatorFactory;
+    private readonly ToasterService _toaster = toaster;
+    private readonly IHxMessageBoxService _confirmer = confirmer;
+    private readonly IMediator _mediator = mediator;
+    private readonly IJSRuntime _js = js;
+    private readonly CancellationTokenSource _cts = new();
 
-    private List<Job>? jobs;    
-    private Dictionary<Guid, Execution>? lastExecutions;
-    private List<StepProjection> steps = [];
-    private bool isLoading = false;
-    private JobEditModal? jobEditModal;
-    private ExecuteModal? executeModal;
-    private JobsBatchEditTagsModal? jobsBatchEditTagsModal;
-    private Paginator<ListItem>? paginator;
-    private HashSet<Job> selectedJobs = [];
-    private JobHistoryOffcanvas? jobHistoryOffcanvas;
+    private List<Job>? _jobs;    
+    private Dictionary<Guid, Execution>? _lastExecutions;
+    private List<StepProjection> _steps = [];
+    private bool _isLoading;
+    private JobEditModal? _jobEditModal;
+    private ExecuteModal? _executeModal;
+    private JobsBatchEditTagsModal? _jobsBatchEditTagsModal;
+    private Paginator<ListItem>? _paginator;
+    private HashSet<Job> _selectedJobs = [];
+    private JobHistoryOffcanvas? _jobHistoryOffcanvas;
 
     private record ListItem(Job Job, Execution? LastExecution, Schedule? NextSchedule, DateTime? NextExecution);
 
@@ -52,21 +56,22 @@ public partial class Jobs : ComponentBase, IDisposable
         var statusFilter = UserState.Jobs.StatusFilter;
         var tagFilter = UserState.Jobs.TagFilter;
 
-        var items = jobs?
+        var items = _jobs?
             .Where(j => stateFilter switch { StateFilter.Enabled => j.IsEnabled, StateFilter.Disabled => !j.IsEnabled, _ => true })
             .Where(j => string.IsNullOrEmpty(jobNameFilter) || j.JobName.ContainsIgnoreCase(jobNameFilter))
-            .Where(j => string.IsNullOrEmpty(stepNameFilter) || steps.Any(s => s.JobId == j.JobId && (s.StepName?.ContainsIgnoreCase(stepNameFilter) ?? false)))
+            .Where(j => string.IsNullOrEmpty(stepNameFilter) || _steps.Any(s => s.JobId == j.JobId && (s.StepName?.ContainsIgnoreCase(stepNameFilter) ?? false)))
             .Select(j =>
             {
                 var schedule = GetNextSchedule(j);
                 var nextExecution = schedule?.NextFireTimes().FirstOrDefault();
-                return new ListItem(j, lastExecutions?.GetValueOrDefault(j.JobId), schedule, nextExecution);
+                return new ListItem(j, _lastExecutions?.GetValueOrDefault(j.JobId), schedule, nextExecution);
             })
             .Where(j => statusFilter.Count == 0 || j.LastExecution is not null && statusFilter.Contains(j.LastExecution.ExecutionStatus))
             .Where(j => tagFilter.Count == 0 || j.Job.Tags.Any(t1 => tagFilter.Any(t2 => t1.TagId == t2.TagId)))
             ?? [];
         return sortMode switch
         {
+            JobSortMode.Pinned => items.OrderBy(i => !i.Job.IsPinned).ThenBy(i => i.Job.JobName),
             JobSortMode.NameAsc => items.OrderBy(i => i.Job.JobName),
             JobSortMode.NameDesc => items.OrderByDescending(i => i.Job.JobName),
             JobSortMode.LastExecAsc => items.OrderBy(i => i.LastExecution?.StartedOn is null).ThenBy(i => i.LastExecution?.StartedOn?.LocalDateTime),
@@ -79,31 +84,31 @@ public partial class Jobs : ComponentBase, IDisposable
 
     private async Task LoadDataAsync()
     {
-        isLoading = true;
+        _isLoading = true;
         await Task.WhenAll(
             LoadJobsAsync(),
             LoadLastExecutionsAsync(),
             LoadStepsAsync());
-        isLoading = false;
+        _isLoading = false;
         StateHasChanged();
     }
 
     private async Task LoadJobsAsync()
     {
-        using var context = await Task.Run(DbFactory.CreateDbContext);
-        jobs = await context.Jobs
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        _jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Include(job => job.Tags)
             .Include(job => job.Schedules)
             .OrderBy(job => job.JobName)
-            .ToListAsync(cts.Token);
+            .ToListAsync(_cts.Token);
         StateHasChanged();
     }
 
     private async Task LoadLastExecutionsAsync()
     {
         // Get each job's last execution.
-        using var context = await Task.Run(DbFactory.CreateDbContext);
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         var lastExecutions = await context.Executions
             .AsNoTrackingWithIdentityResolution()
             .Where(execution => context.Jobs.Any(j => j.JobId == execution.JobId) && execution.StartedOn != null)
@@ -114,18 +119,18 @@ public partial class Jobs : ComponentBase, IDisposable
                 Key = key,
                 Execution = context.Executions.Where(execution => execution.JobId == key).OrderByDescending(e => e.CreatedOn).First()
             })
-            .ToListAsync(cts.Token);
-        this.lastExecutions = lastExecutions.ToDictionary(e => e.Key, e => e.Execution);
+            .ToListAsync(_cts.Token);
+        _lastExecutions = lastExecutions.ToDictionary(e => e.Key, e => e.Execution);
         StateHasChanged();
     }
 
     private async Task LoadStepsAsync()
     {
-        using var context = await Task.Run(DbFactory.CreateDbContext);
-        steps = await context.Steps
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        _steps = await context.Steps
             .AsNoTracking()
             .Select(s => new StepProjection(s.JobId, s.StepName))
-            .ToListAsync(cts.Token);
+            .ToListAsync(_cts.Token);
     }
 
     private static Schedule? GetNextSchedule(Job job)
@@ -137,19 +142,34 @@ public partial class Jobs : ComponentBase, IDisposable
         return schedule?.Schedule;
     }
 
-    private async Task ToggleEnabled(ChangeEventArgs args, Job job)
+    private async Task TogglePinned(Job job)
     {
-        bool value = (bool)args.Value!;
         try
         {
-            await Mediator.SendAsync(new ToggleJobCommand(job.JobId, value));
-            job.IsEnabled = value;
-            var message = value ? "Job enabled" : "Job disabled";
-            Toaster.AddSuccess(message, 2500);
+            await _mediator.SendAsync(new ToggleJobPinnedCommand(job.JobId, !job.IsPinned));
+            job.IsPinned = !job.IsPinned;
+            var message = job.IsPinned ? "Job pinned" : "Job unpinned";
+            _toaster.AddSuccess(message, 2500);
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error toggling job", ex.Message);
+            _toaster.AddError("Error pinning/unpinning job", ex.Message);
+        }
+    }
+
+    private async Task ToggleEnabled(ChangeEventArgs args, Job job)
+    {
+        var value = (bool)args.Value!;
+        try
+        {
+            await _mediator.SendAsync(new ToggleJobEnabledCommand(job.JobId, value));
+            job.IsEnabled = value;
+            var message = value ? "Job enabled" : "Job disabled";
+            _toaster.AddSuccess(message, 2500);
+        }
+        catch (Exception ex)
+        {
+            _toaster.AddError("Error toggling job", ex.Message);
         }
     }
 
@@ -157,16 +177,16 @@ public partial class Jobs : ComponentBase, IDisposable
     {
         try
         {
-            foreach (var job in selectedJobs)
+            foreach (var job in _selectedJobs)
             {
-                await Mediator.SendAsync(new ToggleJobCommand(job.JobId, value));
+                await _mediator.SendAsync(new ToggleJobEnabledCommand(job.JobId, value));
                 job.IsEnabled = value;
             }
 
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error toggling job", ex.Message);
+            _toaster.AddError("Error toggling job", ex.Message);
         }
     }
 
@@ -174,43 +194,44 @@ public partial class Jobs : ComponentBase, IDisposable
     {
         foreach (var job in jobs.ToArray())
         {
-            var index = this.jobs?.FindIndex(j => j.JobId == job.JobId);
-            if (index is int i and >= 0)
+            var index = _jobs?.FindIndex(j => j.JobId == job.JobId);
+            if (index is { } i and >= 0)
             {
-                this.jobs?.RemoveAt(i);
-                this.jobs?.Insert(i, job);
+                _jobs?.RemoveAt(i);
+                _jobs?.Insert(i, job);
             }
             else
             {
-                this.jobs?.Add(job);
+                _jobs?.Add(job);
             }
         }
-        selectedJobs = jobs.ToHashSet();
+        _selectedJobs = jobs.ToHashSet();
     }
 
     private async Task CopyJob(Job job)
     {
         try
         {
-            using var duplicator = await JobDuplicatorFactory.CreateAsync(job.JobId);
+            using var duplicator = await _jobDuplicatorFactory.CreateAsync(job.JobId);
             duplicator.Job.JobName = $"{duplicator.Job.JobName} – Copy";
             var createdJob = await duplicator.SaveJobAsync();
-            jobs?.Add(createdJob);
-            jobs = jobs?.OrderBy(job_ => job_.JobName).ToList();
+            _jobs?.Add(createdJob);
+            _jobs = _jobs?.OrderBy(j => j.JobName).ToList();
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error copying job", ex.Message);
+            _toaster.AddError("Error copying job", ex.Message);
         }
     }
 
     private async Task DeleteJob(Job job)
     {
-        if (!await Confirmer.ConfirmAsync("Delete job", $"Are you sure you want to delete \"{job.JobName}\"?"))
+        if (!await _confirmer.ConfirmAsync("Delete job", $"Are you sure you want to delete \"{job.JobName}\"?"))
         {
             return;
         }
-        using (var context = await DbFactory.CreateDbContextAsync())
+
+        await using (var context = await _dbContextFactory.CreateDbContextAsync())
         {
             var executingSteps = await context.JobSteps
                 .Where(s => s.JobToExecuteId == job.JobId)
@@ -226,7 +247,7 @@ public partial class Jobs : ComponentBase, IDisposable
                     {steps}
                     Removing the job will also remove these steps. Delete anyway?
                     """;
-                var confirmResult = await Confirmer.ConfirmAsync("", message);
+                var confirmResult = await _confirmer.ConfirmAsync("", message);
                 if (!confirmResult)
                 {
                     return;
@@ -235,23 +256,23 @@ public partial class Jobs : ComponentBase, IDisposable
         }
         try
         {
-            await Mediator.SendAsync(new DeleteJobCommand(job.JobId));
-            jobs?.Remove(job);
+            await _mediator.SendAsync(new DeleteJobCommand(job.JobId));
+            _jobs?.Remove(job);
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error deleting job", ex.Message);
+            _toaster.AddError("Error deleting job", ex.Message);
         }
     }
 
     private async Task DeleteSelectedJobsAsync()
     {
-        if (!await Confirmer.ConfirmAsync("Delete selected jobs", $"Delete {selectedJobs.Count} job(s)?"))
+        if (!await _confirmer.ConfirmAsync("Delete selected jobs", $"Delete {_selectedJobs.Count} job(s)?"))
         {
             return;
         }
-        var jobIds = selectedJobs.Select(j => j.JobId).ToArray();
-        using (var context = await DbFactory.CreateDbContextAsync())
+        var jobIds = _selectedJobs.Select(j => j.JobId).ToArray();
+        await using (var context = await _dbContextFactory.CreateDbContextAsync())
         {
             var executingSteps = await context.JobSteps
                 .Where(s => s.JobToExecuteId != null && jobIds.Contains((Guid)s.JobToExecuteId))
@@ -267,7 +288,7 @@ public partial class Jobs : ComponentBase, IDisposable
                     {steps}
                     Removing the jobs will also remove these steps. Delete anyway?
                     """;
-                var confirmResult = await Confirmer.ConfirmAsync("", message);
+                var confirmResult = await _confirmer.ConfirmAsync("", message);
                 if (!confirmResult)
                 {
                     return;
@@ -276,29 +297,29 @@ public partial class Jobs : ComponentBase, IDisposable
         }
         try
         {
-            foreach (var job in selectedJobs)
+            foreach (var job in _selectedJobs)
             {
-                await Mediator.SendAsync(new DeleteJobCommand(job.JobId));
-                jobs?.Remove(job);
+                await _mediator.SendAsync(new DeleteJobCommand(job.JobId));
+                _jobs?.Remove(job);
             }
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error deleting jobs", ex.Message);
+            _toaster.AddError("Error deleting jobs", ex.Message);
         }
-        selectedJobs.Clear();
+        _selectedJobs.Clear();
     }
 
     private void ToggleJobsSelected(IEnumerable<Job> jobs, bool value)
     {
         if (value)
         {
-            var jobsToAdd = jobs.Where(j => !selectedJobs.Contains(j)) ?? [];
-            foreach (var j in jobsToAdd) selectedJobs.Add(j);
+            var jobsToAdd = jobs.Where(j => !_selectedJobs.Contains(j));
+            foreach (var j in jobsToAdd) _selectedJobs.Add(j);
         }
         else
         {
-            selectedJobs.Clear();
+            _selectedJobs.Clear();
         }
     }
 
@@ -306,47 +327,48 @@ public partial class Jobs : ComponentBase, IDisposable
     {
         try
         {
-            using var context = DbFactory.CreateDbContext();
+            await using var context = await _dbContextFactory.CreateDbContextAsync();
             var steps = await context.Steps
                 .Select(s => new ValidationStep(s.Job.JobName, s.StepId, s.StepName, s.Dependencies.Select(d => d.DependantOnStepId).ToArray()))
                 .ToListAsync();
-            var comparer = new TopologicalComparer<ValidationStep, Guid>(steps, s => s?.StepId ?? Guid.Empty, s => s.Dependencies);
+            var comparer = new TopologicalComparer<ValidationStep, Guid>(
+                items: steps,
+                keySelector: s => s?.StepId ?? Guid.Empty,
+                dependenciesSelector: s => s.Dependencies);
             steps.Sort(comparer);
-            Toaster.AddSuccess("Validation successful");
+            _toaster.AddSuccess("Validation successful");
         }
         catch (CyclicDependencyException<ValidationStep> ex)
         {
             var cycles = ex.CyclicObjects.Select(c => c.Select(s => new { s.JobName, s.StepName }));
-            var message = JsonSerializer.Serialize(cycles, jsonOptions);
-            _ = JS.InvokeVoidAsync("console.log", message).AsTask();
-            Toaster.AddError("Cyclic dependencies detected", "See browser console for detailed output.");
+            var message = JsonSerializer.Serialize(cycles, JsonOptions);
+            _ = _js.InvokeVoidAsync("console.log", message).AsTask();
+            _toaster.AddError("Cyclic dependencies detected", "See browser console for detailed output.");
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error validating dependencies", ex.Message);
+            _toaster.AddError("Error validating dependencies", ex.Message);
         }
     }
 
     private void OnJobSubmitted(Job job)
     {
-        var remove = jobs?.FirstOrDefault(j => j.JobId == job.JobId);
+        var remove = _jobs?.FirstOrDefault(j => j.JobId == job.JobId);
         if (remove is not null)
         {
             job.Schedules.AddRange(remove.Schedules);
-            jobs?.Remove(remove);
+            _jobs?.Remove(remove);
         }
-        jobs?.Add(job);
-        jobs?.SortBy(x => x.JobName);
+        _jobs?.Add(job);
+        _jobs?.SortBy(x => x.JobName);
     }
 
     public void Dispose()
     {
-        cts.Cancel();
-        cts.Dispose();
+        _cts.Cancel();
+        _cts.Dispose();
     }
-
-    private class ExpandStatus { public bool IsExpanded { get; set; } = true; }
-
+    
     private record StepProjection(Guid JobId, string? StepName);
 
     private record ValidationStep(string JobName, Guid StepId, string? StepName, Guid[] Dependencies);

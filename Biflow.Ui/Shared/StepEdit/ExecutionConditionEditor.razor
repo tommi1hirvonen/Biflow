@@ -7,11 +7,11 @@
             <label class="form-label">
                 Execution condition expression
                 &nbsp;
-                <span style="cursor: pointer;" @onclick="async () => await helpOffcanvas.LetAsync(x => x.ShowAsync())">
-                    <SvgIcon Icon="FeatherIcon.HelpCircle" />
+                <span style="cursor: pointer;" @onclick="async () => await _helpOffcanvas.LetAsync(x => x.ShowAsync())">
+                    <SvgIcon Icon="LucideIcon.CircleHelp" />
                 </span>
             </label>
-            <CodeEditor @ref="editor"
+            <CodeEditor @ref="_editor"
                         Language="csharp"
                         MinimapEnabled="false"
                         InitialValueExpression="() => Step?.ExecutionConditionExpression.Expression"
@@ -22,7 +22,7 @@
     <div class="row mt-3">
         <div class="col">
             <HxButton OnClick="TestEvaluate" Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
-                <SvgIcon Icon="FeatherIcon.Check" />
+                <SvgIcon Icon="LucideIcon.Check" />
                 Test evaluate / validate
             </HxButton>
         </div>
@@ -85,7 +85,7 @@
                                       Size="ButtonSize.Small"
                                       CssClass="btn-auto"
                                       @onclick="() => Step.ExecutionConditionParameters.Remove(param)">
-                                <SvgIcon Icon="FeatherIcon.Delete" />
+                                <SvgIcon Icon="LucideIcon.Delete" />
                             </HxButton>
                         </HxButtonGroup>
                     </td>
@@ -95,12 +95,12 @@
         </tbody>
     </table>
     <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="() => Step.ExecutionConditionParameters.Add(new ExecutionConditionParameter())">
-        <SvgIcon Icon="FeatherIcon.Plus" />
+        <SvgIcon Icon="LucideIcon.Plus" />
         Add parameter
     </HxButton>
 }
 
-<HxOffcanvas @ref="helpOffcanvas" Size="OffcanvasSize.Large" Backdrop="OffcanvasBackdrop.False" Title="Execution conditions">
+<HxOffcanvas @ref="_helpOffcanvas" Size="OffcanvasSize.Large" Backdrop="OffcanvasBackdrop.False" Title="Execution conditions">
     <BodyTemplate>
         <p>Use C# expressions to control whether the step is executed or not when the step's execution phase is reached (in execution phase mode) or all its dependencies have completed (in dependency mode).</p>
         <p>The return type for the final expression must always be boolean (True/False), however you can test and develop expressions using any kind of return type.</p>
@@ -109,7 +109,7 @@
         <DynamicExpressionHelp />
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" OnClick="async () => await helpOffcanvas.LetAsync(x => x.HideAsync())">
+        <HxButton Color="ThemeColor.Secondary" OnClick="async () => await _helpOffcanvas.LetAsync(x => x.HideAsync())">
             Close
         </HxButton>
     </FooterTemplate>
@@ -120,8 +120,8 @@
 
     [Parameter] public EventCallback OnExecutionConditionChanged {get;set;}
 
-    private HxOffcanvas? helpOffcanvas;
-    private CodeEditor? editor;
+    private HxOffcanvas? _helpOffcanvas;
+    private CodeEditor? _editor;
 
     private void SetJobParameter(bool inheritFromJob, ExecutionConditionParameter param)
     {

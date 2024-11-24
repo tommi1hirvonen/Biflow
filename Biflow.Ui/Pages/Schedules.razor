@@ -3,8 +3,6 @@
 @implements IDisposable
 
 @inject IDbContextFactory<AppDbContext> DbFactory
-@inject ToasterService Toaster
-@inject ISchedulerService SchedulerService
 
 <style>
     tr a {
@@ -26,10 +24,10 @@
 
 <div class="row mt-3 mb-4">
     <div class="col">
-        <ul class="nav nav-tabs" role="tablist">
+        <ul class="nav nav-underline" role="tablist">
             <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" Match="NavLinkMatch.All" href="@($"schedules")">
-                    <SvgIcon Icon="FeatherIcon.List" />
+                    <SvgIcon Icon="LucideIcon.List" />
                     List
                 </NavLink>
             </li>
@@ -44,34 +42,34 @@
 </div>
 
 @{
-    var filterJobs = schedules?
+    var filterJobs = _schedules?
         .Where(s => State.Predicates.Where(p => p != State.JobPredicate).All(p => p(s)))
         .Select(s => (s.Job.JobId, s.Job.JobName))
         .Concat(State.JobFilter)
         .Distinct()
-        .OrderBy(j => j.JobName)
+        .Order()
         .AsEnumerable()
         ?? [];
-    var filterJobTags = schedules?
+    var filterJobTags = _schedules?
         .Where(s => State.Predicates.Where(p => p != State.JobTagPredicate).All(p => p(s)))
         .SelectMany(s => s.Job.Tags)
-        .Select(t => new TagProjection(t.TagId, t.TagName, t.Color))
+        .Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder))
         .Concat(UserState.Jobs.TagFilter)
         .Distinct()
-        .OrderBy(t => t.TagName)
+        .Order()
         .AsEnumerable() ?? [];
-    var filterScheduleTags = schedules?
+    var filterScheduleTags = _schedules?
         .Where(s => State.Predicates.Where(p => p != State.ScheduleTagPredicate).All(p => p(s)))
         .SelectMany(s => s.Tags)
-        .Select(t => new TagProjection(t.TagId, t.TagName, t.Color))
+        .Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder))
         .Distinct()
-        .OrderBy(t => t.TagName)
+        .Order()
         .AsEnumerable() ?? [];
 }
 
 <div class="row">
     <div class="col-auto d-flex align-items-center">
-        <SvgIcon Icon="FeatherIcon.Filter" />
+        <SvgIcon Icon="LucideIcon.Filter" />
         &nbsp;
         Filters
     </div>
@@ -97,7 +95,7 @@
                             TextSelector="t => t.TagName"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
-                    <SvgIcon Icon="FeatherIcon.Tag" />
+                    <SvgIcon Icon="LucideIcon.Tag" />
                     Job tag
                 </TitleTemplate>
                 <ItemTemplate Context="item">
@@ -111,7 +109,7 @@
                             TextSelector="t => t.TagName"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
-                    <SvgIcon Icon="FeatherIcon.Tag" />
+                    <SvgIcon Icon="LucideIcon.Tag" />
                     Schedule tag
                 </TitleTemplate>
                 <ItemTemplate Context="item">
@@ -122,7 +120,7 @@
                       Color="ThemeColor.None" 
                       CssClass="btn-auto" 
                       OnClick="State.Clear">
-                <SvgIcon Icon="FeatherIcon.X" />
+                <SvgIcon Icon="LucideIcon.X" />
                 Clear
             </HxButton>
         </HxButtonGroup>
@@ -130,7 +128,7 @@
     <div class="col">
         <div class="input-group input-group-sm">
             <div class="input-group-text">
-                <SvgIcon Icon="FeatherIcon.Search" />
+                <SvgIcon Icon="LucideIcon.Search" />
             </div>
             <input type="search"
                    class="form-control form-control-sm"
@@ -142,17 +140,17 @@
     </div>
 </div>
 
-@if (Component is null)
+@switch (Component)
 {
-    <SchedulesList Schedules="schedules" Jobs="jobs" FilteredSchedules="FilteredSchedules" OnSchedulesChanged="StateHasChanged" />
-}
-else if (Component == "graph")
-{
-    <SchedulesGraph Schedules="schedules" FilteredSchedules="FilteredSchedules" OnSchedulesChanged="StateHasChanged" />
-}
-else
-{
-    <p>No component to display with component parameter @Component</p>
+    case null:
+        <SchedulesList Schedules="_schedules" Jobs="_jobs" FilteredSchedules="FilteredSchedules" OnSchedulesChanged="StateHasChanged" />
+        break;
+    case "graph":
+        <SchedulesGraph Schedules="_schedules" FilteredSchedules="FilteredSchedules" OnSchedulesChanged="StateHasChanged" />
+        break;
+    default:
+        <p>No component to display with component parameter @Component</p>
+        break;
 }
 
 @code {
@@ -162,33 +160,33 @@ else
 
     private SchedulesPageState State => UserState.Schedules;
 
-    private readonly CancellationTokenSource cts = new();
+    private readonly CancellationTokenSource _cts = new();
 
-    private List<Job>? jobs;
-    private List<Schedule>? schedules;
+    private List<Job>? _jobs;
+    private List<Schedule>? _schedules;
 
-    private IEnumerable<Schedule>? FilteredSchedules => schedules?.Where(s => State.Predicates.All(p => p(s)));
+    private IEnumerable<Schedule>? FilteredSchedules => _schedules?.Where(s => State.Predicates.All(p => p(s)));
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = await Task.Run(DbFactory.CreateDbContext);
-        jobs = await context.Jobs
+        await using var context = await DbFactory.CreateDbContextAsync();
+        _jobs = await context.Jobs
             .Include(j => j.Tags)
             .OrderBy(job => job.JobName)
-            .ToListAsync(cts.Token);
-        schedules = await context.Schedules
+            .ToListAsync(_cts.Token);
+        _schedules = await context.Schedules
             .Include(schedule => schedule.Job)
             .ThenInclude(j => j.Tags)
             .Include(schedule => schedule.Tags)
             .Include(schedule => schedule.TagFilter)
             .OrderBy(schedule => schedule.Job.JobName)
             .ThenBy(schedule => schedule.ScheduleName)
-            .ToListAsync(cts.Token);
+            .ToListAsync(_cts.Token);
     }
 
     public void Dispose()
     {
-        cts.Cancel();
-        cts.Dispose();
+        _cts.Cancel();
+        _cts.Dispose();
     }
 }

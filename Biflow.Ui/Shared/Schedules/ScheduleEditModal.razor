@@ -3,32 +3,32 @@
 @inject ToasterService Toaster
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IMediator Mediator
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 
-<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" Title="@(schedule.ScheduleId == Guid.Empty ? "New schedule" : "Edit schedule")">
+<HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Regular" Title="@(_schedule.ScheduleId == Guid.Empty ? "New schedule" : "Edit schedule")">
     <BodyTemplate>
         <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
-        <EditForm id="schedule_form" Model="schedule" OnValidSubmit="SubmitSchedule" Context="_context">
+        <EditForm id="schedule_form" Model="_schedule" OnValidSubmit="SubmitSchedule">
             <div class="row">
                 <div class="col">
                     <DataAnnotationsValidator />
                     <div>
                         <label class="form-label">Job</label>
-                        <HxAutosuggest Enabled="@(schedule.ScheduleId == Guid.Empty && Job is null)"
+                        <HxAutosuggest Enabled="@(_schedule.ScheduleId == Guid.Empty && Job is null)"
                                        TItem="Job"
                                        TValue="Guid"
                                        DataProvider="GetJobSuggestionsAsync"
-                                       ItemFromValueResolver="jobId => Task.FromResult(Jobs.Append(Job).FirstOrDefault(j => j?.JobId == jobId))"
+                                       ItemFromValueResolver="jobId => Task.FromResult(Jobs.Append(Job).FirstOrDefault(j => j?.JobId == jobId)!)"
                                        ValueSelector="job => job.JobId"
                                        TextSelector="job => job.JobName"
-                                       @bind-Value="schedule.JobId"
+                                       @bind-Value="_schedule.JobId"
                                        Context="job"
                                        MinimumLength="0"
                                        Placeholder="Select job"
                                        autocomplete="off">
                             <InputGroupStartTemplate>
                                 <div class="input-group-text">
-                                    <SvgIcon Icon="LucideIcon.ClipboardList" />
+                                    <SvgIcon Icon="LucideIcon.ClipboardList"/>
                                 </div>
                             </InputGroupStartTemplate>
                             <ItemTemplate>
@@ -40,43 +40,43 @@
                         <label class="form-label">Name</label>
                         <div class="input-group">
                             <div class="input-group-text">
-                                <SvgIcon Icon="FeatherIcon.Edit3" />
+                                <SvgIcon Icon="LucideIcon.PenLine" />
                             </div>
-                            <InputText DisplayName="Name" class="form-control" @bind-Value="schedule.ScheduleName"></InputText>
+                            <InputText DisplayName="Name" class="form-control" @bind-Value="_schedule.ScheduleName"></InputText>
                         </div>
                     </div>
-                    <ValidationMessage For="() => schedule.ScheduleName" />
+                    <ValidationMessage For="() => _schedule.ScheduleName" />
                     <div class="row mt-3">
                         <div class="col">
                             <label class="form-label">Tags</label>
                             <TagInput TTag="ScheduleTag"
-                                      Items="allScheduleTags"
-                                      AllowCustomValues
-                                      SelectedItems="schedule.Tags"
-                                      NewItemFromText="text => new ScheduleTag(text) { Color = TagColor.DarkGray }" />
+                            Items="_allScheduleTags"
+                            AllowCustomValues
+                            SelectedItems="_schedule.Tags"
+                            NewItemFromText="text => new ScheduleTag(text) { Color = TagColor.DarkGray }" />
                         </div>
                     </div>
                     <div class="mt-3">
                         <label class="form-label">
                             Cron expression
                             <HxPopover Trigger="PopoverTrigger.Hover" Content="Schedule cron expression cannot be edited once the schedule has been created. To change the expression, a new schedule needs to be created and the old one removed.">
-                                <SvgIcon Icon="FeatherIcon.Info" />
+                                <SvgIcon Icon="LucideIcon.Info" />
                             </HxPopover>
                         </label>
                         <div class="input-group">
                             <div class="input-group-text">
-                                <SvgIcon Icon="FeatherIcon.Calendar" />
+                                <SvgIcon Icon="LucideIcon.Calendar" />
                             </div>
-                            <OnInputText class="form-control" @bind-Value="schedule.CronExpression" />
+                            <OnInputText class="form-control" @bind-Value="_schedule.CronExpression" />
                         </div>
                     </div>
-                    <ValidationMessage For="() => schedule.CronExpression" />
-                    @if (CronExpression.IsValidExpression(schedule.CronExpression))
+                    <ValidationMessage For="() => _schedule.CronExpression" />
+                    @if (CronExpression.IsValidExpression(_schedule.CronExpression))
                     {
-                        var nextFireTimes = schedule.NextFireTimes().Take(10).ToList();
+                        var nextFireTimes = _schedule.NextFireTimes().Take(10).ToList();
                         <small class="text-secondary">Description:</small>
                         <br />
-                        <small class="text-secondary ms-3">@schedule.GetScheduleDescription()</small>
+                        <small class="text-secondary ms-3">@_schedule.GetScheduleDescription()</small>
                         <br />
                         <small class="text-secondary mt-2">Next execution(s) (showing first 10):</small>
                         <div class="row">
@@ -97,35 +97,35 @@
                     <div class="row mt-3">
                         <label class="form-label">Tag filters</label>
                         <TagInput TTag="StepTag"
-                                  Items="allStepTags"
-                                  AllowCustomValues="false"
-                                  SelectedItems="schedule.TagFilter"
-                                  NewItemFromText="text => new StepTag(text) { Color = TagColor.DarkGray }" />
+                        Items="_allStepTags"
+                        AllowCustomValues="false"
+                        SelectedItems="_schedule.TagFilter"
+                        NewItemFromText="text => new StepTag(text) { Color = TagColor.DarkGray }" />
                         <div class="form-text">Use tag filters to only include steps with specific tags in scheduled executions.</div>
                     </div>
                     <div class="row mt-3">
                         <div class="col">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="schedule_concurrency_check"
-                                       checked=@schedule.DisallowConcurrentExecution
-                                       @bind-value="schedule.DisallowConcurrentExecution">
+                                checked=@_schedule.DisallowConcurrentExecution
+                                @bind-value="_schedule.DisallowConcurrentExecution">
                                 <label class="form-check-label fw-normal" for="schedule_concurrency_check">
                                     Disallow concurrent execution
                                     <HxPopover Trigger="PopoverTrigger.Hover" Content="Allow only one concurrent execution of this job and schedule. This option is useful in cases where the job's duration might overlap with the schedule's next fire time but concurrent execution should not be allowed.">
-                                        <SvgIcon Icon="FeatherIcon.Info" />
+                                        <SvgIcon Icon="LucideIcon.Info" />
                                     </HxPopover>
                                 </label>
                             </div>
                         </div>
                     </div>
-                    
+
                 </div>
             </div>
         </EditForm>
     </BodyTemplate>
     <FooterTemplate>
         <HxSubmit FormId="schedule_form" Color="ThemeColor.Success">Save</HxSubmit>
-        <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
@@ -137,28 +137,30 @@
 
     [Parameter] public EventCallback<Schedule> OnSubmit { get; set; }
 
-    private Schedule schedule = new(); // assign placeholder
-    private HxOffcanvas? offcanvas;
-    private IEnumerable<StepTag> allStepTags = [];
-    private IEnumerable<ScheduleTag> allScheduleTags = [];
+    private Schedule _schedule = new(); // assign placeholder
+    private HxOffcanvas? _offcanvas;
+    private List<StepTag> _allStepTags = [];
+    private List<ScheduleTag> _allScheduleTags = [];
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = DbContextFactory.CreateDbContext();
-        allStepTags = await context.StepTags.OrderBy(t => t.TagName).ToListAsync();
-        allScheduleTags = await context.ScheduleTags.OrderBy(t => t.TagName).ToListAsync();
+        await using var context = await DbContextFactory.CreateDbContextAsync();
+        _allStepTags = await context.StepTags.ToListAsync();
+        _allStepTags.Sort();
+        _allScheduleTags = await context.ScheduleTags.ToListAsync();
+        _allScheduleTags.Sort();
     }
 
     private async Task SubmitSchedule()
     {
         // New schedule
-        if (schedule.ScheduleId == Guid.Empty)
+        if (_schedule.ScheduleId == Guid.Empty)
         {
             try
             {
-                await Mediator.SendAsync(new CreateScheduleCommand(schedule));
-                await OnSubmit.InvokeAsync(schedule);
-                await offcanvas.LetAsync(x => x.HideAsync());
+                await Mediator.SendAsync(new CreateScheduleCommand(_schedule));
+                await OnSubmit.InvokeAsync(_schedule);
+                await _offcanvas.LetAsync(x => x.HideAsync());
             }
             catch (Exception ex)
             {
@@ -170,9 +172,9 @@
         {
             try
             {
-                await Mediator.SendAsync(new UpdateScheduleCommand(schedule));
-                await OnSubmit.InvokeAsync(schedule);
-                await offcanvas.LetAsync(x => x.HideAsync());
+                await Mediator.SendAsync(new UpdateScheduleCommand(_schedule));
+                await OnSubmit.InvokeAsync(_schedule);
+                await _offcanvas.LetAsync(x => x.HideAsync());
             }
             catch (Exception ex)
             {
@@ -185,8 +187,8 @@
     {
         if (scheduleId != Guid.Empty)
         {
-            using var context = DbContextFactory.CreateDbContext();
-            schedule = await context.Schedules
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+            _schedule = await context.Schedules
                 .AsNoTracking()
                 .Include(s => s.TagFilter)
                 .Include(s => s.Tags)
@@ -195,14 +197,13 @@
         else if (scheduleId == Guid.Empty)
         {
             var jobId = Job?.JobId ?? Guid.Empty;
-            ArgumentNullException.ThrowIfNull(jobId);
-            schedule = new()
+            _schedule = new()
             {
-                JobId = (Guid)jobId
+                JobId = jobId
             };
         }
 
-        await offcanvas.LetAsync(x => x.ShowAsync());
+        await _offcanvas.LetAsync(x => x.ShowAsync());
     }
 
     private Task<AutosuggestDataProviderResult<Job>> GetJobSuggestionsAsync(AutosuggestDataProviderRequest request)
@@ -217,7 +218,7 @@
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
-        var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        var confirmed = await Js.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
         if (!confirmed)
         {
             context.PreventNavigation();

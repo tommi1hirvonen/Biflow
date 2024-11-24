@@ -39,11 +39,12 @@ Biflow is a powerful platform for easy business intelligence (BI) and data platf
   - Azure Databricks
 - Microsoft Power BI
 - Snowflake
-- Qlik Cloud
+- dbt Cloud&trade;
+- Qlik Cloud&reg;
 
 The focus of Biflow is ease-of-use. When set up, it should be fairly easy even for relatively non-technical people to start authoring, scheduling, executing and monitoring workflows via the web user interface. Biflow enables intelligent management of even large and complex workflows.
 
-- *__Author, schedule, execute and monitor workflows__* (jobs) comprising of multiple steps
+- *__Author, schedule, execute and monitor workflows__* (jobs) consisting of multiple steps
     - Supports complex schedules using Cron expressions
     - Easy manual execution of either entire or partial workflows
 - Create jobs and *__manage the order in which steps are run__* either by
@@ -51,7 +52,7 @@ The focus of Biflow is ease-of-use. When set up, it should be fairly easy even f
     2. Defining detailed dependencies (loose or strict) between steps in each job
 - *__Parameterize__* workflows and steps
     - Define static or dynamic parameters that are passed to steps
-    - Share commong parameters and values across multiple steps
+    - Share common parameters and values across multiple steps
     - Evaluate or assign parameter values during execution
 - *__Visualize__* workflows
     - Understand your workflow's dependencies more easily by analyzing dependency graphs
@@ -65,7 +66,7 @@ The focus of Biflow is ease-of-use. When set up, it should be fairly easy even f
 
 Currently supported step types:
 - Sql
-    - Run arbitrary SQL commands (e.g. stored procedures) on SQL Server, Azure SQL and Snowflake.
+    - Run arbitrary SQL commands (e.g. stored procedures) on SQL Server, Azure SQL, Fabric Data Warehouse and Snowflake.
     - Return scalar values and assign them to workflow parameters/variables
 - Package
     - Execute SQL Server Integration Services (SSIS) packages deployed to the SSIS catalogue
@@ -81,12 +82,14 @@ Currently supported step types:
 - Databricks
     - Run an Azure Databricks job, pipeline (Delta Live Table), notebook or Python file
     - Use an existing cluster for notebooks and Python files or create a new cluster for each run.
+- Dbt
+    - Run a job in dbt Cloud&trade;
 - Exe
     - Run locally stored executables (e.g. Python or PowerShell scripts)
 - Dataset
     - Refresh datasets/semantic models published to Power BI Service workspaces
 - Qlik
-    - Reload apps and run automations in Qlik Cloud
+    - Reload apps and run automations in Qlik Cloud&reg;
 - Mail
     - Send emails as part of your workflows
 - Job
@@ -103,11 +106,11 @@ Why should I use Biflow? Can't I already orchestrate my data platform using one 
 
 Yes, you can, and we'll get to that shortly. First though, it should be clarified that Biflow *is not an ETL tool*. It focuses on data orchestration, part of which is orchestrating ETL processes. When it comes to implementing the ETL processes themselves, using tools such as SSIS, ADF, Azure Functions and others is obviously the way to go. But tying all these different technologies together and bridging the gaps to create a single orchestration job, that's where Biflow comes in.
 
-Let's look at some common and simple orchestration methods implemented using the previosuly listed tools.
+Let's look at some common and simple orchestration methods implemented using the previously listed tools.
 
 #### SQL Server Agent
 
-In on-premise SQL Server data platforms, SQL Server Agent is often used to at least schedule and sometimes even to orchestrate ETL processes. You can easily run SSIS packages as well as stored procedures and the scheduling capabilities are relatively powerful. It is also extremely reliable. Where SQL Server Agent falls (massively) short is the orchestration part, which is understadable as it was never meant to be one.
+In on-premise SQL Server data platforms, SQL Server Agent is often used to at least schedule and sometimes even to orchestrate ETL processes. You can easily run SSIS packages as well as stored procedures and the scheduling capabilities are relatively powerful. It is also extremely reliable. Where SQL Server Agent falls (massively) short is the orchestration part, which is understandable as it was never meant to be one.
 
 All steps in a job are executed sequentially and defining dependencies is almost nonexistent. Your options are to go to the next step, go back to a previous step or exit the job. SQL Server Agent was primarily meant to target administrative tasks (backups, index rebuilds etc.), where orchestration of a large number of steps was rarely the issue.
 
@@ -115,7 +118,7 @@ All steps in a job are executed sequentially and defining dependencies is almost
 
 The orchestration capabilities in SSIS and ADF are very similar. With SSIS, you often use the scheduling capabilities of SQL Server Agent and the triggers in ADF are also quite powerful. The way in which you can define dependencies between tasks in SSIS and activities in ADF is also similar and has largely inspired and affected how it works in Biflow too.
 
-The downside in both tools is the fact that dependency management between tasks *is not metadata based* but instead you define dependencies between tasks graphically. This works very well and is highly intuitive with simple jobs with a couple dozen tasks at most. However, when you need to manage dependencies across tens of tasks or even a hundred tasks, these tools are no longer optimal. In fact, in ADF, the maximum number of activities in a pipeline is currently 80 (increased from 40 in 2024). This significantly limits the dependency management between individual tasks when you need to split them in separate pipelines.
+The downside in both tools is the fact that dependency management between tasks *is not metadata based*, but instead you define dependencies between tasks graphically. This works very well and is highly intuitive with simple jobs with a couple dozen tasks at most. However, when you need to manage dependencies across tens of tasks or even a hundred tasks, these tools are no longer optimal. In fact, in ADF, the maximum number of activities in a pipeline is currently 80 (increased from 40 in 2024). This significantly limits the dependency management between individual tasks when you need to split them in separate pipelines.
 
 #### Airflow
 
@@ -167,7 +170,7 @@ Some requirements apply depending on whether Biflow is configured to run either 
 
 Four methods of authentication are supported:
 - Built-in
-  - User management and authentication is done using a built in identity provider
+  - User management and authentication is done using a built-in identity provider
   - MFA is not supported
   - Supports remote access
 - Windows
@@ -209,7 +212,7 @@ To better understand the documentation and some of the main features of Biflow, 
 
 **Jobs** are workflows that define the **steps** that need to be taken to update some data. Jobs can contain any number of steps: ranging from a handful of steps to update a simple report to even hundreds of steps to fully load an entire Enterprise Data Warehouse.
 
-An **execution** is a copy (snapshot in time) of a job created when the job needs to be executed. When the execution is created, it becomes independent from the job it was based on – changes to a job do not affect executions that have already been created.
+An **execution** is a copy (snapshot in time) of a job created when the job needs to be executed. When the execution is created, it becomes independent of the job it was based on – changes to a job do not affect executions that have already been created.
 
 The order in which steps are executed is determined by two factors: the job's **execution mode** and the **dependencies** between steps. There are three different execution modes to choose from: execution phase mode (1), dependency mode (2) and hybrid mode (3).
 
@@ -219,7 +222,7 @@ Steps are executed in order based on their execution phase. Steps in the same ex
 
 #### Dependency mode
 
-Jobs using dependency mode are essentially Directed Acyclic Graphs (DAGs). Steps are executed in order based on their dependencies. Steps that have no dependencies are started first and steps that have no dependencies between them can be executed in parallel at the same time. Steps that have dependencies are executed when preceding steps have been completed and the dependency type criteria is met. The execution phase attribute of steps is used to denote the execution priority of otherwise equal steps (lower value = higher priority).
+Jobs using dependency mode are essentially Directed Acyclic Graphs (DAGs). Steps are executed in order based on their dependencies. Steps that have no dependencies are started first and steps that have no dependencies between them can be executed in parallel at the same time. Steps that have dependencies are executed when preceding steps have been completed and the dependency type criteria has been met. The execution phase attribute of steps denotes the execution priority of otherwise equal steps (lower value = higher priority).
 
 #### Hybrid mode
 
@@ -230,11 +233,11 @@ Steps are executed in order based on their execution phase (same as execution ph
 Steps can have any number of dependencies, even to steps in other jobs. There are three types of dependencies.
 - On completed (loose dependency) – the dependency must complete/finish
 - On succeeded (strict dependency) – the dependency must complete *successfully*
-- On failed – the depency must *fail*
+- On failed – the dependency must *fail*
 
 If the dependency conditions of a step are not met, the step will be skipped. The execution of a step can also be skipped if its **execution condition** evaluates to false. These are optional boolean expressions written in C# that are evaluated during execution to run additional dynamic checks (based on date and time, for example).
 
-Jobs and steps can have any number of **parameters** (variables) that can be used to share values between steps during execution. Job parameters can be defined dynamically with C# expressions or they can be set by SQL steps during execution by fetching values from a database. This allows the decoupling of individual ETL components. Instead, it is the orchestration framework that injects the needed parameter values. This pattern is also called Inversion of Control.
+Jobs and steps can have any number of **parameters** (variables) that can be used to share values between steps during execution. Job parameters can be defined dynamically with C# expressions, or they can be set by SQL steps during execution by fetching values from a database. This allows the decoupling of individual ETL components. Instead, it is the orchestration framework that injects the needed parameter values. This pattern is also called Inversion of Control.
 
 Steps can be categorized by using **tags** – simple labels that can be effective when filtering steps based on a data source, business function etc.
 
@@ -250,52 +253,52 @@ Outside of data orchestration, Biflow also supports **data tables**. These are s
 
 ## 3.1. Source code solution and projects
 
-|Project|Description|
-|-|-|
-|Core|Core library project containining common models, entities, interfaces and extensions.|
-|DataAccess|Data access layer project responsible for ORM (Object-relational mapping). Contains the model configuration for the Entity Framework Core database context and some data management related services.|
-|Executor.Core|Core library for the executor and orchestration services|
-|Executor.WebApp|Web App front-end project for the executor and orchestration application|
-|Scheduler.Core|Core library for the scheduler services|
-|Scheduler.WebApp|Web App front-end project for the scheduler service|
-|Ui.Icons|Library for common icon related models|
-|Ui.SourceGeneration|Source generator for the component library project|
-|Ui.TableEditor|Library for models and extensions related to data table interaction|
-|Ui.SqlMetadataExtensions|Library for models and extensions related to retrieving metadata from MS SQL and Snowflake databases|
-|Ui.Core|Common UI services that can be shared between different UI versions/editions|
-|Ui.Components|Razor component library for the UI project. Project also contains generated icon classes generated by the separate source generation project.|
-|Ui|Blazor Server UI application. Can be configured to host the executor and scheduler services internally.|
+| Project                  | Description                                                                                                                                                                                            |
+|--------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Core                     | Core library project containing common models, entities, interfaces and extensions.                                                                                                                    |
+| DataAccess               | Data access layer project responsible for ORM (Object-relational mapping). Contains the model configuration for the Entity Framework Core database context and some data management related services.  |
+| Executor.Core            | Core library for the executor and orchestration services                                                                                                                                               |
+| Executor.WebApp          | Web App front-end project for the executor and orchestration application                                                                                                                               |
+| Scheduler.Core           | Core library for the scheduler services                                                                                                                                                                |
+| Scheduler.WebApp         | Web App front-end project for the scheduler service                                                                                                                                                    |
+| Ui.Icons                 | Library for common icon related models                                                                                                                                                                 |
+| Ui.SourceGeneration      | Source generator for the component library project                                                                                                                                                     |
+| Ui.TableEditor           | Library for models and extensions related to data table interaction                                                                                                                                    |
+| Ui.SqlMetadataExtensions | Library for models and extensions related to retrieving metadata from MS SQL and Snowflake databases                                                                                                   |
+| Ui.Core                  | Common UI services that can be shared between different UI versions/editions                                                                                                                           |
+| Ui.Components            | Razor component library for the UI project. Project also contains generated icon classes generated by the separate source generation project.                                                          |
+| Ui                       | Blazor Server UI application. Can be configured to host the executor and scheduler services internally.                                                                                                |
 
 ## 3.2. Execution statuses
 
 ### 3.2.1 Possible job execution statuses
 
-|Status|Description|
-|-|-|
-|NotStarted |The executions has not yet been started by the executor|
-|Running    |One or more steps included in the execution have not yet been completed.|
-|Succeeded  |All steps included in the execution succeeded.|
-|Failed     |One or more steps failed for the execution.|
-|Warning    |There were duplicate steps in the execution or some steps were retried.|
-|Stopped    |The execution was manually stopped.|
-|Suspended  |There were unstarted steps remaining in the execution when the execution was finished.|
+| Status     | Description                                                                            |
+|------------|----------------------------------------------------------------------------------------|
+| NotStarted | The executions has not yet been started by the executor                                |
+| Running    | One or more steps included in the execution have not yet been completed.               |
+| Succeeded  | All steps included in the execution succeeded.                                         |
+| Failed     | One or more steps failed for the execution.                                            |
+| Warning    | There were duplicate steps in the execution or some steps were retried.                |
+| Stopped    | The execution was manually stopped.                                                    |
+| Suspended  | There were unstarted steps remaining in the execution when the execution was finished. |
 
 ### 3.2.2 Possible step execution statuses
 
-|Status|Description|
-|-|-|
-|NotStarted |This is the initial status of all steps after the execution has been created. The step has not been started but is awaiting evaluation or execution. All dependencies may not have yet been completed. Job executions that have been termiated unexpectedly may have steps left with this status.|
-|DependenciesFailed|One or more of the step's strict dependencies failed and the step's execution was skipped.|
-|Queued|The step's dependencies succeeded and the step is waiting for a parallel execution slot to open up.|
-|Skipped|The step's execution condition was not met and the step was skipped.|
-|Duplicate|The step was skipped with a status of 'Duplicate'. This happens if the same step is running under a different execution at the same time and the step's duplicate behaviour is defined as 'Fail'.|
-|Running|The step is currently executing|
-|Succeeded|The step was completed successfully|
-|Warning|The step succeeded with warnings|
-|Failed|The step encountered an exception and failed or the step reached its timeout limit|
-|Retry|The step failed but has retry attempts left|
-|AwaitingRetry|The step is currently waiting for the specified retry interval before it is executed again|
-|Stopped|A user has manually stopped the execution of the entire job or of this specific step.|
+| Status             | Description                                                                                                                                                                                                                                                                                        |
+|--------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| NotStarted         | This is the initial status of all steps after the execution has been created. The step has not been started but is awaiting evaluation or execution. All dependencies may not have yet been completed. Job executions that have been terminated unexpectedly may have steps left with this status. |
+| DependenciesFailed | One or more of the step's strict dependencies failed and the step's execution was skipped.                                                                                                                                                                                                         |
+| Queued             | The step's dependencies succeeded and the step is waiting for a parallel execution slot to open up.                                                                                                                                                                                                |
+| Skipped            | The step's execution condition was not met and the step was skipped.                                                                                                                                                                                                                               |
+| Duplicate          | The step was skipped with a status of 'Duplicate'. This happens if the same step is running under a different execution at the same time and the step's duplicate behaviour is defined as 'Fail'.                                                                                                  |
+| Running            | The step is currently executing                                                                                                                                                                                                                                                                    |
+| Succeeded          | The step was completed successfully                                                                                                                                                                                                                                                                |
+| Warning            | The step succeeded with warnings                                                                                                                                                                                                                                                                   |
+| Failed             | The step encountered an exception and failed or the step reached its timeout limit                                                                                                                                                                                                                 |
+| Retry              | The step failed but has retry attempts left                                                                                                                                                                                                                                                        |
+| AwaitingRetry      | The step is currently waiting for the specified retry interval before it is executed again                                                                                                                                                                                                         |
+| Stopped            | A user has manually stopped the execution of the entire job or of this specific step.                                                                                                                                                                                                              |
 
 ### 3.2.3 Step execution lifecycle
 
@@ -357,7 +360,7 @@ Secondary roles can be assigned to non-admin users to extend their user rights.
 
 Data saved and processed by Biflow is not encrypted by default on the database level. On Azure SQL Database, use the "Transparent data encryption" option to encrypt the application database at rest.
 
-To implement further encryption of sensitive data in such a way, that malicious high-privileged unauthorized users cannot view this data even if they can login to the database, use the Always Encrypted feature of SQL Server and Azure SQL Database. Azure Key Vault as a store for encryption keys is supported.
+To implement further encryption of sensitive data in such a way, that malicious high-privileged unauthorized users cannot view this data even if they can log in to the database, use the Always Encrypted feature of SQL Server and Azure SQL Database. Azure Key Vault as a store for encryption keys is supported.
 
 More information about Always Encrypted can be found in <a href="https://docs.microsoft.com/en-us/sql/relational-databases/security/encryption/always-encrypted-database-engine?view=sql-server-ver15">Microsoft’s documentation.</a>
 
@@ -375,6 +378,7 @@ When implementing Always Encrypted, these columns are good candidates for encryp
 - [app].[QlikCloudClient].[ApiToken]
 - [app].[Step].[FunctionKey]
 - [app].[DatabricksWorkspace].[ApiToken]
+- [app].[DbtAccount].[ApiToken]
 
 Enabling Always Encrypted with secure enclave is not required.
 
@@ -423,21 +427,21 @@ There are three different installation alternatives: on-premise, Azure (monolith
 
 ### Service account
 
-- It is recommended to use either a local or an AD account as the service account for all Biflow services. Make sure the service account has full control rights to the installation folders. Otherwise you might experience unexpected behaviour, such as log files not being generated.
+- It is recommended to use either a local or an AD account as the service account for all Biflow services. Make sure the service account has full control rights to the installation folders. Otherwise, you might experience unexpected behaviour, such as log files not being generated.
 
 ### Executor web application
 
 1. Extract the BiflowExecutor.zip file to the C: root on the application server (C:\Biflow\BiflowExecutor).
 2. Update the appsettings.json file with the correct settings for your environment.
 
-|Setting|Description|
-|-|-|
-|ConnectionStrings:AppDbContext|Connection string used to connect to the Biflow system database based on steps taken in the database section of this guide. **Note:** the connection string must have `MultipleActiveResultSets=true` enabled.|
-|Authentication:ApiKey|Any arbitrary string value used to authenticate incoming requests to the executor app API. You can use various API key generators online to create a secure value. The UI and scheduler app have corresponding app settings, the values of which need to exactly match this setting.|
-|EmailSettings|Settings used to send email notifications.|
-|PollingIntervalMs|Time interval in milliseconds between status polling operations (applies to some step types). Default value is `5000`.|
-|Serilog:WriteTo:Args:Path|Path where application will write is log files. Default value is `C:\\Biflow\\BiflowExecutor\\log\\executor.log`.|
-|Kestrel:Endpoints:Http:Url|The http url and port which the executor API should listen to, for example `http://localhost:4321`. **Note:** In production environments `localhost` should be replaced with the hosting server's IP address or DNS name. Otherwise external requests will not be routed correctly. If there are multiple installations/environments of the executor service on the same server, the executor applications should listen to different ports.|
+| Setting                        | Description                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+|--------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ConnectionStrings:AppDbContext | Connection string used to connect to the Biflow system database based on steps taken in the database section of this guide. **Note:** the connection string must have `MultipleActiveResultSets=true` enabled.                                                                                                                                                                                                                               |
+| Authentication:ApiKey          | Any arbitrary string value used to authenticate incoming requests to the executor app API. You can use various API key generators online to create a secure value. The UI and scheduler app have corresponding app settings, the values of which need to exactly match this setting.                                                                                                                                                         |
+| EmailSettings                  | Settings used to send email notifications.                                                                                                                                                                                                                                                                                                                                                                                                   |
+| PollingIntervalMs              | Time interval in milliseconds between status polling operations (applies to some step types). Default value is `5000`.                                                                                                                                                                                                                                                                                                                       |
+| Serilog:WriteTo:Args:Path      | Path where application will write is log files. Default value is `C:\\Biflow\\BiflowExecutor\\log\\executor.log`.                                                                                                                                                                                                                                                                                                                            |
+| Kestrel:Endpoints:Http:Url     | The http url and port which the executor API should listen to, for example `http://localhost:4321`. **Note:** In production environments `localhost` should be replaced with the hosting server's IP address or DNS name. Otherwise external requests will not be routed correctly. If there are multiple installations/environments of the executor service on the same server, the executor applications should listen to different ports. |
 
 3. Open the Windows command terminal in **administrator mode**.
     - Run the following command: `sc.exe create BiflowExecutor binpath= C:\Biflow\BiflowExecutor\BiflowExecutor.exe start= auto displayname= "Biflow Executor"`
@@ -452,16 +456,16 @@ There are three different installation alternatives: on-premise, Azure (monolith
 1. Extract the BiflowScheduler.zip file to the C: root on the application server (C:\Biflow\BiflowScheduler).
 2. Update the appsettings.json file with the correct settings
 
-|Setting|Description|
-|-|-|
-|ConnectionStrings:AppDbContext|Connection string used to connect to the Biflow database based on steps taken in the database section of this guide. **Note:** The connection string must have `MultipleActiveResultSets=true` enabled.|
-|Authentication:ApiKey|Any arbitrary string value used to authenticate incoming requests to the scheduler app API. You can use various API key generators online to create a secure value or choose the same value as with the executor app's API. The UI has a corresponding app setting, the value of which needs to exactly match this setting.|
-|Executor:Type|`[ WebApp \| SelfHosted ]`<br/>Whether the executor service is installed as a web app or is running self-hosted inside the scheduler application. **Note:** The SelfHosted executor should only be used for development and testing.|
-|Executor:WebApp:Url|Url to the executor web app|
-|Executor:WebApp:ApiKey|The executor app's API key used to authenticate requests sent to the executor API.|
-|Authorization:Windows:AllowedUsers|Array of Windows users who are authorized to issue requests to the scheduler API, e.g. `[ "DOMAIN\\BiflowService", "DOMAIN\\AdminUser" ]`. If no authorization is required, remove the `Authorization` section. Only applies to on-premise Windows environments.|
-|Kestrel:Endpoints:Http:Url|The http url and port which the scheduler API should listen to, for example `http://localhost:5432`. **Note:** In production environments `localhost` should be replaced with the hosting server's IP address or DNS name. Otherwise external requests will not be routed correctly. If there are multiple installations/environments of the scheduler service on the same server, the scheduler applications should listen to different ports.|
-|Serilog:WriteTo:Args:path|Path where the application will write its log files. Default value is `C:\\Biflow\\BiflowScheduler\\log\\scheduler.log`|
+| Setting                            | Description                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ConnectionStrings:AppDbContext     | Connection string used to connect to the Biflow database based on steps taken in the database section of this guide. **Note:** The connection string must have `MultipleActiveResultSets=true` enabled.                                                                                                                                                                                                                                         |
+| Authentication:ApiKey              | Any arbitrary string value used to authenticate incoming requests to the scheduler app API. You can use various API key generators online to create a secure value or choose the same value as with the executor app's API. The UI has a corresponding app setting, the value of which needs to exactly match this setting.                                                                                                                     |
+| Executor:Type                      | `[ WebApp \| SelfHosted ]`<br/>Whether the executor service is installed as a web app or is running self-hosted inside the scheduler application. **Note:** The SelfHosted executor should only be used for development and testing.                                                                                                                                                                                                            |
+| Executor:WebApp:Url                | Url to the executor web app                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Executor:WebApp:ApiKey             | The executor app's API key used to authenticate requests sent to the executor API.                                                                                                                                                                                                                                                                                                                                                              |
+| Authorization:Windows:AllowedUsers | Array of Windows users who are authorized to issue requests to the scheduler API, e.g. `[ "DOMAIN\\BiflowService", "DOMAIN\\AdminUser" ]`. If no authorization is required, remove the `Authorization` section. Only applies to on-premise Windows environments.                                                                                                                                                                                |
+| Kestrel:Endpoints:Http:Url         | The http url and port which the scheduler API should listen to, for example `http://localhost:5432`. **Note:** In production environments `localhost` should be replaced with the hosting server's IP address or DNS name. Otherwise external requests will not be routed correctly. If there are multiple installations/environments of the scheduler service on the same server, the scheduler applications should listen to different ports. |
+| Serilog:WriteTo:Args:path          | Path where the application will write its log files. Default value is `C:\\Biflow\\BiflowScheduler\\log\\scheduler.log`                                                                                                                                                                                                                                                                                                                         |
 
 3. Open the Windows command terminal in **administrator mode**.
     - Run the following command: `sc.exe create BiflowScheduler binpath= C:\Biflow\BiflowScheduler\BiflowScheduler.exe start= delayed-auto displayname= "Biflow Scheduler"`
@@ -488,35 +492,35 @@ There are three different installation alternatives: on-premise, Azure (monolith
     - The account created in step 1 should have read/write access to this folder.
 3. In the folder where you extracted the installation zip file, locate the file appsettings.production.json. Update the file with the correct settings.
 
-|Setting|Description|
-|-|-|
-|EnvironmentName|Name of the installation environment to be shown in the UI (e.g. Production, Test, Dev etc.)|
-|ConnectionStrings:AppDbContext|Connection string used to connect to the Biflow database based on steps taken in the database section of this guide. **Note:** The connection string must have `MultipleActiveResultSets=true` enabled.|
-|Authentication|`[ BuiltIn \| Windows \| AzureAd \| Ldap ]`<br>`BuiltIn`: User accounts and passwords are fully managed in Biflow. Accounts are only to scoped to be used with Biflow.<br>`Windows`: Authentication is done using Active Directory. User roles and access are defined in the Biflow users management. The user does not need to log in but instead their workstation Windows account is used for authentication.<br>`AzureAd`: Authentication is done using Entra ID. User roles and access are defined in the Biflow users management.<br>`Ldap`: LDAP connection is used to authenticate users. This also supports Active Directory. User roles and access are defined in the Biflow users management. User matching is done using the LDAP `userPrincipalName` attribute.|
-|AdminUser|When this section is defined, the UI application will ensure at startup that an admin user with the credentials from this configuration section exists in the database. This section can be used to create the first admin user to be able to log in via the UI.|
-|AdminUser:Username|Username for the admin user|
-|AdminUser:Password|Password for the admin user. Only used when `Authentication` is set to `BuiltIn`.|
-|AzureAd|This section needs to be defined only if `Authentication` is set to `AzureAd`|
-|AzureAd:Instance|`https://login.microsoftonline.com/`|
-|AzureAd:Domain|Your organization domain, e.g. `contoso.com`|
-|AzureAd:TenantId|If the app registration supports *Accounts in this organizational directory only*, set the value to the directory (tenant) ID (a GUID) of your organization. If the registration supports *Accounts in any organizational directory*, set the value to `organizations`. If the registration supports *All Microsoft account users*, set the value to `common`.|
-|AzureAd:ClientId|The application (client) ID of the application that you registered in the Azure portal.|
-|AzureAd:ClientSecret|The client secret for the app registration.|
-|AzureAd:CallbackPath|`/signin-oidc`|
-|Ldap|This section needs to be defined only if `Authentication` is set to `Ldap`|
-|Ldap:Server|The LDAP server to connect to for authentication|
-|Ldap:Port|The port to use for the LDAP server connection |
-|Ldap:UseSsl|Boolean value: `true` to use SSL for the connection, `false` if not|
-|Ldap:UserStoreDistinguishedName|The DN (distinguished name) for the LDAP container which to query for users|
-|Executor:Type|`[ WebApp \| SelfHosted ]`<br>Whether the executor service is installed as a web app or is running self-hosted inside the UI application. **Note:** The SelfHosted executor should only be used for development and testing.|
-|Executor:WebApp:Url|Needed only when `Executor:Type` is set to `WebApp`. Url to the executor web app API|
-|Executor:WebApp:ApiKey|Needed only when `Executor:Type` is set to `WebApp`. API key used to authenticate requests sent to the executor app's API.|
-|Executor:SelfHosted|This section needs to be defined only if `Executor:Type` is set to `SelfHosted`. Refer to the executor web application's settings section to set the values in this section.|
-|Scheduler:Type|`[ WebApp \| SelfHosted ]`<br>Whether the scheduler service is installed as a web app or is running self-hosted inside the UI application. If `Executor:Type` is set to `SelfHosted` then this settings must also be set to `SelfHosted`.  **Note:** The SelfHosted scheduler should only be used for development and testing.|
-|Scheduler:WebApp:Url|Needed only when `Scheduler:Type` is set to `WebApp`. Url to the scheduler service web app API|
-|Scheduler:WebApp:ApiKey|Needed only when `Scheduler:Type` is set to `WebApp`. API key used to authenticate requests sent to the scheduler app's API.|
-|Kestrel:Endpoints:Https:Url|The https url and port which the UI application should listen to, for example `https://localhost`. **Note:** In production environments `localhost` should be replaced with the hosting server's IP address or DNS name. Otherwise external requests will not be routed correctly. If there are multiple installations on the same server, the UI applications should listen to different ports. Applies only to on-premise installations.|
-|Serilog:WriteTo:Args:path|Folder path where the application will write its log files. Applies only to on-premise installations. Default value is `C:\\Biflow\\BiflowUi\\log\\ui.log`|
+| Setting                         | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+|---------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| EnvironmentName                 | Name of the installation environment to be shown in the UI (e.g. Production, Test, Dev etc.)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ConnectionStrings:AppDbContext  | Connection string used to connect to the Biflow database based on steps taken in the database section of this guide. **Note:** The connection string must have `MultipleActiveResultSets=true` enabled.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Authentication                  | `[ BuiltIn \| Windows \| AzureAd \| Ldap ]`<br>`BuiltIn`: User accounts and passwords are fully managed in Biflow. Accounts are only to scoped to be used with Biflow.<br>`Windows`: Authentication is done using Active Directory. User roles and access are defined in the Biflow users management. The user does not need to log in but instead their workstation Windows account is used for authentication.<br>`AzureAd`: Authentication is done using Entra ID. User roles and access are defined in the Biflow users management.<br>`Ldap`: LDAP connection is used to authenticate users. This also supports Active Directory. User roles and access are defined in the Biflow users management. User matching is done using the LDAP `userPrincipalName` attribute. |
+| AdminUser                       | When this section is defined, the UI application will ensure at startup that an admin user with the credentials from this configuration section exists in the database. This section can be used to create the first admin user to be able to log in via the UI.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| AdminUser:Username              | Username for the admin user                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| AdminUser:Password              | Password for the admin user. Only used when `Authentication` is set to `BuiltIn`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| AzureAd                         | This section needs to be defined only if `Authentication` is set to `AzureAd`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| AzureAd:Instance                | `https://login.microsoftonline.com/`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| AzureAd:Domain                  | Your organization domain, e.g. `contoso.com`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| AzureAd:TenantId                | If the app registration supports *Accounts in this organizational directory only*, set the value to the directory (tenant) ID (a GUID) of your organization. If the registration supports *Accounts in any organizational directory*, set the value to `organizations`. If the registration supports *All Microsoft account users*, set the value to `common`.                                                                                                                                                                                                                                                                                                                                                                                                               |
+| AzureAd:ClientId                | The application (client) ID of the application that you registered in the Azure portal.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| AzureAd:ClientSecret            | The client secret for the app registration.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| AzureAd:CallbackPath            | `/signin-oidc`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Ldap                            | This section needs to be defined only if `Authentication` is set to `Ldap`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Ldap:Server                     | The LDAP server to connect to for authentication                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Ldap:Port                       | The port to use for the LDAP server connection                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Ldap:UseSsl                     | Boolean value: `true` to use SSL for the connection, `false` if not                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Ldap:UserStoreDistinguishedName | The DN (distinguished name) for the LDAP container which to query for users                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Executor:Type                   | `[ WebApp \| SelfHosted ]`<br>Whether the executor service is installed as a web app or is running self-hosted inside the UI application. **Note:** The SelfHosted executor should only be used for development and testing.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Executor:WebApp:Url             | Needed only when `Executor:Type` is set to `WebApp`. Url to the executor web app API                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Executor:WebApp:ApiKey          | Needed only when `Executor:Type` is set to `WebApp`. API key used to authenticate requests sent to the executor app's API.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Executor:SelfHosted             | This section needs to be defined only if `Executor:Type` is set to `SelfHosted`. Refer to the executor web application's settings section to set the values in this section.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Scheduler:Type                  | `[ WebApp \| SelfHosted ]`<br>Whether the scheduler service is installed as a web app or is running self-hosted inside the UI application. If `Executor:Type` is set to `SelfHosted` then this settings must also be set to `SelfHosted`.  **Note:** The SelfHosted scheduler should only be used for development and testing.                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Scheduler:WebApp:Url            | Needed only when `Scheduler:Type` is set to `WebApp`. Url to the scheduler service web app API                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Scheduler:WebApp:ApiKey         | Needed only when `Scheduler:Type` is set to `WebApp`. API key used to authenticate requests sent to the scheduler app's API.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| Kestrel:Endpoints:Https:Url     | The https url and port which the UI application should listen to, for example `https://localhost`. **Note:** In production environments `localhost` should be replaced with the hosting server's IP address or DNS name. Otherwise external requests will not be routed correctly. If there are multiple installations on the same server, the UI applications should listen to different ports. Applies only to on-premise installations.                                                                                                                                                                                                                                                                                                                                   |
+| Serilog:WriteTo:Args:path       | Folder path where the application will write its log files. Applies only to on-premise installations. Default value is `C:\\Biflow\\BiflowUi\\log\\ui.log`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 4. Open the Windows command terminal in **administrator mode**.
     - Run the following command: `sc.exe create BiflowUi binpath= C:\Biflow\BiflowUi\BiflowUi.exe start= delayed-auto displayname= "Biflow User Interface"`
@@ -542,7 +546,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
     - General Settings => Websocket => On
     - General Settings => Always on => On
 - Set the application settings in Configuration => Application settings.
-    - __Note that Linux Web Apps do not recognize colon as a configuration section separator.__ Instead double underscores are used.
+    - __Note that Linux Web Apps do not recognize colon as a configuration section separator.__ Instead, double underscores are used.
     - Application settings
         - Authentication = See the on-premise section for configuring authentication
         - EnvironmentName = NameOfYourEnvironment
@@ -583,33 +587,33 @@ These steps isolate the executor and scheduler application endpoints from the in
 
 It is recommended to use a User Assigned Managed Identity, especially in the modular approach, to authenticate to the application database and possibly other Azure services too. Create a new managed identity and assign it to the executor, scheduler and UI applications. This way you can grant access to the application database to only one managed identity, which is shared among the orchestration related resources.
 
-Add application configurations for each app based on the table below. __Note that Linux Web Apps do not recognize colon as a configuration section separator.__ Instead double underscores are used.
+Add application configurations for each app based on the table below. __Note that Linux Web Apps do not recognize colon as a configuration section separator.__ Instead, double underscores are used.
 
-|Setting|Value|
-|-|-|
-|__UI__||
-|ConnectionStrings__AppDbContext|Connection string to the system database|
-|Authentication|See the on-premise section for configuring authentication|
-|EnvironmentName|`NameOfYourEnvironment`|
-|Executor__Type|`WebApp`|
-|Scheduler__Type|`WebApp`|
-|Executor__WebApp__Url|Executor web app URL, e.g. `https://biflow-executor.azurewebsites.net`|
-|Executor__WebApp__ApiKey|Executor web app API key|
-|Scheduler__WebApp__Url|Scheduler web app URL, e.g. `https://biflow-scheduler.azurewebsites.net`|
-|Scheduler__WebApp__ApiKey|Scheduler web app API key|
-|WEBSITE_TIME_ZONE|Time zone, e.g. `Europe/Helsinki`|
-|__Executor__||
-|ConnectionStrings__AppDbContext|Connection string to the system database|
-|Authentication__ApiKey|API key used to authenticate incoming requests to the executor app API|
-|PollingIntervalMs|`5000` (default)|
-|WEBSITE_TIME_ZONE|Time zone, e.g. `Europe/Helsinki`|
-|__Scheduler__||
-|ConnectionStrings__AppDbContext|Connection string to the system database|
-|Authentication__ApiKey|API key used to authenticate incoming requests to the scheduler app API|
-|Executor__Type|`WebApp`|
-|Executor__WebApp__Url|Executor web app URL, e.g. `https://biflow-executor.azurewebsites.net`|
-|Executor__WebApp__ApiKey|Executor web app API key|
-|WEBSITE_TIME_ZONE|Time zone, e.g. `Europe/Helsinki`|
+| Setting                         | Value                                                                    |
+|---------------------------------|--------------------------------------------------------------------------|
+| __UI__                          |                                                                          |
+| ConnectionStrings__AppDbContext | Connection string to the system database                                 |
+| Authentication                  | See the on-premise section for configuring authentication                |
+| EnvironmentName                 | `NameOfYourEnvironment`                                                  |
+| Executor__Type                  | `WebApp`                                                                 |
+| Scheduler__Type                 | `WebApp`                                                                 |
+| Executor__WebApp__Url           | Executor web app URL, e.g. `https://biflow-executor.azurewebsites.net`   |
+| Executor__WebApp__ApiKey        | Executor web app API key                                                 |
+| Scheduler__WebApp__Url          | Scheduler web app URL, e.g. `https://biflow-scheduler.azurewebsites.net` |
+| Scheduler__WebApp__ApiKey       | Scheduler web app API key                                                |
+| WEBSITE_TIME_ZONE               | Time zone, e.g. `Europe/Helsinki`                                        |
+| __Executor__                    |                                                                          |
+| ConnectionStrings__AppDbContext | Connection string to the system database                                 |
+| Authentication__ApiKey          | API key used to authenticate incoming requests to the executor app API   |
+| PollingIntervalMs               | `5000` (default)                                                         |
+| WEBSITE_TIME_ZONE               | Time zone, e.g. `Europe/Helsinki`                                        |
+| __Scheduler__                   |                                                                          |
+| ConnectionStrings__AppDbContext | Connection string to the system database                                 |
+| Authentication__ApiKey          | API key used to authenticate incoming requests to the scheduler app API  |
+| Executor__Type                  | `WebApp`                                                                 |
+| Executor__WebApp__Url           | Executor web app URL, e.g. `https://biflow-executor.azurewebsites.net`   |
+| Executor__WebApp__ApiKey        | Executor web app API key                                                 |
+| WEBSITE_TIME_ZONE               | Time zone, e.g. `Europe/Helsinki`                                        |
 
 Deploying the application code can be done via the Linux virtual machine.
 - Copy the zip files for the three applications to the virtual machine (`Biflow.Ui`, `Biflow.Executor.WebApp` and `Biflow.Scheduler.WebApp`). Make sure to delete the configuration sections from the appsettings files except for the `Logging` section.
@@ -627,7 +631,7 @@ On your local machine, run the following PowerShell commands to copy files to th
 > scp .\BiflowUi.zip <admin_user>@<vm_public_ip>:/home/<admin_user_>
 ```
 
-Then launch a remote session from PowerShell to the VM using ssh and deply the application code.
+Then launch a remote session from PowerShell to the VM using ssh and deploy the application code.
 
 ```
 > ssh <admin_user>@<vm_public_ip>
@@ -713,14 +717,14 @@ The `[Service]` section defines the service itself and is important.
 - `WorkingDirectory` – it is recommended to use the app install directory as the working directory for the service
 - `ExecStart` – the application executable to launch on service startup
 - `SyslogIdentifier` – this is used to identify the service in syslog files
-- `Restart` – with this option enabled, the service is restarted after its process exits, with the exception of a clean stop by the systemctl command
+- `Restart` – with this option enabled, the service is restarted after its process exits, except a clean stop by the systemctl command
 - `RestartSec` – the time between the service process exiting and restarting the service
 - `User` – the user for running the service
 
 The `[Install]` section defines the behaviour of the service.
 - `WantedBy` – specifies, how a unit should be enabled. `multi-user.target` roughly defines a system state, where all network services are started and the system accepts logins, but a GUI is not started.
 
-Note, that application settings, such as connection strings, can and should still be configured in `appsettings.json`. **Note:** When configuring the HTTP URLs to listen to in appsettings, remember to use the hosting server's IP address or DNS name. Otherwise external requests will not be routed correctly.
+Note, that application settings, such as connection strings, can and should still be configured in `appsettings.json`. **Note:** When configuring the HTTP URLs to listen to in appsettings, remember to use the hosting server's IP address or DNS name. Otherwise, external requests will not be routed correctly.
 
 Save the unit file, enable and start the service and check its status:
 
@@ -837,7 +841,7 @@ Navigate to the Biflow UI website. You should be able to log in using the accoun
         - No SSIS compatibility needed
             - sufficient roles required by the ETL processes (usually `db_owner`)
         - SSIS compatibility
-            - In addition add `db_ssisadmin` role in the SSISDB database
+            - In addition. add `db_ssisadmin` role in the SSISDB database
             - Add a new login using a Windows account which also has `db_ssisadmin` role in the SSISDB database
             - Execute the following T-SQL command in the `master` database: `GRANT IMPERSONATE ON LOGIN::[WindowsLoginName] TO [SqlServerLoginName]`
 
@@ -901,7 +905,7 @@ This section provides some useful information regarding normal operation and als
 
 When job executions are started (either scheduled or manual), the executor service first runs a series of validations on the execution. The executor checks for:
 1. Circular job dependencies caused by job step references (i.e. steps starting another job's execution)
-    - These can cause infinite execution loops and they are considered a user error (incorrect job & step definitions).
+    - These can cause infinite execution loops, and they are considered a user error (incorrect job & step definitions).
 2. Circular step dependencies
     - These can cause infinite waits when step dependencies are being checked after the execution has started.
 3. Illegal hybrid mode steps
@@ -935,7 +939,7 @@ When the executor service is shut down, it will immediately send cancel commands
 
 On startup, the scheduler service reads all schedules from the app database and adds them to the internal scheduler. Disabled schedules are added as paused. If reading the schedules fails, the service will reattempt every 15 minutes until schedules are read successfully. The app database should thus be available at least soon after the scheduler service is started.
 
-For various maintenance reasons (data platform service break, software updates etc.), all schedules may need to be disabled temporarily to prevent new executions from being started. This can achieved easily, efficiently and securely by shutting down the scheduler service. This guarantees that no new executions are started when the scheduler service is not running while also allowing the executor service to complete running executions.
+For various maintenance reasons (data platform service break, software updates etc.), all schedules may need to be disabled temporarily to prevent new executions from being started. This can be achieved easily, efficiently and securely by shutting down the scheduler service. This guarantees that no new executions are started when the scheduler service is not running while also allowing the executor service to complete running executions.
 
 ### User interface service
 

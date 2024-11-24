@@ -2,29 +2,30 @@
 
 namespace Biflow.Ui.Shared.JobDetails.Settings;
 
-public partial class DependenciesSynchronizer : ComponentBase
+public partial class DependenciesSynchronizer(
+    IDbContextFactory<AppDbContext> dbContextFactory,
+    ToasterService toaster,
+    IHxMessageBoxService confirmer,
+    IMediator mediator) : ComponentBase
 {
-    [Inject] private IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
-
-    [Inject] private ToasterService Toaster { get; set; } = null!;
-
-    [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
-
-    [Inject] private IMediator Mediator { get; set; } = null!;
-
     [CascadingParameter] public Job? Job { get; set; }
 
     [CascadingParameter(Name = "SortSteps")] public Action? SortSteps { get; set; }
 
     [CascadingParameter] public List<Step>? Steps { get; set; }
 
-    private List<Dependency>? dependenciesToAdd;
-    private List<Dependency>? dependenciesToRemove;
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
+    private readonly ToasterService _toaster = toaster;
+    private readonly IHxMessageBoxService _confirmer = confirmer;
+    private readonly IMediator _mediator = mediator;
+
+    private List<Dependency>? _dependenciesToAdd;
+    private List<Dependency>? _dependenciesToRemove;
 
     private async Task CalculateChangesAsync()
     {
         if (Job is null) return;
-        using var context = DbContextFactory.CreateDbContext();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         var steps = await context.Steps
             .AsNoTrackingWithIdentityResolution()
             .Where(step => step.JobId == Job.JobId)
@@ -34,19 +35,19 @@ public partial class DependenciesSynchronizer : ComponentBase
             .ThenInclude(dep => dep.DependantOnStep)
             .ToListAsync();
 
-        dependenciesToAdd = [];
-        dependenciesToRemove = [];
+        _dependenciesToAdd = [];
+        _dependenciesToRemove = [];
 
         foreach (var step in steps)
         {
             // Check for missing dependencies based on sources and targets.
             var sources = step.DataObjects.Where(d => d.ReferenceType == DataObjectReferenceType.Source);
-            static IEnumerable<StepDataObject> targetsOf(Step step) => step.DataObjects.Where(d => d.ReferenceType == DataObjectReferenceType.Target);
 
-            var dependencies = steps.Where(s =>
-                targetsOf(s).Any(target =>
-                    sources.Any(source => source.IsSubsetOf(target))));
-            var missingDependencies = dependencies.Where(s => !step.Dependencies.Any(d => s.StepId == d.DependantOnStepId));
+            var dependencies = steps
+                .Where(s =>
+                    TargetsOf(s).Any(target => sources.Any(source => source.IsSubsetOf(target))))
+                .ToArray();
+            var missingDependencies = dependencies.Where(s => step.Dependencies.All(d => s.StepId != d.DependantOnStepId));
             foreach (var missing in missingDependencies)
             {
                 var dependency = new Dependency
@@ -56,16 +57,22 @@ public partial class DependenciesSynchronizer : ComponentBase
                     DependantOnStepId = missing.StepId,
                     DependantOnStep = missing,
                 };
-                dependenciesToAdd.Add(dependency);
+                _dependenciesToAdd.Add(dependency);
             }
 
             // Check for unnecessary dependencies based on sources and targets.
             // Only do this if there are any sources listed.
             if (sources.Any())
             {
-                var extraDependencies = step.Dependencies.Where(d => !dependencies.Any(dep => d.DependantOnStepId == dep.StepId));
-                dependenciesToRemove.AddRange(extraDependencies);
+                var extraDependencies = step.Dependencies
+                    .Where(d => dependencies.All(dep => d.DependantOnStepId != dep.StepId));
+                _dependenciesToRemove.AddRange(extraDependencies);
             }
+
+            continue;
+
+            static IEnumerable<StepDataObject> TargetsOf(Step step) =>
+                step.DataObjects.Where(d => d.ReferenceType == DataObjectReferenceType.Target);
         }
     }
 
@@ -73,33 +80,33 @@ public partial class DependenciesSynchronizer : ComponentBase
     {
         try
         {
-            while (dependenciesToAdd?.Count > 0)
+            while (_dependenciesToAdd?.Count > 0)
             {
-                await AddDependencyAsync(dependenciesToAdd.First());
+                await AddDependencyAsync(_dependenciesToAdd.First());
             }
-            while (dependenciesToRemove?.Count > 0)
+            while (_dependenciesToRemove?.Count > 0)
             {
-                await RemoveDependencyAsync(dependenciesToRemove.First());
+                await RemoveDependencyAsync(_dependenciesToRemove.First());
             }
-            dependenciesToAdd = null;
-            dependenciesToRemove = null;
+            _dependenciesToAdd = null;
+            _dependenciesToRemove = null;
             SortSteps?.Invoke();
-            Toaster.AddSuccess("Changes saved successfully");
+            _toaster.AddSuccess("Changes saved successfully");
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error saving changes", ex.Message);
+            _toaster.AddError("Error saving changes", ex.Message);
         }
     }
 
     private async Task AddDependencyAsync(Dependency dependency)
     {
         // Add dependency to database.
-        await Mediator.SendAsync(new CreateDependencyCommand(dependency));
+        await _mediator.SendAsync(new CreateDependencyCommand(dependency));
 
         // Add dependency to the step loaded into memory.
-        var step = Steps?.FirstOrDefault(step => step.StepId == dependency.StepId);
-        var dependant = Steps?.FirstOrDefault(step => step.StepId == dependency.DependantOnStepId);
+        var step = Steps?.FirstOrDefault(s => s.StepId == dependency.StepId);
+        var dependant = Steps?.FirstOrDefault(s => s.StepId == dependency.DependantOnStepId);
         if (step is not null && dependant is not null)
         {
             dependency.Step = step;
@@ -107,13 +114,13 @@ public partial class DependenciesSynchronizer : ComponentBase
             step.Dependencies.Add(dependency);
         }
 
-        dependenciesToAdd?.Remove(dependency);
+        _dependenciesToAdd?.Remove(dependency);
     }
 
     private async Task RemoveDependencyAsync(Dependency dependency)
     {
         // Remove dependency from the database.
-        await Mediator.SendAsync(new DeleteDependencyCommand(dependency.StepId, dependency.DependantOnStepId));
+        await _mediator.SendAsync(new DeleteDependencyCommand(dependency.StepId, dependency.DependantOnStepId));
 
         // Remove dependency from step loaded into memory.
         var step = Steps?.FirstOrDefault(step => step.StepId == dependency.StepId);
@@ -124,12 +131,12 @@ public partial class DependenciesSynchronizer : ComponentBase
         }
 
         // Dependency was handled => remove from list of modifications.
-        dependenciesToRemove?.Remove(dependency);
+        _dependenciesToRemove?.Remove(dependency);
     }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
-        var confirmed = await Confirmer.ConfirmAsync("", "Discard unsaved changes?");
+        var confirmed = await _confirmer.ConfirmAsync("", "Discard unsaved changes?");
         if (!confirmed)
         {
             context.PreventNavigation();

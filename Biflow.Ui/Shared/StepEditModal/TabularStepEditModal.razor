@@ -10,7 +10,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.XOctagon" />
+                        <SvgIcon Icon="LucideIcon.OctagonX" />
                     </div>
                     <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 5rem;"></InputNumber>
                 </div>
@@ -25,16 +25,16 @@
             <div class="col-md-6 d-inline">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Database" />
+                        <SvgIcon Icon="LucideIcon.Database" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId">
-                        @foreach (var connection in AsConnections ?? Enumerable.Empty<AnalysisServicesConnection>())
+                        @foreach (var connection in AsConnections)
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }
                     </InputSelect>
-                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await offcanvas.LetAsync(x => x.ShowAsync(Step?.ConnectionId))">
-                        <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await _offcanvas.LetAsync(x => x.ShowAsync(Step?.ConnectionId))">
+                        <SvgIcon Icon="LucideIcon.Ellipsis" />
                         Browse models
                     </HxButton>
                 </div>
@@ -48,7 +48,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Box" />
+                        <SvgIcon Icon="LucideIcon.Box" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.TabularModelName" />
                 </div>
@@ -63,7 +63,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Table" />
+                        <SvgIcon Icon="LucideIcon.Table" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.TabularTableName" />
                 </div>
@@ -78,7 +78,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.PieChart" />
+                        <SvgIcon Icon="LucideIcon.ChartPie" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.TabularPartitionName" />
                 </div>
@@ -86,6 +86,6 @@
             </div>
         </div>
 
-        <AnalysisServicesObjectSelectOffcanvas @ref="offcanvas" OnObjectSelected="OnAnalysisServicesObjectSelected" />
+        <AnalysisServicesObjectSelectOffcanvas @ref="_offcanvas" OnObjectSelected="OnAnalysisServicesObjectSelected" />
     }
 </StepEditModalTemplate>

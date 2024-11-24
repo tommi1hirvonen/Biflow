@@ -9,7 +9,7 @@ internal class DeleteStepsCommandHandler(IDbContextFactory<AppDbContext> dbConte
 {
     public async Task Handle(DeleteStepsCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var steps = await context.Steps
             .Include(s => s.Dependencies)
             .Include(s => s.Depending)

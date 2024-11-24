@@ -1,14 +1,10 @@
-@using Microsoft.AspNetCore.Components.Web
-@using Microsoft.JSInterop
-@using System.Text.Json
-
 @namespace Biflow.Ui.Components
 
 @typeparam TItem
 
 @implements IAsyncDisposable
 
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 @inject ContextMenuService ContextMenu
 
 <div @attributes="AdditionalAttributes" class="border" style="resize: both; overflow: hidden;">
@@ -44,7 +40,7 @@
     {
         if (firstRender)
         {
-            jsObject = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/DependencyGraph.js");
+            jsObject = await Js.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/DependencyGraph.js");
             await AfterRender.InvokeAsync();
         }
     }

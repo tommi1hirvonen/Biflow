@@ -1,7 +1,7 @@
 ﻿@inject ToasterService Toaster
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 
-<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Large" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true" Title="Explore SQL definitions">
+<HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Large" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true" Title="Explore SQL definitions">
     <BodyTemplate>
         <div class="row">
             <div class="col-3">
@@ -10,10 +10,10 @@
             <div class="col-9">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Database" />
+                        <SvgIcon Icon="LucideIcon.Database" />
                     </div>
-                    <select class="form-select form-select-sm" @bind="connectionId">
-                        @foreach (var connection in Connections ?? [])
+                    <select class="form-select form-select-sm" @bind="_connectionId">
+                        @foreach (var connection in Connections)
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }
@@ -33,7 +33,7 @@
                                TextSelector="TextSelector"
                                MinimumLength="0"
                                InputSize="InputSize.Small"
-                               ValueExpression="() => procedure"
+                               ValueExpression="() => _procedure!"
                                ValueChanged="RunQuery"
                                autocomplete="off">
                     <EmptyTemplate>
@@ -44,7 +44,7 @@
         </div>
 
         <hr />
-        @if (objectDefinition is not null)
+        @if (_objectDefinition is not null)
         {
             <div class="row">
                 <div class="col">
@@ -53,19 +53,19 @@
             </div>
             <div class="row mt-3">
                 <div class="col">
-                    <CodeEditor @ref="editor"
+                    <CodeEditor @ref="_editor"
                                 Language="sql"
                                 ReadOnly="true"
-                                InitialValueExpression="() => objectDefinition"
+                                InitialValueExpression="() => _objectDefinition"
                                 InitialHeight="calc(100vh - 320px)" />
                 </div>
             </div>
         }
-        @if (errorMessage is not null)
+        @if (_errorMessage is not null)
         {
             <div class="row mt-3">
                 <div class="col">
-                    <pre><code>@errorMessage</code></pre>
+                    <pre><code>@_errorMessage</code></pre>
                 </div>
             </div>
         }
@@ -73,41 +73,41 @@
     </BodyTemplate>
 
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
 @code {
     [Parameter] public IEnumerable<ConnectionBase> Connections { get; set; } = [];
 
-    private Guid? connectionId;
-    private Guid prevConnectionId;
-    private CodeEditor? editor;
-    private HxOffcanvas? offcanvas;
-    private IEnumerable<IStoredProcedure>? procedures;
-    private IStoredProcedure? procedure;
-    private string? objectDefinition;
-    private string? errorMessage;
+    private Guid? _connectionId;
+    private Guid _prevConnectionId;
+    private CodeEditor? _editor;
+    private HxOffcanvas? _offcanvas;
+    private IEnumerable<IStoredProcedure>? _procedures;
+    private IStoredProcedure? _procedure;
+    private string? _objectDefinition;
+    private string? _errorMessage;
 
     private async Task<AutosuggestDataProviderResult<IStoredProcedure>> ProvideSuggestions(AutosuggestDataProviderRequest request)
     {
         try
         {
-            Guid connectionId = this.connectionId ?? throw new ArgumentNullException(nameof(connectionId), "Connection id was null");
-            if (connectionId != prevConnectionId)
+            Guid id = _connectionId ?? throw new ArgumentNullException(nameof(id), "Connection id was null");
+            if (id != _prevConnectionId)
             {
-                prevConnectionId = connectionId;
-                procedures = null;
+                _prevConnectionId = id;
+                _procedures = null;
             }
-            var connection = Connections.First(c => c.ConnectionId == connectionId);
-            procedures ??= connection switch
+            var connection = Connections.First(c => c.ConnectionId == id);
+            _procedures ??= connection switch
             {
                 MsSqlConnection mssql => await mssql.GetStoredProceduresAsync(),
                 SnowflakeConnection sf => await sf.GetStoredProceduresAsync(),
                 _ => null
             };
 
-            var filtered = procedures?
+            var filtered = _procedures?
                 .Where(p => $"{p.QuotedSchemaName}.{p.QuotedProcedureName}".ContainsIgnoreCase(request.UserInput));
             return new AutosuggestDataProviderResult<IStoredProcedure>
             {
@@ -120,7 +120,7 @@
         }
         return new AutosuggestDataProviderResult<IStoredProcedure>
         {
-            Data = Enumerable.Empty<IStoredProcedure>()
+            Data = []
         };
     }
 
@@ -132,15 +132,15 @@
         {
             return;
         }
-        this.procedure = proc;
-        objectDefinition = null;
-        await editor.LetAsync(x => x.SetValueAsync(""));
-        errorMessage = null;
+        _procedure = proc;
+        _objectDefinition = null;
+        await _editor.LetAsync(x => x.SetValueAsync(""));
+        _errorMessage = null;
         try
         {
-            Guid connectionId = this.connectionId ?? throw new ArgumentNullException(nameof(connectionId), "Connection id was null");
-            var connection = Connections.First(c => c.ConnectionId == connectionId);
-            objectDefinition = connection switch
+            Guid id = _connectionId ?? throw new ArgumentNullException(nameof(id), "Connection id was null");
+            var connection = Connections.First(c => c.ConnectionId == id);
+            _objectDefinition = connection switch
             {
                 MsSqlConnection msSql when proc is MsSqlStoredProcedure msproc => await msSql.GetProcedureDefinitionAsync(msproc),
                 MsSqlConnection => throw new ArgumentException($"Unsupported procedure type for {typeof(MsSqlConnection)}: {proc.GetType().Name}"),
@@ -148,15 +148,15 @@
                 SnowflakeConnection => throw new ArgumentException($"Unsupported procedure type for {typeof(SnowflakeConnection)}: {proc.GetType().Name}"),
                 _ => throw new ArgumentException($"Unsupported connection type: {connection.GetType().Name}")
             };
-            if (objectDefinition is null)
+            if (_objectDefinition is null)
             {
-                errorMessage = $"No procedure definition found for {proc}";
+                _errorMessage = $"No procedure definition found for {proc}";
             }
-            await editor.LetAsync(x => x.SetValueAsync(objectDefinition));
+            await _editor.LetAsync(x => x.SetValueAsync(_objectDefinition));
         }
         catch (SqlException ex)
         {
-            objectDefinition = ex.Message;
+            _objectDefinition = ex.Message;
         }
         catch (Exception ex)
         {
@@ -168,7 +168,7 @@
     {
         try
         {
-            await JS.InvokeVoidAsync("navigator.clipboard.writeText", objectDefinition);
+            await Js.InvokeVoidAsync("navigator.clipboard.writeText", _objectDefinition);
             Toaster.AddInformation("Code copied to clipboard");
         }
         catch (Exception ex)
@@ -177,25 +177,25 @@
         }
     }
 
-    public async Task ShowAsync(Guid? connectionId = null, string? sqlStatement = null)
+    public async Task ShowAsync(Guid? connId = null, string? sqlStatement = null)
     {
-        this.connectionId = connectionId ?? Connections.FirstOrDefault()?.ConnectionId;
-        var connection = Connections.FirstOrDefault(c => c.ConnectionId == this.connectionId);
+        _connectionId = connId ?? Connections.FirstOrDefault()?.ConnectionId;
+        var connection = Connections.FirstOrDefault(c => c.ConnectionId == _connectionId);
         if (connection is MsSqlConnection msSql && sqlStatement is not null)
         {
-            var proc = MsSqlExtensions.ParseStoredProcedureFromSqlStatement(sqlStatement);
-            var schema = proc?.Schema;
-            var name = proc?.ProcedureName;
+            var procFromSql = MsSqlExtensions.ParseStoredProcedureFromSqlStatement(sqlStatement);
+            var schema = procFromSql?.Schema;
+            var name = procFromSql?.ProcedureName;
             if (name is not null)
             {
-                var procedure = await msSql.GetStoredProcedureAsync(schema, name);
-                if (procedure is not null)
+                var procFromDb = await msSql.GetStoredProcedureAsync(schema, name);
+                if (procFromDb is not null)
                 {
-                    await RunQuery(procedure);
+                    await RunQuery(procFromDb);
                 }
             }
         }
-        await offcanvas.LetAsync(x => x.ShowAsync());
+        await _offcanvas.LetAsync(x => x.ShowAsync());
     }
 
 }

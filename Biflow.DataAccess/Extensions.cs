@@ -159,6 +159,11 @@ public static class Extensions
                 equals new { Id = includeEndpoint ? (object?)db.WorkspaceId : false }
                 into db_
             from db in db_.DefaultIfEmpty()
+            join dbt in context.DbtAccounts
+                on new { Id = includeEndpoint ? (object?)((DbtStepExecution)stepExec).DbtAccountId : true }
+                equals new { Id = includeEndpoint ? (object?)dbt.DbtAccountId : false }
+                into dbt_
+            from dbt in dbt_.DefaultIfEmpty()
             join exe in context.Credentials
                 on new { Id = includeEndpoint ? (object?)((ExeStepExecution)stepExec).RunAsCredentialId : true }
                 equals new { Id = includeEndpoint ? (object?)exe.CredentialId : false }
@@ -180,6 +185,7 @@ public static class Extensions
                 pipeline,
                 qlik,
                 db,
+                dbt,
                 exe,
                 step);
 
@@ -218,19 +224,17 @@ public static class Extensions
                 case DatabricksStepExecution db:
                     db.SetWorkspace(step.DatabricksWorkspace);
                     break;
+                case DbtStepExecution dbt:
+                    dbt.SetAccount(step.DbtAccount);
+                    break;
                 case ExeStepExecution exe:
                     exe.SetRunAsCredential(step.ExeStepCredential);
-                    break;
-                default:
                     break;
             }
         }
 
         return execution;
     }
-
-    internal static bool EqualsIgnoreCase(this string text, string? compareTo) =>
-        string.Equals(text, compareTo, StringComparison.OrdinalIgnoreCase);
 }
 
 file record StepExecutionProjection(
@@ -244,5 +248,6 @@ file record StepExecutionProjection(
     PipelineClient? PipelineStepClient,
     QlikCloudEnvironment? QlikStepClient,
     DatabricksWorkspace? DatabricksWorkspace,
+    DbtAccount? DbtAccount,
     Credential? ExeStepCredential,
     Step? Step);

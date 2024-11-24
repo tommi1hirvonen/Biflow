@@ -19,9 +19,8 @@ internal class JobExecutor(
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
     private readonly INotificationService _notificationService = notificationService;
     private readonly IJobOrchestrator _jobOrchestrator = jobOrchestratorFactory.Create(execution);
-    private readonly Execution _execution = execution;
 
-    public Execution Execution => _execution;
+    public Execution Execution { get; } = execution;
 
     public async Task RunAsync(CancellationToken cancellationToken)
     {
@@ -31,11 +30,11 @@ internal class JobExecutor(
         try
         {
             var process = Process.GetCurrentProcess();
-            using var context = _dbContextFactory.CreateDbContext();
-            context.Attach(_execution);
-            _execution.ExecutorProcessId = process.Id;
-            _execution.ExecutionStatus = ExecutionStatus.Running;
-            _execution.StartedOn = DateTimeOffset.Now;
+            await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            context.Attach(Execution);
+            Execution.ExecutorProcessId = process.Id;
+            Execution.ExecutionStatus = ExecutionStatus.Running;
+            Execution.StartedOn = DateTimeOffset.Now;
             await context.SaveChangesAsync(cancellationToken);
         }
         catch (Exception ex)
@@ -48,8 +47,8 @@ internal class JobExecutor(
         foreach (var validator in _validators)
         {
             var result = await validator.ValidateAsync(
-                execution: _execution,
-                onValidationFailed: (message) => UpdateExecutionFailedAsync($"Execution failed validation. {message}"),
+                execution: Execution,
+                onValidationFailed: message => UpdateExecutionFailedAsync($"Execution failed validation. {message}"),
                 cancellationToken);
 
             if (!result)
@@ -61,8 +60,8 @@ internal class JobExecutor(
         // Update execution parameter values for parameters that use expressions.
         try
         {
-            using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-            foreach (var parameter in _execution.ExecutionParameters.Where(p => p.UseExpression))
+            await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            foreach (var parameter in Execution.ExecutionParameters.Where(p => p.UseExpression))
             {
                 context.Attach(parameter);
                 parameter.ParameterValue = new(await parameter.EvaluateAsync());
@@ -71,7 +70,7 @@ internal class JobExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{executionId} Error evaluating execution parameters and saving evaluation results", _execution.ExecutionId);
+            _logger.LogError(ex, "{executionId} Error evaluating execution parameters and saving evaluation results", Execution.ExecutionId);
             await UpdateExecutionFailedAsync("Error evaluating execution parameters and saving evaluation results");
             return;
         }
@@ -81,20 +80,20 @@ internal class JobExecutor(
             // Don't pass cancellation token to notification task to not needlessly send notifications
             // if service is being shut down. Instead, pass new token which can be canceled if timeout is not reached.
             using var notificationCts = new CancellationTokenSource();
-            var notificationTask = _execution.OvertimeNotificationLimitMinutes > 0
-                ? Task.Delay(TimeSpan.FromMinutes(_execution.OvertimeNotificationLimitMinutes), notificationCts.Token)
+            var notificationTask = Execution.OvertimeNotificationLimitMinutes > 0
+                ? Task.Delay(TimeSpan.FromMinutes(Execution.OvertimeNotificationLimitMinutes), notificationCts.Token)
                 : Task.Delay(-1, notificationCts.Token); // infinite timeout
 
             var orchestrationTask = _jobOrchestrator.RunAsync(cancellationToken);
 
             await Task.WhenAny(notificationTask, orchestrationTask);
 
-            // If the notification task completed first, send long running notification.
+            // If the notification task completed first, send long-running notification.
             if (notificationTask.IsCompleted)
             {
-                await _notificationService.SendLongRunningExecutionNotificationAsync(_execution);
+                await _notificationService.SendLongRunningExecutionNotificationAsync(Execution);
             }
-            notificationCts.Cancel();
+            await notificationCts.CancelAsync();
             await orchestrationTask; // Wait for orchestration to finish.
         }
         catch (Exception ex)
@@ -105,10 +104,10 @@ internal class JobExecutor(
         // Update job execution status.
         try
         {
-            using var context = _dbContextFactory.CreateDbContext();
-            context.Attach(_execution);
-            _execution.ExecutionStatus = _execution.GetCalculatedStatus();
-            _execution.EndedOn = DateTimeOffset.Now;
+            await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+            context.Attach(Execution);
+            Execution.ExecutionStatus = Execution.GetCalculatedStatus();
+            Execution.EndedOn = DateTimeOffset.Now;
             await context.SaveChangesAsync(CancellationToken.None);
         }
         catch (Exception ex)
@@ -119,18 +118,18 @@ internal class JobExecutor(
         // In case of cancellation (service shutdown), do not send notifications.
         cancellationToken.ThrowIfCancellationRequested();
 
-        await _notificationService.SendCompletionNotificationAsync(_execution);
+        await _notificationService.SendCompletionNotificationAsync(Execution);
     }
 
-    public void Cancel(string username) => _jobOrchestrator?.CancelExecution(username);
+    public void Cancel(string username) => _jobOrchestrator.CancelExecution(username);
 
-    public void Cancel(string username, Guid stepId) => _jobOrchestrator?.CancelExecution(username, stepId);
+    public void Cancel(string username, Guid stepId) => _jobOrchestrator.CancelExecution(username, stepId);
 
     private async Task UpdateExecutionFailedAsync(string errorMessage)
     {
-        using var context = _dbContextFactory.CreateDbContext();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         
-        foreach (var attempt in _execution.StepExecutions.SelectMany(s => s.StepExecutionAttempts))
+        foreach (var attempt in Execution.StepExecutions.SelectMany(s => s.StepExecutionAttempts))
         {
             context.Attach(attempt);
             attempt.StartedOn = DateTimeOffset.Now;
@@ -139,10 +138,10 @@ internal class JobExecutor(
             attempt.AddError(errorMessage);
         }
 
-        context.Attach(_execution);
-        _execution.StartedOn = DateTimeOffset.Now;
-        _execution.EndedOn = DateTimeOffset.Now;
-        _execution.ExecutionStatus = ExecutionStatus.Failed;
+        context.Attach(Execution);
+        Execution.StartedOn = DateTimeOffset.Now;
+        Execution.EndedOn = DateTimeOffset.Now;
+        Execution.ExecutionStatus = ExecutionStatus.Failed;
         // Do not cancel saving failed status.
         await context.SaveChangesAsync();
     }

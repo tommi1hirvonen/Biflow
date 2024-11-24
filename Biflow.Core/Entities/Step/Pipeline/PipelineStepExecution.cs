@@ -16,7 +16,6 @@ public class PipelineStepExecution : StepExecution,
     public PipelineStepExecution(PipelineStep step, Execution execution) : base(step, execution)
     {
         ArgumentNullException.ThrowIfNull(step.PipelineName);
-        ArgumentNullException.ThrowIfNull(step.PipelineClientId);
 
         PipelineName = step.PipelineName;
         PipelineClientId = step.PipelineClientId;

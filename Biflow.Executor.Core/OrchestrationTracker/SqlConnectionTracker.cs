@@ -15,7 +15,7 @@ internal class SqlConnectionTracker(StepExecution stepExecution) : IOrchestratio
     {
         SqlStepExecution sql when sql.GetConnection() is MsSqlConnection { MaxConcurrentSqlSteps: >= 0 } ms => ms.MaxConcurrentSqlSteps,
         SqlStepExecution sql when sql.GetConnection() is SnowflakeConnection { MaxConcurrentSqlSteps: >= 0 } sf => sf.MaxConcurrentSqlSteps,
-        PackageStepExecution package when package.GetConnection() is MsSqlConnection { MaxConcurrentPackageSteps: >= 0 } ms => ms.MaxConcurrentPackageSteps,
+        PackageStepExecution package when package.GetConnection() is { MaxConcurrentPackageSteps: >= 0 } ms => ms.MaxConcurrentPackageSteps,
         _ => 0
     };
 
@@ -29,41 +29,42 @@ internal class SqlConnectionTracker(StepExecution stepExecution) : IOrchestratio
             return null;
         }
 
-        var (step, status) = value;
+        var (otherStep, status) = value;
 
         // The other step is actually the same step.
-        if (step.StepId == stepExecution.StepId && step.ExecutionId == stepExecution.ExecutionId)
+        if (otherStep.StepId == stepExecution.StepId && otherStep.ExecutionId == stepExecution.ExecutionId)
         {
             return null;
         }
 
-        // Only track steps of the same type to not mix Sql and Package step concurrencies.
-        if (step.StepType != stepExecution.StepType)
+        // Only track steps of the same type to not mix Sql and Package step concurrences.
+        if (otherStep.StepType != stepExecution.StepType)
         {
             return null;
         }
 
-        var connectionId = step switch
+        var otherConnectionId = otherStep switch
         {
             SqlStepExecution sql => sql.GetConnection()?.ConnectionId,
             PackageStepExecution package => package.GetConnection()?.ConnectionId,
             _ => null
         };
 
-        if (connectionId is Guid g1 && _connectionId is Guid g2 && g1 == g2)
+        // The connections are not the same.
+        if (otherConnectionId is not { } id1 || _connectionId is not { } id2 || id1 != id2)
         {
-            _others[step] = status;
-            return new()
-            {
-                ExecutionId = stepExecution.ExecutionId,
-                StepId = stepExecution.StepId,
-                MonitoredExecutionId = step.ExecutionId,
-                MonitoredStepId = step.StepId,
-                MonitoringReason = MonitoringReason.CommonConnection
-            };
+            return null;
         }
-
-        return null;
+        
+        _others[otherStep] = status;
+        return new()
+        {
+            ExecutionId = stepExecution.ExecutionId,
+            StepId = stepExecution.StepId,
+            MonitoredExecutionId = otherStep.ExecutionId,
+            MonitoredStepId = otherStep.StepId,
+            MonitoringReason = MonitoringReason.CommonConnection
+        };
     }
 
     public ObserverAction GetStepAction()

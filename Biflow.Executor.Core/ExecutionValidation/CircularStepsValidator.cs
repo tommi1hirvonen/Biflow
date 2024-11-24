@@ -32,14 +32,14 @@ internal class CircularStepsValidator(
             return false;
         }
 
-        if (!string.IsNullOrEmpty(circularSteps))
+        if (string.IsNullOrEmpty(circularSteps))
         {
-            var errorMessage = "Circular step dependencies detected:\n" + circularSteps;
-            await onValidationFailed(errorMessage);
-            return false;
+            return true;
         }
-
-        return true;
+        
+        var errorMessage = "Circular step dependencies detected:\n" + circularSteps;
+        await onValidationFailed(errorMessage);
+        return false;
     }
 
     private async Task<string?> GetCircularStepDependenciesAsync(Guid jobId, CancellationToken cancellationToken)
@@ -53,7 +53,7 @@ internal class CircularStepsValidator(
 
     private async Task<Dictionary<StepProjection, StepProjection[]>> ReadStepDependenciesAsync(Guid jobId, CancellationToken cancellationToken)
     {
-        using var context = _dbContextFactory.CreateDbContext();
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         var steps = await context.Dependencies
             .AsNoTracking()
             .Where(d => d.Step.JobId == jobId)

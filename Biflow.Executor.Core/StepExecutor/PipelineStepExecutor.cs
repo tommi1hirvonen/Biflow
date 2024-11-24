@@ -66,7 +66,7 @@ internal class PipelineStepExecutor(
 
         try
         {
-            using var context = _dbContextFactory.CreateDbContext();
+            await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.PipelineRunId = runId;
             await context.Set<PipelineStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
@@ -86,7 +86,7 @@ internal class PipelineStepExecutor(
             while (true)
             {
                 (status, message) = await GetPipelineRunWithRetriesAsync(client, step, runId, linkedCts.Token);
-                if (status == "InProgress" || status == "Queued")
+                if (status is "InProgress" or "Queued")
                 {
                     await Task.Delay(_pollingIntervalMs, linkedCts.Token);
                 }
@@ -118,11 +118,9 @@ internal class PipelineStepExecutor(
             attempt.AddOutput(message);
             return Result.Success;
         }
-        else
-        {
-            attempt.AddError(message);
-            return Result.Failure;
-        }
+
+        attempt.AddError(message);
+        return Result.Failure;
     }
 
     private async Task<(string Status, string Message)> GetPipelineRunWithRetriesAsync(
@@ -135,12 +133,12 @@ internal class PipelineStepExecutor(
             .Handle<Exception>()
             .WaitAndRetryAsync(
             retryCount: MaxRefreshRetries,
-            sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_pollingIntervalMs),
-            onRetry: (ex, waitDuration) =>
+            sleepDurationProvider: _ => TimeSpan.FromMilliseconds(_pollingIntervalMs),
+            onRetry: (ex, _) =>
                 _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting pipeline run status for run id {runId}", step.ExecutionId, step, runId));
 
-        return await policy.ExecuteAsync((cancellationToken) =>
-            client.GetPipelineRunAsync(runId, cancellationToken), cancellationToken);
+        return await policy.ExecuteAsync(cancellation =>
+            client.GetPipelineRunAsync(runId, cancellation), cancellationToken);
     }
 
     private async Task CancelAsync(

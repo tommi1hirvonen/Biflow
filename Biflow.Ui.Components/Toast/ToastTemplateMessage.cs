@@ -4,5 +4,5 @@ namespace Biflow.Ui.Components;
 
 public class ToastTemplateMessage : ToastMessage
 {
-    public required RenderFragment RenderFragment { get; set; }
+    public required RenderFragment RenderFragment { get; init; }
 }

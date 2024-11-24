@@ -8,9 +8,9 @@ internal class BlobStorageClientAttribute : ValidationAttribute
     protected override ValidationResult? IsValid(object? value, ValidationContext validationContext) =>
         validationContext.ObjectInstance switch
         {
-            BlobStorageClient client and { ConnectionMethod: BlobStorageConnectionMethod.Url } => IsUrlClientValid(client),
-            BlobStorageClient client and { ConnectionMethod: BlobStorageConnectionMethod.ConnectionString } => IsConnectionStringClientValid(client),
-            BlobStorageClient client and { ConnectionMethod: BlobStorageConnectionMethod.AppRegistration } => IsAppRegistrationClientValid(client),
+            BlobStorageClient { ConnectionMethod: BlobStorageConnectionMethod.Url } client => IsUrlClientValid(client),
+            BlobStorageClient { ConnectionMethod: BlobStorageConnectionMethod.ConnectionString } client => IsConnectionStringClientValid(client),
+            BlobStorageClient { ConnectionMethod: BlobStorageConnectionMethod.AppRegistration } client => IsAppRegistrationClientValid(client),
             BlobStorageClient client => new ValidationResult($"Unrecognized {nameof(client.ConnectionMethod)} value {client.ConnectionMethod}"),
             _ => new ValidationResult($"Object is not of type {nameof(BlobStorageClient)}")
         };
@@ -18,7 +18,7 @@ internal class BlobStorageClientAttribute : ValidationAttribute
     private static ValidationResult? IsUrlClientValid(BlobStorageClient client) =>
         client.StorageAccountUrl is not null
         ? ValidationResult.Success
-        : new ValidationResult("Storace account URL is required");
+        : new ValidationResult("Storage account URL is required");
 
     private static ValidationResult? IsConnectionStringClientValid(BlobStorageClient client) =>
         client.ConnectionString is not null

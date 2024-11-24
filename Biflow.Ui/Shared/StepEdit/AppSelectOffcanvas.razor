@@ -1,7 +1,7 @@
 ﻿@inject ToasterService Toaster
 @inject IHttpClientFactory HttpClientFactory
 
-<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" Title="Select app" OnClosed="OnClosed">
+<HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Regular" Title="Select app" OnClosed="OnClosed">
     <BodyTemplate>
         @if (AllowClientChange)
         {
@@ -10,9 +10,9 @@
                     <label class="form-label">App registration</label>
                     <div class="input-group input-group-sm">
                         <div class="input-group-text">
-                            <SvgIcon Icon="FeatherIcon.Globe" />
+                            <SvgIcon Icon="LucideIcon.Globe" />
                         </div>
-                        <select class="form-select form-select-sm" @bind="clientId">
+                        <select class="form-select form-select-sm" @bind="_clientId">
                             @foreach (var client in QlikClients ?? [])
                             {
                                 <option value="@client.QlikCloudEnvironmentId">@client.QlikCloudEnvironmentName</option>
@@ -22,7 +22,7 @@
                 </div>
                 <div class="col-auto">
                     <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="() => LoadAsync()">
-                        <SvgIcon Icon="FeatherIcon.RefreshCw" />
+                        <SvgIcon Icon="LucideIcon.RefreshCw" />
                         Refresh
                     </HxButton>
                 </div>
@@ -32,9 +32,9 @@
             <div class="col">
                 <div class="input-group">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Search" />
+                        <SvgIcon Icon="LucideIcon.Search" />
                     </div>
-                    <input type="search" class="form-control form-control-sm" placeholder="Search apps" @bind-value="appSearchTerm" @bind-value:event="oninput" />
+                    <input type="search" class="form-control form-control-sm" placeholder="Search apps" @bind-value="_appSearchTerm" @bind-value:event="oninput" />
                 </div>
             </div>
         </div>
@@ -43,16 +43,16 @@
                 ? "height: calc(100vh - 290px); overflow-y: scroll;"
                 : "height: calc(100vh - 210px); overflow-y: scroll;";
         }
-        <div class="row mt-3" style="height: calc(100vh - 210px); overflow-y: scroll;">
+        <div class="row mt-3" style="@style">
             <div class="col">
                 <div class="list-group group">
-                    @if (spaces is null)
+                    @if (_spaces is null)
                     {
                         <div class="list-group-item text-center">
                             <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
                         </div>
                     }
-                    else if (!spaces.Any())
+                    else if (!_spaces.Any())
                     {
                         <div class="list-group-item small">
                             No spaces with apps
@@ -60,8 +60,8 @@
                     }
                     else
                     {
-                        var filteredSpaces = spaces
-                            .Where(s => string.IsNullOrEmpty(appSearchTerm) || s.Apps.Any(a => a.Name.ContainsIgnoreCase(appSearchTerm)))
+                        var filteredSpaces = _spaces
+                            .Where(s => string.IsNullOrEmpty(_appSearchTerm) || s.Apps.Any(a => a.Name.ContainsIgnoreCase(_appSearchTerm)))
                             .OrderBy(s => s.Name)
                             .ToArray();
                         if (filteredSpaces.Length == 0)
@@ -73,23 +73,23 @@
                         foreach (var space in filteredSpaces)
                         {
                             var apps = space.Apps
-                                .Where(a => string.IsNullOrEmpty(appSearchTerm) || a.Name.ContainsIgnoreCase(appSearchTerm))
+                                .Where(a => string.IsNullOrEmpty(_appSearchTerm) || a.Name.ContainsIgnoreCase(_appSearchTerm))
                                 .OrderBy(a => a.Name)
                                 .ToArray();
-                            var expanded = !string.IsNullOrEmpty(appSearchTerm) || spaceExpandState.GetValueOrDefault(space);
+                            var expanded = !string.IsNullOrEmpty(_appSearchTerm) || spaceExpandState.GetValueOrDefault(space);
                             <div class="list-group-item list-group-item-action" style="cursor: pointer;" @onclick="() => spaceExpandState[space] = !expanded">
                                 <div class="row">
                                     <div class="col d-flex align-items-center small">
                                         @if (expanded)
                                         {
-                                            <SvgIcon Icon="FeatherIcon.ChevronDown" />
+                                            <SvgIcon Icon="LucideIcon.ChevronDown" />
                                         }
                                         else
                                         {
-                                            <SvgIcon Icon="FeatherIcon.ChevronRight" />
+                                            <SvgIcon Icon="LucideIcon.ChevronRight" />
                                         }
                                         &nbsp;
-                                        <SvgIcon Icon="FeatherIcon.Folder" />
+                                        <SvgIcon Icon="LucideIcon.Folder" />
                                         &nbsp;
                                         @space.Name
                                         <span class="ms-auto badge rounded-pill @(apps.Length > 0 ? "bg-primary" : "bg-secondary")">
@@ -102,12 +102,12 @@
                             {
                                 foreach (var app in apps)
                                 {
-                                    <div class="list-group-item list-group-item-action @(app == selectedApp ? "fw-bold bg-body" : null)" style="cursor: pointer;" @onclick="() => selectedApp = app">
+                                    <div class="list-group-item list-group-item-action @(app == _selectedApp ? "fw-bold bg-body" : null)" style="cursor: pointer;" @onclick="() => _selectedApp = app">
                                         <div class="row">
                                             <div class="col d-flex align-items-center ps-5 small">
-                                                <SvgIcon Icon="LucideIcon.FilePieChart" />
+                                                <SvgIcon Icon="LucideIcon.FileChartPie" />
                                                 &nbsp;
-                                                <HighlightableText Text="@app.Name" PartToHighlight="@appSearchTerm" />
+                                                <HighlightableText Text="@app.Name" PartToHighlight="@_appSearchTerm" />
                                             </div>
                                         </div>
                                     </div>
@@ -121,10 +121,10 @@
     </BodyTemplate>
     <FooterTemplate>
         <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectAppAsync"
-                  Enabled="selectedApp is not null">
+                  Enabled="_selectedApp is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
@@ -133,58 +133,58 @@
     public IEnumerable<QlikCloudEnvironment>? QlikClients { get; set; }
 
     [Parameter]
-    public bool AllowClientChange { get; set; } = false;
+    public bool AllowClientChange { get; set; }
 
     [Parameter] public EventCallback<QlikApp> OnAppSelected { get; set; }
 
     private readonly Dictionary<QlikSpace, bool> spaceExpandState = [];
 
-    private Guid clientId;
-    private HxOffcanvas? offcanvas;
-    private IEnumerable<QlikSpace>? spaces;
-    private QlikApp? selectedApp;    
-    private string appSearchTerm = "";
+    private Guid _clientId;
+    private HxOffcanvas? _offcanvas;
+    private IEnumerable<QlikSpace>? _spaces;
+    private QlikApp? _selectedApp;    
+    private string _appSearchTerm = "";
 
     public async Task ShowAsync(Guid? clientId = null)
     {
-        if (clientId is Guid id)
+        if (clientId is { } id)
         {
-            this.clientId = id;
+            _clientId = id;
         }
         else
         {
-            this.clientId = QlikClients?.FirstOrDefault()?.QlikCloudEnvironmentId ?? Guid.Empty;
+            _clientId = QlikClients?.FirstOrDefault()?.QlikCloudEnvironmentId ?? Guid.Empty;
         }
 
-        if (this.clientId == Guid.Empty)
+        if (_clientId == Guid.Empty)
         {
             Toaster.AddWarning("No Qlik clients found");
             return;
         }
 
-        await offcanvas.LetAsync(x => x.ShowAsync());
+        await _offcanvas.LetAsync(x => x.ShowAsync());
         await LoadAsync();
     }
 
     private async Task SelectAppAsync()
     {
-        ArgumentNullException.ThrowIfNull(selectedApp);
-        await OnAppSelected.InvokeAsync(selectedApp);
-        await offcanvas.LetAsync(x => x.HideAsync());
+        ArgumentNullException.ThrowIfNull(_selectedApp);
+        await OnAppSelected.InvokeAsync(_selectedApp);
+        await _offcanvas.LetAsync(x => x.HideAsync());
     }
 
     private async Task LoadAsync()
     {
-        spaces = null;
-        selectedApp = null;
+        _spaces = null;
+        _selectedApp = null;
         spaceExpandState.Clear();
 
         try
         {
-            var client = QlikClients?.FirstOrDefault(c => c.QlikCloudEnvironmentId == clientId);
+            var client = QlikClients?.FirstOrDefault(c => c.QlikCloudEnvironmentId == _clientId);
             ArgumentNullException.ThrowIfNull(client);
             using var connectedClient = client.CreateClient(HttpClientFactory);
-            spaces = await connectedClient.GetAppsAsync();
+            _spaces = await connectedClient.GetAppsAsync();
         }
         catch (Exception ex)
         {
@@ -195,7 +195,7 @@
     private void OnClosed()
     {
         spaceExpandState.Clear();
-        (selectedApp, spaces) = (null, null);
+        (_selectedApp, _spaces) = (null, null);
     }
     
 }

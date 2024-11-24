@@ -4,12 +4,11 @@ using Biflow.Ui.Shared.StepsBatchEdit;
 
 namespace Biflow.Ui.Shared.JobDetails;
 
-public partial class StepsList : ComponentBase
+public partial class StepsList(
+    ToasterService toaster,
+    IHxMessageBoxService confirmer,
+    IMediator mediator) : ComponentBase
 {
-    [Inject] private ToasterService Toaster { get; set; } = null!;
-    [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
-    [Inject] private IMediator Mediator { get; set; } = null!;
-    
     [CascadingParameter] public Job? Job { get; set; }
     
     [CascadingParameter(Name = "SortSteps")] public Action? SortSteps { get; set; }
@@ -34,64 +33,70 @@ public partial class StepsList : ComponentBase
 
     [Parameter] public List<DatabricksWorkspace>? DatabricksWorkspaces { get; set; }
 
+    [Parameter] public List<DbtAccount>? DbtAccounts { get; set; }
+
     [Parameter] public List<Credential>? Credentials { get; set; }
 
     [Parameter] public Guid? InitialStepId { get; set; }
 
-    private readonly HashSet<StepType> stepTypeFilter = [];
-    private readonly Dictionary<StepType, IStepEditModal?> stepEditModals = [];
-    private readonly HashSet<ConnectionBase> connectionFilter = [];
-    private readonly HashSet<StepTag> tagsFilterSet = [];
+    private readonly ToasterService _toaster = toaster;
+    private readonly IHxMessageBoxService _confirmer = confirmer;
+    private readonly IMediator _mediator = mediator;
+    private readonly HashSet<StepType> _stepTypeFilter = [];
+    private readonly Dictionary<StepType, IStepEditModal?> _stepEditModals = [];
+    private readonly HashSet<StepTag> _tagsFilterSet = [];
 
-    private HashSet<Step> selectedSteps = [];
-    private StepsBatchEditTagsModal? batchEditTagsModal;
-    private StepsBatchEditExecPhaseModal? batchEditExecPhaseModal;
-    private StepsBatchEditRenameModal? batchEditRenameModal;
-    private StepsBatchEditRetriesModal? batchEditRetriesModal;
-    private StepsBatchEditRetryIntervalModal? batchEditRetryIntervalModal;
-    private StepsCopyOffcanvas? stepsCopyOffcanvas;
-    private StepDetailsModal? stepDetailsModal;
-    private StepHistoryOffcanvas? stepHistoryOffcanvas;
-    private ExecuteModal? executeModal;
-    private AdvancedFiltersOffcanvas? advancedFiltersOffcanvas;
-    private string stepNameFilter = string.Empty;
-    private bool showDetails = false;
-    private bool initialStepModalShouldOpen = true;
-    private StateFilter stateFilter = StateFilter.All;
+    private HashSet<Step> _selectedSteps = [];
+    private StepsBatchEditTagsModal? _batchEditTagsModal;
+    private StepsBatchEditExecPhaseModal? _batchEditExecPhaseModal;
+    private StepsBatchEditRenameModal? _batchEditRenameModal;
+    private StepsBatchEditRetriesModal? _batchEditRetriesModal;
+    private StepsBatchEditRetryIntervalModal? _batchEditRetryIntervalModal;
+    private StepsCopyOffcanvas? _stepsCopyOffcanvas;
+    private StepDetailsModal? _stepDetailsModal;
+    private StepHistoryOffcanvas? _stepHistoryOffcanvas;
+    private ExecuteModal? _executeModal;
+    private AdvancedFiltersOffcanvas? _advancedFiltersOffcanvas;
+    private string _stepNameFilter = string.Empty;
+    private bool _showDetails = false;
+    private bool _initialStepModalShouldOpen = true;
+    private StateFilter _stateFilter = StateFilter.All;
+    private FilterDropdownMode _tagsFilterMode = FilterDropdownMode.Any;
 
     private enum StateFilter { All, Enabled, Disabled }
 
     private IEnumerable<Step> FilteredSteps => Steps?
-        .Where(step => stateFilter switch { StateFilter.Enabled => step.IsEnabled, StateFilter.Disabled => !step.IsEnabled, _ => true })
-        .Where(step => stepNameFilter.Length == 0 || (step.StepName?.ContainsIgnoreCase(stepNameFilter) ?? false))
-        .Where(step => tagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName)))
-        .Where(step => stepTypeFilter.Count == 0 || stepTypeFilter.Contains(step.StepType))
-        .Where(step => connectionFilter.Count == 0 || step is IHasConnection conn && connectionFilter.Any(f => f.ConnectionId == conn.ConnectionId))
-        .Where(step => advancedFiltersOffcanvas?.EvaluatePredicates(step) ?? true)
+        .Where(step => _stateFilter switch { StateFilter.Enabled => step.IsEnabled, StateFilter.Disabled => !step.IsEnabled, _ => true })
+        .Where(step => _stepNameFilter.Length == 0 || (step.StepName?.ContainsIgnoreCase(_stepNameFilter) ?? false))
+        .Where(step =>
+            (_tagsFilterMode is FilterDropdownMode.Any && (_tagsFilterSet.Count == 0 || _tagsFilterSet.Any(tag => step.Tags.Any(t => t.TagName == tag.TagName))))
+            || (_tagsFilterMode is FilterDropdownMode.All && _tagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))))
+        .Where(step => _stepTypeFilter.Count == 0 || _stepTypeFilter.Contains(step.StepType))
+        .Where(step => _advancedFiltersOffcanvas?.EvaluatePredicates(step) ?? true)
         ?? [];
 
     private IEnumerable<StepTag> Tags => Steps?
         .SelectMany(step => step.Tags)
         .DistinctBy(t => t.TagName)
-        .OrderBy(t => t.TagName)
+        .Order()
         .AsEnumerable()
         ?? [];
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (initialStepModalShouldOpen && InitialStepId is Guid stepId)
+        if (_initialStepModalShouldOpen && InitialStepId is { } stepId)
         {
             var step = Steps?.FirstOrDefault(s => s.StepId == stepId);
             if (step is not null)
             {
-                initialStepModalShouldOpen = false;
-                var editModal = stepEditModals.GetValueOrDefault(step.StepType);
+                _initialStepModalShouldOpen = false;
+                var editModal = _stepEditModals.GetValueOrDefault(step.StepType);
                 if (editModal is not null)
                 {
                     await editModal.ShowAsync(stepId);
                     return;
                 }
-                await stepDetailsModal.LetAsync(x => x.ShowAsync(step));
+                await _stepDetailsModal.LetAsync(x => x.ShowAsync(step));
             }
         }
     }
@@ -108,6 +113,7 @@ public partial class StepsList : ComponentBase
         StepType.Tabular => ((AsConnections?.Count ?? 0) == 0, "No Analysis Services connections defined"),
         StepType.Qlik => ((QlikCloudClients?.Count ?? 0) == 0, "No Qlik Cloud clients defined"),
         StepType.Databricks => ((DatabricksWorkspaces?.Count ?? 0) == 0, "No Databricks workspaces defined"),
+        StepType.Dbt => ((DbtAccounts?.Count ?? 0) == 0, "No dbt accounts defined"),
         _ => (false, "")
     };
 
@@ -118,32 +124,32 @@ public partial class StepsList : ComponentBase
     private async Task OpenStepEditModal(Guid stepId, StepType? stepType)
     {
         if (stepType is not null)
-            await stepEditModals[(StepType)stepType].LetAsync(x => x.ShowAsync(stepId));
+            await _stepEditModals[(StepType)stepType].LetAsync(x => x.ShowAsync(stepId));
     }
 
     private void ToggleAllStepsSelected(bool value)
     {
         if (value)
         {
-            var stepsToAdd = FilteredSteps.Where(s => !selectedSteps.Contains(s));
-            foreach (var s in stepsToAdd) selectedSteps.Add(s);
+            var stepsToAdd = FilteredSteps.Where(s => !_selectedSteps.Contains(s));
+            foreach (var s in stepsToAdd) _selectedSteps.Add(s);
         }
         else
         {
-            selectedSteps.Clear();
+            _selectedSteps.Clear();
         }
     }
 
     private async Task DeleteSelectedSteps()
     {
-        if (!await Confirmer.ConfirmAsync("Delete steps", $"Are you sure you want to delete {selectedSteps.Count} steps?"))
+        if (!await _confirmer.ConfirmAsync("Delete steps", $"Are you sure you want to delete {_selectedSteps.Count} steps?"))
         {
             return;
         }
         try
         {
-            await Mediator.SendAsync(new DeleteStepsCommand(selectedSteps));
-            foreach (var step in selectedSteps)
+            await _mediator.SendAsync(new DeleteStepsCommand(_selectedSteps));
+            foreach (var step in _selectedSteps)
             {
                 Steps?.Remove(step);
 
@@ -154,41 +160,41 @@ public partial class StepsList : ComponentBase
                     dependant.Dependencies.Remove(dependency);
                 }
             }
-            selectedSteps.Clear();
+            _selectedSteps.Clear();
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error deleting step", ex.Message);
+            _toaster.AddError("Error deleting step", ex.Message);
         }
     }
 
     private async Task ToggleEnabled(ChangeEventArgs args, Step step)
     {
-        bool value = (bool)args.Value!;
+        var value = (bool)args.Value!;
         try
         {
-            await Mediator.SendAsync(new ToggleStepsCommand(step.StepId, value));
+            await _mediator.SendAsync(new ToggleStepsCommand(step.StepId, value));
             step.IsEnabled = value;
             var message = value ? "Step enabled" : "Step disabled";
-            Toaster.AddSuccess(message, 2500);
+            _toaster.AddSuccess(message, 2500);
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error toggling step", ex.Message);
+            _toaster.AddError("Error toggling step", ex.Message);
         }
     }
 
     private async Task DeleteStep(Step step)
     {
-        if (!await Confirmer.ConfirmAsync("Delete step", $"Are you sure you want to delete \"{step.StepName}\"?"))
+        if (!await _confirmer.ConfirmAsync("Delete step", $"Are you sure you want to delete \"{step.StepName}\"?"))
         {
             return;
         }
         try
         {
-            await Mediator.SendAsync(new DeleteStepsCommand(step.StepId));
+            await _mediator.SendAsync(new DeleteStepsCommand(step.StepId));
             Steps?.Remove(step);
-            selectedSteps.Remove(step);
+            _selectedSteps.Remove(step);
 
             // Remove the deleted step from dependencies.
             foreach (var dependant in Steps?.Where(s => s.Dependencies.Any(d => d.DependantOnStepId == step.StepId)) ?? [])
@@ -199,7 +205,7 @@ public partial class StepsList : ComponentBase
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error deleting step", ex.Message);
+            _toaster.AddError("Error deleting step", ex.Message);
         }
     }
 
@@ -207,17 +213,15 @@ public partial class StepsList : ComponentBase
     {
         ArgumentNullException.ThrowIfNull(Job);
         var steps = copies.Where(s => s.JobId == Job.JobId).ToArray();
-        if (steps.Length > 0)
-        {
-            Steps?.AddRange(steps);
-            SortSteps?.Invoke();
-        }
+        if (steps.Length <= 0) return;
+        Steps?.AddRange(steps);
+        SortSteps?.Invoke();
     }
 
     private void OnStepSubmit(Step step)
     {
         var index = Steps?.FindIndex(s => s.StepId == step.StepId);
-        if (index is int i and >= 0)
+        if (index is { } i and >= 0)
         {
             Steps?.RemoveAt(i);
             Steps?.Insert(i, step);
@@ -229,11 +233,11 @@ public partial class StepsList : ComponentBase
 
         SortSteps?.Invoke();
 
-        var selectedStep = selectedSteps.FirstOrDefault(s => s.StepId == step.StepId);
+        var selectedStep = _selectedSteps.FirstOrDefault(s => s.StepId == step.StepId);
         if (selectedStep is not null)
         {
-            selectedSteps.Remove(selectedStep);
-            selectedSteps.Add(step);
+            _selectedSteps.Remove(selectedStep);
+            _selectedSteps.Add(step);
         }
     }
 
@@ -242,7 +246,7 @@ public partial class StepsList : ComponentBase
         foreach (var step in steps.ToArray())
         {
             var index = Steps?.FindIndex(s => s.StepId == step.StepId);
-            if (index is int i and >= 0)
+            if (index is { } i and >= 0)
             {
                 Steps?.RemoveAt(i);
                 Steps?.Insert(i, step);
@@ -255,17 +259,17 @@ public partial class StepsList : ComponentBase
 
         SortSteps?.Invoke();
 
-        selectedSteps = steps.ToHashSet();
+        _selectedSteps = steps.ToHashSet();
     }
 
     private async Task ToggleSelectedStepsEnabledAsync(bool enabled)
     {
-        var steps = selectedSteps
+        var steps = _selectedSteps
             .Where(s => s.IsEnabled != enabled)
             .ToArray();
         try
         {
-            await Mediator.SendAsync(new ToggleStepsCommand(steps, enabled));
+            await _mediator.SendAsync(new ToggleStepsCommand(steps, enabled));
             foreach (var step in steps)
             {
                 step.IsEnabled = enabled;
@@ -273,7 +277,7 @@ public partial class StepsList : ComponentBase
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error toggling steps", ex.Message);
+            _toaster.AddError("Error toggling steps", ex.Message);
         }
     }
 }

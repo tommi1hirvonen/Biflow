@@ -42,7 +42,7 @@ internal class AgentJobStepExecutor(
         // Start agent job execution
         try
         {
-            using var sqlConnection = new SqlConnection(connectionString);
+            await using var sqlConnection = new SqlConnection(connectionString);
             await connection.RunImpersonatedOrAsCurrentUserAsync(
                 () => sqlConnection.ExecuteAsync(
                     "EXEC msdb.dbo.sp_start_job @job_name = @AgentJobName",
@@ -66,7 +66,7 @@ internal class AgentJobStepExecutor(
             while (historyId is null)
             {
                 await Task.Delay(_pollingIntervalMs, linkedCts.Token);
-                using var sqlConnection = new SqlConnection(connectionString);
+                await using var sqlConnection = new SqlConnection(connectionString);
                 // [sp_help_jobactivity] returns one row describing the agent job's status.
                 // Column [job_history_id] will contain the history id of the agent job outcome when it has completed.
                 var status = await connection.RunImpersonatedOrAsCurrentUserAsync(
@@ -78,7 +78,7 @@ internal class AgentJobStepExecutor(
         }
         catch (OperationCanceledException ex)
         {
-            using var sqlConnection = new SqlConnection(connectionString);
+            await using var sqlConnection = new SqlConnection(connectionString);
             await connection.RunImpersonatedOrAsCurrentUserAsync(
                 () => sqlConnection.ExecuteAsync(
                     "EXEC msdb.dbo.sp_stop_job @job_name = @AgentJobName",
@@ -99,7 +99,7 @@ internal class AgentJobStepExecutor(
 
         try
         {
-            using var sqlConnection = new SqlConnection(connectionString);
+            await using var sqlConnection = new SqlConnection(connectionString);
 
             // Get the agent job outcome status using the history id.
             var status = await connection.RunImpersonatedOrAsCurrentUserAsync(
@@ -133,23 +133,20 @@ internal class AgentJobStepExecutor(
             var messageString = JsonSerializer.Serialize(messageRows, _serializerOptions);
             string? jobOutcome = messageRows.LastOrDefault()?.message;
 
-            // 0 = Failed, 1 = Succeeded, 2 = Retry, 3 = Canceled, 4 = In Progress
-            if (status == 1)
+            switch (status)
             {
-                attempt.AddOutput(messageString);
-                return Result.Success;
+                // 0 = Failed, 1 = Succeeded, 2 = Retry, 3 = Canceled, 4 = In Progress
+                case 1:
+                    attempt.AddOutput(messageString);
+                    return Result.Success;
+                case 0 or 3:
+                    attempt.AddError(messageString);
+                    return Result.Failure;
             }
-            else if (status == 0 || status == 3)
-            {
-                attempt.AddError(messageString);
-                return Result.Failure;
-            }
-            else
-            {
-                attempt.AddOutput(messageString);
-                attempt.AddError($"Unexpected agent job history run status ({status}) after execution.\n{jobOutcome}");
-                return Result.Failure;
-            }
+
+            attempt.AddOutput(messageString);
+            attempt.AddError($"Unexpected agent job history run status ({status}) after execution.\n{jobOutcome}");
+            return Result.Failure;
         }
         catch (Exception ex)
         {

@@ -26,13 +26,13 @@ public class JobFixture(DatabaseFixture fixture) : IAsyncLifetime
 
     public Job Job { get; private set; } = null!;
 
-    public string Username { get; } = fixture.Username;
+    public string Username { get; } = DatabaseFixture.Username;
 
     public Task DisposeAsync() => Task.CompletedTask;
 
     public async Task InitializeAsync()
     {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         Job = await context.Jobs.FirstAsync(job => job.JobName == "Test job 1");
     }
 }

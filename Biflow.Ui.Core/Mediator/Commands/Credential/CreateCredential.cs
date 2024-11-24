@@ -7,7 +7,7 @@ internal class CreateCredentialCommandHandler(IDbContextFactory<AppDbContext> db
 {
     public async Task Handle(CreateCredentialCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         context.Credentials.Add(request.Credential);
         await context.SaveChangesAsync(cancellationToken);
     }

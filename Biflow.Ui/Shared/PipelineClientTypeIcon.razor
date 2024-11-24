@@ -5,10 +5,10 @@
         <SvgIcon Icon="LucideIcon.Factory" />
         break;
     case PipelineClientType.Synapse:
-        <SvgIcon Icon="FeatherIcon.Cpu" />
+        <SvgIcon Icon="LucideIcon.Cpu" />
         break;
     default:
-        break;
+        throw new ArgumentOutOfRangeException();
 }
 
 @code {

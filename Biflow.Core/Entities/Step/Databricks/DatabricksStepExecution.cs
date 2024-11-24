@@ -13,8 +13,6 @@ public class DatabricksStepExecution : StepExecution,
 
     public DatabricksStepExecution(DatabricksStep step, Execution execution) : base(step, execution)
     {
-        ArgumentNullException.ThrowIfNull(step.DatabricksWorkspaceId);
-
         DatabricksStepSettings = step.DatabricksStepSettings;
         DatabricksWorkspaceId = step.DatabricksWorkspaceId;
         TimeoutMinutes = step.TimeoutMinutes;
@@ -55,7 +53,7 @@ public class DatabricksStepExecution : StepExecution,
     /// Set the private <see cref="DatabricksWorkspace"/> object used for containing a possible client reference.
     /// It can be later accessed using <see cref="GetWorkspace"/>.
     /// </summary>
-    /// <param name="client"><see cref="DatabricksWorkspace"/> reference to store.
+    /// <param name="workspace"><see cref="DatabricksWorkspace"/> reference to store.
     /// The DatabricksNotebookClientIds are compared and the value is set only if the ids match.</param>
     public void SetWorkspace(DatabricksWorkspace? workspace)
     {

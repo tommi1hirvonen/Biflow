@@ -7,7 +7,7 @@ internal class DeleteDataObjectCommandHandler(IDbContextFactory<AppDbContext> db
 {
     public async Task Handle(DeleteDataObjectCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var dataObject = await context.DataObjects
             .FirstOrDefaultAsync(d => d.ObjectId == request.ObjectId, cancellationToken);
         if (dataObject is not null)

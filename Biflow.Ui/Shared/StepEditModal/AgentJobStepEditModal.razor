@@ -10,7 +10,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.XOctagon" />
+                        <SvgIcon Icon="LucideIcon.OctagonX" />
                     </div>
                     <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 5rem;"></InputNumber>
                 </div>
@@ -25,16 +25,16 @@
             <div class="col-md-6 d-inline">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Database" />
+                        <SvgIcon Icon="LucideIcon.Database" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId">
-                        @foreach (var connection in MsSqlConnections ?? Enumerable.Empty<MsSqlConnection>())
+                        @foreach (var connection in MsSqlConnections)
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }
                     </InputSelect>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenAgentJobSelectOffcanvas">
-                        <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
+                        <SvgIcon Icon="LucideIcon.Ellipsis" />
                         Browse Agent jobs
                     </HxButton>
                 </div>
@@ -49,12 +49,12 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Server" />
+                        <SvgIcon Icon="LucideIcon.Server" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.AgentJobName" />
                 </div>
             </div>
         </div>
-        <AgentJobSelectOffcanvas @ref="agentJobSelectOffcanvas" Connection="Connection" OnAgentJobSelected="OnAgentJobSelected" />
+        <AgentJobSelectOffcanvas @ref="_agentJobSelectOffcanvas" Connection="Connection" OnAgentJobSelected="OnAgentJobSelected" />
     }
 </StepEditModalTemplate>

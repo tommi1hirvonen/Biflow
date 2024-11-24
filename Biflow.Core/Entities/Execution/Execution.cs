@@ -2,15 +2,8 @@
 
 namespace Biflow.Core.Entities;
 
-public class Execution
+public class Execution(string jobName, DateTimeOffset createdOn, ExecutionStatus executionStatus)
 {
-    public Execution(string jobName, DateTimeOffset createdOn, ExecutionStatus executionStatus)
-    {
-        JobName = jobName;
-        CreatedOn = createdOn;
-        ExecutionStatus = executionStatus;
-    }
-
     public Execution(Job job, string? createdBy, StepExecutionAttempt? parent = null) : this(job)
     {
         CreatedBy = createdBy;
@@ -28,13 +21,10 @@ public class Execution
         Notify = true;
     }
 
-    private Execution(Job job)
+    private Execution(Job job) : this(job.JobName, DateTimeOffset.Now, ExecutionStatus.NotStarted)
     {
         ExecutionId = Guid.NewGuid();
         JobId = job.JobId;
-        JobName = job.JobName;
-        CreatedOn = DateTimeOffset.Now;
-        ExecutionStatus = ExecutionStatus.NotStarted;
         ExecutionMode = job.ExecutionMode;
         StopOnFirstError = job.StopOnFirstError;
         MaxParallelSteps = job.MaxParallelSteps;
@@ -56,10 +46,10 @@ public class Execution
 
     [Display(Name = "Job")]
     [MaxLength(250)]
-    public string JobName { get; private set; }
+    public string JobName { get; private set; } = jobName;
 
     [Display(Name = "Created")]
-    public DateTimeOffset CreatedOn { get; private set; }
+    public DateTimeOffset CreatedOn { get; private set; } = createdOn;
 
     [Display(Name = "Started")]
     public DateTimeOffset? StartedOn { get; set; }
@@ -68,7 +58,7 @@ public class Execution
     public DateTimeOffset? EndedOn { get; set; }
 
     [Display(Name = "Status")]
-    public ExecutionStatus ExecutionStatus { get; set; }
+    public ExecutionStatus ExecutionStatus { get; set; } = executionStatus;
 
     [Display(Name = "Dependency mode")]
     public ExecutionMode ExecutionMode { get; private set; }

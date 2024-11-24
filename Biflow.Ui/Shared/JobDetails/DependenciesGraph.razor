@@ -1,13 +1,8 @@
-﻿@inject ToasterService Toaster
-@inject IDbContextFactory<AppDbContext> DbFactory
-@inject IHxMessageBoxService Confirmer
-@inject IMediator Mediator
-@inject NavigationManager NavigationManager
-
+﻿
 @*CSS definitions for the dependency graph nodes and paths created in site.js through JSInterop.*@
 <style>
     html, body {
-        height: 100%;
+    height: 100%;
     }
 </style>
 
@@ -21,13 +16,13 @@
 }
 
 <div class="row align-items-end mb-3">
-    <div class="col-xl-5 col-lg-5 col-12">
+    <div class="col" style="max-width: 40rem;">
         <HxAutosuggest TValue="Guid?"
                        TItem="StepProjection"
-                       @bind-Value="stepFilter"
+                       @bind-Value="_stepFilter"
                        @bind-Value:after="LoadGraphAsync"
                        DataProvider="ProvideSuggestions"
-                       ItemFromValueResolver="v => Task.FromResult(stepSlims?.FirstOrDefault(s => s.StepId == v))"
+                       ItemFromValueResolver="v => Task.FromResult(_stepSlims?.FirstOrDefault(s => s.StepId == v)!)"
                        ValueSelector="item => item.StepId"
                        TextSelector="@(item => item.StepName ?? "")"
                        MinimumLength="0"
@@ -44,30 +39,30 @@
             </EmptyTemplate>
         </HxAutosuggest>
     </div>
-    <div class="col-lg-auto d-flex flex-row align-items-end">
+    <div class="col-xxl-auto mt-xxl-0 mt-3 d-flex flex-row align-items-end">
         <div class="form-group">
             <label class="form-label">Depth backwards</label>
             <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal backwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
                 <ChildContent>
                     <span style="cursor: pointer;">
-                        <SvgIcon Icon="FeatherIcon.Info" />
+                        <SvgIcon Icon="LucideIcon.Info" />
                     </span>
                 </ChildContent>
             </HxPopover>
-            <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthBackwards" disabled=@(stepFilter is null) style="max-width: 9rem;" />
+            <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthBackwards" disabled=@(_stepFilter is null) style="max-width: 9rem;" />
         </div>
         <div class="form-group ms-3">
             <label class="form-label">Depth forwards</label>
             <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal forwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
                 <ChildContent>
                     <span style="cursor: pointer;">
-                        <SvgIcon Icon="FeatherIcon.Info" />
+                        <SvgIcon Icon="LucideIcon.Info" />
                     </span>
                 </ChildContent>
             </HxPopover>
-            <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthForwards" disabled=@(stepFilter is null) style="max-width: 9rem;" />
+            <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthForwards" disabled=@(_stepFilter is null) style="max-width: 9rem;" />
         </div>
-        <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="ms-3">
+        <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="mx-3">
             <HxButton CssClass="btn-auto" Size="ButtonSize.Small" Color="ThemeColor.None" OnClick="LoadGraphAsync">
                 Apply depth filters
             </HxButton>
@@ -80,37 +75,37 @@
                         <div class="col">
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" id="direction_radio_admin"
-                                       checked=@(direction == DependencyGraphDirection.LeftToRight)
-                                       @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.LeftToRight))">
+                                       checked=@(_direction == DependencyGraphDirection.LeftToRight)
+                                       @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.LeftToRight))">
                                 <label class="form-check-label fw-normal" for="direction_radio_admin">
-                                    <SvgIcon Icon="FeatherIcon.ArrowRight" />
+                                    <SvgIcon Icon="LucideIcon.MoveRight"/>
                                     Left to right
                                 </label>
                             </div>
                             <div class="form-check mt-1">
                                 <input class="form-check-input" type="radio" id="direction_radio_editor"
-                                       checked=@(direction == DependencyGraphDirection.RightToLeft)
-                                       @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.RightToLeft))">
+                                       checked=@(_direction == DependencyGraphDirection.RightToLeft)
+                                       @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.RightToLeft))">
                                 <label class="form-check-label fw-normal" for="direction_radio_editor">
-                                    <SvgIcon Icon="FeatherIcon.ArrowLeft" />
+                                    <SvgIcon Icon="LucideIcon.MoveLeft"/>
                                     Right to left
                                 </label>
                             </div>
                             <div class="form-check mt-1">
                                 <input class="form-check-input" type="radio" id="direction_radio_operator"
-                                       checked=@(direction == DependencyGraphDirection.TopToBottom)
-                                       @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.TopToBottom))">
+                                       checked=@(_direction == DependencyGraphDirection.TopToBottom)
+                                       @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.TopToBottom))">
                                 <label class="form-check-label fw-normal" for="direction_radio_operator">
-                                    <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                                    <SvgIcon Icon="LucideIcon.MoveDown"/>
                                     Top to bottom
                                 </label>
                             </div>
                             <div class="form-check mt-1">
                                 <input class="form-check-input" type="radio" id="direction_radio_viewer"
-                                       checked=@(direction == DependencyGraphDirection.BottomToTop)
-                                       @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.BottomToTop))">
+                                       checked=@(_direction == DependencyGraphDirection.BottomToTop)
+                                       @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.BottomToTop))">
                                 <label class="form-check-label fw-normal" for="direction_radio_viewer">
-                                    <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                                    <SvgIcon Icon="LucideIcon.MoveUp"/>
                                     Bottom to top
                                 </label>
                             </div>
@@ -119,17 +114,35 @@
                 </HxDropdownContent>
             </HxDropdownButtonGroup>
         </HxButtonGroup>
+        <FilterDropdown TItem="StepTag"
+                        FilterSet="_tagsFilterSet"
+                        Items="Tags"
+                        IdSelector="tag => tag.TagId.ToString()"
+                        TextSelector="tag => tag.TagName"
+                        IsSearchable
+                        @bind-Mode="_tagsFilterMode"
+                        OnChange="LoadGraphAsync"
+                        ShowPill="_stepFilter is null"
+                        Enabled="_stepFilter is null">
+            <TitleTemplate>
+                <SvgIcon Icon="LucideIcon.Tag" />
+                Tags
+            </TitleTemplate>
+            <ItemTemplate Context="item">
+                <TagBadge Tag="item" />
+            </ItemTemplate>
+        </FilterDropdown>
     </div>
 
 </div>
 
 @if (Job is not null)
 {
-    <DependencyGraph @ref="dependencyGraph"
-                     TItem="StepProjection"
-                     ItemFromNodeIdSelector="nodeId => stepSlims?.FirstOrDefault(s => s.StepId.ToString() == nodeId)"
-                     AfterRender="LoadGraphAsync"
-                     CssClass="dependency-graph">
+    <DependencyGraph @ref="_dependencyGraph"
+    TItem="StepProjection"
+    ItemFromNodeIdSelector="nodeId => _stepSlims?.FirstOrDefault(s => s.StepId.ToString() == nodeId)"
+    AfterRender="LoadGraphAsync"
+    CssClass="dependency-graph">
         <ContextMenuTemplate Context="step">
             <li>
                 <h6 class="dropdown-header">
@@ -138,8 +151,8 @@
                 </h6>
             </li>
             <li>
-                <span class="dropdown-item" role="button" @onclick="async () => { stepFilter = step.StepId; await LoadGraphAsync();}">
-                    <SvgIcon Icon="FeatherIcon.Filter" />
+                <span class="dropdown-item" role="button" @onclick="async () => { _stepFilter = step.StepId; await LoadGraphAsync();}">
+                    <SvgIcon Icon="LucideIcon.Filter" />
                     Limit graph to this
                 </span>
             </li>
@@ -148,7 +161,7 @@
                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                     <li>
                         <span class="dropdown-item" role="button" @onclick="() => OpenStepEditModalAsync(step)">
-                            <SvgIcon Icon="FeatherIcon.Edit2" />
+                            <SvgIcon Icon="LucideIcon.Pen" />
                             Edit
                         </span>
                     </li>
@@ -156,21 +169,21 @@
                         @if (step.IsEnabled)
                         {
                             <span class="dropdown-item" role="button" @onclick="() => ToggleEnabled(step, false)">
-                                <SvgIcon Icon="FeatherIcon.ToggleLeft" />
+                                <SvgIcon Icon="LucideIcon.ToggleLeft" />
                                 Disable
                             </span>
                         }
                         else
                         {
                             <span class="dropdown-item" role="button" @onclick="() => ToggleEnabled(step, true)">
-                                <SvgIcon Icon="FeatherIcon.ToggleRight" />
+                                <SvgIcon Icon="LucideIcon.ToggleRight" />
                                 Enable
                             </span>
                         }
                     </li>
                     <li>
                         <span class="dropdown-item" role="button" @onclick="() => DeleteStep(step)">
-                            <SvgIcon Icon="FeatherIcon.Trash2" />
+                            <SvgIcon Icon="LucideIcon.Trash2" />
                             Delete...
                         </span>
                     </li>
@@ -180,14 +193,14 @@
             {
                 <li>
                     <a class="dropdown-item" role="button" href="@($"jobs/{step.JobId}/steps")">
-                        <SvgIcon Icon="FeatherIcon.ArrowRight" />
+                        <SvgIcon Icon="LucideIcon.MoveRight" />
                         Go to job
                     </a>
                 </li>
             }
             <li>
-                <span class="dropdown-item" role="button" @onclick="() => stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
-                    <SvgIcon Icon="FeatherIcon.Activity" />
+                <span class="dropdown-item" role="button" @onclick="() => _stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
+                    <SvgIcon Icon="LucideIcon.Activity" />
                     History
                 </span>
             </li>
@@ -195,406 +208,114 @@
     </DependencyGraph>
 }
 
-<StepHistoryOffcanvas @ref="stepHistoryOffcanvas" />
+<StepHistoryOffcanvas @ref="_stepHistoryOffcanvas" />
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
-    <SqlStepEditModal @ref="stepEditModals[StepType.Sql]"
-        SqlConnections="SqlConnections"
-        MsSqlConnections="MsSqlConnections"
-        AsConnections="AsConnections"
-        AppRegistrations="AppRegistrations"
-        QlikClients="QlikCloudClients"
-        DatabricksWorkspaces="DatabricksWorkspaces"
-        Credentials="Credentials"
-        OnStepSubmit="OnStepSubmit" />
-    <TabularStepEditModal @ref="stepEditModals[StepType.Tabular]"
-        SqlConnections="SqlConnections"
-        MsSqlConnections="MsSqlConnections"
-        AsConnections="AsConnections"
-        AppRegistrations="AppRegistrations"
-        QlikClients="QlikCloudClients"
-        DatabricksWorkspaces="DatabricksWorkspaces"
-        Credentials="Credentials"
-        OnStepSubmit="OnStepSubmit" />
-    <DatasetStepEditModal @ref="stepEditModals[StepType.Dataset]"
-        SqlConnections="SqlConnections"
-        MsSqlConnections="MsSqlConnections"
-        AsConnections="AsConnections"
-        AppRegistrations="AppRegistrations"
-        QlikClients="QlikCloudClients"
-        DatabricksWorkspaces="DatabricksWorkspaces"
-        Credentials="Credentials"
-        OnStepSubmit="OnStepSubmit" />
-    <ExeStepEditModal @ref="stepEditModals[StepType.Exe]"
-        SqlConnections="SqlConnections"
-        MsSqlConnections="MsSqlConnections"
-        AsConnections="AsConnections"
-        AppRegistrations="AppRegistrations"
-        QlikClients="QlikCloudClients"
-        DatabricksWorkspaces="DatabricksWorkspaces"
-        Credentials="Credentials"
-        OnStepSubmit="OnStepSubmit" />
-    <JobStepEditModal @ref="stepEditModals[StepType.Job]"
-        SqlConnections="SqlConnections"
-        MsSqlConnections="MsSqlConnections"
-        AsConnections="AsConnections"
-        AppRegistrations="AppRegistrations"
-        QlikClients="QlikCloudClients"
-        DatabricksWorkspaces="DatabricksWorkspaces"
-        OnStepSubmit="OnStepSubmit" />
-    <PackageStepEditModal @ref="stepEditModals[StepType.Package]"
-        SqlConnections="SqlConnections"
-        MsSqlConnections="MsSqlConnections"
-        AsConnections="AsConnections"
-        AppRegistrations="AppRegistrations"
-        QlikClients="QlikCloudClients"
-        DatabricksWorkspaces="DatabricksWorkspaces"
-        Credentials="Credentials"
-        OnStepSubmit="OnStepSubmit" />
-    <PipelineStepEditModal @ref="stepEditModals[StepType.Pipeline]"
-        SqlConnections="SqlConnections"
-        MsSqlConnections="MsSqlConnections"
-        AsConnections="AsConnections"
-        AppRegistrations="AppRegistrations"
-        QlikClients="QlikCloudClients"
-        DatabricksWorkspaces="DatabricksWorkspaces"
-        PipelineClients="PipelineClients"
-        Credentials="Credentials"
-        OnStepSubmit="OnStepSubmit" />
-    <FunctionStepEditModal @ref="stepEditModals[StepType.Function]"
-        SqlConnections="SqlConnections"
-        MsSqlConnections="MsSqlConnections"
-        AsConnections="AsConnections"
-        AppRegistrations="AppRegistrations"
-        QlikClients="QlikCloudClients"
-        DatabricksWorkspaces="DatabricksWorkspaces"
-        FunctionApps="FunctionApps"
-        Credentials="Credentials"
-        OnStepSubmit="OnStepSubmit" />
-    <AgentJobStepEditModal @ref="stepEditModals[StepType.AgentJob]"
-        SqlConnections="SqlConnections"
-        MsSqlConnections="MsSqlConnections"
-        AsConnections="AsConnections"
-        AppRegistrations="AppRegistrations"
-        QlikClients="QlikCloudClients"
-        DatabricksWorkspaces="DatabricksWorkspaces"
-        Credentials="Credentials"
-        OnStepSubmit="OnStepSubmit" />
-    <EmailStepEditModal @ref="stepEditModals[StepType.Email]"
-        SqlConnections="SqlConnections"
-        MsSqlConnections="MsSqlConnections"
-        AsConnections="AsConnections"
-        AppRegistrations="AppRegistrations"
-        QlikClients="QlikCloudClients"
-        DatabricksWorkspaces="DatabricksWorkspaces"
-        Credentials="Credentials"
-        OnStepSubmit="OnStepSubmit" />
-    <QlikStepEditModal @ref="stepEditModals[StepType.Qlik]"
-        SqlConnections="SqlConnections"
-        MsSqlConnections="MsSqlConnections"
-        AsConnections="AsConnections"
-        AppRegistrations="AppRegistrations"
-        QlikClients="QlikCloudClients"
-        DatabricksWorkspaces="DatabricksWorkspaces"
-        Credentials="Credentials"
-        OnStepSubmit="OnStepSubmit" />
-    <DatabricksStepEditModal @ref="stepEditModals[StepType.Databricks]"
-        SqlConnections="SqlConnections"
-        MsSqlConnections="MsSqlConnections"
-        AsConnections="AsConnections"
-        AppRegistrations="AppRegistrations"
-        QlikClients="QlikCloudClients"
-        DatabricksWorkspaces="DatabricksWorkspaces"
-        Credentials="Credentials"
-        OnStepSubmit="OnStepSubmit" />
+    <SqlStepEditModal @ref="_stepEditModals[StepType.Sql]"
+                      SqlConnections="SqlConnections"
+                      MsSqlConnections="MsSqlConnections"
+                      AsConnections="AsConnections"
+                      AppRegistrations="AppRegistrations"
+                      QlikClients="QlikCloudClients"
+                      Credentials="Credentials"
+                      OnStepSubmit="OnStepSubmit" />
+    <TabularStepEditModal @ref="_stepEditModals[StepType.Tabular]"
+                          SqlConnections="SqlConnections"
+                          MsSqlConnections="MsSqlConnections"
+                          AsConnections="AsConnections"
+                          AppRegistrations="AppRegistrations"
+                          QlikClients="QlikCloudClients"
+                          Credentials="Credentials"
+                          OnStepSubmit="OnStepSubmit" />
+    <DatasetStepEditModal @ref="_stepEditModals[StepType.Dataset]"
+                          SqlConnections="SqlConnections"
+                          MsSqlConnections="MsSqlConnections"
+                          AsConnections="AsConnections"
+                          AppRegistrations="AppRegistrations"
+                          QlikClients="QlikCloudClients"
+                          Credentials="Credentials"
+                          OnStepSubmit="OnStepSubmit" />
+    <ExeStepEditModal @ref="_stepEditModals[StepType.Exe]"
+                      SqlConnections="SqlConnections"
+                      MsSqlConnections="MsSqlConnections"
+                      AsConnections="AsConnections"
+                      AppRegistrations="AppRegistrations"
+                      QlikClients="QlikCloudClients"
+                      Credentials="Credentials"
+                      OnStepSubmit="OnStepSubmit" />
+    <JobStepEditModal @ref="_stepEditModals[StepType.Job]"
+                      SqlConnections="SqlConnections"
+                      MsSqlConnections="MsSqlConnections"
+                      AsConnections="AsConnections"
+                      AppRegistrations="AppRegistrations"
+                      QlikClients="QlikCloudClients"
+                      OnStepSubmit="OnStepSubmit" />
+    <PackageStepEditModal @ref="_stepEditModals[StepType.Package]"
+                          SqlConnections="SqlConnections"
+                          MsSqlConnections="MsSqlConnections"
+                          AsConnections="AsConnections"
+                          AppRegistrations="AppRegistrations"
+                          QlikClients="QlikCloudClients"
+                          Credentials="Credentials"
+                          OnStepSubmit="OnStepSubmit" />
+    <PipelineStepEditModal @ref="_stepEditModals[StepType.Pipeline]"
+                           SqlConnections="SqlConnections"
+                           MsSqlConnections="MsSqlConnections"
+                           AsConnections="AsConnections"
+                           AppRegistrations="AppRegistrations"
+                           QlikClients="QlikCloudClients"
+                           PipelineClients="PipelineClients"
+                           Credentials="Credentials"
+                           OnStepSubmit="OnStepSubmit" />
+    <FunctionStepEditModal @ref="_stepEditModals[StepType.Function]"
+                           SqlConnections="SqlConnections"
+                           MsSqlConnections="MsSqlConnections"
+                           AsConnections="AsConnections"
+                           AppRegistrations="AppRegistrations"
+                           QlikClients="QlikCloudClients"
+                           FunctionApps="FunctionApps"
+                           Credentials="Credentials"
+                           OnStepSubmit="OnStepSubmit" />
+    <AgentJobStepEditModal @ref="_stepEditModals[StepType.AgentJob]"
+                           SqlConnections="SqlConnections"
+                           MsSqlConnections="MsSqlConnections"
+                           AsConnections="AsConnections"
+                           AppRegistrations="AppRegistrations"
+                           QlikClients="QlikCloudClients"
+                           Credentials="Credentials"
+                           OnStepSubmit="OnStepSubmit" />
+    <EmailStepEditModal @ref="_stepEditModals[StepType.Email]"
+                        SqlConnections="SqlConnections"
+                        MsSqlConnections="MsSqlConnections"
+                        AsConnections="AsConnections"
+                        AppRegistrations="AppRegistrations"
+                        QlikClients="QlikCloudClients"
+                        Credentials="Credentials"
+                        OnStepSubmit="OnStepSubmit" />
+    <QlikStepEditModal @ref="_stepEditModals[StepType.Qlik]"
+                       SqlConnections="SqlConnections"
+                       MsSqlConnections="MsSqlConnections"
+                       AsConnections="AsConnections"
+                       AppRegistrations="AppRegistrations"
+                       QlikClients="QlikCloudClients"
+                       Credentials="Credentials"
+                       OnStepSubmit="OnStepSubmit" />
+    <DatabricksStepEditModal @ref="_stepEditModals[StepType.Databricks]"
+                             SqlConnections="SqlConnections"
+                             MsSqlConnections="MsSqlConnections"
+                             AsConnections="AsConnections"
+                             AppRegistrations="AppRegistrations"
+                             QlikClients="QlikCloudClients"
+                             DatabricksWorkspaces="DatabricksWorkspaces"
+                             Credentials="Credentials"
+                             OnStepSubmit="OnStepSubmit" />
+    <DbtStepEditModal @ref="_stepEditModals[StepType.Dbt]"
+                      SqlConnections="SqlConnections"
+                      MsSqlConnections="MsSqlConnections"
+                      AsConnections="AsConnections"
+                      AppRegistrations="AppRegistrations"
+                      QlikClients="QlikCloudClients"
+                      DbtAccounts="DbtAccounts"
+                      Credentials="Credentials"
+                      OnStepSubmit="OnStepSubmit" />
 </AuthorizeView>
-
-@code {
-    [CascadingParameter] public Job? Job { get; set; }
-
-    [CascadingParameter] public List<Step>? Steps { get; set; }
-
-    [CascadingParameter(Name = "SortSteps")] public Action? SortSteps { get; set; }
-
-    [Parameter] public List<ConnectionBase>? SqlConnections { get; set; }
-
-    [Parameter] public List<MsSqlConnection>? MsSqlConnections { get; set; }
-
-    [Parameter] public List<AnalysisServicesConnection>? AsConnections { get; set; }
-
-    [Parameter] public List<PipelineClient>? PipelineClients { get; set; }
-
-    [Parameter] public List<AppRegistration>? AppRegistrations { get; set; }
-
-    [Parameter] public List<FunctionApp>? FunctionApps { get; set; }
-
-    [Parameter] public List<QlikCloudEnvironment>? QlikCloudClients { get; set; }
-
-    [Parameter] public List<DatabricksWorkspace>? DatabricksWorkspaces { get; set; }
-
-    [Parameter] public List<Credential>? Credentials { get; set; }
-
-    [Parameter] public Guid? InitialStepId { get; set; }
-
-    private readonly Dictionary<StepType, IStepEditModal?> stepEditModals = [];
-
-    private DependencyGraph<StepProjection>? dependencyGraph;
-    private StepHistoryOffcanvas? stepHistoryOffcanvas;
-    private Guid? stepFilter;
-    private DependencyGraphDirection direction = DependencyGraphDirection.LeftToRight;
-    private List<StepProjection>? stepSlims;
-
-    private int FilterDepthBackwards
-    {
-        get => _filterDepthBackwards;
-        set => _filterDepthBackwards = value >= 0 ? value : _filterDepthBackwards;
-    }
-
-    private int _filterDepthBackwards;
-
-    private int FilterDepthForwards
-    {
-        get => _filterDepthForwards;
-        set => _filterDepthForwards = value >= 0 ? value : _filterDepthForwards;
-    }
-
-    private int _filterDepthForwards;
-
-    protected override void OnAfterRender(bool firstRender)
-    {
-        if (firstRender)
-        {
-            if (InitialStepId is Guid filterStepId)
-            {
-                stepFilter = filterStepId;
-                StateHasChanged();
-            }
-        }
-    }
-
-    private Task SetDirectionAsync(DependencyGraphDirection direction)
-    {
-        if (this.direction == direction)
-        {
-            return Task.CompletedTask;
-        }
-        this.direction = direction;
-        return LoadGraphAsync();
-    }
-
-    private async Task LoadGraphAsync()
-    {
-        ArgumentNullException.ThrowIfNull(Job);
-        ArgumentNullException.ThrowIfNull(dependencyGraph);
-
-        using var context = await DbFactory.CreateDbContextAsync();
-        stepSlims = await context.Steps
-            .AsNoTrackingWithIdentityResolution()
-            .IgnoreQueryFilters()
-            .Where(s => s.JobId == Job.JobId
-                    || context.Dependencies.Any(d => d.DependantOnStepId == s.StepId && d.Step.JobId == Job.JobId)
-                    || context.Dependencies.Any(d => d.StepId == s.StepId && d.DependantOnStep.JobId == Job.JobId))
-            .Select(s => new StepProjection(
-                s.StepId,
-                s.JobId,
-                s.Job.JobName,
-                s.StepName,
-                s.StepType,
-                s.ExecutionPhase,
-                s.IsEnabled,
-                Array.Empty<StepTag>(),
-                s.Dependencies.Select(d => new DependencyProjection(d.StepId, d.DependantOnStepId, d.DependencyType)).ToArray()))
-            .ToListAsync();
-
-        List<DependencyGraphNode> nodes;
-        List<DependencyGraphEdge> edges;
-        if (stepFilter is null)
-        {
-            nodes = stepSlims.Select(step => new DependencyGraphNode(
-                Id: step.StepId.ToString(),
-                Name: step.StepName ?? "",
-                CssClass: $"{(step.IsEnabled ? "enabled" : "disabled")} {(step.JobId != Job.JobId ? "external" : "internal")}",
-                TooltipText: step.JobId == Job.JobId ? $"{step.StepType}" : $"{step.StepType}, {step.JobName}",
-                EnableOnClick: true
-            )).ToList();
-            edges = stepSlims
-                .SelectMany(step => step.Dependencies)
-                .Where(d => stepSlims.Any(s => s.StepId == d.DependentOnStepId))
-                .Select(dep => new DependencyGraphEdge(
-                    Id: dep.StepId.ToString(),
-                    DependsOnId: dep.DependentOnStepId.ToString(),
-                    CssClass: dep.DependencyType.ToString().ToLower()
-                )).ToList();
-        }
-        else
-        {
-            var startStep = stepSlims.FirstOrDefault(s => s.StepId == stepFilter);
-            if (startStep is not null)
-            {
-                var steps = RecurseDependenciesBackward(startStep, stepSlims, new(), 0);
-                steps.Remove(startStep);
-                steps = RecurseDependenciesForward(startStep, stepSlims, steps, 0);
-
-                nodes = steps.Select(step => new DependencyGraphNode(
-                    Id: step.StepId.ToString(),
-                    Name: step.StepName ?? "",
-                    CssClass: $"{(step.IsEnabled ? "enabled" : "disabled")} {(step.JobId != Job.JobId ? "external" : "internal")} {(step.StepId == stepFilter ? "selected" : null)}",
-                    TooltipText: $"{step.StepType}",
-                    EnableOnClick: true
-                )).ToList();
-                edges = stepSlims
-                    .SelectMany(step => step.Dependencies)
-                    .Where(d => steps.Any(s => d.DependentOnStepId == s.StepId) && steps.Any(s => d.StepId == s.StepId)) // only include dependencies whose step is included
-                    .Select(dep => new DependencyGraphEdge(
-                        Id: dep.StepId.ToString(),
-                        DependsOnId: dep.DependentOnStepId.ToString(),
-                        CssClass: dep.DependencyType.ToString().ToLower()
-                    )).ToList();
-            }
-            else
-            {
-                return;
-            }
-        }
-
-        await dependencyGraph.DrawAsync(nodes, edges, direction);
-    }
-
-    private List<StepProjection> RecurseDependenciesBackward(StepProjection step, List<StepProjection> allSteps, List<StepProjection> processedSteps, int depth)
-    {
-        // If the step was already handled, return.
-        // This way we do not loop indefinitely in case of circular dependencies.
-        if (processedSteps.Any(s => s.StepId == step.StepId))
-        {
-            return processedSteps;
-        }
-
-        if (depth++ > FilterDepthBackwards && FilterDepthBackwards > 0)
-        {
-            depth--;
-            return processedSteps;
-        }
-
-        processedSteps.Add(step);
-
-        // Get dependency steps.
-        List<StepProjection> dependencySteps = allSteps.Where(s => step.Dependencies.Any(d => d.DependentOnStepId == s.StepId)).ToList();
-
-        // Loop through the dependencies and handle them recursively.
-        foreach (var depencyStep in dependencySteps)
-        {
-            RecurseDependenciesBackward(depencyStep, allSteps, processedSteps, depth);
-        }
-
-        depth--;
-
-        return processedSteps;
-    }
-
-    private List<StepProjection> RecurseDependenciesForward(StepProjection step, List<StepProjection> allSteps, List<StepProjection> processedSteps, int depth)
-    {
-        if (processedSteps.Any(s => s.StepId == step.StepId))
-        {
-            return processedSteps;
-        }
-
-        if (depth++ > FilterDepthForwards && FilterDepthForwards > 0)
-        {
-            depth--;
-            return processedSteps;
-        }
-
-        processedSteps.Add(step);
-
-        List<StepProjection> dependencySteps = allSteps.Where(s => s.Dependencies.Any(d => d.DependentOnStepId == step.StepId)).ToList();
-
-        foreach (var depencyStep in dependencySteps)
-        {
-            RecurseDependenciesForward(depencyStep, allSteps, processedSteps, depth);
-        }
-
-        depth--;
-
-        return processedSteps;
-    }
-
-    private Task OpenStepEditModalAsync(StepProjection step) =>
-        stepEditModals[step.StepType].LetAsync(x => x.ShowAsync(step.StepId, StepEditModalView.Dependencies));
-
-    private async Task OnStepSubmit(Step step)
-    {
-        ArgumentNullException.ThrowIfNull(Steps);
-
-        var index = Steps.FindIndex(s => s.StepId == step.StepId);
-        if (index is int i and >= 0)
-        {
-            Steps.RemoveAt(i);
-            Steps.Insert(i, step);
-        }
-        else
-        {
-            Steps.Add(step);
-        }
-
-        SortSteps?.Invoke();
-
-        await LoadGraphAsync();
-        StateHasChanged();
-    }
-
-    private async Task ToggleEnabled(StepProjection projection, bool value)
-    {
-        try
-        {
-            ArgumentNullException.ThrowIfNull(Steps);
-            var step = Steps.First(s => s.StepId == projection.StepId);
-            await Mediator.SendAsync(new ToggleStepsCommand(step.StepId, value));
-            step.IsEnabled = value;
-            await LoadGraphAsync();
-        }
-        catch (Exception ex)
-        {
-            Toaster.AddError("Error toggling step", ex.Message);
-        }
-    }
-
-    private async Task DeleteStep(StepProjection projection)
-    {
-        try
-        {
-            ArgumentNullException.ThrowIfNull(Steps);
-            var step = Steps.First(s => s.StepId == projection.StepId);
-            var result = await Confirmer.ConfirmAsync("", $"Are you sure you want to delete step \"{step.StepName}\"?");
-            if (!result)
-            {
-                return;    
-            }
-
-            await Mediator.SendAsync(new DeleteStepsCommand(step.StepId));
-            Steps?.Remove(step);
-            // Remove the deleted step from dependencies.
-            foreach (var dependant in Steps?.Where(s => s.Dependencies.Any(d => d.DependantOnStepId == step.StepId)) ?? Enumerable.Empty<Step>())
-            {
-                var dependency = dependant.Dependencies.First(d => d.DependantOnStepId == step.StepId);
-                dependant.Dependencies.Remove(dependency);
-            }
-
-            await LoadGraphAsync();
-            StateHasChanged();
-        }
-        catch (Exception ex)
-        {
-            Toaster.AddError("Error deleting step", ex.Message);
-        }
-    }
-
-    private Task<AutosuggestDataProviderResult<StepProjection>> ProvideSuggestions(AutosuggestDataProviderRequest request)
-    {
-        ArgumentNullException.ThrowIfNull(stepSlims);
-        var filteredModules = stepSlims.Where(s => s.StepName?.ContainsIgnoreCase(request.UserInput) ?? false);
-        return Task.FromResult(new AutosuggestDataProviderResult<StepProjection>
-        {
-            Data = filteredModules
-        });
-    }
-}

@@ -1,7 +1,7 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject NavigationManager NavigationManager
 
-<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Large" Title="@stepExecution?.StepName">
+<HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Large" Title="@_stepExecution?.StepName">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -14,7 +14,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (monitors is null)
+                        @if (_monitors is null)
                         {
                             <tr>
                                 <td colspan="3" class="text-center">
@@ -22,7 +22,7 @@
                                 </td>
                             </tr>
                         }
-                        else if (monitors.Count() == 0)
+                        else if (_monitors.Length == 0)
                         {
                             <tr>
                                 <td colspan="3">
@@ -32,7 +32,7 @@
                         }
                         else
                         {
-                            foreach (var monitor in monitors)
+                            foreach (var monitor in _monitors)
                             {
                                 <tr>
                                     <td class="align-middle">
@@ -69,23 +69,23 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
 @code {
-    private StepExecutionProjection? stepExecution;
-    private StepExecutionMonitor[]? monitors;
-    private HxOffcanvas? offcanvas;
+    private StepExecutionProjection? _stepExecution;
+    private StepExecutionMonitor[]? _monitors;
+    private HxOffcanvas? _offcanvas;
 
     public async Task ShowAsync(StepExecutionProjection step)
     {
-        monitors = null;
-        stepExecution = step;
+        _monitors = null;
+        _stepExecution = step;
         StateHasChanged();
-        await offcanvas.LetAsync(x => x.ShowAsync());
-        using var context = DbContextFactory.CreateDbContext();
-        monitors = await context.StepExecutionMonitors
+        await _offcanvas.LetAsync(x => x.ShowAsync());
+        await using var context = await DbContextFactory.CreateDbContextAsync();
+        _monitors = await context.StepExecutionMonitors
             .AsNoTrackingWithIdentityResolution()
             .IgnoreQueryFilters()
             .Where(m => m.ExecutionId == step.ExecutionId && m.StepId == step.StepId)

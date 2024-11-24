@@ -6,7 +6,7 @@ internal class UpdateJobCommandHandler(IDbContextFactory<AppDbContext> dbContext
 {
     public async Task Handle(UpdateJobCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         
         var tagIds = request.Job.Tags
             .Select(t => t.TagId)
@@ -28,7 +28,7 @@ internal class UpdateJobCommandHandler(IDbContextFactory<AppDbContext> dbContext
         // Synchronize tags
 
         var tagsToAdd = request.Job.Tags
-            .Where(t1 => !jobFromDb.Tags.Any(t2 => t2.TagId == t1.TagId))
+            .Where(t1 => jobFromDb.Tags.All(t2 => t2.TagId != t1.TagId))
             .Select(t => (t.TagId, t.TagName, t.Color));
         foreach (var (id, name, color) in tagsToAdd)
         {

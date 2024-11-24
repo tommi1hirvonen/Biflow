@@ -6,11 +6,11 @@ internal class DeleteJobTagCommandHandler(IDbContextFactory<AppDbContext> dbCont
 {
     public async Task Handle(DeleteJobTagCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var tag = await context.JobTags
             .Include(t => t.Jobs.Where(s => s.JobId == request.JobId))
             .FirstOrDefaultAsync(t => t.TagId == request.TagId, cancellationToken);
-        if (tag?.Jobs.FirstOrDefault(s => s.JobId == request.JobId) is Job job)
+        if (tag?.Jobs.FirstOrDefault(s => s.JobId == request.JobId) is { } job)
         {
             tag.Jobs.Remove(job);
             await context.SaveChangesAsync(cancellationToken);

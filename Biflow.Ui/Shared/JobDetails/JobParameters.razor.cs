@@ -3,40 +3,41 @@ using Microsoft.AspNetCore.Components.Routing;
 
 namespace Biflow.Ui.Shared.JobDetails;
 
-public partial class JobParameters : ComponentBase
+public partial class JobParameters(
+    IDbContextFactory<AppDbContext> dbContextFactory,
+    ToasterService toaster,
+    IHxMessageBoxService confirmer,
+    JobValidator jobValidator,
+    IMediator mediator) : ComponentBase
 {
-    [Inject] private IDbContextFactory<AppDbContext> DbContextFactory { get; set; } = null!;
-    
-    [Inject] private ToasterService Toaster { get; set; } = null!;
-
-    [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
-
-    [Inject] private JobValidator JobValidator { get; set; } = null!;
-
-    [Inject] private IMediator Mediator { get; set; } = null!;
-
     [CascadingParameter] public Job? Job { get; set; }
 
     [CascadingParameter] public List<Step>? Steps { get; set; }
 
-    private EditContext? editContext;
-    private Job? editJob;
-    private bool hasChanges = false;
-    private bool loading = false;
-    private FluentValidationValidator? fluentJobValidator;
-    private ExpressionEditOffcanvas<JobParameter>? expressionEditOffcanvas;
-    private HxOffcanvas? referencingStepsOffcanvas;
-    private ReferencingStepsModel referencingSteps = new(new(), [], [], [], []);
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
+    private readonly ToasterService _toaster = toaster;
+    private readonly IHxMessageBoxService _confirmer = confirmer;
+    private readonly JobValidator _jobValidator = jobValidator;
+    private readonly IMediator _mediator = mediator;
+
+    private EditContext? _editContext;
+    private Job? _editJob;
+    private bool _hasChanges = false;
+    private bool _loading = false;
+    private FluentValidationValidator? _fluentJobValidator;
+    private ExpressionEditOffcanvas<JobParameter>? _expressionEditOffcanvas;
+    private HxOffcanvas? _referencingStepsOffcanvas;
+    private ReferencingStepsModel _referencingSteps = new(new(), [], [], [], []);
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Job is null || loading || Job.JobId == editJob?.JobId)
+        if (Job is null || _loading || Job.JobId == _editJob?.JobId)
         {
             return;
         }
-        loading = true;
-        using var context = DbContextFactory.CreateDbContext();
-        editJob = await context.Jobs
+        _loading = true;
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        _editJob = await context.Jobs
             .Include(j => j.JobParameters)
             .ThenInclude(j => j.InheritingStepParameters)
             .Include(j => j.JobParameters)
@@ -44,19 +45,19 @@ public partial class JobParameters : ComponentBase
             .ThenInclude(p => p.Step) // Assigning steps are from other jobs, which means they are not in the Steps List property
             .ThenInclude(s => s.Job)
             .FirstAsync(j => j.JobId == Job.JobId);
-        editJob.JobParameters.SortBy(x => x.ParameterName);
-        loading = false;
-        editContext = new(editJob);
-        editContext.OnFieldChanged += (sender, args) => hasChanges = true;
+        _editJob.JobParameters.SortBy(x => x.ParameterName);
+        _loading = false;
+        _editContext = new(_editJob);
+        _editContext.OnFieldChanged += (_, _) => _hasChanges = true;
     }
 
-    private void AddParameter() => editJob?.JobParameters
+    private void AddParameter() => _editJob?.JobParameters
         .Insert(0, new JobParameter());
 
     private async Task SubmitParameters()
     {
-        ArgumentNullException.ThrowIfNull(editJob);
-        foreach (var param in editJob.JobParameters)
+        ArgumentNullException.ThrowIfNull(_editJob);
+        foreach (var param in _editJob.JobParameters)
         {
             // Update the referencing job step parameter names to match the possibly changed new name.
             foreach (var referencingJobStepParam in param.AssigningStepParameters)
@@ -67,18 +68,18 @@ public partial class JobParameters : ComponentBase
 
         try
         {
-            await Mediator.SendAsync(new UpdateJobParametersCommand(editJob));
-            hasChanges = false;
-            Toaster.AddSuccess("Job parameters updated successfully");
+            await _mediator.SendAsync(new UpdateJobParametersCommand(_editJob));
+            _hasChanges = false;
+            _toaster.AddSuccess("Job parameters updated successfully");
         }
         catch (DbUpdateConcurrencyException)
         {
-            Toaster.AddError("Concurrency error",
+            _toaster.AddError("Concurrency error",
                 "The job has been modified outside of this session. Reload the page to view the most recent settings.");
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error saving parameters", $"{ex.Message}\n{ex.InnerException?.Message}");
+            _toaster.AddError("Error saving parameters", $"{ex.Message}\n{ex.InnerException?.Message}");
         }
 
     }
@@ -88,24 +89,24 @@ public partial class JobParameters : ComponentBase
         var referencingSteps = GetInheritingSteps(parameter).Concat(GetCapturingSteps(parameter)).Concat(GetAssigningSteps(parameter));
         if (referencingSteps.Any())
         {
-            var confirmResult = await Confirmer.ConfirmAsync("This parameter has one or more referencing steps. Removing it can break these steps. Delete anyway?");
+            var confirmResult = await _confirmer.ConfirmAsync("This parameter has one or more referencing steps. Removing it can break these steps. Delete anyway?");
             if (!confirmResult)
             {
                 return;
             }
         }
 
-        editJob?.JobParameters.Remove(parameter);
+        _editJob?.JobParameters.Remove(parameter);
     }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
-        if (!hasChanges)
+        if (!_hasChanges)
         {
             return;
         }
 
-        var confirmed = await Confirmer.ConfirmAsync("", "Discard unsaved changes?");
+        var confirmed = await _confirmer.ConfirmAsync("", "Discard unsaved changes?");
         if (!confirmed)
         {
             context.PreventNavigation();
@@ -114,8 +115,8 @@ public partial class JobParameters : ComponentBase
 
     private async Task ShowReferencingStepsAsync(JobParameter param)
     {
-        referencingSteps = new(param, GetInheritingSteps(param), GetCapturingSteps(param), GetAssigningSteps(param), GetExecutionConditionSteps(param));
-        await referencingStepsOffcanvas.LetAsync(x => x.ShowAsync());
+        _referencingSteps = new(param, GetInheritingSteps(param), GetCapturingSteps(param), GetAssigningSteps(param), GetExecutionConditionSteps(param));
+        await _referencingStepsOffcanvas.LetAsync(x => x.ShowAsync());
     }
 
     private IEnumerable<Step> GetInheritingSteps(JobParameter parameter) => Steps
@@ -134,9 +135,7 @@ public partial class JobParameters : ComponentBase
     private static IEnumerable<Step> GetAssigningSteps(JobParameter parameter) => parameter.AssigningStepParameters
         .Select(p => p.Step)
         .OrderBy(s => s.Job.JobName)
-        .ThenBy(s => s.StepName)
-        .AsEnumerable()
-        ?? [];
+        .ThenBy(s => s.StepName);
 
     private IEnumerable<Step> GetExecutionConditionSteps(JobParameter parameter) => Steps
         ?.Where(s => s.ExecutionConditionParameters.Any(p => p.JobParameterId == parameter.ParameterId))

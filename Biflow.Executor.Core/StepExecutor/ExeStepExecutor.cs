@@ -61,9 +61,10 @@ internal class ExeStepExecutor(
         var outputBuilder = new StringBuilder();
         var errorBuilder = new StringBuilder();
 
-        using var process = new Process { StartInfo = startInfo };
-        process.OutputDataReceived += (s, e) => outputBuilder.AppendLine(e.Data);
-        process.ErrorDataReceived += (s, e) => errorBuilder.AppendLine(e.Data);
+        using var process = new Process();
+        process.StartInfo = startInfo;
+        process.OutputDataReceived += (_, e) => outputBuilder.AppendLine(e.Data);
+        process.ErrorDataReceived += (_, e) => errorBuilder.AppendLine(e.Data);
 
         try
         {
@@ -80,7 +81,7 @@ internal class ExeStepExecutor(
 
         try
         {
-            using var context = _dbContextFactory.CreateDbContext();
+            await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.ExeProcessId = process.Id;
             await context.Set<ExeStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)

@@ -2,11 +2,11 @@
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHttpClientFactory HttpClientFactory
 
-<HxModal @ref="modal" Size="ModalSize.Large" Title="@(environment?.QlikCloudEnvironmentId == Guid.Empty ? "New Qlik Cloud environment" : "Edit " + environment?.QlikCloudEnvironmentName)">
+<HxModal @ref="_modal" Size="ModalSize.Large" Title="@(_environment?.QlikCloudEnvironmentId == Guid.Empty ? "New Qlik Cloud environment" : "Edit " + _environment?.QlikCloudEnvironmentName)">
     <BodyTemplate>
-        @if (environment is not null)
+        @if (_environment is not null)
         {
-            <EditForm id="qlik_cloud_environment_edit_form" Model="environment" OnValidSubmit="SubmitAsync">
+            <EditForm id="qlik_cloud_environment_edit_form" Model="_environment" OnValidSubmit="SubmitAsync">
                 <div class="row">
                     <div class="col mx-3">
                         <DataAnnotationsValidator />
@@ -16,9 +16,9 @@
                             <label class="form-label">Environment name</label>
                             <div class="input-group">
                                 <div class="input-group-text">
-                                    <SvgIcon Icon="FeatherIcon.Edit3" />
+                                    <SvgIcon Icon="LucideIcon.PenLine" />
                                 </div>
-                                <InputText class="form-control" @bind-Value="environment.QlikCloudEnvironmentName"></InputText>
+                                <InputText class="form-control" @bind-Value="_environment.QlikCloudEnvironmentName"></InputText>
                             </div>
                             
                         </div>
@@ -28,9 +28,9 @@
                                 <label class="form-label">Environment url</label>
                                 <div class="input-group">
                                     <div class="input-group-text">
-                                        <SvgIcon Icon="FeatherIcon.Link" />
+                                        <SvgIcon Icon="LucideIcon.Link" />
                                     </div>
-                                    <InputText class="form-control" @bind-Value="environment.EnvironmentUrl"></InputText>
+                                    <InputText class="form-control" @bind-Value="_environment.EnvironmentUrl"></InputText>
                                 </div>
                                 <div class="form-text">e.g. https://mycompany.eu.qlikcloud.com</div>
                             </div>
@@ -41,16 +41,16 @@
                                 <label class="form-label">API key</label>
                                 <div class="input-group">
                                     <div class="input-group-text">
-                                        <SvgIcon Icon="FeatherIcon.Key" />
+                                        <SvgIcon Icon="LucideIcon.Key" />
                                     </div>
-                                    <InputTextArea class="form-control form-control-sm" rows="6" @bind-Value="environment.ApiToken"></InputTextArea>
+                                    <InputTextArea class="form-control form-control-sm" rows="6" @bind-Value="_environment.ApiToken"></InputTextArea>
                                 </div>
                             </div>
                         </div>
 
                         <div class="row mt-3">
                             <div class="col">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="TestConnectionAsync" Enabled="!testingConnection">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="TestConnectionAsync" Enabled="!_testingConnection">
                                     Test connection
                                 </HxButton>
                             </div>
@@ -58,13 +58,14 @@
 
                         <div class="row mt-3">
                             <div class="col">
-                                @if (connectionTestSuccess == true)
+                                @switch (_connectionTestSuccess)
                                 {
-                                    <span class="badge bg-success">Success</span>
-                                }
-                                else if (connectionTestSuccess == false)
-                                {
-                                    <span class="badge bg-danger">Failed</span>
+                                    case true:
+                                        <span class="badge bg-success">Success</span>
+                                        break;
+                                    case false:
+                                        <span class="badge bg-danger">Failed</span>
+                                        break;
                                 }
                             </div>
                         </div>
@@ -74,8 +75,8 @@
         }
     </BodyTemplate>
     <FooterTemplate>
-        <HxSubmit form="qlik_cloud_environment_edit_form" Color="ThemeColor.Success">@(environment?.QlikCloudEnvironmentId == Guid.Empty ? "Add" : "Save")</HxSubmit>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxSubmit form="qlik_cloud_environment_edit_form" Color="ThemeColor.Success">@(_environment?.QlikCloudEnvironmentId == Guid.Empty ? "Add" : "Save")</HxSubmit>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>
 
@@ -83,19 +84,19 @@
     [Parameter]
     public EventCallback<QlikCloudEnvironment> OnEnvironmentSubmit { get; set; }
 
-    private HxModal? modal;
-    private QlikCloudEnvironment? environment;
-    private bool? connectionTestSuccess = null;
-    private bool testingConnection = false;
+    private HxModal? _modal;
+    private QlikCloudEnvironment? _environment;
+    private bool? _connectionTestSuccess = null;
+    private bool _testingConnection = false;
 
     public async Task ShowAsync(Guid environmentId)
     {
-        environment = null;
-        await modal.LetAsync(x => x.ShowAsync());
+        _environment = null;
+        await _modal.LetAsync(x => x.ShowAsync());
         if (environmentId != Guid.Empty)
         {
-            using var context = await DbContextFactory.CreateDbContextAsync();
-            environment = await context.QlikCloudEnvironments
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+            _environment = await context.QlikCloudEnvironments
                 .AsNoTrackingWithIdentityResolution()
                 .Include(c => c.Steps)
                 .ThenInclude(s => s.Job)
@@ -103,7 +104,7 @@
         }
         else
         {
-            environment = new()
+            _environment = new()
             {
                 QlikCloudEnvironmentName = "",
                 EnvironmentUrl = "",
@@ -114,26 +115,26 @@
 
     private async Task TestConnectionAsync()
     {
-        ArgumentNullException.ThrowIfNull(environment);
-        connectionTestSuccess = null;
-        testingConnection = true;
+        ArgumentNullException.ThrowIfNull(_environment);
+        _connectionTestSuccess = null;
+        _testingConnection = true;
         try
         {
-            using var client = environment.CreateClient(HttpClientFactory);
+            using var client = _environment.CreateClient(HttpClientFactory);
             await client.TestConnectionAsync();
-            connectionTestSuccess = true;
+            _connectionTestSuccess = true;
         }
         catch (Exception ex)
         {
-            connectionTestSuccess = false;
+            _connectionTestSuccess = false;
             Toaster.AddError("Connection test failed", ex.Message);
         }
-        testingConnection = false;
+        _testingConnection = false;
     }
 
     private async Task SubmitAsync()
     {
-        await OnEnvironmentSubmit.InvokeAsync(environment);
-        await modal.LetAsync(x => x.HideAsync());
+        await OnEnvironmentSubmit.InvokeAsync(_environment);
+        await _modal.LetAsync(x => x.HideAsync());
     }
 }

@@ -1,13 +1,9 @@
-﻿@using Biflow.Core.Entities
-@using Biflow.Core.Interfaces
-@using Microsoft.AspNetCore.Components.Web
-
-<span @attributes="InputAttributes" class="badge d-inline-flex align-items-center py-1 px-2 @BadgeCss @CssClass @(Selected ? "text-decoration-underline" : null)" @onclick="OnClick">
+﻿<span @attributes="InputAttributes" class="badge d-inline-flex align-items-center py-1 px-2 @BadgeCss @CssClass @(Selected ? "text-decoration-underline" : null)" @onclick="OnClick">
     @Tag?.TagName
     @if (IsRemovable)
     {
         <span class="ms-1" @onclick="OnRemoveClick">
-            <SvgIcon Icon="FeatherIcon.X" />
+            <SvgIcon Icon="LucideIcon.X" />
         </span>
     }
 </span>
@@ -39,5 +35,5 @@
         _ => null
     };
 
-    private string? BadgeCss => $"bg-{Color}-subtle border border-{Color}-subtle text-{Color}-emphasis";
+    private string BadgeCss => $"bg-{Color}-subtle border border-{Color}-subtle text-{Color}-emphasis";
 }

@@ -16,11 +16,10 @@ public class DatabricksClientWrapper(DatabricksWorkspace workspace) : IDisposabl
    
     public async Task<IEnumerable<DatabricksJob>> GetJobsAsync(CancellationToken cancellationToken = default)
     {
-        var jobs = new List<DatabricksJob>();
-        await foreach (var job in Client.Jobs.ListPageable(cancellationToken: cancellationToken))
-        {
-            jobs.Add(new(job.JobId, job.Settings.Name));
-        }
+        var jobs = await Client.Jobs
+            .ListPageable(cancellationToken: cancellationToken)
+            .Select(job => new DatabricksJob(job.JobId, job.Settings.Name))
+            .ToListAsync(cancellationToken);
         jobs.SortBy(j => j.JobName);
         return jobs;
     }
@@ -77,7 +76,7 @@ public class DatabricksClientWrapper(DatabricksWorkspace workspace) : IDisposabl
         return folder;
     }
 
-    public async Task<IEnumerable<ObjectInfo>> GetWorkspaceObjectsAsync(string path = "/", CancellationToken cancellationToken = default)
+    private async Task<IEnumerable<ObjectInfo>> GetWorkspaceObjectsAsync(string path = "/", CancellationToken cancellationToken = default)
     {
         var result = new ConcurrentBag<ObjectInfo>();
         var items = await Client.Workspace.List(path, cancellationToken: cancellationToken);

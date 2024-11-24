@@ -29,7 +29,7 @@ internal class DataTableQueryBuilder(MasterDataTable table, int? top, FilterSet?
                 (filter, column) => (filter.Value, column))
             .Select((f, i) => (f.Value, f.column, i))
             .ToArray()
-            ?? Array.Empty<(IFilter, Column, int)>();
+            ?? [];
 
         foreach (var (_, column, index) in activeFilters)
         {
@@ -44,7 +44,7 @@ internal class DataTableQueryBuilder(MasterDataTable table, int? top, FilterSet?
                 LookupDisplayType.Value => dataTableLookup.LookupValueColumn.QuoteName(),
                 LookupDisplayType.Description => dataTableLookup.LookupDescriptionColumn.QuoteName(),
                 LookupDisplayType.ValueAndDescription => $"CONCAT({dataTableLookup.LookupValueColumn.QuoteName()}, ' ', {dataTableLookup.LookupDescriptionColumn.QuoteName()})",
-                _ => throw new NotSupportedException($"Unsupoorted {nameof(LookupDisplayType)} value {dataTableLookup.LookupDisplayType}")
+                _ => throw new NotSupportedException($"Unsupported {nameof(LookupDisplayType)} value {dataTableLookup.LookupDisplayType}")
             };
             var lookupJoin = $"""
                 LEFT JOIN (
@@ -91,94 +91,96 @@ internal class DataTableQueryBuilder(MasterDataTable table, int? top, FilterSet?
         return (cmdBuilder.ToString(), parameters);
     }
 
-    private static (string Statement, DynamicParameters Params) GenerateFilterStatement(string filterColumnIdentifier, Enum oper, object filterValue, int parameterIndex)
+    private static (string Statement, DynamicParameters Params) GenerateFilterStatement(string filterColumnIdentifier, Enum @operator, object filterValue, int parameterIndex)
     {
         var statementBuilder = new StringBuilder();
         var parameters = new DynamicParameters();
         statementBuilder.Append($" {filterColumnIdentifier} ");
-        if (oper is NumberFilterOperator nfo)
+        switch (@operator)
         {
-            var operatorText = nfo switch
+            case NumberFilterOperator nfo:
             {
-                NumberFilterOperator.Equals => " = ",
-                NumberFilterOperator.DoesNotEqual => " <> ",
-                NumberFilterOperator.GreaterThan => " > ",
-                NumberFilterOperator.GreaterThanOrEqual => " >= ",
-                NumberFilterOperator.LessThan => " < ",
-                NumberFilterOperator.LessThanOrEqual => " <= ",
-                NumberFilterOperator.IsBlank => " IS NULL",
-                NumberFilterOperator.IsNotBlank => " IS NOT NULL",
-                _ => throw new ArgumentException($"Unsupported NumberFilterOperator value {nfo}")
-            };
-            if (nfo == NumberFilterOperator.IsBlank || nfo == NumberFilterOperator.IsNotBlank)
-            {
-                statementBuilder.Append(operatorText);
+                var operatorText = nfo switch
+                {
+                    NumberFilterOperator.Equals => " = ",
+                    NumberFilterOperator.DoesNotEqual => " <> ",
+                    NumberFilterOperator.GreaterThan => " > ",
+                    NumberFilterOperator.GreaterThanOrEqual => " >= ",
+                    NumberFilterOperator.LessThan => " < ",
+                    NumberFilterOperator.LessThanOrEqual => " <= ",
+                    NumberFilterOperator.IsBlank => " IS NULL",
+                    NumberFilterOperator.IsNotBlank => " IS NOT NULL",
+                    _ => throw new ArgumentException($"Unsupported NumberFilterOperator value {nfo}")
+                };
+                if (nfo is NumberFilterOperator.IsBlank or NumberFilterOperator.IsNotBlank)
+                {
+                    statementBuilder.Append(operatorText);
+                }
+                else
+                {
+                    statementBuilder.Append(operatorText).Append("@Parameter_").Append(parameterIndex);
+                    parameters.Add($"Parameter_{parameterIndex}", filterValue);
+                }
+                break;
             }
-            else
+            case TextFilterOperator tfo:
             {
+                var operatorText = tfo switch
+                {
+                    TextFilterOperator.Equals => " = ",
+                    TextFilterOperator.DoesNotEqual => " <> ",
+                    TextFilterOperator.Contains => " LIKE ",
+                    TextFilterOperator.DoesNotContain => " NOT LIKE ",
+                    TextFilterOperator.StartsWith => " LIKE ",
+                    TextFilterOperator.DoesNotStartWith => " NOT LIKE ",
+                    TextFilterOperator.EndsWith => " LIKE ",
+                    TextFilterOperator.DoesNotEndWith => " NOT LIKE ",
+                    TextFilterOperator.GreaterThan => " > ",
+                    TextFilterOperator.GreaterThanOrEqual => " >= ",
+                    TextFilterOperator.LessThan => " < ",
+                    TextFilterOperator.LessThanOrEqual => " <= ",
+                    TextFilterOperator.IsBlank => " IS NULL",
+                    TextFilterOperator.IsNotBlank => " IS NOT NULL",
+                    _ => throw new ArgumentException($"Unsupported TextFilterOperator value {tfo}")
+                };
+                var value = filterValue;
+                switch (tfo)
+                {
+                    case TextFilterOperator.IsBlank or TextFilterOperator.IsNotBlank:
+                        statementBuilder.Append(operatorText);
+                        break;
+                    case TextFilterOperator.Contains or TextFilterOperator.DoesNotContain:
+                        value = $"%{EncodeForLike(value.ToString() ?? "")}%";
+                        break;
+                    case TextFilterOperator.StartsWith or TextFilterOperator.DoesNotStartWith:
+                        value = $"{EncodeForLike(value.ToString() ?? "")}%";
+                        break;
+                    case TextFilterOperator.EndsWith or TextFilterOperator.DoesNotEndWith:
+                        value = $"%{EncodeForLike(value.ToString() ?? "")}";
+                        break;
+                }
+                if (tfo is not TextFilterOperator.IsBlank and not TextFilterOperator.IsNotBlank)
+                {
+                    statementBuilder.Append(operatorText).Append("@Parameter_").Append(parameterIndex);
+                    parameters.Add($"Parameter_{parameterIndex}", value);
+                }
+                break;
+                
+                static string EncodeForLike(string term) => term.Replace("[", "[[]").Replace("%", "[%]");
+            }
+            case BooleanFilterOperator bfo:
+            {
+                var operatorText = bfo switch
+                {
+                    BooleanFilterOperator.Equals => " = ",
+                    _ => throw new ArgumentException($"Unsupported BooleanFilterOperator value {bfo}")
+                };
                 statementBuilder.Append(operatorText).Append("@Parameter_").Append(parameterIndex);
                 parameters.Add($"Parameter_{parameterIndex}", filterValue);
+                break;
             }
-        }
-        else if (oper is TextFilterOperator tfo)
-        {
-            var operatorText = tfo switch
-            {
-                TextFilterOperator.Equals => " = ",
-                TextFilterOperator.DoesNotEqual => " <> ",
-                TextFilterOperator.Contains => " LIKE ",
-                TextFilterOperator.DoesNotContain => " NOT LIKE ",
-                TextFilterOperator.StartsWith => " LIKE ",
-                TextFilterOperator.DoesNotStartWith => " NOT LIKE ",
-                TextFilterOperator.EndsWith => " LIKE ",
-                TextFilterOperator.DoesNotEndWith => " NOT LIKE ",
-                TextFilterOperator.GreaterThan => " > ",
-                TextFilterOperator.GreaterThanOrEqual => " >= ",
-                TextFilterOperator.LessThan => " < ",
-                TextFilterOperator.LessThanOrEqual => " <= ",
-                TextFilterOperator.IsBlank => " IS NULL",
-                TextFilterOperator.IsNotBlank => " IS NOT NULL",
-                _ => throw new ArgumentException($"Unsupported TextFilterOperator value {tfo}")
-            };
-            static string encodeForLike(string term) => term.Replace("[", "[[]").Replace("%", "[%]");
-            var value = filterValue;
-            if (tfo == TextFilterOperator.IsBlank || tfo == TextFilterOperator.IsNotBlank)
-            {
-                statementBuilder.Append(operatorText);
-            }
-
-            if (tfo == TextFilterOperator.Contains || tfo == TextFilterOperator.DoesNotContain)
-            {
-                value = $"%{encodeForLike(value.ToString() ?? "")}%";
-            }
-            else if (tfo == TextFilterOperator.StartsWith || tfo == TextFilterOperator.DoesNotStartWith)
-            {
-                value = $"{encodeForLike(value.ToString() ?? "")}%";
-            }
-            else if (tfo == TextFilterOperator.EndsWith || tfo == TextFilterOperator.DoesNotEndWith)
-            {
-                value = $"%{encodeForLike(value.ToString() ?? "")}";
-            }
-
-            if (tfo != TextFilterOperator.IsBlank && tfo != TextFilterOperator.IsNotBlank)
-            {
-                statementBuilder.Append(operatorText).Append("@Parameter_").Append(parameterIndex);
-                parameters.Add($"Parameter_{parameterIndex}", value);
-            }
-        }
-        else if (oper is BooleanFilterOperator bfo)
-        {
-            var operatorText = bfo switch
-            {
-                BooleanFilterOperator.Equals => " = ",
-                _ => throw new ArgumentException($"Unsupported BooleanFilterOperator value {bfo}")
-            };
-            statementBuilder.Append(operatorText).Append("@Parameter_").Append(parameterIndex);
-            parameters.Add($"Parameter_{parameterIndex}", filterValue);
-        }
-        else
-        {
-            throw new ArgumentException($"Unsupported filter operator type {oper.GetType()}");
+            default:
+                throw new ArgumentException($"Unsupported filter operator type {@operator.GetType()}");
         }
         return (statementBuilder.ToString(), parameters);
     }

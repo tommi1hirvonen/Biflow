@@ -2,31 +2,31 @@
 
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 
-<HxModal @ref="modal" Title="Edit tags">
+<HxModal @ref="_modal" Title="Edit tags">
     <BodyTemplate>
         <div class="row">
             <div class="col">
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_batch_edit_tags_add"
-                           checked=@(editMode == EditMode.Add)
-                           @onchange="() => SetEditMode(EditMode.Add)">
+                    checked=@(_editMode == EditMode.Add)
+                    @onchange="() => SetEditMode(EditMode.Add)">
                     <label class="form-check-label" for="radio_batch_edit_tags_add">
                         Add
                         &nbsp;
                         <HxPopover Trigger="PopoverTrigger.Hover" Content="Tags listed will be added to all selected jobs where they are not present. New tags can also be added.">
-                            <SvgIcon Icon="FeatherIcon.Info" />
+                            <SvgIcon Icon="LucideIcon.Info" />
                         </HxPopover>
                     </label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_batch_edit_tags_remove"
-                           checked=@(editMode == EditMode.Remove)
-                           @onchange="() => SetEditMode(EditMode.Remove)">
+                    checked=@(_editMode == EditMode.Remove)
+                    @onchange="() => SetEditMode(EditMode.Remove)">
                     <label class="form-check-label" for="radio_batch_edit_tags_remove">
                         Remove
                         &nbsp;
                         <HxPopover Trigger="PopoverTrigger.Hover" Content="Remove tags from the list to remove them from selected jobs where they are present.">
-                            <SvgIcon Icon="FeatherIcon.Info" />
+                            <SvgIcon Icon="LucideIcon.Info" />
                         </HxPopover>
                     </label>
                 </div>
@@ -34,13 +34,13 @@
         </div>
         <div class="row mt-3">
             <div class="col">
-                @if (jobs is not null)
+                @if (_jobs is not null)
                 {
                     <TagInput TTag="JobTag"
-                              Items="allTags"
-                              SelectedItems="tags"
-                              AllowCustomValues="editMode == EditMode.Add"
-                              NewItemFromText="text => new JobTag(text) { Color = TagColor.DarkGray }" />
+                    Items="_allTags"
+                    SelectedItems="_tags"
+                    AllowCustomValues="_editMode == EditMode.Add"
+                    NewItemFromText="text => new JobTag(text) { Color = TagColor.DarkGray }" />
                 }
                 else
                 {
@@ -50,7 +50,7 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Success" Spinner="saving" Enabled="!saving" OnClick="SubmitJobsAsync">
+        <HxButton Color="ThemeColor.Success" Spinner="_saving" Enabled="!_saving" OnClick="SubmitJobsAsync">
             Save
         </HxButton>
         <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="CloseAsync">
@@ -64,13 +64,13 @@
 
     [Parameter] public EventCallback<IEnumerable<Job>> OnJobsSubmit { get; set; }
 
-    private HxModal? modal;
-    private bool saving = false;
-    private AppDbContext? context;
-    protected List<JobTag>? allTags;
-    private List<JobTag> tags = [];
-    private List<Job>? jobs;
-    private EditMode editMode = EditMode.Add;
+    private HxModal? _modal;
+    private bool _saving = false;
+    private AppDbContext? _context;
+    private List<JobTag>? _allTags;
+    private List<JobTag> _tags = [];
+    private List<Job>? _jobs;
+    private EditMode _editMode = EditMode.Add;
 
     private enum EditMode { Add, Remove }
 
@@ -81,16 +81,17 @@
             return;
         }
 
-        await modal.LetAsync(x => x.ShowAsync());
+        await _modal.LetAsync(x => x.ShowAsync());
 
-        if (context is not null)
+        if (_context is not null)
         {
-            await context.DisposeAsync();
+            await _context.DisposeAsync();
         }
-        context = await DbContextFactory.CreateDbContextAsync();
-        allTags = await context.JobTags.OrderBy(t => t.TagName).ToListAsync();
+        _context = await DbContextFactory.CreateDbContextAsync();
+        _allTags = await _context.JobTags.ToListAsync();
+        _allTags.Sort();
         var jobIds = SelectedJobs.Select(s => s.JobId).ToArray();
-        jobs = await context.Jobs
+        _jobs = await _context.Jobs
             .Include(job => job.Tags)
             .Include(job => job.Schedules)
             .Where(s => jobIds.Contains(s.JobId))
@@ -99,66 +100,73 @@
 
     private async Task CloseAsync()
     {
-        tags.Clear();
+        _tags.Clear();
         SetEditMode(EditMode.Add);
-        await modal.LetAsync(x => x.HideAsync());
+        await _modal.LetAsync(x => x.HideAsync());
     }
 
     private void SetEditMode(EditMode editMode)
     {
-        if (this.editMode == editMode)
+        if (_editMode == editMode)
         {
             return;
         }
-        this.editMode = editMode;
-        if (editMode == EditMode.Add)
+        _editMode = editMode;
+        switch (editMode)
         {
-            tags.Clear();
-        }
-        else if (editMode == EditMode.Remove)
-        {
-            tags = jobs?
-                .SelectMany(s => s.Tags)
-                .Distinct()
-                .OrderBy(t => t.TagName)
-                .ToList() ?? new();
+            case EditMode.Add:
+                _tags.Clear();
+                break;
+            case EditMode.Remove:
+                _tags = _jobs?
+                    .SelectMany(s => s.Tags)
+                    .Distinct()
+                    .Order()
+                    .ToList() ?? new();
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(editMode), editMode, null);
         }
     }
 
     private async Task SubmitJobsAsync()
     {
-        ArgumentNullException.ThrowIfNull(jobs);
-        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(_jobs);
+        ArgumentNullException.ThrowIfNull(_context);
 
-        if (editMode == EditMode.Add)
+        switch (_editMode)
         {
-            foreach (var job in jobs)
-            {
-                foreach (var tag in tags)
+            case EditMode.Add:
+                foreach (var job in _jobs)
                 {
-                    if (!job.Tags.Contains(tag))
+                    foreach (var tag in _tags.Where(tag => !job.Tags.Contains(tag)))
                     {
                         job.Tags.Add(tag);
                     }
                 }
-            }
-        }
-        else if (editMode == EditMode.Remove)
-        {
-            var jobTagsToRemove = jobs
-                .SelectMany(s => s.Tags.Where(t => !tags.Contains(t)), (s, t) => (Job: s, Tag: t))
-                .ToArray();
-            foreach (var (job, tag) in jobTagsToRemove)
-            {
-                job.Tags.Remove(tag);
-            }
+
+                break;
+                
+            case EditMode.Remove:
+                var jobTagsToRemove = _jobs
+                    .SelectMany(s => s.Tags.Where(t => !_tags.Contains(t)), (s, t) => (Job: s, Tag: t))
+                    .ToArray();
+                foreach (var (job, tag) in jobTagsToRemove)
+                {
+                    job.Tags.Remove(tag);
+                }
+
+                break;
+                
+            default:
+                throw new ArgumentOutOfRangeException();
         }
 
-        await context.SaveChangesAsync();
-        await OnJobsSubmit.InvokeAsync(jobs);
+        await _context.SaveChangesAsync();
+        await OnJobsSubmit.InvokeAsync(_jobs);
 
         await CloseAsync();
     }
 
-    public void Dispose() => context?.Dispose();
+    public void Dispose() => _context?.Dispose();
 }

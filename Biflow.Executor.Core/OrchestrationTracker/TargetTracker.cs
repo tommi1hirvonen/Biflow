@@ -9,6 +9,9 @@ internal class TargetTracker(StepExecution stepExecution) : IOrchestrationTracke
         .Where(o => o.ReferenceType == DataObjectReferenceType.Target)
         .Select(o => o.ObjectId)
         .ToHashSet();
+    private readonly Dictionary<Guid, int> _limits = stepExecution.DataObjects
+        .Where(o => o.ReferenceType == DataObjectReferenceType.Target)
+        .ToDictionary(o => o.ObjectId, o => o.DataObject.MaxConcurrentWrites);
 
     public StepExecutionMonitor? HandleUpdate(OrchestrationUpdate value)
     {
@@ -18,23 +21,30 @@ internal class TargetTracker(StepExecution stepExecution) : IOrchestrationTracke
             return null;
         }
 
-        var (step, status) = value;
-
-        if ((step.StepId != stepExecution.StepId || step.ExecutionId != stepExecution.ExecutionId)
-            && step.DataObjects.Any(o => o.ReferenceType == DataObjectReferenceType.Target && _targets.Contains(o.ObjectId)))
+        var (otherStep, status) = value;
+        
+        // The other step is actually the same step.
+        if (otherStep.StepId == stepExecution.StepId && otherStep.ExecutionId == stepExecution.ExecutionId)
         {
-            _writers[step] = status;
-            return new()
-            {
-                ExecutionId = stepExecution.ExecutionId,
-                StepId = stepExecution.StepId,
-                MonitoredExecutionId = step.ExecutionId,
-                MonitoredStepId = step.StepId,
-                MonitoringReason = MonitoringReason.CommonTarget
-            };
+            return null;
         }
 
-        return null;
+        // The other step has no common targets.
+        if (!otherStep.DataObjects.Any(o =>
+                o.ReferenceType == DataObjectReferenceType.Target && _targets.Contains(o.ObjectId)))
+        {
+            return null;
+        }
+        
+        _writers[otherStep] = status;
+        return new()
+        {
+            ExecutionId = stepExecution.ExecutionId,
+            StepId = stepExecution.StepId,
+            MonitoredExecutionId = otherStep.ExecutionId,
+            MonitoredStepId = otherStep.StepId,
+            MonitoringReason = MonitoringReason.CommonTarget
+        };
     }
 
     public ObserverAction GetStepAction()
@@ -50,13 +60,10 @@ internal class TargetTracker(StepExecution stepExecution) : IOrchestrationTracke
             .SelectMany(w => w.Key.DataObjects.Where(o => o.ReferenceType == DataObjectReferenceType.Target && _targets.Contains(o.ObjectId)))
             .GroupBy(o => o.ObjectId)
             .Select(g => (Target: g.Key, Count: g.Count()));
-        var limits = stepExecution.DataObjects
-            .Where(o => o.ReferenceType == DataObjectReferenceType.Target)
-            .ToDictionary(o => o.ObjectId, o => o.DataObject.MaxConcurrentWrites);
         
         foreach (var (target, count) in targets)
         {
-            var limit = limits.GetValueOrDefault(target, 0);
+            var limit = _limits.GetValueOrDefault(target, 0);
             if (limit > 0 && count >= limit)
             {
                 return Actions.Wait;

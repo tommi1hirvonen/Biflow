@@ -7,7 +7,7 @@ public record VersionRevertCommand(EnvironmentSnapshot Snapshot) : IRequest;
 internal class VersionRevertCommandHandler(
     IDbContextFactory<RevertDbContext> dbContextFactory,
     ISchedulerService schedulerService,
-    ILogger<VersionRevertCommandHandler> loggger)
+    ILogger<VersionRevertCommandHandler> logger)
     : IRequestHandler<VersionRevertCommand>
 {
     public async Task Handle(VersionRevertCommand request, CancellationToken cancellationToken)
@@ -16,10 +16,10 @@ internal class VersionRevertCommandHandler(
         {
             var snapshot = request.Snapshot;
 
-            using var context = dbContextFactory.CreateDbContext();
+            await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
             // Manually controlling transactions is allowed since RevertDbContext does not use retry-on-failure execution strategy.
-            using var transaction = context.Database.BeginTransaction();
+            await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
 
 
             // Capture subscriptions, job and data table authorizations.
@@ -124,6 +124,18 @@ internal class VersionRevertCommandHandler(
                     ?.ApiToken ?? "";
             }
 
+            var capturedDbtAccountTokens = await context.DbtAccounts
+                .AsNoTracking()
+                .Select(a => new { a.DbtAccountId, a.ApiToken })
+                .ToArrayAsync(cancellationToken);
+
+            foreach (var account in snapshot.DbtAccounts.Where(a => string.IsNullOrEmpty(a.ApiToken)))
+            {
+                account.ApiToken = capturedDbtAccountTokens
+                    .FirstOrDefault(a => a.DbtAccountId == account.DbtAccountId)
+                    ?.ApiToken ?? "";
+            }
+
             var capturedCredentials = await context.Credentials
                 .AsNoTracking()
                 .Select(c => new { c.CredentialId, c.Password })
@@ -138,8 +150,18 @@ internal class VersionRevertCommandHandler(
 
             var capturedFunctionStepKeys = await context.FunctionSteps
                 .AsNoTracking()
+                .Where(s => !string.IsNullOrEmpty(s.FunctionKey))
                 .Select(s => new { s.StepId, s.FunctionKey })
                 .ToArrayAsync(cancellationToken);
+            
+            var functionSteps = snapshot.Jobs.SelectMany(j =>
+                j.Steps.OfType<FunctionStep>().Where(s => string.IsNullOrEmpty(s.FunctionKey)));
+            foreach (var step in functionSteps)
+            {
+                step.FunctionKey = capturedFunctionStepKeys
+                    .FirstOrDefault(s => s.StepId == step.StepId)
+                    ?.FunctionKey;
+            }
 
 
             // Delete all records for entities that are part of the revert process.
@@ -184,6 +206,7 @@ internal class VersionRevertCommandHandler(
             await context.FunctionApps.ExecuteDeleteAsync(cancellationToken);
             await context.QlikCloudEnvironments.ExecuteDeleteAsync(cancellationToken);
             await context.DatabricksWorkspaces.ExecuteDeleteAsync(cancellationToken);
+            await context.DbtAccounts.ExecuteDeleteAsync(cancellationToken);
             await context.BlobStorageClients.ExecuteDeleteAsync(cancellationToken);
             await context.Credentials.ExecuteDeleteAsync(cancellationToken);
             await context.AppRegistrations.ExecuteDeleteAsync(cancellationToken);
@@ -202,6 +225,7 @@ internal class VersionRevertCommandHandler(
             context.FunctionApps.AddRange(snapshot.FunctionApps);
             context.QlikCloudEnvironments.AddRange(snapshot.QlikCloudEnvironments);
             context.DatabricksWorkspaces.AddRange(snapshot.DatabricksWorkspaces);
+            context.DbtAccounts.AddRange(snapshot.DbtAccounts);
             context.BlobStorageClients.AddRange(snapshot.BlobStorageClients);
             await context.SaveChangesAsync(cancellationToken);
 
@@ -283,7 +307,7 @@ internal class VersionRevertCommandHandler(
         }
         catch (Exception ex)
         {
-            loggger.LogError(ex, "Error reverting version");
+            logger.LogError(ex, "Error reverting version");
             throw;
         }
     }

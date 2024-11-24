@@ -32,7 +32,8 @@ internal class StepExecutionAttemptEntityTypeConfiguration : IEntityTypeConfigur
             .HasValue<TabularStepExecutionAttempt>(StepType.Tabular)
             .HasValue<EmailStepExecutionAttempt>(StepType.Email)
             .HasValue<QlikStepExecutionAttempt>(StepType.Qlik)
-            .HasValue<DatabricksStepExecutionAttempt>(StepType.Databricks);
+            .HasValue<DatabricksStepExecutionAttempt>(StepType.Databricks)
+            .HasValue<DbtStepExecutionAttempt>(StepType.Dbt);
 
         builder.Property(x => x.InfoMessages)
             .HasColumnName("InfoMessages")

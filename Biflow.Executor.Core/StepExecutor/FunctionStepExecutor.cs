@@ -54,7 +54,10 @@ internal class FunctionStepExecutor(
             // A durable function will return immediately and run asynchronously.
             response = await client.SendAsync(request, cancellationToken);
             content = await response.Content.ReadAsStringAsync(CancellationToken.None);
-            attempt.AddOutput(content);
+            if (!string.IsNullOrEmpty(content))
+            {
+                attempt.AddOutput($"Response:\n{content}");
+            }
         }
         catch (OperationCanceledException ex)
         {
@@ -95,7 +98,7 @@ internal class FunctionStepExecutor(
         // Update instance id for the step execution attempt
         try
         {
-            using var context = _dbContextFactory.CreateDbContext();
+            await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.FunctionInstanceId = startResponse.Id;
             await context.Set<FunctionStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
@@ -114,7 +117,7 @@ internal class FunctionStepExecutor(
             try
             {
                 status = await GetStatusWithRetriesAsync(client, step, startResponse.StatusQueryGetUri, linkedCts.Token);
-                if (status.RuntimeStatus == "Pending" || status.RuntimeStatus == "Running" || status.RuntimeStatus == "ContinuedAsNew")
+                if (status.RuntimeStatus is "Pending" or "Running" or "ContinuedAsNew")
                 {
                     await Task.Delay(_pollingIntervalMs, linkedCts.Token);
                 }
@@ -142,20 +145,21 @@ internal class FunctionStepExecutor(
             }
         }
 
-        if (status.RuntimeStatus == "Completed")
+        switch (status.RuntimeStatus)
         {
-            attempt.AddOutput(status.Output?.ToString());
-            return Result.Success;
-        }
-        else if (status.RuntimeStatus == "Terminated")
-        {
-            attempt.AddError(status.Output?.ToString() ?? "Function was terminated");
-            return Result.Failure;
-        }
-        else
-        {
-            attempt.AddError(status.Output?.ToString() ?? "Function failed");
-            return Result.Failure;
+            case "Completed":
+                var output = status.Output?.ToString();
+                if (!string.IsNullOrWhiteSpace(output))
+                {
+                    attempt.AddOutput($"Output:\n{output}");
+                }
+                return Result.Success;
+            case "Terminated":
+                attempt.AddError(status.Output?.ToString() ?? "Function was terminated");
+                return Result.Failure;
+            default:
+                attempt.AddError(status.Output?.ToString() ?? "Function failed");
+                return Result.Failure;
         }
     }
 
@@ -169,7 +173,6 @@ internal class FunctionStepExecutor(
                     : new CancellationTokenSource();
 
         HttpResponseMessage response;
-        string content;
         try
         {
             // The linked timeout token will cancel if the timeout expires or the step was canceled manually.
@@ -182,8 +185,11 @@ internal class FunctionStepExecutor(
 
             // Send the request to the function url. This will start the function, if the request was successful.
             response = await noTimeoutClient.SendAsync(request, linkedCts.Token);
-            content = await response.Content.ReadAsStringAsync(CancellationToken.None);
-            attempt.AddOutput(content);
+            var content = await response.Content.ReadAsStringAsync(CancellationToken.None);
+            if (!string.IsNullOrEmpty(content))
+            {
+                attempt.AddOutput($"Response:\n{content}");
+            }
         }
         catch (OperationCanceledException ex)
         {
@@ -222,11 +228,11 @@ internal class FunctionStepExecutor(
         try
         {
             // Try and get the function key from the actual step if it was defined.
-            using var context = _dbContextFactory.CreateDbContext();
+            await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             functionKey = await context.FunctionSteps
                 .AsNoTracking()
-                .Where(step => step.StepId == step.StepId)
-                .Select(step => step.FunctionKey)
+                .Where(s => s.StepId == step.StepId)
+                .Select(s => s.FunctionKey)
                 .FirstOrDefaultAsync(cancellationToken);
         }
         catch (Exception ex)
@@ -238,7 +244,7 @@ internal class FunctionStepExecutor(
         var message = new HttpRequestMessage(HttpMethod.Post, step.FunctionUrl);
 
         // Add function security code as a request header. If the function specific code was defined, use that.
-        // Otherwise revert to the function app code if it was defined.
+        // Otherwise, revert to the function app code if it was defined.
         var functionApp = step.GetApp();
         ArgumentNullException.ThrowIfNull(functionApp);
 
@@ -247,14 +253,17 @@ internal class FunctionStepExecutor(
         {
             message.Headers.Add("x-functions-key", functionKey);
         }
-
-        // If the input for the function was defined, add it to the request content.
-        if (!string.IsNullOrEmpty(step.FunctionInput))
+        
+        if (string.IsNullOrEmpty(step.FunctionInput))
         {
-            var parameters = step.StepExecutionParameters.ToStringDictionary();
-            var input = step.FunctionInput.Replace(parameters);
-            message.Content = new StringContent(input);
+            return message;
         }
+        
+        // If the input for the function was defined, add it to the request content.
+        var parameters = step.StepExecutionParameters.ToStringDictionary();
+        var input = step.FunctionInput.Replace(parameters);
+        attempt.AddOutput($"Evaluated function input:\n{input}");
+        message.Content = new StringContent(input);
 
         return message;
     }
@@ -289,14 +298,14 @@ internal class FunctionStepExecutor(
             .Handle<Exception>()
             .WaitAndRetryAsync(
             retryCount: MaxRefreshRetries,
-            sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_pollingIntervalMs),
-            onRetry: (ex, waitDuration) =>
+            sleepDurationProvider: _ => TimeSpan.FromMilliseconds(_pollingIntervalMs),
+            onRetry: (ex, _) =>
                 _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting function instance status", step.ExecutionId, step));
 
-        return await policy.ExecuteAsync(async (cancellationToken) =>
+        return await policy.ExecuteAsync(async cancellation =>
         {
-            var response = await client.GetAsync(statusUrl, cancellationToken);
-            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+            var response = await client.GetAsync(statusUrl, cancellation);
+            var content = await response.Content.ReadAsStringAsync(cancellation);
             var statusResponse = JsonSerializer.Deserialize<StatusResponse>(content, CamelCaseOptions)
                 ?? throw new InvalidOperationException("Status response was null");
             return statusResponse;

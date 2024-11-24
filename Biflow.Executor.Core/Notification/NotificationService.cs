@@ -13,7 +13,7 @@ internal class NotificationService(
 
     public async Task SendCompletionNotificationAsync(Execution execution)
     {
-        if (!execution.Notify && execution.NotifyCaller is null)
+        if (execution is { Notify: false, NotifyCaller: null })
         {
             return;
         }
@@ -34,8 +34,7 @@ internal class NotificationService(
             return;
         }
 
-        string messageBody = string.Empty;
-
+        var messageBody = string.Empty;
         try
         {
             var statusColor = execution.ExecutionStatus switch
@@ -152,13 +151,12 @@ internal class NotificationService(
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} Error sending notification email.", execution.ExecutionId);
-            return;
         }
     }
 
     public async Task SendLongRunningExecutionNotificationAsync(Execution execution)
     {
-        if (!execution.Notify && !execution.NotifyCallerOvertime)
+        if (execution is { Notify: false, NotifyCallerOvertime: false })
         {
             return;
         }
@@ -190,7 +188,6 @@ internal class NotificationService(
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} Error sending notification email.", execution.ExecutionId);
-            return;
         }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace Biflow.DataAccess;
 
-public interface IExecutionBuilderFactory<TDbContext> where TDbContext : AppDbContext
+public interface IExecutionBuilderFactory<out TDbContext> where TDbContext : AppDbContext
 {
     /// <summary>
     /// 
@@ -10,6 +10,7 @@ public interface IExecutionBuilderFactory<TDbContext> where TDbContext : AppDbCo
     /// <param name="jobId"></param>
     /// <param name="createdBy"></param>
     /// <param name="predicates">List of predicates to be applied as where clause predicates when translating the database query</param>
+    /// <param name="cancellationToken"></param>
     /// <returns><see cref="ExecutionBuilder"/> if <see cref="Job"/> was found with the given <paramref name="jobId"/>, <see langword="null"/> if not</returns>
     public Task<ExecutionBuilder?> CreateAsync(
         Guid jobId,
@@ -24,6 +25,7 @@ public interface IExecutionBuilderFactory<TDbContext> where TDbContext : AppDbCo
     /// <param name="createdBy"></param>
     /// <param name="parent">The parent <see cref="StepExecutionAttempt"/> that is creating/launching the built <see cref="Execution"/></param>
     /// <param name="predicates">List of predicates to be applied as where clause predicates when translating the database query</param>
+    /// <param name="cancellationToken"></param>
     /// <returns><see cref="ExecutionBuilder"/> if <see cref="Job"/> was found with the given <paramref name="jobId"/>, <see langword="null"/> if not</returns>
     public Task<ExecutionBuilder?> CreateAsync(
         Guid jobId,
@@ -38,6 +40,7 @@ public interface IExecutionBuilderFactory<TDbContext> where TDbContext : AppDbCo
     /// <param name="jobId"></param>
     /// <param name="scheduleId"></param>
     /// <param name="predicates">List of predicates to be applied as where clause predicates when translating the database query</param>
+    /// <param name="cancellationToken"></param>
     /// <returns><see cref="ExecutionBuilder"/> if <see cref="Job"/> was found with the given <paramref name="jobId"/>, <see langword="null"/> if not</returns>
     public Task<ExecutionBuilder?> CreateAsync(
         Guid jobId,

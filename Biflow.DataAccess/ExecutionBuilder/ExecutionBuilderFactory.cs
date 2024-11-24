@@ -26,8 +26,8 @@ internal class ExecutionBuilderFactory<TDbContext>(IDbContextFactory<TDbContext>
             return null;
         }
         var (context, job, steps) = data;
-        Execution createExecution() => new(job, createdBy, parent);
-        return new ExecutionBuilder(context, createExecution, steps);
+        return new ExecutionBuilder(context, CreateExecution, steps);
+        Execution CreateExecution() => new(job, createdBy, parent);
     }
 
     public async Task<ExecutionBuilder?> CreateAsync(
@@ -45,8 +45,8 @@ internal class ExecutionBuilderFactory<TDbContext>(IDbContextFactory<TDbContext>
         var schedule = await context.Schedules
             .AsNoTracking()
             .FirstOrDefaultAsync(s => s.ScheduleId == scheduleId, cancellationToken);
-        Execution createExecution() => new(job, schedule);
-        return new ExecutionBuilder(context, createExecution, steps);
+        return new ExecutionBuilder(context, CreateExecution, steps);
+        Execution CreateExecution() => new(job, schedule);
     }
 
     private async Task<BuilderData?> GetBuilderDataAsync(
@@ -67,10 +67,8 @@ internal class ExecutionBuilderFactory<TDbContext>(IDbContextFactory<TDbContext>
         var stepsQuery = context.Steps
             .AsNoTrackingWithIdentityResolution()
             .Where(s => s.JobId == job.JobId);
-        foreach (var predicate in predicates ?? [])
-        {
-            stepsQuery = stepsQuery.Where(predicate(context));
-        }
+        stepsQuery = (predicates ?? [])
+            .Aggregate(stepsQuery, (current, predicate) => current.Where(predicate(context)));
         var steps = await stepsQuery
             .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.ExpressionParameters)}")
             .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.InheritFromJobParameter)}")

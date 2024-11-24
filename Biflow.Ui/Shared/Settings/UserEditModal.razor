@@ -1,22 +1,22 @@
 ﻿
-<HxModal @ref="modal" Title="@(IsNewUser ? "New user" : $"Edit {currentUsername}")" Scrollable="true" Size="ModalSize.Large" OnClosed="OnClosed">
+<HxModal @ref="_modal" Title="@(IsNewUser ? "New user" : $"Edit {_currentUsername}")" Scrollable="true" Size="ModalSize.Large" OnClosed="OnClosed">
     <BodyTemplate>
-        @if (model is not null)
+        @if (_model is not null)
         {
             <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
-            <EditForm Model="model" id="user_edit_form" OnValidSubmit="SubmitUser">
+            <EditForm Model="_model" id="user_edit_form" OnValidSubmit="SubmitUser">
                 <div class="row">
                     <div class="col-md-10 mx-auto">
                         <ObjectGraphDataAnnotationsValidator />
                         <ValidationSummary />
-                        <FluentValidationValidator Validator="validator" />
+                        <FluentValidationValidator Validator="_validator" />
                         <div>
                             <label class="form-label">Username</label>
                             <div class="input-group">
                                 <div class="input-group-text">
-                                    <SvgIcon Icon="FeatherIcon.User" />
+                                    <SvgIcon Icon="LucideIcon.User" />
                                 </div>
-                                <InputText class="form-control" @bind-Value="model.User.Username"></InputText>
+                                <InputText class="form-control" @bind-Value="_model.User.Username"></InputText>
                             </div>
                         </div>
                         <div class="mt-3">
@@ -26,82 +26,82 @@
                             <div class="col">
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" id="role_radio_admin"
-                                           checked=@model.User.Roles.Contains(Roles.Admin)
-                                    @onchange="@(e => model.User.SetIsAdmin())">
+                                           checked=@_model.User.Roles.Contains(Roles.Admin)
+                                    @onchange="@(_ => _model.User.SetIsAdmin())">
                                     <label class="form-check-label fw-normal" for="role_radio_admin">
                                         Admin
                                         <HxPopover Trigger="PopoverTrigger.Hover" Content="Admins have full edit and execute rights to all jobs, access to global settings including users and they can fully manage environment version snapshot, including reverting to previous snapshots.">
-                                            <SvgIcon Icon="FeatherIcon.Info" />
+                                            <SvgIcon Icon="LucideIcon.Info" />
                                         </HxPopover>
                                     </label>
                                 </div>
                                 <div class="form-check mt-1">
                                     <input class="form-check-input" type="radio" id="role_radio_editor"
-                                           checked=@model.User.Roles.Contains(Roles.Editor)
-                                    @onchange="@(e => model.User.SetIsEditor())">
+                                           checked=@_model.User.Roles.Contains(Roles.Editor)
+                                    @onchange="@(_ => _model.User.SetIsEditor())">
                                     <label class="form-check-label fw-normal" for="role_radio_editor">
                                         Editor
                                         <HxPopover Trigger="PopoverTrigger.Hover" Content="Editors have full edit and execute rights to all jobs. Editors can also create environment version snapshots but not revert them.">
-                                            <SvgIcon Icon="FeatherIcon.Info" />
+                                            <SvgIcon Icon="LucideIcon.Info" />
                                         </HxPopover>
                                     </label>
                                 </div>
                                 <div class="form-check mt-1">
                                     <input class="form-check-input" type="radio" id="role_radio_operator"
-                                           checked=@model.User.Roles.Contains(Roles.Operator)
-                                    @onchange="@(e => model.User.SetIsOperator())">
+                                           checked=@_model.User.Roles.Contains(Roles.Operator)
+                                    @onchange="@(_ => _model.User.SetIsOperator())">
                                     <label class="form-check-label fw-normal" for="role_radio_operator">
                                         Operator
                                         <HxPopover Trigger="PopoverTrigger.Hover" Content="Operators have execute access to jobs the user has been authorized to execute and view.">
-                                            <SvgIcon Icon="FeatherIcon.Info" />
+                                            <SvgIcon Icon="LucideIcon.Info" />
                                         </HxPopover>
                                     </label>
                                 </div>
                                 <div class="form-check mt-1">
                                     <input class="form-check-input" type="radio" id="role_radio_viewer"
-                                           checked=@model.User.Roles.Contains(Roles.Viewer)
-                                    @onchange="@(e => model.User.SetIsViewer())">
+                                           checked=@_model.User.Roles.Contains(Roles.Viewer)
+                                    @onchange="@(_ => _model.User.SetIsViewer())">
                                     <label class="form-check-label fw-normal" for="role_radio_viewer">
                                         Viewer
                                         <HxPopover Trigger="PopoverTrigger.Hover" Content="Viewers can view executions and details related to jobs they have been authorized to view.">
-                                            <SvgIcon Icon="FeatherIcon.Info" />
+                                            <SvgIcon Icon="LucideIcon.Info" />
                                         </HxPopover>
                                     </label>
                                 </div>
                             </div>
                             <div class="col">
-                                @if (!model.User.Roles.Contains(Roles.Admin))
+                                @if (!_model.User.Roles.Contains(Roles.Admin))
                                 {
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" id="role_radio_version_manager"
-                                               checked=@model.User.Roles.Contains(Roles.VersionManager)
-                                               @onchange="@(e => model.User.SetIsVersionManager((bool)e.Value!))">
+                                               checked=@_model.User.Roles.Contains(Roles.VersionManager)
+                                               @onchange="@(e => _model.User.SetIsVersionManager((bool)e.Value!))">
                                         <label class="form-check-label fw-normal" for="role_radio_version_manager">
                                             Version Manager
                                             <HxPopover Trigger="PopoverTrigger.Hover" Content="Version managers can fully manage environment version snapshots, including reverting them.">
-                                                <SvgIcon Icon="FeatherIcon.Info" />
+                                                <SvgIcon Icon="LucideIcon.Info" />
                                             </HxPopover>
                                         </label>
                                     </div>
                                     <div class="form-check mt-1">
                                         <input class="form-check-input" type="checkbox" id="role_radio_settings_editor"
-                                               checked=@model.User.Roles.Contains(Roles.SettingsEditor)
-                                               @onchange="@(e => model.User.SetIsSettingsEditor((bool)e.Value!))">
+                                               checked=@_model.User.Roles.Contains(Roles.SettingsEditor)
+                                               @onchange="@(e => _model.User.SetIsSettingsEditor((bool)e.Value!))">
                                         <label class="form-check-label fw-normal" for="role_radio_settings_editor">
                                             Settings Editor
                                             <HxPopover Trigger="PopoverTrigger.Hover" Content="Settings editors can manage (create, edit, delete) connections, app registrations, pipeline clients, function apps and Qlik environments">
-                                                <SvgIcon Icon="FeatherIcon.Info" />
+                                                <SvgIcon Icon="LucideIcon.Info" />
                                             </HxPopover>
                                         </label>
                                     </div>
                                     <div class="form-check mt-1">
                                         <input class="form-check-input" type="checkbox" id="role_radio_datatable_maintainer"
-                                               checked=@model.User.Roles.Contains(Roles.DataTableMaintainer)
-                                        @onchange="@(e => model.User.SetIsDataTableMaintainer((bool)e.Value!))">
+                                               checked=@_model.User.Roles.Contains(Roles.DataTableMaintainer)
+                                        @onchange="@(e => _model.User.SetIsDataTableMaintainer((bool)e.Value!))">
                                         <label class="form-check-label fw-normal" for="role_radio_datatable_maintainer">
                                             Data Table Maintainer
                                             <HxPopover Trigger="PopoverTrigger.Hover" Content="Data table maintainers can manage (create, edit delete) data tables and edit their content.">
-                                                <SvgIcon Icon="FeatherIcon.Info" />
+                                                <SvgIcon Icon="LucideIcon.Info" />
                                             </HxPopover>
                                         </label>
                                     </div>
@@ -112,171 +112,178 @@
                             <label class="form-label">Email</label>
                             <div class="input-group">
                                 <div class="input-group-text">
-                                    <SvgIcon Icon="FeatherIcon.AtSign" />
+                                    <SvgIcon Icon="LucideIcon.AtSign" />
                                 </div>
-                                <InputText class="form-control" type="email" @bind-Value="model.User.Email"></InputText>
+                                <InputText class="form-control" type="email" @bind-Value="_model.User.Email"></InputText>
                             </div>
                         </div>
-                        @if (IsNewUser && AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn)
+                        @if (IsNewUser && _authenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn)
                         {
-                            ArgumentNullException.ThrowIfNull(model.PasswordModel);
+                            ArgumentNullException.ThrowIfNull(_model.PasswordModel);
                             <div class="mt-3">
                                 <label class="form-label">Password</label>
                                 <div class="input-group">
                                     <div class="input-group-text">
-                                        <SvgIcon Icon="FeatherIcon.Lock" />
+                                        <SvgIcon Icon="LucideIcon.Lock" />
                                     </div>
-                                    <InputText class="form-control" type="password" @bind-Value="model.PasswordModel.Password"></InputText>
+                                    <InputText class="form-control" type="password" @bind-Value="_model.PasswordModel.Password"></InputText>
                                 </div>
                             </div>
                             <div class="mt-3">
                                 <label class="form-label">Confirm password</label>
                                 <div class="input-group">
                                     <div class="input-group-text">
-                                        <SvgIcon Icon="FeatherIcon.Key" />
+                                        <SvgIcon Icon="LucideIcon.Key" />
                                     </div>
-                                    <InputText class="form-control" type="password" @bind-Value="model.PasswordModel.ConfirmPassword"></InputText>
+                                    <InputText class="form-control" type="password" @bind-Value="_model.PasswordModel.ConfirmPassword"></InputText>
                                 </div>
                             </div>
                         }
-                        @if (!model.User.Roles.Contains(Roles.Admin))
+                        @if (!_model.User.Roles.Contains(Roles.Admin))
                         {
                             <div class="mt-4">
                                 <strong>Authorization</strong>
                             </div>
-                            <ul class="nav nav-tabs mt-3">
+                            <ul class="nav nav-underline mt-3">
                                 <li class="nav-item">
-                                    <a class="nav-link @(currentPane == AuthorizationPane.Jobs ? "active" : null)"
-                                       href="javascript:void()"
-                                       @onclick="() => currentPane = AuthorizationPane.Jobs">
+                                    <a class="nav-link @(_currentPane == AuthorizationPane.Jobs ? "active" : null)"
+                                       href="javascript:void(0)"
+                                       @onclick="() => _currentPane = AuthorizationPane.Jobs">
                                         Jobs
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link @(currentPane == AuthorizationPane.DataTables ? "active" : null)"
-                                       href="javascript:void()"
-                                       @onclick="() => currentPane = AuthorizationPane.DataTables">
+                                    <a class="nav-link @(_currentPane == AuthorizationPane.DataTables ? "active" : null)"
+                                       href="javascript:void(0)"
+                                       @onclick="() => _currentPane = AuthorizationPane.DataTables">
                                         Data tables
                                     </a>
                                 </li>
                             </ul>
-                            @if (currentPane == AuthorizationPane.Jobs && model.User.Roles.Contains(Roles.Editor))
+                            @switch (_currentPane)
                             {
-                                <div class="row mt-3">
-                                    <div class="col">
-                                        <span class="text-muted fst-italic mt-3">
-                                            User has @Roles.Editor role and is implicitly authorized to edit all jobs.
-                                        </span>
+                                case AuthorizationPane.Jobs when _model.User.Roles.Contains(Roles.Editor):
+                                    <div class="row mt-3">
+                                        <div class="col">
+                                            <span class="text-muted fst-italic mt-3">
+                                                User has @Roles.Editor role and is implicitly authorized to edit all jobs.
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
-                            }
-                            else if (currentPane == AuthorizationPane.Jobs)
-                            {
-                                <div class="mt-3">
-                                    <div class="form-check form-check-inline">
-                                        <input type="checkbox" class="form-check-input" id="authorize_all_jobs"
-                                           checked=@model.User.AuthorizeAllJobs
-                                        @bind-value="model.User.AuthorizeAllJobs">
-                                        <label class="form-check-label" for="authorize_all_jobs">Authorize all jobs</label>
-                                    </div>
-                                </div>
-                                @if (!model.User.AuthorizeAllJobs)
+                                    break;
+                                case AuthorizationPane.Jobs:
                                 {
-                                    <div class="list-group mt-3">
-                                        @if (jobs is null)
-                                        {
-                                            <div class="list-group-item text-center"><HxSpinner Color="ThemeColor.Secondary" /></div>
-                                        }
-                                        else if (!jobs.Any())
-                                        {
-                                            <div class="list-group-item">No jobs</div>
-                                        }
-                                        else
-                                        {
-                                            @foreach (var job in jobs.OrderBy(j => j.JobName))
+                                    <div class="mt-3">
+                                        <div class="form-check form-check-inline">
+                                            <input type="checkbox" class="form-check-input" id="authorize_all_jobs"
+                                                   checked=@_model.User.AuthorizeAllJobs
+                                                                                @bind-value="_model.User.AuthorizeAllJobs">
+                                            <label class="form-check-label" for="authorize_all_jobs">Authorize all jobs</label>
+                                        </div>
+                                    </div>
+                                    if (!_model.User.AuthorizeAllJobs)
+                                    {
+                                        <div class="list-group mt-3">
+                                            @if (_jobs is null)
                                             {
-                                                <div class="list-group-item">
-                                                    <div class="row">
-                                                        <div class="col">
-                                                            @job.JobName
-                                                        </div>
-                                                        <div class="col-auto">
-                                                            <div class="form-check form-check-inline">
-                                                                <input type="checkbox" class="form-check-input" id="authorize_@job.JobId"
-                                                                        checked=@model.User.Jobs.Any(j => j.JobId == job.JobId)
-                                                                        @onchange="args => ToggleJobAuthorization(args, job)">
-                                                                <label class="form-check-label" for="authorize_@job.JobId"></label>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                <div class="list-group-item text-center"><HxSpinner Color="ThemeColor.Secondary" /></div>
                                             }
-                                        }
-                                    </div>
-                                }
-                            }
-                            else if (currentPane == AuthorizationPane.DataTables && model.User.Roles.Contains(Roles.DataTableMaintainer))
-                            {
-                                <div class="row mt-3">
-                                    <div class="col">
-                                        <span class="text-muted fst-italic mt-3">
-                                            User has @Roles.DataTableMaintainer role and is implicitly authorized to edit all data tables.
-                                        </span>
-                                    </div>
-                                </div>
-                            }
-                            else if (currentPane == AuthorizationPane.DataTables)
-                            {
-                                <div class="mt-3">
-                                    <div class="form-check form-check-inline">
-                                        <input type="checkbox" class="form-check-input" id="authorize_all_datatables"
-                                               checked=@model.User.AuthorizeAllDataTables
-                                        @bind-value="model.User.AuthorizeAllDataTables">
-                                        <label class="form-check-label" for="authorize_all_datatables">Authorize all data tables</label>
-                                    </div>
-                                </div>
-                                @if (!model.User.AuthorizeAllDataTables)
-                                {
-                                    <div class="list-group mt-3">
-                                        @if (dataTables is null)
-                                        {
-                                            <div class="list-group-item text-center"><HxSpinner Color="ThemeColor.Secondary" /></div>
-                                        }
-                                        else if (!dataTables.Any())
-                                        {
-                                            <div class="list-group-item">No data tables</div>
-                                        }
-                                        else
-                                        {
-                                            foreach (var category in dataTables
-                                                .GroupBy(t => t.Category?.CategoryName ?? "No category")
-                                                .OrderBy(g => g.Key.Equals("No category"))
-                                                .ThenBy(g => g.Key))
-                                            {
-                                                <div class="list-group-item fw-bold list-group-header">
-                                                    @category.Key
-                                                </div>
-                                                @foreach (var table in category.OrderBy(t => t.DataTableName))
+                                            else {if (!_jobs.Any())
                                                 {
-                                                    <div class="list-group-item">
-                                                        <div class="row">
-                                                            <div class="col">
-                                                                @table.DataTableName
-                                                            </div>
-                                                            <div class="col-auto">
-                                                                <div class="form-check form-check-inline">
-                                                                    <input type="checkbox" class="form-check-input" id="authorize_@table.DataTableId"
-                                                                           checked=@model.User.DataTables.Any(t => t.DataTableId == table.DataTableId)
-                                                                           @onchange="args => ToggleDataTableAuthorization(args, table)">
-                                                                    <label class="form-check-label" for="authorize_@table.DataTableId"></label>
+                                                    <div class="list-group-item">No jobs</div>
+                                                }
+                                                else
+                                                {
+                                                    foreach (var job in _jobs.OrderBy(j => j.JobName))
+                                                    {
+                                                        <div class="list-group-item">
+                                                            <div class="row">
+                                                                <div class="col">
+                                                                    @job.JobName
+                                                                </div>
+                                                                <div class="col-auto">
+                                                                    <div class="form-check form-check-inline">
+                                                                        <input type="checkbox" class="form-check-input" id="authorize_@(job.JobId)"
+                                                                               checked=@_model.User.Jobs.Any(j => j.JobId == job.JobId)
+                                                                                                                                                @onchange="args => ToggleJobAuthorization(args, job)">
+                                                                        <label class="form-check-label" for="authorize_@(job.JobId)"></label>
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </div>
+                                                    }
                                                 }
                                             }
-                                        }
+                                        </div>
+                                    }
+
+                                    break;
+                                }
+                                case AuthorizationPane.DataTables when _model.User.Roles.Contains(Roles.DataTableMaintainer):
+                                    <div class="row mt-3">
+                                        <div class="col">
+                                            <span class="text-muted fst-italic mt-3">
+                                                User has @Roles.DataTableMaintainer role and is implicitly authorized to edit all data tables.
+                                            </span>
+                                        </div>
                                     </div>
+                                    break;
+                                case AuthorizationPane.DataTables:
+                                {
+                                    <div class="mt-3">
+                                        <div class="form-check form-check-inline">
+                                            <input type="checkbox" class="form-check-input" id="authorize_all_datatables"
+                                                   checked=@_model.User.AuthorizeAllDataTables
+                                                                                @bind-value="_model.User.AuthorizeAllDataTables">
+                                            <label class="form-check-label" for="authorize_all_datatables">Authorize all data tables</label>
+                                        </div>
+                                    </div>
+                                    if (!_model.User.AuthorizeAllDataTables)
+                                    {
+                                        <div class="list-group mt-3">
+                                            @if (_dataTables is null)
+                                            {
+                                                <div class="list-group-item text-center"><HxSpinner Color="ThemeColor.Secondary" /></div>
+                                            }
+                                            else {if (!_dataTables.Any())
+                                                {
+                                                    <div class="list-group-item">No data tables</div>
+                                                }
+                                                else
+                                                {
+                                                    foreach (var category in _dataTables
+                                                                 .GroupBy(t => t.Category?.CategoryName ?? "No category")
+                                                                 .OrderBy(g => g.Key.Equals("No category"))
+                                                                 .ThenBy(g => g.Key))
+                                                    {
+                                                        <div class="list-group-item fw-bold list-group-header">
+                                                            @category.Key
+                                                        </div>
+                                                        foreach (var table in category.OrderBy(t => t.DataTableName))
+                                                        {
+                                                            <div class="list-group-item">
+                                                                <div class="row">
+                                                                    <div class="col">
+                                                                        @table.DataTableName
+                                                                    </div>
+                                                                    <div class="col-auto">
+                                                                        <div class="form-check form-check-inline">
+                                                                            <input type="checkbox" class="form-check-input" id="authorize_@(table.DataTableId)"
+                                                                                   checked=@_model.User.DataTables.Any(t => t.DataTableId == table.DataTableId)
+                                                                                                                                                      @onchange="args => ToggleDataTableAuthorization(args, table)">
+                                                                            <label class="form-check-label" for="authorize_@(table.DataTableId)"></label>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        </div>
+                                    }
+
+                                    break;
                                 }
                             }
                         }
@@ -288,6 +295,6 @@
     
     <FooterTemplate>
         <HxSubmit form="user_edit_form" Color="ThemeColor.Success">@(IsNewUser ? "Add" : "Save")</HxSubmit>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>

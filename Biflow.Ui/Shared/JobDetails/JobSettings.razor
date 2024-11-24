@@ -3,48 +3,52 @@
 
 <div class="row">
     <div class="col-auto">
-        <div class="list-group shadow-sm">
-            <button type="button" class="list-group-item list-group-item-action @(activeTab == SettingsTab.General ? "active" : null)"
-                    @onclick="() => activeTab = SettingsTab.General">
-                <SvgIcon Icon="FeatherIcon.Info" />
-                &nbsp;
-                General
-            </button>
-            <button type="button" class="list-group-item list-group-item-action @(activeTab == SettingsTab.Execution ? "active" : null)"
-                    @onclick="() => activeTab = SettingsTab.Execution">
-                <SvgIcon Icon="FeatherIcon.Tool" />
-                &nbsp;
-                Execution mode
-            </button>
-            <button type="button" class="list-group-item list-group-item-action @(activeTab == SettingsTab.Concurrency ? "active" : null)"
-                    @onclick="() => activeTab = SettingsTab.Concurrency">
-                <SvgIcon Icon="FeatherIcon.Sliders" />
-                &nbsp;
-                Concurrency
-            </button>
-            <button type="button" class="list-group-item list-group-item-action @(activeTab == SettingsTab.SyncDependencies ? "active" : null)"
-                    @onclick="() => activeTab = SettingsTab.SyncDependencies">
-                <SvgIcon Icon="FeatherIcon.RefreshCw" />
-                &nbsp;
-                Sync dependencies
-            </button>
-        </div>
+        <ul class="nav flex-column nav-pills" style="gap: 0.2rem;">
+            <li class="nav-item">
+                <NavLink class="nav-link" href="@($"jobs/{Job?.JobId}/settings/general")">
+                    <SvgIcon Icon="LucideIcon.Info" />
+                    &nbsp;
+                    General
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="@($"jobs/{Job?.JobId}/settings/executionmode")">
+                    <SvgIcon Icon="LucideIcon.Wrench" />
+                    &nbsp;
+                    Execution mode
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="@($"jobs/{Job?.JobId}/settings/concurrency")">
+                    <SvgIcon Icon="LucideIcon.SlidersVertical" />
+                    &nbsp;
+                    Concurrency
+                </NavLink>
+            </li>
+            <li class="nav-item">
+                <NavLink class="nav-link" href="@($"jobs/{Job?.JobId}/settings/syncdependencies")">
+                    <SvgIcon Icon="LucideIcon.RefreshCw" />
+                    &nbsp;
+                    Sync dependencies
+                </NavLink>
+            </li>
+        </ul>
     </div>
     <div class="col">
-        <div class="card shadow-sm">
+        <div class="card">
             <div class="card-body">
-                @switch (activeTab)
+                @switch (Page)
                 {
-                    case SettingsTab.General:
+                    case "general":
                         <GeneralSettings />
                         break;
-                    case SettingsTab.Execution:
+                    case "executionmode":
                         <ExecutionSettings />
                         break;
-                    case SettingsTab.Concurrency:
+                    case "concurrency":
                         <ConcurrencySettings />
                         break;
-                    case SettingsTab.SyncDependencies:
+                    case "syncdependencies":
                         <DependenciesSynchronizer />
                         break;
                     default:
@@ -59,7 +63,5 @@
 @code {
     [CascadingParameter] public Job? Job { get; set; }
 
-    private SettingsTab activeTab = SettingsTab.General;
-
-    private enum SettingsTab { General, Execution, Concurrency, SyncDependencies }
+    [Parameter] public string? Page { get; set; }
 }

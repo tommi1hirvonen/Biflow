@@ -1,4 +1,3 @@
-@using Microsoft.AspNetCore.Components.Rendering
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.JSInterop
 
@@ -6,8 +5,8 @@
 
 @implements IAsyncDisposable
 
-@inject IJSRuntime js
-@inject ContextMenuService contextMenuService
+@inject IJSRuntime Js
+@inject ContextMenuService ContextMenuService
 
 <div class="dropdown position-absolute">
     <ul @ref="dropdown" class="dropdown-menu context-menu">
@@ -26,14 +25,14 @@
     protected override void OnInitialized()
     {
         dotNetObject = DotNetObjectReference.Create(this);
-        contextMenuService.OnShowContextMenu += HandleContextMenu;
+        ContextMenuService.OnShowContextMenu += HandleContextMenu;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            jsObject = await js.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/ContextMenu.js");
+            jsObject = await Js.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/ContextMenu.js");
             await jsObject.InvokeVoidAsync("attachWindowListeners", dropdown, dotNetObject);
         }
         if (eventArgs is not null && jsObject is not null && dotNetObject is not null)
@@ -78,7 +77,7 @@
 
     public async ValueTask DisposeAsync()
     {
-        contextMenuService.OnShowContextMenu -= HandleContextMenu;
+        ContextMenuService.OnShowContextMenu -= HandleContextMenu;
         if (jsObject is not null)
         {
             try

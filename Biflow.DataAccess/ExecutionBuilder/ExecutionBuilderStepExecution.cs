@@ -12,7 +12,7 @@ public class ExecutionBuilderStepExecution
         Parameters = stepExecution switch
         {
             IHasStepExecutionParameters hasParams => hasParams.StepExecutionParameters,
-            _ => Enumerable.Empty<StepExecutionParameterBase>()
+            _ => []
         };
     }
 
@@ -30,6 +30,6 @@ public class ExecutionBuilderStepExecution
 
     public IEnumerable<StepExecutionParameterBase> Parameters { get; }
 
-    public bool RemoveFromExecution() => Builder.Remove(_stepExecution);
+    public void RemoveFromExecution() => Builder.Remove(_stepExecution);
 }
 

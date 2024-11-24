@@ -6,21 +6,21 @@
 
 <div class="row">
     <div class="col small">
-        @if (accountName is not null)
+        @if (_accountName is not null)
         {
-            <span class="link-primary text-decoration-underline pointer" @onclick="() => items = null">
-                @accountName
+            <span class="link-primary text-decoration-underline pointer" @onclick="() => _items = null">
+                @_accountName
             </span>
             <span> / </span>
         }
-        @if (container is not null)
+        @if (_container is not null)
         {
-            <span class="link-primary text-decoration-underline pointer" @onclick="() => BrowseAsync(container)">
-                @container.Name
+            <span class="link-primary text-decoration-underline pointer" @onclick="() => BrowseAsync(_container)">
+                @_container.Name
             </span>
             <span> / </span>
         }
-        @foreach (var (segment, index) in prefix?.Split('/').SkipLast(1).Select((s, i) => (s, i)) ?? [])
+        @foreach (var (segment, index) in _prefix?.Split('/').SkipLast(1).Select((s, i) => (s, i)) ?? [])
         {
             <span class="link-primary text-decoration-underline pointer" @onclick="() => BrowseAsync(index)">
                 @segment
@@ -31,39 +31,39 @@
 </div>
 
 <ul class="list-group small mt-3">
-    @if (loading)
+    @if (_loading)
     {
         <li class="list-group-item text-center">
             <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
         </li>
     }
-    else if (items is not null)
+    else if (_items is not null)
     {
-        @foreach (var i in items)
+        @foreach (var i in _items)
         {
             @if (i.IsBlob)
             {
-                <li class="list-group-item list-group-item-action pointer d-flex align-items-center @(item == i.Blob ? "active" : null)" @onclick="() => SelectItemAsync(i.Blob)">
+                <li class="list-group-item list-group-item-action pointer d-flex align-items-center @(_item == i.Blob ? "active" : null)" @onclick="() => SelectItemAsync(i.Blob)">
                     <FileTypeIcon Filename="@i.Blob.Name" />
                     <span class="ms-1">
-                        @i.Blob.Name.Substring(prefix?.Length ?? 0)
+                        @i.Blob.Name.Substring(_prefix?.Length ?? 0)
                     </span>
                 </li>
             }
             else if (i.IsPrefix)
             {
                 <li class="list-group-item d-flex align-items-center">
-                    <SvgIcon Icon="FeatherIcon.Folder" />
+                    <SvgIcon Icon="LucideIcon.Folder" />
                     <span class="link-primary text-decoration-underline pointer ms-1" @onclick="() => BrowseAsync(i)">
-                        @i.Prefix.Substring(prefix?.Length ?? 0, i.Prefix.Length - (prefix?.Length ?? 0) - 1)
+                        @i.Prefix.Substring(_prefix?.Length ?? 0, i.Prefix.Length - (_prefix?.Length ?? 0) - 1)
                     </span>
                 </li>
             }
         }
     }
-    else if (containers is not null)
+    else if (_containers is not null)
     {
-        @foreach (var c in containers)
+        @foreach (var c in _containers)
         {
             <li class="list-group-item d-flex align-items-center">
                 <SvgIcon Icon="LucideIcon.Container" />
@@ -79,79 +79,79 @@
     [Parameter]
     public EventCallback<BlobSelectedResponse?> OnItemSelected { get; set; }
 
-    private BlobStorageExplorer? client;
-    private string? accountName;
-    private IEnumerable<BlobContainerItem>? containers;
-    private BlobContainerItem? container;
-    private IEnumerable<BlobHierarchyItem>? items;
-    private BlobItem? item;
-    private bool loading = false;
-    private string? prefix;
+    private BlobStorageExplorer? _client;
+    private string? _accountName;
+    private IEnumerable<BlobContainerItem>? _containers;
+    private BlobContainerItem? _container;
+    private IEnumerable<BlobHierarchyItem>? _items;
+    private BlobItem? _item;
+    private bool _loading = false;
+    private string? _prefix;
 
     public async Task SetClientAsync(BlobStorageClient client)
     {
-        this.client = client.CreateExplorer(TokenService);
-        prefix = null;
-        containers = null;
-        accountName = null;
-        container = null;
-        items = null;
-        item = null;
-        loading = true;
+        _client = client.CreateExplorer(TokenService);
+        _prefix = null;
+        _containers = null;
+        _accountName = null;
+        _container = null;
+        _items = null;
+        _item = null;
+        _loading = true;
         StateHasChanged();
-        containers = await this.client.GetContainersAsync();
-        accountName = this.client.StorageAccountName;
-        loading = false;
+        _containers = await _client.GetContainersAsync();
+        _accountName = _client.StorageAccountName;
+        _loading = false;
     }
 
     private async Task SelectItemAsync(BlobItem item)
     {
-        ArgumentNullException.ThrowIfNull(accountName);
-        ArgumentNullException.ThrowIfNull(container);
-        this.item = item;
-        await OnItemSelected.InvokeAsync(new(accountName, container.Name, item.Name));
+        ArgumentNullException.ThrowIfNull(_accountName);
+        ArgumentNullException.ThrowIfNull(_container);
+        _item = item;
+        await OnItemSelected.InvokeAsync(new(_accountName, _container.Name, item.Name));
     }
 
     private async Task BrowseAsync(BlobContainerItem container)
     {
-        ArgumentNullException.ThrowIfNull(client);
-        this.container = container;
-        prefix = null;
-        item = null;
+        ArgumentNullException.ThrowIfNull(_client);
+        _container = container;
+        _prefix = null;
+        _item = null;
         await OnItemSelected.InvokeAsync(null);
-        loading = true;
+        _loading = true;
         StateHasChanged();
-        items = await client.GetItemsAsync(container);
-        loading = false;
+        _items = await _client.GetItemsAsync(container);
+        _loading = false;
     }
 
     private async Task BrowseAsync(int index)
     {
-        ArgumentNullException.ThrowIfNull(client);
-        ArgumentNullException.ThrowIfNull(accountName);
-        ArgumentNullException.ThrowIfNull(container);
-        ArgumentNullException.ThrowIfNull(prefix);
-        item = null;
-        prefix = string.Join('/', prefix.Split('/').Take(index + 1)) + "/";
-        await OnItemSelected.InvokeAsync(new(accountName, container.Name, prefix));
-        loading = true;
+        ArgumentNullException.ThrowIfNull(_client);
+        ArgumentNullException.ThrowIfNull(_accountName);
+        ArgumentNullException.ThrowIfNull(_container);
+        ArgumentNullException.ThrowIfNull(_prefix);
+        _item = null;
+        _prefix = string.Join('/', _prefix.Split('/').Take(index + 1)) + "/";
+        await OnItemSelected.InvokeAsync(new(_accountName, _container.Name, _prefix));
+        _loading = true;
         StateHasChanged();
-        items = await client.GetItemsAsync(container, prefix);
-        loading = false;
+        _items = await _client.GetItemsAsync(_container, _prefix);
+        _loading = false;
     }
 
     private async Task BrowseAsync(BlobHierarchyItem item)
     {
-        ArgumentNullException.ThrowIfNull(client);
-        ArgumentNullException.ThrowIfNull(accountName);
-        ArgumentNullException.ThrowIfNull(container);
-        this.item = null;
-        prefix = item.Prefix;
-        await OnItemSelected.InvokeAsync(new(accountName, container.Name, item.Prefix));
-        loading = true;
+        ArgumentNullException.ThrowIfNull(_client);
+        ArgumentNullException.ThrowIfNull(_accountName);
+        ArgumentNullException.ThrowIfNull(_container);
+        _item = null;
+        _prefix = item.Prefix;
+        await OnItemSelected.InvokeAsync(new(_accountName, _container.Name, item.Prefix));
+        _loading = true;
         StateHasChanged();
-        items = await client.GetItemsAsync(container, item.Prefix);
-        loading = false;
+        _items = await _client.GetItemsAsync(_container, item.Prefix);
+        _loading = false;
     }
 
     public void Dispose()

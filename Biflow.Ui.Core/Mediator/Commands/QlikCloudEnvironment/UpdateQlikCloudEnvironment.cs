@@ -7,7 +7,7 @@ internal class UpdateQlikCloudEnvironmentCommandHandler(IDbContextFactory<AppDbC
 {
     public async Task Handle(UpdateQlikCloudEnvironmentCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         context.Attach(request.Environment).State = EntityState.Modified;
         await context.SaveChangesAsync(cancellationToken);
     }

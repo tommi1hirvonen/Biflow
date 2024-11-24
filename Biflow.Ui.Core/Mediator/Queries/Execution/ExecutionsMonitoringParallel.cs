@@ -59,7 +59,7 @@ internal class ExecutionsParallelQueryHandler(IDbContextFactory<AppDbContext> db
     private async Task<ExecutionProjection[]> GetExecutionsAsync(
         Expression<Func<Execution, bool>> predicate, CancellationToken cancellationToken)
     {
-        using var context = dbContextFactory.CreateDbContext();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var query = context.Executions
             .AsNoTracking()
             .AsSingleQuery()
@@ -80,7 +80,7 @@ internal class ExecutionsParallelQueryHandler(IDbContextFactory<AppDbContext> db
                 e.EndedOn,
                 e.ExecutionStatus,
                 e.StepExecutions.Count(),
-                job.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color)).ToArray()
+                job.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder)).ToArray()
             )).ToArrayAsync(cancellationToken);
     }
 }

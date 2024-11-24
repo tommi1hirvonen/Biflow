@@ -10,7 +10,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.XOctagon" />
+                        <SvgIcon Icon="LucideIcon.OctagonX" />
                     </div>
                     <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 5rem;"></InputNumber>
                 </div>
@@ -24,17 +24,20 @@
             </div>
             <div class="col-md-6 d-inline">
                 <div class="input-group input-group-sm">
-                    <div class="input-group-text">
-                        <ConnectionTypeIcon ConnectionType="Connection.ConnectionType" />
-                    </div>
+                    @if (Connection is { } c)
+                    {
+                        <div class="input-group-text">
+                            <ConnectionTypeIcon ConnectionType="c.ConnectionType"/>
+                        </div>    
+                    }
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId" @bind-Value:after="StateHasChanged">
-                        @foreach (var connection in SqlConnections ?? [])
+                        @foreach (var connection in SqlConnections)
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }
                     </InputSelect>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenStoredProcedureSelectModal">
-                        <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
+                        <SvgIcon Icon="LucideIcon.Ellipsis"/>
                         Stored procedures
                     </HxButton>
                 </div>
@@ -53,7 +56,7 @@
                             Language="sql"
                             MinimapEnabled="false"
                             InitialValueExpression="() => Step?.SqlStatement"
-                            OnValueChanged="value => Step.SqlStatement = value"
+                            OnValueChanged="value => Step.SqlStatement = value ?? string.Empty"
                             Resize="CodeEditor.CodeEditorResize.Both"/>
             </div>
         </div>
@@ -65,7 +68,7 @@
                 <label class="form-label mb-md-0">
                     Capture scalar result
                     <HxPopover Trigger="PopoverTrigger.Hover" Content="Capture and assign the scalar result of the SQL statement to a job parameter">
-                         <SvgIcon Icon="FeatherIcon.Info" />
+                         <SvgIcon Icon="LucideIcon.Info" />
                      </HxPopover>
                 </label>
             </div>
@@ -75,7 +78,7 @@
                 }
                 <InputSelect class="form-select form-select-sm" @bind-Value="Step.ResultCaptureJobParameterId" disabled=@(Step.Job.JobParameters.Any() == false)>
                     <option value="">@noneOption</option>
-                    @foreach (var jobParam in Step.Job.JobParameters.OrderBy(p => p.ParameterName) ?? Enumerable.Empty<JobParameter>())
+                    @foreach (var jobParam in Step.Job.JobParameters.OrderBy(p => p.ParameterName))
                     {
                         <option value="@jobParam.ParameterId">
                             @jobParam.ParameterName (@jobParam.ParameterValue.ValueType = @jobParam.ParameterValue.Value)

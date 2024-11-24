@@ -2,7 +2,6 @@
 
 @attribute [Authorize(Roles = $"{Roles.Admin}, {Roles.VersionManager}, {Roles.Editor}")]
 
-@inject NavigationManager NavigationManager
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 
 <PageTitle>Versions | Biflow</PageTitle>
@@ -13,10 +12,10 @@
 {
     <div class="row mt-3 mb-4">
         <div class="col">
-            <ul class="nav nav-tabs" role="tablist">
+            <ul class="nav nav-underline" role="tablist">
                 <li class="nav-item" role="presentation">
                     <NavLink class="nav-link" href="versions" Match="NavLinkMatch.All">
-                        <SvgIcon Icon="FeatherIcon.List" />
+                        <SvgIcon Icon="LucideIcon.List" />
                         List
                     </NavLink>
                 </li>
@@ -28,7 +27,7 @@
                 </li>
                 <li class="nav-item" role="presentation">
                     <NavLink class="nav-link" href="versions/help">
-                        <SvgIcon Icon="FeatherIcon.HelpCircle" />
+                        <SvgIcon Icon="LucideIcon.CircleHelp" />
                         Help
                     </NavLink>
                 </li>
@@ -37,29 +36,28 @@
     </div>
 }
 
-@if (Page is null)
+
+@switch (Page)
 {
-    <VersionsList Versions="versions" />   
-}
-else if (Page == "compare")
-{
-    <VersionsCompare Versions="versions" InitialSourceVersionId="VersionId" />
-}
-else if (Page == "help")
-{
-    <VersionsHelp />
-}
-else if (Page == "revert")
-{
-    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.VersionManager}")">
-        <VersionRevert VersionId="VersionId" />
-    </AuthorizeView>
-}
-else if (Page == "revertjson")
-{
-    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.VersionManager}")">
-        <VersionRevertJson />
-    </AuthorizeView>
+    case null:
+        <VersionsList Versions="_versions" />
+        break;
+    case "compare":
+        <VersionsCompare Versions="_versions" InitialSourceVersionId="VersionId" />
+        break;
+    case "help":
+        <VersionsHelp />
+        break;
+    case "revert":
+        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.VersionManager}")">
+            <VersionRevert VersionId="VersionId" />
+        </AuthorizeView>
+        break;
+    case "revertjson":
+        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.VersionManager}")">
+            <VersionRevertJson />
+        </AuthorizeView>
+        break;
 }
 
 @code {
@@ -67,12 +65,12 @@ else if (Page == "revertjson")
 
     [Parameter] public int? VersionId { get; set; }
 
-    private IList<VersionProjection>? versions;
+    private IList<VersionProjection>? _versions;
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = await DbContextFactory.CreateDbContextAsync();
-        versions = await context.EnvironmentVersions
+        await using var context = await DbContextFactory.CreateDbContextAsync();
+        _versions = await context.EnvironmentVersions
             .OrderByDescending(v => v.VersionId)
             .Select(v => new VersionProjection(v.VersionId, v.Description, v.CreatedOn, v.CreatedBy))
             .ToListAsync();

@@ -4,7 +4,10 @@ namespace Biflow.Core.Interfaces;
 
 public interface ITokenService
 {
-    public Task<(string Token, DateTimeOffset ExpiresOn)> GetTokenAsync(AppRegistration appRegistration, string resourceUrl);
+    public Task<(string Token, DateTimeOffset ExpiresOn)> GetTokenAsync(
+        AppRegistration appRegistration,
+        string resourceUrl,
+        CancellationToken cancellationToken = default);
 
-    public void Clear();
+    public Task ClearAsync(CancellationToken cancellationToken = default);
 }

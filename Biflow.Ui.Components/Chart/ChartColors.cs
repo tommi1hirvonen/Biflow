@@ -14,5 +14,5 @@ public static class ChartColors
     public const string Purple  = "#6f42c1";
 
     public static string[] AsArray() =>
-        new string[] { Indigo, Teal, Blue, Red, Yellow, Green, Orange, Cyan, Pink, Purple };
+        [Indigo, Teal, Blue, Red, Yellow, Green, Orange, Cyan, Pink, Purple];
 }

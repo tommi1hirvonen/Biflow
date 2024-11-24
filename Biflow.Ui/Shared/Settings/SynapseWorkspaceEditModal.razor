@@ -1,15 +1,13 @@
-﻿@implements IPipelineClientEditModal
-
-@inject IDbContextFactory<AppDbContext> DbFactory
+﻿@inject IDbContextFactory<AppDbContext> DbFactory
 @inject ToasterService Toaster
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 
-<HxModal @ref="modal" Size="ModalSize.Large" OnClosed="() => connectionTestSuccess = null" Title="@(synapseWorkspace?.PipelineClientId == Guid.Empty ? "New Synapse workspace" : "Edit " + synapseWorkspace?.PipelineClientName)">
+<HxModal @ref="_modal" Size="ModalSize.Large" OnClosed="() => _connectionTestSuccess = null" Title="@(_synapseWorkspace?.PipelineClientId == Guid.Empty ? "New Synapse workspace" : "Edit " + _synapseWorkspace?.PipelineClientName)">
     <BodyTemplate>
-        @if (synapseWorkspace is not null)
+        @if (_synapseWorkspace is not null)
         {
             <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
-            <EditForm Model="synapseWorkspace" id="df_edit_form" OnValidSubmit="SubmitSynapseAsync">
+            <EditForm Model="_synapseWorkspace" id="df_edit_form" OnValidSubmit="SubmitSynapseAsync">
                 <div class="row">
                     <div class="col mx-3">
                         <DataAnnotationsValidator />
@@ -18,14 +16,14 @@
                         <div class="row">
                             <div class="col">
                                 <label class="form-label">Synapse workspace name</label>
-                                <InputText class="form-control" @bind-Value="synapseWorkspace.PipelineClientName"></InputText>
+                                <InputText class="form-control" @bind-Value="_synapseWorkspace.PipelineClientName"></InputText>
                             </div>
                         </div>
 
                         <div class=" row mt-3">
                             <div class="col-lg-6">
                                 <label class="form-label">App registration</label>
-                                <InputSelect class="form-select" @bind-Value="synapseWorkspace.AppRegistrationId">
+                                <InputSelect class="form-select" @bind-Value="_synapseWorkspace.AppRegistrationId">
                                     @foreach (var app in AppRegistrations ?? Enumerable.Empty<AppRegistration>())
                                         {
                                         <option value="@app.AppRegistrationId">@app.AppRegistrationName</option>
@@ -37,13 +35,13 @@
                         <div class="row mt-3">
                             <div class="col-lg">
                                 <label class="form-label">Synapse workspace URL</label>
-                                <InputText class="form-control" @bind-Value="synapseWorkspace.SynapseWorkspaceUrl"></InputText>
+                                <InputText class="form-control" @bind-Value="_synapseWorkspace.SynapseWorkspaceUrl"></InputText>
                             </div>
                         </div>
 
                         <div class="row mt-3">
                             <div class="col">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="TestConnection" Enabled="!testingConnection">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="TestConnection" Enabled="!_testingConnection">
                                     Test connection
                                 </HxButton>
                             </div>
@@ -51,11 +49,11 @@
 
                         <div class="row mt-3">
                             <div class="col">
-                                @if (connectionTestSuccess == true)
+                                @if (_connectionTestSuccess == true)
                                 {
                                     <span class="badge bg-success">Success</span>
                                 }
-                                else if (connectionTestSuccess == false)
+                                else if (_connectionTestSuccess == false)
                                 {
                                     <span class="badge bg-danger">Failed</span>
                                 }
@@ -65,7 +63,7 @@
                         <div class="row mt-3">
                             <div class="col">
                                 <label class="form-label">Max concurrent pipeline step executions</label>
-                                <InputNumber class="form-control" style="max-width: 10rem;" @bind-Value="synapseWorkspace.MaxConcurrentPipelineSteps"></InputNumber>
+                                <InputNumber class="form-control" style="max-width: 10rem;" @bind-Value="_synapseWorkspace.MaxConcurrentPipelineSteps"></InputNumber>
                                 <div class="form-text">
                                     Limit the number of concurrently executing pipeline steps across all executions for this Synapse Workspace.
                                     <br />
@@ -79,8 +77,8 @@
         }
     </BodyTemplate>
     <FooterTemplate>
-        <HxSubmit form="df_edit_form" Color="ThemeColor.Success">@(synapseWorkspace?.PipelineClientId == Guid.Empty ? "Create" : "Save")</HxSubmit>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxSubmit form="df_edit_form" Color="ThemeColor.Success">@(_synapseWorkspace?.PipelineClientId == Guid.Empty ? "Create" : "Save")</HxSubmit>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>
 
@@ -91,50 +89,50 @@
     [Parameter]
     public List<AppRegistration>? AppRegistrations { get; set; }
 
-    private SynapseWorkspace? synapseWorkspace;
-    private HxModal? modal;
-    private bool? connectionTestSuccess = null;
-    private bool testingConnection = false;
+    private SynapseWorkspace? _synapseWorkspace;
+    private HxModal? _modal;
+    private bool? _connectionTestSuccess = null;
+    private bool _testingConnection = false;
 
     private async Task SubmitSynapseAsync()
     {
-        await OnSynapseWorkspaceSubmit.InvokeAsync(synapseWorkspace);
-        await modal.LetAsync(x => x.HideAsync());
+        await OnSynapseWorkspaceSubmit.InvokeAsync(_synapseWorkspace);
+        await _modal.LetAsync(x => x.HideAsync());
     }
 
     private async Task TestConnection()
     {
-        connectionTestSuccess = null;
-        testingConnection = true;
+        _connectionTestSuccess = null;
+        _testingConnection = true;
         try
         {
-            var appRegistration = AppRegistrations?.First(ar => ar.AppRegistrationId == synapseWorkspace?.AppRegistrationId)
-                ?? throw new ArgumentNullException("App registration cannot be null");
-            await (synapseWorkspace?.TestConnection(appRegistration) ?? Task.CompletedTask);
-            connectionTestSuccess = true;
+            var appRegistration = AppRegistrations?.First(ar => ar.AppRegistrationId == _synapseWorkspace?.AppRegistrationId)
+                ?? throw new ArgumentException("App registration cannot be null");
+            await (_synapseWorkspace?.TestConnection(appRegistration) ?? Task.CompletedTask);
+            _connectionTestSuccess = true;
         }
         catch (Exception ex)
         {
-            connectionTestSuccess = false;
+            _connectionTestSuccess = false;
             Toaster.AddError("Connection test failed", ex.Message);
         }
-        testingConnection = false;
+        _testingConnection = false;
     }
 
     private void OnOpenChanged(bool isOpen)
     {
         if (!isOpen)
-            connectionTestSuccess = null;
+            _connectionTestSuccess = null;
     }
 
     public async Task ShowAsync(Guid pipelineClientId)
     {
-        synapseWorkspace = null;
-        await modal.LetAsync(x => x.ShowAsync());
+        _synapseWorkspace = null;
+        await _modal.LetAsync(x => x.ShowAsync());
         if (pipelineClientId != Guid.Empty)
         {
-            using var context = DbFactory.CreateDbContext();
-            synapseWorkspace = await context.SynapseWorkspaces
+            await using var context = await DbFactory.CreateDbContextAsync();
+            _synapseWorkspace = await context.SynapseWorkspaces
                 .AsNoTrackingWithIdentityResolution()
                 .Include(s => s.Steps)
                 .ThenInclude(step => step.Job)
@@ -142,18 +140,18 @@
         }
         else
         {
-            synapseWorkspace = new()
+            _synapseWorkspace = new()
             {
                 AppRegistrationId = AppRegistrations?.FirstOrDefault()?.AppRegistrationId,
             };
         }
-        connectionTestSuccess = null;
-        testingConnection = false;
+        _connectionTestSuccess = null;
+        _testingConnection = false;
     }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
     {
-        var confirmed = await JS.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        var confirmed = await Js.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
         if (!confirmed)
         {
             context.PreventNavigation();

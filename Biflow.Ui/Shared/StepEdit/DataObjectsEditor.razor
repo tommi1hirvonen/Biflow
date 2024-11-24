@@ -1,15 +1,15 @@
 ﻿@inject ToasterService Toaster
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 
-@if (Step is SqlStep sql && sql.SqlStatement is not null && Connection is MsSqlConnection mssql)
+@if (Step is SqlStep sql && Connection is MsSqlConnection mssql)
 {
     <div class="row">
         <div class="col">
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.Link" OnClick="() => GetDatabaseObjectsAsync(mssql, sql.SqlStatement)">
                 Attempt to infer from stored procedure
             </HxButton>
-            <HxPopover Trigger="PopoverTrigger.Hover" Content="@popoverContent">
-                <SvgIcon Icon="FeatherIcon.Info" />
+            <HxPopover Trigger="PopoverTrigger.Hover" Content="@_popoverContent">
+                <SvgIcon Icon="LucideIcon.Info" />
             </HxPopover>
         </div>
     </div>
@@ -24,21 +24,21 @@
         </tr>
     </thead>
     <tbody>
-        @if (references is null)
+        @if (_references is null)
         {
             <tr>
                 <td colspan="3">Loading...</td>
             </tr>
         }
-        else if (!references.Any(r => r.ReferenceType == ReferenceType) && newObject is null)
+        else if (_references.All(r => r.ReferenceType != ReferenceType) && _newObject is null)
         {
             <tr>
-                <td colspan="3">@noDataObjects</td>
+                <td colspan="3">@_noDataObjects</td>
             </tr>
         }
         else
         {
-            foreach (var reference in references.Where(d => d.ReferenceType == ReferenceType).OrderBy(x => x.DataObject.ObjectUri))
+            foreach (var reference in _references.Where(d => d.ReferenceType == ReferenceType).OrderBy(x => x.DataObject.ObjectUri))
             {
                 var mappingResult = GetMappingResult(reference.DataObject);
                 var title = mappingResult switch
@@ -54,17 +54,17 @@
                             <span>@reference.DataObject.ObjectUri</span>
                         </div>
                         <div class="row mt-2">
-                            <div class="col @(reference == editReference ? null : "d-flex") align-items-center">
-                                @if (reference == editReference)
+                            <div class="col @(reference == _editReference ? null : "d-flex") align-items-center">
+                                @if (reference == _editReference)
                                 {
                                     <HxInputTags Delimiters="new()"
-                                                InputSize="InputSize.Small"
-                                                Placeholder="Add data attributes"
-                                                SuggestDelay="0"
-                                                SuggestMinimumLength="0"
-                                                DataProvider="GetDataAttributeSuggestionsAsync"
-                                                TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
-                                                @bind-Value="editReferenceAttributes" />
+                                    InputSize="InputSize.Small"
+                                    Placeholder="Add data attributes"
+                                    SuggestDelay="0"
+                                    SuggestMinimumLength="0"
+                                    DataProvider="GetDataAttributeSuggestionsAsync"
+                                    TagBadgeSettings="new BadgeSettings { Color = ThemeColor.Secondary }"
+                                    @bind-Value="_editReferenceAttributes" />
                                 }
                                 else
                                 {
@@ -79,14 +79,14 @@
                                         <TagBadge IsRemovable Tag="tag" CssClass="mx-1" OnRemoveClick="() => reference.DataAttributes.Remove(value)" />
                                     }
                                     <span class="data-attribute-edit bg-light-subtle border d-inline-flex align-items-center rounded small mx-1" title="Add data attributes"
-                                          @onclick="() => { editReference = reference; editReferenceAttributes = reference.DataAttributes.ToList(); }">
-                                        <SvgIcon Icon="FeatherIcon.Plus" />
+                                    @onclick="() => { _editReference = reference; _editReferenceAttributes = reference.DataAttributes.ToList(); }">
+                                        <SvgIcon Icon="LucideIcon.Plus" />
                                     </span>
                                 }
                             </div>
                         </div>
                     </td>
-                    @if (reference != editReference)
+                    @if (reference != _editReference)
                     {
                         <td class="align-middle">
                             @if (mappingResult.IsCandidateForRemoval)
@@ -103,32 +103,32 @@
                             }
                         </td>
                     }
-                    <td class="@(reference == editReference ? "align-bottom" : "align-middle")" colspan="@(reference == editReference ? "2" : "1")">
+                    <td class="@(reference == _editReference ? "align-bottom" : "align-middle")" colspan="@(reference == _editReference ? "2" : "1")">
                         <HxButtonGroup Size="ButtonGroupSize.Small">
-                            @if (reference == editReference)
+                            @if (reference == _editReference)
                             {
                                 <HxButton Size="ButtonSize.Small"
-                                          Color="ThemeColor.None"
-                                          CssClass="btn-auto text-success"
-                                          OnClick="() => { reference.DataAttributes.Clear(); reference.DataAttributes.AddRange(editReferenceAttributes); editReferenceAttributes.Clear(); editReference = null; }"
-                                          title="Done">
-                                    <SvgIcon Icon="FeatherIcon.Check" />
+                                Color="ThemeColor.None"
+                                CssClass="btn-auto text-success"
+                                OnClick="() => { reference.DataAttributes.Clear(); reference.DataAttributes.AddRange(_editReferenceAttributes); _editReferenceAttributes.Clear(); _editReference = null; }"
+                                title="Done">
+                                    <SvgIcon Icon="LucideIcon.Check" />
                                 </HxButton>
                                 <HxButton Size="ButtonSize.Small"
-                                          Color="ThemeColor.None"
-                                          CssClass="btn-auto text-danger"
-                                          OnClick="() => { editReference = null; editReferenceAttributes.Clear(); }"
-                                          title="Discard">
-                                    <SvgIcon Icon="FeatherIcon.X" />
+                                Color="ThemeColor.None"
+                                CssClass="btn-auto text-danger"
+                                OnClick="() => { _editReference = null; _editReferenceAttributes.Clear(); }"
+                                title="Discard">
+                                    <SvgIcon Icon="LucideIcon.X" />
                                 </HxButton>
                             }
                             else
                             {
                                 <HxButton Size="ButtonSize.Small"
-                                          Color="ThemeColor.None"
-                                          CssClass="btn-auto"
-                                          OnClick="() => references.Remove(reference)">
-                                    <SvgIcon Icon="FeatherIcon.Delete" />
+                                Color="ThemeColor.None"
+                                CssClass="btn-auto"
+                                OnClick="() => _references.Remove(reference)">
+                                    <SvgIcon Icon="LucideIcon.Delete" />
                                 </HxButton>
                             }
                         </HxButtonGroup>
@@ -136,29 +136,29 @@
                 </tr>
             }
         }
-        @if (newObject is not null)
+        @if (_newObject is not null)
         {
             <tr>
                 <td>
                     <input class="form-control form-control-sm font-monospace" type="text" autocomplete="off" placeholder="Uri"
-                            @bind="newObject.ObjectUri"
-                            @bind:event="oninput" />
+                    @bind="_newObject.ObjectUri"
+                    @bind:event="oninput" />
                 </td>
                 <td colspan="2">
                     <HxButtonGroup Size="ButtonGroupSize.Small">
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-success" OnClick="SubmitNewObject" title="Add">
-                            <SvgIcon Icon="FeatherIcon.Check" />
+                            <SvgIcon Icon="LucideIcon.Check" />
                         </HxButton>
-                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger" OnClick="() => newObject = null" title="Discard">
-                            <SvgIcon Icon="FeatherIcon.X" />
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger" OnClick="() => _newObject = null" title="Discard">
+                            <SvgIcon Icon="LucideIcon.X" />
                         </HxButton>
                     </HxButtonGroup>
                 </td>
             </tr>
-            var objects = allObjects?
-                .Where(o => o.ObjectUri.ContainsIgnoreCase(newObject.ObjectUri))
+            var objects = _allObjects?
+                .Where(o => o.ObjectUri.ContainsIgnoreCase(_newObject.ObjectUri))
                 .OrderBy(o => o.ObjectUri)
-                .Take(10) ?? Enumerable.Empty<DataObject>();
+                .Take(10) ?? [];
             <tr>
                 <td class="px-5" colspan="3">
                     <table class="table table-sm small table-hover mb-0">
@@ -171,14 +171,14 @@
                         <tbody>
                             @foreach (var obj in objects)
                             {
-                                <tr style="cursor: pointer;" @onclick="() => { newObject = obj; SubmitNewObject(); }">
+                                <tr style="cursor: pointer;" @onclick="() => { _newObject = obj; SubmitNewObject(); }">
                                     <td class="align-middle font-monospace">
-                                        <HighlightableText Text="@obj.ObjectUri" PartToHighlight="@newObject.ObjectUri" />
+                                        <HighlightableText Text="@obj.ObjectUri" PartToHighlight="@_newObject.ObjectUri" />
                                     </td>
                                     <td>
                                         <HxButtonGroup Size="ButtonGroupSize.Small">
-                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => { newObject = obj; }" title="Edit before adding">
-                                                <SvgIcon Icon="FeatherIcon.Edit2" />
+                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => { _newObject = obj; }" title="Edit before adding">
+                                                <SvgIcon Icon="LucideIcon.Pen" />
                                             </HxButton>
                                         </HxButtonGroup>
                                     </td>
@@ -194,8 +194,8 @@
 
 <HxDropdownButtonGroup CssClass="mt-2">
     <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
-        <SvgIcon Icon="FeatherIcon.Plus" />
-        @addButton
+        <SvgIcon Icon="LucideIcon.Plus" />
+        @_addButton
     </HxDropdownToggleButton>
     <HxDropdownMenu>
         @{
@@ -203,42 +203,42 @@
             Guid? qlikClientId = Step is QlikStep qlik ? qlik.QlikCloudEnvironmentId : null;
             Guid? tabularConnectionId = Step is TabularStep tabular ? tabular.ConnectionId : null;
         }
-        <HxDropdownItem OnClick="() => appOffcanvas.LetAsync(x => x.ShowAsync(qlikClientId))">
-            <SvgIcon Icon="LucideIcon.FilePieChart" />
+        <HxDropdownItem OnClick="() => _appOffcanvas.LetAsync(x => x.ShowAsync(qlikClientId))">
+            <SvgIcon Icon="LucideIcon.FileChartPie" />
             Add app
         </HxDropdownItem>
-        <HxDropdownItem OnClick="() => tabularOffcanvas.LetAsync(x => x.ShowAsync(tabularConnectionId))">
-            <SvgIcon Icon="FeatherIcon.Box" />
+        <HxDropdownItem OnClick="() => _tabularOffcanvas.LetAsync(x => x.ShowAsync(tabularConnectionId))">
+            <SvgIcon Icon="LucideIcon.Box" />
             Add tabular
         </HxDropdownItem>
-        <HxDropdownItem OnClick="() => datasetOffcanvas.LetAsync(x => x.ShowAsync(appRegistrationId))">
+        <HxDropdownItem OnClick="() => _datasetOffcanvas.LetAsync(x => x.ShowAsync(appRegistrationId))">
             <SvgIcon Icon="LucideIcon.FileBarChart2" />
             Add dataset
         </HxDropdownItem>
-        <HxDropdownItem OnClick="() => blobOffcanvas.LetAsync(x => x.ShowAsync())">
-            <SvgIcon Icon="FeatherIcon.File" />
+        <HxDropdownItem OnClick="() => _blobOffcanvas.LetAsync(x => x.ShowAsync())">
+            <SvgIcon Icon="LucideIcon.File" />
             Add blob
         </HxDropdownItem>
-        <HxDropdownItem OnClick="() => dbObjectExplorerOffcanvas.LetAsync(x => x.ShowAsync(Connection?.ConnectionId))">
-            <SvgIcon Icon="FeatherIcon.Table" />
+        <HxDropdownItem OnClick="() => _dbObjectExplorerOffcanvas.LetAsync(x => x.ShowAsync(Connection?.ConnectionId))">
+            <SvgIcon Icon="LucideIcon.Table" />
             Add table
         </HxDropdownItem>
         <HxDropdownItem OnClick="AddNewObjectAsync">
-            <SvgIcon Icon="FeatherIcon.Edit3" />
+            <SvgIcon Icon="LucideIcon.PenLine" />
             Add manually
         </HxDropdownItem>
     </HxDropdownMenu>
 </HxDropdownButtonGroup>
 
-<DbObjectExplorerOffcanvas @ref="dbObjectExplorerOffcanvas" Connections="SqlConnections" OnDbObjectSelected="OnDbObjectSelected" />
+<DbObjectExplorerOffcanvas @ref="_dbObjectExplorerOffcanvas" Connections="SqlConnections" OnDbObjectSelected="OnDbObjectSelected" />
 
-<DatasetSelectOffcanvas @ref="datasetOffcanvas" AppRegistrations="AppRegistrations" AllowAppRegistrationChange OnDatasetSelected="OnDatasetSelected" />
+<DatasetSelectOffcanvas @ref="_datasetOffcanvas" AppRegistrations="AppRegistrations" AllowAppRegistrationChange OnDatasetSelected="OnDatasetSelected" />
 
-<AppSelectOffcanvas @ref="appOffcanvas" QlikClients="QlikClients" AllowClientChange OnAppSelected="OnAppSelected" />
+<AppSelectOffcanvas @ref="_appOffcanvas" QlikClients="QlikClients" AllowClientChange OnAppSelected="OnAppSelected" />
 
-<BlobSelectOffcanvas @ref="blobOffcanvas" OnBlobSelected="OnBlobSelected" />
+<BlobSelectOffcanvas @ref="_blobOffcanvas" OnBlobSelected="OnBlobSelected" />
 
-<AnalysisServicesObjectSelectOffcanvas @ref="tabularOffcanvas" Connections="AsConnections" AllowAppRegistrationChange OnObjectSelected="OnTabularSelected" />
+<AnalysisServicesObjectSelectOffcanvas @ref="_tabularOffcanvas" Connections="AsConnections" AllowAppRegistrationChange OnObjectSelected="OnTabularSelected" />
 
 @code {
     [Parameter] public DataObjectReferenceType ReferenceType { get; set; }
@@ -259,63 +259,63 @@
 
     private Func<DataObject, DataObjectMappingResult> GetMappingResult => ReferenceType switch
     {
-        DataObjectReferenceType.Source => (DataObject d) => d.SourceMappingResult,
-        _ => (DataObject d) => d.TargetMappingResult
+        DataObjectReferenceType.Source => d => d.SourceMappingResult,
+        _ => d => d.TargetMappingResult
     };
 
-    private ICollection<StepDataObject>? references;
-    private string listName = "";
-    private string noDataObjects = "";
-    private string addButton = "";
-    private string popoverContent = "";
-    private IEnumerable<DataObject>? allObjects;
-    private DataObject? newObject;
-    private StepDataObject? editReference;
-    private List<string> editReferenceAttributes = [];
-    private DbObjectExplorerOffcanvas? dbObjectExplorerOffcanvas;
-    private DatasetSelectOffcanvas? datasetOffcanvas;
-    private AppSelectOffcanvas? appOffcanvas;
-    private BlobSelectOffcanvas? blobOffcanvas;
-    private AnalysisServicesObjectSelectOffcanvas? tabularOffcanvas;
+    private ICollection<StepDataObject>? _references;
+    private string _listName = "";
+    private string _noDataObjects = "";
+    private string _addButton = "";
+    private string _popoverContent = "";
+    private IEnumerable<DataObject>? _allObjects;
+    private DataObject? _newObject;
+    private StepDataObject? _editReference;
+    private List<string> _editReferenceAttributes = [];
+    private DbObjectExplorerOffcanvas? _dbObjectExplorerOffcanvas;
+    private DatasetSelectOffcanvas? _datasetOffcanvas;
+    private AppSelectOffcanvas? _appOffcanvas;
+    private BlobSelectOffcanvas? _blobOffcanvas;
+    private AnalysisServicesObjectSelectOffcanvas? _tabularOffcanvas;
 
     protected override void OnParametersSet()
     {
-        references = Step?.DataObjects;
-        listName = ReferenceType switch
+        _references = Step?.DataObjects;
+        _listName = ReferenceType switch
         {
             DataObjectReferenceType.Source => "source",
             _ => "target"
         };
-        noDataObjects = $"No {listName}s";
-        popoverContent = $"Read {listName} objects from the database based on stored procedure definition. Mapping can be unreliable especially when temporary tables are used. Manually remove extra {listName}s after mapping.";
-        addButton = $"Add {listName}";
+        _noDataObjects = $"No {_listName}s";
+        _popoverContent = $"Read {_listName} objects from the database based on stored procedure definition. Mapping can be unreliable especially when temporary tables are used. Manually remove extra {_listName}s after mapping.";
+        _addButton = $"Add {_listName}";
     }
 
     private async Task AddNewObjectAsync()
     {
-        allObjects ??= await LoadAllDataObjects();
-        newObject = new();
+        _allObjects ??= await LoadAllDataObjects();
+        _newObject = new();
     }
 
     private void SubmitNewObject()
     {
-        ArgumentNullException.ThrowIfNull(newObject);
-        ArgumentNullException.ThrowIfNull(references);
+        ArgumentNullException.ThrowIfNull(_newObject);
+        ArgumentNullException.ThrowIfNull(_references);
 
-        if (references.Any(o => o.ReferenceType == ReferenceType && o.DataObject.UriEquals(newObject)))
+        if (_references.Any(o => o.ReferenceType == ReferenceType && o.DataObject.UriEquals(_newObject)))
         {
-            Toaster.AddWarning($"Duplicate {listName} object");
+            Toaster.AddWarning($"Duplicate {_listName} object");
             return;
         }
 
-        if (!newObject.IsValid)
+        if (!_newObject.IsValid)
         {
             Toaster.AddWarning("Only ASCII characters allowed");
             return;
         }
 
-        var existing = allObjects?.FirstOrDefault(o => o.UriEquals(newObject))
-            ?? references.Select(d => d.DataObject).FirstOrDefault(o => o.UriEquals(newObject));
+        var existing = _allObjects?.FirstOrDefault(o => o.UriEquals(_newObject))
+            ?? _references.Select(d => d.DataObject).FirstOrDefault(o => o.UriEquals(_newObject));
         if (existing is not null)
         {
             GetMappingResult(existing).IsNewAddition = true;
@@ -323,17 +323,17 @@
         }
         else
         {
-            GetMappingResult(newObject).IsNewAddition = true;
-            AddReference(newObject);
+            GetMappingResult(_newObject).IsNewAddition = true;
+            AddReference(_newObject);
         }
-        newObject = null;
+        _newObject = null;
     }
 
     private async Task GetDatabaseObjectsAsync(MsSqlConnection connection, string sqlStatement)
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(references);
+            ArgumentNullException.ThrowIfNull(_references);
 
             var proc = MsSqlExtensions.ParseStoredProcedureFromSqlStatement(sqlStatement);
             var schema = proc?.Schema;
@@ -343,7 +343,7 @@
                 return;
             }
 
-            allObjects ??= await LoadAllDataObjects();
+            _allObjects ??= await LoadAllDataObjects();
 
             var dependencies = ReferenceType switch
             {
@@ -357,30 +357,32 @@
                 // Check if the same object exists in the list already. Skip this object if it does.
                 // This way we do not accidentally add objects that might be a target as sources,
                 // thus creating a self reference.
-                if (references.Any(d => d.DataObject.UriEquals(dependency)))
+                if (_references.Any(d => d.DataObject.UriEquals(dependency)))
                 {
                     continue;
                 }
 
-                var dbObject = allObjects?.FirstOrDefault(o => o.UriEquals(dependency)) ??
+                var dbObject = _allObjects?.FirstOrDefault(o => o.UriEquals(dependency)) ??
                     new DataObject { ObjectUri = dependency.ObjectUri };
 
-                if (!references.Any(d => d.DataObject.UriEquals(dbObject)))
+                if (_references.Any(d => d.DataObject.UriEquals(dbObject)))
                 {
-                    GetMappingResult(dbObject).IsNewAddition = true;
-                    GetMappingResult(dbObject).IsUnreliableMapping = dependency.IsUnreliable;
-                    AddReference(dbObject);
+                    continue;
                 }
+                
+                GetMappingResult(dbObject).IsNewAddition = true;
+                GetMappingResult(dbObject).IsUnreliableMapping = dependency.IsUnreliable;
+                AddReference(dbObject);
             }
 
-            foreach (var dbObject in references)
+            foreach (var dbObject in _references)
             {
                 GetMappingResult(dbObject.DataObject).IsCandidateForRemoval = false;
             }
 
             // Check if there are objects in the list that are not mentioned in the dependencies.
             // Flag them as candidates for removal.
-            var candidatesForRemoval = references.Where(o => !dependencies.Any(d => o.DataObject.UriEquals(d))).ToList();
+            var candidatesForRemoval = _references.Where(o => !dependencies.Any(d => o.DataObject.UriEquals(d))).ToList();
             foreach (var candidate in candidatesForRemoval)
             {
                 GetMappingResult(candidate.DataObject).IsCandidateForRemoval = true;
@@ -401,13 +403,13 @@
             DataObject = dataObject,
             ReferenceType = ReferenceType
         };
-        references?.Add(reference);
+        _references?.Add(reference);
     }
 
     private void OnDbObjectSelected((string Server, string Database, string Schema, string Object) tuple, bool commit)
     {
-        newObject ??= new();
-        newObject.ObjectUri = DataObject.CreateTableUri(tuple.Server, tuple.Database, tuple.Schema, tuple.Object);
+        _newObject ??= new();
+        _newObject.ObjectUri = DataObject.CreateTableUri(tuple.Server, tuple.Database, tuple.Schema, tuple.Object);
         if (commit)
         {
             SubmitNewObject();
@@ -417,29 +419,29 @@
 
     private void OnDatasetSelected(Dataset dataset)
     {
-        newObject ??= new();
-        newObject.ObjectUri = DataObject.CreateDatasetUri(dataset.GroupName, dataset.DatasetName);
+        _newObject ??= new();
+        _newObject.ObjectUri = DataObject.CreateDatasetUri(dataset.GroupName, dataset.DatasetName);
         StateHasChanged();
     }
 
     private void OnTabularSelected(AnalysisServicesObjectSelectedResponse tabular)
     {
-        newObject ??= new();
-        newObject.ObjectUri = DataObject.CreateTabularUri(tabular.ServerName, tabular.ModelName, tabular.TableName, tabular.PartitionName);
+        _newObject ??= new();
+        _newObject.ObjectUri = DataObject.CreateTabularUri(tabular.ServerName, tabular.ModelName, tabular.TableName, tabular.PartitionName);
         StateHasChanged();
     }
 
     private void OnAppSelected(QlikApp app)
     {
-        newObject ??= new();
-        newObject.ObjectUri = DataObject.CreateQlikUri(app.Name);
+        _newObject ??= new();
+        _newObject.ObjectUri = DataObject.CreateQlikUri(app.Name);
         StateHasChanged();
     }
 
     private void OnBlobSelected(BlobSelectedResponse blob)
     {
-        newObject ??= new();
-        newObject.ObjectUri = DataObject.CreateBlobUri(blob.AccountName, blob.ContainerName, blob.Path);
+        _newObject ??= new();
+        _newObject.ObjectUri = DataObject.CreateBlobUri(blob.AccountName, blob.ContainerName, blob.Path);
         StateHasChanged();
     }
 
@@ -450,7 +452,7 @@
             .Where(d => d.DataAttributes.Any(a => a.ToLower().Contains(request.UserInput.ToLower())))
             .Select(d => d.DataAttributes)
             .ToListAsync();
-        var current = references
+        var current = _references
             ?.SelectMany(r => r.DataAttributes)
             .Where(a => a.ContainsIgnoreCase(request.UserInput))
             ?? [];
@@ -460,17 +462,20 @@
                 .SelectMany(a => a)
                 .Where(a => a.ContainsIgnoreCase(request.UserInput))
                 .Concat(current)
+                .Where(a => _editReferenceAttributes.All(x => a != x))
                 .Distinct()
                 .ToArray()
         };
     }
 
-    private struct DataAttribute(string attribute) : ITag
+    private readonly struct DataAttribute(string attribute) : ITag
     {
         public Guid TagId { get; }
 
         public string TagName { get; } = attribute;
 
-        public TagColor Color { get; } = TagColor.LightGray;
+        public TagColor Color => TagColor.LightGray;
+
+        public int SortOrder => 0;
     }
 }

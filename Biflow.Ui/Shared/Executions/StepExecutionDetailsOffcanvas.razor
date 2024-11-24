@@ -1,21 +1,21 @@
 ﻿
-﻿<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Large" Title="@stepExecutionAttempt?.StepExecution.StepName">
+﻿<HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Large" Title="@_stepExecutionAttempt?.StepExecution.StepName">
     <BodyTemplate>
-        <StepExecutionDetails StepExecutionAttempt="stepExecutionAttempt" ShowExtraDetails="true" />
+        <StepExecutionDetails StepExecutionAttempt="_stepExecutionAttempt" ShowExtraDetails="true" />
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
 @code {
-    private StepExecutionAttempt? stepExecutionAttempt;
-    private HxOffcanvas? offcanvas;
+    private StepExecutionAttempt? _stepExecutionAttempt;
+    private HxOffcanvas? _offcanvas;
 
     public async Task ShowAsync(StepExecutionAttempt attempt)
     {
-        stepExecutionAttempt = attempt;
+        _stepExecutionAttempt = attempt;
         StateHasChanged();
-        await offcanvas.LetAsync(x => x.ShowAsync());
+        await _offcanvas.LetAsync(x => x.ShowAsync());
     }
 }

@@ -1,16 +1,14 @@
-@using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.JSInterop
-@using System.Linq.Expressions
 @using Biflow.Core.Entities
 
 @implements IAsyncDisposable
 
 @typeparam TTag
 
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 
-<div @ref="comboboxElement" @attributes=@InputAttributes class="@CssClass taginput-wrapper position-relative">
+<div @ref="comboboxElement" @attributes="@InputAttributes" class="@CssClass taginput-wrapper position-relative">
     @if (Label is not null)
     {
         <label for="@($"{id}_input")" class="form-label mb-0">@Label</label>
@@ -48,11 +46,11 @@
             </div>
 
             <span class="m-1 @(inputValue.Length > 0 ? null : "d-none")" @onclick="ClearInputValue" style="cursor: pointer;">
-                <SvgIcon Icon="FeatherIcon.X" />
+                <SvgIcon Icon="LucideIcon.X" />
             </span>
 
             <span class="m-1" @onclick="ToggleSuggestionsAsync" style="cursor: pointer;">
-                <SvgIcon Icon="FeatherIcon.Search" />
+                <SvgIcon Icon="LucideIcon.Search" />
             </span>
         }
 
@@ -140,7 +138,7 @@
         if (firstRender)
         {
             dotNetObject = DotNetObjectReference.Create(this);
-            jSObject = await JS.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/TagInput.js");
+            jSObject = await Js.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/TagInput.js");
             if (dotNetObject is not null)
                 await jSObject.InvokeVoidAsync("create", comboboxElement, dotNetObject);
         }
@@ -211,73 +209,65 @@
     private async Task OnKeyDownAsync(KeyboardEventArgs args)
     {
         var filteredItems = FilteredItems.ToArray();
-        if (args.Key == "Escape")
+        switch (args.Key)
         {
-            focusIndex = null;
-            HideSuggestions();
-        }
-        else if (args.Key == "ArrowDown")
-        {
-            if (focusIndex < filteredItems.Length - 1)
+            case "Escape":
+                focusIndex = null;
+                HideSuggestions();
+                break;
+            case "ArrowDown" when focusIndex < filteredItems.Length - 1:
                 focusIndex++;
-            else
+                break;
+            case "ArrowDown":
                 focusIndex = 0;
-        }
-        else if (args.Key == "ArrowUp")
-        {
-            if (focusIndex > 0)
+                break;
+            case "ArrowUp" when focusIndex > 0:
                 focusIndex--;
-            else
+                break;
+            case "ArrowUp":
                 focusIndex = filteredItems.Length - 1;
-        }
-        else if (args.Key == "PageDown")
-        {
-            if (focusIndex is null)
+                break;
+            case "PageDown" when focusIndex is null:
                 focusIndex = 0;
-            else if (focusIndex < filteredItems.Length - 10)
+                break;
+            case "PageDown" when focusIndex < filteredItems.Length - 10:
                 focusIndex += 10;
-            else
+                break;
+            case "PageDown":
+            case "PageUp" when focusIndex is null:
                 focusIndex = filteredItems.Length - 1;
-        }
-        else if (args.Key == "PageUp")
-        {
-            if (focusIndex is null)
-                focusIndex = filteredItems.Length - 1;
-            else if (focusIndex > 10)
+                break;
+            case "PageUp" when focusIndex > 10:
                 focusIndex -= 10;
-            else
+                break;
+            case "PageUp":
+            case "Home":
                 focusIndex = 0;
-        }
-        else if (args.Key == "Home")
-        {
-            focusIndex = 0;
-        }
-        else if (args.Key == "End")
-        {
-            focusIndex = filteredItems.Length - 1;
-        }
-        else if (args.Key == "Enter" && filteredItems.Any() && focusIndex >= 0 && focusIndex < filteredItems.Length)
-        {
-            var item = filteredItems[(int)focusIndex];
-            if (focusIndex == filteredItems.Length - 1)
-            {
-                focusIndex--;
-            }
-            await SelectItemAsync(item);
-        }
-        else if (args.Key == "Backspace" && !inputValue.Any())
-        {
-            var lastItem = SelectedItems.LastOrDefault();
-            if (lastItem is not null)
-                SelectedItems.Remove(lastItem);
-        }
-        else if (args.Key == "Backspace")
-        {
-            inputValue = inputValue[..^1];
-        }
-        else if (args.Key == " ")
-        {
-            AddNewItem();
+                break;
+            case "End":
+                focusIndex = filteredItems.Length - 1;
+                break;
+            case "Enter" when filteredItems.Any() && focusIndex >= 0 && focusIndex < filteredItems.Length:
+                var item = filteredItems[(int)focusIndex];
+                if (focusIndex == filteredItems.Length - 1)
+                {
+                    focusIndex--;
+                }
+                await SelectItemAsync(item);
+                break;
+            case "Backspace" when !inputValue.Any():
+                var lastItem = SelectedItems.LastOrDefault();
+                if (lastItem is not null)
+                {
+                    SelectedItems.Remove(lastItem);
+                }
+                break;
+            case "Backspace":
+                inputValue = inputValue[..^1];
+                break;
+            case " ":
+                AddNewItem();
+                break;
         }
     }
 
@@ -287,7 +277,7 @@
         {
             return;
         }
-        var key = (string)args.Key;
+        var key = args.Key;
         inputValue += key;
         await ShowSuggestionsAsync();
     }
@@ -299,13 +289,12 @@
             return;
         }
 
-        foreach (var item in Items?.Concat(SelectedItems) ?? [])
+        var existingTags =
+            from item in Items?.Concat(SelectedItems) ?? []
+            select TagTextSelector.Invoke(item);
+        if (existingTags.Any(text => text == inputValue))
         {
-            var text = TagTextSelector.Invoke(item);
-            if (text == inputValue)
-            {
-                return;
-            }
+            return;
         }
 
         var newItem = NewItemFromText(inputValue);

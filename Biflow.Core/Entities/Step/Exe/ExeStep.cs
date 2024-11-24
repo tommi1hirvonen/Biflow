@@ -35,21 +35,18 @@ public class ExeStep : Step, IHasTimeout, IHasStepParameters<ExeStepParameter>
     [Display(Name = "Arguments")]
     public string? ExeArguments
     {
-        get => _exeArguments;
-        set => _exeArguments = string.IsNullOrEmpty(value) ? null : value;
+        get;
+        set => field = string.IsNullOrEmpty(value) ? null : value;
     }
-
-    private string? _exeArguments;
 
     [Display(Name = "Working directory")]
     [MaxLength(1000)]
     public string? ExeWorkingDirectory
     {
-        get => _exeWorkingDirectory;
-        set => _exeWorkingDirectory = string.IsNullOrEmpty(value) ? null : value;
+        get;
+        set => field = string.IsNullOrEmpty(value) ? null : value;
     }
 
-    private string? _exeWorkingDirectory;
 
     [Display(Name = "Success exit code")]
     public int? ExeSuccessExitCode { get; set; }

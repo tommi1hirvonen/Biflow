@@ -3,29 +3,29 @@
 @inject IDbContextFactory<AppDbContext> DbFactory
 @inject NavigationManager NavigationManager
 
-<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Large" Title="@JobName" OnClosed="OnClosed">
+<HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Large" Title="@JobName" OnClosed="OnClosed">
     <BodyTemplate>
         <div class="row">
             <div class="col-auto d-inline-flex align-items-center">
                 <label>No of executions</label>
-                <input @bind-value="maxExecutions" class="form-control form-control-sm ms-3" type="number" style="max-width: 5rem;">
+                <input @bind-value="_maxExecutions" class="form-control form-control-sm ms-3" type="number" style="max-width: 5rem;">
             </div>
             <div class="col">
                 <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="ReloadAsync">
-                    <SvgIcon Icon="FeatherIcon.RefreshCw" />
+                    <SvgIcon Icon="LucideIcon.RefreshCw" />
                     Refresh
                 </HxButton>
             </div>
         </div>
         <div class="row mt-1">
             <div class="col">
-                <small class="text-muted">Actual no of executions: @executions?.Count()</small>
+                <small class="text-muted">Actual no of executions: @_executions?.Count()</small>
             </div>
         </div>
 
         <div class="row">
             <div class="col">
-                <LineChart Dataset="lineChartDataset" />
+                <LineChart Dataset="_lineChartDataset" />
             </div>
         </div>
 
@@ -51,17 +51,17 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (executions is null)
+                        @if (_executions is null)
                         {
                             <tr><td colspan="6" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                         }
-                        else if (!executions.Any())
+                        else if (!_executions.Any())
                         {
                             <tr><td colspan="6">No executions</td></tr>
                         }
                         else
                         {
-                            @foreach (var execution in executions)
+                            @foreach (var execution in _executions)
                             {
                                 var createdBy = execution switch
                                 {
@@ -89,34 +89,34 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
 @code {
-    private CancellationTokenSource cts = new();
-    private HxOffcanvas? offcanvas;
-    private LineChartDataset? lineChartDataset;
-    private IEnumerable<ExecutionProjection>? executions;
-    private int maxExecutions = DefaultMaxExecutions;
-    private Guid jobId;
+    private CancellationTokenSource _cts = new();
+    private HxOffcanvas? _offcanvas;
+    private LineChartDataset? _lineChartDataset;
+    private IEnumerable<ExecutionProjection>? _executions;
+    private int _maxExecutions = DefaultMaxExecutions;
+    private Guid _jobId;
 
     private const int DefaultMaxExecutions = 50;
 
-    private string JobName => executions?.FirstOrDefault()?.JobName ?? "";
+    private string JobName => _executions?.FirstOrDefault()?.JobName ?? "";
 
     private double AverageDurationInSeconds =>
-        (int)(executions
+        (int)(_executions
             ?.Where(e => e.ExecutionStatus == ExecutionStatus.Succeeded)
             .Average(e => e.ExecutionInSeconds)
             ?? 0);
 
     public async Task ShowAsync(Guid jobId)
     {
-        this.jobId = jobId;
-        executions = null;
-        maxExecutions = DefaultMaxExecutions;
-        await offcanvas.LetAsync(x => x.ShowAsync());
+        _jobId = jobId;
+        _executions = null;
+        _maxExecutions = DefaultMaxExecutions;
+        await _offcanvas.LetAsync(x => x.ShowAsync());
         await ReloadAsync();
         StateHasChanged();
     }
@@ -126,13 +126,13 @@
         var context = await DbFactory.CreateDbContextAsync();
         try
         {
-            executions = await context.Executions
+            _executions = await context.Executions
                 .AsNoTracking()
                 .IgnoreQueryFilters()
-                .Where(e => e.JobId == jobId)
+                .Where(e => e.JobId == _jobId)
                 .OrderByDescending(execution => execution.CreatedOn)
-                .ThenByDescending(Execution => Execution.StartedOn)
-                .Take(maxExecutions)
+                .ThenByDescending(execution => execution.StartedOn)
+                .Take(_maxExecutions)
                 .Select(e => new ExecutionProjection(
                     e.ExecutionId,
                     e.JobId,
@@ -147,35 +147,35 @@
                     e.StepExecutions.Count(),
                     Array.Empty<TagProjection>()
                 ))
-                .ToArrayAsync(cts.Token);
+                .ToArrayAsync(_cts.Token);
         }
         catch (OperationCanceledException)
         {
             return;
         }
 
-        var datapoints = executions
+        var datapoints = _executions
             .Where(e => e.StartedOn is not null)
             .GroupBy(group => ((DateTimeOffset)group.StartedOn!).Date)
             .Select(select => new TimeSeriesDataPoint(DateOnly.FromDateTime(select.Key.Date), select.Average(total => (decimal)(total.ExecutionInSeconds ?? 0) / 60))) // Calculate avg. duration in minutes per day
             .ToArray();
         var series = new LineChartSeries[]
         {
-            new LineChartSeries("Avg. duration", datapoints)
+            new("Avg. duration", datapoints)
         };
-        lineChartDataset = new LineChartDataset(series, "min", 0);
+        _lineChartDataset = new LineChartDataset(series, "min", 0);
     }
 
     private void OnClosed()
     {
-        cts.Cancel();
-        cts.Dispose();
-        cts = new();
+        _cts.Cancel();
+        _cts.Dispose();
+        _cts = new();
     }
 
     public void Dispose()
     {
-        cts.Cancel();
-        cts.Dispose();
+        _cts.Cancel();
+        _cts.Dispose();
     }
 }

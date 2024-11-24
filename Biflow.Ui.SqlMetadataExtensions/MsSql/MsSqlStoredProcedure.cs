@@ -12,7 +12,7 @@ public class MsSqlStoredProcedure(int procedureId, string schemaName, string pro
 
     public string QuotedProcedureName { get; } = $"[{procedureName}]";
 
-    public string ArgumentSignature { get; } = string.Empty;
+    public string ArgumentSignature => string.Empty;
 
     public string InvokeSqlStatement { get; } = $"EXEC [{schemaName}].[{procedureName}]";
 

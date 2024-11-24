@@ -2,8 +2,6 @@
 using Azure.ResourceManager.DataFactory;
 using Azure.ResourceManager.DataFactory.Models;
 using Biflow.Core.Interfaces;
-using System.Text;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 
 namespace Biflow.Core.Entities;
@@ -41,17 +39,17 @@ internal class DataFactoryClient : IPipelineClient
 
     public async Task<PipelineFolder> GetPipelinesAsync()
     {
-        var pipelineResources = new List<DataFactoryPipelineResource>();
-        await foreach (var pipelineResource in _dataFactoryResource.GetDataFactoryPipelines().GetAllAsync())
-        {
-            pipelineResources.Add(pipelineResource);
-        }
+        var pipelineResources = await _dataFactoryResource
+            .GetDataFactoryPipelines()
+            .GetAllAsync()
+            .ToListAsync();
 
-        var pipelines = pipelineResources.Select(p =>
+        var pipelines = pipelineResources.Select(pipelineResource =>
         {
-            var folder = (string?)p.Data.FolderName;
-            var parameters = p.Data.Parameters?.ToDictionary(p => p.Key, p => (p.Value.ParameterType.ToString(), p.Value.DefaultValue?.ToString()));
-            var pipeline = new PipelineInfo(p.Data.Name, folder, parameters ?? []);
+            var folder = pipelineResource.Data.FolderName;
+            var parameters = pipelineResource.Data.Parameters
+                ?.ToDictionary(p => p.Key, p => (p.Value.ParameterType.ToString(), p.Value.DefaultValue?.ToString()));
+            var pipeline = new PipelineInfo(pipelineResource.Data.Name, folder, parameters ?? []);
             return pipeline;
         });
 
@@ -70,12 +68,14 @@ internal class DataFactoryClient : IPipelineClient
                 _ = ParameterValue.TryCreate(ParameterValueType.Int32, i, out var param);
                 return (p.Key, param);
             }
-            else if (p.Value.ParameterType == EntityParameterType.Bool && bool.TryParse(defaultValue, out var b))
+
+            if (p.Value.ParameterType == EntityParameterType.Bool && bool.TryParse(defaultValue, out var b))
             {
                 _ = ParameterValue.TryCreate(ParameterValueType.Boolean, b, out var param);
                 return (p.Key, param);
             }
-            else if (p.Value.ParameterType == EntityParameterType.Float && double.TryParse(defaultValue, out var d))
+
+            if (p.Value.ParameterType == EntityParameterType.Float && double.TryParse(defaultValue, out var d))
             {
                 _ = ParameterValue.TryCreate(ParameterValueType.Double, d, out var param);
                 return (p.Key, param);

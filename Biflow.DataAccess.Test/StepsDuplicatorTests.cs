@@ -13,7 +13,7 @@ public class StepsDuplicatorTests(DatabaseFixture fixture)
     [Fact]
     public async Task StepsDuplicatorProducesExpected()
     {
-        using var dbContext = await _dbContextFactory.CreateDbContextAsync();
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
         var step = (SqlStep)await dbContext.Steps
             .AsNoTracking()
             .Include(s => (s as SqlStep)!.StepParameters)
@@ -23,7 +23,7 @@ public class StepsDuplicatorTests(DatabaseFixture fixture)
             .Include(s => s.ExecutionConditionParameters)
             .ThenInclude(p => p.JobParameter)
             .FirstAsync(s => s.StepName == "Test step 4" && s.Job.JobName == "Test job 1");
-        using var duplicator = await _stepsDuplicatorFactory.CreateAsync(step.StepId);
+        using var duplicator = await _stepsDuplicatorFactory.CreateAsync(step.StepId, targetJobId: null);
         foreach (var s in duplicator.Steps)
         {
             s.StepName += " - Copy";

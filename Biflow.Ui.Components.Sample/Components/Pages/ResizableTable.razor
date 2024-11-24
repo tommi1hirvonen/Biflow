@@ -11,7 +11,7 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var country in countries)
+        @foreach (var country in Countries)
         {
             <tr>
                 <td>@country.Name</td>
@@ -19,7 +19,7 @@
                 <td>@country.Population</td>
                 <td>@country.Area</td>
                 <td>
-                    <span class="text-decoration-underline" @onclick="() => countries.Remove(country)" style="cursor: pointer;">
+                    <span class="text-decoration-underline" @onclick="() => Countries.Remove(country)" style="cursor: pointer;">
                         Delete
                     </span>
                 </td>
@@ -29,7 +29,7 @@
 </Biflow.Ui.Components.ResizableTable>
 
 @code {
-    private List<Country> countries =
+    private static readonly List<Country> Countries =
     [
         new("Finland", "Helsinki", 5_616_923, 338_472),
         new("Sweden", "Stockholm", 10_529_000, 450_295),

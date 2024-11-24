@@ -5,15 +5,13 @@ namespace Biflow.Ui.Core;
 
 public class WebAppExecutorService : IExecutorService
 {
-    private readonly IConfiguration _configuration;
     private readonly HttpClient _httpClient;
 
     public WebAppExecutorService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
     {
-        _configuration = configuration;
         _httpClient = httpClientFactory.CreateClient();
 
-        var section = _configuration
+        var section = configuration
             .GetSection("Executor")
             .GetSection("WebApp");
 

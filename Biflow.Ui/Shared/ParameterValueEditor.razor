@@ -62,6 +62,10 @@
                disabled
                placeholder="null" />
         break;
+    case null:
+        break;
+    default:
+        throw new ArgumentOutOfRangeException($"Unhandled parameter value type {Parameter.ParameterValue.ValueType}");
 }
 
 @code {
@@ -75,7 +79,7 @@
     private int? ValueInt32 => Parameter?.ParameterValue.GetValueOrDefault<int?>();
     private long? ValueInt64 => Parameter?.ParameterValue.GetValueOrDefault<long?>();
     private float? ValueFloat => Parameter?.ParameterValue.GetValueOrDefault<float?>();
-    private string? ValueString => Parameter?.ParameterValue.GetValueOrDefault<string>() ?? "";
+    private string ValueString => Parameter?.ParameterValue.GetValueOrDefault<string>() ?? "";
 
     private void SetValue(object? value, ParameterValueType type)
     {

@@ -47,14 +47,14 @@ public static class Extensions
         services.AddSingleton<IConnectionTest, ConnectionTest.ConnectionTest>();
         services.AddSingleton<IJobExecutorFactory, JobExecutorFactory>();
         services.AddSingleton<IExecutionManager, ExecutionManager>();
-        services.AddHostedService(services => services.GetRequiredService<IExecutionManager>());
+        services.AddHostedService(s => s.GetRequiredService<IExecutionManager>());
         // Timeout for hosted services (e.g. ExecutionManager) to shut down gracefully when StopAsync() is called.
         services.Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromSeconds(20));
 
         // Scan assembly and add step executors as their implemented type and as singletons.
         var stepExecutorType = typeof(IStepExecutor<,>);
         var types = stepExecutorType.Assembly.GetTypes()
-            .Where(t => t.IsClass && !t.IsAbstract && t.IsAssignableTo(typeof(IStepExecutor)));
+            .Where(t => t is { IsClass: true, IsAbstract: false } && t.IsAssignableTo(typeof(IStepExecutor)));
         foreach (var type in types)
         {
             var @interface = type.GetInterfaces()
@@ -68,19 +68,25 @@ public static class Extensions
 
     public static WebApplication MapExecutorEndpoints(this WebApplication app)
     {
-        var executions = app
+        var executionsGroup = app
             .MapGroup("/executions")
             .WithName("Executions")
             .AddEndpointFilter<ApiKeyEndpointFilter>();
 
 
-        executions.MapPost("/create", async (
+        executionsGroup.MapPost("/create", async (
             ExecutionCreateRequest request,
             IExecutionBuilderFactory<ExecutorDbContext> executionBuilderFactory,
             IExecutionManager executionManager) =>
         {
-            using var builder = await executionBuilderFactory.CreateAsync(request.JobId, createdBy: "API",
-                [context => step => (request.StepIds == null && step.IsEnabled) || (request.StepIds != null && request.StepIds.Contains(step.StepId))]);
+            using var builder = await executionBuilderFactory.CreateAsync(
+                request.JobId,
+                createdBy: "API",
+                predicates:
+                [
+                    _ => step => (request.StepIds == null && step.IsEnabled)
+                                 || (request.StepIds != null && request.StepIds.Contains(step.StepId))
+                ]);
             if (builder is null)
             {
                 return Results.NotFound("Job not found");
@@ -99,7 +105,7 @@ public static class Extensions
         }).WithName("CreateExecution");
 
 
-        executions.MapGet("/start/{executionId}", async (Guid executionId, IExecutionManager executionManager, CancellationToken cancellationToken) =>
+        executionsGroup.MapGet("/start/{executionId:guid}", async (Guid executionId, IExecutionManager executionManager, CancellationToken cancellationToken) =>
         {
             try
             {
@@ -113,7 +119,7 @@ public static class Extensions
         }).WithName("StartExecution");
 
 
-        executions.MapGet("/stop/{executionId}", (Guid executionId, string username, IExecutionManager executionManager) =>
+        executionsGroup.MapGet("/stop/{executionId:guid}", (Guid executionId, string username, IExecutionManager executionManager) =>
         {
             try
             {
@@ -127,7 +133,7 @@ public static class Extensions
         }).WithName("StopExecution");
 
 
-        executions.MapGet("/stop/{executionId}/{stepId}", (Guid executionId, Guid stepId, string username, IExecutionManager executionManager) =>
+        executionsGroup.MapGet("/stop/{executionId:guid}/{stepId:guid}", (Guid executionId, Guid stepId, string username, IExecutionManager executionManager) =>
         {
             try
             {
@@ -141,15 +147,13 @@ public static class Extensions
         }).WithName("StopExecutionStep");
 
 
-        executions.MapGet("/status/{executionId}", (Guid executionId, IExecutionManager executionManager) =>
-        {
-            return executionManager.IsExecutionRunning(executionId)
-                ? Results.Ok()
-                : Results.NotFound();
-        }).WithName("ExecutionStatus");
+        executionsGroup.MapGet("/status/{executionId:guid}", (Guid executionId, IExecutionManager executionManager) =>
+            executionManager.IsExecutionRunning(executionId) 
+                ? Results.Ok() 
+                : Results.NotFound()).WithName("ExecutionStatus");
 
 
-        executions.MapGet("/status", (bool? includeSteps, IExecutionManager executionManager) =>
+        executionsGroup.MapGet("/status", (bool? includeSteps, IExecutionManager executionManager) =>
         {
             var executions = executionManager.CurrentExecutions
                 .Select(e =>
@@ -198,21 +202,24 @@ public static class Extensions
     /// <returns></returns>
     internal static string Replace(this string input, IDictionary<string, string?> replacementRules)
     {
-        var matches = replacementRules.Where(rule => input.Contains(rule.Key));
-        if (!matches.Any())
+        var matches = replacementRules
+            .Where(rule => input.Contains(rule.Key))
+            .ToArray();
+        
+        if (matches.Length == 0)
         {
             return input;
         }
 
-        var match = matches.First();
-        int startIndex = input.IndexOf(match.Key);
-        int endIndex = startIndex + match.Key.Length;
+        var (searchValue, replacement) = matches.First();
+        
+        var startIndex = input.IndexOf(searchValue, StringComparison.Ordinal);
+        var endIndex = startIndex + searchValue.Length;
 
         var before = input[..startIndex].Replace(replacementRules);
-        var replaced = match.Value;
         var after = input[endIndex..].Replace(replacementRules);
 
-        return before + replaced + after;
+        return before + replacement + after;
     }
 
     /// <summary>
@@ -228,12 +235,6 @@ public static class Extensions
             _ => (Name: p.ParameterName, Value: p.ParameterValue.Value?.ToString())
         })
         .ToDictionary(key => key.Name, value => value.Value);
-    }
-
-    internal static IEnumerable<T> SelectNotNull<T, U>(this IEnumerable<U> source, Func<U, T?> selector)
-        where T : class
-    {
-        return source.Select(selector).Where(t => t is not null).Cast<T>();
     }
 }
 

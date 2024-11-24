@@ -1,16 +1,37 @@
-﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
+﻿@implements IDisposable
+
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject ToasterService Toaster
 @inject IMediator Mediator
+@inject ThemeService ThemeService
 
-<PageTitle>Qlik Cloud Clients | Biflow</PageTitle>
+<PageTitle>Qlik Cloud | Biflow</PageTitle>
 
-<HxButton Color="ThemeColor.Success"
-@onclick="() => ShowEditModal(null)"
-          Enabled="environments is not null">
-    Add Qlik Cloud environment
-</HxButton>
+<div class="row flex-row-reverse justify-content-between align-items-end g-3">
+    <div class="col-auto">
+        <HxAlert Color="ThemeService.CurrentTheme == Theme.Light ? ThemeColor.Light : ThemeColor.Dark"
+                 CssClass="small py-2 mb-0"
+                 style="max-width: 50rem;">
+            <div class="row g-3">
+                <div class="col-auto">
+                    <SvgIcon Icon="LucideIcon.Info" />
+                </div>
+                <div class="col">
+                    Add Qlik Cloud&reg; environments to run app reloads and automations in your Qlik Cloud environment.  
+                </div>
+            </div>
+        </HxAlert>
+    </div>
+    <div class="col-auto">
+        <HxButton Color="ThemeColor.Success"
+                  @onclick="() => ShowEditModal(null)"
+                  Enabled="_environments is not null">
+            Add environment
+        </HxButton>
+    </div>
+</div>
 
-<div class="card shadow-sm pt-2 my-4">
+<div class="card pt-2 my-4">
     <table class="table table-hover">
         <thead>
             <tr>
@@ -26,17 +47,17 @@
             </tr>
         </thead>
         <tbody>
-            @if (environments is null)
+            @if (_environments is null)
             {
                 <tr><td colspan="5" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
-            else if (environments.Count == 0)
+            else if (_environments.Count == 0)
             {
                 <tr><td colspan="5">No Qlik Cloud environments</td></tr>
             }
             else
             {
-                @foreach (var environment in environments.OrderBy(c => c.QlikCloudEnvironmentName))
+                @foreach (var environment in _environments.OrderBy(c => c.QlikCloudEnvironmentName))
                 {
                     var jobs = environment.Steps.Select(s => s.Job).Distinct().Count();
                     var steps = environment.Steps.Count();
@@ -47,11 +68,11 @@
                         <td class="align-middle">
                             <HxButtonGroup Size="ButtonGroupSize.Small">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="() => ShowEditModal(environment)">
-                                    <SvgIcon Icon="FeatherIcon.Edit2" />
+                                    <SvgIcon Icon="LucideIcon.Pen" />
                                 </HxButton>
                                 <HxDropdownButtonGroup>
                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="delete">
-                                        <SvgIcon Icon="FeatherIcon.Trash2" />
+                                        <SvgIcon Icon="LucideIcon.Trash2" />
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
                                         <HxDropdownHeader>Delete?</HxDropdownHeader>
@@ -70,8 +91,8 @@
                             <a class="text-body" href="javascript:void(0)"
                             @onclick="async () =>
                             {
-                                stepsEnvironment = environment;
-                                await stepsModal.LetAsync(x => x.ShowAsync());
+                                _stepsEnvironment = environment;
+                                await _stepsModal.LetAsync(x => x.ShowAsync());
                             }">
                                 @(steps > 0 ? $"{steps} step(s)" : null)
                             </a>
@@ -83,9 +104,9 @@
     </table>
 </div>
 
-<QlikCloudEnvironmentEditModal @ref="editModal" OnEnvironmentSubmit="OnEnvironmentSubmitAsync" />
+<QlikCloudEnvironmentEditModal @ref="_editModal" OnEnvironmentSubmit="OnEnvironmentSubmitAsync" />
 
-<HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsEnvironment?.QlikCloudEnvironmentName}")">
+<HxModal @ref="_stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {_stepsEnvironment?.QlikCloudEnvironmentName}")">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -97,7 +118,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var step in stepsEnvironment?.Steps
+                        @foreach (var step in _stepsEnvironment?.Steps
                         .OrderBy(s => s.Job.JobName)
                         .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
                         {
@@ -118,21 +139,26 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await stepsModal.LetAsync(x => x.HideAsync())">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await _stepsModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
 @code {
-    private List<QlikCloudEnvironment>? environments;
-    private QlikCloudEnvironmentEditModal? editModal;
+    private List<QlikCloudEnvironment>? _environments;
+    private QlikCloudEnvironmentEditModal? _editModal;
+    private QlikCloudEnvironment? _stepsEnvironment;
+    private HxModal? _stepsModal;
+    
+    protected override void OnInitialized() => ThemeService.OnThemeChanged += OnThemeChanged;
+    
+    public void Dispose() => ThemeService.OnThemeChanged -= OnThemeChanged;
 
-    private QlikCloudEnvironment? stepsEnvironment;
-    private HxModal? stepsModal;
+    private void OnThemeChanged(Theme theme, bool isAuto) => StateHasChanged();
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = await DbContextFactory.CreateDbContextAsync();
-        environments = await context.QlikCloudEnvironments
+        await using var context = await DbContextFactory.CreateDbContextAsync();
+        _environments = await context.QlikCloudEnvironments
             .AsNoTrackingWithIdentityResolution()
             .Include(c => c.Steps)
             .ThenInclude(s => s.Job)
@@ -144,7 +170,7 @@
         try
         {
             await Mediator.SendAsync(new DeleteQlikCloudEnvironmentCommand(environment.QlikCloudEnvironmentId));
-            environments?.Remove(environment);
+            _environments?.Remove(environment);
         }
         catch (Exception ex)
         {
@@ -158,17 +184,16 @@
         if (environment.QlikCloudEnvironmentId == Guid.Empty)
         {
             await Mediator.SendAsync(new CreateQlikCloudEnvironmentCommand(environment));
-            environments?.Add(environment);
         }
         else
         {
             await Mediator.SendAsync(new UpdateQlikCloudEnvironmentCommand(environment));
-            environments?.RemoveAll(c => c.QlikCloudEnvironmentId == environment.QlikCloudEnvironmentId);
-            environments?.Add(environment);
+            _environments?.RemoveAll(c => c.QlikCloudEnvironmentId == environment.QlikCloudEnvironmentId);
         }
+        _environments?.Add(environment);
         StateHasChanged();
     }
 
     private async Task ShowEditModal(QlikCloudEnvironment? environment) =>
-        await editModal.LetAsync(x => x.ShowAsync(environment?.QlikCloudEnvironmentId?? Guid.Empty));
+        await _editModal.LetAsync(x => x.ShowAsync(environment?.QlikCloudEnvironmentId?? Guid.Empty));
 }

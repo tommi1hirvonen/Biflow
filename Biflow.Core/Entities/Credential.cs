@@ -29,8 +29,8 @@ public partial class Credential
         ? $@"{domain}\{Username}"
         : Username;
 
-    private const int LOGON32_PROVIDER_DEFAULT = 0;
-    private const int LOGON32_LOGON_INTERACTIVE = 2;
+    private const int Logon32ProviderDefault = 0;
+    private const int Logon32LogonInteractive = 2;
 
     [JsonIgnore]
     public IEnumerable<ExeStep> ExeSteps { get; private set; } = new List<ExeStep>();
@@ -66,7 +66,7 @@ public partial class Credential
         {
             domain = ".";
         }
-        if (LogonUserW(Username, domain, Password, LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_DEFAULT, out var handle))
+        if (LogonUserW(Username, domain, Password, Logon32LogonInteractive, Logon32ProviderDefault, out var handle))
         {
             token = new SafeAccessTokenHandle(handle);
             return true;

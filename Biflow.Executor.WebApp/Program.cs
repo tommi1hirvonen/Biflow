@@ -4,6 +4,8 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddServiceDefaults();
+
 builder.Services.AddWindowsService();
 builder.Services.AddSystemd();
 
@@ -43,6 +45,8 @@ builder.Services.AddExecutorServices(builder.Configuration);
 Biflow.DataAccess.Extensions.RegisterAzureKeyVaultColumnEncryptionKeyStoreProvider(builder.Configuration);
 
 var app = builder.Build();
+
+app.MapDefaultEndpoints();
 
 if (app.Environment.IsDevelopment())
 {

@@ -8,8 +8,8 @@ public partial class SchedulerStatusResponse : OneOfBase<Success, AuthorizationE
 
 public record Success(IEnumerable<JobStatus> Jobs);
 
-public readonly record struct AuthorizationError();
+public readonly record struct AuthorizationError;
 
-public readonly record struct SchedulerError();
+public readonly record struct SchedulerError;
 
-public readonly record struct UndefinedError();
+public readonly record struct UndefinedError;

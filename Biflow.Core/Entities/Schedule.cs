@@ -31,7 +31,7 @@ public class Schedule : IAuditable
     [Display(Name = "Enabled")]
     public bool IsEnabled { get; set; } = true;
 
-    public bool DisallowConcurrentExecution { get; set; } = false;
+    public bool DisallowConcurrentExecution { get; set; }
 
     [Required]
     [Display(Name = "Created")]

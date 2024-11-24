@@ -6,9 +6,9 @@ using Microsoft.Extensions.Logging;
 namespace Biflow.Executor.Core;
 
 internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFactory jobExecutorFactory)
-    : BackgroundService, IExecutionManager, IDisposable
+    : BackgroundService, IExecutionManager
 {
-    private readonly object _lock = new();
+    private readonly Lock _lock = new();
     private readonly ILogger<ExecutionManager> _logger = logger;
     private readonly IJobExecutorFactory _jobExecutorFactory = jobExecutorFactory;
     private readonly Dictionary<Guid, IJobExecutor> _jobExecutors = [];
@@ -53,12 +53,11 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
             {
                 throw new ApplicationException("Cannot start new executions when service shutdown is requested.");
             }
-            if (_jobExecutors.ContainsKey(executionId))
+            if (!_jobExecutors.TryAdd(executionId, jobExecutor))
             {
                 throw new DuplicateExecutionException(executionId);
             }
 
-            _jobExecutors[executionId] = jobExecutor;
             var task = jobExecutor.RunAsync(_shutdownCts.Token);
             _executionTasks[executionId] = task;
             _ = MonitorExecutionTaskAsync(task, executionId);

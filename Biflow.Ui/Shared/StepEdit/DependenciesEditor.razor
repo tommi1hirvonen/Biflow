@@ -1,6 +1,6 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject ToasterService Toaster
-@inject IJSRuntime JS
+@inject IJSRuntime Js
 
 <div class="row">
     <div class="col">
@@ -15,14 +15,14 @@
         <HxButtonGroup>
             <FilterDropdown TItem="JobProjection"
                             Items="JobSlims.Values.OrderBy(j => j.JobName)"
-                            FilterSet="jobFilter"                            
+                            FilterSet="_jobFilter"                            
                             IdSelector="x => x.JobId.ToString()"
                             TextSelector="x => x.JobName"
                             OnChange="StateHasChanged"
                             IsSearchable
                             DelayItemsRender>
                 <TitleTemplate>
-                    @if (jobsLoading && JobSlims is null)
+                    @if (_jobsLoading)
                     {
                         <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
                         <span>Loading...</span>
@@ -39,11 +39,11 @@
             </FilterDropdown>
 
             <FilterDropdown TItem="StepType"
-                            FilterSet="stepTypeFilter"
-                            Items="Steps.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
+                            FilterSet="_stepTypeFilter"
+                            Items="Steps.Select(s => s.StepType).Distinct().OrderBy(t => t)"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
-                    <SvgIcon Icon="FeatherIcon.Tool" />
+                    <SvgIcon Icon="LucideIcon.Wrench" />
                     Step type
                 </TitleTemplate>
                 <ItemTemplate Context="item">
@@ -53,13 +53,13 @@
             </FilterDropdown>
 
             <FilterDropdown TItem="StepTag"
-                            FilterSet="tagFilter"
-                            Items="StepSlims.Values.SelectMany(step => step.Tags).DistinctBy(t => t.TagName).OrderBy(t => t.TagName)"
+                            FilterSet="_tagFilter"
+                            Items="StepSlims.Values.SelectMany(step => step.Tags).DistinctBy(t => t.TagName).Order()"
                             IdSelector="t => t.TagId.ToString()"
                             TextSelector="t => t.TagName"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
-                    <SvgIcon Icon="FeatherIcon.Tag" />
+                    <SvgIcon Icon="LucideIcon.Tag" />
                     Tags
                 </TitleTemplate>
                 <ItemTemplate Context="tag">
@@ -70,9 +70,9 @@
     </div>
     <div class="input-group input-group-sm col">
         <div class="input-group-text rounded-left">
-            <SvgIcon Icon="FeatherIcon.Search" />
+            <SvgIcon Icon="LucideIcon.Search" />
         </div>
-        <input type="search" style="max-width: 25rem;" class="form-control" @bind-value="dependenciesFilterText" @bind-value:event="oninput" placeholder="Search" autocomplete="off" />
+        <input type="search" style="max-width: 25rem;" class="form-control" @bind-value="_dependenciesFilterText" @bind-value:event="oninput" placeholder="Search" autocomplete="off" />
     </div>    
 </div>
 
@@ -84,14 +84,14 @@
                 <tbody>
                     @{
                         var steps = GetOrderedSteps().ToList();
-                        var multiJobAvailable = jobFilter.Count > 1;
+                        var multiJobAvailable = _jobFilter.Count > 1;
                     }
                     @foreach (var step in steps)
                     {
                         <tr @onclick="() => AddDependency(step)" style="cursor: pointer;">
                             <td class="align-middle small">
                                 <StepTypeIcon StepType="step.StepType" />
-                                <HighlightableText Text="@step.StepName" PartToHighlight="@dependenciesFilterText" />
+                                <HighlightableText Text="@step.StepName" PartToHighlight="@_dependenciesFilterText" />
                                 @if (multiJobAvailable)
                                 {
                                     var job = JobSlims.GetValueOrDefault(step.JobId);
@@ -155,10 +155,10 @@
                                     @{
                                         var (className, icon) = dependency.DependencyType switch
                                         {
-                                            DependencyType.OnSucceeded => ("text-success", FeatherIcon.CheckCircle),
-                                            DependencyType.OnCompleted => ("text-primary", FeatherIcon.ArrowRight),
-                                            DependencyType.OnFailed => ("text-danger", FeatherIcon.AlertOctagon),
-                                            _ => ("text-secondary", FeatherIcon.HelpCircle)
+                                            DependencyType.OnSucceeded => ("text-success", LucideIcon.CircleCheck),
+                                            DependencyType.OnCompleted => ("text-primary", LucideIcon.MoveRight),
+                                            DependencyType.OnFailed => ("text-danger", LucideIcon.OctagonAlert),
+                                            _ => ("text-secondary", LucideIcon.CircleHelp)
                                         };
                                     }
                                     <span class="@className">
@@ -175,7 +175,7 @@
                                 </td>
                                 <td class="align-middle">
                                     <HxButton Size="ButtonSize.Small" CssClass="btn-auto" OnClick="() => RemoveDependency(step)">
-                                        <SvgIcon Icon="FeatherIcon.Delete" />
+                                        <SvgIcon Icon="LucideIcon.Delete" />
                                     </HxButton>
                                 </td>
                             </tr>
@@ -200,25 +200,26 @@
     [Parameter]
     public Dictionary<Guid, JobProjection> JobSlims { get; set; } = [];
 
-    private readonly HashSet<JobProjection> jobFilter = [];
-    private readonly HashSet<StepTag> tagFilter = [];
-    private readonly HashSet<StepType> stepTypeFilter = [];
-    private static readonly JsonSerializerOptions jsonOptions = new JsonSerializerOptions { WriteIndented = true };
+    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+    
+    private readonly HashSet<JobProjection> _jobFilter = [];
+    private readonly HashSet<StepTag> _tagFilter = [];
+    private readonly HashSet<StepType> _stepTypeFilter = [];
 
-    private Step? previousStep;
-    private string dependenciesFilterText = string.Empty;
-    private bool jobsLoading = false;
+    private Step? _previousStep;
+    private string _dependenciesFilterText = string.Empty;
+    private bool _jobsLoading = false;
 
     private IEnumerable<StepProjection> GetOrderedSteps()
     {
         // Filter steps and group them by job.
         var jobs = StepSlims.Values
-            .Where(step => !jobFilter.Any() || jobFilter.Any(j => step.JobId == j.JobId))
+            .Where(step => !_jobFilter.Any() || _jobFilter.Any(j => step.JobId == j.JobId))
             .Where(step => step.StepId != Step?.StepId) // Exclude current step => step cannot depend on itself.
-            .Where(step => step.StepName?.ContainsIgnoreCase(dependenciesFilterText) == true) // Filter based on search filter.
-            .Where(step => !stepTypeFilter.Any() || stepTypeFilter.Contains(step.StepType)) // Filter based on step type
-            .Where(step => tagFilter.Count == 0 || tagFilter.Any(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Filter based on tags
-            .Where(step => !Step?.Dependencies.Any(d => d.DependantOnStepId == step.StepId) ?? true) // Exclude steps which are already listed as dependencies
+            .Where(step => step.StepName?.ContainsIgnoreCase(_dependenciesFilterText) == true) // Filter based on search filter.
+            .Where(step => !_stepTypeFilter.Any() || _stepTypeFilter.Contains(step.StepType)) // Filter based on step type
+            .Where(step => _tagFilter.Count == 0 || _tagFilter.Any(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Filter based on tags
+            .Where(step => Step?.Dependencies.All(d => d.DependantOnStepId != step.StepId) ?? true) // Exclude steps which are already listed as dependencies
             .GroupBy(step => (step.JobId, step.JobName))
             .OrderBy(g => g.Key.JobName)
             .Select(g => (g.Key.JobId, Steps: g.ToArray()))
@@ -228,37 +229,41 @@
         {
             IComparer<StepProjection> comparer = Comparer<StepProjection>.Default;
             var executionMode = JobSlims.GetValueOrDefault(j.JobId)?.ExecutionMode;
-            if (executionMode == ExecutionMode.Dependency)
+            if (executionMode != ExecutionMode.Dependency)
             {
-                try
-                {
-                    comparer = new TopologicalStepProjectionComparer(j.Steps);
-                }
-                catch (CyclicDependencyException ex)
-                {
-                    var message = JsonSerializer.Serialize(ex.CyclicObjects, jsonOptions);
-                    _ = JS.InvokeVoidAsync("console.log", message);
-                    Toaster.AddError("Error sorting steps", "Cyclic dependencies detected. See browser console for detailed output.");
-                }
-                catch (Exception ex)
-                {
-                    Toaster.AddError("Error sorting steps", ex.Message);
-                }
+                return j.Steps.OrderBy(s => s, comparer);
             }
+            
+            try
+            {
+                comparer = new TopologicalStepProjectionComparer(j.Steps);
+            }
+            catch (CyclicDependencyException ex)
+            {
+                var message = JsonSerializer.Serialize(ex.CyclicObjects, JsonOptions);
+                _ = Js.InvokeVoidAsync("console.log", message);
+                Toaster.AddError("Error sorting steps", "Cyclic dependencies detected. See browser console for detailed output.");
+            }
+            catch (Exception ex)
+            {
+                Toaster.AddError("Error sorting steps", ex.Message);
+            }
+            
             return j.Steps.OrderBy(s => s, comparer);
         }).ToArray();
     }
 
     protected override void OnParametersSet()
     {
-        if (Step is not null && previousStep != Step)
+        if (Step is null || _previousStep == Step)
         {
-            previousStep = Step;
-            jobFilter.Clear();
-            var job = JobSlims.GetValueOrDefault(Step.JobId);
-            if (job is not null)
-                jobFilter.Add(job);
+            return;
         }
+        _previousStep = Step;
+        _jobFilter.Clear();
+        var job = JobSlims.GetValueOrDefault(Step.JobId);
+        if (job is not null)
+            _jobFilter.Add(job);
     }
 
     private void RemoveDependency(StepProjection step)
@@ -274,28 +279,28 @@
     private void AddDependency(StepProjection step)
     {
         ArgumentNullException.ThrowIfNull(Step);
-        if (!Step.Dependencies.Any(dep => dep.DependantOnStepId == step.StepId))
+        if (Step.Dependencies.Any(dep => dep.DependantOnStepId == step.StepId))
         {
-            var newDep = new Dependency
-                {
-                    StepId = Step.StepId,
-                    DependantOnStepId = step.StepId,
-                    IsNewAddition = true
-                };
-            Step.Dependencies.Add(newDep);
+            return;
         }
+        var newDep = new Dependency
+        {
+            StepId = Step.StepId,
+            DependantOnStepId = step.StepId,
+            IsNewAddition = true
+        };
+        Step.Dependencies.Add(newDep);
     }
 
     private void InferDependenciesFromDataObjects()
     {
         ArgumentNullException.ThrowIfNull(Step);
         var sources = Step.DataObjects.Where(d => d.ReferenceType == DataObjectReferenceType.Source);
-        static IEnumerable<StepDataObject> targetsOf(Step step) => step.DataObjects.Where(d => d.ReferenceType == DataObjectReferenceType.Target);
 
         var dependsOnSteps = Steps.Where(step =>
-            targetsOf(step).Any(target =>
+            TargetsOf(step).Any(target =>
                 sources.Any(source => source.IsSubsetOf(target))));
-        var missingDependencies = dependsOnSteps.Where(d1 => !Step.Dependencies.Any(d2 => d2.DependantOnStepId == d1.StepId));
+        var missingDependencies = dependsOnSteps.Where(d1 => Step.Dependencies.All(d2 => d2.DependantOnStepId != d1.StepId));
 
         foreach (var step in missingDependencies)
         {
@@ -313,6 +318,11 @@
         {
             candidate.IsCandidateForRemoval = true;
         }
+
+        return;
+
+        static IEnumerable<StepDataObject> TargetsOf(Step step) =>
+            step.DataObjects.Where(d => d.ReferenceType == DataObjectReferenceType.Target);
     }
 
 }

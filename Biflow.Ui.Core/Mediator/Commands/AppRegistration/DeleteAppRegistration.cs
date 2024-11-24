@@ -7,7 +7,7 @@ internal class DeleteAppRegistrationCommandHandler(IDbContextFactory<AppDbContex
 {
     public async Task Handle(DeleteAppRegistrationCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var client = await context.AppRegistrations
             .FirstOrDefaultAsync(p => p.AppRegistrationId == request.AppRegistrationId, cancellationToken);
         if (client is not null)

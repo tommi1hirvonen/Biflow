@@ -7,7 +7,7 @@ internal class UpdateJobConcurrenciesCommandHandler(IDbContextFactory<AppDbConte
 {
     public async Task Handle(UpdateJobConcurrenciesCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var job = await context.Jobs
             .Include(j => j.JobConcurrencies)
             .FirstOrDefaultAsync(j => j.JobId == request.Job.JobId, cancellationToken);

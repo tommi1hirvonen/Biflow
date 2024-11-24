@@ -4,45 +4,59 @@ using System.Text.Json;
 namespace Biflow.Ui.Pages;
 
 [Route("/jobs/{Id:guid}/{DetailsPage}/{InitialStepId:guid?}")]
-public partial class JobDetails : ComponentBase, IDisposable
+[Route("/jobs/{Id:guid}/settings/{SettingsPage?}")]
+public partial class JobDetails(
+    IDbContextFactory<AppDbContext> dbContextFactory,
+    NavigationManager navigationManager,
+    ToasterService toaster,
+    IHxMessageBoxService confirmer,
+    IMediator mediator,
+    IJSRuntime js) : ComponentBase, IDisposable
 {
-    [Inject] private IDbContextFactory<AppDbContext> DbFactory { get; set; } = null!;
-    [Inject] private NavigationManager NavigationManager { get; set; } = null!;
-    [Inject] private ToasterService Toaster { get; set; } = null!;
-    [Inject] private IHxMessageBoxService Confirmer { get; set; } = null!;
-    [Inject] private IMediator Mediator { get; set; } = null!;
-    [Inject] private IJSRuntime JS { get; set; } = null!;
-
     [Parameter] public string DetailsPage { get; set; } = "steps";
+
+    [Parameter] public string? SettingsPage { get; set; }
 
     [Parameter] public Guid Id { get; set; }
 
     [Parameter] public Guid? InitialStepId { get; set; }
 
-    private readonly CancellationTokenSource cts = new();
-    private static readonly JsonSerializerOptions jsonOptions = new JsonSerializerOptions { WriteIndented = true };
+    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
+    private readonly NavigationManager _navigationManager = navigationManager;
+    private readonly ToasterService _toaster = toaster;
+    private readonly IHxMessageBoxService _confirmer = confirmer;
+    private readonly IMediator _mediator = mediator;
+    private readonly IJSRuntime _js = js;
+    private readonly CancellationTokenSource _cts = new();
 
-    private Job? job;
-    private List<Job> jobs = [];
-    private List<Step> steps = [];
-    private List<ConnectionBase>? sqlConnections;
-    private List<MsSqlConnection>? msSqlConnections;
-    private List<AnalysisServicesConnection>? asConnections;
-    private List<PipelineClient>? pipelineClients;
-    private List<AppRegistration>? appRegistrations;
-    private List<FunctionApp>? functionApps;
-    private List<QlikCloudEnvironment>? qlikCloudClients;
-    private List<DatabricksWorkspace>? databricksWorkspaces;
-    private List<Credential>? credentials;
-    private bool descriptionOpen;
-    private Guid previousJobId;
+    private Job? _job;
+    private List<Job> _jobs = [];
+    private List<Step> _steps = [];
+    private List<ConnectionBase>? _sqlConnections;
+    private List<MsSqlConnection>? _msSqlConnections;
+    private List<AnalysisServicesConnection>? _asConnections;
+    private List<PipelineClient>? _pipelineClients;
+    private List<AppRegistration>? _appRegistrations;
+    private List<FunctionApp>? _functionApps;
+    private List<QlikCloudEnvironment>? _qlikCloudClients;
+    private List<DatabricksWorkspace>? _databricksWorkspaces;
+    private List<DbtAccount>? _dbtAccounts;
+    private List<Credential>? _credentials;
+    private bool _descriptionOpen;
+    private Guid _previousJobId;
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Id != previousJobId)
+        if (Id != _previousJobId)
         {
-            previousJobId = Id;
+            _previousJobId = Id;
             await OnInitializedAsync();
+        }
+
+        if (_navigationManager.Uri.EndsWith("settings") && SettingsPage is null)
+        {
+            _navigationManager.NavigateTo($"/jobs/{Id}/settings/general");
         }
     }
 
@@ -62,95 +76,115 @@ public partial class JobDetails : ComponentBase, IDisposable
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = await DbFactory.CreateDbContextAsync();
-        sqlConnections = await context.Connections
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        _sqlConnections = await context.Connections
             .AsNoTracking()
             .Where(c => c.ConnectionType == ConnectionType.Sql || c.ConnectionType == ConnectionType.Snowflake)
             .OrderBy(c => c.ConnectionName)
-            .ToListAsync(cts.Token);
-        msSqlConnections = sqlConnections.OfType<MsSqlConnection>().ToList();
-        asConnections = await context.AnalysisServicesConnections
+            .ToListAsync(_cts.Token);
+        _msSqlConnections = _sqlConnections.OfType<MsSqlConnection>().ToList();
+        _asConnections = await context.AnalysisServicesConnections
             .AsNoTracking()
             .OrderBy(c => c.ConnectionName)
-            .ToListAsync(cts.Token);
-        pipelineClients = await context.PipelineClients
+            .ToListAsync(_cts.Token);
+        _pipelineClients = await context.PipelineClients
             .AsNoTracking()
             .OrderBy(df => df.PipelineClientName)
-            .ToListAsync(cts.Token);
-        appRegistrations = await context.AppRegistrations
+            .ToListAsync(_cts.Token);
+        _appRegistrations = await context.AppRegistrations
             .AsNoTracking()
             .OrderBy(app => app.AppRegistrationName)
-            .ToListAsync(cts.Token);
-        functionApps = await context.FunctionApps
+            .ToListAsync(_cts.Token);
+        _functionApps = await context.FunctionApps
             .AsNoTracking()
             .OrderBy(app => app.FunctionAppName)
-            .ToListAsync(cts.Token);
-        qlikCloudClients = await context.QlikCloudEnvironments
+            .ToListAsync(_cts.Token);
+        _qlikCloudClients = await context.QlikCloudEnvironments
             .AsNoTracking()
             .OrderBy(c => c.QlikCloudEnvironmentName)
-            .ToListAsync(cts.Token);
-        databricksWorkspaces = await context.DatabricksWorkspaces
+            .ToListAsync(_cts.Token);
+        _databricksWorkspaces = await context.DatabricksWorkspaces
             .AsNoTracking()
             .OrderBy(w => w.WorkspaceName)
-            .ToListAsync(cts.Token);
-        credentials = await context.Credentials
+            .ToListAsync(_cts.Token);
+        _dbtAccounts = await context.DbtAccounts
+            .AsNoTracking()
+            .OrderBy(a => a.DbtAccountName)
+            .ToListAsync(_cts.Token);
+        _credentials = await context.Credentials
             .AsNoTracking()
             .OrderBy(c => c.Domain)
             .ThenBy(c => c.Username)
-            .ToListAsync(cts.Token);
-        job = await context.Jobs
+            .ToListAsync(_cts.Token);
+        _job = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
-            .FirstAsync(job => job.JobId == Id, cts.Token);
-        steps = await BuildStepsQueryWithIncludes(context)
-            .Where(step => step.JobId == job.JobId)
+            .FirstAsync(j => j.JobId == Id, _cts.Token);
+        _steps = await BuildStepsQueryWithIncludes(context)
+            .Where(step => step.JobId == _job.JobId)
             .AsNoTrackingWithIdentityResolution()
-            .ToListAsync(cts.Token);
-        jobs = await context.Jobs
+            .ToListAsync(_cts.Token);
+        _jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(j => j.JobName)
-            .ToListAsync(cts.Token);
+            .ToListAsync(_cts.Token);
         SortSteps();
     }
 
     private void SortSteps()
     {
-        if (job is null)
+        if (_job is null)
         {
             return;
         }
         try
         {
-            if (job.ExecutionMode == ExecutionMode.Dependency)
+            switch (_job.ExecutionMode)
             {
-                var comparer = new TopologicalStepComparer(steps);
-                steps.Sort(comparer);
+                case ExecutionMode.Dependency:
+                {
+                    var comparer = new TopologicalStepComparer(_steps);
+                    _steps.Sort(comparer);
+                    break;
+                }
+                case ExecutionMode.Hybrid:
+                {
+                    var topologicalComparer = new TopologicalStepComparer(_steps);
+                    var comparer = Comparer<Step>.Create((s1, s2) =>
+                    {
+                        var result = s1.ExecutionPhase.CompareTo(s2.ExecutionPhase);
+                        return result != 0 ? result : topologicalComparer.Compare(s1, s2);
+                    });
+                    _steps.Sort(comparer);
+                    break;
+                }
+                case ExecutionMode.ExecutionPhase:
+                default:
+                    _steps.Sort();
+                    break;
             }
-            else
-            {
-                steps.Sort();
-            }
+
             StateHasChanged();
         }
         catch (CyclicDependencyException<Step> ex)
         {
             var cycles = ex.CyclicObjects.Select(c => c.Select(s => new { s.StepId, s.StepName, s.StepType }));
-            var message = JsonSerializer.Serialize(cycles, jsonOptions);
-            _ = JS.InvokeVoidAsync("console.log", message).AsTask();
-            Toaster.AddError("Error sorting steps", "Cyclic dependencies detected. See browser console for detailed output.");
+            var message = JsonSerializer.Serialize(cycles, JsonOptions);
+            _ = _js.InvokeVoidAsync("console.log", message).AsTask();
+            _toaster.AddError("Error sorting steps", "Cyclic dependencies detected. See browser console for detailed output.");
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error sorting steps", ex.Message);
+            _toaster.AddError("Error sorting steps", ex.Message);
         }
     }
 
     private void OnJobUpdated(Job job)
     {
-        if (this.job is null)
+        if (_job is null)
         {
             return;
         }
-        this.job = job;
+        _job = job;
         StateHasChanged();
     }
 
@@ -158,11 +192,11 @@ public partial class JobDetails : ComponentBase, IDisposable
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(job);
-            using (var context1 = await DbFactory.CreateDbContextAsync())
+            ArgumentNullException.ThrowIfNull(_job);
+            await using (var context1 = await _dbContextFactory.CreateDbContextAsync())
             {
                 var executingSteps = await context1.JobSteps
-                    .Where(s => s.JobToExecuteId == job.JobId)
+                    .Where(s => s.JobToExecuteId == _job.JobId)
                     .Include(s => s.Job)
                     .OrderBy(s => s.Job.JobName)
                     .ThenBy(s => s.StepName)
@@ -175,19 +209,19 @@ public partial class JobDetails : ComponentBase, IDisposable
                     {steps}
                     Removing the job will also remove these steps. Delete anyway?
                     """;
-                    var confirmResult = await Confirmer.ConfirmAsync("", message);
+                    var confirmResult = await _confirmer.ConfirmAsync("", message);
                     if (!confirmResult)
                     {
                         return;
                     }
                 }
             }
-            await Mediator.SendAsync(new DeleteJobCommand(job.JobId));
-            NavigationManager.NavigateTo("jobs");
+            await _mediator.SendAsync(new DeleteJobCommand(_job.JobId));
+            _navigationManager.NavigateTo("jobs");
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error deleting job", ex.Message);
+            _toaster.AddError("Error deleting job", ex.Message);
         }
     }
 
@@ -196,21 +230,21 @@ public partial class JobDetails : ComponentBase, IDisposable
         try
         {
             var enabled = (bool)args.Value!;
-            ArgumentNullException.ThrowIfNull(job);
-            await Mediator.SendAsync(new ToggleJobCommand(job.JobId, enabled));
-            job.IsEnabled = enabled;
-            var message = job.IsEnabled ? "Job enabled successfully" : "Job disabled successfully";
-            Toaster.AddSuccess(message);
+            ArgumentNullException.ThrowIfNull(_job);
+            await _mediator.SendAsync(new ToggleJobEnabledCommand(_job.JobId, enabled));
+            _job.IsEnabled = enabled;
+            var message = _job.IsEnabled ? "Job enabled successfully" : "Job disabled successfully";
+            _toaster.AddSuccess(message);
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error toggling job", ex.Message);
+            _toaster.AddError("Error toggling job", ex.Message);
         }
     }
 
     public void Dispose()
     {
-        cts.Cancel();
-        cts.Dispose();
+        _cts.Cancel();
+        _cts.Dispose();
     }
 }

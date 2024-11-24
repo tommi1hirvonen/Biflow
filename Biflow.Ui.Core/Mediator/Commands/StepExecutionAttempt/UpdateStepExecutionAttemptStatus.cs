@@ -8,7 +8,7 @@ internal class UpdateStepExecutionAttemptStatusCommandHandler(IDbContextFactory<
 {
     public async Task<StepExecutionAttempt> Handle(UpdateStepExecutionAttemptStatusCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var attempt = await context.StepExecutionAttempts
             .Where(e => e.ExecutionId == request.ExecutionId && e.StepId == request.StepId && e.RetryAttemptIndex == request.RetryAttemptIndex)
             .FirstAsync(cancellationToken);

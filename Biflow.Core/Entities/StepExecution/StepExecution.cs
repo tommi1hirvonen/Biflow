@@ -2,21 +2,13 @@
 
 namespace Biflow.Core.Entities;
 
-public abstract class StepExecution
+public abstract class StepExecution(string stepName, StepType stepType)
 {
-    protected StepExecution(string stepName, StepType stepType)
-    {
-        StepName = stepName;
-        StepType = stepType;
-    }
-
-    protected StepExecution(Step step, Execution execution)
+    protected StepExecution(Step step, Execution execution) : this(step.StepName ?? "", step.StepType)
     {
         ExecutionId = execution.ExecutionId;
         Execution = execution;
         StepId = step.StepId;
-        StepName = step.StepName ?? "";
-        StepType = step.StepType;
         DuplicateExecutionBehaviour = step.DuplicateExecutionBehaviour;
         ExecutionPhase = step.ExecutionPhase;
         RetryAttempts = step.RetryAttempts;
@@ -50,10 +42,10 @@ public abstract class StepExecution
 
     [Display(Name = "Step")]
     [MaxLength(250)]
-    public string StepName { get; private set; }
+    public string StepName { get; private set; } = stepName;
 
     [Display(Name = "Step type")]
-    public StepType StepType { get; }
+    public StepType StepType { get; } = stepType;
 
     public DuplicateExecutionBehaviour DuplicateExecutionBehaviour { get; private set; }
 
@@ -113,7 +105,7 @@ public abstract class StepExecution
         $"{GetType().Name} {{ ExecutionId = \"{ExecutionId}\", StepId = \"{StepId}\", StepName = \"{StepName}\" }}";
 
     public StepExecutionStatus? ExecutionStatus => StepExecutionAttempts
-            ?.MaxBy(e => e.RetryAttemptIndex)
+            .MaxBy(e => e.RetryAttemptIndex)
             ?.ExecutionStatus;
 
     public async Task<bool> EvaluateExecutionConditionAsync()

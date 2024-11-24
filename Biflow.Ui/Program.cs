@@ -9,6 +9,8 @@ using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddServiceDefaults();
+
 builder.Services.AddWindowsService();
 builder.Services.AddSystemd();
 
@@ -71,12 +73,14 @@ var localizationOptions = new RequestLocalizationOptions()
 
 app.UseRequestLocalization(localizationOptions);
 
-app.UseStaticFiles();
+app.MapStaticAssets();
 app.UseAntiforgery();
 app.UseCookiePolicy();
 app.MapControllers(); // Needed for MicrosoftIdentityUI
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+app.MapDefaultEndpoints();
 
 await app.EnsureAdminUserAsync();
 

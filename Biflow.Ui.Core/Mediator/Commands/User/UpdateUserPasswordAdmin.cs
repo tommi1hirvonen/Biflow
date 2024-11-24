@@ -14,7 +14,7 @@ internal class UpdateUserPasswordAdminCommandHandler(IDbContextFactory<AppDbCont
 {
     public async Task Handle(UpdateUserPasswordAdminCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var newHash = BC.HashPassword(request.Password);
         var affectedRows = await context.Users
             .Where(u => u.Username == request.Username)

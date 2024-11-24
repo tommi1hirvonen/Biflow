@@ -7,7 +7,7 @@ namespace Biflow.Core.Entities;
 
 public abstract class StepParameterBase : DynamicParameter, IHasExpressionParameters<StepParameterExpressionParameter, JobParameter>
 {
-    public StepParameterBase(ParameterType parameterType)
+    protected StepParameterBase(ParameterType parameterType)
     {
         ParameterType = parameterType;
     }
@@ -23,12 +23,14 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
         StepId = step.StepId;
 
         // The target job is set, the JobParameter is not null and the target job has a parameter with a matching name.
-        if (job is not null && other.InheritFromJobParameter is not null && job.JobParameters.FirstOrDefault(p => p.ParameterName == other.InheritFromJobParameter.ParameterName) is JobParameter parameter)
+        if (job is not null
+            && other.InheritFromJobParameter is not null
+            && job.JobParameters.FirstOrDefault(p => p.ParameterName == other.InheritFromJobParameter.ParameterName) is { } parameter)
         {
             InheritFromJobParameterId = parameter.ParameterId;
             InheritFromJobParameter = parameter;
         }
-        // The target job has no parameter with a mathing name, so add one.
+        // The target job has no parameter with a matching name, so add one.
         else if (job is not null && other.InheritFromJobParameter is not null)
         {
             var newParameter = new JobParameter(other.InheritFromJobParameter, job);
@@ -53,7 +55,7 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
 
     public Guid? InheritFromJobParameterId
     {
-        get => _inheritFromJobParameterId;
+        get;
         set
         {
             if (value is not null)
@@ -61,16 +63,14 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
                 UseExpression = false;
                 ParameterValue = new();
             }
-            _inheritFromJobParameterId = value;
+            field = value;
         }
     }
-
-    private Guid? _inheritFromJobParameterId;
 
     [JsonIgnore]
     public JobParameter? InheritFromJobParameter
     {
-        get => _inheritFromJobParameter;
+        get;
         set
         {
             if (value is not null)
@@ -78,11 +78,9 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
                 UseExpression = false;
                 ParameterValue = new();
             }
-            _inheritFromJobParameter = value;
+            field = value;
         }
     }
-
-    private JobParameter? _inheritFromJobParameter;
 
     [ValidateComplexType]
     [JsonIgnore]
@@ -104,21 +102,21 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
             return await InheritFromJobParameter.EvaluateAsync();
         }
 
-        if (UseExpression)
+        if (!UseExpression)
         {
-            var parameters = new Dictionary<string, object?>();
-            foreach (var parameter in ExpressionParameters)
-            {
-                parameters[parameter.ParameterName] = await parameter.EvaluateAsync();
-            }
-            parameters[ExpressionParameterNames.ExecutionId] = Guid.Empty;
-            parameters[ExpressionParameterNames.JobId] = BaseStep.JobId;
-            parameters[ExpressionParameterNames.StepId] = BaseStep.StepId;
-            parameters[ExpressionParameterNames.RetryAttemptIndex] = 0;
-            return await Expression.EvaluateAsync(parameters);
+            return ParameterValue.Value;
         }
-
-        return ParameterValue.Value;
+        
+        var parameters = new Dictionary<string, object?>();
+        foreach (var parameter in ExpressionParameters)
+        {
+            parameters[parameter.ParameterName] = await parameter.EvaluateAsync();
+        }
+        parameters[ExpressionParameterNames.ExecutionId] = Guid.Empty;
+        parameters[ExpressionParameterNames.JobId] = BaseStep.JobId;
+        parameters[ExpressionParameterNames.StepId] = BaseStep.StepId;
+        parameters[ExpressionParameterNames.RetryAttemptIndex] = 0;
+        return await Expression.EvaluateAsync(parameters);
     }
 
     public void AddExpressionParameter(JobParameter jobParameter)
@@ -133,12 +131,12 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
         _expressionParameters.Add(expressionParameter);
     }
 
-    public bool RemoveExpressionParameter(StepParameterExpressionParameter parameter) => _expressionParameters.Remove(parameter);
+    public void RemoveExpressionParameter(StepParameterExpressionParameter parameter) => _expressionParameters.Remove(parameter);
 
     [JsonIgnore]
     public override string DisplayValue => InheritFromJobParameter switch
     {
-        not null => $"{InheritFromJobParameter.DisplayValue?.ToString() ?? "null"} (inherited from job parameter {InheritFromJobParameter.DisplayName})",
+        not null => $"{InheritFromJobParameter.DisplayValue} (inherited from job parameter {InheritFromJobParameter.DisplayName})",
         _ => base.DisplayValue
     };
 

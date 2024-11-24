@@ -10,7 +10,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.XOctagon" />
+                        <SvgIcon Icon="LucideIcon.OctagonX" />
                     </div>
                     <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 5rem;"></InputNumber>
                 </div>
@@ -25,16 +25,16 @@
             <div class="col-md-6 d-inline">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Database" />
+                        <SvgIcon Icon="LucideIcon.Database" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId">
-                        @foreach (var connection in MsSqlConnections ?? [])
+                        @foreach (var connection in MsSqlConnections)
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }
                     </InputSelect>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenPackageSelectOffcanvas">
-                        <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
+                        <SvgIcon Icon="LucideIcon.Ellipsis" />
                         Browse catalog
                     </HxButton>
                 </div>
@@ -48,7 +48,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Folder" />
+                        <SvgIcon Icon="LucideIcon.Folder" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.PackageFolderName"></InputText>
                 </div>
@@ -62,7 +62,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Briefcase" />
+                        <SvgIcon Icon="LucideIcon.Briefcase" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.PackageProjectName"></InputText>
                 </div>
@@ -76,7 +76,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Package" />
+                        <SvgIcon Icon="LucideIcon.Package" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.PackageName"></InputText>
                 </div>
@@ -103,7 +103,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.User" />
+                        <SvgIcon Icon="LucideIcon.User" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.ExecuteAsLogin"></InputText>
                 </div>
@@ -111,7 +111,7 @@
             </div>
         </div>
 
-        <PackageSelectOffcanvas @ref="packageSelectOffcanvas" OnPackageSelected="OnPackageSelected" />
+        <PackageSelectOffcanvas @ref="_packageSelectOffcanvas" OnPackageSelected="OnPackageSelected" />
 
         <PackageParametersEditor Step="Step" Connection="Connection" />
     }

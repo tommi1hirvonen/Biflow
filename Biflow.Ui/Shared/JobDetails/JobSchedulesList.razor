@@ -1,6 +1,7 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbFactory
 @inject ToasterService Toaster
 @inject IMediator Mediator
+@inject IHxMessageBoxService Confirmer
 
 <style>
     .white-space-pre {
@@ -11,12 +12,12 @@
 <PageTitle>@Job?.JobName | Schedules | Biflow</PageTitle>
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-    <HxButton Color="ThemeColor.Success" @onclick="async () => await editModal.LetAsync(x => x.ShowAsync(Guid.Empty))">
+    <HxButton Color="ThemeColor.Success" @onclick="async () => await _editModal.LetAsync(x => x.ShowAsync(Guid.Empty))">
         Add schedule
     </HxButton>
 </AuthorizeView>
 
-<div class="card shadow-sm pt-2 my-4">
+<div class="card pt-2 my-4">
     <table class="table table-hover table-sm">
         <thead>
             <tr>
@@ -38,97 +39,114 @@
             </tr>
         </thead>
         <tbody>
-            @if (schedules is null)
+            @if (_schedules is null)
             {
                 <tr><td colspan="6" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
-            else if (schedules.Count == 0)
+            else if (_schedules.Count == 0)
             {
                 <tr><td colspan="6">No schedules</td></tr>
             }
             else
             {
-                @foreach (var item in schedules.OrderBy(s => s.ScheduleName))
+                @foreach (var item in _schedules.OrderBy(s => s.ScheduleName))
                 {
-                    <tr class="schedule-row small @(item.IsEnabled ? null : "disabled")">
-                        <td class="align-middle">
-                            <div class="row">
-                                <div class="col">
-                                    @item.ScheduleName
+                    <ContextMenuToggle ContainerHtmlTag="tr" CssClass="@($"schedule-row small {(item.IsEnabled ? null : "disabled")}")">
+                        <ChildContent Context="_">
+                            <td class="align-middle">
+                                <div class="row">
+                                    <div class="col">
+                                        @item.ScheduleName
+                                    </div>
                                 </div>
-                            </div>
-                            <div class="row">
-                                <div class="col">
-                                    @foreach (var tag in item.Tags.OrderBy(t => t.TagName))
-                                    {
-                                        <TagBadge Tag="tag" CssClass="m-1" />
-                                    }
+                                <div class="row">
+                                    <div class="col">
+                                        @foreach (var tag in item.Tags.Order())
+                                        {
+                                            <TagBadge Tag="tag" CssClass="m-1"/>
+                                        }
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
-                        <td class="align-middle">
-                            <div class="form-check form-switch">
+                            </td>
+                            <td class="align-middle">
+                                <div class="form-check form-switch">
+                                    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+                                        <input type="checkbox" class="form-check-input" id="@item.ScheduleId" checked=@item.IsEnabled @onchange="args => ToggleEnabled(args, item)">
+                                        <label class="form-check-label" for="@item.ScheduleId"></label>
+                                    </AuthorizeView>
+                                    <AuthorizeView Roles="@(Roles.Viewer)">
+                                        <input type="checkbox" class="form-check-input" disabled checked=@item.IsEnabled>
+                                        <label class="form-check-label" for="@item.ScheduleId"></label>
+                                    </AuthorizeView>
+                                </div>
+                            </td>
+                            <td class="align-middle">
+                                <span>@item.CronExpression</span>
+                                <br/>
+                                <span class="text-secondary small">@item.GetScheduleDescription()</span>
+                            </td>
+                            <td class="align-middle">
+                                <div class="d-inline-flex @(!item.IsEnabled || (!Job?.IsEnabled ?? false) ? "text-body-tertiary" : null)">
+                                    @item.NextFireTimes().FirstOrDefault()
+                                    &nbsp;&nbsp;
+                                    <HxTooltip Placement="TooltipPlacement.Auto"
+                                               Text="@("Next execution(s) (first 15):\n" + string.Join("\n", item.NextFireTimes().Take(15)))"
+                                               CssClass="white-space-pre">
+                                        <SvgIcon Icon="LucideIcon.Info"/>
+                                    </HxTooltip>
+                                </div>
+                                <br/>
+                                <span class="text-body-tertiary small">
+                                    @(!item.IsEnabled ? "(Schedule disabled)" : null)
+                                    @(Job?.IsEnabled == false ? "(Job disabled)" : null)
+                                </span>
+                            </td>
+                            <td class="align-middle">
+                                @if (!item.TagFilter.Any())
+                                {
+                                    <span class="text-secondary">No tag filters</span>
+                                }
+                                @foreach (var tag in item.TagFilter.Order())
+                                {
+                                    <TagBadge Tag="tag" CssClass="m-1"/>
+                                }
+                            </td>
+                            <td class="align-middle">
                                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-                                    <input type="checkbox" class="form-check-input" id="@item.ScheduleId" checked=@item.IsEnabled @onchange="args => ToggleEnabled(args, item)">
-                                    <label class="form-check-label" for="@item.ScheduleId"></label>
+                                    <HxButtonGroup Size="ButtonGroupSize.Small">
+                                        <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto"
+                                                  @onclick="async () => await _editModal.LetAsync(x => x.ShowAsync(item.ScheduleId))">
+                                            <SvgIcon Icon="LucideIcon.Pen"/>
+                                        </HxButton>
+                                        <HxDropdownButtonGroup>
+                                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                                                <SvgIcon Icon="LucideIcon.Trash2"/>
+                                            </HxDropdownToggleButton>
+                                            <HxDropdownMenu>
+                                                <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                                <HxDropdownItem @onclick="() => DeleteSchedule(item)">Confirm</HxDropdownItem>
+                                            </HxDropdownMenu>
+                                        </HxDropdownButtonGroup>
+                                    </HxButtonGroup>
                                 </AuthorizeView>
-                                <AuthorizeView Roles="@(Roles.Viewer)">
-                                    <input type="checkbox" class="form-check-input" disabled checked=@item.IsEnabled>
-                                    <label class="form-check-label" for="@item.ScheduleId"></label>
-                                </AuthorizeView>
-                            </div>
-                        </td>
-                        <td class="align-middle">
-                            <span>@item.CronExpression</span>
-                            <br />
-                            <span class="text-secondary small">@item.GetScheduleDescription()</span>
-                        </td>
-                        <td class="align-middle">
-                            <div class="d-inline-flex @(!item.IsEnabled || (!Job?.IsEnabled ?? false) ? "text-body-tertiary" : null)">
-                                @item.NextFireTimes().FirstOrDefault()
-                                &nbsp;&nbsp;
-                                <HxTooltip Placement="TooltipPlacement.Auto"
-                                           Text="@("Next execution(s) (first 15):\n" + string.Join("\n", item.NextFireTimes().Take(15)))"
-                                           CssClass="white-space-pre">
-                                    <SvgIcon Icon="FeatherIcon.Info" />
-                                </HxTooltip>
-                            </div>
-                            <br />
-                            <span class="text-body-tertiary small">
-                                @(!item.IsEnabled ? "(Schedule disabled)" : null)
-                                @(Job?.IsEnabled == false ? "(Job disabled)" : null)
-                            </span>
-                        </td>
-                        <td class="align-middle">
-                            @if (!item.TagFilter.Any())
-                            {
-                                <span class="text-secondary">No tag filters</span>
-                            }
-                            @foreach (var tag in item.TagFilter.OrderBy(t => t.TagName))
-                            {
-                                <TagBadge Tag="tag" CssClass="m-1" />
-                            }
-                        </td>
-                        <td class="align-middle">
+                            </td>
+                        </ChildContent>
+                        <MenuContent>
                             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-                                <HxButtonGroup Size="ButtonGroupSize.Small">
-                                    <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto"
-                                              @onclick="async () => await editModal.LetAsync(x => x.ShowAsync(item.ScheduleId))">
-                                        <SvgIcon Icon="FeatherIcon.Edit2" />
-                                    </HxButton>
-                                    <HxDropdownButtonGroup>
-                                        <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                            <SvgIcon Icon="FeatherIcon.Trash2" />
-                                        </HxDropdownToggleButton>
-                                        <HxDropdownMenu>
-                                            <HxDropdownHeader>Delete?</HxDropdownHeader>
-                                            <HxDropdownItem @onclick="() => DeleteSchedule(item)">Confirm</HxDropdownItem>
-                                        </HxDropdownMenu>
-                                    </HxDropdownButtonGroup>
-                                </HxButtonGroup>
+                                <DropdownMenuHeader>
+                                    @item.ScheduleName
+                                </DropdownMenuHeader>
+                                <DropdownMenuItem @onclick="() => _editModal.LetAsync(x => x.ShowAsync(item.ScheduleId))">
+                                    <SvgIcon Icon="LucideIcon.Pen"/>
+                                    Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem @onclick="() => ConfirmAndDeleteSchedule(item)">
+                                    <SvgIcon Icon="LucideIcon.Trash2"/>
+                                    Delete...
+                                </DropdownMenuItem>
                             </AuthorizeView>
-                        </td>
-                    </tr>
+                        </MenuContent>
+                    </ContextMenuToggle>
                 }
             }
         </tbody>
@@ -136,21 +154,21 @@
 </div>
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-    <ScheduleEditModal @ref="editModal" Job="Job" OnSubmit="OnScheduleSubmit" />
+    <ScheduleEditModal @ref="_editModal" Job="Job" OnSubmit="OnScheduleSubmit" />
 </AuthorizeView>
 
 @code {
     [CascadingParameter] public Job? Job { get; set; }
 
-    private List<Schedule>? schedules;
-    private ScheduleEditModal? editModal;
+    private List<Schedule>? _schedules;
+    private ScheduleEditModal? _editModal;
 
     protected override async Task OnParametersSetAsync()
     {
-        if (schedules is null && Job is not null)
+        if (_schedules is null && Job is not null)
         {
-            using var context = DbFactory.CreateDbContext();
-            schedules = await context.Schedules
+            await using var context = await DbFactory.CreateDbContextAsync();
+            _schedules = await context.Schedules
                 .AsNoTrackingWithIdentityResolution()
                 .Include(schedule => schedule.Tags)
                 .Include(schedule => schedule.TagFilter)
@@ -178,8 +196,17 @@
 
     private void OnScheduleSubmit(Schedule schedule)
     {
-        schedules?.RemoveAll(s => s.ScheduleId == schedule.ScheduleId);
-        schedules?.Add(schedule);
+        _schedules?.RemoveAll(s => s.ScheduleId == schedule.ScheduleId);
+        _schedules?.Add(schedule);
+    }
+
+    private async Task ConfirmAndDeleteSchedule(Schedule schedule)
+    {
+        if (!await Confirmer.ConfirmAsync("Delete schedule", $"Are you sure you want to delete \"{schedule.ScheduleName}\"?"))
+        {
+            return;
+        }
+        await DeleteSchedule(schedule);
     }
 
     private async Task DeleteSchedule(Schedule schedule)
@@ -187,12 +214,11 @@
         try
         {
             await Mediator.SendAsync(new DeleteScheduleCommand(schedule.ScheduleId));
-            schedules?.Remove(schedule);
+            _schedules?.Remove(schedule);
         }
         catch (Exception ex)
         {
             Toaster.AddError("Error deleting schedule", ex.Message);
         }
     }
-
 }

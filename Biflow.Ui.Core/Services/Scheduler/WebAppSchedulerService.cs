@@ -8,15 +8,13 @@ namespace Biflow.Ui.Core;
 
 public class WebAppSchedulerService : ISchedulerService
 {
-    private readonly IConfiguration _configuration;
     private readonly HttpClient _httpClient;
 
     public WebAppSchedulerService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
     {
-        _configuration = configuration;
         _httpClient = httpClientFactory.CreateClient();
 
-        var section = _configuration
+        var section = configuration
             .GetSection("Scheduler")
             .GetSection("WebApp");
 
@@ -39,7 +37,7 @@ public class WebAppSchedulerService : ISchedulerService
             return;
         }
 
-        var endpoint = $"/schedules/removejob";
+        const string endpoint = "/schedules/removejob";
         var schedulerJob = new SchedulerJob(jobId);
         var json = JsonSerializer.Serialize(schedulerJob);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -55,7 +53,7 @@ public class WebAppSchedulerService : ISchedulerService
             return;
         }
 
-        var endpoint = $"/schedules/add";
+        const string endpoint = "/schedules/add";
         var schedulerSchedule = SchedulerSchedule.From(schedule);
         var json = JsonSerializer.Serialize(schedulerSchedule);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -71,7 +69,7 @@ public class WebAppSchedulerService : ISchedulerService
             return;
         }
 
-        var endpoint = $"/schedules/remove";
+        const string endpoint = "/schedules/remove";
         var schedulerSchedule = SchedulerSchedule.From(schedule);
         var json = JsonSerializer.Serialize(schedulerSchedule);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -87,7 +85,7 @@ public class WebAppSchedulerService : ISchedulerService
             return;
         }
 
-        var endpoint = $"/schedules/update";
+        const string endpoint = "/schedules/update";
         var schedulerSchedule = SchedulerSchedule.From(schedule);
         var json = JsonSerializer.Serialize(schedulerSchedule);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -97,27 +95,24 @@ public class WebAppSchedulerService : ISchedulerService
 
     public async Task<SchedulerStatusResponse> GetStatusAsync()
     {
-        var endpoint = $"/schedules/status";
+        const string endpoint = "/schedules/status";
         var response = await _httpClient.GetAsync(endpoint);
-        if (response.IsSuccessStatusCode)
+        if (!response.IsSuccessStatusCode)
         {
-            var jobs = await response.Content.ReadFromJsonAsync<IEnumerable<JobStatus>>();
-            return new Success(jobs ?? []);
+            return response.StatusCode switch
+            {
+                System.Net.HttpStatusCode.Forbidden => new AuthorizationError(),
+                System.Net.HttpStatusCode.InternalServerError => new SchedulerError(),
+                _ => new UndefinedError()
+            };
         }
-        else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
-        {
-            return new AuthorizationError();
-        }
-        else if (response.StatusCode == System.Net.HttpStatusCode.InternalServerError)
-        {
-            return new SchedulerError();
-        }
-        return new UndefinedError();
+        var jobs = await response.Content.ReadFromJsonAsync<IEnumerable<JobStatus>>();
+        return new Success(jobs ?? []);
     }
 
     public async Task SynchronizeAsync()
     {
-        var endpoint = $"/schedules/synchronize";
+        const string endpoint = "/schedules/synchronize";
         var response = await _httpClient.GetAsync(endpoint);
         response.EnsureSuccessStatusCode();
     }
@@ -125,7 +120,7 @@ public class WebAppSchedulerService : ISchedulerService
     public async Task ToggleScheduleEnabledAsync(Schedule schedule, bool enabled)
     {
         var status = await GetStatusAsync();
-        if (!status.TryPickT0(out Success _, out var _))
+        if (!status.TryPickT0(out _, out _))
         {
             return;
         }
@@ -135,8 +130,8 @@ public class WebAppSchedulerService : ISchedulerService
         var content = new StringContent(json, Encoding.UTF8, "application/json");
         var endpoint = enabled switch
         {
-            true => $"/schedules/resume",
-            false => $"/schedules/pause"
+            true => "/schedules/resume",
+            false => "/schedules/pause"
         };
         var response = await _httpClient.PostAsync(endpoint, content);
         response.EnsureSuccessStatusCode();

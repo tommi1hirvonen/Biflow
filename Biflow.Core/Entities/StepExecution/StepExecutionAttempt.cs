@@ -2,30 +2,22 @@
 
 namespace Biflow.Core.Entities;
 
-public abstract class StepExecutionAttempt
+public abstract class StepExecutionAttempt(StepExecutionStatus executionStatus, StepType stepType)
 {
-    public StepExecutionAttempt(StepExecutionStatus executionStatus, StepType stepType)
-    {
-        ExecutionStatus = executionStatus;
-        StepType = stepType;
-    }
-
     protected StepExecutionAttempt(StepExecutionAttempt other, int retryAttemptIndex)
+        : this(other.ExecutionStatus, other.StepType)
     {
         ExecutionId = other.ExecutionId;
         StepId = other.StepId;
         RetryAttemptIndex = retryAttemptIndex;
-        ExecutionStatus = other.ExecutionStatus;
-        StepType = other.StepType;
         StepExecution = other.StepExecution;
     }
 
     protected StepExecutionAttempt(StepExecution execution)
+        : this(StepExecutionStatus.NotStarted, execution.StepType)
     {
         ExecutionId = execution.ExecutionId;
         StepId = execution.StepId;
-        ExecutionStatus = StepExecutionStatus.NotStarted;
-        StepType = execution.StepType;
     }
 
     public Guid ExecutionId { get; private set; }
@@ -38,9 +30,9 @@ public abstract class StepExecutionAttempt
 
     public DateTimeOffset? EndedOn { get; set; }
 
-    public StepExecutionStatus ExecutionStatus { get; set; }
+    public StepExecutionStatus ExecutionStatus { get; set; } = executionStatus;
 
-    public StepType StepType { get; }
+    public StepType StepType { get; } = stepType;
 
     public IList<ErrorMessage> ErrorMessages { get; private set; } = new List<ErrorMessage>();
 
@@ -85,11 +77,12 @@ public abstract class StepExecutionAttempt
 
     public void AddError(string? message)
     {
-        if (!string.IsNullOrEmpty(message))
+        if (string.IsNullOrEmpty(message))
         {
-            var error = new ErrorMessage(message, null);
-            ErrorMessages.Add(error);
+            return;
         }
+        var error = new ErrorMessage(message, null);
+        ErrorMessages.Add(error);
     }
 
     public void AddWarning(Exception? ex, string message)
@@ -106,26 +99,28 @@ public abstract class StepExecutionAttempt
 
     public void AddWarning(string? message)
     {
-        if (!string.IsNullOrEmpty(message))
+        if (string.IsNullOrEmpty(message))
         {
-            var warning = new WarningMessage(message, null);
-            WarningMessages.Add(warning);
+            return;
         }
+        var warning = new WarningMessage(message, null);
+        WarningMessages.Add(warning);
     }
 
     public void AddOutput(string? message, bool insertFirst = false)
     {
-        if (!string.IsNullOrEmpty(message))
+        if (string.IsNullOrEmpty(message))
         {
-            var info = new InfoMessage(message);
-            if (insertFirst)
-            {
-                InfoMessages.Insert(0, info);
-            }
-            else
-            {
-                InfoMessages.Add(info);
-            }
+            return;
+        }
+        var info = new InfoMessage(message);
+        if (insertFirst)
+        {
+            InfoMessages.Insert(0, info);
+        }
+        else
+        {
+            InfoMessages.Add(info);
         }
     }
 }

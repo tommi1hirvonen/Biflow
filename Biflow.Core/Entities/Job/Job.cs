@@ -30,10 +30,20 @@ public class Job : IAuditable
         // While creating copies of steps,
         // also create a mapping dictionary to map dependencies based on old step ids.
         var mapping = other.Steps
-            .Select(s => (Orig: s, Copy: s.Copy(this)))
-            .ToDictionary(x => x.Orig.StepId, x => x);
+            .Select(s => (Original: s, Copy: s.Copy(this)))
+            .ToDictionary(x => x.Original.StepId, x => x);
 
-        Dependency mapDependency(Step copy, Dependency dep)
+        Steps = mapping.Values
+            .Select(map =>
+            {
+                // Map dependencies from ids to new ids.
+                map.Copy.Dependencies.AddRange(map.Original.Dependencies.Select(d => MapDependency(map.Copy, d)));
+                return map.Copy;
+            })
+            .ToList();
+        return;
+
+        Dependency MapDependency(Step copy, Dependency dep)
         {
             // Map the dependent step's id from an old value to a new value using the dictionary.
             // In case no matching key is found, it is likely a cross-job dependency => use the id as is.
@@ -45,15 +55,6 @@ public class Job : IAuditable
                 DependencyType = dep.DependencyType
             };
         }
-
-        Steps = mapping.Values
-            .Select(map =>
-            {
-                // Map dependencies from ids to new ids.
-                map.Copy.Dependencies.AddRange(map.Orig.Dependencies.Select(d => mapDependency(map.Copy, d)));
-                return map.Copy;
-            })
-            .ToList();
     }
 
     [JsonInclude]
@@ -67,11 +68,9 @@ public class Job : IAuditable
     [Display(Name = "Description")]
     public string? JobDescription
     {
-        get => _jobDescription;
-        set => _jobDescription = string.IsNullOrEmpty(value) ? null : value;
+        get;
+        set => field = string.IsNullOrEmpty(value) ? null : value;
     }
-
-    private string? _jobDescription;
 
     [Required]
     [Display(Name = "Use dependency mode")]
@@ -99,6 +98,8 @@ public class Job : IAuditable
     [Required]
     [Display(Name = "Enabled")]
     public bool IsEnabled { get; set; } = true;
+    
+    public bool IsPinned { get; set; }
 
     [ValidateComplexType]
     [JsonInclude]

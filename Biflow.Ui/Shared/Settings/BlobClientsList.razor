@@ -1,16 +1,37 @@
-﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
+﻿@implements IDisposable
+
+@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject ToasterService Toaster
 @inject IMediator Mediator
+@inject ThemeService ThemeService
 
 <PageTitle>Blob Clients | Biflow</PageTitle>
 
-<HxButton Color="ThemeColor.Success"
-          @onclick="() => ShowEditModal(null)"
-          Enabled="blobClients is not null">
-    Add blob storage
-</HxButton>
+<div class="row flex-row-reverse justify-content-between align-items-end g-3">
+    <div class="col-auto">
+        <HxAlert Color="ThemeService.CurrentTheme == Theme.Light ? ThemeColor.Light : ThemeColor.Dark"
+                 CssClass="small py-2 mb-0"
+                 style="max-width: 40rem;">
+            <div class="row g-3">
+                <div class="col-auto">
+                    <SvgIcon Icon="LucideIcon.Info" />
+                </div>
+                <div class="col">
+                    Blob Storage clients allow you to more easily manage the optional data lineage (source & target data objects) for steps and jobs by enabling you to browse blob storage container contents when editing steps.
+                </div>
+            </div>
+        </HxAlert>
+    </div>
+    <div class="col-auto">
+        <HxButton Color="ThemeColor.Success"
+                  @onclick="() => ShowEditModal(null)"
+                  Enabled="_blobClients is not null">
+            Add Blob Storage
+        </HxButton>
+    </div>
+</div>
 
-<div class="card shadow-sm pt-2 my-4">
+<div class="card pt-2 my-4">
     <table class="table table-hover">
         <thead>
             <tr>
@@ -22,17 +43,17 @@
             </tr>
         </thead>
         <tbody>
-            @if (blobClients is null)
+            @if (_blobClients is null)
             {
                 <tr><td colspan="3" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
-            else if (blobClients.Count == 0)
+            else if (_blobClients.Count == 0)
             {
-                <tr><td colspan="3">No blob storage clients</td></tr>
+                <tr><td colspan="3">No Blob Storage clients</td></tr>
             }
             else
             {
-                @foreach (var client in blobClients.OrderBy(c => c.BlobStorageClientName))
+                @foreach (var client in _blobClients.OrderBy(c => c.BlobStorageClientName))
                 {
                     <tr>
                         <td class="align-middle">
@@ -44,11 +65,11 @@
                         <td class="align-middle">
                             <HxButtonGroup Size="ButtonGroupSize.Small">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="() => ShowEditModal(client)">
-                                    <SvgIcon Icon="FeatherIcon.Edit2" />
+                                    <SvgIcon Icon="LucideIcon.Pen" />
                                 </HxButton>
                                 <HxDropdownButtonGroup>
                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="delete">
-                                        <SvgIcon Icon="FeatherIcon.Trash2" />
+                                        <SvgIcon Icon="LucideIcon.Trash2" />
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
                                         <HxDropdownHeader>Delete?</HxDropdownHeader>
@@ -64,21 +85,27 @@
     </table>
 </div>
 
-<BlobClientEditModal @ref="blobClientEditModal" AppRegistrations="appRegistrations" OnBlobClientSubmit="OnBlobClientSubmitAsync" />
+<BlobClientEditModal @ref="_blobClientEditModal" AppRegistrations="_appRegistrations" OnBlobClientSubmit="OnBlobClientSubmitAsync" />
 
 @code {
-    private List<BlobStorageClient>? blobClients;
-    private List<AppRegistration>? appRegistrations;
-    private BlobClientEditModal? blobClientEditModal;
+    private List<BlobStorageClient>? _blobClients;
+    private List<AppRegistration>? _appRegistrations;
+    private BlobClientEditModal? _blobClientEditModal;
+    
+    protected override void OnInitialized() => ThemeService.OnThemeChanged += OnThemeChanged;
+    
+    public void Dispose() => ThemeService.OnThemeChanged -= OnThemeChanged;
+
+    private void OnThemeChanged(Theme theme, bool isAuto) => StateHasChanged();
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = await DbContextFactory.CreateDbContextAsync();
-        blobClients = await context.BlobStorageClients
+        await using var context = await DbContextFactory.CreateDbContextAsync();
+        _blobClients = await context.BlobStorageClients
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(f => f.BlobStorageClientName)
             .ToListAsync();
-        appRegistrations = await context.AppRegistrations
+        _appRegistrations = await context.AppRegistrations
             .AsNoTracking()
             .OrderBy(ar => ar.AppRegistrationName)
             .ToListAsync();
@@ -89,7 +116,7 @@
         try
         {
             await Mediator.SendAsync(new DeleteBlobStorageClientCommand(client.BlobStorageClientId));
-            blobClients?.Remove(client);
+            _blobClients?.Remove(client);
         }
         catch (Exception ex)
         {
@@ -103,17 +130,17 @@
         if (client.BlobStorageClientId == Guid.Empty)
         {
             await Mediator.SendAsync(new CreateBlobStorageClientCommand(client));
-            blobClients?.Add(client);
+            _blobClients?.Add(client);
         }
         else
         {
             await Mediator.SendAsync(new UpdateBlobStorageClientCommand(client));
-            blobClients?.RemoveAll(b => b.BlobStorageClientId == client.BlobStorageClientId);
-            blobClients?.Add(client);
+            _blobClients?.RemoveAll(b => b.BlobStorageClientId == client.BlobStorageClientId);
+            _blobClients?.Add(client);
         }
         StateHasChanged();
     }
 
     private async Task ShowEditModal(BlobStorageClient? blobClient) =>
-        await blobClientEditModal.LetAsync(x => x.ShowAsync(blobClient?.BlobStorageClientId ?? Guid.Empty));
+        await _blobClientEditModal.LetAsync(x => x.ShowAsync(blobClient?.BlobStorageClientId ?? Guid.Empty));
 }

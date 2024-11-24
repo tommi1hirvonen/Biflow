@@ -7,7 +7,7 @@ internal class UpdateSubscriptionCommandHandler(IDbContextFactory<AppDbContext> 
 {
     public async Task Handle(UpdateSubscriptionCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         context.Attach(request.Subscription).State = EntityState.Modified;
         await context.SaveChangesAsync(cancellationToken);
     }

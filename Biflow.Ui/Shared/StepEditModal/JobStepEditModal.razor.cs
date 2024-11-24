@@ -1,6 +1,8 @@
 ﻿namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class JobStepEditModal : StepEditModal<JobStep>
+public partial class JobStepEditModal(
+    ToasterService toaster, IDbContextFactory<AppDbContext> dbContextFactory)
+    : StepEditModal<JobStep>(toaster, dbContextFactory)
 {
     internal override string FormId => "job_step_edit_form";
 
@@ -11,7 +13,8 @@ public partial class JobStepEditModal : StepEditModal<JobStep>
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            JobToExecuteId = null
+            JobToExecuteId = null,
+            JobExecuteSynchronized = true
         };
 
     protected override async Task<JobStep> GetExistingStepAsync(AppDbContext context, Guid stepId)

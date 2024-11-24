@@ -7,7 +7,7 @@ internal class UpdateBlobStorageClientCommandHandler(IDbContextFactory<AppDbCont
 {
     public async Task Handle(UpdateBlobStorageClientCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var client = await context.BlobStorageClients
             .FirstOrDefaultAsync(c => c.BlobStorageClientId == request.Client.BlobStorageClientId, cancellationToken)
             ?? throw new NotFoundException<BlobStorageClient>(request.Client.BlobStorageClientId);

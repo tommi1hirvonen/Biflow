@@ -2,9 +2,10 @@
 @using Microsoft.AspNetCore.Localization
 
 @inject IHostEnvironment Env
+@inject ThemeService Theme
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="@CurrentTheme">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -15,15 +16,15 @@
         This makes sure the correct theme is instantly applied before interactive theme components are ready to be used.
     *@
     <script src="/js/theme.js"></script> 
-    <link href="_content/Havit.Blazor.Components.Web.Bootstrap/defaults.css" rel="stylesheet" />
-    <link href="_content/Biflow.Ui.Components/defaults.css" rel="stylesheet" />
-    <link href="/css/bootstrap.custom.min.css" rel="stylesheet" />
-    <link href="BiflowUi.styles.css" rel="stylesheet" />
-    <HeadOutlet @rendermode="RenderModeForPage" />
+    <link href="@Assets["_content/Havit.Blazor.Components.Web.Bootstrap/defaults.css"]" rel="stylesheet" />
+    <link href="@Assets["_content/Biflow.Ui.Components/defaults.css"]" rel="stylesheet" />
+    <link href="@Assets["/css/bootstrap.custom.css"]" rel="stylesheet" />
+    <link href="@Assets["BiflowUi.styles.css"]" rel="stylesheet" />
+    <HeadOutlet @rendermode="PageRenderMode" />
 </head>
 <body class="bg-body">
     <app>
-        <Routes @rendermode="RenderModeForPage" />
+        <Routes @rendermode="PageRenderMode" />
     </app>
 
     <div id="blazor-error-ui" class="alert alert-danger alert-dismissible">
@@ -43,23 +44,23 @@
         <button type="button" class="btn-close dismiss" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
-    <script src="/lib/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="@Assets["/lib/bootstrap/js/bootstrap.bundle.min.js"]"></script>
 
     @*Used to draw the dependencies between different steps.*@
-    <script src="/lib/d3/d3.min.js"></script>
-    <script src="/lib/dagre-d3/dagre-d3.min.js"></script>
+    <script src="@Assets["/lib/d3/d3.min.js"]"></script>
+    <script src="@Assets["/lib/dagre-d3/dagre-d3.min.js"]"></script>
 
     @*Used to draw the dashboard page reports.*@
-    <script src="/lib/Chart.js/chart.min.js"></script>
-    <script src="/lib/moment.js/moment.min.js"></script>
-    <script src="/lib/chartjs-adapter-moment/chartjs-adapter-moment.min.js"></script>
+    <script src="@Assets["/lib/Chart.js/chart.min.js"]"></script>
+    <script src="@Assets["/lib/moment.js/moment.min.js"]"></script>
+    <script src="@Assets["/lib/chartjs-adapter-moment/chartjs-adapter-moment.min.js"]"></script>
 
     @*Used by the BlazorMonaco component*@
-    <script src="_content/BlazorMonaco/jsInterop.js"></script>
-    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"></script>
-    <script src="_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"></script>
+    <script src="@Assets["_content/BlazorMonaco/jsInterop.js"]"></script>
+    <script src="@Assets["_content/BlazorMonaco/lib/monaco-editor/min/vs/loader.js"]"></script>
+    <script src="@Assets["_content/BlazorMonaco/lib/monaco-editor/min/vs/editor/editor.main.js"]"></script>
 
-    <script src="/js/site.js"></script>
+    <script src="@Assets["/js/site.js"]"></script>
 
     @*Load Blazor scripts last to make sure any referenced JS functions have been loaded first.*@
     <script src="_framework/blazor.web.js"></script>
@@ -70,17 +71,21 @@
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = null!;
 
-    private IComponentRenderMode? RenderModeForPage =>
-        HttpContext.Request.Path.StartsWithSegments("/login") ||
-        HttpContext.Request.Path.StartsWithSegments("/logout")
-        ? null
-        : new InteractiveServerRenderMode(prerender: false);
+    private IComponentRenderMode? PageRenderMode =>
+        HttpContext.AcceptsInteractiveRouting()
+        ? new InteractiveServerRenderMode(prerender: false)
+        : null; // fall back to static server-side rendering
+
+    private string? CurrentTheme =>
+        PageRenderMode is not null
+        ? Theme.CurrentTheme.ToString().ToLower()
+        : null;
 
     protected override void OnInitialized()
     {
         var requestCulture = new RequestCulture(CultureInfo.CurrentCulture, CultureInfo.CurrentUICulture);
         var cultureCookieValue = CookieRequestCultureProvider.MakeCookieValue(requestCulture);
-        HttpContext?.Response.Cookies.Append(
+        HttpContext.Response.Cookies.Append(
             CookieRequestCultureProvider.DefaultCookieName,
             cultureCookieValue);
     }

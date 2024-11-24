@@ -7,7 +7,7 @@ internal class DeleteDataTableCommandHandler(IDbContextFactory<AppDbContext> dbC
 {
     public async Task Handle(DeleteDataTableCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var table = await context.MasterDataTables
             .IgnoreQueryFilters()
             .Include(t => t.Lookups)

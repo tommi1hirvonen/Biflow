@@ -29,16 +29,14 @@ internal class EmailOptions
             {
                 return new SmtpClient(SmtpServer);
             }
-            else
+
+            return new SmtpClient(SmtpServer)
             {
-                return new SmtpClient(SmtpServer)
-                {
-                    UseDefaultCredentials = false,
-                    Credentials = new NetworkCredential(Username, Password),
-                    EnableSsl = EnableSsl,
-                    Port = Port
-                };
-            }
+                UseDefaultCredentials = false,
+                Credentials = new NetworkCredential(Username, Password),
+                EnableSsl = EnableSsl,
+                Port = Port
+            };
         }
     }
 }

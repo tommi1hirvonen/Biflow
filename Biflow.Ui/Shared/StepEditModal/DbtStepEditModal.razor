@@ -1,0 +1,95 @@
+﻿@inherits StepEditModal<DbtStep>
+
+<StepEditModalTemplate Modal="this" TStep="DbtStep">
+    @if (Step is not null)
+    {
+        <div class="row">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Timeout (min)</label>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <SvgIcon Icon="LucideIcon.OctagonX" />
+                    </div>
+                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 5rem;"></InputNumber>
+                </div>
+                <span class="form-text">0 = indefinite</span>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                <label class="form-label mb-lg-0">dbt Cloud account</label>
+            </div>
+            <div class="col-md-6 d-inline">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <SvgIcon Icon="LucideIcon.Blocks" />
+                    </div>
+                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.DbtAccountId">
+                        @foreach (var account in DbtAccounts)
+                        {
+                            <option value="@account.DbtAccountId">@account.DbtAccountName</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+            </div>
+            <div class="col-md-6">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenJobSelectOffcanvas">
+                    <SvgIcon Icon="LucideIcon.Ellipsis" />
+                    Browse jobs
+                </HxButton>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Job</label>
+            </div>
+            <div class="col-md-6 d-inline">
+                <div class="input-group input-group-sm">
+                    <input class="form-control form-control-sm" value="@Step.DbtJob.Name" disabled />
+                </div>
+                <div class="form-text">
+                    Id: @Step.DbtJob.Id
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Environment</label>
+            </div>
+            <div class="col-md-6 d-inline">
+                <div class="input-group input-group-sm">
+                    <input class="form-control form-control-sm" value="@Step.DbtJob.EnvironmentName" disabled />
+                </div>
+                <div class="form-text">
+                    Id: @Step.DbtJob.EnvironmentId
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Project</label>
+            </div>
+            <div class="col-md-6 d-inline">
+                <div class="input-group input-group-sm">
+                    <input class="form-control form-control-sm" value="@Step.DbtJob.ProjectName" disabled />
+                </div>
+                <div class="form-text">
+                    Id: @Step.DbtJob.ProjectId
+                </div>
+            </div>
+        </div>
+
+        <DbtJobSelectOffcanvas @ref="_jobSelectOffcanvas" OnJobSelected="OnJobSelected" />
+    }
+</StepEditModalTemplate>

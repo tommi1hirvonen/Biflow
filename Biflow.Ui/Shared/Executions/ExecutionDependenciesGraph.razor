@@ -7,8 +7,8 @@
 }
 
 <div class="row align-items-end mb-3">
-    <div class="col-xl-5 col-lg-5 col-12">
-        <HxAutosuggest @bind-Value="dependencyGraphStepFilter"
+    <div class="col" style="max-width: 40rem;">
+        <HxAutosuggest @bind-Value="_dependencyGraphStepFilter"
                        @bind-Value:after="LoadGraphAsync"
                        DataProvider="ProvideSuggestions"
                        TextSelector="TextSelector"
@@ -26,28 +26,28 @@
             </EmptyTemplate>
         </HxAutosuggest>
     </div>
-    <div class="col-lg-auto d-flex flex-row align-items-end">
+    <div class="col-xxl-auto mt-xxl-0 mt-3 d-flex flex-row align-items-end">
         <div class="form-group">
             <label class="form-label">Depth backwards</label>
             <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal backwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
                  <ChildContent>
                      <span style="cursor: pointer;">
-                         <SvgIcon Icon="FeatherIcon.Info" />
+                         <SvgIcon Icon="LucideIcon.Info" />
                      </span>
                  </ChildContent>
              </HxPopover>
-             <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthBackwards" disabled=@(dependencyGraphStepFilter is null) style="max-width: 9rem;" />
+             <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthBackwards" disabled=@(_dependencyGraphStepFilter is null) style="max-width: 9rem;" />
          </div>
          <div class="form-group ms-3">
              <label class="form-label">Depth forwards</label>
              <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal forwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
                  <ChildContent>
                      <span style="cursor: pointer;">
-                         <SvgIcon Icon="FeatherIcon.Info" />
+                         <SvgIcon Icon="LucideIcon.Info" />
                      </span>
                  </ChildContent>
              </HxPopover>
-             <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthForwards" disabled=@(dependencyGraphStepFilter is null) style="max-width: 9rem;" />
+             <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthForwards" disabled=@(_dependencyGraphStepFilter is null) style="max-width: 9rem;" />
          </div>
         <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="ms-3">
             <HxButton CssClass="btn-auto" Size="ButtonSize.Small" Color="ThemeColor.None" OnClick="LoadGraphAsync">
@@ -62,37 +62,37 @@
                         <div class="col">
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" id="direction_radio_admin"
-                                       checked=@(direction == DependencyGraphDirection.LeftToRight)
-                                       @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.LeftToRight))">
+                                       checked=@(_direction == DependencyGraphDirection.LeftToRight)
+                                       @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.LeftToRight))">
                                 <label class="form-check-label fw-normal" for="direction_radio_admin">
-                                    <SvgIcon Icon="FeatherIcon.ArrowRight" />
+                                    <SvgIcon Icon="LucideIcon.MoveRight" />
                                     Left to right
                                 </label>
                             </div>
                             <div class="form-check mt-1">
                                 <input class="form-check-input" type="radio" id="direction_radio_editor"
-                                       checked=@(direction == DependencyGraphDirection.RightToLeft)
-                                       @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.RightToLeft))">
+                                       checked=@(_direction == DependencyGraphDirection.RightToLeft)
+                                       @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.RightToLeft))">
                                 <label class="form-check-label fw-normal" for="direction_radio_editor">
-                                    <SvgIcon Icon="FeatherIcon.ArrowLeft" />
+                                    <SvgIcon Icon="LucideIcon.MoveLeft" />
                                     Right to left
                                 </label>
                             </div>
                             <div class="form-check mt-1">
                                 <input class="form-check-input" type="radio" id="direction_radio_operator"
-                                       checked=@(direction == DependencyGraphDirection.TopToBottom)
-                                       @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.TopToBottom))">
+                                       checked=@(_direction == DependencyGraphDirection.TopToBottom)
+                                       @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.TopToBottom))">
                                 <label class="form-check-label fw-normal" for="direction_radio_operator">
-                                    <SvgIcon Icon="FeatherIcon.ArrowDown" />
+                                    <SvgIcon Icon="LucideIcon.MoveDown" />
                                     Top to bottom
                                 </label>
                             </div>
                             <div class="form-check mt-1">
                                 <input class="form-check-input" type="radio" id="direction_radio_viewer"
-                                       checked=@(direction == DependencyGraphDirection.BottomToTop)
-                                       @onchange="@(e => SetDirectionAsync(DependencyGraphDirection.BottomToTop))">
+                                       checked=@(_direction == DependencyGraphDirection.BottomToTop)
+                                       @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.BottomToTop))">
                                 <label class="form-check-label fw-normal" for="direction_radio_viewer">
-                                    <SvgIcon Icon="FeatherIcon.ArrowUp" />
+                                    <SvgIcon Icon="LucideIcon.MoveUp" />
                                     Bottom to top
                                 </label>
                             </div>
@@ -106,7 +106,7 @@
 
  @if (Execution is not null)
 {
-    <DependencyGraph @ref="dependencyGraph"
+    <DependencyGraph @ref="_dependencyGraph"
                      TItem="StepExecution"
                      ItemFromNodeIdSelector="ItemFromNodeId"
                      AfterRender="LoadGraphAsync"
@@ -119,8 +119,8 @@
                 </h6>
             </li>
             <li>
-                <span class="dropdown-item" role="button" @onclick="async () => { dependencyGraphStepFilter = step; await LoadGraphAsync(); }">
-                    <SvgIcon Icon="FeatherIcon.Filter" />
+                <span class="dropdown-item" role="button" @onclick="async () => { _dependencyGraphStepFilter = step; await LoadGraphAsync(); }">
+                    <SvgIcon Icon="LucideIcon.Filter" />
                     Limit graph to this
                 </span>
             </li>
@@ -128,13 +128,13 @@
             {
                 <li>
                     <span class="dropdown-item" role="button" @onclick="() => ShowStepExecutionOffcanvas(step)">
-                        <SvgIcon Icon="FeatherIcon.Info" />
+                        <SvgIcon Icon="LucideIcon.Info" />
                         Details
                     </span>
                 </li>
                 <li>
-                    <span class="dropdown-item" role="button" @onclick="() => stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
-                        <SvgIcon Icon="FeatherIcon.Activity" />
+                    <span class="dropdown-item" role="button" @onclick="() => _stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(step.StepId))">
+                        <SvgIcon Icon="LucideIcon.Activity" />
                         History
                     </span>
                 </li>
@@ -143,7 +143,7 @@
             {
                 <li>
                     <a class="dropdown-item" role="button" href="@($"executions/{step.ExecutionId}/list")">
-                        <SvgIcon Icon="FeatherIcon.ArrowRight" />
+                        <SvgIcon Icon="LucideIcon.MoveRight" />
                         Go to execution
                     </a>
                 </li>
@@ -152,248 +152,6 @@
     </DependencyGraph>
 }
 
-<StepExecutionDetailsOffcanvas @ref="stepExecutionDetailsOffcanvas" />
+<StepExecutionDetailsOffcanvas @ref="_stepExecutionDetailsOffcanvas" />
 
-<StepHistoryOffcanvas @ref="stepHistoryOffcanvas" />
-
-@code {
-    [Parameter] public Execution? Execution { get; set; }
-
-    [Parameter] public Guid? InitialStepId { get; set; }
-
-    private DependencyGraph<StepExecution>? dependencyGraph;
-    private StepExecution? dependencyGraphStepFilter;
-    private StepExecutionDetailsOffcanvas? stepExecutionDetailsOffcanvas;
-    private StepHistoryOffcanvas? stepHistoryOffcanvas;
-    private DependencyGraphDirection direction = DependencyGraphDirection.LeftToRight;
-
-    private int FilterDepthBackwards
-    {
-        get => _filterDepthBackwards;
-        set => _filterDepthBackwards = value >= 0 ? value : _filterDepthBackwards;
-    }
-
-    private int _filterDepthBackwards;
-
-    private int FilterDepthForwards
-    {
-        get => _filterDepthForwards;
-        set => _filterDepthForwards = value >= 0 ? value : _filterDepthForwards;
-    }
-
-    private int _filterDepthForwards;
-
-    private IEnumerable<StepExecution>? StepExecutions => Execution?.StepExecutions
-        .Concat(Execution.StepExecutions
-            .SelectMany(e => e.MonitoredStepExecutions.Where(m => m.MonitoringReason is MonitoringReason.UpstreamDependency or MonitoringReason.DownstreamDependency))
-            .Select(e => e.MonitoredStepExecution)
-            .Where(e => e.ExecutionId != Execution.ExecutionId) ?? []);
-
-    private StepExecution? ItemFromNodeId(string nodeId)
-    {
-        return nodeId.Split('_') switch
-        {
-            [var item1, var item2] when
-                Guid.TryParse(item1, out var execId) &&
-                Guid.TryParse(item2, out var stepId) => StepExecutions?.FirstOrDefault(e => e.ExecutionId == execId && e.StepId == stepId),
-            _ => null
-        };
-    }
-
-    protected override void OnAfterRender(bool firstRender)
-    {
-        if (firstRender)
-        {
-            if (InitialStepId is Guid filterStepId)
-            {
-                dependencyGraphStepFilter = Execution?.StepExecutions?.FirstOrDefault(s => s.StepId == filterStepId);
-                StateHasChanged();
-            }
-        }
-    }
-
-    private Task SetDirectionAsync(DependencyGraphDirection direction)
-    {
-        if (this.direction == direction)
-        {
-            return Task.CompletedTask;
-        }
-        this.direction = direction;
-        return LoadGraphAsync();
-    }
-
-    public async Task LoadGraphAsync()
-    {
-        ArgumentNullException.ThrowIfNull(dependencyGraph);
-        ArgumentNullException.ThrowIfNull(Execution);
-        ArgumentNullException.ThrowIfNull(StepExecutions);
-
-        var allNodes = StepExecutions
-            .Select(step =>
-            {
-                var status = step.ExecutionStatus.ToString() ?? "";
-                var @internal = step.ExecutionId == Execution.ExecutionId;
-                return new DependencyGraphNode(
-                    Id: $"{step.ExecutionId}_{step.StepId}",
-                    Name: step.StepName,
-                    CssClass: $"enabled {status.ToLower()} {(@internal ? "internal" : "external")}",
-                    TooltipText: $"{step.StepType}, {status}, {step.GetDurationInSeconds().SecondsToReadableFormat()}",
-                    EnableOnClick: true
-                );
-            })
-            .ToArray();
-        var crossExecutionEdgesUpstream = Execution.StepExecutions
-                .SelectMany(e => e.MonitoredStepExecutions.Where(m => m.MonitoringReason == MonitoringReason.UpstreamDependency))
-                .Where(m => m.MonitoredExecutionId != Execution.ExecutionId)
-                .Select(m =>
-                {
-                    var dependencyType = m.StepExecution.ExecutionDependencies
-                        .FirstOrDefault(d => d.DependantOnStepId == m.MonitoredStepId)
-                        ?.DependencyType
-                        ?? DependencyType.OnCompleted;
-                    return new DependencyGraphEdge(
-                        Id: $"{m.ExecutionId}_{m.StepId}",
-                        DependsOnId: $"{m.MonitoredExecutionId}_{m.MonitoredStepId}",
-                        CssClass: dependencyType.ToString().ToLower());
-                });
-        var crossExecutionEdgesDownstream = Execution.StepExecutions
-            .SelectMany(e => e.MonitoredStepExecutions.Where(m => m.MonitoringReason == MonitoringReason.DownstreamDependency))
-            .Where(m => m.MonitoredExecutionId != Execution.ExecutionId)
-            .Select(m =>
-            {
-                return new DependencyGraphEdge(
-                    Id: $"{m.MonitoredExecutionId}_{m.MonitoredStepId}",
-                    DependsOnId: $"{m.ExecutionId}_{m.StepId}",
-                    CssClass: DependencyType.OnCompleted.ToString().ToLower());
-            });
-        var allEdges = Execution.StepExecutions
-            .SelectMany(step => step.ExecutionDependencies)
-            .Where(dep => Execution.StepExecutions.Any(s => dep.DependantOnStepId == s.StepId))
-            .Select(dep => new DependencyGraphEdge(
-                Id: $"{dep.ExecutionId}_{dep.StepId}",
-                DependsOnId: $"{dep.ExecutionId}_{dep.DependantOnStepId}",
-                CssClass: dep.DependencyType.ToString().ToLower()
-            ))
-            .Concat(crossExecutionEdgesUpstream)
-            .Concat(crossExecutionEdgesDownstream)
-            .ToArray();
-
-        DependencyGraphNode[] nodes;
-        DependencyGraphEdge[] edges;
-        if (dependencyGraphStepFilter is null)
-        {
-            // Create a list of steps and dependencies and send them through JSInterop as JSON objects.
-            nodes = allNodes;
-            edges = allEdges;
-        }
-        else
-        {
-            var startNode = allNodes.FirstOrDefault(n => n.Id == $"{dependencyGraphStepFilter.ExecutionId}_{dependencyGraphStepFilter.StepId}");
-            if (startNode is not null)
-            {
-                var recursedNodes = RecurseDependenciesBackward(allNodes, startNode, [], allEdges, 0);
-                recursedNodes.Remove(startNode);
-                recursedNodes = RecurseDependenciesForward(allNodes, startNode, recursedNodes, allEdges, 0);
-                nodes = recursedNodes.ToArray();
-                edges = allEdges.Where(e => nodes.Any(n => n.Id == e.Id) && nodes.Any(n => n.Id == e.DependsOnId)).ToArray();
-            }
-            else
-            {
-                return;
-            }
-        }
-        await dependencyGraph.DrawAsync(nodes, edges, direction);
-        StateHasChanged();
-    }
-
-    private List<DependencyGraphNode> RecurseDependenciesBackward(
-        IEnumerable<DependencyGraphNode> allNodes,
-        DependencyGraphNode node,
-        List<DependencyGraphNode> processedNodes,
-        IEnumerable<DependencyGraphEdge> edges,
-        int depth)
-    {
-        // If the step was already handled, return.
-        // This way we do not loop indefinitely in case of circular dependencies.
-        if (processedNodes.Any(n => n.Id == node.Id))
-        {
-            return processedNodes;
-        }
-
-        if (depth++ > FilterDepthBackwards && FilterDepthBackwards > 0)
-        {
-            depth--;
-            return processedNodes;
-        }
-
-        processedNodes.Add(node);
-
-        // Get dependency steps.
-        var dependencyNodes = allNodes.Where(n => edges.Any(e => e.Id == node.Id && e.DependsOnId == n.Id)).ToList();
-
-        // Loop through the dependencies and handle them recursively.
-        foreach (var depencyNode in dependencyNodes)
-        {
-            RecurseDependenciesBackward(allNodes, depencyNode, processedNodes, edges, depth);
-        }
-
-        depth--;
-
-        return processedNodes;
-    }
-
-    private List<DependencyGraphNode> RecurseDependenciesForward(
-        IEnumerable<DependencyGraphNode> allNodes,
-        DependencyGraphNode node,
-        List<DependencyGraphNode> processedNodes,
-        IEnumerable<DependencyGraphEdge> edges,
-        int depth)
-    {
-        if (processedNodes.Any(n => n.Id == node.Id))
-        {
-            return processedNodes;
-        }
-
-        if (depth++ > FilterDepthForwards && FilterDepthForwards > 0)
-        {
-            depth--;
-            return processedNodes;
-        }
-
-        processedNodes.Add(node);
-
-        var dependencyNodes = allNodes.Where(n => edges.Any(e => e.DependsOnId == node.Id && e.Id == n.Id)).ToList();
-
-        foreach (var depencyNode in dependencyNodes)
-        {
-            RecurseDependenciesForward(allNodes, depencyNode, processedNodes, edges, depth);
-        }
-
-        depth--;
-
-        return processedNodes;
-    }
-
-    private async Task ShowStepExecutionOffcanvas(StepExecution step)
-    {
-        var attempt = step?.StepExecutionAttempts.OrderByDescending(s => s.StartedOn).First();
-        if (attempt is null)
-        {
-            return;
-        }
-        StateHasChanged();
-        await stepExecutionDetailsOffcanvas.LetAsync(x => x.ShowAsync(attempt));
-    }
-
-    private Task<AutosuggestDataProviderResult<StepExecution>> ProvideSuggestions(AutosuggestDataProviderRequest request)
-    {
-        ArgumentNullException.ThrowIfNull(StepExecutions);
-        var filtered = StepExecutions.Where(s => s.StepName?.ContainsIgnoreCase(request.UserInput) ?? false);
-        return Task.FromResult(new AutosuggestDataProviderResult<StepExecution>
-        {
-            Data = filtered
-        });
-    }
-
-    private static string TextSelector(StepExecution step) => step.StepName ?? "";
-}
+<StepHistoryOffcanvas @ref="_stepHistoryOffcanvas" />

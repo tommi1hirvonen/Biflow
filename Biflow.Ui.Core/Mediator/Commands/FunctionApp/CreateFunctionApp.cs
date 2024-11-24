@@ -7,7 +7,7 @@ internal class CreateFunctionAppCommandHandler(IDbContextFactory<AppDbContext> d
 {
     public async Task Handle(CreateFunctionAppCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         context.FunctionApps.Add(request.FunctionApp);
         context.Entry(request.FunctionApp.AppRegistration).State = EntityState.Unchanged;
         await context.SaveChangesAsync(cancellationToken);

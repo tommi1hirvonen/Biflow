@@ -1,6 +1,6 @@
 ﻿@inject ToasterService Toaster
 
-<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Large" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true" Title="Explore SQL references">
+<HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Large" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true" Title="Explore SQL references">
     <BodyTemplate>
         <div class="row">
             <div class="col-auto">
@@ -9,10 +9,10 @@
             <div class="col-auto">
                 <div class="input-group">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Database" />
+                        <SvgIcon Icon="LucideIcon.Database" />
                     </div>
-                    <select class="form-select form-select-sm" @bind="connectionId">
-                        @foreach (var connection in Connections ?? [])
+                    <select class="form-select form-select-sm" @bind="_connectionId">
+                        @foreach (var connection in Connections)
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }
@@ -21,11 +21,11 @@
             </div>
             <div class="col-auto">
                 <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="RunQueryAsync">
-                    <SvgIcon Icon="FeatherIcon.RefreshCw" />
+                    <SvgIcon Icon="LucideIcon.RefreshCw" />
                     Run query
                 </HxButton>
                 <HxButton Color="ThemeColor.Secondary" Size="ButtonSize.Small" CssClass="ms-3" OnClick="ClearFilters">
-                    <SvgIcon Icon="FeatherIcon.X" />
+                    <SvgIcon Icon="LucideIcon.X" />
                     Clear filters
                 </HxButton>
             </div>
@@ -36,19 +36,19 @@
                 <label class="form-label">Referencing object</label>
                 <div class="input-group input-group-sm">
                     <span class="input-group-text">Schema</span>
-                    <select class="form-select form-select-sm" @bind="referencingSchemaOperator" style="max-width: 5rem;">
+                    <select class="form-select form-select-sm" @bind="_referencingSchemaOperator" style="max-width: 5rem;">
                         <option value="=">=</option>
                         <option value="like">like</option>
                     </select>
                     <input type="text" class="form-control form-control-sm" autocomplete="off"
-                           @bind="referencingSchemaFilter" @bind:event="oninput" />
+                           @bind="_referencingSchemaFilter" @bind:event="oninput" />
                     <span class="input-group-text">Name</span>
-                    <select class="form-select form-select-sm" @bind="referencingNameOperator" style="max-width: 5rem;">
+                    <select class="form-select form-select-sm" @bind="_referencingNameOperator" style="max-width: 5rem;">
                         <option value="=">=</option>
                         <option value="like">like</option>
                     </select>
                     <input type="text" class="form-control form-control-sm" autocomplete="off"
-                           @bind="referencingNameFilter" @bind:event="oninput" />
+                           @bind="_referencingNameFilter" @bind:event="oninput" />
                 </div>
             </div>
         </div>
@@ -56,9 +56,9 @@
             <div class="col-sm-6">
                 <div class="input-group input-group-sm">
                     <span class="input-group-text">Type</span>
-                    <select class="form-select form-select-sm" @bind="referencingTypeFilter">
+                    <select class="form-select form-select-sm" @bind="_referencingTypeFilter">
                         <option value="">ALL</option>
-                        @foreach (var type in queryResults.Select(r => r.ReferencingType).Distinct().OrderBy(s => s))
+                        @foreach (var type in _queryResults.Select(r => r.ReferencingType).Distinct().OrderBy(s => s))
                         {
                             <option value="@type">@type</option>
                         }
@@ -71,19 +71,19 @@
                 <label class="form-label">Referenced object</label>
                 <div class="input-group input-group-sm">
                     <span class="input-group-text">Schema</span>
-                    <select class="form-select form-select-sm" @bind="referencedSchemaOperator" style="max-width: 5rem;">
+                    <select class="form-select form-select-sm" @bind="_referencedSchemaOperator" style="max-width: 5rem;">
                         <option value="=">=</option>
                         <option value="like">like</option>
                     </select>
                     <input type="text" class="form-control form-control-sm" autocomplete="off"
-                           @bind="referencedSchemaFilter" @bind:event="oninput" />
+                           @bind="_referencedSchemaFilter" @bind:event="oninput" />
                     <span class="input-group-text">Name</span>
-                    <select class="form-select form-select-sm" @bind="referencedNameOperator" style="max-width: 5rem;">
+                    <select class="form-select form-select-sm" @bind="_referencedNameOperator" style="max-width: 5rem;">
                         <option value="=">=</option>
                         <option value="like">like</option>
                     </select>
                     <input type="text" class="form-control form-control-sm" autocomplete="off"
-                           @bind="referencedNameFilter" @bind:event="oninput" />
+                           @bind="_referencedNameFilter" @bind:event="oninput" />
                 </div>
             </div>
         </div>
@@ -91,9 +91,9 @@
             <div class="col-sm-6">
                 <div class="input-group input-group-sm">
                     <span class="input-group-text">Type</span>
-                    <select class="form-select form-select-sm" @bind="referencedTypeFilter">
+                    <select class="form-select form-select-sm" @bind="_referencedTypeFilter">
                         <option value="">ALL</option>
-                        @foreach (var type in queryResults.Select(r => r.ReferencedType).Distinct().OrderBy(s => s))
+                        @foreach (var type in _queryResults.Select(r => r.ReferencedType).Distinct().OrderBy(s => s))
                         {
                             <option value="@type">@type</option>
                         }
@@ -147,6 +147,6 @@
     </BodyTemplate>
 
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
     </FooterTemplate>
 </HxOffcanvas>

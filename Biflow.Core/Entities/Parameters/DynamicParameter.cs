@@ -7,18 +7,16 @@ public abstract class DynamicParameter : ParameterBase, IAsyncEvaluable
 {
     public virtual bool UseExpression
     {
-        get => _useExpression;
+        get;
         set
         {
-            _useExpression = value;
-            if (_useExpression)
+            field = value;
+            if (field)
             {
                 ParameterValue = new();
             }
         }
     }
-
-    private bool _useExpression;
 
     public EvaluationExpression Expression { get; set; } = new();
 

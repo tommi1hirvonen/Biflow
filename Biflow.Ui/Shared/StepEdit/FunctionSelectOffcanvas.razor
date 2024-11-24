@@ -3,16 +3,16 @@
 @inject IHttpClientFactory HttpClientFactory
 @inject ITokenService TokenService
 
-<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Large" Title="Select function">
+<HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Large" Title="Select function">
 
     <BodyTemplate>
         <div class="row">
             <div class="col-sm-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Filter" />
+                        <SvgIcon Icon="LucideIcon.Filter" />
                     </div>
-                    <input type="search" class="form-control" @bind-value="filterText" @bind-value:event="oninput"
+                    <input type="search" class="form-control" @bind-value="_filterText" @bind-value:event="oninput"
                            placeholder="Filter by name" autocomplete="off" />
                 </div>
             </div>
@@ -31,13 +31,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (functions is null)
+                        @if (_functions is null)
                         {
                             <tr>
                                 <td colspan="2" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td>
                             </tr>
                         }
-                        else if (functions.Count == 0)
+                        else if (_functions.Count == 0)
                         {
                             <tr>
                                 <td colspan="2">No functions</td>
@@ -45,16 +45,16 @@
                         }
                         else
                         {
-                            foreach (var function in functions
-                                .Where(function => function.FunctionName.ContainsIgnoreCase(filterText))
+                            foreach (var function in _functions
+                                .Where(function => function.FunctionName.ContainsIgnoreCase(_filterText))
                                 .OrderBy(function => function.FunctionName))
                             {
                                 <tr style="cursor: pointer;"
-                                    @onclick="() => selectedFunctionUrl = function.FunctionUrl"
-                                    class="@(function.FunctionUrl == selectedFunctionUrl ? "bg-body-tertiary fw-bold" : null)">
+                                    @onclick="() => _selectedFunctionUrl = function.FunctionUrl"
+                                    class="@(function.FunctionUrl == _selectedFunctionUrl ? "bg-body-tertiary fw-bold" : null)">
                                     <td>
                                         <small>
-                                            <HighlightableText Text="@function.FunctionName" PartToHighlight="@filterText" />
+                                            <HighlightableText Text="@function.FunctionName" PartToHighlight="@_filterText" />
                                         </small>
                                     </td>
                                     <td>
@@ -74,10 +74,10 @@
 
     <FooterTemplate>
         <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectFunctionAsync"
-                  Enabled="selectedFunctionUrl is not null">
+                  Enabled="_selectedFunctionUrl is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
@@ -85,37 +85,37 @@
     [Parameter]
     public EventCallback<string> OnFunctionSelected { get; set; }
 
-    private HxOffcanvas? offcanvas;
-    private List<(string FunctionName, string FunctionUrl)>? functions;
-    private string? selectedFunctionUrl;
-    private string filterText = string.Empty;
+    private HxOffcanvas? _offcanvas;
+    private List<(string FunctionName, string FunctionUrl)>? _functions;
+    private string? _selectedFunctionUrl;
+    private string _filterText = string.Empty;
 
     private async Task SelectFunctionAsync()
     {
-        if (selectedFunctionUrl is not null)
+        if (_selectedFunctionUrl is not null)
         {
-            await OnFunctionSelected.InvokeAsync(selectedFunctionUrl);
-            await offcanvas.LetAsync(x => x.HideAsync());
+            await OnFunctionSelected.InvokeAsync(_selectedFunctionUrl);
+            await _offcanvas.LetAsync(x => x.HideAsync());
         }
     }
 
     public async Task ShowAsync(Guid functionAppId)
     {
-        functions = null;
-        selectedFunctionUrl = null;
-        filterText = string.Empty;
+        _functions = null;
+        _selectedFunctionUrl = null;
+        _filterText = string.Empty;
 
-        await offcanvas.LetAsync(x => x.ShowAsync());
+        await _offcanvas.LetAsync(x => x.ShowAsync());
 
         try
         {
-            using var context = DbContextFactory.CreateDbContext();
+            await using var context = await DbContextFactory.CreateDbContextAsync();
             var functionApp = await context.FunctionApps
                 .AsNoTrackingWithIdentityResolution()
                 .Include(fa => fa.AppRegistration)
                 .FirstAsync(fa => fa.FunctionAppId == functionAppId);
             var client = functionApp.CreateClient(TokenService, HttpClientFactory);
-            functions = await client.GetFunctionsAsync();
+            _functions = await client.GetFunctionsAsync();
             StateHasChanged();
         }
         catch (Exception ex)

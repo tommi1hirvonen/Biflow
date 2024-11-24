@@ -1,5 +1,4 @@
 ﻿using ClosedXML.Excel;
-using System.Data;
 
 namespace Biflow.Ui.TableEditor;
 
@@ -29,12 +28,10 @@ public class UploadBuilder
             .Worksheet(1)
             .Table(0)
             .HeadersRow();
-        var headers = new List<string>();
-        foreach (var cell in headerRow.Cells())
-        {
-            var header = cell.GetValue<string>();
-            headers.Add(header);
-        }
+        var headers = headerRow
+            .Cells()
+            .Select(cell => cell.GetValue<string>())
+            .ToList();
 
         // Check that all primary key columns are included
         foreach (var pk in _columns.Where(c => c.IsPrimaryKey).Select(c => c.Name))
@@ -95,12 +92,12 @@ public class UploadBuilder
                 else if (type == typeof(DateOnly))
                 {
                     var dt = cell.GetValue<DateTime?>();
-                    dataRow[col] = dt is DateTime notNull ? DateOnly.FromDateTime(notNull) : null;
+                    dataRow[col] = dt is { } notNull ? DateOnly.FromDateTime(notNull) : null;
                 }
                 else if (type == typeof(TimeOnly))
                 {
                     var dt = cell.GetValue<DateTime?>();
-                    dataRow[col] = dt is DateTime notNull ? TimeOnly.FromDateTime(notNull) : null;
+                    dataRow[col] = dt is { } notNull ? TimeOnly.FromDateTime(notNull) : null;
                 }
                 else if (type == typeof(bool))
                 {
@@ -119,8 +116,11 @@ public class UploadBuilder
     public static async Task<UploadBuilder> FromTableAsync(MasterDataTable table)
     {
         var columns = (await table.GetColumnsAsync(includeLookups: false)).ToArray();
-        var notSupportedColumns = columns.Where(c => c.Datatype is null).Select(c => $"c.Name ({c.DbDatatype})");
-        if (notSupportedColumns.Any())
+        var notSupportedColumns = columns
+            .Where(c => c.Datatype is null)
+            .Select(c => $"c.Name ({c.DbDatatype})")
+            .ToArray();
+        if (notSupportedColumns.Length != 0)
         {
             throw new NotSupportedException($"Unsupported database datatypes detected: {string.Join(',', notSupportedColumns)}");
         }

@@ -14,7 +14,7 @@ internal class ToggleStepsCommandHandler(IDbContextFactory<AppDbContext> dbConte
 {
     public async Task Handle(ToggleStepsCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         await context.Steps
             .Where(step => request.StepIds.Contains(step.StepId))
             .ExecuteUpdateAsync(x => x.SetProperty(step => step.IsEnabled, request.IsEnabled), cancellationToken);

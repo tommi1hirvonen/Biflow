@@ -25,15 +25,18 @@ internal sealed class UserCircuitHandler(
     private void AuthenticationChanged(Task<AuthenticationState> task)
     {
         _ = UpdateAuthentication(task);
-        async Task UpdateAuthentication(Task<AuthenticationState> task)
+        return;
+
+        async Task UpdateAuthentication(Task<AuthenticationState> task2)
         {
             try
             {
-                var state = await task;
+                var state = await task2;
                 _userService.SetUser(state.User);
             }
             catch
             {
+                // ignored
             }
         }
     }

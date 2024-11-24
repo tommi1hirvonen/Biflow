@@ -4,7 +4,7 @@ public static class Extensions
 {
     public static async Task<IEnumerable<string>> GetColumnNamesAsync(this MasterDataTable table)
     {
-        using var connection = new SqlConnection(table.Connection.ConnectionString);
+        await using var connection = new SqlConnection(table.Connection.ConnectionString);
         return await table.Connection.RunImpersonatedOrAsCurrentUserAsync(async () =>
         {
             await connection.OpenAsync();
@@ -29,7 +29,7 @@ public static class Extensions
             throw new InvalidOperationException("All lookup tables must use the same connection as the main table.");
         }
 
-        using var connection = new SqlConnection(table.Connection.ConnectionString);
+        await using var connection = new SqlConnection(table.Connection.ConnectionString);
         return await table.Connection.RunImpersonatedOrAsCurrentUserAsync(async () =>
         {
             await connection.OpenAsync();
@@ -38,22 +38,23 @@ public static class Extensions
 
             var (query, parameters) = new DataTableQueryBuilder(
                 table: table,
-                top: top is not null ? top + 1 : null,
+                top: top + 1,
                 filters: filters)
                 .Build();
-            var rows = await connection.QueryAsync(query, parameters);
+            var rows = (List<dynamic>)await connection.QueryAsync(query, parameters);
             var initialValues = rows
                 .TakeIfNotNull(top)
-                .Cast<IDictionary<string, object?>>();
+                .Cast<IDictionary<string, object?>>()
+                .ToArray();
 
-            var hasMoreRows = top is not null && rows.Count() > top; // Actual type of rows is List, so Count() is safe to do. O(1) operation
+            var hasMoreRows = top is not null && rows.Count > top; // Actual type of rows is List, so Count() is safe to do. O(1) operation
             return new TableData(table, columns, initialValues, hasMoreRows);
         });  
     }
 
     internal static async Task<IEnumerable<Column>> GetColumnsAsync(this MasterDataTable table, bool includeLookups = true)
     {
-        using var connection = new SqlConnection(table.Connection.ConnectionString);
+        await using var connection = new SqlConnection(table.Connection.ConnectionString);
         return await table.Connection.RunImpersonatedOrAsCurrentUserAsync(async () =>
         {
             await connection.OpenAsync();
@@ -120,7 +121,7 @@ public static class Extensions
     private static async Task<Dictionary<string, Lookup>> GetLookupsAsync(this MasterDataTable table) =>
         await table.Lookups.ToAsyncEnumerable().SelectAwait(async lookup =>
         {
-            using var connection = new SqlConnection(lookup.LookupTable.Connection.ConnectionString);
+            await using var connection = new SqlConnection(lookup.LookupTable.Connection.ConnectionString);
             await connection.OpenAsync();
 
             var dataTypes = await lookup.LookupTable.GetColumnDatatypesAsync(connection);
@@ -196,7 +197,7 @@ public static class Extensions
                             --float default precision is 53 - add precision when column has a different precision value
                             when type_name(b.user_type_id) in (N'float')
                                 then case when b.precision = 53 then N'' else concat(N'(', b.precision, N')') end
-                            --types with length specifiecation
+                            --types with length specification
                             when type_name(b.user_type_id) like N'n%char'
                                 then concat(N'(', case b.max_length when -1 then N'max' else cast(b.max_length / 2 as nvarchar(20)) end, N')')
                             when type_name(b.user_type_id) like N'%char'
@@ -251,13 +252,13 @@ public static class Extensions
     internal static string QuoteName(this string name, char quoteCharacter = '[') => (name, quoteCharacter) switch
     {
         ({ Length: > SysnameLength }, _) => throw new ArgumentException($"{nameof(name)} is longer than {SysnameLength} characters"),
-        (_, '\'') => string.Format("'{0}'", name.Replace("'", "''")),
-        (_, '"') => string.Format("\"{0}\"", name.Replace("\"", "\"\"")),
-        (_, '[' or ']') => string.Format("[{0}]", name.Replace("]", "]]")),
+        (_, '\'') => $"'{name.Replace("'", "''")}'",
+        (_, '"') => $"\"{name.Replace("\"", "\"\"")}\"",
+        (_, '[' or ']') => $"[{name.Replace("]", "]]")}]",
         _ => throw new ArgumentException("quoteCharacter must be one of: ', \", [, or ]"),
     };
 
-    public static IEnumerable<TResult> TakeIfNotNull<TResult>(this IEnumerable<TResult> source, int? count)
+    private static IEnumerable<TResult> TakeIfNotNull<TResult>(this IEnumerable<TResult> source, int? count)
     {
         return count.HasValue ? source.Take(count.Value) : source;
     }

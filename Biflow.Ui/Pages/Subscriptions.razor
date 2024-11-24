@@ -6,17 +6,17 @@
 
 <h4>Subscriptions</h4>
 
-<UserSubscriptions User="user" Jobs="jobs" Steps="steps" Tags="tags" />
+<UserSubscriptions User="_user" Jobs="_jobs" Steps="_steps" Tags="_tags" />
 
 @code {
     [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
 
     [Parameter] public string? Page { get; set; }
 
-    private User? user;
-    private IEnumerable<JobProjection>? jobs;
-    private IEnumerable<StepTag>? tags;
-    private IEnumerable<StepProjection>? steps;
+    private User? _user;
+    private List<JobProjection>? _jobs;
+    private List<StepTag>? _tags;
+    private List<StepProjection>? _steps;
 
     protected override async Task OnInitializedAsync()
     {
@@ -24,17 +24,17 @@
         var authState = await AuthenticationState;
         var username = authState.User.Identity?.Name;
 
-        using var context = await Task.Run(DbFactory.CreateDbContext);
-        user = await context.Users
+        await using var context = await DbFactory.CreateDbContextAsync();
+        _user = await context.Users
             .AsNoTrackingWithIdentityResolution()
             .Include(user => user.Subscriptions)
             .FirstAsync(user => user.Username == username);
-        jobs = await context.Jobs
+        _jobs = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(job => job.JobName)
             .Select(j => new JobProjection(j.JobId, j.JobName, j.ExecutionMode))
-            .ToArrayAsync();
-        steps = await context.Steps
+            .ToListAsync();
+        _steps = await context.Steps
             .AsNoTrackingWithIdentityResolution()
             .Select(s => new StepProjection(
                 s.StepId,
@@ -46,10 +46,10 @@
                 s.IsEnabled,
                 s.Tags.ToArray(),
                 s.Dependencies.Select(d => new DependencyProjection(d.StepId, d.DependantOnStepId, d.DependencyType)).ToArray()))
-            .ToArrayAsync();
-        tags = await context.StepTags
+            .ToListAsync();
+        _tags = await context.StepTags
             .AsNoTrackingWithIdentityResolution()
-            .OrderBy(t => t.TagName)
-            .ToArrayAsync();
+            .ToListAsync();
+        _tags.Sort();
     }
 }

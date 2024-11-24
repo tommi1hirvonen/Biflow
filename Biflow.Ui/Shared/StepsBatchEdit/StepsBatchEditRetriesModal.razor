@@ -2,11 +2,11 @@
 
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 
-<HxModal @ref="modal" Title="Edit tags" Size="ModalSize.Small">
+<HxModal @ref="_modal" Title="Edit retries" Size="ModalSize.Small">
     <BodyTemplate>
         <div class="row">
             <div class="col">
-                @if (steps is not null)
+                @if (_steps is not null)
                 {
                     <input class="form-control" type="number" placeholder="Retry attempts" min="0" @bind-value="RetryAttempts" />
                 }
@@ -28,28 +28,20 @@
 </HxModal>
 
 @code {
-    [Parameter] public IEnumerable<Step> SelectedSteps { get; set; } = Enumerable.Empty<Step>();
+    [Parameter] public IEnumerable<Step> SelectedSteps { get; set; } = [];
 
     [Parameter] public EventCallback<IEnumerable<Step>> OnStepsSubmit { get; set; }
 
-    private HxModal? modal;
-    private AppDbContext? context;
-    private List<Step>? steps;
+    private HxModal? _modal;
+    private AppDbContext? _context;
+    private List<Step>? _steps;
 
     private int? RetryAttempts
     {
-        get => retries;
-        set
-        {
-            if (value is null || value >= 0)
-            {
-                retries = value;
-            }
-        }
+        get;
+        set => field = value is null or >= 0 ? value : field;
     }
-
-    private int? retries;
-
+    
     public async Task ShowAsync()
     {
         if (!SelectedSteps.Any())
@@ -57,15 +49,15 @@
             return;
         }
 
-        await modal.LetAsync(x => x.ShowAsync());
+        await _modal.LetAsync(x => x.ShowAsync());
 
-        if (context is not null)
+        if (_context is not null)
         {
-            await context.DisposeAsync();
+            await _context.DisposeAsync();
         }
-        context = await DbContextFactory.CreateDbContextAsync();
+        _context = await DbContextFactory.CreateDbContextAsync();
         var stepIds = SelectedSteps.Select(s => s.StepId).ToArray();
-        steps = await JobDetails.BuildStepsQueryWithIncludes(context)
+        _steps = await JobDetails.BuildStepsQueryWithIncludes(_context)
             .Where(s => stepIds.Contains(s.StepId))
             .ToListAsync();
     }
@@ -73,16 +65,16 @@
     private async Task CloseAsync()
     {
         RetryAttempts = null;
-        await modal.LetAsync(x => x.HideAsync());
+        await _modal.LetAsync(x => x.HideAsync());
     }
 
     private async Task SubmitStepsAsync()
     {
-        ArgumentNullException.ThrowIfNull(steps);
-        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(_steps);
+        ArgumentNullException.ThrowIfNull(_context);
 
         int retries;
-        if (RetryAttempts is int i)
+        if (RetryAttempts is { } i)
         {
             retries = i;
         }
@@ -91,15 +83,15 @@
             return;
         }
 
-        foreach (var step in steps)
+        foreach (var step in _steps)
         {
             step.RetryAttempts = retries;
         }
 
-        await context.SaveChangesAsync();
-        await OnStepsSubmit.InvokeAsync(steps);
+        await _context.SaveChangesAsync();
+        await OnStepsSubmit.InvokeAsync(_steps);
         await CloseAsync();
     }
 
-    public void Dispose() => context?.Dispose();
+    public void Dispose() => _context?.Dispose();
 }

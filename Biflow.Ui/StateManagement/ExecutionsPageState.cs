@@ -1,4 +1,6 @@
-﻿namespace Biflow.Ui.StateManagement;
+﻿using Biflow.Ui.Shared;
+
+namespace Biflow.Ui.StateManagement;
 
 public class ExecutionsPageState
 {
@@ -6,7 +8,9 @@ public class ExecutionsPageState
     {
         JobStatusPredicate = e => JobStatusFilter.Count == 0 || JobStatusFilter.Contains(e.ExecutionStatus);
         JobPredicate = e => JobFilter.Count == 0 || JobFilter.Contains(e.JobName);
-        JobTagPredicate = e=> JobTagFilter.Count == 0 || e.JobTags.Any(t => JobTagFilter.Contains(t));
+        JobTagPredicate = e =>
+            (JobTagFilterMode is FilterDropdownMode.Any && (JobTagFilter.Count == 0 || JobTagFilter.Any(tag => e.JobTags.Any(t => t.TagName == tag.TagName))))
+            || (JobTagFilterMode is FilterDropdownMode.All && JobTagFilter.All(tag => e.JobTags.Any(t => t.TagName == tag.TagName)));
         SchedulePredicate = e => ScheduleFilter.Count == 0 || ScheduleFilter.Any(f => f.ScheduleId == e.ScheduleId);
         StartTypePredicate = e => StartTypeFilter == StartType.All ||
                                   StartTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
@@ -24,7 +28,9 @@ public class ExecutionsPageState
         StepPredicate = e => StepFilter.Count == 0 || StepFilter.Contains((e.StepName, e.StepType));
         StepStatusPredicate = e => StepStatusFilter.Count == 0 || StepStatusFilter.Contains(e.StepExecutionStatus);
         StepTypePredicate = e => StepTypeFilter.Count == 0 || StepTypeFilter.Contains(e.StepType);
-        StepTagPredicate = e => StepTagFilter.Count == 0 || e.StepTags.Any(t => StepTagFilter.Contains(t));
+        StepTagPredicate = e =>
+            (StepTagFilterMode is FilterDropdownMode.Any && (StepTagFilter.Count == 0 || StepTagFilter.Any(tag => e.StepTags.Any(t => t.TagName == tag.TagName))))
+            || (StepTagFilterMode is FilterDropdownMode.All && StepTagFilter.All(tag => e.StepTags.Any(t => t.TagName == tag.TagName)));
 
         StepExecutionPredicates =
         [
@@ -39,9 +45,9 @@ public class ExecutionsPageState
         ];
     }
 
-    public bool ShowSteps { get; set; } = false;
+    public bool ShowSteps { get; set; }
     
-    public bool ShowGraph { get; set; } = false;
+    public bool ShowGraph { get; set; }
 
     public Preset? Preset { get; set; } = StateManagement.Preset.OneHour;
 
@@ -83,6 +89,10 @@ public class ExecutionsPageState
     public StepExecutionSortMode StepExecutionSortMode { get; set; } = StepExecutionSortMode.CreatedDesc;
 
     public StartType StartTypeFilter { get; set; } = StartType.All;
+
+    public FilterDropdownMode JobTagFilterMode { get; set; } = FilterDropdownMode.Any;
+
+    public FilterDropdownMode StepTagFilterMode { get; set; } = FilterDropdownMode.Any;
     
     public HashSet<ExecutionStatus> JobStatusFilter { get; } = [];
     

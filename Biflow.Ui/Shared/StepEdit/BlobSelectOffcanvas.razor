@@ -1,7 +1,6 @@
-﻿@using Azure.Storage.Blobs.Models
-@inject IDbContextFactory<AppDbContext> DbContextFactory
+﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
 
-<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Regular" Title="Select blob" RenderMode="OffcanvasRenderMode.Always">
+<HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Regular" Title="Select blob" RenderMode="OffcanvasRenderMode.Always">
     <BodyTemplate>
         <div class="row align-items-end">
             <div class="col">
@@ -10,9 +9,9 @@
                     <div class="input-group-text">
                         <SvgIcon Icon="LucideIcon.Container" />
                     </div>
-                    <select class="form-select form-select-sm" @bind="clientId" @bind:after="LoadAsync">
+                    <select class="form-select form-select-sm" @bind="_clientId" @bind:after="LoadAsync">
                         <option value="@Guid.Empty">Select client</option>
-                        @foreach (var client in clients ?? [])
+                        @foreach (var client in _clients ?? [])
                         {
                             <option value="@client.BlobStorageClientId">@client.BlobStorageClientName</option>
                         }
@@ -22,16 +21,16 @@
         </div>
         <div class="row mt-3">
             <div class="col">
-                <BlobStorageBrowser @ref="browser" OnItemSelected="r => response = r" />
+                <BlobStorageBrowser @ref="_browser" OnItemSelected="r => _response = r" />
             </div>
         </div>
     </BodyTemplate>
     <FooterTemplate>
         <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectBlobAsync"
-                  Enabled="response is not null">
+                  Enabled="_response is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
@@ -39,44 +38,44 @@
     [Parameter]
     public EventCallback<BlobSelectedResponse> OnBlobSelected { get; set; }
 
-    private HxOffcanvas? offcanvas;
-    private IEnumerable<BlobStorageClient>? clients;
-    private Guid clientId;
-    private BlobSelectedResponse? response;
-    private BlobStorageBrowser? browser;
+    private HxOffcanvas? _offcanvas;
+    private IEnumerable<BlobStorageClient>? _clients;
+    private Guid _clientId;
+    private BlobSelectedResponse? _response;
+    private BlobStorageBrowser? _browser;
 
     public async Task ShowAsync()
     {
-        if (clients is null)
+        if (_clients is null)
         {
-            using var context = await DbContextFactory.CreateDbContextAsync();
-            clients = await context.BlobStorageClients
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+            _clients = await context.BlobStorageClients
                 .Include(c => c.AppRegistration)
                 .OrderBy(c => c.BlobStorageClientName)
                 .ToArrayAsync();
         }
-        await offcanvas.LetAsync(x => x.ShowAsync());
+        await _offcanvas.LetAsync(x => x.ShowAsync());
         StateHasChanged();
     }
 
     private async Task LoadAsync()
     {
-        ArgumentNullException.ThrowIfNull(clients);
-        var client = clients.FirstOrDefault(c => c.BlobStorageClientId == clientId);
+        ArgumentNullException.ThrowIfNull(_clients);
+        var client = _clients.FirstOrDefault(c => c.BlobStorageClientId == _clientId);
         if (client is null)
         {
             return;
         }
-        await browser.LetAsync(x => x.SetClientAsync(client));
+        await _browser.LetAsync(x => x.SetClientAsync(client));
     }
 
     private async Task SelectBlobAsync()
     {
-        if (response is null)
+        if (_response is null)
         {
             return;
         }
-        await OnBlobSelected.InvokeAsync(response);
-        await offcanvas.LetAsync(x => x.HideAsync());
+        await OnBlobSelected.InvokeAsync(_response);
+        await _offcanvas.LetAsync(x => x.HideAsync());
     }
 }

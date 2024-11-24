@@ -2,31 +2,31 @@
 
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 
-<HxModal @ref="modal" Title="Edit tags">
+<HxModal @ref="_modal" Title="Edit tags">
     <BodyTemplate>
         <div class="row">
             <div class="col">
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_batch_edit_tags_add"
-                           checked=@(editMode == EditMode.Add)
+                    checked=@(_editMode == EditMode.Add)
                     @onchange="() => SetEditMode(EditMode.Add)">
                     <label class="form-check-label" for="radio_batch_edit_tags_add">
                         Add
                         &nbsp;
                         <HxPopover Trigger="PopoverTrigger.Hover" Content="Tags listed will be added to all selected steps where they are not present. New tags can also be added.">
-                            <SvgIcon Icon="FeatherIcon.Info" />
+                            <SvgIcon Icon="LucideIcon.Info" />
                         </HxPopover>
                     </label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_batch_edit_tags_remove"
-                           checked=@(editMode == EditMode.Remove)
+                    checked=@(_editMode == EditMode.Remove)
                     @onchange="() => SetEditMode(EditMode.Remove)">
                     <label class="form-check-label" for="radio_batch_edit_tags_remove">
                         Remove
                         &nbsp;
                         <HxPopover Trigger="PopoverTrigger.Hover" Content="Remove tags from the list to remove them from selected steps where they are present.">
-                            <SvgIcon Icon="FeatherIcon.Info" />
+                            <SvgIcon Icon="LucideIcon.Info" />
                         </HxPopover>
                     </label>
                 </div>
@@ -34,13 +34,13 @@
         </div>
         <div class="row mt-3">
             <div class="col">
-                @if (steps is not null)
+                @if (_steps is not null)
                 {
                     <TagInput TTag="StepTag"
-                              Items="allTags"
-                              SelectedItems="tags"
-                              AllowCustomValues="editMode == EditMode.Add"
-                              NewItemFromText="text => new StepTag(text) { Color = TagColor.DarkGray }" />
+                    Items="_allTags"
+                    SelectedItems="_tags"
+                    AllowCustomValues="_editMode == EditMode.Add"
+                    NewItemFromText="text => new StepTag(text) { Color = TagColor.DarkGray }" />
                 }
                 else
                 {
@@ -50,7 +50,7 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Success" Spinner="saving" Enabled="!saving" OnClick="SubmitStepsAsync">
+        <HxButton Color="ThemeColor.Success" Spinner="_saving" Enabled="!_saving" OnClick="SubmitStepsAsync">
             Save
         </HxButton>
         <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="CloseAsync">
@@ -60,17 +60,17 @@
 </HxModal>
 
 @code {
-    [Parameter] public IEnumerable<Step> SelectedSteps { get; set; } = Enumerable.Empty<Step>();
+    [Parameter] public IEnumerable<Step> SelectedSteps { get; set; } = [];
 
     [Parameter] public EventCallback<IEnumerable<Step>> OnStepsSubmit { get; set; }
 
-    private HxModal? modal;
-    private bool saving = false;
-    private AppDbContext? context;
-    protected StepTag[]? allTags;
-    private List<StepTag> tags = [];
-    private List<Step>? steps;
-    private EditMode editMode = EditMode.Add;
+    private HxModal? _modal;
+    private bool _saving = false;
+    private AppDbContext? _context;
+    private List<StepTag>? _allTags;
+    private List<StepTag> _tags = [];
+    private List<Step>? _steps;
+    private EditMode _editMode = EditMode.Add;
 
     private enum EditMode { Add, Remove }
 
@@ -81,82 +81,92 @@
             return;
         }
 
-        await modal.LetAsync(x => x.ShowAsync());
+        await _modal.LetAsync(x => x.ShowAsync());
 
-        if (context is not null)
+        if (_context is not null)
         {
-            await context.DisposeAsync();
+            await _context.DisposeAsync();
         }
-        context = await DbContextFactory.CreateDbContextAsync();
-        allTags = await context.StepTags.OrderBy(t => t.TagName).ToArrayAsync();
+        _context = await DbContextFactory.CreateDbContextAsync();
+        _allTags = await _context.StepTags.ToListAsync();
+        _allTags.Sort();
         var stepIds = SelectedSteps.Select(s => s.StepId).ToArray();
-        steps = await JobDetails.BuildStepsQueryWithIncludes(context)
+        _steps = await JobDetails.BuildStepsQueryWithIncludes(_context)
             .Where(s => stepIds.Contains(s.StepId))
             .ToListAsync();
     }
 
     private async Task CloseAsync()
     {
-        tags.Clear();
+        _tags.Clear();
         SetEditMode(EditMode.Add);
-        await modal.LetAsync(x => x.HideAsync());
+        await _modal.LetAsync(x => x.HideAsync());
     }
 
     private void SetEditMode(EditMode editMode)
     {
-        if (this.editMode == editMode)
+        if (_editMode == editMode)
         {
             return;
         }
-        this.editMode = editMode;
-        if (editMode == EditMode.Add)
+        _editMode = editMode;
+        switch (editMode)
         {
-            tags.Clear();
-        }
-        else if (editMode == EditMode.Remove)
-        {
-            tags = steps?
-                .SelectMany(s => s.Tags)
-                .Distinct()
-                .OrderBy(t => t.TagName)
-                .ToList() ?? new();
+            case EditMode.Add:
+                _tags.Clear();
+                break;
+            case EditMode.Remove:
+                _tags = _steps?
+                    .SelectMany(s => s.Tags)
+                    .Distinct()
+                    .Order()
+                    .ToList() ?? new();
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(editMode), editMode, null);
         }
     }
 
     private async Task SubmitStepsAsync()
     {
-        ArgumentNullException.ThrowIfNull(steps);
-        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(_steps);
+        ArgumentNullException.ThrowIfNull(_context);
 
-        if (editMode == EditMode.Add)
+        switch (_editMode)
         {
-            foreach (var step in steps)
+            case EditMode.Add:
             {
-                foreach (var tag in tags)
+                foreach (var step in _steps)
                 {
-                    if (!step.Tags.Contains(tag))
+                    foreach (var tag in _tags.Where(tag => !step.Tags.Contains(tag)))
                     {
                         step.Tags.Add(tag);
                     }
                 }
+
+                break;
             }
-        }
-        else if (editMode == EditMode.Remove)
-        {
-            var stepTagsToRemove = steps
-                .SelectMany(s => s.Tags.Where(t => !tags.Contains(t)), (s, t) => (Step: s, Tag: t))
-                .ToArray();
-            foreach (var (step, tag) in stepTagsToRemove)
+            case EditMode.Remove:
             {
-                step.Tags.Remove(tag);
+                var stepTagsToRemove = _steps
+                    .SelectMany(s => s.Tags.Where(t => !_tags.Contains(t)), (s, t) => (Step: s, Tag: t))
+                    .ToArray();
+                foreach (var (step, tag) in stepTagsToRemove)
+                {
+                    step.Tags.Remove(tag);
+                }
+
+                break;
             }
+            default:
+                throw new ArgumentOutOfRangeException();
         }
 
-        await context.SaveChangesAsync();
-        await OnStepsSubmit.InvokeAsync(steps);
+        await _context.SaveChangesAsync();
+        await OnStepsSubmit.InvokeAsync(_steps);
 
         await CloseAsync();
     }
 
-    public void Dispose() => context?.Dispose();
+    public void Dispose() => _context?.Dispose();
 }

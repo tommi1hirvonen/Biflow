@@ -50,55 +50,58 @@ public class User : IAuditable
 
     public void SetIsEditor()
     {
-        _roles.RemoveAll(r => r == R.Admin || r == R.Editor || r == R.Viewer || r == R.Operator);
+        _roles.RemoveAll(r => r is R.Admin or R.Editor or R.Viewer or R.Operator);
         _roles.Add(R.Editor);
     }
 
     public void SetIsOperator()
     {
-        _roles.RemoveAll(r => r == R.Admin || r == R.Editor || r == R.Viewer || r == R.Operator);
+        _roles.RemoveAll(r => r is R.Admin or R.Editor or R.Viewer or R.Operator);
         _roles.Add(R.Operator);
     }
 
     public void SetIsViewer()
     {
-        _roles.RemoveAll(r => r == R.Admin || r == R.Editor || r == R.Viewer || r == R.Operator);
+        _roles.RemoveAll(r => r is R.Admin or R.Editor or R.Viewer or R.Operator);
         _roles.Add(R.Viewer);
     }
 
     public void SetIsSettingsEditor(bool enabled = true)
     {
-        if (enabled && !_roles.Contains(R.Admin) && !_roles.Contains(R.SettingsEditor))
+        switch (enabled)
         {
-            _roles.Add(R.SettingsEditor);
-        }
-        else if (!enabled)
-        {
-            _roles.Remove(R.SettingsEditor);
+            case true when !_roles.Contains(R.Admin) && !_roles.Contains(R.SettingsEditor):
+                _roles.Add(R.SettingsEditor);
+                break;
+            case false:
+                _roles.Remove(R.SettingsEditor);
+                break;
         }
     }
 
     public void SetIsDataTableMaintainer(bool enabled = true)
     {
-        if (enabled && !_roles.Contains(R.Admin) && !_roles.Contains(R.DataTableMaintainer))
+        switch (enabled)
         {
-            _roles.Add(R.DataTableMaintainer);
-        }
-        else if (!enabled)
-        {
-            _roles.Remove(R.DataTableMaintainer);
+            case true when !_roles.Contains(R.Admin) && !_roles.Contains(R.DataTableMaintainer):
+                _roles.Add(R.DataTableMaintainer);
+                break;
+            case false:
+                _roles.Remove(R.DataTableMaintainer);
+                break;
         }
     }
 
     public void SetIsVersionManager(bool enabled = true)
     {
-        if (enabled && !_roles.Contains(R.Admin) && !_roles.Contains(R.VersionManager))
+        switch (enabled)
         {
-            _roles.Add(R.VersionManager);
-        }
-        else if (!enabled)
-        {
-            _roles.Remove(R.VersionManager);
+            case true when !_roles.Contains(R.Admin) && !_roles.Contains(R.VersionManager):
+                _roles.Add(R.VersionManager);
+                break;
+            case false:
+                _roles.Remove(R.VersionManager);
+                break;
         }
     }
 }

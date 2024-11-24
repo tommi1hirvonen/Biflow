@@ -12,7 +12,7 @@ internal class ExecutionsQueryHandler(IDbContextFactory<AppDbContext> dbContextF
 {
     public async Task<ExecutionsMonitoringQueryResponse> Handle(ExecutionsMonitoringQuery request, CancellationToken cancellationToken)
     {
-        using var context = dbContextFactory.CreateDbContext();
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var from = request.FromDateTime;
         var to = request.ToDateTime;
 
@@ -62,7 +62,7 @@ internal class ExecutionsQueryHandler(IDbContextFactory<AppDbContext> dbContextF
                 e.EndedOn,
                 e.ExecutionStatus,
                 e.StepExecutions.Count(),
-                job.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color)).ToArray()
+                job.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder)).ToArray()
             )).ToArrayAsync(cancellationToken);
 
         return new ExecutionsMonitoringQueryResponse(executions);

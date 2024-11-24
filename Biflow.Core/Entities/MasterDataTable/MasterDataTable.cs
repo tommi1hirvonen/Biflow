@@ -37,7 +37,7 @@ public class MasterDataTable
 
     public List<string> LockedColumns { get; set; } = [];
 
-    public bool LockedColumnsExcludeMode { get; set; } = false;
+    public bool LockedColumnsExcludeMode { get; set; }
 
     public List<string> HiddenColumns { get; set; } = [];
 

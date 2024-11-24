@@ -1,9 +1,6 @@
-﻿using Biflow.Core.Entities;
-using Biflow.Executor.Core.Common;
+﻿using Biflow.Executor.Core.Common;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System.Reflection.Metadata.Ecma335;
-using System.Threading;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
@@ -71,7 +68,7 @@ internal class QlikStepExecutor(
         // Update reload id for the step execution attempt
         try
         {
-            using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+            await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.ReloadOrRunId = reload.Id;
             await context.Set<QlikStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
@@ -105,7 +102,6 @@ internal class QlikStepExecutor(
             }
             catch (OperationCanceledException ex)
             {
-                var reason = timeoutCts.IsCancellationRequested ? "StepTimedOut" : "StepWasCanceled";
                 await CancelReloadAsync(client, step, attempt, reload.Id);
                 if (timeoutCts.IsCancellationRequested)
                 {
@@ -156,7 +152,7 @@ internal class QlikStepExecutor(
         // Update reload id for the step execution attempt
         try
         {
-            using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+            await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.ReloadOrRunId = run.Id;
             await context.Set<QlikStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
@@ -189,7 +185,6 @@ internal class QlikStepExecutor(
             }
             catch (OperationCanceledException ex)
             {
-                var reason = timeoutCts.IsCancellationRequested ? "StepTimedOut" : "StepWasCanceled";
                 await CancelRunAsync(client, step, attempt, runSettings.AutomationId, run.Id);
                 if (timeoutCts.IsCancellationRequested)
                 {

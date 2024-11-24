@@ -8,7 +8,7 @@ public class SelfHostedExecutorService(IExecutionManager executionManager) : IEx
 
     public async Task StartExecutionAsync(Guid executionId, CancellationToken cancellationToken = default)
     {
-        await _executionManager.StartExecutionAsync(executionId);
+        await _executionManager.StartExecutionAsync(executionId, cancellationToken);
     }
 
     public Task StopExecutionAsync(Guid executionId, Guid stepId, string username)

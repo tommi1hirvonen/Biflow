@@ -7,7 +7,7 @@ internal class CreatePipelineClientCommandHandler(IDbContextFactory<AppDbContext
 {
     public async Task Handle(CreatePipelineClientCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         context.PipelineClients.Add(request.Client);
         await context.SaveChangesAsync(cancellationToken);
     }

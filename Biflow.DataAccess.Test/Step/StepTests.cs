@@ -50,13 +50,13 @@ public class StepFixture(DatabaseFixture fixture) : IAsyncLifetime
 
     public Step Step { get; private set; } = null!;
 
-    public string Username { get; private set; } = fixture.Username;
+    public string Username { get; private set; } = DatabaseFixture.Username;
 
     public Task DisposeAsync() => Task.CompletedTask;
 
     public async Task InitializeAsync()
     {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         Step = await context.Steps
             .Include(step => step.Job)
             .Include(step => step.Tags)

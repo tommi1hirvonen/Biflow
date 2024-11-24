@@ -10,7 +10,7 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.XOctagon" />
+                        <SvgIcon Icon="LucideIcon.OctagonX" />
                     </div>
                     <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 5rem;"></InputNumber>
                 </div>
@@ -28,13 +28,13 @@
                         <SvgIcon Icon="LucideIcon.Factory" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.PipelineClientId">
-                        @foreach (var client in PipelineClients ?? Enumerable.Empty<PipelineClient>())
+                        @foreach (var client in PipelineClients)
                         {
                             <option value="@client.PipelineClientId">@client.PipelineClientName</option>
                         }
                     </InputSelect>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenPipelineSelectOffcanvas">
-                        <SvgIcon Icon="FeatherIcon.MoreHorizontal" />
+                        <SvgIcon Icon="LucideIcon.Ellipsis" />
                         Browse pipelines
                     </HxButton>
                 </div>
@@ -48,14 +48,14 @@
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
-                        <SvgIcon Icon="FeatherIcon.Pipeline" />
+                        <SvgIcon Icon="LucideIcon.Pipeline" />
                     </div>
                     <InputText class="form-control form-control-sm" @bind-Value="Step.PipelineName"></InputText>
                 </div>
             </div>
         </div>
 
-        <PipelineSelectOffcanvas @ref="pipelineSelectOffcanvas" OnPipelineSelected="OnPipelineSelected" />
+        <PipelineSelectOffcanvas @ref="_pipelineSelectOffcanvas" OnPipelineSelected="OnPipelineSelected" />
         <StepParametersEditor Step="Step"
                               NewParameterDelegate="() => new() { Step = Step }"
                               OnImportParameters="ImportParametersAsync"

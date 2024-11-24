@@ -10,7 +10,7 @@ public class JobDuplicator : IDisposable
         Job = job;
     }
 
-    public Job Job { get; set; }
+    public Job Job { get; }
 
     public async Task<Job> SaveJobAsync()
     {

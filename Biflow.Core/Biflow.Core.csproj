@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
+	<LangVersion>preview</LangVersion>
 	<Nullable>enable</Nullable>
 	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	<!-- Allow NuGet warnings to remain as warnings -->
@@ -14,20 +15,23 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.Analytics.Synapse.Artifacts" Version="1.0.0-preview.19" />
-    <PackageReference Include="Azure.Identity" Version="1.12.0" />
-    <PackageReference Include="Azure.ResourceManager.DataFactory" Version="1.3.0" />
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.21.2" />
-    <PackageReference Include="CodingSeb.ExpressionEvaluator" Version="1.4.40" />
-    <PackageReference Include="Microsoft.AnalysisServices.NetCore.retail.amd64" Version="19.84.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.DataAnnotations.Validation" Version="3.2.0-rc1.20223.4" />
-    <PackageReference Include="Microsoft.Azure.Databricks.Client" Version="2.6.0" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.1" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
-    <PackageReference Include="Microsoft.PowerBI.Api" Version="4.20.0" />
-    <PackageReference Include="Quartz" Version="3.13.0" />
-    <PackageReference Include="Snowflake.Data" Version="4.1.0" />
-    <PackageReference Include="System.Linq.Async" Version="6.0.1" />
+    <PackageReference Include="Azure.Analytics.Synapse.Artifacts" />
+    <PackageReference Include="Azure.Identity" />
+    <PackageReference Include="Azure.ResourceManager.DataFactory" />
+    <PackageReference Include="Azure.Storage.Blobs" />
+    <PackageReference Include="CodingSeb.ExpressionEvaluator" />
+    <PackageReference Include="Microsoft.AnalysisServices.NetCore.retail.amd64" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.DataAnnotations.Validation" />
+	<PackageReference Include="Microsoft.Azure.Databricks.Client" />
+    <PackageReference Include="Microsoft.Data.SqlClient" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
+    <PackageReference Include="Microsoft.PowerBI.Api" />
+    <PackageReference Include="Quartz" />
+    <PackageReference Include="Snowflake.Data" />
+    <PackageReference Include="System.Linq.Async" />
+	<PackageReference Include="System.Text.Json" />
+    <PackageReference Include="System.Private.Uri" />
+	<PackageReference Include="System.Runtime.Caching" />
   </ItemGroup>
 
 </Project>

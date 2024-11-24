@@ -15,7 +15,7 @@
                        Content="@InfoContent">
                 <ChildContent>
                     <span style="cursor: pointer;">
-                        <SvgIcon Icon="FeatherIcon.Info" />
+                        <SvgIcon Icon="LucideIcon.Info" />
                     </span>
                 </ChildContent>
             </HxPopover>
@@ -88,7 +88,7 @@
                                       CssClass="btn-auto"
                                       Size="ButtonSize.Small"
                                       @onclick="async () => { Step.StepParameters.Remove(param); await ParametersValidator.LetAsync(x => x.ValidateAsync()); }">
-                                <SvgIcon Icon="FeatherIcon.Delete" />
+                                <SvgIcon Icon="LucideIcon.Delete" />
                             </HxButton>
                         </HxButtonGroup>
                     </td>
@@ -99,20 +99,20 @@
     </table>
     <HxButtonGroup Size="ButtonGroupSize.Small">
         <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" @onclick="AddParameter">
-            <SvgIcon Icon="FeatherIcon.Plus" />
+            <SvgIcon Icon="LucideIcon.Plus" />
             Add parameter
         </HxButton>
         @if (OnImportParameters is not null)
         {
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="ImportParametersAsync" Spinner="loadingParameters" Enabled="!loadingParameters">
-                <SvgIcon Icon="FeatherIcon.AtSign" />
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="ImportParametersAsync" Spinner="_loadingParameters" Enabled="!_loadingParameters">
+                <SvgIcon Icon="LucideIcon.AtSign" />
                 Import parameters
             </HxButton>
         }
     </HxButtonGroup>
 }
 
-<ExpressionEditOffcanvas @ref="expressionEditOffcanvas" OnExpressionChanged="StateHasChanged" TParameter="StepParameterBase">
+<ExpressionEditOffcanvas @ref="_expressionEditOffcanvas" OnExpressionChanged="StateHasChanged" TParameter="StepParameterBase">
     <div class="row mt-3">
         <div class="col">
             <ExpressionParameterEditor StepParameter="context" />
@@ -134,31 +134,32 @@
 
     [Parameter] public string? InfoContent { get; set; }
 
-    private ExpressionEditOffcanvas<StepParameterBase>? expressionEditOffcanvas;
-    private bool loadingParameters = false;
+    private ExpressionEditOffcanvas<StepParameterBase>? _expressionEditOffcanvas;
+    private bool _loadingParameters = false;
 
-    private IEnumerable<JobParameter> JobParameters => (Step as Step)?.Job.JobParameters ?? Enumerable.Empty<JobParameter>();
+    private IEnumerable<JobParameter> JobParameters =>
+        (Step as Step)?.Job.JobParameters ?? Enumerable.Empty<JobParameter>();
 
     private void SetJobParameter(bool inheritFromJob, StepParameterBase param, Guid? jobParameterId = null)
     {
-        if (inheritFromJob && jobParameterId is Guid id)
+        switch (inheritFromJob)
         {
-            param.InheritFromJobParameterId = JobParameters.FirstOrDefault(p => p.ParameterId == id)?.ParameterId;
-            param.InheritFromJobParameter = JobParameters.FirstOrDefault(p => p.ParameterId == id);
-        }
-        else if (inheritFromJob)
-        {
-            param.InheritFromJobParameterId = JobParameters.FirstOrDefault()?.ParameterId;
-            param.InheritFromJobParameter = JobParameters.FirstOrDefault();
-        }
-        else
-        {
-            param.InheritFromJobParameterId = null;
-            param.InheritFromJobParameter = null;
+            case true when jobParameterId is { } id:
+                param.InheritFromJobParameterId = JobParameters.FirstOrDefault(p => p.ParameterId == id)?.ParameterId;
+                param.InheritFromJobParameter = JobParameters.FirstOrDefault(p => p.ParameterId == id);
+                break;
+            case true:
+                param.InheritFromJobParameterId = JobParameters.FirstOrDefault()?.ParameterId;
+                param.InheritFromJobParameter = JobParameters.FirstOrDefault();
+                break;
+            default:
+                param.InheritFromJobParameterId = null;
+                param.InheritFromJobParameter = null;
+                break;
         }
     }
 
-    private Task OnParameterEdit(StepParameterBase parameter) => expressionEditOffcanvas.LetAsync(x => x.ShowAsync(parameter));
+    private Task OnParameterEdit(StepParameterBase parameter) => _expressionEditOffcanvas.LetAsync(x => x.ShowAsync(parameter));
 
     private void AddParameter()
     {
@@ -171,7 +172,7 @@
     {
         try
         {
-            loadingParameters = true;
+            _loadingParameters = true;
             ArgumentNullException.ThrowIfNull(OnImportParameters);
             await OnImportParameters();
             StateHasChanged();
@@ -179,7 +180,7 @@
         }
         finally
         {
-            loadingParameters = false;
+            _loadingParameters = false;
         }
     }
 

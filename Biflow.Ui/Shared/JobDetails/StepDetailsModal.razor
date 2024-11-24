@@ -1,6 +1,6 @@
-﻿<HxModal @ref="modal" Size="ModalSize.Large" Title="@step?.StepName">
+﻿<HxModal @ref="_modal" Size="ModalSize.Large" Title="@_step?.StepName">
     <BodyTemplate>
-        @if (step is not null)
+        @if (_step is not null)
         {
             <div class="row">
                 <div class="col">
@@ -8,191 +8,215 @@
                         <tbody>
                             <tr>
                                 <td>Step name</td>
-                                <td>@step.StepName</td>
+                                <td>@_step.StepName</td>
                             </tr>
                             <tr>
                                 <td>Step id</td>
-                                <td>@step.StepId</td>
+                                <td>@_step.StepId</td>
                             </tr>
                             <tr>
                                 <td>Description</td>
-                                <td>@step.StepDescription</td>
+                                <td>@_step.StepDescription</td>
                             </tr>
                             <tr>
                                 <td>Execution phase</td>
-                                <td>@step.ExecutionPhase</td>
+                                <td>@_step.ExecutionPhase</td>
                             </tr>
                             <tr>
                                 <td>Step type</td>
-                                <td>@step.StepType</td>
+                                <td>@_step.StepType</td>
                             </tr>
                             <tr>
                                 <td>Retry attempts</td>
-                                <td>@step.RetryAttempts</td>
+                                <td>@_step.RetryAttempts</td>
                             </tr>
                             <tr>
                                 <td>Retry interval (min)</td>
-                                <td>@step.RetryIntervalMinutes</td>
+                                <td>@_step.RetryIntervalMinutes</td>
                             </tr>
                             <tr>
                                 <td>Duplicate execution behaviour</td>
-                                <td>@step.DuplicateExecutionBehaviour</td>
+                                <td>@_step.DuplicateExecutionBehaviour</td>
                             </tr>
-                            @if (step is IHasTimeout timeout)
+                            @if (_step is IHasTimeout timeout)
                             {
                                 <tr>
                                     <td>Timeout (min)</td>
                                     <td>@timeout.TimeoutMinutes</td>
                                 </tr>
                             }
-                            @if (step is SqlStep sql)
+                            @switch (_step)
                             {
-                                <tr>
-                                    <td>SQL statement</td>
-                                    <td>
-                                        <pre class="my-0"><code>@sql.SqlStatement</code></pre>
-                                    </td>
-                                </tr>
-                            }
-                            else if (step is PipelineStep pipeline)
-                            {
-                                <tr>
-                                    <td>Pipeline name</td>
-                                    <td>@pipeline.PipelineName</td>
-                                </tr>
-                            }
-                            else if (step is JobStep job)
-                            {
-                                <tr>
-                                    <td>Job to execute</td>
-                                    <td>@job.JobToExecuteId</td>
-                                </tr>
-                                <tr>
-                                    <td>Synchronized</td>
-                                    <td>@job.JobExecuteSynchronized</td>
-                                </tr>
-                            }
-                            else if (step is ExeStep exe)
-                            {
-                                <tr>
-                                    <td>File path</td>
-                                    <td>@exe.ExeFileName</td>
-                                </tr>
-                                <tr>
-                                    <td>Arguments</td>
-                                    <td>@exe.ExeArguments</td>
-                                </tr>
-                                <tr>
-                                    <td>Working directory</td>
-                                    <td>@exe.ExeWorkingDirectory</td>
-                                </tr>
-                                <tr>
-                                    <td>Success exit code</td>
-                                    <td>@exe.ExeSuccessExitCode</td>
-                                </tr>
-                            }
-                            else if (step is DatasetStep dataset)
-                            {
-                                <tr>
-                                    <td>Group id</td>
-                                    <td>@dataset.DatasetGroupId</td>
-                                </tr>
-                                <tr>
-                                    <td>Dataset id</td>
-                                    <td>@dataset.DatasetId</td>
-                                </tr>
-                            }
-                            else if (step is PackageStep package)
-                            {
-                                <tr>
-                                    <td>Package folder</td>
-                                    <td>@package.PackageFolderName</td>
-                                </tr>
-                                <tr>
-                                    <td>Package project</td>
-                                    <td>@package.PackageProjectName</td>
-                                </tr>
-                                <tr>
-                                    <td>Package name</td>
-                                    <td>@package.PackageName</td>
-                                </tr>
-                                <tr>
-                                    <td>32 bit mode</td>
-                                    <td>
-                                        <div class="custom-control custom-checkbox">
-                                            <input type="checkbox" class="custom-control-input" disabled checked="@(package.ExecuteIn32BitMode ? "checked" : null)">
-                                            <label class="custom-control-label"></label>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Execute as login</td>
-                                    <td>@package.ExecuteAsLogin</td>
-                                </tr>
-                            }
-                            else if (step is FunctionStep function)
-                            {
-                                <tr>
-                                    <td>Function url</td>
-                                    <td>@function.FunctionUrl</td>
-                                </tr>
-                                <tr>
-                                    <td>Function input</td>
-                                    <td><pre class="my-0"><code>@function.FunctionInput</code></pre></td>
-                                </tr>
-                                <tr>
-                                    <td>Function App id</td>
-                                    <td>@function.FunctionAppId</td>
-                                </tr>
-                            }
-                            else if (step is AgentJobStep agent)
-                            {
-                                <tr>
-                                    <td>Agent job name</td>
-                                    <td>@agent.AgentJobName</td>
-                                </tr>
-                            }
-                            else if (step is TabularStep tabular)
-                            {
-                                <tr>
-                                    <td>Model name</td>
-                                    <td>@tabular.TabularModelName</td>
-                                </tr>
-                                <tr>
-                                    <td>Table name</td>
-                                    <td>@tabular.TabularTableName</td>
-                                </tr>
-                                <tr>
-                                    <td>Partition name</td>
-                                    <td>@tabular.TabularPartitionName</td>
-                                </tr>
-                            }
-                            else if (step is EmailStep email)
-                            {
-                                <tr>
-                                    <td>Recipients</td>
-                                    <td>@email.Recipients</td>
-                                </tr>
-                                <tr>
-                                    <td>Subject</td>
-                                    <td>@email.Subject</td>
-                                </tr>
-                                <tr>
-                                    <td>Body</td>
-                                    <td>@email.Body</td>
-                                </tr>
-                            }
-                            else if (step is DatabricksStep db)
-                            {
-                                <tr>
-                                    <td>Settings</td>
-                                    <td><pre><code>@JsonSerializer.Serialize(db.DatabricksStepSettings, JsonSerializerOptions)</code></pre></td>
-                                </tr>
+                                case SqlStep sql:
+                                    <tr>
+                                        <td>SQL statement</td>
+                                        <td>
+                                            <pre class="my-0"><code>@sql.SqlStatement</code></pre>
+                                        </td>
+                                    </tr>
+                                    break;
+                                case PipelineStep pipeline:
+                                    <tr>
+                                        <td>Pipeline name</td>
+                                        <td>@pipeline.PipelineName</td>
+                                    </tr>
+                                    break;
+                                case JobStep job:
+                                    <tr>
+                                        <td>Job to execute</td>
+                                        <td>@job.JobToExecuteId</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Synchronized</td>
+                                        <td>@job.JobExecuteSynchronized</td>
+                                    </tr>
+                                    break;
+                                case ExeStep exe:
+                                    <tr>
+                                        <td>File path</td>
+                                        <td>@exe.ExeFileName</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Arguments</td>
+                                        <td>@exe.ExeArguments</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Working directory</td>
+                                        <td>@exe.ExeWorkingDirectory</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Success exit code</td>
+                                        <td>@exe.ExeSuccessExitCode</td>
+                                    </tr>
+                                    break;
+                                case DatasetStep dataset:
+                                    <tr>
+                                        <td>Group id</td>
+                                        <td>@dataset.DatasetGroupId</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Dataset id</td>
+                                        <td>@dataset.DatasetId</td>
+                                    </tr>
+                                    break;
+                                case PackageStep package:
+                                    <tr>
+                                        <td>Package folder</td>
+                                        <td>@package.PackageFolderName</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Package project</td>
+                                        <td>@package.PackageProjectName</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Package name</td>
+                                        <td>@package.PackageName</td>
+                                    </tr>
+                                    <tr>
+                                        <td>32 bit mode</td>
+                                        <td>
+                                            <div class="custom-control custom-checkbox">
+                                                <input type="checkbox" class="custom-control-input" disabled checked="@(package.ExecuteIn32BitMode ? "checked" : null)">
+                                                <label class="custom-control-label"></label>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Execute as login</td>
+                                        <td>@package.ExecuteAsLogin</td>
+                                    </tr>
+                                    break;
+                                case FunctionStep function:
+                                    <tr>
+                                        <td>Function url</td>
+                                        <td>@function.FunctionUrl</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Function input</td>
+                                        <td><pre class="my-0"><code>@function.FunctionInput</code></pre></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Function App id</td>
+                                        <td>@function.FunctionAppId</td>
+                                    </tr>
+                                    break;
+                                case AgentJobStep agent:
+                                    <tr>
+                                        <td>Agent job name</td>
+                                        <td>@agent.AgentJobName</td>
+                                    </tr>
+                                    break;
+                                case TabularStep tabular:
+                                    <tr>
+                                        <td>Model name</td>
+                                        <td>@tabular.TabularModelName</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Table name</td>
+                                        <td>@tabular.TabularTableName</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Partition name</td>
+                                        <td>@tabular.TabularPartitionName</td>
+                                    </tr>
+                                    break;
+                                case EmailStep email:
+                                    <tr>
+                                        <td>Recipients</td>
+                                        <td>@email.Recipients</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Subject</td>
+                                        <td>@email.Subject</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Body</td>
+                                        <td>@email.Body</td>
+                                    </tr>
+                                    break;
+                                case QlikStep qlik:
+                                    <tr>
+                                        <td>Settings</td>
+                                        <td><pre><code>@JsonSerializer.Serialize(qlik.QlikStepSettings, JsonSerializerOptions)</code></pre></td>
+                                    </tr>
+                                    break;
+                                case DatabricksStep db:
+                                    <tr>
+                                        <td>Settings</td>
+                                        <td><pre><code>@JsonSerializer.Serialize(db.DatabricksStepSettings, JsonSerializerOptions)</code></pre></td>
+                                    </tr>
+                                    break;
+                                case DbtStep dbt:
+                                    <tr>
+                                        <td>dbt job id</td>
+                                        <td>@dbt.DbtJob.Id</td>
+                                    </tr>
+                                    <tr>
+                                        <td>dbt job name</td>
+                                        <td>@dbt.DbtJob.Name</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Environment id</td>
+                                        <td>@dbt.DbtJob.EnvironmentId</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Environment name</td>
+                                        <td>@dbt.DbtJob.EnvironmentName</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Project id</td>
+                                        <td>@dbt.DbtJob.ProjectId</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Project name</td>
+                                        <td>@dbt.DbtJob.ProjectName</td>
+                                    </tr>
+                                    break;
                             }
                             <tr>
                                 <td>Execution condition</td>
                                 <td>
-                                    <pre class="my-0"><code>@step.ExecutionConditionExpression.Expression</code></pre>
+                                    <pre class="my-0"><code>@_step.ExecutionConditionExpression.Expression</code></pre>
                                 </td>
                             </tr>
                         </tbody>
@@ -206,13 +230,13 @@
                     <table class="table table-sm">
                         <tbody class="border-top">
                             @{
-                                var executionConditionParameters = step.ExecutionConditionParameters ?? Enumerable.Empty<ExecutionConditionParameter>();
+                                var executionConditionParameters = _step.ExecutionConditionParameters;
                             }
                             @if (!executionConditionParameters.Any())
                             {
                                 <tr><td class="small">No execution condition parameters</td></tr>
                             }
-                            @foreach (var param in step.ExecutionConditionParameters ?? Enumerable.Empty<ExecutionConditionParameter>())
+                            @foreach (var param in _step.ExecutionConditionParameters)
                             {
                                 <tr>
                                     <td class="fw-bold w-25">
@@ -228,7 +252,7 @@
                 </div>
             </div>
 
-            @if (step is IHasStepParameters hasParams)
+            @if (_step is IHasStepParameters hasParams)
             {
                 <h6>Parameters</h6>
                 <div class="row">
@@ -255,23 +279,21 @@
     </BodyTemplate>
     
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await modal.LetAsync(x => x.HideAsync())">Close</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _modal.LetAsync(x => x.HideAsync())">Close</HxButton>
     </FooterTemplate>
 </HxModal>
 
 
 @code {
-    private HxModal? modal;
-    private Step? step;
+    private HxModal? _modal;
+    private Step? _step;
 
-    private static JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
 
     public async Task ShowAsync(Step step)
     {
-        this.step = step;
+        _step = step;
         StateHasChanged();
-        await modal.LetAsync(x => x.ShowAsync());
+        await _modal.LetAsync(x => x.ShowAsync());
     }
-
-    public Task HideAsync() => modal.LetAsync(x => x.HideAsync());
 }

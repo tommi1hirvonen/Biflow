@@ -57,11 +57,9 @@ public class PackageStep : Step, IHasConnection, IHasTimeout, IHasStepParameters
     [MaxLength(128)]
     public string? ExecuteAsLogin
     {
-        get => _executeAsLogin;
-        set => _executeAsLogin = string.IsNullOrEmpty(value) ? null : value;
+        get;
+        set => field = string.IsNullOrEmpty(value) ? null : value;
     }
-
-    private string? _executeAsLogin;
 
     [JsonIgnore]
     public MsSqlConnection Connection { get; set; } = null!;

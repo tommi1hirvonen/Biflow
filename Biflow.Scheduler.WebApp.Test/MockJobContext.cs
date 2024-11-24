@@ -1,6 +1,4 @@
 ﻿using Quartz;
-using System;
-using System.Threading;
 
 namespace Biflow.Scheduler.WebApp.Test;
 

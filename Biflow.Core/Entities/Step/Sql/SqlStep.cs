@@ -18,12 +18,14 @@ public class SqlStep : Step, IHasConnection, IHasTimeout, IHasStepParameters<Sql
         Connection = other.Connection;
 
         // The target job is set, the JobParameter is not null and the target job has a parameter with a matching name.
-        if (targetJob is not null && other.ResultCaptureJobParameter is not null && targetJob.JobParameters.FirstOrDefault(p => p.ParameterName == other.ResultCaptureJobParameter.ParameterName) is JobParameter parameter)
+        if (targetJob is not null
+            && other.ResultCaptureJobParameter is not null
+            && targetJob.JobParameters.FirstOrDefault(p => p.ParameterName == other.ResultCaptureJobParameter.ParameterName) is { } parameter)
         {
             ResultCaptureJobParameterId = parameter.ParameterId;
             ResultCaptureJobParameter = parameter;
         }
-        // The target job has no parameter with a mathing name, so add one.
+        // The target job has no parameter with a matching name, so add one.
         else if (targetJob is not null && other.ResultCaptureJobParameter is not null)
         {
             var newParameter = new JobParameter(other.ResultCaptureJobParameter, targetJob);
@@ -63,21 +65,19 @@ public class SqlStep : Step, IHasConnection, IHasTimeout, IHasStepParameters<Sql
     [JsonIgnore]
     public ConnectionBase Connection
     {
-        get => _connection;
+        get;
         set
         {
             if (value is MsSqlConnection or SnowflakeConnection)
             {
-                _connection = value;
+                field = value;
             }
             else
             {
-                throw new ArgumentException($"Unallowed connection type: {value.GetType().Name}. Connection must be of type {typeof(MsSqlConnection).Name} or {typeof(SnowflakeConnection).Name}.");
+                throw new ArgumentException($"Illegal connection type: {value.GetType().Name}. Connection must be of type {nameof(MsSqlConnection)} or {nameof(SnowflakeConnection)}.");
             }
         }
-    }
-
-    private ConnectionBase _connection = null!;
+    } = null!;
 
     [ValidateComplexType]
     [JsonInclude]

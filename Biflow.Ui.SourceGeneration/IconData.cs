@@ -12,7 +12,7 @@ internal class IconData(string iconPath, string? iconText) : IEquatable<IconData
 
     public string? IconText { get; } = iconText;
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         return obj is IconData other &&
                IconPath == other.IconPath &&
@@ -30,7 +30,7 @@ internal class IconData(string iconPath, string? iconText) : IEquatable<IconData
 
     public override int GetHashCode()
     {
-        int hashCode = -445792199;
+        var hashCode = -445792199;
         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(IconPath);
         hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(IconName);
         hashCode = hashCode * -1521134295 + EqualityComparer<string?>.Default.GetHashCode(IconText);

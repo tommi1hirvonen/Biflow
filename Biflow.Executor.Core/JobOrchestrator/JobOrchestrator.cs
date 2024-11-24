@@ -27,7 +27,7 @@ internal class JobOrchestrator : IJobOrchestrator, IStepExecutionListener
             .ToDictionary(e => e, _ => new ExtendedCancellationTokenSource());
 
         // If MaxParallelSteps was defined for the job, use that.
-        // Otherwise default to int.MaxValue, i.e. practically no upper limit.
+        // Otherwise, default to int.MaxValue, i.e. practically no upper limit.
         var maxParallelStepsMain = execution.MaxParallelSteps > 0
             ? execution.MaxParallelSteps
             : int.MaxValue;
@@ -71,14 +71,13 @@ internal class JobOrchestrator : IJobOrchestrator, IStepExecutionListener
                 var observer = new OrchestrationObserver(
                     logger: _logger,
                     stepExecution: step,
-                    orchestrationListener: this,
                     orchestrationTrackers: trackers,
                     cancellationTokenSource: _cancellationTokenSources[step]);
 
                 return observer;
             })
-            .ToList();
-        var orchestrationTask = _globalOrchestrator.RegisterStepsAndObserversAsync(observers);
+            .ToArray();
+        var orchestrationTask = _globalOrchestrator.RegisterStepsAndObserversAsync(observers, stepExecutionListener: this);
         
         // CancellationToken is triggered when the executor service is being shut down
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -101,13 +100,10 @@ internal class JobOrchestrator : IJobOrchestrator, IStepExecutionListener
             CancelExecution("Job timeout limit reached");
         }
 
+        // Just to be safe and correct, also cancel the linked token source even though it doesn't do much.
         if (!cts.IsCancellationRequested)
         {
-            try
-            {
-                cts.Cancel(); // Cancel
-            }
-            catch { }
+            try { await cts.CancelAsync(); } catch { /* ignore any possible exceptions */ }
         }
 
         await orchestrationTask; // Wait for orchestration tasks to finish
@@ -142,7 +138,7 @@ internal class JobOrchestrator : IJobOrchestrator, IStepExecutionListener
         // Wait until the semaphores can be entered and the step can be started.
         // Start from the most detailed semaphores and move towards the main semaphore.
         // Keep track of semaphores that have been entered. If the step is stopped/canceled
-        // while waiting to enter one of the semaphores, they can be released afterwards.
+        // while waiting to enter one of the semaphores, they can be released afterward.
 
         if (_stepTypeSemaphores.TryGetValue(stepExecution.StepType, out var stepTypeSemaphore))
         {

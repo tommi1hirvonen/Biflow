@@ -15,9 +15,9 @@ internal class PipelineClientTracker(PipelineStepExecution stepExecution) : IOrc
             return null;
         }
 
-        var (step, status) = value;
+        var (otherStep, status) = value;
 
-        if (step is not PipelineStepExecution pipelineStep)
+        if (otherStep is not PipelineStepExecution pipelineStep)
         {
             return null;
         }
@@ -28,20 +28,21 @@ internal class PipelineClientTracker(PipelineStepExecution stepExecution) : IOrc
             return null;
         }
 
-        if (pipelineStep.PipelineClientId == stepExecution.PipelineClientId)
+        // The pipeline clients are not the same.
+        if (pipelineStep.PipelineClientId != stepExecution.PipelineClientId)
         {
-            _others[pipelineStep] = status;
-            return new()
-            {
-                ExecutionId = stepExecution.ExecutionId,
-                StepId = stepExecution.StepId,
-                MonitoredExecutionId = step.ExecutionId,
-                MonitoredStepId = step.StepId,
-                MonitoringReason = MonitoringReason.CommonPipelineClient
-            };
+            return null;
         }
-
-        return null;
+        
+        _others[pipelineStep] = status;
+        return new()
+        {
+            ExecutionId = stepExecution.ExecutionId,
+            StepId = stepExecution.StepId,
+            MonitoredExecutionId = otherStep.ExecutionId,
+            MonitoredStepId = otherStep.StepId,
+            MonitoringReason = MonitoringReason.CommonPipelineClient
+        };
     }
 
     public ObserverAction GetStepAction()

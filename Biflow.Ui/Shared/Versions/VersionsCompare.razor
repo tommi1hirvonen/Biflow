@@ -9,7 +9,7 @@
             <label class="form-label mb-0">
                 Source version
             </label>
-            <select class="form-select form-select-sm ms-3" @bind="sourceVersionId" @bind:after="CompareAsync" style="max-width: 20rem;">
+            <select class="form-select form-select-sm ms-3" @bind="_sourceVersionId" @bind:after="CompareAsync" style="max-width: 20rem;">
                 <option value="-1">Select source version</option>
                 <option value="0">Current</option>
                 @foreach (var version in Versions)
@@ -20,7 +20,7 @@
             <label class="form-label mb-0 ms-4">
                 Target version
             </label>
-            <select class="form-select form-select-sm ms-3" @bind="targetVersionId" @bind:after="CompareAsync" style="max-width: 20rem;">
+            <select class="form-select form-select-sm ms-3" @bind="_targetVersionId" @bind:after="CompareAsync" style="max-width: 20rem;">
                 <option value="-1">Select target version</option>
                 <option value="0">Current</option>
                 @foreach (var version in Versions)
@@ -28,7 +28,7 @@
                     <option value="@version.VersionId">@version.VersionId – @version.CreatedDateTime.LocalDateTime</option>
                 }
             </select>
-            @if (loading)
+            @if (_loading)
             {
                 <HxSpinner Color="ThemeColor.Secondary" CssClass="ms-4" />
             }
@@ -38,31 +38,31 @@
         <div class="col-auto">
             <div class="form-check">
                 <input type="checkbox" class="form-check-input" id="simplified_json"
-                       checked=@simplifiedJson
+                       checked=@_simplifiedJson
                        @onchange="args => SetSimplifiedJsonAsync((bool)args.Value!)">
                 <label class="form-check-label" for="simplified_json">Simplified JSON</label>
                 <HxPopover Trigger="PopoverTrigger.Hover" WrapperCssClass="ms-2" Content="Simplified JSON is easier for humans to read and is recommended for diff comparisons. JSON with object references preserved (non-simplified) includes additional metadata properties that add complexity and reduce readability but are required when deserializing and reverting snapshots.">
-                    <SvgIcon Icon="FeatherIcon.Info" />
+                    <SvgIcon Icon="LucideIcon.Info" />
                 </HxPopover>
             </div>
         </div>
         <div class="col-auto">
             <div class="input-group input-group-sm">
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => diffEditor.LetAsync(x => x.GotoPreviousDiffAsync())" Spinner="false" Enabled="sourceVersionId >= 0 && targetVersionId >= 0">
-                    <SvgIcon Icon="FeatherIcon.ChevronUp" />
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => _diffEditor.LetAsync(x => x.GotoPreviousDiffAsync())" Spinner="false" Enabled="_sourceVersionId >= 0 && _targetVersionId >= 0">
+                    <SvgIcon Icon="LucideIcon.ChevronUp" />
                 </HxButton>
                 <div class="input-group-text">
                     Navigate diffs
                 </div>
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => diffEditor.LetAsync(x => x.GotoNextDiffAsync())" Spinner="false" Enabled="sourceVersionId >= 0 && targetVersionId >= 0">
-                    <SvgIcon Icon="FeatherIcon.ChevronDown" />
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => _diffEditor.LetAsync(x => x.GotoNextDiffAsync())" Spinner="false" Enabled="_sourceVersionId >= 0 && _targetVersionId >= 0">
+                    <SvgIcon Icon="LucideIcon.ChevronDown" />
                 </HxButton>
             </div>
         </div>
     </div>
     <div class="row mt-3 mb-5">
         <div class="col">
-            <CodeDiffEditor @ref="diffEditor" InitialHeight="calc(100vh - 250px)" FontSize="12" />
+            <CodeDiffEditor @ref="_diffEditor" InitialHeight="calc(100vh - 250px)" FontSize="12" />
         </div>
     </div>
 }
@@ -80,50 +80,50 @@ else
 
     [Parameter] public int? InitialSourceVersionId { get; set; }
 
-    private CodeDiffEditor? diffEditor;
-    private int sourceVersionId = -1;
-    private int targetVersionId = -1;
-    private bool loading;
-    private bool simplifiedJson = true; // inverse of whether to show JSON with references preserved
+    private CodeDiffEditor? _diffEditor;
+    private int _sourceVersionId = -1;
+    private int _targetVersionId = -1;
+    private bool _loading;
+    private bool _simplifiedJson = true; // inverse of whether to show JSON with references preserved
 
     protected override async Task OnParametersSetAsync()
     {
-        if (InitialSourceVersionId is int i)
+        if (InitialSourceVersionId is { } i)
         {
-            sourceVersionId = i;
-            targetVersionId = 0; // current;
+            _sourceVersionId = i;
+            _targetVersionId = 0; // current;
             await CompareAsync();
         }
     }
 
     private Task SetSimplifiedJsonAsync(bool simplifiedJson)
     {
-        this.simplifiedJson = simplifiedJson;
+        _simplifiedJson = simplifiedJson;
         return CompareAsync();
     }
 
     private async Task CompareAsync()
     {
-        if (sourceVersionId < 0 || targetVersionId < 0 || loading)
+        if (_sourceVersionId < 0 || _targetVersionId < 0 || _loading)
         {
             return;
         }
 
         try
         {
-            loading = true;
-            using var context = await DbContextFactory.CreateDbContextAsync();
-            var sourceVersion = sourceVersionId switch
+            _loading = true;
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+            var sourceVersion = _sourceVersionId switch
             {
-                0 => (await SnapshotBuilder.CreateAsync()).ToJson(preserveReferences: !simplifiedJson),
-                _ => await context.EnvironmentVersions.Where(v => v.VersionId == sourceVersionId).Select(v => simplifiedJson ? v.Snapshot : v.SnapshotWithReferencesPreserved).FirstOrDefaultAsync()
+                0 => (await SnapshotBuilder.CreateAsync()).ToJson(preserveReferences: !_simplifiedJson),
+                _ => await context.EnvironmentVersions.Where(v => v.VersionId == _sourceVersionId).Select(v => _simplifiedJson ? v.Snapshot : v.SnapshotWithReferencesPreserved).FirstOrDefaultAsync()
             };
-            var targetVersion = targetVersionId switch
+            var targetVersion = _targetVersionId switch
             {
-                0 => (await SnapshotBuilder.CreateAsync()).ToJson(preserveReferences: !simplifiedJson),
-                _ => await context.EnvironmentVersions.Where(v => v.VersionId == targetVersionId).Select(v => simplifiedJson ? v.Snapshot : v.SnapshotWithReferencesPreserved).FirstOrDefaultAsync()
+                0 => (await SnapshotBuilder.CreateAsync()).ToJson(preserveReferences: !_simplifiedJson),
+                _ => await context.EnvironmentVersions.Where(v => v.VersionId == _targetVersionId).Select(v => _simplifiedJson ? v.Snapshot : v.SnapshotWithReferencesPreserved).FirstOrDefaultAsync()
             };
-            await diffEditor.LetAsync(x => x.SetDiffEditor(sourceVersion, targetVersion, "json"));
+            await _diffEditor.LetAsync(x => x.SetDiffEditor(sourceVersion, targetVersion, "json"));
         }
         catch (Exception ex)
         {
@@ -131,7 +131,7 @@ else
         }
         finally
         {
-            loading = false;
+            _loading = false;
         }
     }
 }

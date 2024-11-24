@@ -1,6 +1,10 @@
-﻿@inject IDbContextFactory<AppDbContext> DbFactory
+﻿@implements IDisposable
+
+@inject IDbContextFactory<AppDbContext> DbFactory
 @inject ToasterService Toaster
 @inject IMediator Mediator
+
+@inject ThemeService ThemeService
 
 <style>
     tr a {
@@ -14,13 +18,43 @@
 
 <PageTitle>Function Apps | Biflow</PageTitle>
 
-<HxButton Color="ThemeColor.Success"
-          @onclick="() => ShowEditModal(null)"
-          Enabled="functionApps is not null && appRegistrations is not null && appRegistrations.Any()">
-    Add Function App
-</HxButton>
+@if (_appRegistrations is not null && !_appRegistrations.Any())
+{
+    <div class="row">
+        <div class="col">
+            <HxAlert Color="ThemeColor.Warning" CssClass="small py-2">
+                No app registrations were added.
+                Create an <a class="alert-link" href="settings/integrations/appregistrations">app registration</a> in order to add Function Apps.
+            </HxAlert>
+        </div>
+    </div>
+}
 
-<div class="card shadow-sm pt-2 my-4">
+<div class="row flex-row-reverse justify-content-between align-items-end g-3">
+    <div class="col-auto">
+        <HxAlert Color="ThemeService.CurrentTheme == Theme.Light ? ThemeColor.Light : ThemeColor.Dark"
+                 CssClass="small py-2 mb-0"
+                 style="max-width: 50rem;">
+            <div class="row g-3">
+                <div class="col-auto">
+                    <SvgIcon Icon="LucideIcon.Info" />
+                </div>
+                <div class="col">
+                    Add Function Apps to create function steps to invoke HTTP triggered functions as part of your jobs.
+                </div>
+            </div>
+        </HxAlert>
+    </div>
+    <div class="col-auto">
+        <HxButton Color="ThemeColor.Success"
+                  @onclick="() => ShowEditModal(null)"
+                  Enabled="_functionApps is not null && _appRegistrations is not null && _appRegistrations.Any()">
+            Add Function App
+        </HxButton>
+    </div>
+</div>
+
+<div class="card pt-2 my-4">
     <table class="table table-hover">
         <thead>
             <tr>
@@ -39,17 +73,17 @@
             </tr>
         </thead>
         <tbody>
-            @if (functionApps is null)
+            @if (_functionApps is null)
             {
                 <tr><td colspan="6" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
-            else if (functionApps.Count == 0)
+            else if (_functionApps.Count == 0)
             {
                 <tr><td colspan="6">No Function Apps</td></tr>
             }
             else
             {
-                @foreach (var app in functionApps.OrderBy(f => f.FunctionAppName))
+                @foreach (var app in _functionApps.OrderBy(f => f.FunctionAppName))
                 {
                     var jobs = app.Steps.Select(s => s.Job).Distinct().Count();
                     var steps = app.Steps.Count();
@@ -60,11 +94,11 @@
                         <td class="align-middle">
                             <HxButtonGroup Size="ButtonGroupSize.Small">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="() => ShowEditModal(app)">
-                                    <SvgIcon Icon="FeatherIcon.Edit2" />
+                                    <SvgIcon Icon="LucideIcon.Pen" />
                                 </HxButton>
                                 <HxDropdownButtonGroup>
                                     <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="delete">
-                                        <SvgIcon Icon="FeatherIcon.Trash2" />
+                                        <SvgIcon Icon="LucideIcon.Trash2" />
                                     </HxDropdownToggleButton>
                                     <HxDropdownMenu>
                                         <HxDropdownHeader>Delete?</HxDropdownHeader>
@@ -86,8 +120,8 @@
                             <a class="text-body" href="javascript:void(0)"
                             @onclick="async () =>
                             {
-                                stepsFunctionApp = app;
-                                await stepsModal.LetAsync(x => x.ShowAsync());
+                                _stepsFunctionApp = app;
+                                await _stepsModal.LetAsync(x => x.ShowAsync());
                             }">
                                 @(steps > 0 ? $"{steps} step(s)" : null)
                             </a>
@@ -99,9 +133,9 @@
     </table>
 </div>
 
-<FunctionAppEditModal @ref="functionAppEditModal" AppRegistrations="appRegistrations" OnFunctionAppSubmit="OnFunctionAppSubmit" />
+<FunctionAppEditModal @ref="_functionAppEditModal" AppRegistrations="_appRegistrations" OnFunctionAppSubmit="OnFunctionAppSubmit" />
 
-<HxModal @ref="stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {stepsFunctionApp?.FunctionAppName}")">
+<HxModal @ref="_stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {_stepsFunctionApp?.FunctionAppName}")">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -113,7 +147,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var step in stepsFunctionApp?.Steps
+                        @foreach (var step in _stepsFunctionApp?.Steps
                             .OrderBy(s => s.Job.JobName)
                             .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
                         {
@@ -134,27 +168,33 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <button class="btn btn-secondary" @onclick="async () => await stepsModal.LetAsync(x => x.HideAsync())">Close</button>
+        <button class="btn btn-secondary" @onclick="async () => await _stepsModal.LetAsync(x => x.HideAsync())">Close</button>
     </FooterTemplate>
 </HxModal>
 
 @code {
-    private List<FunctionApp>? functionApps;
-    private List<AppRegistration>? appRegistrations;
-    private FunctionAppEditModal? functionAppEditModal;
-    private FunctionApp? stepsFunctionApp;
-    private HxModal? stepsModal;
+    private List<FunctionApp>? _functionApps;
+    private List<AppRegistration>? _appRegistrations;
+    private FunctionAppEditModal? _functionAppEditModal;
+    private FunctionApp? _stepsFunctionApp;
+    private HxModal? _stepsModal;
+    
+    protected override void OnInitialized() => ThemeService.OnThemeChanged += OnThemeChanged;
+    
+    public void Dispose() => ThemeService.OnThemeChanged -= OnThemeChanged;
+    
+    private void OnThemeChanged(Theme theme, bool isAuto) => StateHasChanged();
 
     protected override async Task OnInitializedAsync()
     {
-        using var context = await Task.Run<AppDbContext>(DbFactory.CreateDbContext);
-        functionApps = await context.FunctionApps
+        await using var context = await DbFactory.CreateDbContextAsync();
+        _functionApps = await context.FunctionApps
             .AsNoTrackingWithIdentityResolution()
             .Include(f => f.Steps)
             .ThenInclude(step => step.Job)
             .OrderBy(f => f.FunctionAppName)
             .ToListAsync();
-        appRegistrations = await context.AppRegistrations
+        _appRegistrations = await context.AppRegistrations
             .AsNoTracking()
             .OrderBy(ar => ar.AppRegistrationName)
             .ToListAsync();
@@ -165,7 +205,7 @@
         try
         {
             await Mediator.SendAsync(new DeleteFunctionAppCommand(functionApp.FunctionAppId));
-            functionApps?.Remove(functionApp);
+            _functionApps?.Remove(functionApp);
         }
         catch (Exception ex)
         {
@@ -179,17 +219,16 @@
         if (functionApp.FunctionAppId == Guid.Empty)
         {
             await Mediator.SendAsync(new CreateFunctionAppCommand(functionApp));
-            functionApps?.Add(functionApp);
         }
         else
         {
             await Mediator.SendAsync(new UpdateFunctionAppCommand(functionApp));
-            functionApps?.RemoveAll(f => f.FunctionAppId == functionApp.FunctionAppId);
-            functionApps?.Add(functionApp);
+            _functionApps?.RemoveAll(f => f.FunctionAppId == functionApp.FunctionAppId);
         }
+        _functionApps?.Add(functionApp);
         StateHasChanged();
     }
 
     private async Task ShowEditModal(FunctionApp? functionApp) =>
-        await functionAppEditModal.LetAsync(x => x.ShowAsync(functionApp?.FunctionAppId ?? Guid.Empty));
+        await _functionAppEditModal.LetAsync(x => x.ShowAsync(functionApp?.FunctionAppId ?? Guid.Empty));
 }

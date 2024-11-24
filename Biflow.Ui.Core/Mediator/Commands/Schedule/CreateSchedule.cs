@@ -9,7 +9,7 @@ internal class CreateScheduleCommandHandler(
 {
     public async Task Handle(CreateScheduleCommand request, CancellationToken cancellationToken)
     {
-        using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         // Synchronize step tags
         var stepTags = request.Schedule.TagFilter
@@ -36,7 +36,7 @@ internal class CreateScheduleCommandHandler(
             .ToArray();
         request.Schedule.Tags.Clear();
         var scheduleTagsFromDb = await context.ScheduleTags
-            .Where(t => scheduleTags.Select(t => t.TagName).Contains(t.TagName))
+            .Where(t1 => scheduleTags.Select(t2 => t2.TagName).Contains(t1.TagName))
             .ToListAsync(cancellationToken);
         foreach (var (name, color) in scheduleTags)
         {
@@ -45,18 +45,18 @@ internal class CreateScheduleCommandHandler(
             request.Schedule.Tags.Add(tag);
         }
 
-        using var transaction = context.Database.BeginTransaction();
+        await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
         try
         {
             ArgumentNullException.ThrowIfNull(request.Schedule.TagFilter);
             context.Schedules.Add(request.Schedule);
             await context.SaveChangesAsync(cancellationToken);
             await scheduler.AddScheduleAsync(request.Schedule);
-            transaction.Commit();
+            await transaction.CommitAsync(cancellationToken);
         }
         catch
         {
-            transaction.Rollback();
+            await transaction.RollbackAsync(CancellationToken.None);
             throw;
         }
     }

@@ -63,7 +63,7 @@ public class AppRegistration
     {
         var credential = new ClientSecretCredential(TenantId, ClientId, ClientSecret);
         var context = new TokenRequestContext([AzureResourceUrl]);
-        var _ = await credential.GetTokenAsync(context);
+        _ = await credential.GetTokenAsync(context);
     }
 
     public async Task TestPowerBIConnection()
@@ -74,6 +74,6 @@ public class AppRegistration
 
         var credentials = new TokenCredentials(token.Token);
         var client = new PowerBIClient(credentials);
-        var _ = await client.Groups.GetGroupsAsync();
+        _ = await client.Groups.GetGroupsAsync();
     }
 }

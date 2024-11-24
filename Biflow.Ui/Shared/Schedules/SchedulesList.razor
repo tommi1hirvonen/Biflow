@@ -6,9 +6,9 @@
 @{
     var triggerText = (UserState.Schedules.TriggersAfter, UserState.Schedules.TriggersBefore) switch
     {
-        (DateTime a, DateTime b) => $"between {a} and {b}",
-        (DateTime a, _) => $"after {a}",
-        (_, DateTime b) => $"before {b}",
+        ({ } a, { } b) => $"between {a} and {b}",
+        ({ } a, _) => $"after {a}",
+        (_, { } b) => $"before {b}",
         _ => "any time"
     };
 }
@@ -30,7 +30,7 @@
                                        class="form-control form-control-sm"
                                        type="datetime-local">
                                 <button class="btn btn-sm btn-auto" @onclick="() => UserState.Schedules.TriggersAfter = null" title="Clear">
-                                    <SvgIcon Icon="FeatherIcon.X" />
+                                    <SvgIcon Icon="LucideIcon.X" />
                                 </button>
                             </div>
                         </div>
@@ -44,7 +44,7 @@
                                        class="form-control form-control-sm"
                                        type="datetime-local">
                                 <button class="btn btn-sm btn-auto" @onclick="() => UserState.Schedules.TriggersBefore = null" title="Clear">
-                                    <SvgIcon Icon="FeatherIcon.X" />
+                                    <SvgIcon Icon="LucideIcon.X" />
                                 </button>
                             </div>
                         </div>
@@ -73,7 +73,7 @@
             <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
                       OnClick="() => { UserState.Schedules.TriggersAfter = null; UserState.Schedules.TriggersBefore = null; }"
                       title="Clear">
-                <SvgIcon Icon="FeatherIcon.X" />
+                <SvgIcon Icon="LucideIcon.X" />
             </HxButton>
         </HxButtonGroup>
     </div>
@@ -85,16 +85,16 @@
             <div class="row">
                 <div class="col-auto">
                     <HxButton Color="ThemeColor.Success"
-                              @onclick="async () => await editModal.LetAsync(x => x.ShowAsync(Guid.Empty))"
+                              @onclick="async () => await _editModal.LetAsync(x => x.ShowAsync(Guid.Empty))"
                               Enabled="Jobs is not null && Jobs?.Any() == true">
                         Add schedule
                     </HxButton>
                     <HxButton CssClass="ms-3" Color="ThemeColor.Primary" @onclick="SynchronizeSchedulerService">
-                        <SvgIcon Icon="FeatherIcon.RefreshCw" />
+                        <SvgIcon Icon="LucideIcon.RefreshCw" />
                         Synchronize
                     </HxButton>
                     <HxButton CssClass="ms-3 btn-auto" Color="ThemeColor.None" OnClick="ShowStatusOffcanvasAsync" Spinner="false" title="Show scheduler service status">
-                        <SvgIcon Icon="FeatherIcon.Info" />
+                        <SvgIcon Icon="LucideIcon.Info" />
                         Status
                     </HxButton>
                 </div>
@@ -121,25 +121,25 @@
             </div>
         </div>
         <div class="col-auto ms-auto">
-            <HxButton Color="ThemeColor.None" CssClass="btn-auto" OnClick="async () => await helpModal.LetAsync(x => x.ShowAsync())">
-                <SvgIcon Icon="FeatherIcon.HelpCircle" />
+            <HxButton Color="ThemeColor.None" CssClass="btn-auto" OnClick="async () => await _helpModal.LetAsync(x => x.ShowAsync())">
+                <SvgIcon Icon="LucideIcon.CircleHelp" />
             </HxButton>
         </div>
     </div>
 </AuthorizeView>
 
 @{
-    var count = VisibleSchedules?.Count() ?? 0;
-    var selectedText = selectedSchedules.Count switch
+    var count = VisibleSchedules.Count();
+    var selectedText = _selectedSchedules.Count switch
     {
-        1 => $"{selectedSchedules.Count} selected schedule",
-        > 1 => $"{selectedSchedules.Count} selected schedules",
+        1 => $"{_selectedSchedules.Count} selected schedule",
+        > 1 => $"{_selectedSchedules.Count} selected schedules",
         _ => ""
     };
 }
 
 <Paginator TItem="Schedule"
-           @ref="paginator"
+           @ref="_paginator"
            Items="VisibleSchedules"
            Context="items"
            InitialPageSize="UserState.Schedules.PageSize"
@@ -150,12 +150,12 @@
     <div class="row justify-content-xl-between sticky-top mt-1 py-2 bg-body" style="z-index: 999;">
         <div class="col">
             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-                @if (selectedSchedules.Count > 0)
+                @if (_selectedSchedules.Count > 0)
                 {
                     <HxButtonGroup Size="ButtonGroupSize.Small">
                         <HxDropdownButtonGroup>
                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                <SvgIcon Icon="FeatherIcon.ToggleRight" />
+                                <SvgIcon Icon="LucideIcon.ToggleRight" />
                                 Enable
                             </HxDropdownToggleButton>
                             <HxDropdownMenu>
@@ -166,7 +166,7 @@
                         </HxDropdownButtonGroup>
                         <HxDropdownButtonGroup>
                             <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                <SvgIcon Icon="FeatherIcon.ToggleLeft" />
+                                <SvgIcon Icon="LucideIcon.ToggleLeft" />
                                 Disable
                             </HxDropdownToggleButton>
                             <HxDropdownMenu>
@@ -176,7 +176,7 @@
                             </HxDropdownMenu>
                         </HxDropdownButtonGroup>
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="DeleteSelectedSchedulesAsync">
-                            <SvgIcon Icon="FeatherIcon.Trash2" />
+                            <SvgIcon Icon="LucideIcon.Trash2" />
                             Delete...
                         </HxButton>
                     </HxButtonGroup>
@@ -184,19 +184,19 @@
             </AuthorizeView>
         </div>
         <div class="col-xl-auto mt-xl-0 mt-3 d-flex justify-content-end">
-            <PaginationControls Paginator="paginator" />
+            <PaginationControls Paginator="_paginator" />
         </div>
     </div>
 
-    <div class="card shadow-sm pt-2 mb-4">
+    <div class="card pt-2 mb-4">
         <table class="table table-hover table-sm">
             <thead>
                 <tr>
                     <th>
                         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
                             <div class="col text-muted d-flex align-items-center">
-                                <TriStateCheckbox Checked="@(selectedSchedules.Count > 0 && FilteredSchedules?.Any() == true && count > 0)"
-                                                  Indeterminate="@(selectedSchedules.Any() && selectedSchedules.Count != count)"
+                                <TriStateCheckbox Checked="@(_selectedSchedules.Count > 0 && FilteredSchedules?.Any() == true && count > 0)"
+                                                  Indeterminate="@(_selectedSchedules.Any() && _selectedSchedules.Count != count)"
                                                   CheckedChanged="ToggleAllSchedulesSelected" />
                                 <div class="text-muted small fw-normal">@selectedText</div>
                             </div>
@@ -223,114 +223,131 @@
                 {
                     <tr><td colspan="6" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
                 }
-                else if (FilteredSchedules.Count() == 0)
+                else if (!FilteredSchedules.Any())
                 {
                     <tr><td colspan="6">No schedules</td></tr>
                 }
                 else
                 {
-                    @foreach (var item in items)
+                    @foreach (var item in items ?? [])
                     {
-                        <tr class="schedule-row @(item.IsEnabled ? null : "disabled")">
-                            <td class="align-middle">
-                                <div class="row g-1">
-                                    <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-                                        <div class="col-auto align-items-center d-flex">
-                                            <div class="form-check form-check me-0">
-                                                <input type="checkbox" class="form-check-input" id="select_schedule_@item.ScheduleId"
-                                                       checked=@selectedSchedules.Contains(item)
-                                                       @onchange="args => { if (selectedSchedules.Contains(item)) selectedSchedules.Remove(item); else selectedSchedules.Add(item); }">
-                                                <label class="form-check-label" for="select_schedule_@item.ScheduleId"></label>
+                        <ContextMenuToggle ContainerHtmlTag="tr" CssClass="@($"schedule-row {(item.IsEnabled ? null : "disabled")}")">
+                            <ChildContent Context="_">
+                                <td class="align-middle">
+                                    <div class="row g-1">
+                                        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+                                            <div class="col-auto align-items-center d-flex">
+                                                <div class="form-check form-check me-0">
+                                                    <input type="checkbox" class="form-check-input" id="select_schedule_@item.ScheduleId"
+                                                           checked=@_selectedSchedules.Contains(item)
+                                                                                                                                                                                                                                    @onchange="_ => { if (!_selectedSchedules.Add(item)) _selectedSchedules.Remove(item); }">
+                                                    <label class="form-check-label" for="select_schedule_@item.ScheduleId"></label>
+                                                </div>
                                             </div>
-                                        </div>
-                                    </AuthorizeView>
-                                    <div class="col">
-                                        <div class="row">
-                                            <div class="col fw-semibold small">
-                                                <HighlightableText Text="@item.ScheduleName" PartToHighlight="@UserState.Schedules.ScheduleFilter" />
+                                        </AuthorizeView>
+                                        <div class="col">
+                                            <div class="row">
+                                                <div class="col fw-semibold small">
+                                                    <HighlightableText Text="@item.ScheduleName" PartToHighlight="@UserState.Schedules.ScheduleFilter"/>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col">
-                                                <a class="text-body small" href="@($"jobs/{item.JobId}/schedules")">
-                                                    @item.Job.JobName
-                                                </a>
+                                            <div class="row">
+                                                <div class="col">
+                                                    <a class="text-body small" href="@($"jobs/{item.JobId}/schedules")">
+                                                        @item.Job.JobName
+                                                    </a>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col">
-                                                @foreach (var tag in item.Tags.OrderBy(t => t.TagName))
-                                                {
-                                                    <TagBadge Tag="tag" CssClass="m-1" />
-                                                }
+                                            <div class="row">
+                                                <div class="col">
+                                                    @foreach (var tag in item.Tags.Order())
+                                                    {
+                                                        <TagBadge Tag="tag" CssClass="m-1"/>
+                                                    }
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </td>
-                            <td class="align-middle">
-                                <div class="form-check form-switch">
+                                </td>
+                                <td class="align-middle">
+                                    <div class="form-check form-switch">
+                                        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
+                                            <input type="checkbox" class="form-check-input" id="@item.ScheduleId" checked=@item.IsEnabled @onchange="args => ToggleEnabled(args, item)">
+                                            <label class="form-check-label" for="@item.ScheduleId"></label>
+                                        </AuthorizeView>
+                                        <AuthorizeView Roles="@(Roles.Viewer)">
+                                            <input type="checkbox" class="form-check-input" disabled checked=@item.IsEnabled>
+                                            <label class="form-check-label" for="@item.ScheduleId"></label>
+                                        </AuthorizeView>
+                                    </div>
+                                </td>
+                                <td class="align-middle small">
+                                    <span>@item.CronExpression</span>
+                                    <br/>
+                                    <span class="text-secondary small">@item.GetScheduleDescription()</span>
+                                </td>
+                                <td class="align-middle small">
+                                    <div class="d-inline-flex @(!item.IsEnabled || !item.Job.IsEnabled ? "text-body-tertiary" : null)">
+                                        @item.NextFireTimes().FirstOrDefault()
+                                        &nbsp;&nbsp;
+                                        <HxTooltip Placement="TooltipPlacement.Auto"
+                                                   Text="@("Next execution(s) (first 15):\n" + string.Join("\n", item.NextFireTimes().Take(15)))"
+                                                   CssClass="white-space-pre">
+                                            <SvgIcon Icon="LucideIcon.Info"/>
+                                        </HxTooltip>
+                                    </div>
+                                    <br/>
+                                    <span class="text-body-tertiary small">
+                                        @(!item.IsEnabled ? "(Schedule disabled)" : null)
+                                        @(!item.Job.IsEnabled ? "(Job disabled)" : null)
+                                    </span>
+                                </td>
+                                <td class="align-middle small">
+                                    @if (!item.TagFilter.Any())
+                                    {
+                                        <span class="text-secondary ms-2">No tag filters</span>
+                                    }
+                                    @foreach (var tag in item.TagFilter.Order())
+                                    {
+                                        <TagBadge Tag="tag" CssClass="m-1"/>
+                                    }
+                                </td>
+                                <td class="align-middle" align="center">
                                     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-                                        <input type="checkbox" class="form-check-input" id="@item.ScheduleId" checked=@item.IsEnabled @onchange="args => ToggleEnabled(args, item)">
-                                        <label class="form-check-label" for="@item.ScheduleId"></label>
+                                        <HxButtonGroup Size="ButtonGroupSize.Small">
+                                            <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto"
+                                                      @onclick="async () => await _editModal.LetAsync(x => x.ShowAsync(item.ScheduleId))">
+                                                <SvgIcon Icon="LucideIcon.Pen"/>
+                                            </HxButton>
+                                            <HxDropdownButtonGroup>
+                                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                                                    <SvgIcon Icon="LucideIcon.Trash2"/>
+                                                </HxDropdownToggleButton>
+                                                <HxDropdownMenu>
+                                                    <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                                    <HxDropdownItem @onclick="() => DeleteScheduleAsync(item)">Confirm</HxDropdownItem>
+                                                </HxDropdownMenu>
+                                            </HxDropdownButtonGroup>
+                                        </HxButtonGroup>
                                     </AuthorizeView>
-                                    <AuthorizeView Roles="@(Roles.Viewer)">
-                                        <input type="checkbox" class="form-check-input" disabled checked=@item.IsEnabled>
-                                        <label class="form-check-label" for="@item.ScheduleId"></label>
-                                    </AuthorizeView>
-                                </div>
-                            </td>
-                            <td class="align-middle small">
-                                <span>@item.CronExpression</span>
-                                <br />
-                                <span class="text-secondary small">@item.GetScheduleDescription()</span>
-                            </td>
-                            <td class="align-middle small">
-                                <div class="d-inline-flex @(!item.IsEnabled || !item.Job.IsEnabled ? "text-body-tertiary" : null)">
-                                    @item.NextFireTimes().FirstOrDefault()
-                                    &nbsp;&nbsp;
-                                    <HxTooltip Placement="TooltipPlacement.Auto"
-                                       Text="@("Next execution(s) (first 15):\n" + string.Join("\n", item.NextFireTimes().Take(15)))"
-                                       CssClass="white-space-pre">
-                                        <SvgIcon Icon="FeatherIcon.Info" />
-                                    </HxTooltip>
-                                </div>
-                                <br />
-                                <span class="text-body-tertiary small">
-                                    @(!item.IsEnabled ? "(Schedule disabled)" : null)
-                                    @(!item.Job.IsEnabled ? "(Job disabled)" : null)
-                                </span>
-                            </td>
-                            <td class="align-middle small">
-                                @if (!item.TagFilter.Any())
-                                {
-                                    <span class="text-secondary ms-2">No tag filters</span>
-                                }
-                                @foreach (var tag in item.TagFilter.OrderBy(t => t.TagName))
-                                {
-                                    <TagBadge Tag="tag" CssClass="m-1" />
-                                }
-                            </td>
-                            <td class="align-middle" align="center">
+                                </td>
+                            </ChildContent>
+                            <MenuContent>
                                 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-                                    <HxButtonGroup Size="ButtonGroupSize.Small">
-                                        <HxButton Color="ThemeColor.None" Size="ButtonSize.Small" CssClass="btn-auto"
-                                                  @onclick="async () => await editModal.LetAsync(x => x.ShowAsync(item.ScheduleId))">
-                                            <SvgIcon Icon="FeatherIcon.Edit2" />
-                                        </HxButton>
-                                        <HxDropdownButtonGroup>
-                                            <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                                                <SvgIcon Icon="FeatherIcon.Trash2" />
-                                            </HxDropdownToggleButton>
-                                            <HxDropdownMenu>
-                                                <HxDropdownHeader>Delete?</HxDropdownHeader>
-                                                <HxDropdownItem @onclick="() => DeleteScheduleAsync(item)">Confirm</HxDropdownItem>
-                                            </HxDropdownMenu>
-                                        </HxDropdownButtonGroup>
-                                    </HxButtonGroup>
+                                    <DropdownMenuHeader>
+                                        @item.ScheduleName
+                                    </DropdownMenuHeader>
+                                    <DropdownMenuItem @onclick="() => _editModal.LetAsync(x => x.ShowAsync(item.ScheduleId))">
+                                        <SvgIcon Icon="LucideIcon.Pen"/>
+                                        Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem @onclick="() => ConfirmAndDeleteSchedule(item)">
+                                        <SvgIcon Icon="LucideIcon.Trash2"/>
+                                        Delete...
+                                    </DropdownMenuItem>
                                 </AuthorizeView>
-                            </td>
-                        </tr>
+                            </MenuContent>
+                        </ContextMenuToggle>
                     }
                 }
             </tbody>
@@ -340,14 +357,14 @@
 </Paginator>
 
 <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-    <ScheduleEditModal @ref="editModal" Jobs="Jobs" OnSubmit="OnScheduleSubmitAsync" />
+    <ScheduleEditModal @ref="_editModal" Jobs="Jobs" OnSubmit="OnScheduleSubmitAsync" />
 </AuthorizeView>
 
-<SchedulesHelpModal @ref="helpModal" />
+<SchedulesHelpModal @ref="_helpModal" />
 
-<HxOffcanvas @ref="statusOffcanvas" Title="Scheduler service status" Backdrop="OffcanvasBackdrop.False">
+<HxOffcanvas @ref="_statusOffcanvas" Title="Scheduler service status" Backdrop="OffcanvasBackdrop.False">
     <BodyTemplate>
-        @if (schedulerStatus is null)
+        @if (_schedulerStatus is null)
         {
             <div class="row">
                 <div class="col text-center">
@@ -359,19 +376,19 @@
         {
             <div class="row">
                 <div class="col">
-                    <CodeEditor @ref="editor"
+                    <CodeEditor @ref="_editor"
                                 Language="json"
                                 ReadOnly="true"
                                 MinimapEnabled="false"
                                 FontSize="12"
-                                InitialValueExpression="() => schedulerStatus"
+                                InitialValueExpression="() => _schedulerStatus"
                                 InitialHeight="calc(100vh - 170px)" />
                 </div>
             </div>
         }
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" OnClick="() => statusOffcanvas.LetAsync(x => x.HideAsync())">
+        <HxButton Color="ThemeColor.Secondary" OnClick="() => _statusOffcanvas.LetAsync(x => x.HideAsync())">
             Close
         </HxButton>
     </FooterTemplate>
@@ -398,13 +415,13 @@
 
     private static readonly JsonSerializerOptions SerializerOptions = new() { WriteIndented = true };
 
-    private ScheduleEditModal? editModal;
-    private SchedulesHelpModal? helpModal;
-    private HxOffcanvas? statusOffcanvas;
-    private CodeEditor? editor;
-    private string? schedulerStatus = null;
-    private Paginator<Schedule>? paginator;
-    private HashSet<Schedule> selectedSchedules = [];
+    private ScheduleEditModal? _editModal;
+    private SchedulesHelpModal? _helpModal;
+    private HxOffcanvas? _statusOffcanvas;
+    private CodeEditor? _editor;
+    private string? _schedulerStatus = null;
+    private Paginator<Schedule>? _paginator;
+    private HashSet<Schedule> _selectedSchedules = [];
 
     private async Task ToggleEnabled(ChangeEventArgs args, Schedule schedule)
     {
@@ -426,7 +443,7 @@
     {
         try
         {
-            foreach (var schedule in selectedSchedules)
+            foreach (var schedule in _selectedSchedules)
             {
                 await Mediator.SendAsync(new ToggleScheduleCommand(schedule.ScheduleId, value));
                 schedule.IsEnabled = value;
@@ -444,15 +461,24 @@
         ArgumentNullException.ThrowIfNull(Schedules);
 
         var job = Jobs.First(j => j.JobId == schedule.JobId);
-        if (job.Schedules.FirstOrDefault(s => s.ScheduleId == schedule.ScheduleId) is Schedule s)
+        if (job.Schedules.FirstOrDefault(s => s.ScheduleId == schedule.ScheduleId) is { } scheduleToRemove)
         {
-            job.Schedules.Remove(s);
+            job.Schedules.Remove(scheduleToRemove);
         }
         job.Schedules.Add(schedule);
         schedule.Job = job;
         Schedules.RemoveAll(s => s.ScheduleId == schedule.ScheduleId);
         Schedules.Add(schedule);
         await OnSchedulesChanged.InvokeAsync();
+    }
+    
+    private async Task ConfirmAndDeleteSchedule(Schedule schedule)
+    {
+        if (!await Confirmer.ConfirmAsync("Delete schedule", $"Are you sure you want to delete \"{schedule.ScheduleName}\"?"))
+        {
+            return;
+        }
+        await DeleteScheduleAsync(schedule);
     }
 
     private async Task DeleteScheduleAsync(Schedule schedule)
@@ -471,13 +497,13 @@
 
     private async Task DeleteSelectedSchedulesAsync()
     {
-        if (!await Confirmer.ConfirmAsync("Delete selected schedules", $"Delete {selectedSchedules.Count} schedule(s)?"))
+        if (!await Confirmer.ConfirmAsync("Delete selected schedules", $"Delete {_selectedSchedules.Count} schedule(s)?"))
         {
             return;
         }
         try
         {
-            foreach (var schedule in selectedSchedules)
+            foreach (var schedule in _selectedSchedules)
             {
                 await Mediator.SendAsync(new DeleteScheduleCommand(schedule.ScheduleId));
                 Schedules?.Remove(schedule);
@@ -487,7 +513,7 @@
         {
             Toaster.AddError("Error deleting schedules", ex.Message);
         }
-        selectedSchedules.Clear();
+        _selectedSchedules.Clear();
         await OnSchedulesChanged.InvokeAsync();
     }
 
@@ -495,32 +521,32 @@
     {
         if (value)
         {
-            var schedulesToAdd = VisibleSchedules.Where(s => !selectedSchedules.Contains(s)) ?? [];
-            foreach (var s in schedulesToAdd) selectedSchedules.Add(s);
+            var schedulesToAdd = VisibleSchedules.Where(s => !_selectedSchedules.Contains(s));
+            foreach (var s in schedulesToAdd) _selectedSchedules.Add(s);
         }
         else
         {
-            selectedSchedules.Clear();
+            _selectedSchedules.Clear();
         }
     }
 
     private async Task ShowStatusOffcanvasAsync()
     {
-        schedulerStatus = null;
+        _schedulerStatus = null;
         StateHasChanged();
-        await statusOffcanvas.LetAsync(x => x.ShowAsync());
+        await _statusOffcanvas.LetAsync(x => x.ShowAsync());
         try
         {
             var status = await SchedulerService.GetStatusAsync();
-            schedulerStatus = status.Match(
+            _schedulerStatus = status.Match(
                 (Success success) => GenerateStatusJson(success.Jobs),
-                (AuthorizationError error1) => "Authorization failed when getting scheduler service status. Check the scheduler service auth configuration.",
-                (SchedulerError error2) => "Scheduler service reported internal error. Check the scheduler service log for details.",
-                (UndefinedError error3) => "Undefined error getting scheduler service status. Make sure the service is configured and running correctly.");
+                (AuthorizationError _) => "Authorization failed when getting scheduler service status. Check the scheduler service auth configuration.",
+                (SchedulerError _) => "Scheduler service reported internal error. Check the scheduler service log for details.",
+                (UndefinedError _) => "Undefined error getting scheduler service status. Make sure the service is configured and running correctly.");
         }
         catch (Exception ex)
         {
-            schedulerStatus = $"Error getting scheduler service status. Make sure the service is configured and running correctly.\n\n{ex.Message}";
+            _schedulerStatus = $"Error getting scheduler service status. Make sure the service is configured and running correctly.\n\n{ex.Message}";
         }
     }
 
@@ -530,10 +556,10 @@
         var statuses = jobs.Select(j =>
         {
             var jobName = Jobs?.FirstOrDefault(job => job.JobId.ToString().ToLower() == j.JobId.ToLower())?.JobName;
-            var schedules = j.Schedules.Select(s =>
+            var schedules = j.Schedules.Select(scheduleStatus =>
             {
-                var scheduleName = Schedules?.FirstOrDefault(sched => sched.ScheduleId.ToString().ToLower() == s.ScheduleId.ToLower())?.ScheduleName;
-                return new ScheduleStatus(s.ScheduleId, scheduleName, s.CronExpression, s.IsEnabled, s.IsRunning, s.DisallowConcurrentExecution);
+                var scheduleName = Schedules?.FirstOrDefault(s => s.ScheduleId.ToString().ToLower() == scheduleStatus.ScheduleId.ToLower())?.ScheduleName;
+                return new ScheduleStatus(scheduleStatus.ScheduleId, scheduleName, scheduleStatus.CronExpression, scheduleStatus.IsEnabled, scheduleStatus.IsRunning, scheduleStatus.DisallowConcurrentExecution);
             }).OrderBy(s => s.ScheduleName);
 
             return new JobStatus(j.JobId, jobName, schedules);
