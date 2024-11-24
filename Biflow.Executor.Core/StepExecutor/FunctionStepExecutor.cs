@@ -54,7 +54,10 @@ internal class FunctionStepExecutor(
             // A durable function will return immediately and run asynchronously.
             response = await client.SendAsync(request, cancellationToken);
             content = await response.Content.ReadAsStringAsync(CancellationToken.None);
-            attempt.AddOutput(content);
+            if (!string.IsNullOrEmpty(content))
+            {
+                attempt.AddOutput($"Response:\n{content}");
+            }
         }
         catch (OperationCanceledException ex)
         {
@@ -145,7 +148,11 @@ internal class FunctionStepExecutor(
         switch (status.RuntimeStatus)
         {
             case "Completed":
-                attempt.AddOutput(status.Output?.ToString());
+                var output = status.Output?.ToString();
+                if (!string.IsNullOrWhiteSpace(output))
+                {
+                    attempt.AddOutput($"Output:\n{output}");
+                }
                 return Result.Success;
             case "Terminated":
                 attempt.AddError(status.Output?.ToString() ?? "Function was terminated");
@@ -179,7 +186,10 @@ internal class FunctionStepExecutor(
             // Send the request to the function url. This will start the function, if the request was successful.
             response = await noTimeoutClient.SendAsync(request, linkedCts.Token);
             var content = await response.Content.ReadAsStringAsync(CancellationToken.None);
-            attempt.AddOutput(content);
+            if (!string.IsNullOrEmpty(content))
+            {
+                attempt.AddOutput($"Response:\n{content}");
+            }
         }
         catch (OperationCanceledException ex)
         {
@@ -234,7 +244,7 @@ internal class FunctionStepExecutor(
         var message = new HttpRequestMessage(HttpMethod.Post, step.FunctionUrl);
 
         // Add function security code as a request header. If the function specific code was defined, use that.
-        // Otherwise revert to the function app code if it was defined.
+        // Otherwise, revert to the function app code if it was defined.
         var functionApp = step.GetApp();
         ArgumentNullException.ThrowIfNull(functionApp);
 
@@ -243,15 +253,16 @@ internal class FunctionStepExecutor(
         {
             message.Headers.Add("x-functions-key", functionKey);
         }
-
-        // If the input for the function was defined, add it to the request content.
+        
         if (string.IsNullOrEmpty(step.FunctionInput))
         {
             return message;
         }
         
+        // If the input for the function was defined, add it to the request content.
         var parameters = step.StepExecutionParameters.ToStringDictionary();
         var input = step.FunctionInput.Replace(parameters);
+        attempt.AddOutput($"Evaluated function input:\n{input}");
         message.Content = new StringContent(input);
 
         return message;
