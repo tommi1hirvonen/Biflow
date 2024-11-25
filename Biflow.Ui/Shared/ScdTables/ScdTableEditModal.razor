@@ -1,4 +1,5 @@
 ﻿@using Biflow.Ui.Core.Validation
+
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject ScdTableValidator ScdTableValidator
 @inject ToasterService Toaster
@@ -96,7 +97,7 @@
                                 <div class="form-check form-check-inline">
                                     <input type="radio" class="form-check-input" id="radio_schema_drift_disabled"
                                            checked=@(_table.SchemaDriftConfiguration is SchemaDriftDisabledConfiguration)
-                                           @onchange="SetSchemaDriftDisabled">
+                                           @onchange="() => _table.SchemaDriftConfiguration = _disabledConfiguration">
                                     <label class="form-check-label fw-normal" for="radio_schema_drift_disabled">
                                         Disabled
                                     </label>
@@ -104,7 +105,7 @@
                                 <div class="form-check form-check-inline">
                                     <input type="radio" class="form-check-input" id="radio_schema_drift_enabled"
                                            checked=@(_table.SchemaDriftConfiguration is SchemaDriftEnabledConfiguration)
-                                           @onchange="() => _table.SchemaDriftConfiguration = new SchemaDriftEnabledConfiguration()">
+                                           @onchange="() => _table.SchemaDriftConfiguration = _enabledConfiguration">
                                     <label class="form-check-label fw-normal" for="radio_schema_drift_enabled">
                                         Enabled
                                     </label>
@@ -238,16 +239,22 @@
     public IEnumerable<MsSqlConnection>? Connections { get; set; }
     
     private HxModal? _modal;
-    private ScdTable? _table;
     private DatabaseTableSelectOffcanvas? _offcanvas;
     private IEnumerable<ScdColumnMetadata> _columns = [];
     private bool _firstColumnImport = true;
+    private ScdTable? _table;
+    // Cache the configurations to fields.
+    // This way settings aren't lost if the user changes the table's configuration.
+    private SchemaDriftDisabledConfiguration _disabledConfiguration = new();
+    private SchemaDriftEnabledConfiguration _enabledConfiguration = new();
     
     public async Task ShowAsync(Guid? scdTableId)
     {
         _table = null;
         _columns = [];
         _firstColumnImport = true;
+        _disabledConfiguration = new();
+        _enabledConfiguration = new();
         await _modal.LetAsync(x => x.ShowAsync());
         if (scdTableId is { } id)
         {
@@ -256,7 +263,27 @@
                 .AsNoTrackingWithIdentityResolution()
                 .Include(t => t.Connection)
                 .FirstAsync(t => t.ScdTableId == id);
-            await ImportColumnsAsync();
+            switch (_table.SchemaDriftConfiguration)
+            {
+                case SchemaDriftDisabledConfiguration disabled:
+                    _disabledConfiguration = disabled;
+                    await ImportColumnsAsync();
+                    var excludedColumns = _columns
+                        .Select(c => c.ColumnName)
+                        .Where(c1 => disabled.IncludedColumns.Concat(_table.NaturalKeyColumns).All(c2 => c1 != c2))
+                        .Order();
+                    _enabledConfiguration.ExcludedColumns.AddRange(excludedColumns);
+                    break;
+                case SchemaDriftEnabledConfiguration enabled:
+                    _enabledConfiguration = enabled;
+                    await ImportColumnsAsync();
+                    var includedColumns = _columns
+                        .Select(c => c.ColumnName)
+                        .Where(c1 => enabled.ExcludedColumns.All(c2 => c1 != c2))
+                        .Order(); 
+                    _disabledConfiguration.IncludedColumns.AddRange(includedColumns);
+                    break;
+            }
         }
         else
         {
@@ -268,14 +295,6 @@
                 ConnectionId = connection.ConnectionId
             };
         }
-    }
-
-    private void SetSchemaDriftDisabled()
-    {
-        ArgumentNullException.ThrowIfNull(_table);
-        var configuration = new SchemaDriftDisabledConfiguration();
-        _table.SchemaDriftConfiguration = configuration;
-        configuration.IncludedColumns.AddRange(_columns.Select(c => c.ColumnName).Order());
     }
 
     private async Task ShowTablesOffcanvasAsync()
@@ -325,26 +344,19 @@
                 _table.SourceTableSchema,
                 _table.SourceTableName);
             _table.NaturalKeyColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName));
-            switch (_table.SchemaDriftConfiguration)
+            if (_table.ConnectionId == Guid.Empty && _firstColumnImport)
             {
-                case SchemaDriftDisabledConfiguration disabled:
-                    if (_table.ConnectionId == Guid.Empty && _firstColumnImport)
-                    {
-                        // New table and columns are being imported for the first time.
-                        disabled.IncludedColumns.Clear();
-                        disabled.IncludedColumns.AddRange(_columns.Select(c => c.ColumnName).Order());
-                    }
-                    else
-                    {
-                        // Use may have made changes.
-                        // Do not clear included columns but instead remove any unmatched columns.
-                        disabled.IncludedColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName));
-                    }
-                    break;
-                case SchemaDriftEnabledConfiguration enabled:
-                    enabled.ExcludedColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName));
-                    break;
+                // New table and columns are being imported for the first time.
+                _disabledConfiguration.IncludedColumns.Clear();
+                _disabledConfiguration.IncludedColumns.AddRange(_columns.Select(c => c.ColumnName).Order());
             }
+            else
+            {
+                // Use may have made changes.
+                // Do not clear included columns but instead remove any unmatched columns.
+                _disabledConfiguration.IncludedColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName));
+            }
+            _enabledConfiguration.ExcludedColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName));
             _firstColumnImport = false;
         }
         catch (Exception ex)
@@ -357,17 +369,10 @@
     {
         ArgumentNullException.ThrowIfNull(_table);
         _table.NaturalKeyColumns.Sort();
-        switch (_table.SchemaDriftConfiguration)
-        {
-            case SchemaDriftDisabledConfiguration disabled:
-                disabled.IncludedColumns.RemoveAll(c => _table.NaturalKeyColumns.Contains(c));
-                disabled.IncludedColumns.Sort();
-                break;
-            case SchemaDriftEnabledConfiguration enabled:
-                enabled.ExcludedColumns.RemoveAll(c => _table.NaturalKeyColumns.Contains(c));
-                enabled.ExcludedColumns.Sort();
-                break;
-        }
+        _disabledConfiguration.IncludedColumns.RemoveAll(c => _table.NaturalKeyColumns.Contains(c));
+        _disabledConfiguration.IncludedColumns.Sort();
+        _enabledConfiguration.ExcludedColumns.RemoveAll(c => _table.NaturalKeyColumns.Contains(c));
+        _enabledConfiguration.ExcludedColumns.Sort();
         await OnTableSubmit.InvokeAsync(_table);
         await _modal.LetAsync(x => x.HideAsync());
     }
