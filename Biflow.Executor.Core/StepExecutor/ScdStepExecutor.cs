@@ -1,4 +1,5 @@
-﻿using Biflow.Executor.Core.Common;
+﻿using System.Text.Json;
+using Biflow.Executor.Core.Common;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
@@ -12,6 +13,8 @@ internal class ScdStepExecutor(
 {
     private readonly ILogger<ScdStepExecutor> _logger = logger;
     
+    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+    
     protected override async Task<Result> ExecuteAsync(
         ScdStepExecution step,
         ScdStepExecutionAttempt attempt,
@@ -22,6 +25,9 @@ internal class ScdStepExecutor(
 
         var scdTable = step.GetScdTable();
         ArgumentNullException.ThrowIfNull(scdTable);
+        
+        var scdTableJson = JsonSerializer.Serialize(scdTable, JsonOptions);
+        attempt.AddOutput($"SCD table configuration:\n{scdTableJson}");
         
         // TODO: Handle impersonation for MsSqlConnections
 
