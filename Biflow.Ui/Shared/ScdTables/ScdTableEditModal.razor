@@ -47,7 +47,7 @@
 
                         <div class="row mt-3">
                             <div class="col">
-                                <label class="form-label">Source table</label>
+                                <label class="form-label">Source table/view</label>
                                 <div class="input-group input-group-sm">
                                     <InputText class="form-control form-control-sm" placeholder="Schema" @bind-Value="_table.SourceTableSchema" style="max-width: 15rem;"></InputText>
                                     <div class="input-group-text">
@@ -243,7 +243,7 @@
                 </div>
             </EditForm>
             
-            <DatabaseTableSelectOffcanvas @ref="_offcanvas" OnTableSelected="OnTableSelected" />
+            <TableSelectOffcanvas @ref="_offcanvas" OnTableSelected="OnTableSelected" />
         }
     </BodyTemplate>
     <FooterTemplate>
@@ -260,7 +260,7 @@
     public IEnumerable<MsSqlConnection>? Connections { get; set; }
     
     private HxModal? _modal;
-    private DatabaseTableSelectOffcanvas? _offcanvas;
+    private TableSelectOffcanvas? _offcanvas;
     private IEnumerable<ScdColumnMetadata> _columns = [];
     private bool _firstColumnImport = true;
     private ScdTable? _table;
@@ -328,15 +328,15 @@
         await _offcanvas.LetAsync(x => x.ShowAsync(connection));
     }
     
-    private async Task OnTableSelected(DatabaseTableSelectedResult table)
+    private async Task OnTableSelected(DbObject table)
     {
         ArgumentNullException.ThrowIfNull(_table);
-        if (_table.SourceTableSchema != table.Schema || _table.SourceTableName != table.Name)
+        if (_table.SourceTableSchema != table.Schema || _table.SourceTableName != table.Object)
         {
             // Table was changed. Reset _firstColumnImport.
             _firstColumnImport = true;
         }
-        (_table.SourceTableSchema, _table.SourceTableName) = table;
+        (_table.SourceTableSchema, _table.SourceTableName) = (table.Schema, table.Object);
         if (string.IsNullOrEmpty(_table.TargetTableSchema) && string.IsNullOrEmpty(_table.TargetTableName))
         {
             // TODO: Handle target table name conventions dynamically based on preferences set on the connection.
