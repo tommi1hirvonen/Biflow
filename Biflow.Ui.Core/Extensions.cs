@@ -14,6 +14,7 @@ using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 using Quartz;
 using System.Runtime.CompilerServices;
+using Biflow.Ui.Core.Validation;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using StartEnd = (System.DateTimeOffset? Start, System.DateTimeOffset? End);
 
@@ -198,6 +199,7 @@ public static class Extensions
         services.AddTransient<StepValidator>();
         services.AddTransient<JobValidator>();
         services.AddTransient<DataTableValidator>();
+        services.AddTransient<ScdTableValidator>();
         return services;
     }
 

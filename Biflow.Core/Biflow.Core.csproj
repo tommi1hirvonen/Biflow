@@ -20,6 +20,7 @@
     <PackageReference Include="Azure.ResourceManager.DataFactory" />
     <PackageReference Include="Azure.Storage.Blobs" />
     <PackageReference Include="CodingSeb.ExpressionEvaluator" />
+    <PackageReference Include="Dapper" />
     <PackageReference Include="Microsoft.AnalysisServices.NetCore.retail.amd64" />
     <PackageReference Include="Microsoft.AspNetCore.Components.DataAnnotations.Validation" />
 	<PackageReference Include="Microsoft.Azure.Databricks.Client" />

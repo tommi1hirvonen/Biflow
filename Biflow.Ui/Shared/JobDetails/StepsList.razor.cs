@@ -34,6 +34,8 @@ public partial class StepsList(
     [Parameter] public List<DatabricksWorkspace>? DatabricksWorkspaces { get; set; }
 
     [Parameter] public List<DbtAccount>? DbtAccounts { get; set; }
+    
+    [Parameter] public List<ScdTable>? ScdTables { get; set; }
 
     [Parameter] public List<Credential>? Credentials { get; set; }
 
@@ -114,6 +116,7 @@ public partial class StepsList(
         StepType.Qlik => ((QlikCloudClients?.Count ?? 0) == 0, "No Qlik Cloud clients defined"),
         StepType.Databricks => ((DatabricksWorkspaces?.Count ?? 0) == 0, "No Databricks workspaces defined"),
         StepType.Dbt => ((DbtAccounts?.Count ?? 0) == 0, "No dbt accounts defined"),
+        StepType.Scd => ((ScdTables?.Count ?? 0) == 0, "No SCD tables defined"),
         _ => (false, "")
     };
 

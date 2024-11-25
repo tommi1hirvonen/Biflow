@@ -164,6 +164,11 @@ public static class Extensions
                 equals new { Id = includeEndpoint ? (object?)dbt.DbtAccountId : false }
                 into dbt_
             from dbt in dbt_.DefaultIfEmpty()
+            join scd in context.ScdTables.Include(t => t.Connection).ThenInclude(c => (c as MsSqlConnection)!.Credential)
+                on new { Id = includeEndpoint ? (object?)((ScdStepExecution)stepExec).ScdTableId : true }
+                equals new { Id = includeEndpoint ? (object?)scd.ScdTableId : false }
+                into scd_
+            from scd in scd_.DefaultIfEmpty()
             join exe in context.Credentials
                 on new { Id = includeEndpoint ? (object?)((ExeStepExecution)stepExec).RunAsCredentialId : true }
                 equals new { Id = includeEndpoint ? (object?)exe.CredentialId : false }
@@ -186,6 +191,7 @@ public static class Extensions
                 qlik,
                 db,
                 dbt,
+                scd,
                 exe,
                 step);
 
@@ -227,6 +233,9 @@ public static class Extensions
                 case DbtStepExecution dbt:
                     dbt.SetAccount(step.DbtAccount);
                     break;
+                case ScdStepExecution scd:
+                    scd.SetScdTable(step.ScdTable);
+                    break;
                 case ExeStepExecution exe:
                     exe.SetRunAsCredential(step.ExeStepCredential);
                     break;
@@ -249,5 +258,6 @@ file record StepExecutionProjection(
     QlikCloudEnvironment? QlikStepClient,
     DatabricksWorkspace? DatabricksWorkspace,
     DbtAccount? DbtAccount,
+    ScdTable? ScdTable,
     Credential? ExeStepCredential,
     Step? Step);

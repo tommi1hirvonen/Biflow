@@ -32,6 +32,8 @@ public partial class DependenciesGraph(
     [Parameter] public List<DatabricksWorkspace>? DatabricksWorkspaces { get; set; }
 
     [Parameter] public List<DbtAccount>? DbtAccounts { get; set; }
+    
+    [Parameter] public List<ScdTable>? ScdTables { get; set; }
 
     [Parameter] public List<Credential>? Credentials { get; set; }
 

@@ -1,5 +1,6 @@
 ﻿using Microsoft.JSInterop;
 using System.Text.Json;
+using Havit.Linq;
 
 namespace Biflow.Ui.Pages;
 
@@ -42,6 +43,7 @@ public partial class JobDetails(
     private List<QlikCloudEnvironment>? _qlikCloudClients;
     private List<DatabricksWorkspace>? _databricksWorkspaces;
     private List<DbtAccount>? _dbtAccounts;
+    private List<ScdTable>? _scdTables;
     private List<Credential>? _credentials;
     private bool _descriptionOpen;
     private Guid _previousJobId;
@@ -110,6 +112,10 @@ public partial class JobDetails(
         _dbtAccounts = await context.DbtAccounts
             .AsNoTracking()
             .OrderBy(a => a.DbtAccountName)
+            .ToListAsync(_cts.Token);
+        _scdTables = await context.ScdTables
+            .AsNoTracking()
+            .OrderBy(t => t.ScdTableName)
             .ToListAsync(_cts.Token);
         _credentials = await context.Credentials
             .AsNoTracking()

@@ -19,6 +19,7 @@ public class SerializationTestsFixture(DatabaseFixture fixture) : IAsyncLifetime
     public BlobStorageClient[] BlobStorageClients { get; private set; } = [];
     public DatabricksWorkspace[] DatabricksWorkspaces { get; private set; } = [];
     public DbtAccount[] DbtAccounts { get; private set; } = [];
+    public ScdTable[] ScdTables { get; private set; } = [];
     
     public Job[] Jobs { get; private set; } = [];
     public Step[] Steps { get; private set; } = [];
@@ -70,6 +71,10 @@ public class SerializationTestsFixture(DatabaseFixture fixture) : IAsyncLifetime
         DbtAccounts = await context.DbtAccounts
             .AsNoTracking()
             .OrderBy(d => d.DbtAccountId)
+            .ToArrayAsync();
+        ScdTables = await context.ScdTables
+            .AsNoTracking()
+            .OrderBy(t => t.ScdTableId)
             .ToArrayAsync();
 
 

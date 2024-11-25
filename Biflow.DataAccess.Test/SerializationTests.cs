@@ -185,6 +185,7 @@ public class SerializationTests(SerializationTestsFixture fixture) : IClassFixtu
             Jobs = fixture.Jobs,
             Tags = fixture.Tags,
             DataObjects = fixture.DataObjects,
+            ScdTables = fixture.ScdTables,
             DataTables = fixture.DataTables,
             DataTableCategories = fixture.DataTableCategories
         };

@@ -34,6 +34,7 @@ public class EnvironmentSnapshot
     public required Job[] Jobs { get; init; }
     public required Tag[] Tags { get; init; }
     public required DataObject[] DataObjects { get; init; }
+    public required ScdTable[] ScdTables { get; init; }
 
     public required ConnectionBase[] Connections { get; init; }
     public required Credential[] Credentials { get; init; }

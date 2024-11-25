@@ -54,6 +54,8 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
             from db in db_.DefaultIfEmpty()
             join dbt in context.DbtAccounts on ((DbtStepExecution)step).DbtAccountId equals dbt.DbtAccountId into dbt_
             from dbt in dbt_.DefaultIfEmpty()
+            join scd in context.ScdTables.Include(t => t.Connection).ThenInclude(c => (c as MsSqlConnection)!.Credential) on ((ScdStepExecution)step).ScdTableId equals scd.ScdTableId into scd_
+            from scd in scd_.DefaultIfEmpty()
             join exe in context.Credentials on ((ExeStepExecution)step).RunAsCredentialId equals exe.CredentialId into exe_
             from exe in exe_.DefaultIfEmpty()
             select new
@@ -69,6 +71,7 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
                 qlik,
                 db,
                 dbt,
+                scd,
                 exe
             };
 
@@ -108,6 +111,9 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
                     break;
                 case DbtStepExecution dbt:
                     dbt.SetAccount(step.dbt);
+                    break;
+                case ScdStepExecution scd:
+                    scd.SetScdTable(step.scd);
                     break;
                 case ExeStepExecution exe:
                     exe.SetRunAsCredential(step.exe);

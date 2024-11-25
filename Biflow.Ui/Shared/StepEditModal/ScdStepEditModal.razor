@@ -1,0 +1,49 @@
+﻿@inherits StepEditModal<ScdStep>
+
+<StepEditModalTemplate Modal="this" TStep="ScdStep">
+    @if (Step is not null)
+    {
+        <div class="row">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Timeout (min)</label>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <SvgIcon Icon="LucideIcon.OctagonX" />
+                    </div>
+                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 5rem;"></InputNumber>
+                </div>
+                <span class="form-text">0 = indefinite</span>
+            </div>
+        </div>
+        
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end pt-md-1">
+                <label class="form-label mb-lg-0">SCD table to load</label>
+            </div>
+            <div class="col-md-6">
+                <HxAutosuggest TItem="ScdTable"
+                               TValue="Guid?"
+                               DataProvider="GetSuggestionsAsync"
+                               ItemFromValueResolver="tableId => Task.FromResult(ScdTables.FirstOrDefault(t => t.ScdTableId == tableId)!)"
+                               ValueSelector="table => table.ScdTableId"
+                               TextSelector="table => table.ScdTableName"
+                               @bind-Value="Step.ScdTableId"
+                               Context="table"
+                               MinimumLength="0"
+                               Placeholder="Select SCD table"
+                               autocomplete="off">
+                    <InputGroupStartTemplate>
+                        <div class="input-group-text">
+                            <SvgIcon Icon="LucideIcon.Replace" />
+                        </div>
+                    </InputGroupStartTemplate>
+                    <ItemTemplate>
+                        <span class="small">@table.ScdTableName</span>
+                    </ItemTemplate>
+                </HxAutosuggest>
+            </div>
+        </div>
+    }
+</StepEditModalTemplate>

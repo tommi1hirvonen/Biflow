@@ -70,6 +70,9 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
         var dataObjects = await context.DataObjects
             .OrderBy(d => d.ObjectId)
             .ToArrayAsync();
+        var scdTables = await context.ScdTables
+            .OrderBy(t => t.ScdTableId)
+            .ToArrayAsync();
 
         var dataTables = await context.MasterDataTables
             .Include(t => t.Lookups.OrderBy(l => l.LookupId))
@@ -93,6 +96,7 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
             Jobs = jobs,
             Tags = tags,
             DataObjects = dataObjects,
+            ScdTables = scdTables,
             DataTables = dataTables,
             DataTableCategories = dataTableCategories
         };

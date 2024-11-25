@@ -38,4 +38,7 @@ public abstract class ConnectionBase(ConnectionType connectionType) : IComparabl
 
     [JsonIgnore]
     public virtual IEnumerable<Step> Steps => SqlSteps;
+    
+    [JsonIgnore]
+    public IEnumerable<ScdTable> ScdTables { get; set; } = new List<ScdTable>();
 }

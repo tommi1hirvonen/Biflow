@@ -318,4 +318,13 @@
                       DbtAccounts="DbtAccounts"
                       Credentials="Credentials"
                       OnStepSubmit="OnStepSubmit" />
+    <ScdStepEditModal @ref="_stepEditModals[StepType.Scd]"
+                      SqlConnections="SqlConnections"
+                      MsSqlConnections="MsSqlConnections"
+                      AsConnections="AsConnections"
+                      AppRegistrations="AppRegistrations"
+                      QlikClients="QlikCloudClients"
+                      ScdTables="ScdTables ?? []"
+                      Credentials="Credentials"
+                      OnStepSubmit="OnStepSubmit" />
 </AuthorizeView>

@@ -54,5 +54,9 @@ public enum StepType
 
     [Category("Transformation", 2)]
     [Description("Run a dbt Cloud job")]
-    Dbt
+    Dbt,
+    
+    [Category("Transformation", 2)]
+    [Description("Run an SCD table load")]
+    Scd
 }
