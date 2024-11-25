@@ -55,7 +55,21 @@ public class ScdTable
     /// If full load is enabled, target table records that are missing in source table will be marked as invalid/expired.
     /// Missing records are identified based on their keys.
     /// </summary>
-    public bool FullLoad { get; set; } 
+    public bool FullLoad { get; set; }
+
+    /// <summary>
+    /// Whether indexes should be created on the target table when it is first created.
+    /// Note, that some SQL platforms may not support indexes.
+    /// In those cases <see cref="ApplyIndexesOnCreate"/> should be set to <see langword="false" />.
+    /// </summary>
+    public bool ApplyIndexesOnCreate { get; set; } = true;
+    
+    /// <summary>
+    /// Whether the select statement on the source table should be executed as distinct or not.
+    /// Enabling <see cref="SelectDistinct"/> can help to get rid of potential duplicate records in source table
+    /// but may have a negative performance impact with large data amounts.
+    /// </summary>
+    public bool SelectDistinct { get; set; }
     
     /// <summary>
     /// Columns that comprise the natural key for the source table.

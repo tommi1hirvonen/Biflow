@@ -83,6 +83,27 @@
                                 </div>
                             </div>
                         </div>
+
+                        <div class="row mt-3">
+                            <div class="col">
+                                <div class="form-check form-check-inline">
+                                    <input type="checkbox" class="form-check-input" id="apply_index_on_create"
+                                           checked=@(_table.ApplyIndexesOnCreate)
+                                           @onchange="() => _table.ApplyIndexesOnCreate = !_table.ApplyIndexesOnCreate">
+                                    <label class="form-check-label fw-normal" for="apply_index_on_create">
+                                        Create index on target table
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input type="checkbox" class="form-check-input" id="select_distinct"
+                                           checked=@(_table.SelectDistinct)
+                                           @onchange="() => _table.SelectDistinct = !_table.SelectDistinct">
+                                    <label class="form-check-label fw-normal" for="select_distinct">
+                                        Distinct select
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
                         
                         @* TODO: Pre-load script input *@
                         @* TODO: Post-load script input *@
@@ -292,7 +313,8 @@
             ArgumentNullException.ThrowIfNull(connection);
             _table = new()
             {
-                ConnectionId = connection.ConnectionId
+                ConnectionId = connection.ConnectionId,
+                SchemaDriftConfiguration = _disabledConfiguration
             };
         }
     }
@@ -344,7 +366,7 @@
                 _table.SourceTableSchema,
                 _table.SourceTableName);
             _table.NaturalKeyColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName));
-            if (_table.ConnectionId == Guid.Empty && _firstColumnImport)
+            if (_table.ScdTableId == Guid.Empty && _firstColumnImport)
             {
                 // New table and columns are being imported for the first time.
                 _disabledConfiguration.IncludedColumns.Clear();

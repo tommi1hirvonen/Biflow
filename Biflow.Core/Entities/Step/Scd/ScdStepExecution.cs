@@ -19,8 +19,6 @@ public class ScdStepExecution : StepExecution, IHasTimeout, IHasStepExecutionAtt
 
     public Guid ScdTableId { get; set; }
     
-    // TODO: Also store ScdTableName for audit purposes
-
     public override ScdStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {
         var previous = StepExecutionAttempts.MaxBy(x => x.RetryAttemptIndex);

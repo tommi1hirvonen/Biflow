@@ -61,7 +61,7 @@ public class MsSqlScdProvider(ScdTable table, IScdColumnMetadataProvider columnP
         builder.AppendLine($"""
                             DROP TABLE IF EXISTS {stagingTableName};
 
-                            SELECT
+                            SELECT {(table.SelectDistinct ? "DISTINCT" : null)}
                             {string.Join(",\n", quotedStagingColumns)}    
                             INTO {stagingTableName}
                             FROM {sourceTableName};
@@ -182,20 +182,28 @@ public class MsSqlScdProvider(ScdTable table, IScdColumnMetadataProvider columnP
             var hkIndexColumnDefinition = $"{HashKeyColumn.QuoteName()} ASC, {IsCurrentColumn.QuoteName()} ASC";
             var columnDefinitions = GetIncludedColumns(sourceColumns)
                 .Select(c => $"{c.ColumnName.QuoteName()} {c.DataType} {(c.IsNullable ? "null" : "not null")}");
+            
             builder.AppendLine($"""
                 CREATE TABLE {tableName} (
                 {string.Join(",\n", columnDefinitions)}
                 );
 
-                CREATE CLUSTERED INDEX {hkIndexName} ON {tableName} (
-                {hkIndexColumnDefinition}
-                );
-
-                CREATE NONCLUSTERED INDEX {nkIndexName} ON {tableName} (
-                {string.Join(",\n", nkIndexColumnDefinitions)}
-                );
-
                 """);
+
+            if (table.ApplyIndexesOnCreate)
+            {
+                builder.AppendLine($"""
+                    CREATE CLUSTERED INDEX {hkIndexName} ON {tableName} (
+                    {hkIndexColumnDefinition}
+                    );
+
+                    CREATE NONCLUSTERED INDEX {nkIndexName} ON {tableName} (
+                    {string.Join(",\n", nkIndexColumnDefinitions)}
+                    );
+
+                    """);
+            }
+            
             return builder.ToString();
         }
 
@@ -320,7 +328,7 @@ public class MsSqlScdProvider(ScdTable table, IScdColumnMetadataProvider columnP
         var validFrom = new ScdColumnMetadata
         {
             ColumnName = ValidFromColumn,
-            DataType = "datetime2(7)",
+            DataType = "datetime2(6)",
             IsNullable = false,
             IncludeInStagingTable = false,
             StagingTableExpression = null,
@@ -329,11 +337,11 @@ public class MsSqlScdProvider(ScdTable table, IScdColumnMetadataProvider columnP
         var validUntil = new ScdColumnMetadata
         {
             ColumnName = ValidUntilColumn,
-            DataType = "datetime2(7)",
+            DataType = "datetime2(6)",
             IsNullable = true,
             IncludeInStagingTable = false,
             StagingTableExpression = null,
-            TargetTableExpression = "CONVERT(datetime2(7), '9999-12-31')"
+            TargetTableExpression = "CONVERT(datetime2(6), '9999-12-31')"
         };
         var isCurrent = new ScdColumnMetadata
         {
@@ -381,7 +389,7 @@ public class MsSqlScdProvider(ScdTable table, IScdColumnMetadataProvider columnP
             IsNullable = false,
             IncludeInStagingTable = true,
             // HASHBYTES() is the most reliable way of case-sensitively capturing all changes.
-            StagingTableExpression = $"HASHBYTES('MD5', CONCAT({string.Join(", '|', ", quotedRecordColumns)}))",
+            StagingTableExpression = $"CONVERT(VARBINARY(128), HASHBYTES('MD5', CONCAT({string.Join(", '|', ", quotedRecordColumns)})))",
             TargetTableExpression = null
         };
         
