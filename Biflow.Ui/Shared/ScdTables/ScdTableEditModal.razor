@@ -1,6 +1,7 @@
 ﻿@using Biflow.Ui.Core.Validation
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject ScdTableValidator ScdTableValidator
+@inject ToasterService Toaster
 
 <HxModal @ref="_modal" Size="ModalSize.Large" Title="@(_table?.ScdTableId == Guid.Empty ? "New SCD table" : "Edit " + _table?.ScdTableName)" Scrollable="true">
     <BodyTemplate>
@@ -21,35 +22,6 @@
                                 </div>    
                             </div>
                         </div>
-
-                        <div class="row mt-3">
-                            <div class="col">
-                                <label class="form-label">Target table</label>
-                                <div class="input-group input-group-sm">
-                                    <InputText class="form-control form-control-sm" placeholder="Schema" @bind-Value="_table.TargetTableSchema" style="max-width: 15rem;"></InputText>
-                                    <div class="input-group-text">
-                                        .
-                                    </div>
-                                    <InputText class="form-control form-control-sm" placeholder="Table" @bind-Value="_table.TargetTableName"></InputText>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row mt-3">
-                            <div class="col">
-                                <label class="form-label">Staging table</label>
-                                <div class="input-group input-group-sm">
-                                    <InputText class="form-control form-control-sm" placeholder="Schema" @bind-Value="_table.StagingTableSchema" style="max-width: 15rem;"></InputText>
-                                    <div class="input-group-text">
-                                        .
-                                    </div>
-                                    <InputText class="form-control form-control-sm" placeholder="Schema" @bind-Value="_table.StagingTableName"></InputText>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        @* TODO: Pre-load script input *@
-                        @* TODO: Post-load script input *@
 
                         <div class="row mt-3">
                             <div class="col">
@@ -87,6 +59,35 @@
 
                         <div class="row mt-3">
                             <div class="col">
+                                <label class="form-label">Target table</label>
+                                <div class="input-group input-group-sm">
+                                    <InputText class="form-control form-control-sm" placeholder="Schema" @bind-Value="_table.TargetTableSchema" style="max-width: 15rem;"></InputText>
+                                    <div class="input-group-text">
+                                        .
+                                    </div>
+                                    <InputText class="form-control form-control-sm" placeholder="Table" @bind-Value="_table.TargetTableName"></InputText>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col">
+                                <label class="form-label">Staging table</label>
+                                <div class="input-group input-group-sm">
+                                    <InputText class="form-control form-control-sm" placeholder="Schema" @bind-Value="_table.StagingTableSchema" style="max-width: 15rem;"></InputText>
+                                    <div class="input-group-text">
+                                        .
+                                    </div>
+                                    <InputText class="form-control form-control-sm" placeholder="Schema" @bind-Value="_table.StagingTableName"></InputText>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        @* TODO: Pre-load script input *@
+                        @* TODO: Post-load script input *@
+
+                        <div class="row mt-3">
+                            <div class="col">
                                 <label class="form-label">Schema drift</label>
                             </div>
                         </div>
@@ -95,7 +96,7 @@
                                 <div class="form-check form-check-inline">
                                     <input type="radio" class="form-check-input" id="radio_schema_drift_disabled"
                                            checked=@(_table.SchemaDriftConfiguration is SchemaDriftDisabledConfiguration)
-                                           @onchange="() => _table.SchemaDriftConfiguration = new SchemaDriftDisabledConfiguration()">
+                                           @onchange="SetSchemaDriftDisabled">
                                     <label class="form-check-label fw-normal" for="radio_schema_drift_disabled">
                                         Disabled
                                     </label>
@@ -240,11 +241,13 @@
     private ScdTable? _table;
     private DatabaseTableSelectOffcanvas? _offcanvas;
     private IEnumerable<ScdColumnMetadata> _columns = [];
+    private bool _firstColumnImport = true;
     
     public async Task ShowAsync(Guid? scdTableId)
     {
         _table = null;
         _columns = [];
+        _firstColumnImport = true;
         await _modal.LetAsync(x => x.ShowAsync());
         if (scdTableId is { } id)
         {
@@ -267,6 +270,14 @@
         }
     }
 
+    private void SetSchemaDriftDisabled()
+    {
+        ArgumentNullException.ThrowIfNull(_table);
+        var configuration = new SchemaDriftDisabledConfiguration();
+        _table.SchemaDriftConfiguration = configuration;
+        configuration.IncludedColumns.AddRange(_columns.Select(c => c.ColumnName).Order());
+    }
+
     private async Task ShowTablesOffcanvasAsync()
     {
         ArgumentNullException.ThrowIfNull(_table);
@@ -279,30 +290,66 @@
     private async Task OnTableSelected(DatabaseTableSelectedResult table)
     {
         ArgumentNullException.ThrowIfNull(_table);
+        if (_table.SourceTableSchema != table.Schema || _table.SourceTableName != table.Name)
+        {
+            // Table was changed. Reset _firstColumnImport.
+            _firstColumnImport = true;
+        }
         (_table.SourceTableSchema, _table.SourceTableName) = table;
+        if (string.IsNullOrEmpty(_table.TargetTableSchema) && string.IsNullOrEmpty(_table.TargetTableName))
+        {
+            // TODO: Handle target table name conventions dynamically based on preferences set on the connection.
+            _table.TargetTableSchema = _table.SourceTableSchema;
+            _table.TargetTableName = $"{_table.SourceTableName}_SCD";
+        }
+        if (string.IsNullOrEmpty(_table.StagingTableSchema) && string.IsNullOrEmpty(_table.StagingTableName))
+        {
+            // TODO: Handle staging table name conventions dynamically based on preferences set on the connection.
+            _table.StagingTableSchema = _table.SourceTableSchema;
+            _table.StagingTableName = $"{_table.SourceTableName}_SCD_DELTA";
+        }
         await ImportColumnsAsync();
     }
 
     private async Task ImportColumnsAsync()
     {
-        ArgumentNullException.ThrowIfNull(_table);
-        ArgumentNullException.ThrowIfNull(Connections);
-        var connection = Connections.FirstOrDefault(c => c.ConnectionId == _table.ConnectionId);
-        ArgumentNullException.ThrowIfNull(connection);
-        var columnProvider = new MsSqlColumnMetadataProvider();
-        _columns = await columnProvider.GetTableColumnsAsync(
-            connection.ConnectionString,
-            _table.SourceTableSchema,
-            _table.SourceTableName);
-        _table.NaturalKeyColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName));
-        switch (_table.SchemaDriftConfiguration)
+        try
         {
-            case SchemaDriftDisabledConfiguration disabled:
-                disabled.IncludedColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName));
-                break;
-            case SchemaDriftEnabledConfiguration enabled:
-                enabled.ExcludedColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName));
-                break;
+            ArgumentNullException.ThrowIfNull(_table);
+            ArgumentNullException.ThrowIfNull(Connections);
+            var connection = Connections.FirstOrDefault(c => c.ConnectionId == _table.ConnectionId);
+            ArgumentNullException.ThrowIfNull(connection);
+            var columnProvider = new MsSqlColumnMetadataProvider();
+            _columns = await columnProvider.GetTableColumnsAsync(
+                connection.ConnectionString,
+                _table.SourceTableSchema,
+                _table.SourceTableName);
+            _table.NaturalKeyColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName));
+            switch (_table.SchemaDriftConfiguration)
+            {
+                case SchemaDriftDisabledConfiguration disabled:
+                    if (_table.ConnectionId == Guid.Empty && _firstColumnImport)
+                    {
+                        // New table and columns are being imported for the first time.
+                        disabled.IncludedColumns.Clear();
+                        disabled.IncludedColumns.AddRange(_columns.Select(c => c.ColumnName).Order());
+                    }
+                    else
+                    {
+                        // Use may have made changes.
+                        // Do not clear included columns but instead remove any unmatched columns.
+                        disabled.IncludedColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName));
+                    }
+                    break;
+                case SchemaDriftEnabledConfiguration enabled:
+                    enabled.ExcludedColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName));
+                    break;
+            }
+            _firstColumnImport = false;
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error importing columns", ex.Message);
         }
     }
     
