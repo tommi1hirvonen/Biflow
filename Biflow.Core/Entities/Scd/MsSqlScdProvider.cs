@@ -75,7 +75,7 @@ public class MsSqlScdProvider(ScdTable table, IScdColumnMetadataProvider columnP
                FROM {targetTableName} AS tgt
                LEFT JOIN {stagingTableName} AS src ON tgt.{HashKeyColumn.QuoteName()} = src.{HashKeyColumn.QuoteName()}
                WHERE tgt.{IsCurrentColumn.QuoteName()} = 1 AND
-                     (tgt.{RecordHashColumn.QuoteName()} <> src.{RecordHashColumn.QuoteName()} OR src.{RecordHashColumn.QuoteName()} IS NULL) 
+                     (tgt.{RecordHashColumn.QuoteName()} <> src.{RecordHashColumn.QuoteName()} OR src.{RecordHashColumn.QuoteName()} IS NULL);
                        
                """
             : $"""
@@ -84,7 +84,7 @@ public class MsSqlScdProvider(ScdTable table, IScdColumnMetadataProvider columnP
                FROM {targetTableName} AS tgt
                INNER JOIN {stagingTableName} AS src ON tgt.{HashKeyColumn.QuoteName()} = src.{HashKeyColumn.QuoteName()}
                WHERE tgt.{IsCurrentColumn.QuoteName()} = 1 AND
-                     tgt.{RecordHashColumn.QuoteName()} <> src.{RecordHashColumn.QuoteName()}
+                     tgt.{RecordHashColumn.QuoteName()} <> src.{RecordHashColumn.QuoteName()};
                      
                """;
         builder.AppendLine(update);
