@@ -30,7 +30,7 @@ public class MsSqlColumnMetadataProvider : IScdColumnMetadataProvider
                           --types with length specification
                           when type_name(b.user_type_id) like N'n%char'
                               then concat(N'(', case b.max_length when -1 then N'max' else cast(b.max_length / 2 as nvarchar(20)) end, N')')
-                          when type_name(b.user_type_id) like N'%char'
+                          when type_name(b.user_type_id) like N'%char' or type_name(b.user_type_id) like '%binary'
                               then concat(N'(', case b.max_length when -1 then N'max' else cast(b.max_length as nvarchar(20)) end, N')')
                       end),
               IsNullable = convert(bit, b.is_nullable)
