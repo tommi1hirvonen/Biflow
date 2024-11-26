@@ -179,7 +179,7 @@ public static class Extensions
                             --types with length specification
                             when type_name(b.user_type_id) like N'n%char'
                                 then concat(N'(', case b.max_length when -1 then N'max' else cast(b.max_length / 2 as nvarchar(20)) end, N')')
-                            when type_name(b.user_type_id) like N'%char'
+                            when type_name(b.user_type_id) like N'%char' or type_name(b.user_type_id) like '%binary'
                                 then concat(N'(', case b.max_length when -1 then N'max' else cast(b.max_length as nvarchar(20)) end, N')')
                         end,
                         case when b.is_identity = 1 then concat(N' identity(', ident_seed(d.name + '.' + a.name), ', ', ident_incr(d.name + '.' + a.name), ')') end,
@@ -200,7 +200,7 @@ public static class Extensions
                             --types with length specification
                             when type_name(b.user_type_id) like N'n%char'
                                 then concat(N'(', case b.max_length when -1 then N'max' else cast(b.max_length / 2 as nvarchar(20)) end, N')')
-                            when type_name(b.user_type_id) like N'%char'
+                            when type_name(b.user_type_id) like N'%char' or type_name(b.user_type_id) like '%binary'
                                 then concat(N'(', case b.max_length when -1 then N'max' else cast(b.max_length as nvarchar(20)) end, N')')
                         end),
                 IsComputed = b.is_computed
