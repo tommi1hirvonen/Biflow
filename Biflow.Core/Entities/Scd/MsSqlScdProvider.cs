@@ -385,11 +385,11 @@ public class MsSqlScdProvider(ScdTable table, IScdColumnMetadataProvider columnP
         var recordHashColumn = new ScdColumnMetadata
         {
             ColumnName = RecordHashColumn,
-            DataType = "varbinary(128)", // MD5 hash produces 128 bits (16 bytes) according to the standard
+            DataType = "VARCHAR(32)",
             IsNullable = false,
             IncludeInStagingTable = true,
             // HASHBYTES() is the most reliable way of case-sensitively capturing all changes.
-            StagingTableExpression = $"CONVERT(VARBINARY(128), HASHBYTES('MD5', CONCAT({string.Join(", '|', ", quotedRecordColumns)})))",
+            StagingTableExpression = $"CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT({string.Join(", '|', ", quotedRecordColumns)})))",
             TargetTableExpression = null
         };
         
