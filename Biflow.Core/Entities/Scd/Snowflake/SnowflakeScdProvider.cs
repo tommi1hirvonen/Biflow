@@ -1,14 +1,14 @@
 ﻿using System.Text;
 
-namespace Biflow.Core.Entities.Scd.MsSql;
+namespace Biflow.Core.Entities.Scd.Snowflake;
 
-internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnProvider) : IScdProvider
+internal class SnowflakeScdProvider(ScdTable table, IColumnMetadataProvider columnProvider) : IScdProvider
 {
-    private const string HashKeyColumn = "_HashKey";
-    private const string ValidFromColumn = "_ValidFrom";
-    private const string ValidUntilColumn = "_ValidUntil";
-    private const string IsCurrentColumn = "_IsCurrent";
-    private const string RecordHashColumn = "_RecordHash";
+    private const string HashKeyColumn = "_HASH_KEY";
+    private const string ValidFromColumn = "_VALID_FROM";
+    private const string ValidUntilColumn = "_VALID_UNTIL";
+    private const string IsCurrentColumn = "_IS_CURRENT";
+    private const string RecordHashColumn = "_RECORD_HASH";
     private static readonly string[] SystemColumns =
     [
         HashKeyColumn,
@@ -17,7 +17,6 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
         IsCurrentColumn,
         RecordHashColumn
     ];
-    public const int SysNameLength = 128;
 
     public async Task<StagingLoadStatementResult> CreateStagingLoadStatementAsync(
         CancellationToken cancellationToken = default)
@@ -39,6 +38,7 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
             targetColumns.Cast<IColumn>().ToArray());
         
         var includedColumns = GetDataLoadColumns(sourceColumns, targetColumns);
+        
         var sourceTableName = $"{table.SourceTableSchema.QuoteName()}.{table.SourceTableName.QuoteName()}";
         var stagingTableName = string.IsNullOrEmpty(table.StagingTableSchema)
             ? $"{table.StagingTableName.QuoteName()}"
@@ -48,33 +48,24 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
             .Select(c => c.StagingTableExpression is null
                 ? c.ColumnName.QuoteName()
                 : $"{c.StagingTableExpression} AS {c.ColumnName.QuoteName()}");
+        
         var statement = $"""
-            BEGIN TRY
-            
-            BEGIN TRANSACTION;
+            BEGIN
             
             DROP TABLE IF EXISTS {stagingTableName};
             
+            CREATE TABLE {stagingTableName} AS
             SELECT {(table.SelectDistinct ? "DISTINCT" : null)}
             {string.Join(",\n", quotedStagingColumns)}
-            INTO {stagingTableName}
             FROM {sourceTableName};
             
-            COMMIT TRANSACTION;
-            
-            END TRY
-            BEGIN CATCH
-            
-            ROLLBACK TRANSACTION;
-            THROW;
-                
-            END CATCH;
+            END;
             
             """;
         
         return new(statement, sourceColumns, targetColumns);
     }
-
+    
     public async Task<string> CreateTargetLoadStatementAsync(CancellationToken cancellationToken = default)
     {
         var sourceColumns = (await columnProvider.GetTableColumnsAsync(
@@ -114,35 +105,42 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
                 : $"{c.TargetTableExpression} AS {c.ColumnName.QuoteName()}");
         
         builder.AppendLine($"""
-            BEGIN TRY
+            BEGIN
             
             BEGIN TRANSACTION;
             
             {table.PreLoadScript}
             
             """);
+
+        if (table.FullLoad)
+        {
+            // Update removed records validity.
+            builder.AppendLine($"""
+                UPDATE {targetTableName} AS tgt
+                SET {IsCurrentColumn.QuoteName()} = 0, {ValidUntilColumn.QuoteName()} = CURRENT_TIMESTAMP
+                WHERE tgt.{IsCurrentColumn.QuoteName()} = 1 AND
+                      NOT EXISTS (
+                          SELECT *
+                          FROM {stagingTableName} AS src
+                          WHERE tgt.{HashKeyColumn.QuoteName()} = src.{HashKeyColumn.QuoteName()}
+                      );
+                      
+                """);    
+        }
+
+        // Update changed records validity.
+        builder.AppendLine($"""
+            UPDATE {targetTableName} AS tgt
+            SET {IsCurrentColumn.QuoteName()} = 0, {ValidUntilColumn.QuoteName()} = CURRENT_TIMESTAMP
+            FROM {stagingTableName} AS src
+            WHERE tgt.{IsCurrentColumn.QuoteName()} = 1 AND
+                  tgt.{HashKeyColumn.QuoteName()} = src.{HashKeyColumn.QuoteName()} AND -- inner join
+                  tgt.{RecordHashColumn.QuoteName()} <> src.{RecordHashColumn.QuoteName()};
+                  
+            """);
         
-        var update = table.FullLoad
-            ? $"""
-               UPDATE tgt
-               SET {IsCurrentColumn.QuoteName()} = 0, {ValidUntilColumn.QuoteName()} = GETDATE()
-               FROM {targetTableName} AS tgt
-               LEFT JOIN {stagingTableName} AS src ON tgt.{HashKeyColumn.QuoteName()} = src.{HashKeyColumn.QuoteName()}
-               WHERE tgt.{IsCurrentColumn.QuoteName()} = 1 AND
-                     (tgt.{RecordHashColumn.QuoteName()} <> src.{RecordHashColumn.QuoteName()} OR src.{RecordHashColumn.QuoteName()} IS NULL);
-                       
-               """
-            : $"""
-               UPDATE tgt
-               SET {IsCurrentColumn.QuoteName()} = 0, {ValidUntilColumn.QuoteName()} = GETDATE()
-               FROM {targetTableName} AS tgt
-               INNER JOIN {stagingTableName} AS src ON tgt.{HashKeyColumn.QuoteName()} = src.{HashKeyColumn.QuoteName()}
-               WHERE tgt.{IsCurrentColumn.QuoteName()} = 1 AND
-                     tgt.{RecordHashColumn.QuoteName()} <> src.{RecordHashColumn.QuoteName()};
-                     
-               """;
-        builder.AppendLine(update);
-        
+        // Insert new and changed records.
         builder.AppendLine($"""
             INSERT INTO {targetTableName} (
             {string.Join(",\n", quotedInsertColumns)}
@@ -161,20 +159,20 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
         builder.AppendLine($"""
             {table.PostLoadScript}
             
-            COMMIT TRANSACTION;
+            COMMIT;
             
-            END TRY
-            BEGIN CATCH
+            EXCEPTION
+                WHEN OTHER THEN
             
-            ROLLBACK TRANSACTION;
-            THROW;
+                ROLLBACK;
+                RAISE;
                 
-            END CATCH;
+            END;
             """);
         
         return builder.ToString();
     }
-
+    
     public async Task<string> CreateStructureUpdateStatementAsync(CancellationToken cancellationToken = default)
     {
         var sourceColumns = (await columnProvider.GetTableColumnsAsync(
@@ -202,43 +200,17 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
             // Target table does not exist.
             var columnDefinitions = GetStructureColumns(sourceColumns)
                 .Select(c => $"{c.ColumnName.QuoteName()} {c.DataType} {(c.IsNullable ? "null" : "not null")}");
-            
             builder.AppendLine($"""
                 CREATE TABLE {tableName} (
                 {string.Join(",\n", columnDefinitions)}
                 );
 
                 """);
-
-            if (!table.ApplyIndexesOnCreate)
-            {
-                return builder.ToString();
-            }
-            
-            var nkIndexName = $"IX_{table.TargetTableName}_NaturalKey".QuoteName();
-            var nkIndexColumnDefinitions = table.NaturalKeyColumns
-                .Distinct()
-                .Order()
-                .Select(c => $"{c.QuoteName()} ASC")
-                .Append($"{IsCurrentColumn.QuoteName()} ASC");
-            var hkIndexName = $"IX_{table.TargetTableName}_HashKey".QuoteName();
-            var hkIndexColumnDefinition = $"{HashKeyColumn.QuoteName()} ASC, {IsCurrentColumn.QuoteName()} ASC";
-            builder.AppendLine($"""
-                CREATE CLUSTERED INDEX {hkIndexName} ON {tableName} (
-                {hkIndexColumnDefinition}
-                );
-
-                CREATE NONCLUSTERED INDEX {nkIndexName} ON {tableName} (
-                {string.Join(",\n", nkIndexColumnDefinitions)}
-                );
-
-                """);
-
             return builder.ToString();
         }
-
-        IEnumerable<IStructureColumn> columnsToAlter;
-        IEnumerable<IStructureColumn> columnsToAdd;
+        
+        IStructureColumn[] columnsToAlter;
+        IStructureColumn[] columnsToAdd;
 
         switch (table.SchemaDriftConfiguration)
         {
@@ -250,11 +222,13 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
                     .Where(c => !SystemColumns.Contains(c.ColumnName))
                     .Where(c1 =>
                         disabled.IncludedColumns.Concat(table.NaturalKeyColumns)
-                            .All(c2 => c1.ColumnName != c2));
+                            .All(c2 => c1.ColumnName != c2))
+                    .ToArray();
                 // Newly included columns
                 columnsToAdd = sourceColumns
                     .Where(c => disabled.IncludedColumns.Contains(c.ColumnName))
-                    .Where(c => targetColumns.All(sc => sc.ColumnName != c.ColumnName));
+                    .Where(c => targetColumns.All(sc => sc.ColumnName != c.ColumnName))
+                    .ToArray();
                 
                 break;
             }
@@ -274,6 +248,7 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
                     ? sourceColumns
                         .Where(c => !enabled.ExcludedColumns.Contains(c.ColumnName))
                         .Where(c => targetColumns.All(sc => sc.ColumnName != c.ColumnName))
+                        .ToArray()
                     : [];
                 
                 break;
@@ -282,15 +257,25 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
                 throw new ScdTableValidationException($"Unknown table type: {table.GetType().Name}");
         }
 
+        if (columnsToAlter.Length != 0 || columnsToAdd.Length != 0)
+        {
+            builder.AppendLine("BEGIN\n");
+        }
+        
         foreach (var c in columnsToAlter)
         {
-            builder.AppendLine($"ALTER TABLE {tableName} ALTER COLUMN {c.ColumnName.QuoteName()} {c.DataType} NULL;"); 
+            builder.AppendLine($"ALTER TABLE {tableName} ALTER {c.ColumnName.QuoteName()} DROP NOT NULL;"); 
         }
 
         foreach (var c in columnsToAdd.OrderBy(c => c.ColumnName))
         {
             // New columns are nullable because target table might already contain data
             builder.AppendLine($"ALTER TABLE {tableName} ADD {c.ColumnName.QuoteName()} {c.DataType} NULL;");
+        }
+        
+        if (columnsToAlter.Length != 0 || columnsToAdd.Length != 0)
+        {
+            builder.AppendLine("END;\n");
         }
         
         return builder.ToString();
@@ -301,13 +286,13 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
         var hashKeyColumn = new StructureColumn
         {
             ColumnName = HashKeyColumn,
-            DataType = "varchar(32)",
+            DataType = "VARCHAR(32)",
             IsNullable = false
         };
         
         var naturalKeyColumns = table.NaturalKeyColumns
             .Distinct()
-            .Order() // Use alphabetical ordering for columns when listing them for table structure. 
+            .Order()
             .Select(c =>
             {
                 var sourceColumn = sourceColumns.First(sc => sc.ColumnName == c); 
@@ -323,26 +308,19 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
         var validFrom = new StructureColumn
         {
             ColumnName = ValidFromColumn,
-            DataType = "datetime2(7)",
+            DataType = "TIMESTAMP_NTZ",
             IsNullable = false
         };
         var validUntil = new StructureColumn
         {
             ColumnName = ValidUntilColumn,
-            DataType = "datetime2(7)",
+            DataType = "TIMESTAMP_NTZ",
             IsNullable = true
         };
         var isCurrent = new StructureColumn
         {
             ColumnName = IsCurrentColumn,
-            DataType = "bit",
-            IsNullable = false
-        };
-        
-        var recordHashColumn = new StructureColumn
-        {
-            ColumnName = RecordHashColumn,
-            DataType = "VARCHAR(32)",
+            DataType = "BOOLEAN",
             IsNullable = false
         };
         
@@ -357,9 +335,16 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
             _ => throw new ScdTableValidationException($"Unhandled table historization case: {table.GetType().Name}")
         };
         
+        var recordHashColumn = new StructureColumn
+        {
+            ColumnName = RecordHashColumn,
+            DataType = "VARCHAR(32)",
+            IsNullable = false
+        };
+        
         return [hashKeyColumn, ..naturalKeyColumns, validFrom, validUntil, isCurrent, recordHashColumn, ..otherColumns];
     }
-
+    
     private ILoadColumn[] GetDataLoadColumns(
         IReadOnlyList<IOrderedLoadColumn> sourceColumns, IReadOnlyList<IOrderedLoadColumn> targetColumns)
     {
@@ -371,7 +356,7 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
             .Select(c => c.QuoteName())
             .ToArray();
         var hashKeyExpression =
-            $"CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT({string.Join(", '|', ", quotedNkColumns)})), 2)";
+            $"UPPER(MD5(CONCAT({string.Join(", '|', ", quotedNkColumns)})))";
         var hashKeyColumn = new LoadColumn
         {
             ColumnName = HashKeyColumn,
@@ -391,7 +376,7 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
             ColumnName = ValidUntilColumn,
             IncludeInStagingTable = false,
             StagingTableExpression = null,
-            TargetTableExpression = "CONVERT(datetime2(7), '9999-12-31')"
+            TargetTableExpression = "CAST('9999-12-31' AS TIMESTAMP_NTZ)"
         };
         var isCurrent = new LoadColumn
         {
@@ -427,34 +412,19 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
         {
             ColumnName = RecordHashColumn,
             IncludeInStagingTable = true,
-            // HASHBYTES() is the most reliable way of case-sensitively capturing all changes.
-            StagingTableExpression = $"CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT({string.Join(", '|', ", quotedRecordColumns)})), 2)",
+            // MD5 is the most reliable way of case-sensitively capturing all changes.
+            StagingTableExpression = $"UPPER(MD5(CONCAT({string.Join(", '|', ", quotedRecordColumns)})))",
             TargetTableExpression = null
         };
         
         return [hashKeyColumn, ..naturalKeyColumns, validFrom, validUntil, isCurrent, recordHashColumn, ..otherColumns];
     }
+    
 }
 
 file static class Extensions
 {
-    /// <summary>
-    /// Returns a string with the delimiters added to make the input string
-    /// a valid SQL Server delimited identifier. Unlike the T-SQL version,
-    /// an ArgumentException is thrown instead of returning a null for
-    /// invalid arguments.
-    /// </summary>
-    /// <param name="name">sysname, limited to 128 characters.</param>
-    /// <param name="quoteCharacter">Can be a single quotation mark ( ' ), a
-    /// left or right bracket ( [] ), or a double quotation mark ( " ).</param>
-    /// <returns>An escaped identifier, no longer than 258 characters.</returns>
-    public static string QuoteName(this string name, char quoteCharacter = '[') => (name, quoteCharacter) switch
-    {
-        ({ Length: > MsSqlScdProvider.SysNameLength }, _) =>
-            throw new ArgumentException($"{nameof(name)} is longer than {MsSqlScdProvider.SysNameLength} characters"),
-        (_, '\'') => $"'{name.Replace("'", "''")}'",
-        (_, '"') => $"\"{name.Replace("\"", "\"\"")}\"",
-        (_, '[' or ']') => $"[{name.Replace("]", "]]")}]",
-        _ => throw new ArgumentException("quoteCharacter must be one of: ', \", [, or ]"),
-    };
+    // TODO: Handle potential quoted object identifiers
+    // https://docs.snowflake.com/en/sql-reference/identifiers-syntax
+    public static string QuoteName(this string name) => name;
 }

@@ -3,7 +3,7 @@ using Microsoft.Data.SqlClient;
 
 namespace Biflow.Core.Entities.Scd.MsSql;
 
-public class MsSqlColumnMetadataProvider(string connectionString) : IColumnMetadataProvider
+internal class MsSqlColumnMetadataProvider(string connectionString) : IColumnMetadataProvider
 {
     public async Task<IReadOnlyList<FullColumnMetadata>> GetTableColumnsAsync(
         string schema, string table, CancellationToken cancellationToken = default)

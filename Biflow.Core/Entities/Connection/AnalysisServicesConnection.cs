@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Data.Common;
+using System.Text.Json.Serialization;
 using Biflow.Core.Entities.Scd;
 
 namespace Biflow.Core.Entities;
@@ -81,4 +82,7 @@ public class AnalysisServicesConnection() : ConnectionBase(ConnectionType.Analys
 
     public override IScdProvider CreateScdProvider(ScdTable table) =>
         throw new NotSupportedException($"{nameof(AnalysisServicesConnection)} does not support SCD providers.");
+    
+    public override DbConnection CreateDbConnection() =>
+        throw new NotSupportedException($"{nameof(AnalysisServicesConnection)} does not support {nameof(DbConnection)}.");
 }

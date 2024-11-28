@@ -111,7 +111,7 @@
 
 @code {
     private List<ScdTable>? _tables;
-    private MsSqlConnection[]? _connections;
+    private ConnectionBase[]? _connections;
     private ScdTableEditModal? _editModal;
     
     protected override void OnInitialized() => ThemeService.OnThemeChanged += OnThemeChanged;
@@ -126,7 +126,8 @@
         _tables = await context.ScdTables
             .OrderBy(t => t.ScdTableName)
             .ToListAsync();
-        _connections = await context.MsSqlConnections
+        _connections = await context.Connections
+            .Where(c => c.ConnectionType == ConnectionType.Sql || c.ConnectionType == ConnectionType.Snowflake)
             .OrderBy(c => c.ConnectionName)
             .ToArrayAsync();
     }

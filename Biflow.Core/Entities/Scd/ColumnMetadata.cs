@@ -26,7 +26,7 @@ public interface IOrderedLoadColumn : ILoadColumn
     public int Ordinal { get; }
 }
 
-public class StructureColumn : IStructureColumn
+internal class StructureColumn : IStructureColumn
 {
     public required string ColumnName { get; init; }
     
@@ -35,7 +35,7 @@ public class StructureColumn : IStructureColumn
     public required bool IsNullable { get; init; }
 }
 
-public class LoadColumn : ILoadColumn
+internal class LoadColumn : ILoadColumn
 {
     public required string ColumnName { get; init; }
     

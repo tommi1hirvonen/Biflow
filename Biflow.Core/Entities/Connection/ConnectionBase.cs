@@ -1,5 +1,6 @@
 ﻿using Biflow.Core.Attributes;
 using System.ComponentModel.DataAnnotations;
+using System.Data.Common;
 using System.Text.Json.Serialization;
 using Biflow.Core.Entities.Scd;
 
@@ -46,4 +47,6 @@ public abstract class ConnectionBase(ConnectionType connectionType) : IComparabl
     public abstract IColumnMetadataProvider CreateColumnMetadataProvider();
 
     public abstract IScdProvider CreateScdProvider(ScdTable table);
+
+    public abstract DbConnection CreateDbConnection();
 }

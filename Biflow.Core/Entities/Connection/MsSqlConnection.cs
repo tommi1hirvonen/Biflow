@@ -102,4 +102,13 @@ public class MsSqlConnection() : ConnectionBase(ConnectionType.Sql)
     
     public override IScdProvider CreateScdProvider(ScdTable table) =>
         new MsSqlScdProvider(table, CreateColumnMetadataProvider());
+    
+    public override SqlConnection CreateDbConnection() => new(ConnectionString);
+
+    public SqlConnection CreateDbConnection(SqlInfoMessageEventHandler eventHandler)
+    {
+        var connection = new SqlConnection(ConnectionString);
+        connection.InfoMessage += eventHandler;
+        return connection;
+    }
 }
