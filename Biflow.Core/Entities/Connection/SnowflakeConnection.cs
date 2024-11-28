@@ -1,6 +1,7 @@
 ﻿using Snowflake.Data.Client;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Biflow.Core.Entities.Scd;
 
 namespace Biflow.Core.Entities;
 
@@ -17,4 +18,10 @@ public class SnowflakeConnection() : ConnectionBase(ConnectionType.Snowflake)
         await using var connection = new SnowflakeDbConnection(ConnectionString);
         await connection.OpenAsync(cancellationToken);
     }
+    
+    public override IColumnMetadataProvider CreateColumnMetadataProvider() =>
+        throw new NotImplementedException();
+    
+    public override IScdProvider CreateScdProvider(ScdTable table) =>
+        throw new NotImplementedException();
 }

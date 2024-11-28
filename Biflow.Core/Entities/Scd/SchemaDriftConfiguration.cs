@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Biflow.Core.Entities;
+namespace Biflow.Core.Entities.Scd;
 
 [JsonDerivedType(typeof(SchemaDriftDisabledConfiguration), "SchemaDriftDisabled")]
 [JsonDerivedType(typeof(SchemaDriftEnabledConfiguration), "SchemaDriftEnabled")]
@@ -12,7 +12,7 @@ public sealed class SchemaDriftDisabledConfiguration : SchemaDriftConfiguration
     /// If schema drift is disabled, included columns need to be explicitly defined.
     /// Included columns not found in the source table will cause a validation exception when load is executed.
     /// </summary>
-    public List<string> IncludedColumns { get; set; } = [];
+    public List<string> IncludedColumns { get; init; } = [];
     
     /// <summary>
     /// Removes a column from the list of included columns if it is found, otherwise adds it to the list.

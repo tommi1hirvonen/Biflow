@@ -1,8 +1,8 @@
 ﻿using System.Text;
 
-namespace Biflow.Core.Entities;
+namespace Biflow.Core.Entities.Scd.MsSql;
 
-public class MsSqlScdProvider(ScdTable table, IScdColumnMetadataProvider columnProvider) : IScdProvider
+public class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnProvider) : IScdProvider
 {
     private const string HashKeyColumn = "_HashKey";
     private const string ValidFromColumn = "_ValidFrom";
@@ -21,16 +21,19 @@ public class MsSqlScdProvider(ScdTable table, IScdColumnMetadataProvider columnP
     
     public async Task<string> CreateDataLoadStatementAsync(CancellationToken cancellationToken = default)
     {
-        var sourceColumnMetadata = await columnProvider.GetTableColumnsAsync(
-            table.Connection.ConnectionString,
-            table.SourceTableSchema,
-            table.SourceTableName,
-            cancellationToken);
-        var sourceColumns = sourceColumnMetadata
+        var sourceColumns = (await columnProvider.GetTableColumnsAsync(
+                table.SourceTableSchema, table.SourceTableName, cancellationToken))
             .Where(c => !SystemColumns.Contains(c.ColumnName))
+            .Cast<IOrderedLoadColumn>()
             .ToArray();
+        var targetColumns = (await columnProvider.GetTableColumnsAsync(
+                table.TargetTableSchema, table.TargetTableName, cancellationToken))
+            .Where(c => !SystemColumns.Contains(c.ColumnName))
+            .Cast<IOrderedLoadColumn>()
+            .ToArray();
+        
         var builder = new StringBuilder();
-        var includedColumns = GetIncludedColumns(sourceColumns);
+        var includedColumns = GetDataLoadColumns(sourceColumns, targetColumns);
         
         var targetTableName = $"{table.TargetTableSchema.QuoteName()}.{table.TargetTableName.QuoteName()}";
         var sourceTableName = $"{table.SourceTableSchema.QuoteName()}.{table.SourceTableName.QuoteName()}";
@@ -123,6 +126,17 @@ public class MsSqlScdProvider(ScdTable table, IScdColumnMetadataProvider columnP
 
     public async Task<string> CreateStructureUpdateStatementAsync(CancellationToken cancellationToken = default)
     {
+        var sourceColumns = (await columnProvider.GetTableColumnsAsync(
+                table.SourceTableSchema, table.SourceTableName, cancellationToken))
+            .Where(c => !SystemColumns.Contains(c.ColumnName))
+            .Cast<IStructureColumn>()
+            .ToArray();
+        var targetColumns = (await columnProvider.GetTableColumnsAsync(
+                table.TargetTableSchema, table.TargetTableName, cancellationToken))
+            .Where(c => !SystemColumns.Contains(c.ColumnName))
+            .Cast<IStructureColumn>()
+            .ToArray();
+        
         if (table.SourceTableSchema == table.TargetTableSchema && table.SourceTableName == table.TargetTableName)
         {
             throw new ScdTableValidationException("The target and source table cannot be the same");
@@ -132,15 +146,6 @@ public class MsSqlScdProvider(ScdTable table, IScdColumnMetadataProvider columnP
         {
             throw new ScdTableValidationException("The table must have at least one natural key column.");
         }
-        
-        var sourceColumnMetadata = await columnProvider.GetTableColumnsAsync(
-            table.Connection.ConnectionString,
-            table.SourceTableSchema,
-            table.SourceTableName,
-            cancellationToken);
-        var sourceColumns = sourceColumnMetadata
-            .Where(c => !SystemColumns.Contains(c.ColumnName))
-            .ToArray();
 
         if (sourceColumns.Length == 0)
         {
@@ -155,15 +160,6 @@ public class MsSqlScdProvider(ScdTable table, IScdColumnMetadataProvider columnP
             var columns = string.Join(", ", missingNaturalKeyColumns);
             throw new ScdTableValidationException($"Natural key columns are missing from the source table: {columns}");
         }
-        
-        var targetColumnMetadata = await columnProvider.GetTableColumnsAsync(
-            table.Connection.ConnectionString,
-            table.TargetTableSchema,
-            table.TargetTableName,
-            cancellationToken);
-        var targetColumns = targetColumnMetadata
-            .Where(c => !SystemColumns.Contains(c.ColumnName))
-            .ToArray();
         
         var builder = new StringBuilder();
         
@@ -180,7 +176,7 @@ public class MsSqlScdProvider(ScdTable table, IScdColumnMetadataProvider columnP
                 .Append($"{IsCurrentColumn.QuoteName()} ASC");
             var hkIndexName = $"IX_{table.TargetTableName}_HashKey".QuoteName();
             var hkIndexColumnDefinition = $"{HashKeyColumn.QuoteName()} ASC, {IsCurrentColumn.QuoteName()} ASC";
-            var columnDefinitions = GetIncludedColumns(sourceColumns)
+            var columnDefinitions = GetStructureColumns(sourceColumns)
                 .Select(c => $"{c.ColumnName.QuoteName()} {c.DataType} {(c.IsNullable ? "null" : "not null")}");
             
             builder.AppendLine($"""
@@ -307,128 +303,142 @@ public class MsSqlScdProvider(ScdTable table, IScdColumnMetadataProvider columnP
         return builder.ToString();
     }
     
-    private IReadOnlyList<ScdColumnMetadata> GetIncludedColumns(ScdColumnMetadata[] sourceColumns)
+    private IStructureColumn[] GetStructureColumns(IStructureColumn[] sourceColumns)
+    {
+        var hashKeyColumn = new StructureColumn
+        {
+            ColumnName = HashKeyColumn,
+            DataType = "varchar(32)",
+            IsNullable = false
+        };
+        
+        var naturalKeyColumns = table.NaturalKeyColumns
+            .Distinct()
+            .Order() // Use alphabetical ordering for columns when listing them for table structure. 
+            .Select(c =>
+            {
+                var sourceColumn = sourceColumns.First(sc => sc.ColumnName == c); 
+                return new StructureColumn
+                {
+                    ColumnName = sourceColumn.ColumnName,
+                    DataType = sourceColumn.DataType,
+                    IsNullable = false // force natural key column to be non-null
+                };
+            })
+            .ToArray();
+        
+        var validFrom = new StructureColumn
+        {
+            ColumnName = ValidFromColumn,
+            DataType = "datetime2(7)",
+            IsNullable = false
+        };
+        var validUntil = new StructureColumn
+        {
+            ColumnName = ValidUntilColumn,
+            DataType = "datetime2(7)",
+            IsNullable = true
+        };
+        var isCurrent = new StructureColumn
+        {
+            ColumnName = IsCurrentColumn,
+            DataType = "bit",
+            IsNullable = false
+        };
+        
+        var recordHashColumn = new StructureColumn
+        {
+            ColumnName = RecordHashColumn,
+            DataType = "VARCHAR(32)",
+            IsNullable = false
+        };
+        
+        var otherColumns = table.SchemaDriftConfiguration switch
+        {
+            SchemaDriftDisabledConfiguration disabled =>
+                Scd.GetNonNkIncludedColumns(table.NaturalKeyColumns, disabled, sourceColumns)
+                    .OrderBy(c => c.ColumnName).ToArray(),
+            SchemaDriftEnabledConfiguration enabled =>
+                Scd.GetNonNkStructureIncludedColumns(table.NaturalKeyColumns, enabled, sourceColumns)
+                    .OrderBy(c => c.ColumnName).ToArray(),
+            _ => throw new ScdTableValidationException($"Unhandled table historization case: {table.GetType().Name}")
+        };
+        
+        return [hashKeyColumn, ..naturalKeyColumns, validFrom, validUntil, isCurrent, recordHashColumn, ..otherColumns];
+    }
+
+    private ILoadColumn[] GetDataLoadColumns(IOrderedLoadColumn[] sourceColumns, IOrderedLoadColumn[] targetColumns)
     {
         var quotedNkColumns = table.NaturalKeyColumns
-            .Distinct()
-            .Order()
+            .Select(c => targetColumns.First(sc => sc.ColumnName == c))
+            .DistinctBy(c => c.ColumnName)
+            .OrderBy(c => c.Ordinal) // Order by ordinal to make sure column renames don't affect hashing results.
+            .Select(c => c.ColumnName)
             .Select(c => c.QuoteName())
             .ToArray();
         var hashKeyExpression =
             $"CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT({string.Join(", '|', ", quotedNkColumns)})), 2)";
-        var hashKeyColumn = new ScdColumnMetadata
+        var hashKeyColumn = new LoadColumn
         {
             ColumnName = HashKeyColumn,
-            DataType = "varchar(32)",
-            IsNullable = false,
             IncludeInStagingTable = true,
             StagingTableExpression = hashKeyExpression,
             TargetTableExpression = null
         };
-        var validFrom = new ScdColumnMetadata
+        var validFrom = new LoadColumn
         {
             ColumnName = ValidFromColumn,
-            DataType = "datetime2(6)",
-            IsNullable = false,
             IncludeInStagingTable = false,
             StagingTableExpression = null,
             TargetTableExpression = "GETDATE()"
         };
-        var validUntil = new ScdColumnMetadata
+        var validUntil = new LoadColumn
         {
             ColumnName = ValidUntilColumn,
-            DataType = "datetime2(6)",
-            IsNullable = true,
             IncludeInStagingTable = false,
             StagingTableExpression = null,
-            TargetTableExpression = "CONVERT(datetime2(6), '9999-12-31')"
+            TargetTableExpression = "CONVERT(datetime2(7), '9999-12-31')"
         };
-        var isCurrent = new ScdColumnMetadata
+        var isCurrent = new LoadColumn
         {
             ColumnName = IsCurrentColumn,
-            DataType = "bit",
-            IsNullable = false,
             IncludeInStagingTable = false,
             StagingTableExpression = null,
             TargetTableExpression = "1"
         };
         
         var naturalKeyColumns = table.NaturalKeyColumns
-            .Distinct()
-            .Order()
-            .Select(c =>
-            {
-                var sourceColumn = sourceColumns.First(sc => sc.ColumnName == c); 
-                return new ScdColumnMetadata
-                {
-                    ColumnName = sourceColumn.ColumnName,
-                    DataType = sourceColumn.DataType,
-                    IsNullable = false, // force natural key column to be non-null
-                    IncludeInStagingTable = true,
-                    StagingTableExpression = null,
-                    TargetTableExpression = null
-                };
-            })
+            .Select(c => targetColumns.First(sc => sc.ColumnName == c))
+            .DistinctBy(c => c.ColumnName)
+            .OrderBy(c => c.Ordinal) // Order by ordinal to make sure column renames don't affect hashing results.
             .ToArray();
         
+        // Order by ordinal to make sure column renames do not affect how hashes are calculated.
         var otherColumns = table.SchemaDriftConfiguration switch
         {
-            SchemaDriftDisabledConfiguration disabled => GetNonNkIncludedColumns(disabled, sourceColumns),
-            SchemaDriftEnabledConfiguration enabled => GetNonNkIncludedColumns(enabled, sourceColumns),
+            SchemaDriftDisabledConfiguration disabled =>
+                Scd.GetNonNkIncludedColumns(table.NaturalKeyColumns, disabled, targetColumns)
+                    .OrderBy(c => c.Ordinal).ToArray(),
+            SchemaDriftEnabledConfiguration enabled =>
+                Scd.GetNonNkLoadIncludedColumns(table.NaturalKeyColumns, enabled, sourceColumns, targetColumns)
+                    .OrderBy(c => c.Ordinal).ToArray(),
             _ => throw new ScdTableValidationException($"Unhandled table historization case: {table.GetType().Name}")
         };
         
-        ScdColumnMetadata[] recordColumns = [..naturalKeyColumns, ..otherColumns];
+        IEnumerable<ILoadColumn> recordColumns = [..naturalKeyColumns, ..otherColumns];
         var quotedRecordColumns = recordColumns
             .Select(c => c.ColumnName.QuoteName())
             .ToArray();
-        var recordHashColumn = new ScdColumnMetadata
+        var recordHashColumn = new LoadColumn
         {
             ColumnName = RecordHashColumn,
-            DataType = "VARCHAR(32)",
-            IsNullable = false,
             IncludeInStagingTable = true,
             // HASHBYTES() is the most reliable way of case-sensitively capturing all changes.
-            StagingTableExpression = $"CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT({string.Join(", '|', ", quotedRecordColumns)})))",
+            StagingTableExpression = $"CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT({string.Join(", '|', ", quotedRecordColumns)})), 2)",
             TargetTableExpression = null
         };
         
         return [hashKeyColumn, ..naturalKeyColumns, validFrom, validUntil, isCurrent, recordHashColumn, ..otherColumns];
-    }
-    
-    private ScdColumnMetadata[] GetNonNkIncludedColumns(
-        SchemaDriftDisabledConfiguration configuration,
-        ScdColumnMetadata[] sourceColumns)
-    {
-        var missingColumns = configuration.IncludedColumns
-            .Where(c => sourceColumns.All(sc => sc.ColumnName != c))
-            .ToArray();
-        
-        if (missingColumns.Length <= 0)
-        {
-            return configuration.IncludedColumns
-                .Distinct()
-                .Order()
-                .Where(c => !table.NaturalKeyColumns.Contains(c))
-                .Select(c => sourceColumns.First(sc => sc.ColumnName == c))
-                .ToArray();
-        }
-        
-        var missingColumnNames = string.Join(", ", missingColumns);
-        throw new ScdTableValidationException(
-            $"Schema drift was disabled and some included columns are missing from the source table: {missingColumnNames}");
-    }
-    
-    private ScdColumnMetadata[] GetNonNkIncludedColumns(
-        SchemaDriftEnabledConfiguration configuration,
-        ScdColumnMetadata[] sourceColumns)
-    {
-        return sourceColumns
-            .Where(c => !table.NaturalKeyColumns.Contains(c.ColumnName))
-            .Where(c => !configuration.ExcludedColumns.Contains(c.ColumnName))
-            .DistinctBy(c => c.ColumnName)
-            .OrderBy(c => c.ColumnName)
-            .ToArray();
     }
 }
 

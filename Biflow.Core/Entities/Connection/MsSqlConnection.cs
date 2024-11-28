@@ -1,6 +1,8 @@
 ﻿using Microsoft.Data.SqlClient;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Biflow.Core.Entities.Scd;
+using Biflow.Core.Entities.Scd.MsSql;
 
 namespace Biflow.Core.Entities;
 
@@ -94,4 +96,10 @@ public class MsSqlConnection() : ConnectionBase(ConnectionType.Sql)
         ArgumentNullException.ThrowIfNull(Credential);
         return Credential.RunImpersonatedAsync(func);
     }
+    
+    public override IColumnMetadataProvider CreateColumnMetadataProvider() =>
+        new MsSqlColumnMetadataProvider(ConnectionString);
+    
+    public override IScdProvider CreateScdProvider(ScdTable table) =>
+        new MsSqlScdProvider(table, CreateColumnMetadataProvider());
 }

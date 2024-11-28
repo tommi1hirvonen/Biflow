@@ -1,15 +1,12 @@
 ﻿using Dapper;
 using Microsoft.Data.SqlClient;
 
-namespace Biflow.Core.Entities;
+namespace Biflow.Core.Entities.Scd.MsSql;
 
-public class MsSqlColumnMetadataProvider : IScdColumnMetadataProvider
+public class MsSqlColumnMetadataProvider(string connectionString) : IColumnMetadataProvider
 {
-    public async Task<IReadOnlyList<ScdColumnMetadata>> GetTableColumnsAsync(
-        string connectionString,
-        string schema,
-        string table,
-        CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<FullColumnMetadata>> GetTableColumnsAsync(
+        string schema, string table, CancellationToken cancellationToken = default)
     {
         await using var connection = new SqlConnection(connectionString);
         const string sql = """
@@ -33,7 +30,8 @@ public class MsSqlColumnMetadataProvider : IScdColumnMetadataProvider
                           when type_name(b.user_type_id) like N'%char' or type_name(b.user_type_id) like '%binary'
                               then concat(N'(', case b.max_length when -1 then N'max' else cast(b.max_length as nvarchar(20)) end, N')')
                       end),
-              IsNullable = convert(bit, b.is_nullable)
+              IsNullable = convert(bit, b.is_nullable),
+              Ordinal = b.column_id
             from sys.tables as a
               inner join sys.columns as b on a.object_id = b.object_id
               inner join sys.types as c on b.user_type_id = c.user_type_id
@@ -43,13 +41,14 @@ public class MsSqlColumnMetadataProvider : IScdColumnMetadataProvider
             """;
         var parameters = new { schema, table };
         var command = new CommandDefinition(sql, parameters, cancellationToken: cancellationToken);
-        var results = await connection.QueryAsync<(string ColumnName, string DataType, bool IsNullable)>(command);
+        var results = await connection.QueryAsync<(string ColumnName, string DataType, bool IsNullable, int Ordinal)>(command);
         return results
-            .Select(r => new ScdColumnMetadata
+            .Select(r => new FullColumnMetadata
             {
                 ColumnName = r.ColumnName,
                 DataType = r.DataType,
                 IsNullable = r.IsNullable,
+                Ordinal = r.Ordinal,
                 IncludeInStagingTable = true,
                 StagingTableExpression = null,
                 TargetTableExpression = null

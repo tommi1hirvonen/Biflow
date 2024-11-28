@@ -1,6 +1,7 @@
 ﻿using Biflow.Core.Attributes;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Biflow.Core.Entities.Scd;
 
 namespace Biflow.Core.Entities;
 
@@ -41,4 +42,8 @@ public abstract class ConnectionBase(ConnectionType connectionType) : IComparabl
     
     [JsonIgnore]
     public IEnumerable<ScdTable> ScdTables { get; set; } = new List<ScdTable>();
+    
+    public abstract IColumnMetadataProvider CreateColumnMetadataProvider();
+
+    public abstract IScdProvider CreateScdProvider(ScdTable table);
 }

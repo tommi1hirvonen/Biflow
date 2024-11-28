@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using Biflow.Core.Entities.Scd;
 
 namespace Biflow.Core.Entities;
 
@@ -74,4 +75,10 @@ public class AnalysisServicesConnection() : ConnectionBase(ConnectionType.Analys
         ArgumentNullException.ThrowIfNull(Credential);
         return Credential.RunImpersonatedAsync(func);
     }
+    
+    public override IColumnMetadataProvider CreateColumnMetadataProvider() =>
+        throw new NotSupportedException($"{nameof(AnalysisServicesConnection)} does not support column metadata providers.");
+
+    public override IScdProvider CreateScdProvider(ScdTable table) =>
+        throw new NotSupportedException($"{nameof(AnalysisServicesConnection)} does not support SCD providers.");
 }

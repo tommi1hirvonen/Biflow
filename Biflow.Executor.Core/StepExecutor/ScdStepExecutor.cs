@@ -31,7 +31,7 @@ internal class ScdStepExecutor(
         
         // TODO: Handle impersonation for MsSqlConnections
 
-        var scdProvider = new MsSqlScdProvider(scdTable, new MsSqlColumnMetadataProvider());
+        var scdProvider = scdTable.CreateScdProvider();
 
         string structureUpdateStatement;
         try

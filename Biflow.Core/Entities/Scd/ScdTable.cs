@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Biflow.Core.Entities.Scd;
 
 namespace Biflow.Core.Entities;
 
@@ -99,4 +100,6 @@ public class ScdTable
         }
         NaturalKeyColumns.Add(column);
     }
+
+    public IScdProvider CreateScdProvider() => Connection.CreateScdProvider(this);
 }
