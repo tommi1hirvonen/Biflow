@@ -122,7 +122,7 @@
 
                                 <div class="row mt-3">
                                     <div class="col">
-                                        <label class="form-label">Target table</label>
+                                        <label class="form-label">Target table</label> @* TODO: Info popover about target table purpose *@
                                         <div class="input-group input-group-sm">
                                             <InputText class="form-control form-control-sm" placeholder="Schema"
                                                        @bind-Value="_table.TargetTableSchema"
@@ -138,7 +138,7 @@
 
                                 <div class="row mt-3">
                                     <div class="col">
-                                        <label class="form-label">Staging table</label>
+                                        <label class="form-label">Staging table</label> @* TODO: Info popover about staging table purpose *@
                                         <div class="input-group input-group-sm">
                                             <InputText class="form-control form-control-sm" placeholder="Schema"
                                                        @bind-Value="_table.StagingTableSchema"
@@ -158,7 +158,7 @@
                                             <input type="checkbox" class="form-check-input" id="full_load"
                                                    checked=@(_table.FullLoad)
                                                    @onchange="() => _table.FullLoad = !_table.FullLoad">
-                                            <label class="form-check-label fw-normal" for="full_load">
+                                            <label class="form-check-label fw-normal" for="full_load"> @* TODO: Info popover about full load/incremental load difference *@
                                                 Full load
                                             </label>
                                         </div>
@@ -172,7 +172,7 @@
                                                 <input type="checkbox" class="form-check-input" id="apply_index_on_create"
                                                        checked=@(_table.ApplyIndexesOnCreate)
                                                        @onchange="() => _table.ApplyIndexesOnCreate = !_table.ApplyIndexesOnCreate">
-                                                <label class="form-check-label fw-normal" for="apply_index_on_create">
+                                                <label class="form-check-label fw-normal" for="apply_index_on_create"> @* TODO: Info popover about indexes *@
                                                     Create index on target table
                                                 </label>
                                             </div>
@@ -181,7 +181,7 @@
                                             <input type="checkbox" class="form-check-input" id="select_distinct"
                                                    checked=@(_table.SelectDistinct)
                                                    @onchange="() => _table.SelectDistinct = !_table.SelectDistinct">
-                                            <label class="form-check-label fw-normal" for="select_distinct">
+                                            <label class="form-check-label fw-normal" for="select_distinct"> @* TODO: Info popover about distinct select option *@
                                                 Distinct select
                                             </label>
                                         </div>
@@ -207,7 +207,7 @@
                                             <input type="radio" class="form-check-input" id="radio_schema_drift_enabled"
                                                    checked=@(_table.SchemaDriftConfiguration is SchemaDriftEnabledConfiguration)
                                                    @onchange="() => _table.SchemaDriftConfiguration = _enabledConfiguration">
-                                            <label class="form-check-label fw-normal" for="radio_schema_drift_enabled">
+                                            <label class="form-check-label fw-normal" for="radio_schema_drift_enabled"> @* TODO: Info popover about enabling schema drift to handle new and removed columns *@
                                                 Enabled
                                             </label>
                                         </div>
@@ -222,7 +222,7 @@
                                                 <input type="checkbox" class="form-check-input" id="auto_include_new_columns"
                                                        checked=@(driftEnabled.IncludeNewColumns)
                                                        @onchange="() => driftEnabled.IncludeNewColumns = !driftEnabled.IncludeNewColumns">
-                                                <label class="form-check-label fw-normal" for="auto_include_new_columns">
+                                                <label class="form-check-label fw-normal" for="auto_include_new_columns"> @* TODO: Info popover about how adding new columns works *@
                                                     Auto-include new columns
                                                 </label>
                                             </div>
@@ -230,7 +230,7 @@
                                                 <input type="checkbox" class="form-check-input" id="ignore_removed_columns"
                                                        checked=@(driftEnabled.IgnoreMissingColumns)
                                                        @onchange="() => driftEnabled.IgnoreMissingColumns = !driftEnabled.IgnoreMissingColumns">
-                                                <label class="form-check-label fw-normal" for="ignore_removed_columns">
+                                                <label class="form-check-label fw-normal" for="ignore_removed_columns"> 
                                                     Silently ignore removed/missing columns
                                                 </label>
                                             </div>
@@ -412,7 +412,7 @@
                                         <table class="table table-sm table-hover small">
                                             <thead>
                                             <tr>
-                                                <th>Column</th>
+                                                <th>Column</th> @* TODO: Info popover about column mapping between source and target being done based on column names and using source views to have different names in source and target tables. *@
                                                 <th>Datatype</th>
                                                 <th>Natural key</th>
                                                 @switch (_table.SchemaDriftConfiguration)
