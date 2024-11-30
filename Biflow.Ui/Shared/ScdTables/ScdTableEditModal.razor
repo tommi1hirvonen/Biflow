@@ -112,15 +112,21 @@
                                         Full load
                                     </label>
                                 </div>
-                                @* TODO: Hide index checkbox for Snowflake since it has no effect *@
-                                <div class="form-check form-check-inline">
-                                    <input type="checkbox" class="form-check-input" id="apply_index_on_create"
-                                           checked=@(_table.ApplyIndexesOnCreate)
-                                           @onchange="() => _table.ApplyIndexesOnCreate = !_table.ApplyIndexesOnCreate">
-                                    <label class="form-check-label fw-normal" for="apply_index_on_create">
-                                        Create index on target table
-                                    </label>
-                                </div>
+                                @{
+                                    var connection = Connections.FirstOrDefault(c => c.ConnectionId == _table.ConnectionId);
+                                }
+                                @if (connection?.ConnectionType != ConnectionType.Snowflake)
+                                {
+                                    // Hide index options on Snowflake since it doesn't have an effect.
+                                    <div class="form-check form-check-inline">
+                                        <input type="checkbox" class="form-check-input" id="apply_index_on_create"
+                                               checked=@(_table.ApplyIndexesOnCreate)
+                                               @onchange="() => _table.ApplyIndexesOnCreate = !_table.ApplyIndexesOnCreate">
+                                        <label class="form-check-label fw-normal" for="apply_index_on_create">
+                                            Create index on target table
+                                        </label>
+                                    </div>
+                                }
                                 <div class="form-check form-check-inline">
                                     <input type="checkbox" class="form-check-input" id="select_distinct"
                                            checked=@(_table.SelectDistinct)
