@@ -199,7 +199,7 @@ internal class SnowflakeScdProvider(ScdTable table, IColumnMetadataProvider colu
         {
             // Target table does not exist.
             var columnDefinitions = GetStructureColumns(sourceColumns)
-                .Select(c => $"{c.ColumnName.QuoteName()} {c.DataType} {(c.IsNullable ? "null" : "not null")}");
+                .Select(c => $"{c.ColumnName.QuoteName()} {c.DataType} {(c.IsNullable ? "NULL" : "NOT NULL")}");
             builder.AppendLine($"""
                 CREATE TABLE {tableName} (
                 {string.Join(",\n", columnDefinitions)}

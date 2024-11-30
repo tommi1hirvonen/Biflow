@@ -201,7 +201,7 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
         {
             // Target table does not exist.
             var columnDefinitions = GetStructureColumns(sourceColumns)
-                .Select(c => $"{c.ColumnName.QuoteName()} {c.DataType} {(c.IsNullable ? "null" : "not null")}");
+                .Select(c => $"{c.ColumnName.QuoteName()} {c.DataType} {(c.IsNullable ? "NULL" : "NOT NULL")}");
             
             builder.AppendLine($"""
                 CREATE TABLE {tableName} (
@@ -301,7 +301,7 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
         var hashKeyColumn = new StructureColumn
         {
             ColumnName = HashKeyColumn,
-            DataType = "varchar(32)",
+            DataType = "VARCHAR(32)",
             IsNullable = false
         };
         
@@ -323,19 +323,19 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
         var validFrom = new StructureColumn
         {
             ColumnName = ValidFromColumn,
-            DataType = "datetime2(6)",
+            DataType = "DATETIME2(6)",
             IsNullable = false
         };
         var validUntil = new StructureColumn
         {
             ColumnName = ValidUntilColumn,
-            DataType = "datetime2(6)",
+            DataType = "DATETIME2(6)",
             IsNullable = true
         };
         var isCurrent = new StructureColumn
         {
             ColumnName = IsCurrentColumn,
-            DataType = "bit",
+            DataType = "BIT",
             IsNullable = false
         };
         
@@ -391,7 +391,7 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
             ColumnName = ValidUntilColumn,
             IncludeInStagingTable = false,
             StagingTableExpression = null,
-            TargetTableExpression = "CONVERT(datetime2(6), '9999-12-31')"
+            TargetTableExpression = "CONVERT(DATETIME2(6), '9999-12-31')"
         };
         var isCurrent = new LoadColumn
         {
