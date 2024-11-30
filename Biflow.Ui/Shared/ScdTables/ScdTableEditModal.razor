@@ -191,13 +191,30 @@
                             </div>
                         }
 
-                        <div class="row mt-3">
-                            <div class="col">
+                        <div class="row mt-3 justify-content-between">
+                            <div class="col-auto">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
-                                          OnClick="async () => _columns = await LoadColumnsAsync()">
+                                          OnClick="async () => _columns = await LoadColumnsAsync()"
+                                          Spinner="_loadingColumns"
+                                          Enabled="!_loadingColumns">
                                     <SvgIcon Icon="LucideIcon.RefreshCw"/>
                                     Import columns
                                 </HxButton>
+                            </div>
+                            <div class="col-auto">
+                                @if (_columns is not null && _prevConnectionId != _table.ConnectionId)
+                                {
+                                    // Show alert to advise user to reimport columns after connection change.
+                                    <HxAlert Color="ThemeColor.Warning" CssClass="mb-0 small py-1 d-flex align-items-center">
+                                        <SvgIcon Icon="LucideIcon.CircleAlert" />
+                                        &nbsp;
+                                        Connection was changed –&nbsp;
+                                        <span class="alert-link pointer text-decoration-underline"
+                                              @onclick="async () => _columns = await LoadColumnsAsync()">
+                                            reimport columns
+                                        </span> 
+                                    </HxAlert>
+                                }
                             </div>
                         </div>
 
@@ -314,7 +331,9 @@
     private TableSelectOffcanvas? _offcanvas;
     private IEnumerable<FullColumnMetadata>? _columns;
     private bool _firstColumnImport = true;
+    private bool _loadingColumns = false;
     private ScdTable? _table;
+    private Guid _prevConnectionId;
     // Cache the configurations to fields.
     // This way settings aren't lost if the user changes the table's configuration.
     private SchemaDriftDisabledConfiguration _disabledConfiguration = new();
@@ -324,6 +343,7 @@
     {
         _table = null;
         _columns = null;
+        _prevConnectionId = Guid.Empty;
         _firstColumnImport = true;
         _disabledConfiguration = new();
         _enabledConfiguration = new();
@@ -335,6 +355,7 @@
                 .AsNoTrackingWithIdentityResolution()
                 .Include(t => t.Connection)
                 .FirstAsync(t => t.ScdTableId == id);
+            _prevConnectionId = _table.ConnectionId;
             StateHasChanged();
             switch (_table.SchemaDriftConfiguration)
             {
@@ -360,9 +381,11 @@
         }
         else
         {
+            _columns = [];
             ArgumentNullException.ThrowIfNull(Connections);
             var connection = Connections.FirstOrDefault();
             ArgumentNullException.ThrowIfNull(connection);
+            _prevConnectionId = connection.ConnectionId;
             _table = new()
             {
                 ConnectionId = connection.ConnectionId,
@@ -408,6 +431,7 @@
     {
         try
         {
+            _loadingColumns = true;
             ArgumentNullException.ThrowIfNull(_table);
             ArgumentNullException.ThrowIfNull(Connections);
             var connection = Connections.FirstOrDefault(c => c.ConnectionId == _table.ConnectionId);
@@ -429,14 +453,20 @@
                 // Do not clear included columns but instead remove any unmatched columns.
                 _disabledConfiguration.IncludedColumns.RemoveAll(c1 => columns.All(c2 => c1 != c2.ColumnName));
             }
+
             _enabledConfiguration.ExcludedColumns.RemoveAll(c1 => columns.All(c2 => c1 != c2.ColumnName));
             _firstColumnImport = false;
+            _prevConnectionId = connection.ConnectionId;
             return columns;
         }
         catch (Exception ex)
         {
             Toaster.AddError("Error importing columns", ex.Message);
             return [];
+        }
+        finally
+        {
+            _loadingColumns = false;
         }
     }
     
