@@ -7,8 +7,15 @@
 
 <HxModal @ref="_modal" Size="ModalSize.Large" Title="@(_table?.ScdTableId == Guid.Empty ? "New SCD table" : "Edit " + _table?.ScdTableName)" Scrollable="true">
     <BodyTemplate>
-        @* TODO: Show spinner when loading table and connections *@
-        @if (_table is not null && Connections is not null)
+        @if (_table is null || Connections is null)
+        {
+            <div class="row my-4">
+                <div class="col text-center">
+                    <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Regular" />
+                </div>
+            </div>
+        }
+        else
         {
             <EditForm id="scd_table_edit_form" Model="_table" OnValidSubmit="SubmitAsync">
                 <div class="row">
@@ -181,7 +188,7 @@
                         <div class="row mt-3">
                             <div class="col">
                                 <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
-                                          OnClick="ImportColumnsAsync">
+                                          OnClick="async () => _columns = await LoadColumnsAsync()">
                                     <SvgIcon Icon="LucideIcon.RefreshCw"/>
                                     Import columns
                                 </HxButton>
@@ -210,11 +217,19 @@
                                     <tbody>
                                     @{
                                         var columns = _columns
-                                            .OrderBy(c => !_table.NaturalKeyColumns.Contains(c.ColumnName))
-                                            .ThenBy(c => c.ColumnName);
+                                            ?.OrderBy(c => !_table.NaturalKeyColumns.Contains(c.ColumnName))
+                                            .ThenBy(c => c.ColumnName)
+                                            .AsEnumerable() ?? [];
                                     }
                                     @* TODO: Show orphaned columns (exists in SCD table config but not in DB *@
-                                    @* TODO: Show spinner when loading columns *@
+                                    @if (_columns is null)
+                                    {
+                                        <tr>
+                                            <td colspan="4" class="text-center">
+                                                <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                                            </td>
+                                        </tr>
+                                    }
                                     @foreach (var column in columns)
                                     {
                                         <tr>
@@ -291,7 +306,7 @@
     
     private HxModal? _modal;
     private TableSelectOffcanvas? _offcanvas;
-    private IEnumerable<FullColumnMetadata> _columns = [];
+    private IEnumerable<FullColumnMetadata>? _columns;
     private bool _firstColumnImport = true;
     private ScdTable? _table;
     // Cache the configurations to fields.
@@ -302,7 +317,7 @@
     public async Task ShowAsync(Guid? scdTableId)
     {
         _table = null;
-        _columns = [];
+        _columns = null;
         _firstColumnImport = true;
         _disabledConfiguration = new();
         _enabledConfiguration = new();
@@ -319,7 +334,7 @@
             {
                 case SchemaDriftDisabledConfiguration disabled:
                     _disabledConfiguration = disabled;
-                    await ImportColumnsAsync();
+                    _columns = await LoadColumnsAsync();
                     var excludedColumns = _columns
                         .Select(c => c.ColumnName)
                         .Where(c1 => disabled.IncludedColumns.Concat(_table.NaturalKeyColumns).All(c2 => c1 != c2))
@@ -328,7 +343,7 @@
                     break;
                 case SchemaDriftEnabledConfiguration enabled:
                     _enabledConfiguration = enabled;
-                    await ImportColumnsAsync();
+                    _columns = await LoadColumnsAsync();
                     var includedColumns = _columns
                         .Select(c => c.ColumnName)
                         .Where(c1 => enabled.ExcludedColumns.All(c2 => c1 != c2))
@@ -380,10 +395,10 @@
             _table.StagingTableSchema = _table.SourceTableSchema;
             _table.StagingTableName = $"{_table.SourceTableName}_SCD_DELTA";
         }
-        await ImportColumnsAsync();
+        _columns = await LoadColumnsAsync();
     }
 
-    private async Task ImportColumnsAsync()
+    private async Task<IEnumerable<FullColumnMetadata>> LoadColumnsAsync()
     {
         try
         {
@@ -392,28 +407,30 @@
             var connection = Connections.FirstOrDefault(c => c.ConnectionId == _table.ConnectionId);
             ArgumentNullException.ThrowIfNull(connection);
             var columnProvider = connection.CreateColumnMetadataProvider();
-            _columns = await columnProvider.GetTableColumnsAsync(
+            var columns = await columnProvider.GetTableColumnsAsync(
                 _table.SourceTableSchema,
                 _table.SourceTableName);
-            _table.NaturalKeyColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName));
+            _table.NaturalKeyColumns.RemoveAll(c1 => columns.All(c2 => c1 != c2.ColumnName));
             if (_table.ScdTableId == Guid.Empty && _firstColumnImport)
             {
                 // New table and columns are being imported for the first time.
                 _disabledConfiguration.IncludedColumns.Clear();
-                _disabledConfiguration.IncludedColumns.AddRange(_columns.Select(c => c.ColumnName).Order());
+                _disabledConfiguration.IncludedColumns.AddRange(columns.Select(c => c.ColumnName).Order());
             }
             else
             {
                 // Use may have made changes.
                 // Do not clear included columns but instead remove any unmatched columns.
-                _disabledConfiguration.IncludedColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName));
+                _disabledConfiguration.IncludedColumns.RemoveAll(c1 => columns.All(c2 => c1 != c2.ColumnName));
             }
-            _enabledConfiguration.ExcludedColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName));
+            _enabledConfiguration.ExcludedColumns.RemoveAll(c1 => columns.All(c2 => c1 != c2.ColumnName));
             _firstColumnImport = false;
+            return columns;
         }
         catch (Exception ex)
         {
             Toaster.AddError("Error importing columns", ex.Message);
+            return [];
         }
     }
     
