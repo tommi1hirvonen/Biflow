@@ -1,0 +1,11 @@
+﻿.tr-hover-underline {
+    cursor: pointer;
+}
+
+tr .tr-hover-underline {
+    text-decoration: none;
+}
+
+tr:hover .tr-hover-underline {
+    text-decoration: underline;
+}
