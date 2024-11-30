@@ -48,7 +48,7 @@
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
                                               OnClick="ShowTablesOffcanvasAsync">
                                         <SvgIcon Icon="LucideIcon.Ellipsis"/>
-                                        Select source table
+                                        Select source
                                     </HxButton>
                                 </div>
                             </div>
@@ -217,6 +217,148 @@
                                 }
                             </div>
                         </div>
+                        
+                        @if (_columns is not null)
+                        {
+                            var orphanedNaturalKeyColumns = _table.NaturalKeyColumns
+                                .Where(c1 => _columns.All(c2 => c1 != c2.ColumnName));
+                            if (orphanedNaturalKeyColumns.Any())
+                            {
+                                <div class="row mt-3">
+                                    <div class="col">
+                                        <table class="table table-sm small">
+                                            <thead>
+                                                <tr>
+                                                    <th>
+                                                        Orphaned natural key columns
+                                                        &nbsp;
+                                                        <HxPopover Trigger="PopoverTrigger.Hover" Content="Orphaned natural key columns will cause an error during execution. Clear the orphaned columns or make sure they exist in the source table/view and reimport columns.">
+                                                            <span class="text-danger">
+                                                                <SvgIcon Icon="LucideIcon.CircleAlert"/>
+                                                            </span>
+                                                        </HxPopover>
+                                                    </th>
+                                                    <th>
+                                                        <span class="pointer bold text-decoration-underline"
+                                                              @onclick="() => _table.NaturalKeyColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName))">
+                                                            Clear all
+                                                        </span>
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var col in orphanedNaturalKeyColumns)
+                                                {
+                                                    <tr>
+                                                        <td>@col</td>
+                                                        <td>
+                                                            <span class="pointer bold text-decoration-underline"
+                                                                  @onclick="() => _table.NaturalKeyColumns.Remove(col)">
+                                                            Clear
+                                                        </span>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            }
+
+                            @switch (_table.SchemaDriftConfiguration)
+                            {
+                                case SchemaDriftDisabledConfiguration disabled:
+                                    var orphanedIncludedColumns = disabled.IncludedColumns
+                                        .Where(c1 => _columns.All(c2 => c1 != c2.ColumnName));
+                                    if (orphanedIncludedColumns.Any())
+                                    {
+                                        <div class="row mt-3">
+                                            <div class="col">
+                                                <table class="table table-sm small">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>
+                                                                Orphaned included columns
+                                                                &nbsp;
+                                                                <HxPopover Trigger="PopoverTrigger.Hover" Content="Orphaned included columns will cause an error during execution. Clear the orphaned columns or make sure they exist in the source table/view and reimport columns.">
+                                                                    <span class="text-danger">
+                                                                        <SvgIcon Icon="LucideIcon.CircleAlert"/>
+                                                                    </span>
+                                                                </HxPopover>
+                                                            </th>
+                                                            <th>
+                                                                <span class="pointer bold text-decoration-underline"
+                                                                      @onclick="() => _disabledConfiguration.IncludedColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName))">
+                                                                    Clear all
+                                                                </span>
+                                                            </th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach (var col in orphanedIncludedColumns)
+                                                        {
+                                                            <tr>
+                                                                <td>@col</td>
+                                                                <td>
+                                                                    <span class="pointer bold text-decoration-underline"
+                                                                          @onclick="() => _disabledConfiguration.IncludedColumns.Remove(col)">
+                                                                    Clear
+                                                                </span>
+                                                                </td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    }
+                                    break;
+                                case SchemaDriftEnabledConfiguration enabled:
+                                    var orphanedExcludedColumns = enabled.ExcludedColumns
+                                        .Where(c1 => _columns.All(c2 => c1 != c2.ColumnName));
+                                    if (orphanedExcludedColumns.Any())
+                                    {
+                                        <div class="row mt-3">
+                                            <div class="col">
+                                                <table class="table table-sm small">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>
+                                                                Orphaned excluded columns
+                                                                &nbsp;
+                                                                <HxPopover Trigger="PopoverTrigger.Hover" Content="Orphaned excluded columns will have no effect during execution.">
+                                                                    <SvgIcon Icon="LucideIcon.Info"/>
+                                                                </HxPopover>
+                                                            </th>
+                                                            <th>
+                                                                <span class="pointer bold text-decoration-underline"
+                                                                      @onclick="() => _enabledConfiguration.ExcludedColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName))">
+                                                                    Clear all
+                                                                </span>
+                                                            </th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach (var col in orphanedExcludedColumns)
+                                                        {
+                                                            <tr>
+                                                                <td>@col</td>
+                                                                <td>
+                                                                    <span class="pointer bold text-decoration-underline"
+                                                                          @onclick="() => _enabledConfiguration.ExcludedColumns.Remove(col)">
+                                                                        Clear
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    }
+                                    break;
+                            }
+                        }
 
                         <div class="row mt-3">
                             <div class="col">
@@ -244,7 +386,6 @@
                                             .ThenBy(c => c.ColumnName)
                                             .AsEnumerable() ?? [];
                                     }
-                                    @* TODO: Show orphaned columns (exists in SCD table config but not in DB *@
                                     @if (_columns is null)
                                     {
                                         <tr>
@@ -440,21 +581,13 @@
             var columns = await columnProvider.GetColumnsAsync(
                 _table.SourceTableSchema,
                 _table.SourceTableName);
-            _table.NaturalKeyColumns.RemoveAll(c1 => columns.All(c2 => c1 != c2.ColumnName));
             if (_table.ScdTableId == Guid.Empty && _firstColumnImport)
             {
                 // New table and columns are being imported for the first time.
                 _disabledConfiguration.IncludedColumns.Clear();
                 _disabledConfiguration.IncludedColumns.AddRange(columns.Select(c => c.ColumnName).Order());
             }
-            else
-            {
-                // Use may have made changes.
-                // Do not clear included columns but instead remove any unmatched columns.
-                _disabledConfiguration.IncludedColumns.RemoveAll(c1 => columns.All(c2 => c1 != c2.ColumnName));
-            }
 
-            _enabledConfiguration.ExcludedColumns.RemoveAll(c1 => columns.All(c2 => c1 != c2.ColumnName));
             _firstColumnImport = false;
             _prevConnectionId = connection.ConnectionId;
             return columns;
@@ -474,8 +607,12 @@
     {
         ArgumentNullException.ThrowIfNull(_table);
         _table.NaturalKeyColumns.Sort();
+        // Included columns should not contain natural key columns.
+        // Natural key columns are included by default.
         _disabledConfiguration.IncludedColumns.RemoveAll(c => _table.NaturalKeyColumns.Contains(c));
         _disabledConfiguration.IncludedColumns.Sort();
+        // Excluded columns should not contain natural key columns.
+        // Natural key columns cannot be excluded.
         _enabledConfiguration.ExcludedColumns.RemoveAll(c => _table.NaturalKeyColumns.Contains(c));
         _enabledConfiguration.ExcludedColumns.Sort();
         await OnTableSubmit.InvokeAsync(_table);
