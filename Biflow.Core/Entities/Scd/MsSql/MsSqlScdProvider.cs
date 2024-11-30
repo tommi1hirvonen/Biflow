@@ -22,16 +22,7 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
     public async Task<StagingLoadStatementResult> CreateStagingLoadStatementAsync(
         CancellationToken cancellationToken = default)
     {
-        var sourceColumns = (await columnProvider.GetTableColumnsAsync(
-                table.SourceTableSchema, table.SourceTableName, cancellationToken))
-            .Where(c => !SystemColumns.Contains(c.ColumnName))
-            .Cast<IOrderedLoadColumn>()
-            .ToArray();
-        var targetColumns = (await columnProvider.GetTableColumnsAsync(
-                table.TargetTableSchema, table.TargetTableName, cancellationToken))
-            .Where(c => !SystemColumns.Contains(c.ColumnName))
-            .Cast<IOrderedLoadColumn>()
-            .ToArray();
+        var (sourceColumns, targetColumns) = await GetSourceTargetColumnsAsync<IOrderedLoadColumn>(cancellationToken);
         
         Scd.EnsureScdTableValidated(
             table,
@@ -77,16 +68,7 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
 
     public async Task<string> CreateTargetLoadStatementAsync(CancellationToken cancellationToken = default)
     {
-        var sourceColumns = (await columnProvider.GetTableColumnsAsync(
-                table.SourceTableSchema, table.SourceTableName, cancellationToken))
-            .Where(c => !SystemColumns.Contains(c.ColumnName))
-            .Cast<IOrderedLoadColumn>()
-            .ToArray();
-        var targetColumns = (await columnProvider.GetTableColumnsAsync(
-                table.TargetTableSchema, table.TargetTableName, cancellationToken))
-            .Where(c => !SystemColumns.Contains(c.ColumnName))
-            .Cast<IOrderedLoadColumn>()
-            .ToArray();
+        var (sourceColumns, targetColumns) = await GetSourceTargetColumnsAsync<IOrderedLoadColumn>(cancellationToken);
         return CreateTargetLoadStatement(sourceColumns, targetColumns);
     }
     
@@ -177,16 +159,7 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
 
     public async Task<string> CreateStructureUpdateStatementAsync(CancellationToken cancellationToken = default)
     {
-        var sourceColumns = (await columnProvider.GetTableColumnsAsync(
-                table.SourceTableSchema, table.SourceTableName, cancellationToken))
-            .Where(c => !SystemColumns.Contains(c.ColumnName))
-            .Cast<IStructureColumn>()
-            .ToArray();
-        var targetColumns = (await columnProvider.GetTableColumnsAsync(
-                table.TargetTableSchema, table.TargetTableName, cancellationToken))
-            .Where(c => !SystemColumns.Contains(c.ColumnName))
-            .Cast<IStructureColumn>()
-            .ToArray();
+        var (sourceColumns, targetColumns) = await GetSourceTargetColumnsAsync<IStructureColumn>(cancellationToken);
         
         Scd.EnsureScdTableValidated(
             table,
@@ -197,7 +170,7 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
         
         var tableName = $"{table.TargetTableSchema.QuoteName()}.{table.TargetTableName.QuoteName()}";
         
-        if (targetColumns.Length == 0)
+        if (targetColumns.Count == 0)
         {
             // Target table does not exist.
             var columnDefinitions = GetStructureColumns(sourceColumns)
@@ -237,8 +210,7 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
             return builder.ToString();
         }
 
-        IEnumerable<IStructureColumn> columnsToAlter;
-        IEnumerable<IStructureColumn> columnsToAdd;
+        IEnumerable<IStructureColumn> columnsToAlter, columnsToAdd;
 
         switch (table.SchemaDriftConfiguration)
         {
@@ -296,7 +268,7 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
         return builder.ToString();
     }
     
-    private IStructureColumn[] GetStructureColumns(IStructureColumn[] sourceColumns)
+    private IReadOnlyList<IStructureColumn> GetStructureColumns(IReadOnlyList<IStructureColumn> sourceColumns)
     {
         var hashKeyColumn = new StructureColumn
         {
@@ -433,6 +405,22 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
         };
         
         return [hashKeyColumn, ..naturalKeyColumns, validFrom, validUntil, isCurrent, recordHashColumn, ..otherColumns];
+    }
+    
+    private async Task<(IReadOnlyList<T> SourceColumns, IReadOnlyList<T> TargetColumns)>
+        GetSourceTargetColumnsAsync<T>(CancellationToken cancellationToken)
+    {
+        var sourceColumns = (await columnProvider.GetColumnsAsync(
+                table.SourceTableSchema, table.SourceTableName, cancellationToken))
+            .Where(c => !SystemColumns.Contains(c.ColumnName))
+            .Cast<T>()
+            .ToArray();
+        var targetColumns = (await columnProvider.GetColumnsAsync(
+                table.TargetTableSchema, table.TargetTableName, cancellationToken))
+            .Where(c => !SystemColumns.Contains(c.ColumnName))
+            .Cast<T>()
+            .ToArray();
+        return (sourceColumns, targetColumns);
     }
 }
 

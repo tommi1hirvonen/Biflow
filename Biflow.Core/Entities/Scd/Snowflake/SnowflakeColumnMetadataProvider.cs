@@ -5,7 +5,7 @@ namespace Biflow.Core.Entities.Scd.Snowflake;
 
 internal class SnowflakeColumnMetadataProvider(string connectionString) : IColumnMetadataProvider
 {
-    public async Task<IReadOnlyList<FullColumnMetadata>> GetTableColumnsAsync(
+    public async Task<IReadOnlyList<FullColumnMetadata>> GetColumnsAsync(
         string schema, string table, CancellationToken cancellationToken = default)
     {
         await using var connection = new SnowflakeDbConnection(connectionString);

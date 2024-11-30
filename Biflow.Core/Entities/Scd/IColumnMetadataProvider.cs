@@ -2,6 +2,6 @@
 
 public interface IColumnMetadataProvider
 {
-    public Task<IReadOnlyList<FullColumnMetadata>> GetTableColumnsAsync(
+    public Task<IReadOnlyList<FullColumnMetadata>> GetColumnsAsync(
         string schema, string table, CancellationToken cancellationToken = default);
 }

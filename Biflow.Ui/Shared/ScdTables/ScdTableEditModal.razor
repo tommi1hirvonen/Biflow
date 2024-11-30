@@ -407,7 +407,7 @@
             var connection = Connections.FirstOrDefault(c => c.ConnectionId == _table.ConnectionId);
             ArgumentNullException.ThrowIfNull(connection);
             var columnProvider = connection.CreateColumnMetadataProvider();
-            var columns = await columnProvider.GetTableColumnsAsync(
+            var columns = await columnProvider.GetColumnsAsync(
                 _table.SourceTableSchema,
                 _table.SourceTableName);
             _table.NaturalKeyColumns.RemoveAll(c1 => columns.All(c2 => c1 != c2.ColumnName));
