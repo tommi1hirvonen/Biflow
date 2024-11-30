@@ -8,6 +8,7 @@
 @inject ToasterService Toaster
 @inject ThemeService ThemeService
 @inject IMediator Mediator
+@inject IHxMessageBoxService Confirmer
 
 <PageTitle>SCD tables | Biflow</PageTitle>
 
@@ -52,73 +53,77 @@
 <div class="card pt-2 my-4">
     <table class="table table-sm table-hover">
         <thead>
-        <tr>
-            <th>
-                Name
-            </th>
-            <th></th>
-            <th>Pre-load script</th>
-            <th>Post-load script</th>
-            <th>Source table</th>
-            <th>Target table</th>
-        </tr>
+            <tr>
+                <th>
+                    Name
+                </th>
+                <th>Source table</th>
+                <th>Target table</th>
+                <th>Pre-load script</th>
+                <th>Post-load script</th>
+                <th></th>
+            </tr>
         </thead>
         <tbody>
-        @if (_tables is null)
-        {
-            <tr><td colspan="6" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
-        }
-        else if (_tables.Count == 0)
-        {
-            <tr><td colspan="6">No SCD tables</td></tr>
-        }
-        else
-        {
-            @foreach (var table in _tables.OrderBy(t => t.ScdTableName))
+            @if (_tables is null)
             {
-                <tr>
-                    <td class="align-middle">
-                        <span class="tr-hover-underline" @onclick="() => ShowEditModalAsync(table)">
-                            @table.ScdTableName    
-                        </span>
-                    </td>
-                    <td class="align-middle">
-                        <HxButtonGroup Size="ButtonGroupSize.Small">
-                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="() => ShowEditModalAsync(table)">
-                                <SvgIcon Icon="LucideIcon.Pen" />
-                            </HxButton>
-                            <HxDropdownButtonGroup>
-                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="delete">
-                                    <SvgIcon Icon="LucideIcon.Trash2" />
-                                </HxDropdownToggleButton>
-                                <HxDropdownMenu>
-                                    <HxDropdownHeader>Delete?</HxDropdownHeader>
-                                    <HxDropdownItem @onclick="() => DeleteTableAsync(table)">Confirm</HxDropdownItem>
-                                </HxDropdownMenu>
-                            </HxDropdownButtonGroup>
-                        </HxButtonGroup>
-                    </td>
-                    <td class="align-middle">
-                        @if (!string.IsNullOrWhiteSpace(table.PreLoadScript))
-                        {
-                            <SvgIcon Icon="LucideIcon.Check" />      
-                        }
-                    </td>
-                    <td class="align-middle">
-                        @if (!string.IsNullOrWhiteSpace(table.PostLoadScript))
-                        {
-                            <SvgIcon Icon="LucideIcon.Check" />
-                        }
-                    </td>
-                    <td class="align-middle small">
-                        @table.SourceTableSchema.@table.SourceTableName
-                    </td>
-                    <td class="align-middle small">
-                        @table.TargetTableSchema.@table.TargetTableName
-                    </td>
-                </tr>
+                <tr><td colspan="6" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
-        }
+            else if (_tables.Count == 0)
+            {
+                <tr><td colspan="6">No SCD tables</td></tr>
+            }
+            else
+            {
+                @foreach (var table in _tables.OrderBy(t => t.ScdTableName))
+                {
+                    <ContextMenuToggle ContainerHtmlTag="tr">
+                        <ChildContent Context="menu">
+                            <td class="align-middle">
+                            <span class="tr-hover-underline" @onclick="() => ShowEditModalAsync(table)">
+                                @table.ScdTableName
+                            </span>
+                            </td>
+                            <td class="align-middle small">
+                                @table.SourceTableSchema.@table.SourceTableName
+                            </td>
+                            <td class="align-middle small">
+                                @table.TargetTableSchema.@table.TargetTableName
+                            </td>
+                            <td class="align-middle">
+                                @if (!string.IsNullOrWhiteSpace(table.PreLoadScript))
+                                {
+                                    <SvgIcon Icon="LucideIcon.Check"/>
+                                }
+                            </td>
+                            <td class="align-middle">
+                                @if (!string.IsNullOrWhiteSpace(table.PostLoadScript))
+                                {
+                                    <SvgIcon Icon="LucideIcon.Check"/>
+                                }
+                            </td>
+                            <td class="align-middle">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" Spinner="false" CssClass="btn-auto" @onclick="e => menu.ShowContextMenuAsync(e)">
+                                    <SvgIcon Icon="LucideIcon.Ellipsis" />
+                                </HxButton>
+                            </td>
+                        </ChildContent>
+                        <MenuContent>
+                            <DropdownMenuHeader>
+                                @table.ScdTableName
+                            </DropdownMenuHeader>
+                            <DropdownMenuItem @onclick="() => ShowEditModalAsync(table)">
+                                <SvgIcon Icon="LucideIcon.Pen" />
+                                Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem @onclick="() => ConfirmAndDeleteTableAsync(table)">
+                                <SvgIcon Icon="LucideIcon.Trash2" />
+                                Delete...
+                            </DropdownMenuItem>
+                        </MenuContent>
+                    </ContextMenuToggle>
+                }
+            }
         </tbody>
     </table>
 </div>
@@ -153,8 +158,12 @@
         return _editModal.LetAsync(x => x.ShowAsync(table?.ScdTableId));
     }
 
-    private async Task DeleteTableAsync(ScdTable table)
+    private async Task ConfirmAndDeleteTableAsync(ScdTable table)
     {
+        if (!await Confirmer.ConfirmAsync("Delete SCD table", $"Are you sure you want to delete '{table.ScdTableName}'?"))
+        {
+            return;
+        }
         try
         {
             await Mediator.SendAsync(new DeleteScdTableCommand(table.ScdTableId));
