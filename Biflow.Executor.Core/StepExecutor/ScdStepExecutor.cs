@@ -14,6 +14,7 @@ internal class ScdStepExecutor(
     : StepExecutor<ScdStepExecution, ScdStepExecutionAttempt>(logger, dbContextFactory)
 {
     private readonly ILogger<ScdStepExecutor> _logger = logger;
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
     
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
     
@@ -44,8 +45,6 @@ internal class ScdStepExecutor(
         try
         {
             structureUpdateStatement = await scdProvider.CreateStructureUpdateStatementAsync(cancellationToken);
-            if (!string.IsNullOrWhiteSpace(structureUpdateStatement))
-                attempt.AddOutput(structureUpdateStatement);
         }
         catch (ScdTableValidationException ex)
         {
@@ -60,6 +59,9 @@ internal class ScdStepExecutor(
 
         if (!string.IsNullOrWhiteSpace(structureUpdateStatement))
         {
+            attempt.AddOutput(structureUpdateStatement);
+            // Update the output messages so that they are visible in monitoring even during execution.
+            await UpdateOutputAsync(attempt, cancellationToken);
             var structureUpdateResult = await ExecuteStatementAsync(
                 step, attempt, scdTable, structureUpdateStatement, cancellationToken);
             if (structureUpdateResult is not null)
@@ -77,6 +79,8 @@ internal class ScdStepExecutor(
             (stagingLoadStatement, sourceColumns, targetColumns) =
                 await scdProvider.CreateStagingLoadStatementAsync(cancellationToken);
             attempt.AddOutput(stagingLoadStatement);
+            // Update the output messages so that they are visible in monitoring even during execution.
+            await UpdateOutputAsync(attempt, cancellationToken);
         }
         catch (ScdTableValidationException ex)
         {
@@ -103,6 +107,8 @@ internal class ScdStepExecutor(
             // Reuse columns from before since they have not changed.
             targetLoadStatement = scdProvider.CreateTargetLoadStatement(sourceColumns, targetColumns);
             attempt.AddOutput(targetLoadStatement);
+            // Update the output messages so that they are visible in monitoring even during execution.
+            await UpdateOutputAsync(attempt, cancellationToken);
         }
         catch (ScdTableValidationException ex)
         {
@@ -204,6 +210,24 @@ internal class ScdStepExecutor(
             attempt.AddError(ex, "SCD table execution failed");
             _logger.LogWarning(ex, "{ExecutionId} {Step} SCD table execution failed", step.ExecutionId, step);
             return Result.Failure;
+        }
+    }
+
+    private async Task UpdateOutputAsync(ScdStepExecutionAttempt attempt, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await context.StepExecutionAttempts
+                .Where(x => x.ExecutionId == attempt.ExecutionId
+                            && x.StepId == attempt.StepId
+                            && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+                .ExecuteUpdateAsync(x => x.SetProperty(p => p.InfoMessages, attempt.InfoMessages), cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "{executionId} {stepId} Error updating SCD step execution attempt output",
+                attempt.ExecutionId, attempt.StepId);
         }
     }
 }
