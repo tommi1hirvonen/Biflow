@@ -19,258 +19,257 @@
         {
             <EditForm id="scd_table_edit_form" Model="_table" OnValidSubmit="SubmitAsync">
                 <div class="row">
+                    <div class="col">
+                        <ul class="nav nav-underline">
+                            <li class="nav-item pointer">
+                                <span
+                                    class="nav-link @(_view == View.Settings ? "active" : null)"
+                                    @onclick="() => _view = View.Settings">
+                                    Settings
+                                </span>
+                            </li>
+                            <li class="nav-item pointer">
+                                <span
+                                    class="nav-link @(_view == View.PreLoadScript ? "active" : null)"
+                                    @onclick="() => _view = View.PreLoadScript">
+                                    Pre-load script
+                                    @if (!string.IsNullOrWhiteSpace(_table.PreLoadScript))
+                                    {
+                                        <HxTooltip Trigger="TooltipTrigger.Hover" Text="Pre-load script enabled">
+                                            <span class="text-warning">
+                                                &nbsp;
+                                                <SvgIcon Icon="LucideIcon.Info" />
+                                            </span>
+                                        </HxTooltip>
+                                    }
+                                </span>
+                            </li>
+                            <li class="nav-item pointer">
+                                <span
+                                    class="nav-link @(_view == View.PostLoadScript ? "active" : null)"
+                                    @onclick="() => _view = View.PostLoadScript">
+                                    Post-load script
+                                    @if (!string.IsNullOrWhiteSpace(_table.PostLoadScript))
+                                    {
+                                        <HxTooltip Trigger="TooltipTrigger.Hover" Text="Post-load script enabled">
+                                            <span class="text-warning">
+                                                &nbsp;
+                                                <SvgIcon Icon="LucideIcon.Info" />
+                                            </span>
+                                        </HxTooltip>
+                                    }
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="row">
                     <div class="col mx-3">
                         <DataAnnotationsValidator/>
                         <ValidationSummary/>
                         <FluentValidationValidator Validator="ScdTableValidator"/>
-
-                        <div class="row">
-                            <div class="col">
-                                <label class="form-label">SCD table name</label>
-                                <div class="input-group">
-                                    <InputText class="form-control form-control-sm" @bind-Value="_table.ScdTableName"></InputText>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row mt-3">
-                            <div class="col">
-                                <label class="form-label">Connection</label>
-                                <div class="input-group input-group-sm">
-                                    <InputSelect class="form-select form-select-sm" @bind-Value="_table.ConnectionId">
-                                        @foreach (var connection in Connections ?? [])
-                                        {
-                                            <option value="@connection.ConnectionId">
-                                                @connection.ConnectionName
-                                            </option>
-                                        }
-                                    </InputSelect>
-                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
-                                              OnClick="ShowTablesOffcanvasAsync">
-                                        <SvgIcon Icon="LucideIcon.Ellipsis"/>
-                                        Select source
-                                    </HxButton>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row mt-3">
-                            <div class="col">
-                                <label class="form-label">Source table/view</label>
-                                <div class="input-group input-group-sm">
-                                    <InputText class="form-control form-control-sm" placeholder="Schema"
-                                               @bind-Value="_table.SourceTableSchema"
-                                               style="max-width: 15rem;"></InputText>
-                                    <div class="input-group-text">
-                                        .
-                                    </div>
-                                    <InputText class="form-control form-control-sm" placeholder="Table/view"
-                                               @bind-Value="_table.SourceTableName"></InputText>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row mt-3">
-                            <div class="col">
-                                <label class="form-label">Target table</label>
-                                <div class="input-group input-group-sm">
-                                    <InputText class="form-control form-control-sm" placeholder="Schema"
-                                               @bind-Value="_table.TargetTableSchema"
-                                               style="max-width: 15rem;"></InputText>
-                                    <div class="input-group-text">
-                                        .
-                                    </div>
-                                    <InputText class="form-control form-control-sm" placeholder="Table"
-                                               @bind-Value="_table.TargetTableName"></InputText>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row mt-3">
-                            <div class="col">
-                                <label class="form-label">Staging table</label>
-                                <div class="input-group input-group-sm">
-                                    <InputText class="form-control form-control-sm" placeholder="Schema"
-                                               @bind-Value="_table.StagingTableSchema"
-                                               style="max-width: 15rem;"></InputText>
-                                    <div class="input-group-text">
-                                        .
-                                    </div>
-                                    <InputText class="form-control form-control-sm" placeholder="Schema"
-                                               @bind-Value="_table.StagingTableName"></InputText>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row mt-3">
-                            <div class="col">
-                                <div class="form-check form-check-inline">
-                                    <input type="checkbox" class="form-check-input" id="full_load"
-                                           checked=@(_table.FullLoad)
-                                           @onchange="() => _table.FullLoad = !_table.FullLoad">
-                                    <label class="form-check-label fw-normal" for="full_load">
-                                        Full load
-                                    </label>
-                                </div>
-                                @{
-                                    var connection = Connections.FirstOrDefault(c => c.ConnectionId == _table.ConnectionId);
-                                }
-                                @if (connection?.ConnectionType != ConnectionType.Snowflake)
-                                {
-                                    // Hide index options on Snowflake since it doesn't have an effect.
-                                    <div class="form-check form-check-inline">
-                                        <input type="checkbox" class="form-check-input" id="apply_index_on_create"
-                                               checked=@(_table.ApplyIndexesOnCreate)
-                                               @onchange="() => _table.ApplyIndexesOnCreate = !_table.ApplyIndexesOnCreate">
-                                        <label class="form-check-label fw-normal" for="apply_index_on_create">
-                                            Create index on target table
-                                        </label>
-                                    </div>
-                                }
-                                <div class="form-check form-check-inline">
-                                    <input type="checkbox" class="form-check-input" id="select_distinct"
-                                           checked=@(_table.SelectDistinct)
-                                           @onchange="() => _table.SelectDistinct = !_table.SelectDistinct">
-                                    <label class="form-check-label fw-normal" for="select_distinct">
-                                        Distinct select
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        @* TODO: Pre-load script input *@
-                        @* TODO: Post-load script input *@
-
-                        <div class="row mt-3">
-                            <div class="col">
-                                <label class="form-label">Schema drift</label>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col">
-                                <div class="form-check form-check-inline">
-                                    <input type="radio" class="form-check-input" id="radio_schema_drift_disabled"
-                                           checked=@(_table.SchemaDriftConfiguration is SchemaDriftDisabledConfiguration)
-                                           @onchange="() => _table.SchemaDriftConfiguration = _disabledConfiguration">
-                                    <label class="form-check-label fw-normal" for="radio_schema_drift_disabled">
-                                        Disabled
-                                    </label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input type="radio" class="form-check-input" id="radio_schema_drift_enabled"
-                                           checked=@(_table.SchemaDriftConfiguration is SchemaDriftEnabledConfiguration)
-                                           @onchange="() => _table.SchemaDriftConfiguration = _enabledConfiguration">
-                                    <label class="form-check-label fw-normal" for="radio_schema_drift_enabled">
-                                        Enabled
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        @if (_table.SchemaDriftConfiguration is SchemaDriftEnabledConfiguration driftEnabled)
-                        {
-                            <div class="row mt-3">
-                                <div class="col">
-                                    <div class="form-check form-check-inline">
-                                        <input type="checkbox" class="form-check-input" id="auto_include_new_columns"
-                                               checked=@(driftEnabled.IncludeNewColumns)
-                                               @onchange="() => driftEnabled.IncludeNewColumns = !driftEnabled.IncludeNewColumns">
-                                        <label class="form-check-label fw-normal" for="auto_include_new_columns">
-                                            Auto-include new columns
-                                        </label>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input type="checkbox" class="form-check-input" id="ignore_removed_columns"
-                                               checked=@(driftEnabled.IgnoreMissingColumns)
-                                               @onchange="() => driftEnabled.IgnoreMissingColumns = !driftEnabled.IgnoreMissingColumns">
-                                        <label class="form-check-label fw-normal" for="ignore_removed_columns">
-                                            Silently ignore removed/missing columns
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        }
-
-                        <div class="row mt-3 justify-content-between">
-                            <div class="col-auto">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
-                                          OnClick="async () => _columns = await LoadColumnsAsync()"
-                                          Spinner="_loadingColumns"
-                                          Enabled="!_loadingColumns">
-                                    <SvgIcon Icon="LucideIcon.RefreshCw"/>
-                                    Import columns
-                                </HxButton>
-                            </div>
-                            <div class="col-auto">
-                                @if (_columns is not null && _prevConnectionId != _table.ConnectionId)
-                                {
-                                    // Show alert to advise user to reimport columns after connection change.
-                                    <HxAlert Color="ThemeColor.Warning" CssClass="mb-0 small py-1 d-flex align-items-center">
-                                        <SvgIcon Icon="LucideIcon.CircleAlert" />
-                                        &nbsp;
-                                        Connection was changed –&nbsp;
-                                        <span class="alert-link pointer text-decoration-underline"
-                                              @onclick="async () => _columns = await LoadColumnsAsync()">
-                                            reimport columns
-                                        </span> 
-                                    </HxAlert>
-                                }
-                            </div>
-                        </div>
                         
-                        @if (_columns is not null)
+                        @switch (_view)
                         {
-                            var orphanedNaturalKeyColumns = _table.NaturalKeyColumns
-                                .Where(c1 => _columns.All(c2 => c1 != c2.ColumnName));
-                            if (orphanedNaturalKeyColumns.Any())
+                            case View.Settings:
                             {
+                                <div class="row">
+                                    <div class="col">
+                                        <label class="form-label">SCD table name</label>
+                                        <div class="input-group">
+                                            <InputText class="form-control form-control-sm" @bind-Value="_table.ScdTableName"></InputText>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="row mt-3">
                                     <div class="col">
-                                        <table class="table table-sm small">
-                                            <thead>
-                                                <tr>
-                                                    <th>
-                                                        Orphaned natural key columns
-                                                        &nbsp;
-                                                        <HxPopover Trigger="PopoverTrigger.Hover" Content="Orphaned natural key columns will cause an error during execution. Clear the orphaned columns or make sure they exist in the source table/view and reimport columns.">
-                                                            <span class="text-danger">
-                                                                <SvgIcon Icon="LucideIcon.CircleAlert"/>
-                                                            </span>
-                                                        </HxPopover>
-                                                    </th>
-                                                    <th>
-                                                        <span class="pointer bold text-decoration-underline"
-                                                              @onclick="() => _table.NaturalKeyColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName))">
-                                                            Clear all
-                                                        </span>
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @foreach (var col in orphanedNaturalKeyColumns)
+                                        <label class="form-label">Connection</label>
+                                        <div class="input-group input-group-sm">
+                                            <InputSelect class="form-select form-select-sm" @bind-Value="_table.ConnectionId">
+                                                @foreach (var connection in Connections ?? [])
                                                 {
-                                                    <tr>
-                                                        <td>@col</td>
-                                                        <td>
-                                                            <span class="pointer bold text-decoration-underline"
-                                                                  @onclick="() => _table.NaturalKeyColumns.Remove(col)">
-                                                            Clear
-                                                        </span>
-                                                        </td>
-                                                    </tr>
+                                                    <option value="@connection.ConnectionId">
+                                                        @connection.ConnectionName
+                                                    </option>
                                                 }
-                                            </tbody>
-                                        </table>
+                                            </InputSelect>
+                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
+                                                      OnClick="ShowTablesOffcanvasAsync">
+                                                <SvgIcon Icon="LucideIcon.Ellipsis"/>
+                                                Select source
+                                            </HxButton>
+                                        </div>
                                     </div>
                                 </div>
-                            }
 
-                            @switch (_table.SchemaDriftConfiguration)
-                            {
-                                case SchemaDriftDisabledConfiguration disabled:
-                                    var orphanedIncludedColumns = disabled.IncludedColumns
+                                <div class="row mt-3">
+                                    <div class="col">
+                                        <label class="form-label">Source table/view</label>
+                                        <div class="input-group input-group-sm">
+                                            <InputText class="form-control form-control-sm" placeholder="Schema"
+                                                       @bind-Value="_table.SourceTableSchema"
+                                                       style="max-width: 15rem;"></InputText>
+                                            <div class="input-group-text">
+                                                .
+                                            </div>
+                                            <InputText class="form-control form-control-sm" placeholder="Table/view"
+                                                       @bind-Value="_table.SourceTableName"></InputText>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mt-3">
+                                    <div class="col">
+                                        <label class="form-label">Target table</label>
+                                        <div class="input-group input-group-sm">
+                                            <InputText class="form-control form-control-sm" placeholder="Schema"
+                                                       @bind-Value="_table.TargetTableSchema"
+                                                       style="max-width: 15rem;"></InputText>
+                                            <div class="input-group-text">
+                                                .
+                                            </div>
+                                            <InputText class="form-control form-control-sm" placeholder="Table"
+                                                       @bind-Value="_table.TargetTableName"></InputText>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mt-3">
+                                    <div class="col">
+                                        <label class="form-label">Staging table</label>
+                                        <div class="input-group input-group-sm">
+                                            <InputText class="form-control form-control-sm" placeholder="Schema"
+                                                       @bind-Value="_table.StagingTableSchema"
+                                                       style="max-width: 15rem;"></InputText>
+                                            <div class="input-group-text">
+                                                .
+                                            </div>
+                                            <InputText class="form-control form-control-sm" placeholder="Schema"
+                                                       @bind-Value="_table.StagingTableName"></InputText>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mt-3">
+                                    <div class="col">
+                                        <div class="form-check form-check-inline">
+                                            <input type="checkbox" class="form-check-input" id="full_load"
+                                                   checked=@(_table.FullLoad)
+                                                   @onchange="() => _table.FullLoad = !_table.FullLoad">
+                                            <label class="form-check-label fw-normal" for="full_load">
+                                                Full load
+                                            </label>
+                                        </div>
+                                        @{
+                                            var connection = Connections.FirstOrDefault(c => c.ConnectionId == _table.ConnectionId);
+                                        }
+                                        @if (connection?.ConnectionType != ConnectionType.Snowflake)
+                                        {
+                                            // Hide index options on Snowflake since it doesn't have an effect.
+                                            <div class="form-check form-check-inline">
+                                                <input type="checkbox" class="form-check-input" id="apply_index_on_create"
+                                                       checked=@(_table.ApplyIndexesOnCreate)
+                                                       @onchange="() => _table.ApplyIndexesOnCreate = !_table.ApplyIndexesOnCreate">
+                                                <label class="form-check-label fw-normal" for="apply_index_on_create">
+                                                    Create index on target table
+                                                </label>
+                                            </div>
+                                        }
+                                        <div class="form-check form-check-inline">
+                                            <input type="checkbox" class="form-check-input" id="select_distinct"
+                                                   checked=@(_table.SelectDistinct)
+                                                   @onchange="() => _table.SelectDistinct = !_table.SelectDistinct">
+                                            <label class="form-check-label fw-normal" for="select_distinct">
+                                                Distinct select
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mt-3">
+                                    <div class="col">
+                                        <label class="form-label">Schema drift</label>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col">
+                                        <div class="form-check form-check-inline">
+                                            <input type="radio" class="form-check-input" id="radio_schema_drift_disabled"
+                                                   checked=@(_table.SchemaDriftConfiguration is SchemaDriftDisabledConfiguration)
+                                                   @onchange="() => _table.SchemaDriftConfiguration = _disabledConfiguration">
+                                            <label class="form-check-label fw-normal" for="radio_schema_drift_disabled">
+                                                Disabled
+                                            </label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input type="radio" class="form-check-input" id="radio_schema_drift_enabled"
+                                                   checked=@(_table.SchemaDriftConfiguration is SchemaDriftEnabledConfiguration)
+                                                   @onchange="() => _table.SchemaDriftConfiguration = _enabledConfiguration">
+                                            <label class="form-check-label fw-normal" for="radio_schema_drift_enabled">
+                                                Enabled
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                @if (_table.SchemaDriftConfiguration is SchemaDriftEnabledConfiguration driftEnabled)
+                                {
+                                    <div class="row mt-3">
+                                        <div class="col">
+                                            <div class="form-check form-check-inline">
+                                                <input type="checkbox" class="form-check-input" id="auto_include_new_columns"
+                                                       checked=@(driftEnabled.IncludeNewColumns)
+                                                       @onchange="() => driftEnabled.IncludeNewColumns = !driftEnabled.IncludeNewColumns">
+                                                <label class="form-check-label fw-normal" for="auto_include_new_columns">
+                                                    Auto-include new columns
+                                                </label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input type="checkbox" class="form-check-input" id="ignore_removed_columns"
+                                                       checked=@(driftEnabled.IgnoreMissingColumns)
+                                                       @onchange="() => driftEnabled.IgnoreMissingColumns = !driftEnabled.IgnoreMissingColumns">
+                                                <label class="form-check-label fw-normal" for="ignore_removed_columns">
+                                                    Silently ignore removed/missing columns
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+
+                                <div class="row mt-3 justify-content-between">
+                                    <div class="col-auto">
+                                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
+                                                  OnClick="async () => _columns = await LoadColumnsAsync()"
+                                                  Spinner="_loadingColumns"
+                                                  Enabled="!_loadingColumns">
+                                            <SvgIcon Icon="LucideIcon.RefreshCw"/>
+                                            Import columns
+                                        </HxButton>
+                                    </div>
+                                    <div class="col-auto">
+                                        @if (_columns is not null && _prevConnectionId != _table.ConnectionId)
+                                        {
+                                            // Show alert to advise user to reimport columns after connection change.
+                                            <HxAlert Color="ThemeColor.Warning" CssClass="mb-0 small py-1 d-flex align-items-center">
+                                                <SvgIcon Icon="LucideIcon.CircleAlert" />
+                                                &nbsp;
+                                                Connection was changed –&nbsp;
+                                                <span class="alert-link pointer text-decoration-underline"
+                                                      @onclick="async () => _columns = await LoadColumnsAsync()">
+                                                    reimport columns
+                                                </span> 
+                                            </HxAlert>
+                                        }
+                                    </div>
+                                </div>
+                                
+                                @if (_columns is not null)
+                                {
+                                    var orphanedNaturalKeyColumns = _table.NaturalKeyColumns
                                         .Where(c1 => _columns.All(c2 => c1 != c2.ColumnName));
-                                    if (orphanedIncludedColumns.Any())
+                                    if (orphanedNaturalKeyColumns.Any())
                                     {
                                         <div class="row mt-3">
                                             <div class="col">
@@ -278,9 +277,9 @@
                                                     <thead>
                                                         <tr>
                                                             <th>
-                                                                Orphaned included columns
+                                                                Orphaned natural key columns
                                                                 &nbsp;
-                                                                <HxPopover Trigger="PopoverTrigger.Hover" Content="Orphaned included columns will cause an error during execution. Clear the orphaned columns or make sure they exist in the source table/view and reimport columns.">
+                                                                <HxPopover Trigger="PopoverTrigger.Hover" Content="Orphaned natural key columns will cause an error during execution. Clear the orphaned columns or make sure they exist in the source table/view and reimport columns.">
                                                                     <span class="text-danger">
                                                                         <SvgIcon Icon="LucideIcon.CircleAlert"/>
                                                                     </span>
@@ -288,20 +287,20 @@
                                                             </th>
                                                             <th>
                                                                 <span class="pointer bold text-decoration-underline"
-                                                                      @onclick="() => _disabledConfiguration.IncludedColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName))">
+                                                                      @onclick="() => _table.NaturalKeyColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName))">
                                                                     Clear all
                                                                 </span>
                                                             </th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-                                                        @foreach (var col in orphanedIncludedColumns)
+                                                        @foreach (var col in orphanedNaturalKeyColumns)
                                                         {
                                                             <tr>
                                                                 <td>@col</td>
                                                                 <td>
                                                                     <span class="pointer bold text-decoration-underline"
-                                                                          @onclick="() => _disabledConfiguration.IncludedColumns.Remove(col)">
+                                                                          @onclick="() => _table.NaturalKeyColumns.Remove(col)">
                                                                     Clear
                                                                 </span>
                                                                 </td>
@@ -312,142 +311,249 @@
                                             </div>
                                         </div>
                                     }
-                                    break;
-                                case SchemaDriftEnabledConfiguration enabled:
-                                    var orphanedExcludedColumns = enabled.ExcludedColumns
-                                        .Where(c1 => _columns.All(c2 => c1 != c2.ColumnName));
-                                    if (orphanedExcludedColumns.Any())
-                                    {
-                                        <div class="row mt-3">
-                                            <div class="col">
-                                                <table class="table table-sm small">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>
-                                                                Orphaned excluded columns
-                                                                &nbsp;
-                                                                <HxPopover Trigger="PopoverTrigger.Hover" Content="Orphaned excluded columns will have no effect during execution.">
-                                                                    <SvgIcon Icon="LucideIcon.Info"/>
-                                                                </HxPopover>
-                                                            </th>
-                                                            <th>
-                                                                <span class="pointer bold text-decoration-underline"
-                                                                      @onclick="() => _enabledConfiguration.ExcludedColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName))">
-                                                                    Clear all
-                                                                </span>
-                                                            </th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        @foreach (var col in orphanedExcludedColumns)
-                                                        {
-                                                            <tr>
-                                                                <td>@col</td>
-                                                                <td>
-                                                                    <span class="pointer bold text-decoration-underline"
-                                                                          @onclick="() => _enabledConfiguration.ExcludedColumns.Remove(col)">
-                                                                        Clear
-                                                                    </span>
-                                                                </td>
-                                                            </tr>
-                                                        }
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    }
-                                    break;
-                            }
-                        }
 
-                        <div class="row mt-3">
-                            <div class="col">
-                                <table class="table table-sm table-hover small">
-                                    <thead>
-                                    <tr>
-                                        <th>Column</th>
-                                        <th>Datatype</th>
-                                        <th>Natural key</th>
-                                        @switch (_table.SchemaDriftConfiguration)
-                                        {
-                                            case SchemaDriftDisabledConfiguration:
-                                                <th>Included</th>
-                                                break;
-                                            case SchemaDriftEnabledConfiguration:
-                                                <th>Excluded</th>
-                                                break;
-                                        }
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    @{
-                                        var columns = _columns
-                                            ?.OrderBy(c => !_table.NaturalKeyColumns.Contains(c.ColumnName))
-                                            .ThenBy(c => c.ColumnName)
-                                            .AsEnumerable() ?? [];
-                                    }
-                                    @if (_columns is null)
+                                    @switch (_table.SchemaDriftConfiguration)
                                     {
-                                        <tr>
-                                            <td colspan="4" class="text-center">
-                                                <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
-                                            </td>
-                                        </tr>
-                                    }
-                                    @foreach (var column in columns)
-                                    {
-                                        <tr>
-                                            <td>
-                                                @column.ColumnName
-                                            </td>
-                                            <td>
-                                                @column.DataType @(column.IsNullable ? "null" : "not null")
-                                            </td>
-                                            <td>
-                                                <div @key="@column.ColumnName" class="form-check form-check-inline">
-                                                    <input type="checkbox" class="form-check-input"
-                                                           id="natural_key_@(column.ColumnName)"
-                                                           checked=@_table.NaturalKeyColumns.Contains(column.ColumnName)
-                                                           @onchange="_ => _table.ToggleNaturalKeyColumn(column.ColumnName)">
-                                                    <label class="form-check-label"
-                                                           for="natural_key_@(column.ColumnName)"></label>
+                                        case SchemaDriftDisabledConfiguration disabled:
+                                            var orphanedIncludedColumns = disabled.IncludedColumns
+                                                .Where(c1 => _columns.All(c2 => c1 != c2.ColumnName));
+                                            if (orphanedIncludedColumns.Any())
+                                            {
+                                                <div class="row mt-3">
+                                                    <div class="col">
+                                                        <table class="table table-sm small">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>
+                                                                        Orphaned included columns
+                                                                        &nbsp;
+                                                                        <HxPopover Trigger="PopoverTrigger.Hover" Content="Orphaned included columns will cause an error during execution. Clear the orphaned columns or make sure they exist in the source table/view and reimport columns.">
+                                                                            <span class="text-danger">
+                                                                                <SvgIcon Icon="LucideIcon.CircleAlert"/>
+                                                                            </span>
+                                                                        </HxPopover>
+                                                                    </th>
+                                                                    <th>
+                                                                        <span class="pointer bold text-decoration-underline"
+                                                                              @onclick="() => _disabledConfiguration.IncludedColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName))">
+                                                                            Clear all
+                                                                        </span>
+                                                                    </th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach (var col in orphanedIncludedColumns)
+                                                                {
+                                                                    <tr>
+                                                                        <td>@col</td>
+                                                                        <td>
+                                                                            <span class="pointer bold text-decoration-underline"
+                                                                                  @onclick="() => _disabledConfiguration.IncludedColumns.Remove(col)">
+                                                                            Clear
+                                                                        </span>
+                                                                        </td>
+                                                                    </tr>
+                                                                }
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
                                                 </div>
-                                            </td>
-                                            <td>
+                                            }
+                                            break;
+                                        case SchemaDriftEnabledConfiguration enabled:
+                                            var orphanedExcludedColumns = enabled.ExcludedColumns
+                                                .Where(c1 => _columns.All(c2 => c1 != c2.ColumnName));
+                                            if (orphanedExcludedColumns.Any())
+                                            {
+                                                <div class="row mt-3">
+                                                    <div class="col">
+                                                        <table class="table table-sm small">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>
+                                                                        Orphaned excluded columns
+                                                                        &nbsp;
+                                                                        <HxPopover Trigger="PopoverTrigger.Hover" Content="Orphaned excluded columns will have no effect during execution.">
+                                                                            <SvgIcon Icon="LucideIcon.Info"/>
+                                                                        </HxPopover>
+                                                                    </th>
+                                                                    <th>
+                                                                        <span class="pointer bold text-decoration-underline"
+                                                                              @onclick="() => _enabledConfiguration.ExcludedColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName))">
+                                                                            Clear all
+                                                                        </span>
+                                                                    </th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach (var col in orphanedExcludedColumns)
+                                                                {
+                                                                    <tr>
+                                                                        <td>@col</td>
+                                                                        <td>
+                                                                            <span class="pointer bold text-decoration-underline"
+                                                                                  @onclick="() => _enabledConfiguration.ExcludedColumns.Remove(col)">
+                                                                                Clear
+                                                                            </span>
+                                                                        </td>
+                                                                    </tr>
+                                                                }
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            }
+                                            break;
+                                    }
+                                }
+
+                                <div class="row mt-3">
+                                    <div class="col">
+                                        <table class="table table-sm table-hover small">
+                                            <thead>
+                                            <tr>
+                                                <th>Column</th>
+                                                <th>Datatype</th>
+                                                <th>Natural key</th>
                                                 @switch (_table.SchemaDriftConfiguration)
                                                 {
-                                                    case SchemaDriftDisabledConfiguration disabled:
-                                                        <div @key="@column.ColumnName"
-                                                             class="form-check form-check-inline">
-                                                            <input type="checkbox" class="form-check-input"
-                                                                   id="included_@(column.ColumnName)"
-                                                                   checked=@(disabled.IncludedColumns.Contains(column.ColumnName) || _table.NaturalKeyColumns.Contains(column.ColumnName))
-                                                                   disabled=@_table.NaturalKeyColumns.Contains(column.ColumnName)
-                                                                   @onchange="_ => disabled.ToggleIncludedColumn(column.ColumnName)">
-                                                            <label class="form-check-label"
-                                                                   for="included_@(column.ColumnName)"></label>
-                                                        </div>
+                                                    case SchemaDriftDisabledConfiguration:
+                                                        <th>Included</th>
                                                         break;
-                                                    case SchemaDriftEnabledConfiguration enabled:
-                                                        <div @key="@column.ColumnName"
-                                                             class="form-check form-check-inline">
-                                                            <input type="checkbox" class="form-check-input"
-                                                                   id="excluded_@(column.ColumnName)"
-                                                                   checked=@(enabled.ExcludedColumns.Contains(column.ColumnName) && !_table.NaturalKeyColumns.Contains(column.ColumnName))
-                                                                   disabled=@_table.NaturalKeyColumns.Contains(column.ColumnName)
-                                                                   @onchange="_ => enabled.ToggleExcludedColumn(column.ColumnName)">
-                                                            <label class="form-check-label"
-                                                                   for="excluded_@(column.ColumnName)"></label>
-                                                        </div>
+                                                    case SchemaDriftEnabledConfiguration:
+                                                        <th>Excluded</th>
                                                         break;
                                                 }
-                                            </td>
-                                        </tr>
-                                    }
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            @{
+                                                var columns = _columns
+                                                    ?.OrderBy(c => !_table.NaturalKeyColumns.Contains(c.ColumnName))
+                                                    .ThenBy(c => c.ColumnName)
+                                                    .AsEnumerable() ?? [];
+                                            }
+                                            @if (_columns is null)
+                                            {
+                                                <tr>
+                                                    <td colspan="4" class="text-center">
+                                                        <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                                                    </td>
+                                                </tr>
+                                            }
+                                            @foreach (var column in columns)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        @column.ColumnName
+                                                    </td>
+                                                    <td>
+                                                        @column.DataType @(column.IsNullable ? "null" : "not null")
+                                                    </td>
+                                                    <td>
+                                                        <div @key="@column.ColumnName" class="form-check form-check-inline">
+                                                            <input type="checkbox" class="form-check-input"
+                                                                   id="natural_key_@(column.ColumnName)"
+                                                                   checked=@_table.NaturalKeyColumns.Contains(column.ColumnName)
+                                                                   @onchange="_ => _table.ToggleNaturalKeyColumn(column.ColumnName)">
+                                                            <label class="form-check-label"
+                                                                   for="natural_key_@(column.ColumnName)"></label>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        @switch (_table.SchemaDriftConfiguration)
+                                                        {
+                                                            case SchemaDriftDisabledConfiguration disabled:
+                                                                <div @key="@column.ColumnName"
+                                                                     class="form-check form-check-inline">
+                                                                    <input type="checkbox" class="form-check-input"
+                                                                           id="included_@(column.ColumnName)"
+                                                                           checked=@(disabled.IncludedColumns.Contains(column.ColumnName) || _table.NaturalKeyColumns.Contains(column.ColumnName))
+                                                                           disabled=@_table.NaturalKeyColumns.Contains(column.ColumnName)
+                                                                           @onchange="_ => disabled.ToggleIncludedColumn(column.ColumnName)">
+                                                                    <label class="form-check-label"
+                                                                           for="included_@(column.ColumnName)"></label>
+                                                                </div>
+                                                                break;
+                                                            case SchemaDriftEnabledConfiguration enabled:
+                                                                <div @key="@column.ColumnName"
+                                                                     class="form-check form-check-inline">
+                                                                    <input type="checkbox" class="form-check-input"
+                                                                           id="excluded_@(column.ColumnName)"
+                                                                           checked=@(enabled.ExcludedColumns.Contains(column.ColumnName) && !_table.NaturalKeyColumns.Contains(column.ColumnName))
+                                                                           disabled=@_table.NaturalKeyColumns.Contains(column.ColumnName)
+                                                                           @onchange="_ => enabled.ToggleExcludedColumn(column.ColumnName)">
+                                                                    <label class="form-check-label"
+                                                                           for="excluded_@(column.ColumnName)"></label>
+                                                                </div>
+                                                                break;
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            }
+                                break;
+                            case View.PreLoadScript:
+                            {
+                                <div class="row mt-1">
+                                    <div class="col">
+                                        <label class="form-label">
+                                            Pre-load script
+                                        </label>
+                                        <CodeEditor @ref="_preLoadScriptEditor"
+                                                    Language="sql"
+                                                    MinimapEnabled="false"
+                                                    InitialValueExpression="() => _table.PreLoadScript"
+                                                    OnValueChanged="value => _table.PreLoadScript = value ?? string.Empty"
+                                                    Resize="CodeEditor.CodeEditorResize.Both"/>
+                                        <div class="form-text">
+                                            <p>Blank = no pre-load script</p>
+                                            <p>
+                                                Define a SQL script to be included as the first step of the target table data load process.
+                                                The script will be executed in the same transaction as the rest of the target data load.
+                                                Errors running the pre-load script will roll back the entire target table data load transaction.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                                break;
+                            case View.PostLoadScript:
+                            {
+                                <div class="row mt-1">
+                                    <div class="col">
+                                        <label class="form-label">
+                                            Post-load script
+                                        </label>
+                                        <CodeEditor @ref="_postLoadScriptEditor"
+                                                    Language="sql"
+                                                    MinimapEnabled="false"
+                                                    InitialValueExpression="() => _table.PostLoadScript"
+                                                    OnValueChanged="value => _table.PostLoadScript = value ?? string.Empty"
+                                                    Resize="CodeEditor.CodeEditorResize.Both"/>
+                                        <div class="form-text">
+                                            <p>
+                                                Blank = no post-load script
+                                            </p>
+                                            <p>
+                                                Define a SQL script to be included as the last step of the data load process.
+                                                The script will be executed in the same transaction as the rest of the target table data load.
+                                                Errors running the post-load script will roll back the entire target table data load transaction.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+
+                        
                     </div>
                 </div>
             </EditForm>
@@ -469,6 +575,9 @@
     public IEnumerable<ConnectionBase>? Connections { get; set; }
     
     private HxModal? _modal;
+    private CodeEditor? _preLoadScriptEditor;
+    private CodeEditor? _postLoadScriptEditor;
+    private View _view = View.Settings;
     private TableSelectOffcanvas? _offcanvas;
     private IEnumerable<FullColumnMetadata>? _columns;
     private bool _firstColumnImport = true;
@@ -479,6 +588,8 @@
     // This way settings aren't lost if the user changes the table's configuration.
     private SchemaDriftDisabledConfiguration _disabledConfiguration = new();
     private SchemaDriftEnabledConfiguration _enabledConfiguration = new();
+    
+    private enum View { Settings, PreLoadScript, PostLoadScript }
     
     public async Task ShowAsync(Guid? scdTableId)
     {
