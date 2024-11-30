@@ -26,17 +26,42 @@
     </div>
 }
 
+@* TODO: Connection filter dropdown *@
+
+@* TODO: SCD steps offcanvas to view related steps *@
+
+@* TODO: Generate, preview and copy structure and loader codes *@
+
 <div class="row mt-3 flex-row-reverse justify-content-between align-items-end g-3">
     <div class="col-auto">
         <HxAlert Color="ThemeService.CurrentTheme == Theme.Light ? ThemeColor.Light : ThemeColor.Dark"
                  CssClass="small py-2 mb-0"
-                 style="max-width: 50rem;">
+                 style="max-width: 55rem;">
             <div class="row g-3">
                 <div class="col-auto">
                     <SvgIcon Icon="LucideIcon.Info" />
                 </div>
                 <div class="col">
                     Define SCD tables to automate loading of Slowly Changing Dimensions and start capturing changes to your data.
+                    @if (!_infoExpanded)
+                    {
+                        <span class="alert-link pointer text-decoration-underline"
+                              @onclick="() => _infoExpanded = true">
+                            Show more
+                        </span> 
+                    }
+                    @if (_infoExpanded)
+                    {
+                        <text>
+                            SCD tables can be generated from all kinds of data, not just dimensions in the traditional sense (such as customers or products).
+                            Any table or view with a unique key can be the source for an SCD table.
+                            Type 2 historization is applied to all attribute columns.
+                        </text>
+                        <span class="alert-link pointer text-decoration-underline"
+                              @onclick="() => _infoExpanded = false">
+                            Show less
+                        </span>
+                    }
                 </div>
             </div>
         </HxAlert>
@@ -134,6 +159,7 @@
     private List<ScdTable>? _tables;
     private ConnectionBase[]? _connections;
     private ScdTableEditModal? _editModal;
+    private bool _infoExpanded;
     
     protected override void OnInitialized() => ThemeService.OnThemeChanged += OnThemeChanged;
     
