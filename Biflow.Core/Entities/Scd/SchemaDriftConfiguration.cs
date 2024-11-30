@@ -1,9 +1,11 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities.Scd;
 
 [JsonDerivedType(typeof(SchemaDriftDisabledConfiguration), "SchemaDriftDisabled")]
 [JsonDerivedType(typeof(SchemaDriftEnabledConfiguration), "SchemaDriftEnabled")]
+[ComplexType]
 public abstract class SchemaDriftConfiguration;
 
 public sealed class SchemaDriftDisabledConfiguration : SchemaDriftConfiguration
