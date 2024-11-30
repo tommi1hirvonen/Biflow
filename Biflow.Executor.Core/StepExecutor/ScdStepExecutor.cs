@@ -131,19 +131,32 @@ internal class ScdStepExecutor(
         try
         {
             var command = new CommandDefinition(statement, commandTimeout: 0, cancellationToken: cancellationToken);
-            await using var connection = scdTable.Connection switch
+            switch (scdTable.Connection)
             {
-                MsSqlConnection msSql =>
-                    msSql.CreateDbConnection((_, eventArgs) => attempt.AddOutput(eventArgs.Message)),
-                { } conn =>
-                    conn.CreateDbConnection()
-            };
-            await connection.ExecuteAsync(command);
+                case MsSqlConnection msSql:
+                {
+                    if (msSql.Credential is not null && !OperatingSystem.IsWindows())
+                    {
+                        attempt.AddWarning("Connection has impersonation enabled but the OS platform does not support it. Impersonation will be skipped.");
+                    }
+                    await using var connection = msSql.CreateDbConnection((_, eventArgs) =>
+                        attempt.AddOutput(eventArgs.Message));
+                    await msSql.RunImpersonatedOrAsCurrentUserAsync(
+                        () => connection.ExecuteAsync(command));
+                    break;
+                }
+                default:
+                {
+                    await using var connection = scdTable.Connection.CreateDbConnection();
+                    await connection.ExecuteAsync(command);
+                    break;
+                }
+            }
             return null;
         }
+        // MS SQL error
         catch (SqlException ex)
         {
-            // MS SQL error
             var errors = ex.Errors.Cast<SqlError>();
             foreach (var error in errors)
             {
@@ -163,9 +176,9 @@ internal class ScdStepExecutor(
 
             return Result.Failure;
         }
+        // Snowflake error
         catch (SnowflakeDbException ex)
         {
-            // Snowflake error
             attempt.AddError(ex, ex.Message);
 
             // Return Cancel if the SqlCommand failed due to cancel being requested.
@@ -180,9 +193,9 @@ internal class ScdStepExecutor(
 
             return Result.Failure;
         }
+        // Other error
         catch (Exception ex)
         {
-            // Other error
             if (cancellationToken.IsCancellationRequested)
             {
                 attempt.AddWarning(ex);
