@@ -323,13 +323,13 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
         var validFrom = new StructureColumn
         {
             ColumnName = ValidFromColumn,
-            DataType = "datetime2(7)",
+            DataType = "datetime2(6)",
             IsNullable = false
         };
         var validUntil = new StructureColumn
         {
             ColumnName = ValidUntilColumn,
-            DataType = "datetime2(7)",
+            DataType = "datetime2(6)",
             IsNullable = true
         };
         var isCurrent = new StructureColumn
@@ -391,7 +391,7 @@ internal class MsSqlScdProvider(ScdTable table, IColumnMetadataProvider columnPr
             ColumnName = ValidUntilColumn,
             IncludeInStagingTable = false,
             StagingTableExpression = null,
-            TargetTableExpression = "CONVERT(datetime2(7), '9999-12-31')"
+            TargetTableExpression = "CONVERT(datetime2(6), '9999-12-31')"
         };
         var isCurrent = new LoadColumn
         {
