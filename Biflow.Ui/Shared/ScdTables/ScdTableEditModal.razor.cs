@@ -20,7 +20,7 @@ public partial class ScdTableEditModal(
     private CodeEditor? _postLoadScriptEditor;
     private View _view = View.Settings;
     private TableSelectOffcanvas? _offcanvas;
-    private IEnumerable<FullColumnMetadata>? _columns;
+    private IReadOnlyList<FullColumnMetadata>? _columns;
     private bool _firstColumnImport = true;
     private bool _loadingColumns = false;
     private ScdTable? _table;
@@ -67,7 +67,7 @@ public partial class ScdTableEditModal(
                     _columns = await LoadColumnsAsync();
                     var includedColumns = _columns
                         .Select(c => c.ColumnName)
-                        .Where(c1 => enabled.ExcludedColumns.All(c2 => c1 != c2))
+                        .Where(c1 => enabled.ExcludedColumns.Concat(_table.NaturalKeyColumns).All(c2 => c1 != c2))
                         .Order(); 
                     _disabledConfiguration.IncludedColumns.AddRange(includedColumns);
                     break;
@@ -121,7 +121,7 @@ public partial class ScdTableEditModal(
         _columns = await LoadColumnsAsync();
     }
 
-    private async Task<IEnumerable<FullColumnMetadata>> LoadColumnsAsync()
+    private async Task<IReadOnlyList<FullColumnMetadata>> LoadColumnsAsync()
     {
         try
         {
@@ -153,6 +153,46 @@ public partial class ScdTableEditModal(
         finally
         {
             _loadingColumns = false;
+        }
+    }
+
+    private void ToggleAllIncluded(bool value)
+    {
+        ArgumentNullException.ThrowIfNull(_table);
+        ArgumentNullException.ThrowIfNull(_columns);
+        if (value)
+        {
+            var missing = _columns
+                .Where(c => !_table.NaturalKeyColumns.Contains(c.ColumnName))
+                .Where(c => !_disabledConfiguration.IncludedColumns.Contains(c.ColumnName));
+            foreach (var col in missing)
+            {
+                _disabledConfiguration.IncludedColumns.Add(col.ColumnName);
+            }
+        }
+        else
+        {
+            _disabledConfiguration.IncludedColumns.Clear();
+        }
+    }
+
+    private void ToggleAllExcluded(bool value)
+    {
+        ArgumentNullException.ThrowIfNull(_table);
+        ArgumentNullException.ThrowIfNull(_columns);
+        if (value)
+        {
+            var missing = _columns
+                .Where(c => !_table.NaturalKeyColumns.Contains(c.ColumnName))
+                .Where(c => !_enabledConfiguration.ExcludedColumns.Contains(c.ColumnName));
+            foreach (var col in missing)
+            {
+                _enabledConfiguration.ExcludedColumns.Add(col.ColumnName);
+            }
+        }
+        else
+        {
+            _enabledConfiguration.ExcludedColumns.Clear();
         }
     }
     

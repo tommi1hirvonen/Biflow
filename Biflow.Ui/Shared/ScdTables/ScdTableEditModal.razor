@@ -490,11 +490,25 @@
                                                 <th>Natural key</th>
                                                 @switch (_table.SchemaDriftConfiguration)
                                                 {
-                                                    case SchemaDriftDisabledConfiguration:
-                                                        <th>Included</th>
+                                                    case SchemaDriftDisabledConfiguration disabled:
+                                                        <th>
+                                                            <div class="col d-flex align-items-center">
+                                                                <TriStateCheckbox Checked="@(_columns?.Count > 0 && disabled.IncludedColumns.Count > 0)"
+                                                                                  Indeterminate="@(disabled.IncludedColumns.Count > 0 && disabled.IncludedColumns.Count + _table.NaturalKeyColumns.Count < _columns?.Count)"
+                                                                                  CheckedChanged="ToggleAllIncluded" />
+                                                                Included
+                                                            </div>
+                                                        </th>
                                                         break;
-                                                    case SchemaDriftEnabledConfiguration:
-                                                        <th>Excluded</th>
+                                                    case SchemaDriftEnabledConfiguration enabled:
+                                                        <th>
+                                                            <div class="col d-flex align-items-center">
+                                                                <TriStateCheckbox Checked="@(_columns?.Count > 0 && enabled.ExcludedColumns.Count > 0)"
+                                                                                  Indeterminate="@(enabled.ExcludedColumns.Count > 0 && enabled.ExcludedColumns.Count + _table.NaturalKeyColumns.Count < _columns?.Count)"
+                                                                                  CheckedChanged="ToggleAllExcluded" />
+                                                                Excluded
+                                                            </div>
+                                                        </th>
                                                         break;
                                                 }
                                             </tr>

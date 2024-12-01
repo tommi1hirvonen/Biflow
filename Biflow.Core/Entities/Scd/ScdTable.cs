@@ -99,6 +99,15 @@ public class ScdTable
             return;
         }
         NaturalKeyColumns.Add(column);
+        switch (SchemaDriftConfiguration)
+        {
+            case SchemaDriftDisabledConfiguration disabled:
+                disabled.IncludedColumns.RemoveAll(c => c == column);
+                break;
+            case SchemaDriftEnabledConfiguration enabled:
+                enabled.ExcludedColumns.RemoveAll(c => c == column);
+                break;
+        }
     }
 
     public IScdProvider CreateScdProvider() => Connection.CreateScdProvider(this);
