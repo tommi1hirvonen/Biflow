@@ -2,15 +2,15 @@
 
 namespace Biflow.Core.Entities.Scd;
 
-internal abstract class ScdProvider<TSyntaxProvider>(
-    ScdTable table, IColumnMetadataProvider columnProvider) : IScdProvider
-    where TSyntaxProvider : ISqlSyntaxProvider, new()
+internal abstract class ScdProvider(ScdTable table, IColumnMetadataProvider columnProvider) : IScdProvider
 {
     protected abstract string HashKeyColumn { get; }
     protected abstract string ValidFromColumn { get; }
     protected abstract string ValidUntilColumn { get; }
     protected abstract string IsCurrentColumn { get; }
     protected abstract string RecordHashColumn { get; }
+    
+    protected abstract ISqlSyntaxProvider SyntaxProvider { get; }
 
     private IEnumerable<string> SystemColumns =>
     [
@@ -20,8 +20,6 @@ internal abstract class ScdProvider<TSyntaxProvider>(
         IsCurrentColumn,
         RecordHashColumn
     ];
-    
-    private TSyntaxProvider SyntaxProvider { get; } = new();
     
     public async Task<StagingLoadStatementResult> CreateStagingLoadStatementAsync(
         CancellationToken cancellationToken = default)
