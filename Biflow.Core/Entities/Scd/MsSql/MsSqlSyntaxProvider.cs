@@ -2,7 +2,11 @@
 
 internal sealed class MsSqlSyntaxProvider : ISqlSyntaxProvider
 {
-    public string QuoteName(string name) => name.QuoteName();
+    public string QuoteColumn(string column) => column.QuoteName();
+    public string QuoteTable(string? schema, string table) => 
+        string.IsNullOrWhiteSpace(schema) 
+            ? table.QuoteName() 
+            : $"{schema.QuoteName()}.{table.QuoteName()}";
     
     private class MsSqlDatatypeProvider : ISqlDatatypeProvider
     {
@@ -17,29 +21,30 @@ internal sealed class MsSqlSyntaxProvider : ISqlSyntaxProvider
         public string MaxDateTime => "CONVERT(DATETIME2(6), '9999-12-31')";
         public string True => "1";
         public string Md5(IEnumerable<string> columns) =>
-            $"CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT({string.Join(", '|', ", columns)})), 2)";
+            $"CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT({string.Join(", '|', ", columns.Select(c => c.QuoteName()))})), 2)";
     }
 
     private class MsSqlIndexProvider : ISqlIndexProvider
     {
         public bool AreSupported => true;
-        public string ClusteredIndex(string table, string index, IEnumerable<(string ColumnName, bool Descending)> columns)
+        public string ClusteredIndex(
+            string schema, string table, string index, IEnumerable<(string ColumnName, bool Descending)> columns)
         {
-            var indexColumns = columns.Select(c => $"{c.ColumnName} {(c.Descending ? "DESC" : "ASC")}");
+            var indexColumns = columns.Select(c => $"{c.ColumnName.QuoteName()} {(c.Descending ? "DESC" : "ASC")}");
             var indexColumnsDefinition = string.Join(", ", indexColumns);
             return $"""
-                    CREATE CLUSTERED INDEX {index} ON {table} (
+                    CREATE CLUSTERED INDEX {index.QuoteName()} ON {schema.QuoteName()}.{table.QuoteName()} (
                     {indexColumnsDefinition}
                     );
                     """;
         }
-
-        public string NonClusteredIndex(string table, string index, IEnumerable<(string ColumnName, bool Descending)> columns)
+        public string NonClusteredIndex(
+            string schema, string table, string index, IEnumerable<(string ColumnName, bool Descending)> columns)
         {
-            var indexColumns = columns.Select(c => $"{c.ColumnName} {(c.Descending ? "DESC" : "ASC")}");
+            var indexColumns = columns.Select(c => $"{c.ColumnName.QuoteName()} {(c.Descending ? "DESC" : "ASC")}");
             var indexColumnsDefinition = string.Join(", ", indexColumns);
             return $"""
-                    CREATE NONCLUSTERED INDEX {index} ON {table} (
+                    CREATE NONCLUSTERED INDEX {index.QuoteName()} ON {schema.QuoteName()}.{table.QuoteName()} (
                     {indexColumnsDefinition}
                     );
                     """;
@@ -51,8 +56,6 @@ internal sealed class MsSqlSyntaxProvider : ISqlSyntaxProvider
     public ISqlIndexProvider Indexes => new MsSqlIndexProvider();
 
     public bool SupportsDdlRollback => true;
-    
-    public bool SupportsIndexes => true;
 
     public string WithBlock(string block) => $"""
         BEGIN
@@ -80,9 +83,27 @@ internal sealed class MsSqlSyntaxProvider : ISqlSyntaxProvider
         END CATCH;
         """;
 
-    public string Ctas(
-        string source, string target, IEnumerable<(string Expression, string ColumnName)> select, bool distinct)
+    public string CreateTable(string schema, string table, IEnumerable<IStructureColumn> columns)
     {
+        var columnDefinitions = columns
+            .Select(c => $"{c.ColumnName.QuoteName()} {c.DataType} {(c.IsNullable ? "NULL" : "NOT NULL")}");
+        return $"""
+            CREATE TABLE {schema.QuoteName()}.{table.QuoteName()} (
+            {string.Join(",\n", columnDefinitions)}
+            );
+            """;
+    }
+
+    public string Ctas(
+        string sourceSchema,
+        string sourceTable,
+        string? targetSchema,
+        string targetTable,
+        IEnumerable<(string Expression, string ColumnName)> select,
+        bool distinct)
+    {
+        var source = QuoteTable(sourceSchema, sourceTable);
+        var target = QuoteTable(targetSchema, targetTable);
         var columns = select.Select(c => $"{c.Expression} AS {c.ColumnName}");
         return $"""
             DROP TABLE IF EXISTS {target};
@@ -94,33 +115,45 @@ internal sealed class MsSqlSyntaxProvider : ISqlSyntaxProvider
             """;
     }
 
-    public string ScdUpdate(string source, string target, bool fullLoad,
-        string isCurrentColumn, string validUntilColumn, string hashKeyColumn, string recordHashColumn) =>
-        fullLoad
+    public string ScdUpdate(
+        string? sourceSchema,
+        string sourceTable,
+        string targetSchema,
+        string targetTable,
+        bool fullLoad,
+        string isCurrentColumn,
+        string validUntilColumn,
+        string hashKeyColumn,
+        string recordHashColumn)
+    {
+        var source = QuoteTable(sourceSchema, sourceTable);
+        var target = QuoteTable(targetSchema, targetTable);
+        return fullLoad
             ? $"""
                UPDATE tgt
-               SET {isCurrentColumn} = 0, {validUntilColumn} = GETDATE()
+               SET {isCurrentColumn.QuoteName()} = 0, {validUntilColumn.QuoteName()} = GETDATE()
                FROM {target} AS tgt
-               LEFT JOIN {source} AS src ON tgt.{hashKeyColumn} = src.{hashKeyColumn}
-               WHERE tgt.{isCurrentColumn} = 1 AND
-                     (tgt.{recordHashColumn} <> src.{recordHashColumn} OR src.{recordHashColumn} IS NULL);
+               LEFT JOIN {source} AS src ON tgt.{hashKeyColumn.QuoteName()} = src.{hashKeyColumn.QuoteName()}
+               WHERE tgt.{isCurrentColumn.QuoteName()} = 1 AND
+                     (tgt.{recordHashColumn.QuoteName()} <> src.{recordHashColumn.QuoteName()} OR src.{recordHashColumn.QuoteName()} IS NULL);
                        
                """
             : $"""
                UPDATE tgt
-               SET {isCurrentColumn} = 0, {validUntilColumn} = GETDATE()
+               SET {isCurrentColumn.QuoteName()} = 0, {validUntilColumn.QuoteName()} = GETDATE()
                FROM {target} AS tgt
-               INNER JOIN {source} AS src ON tgt.{hashKeyColumn} = src.{hashKeyColumn}
-               WHERE tgt.{isCurrentColumn} = 1 AND
-                     tgt.{recordHashColumn} <> src.{recordHashColumn};
+               INNER JOIN {source} AS src ON tgt.{hashKeyColumn.QuoteName()} = src.{hashKeyColumn.QuoteName()}
+               WHERE tgt.{isCurrentColumn.QuoteName()} = 1 AND
+                     tgt.{recordHashColumn.QuoteName()} <> src.{recordHashColumn.QuoteName()};
                      
                """;
+    }
 
-    public string AlterColumnDropNull(string table, IStructureColumn column) =>
-        $"ALTER TABLE {table} ALTER COLUMN {QuoteName(column.ColumnName)} {column.DataType} NULL;";
+    public string AlterColumnDropNull(string schema, string table, IStructureColumn column) =>
+        $"ALTER TABLE {schema.QuoteName()}.{table.QuoteName()} ALTER COLUMN {column.ColumnName.QuoteName()} {column.DataType} NULL;";
 
-    public string AlterTableAddColumn(string table, IStructureColumn column, bool nullable) =>
-        $"ALTER TABLE {table} ADD {QuoteName(column.ColumnName)} {column.DataType} {(nullable ? "NULL" : "NOT NULL")};";
+    public string AlterTableAddColumn(string schema, string table, IStructureColumn column, bool nullable) =>
+        $"ALTER TABLE {schema.QuoteName()}.{table.QuoteName()} ADD {column.ColumnName.QuoteName()} {column.DataType} {(nullable ? "NULL" : "NOT NULL")};";
 }
 
 file static class Extensions

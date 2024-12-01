@@ -38,15 +38,16 @@ internal abstract class ScdProvider<TSyntaxProvider>(
             targetColumns.Cast<IColumn>().ToArray());
         
         var includedColumns = GetDataLoadColumns(sourceColumns, targetColumns);
-        var sourceTableName =
-            $"{SyntaxProvider.QuoteName(table.SourceTableSchema)}.{SyntaxProvider.QuoteName(table.SourceTableName)}";
-        var stagingTableName = string.IsNullOrEmpty(table.StagingTableSchema)
-            ? SyntaxProvider.QuoteName(table.StagingTableName)
-            : $"{SyntaxProvider.QuoteName(table.StagingTableSchema)}.{SyntaxProvider.QuoteName(table.StagingTableName)}";
         var select = includedColumns
             .Where(c => c.IncludeInStagingTable)
             .Select(c => (c.StagingTableExpression ?? c.ColumnName, c.ColumnName));
-        var ctas = SyntaxProvider.Ctas(sourceTableName, stagingTableName, select, table.SelectDistinct);
+        var ctas = SyntaxProvider.Ctas(
+            table.SourceTableSchema,
+            table.SourceTableName,
+            table.StagingTableSchema,
+            table.StagingTableName,
+            select,
+            table.SelectDistinct);
         var statement = SyntaxProvider.SupportsDdlRollback
             ? SyntaxProvider.RollbackOnError(ctas)
             : SyntaxProvider.WithBlock(ctas);
@@ -68,29 +69,28 @@ internal abstract class ScdProvider<TSyntaxProvider>(
             table,
             sourceColumns.Cast<IColumn>().ToArray(),
             targetColumns.Cast<IColumn>().ToArray());
-        
-        var includedColumns = GetDataLoadColumns(sourceColumns, targetColumns);
-        
-        var targetTableName =
-            $"{SyntaxProvider.QuoteName(table.TargetTableSchema)}.{SyntaxProvider.QuoteName(table.TargetTableName)}";
-        var stagingTableName = string.IsNullOrEmpty(table.StagingTableSchema)
-            ? SyntaxProvider.QuoteName(table.StagingTableName)
-            : $"{SyntaxProvider.QuoteName(table.StagingTableSchema)}.{SyntaxProvider.QuoteName(table.StagingTableName)}";
-        var quotedInsertColumns = includedColumns
-            .Select(c => SyntaxProvider.QuoteName(c.ColumnName));
-        var quotedSelectColumns = includedColumns
-            .Select(c => c.TargetTableExpression is null
-                ? $"src.{SyntaxProvider.QuoteName(c.ColumnName)}"
-                : $"{c.TargetTableExpression} AS {SyntaxProvider.QuoteName(c.ColumnName)}");
 
         var update = SyntaxProvider.ScdUpdate(
-            source: stagingTableName,
-            target: targetTableName,
+            sourceSchema: table.StagingTableSchema,
+            sourceTable: table.StagingTableName,
+            targetSchema: table.TargetTableSchema,
+            targetTable: table.TargetTableName,
             fullLoad: table.FullLoad,
-            isCurrentColumn: SyntaxProvider.QuoteName(IsCurrentColumn),
-            validUntilColumn: SyntaxProvider.QuoteName(ValidUntilColumn),
-            hashKeyColumn: SyntaxProvider.QuoteName(HashKeyColumn),
-            recordHashColumn: SyntaxProvider.QuoteName(RecordHashColumn));
+            isCurrentColumn: IsCurrentColumn,
+            validUntilColumn: ValidUntilColumn,
+            hashKeyColumn: HashKeyColumn,
+            recordHashColumn: RecordHashColumn);
+        
+        var targetTableName = SyntaxProvider.QuoteTable(table.TargetTableSchema, table.TargetTableName);
+        var stagingTableName = SyntaxProvider.QuoteTable(table.StagingTableSchema, table.StagingTableName);
+        
+        var includedColumns = GetDataLoadColumns(sourceColumns, targetColumns);
+        var quotedInsertColumns = includedColumns
+            .Select(c => SyntaxProvider.QuoteColumn(c.ColumnName));
+        var quotedSelectColumns = includedColumns
+            .Select(c => c.TargetTableExpression is null
+                ? $"src.{SyntaxProvider.QuoteColumn(c.ColumnName)}"
+                : $"{c.TargetTableExpression} AS {SyntaxProvider.QuoteColumn(c.ColumnName)}");
 
         var insert = $"""
             INSERT INTO {targetTableName} (
@@ -100,11 +100,10 @@ internal abstract class ScdProvider<TSyntaxProvider>(
             {string.Join(",\n", quotedSelectColumns)}
             FROM {stagingTableName} AS src
               LEFT JOIN {targetTableName} AS tgt ON
-                  src.{SyntaxProvider.QuoteName(HashKeyColumn)} = tgt.{SyntaxProvider.QuoteName(HashKeyColumn)} AND
-                  tgt.{SyntaxProvider.QuoteName(IsCurrentColumn)} = 1
-            WHERE tgt.{SyntaxProvider.QuoteName(HashKeyColumn)} IS NULL OR 
-                src.{SyntaxProvider.QuoteName(RecordHashColumn)} <> tgt.{SyntaxProvider.QuoteName(RecordHashColumn)};
-                
+                  src.{SyntaxProvider.QuoteColumn(HashKeyColumn)} = tgt.{SyntaxProvider.QuoteColumn(HashKeyColumn)} AND
+                  tgt.{SyntaxProvider.QuoteColumn(IsCurrentColumn)} = 1
+            WHERE tgt.{SyntaxProvider.QuoteColumn(HashKeyColumn)} IS NULL OR 
+                src.{SyntaxProvider.QuoteColumn(RecordHashColumn)} <> tgt.{SyntaxProvider.QuoteColumn(RecordHashColumn)};
             """;
         
         var block = SyntaxProvider.RollbackOnError($"""
@@ -132,48 +131,36 @@ internal abstract class ScdProvider<TSyntaxProvider>(
             targetColumns.Cast<IColumn>().ToArray());
         
         var builder = new StringBuilder();
-        
-        var tableName =
-            $"{SyntaxProvider.QuoteName(table.TargetTableSchema)}.{SyntaxProvider.QuoteName(table.TargetTableName)}";
 
         if (targetColumns.Count == 0)
         {
             // Target table does not exist.
-            var columnDefinitions = GetStructureColumns(sourceColumns)
-                .Select(c => $"{SyntaxProvider.QuoteName(c.ColumnName)} {c.DataType} {(c.IsNullable ? "NULL" : "NOT NULL")}");
-            
-            builder.AppendLine($"""
-                CREATE TABLE {tableName} (
-                {string.Join(",\n", columnDefinitions)}
-                );
-
-                """);
+            var columns = GetStructureColumns(sourceColumns);
+            builder.AppendLine(SyntaxProvider.CreateTable(table.TargetTableSchema, table.TargetTableName, columns));
 
             if (!table.ApplyIndexesOnCreate || !SyntaxProvider.Indexes.AreSupported)
             {
                 return SyntaxProvider.WithBlock(builder.ToString());
             }
             
-            var naturalKeyIndexName = SyntaxProvider.QuoteName($"IX_{table.TargetTableName}_NaturalKey");
+            var naturalKeyIndexName = $"IX_{table.TargetTableName}_NaturalKey";
             var naturalKeyIndexColumns = table.NaturalKeyColumns
                 .Distinct()
                 .Order()
                 .Append(IsCurrentColumn)
-                .Select(SyntaxProvider.QuoteName)
                 .Select(c => (ColumnName: c, Descending: false));
             
             builder.AppendLine(SyntaxProvider.Indexes.ClusteredIndex(
-                tableName, naturalKeyIndexName, naturalKeyIndexColumns));
+                table.TargetTableSchema, table.TargetTableName, naturalKeyIndexName, naturalKeyIndexColumns));
             
-            var hashKeyIndexName = SyntaxProvider.QuoteName($"IX_{table.TargetTableName}_HashKey");
+            var hashKeyIndexName = $"IX_{table.TargetTableName}_HashKey";
             var hashKeyColumns = Enumerable.Empty<string>()
                 .Append(HashKeyColumn)
                 .Append(IsCurrentColumn)
-                .Select(SyntaxProvider.QuoteName)
                 .Select(c => (ColumnName: c, Descending: false));
             
             builder.AppendLine(SyntaxProvider.Indexes.NonClusteredIndex(
-                tableName, hashKeyIndexName, hashKeyColumns));
+                table.TargetTableSchema, table.TargetTableName, hashKeyIndexName, hashKeyColumns));
             
             return SyntaxProvider.WithBlock(builder.ToString());
         }
@@ -232,13 +219,14 @@ internal abstract class ScdProvider<TSyntaxProvider>(
 
         foreach (var c in columnsToAlter)
         {
-            builder.AppendLine(SyntaxProvider.AlterColumnDropNull(tableName, c));
+            builder.AppendLine(SyntaxProvider.AlterColumnDropNull(table.TargetTableSchema, table.TargetTableName, c));
         }
 
         foreach (var c in columnsToAdd.OrderBy(c => c.ColumnName))
         {
             // New columns are nullable because target table might already contain data
-            builder.AppendLine(SyntaxProvider.AlterTableAddColumn(tableName, c, nullable: true));
+            builder.AppendLine(SyntaxProvider.AlterTableAddColumn(
+                table.TargetTableSchema, table.TargetTableName, c, nullable: true));
         }
         
         return SyntaxProvider.WithBlock(builder.ToString());
@@ -316,7 +304,6 @@ internal abstract class ScdProvider<TSyntaxProvider>(
             .DistinctBy(c => c.ColumnName)
             .OrderBy(c => c.Ordinal) // Order by ordinal to make sure column renames don't affect hashing results.
             .Select(c => c.ColumnName)
-            .Select(SyntaxProvider.QuoteName)
             .ToArray();
         var hashKeyColumn = new LoadColumn
         {
@@ -367,8 +354,7 @@ internal abstract class ScdProvider<TSyntaxProvider>(
         
         IEnumerable<ILoadColumn> recordColumns = [..naturalKeyColumns, ..otherColumns];
         var quotedRecordColumns = recordColumns
-            .Select(c => c.ColumnName)
-            .Select(SyntaxProvider.QuoteName);
+            .Select(c => c.ColumnName);
         var recordHashColumn = new LoadColumn
         {
             ColumnName = RecordHashColumn,
