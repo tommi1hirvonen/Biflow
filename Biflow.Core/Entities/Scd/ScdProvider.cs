@@ -7,13 +7,9 @@ internal abstract class ScdProvider<TSyntaxProvider>(
     where TSyntaxProvider : ISqlSyntaxProvider, new()
 {
     protected abstract string HashKeyColumn { get; }
-    
     protected abstract string ValidFromColumn { get; }
-    
     protected abstract string ValidUntilColumn { get; }
-    
     protected abstract string IsCurrentColumn { get; }
-    
     protected abstract string RecordHashColumn { get; }
 
     private IEnumerable<string> SystemColumns =>
@@ -107,7 +103,6 @@ internal abstract class ScdProvider<TSyntaxProvider>(
             """;
         
         var block = SyntaxProvider.RollbackOnError($"""
-
             {table.PreLoadScript}
 
             {update}
@@ -115,7 +110,6 @@ internal abstract class ScdProvider<TSyntaxProvider>(
             {insert}
 
             {table.PostLoadScript}
-
             """);
         
         return block;
