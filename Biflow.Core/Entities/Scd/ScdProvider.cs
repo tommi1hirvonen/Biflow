@@ -173,9 +173,10 @@ internal abstract class ScdProvider<TSyntaxProvider>(
                         disabled.IncludedColumns.Concat(table.NaturalKeyColumns)
                             .All(c2 => c1.ColumnName != c2))
                     .ToArray();
-                // Newly included columns
+                // Newly included columns. Also account for new columns via additions to natural key.
                 columnsToAdd = sourceColumns
-                    .Where(c => disabled.IncludedColumns.Contains(c.ColumnName))
+                    .Where(c => disabled.IncludedColumns.Contains(c.ColumnName)
+                                || table.NaturalKeyColumns.Contains(c.ColumnName))
                     .Where(c => targetColumns.All(sc => sc.ColumnName != c.ColumnName))
                     .ToArray();
                 
@@ -195,7 +196,8 @@ internal abstract class ScdProvider<TSyntaxProvider>(
                 columnsToAlter = [..missingNonNullColumns, ..newlyExcludedColumns];
                 columnsToAdd = enabled.IncludeNewColumns
                     ? sourceColumns
-                        .Where(c => !enabled.ExcludedColumns.Contains(c.ColumnName))
+                        .Where(c => !enabled.ExcludedColumns.Contains(c.ColumnName)
+                                    || table.NaturalKeyColumns.Contains(c.ColumnName))
                         .Where(c => targetColumns.All(sc => sc.ColumnName != c.ColumnName))
                         .ToArray()
                     : [];
