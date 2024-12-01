@@ -277,7 +277,7 @@ internal abstract class ScdProvider<TSyntaxProvider>(
         {
             ColumnName = ValidUntilColumn,
             DataType = SyntaxProvider.Datatypes.DateTime,
-            IsNullable = true
+            IsNullable = false
         };
         var isCurrent = new StructureColumn
         {
