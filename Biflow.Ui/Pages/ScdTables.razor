@@ -26,8 +26,6 @@
     </div>
 }
 
-@* TODO: Connection filter dropdown *@
-
 @* TODO: SCD steps offcanvas to view related steps *@
 
 @* TODO: Generate, preview and copy structure and loader codes *@
@@ -75,6 +73,51 @@
     </div>
 </div>
 
+<div class="row mt-2 g-3">
+    <div class="col-auto">
+        <div class="input-group input-group-sm">
+            <div class="input-group-text">
+                <SvgIcon Icon="LucideIcon.Filter" />
+                Filter
+            </div>
+            <input type="search" class="form-control"
+                   @bind-value="_tableNameFilter"
+                   @bind-value:event="oninput"
+                   style="min-width: 12rem; max-width: 12rem;"
+                   placeholder="Name"/>
+            <input type="search" class="form-control"
+                   @bind-value="_sourceTableNameFilter"
+                   @bind-value:event="oninput"
+                   style="min-width: 12rem; max-width: 12rem;"
+                   placeholder="Source table/view"/>
+            <input type="search" class="form-control"
+                   @bind-value="_targetTableNameFilter"
+                   @bind-value:event="oninput"
+                   style="min-width: 12rem; max-width: 12rem;"
+                   placeholder="Target table"/>
+        </div>
+    </div>
+
+    <div class="col-auto">
+        <HxButtonGroup Size="ButtonGroupSize.Small">
+            <FilterDropdown Items="_connections?.Where(c => _tables?.Any(t => t.ConnectionId == c.ConnectionId) == true) ?? []"
+                            FilterSet="_connectionFilter"
+                            TextSelector="c => c.ConnectionName"
+                            OnChange="StateHasChanged"
+                            IdSelector="c => c.ConnectionId.ToString()">
+                <TitleTemplate>
+                    <SvgIcon Icon="LucideIcon.Database" />
+                    Connections
+                </TitleTemplate>
+            </FilterDropdown>
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="ClearFilters">
+                <SvgIcon Icon="LucideIcon.X"/>
+                Clear
+            </HxButton>
+        </HxButtonGroup>
+    </div>
+</div>
+
 <div class="card pt-2 my-4">
     <table class="table table-sm table-hover">
         <thead>
@@ -82,7 +125,7 @@
                 <th>
                     Name
                 </th>
-                <th>Source table</th>
+                <th>Source table/view</th>
                 <th>Target table</th>
                 <th>Pre-load script</th>
                 <th>Post-load script</th>
@@ -100,20 +143,26 @@
             }
             else
             {
-                @foreach (var table in _tables.OrderBy(t => t.ScdTableName))
+                var tables = _tables
+                    .Where(t => string.IsNullOrEmpty(_tableNameFilter) || t.ScdTableName.ContainsIgnoreCase(_tableNameFilter))
+                    .Where(t => string.IsNullOrEmpty(_sourceTableNameFilter) || t.SourceTableSchema.ContainsIgnoreCase(_sourceTableNameFilter) || t.SourceTableName.ContainsIgnoreCase(_sourceTableNameFilter))
+                    .Where(t => string.IsNullOrEmpty(_targetTableNameFilter) || t.TargetTableSchema.ContainsIgnoreCase(_targetTableNameFilter) || t.TargetTableName.ContainsIgnoreCase(_targetTableNameFilter))
+                    .Where(t => _connectionFilter.Count == 0 || _connectionFilter.Any(c => c.ConnectionId == t.ConnectionId))
+                    .OrderBy(t => t.ScdTableName);
+                @foreach (var table in tables)
                 {
                     <ContextMenuToggle ContainerHtmlTag="tr">
                         <ChildContent Context="menu">
                             <td class="align-middle">
                             <span class="tr-hover-underline" @onclick="() => ShowEditModalAsync(table)">
-                                @table.ScdTableName
+                                <HighlightableText PartToHighlight="@_tableNameFilter" Text="@table.ScdTableName"/>
                             </span>
                             </td>
                             <td class="align-middle small">
-                                @table.SourceTableSchema.@table.SourceTableName
+                                <HighlightableText PartToHighlight="@_sourceTableNameFilter" Text="@($"{table.SourceTableSchema}.{table.SourceTableName}")"/>
                             </td>
                             <td class="align-middle small">
-                                @table.TargetTableSchema.@table.TargetTableName
+                                <HighlightableText PartToHighlight="@_targetTableNameFilter" Text="@($"{table.TargetTableSchema}.{table.TargetTableName}")"/>
                             </td>
                             <td class="align-middle">
                                 @if (!string.IsNullOrWhiteSpace(table.PreLoadScript))
@@ -156,10 +205,15 @@
 <ScdTableEditModal @ref="_editModal" OnTableSubmit="OnTableSubmitAsync" Connections="_connections" />
 
 @code {
+    private readonly HashSet<ConnectionBase> _connectionFilter = [];
+    
     private List<ScdTable>? _tables;
     private ConnectionBase[]? _connections;
     private ScdTableEditModal? _editModal;
     private bool _infoExpanded;
+    private string _tableNameFilter = "";
+    private string _sourceTableNameFilter = "";
+    private string _targetTableNameFilter = ""; 
     
     protected override void OnInitialized() => ThemeService.OnThemeChanged += OnThemeChanged;
     
@@ -215,5 +269,13 @@
         }
         _tables?.Add(table);
         StateHasChanged();
+    }
+
+    private void ClearFilters()
+    {
+        _sourceTableNameFilter = "";
+        _targetTableNameFilter = "";
+        _tableNameFilter = "";
+        _connectionFilter.Clear();
     }
 }
