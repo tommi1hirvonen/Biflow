@@ -86,12 +86,13 @@ internal sealed class SnowflakeSyntaxProvider : ISqlSyntaxProvider
         string sourceTable,
         string? targetSchema,
         string targetTable,
-        IEnumerable<(string Expression, string ColumnName)> select,
+        IEnumerable<(string? Expression, string ColumnName)> select,
         bool distinct)
     {
         var source = QuoteTable(sourceSchema, sourceTable);
         var target = QuoteTable(targetSchema, targetTable);
-        var columns = select.Select(c => $"{c.Expression} AS {c.ColumnName}");
+        var columns = select.Select(c =>
+            c.Expression is null ? c.ColumnName.QuoteName() : $"{c.Expression} AS {c.ColumnName.QuoteName()}");
         return $"""
             DROP TABLE IF EXISTS {target};
             

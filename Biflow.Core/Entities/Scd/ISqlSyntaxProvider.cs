@@ -16,7 +16,7 @@ internal interface ISqlSyntaxProvider
         string sourceTable,
         string? targetSchema,
         string targetTable,
-        IEnumerable<(string Expression, string ColumnName)> columns,
+        IEnumerable<(string? Expression, string ColumnName)> columns,
         bool distinct);
     public string ScdUpdate(
         string? sourceSchema,

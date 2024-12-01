@@ -36,7 +36,7 @@ internal abstract class ScdProvider<TSyntaxProvider>(
         var includedColumns = GetDataLoadColumns(sourceColumns, targetColumns);
         var select = includedColumns
             .Where(c => c.IncludeInStagingTable)
-            .Select(c => (c.StagingTableExpression ?? c.ColumnName, c.ColumnName));
+            .Select(c => (c.StagingTableExpression, c.ColumnName));
         var ctas = SyntaxProvider.Ctas(
             table.SourceTableSchema,
             table.SourceTableName,
