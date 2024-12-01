@@ -24,8 +24,19 @@ internal sealed class SnowflakeSyntaxProvider : ISqlSyntaxProvider
             $"UPPER(MD5(CONCAT({string.Join(", '|', ", columns)})))";
     }
 
+    private class SnowflakeIndexProvider : ISqlIndexProvider
+    {
+        public bool AreSupported => false;
+        public string ClusteredIndex(string table, string index, IEnumerable<(string ColumnName, bool Descending)> columns) =>
+            throw new NotSupportedException("Indexes are not supported on Snowflake.");
+
+        public string NonClusteredIndex(string table, string index, IEnumerable<(string ColumnName, bool Descending)> columns) =>
+            throw new NotSupportedException("Indexes are not supported on Snowflake.");
+    }
+
     public ISqlDatatypeProvider Datatypes => new SnowflakeDatatypeProvider();
     public ISqlFunctionProvider Functions => new SnowflakeFunctionProvider();
+    public ISqlIndexProvider Indexes => new SnowflakeIndexProvider();
 
     public bool SupportsDdlRollback => false;
     

@@ -5,8 +5,8 @@ internal interface ISqlSyntaxProvider
     public string QuoteName(string name);
     public ISqlDatatypeProvider Datatypes { get; }  
     public ISqlFunctionProvider Functions { get; }
+    public ISqlIndexProvider Indexes { get; }
     public bool SupportsDdlRollback { get; }
-    public bool SupportsIndexes { get; }
     public string WithBlock(string block);
     public string RollbackOnError(string block);
     public string Ctas(
@@ -30,4 +30,11 @@ internal interface ISqlFunctionProvider
     public string MaxDateTime { get; }
     public string True { get; }
     public string Md5(IEnumerable<string> columns);
+}
+
+internal interface ISqlIndexProvider
+{
+    public bool AreSupported { get; }
+    public string ClusteredIndex(string table, string index, IEnumerable<(string ColumnName, bool Descending)> columns);
+    public string NonClusteredIndex(string table, string index, IEnumerable<(string ColumnName, bool Descending)> columns);
 }

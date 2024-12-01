@@ -149,30 +149,31 @@ internal abstract class ScdProvider<TSyntaxProvider>(
 
                 """);
 
-            if (!table.ApplyIndexesOnCreate || !SyntaxProvider.SupportsIndexes)
+            if (!table.ApplyIndexesOnCreate || !SyntaxProvider.Indexes.AreSupported)
             {
                 return SyntaxProvider.WithBlock(builder.ToString());
             }
             
-            var nkIndexName = SyntaxProvider.QuoteName($"IX_{table.TargetTableName}_NaturalKey");
-            var nkIndexColumnDefinitions = table.NaturalKeyColumns
+            var naturalKeyIndexName = SyntaxProvider.QuoteName($"IX_{table.TargetTableName}_NaturalKey");
+            var naturalKeyIndexColumns = table.NaturalKeyColumns
                 .Distinct()
                 .Order()
-                .Select(c => $"{SyntaxProvider.QuoteName(c)} ASC")
-                .Append($"{SyntaxProvider.QuoteName(IsCurrentColumn)} ASC");
-            var hkIndexName = SyntaxProvider.QuoteName($"IX_{table.TargetTableName}_HashKey");
-            var hkIndexColumnDefinition =
-                $"{SyntaxProvider.QuoteName(HashKeyColumn)} ASC, {SyntaxProvider.QuoteName(IsCurrentColumn)} ASC";
-            builder.AppendLine($"""
-                CREATE CLUSTERED INDEX {hkIndexName} ON {tableName} (
-                {hkIndexColumnDefinition}
-                );
-
-                CREATE NONCLUSTERED INDEX {nkIndexName} ON {tableName} (
-                {string.Join(",\n", nkIndexColumnDefinitions)}
-                );
-
-                """);
+                .Append(IsCurrentColumn)
+                .Select(SyntaxProvider.QuoteName)
+                .Select(c => (ColumnName: c, Descending: false));
+            
+            builder.AppendLine(SyntaxProvider.Indexes.ClusteredIndex(
+                tableName, naturalKeyIndexName, naturalKeyIndexColumns));
+            
+            var hashKeyIndexName = SyntaxProvider.QuoteName($"IX_{table.TargetTableName}_HashKey");
+            var hashKeyColumns = Enumerable.Empty<string>()
+                .Append(HashKeyColumn)
+                .Append(IsCurrentColumn)
+                .Select(SyntaxProvider.QuoteName)
+                .Select(c => (ColumnName: c, Descending: false));
+            
+            builder.AppendLine(SyntaxProvider.Indexes.NonClusteredIndex(
+                tableName, hashKeyIndexName, hashKeyColumns));
             
             return SyntaxProvider.WithBlock(builder.ToString());
         }

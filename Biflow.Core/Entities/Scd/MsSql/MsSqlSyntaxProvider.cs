@@ -19,9 +19,36 @@ internal sealed class MsSqlSyntaxProvider : ISqlSyntaxProvider
         public string Md5(IEnumerable<string> columns) =>
             $"CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT({string.Join(", '|', ", columns)})), 2)";
     }
+
+    private class MsSqlIndexProvider : ISqlIndexProvider
+    {
+        public bool AreSupported => true;
+        public string ClusteredIndex(string table, string index, IEnumerable<(string ColumnName, bool Descending)> columns)
+        {
+            var indexColumns = columns.Select(c => $"{c.ColumnName} {(c.Descending ? "DESC" : "ASC")}");
+            var indexColumnsDefinition = string.Join(", ", indexColumns);
+            return $"""
+                    CREATE CLUSTERED INDEX {index} ON {table} (
+                    {indexColumnsDefinition}
+                    );
+                    """;
+        }
+
+        public string NonClusteredIndex(string table, string index, IEnumerable<(string ColumnName, bool Descending)> columns)
+        {
+            var indexColumns = columns.Select(c => $"{c.ColumnName} {(c.Descending ? "DESC" : "ASC")}");
+            var indexColumnsDefinition = string.Join(", ", indexColumns);
+            return $"""
+                    CREATE NONCLUSTERED INDEX {index} ON {table} (
+                    {indexColumnsDefinition}
+                    );
+                    """;
+        }
+    }
     
     public ISqlDatatypeProvider Datatypes => new MsSqlDatatypeProvider();
     public ISqlFunctionProvider Functions => new MsSqlFunctionProvider();
+    public ISqlIndexProvider Indexes => new MsSqlIndexProvider();
 
     public bool SupportsDdlRollback => true;
     
