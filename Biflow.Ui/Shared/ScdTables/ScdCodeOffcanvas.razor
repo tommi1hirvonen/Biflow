@@ -1,0 +1,130 @@
+﻿@inject ToasterService Toaster
+@inject IJSRuntime Js
+
+<HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Large" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true">
+    <BodyTemplate>
+        @if (_loading)
+        {
+            <div class="row my-3">
+                <div class="col text-center">
+                    <HxSpinner Color="ThemeColor.Secondary" />
+                </div>
+            </div>
+        }
+        <div class="row">
+            <div class="col">
+                <span class="text-secondary text-decoration-underline small pointer" @onclick="CopyToClipboard">
+                    Copy to clipboard
+                </span>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col">
+                <CodeEditor @ref="_editor"
+                            Language="sql"
+                            ReadOnly="true"
+                            InitialValueExpression="() => _code"
+                            InitialHeight="calc(100vh - 200px)"/>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
+@code {
+    private CodeEditor? _editor;
+    private HxOffcanvas? _offcanvas;
+    private string? _code;
+    private bool _loading = false;
+    
+    private async Task CopyToClipboard()
+    {
+        try
+        {
+            await Js.InvokeVoidAsync("navigator.clipboard.writeText", _code);
+            Toaster.AddInformation("Code copied to clipboard");
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error copying to clipboard", ex.Message);
+        }
+    }
+
+    public async Task ShowStructureUpdateAsync(ScdTable table, ConnectionBase? connection)
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(connection);
+            _code = "-- Loading...";
+            await _editor.LetAsync(x => x.SetValueAsync("-- Loading..."));
+            _loading = true;
+            StateHasChanged();
+            await _offcanvas.LetAsync(x => x.ShowAsync());
+            var scdProvider = connection.CreateScdProvider(table);
+            _code = await scdProvider.CreateStructureUpdateStatementAsync();
+            var editorCode = string.IsNullOrWhiteSpace(_code) ? "-- No structural updates found" : _code;
+            await _editor.LetAsync(x => x.SetValueAsync(editorCode));
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error generating SQL", ex.Message);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+    
+    public async Task ShowStagingLoadAsync(ScdTable table, ConnectionBase? connection)
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(connection);
+            _code = "-- Loading...";
+            await _editor.LetAsync(x => x.SetValueAsync("-- Loading..."));
+            _loading = true;
+            StateHasChanged();
+            await _offcanvas.LetAsync(x => x.ShowAsync());
+            var scdProvider = connection.CreateScdProvider(table);
+            (_code, _, _) = await scdProvider.CreateStagingLoadStatementAsync();
+            await _editor.LetAsync(x => x.SetValueAsync(_code));
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error generating SQL", ex.Message);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+    
+    public async Task ShowTargetLoadAsync(ScdTable table, ConnectionBase? connection)
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(connection);
+            _code = "-- Loading...";
+            await _editor.LetAsync(x => x.SetValueAsync("-- Loading..."));
+            _loading = true;
+            StateHasChanged();
+            await _offcanvas.LetAsync(x => x.ShowAsync());
+            var scdProvider = connection.CreateScdProvider(table);
+            _code = await scdProvider.CreateTargetLoadStatementAsync();
+            await _editor.LetAsync(x => x.SetValueAsync(_code));
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error generating SQL", ex.Message);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+}

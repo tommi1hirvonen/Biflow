@@ -26,8 +26,6 @@
     </div>
 }
 
-@* TODO: Generate, preview and copy structure and loader codes *@
-
 <div class="row mt-3 flex-row-reverse justify-content-between align-items-end g-3">
     <div class="col-auto">
         <HxAlert Color="ThemeService.CurrentTheme == Theme.Light ? ThemeColor.Light : ThemeColor.Dark"
@@ -167,6 +165,7 @@
                     .OrderBy(t => t.ScdTableName);
                 @foreach (var table in tables)
                 {
+                    var connection = _connections?.FirstOrDefault(c => c.ConnectionId == table.ConnectionId);
                     var jobs = table.ScdSteps.Select(s => s.Job).Distinct().Count();
                     var steps = table.ScdSteps.Count();
                     <ContextMenuToggle ContainerHtmlTag="tr">
@@ -225,6 +224,15 @@
                                 <SvgIcon Icon="LucideIcon.Trash2" />
                                 Delete...
                             </DropdownMenuItem>
+                            <DropdownMenuItem CssClass="small" @onclick="() => _codeOffcanvas.LetAsync(x => x.ShowStructureUpdateAsync(table, connection))">
+                                Generate structure update SQL
+                            </DropdownMenuItem>
+                            <DropdownMenuItem CssClass="small" @onclick="() => _codeOffcanvas.LetAsync(x => x.ShowStagingLoadAsync(table, connection))">
+                                Generate staging load SQL
+                            </DropdownMenuItem>
+                            <DropdownMenuItem CssClass="small" @onclick="() => _codeOffcanvas.LetAsync(x => x.ShowTargetLoadAsync(table, connection))">
+                                Generate target load SQL
+                            </DropdownMenuItem>
                         </MenuContent>
                     </ContextMenuToggle>
                 }
@@ -234,6 +242,8 @@
 </div>
 
 <ScdTableEditModal @ref="_editModal" OnTableSubmit="OnTableSubmitAsync" Connections="_connections" />
+
+<ScdCodeOffcanvas @ref="_codeOffcanvas" />
 
 <HxModal @ref="_stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {_stepsTable?.ScdTableName}")">
     <BodyTemplate>
@@ -279,6 +289,7 @@
     private List<ScdTable>? _tables;
     private ConnectionBase[]? _connections;
     private ScdTableEditModal? _editModal;
+    private ScdCodeOffcanvas? _codeOffcanvas;
     private ScdTable? _stepsTable;
     private HxModal? _stepsModal;
     private bool _infoExpanded;
