@@ -1,29 +1,33 @@
 ﻿namespace Biflow.Core.Entities.Scd.MsSql;
 
-internal abstract class MsSqlSyntaxProvider : ISqlSyntaxProvider
+internal sealed class MsSqlSyntaxProvider : ISqlSyntaxProvider
 {
-    public static string QuoteName(string name) => name.QuoteName();
-
-    public static string CurrentTimestamp => "GETDATE()";
-
-    public static string DateTime => "DATETIME2(6)";
-
-    public static string Boolean => "BIT";
+    public string QuoteName(string name) => name.QuoteName();
     
-    public static string Varchar(int length) => $"VARCHAR({length})";
+    private class MsSqlDatatypeProvider : ISqlDatatypeProvider
+    {
+        public string Varchar(int length) => $"VARCHAR({length})";
+        public string DateTime => "DATETIME2(6)";
+        public string Boolean => "BIT";
+    }
 
-    public static string Md5(IEnumerable<string> columns) =>
-        $"CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT({string.Join(", '|', ", columns)})), 2)";
-
-    public static string MaxDateTime => "CONVERT(DATETIME2(6), '9999-12-31')";
-
-    public static string True => "1";
-
-    public static bool SupportsDdlRollback => true;
+    private class MsSqlFunctionProvider : ISqlFunctionProvider
+    {
+        public string CurrentTimestamp => "GETDATE()";
+        public string MaxDateTime => "CONVERT(DATETIME2(6), '9999-12-31')";
+        public string True => "1";
+        public string Md5(IEnumerable<string> columns) =>
+            $"CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT({string.Join(", '|', ", columns)})), 2)";
+    }
     
-    public static bool SupportsIndexes => true;
+    public ISqlDatatypeProvider Datatypes => new MsSqlDatatypeProvider();
+    public ISqlFunctionProvider Functions => new MsSqlFunctionProvider();
 
-    public static string WithBlock(string block) => $"""
+    public bool SupportsDdlRollback => true;
+    
+    public bool SupportsIndexes => true;
+
+    public string WithBlock(string block) => $"""
         BEGIN
 
         {block}
@@ -31,7 +35,7 @@ internal abstract class MsSqlSyntaxProvider : ISqlSyntaxProvider
         END;
         """;
     
-    public static string RollbackOnError(string block) => $"""
+    public string RollbackOnError(string block) => $"""
         BEGIN TRY
 
         BEGIN TRANSACTION;
@@ -49,7 +53,7 @@ internal abstract class MsSqlSyntaxProvider : ISqlSyntaxProvider
         END CATCH;
         """;
 
-    public static string Ctas(
+    public string Ctas(
         string source, string target, IEnumerable<(string Expression, string ColumnName)> select, bool distinct)
     {
         var columns = select.Select(c => $"{c.Expression} AS {c.ColumnName}");
@@ -63,7 +67,7 @@ internal abstract class MsSqlSyntaxProvider : ISqlSyntaxProvider
             """;
     }
 
-    public static string ScdUpdate(string source, string target, bool fullLoad,
+    public string ScdUpdate(string source, string target, bool fullLoad,
         string isCurrentColumn, string validUntilColumn, string hashKeyColumn, string recordHashColumn) =>
         fullLoad
             ? $"""
@@ -85,10 +89,10 @@ internal abstract class MsSqlSyntaxProvider : ISqlSyntaxProvider
                      
                """;
 
-    public static string AlterColumnDropNull(string table, IStructureColumn column) =>
+    public string AlterColumnDropNull(string table, IStructureColumn column) =>
         $"ALTER TABLE {table} ALTER COLUMN {QuoteName(column.ColumnName)} {column.DataType} NULL;";
 
-    public static string AlterTableAddColumn(string table, IStructureColumn column, bool nullable) =>
+    public string AlterTableAddColumn(string table, IStructureColumn column, bool nullable) =>
         $"ALTER TABLE {table} ADD {QuoteName(column.ColumnName)} {column.DataType} {(nullable ? "NULL" : "NOT NULL")};";
 }
 

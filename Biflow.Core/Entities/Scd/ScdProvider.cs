@@ -4,7 +4,7 @@ namespace Biflow.Core.Entities.Scd;
 
 internal abstract class ScdProvider<TSyntaxProvider>(
     ScdTable table, IColumnMetadataProvider columnProvider) : IScdProvider
-    where TSyntaxProvider : ISqlSyntaxProvider
+    where TSyntaxProvider : ISqlSyntaxProvider, new()
 {
     protected abstract string HashKeyColumn { get; }
     
@@ -25,6 +25,8 @@ internal abstract class ScdProvider<TSyntaxProvider>(
         RecordHashColumn
     ];
     
+    private TSyntaxProvider SyntaxProvider { get; } = new();
+    
     public async Task<StagingLoadStatementResult> CreateStagingLoadStatementAsync(
         CancellationToken cancellationToken = default)
     {
@@ -37,17 +39,17 @@ internal abstract class ScdProvider<TSyntaxProvider>(
         
         var includedColumns = GetDataLoadColumns(sourceColumns, targetColumns);
         var sourceTableName =
-            $"{TSyntaxProvider.QuoteName(table.SourceTableSchema)}.{TSyntaxProvider.QuoteName(table.SourceTableName)}";
+            $"{SyntaxProvider.QuoteName(table.SourceTableSchema)}.{SyntaxProvider.QuoteName(table.SourceTableName)}";
         var stagingTableName = string.IsNullOrEmpty(table.StagingTableSchema)
-            ? TSyntaxProvider.QuoteName(table.StagingTableName)
-            : $"{TSyntaxProvider.QuoteName(table.StagingTableSchema)}.{TSyntaxProvider.QuoteName(table.StagingTableName)}";
+            ? SyntaxProvider.QuoteName(table.StagingTableName)
+            : $"{SyntaxProvider.QuoteName(table.StagingTableSchema)}.{SyntaxProvider.QuoteName(table.StagingTableName)}";
         var select = includedColumns
             .Where(c => c.IncludeInStagingTable)
             .Select(c => (c.StagingTableExpression ?? c.ColumnName, c.ColumnName));
-        var ctas = TSyntaxProvider.Ctas(sourceTableName, stagingTableName, select, table.SelectDistinct);
-        var statement = TSyntaxProvider.SupportsDdlRollback
-            ? TSyntaxProvider.RollbackOnError(ctas)
-            : TSyntaxProvider.WithBlock(ctas);
+        var ctas = SyntaxProvider.Ctas(sourceTableName, stagingTableName, select, table.SelectDistinct);
+        var statement = SyntaxProvider.SupportsDdlRollback
+            ? SyntaxProvider.RollbackOnError(ctas)
+            : SyntaxProvider.WithBlock(ctas);
         
         return new(statement, sourceColumns, targetColumns);
     }
@@ -70,25 +72,25 @@ internal abstract class ScdProvider<TSyntaxProvider>(
         var includedColumns = GetDataLoadColumns(sourceColumns, targetColumns);
         
         var targetTableName =
-            $"{TSyntaxProvider.QuoteName(table.TargetTableSchema)}.{TSyntaxProvider.QuoteName(table.TargetTableName)}";
+            $"{SyntaxProvider.QuoteName(table.TargetTableSchema)}.{SyntaxProvider.QuoteName(table.TargetTableName)}";
         var stagingTableName = string.IsNullOrEmpty(table.StagingTableSchema)
-            ? TSyntaxProvider.QuoteName(table.StagingTableName)
-            : $"{TSyntaxProvider.QuoteName(table.StagingTableSchema)}.{TSyntaxProvider.QuoteName(table.StagingTableName)}";
+            ? SyntaxProvider.QuoteName(table.StagingTableName)
+            : $"{SyntaxProvider.QuoteName(table.StagingTableSchema)}.{SyntaxProvider.QuoteName(table.StagingTableName)}";
         var quotedInsertColumns = includedColumns
-            .Select(c => TSyntaxProvider.QuoteName(c.ColumnName));
+            .Select(c => SyntaxProvider.QuoteName(c.ColumnName));
         var quotedSelectColumns = includedColumns
             .Select(c => c.TargetTableExpression is null
-                ? $"src.{TSyntaxProvider.QuoteName(c.ColumnName)}"
-                : $"{c.TargetTableExpression} AS {TSyntaxProvider.QuoteName(c.ColumnName)}");
+                ? $"src.{SyntaxProvider.QuoteName(c.ColumnName)}"
+                : $"{c.TargetTableExpression} AS {SyntaxProvider.QuoteName(c.ColumnName)}");
 
-        var update = TSyntaxProvider.ScdUpdate(
+        var update = SyntaxProvider.ScdUpdate(
             source: stagingTableName,
             target: targetTableName,
             fullLoad: table.FullLoad,
-            isCurrentColumn: TSyntaxProvider.QuoteName(IsCurrentColumn),
-            validUntilColumn: TSyntaxProvider.QuoteName(ValidUntilColumn),
-            hashKeyColumn: TSyntaxProvider.QuoteName(HashKeyColumn),
-            recordHashColumn: TSyntaxProvider.QuoteName(RecordHashColumn));
+            isCurrentColumn: SyntaxProvider.QuoteName(IsCurrentColumn),
+            validUntilColumn: SyntaxProvider.QuoteName(ValidUntilColumn),
+            hashKeyColumn: SyntaxProvider.QuoteName(HashKeyColumn),
+            recordHashColumn: SyntaxProvider.QuoteName(RecordHashColumn));
 
         var insert = $"""
             INSERT INTO {targetTableName} (
@@ -98,14 +100,14 @@ internal abstract class ScdProvider<TSyntaxProvider>(
             {string.Join(",\n", quotedSelectColumns)}
             FROM {stagingTableName} AS src
               LEFT JOIN {targetTableName} AS tgt ON
-                  src.{TSyntaxProvider.QuoteName(HashKeyColumn)} = tgt.{TSyntaxProvider.QuoteName(HashKeyColumn)} AND
-                  tgt.{TSyntaxProvider.QuoteName(IsCurrentColumn)} = 1
-            WHERE tgt.{TSyntaxProvider.QuoteName(HashKeyColumn)} IS NULL OR 
-                src.{TSyntaxProvider.QuoteName(RecordHashColumn)} <> tgt.{TSyntaxProvider.QuoteName(RecordHashColumn)};
+                  src.{SyntaxProvider.QuoteName(HashKeyColumn)} = tgt.{SyntaxProvider.QuoteName(HashKeyColumn)} AND
+                  tgt.{SyntaxProvider.QuoteName(IsCurrentColumn)} = 1
+            WHERE tgt.{SyntaxProvider.QuoteName(HashKeyColumn)} IS NULL OR 
+                src.{SyntaxProvider.QuoteName(RecordHashColumn)} <> tgt.{SyntaxProvider.QuoteName(RecordHashColumn)};
                 
             """;
         
-        var block = TSyntaxProvider.RollbackOnError($"""
+        var block = SyntaxProvider.RollbackOnError($"""
 
             {table.PreLoadScript}
 
@@ -132,13 +134,13 @@ internal abstract class ScdProvider<TSyntaxProvider>(
         var builder = new StringBuilder();
         
         var tableName =
-            $"{TSyntaxProvider.QuoteName(table.TargetTableSchema)}.{TSyntaxProvider.QuoteName(table.TargetTableName)}";
+            $"{SyntaxProvider.QuoteName(table.TargetTableSchema)}.{SyntaxProvider.QuoteName(table.TargetTableName)}";
 
         if (targetColumns.Count == 0)
         {
             // Target table does not exist.
             var columnDefinitions = GetStructureColumns(sourceColumns)
-                .Select(c => $"{TSyntaxProvider.QuoteName(c.ColumnName)} {c.DataType} {(c.IsNullable ? "NULL" : "NOT NULL")}");
+                .Select(c => $"{SyntaxProvider.QuoteName(c.ColumnName)} {c.DataType} {(c.IsNullable ? "NULL" : "NOT NULL")}");
             
             builder.AppendLine($"""
                 CREATE TABLE {tableName} (
@@ -147,20 +149,20 @@ internal abstract class ScdProvider<TSyntaxProvider>(
 
                 """);
 
-            if (!table.ApplyIndexesOnCreate || !TSyntaxProvider.SupportsIndexes)
+            if (!table.ApplyIndexesOnCreate || !SyntaxProvider.SupportsIndexes)
             {
-                return TSyntaxProvider.WithBlock(builder.ToString());
+                return SyntaxProvider.WithBlock(builder.ToString());
             }
             
-            var nkIndexName = TSyntaxProvider.QuoteName($"IX_{table.TargetTableName}_NaturalKey");
+            var nkIndexName = SyntaxProvider.QuoteName($"IX_{table.TargetTableName}_NaturalKey");
             var nkIndexColumnDefinitions = table.NaturalKeyColumns
                 .Distinct()
                 .Order()
-                .Select(c => $"{TSyntaxProvider.QuoteName(c)} ASC")
-                .Append($"{TSyntaxProvider.QuoteName(IsCurrentColumn)} ASC");
-            var hkIndexName = TSyntaxProvider.QuoteName($"IX_{table.TargetTableName}_HashKey");
+                .Select(c => $"{SyntaxProvider.QuoteName(c)} ASC")
+                .Append($"{SyntaxProvider.QuoteName(IsCurrentColumn)} ASC");
+            var hkIndexName = SyntaxProvider.QuoteName($"IX_{table.TargetTableName}_HashKey");
             var hkIndexColumnDefinition =
-                $"{TSyntaxProvider.QuoteName(HashKeyColumn)} ASC, {TSyntaxProvider.QuoteName(IsCurrentColumn)} ASC";
+                $"{SyntaxProvider.QuoteName(HashKeyColumn)} ASC, {SyntaxProvider.QuoteName(IsCurrentColumn)} ASC";
             builder.AppendLine($"""
                 CREATE CLUSTERED INDEX {hkIndexName} ON {tableName} (
                 {hkIndexColumnDefinition}
@@ -172,7 +174,7 @@ internal abstract class ScdProvider<TSyntaxProvider>(
 
                 """);
             
-            return TSyntaxProvider.WithBlock(builder.ToString());
+            return SyntaxProvider.WithBlock(builder.ToString());
         }
         
         IStructureColumn[] columnsToAlter, columnsToAdd;
@@ -229,16 +231,16 @@ internal abstract class ScdProvider<TSyntaxProvider>(
 
         foreach (var c in columnsToAlter)
         {
-            builder.AppendLine(TSyntaxProvider.AlterColumnDropNull(tableName, c));
+            builder.AppendLine(SyntaxProvider.AlterColumnDropNull(tableName, c));
         }
 
         foreach (var c in columnsToAdd.OrderBy(c => c.ColumnName))
         {
             // New columns are nullable because target table might already contain data
-            builder.AppendLine(TSyntaxProvider.AlterTableAddColumn(tableName, c, nullable: true));
+            builder.AppendLine(SyntaxProvider.AlterTableAddColumn(tableName, c, nullable: true));
         }
         
-        return TSyntaxProvider.WithBlock(builder.ToString());
+        return SyntaxProvider.WithBlock(builder.ToString());
     }
 
     private IReadOnlyList<IStructureColumn> GetStructureColumns(IReadOnlyList<IStructureColumn> sourceColumns)
@@ -246,7 +248,7 @@ internal abstract class ScdProvider<TSyntaxProvider>(
         var hashKeyColumn = new StructureColumn
         {
             ColumnName = HashKeyColumn,
-            DataType = TSyntaxProvider.Varchar(32),
+            DataType = SyntaxProvider.Datatypes.Varchar(32),
             IsNullable = false
         };
         
@@ -268,26 +270,26 @@ internal abstract class ScdProvider<TSyntaxProvider>(
         var validFrom = new StructureColumn
         {
             ColumnName = ValidFromColumn,
-            DataType = TSyntaxProvider.DateTime,
+            DataType = SyntaxProvider.Datatypes.DateTime,
             IsNullable = false
         };
         var validUntil = new StructureColumn
         {
             ColumnName = ValidUntilColumn,
-            DataType = TSyntaxProvider.DateTime,
+            DataType = SyntaxProvider.Datatypes.DateTime,
             IsNullable = true
         };
         var isCurrent = new StructureColumn
         {
             ColumnName = IsCurrentColumn,
-            DataType = TSyntaxProvider.Boolean,
+            DataType = SyntaxProvider.Datatypes.Boolean,
             IsNullable = false
         };
         
         var recordHashColumn = new StructureColumn
         {
             ColumnName = RecordHashColumn,
-            DataType = TSyntaxProvider.Varchar(32),
+            DataType = SyntaxProvider.Datatypes.Varchar(32),
             IsNullable = false
         };
         
@@ -313,13 +315,13 @@ internal abstract class ScdProvider<TSyntaxProvider>(
             .DistinctBy(c => c.ColumnName)
             .OrderBy(c => c.Ordinal) // Order by ordinal to make sure column renames don't affect hashing results.
             .Select(c => c.ColumnName)
-            .Select(TSyntaxProvider.QuoteName)
+            .Select(SyntaxProvider.QuoteName)
             .ToArray();
         var hashKeyColumn = new LoadColumn
         {
             ColumnName = HashKeyColumn,
             IncludeInStagingTable = true,
-            StagingTableExpression = TSyntaxProvider.Md5(quotedNkColumns),
+            StagingTableExpression = SyntaxProvider.Functions.Md5(quotedNkColumns),
             TargetTableExpression = null
         };
         var validFrom = new LoadColumn
@@ -327,21 +329,21 @@ internal abstract class ScdProvider<TSyntaxProvider>(
             ColumnName = ValidFromColumn,
             IncludeInStagingTable = false,
             StagingTableExpression = null,
-            TargetTableExpression = TSyntaxProvider.CurrentTimestamp
+            TargetTableExpression = SyntaxProvider.Functions.CurrentTimestamp
         };
         var validUntil = new LoadColumn
         {
             ColumnName = ValidUntilColumn,
             IncludeInStagingTable = false,
             StagingTableExpression = null,
-            TargetTableExpression = TSyntaxProvider.MaxDateTime
+            TargetTableExpression = SyntaxProvider.Functions.MaxDateTime
         };
         var isCurrent = new LoadColumn
         {
             ColumnName = IsCurrentColumn,
             IncludeInStagingTable = false,
             StagingTableExpression = null,
-            TargetTableExpression = TSyntaxProvider.True
+            TargetTableExpression = SyntaxProvider.Functions.True
         };
         
         var naturalKeyColumns = table.NaturalKeyColumns
@@ -365,13 +367,13 @@ internal abstract class ScdProvider<TSyntaxProvider>(
         IEnumerable<ILoadColumn> recordColumns = [..naturalKeyColumns, ..otherColumns];
         var quotedRecordColumns = recordColumns
             .Select(c => c.ColumnName)
-            .Select(TSyntaxProvider.QuoteName);
+            .Select(SyntaxProvider.QuoteName);
         var recordHashColumn = new LoadColumn
         {
             ColumnName = RecordHashColumn,
             IncludeInStagingTable = true,
             // MD5 is the most reliable way of case-sensitively capturing all changes.
-            StagingTableExpression = TSyntaxProvider.Md5(quotedRecordColumns),
+            StagingTableExpression = SyntaxProvider.Functions.Md5(quotedRecordColumns),
             TargetTableExpression = null
         };
         

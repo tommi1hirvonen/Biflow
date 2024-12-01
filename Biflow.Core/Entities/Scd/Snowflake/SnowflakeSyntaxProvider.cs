@@ -2,32 +2,36 @@
 
 namespace Biflow.Core.Entities.Scd.Snowflake;
 
-internal abstract class SnowflakeSyntaxProvider : ISqlSyntaxProvider
+internal sealed class SnowflakeSyntaxProvider : ISqlSyntaxProvider
 {
     // TODO: Handle potential quoted object identifiers
     // https://docs.snowflake.com/en/sql-reference/identifiers-syntax
-    public static string QuoteName(string name) => name;
+    public string QuoteName(string name) => name;
 
-    public static string CurrentTimestamp => "CURRENT_TIMESTAMP";
+    private class SnowflakeDatatypeProvider : ISqlDatatypeProvider
+    {
+        public string Varchar(int length) => $"VARCHAR({length})";
+        public string DateTime => "TIMESTAMP_NTZ";
+        public string Boolean => "BOOLEAN";
+    }
 
-    public static string DateTime => "TIMESTAMP_NTZ";
+    private class SnowflakeFunctionProvider : ISqlFunctionProvider
+    {
+        public string CurrentTimestamp => "CURRENT_TIMESTAMP";
+        public string MaxDateTime => "CAST('9999-12-31' AS TIMESTAMP_NTZ)";
+        public string True => "1";
+        public string Md5(IEnumerable<string> columns) =>
+            $"UPPER(MD5(CONCAT({string.Join(", '|', ", columns)})))";
+    }
 
-    public static string Boolean => "BOOLEAN";
+    public ISqlDatatypeProvider Datatypes => new SnowflakeDatatypeProvider();
+    public ISqlFunctionProvider Functions => new SnowflakeFunctionProvider();
+
+    public bool SupportsDdlRollback => false;
     
-    public static string Varchar(int length) => $"VARCHAR({length})";
+    public bool SupportsIndexes => false;
 
-    public static string Md5(IEnumerable<string> columns) =>
-        $"UPPER(MD5(CONCAT({string.Join(", '|', ", columns)})))";
-
-    public static string MaxDateTime => "CAST('9999-12-31' AS TIMESTAMP_NTZ)";
-
-    public static string True => "1";
-
-    public static bool SupportsDdlRollback => false;
-    
-    public static bool SupportsIndexes => false;
-
-    public static string WithBlock(string block) => $"""
+    public string WithBlock(string block) => $"""
         BEGIN
 
         {block}
@@ -35,7 +39,7 @@ internal abstract class SnowflakeSyntaxProvider : ISqlSyntaxProvider
         END;
         """;
     
-    public static string RollbackOnError(string block) => $"""
+    public string RollbackOnError(string block) => $"""
         BEGIN
 
         BEGIN TRANSACTION;
@@ -53,7 +57,7 @@ internal abstract class SnowflakeSyntaxProvider : ISqlSyntaxProvider
         END;
         """;
 
-    public static string Ctas(
+    public string Ctas(
         string source, string target, IEnumerable<(string Expression, string ColumnName)> select, bool distinct)
     {
         var columns = select.Select(c => $"{c.Expression} AS {c.ColumnName}");
@@ -67,7 +71,7 @@ internal abstract class SnowflakeSyntaxProvider : ISqlSyntaxProvider
             """;
     }
 
-    public static string ScdUpdate(string source, string target, bool fullLoad,
+    public string ScdUpdate(string source, string target, bool fullLoad,
         string isCurrentColumn, string validUntilColumn, string hashKeyColumn, string recordHashColumn)
     {
         var builder = new StringBuilder();
@@ -99,9 +103,9 @@ internal abstract class SnowflakeSyntaxProvider : ISqlSyntaxProvider
         return builder.ToString();
     }
 
-    public static string AlterColumnDropNull(string table, IStructureColumn column) =>
+    public string AlterColumnDropNull(string table, IStructureColumn column) =>
         $"ALTER TABLE {table} ALTER COLUMN {QuoteName(column.ColumnName)} {column.DataType} NULL;";
 
-    public static string AlterTableAddColumn(string table, IStructureColumn column, bool nullable) =>
+    public string AlterTableAddColumn(string table, IStructureColumn column, bool nullable) =>
         $"ALTER TABLE {table} ADD {QuoteName(column.ColumnName)} {column.DataType} {(nullable ? "NULL" : "NOT NULL")};";
 }
