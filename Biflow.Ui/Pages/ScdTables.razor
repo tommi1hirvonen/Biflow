@@ -26,8 +26,6 @@
     </div>
 }
 
-@* TODO: SCD steps offcanvas to view related steps *@
-
 @* TODO: Generate, preview and copy structure and loader codes *@
 
 <div class="row mt-3 flex-row-reverse justify-content-between align-items-end g-3">
@@ -117,6 +115,22 @@
         </HxButtonGroup>
     </div>
 </div>
+
+@if (_nonDistinctTargetTables.Length > 0)
+{
+    <HxAlert Color="ThemeColor.Warning" CssClass="mt-3 mb-0 d-inline-block small" style="padding-right: 3rem;">
+        Detected multiple SCD tables having the same target table.
+        <br/>
+        This can cause unexpected behaviour if two differing SCD configurations are used to update the same target.
+        @foreach (var target in _nonDistinctTargetTables)
+        {
+            <br/>
+            <span>- @target</span>
+        }
+        <button type="button" class="btn-close" aria-label="Close" @onclick="() => _nonDistinctTargetTables = []"
+                style="position: absolute;top: 0;right: 0;z-index: 2;padding: 1.25rem 1rem;"></button>
+    </HxAlert>
+}
 
 <div class="card pt-2 my-4">
     <table class="table table-sm table-hover small">
@@ -270,7 +284,8 @@
     private bool _infoExpanded;
     private string _tableNameFilter = "";
     private string _sourceTableNameFilter = "";
-    private string _targetTableNameFilter = ""; 
+    private string _targetTableNameFilter = "";
+    private string[] _nonDistinctTargetTables = [];
     
     protected override void OnInitialized() => ThemeService.OnThemeChanged += OnThemeChanged;
     
@@ -289,7 +304,14 @@
             .Where(c => c.ConnectionType == ConnectionType.Sql || c.ConnectionType == ConnectionType.Snowflake)
             .OrderBy(c => c.ConnectionName)
             .ToArrayAsync();
+        UpdateNonDistinctTargetTables();
     }
+    
+    private void UpdateNonDistinctTargetTables() => _nonDistinctTargetTables = _tables?
+        .CountBy(t => (t.TargetTableSchema, t.TargetTableName, t.ConnectionId))
+        .Where(g => g.Value > 1)
+        .Select(g => $"{g.Key.TargetTableSchema}.{g.Key.TargetTableName}")
+        .ToArray() ?? [];
 
     private Task ShowEditModalAsync(ScdTable? table)
     {
@@ -306,6 +328,7 @@
         {
             await Mediator.SendAsync(new DeleteScdTableCommand(table.ScdTableId));
             _tables?.Remove(table);
+            UpdateNonDistinctTargetTables();
         }
         catch (Exception ex)
         {
@@ -326,6 +349,7 @@
             _tables?.RemoveAll(t => t.ScdTableId == table.ScdTableId);
         }
         _tables?.Add(table);
+        UpdateNonDistinctTargetTables();
         StateHasChanged();
     }
 
