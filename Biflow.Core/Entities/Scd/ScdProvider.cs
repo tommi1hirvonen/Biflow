@@ -32,6 +32,7 @@ internal abstract class ScdProvider<TSyntaxProvider>(
             table,
             sourceColumns.Cast<IColumn>().ToArray(),
             targetColumns.Cast<IColumn>().ToArray());
+        Scd.EnsureScdTableValidatedForLoad(table, targetColumns.Cast<IColumn>().ToArray());
         
         var includedColumns = GetDataLoadColumns(sourceColumns, targetColumns);
         var select = includedColumns
@@ -65,6 +66,7 @@ internal abstract class ScdProvider<TSyntaxProvider>(
             table,
             sourceColumns.Cast<IColumn>().ToArray(),
             targetColumns.Cast<IColumn>().ToArray());
+        Scd.EnsureScdTableValidatedForLoad(table, targetColumns.Cast<IColumn>().ToArray());
 
         var update = SyntaxProvider.ScdUpdate(
             sourceSchema: table.StagingTableSchema,

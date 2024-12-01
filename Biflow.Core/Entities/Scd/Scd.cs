@@ -117,4 +117,38 @@ internal static class Scd
             }
         }
     }
+
+    public static void EnsureScdTableValidatedForLoad(ScdTable table, IColumn[] targetColumns)
+    {
+        if (targetColumns.Length == 0)
+        {
+            throw new ScdTableValidationException("The target table does not exist");
+        }
+        
+        var missingNkColumns = table.NaturalKeyColumns
+            .Where(c => targetColumns.All(sc => sc.ColumnName != c))
+            .ToArray();
+        if (missingNkColumns.Length > 0)
+        {
+            var missingColumnNames = string.Join(", ", missingNkColumns);
+            throw new ScdTableValidationException($"Natural key columns are missing from the target table: {missingColumnNames}");
+        }
+
+        if (table.SchemaDriftConfiguration is not SchemaDriftDisabledConfiguration disabled)
+        {
+            return;
+        }
+        
+        var missingIncludedColumns = disabled.IncludedColumns
+            .Where(c => targetColumns.All(sc => sc.ColumnName != c))
+            .ToArray();
+        
+        if (missingIncludedColumns.Length <= 0)
+        {
+            return;
+        }
+        
+        var missingIncludedColumnNames = string.Join(", ", missingIncludedColumns);
+        throw new ScdTableValidationException($"Some included columns are missing from the target table: {missingIncludedColumnNames}");
+    }
 }
