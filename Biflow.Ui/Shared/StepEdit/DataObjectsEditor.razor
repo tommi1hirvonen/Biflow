@@ -15,7 +15,19 @@
     </div>
 }
 
-@* TODO: Handle inferring source and target objects from SCD table for ScdSteps. *@
+@if (Step is ScdStep scd && Connection is MsSqlConnection mssql2)
+{
+    <div class="row">
+        <div class="col">
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.Link" OnClick="() => GetDatabaseObjectsAsync(mssql2, scd)">
+                Attempt to infer from SCD table
+            </HxButton>
+            <HxPopover Trigger="PopoverTrigger.Hover" Content="@_popoverContent">
+                <SvgIcon Icon="LucideIcon.Info" />
+            </HxPopover>
+        </div>
+    </div>
+}
 
 <table class="table mt-3">
     <thead>
@@ -256,7 +268,7 @@
     [Parameter] public IEnumerable<AppRegistration>? AppRegistrations { get; set; }
 
     [Parameter] public IEnumerable<QlikCloudEnvironment>? QlikClients { get; set; }
-
+    
     [Parameter] public Func<Task<IEnumerable<DataObject>>> LoadAllDataObjects { get; set; } = null!;
 
     private Func<DataObject, DataObjectMappingResult> GetMappingResult => ReferenceType switch
@@ -329,6 +341,45 @@
             AddReference(_newObject);
         }
         _newObject = null;
+    }
+
+    private async Task GetDatabaseObjectsAsync(MsSqlConnection connection, ScdStep step)
+    {
+        try
+        {
+            ArgumentNullException.ThrowIfNull(_references);
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+            var scdTable = await context.ScdTables.FirstOrDefaultAsync(t => t.ScdTableId == step.ScdTableId);
+            if (scdTable is null) return;
+            var (schema, table) = ReferenceType switch
+            {
+                DataObjectReferenceType.Source => (scdTable.SourceTableSchema, scdTable.SourceTableName),
+                _ => (scdTable.TargetTableSchema, scdTable.TargetTableName)
+            };
+            var dataObjects = (await connection.GetDatabaseObjectsAsync(schema, table))
+                .Where(x => x.Schema == schema && x.Object == table); // method returns wildcard matches => make sure the match is exact
+            foreach (var item in dataObjects)
+            {
+                // Check if the same object exists in the list already. Skip this object if it does.
+                // This way we do not accidentally add objects that might be a target as sources,
+                // thus creating a self reference.
+                if (_references.Any(d => d.DataObject.UriEquals(item)))
+                {
+                    continue;
+                }
+
+                var dbObject = _allObjects?
+                                   .FirstOrDefault(o => o.UriEquals(item)) 
+                               ?? new DataObject { ObjectUri = item.ObjectUri };
+                
+                GetMappingResult(dbObject).IsNewAddition = true;
+                AddReference(dbObject);
+            }
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error getting object details", ex.Message);
+        }
     }
 
     private async Task GetDatabaseObjectsAsync(MsSqlConnection connection, string sqlStatement)

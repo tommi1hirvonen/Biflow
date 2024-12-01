@@ -115,6 +115,7 @@ public partial class JobDetails(
             .ToListAsync(_cts.Token);
         _scdTables = await context.ScdTables
             .AsNoTracking()
+            .Include(t => t.Connection) // used in data objects editor in step edit modal
             .OrderBy(t => t.ScdTableName)
             .ToListAsync(_cts.Token);
         _credentials = await context.Credentials

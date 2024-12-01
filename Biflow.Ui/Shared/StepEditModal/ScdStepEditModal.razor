@@ -30,6 +30,7 @@
                                ValueSelector="table => table.ScdTableId"
                                TextSelector="table => table.ScdTableName"
                                @bind-Value="Step.ScdTableId"
+                               @bind-Value:after="SetStepConnection"
                                Context="table"
                                MinimumLength="0"
                                Placeholder="Select SCD table"

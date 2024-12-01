@@ -1,10 +1,11 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
-public class ScdStep : Step, IHasTimeout
+public class ScdStep : Step, IHasTimeout, IHasConnection
 {
     [JsonConstructor]
     public ScdStep() : base(StepType.Scd)
@@ -27,6 +28,12 @@ public class ScdStep : Step, IHasTimeout
 
     [JsonIgnore]
     public ScdTable ScdTable { get; set; } = null!;
+    
+    [JsonIgnore, NotMapped]
+    public ConnectionBase? Connection { get; set; }
+    
+    [JsonIgnore, NotMapped]
+    public Guid ConnectionId { get; set; }
 
     public override ScdStep Copy(Job? targetJob = null) => new(this, targetJob);
 

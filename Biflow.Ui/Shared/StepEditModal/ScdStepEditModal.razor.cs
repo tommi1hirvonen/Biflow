@@ -18,7 +18,17 @@ public partial class ScdStepEditModal(
             .ThenInclude(s => s.DataObject)
             .Include(step => step.ExecutionConditionParameters)
             .FirstAsync(step => step.StepId == stepId);
+        // Data object editor pane of the step edit modal takes advantage of the step's connection.
+        step.ConnectionId = ScdTables.FirstOrDefault(t => t.ScdTableId == step.ScdTableId)?.ConnectionId ?? Guid.Empty;
         return step;
+    }
+
+    private void SetStepConnection()
+    {
+        ArgumentNullException.ThrowIfNull(Step);
+        // Refresh the connection id.
+        Step.ConnectionId = ScdTables
+            .FirstOrDefault(t => t.ScdTableId == Step.ScdTableId)?.ConnectionId ?? Guid.Empty;
     }
 
     protected override ScdStep CreateNewStep(Job job)
