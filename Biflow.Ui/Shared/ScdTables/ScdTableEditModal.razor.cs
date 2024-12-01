@@ -47,6 +47,7 @@ public partial class ScdTableEditModal(
             _table = await context.ScdTables
                 .AsNoTrackingWithIdentityResolution()
                 .Include(t => t.Connection)
+                .Include(t => t.ScdSteps).ThenInclude(s => s.Job)
                 .FirstAsync(t => t.ScdTableId == id);
             _prevConnectionId = _table.ConnectionId;
             StateHasChanged();
