@@ -313,7 +313,7 @@
                                         </HxButton>
                                     </div>
                                     <div class="col-auto">
-                                        @if (_columns is not null && _prevConnectionId != _table.ConnectionId)
+                                        @if (_columns?.Count > 0 && _prevConnectionId != _table.ConnectionId)
                                         {
                                             // Show alert to advise user to reimport columns after connection change.
                                             <HxAlert Color="ThemeColor.Warning" CssClass="mb-0 small py-1 d-flex align-items-center">
