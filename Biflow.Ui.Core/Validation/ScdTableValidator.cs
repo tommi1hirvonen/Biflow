@@ -7,6 +7,21 @@ public class ScdTableValidator : AbstractValidator<ScdTable>
 {
     public ScdTableValidator()
     {
+        RuleFor(table => table)
+            .Must(table => table.SourceTableSchema != table.TargetTableSchema
+                           || table.SourceTableName != table.TargetTableName)
+            .WithMessage("The source and target table cannot be the same.");
+            
+        RuleFor(table => table)
+            .Must(table => table.SourceTableSchema != table.StagingTableSchema
+                           || table.SourceTableName != table.StagingTableName)
+            .WithMessage("The source and staging table cannot be the same.");
+        
+        RuleFor(table => table)
+            .Must(table => table.StagingTableSchema != table.TargetTableSchema
+                           || table.StagingTableName != table.TargetTableName)
+            .WithMessage("The staging and target table cannot be the same.");
+        
         RuleFor(table => table.NaturalKeyColumns)
             .NotEmpty()
             .WithMessage("At least one natural key column is required");

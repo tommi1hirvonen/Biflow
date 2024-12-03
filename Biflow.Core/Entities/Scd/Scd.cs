@@ -61,7 +61,17 @@ internal static class Scd
     {
         if (table.SourceTableSchema == table.TargetTableSchema && table.SourceTableName == table.TargetTableName)
         {
-            throw new ScdTableValidationException("The target and source table cannot be the same");
+            throw new ScdTableValidationException("The source and target table cannot be the same");
+        }
+        
+        if (table.SourceTableSchema == table.StagingTableSchema && table.SourceTableName == table.StagingTableName)
+        {
+            throw new ScdTableValidationException("The source and staging table cannot be the same");
+        }
+        
+        if (table.StagingTableSchema == table.TargetTableSchema && table.StagingTableName == table.TargetTableName)
+        {
+            throw new ScdTableValidationException("The staging and target table cannot be the same");
         }
 
         if (table.NaturalKeyColumns.Count == 0)
