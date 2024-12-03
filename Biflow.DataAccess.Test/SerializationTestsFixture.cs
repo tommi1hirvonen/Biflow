@@ -10,7 +10,8 @@ public class SerializationTestsFixture(DatabaseFixture fixture) : IAsyncLifetime
 {
     private readonly IDbContextFactory<AppDbContext> dbContextFactory = fixture.DbContextFactory;
 
-    public ConnectionBase[] Connections { get; private set; } = [];
+    public SqlConnectionBase[] SqlConnections { get; private set; } = [];
+    public AnalysisServicesConnection[] AnalysisServicesConnections { get; private set; } = [];
     public Credential[] Credentials { get; private set; } = [];
     public AppRegistration[] AppRegistrations { get; private set; } = [];
     public PipelineClient[] PipelineClients { get; private set; } = [];
@@ -36,7 +37,11 @@ public class SerializationTestsFixture(DatabaseFixture fixture) : IAsyncLifetime
     {
         await using var context = await dbContextFactory.CreateDbContextAsync();
 
-        Connections = await context.Connections
+        SqlConnections = await context.SqlConnections
+            .AsNoTracking()
+            .OrderBy(c => c.ConnectionId)
+            .ToArrayAsync();
+        AnalysisServicesConnections = await context.AnalysisServicesConnections
             .AsNoTracking()
             .OrderBy(c => c.ConnectionId)
             .ToArrayAsync();

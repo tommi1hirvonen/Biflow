@@ -1,19 +1,42 @@
-﻿using System.Data.Common;
+﻿using Microsoft.Data.SqlClient;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using Biflow.Core.Entities.Scd;
+using Biflow.Core.Entities.Scd.MsSql;
 
 namespace Biflow.Core.Entities;
 
-public class AnalysisServicesConnection() : ConnectionBase(ConnectionType.AnalysisServices)
+public class MsSqlConnection() : SqlConnectionBase(SqlConnectionType.Sql)
 {
     public Guid? CredentialId { get; set; }
 
     public Credential? Credential { get; set; }
 
-    [JsonIgnore]
-    public IEnumerable<TabularStep> TabularSteps { get; set; } = new List<TabularStep>();
+    [Display(Name = "Execute packages as login")]
+    [MaxLength(128)]
+    public string? ExecutePackagesAsLogin
+    {
+        get;
+        set => field = string.IsNullOrEmpty(value) ? null : value;
+    }
 
-    public override IEnumerable<Step> Steps => TabularSteps;
+    [Range(0, int.MaxValue)]
+    public int MaxConcurrentSqlSteps { get; set; }
+
+    [Range(0, int.MaxValue)]
+    public int MaxConcurrentPackageSteps { get; set; }
+
+    [JsonIgnore]
+    public IEnumerable<AgentJobStep> AgentJobSteps { get; set; } = new List<AgentJobStep>();
+
+    [JsonIgnore]
+    public IEnumerable<PackageStep> PackageSteps { get; set; } = new List<PackageStep>();
+
+    [JsonIgnore]
+    public override IEnumerable<Step> Steps => AgentJobSteps.Cast<Step>().Concat(PackageSteps).Concat(SqlSteps);
+
+    [JsonIgnore]
+    public IEnumerable<MasterDataTable> DataTables { get; } = new List<MasterDataTable>();
 
     public async Task TestConnectionAsync(CancellationToken cancellationToken = default)
     {
@@ -32,13 +55,10 @@ public class AnalysisServicesConnection() : ConnectionBase(ConnectionType.Analys
 
         return;
 
-        Task TestConnection()
+        async Task TestConnection()
         {
-            return Task.Run(() =>
-            {
-                using var server = new Microsoft.AnalysisServices.Tabular.Server();
-                server.Connect(ConnectionString);
-            }, cancellationToken);
+            await using var connection = new SqlConnection(ConnectionString);
+            await connection.OpenAsync(cancellationToken);
         }
     }
 
@@ -78,11 +98,17 @@ public class AnalysisServicesConnection() : ConnectionBase(ConnectionType.Analys
     }
     
     public override IColumnMetadataProvider CreateColumnMetadataProvider() =>
-        throw new NotSupportedException($"{nameof(AnalysisServicesConnection)} does not support column metadata providers.");
-
-    public override IScdProvider CreateScdProvider(ScdTable table) =>
-        throw new NotSupportedException($"{nameof(AnalysisServicesConnection)} does not support SCD providers.");
+        new MsSqlColumnMetadataProvider(ConnectionString);
     
-    public override DbConnection CreateDbConnection() =>
-        throw new NotSupportedException($"{nameof(AnalysisServicesConnection)} does not support {nameof(DbConnection)}.");
+    public override IScdProvider CreateScdProvider(ScdTable table) =>
+        new MsSqlScdProvider(table, CreateColumnMetadataProvider());
+    
+    public override SqlConnection CreateDbConnection() => new(ConnectionString);
+
+    public SqlConnection CreateDbConnection(SqlInfoMessageEventHandler eventHandler)
+    {
+        var connection = new SqlConnection(ConnectionString);
+        connection.InfoMessage += eventHandler;
+        return connection;
+    }
 }

@@ -3,13 +3,12 @@
 <SvgIcon Icon="Icon" />
 
 @code {
-    [Parameter] public ConnectionType ConnectionType { get; set; }
+    [Parameter] public SqlConnectionType ConnectionType { get; set; }
 
     private Svg Icon => ConnectionType switch
     {
-        ConnectionType.Sql => LucideIcon.Database,
-        ConnectionType.AnalysisServices => LucideIcon.Box,
-        ConnectionType.Snowflake => LucideIcon.Snowflake,
+        SqlConnectionType.Sql => LucideIcon.Database,
+        SqlConnectionType.Snowflake => LucideIcon.Snowflake,
         _ => LucideIcon.CircleHelp
     };
 }

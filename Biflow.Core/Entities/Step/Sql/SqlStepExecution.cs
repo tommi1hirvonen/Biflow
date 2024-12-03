@@ -54,19 +54,19 @@ public class SqlStepExecution : StepExecution,
     }
 
     /// <summary>
-    /// Get the <see cref="ConnectionBase"/> entity associated with this <see cref="StepExecution"/>.
-    /// The method <see cref="SetConnection(ConnectionBase?)"/> will need to have been called first for the <see cref="ConnectionBase"/> to be available.
+    /// Get the <see cref="SqlConnectionBase"/> entity associated with this <see cref="StepExecution"/>.
+    /// The method <see cref="SetConnection(SqlConnectionBase?)"/> will need to have been called first for the <see cref="SqlConnectionBase"/> to be available.
     /// </summary>
-    /// <returns><see cref="ConnectionBase"/> if it was previously set using <see cref="SetConnection(ConnectionBase?)"/> with a non-null object; <see langword="null"/> otherwise.</returns>
-    public ConnectionBase? GetConnection() => _connection;
+    /// <returns><see cref="SqlConnectionBase"/> if it was previously set using <see cref="SetConnection(SqlConnectionBase?)"/> with a non-null object; <see langword="null"/> otherwise.</returns>
+    public SqlConnectionBase? GetConnection() => _connection;
 
     /// <summary>
-    /// Set the private <see cref="ConnectionBase"/> object used for containing a possible connection reference.
+    /// Set the private <see cref="SqlConnectionBase"/> object used for containing a possible connection reference.
     /// It can be later accessed using <see cref="GetConnection"/>.
     /// </summary>
-    /// <param name="connection"><see cref="ConnectionBase"/> reference to store.
+    /// <param name="connection"><see cref="SqlConnectionBase"/> reference to store.
     /// The ConnectionIds are compared and the value is set only if the ids match.</param>
-    public void SetConnection(ConnectionBase? connection)
+    public void SetConnection(SqlConnectionBase? connection)
     {
         if (connection is not (MsSqlConnection or SnowflakeConnection or null))
         {
@@ -81,5 +81,5 @@ public class SqlStepExecution : StepExecution,
     // Use a field excluded from the EF model to store the connection reference.
     // This is to avoid generating a foreign key constraint on the ExecutionStep table caused by a navigation property.
     // Make it private with public method access so that it is not used in EF Include method calls by accident.
-    private ConnectionBase? _connection;
+    private SqlConnectionBase? _connection;
 }

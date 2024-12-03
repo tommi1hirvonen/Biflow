@@ -75,7 +75,7 @@
     private readonly SemaphoreSlim _semaphore = new(1, 1);
 
     private HxOffcanvas? _offcanvas;
-    private ConnectionBase? _connection;
+    private SqlConnectionBase? _connection;
     private IEnumerable<DbObject>? _databaseObjects;
     private string _schemaSearchTerm = string.Empty;
     private string _nameSearchTerm = string.Empty;
@@ -142,7 +142,7 @@
         await _offcanvas.LetAsync(x => x.HideAsync());
     }
     
-    public Task ShowAsync(ConnectionBase connection)
+    public Task ShowAsync(SqlConnectionBase connection)
     {
         if (connection == _connection)
         {

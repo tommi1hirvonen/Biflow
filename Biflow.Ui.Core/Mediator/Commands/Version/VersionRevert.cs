@@ -38,17 +38,28 @@ internal class VersionRevertCommandHandler(
             // Capture some sensitive properties and fill missing data for entities coming from the snapshot.
             // The snapshot does not contain data for properties marked as sensitive.
 
-            var capturedConnectionStrings = await context.Connections
+            var capturedSqlConnectionStrings = await context.SqlConnections
                 .AsNoTracking()
                 .Select(c => new { c.ConnectionId, c.ConnectionString })
                 .ToArrayAsync(cancellationToken);
 
-            foreach (var connection in snapshot.Connections.Where(c => string.IsNullOrEmpty(c.ConnectionString)))
+            foreach (var connection in snapshot.SqlConnections.Where(c => string.IsNullOrEmpty(c.ConnectionString)))
             {
-                connection.ConnectionString = capturedConnectionStrings
+                connection.ConnectionString = capturedSqlConnectionStrings
                     .FirstOrDefault(c => c.ConnectionId == connection.ConnectionId)
-                    ?.ConnectionString
-                    ?? "";
+                    ?.ConnectionString ?? "";
+            }
+            
+            var capturedAsConnectionStrings = await context.AnalysisServicesConnections
+                .AsNoTracking()
+                .Select(c => new { c.ConnectionId, c.ConnectionString })
+                .ToArrayAsync(cancellationToken);
+
+            foreach (var connection in snapshot.AnalysisServicesConnections.Where(c => string.IsNullOrEmpty(c.ConnectionString)))
+            {
+                connection.ConnectionString = capturedAsConnectionStrings
+                  .FirstOrDefault(c => c.ConnectionId == connection.ConnectionId)
+                  ?.ConnectionString ?? "";
             }
 
             var capturedAppRegistrationSecrets = await context.AppRegistrations
@@ -201,7 +212,8 @@ internal class VersionRevertCommandHandler(
 
             await context.MasterDataTableCategories.ExecuteDeleteAsync(cancellationToken);
 
-            await context.Connections.ExecuteDeleteAsync(cancellationToken);
+            await context.SqlConnections.ExecuteDeleteAsync(cancellationToken);
+            await context.AnalysisServicesConnections.ExecuteDeleteAsync(cancellationToken);
             await context.PipelineClients.ExecuteDeleteAsync(cancellationToken);
             await context.FunctionApps.ExecuteDeleteAsync(cancellationToken);
             await context.QlikCloudEnvironments.ExecuteDeleteAsync(cancellationToken);
@@ -220,7 +232,8 @@ internal class VersionRevertCommandHandler(
             context.Credentials.AddRange(snapshot.Credentials);
             context.AppRegistrations.AddRange(snapshot.AppRegistrations);
 
-            context.Connections.AddRange(snapshot.Connections);
+            context.SqlConnections.AddRange(snapshot.SqlConnections);
+            context.AnalysisServicesConnections.AddRange(snapshot.AnalysisServicesConnections);
             context.PipelineClients.AddRange(snapshot.PipelineClients);
             context.FunctionApps.AddRange(snapshot.FunctionApps);
             context.QlikCloudEnvironments.AddRange(snapshot.QlikCloudEnvironments);

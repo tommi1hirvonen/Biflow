@@ -68,8 +68,8 @@
             {
                 @foreach (var connection in _connections.OrderBy(c => c.ConnectionName))
                 {
-                    var steps = connection.Steps.Count();
-                    var jobs = connection.Steps.Select(s => s.JobId).Distinct().Count();
+                    var steps = connection.TabularSteps.Count();
+                    var jobs = connection.TabularSteps.Select(s => s.JobId).Distinct().Count();
 
                     <tr>
                         <td class="align-middle">
@@ -127,7 +127,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var step in _stepsConnection?.Steps
+                        @foreach (var step in _stepsConnection?.TabularSteps
                         .OrderBy(s => s.Job.JobName)
                         .ThenBy(s => s.StepName) ?? Enumerable.Empty<Step>())
                         {
@@ -185,7 +185,7 @@
     {
         try
         {
-            await Mediator.SendAsync(new DeleteConnectionCommand(connection.ConnectionId));
+            await Mediator.SendAsync(new DeleteAnalysisServicesConnectionCommand(connection.ConnectionId));
             _connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
         }
         catch (Exception ex)
@@ -199,11 +199,11 @@
     {
         if (connection.ConnectionId == Guid.Empty)
         {
-            await Mediator.SendAsync(new CreateConnectionCommand(connection));
+            await Mediator.SendAsync(new CreateAnalysisServicesConnectionCommand(connection));
         }
         else
         {
-            await Mediator.SendAsync(new UpdateConnectionCommand(connection));
+            await Mediator.SendAsync(new UpdateAnalysisServicesConnectionCommand(connection));
             _connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
         }
         _connections?.Add(connection);

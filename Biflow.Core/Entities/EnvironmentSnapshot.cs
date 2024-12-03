@@ -36,7 +36,8 @@ public class EnvironmentSnapshot
     public required DataObject[] DataObjects { get; init; }
     public required ScdTable[] ScdTables { get; init; }
 
-    public required ConnectionBase[] Connections { get; init; }
+    public required SqlConnectionBase[] SqlConnections { get; init; }
+    public required AnalysisServicesConnection[] AnalysisServicesConnections { get; init; }
     public required Credential[] Credentials { get; init; }
     public required AppRegistration[] AppRegistrations { get; init; }
     public required PipelineClient[] PipelineClients { get; init; }

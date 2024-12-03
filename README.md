@@ -373,6 +373,7 @@ When implementing Always Encrypted, these columns are good candidates for encryp
 - [app].[BlobStorageClient].[ConnectionString]
 - [app].[BlobStorageClient].[StorageAccountUrl]
 - [app].[Connection].[ConnectionString]
+- [app].[AnalysisServicesConnection].[ConnectionString]
 - [app].[Credential].[Password]
 - [app].[FunctionApp].[FunctionAppKey]
 - [app].[QlikCloudClient].[ApiToken]

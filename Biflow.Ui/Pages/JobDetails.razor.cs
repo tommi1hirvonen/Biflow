@@ -34,7 +34,7 @@ public partial class JobDetails(
     private Job? _job;
     private List<Job> _jobs = [];
     private List<Step> _steps = [];
-    private List<ConnectionBase>? _sqlConnections;
+    private List<SqlConnectionBase>? _sqlConnections;
     private List<MsSqlConnection>? _msSqlConnections;
     private List<AnalysisServicesConnection>? _asConnections;
     private List<PipelineClient>? _pipelineClients;
@@ -79,9 +79,9 @@ public partial class JobDetails(
     protected override async Task OnInitializedAsync()
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        _sqlConnections = await context.Connections
+        _sqlConnections = await context.SqlConnections
             .AsNoTracking()
-            .Where(c => c.ConnectionType == ConnectionType.Sql || c.ConnectionType == ConnectionType.Snowflake)
+            .Where(c => c.ConnectionType == SqlConnectionType.Sql || c.ConnectionType == SqlConnectionType.Snowflake)
             .OrderBy(c => c.ConnectionName)
             .ToListAsync(_cts.Token);
         _msSqlConnections = _sqlConnections.OfType<MsSqlConnection>().ToList();

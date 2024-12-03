@@ -15,7 +15,7 @@ public partial class DependenciesGraph(
 
     [CascadingParameter(Name = "SortSteps")] public Action? SortSteps { get; set; }
 
-    [Parameter] public List<ConnectionBase>? SqlConnections { get; set; }
+    [Parameter] public List<SqlConnectionBase>? SqlConnections { get; set; }
 
     [Parameter] public List<MsSqlConnection>? MsSqlConnections { get; set; }
 

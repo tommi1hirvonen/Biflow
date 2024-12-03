@@ -36,7 +36,10 @@ public partial class Credential
     public IEnumerable<ExeStep> ExeSteps { get; private set; } = new List<ExeStep>();
 
     [JsonIgnore]
-    public IEnumerable<MsSqlConnection> Connections { get; private set; } = new List<MsSqlConnection>();
+    public IEnumerable<MsSqlConnection> MsSqlConnections { get; private set; } = new List<MsSqlConnection>();
+    
+    [JsonIgnore]
+    public IEnumerable<AnalysisServicesConnection> AnalysisServicesConnections { get; private set; } = new List<AnalysisServicesConnection>();
 
     [SupportedOSPlatform("windows")]
     public Task RunImpersonatedAsync(Func<Task> func)

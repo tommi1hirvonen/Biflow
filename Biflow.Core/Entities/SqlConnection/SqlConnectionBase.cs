@@ -6,17 +6,16 @@ using Biflow.Core.Entities.Scd;
 
 namespace Biflow.Core.Entities;
 
-[JsonDerivedType(typeof(MsSqlConnection), nameof(ConnectionType.Sql))]
-[JsonDerivedType(typeof(AnalysisServicesConnection), nameof(ConnectionType.AnalysisServices))]
-[JsonDerivedType(typeof(SnowflakeConnection), nameof(ConnectionType.Snowflake))]
-public abstract class ConnectionBase(ConnectionType connectionType) : IComparable
+[JsonDerivedType(typeof(MsSqlConnection), nameof(SqlConnectionType.Sql))]
+[JsonDerivedType(typeof(SnowflakeConnection), nameof(SqlConnectionType.Snowflake))]
+public abstract class SqlConnectionBase(SqlConnectionType connectionType) : IComparable
 {
     [Display(Name = "Connection id")]
     [JsonInclude]
     public Guid ConnectionId { get; private set; }
 
     [Display(Name = "Connection type")]
-    public ConnectionType ConnectionType { get; } = connectionType;
+    public SqlConnectionType ConnectionType { get; } = connectionType;
 
     [Required]
     [MaxLength(250)]
@@ -31,7 +30,7 @@ public abstract class ConnectionBase(ConnectionType connectionType) : IComparabl
     public int CompareTo(object? obj) => obj switch
     {
         null => 1,
-        ConnectionBase connection => -string.Compare(connection.ConnectionName, ConnectionName, StringComparison.Ordinal),
+        SqlConnectionBase connection => -string.Compare(connection.ConnectionName, ConnectionName, StringComparison.Ordinal),
         _ => throw new ArgumentException("Object does not inherit from ConnectionInfoBase")
     };
 

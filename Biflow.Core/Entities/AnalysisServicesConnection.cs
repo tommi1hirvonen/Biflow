@@ -1,42 +1,26 @@
-﻿using Microsoft.Data.SqlClient;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using Biflow.Core.Entities.Scd;
-using Biflow.Core.Entities.Scd.MsSql;
 
 namespace Biflow.Core.Entities;
 
-public class MsSqlConnection() : ConnectionBase(ConnectionType.Sql)
+public class AnalysisServicesConnection
 {
+    [JsonInclude]
+    public Guid ConnectionId { get; private set; }
+    
+    [Required]
+    [MaxLength(250)]
+    public string ConnectionName { get; set; } = "";
+    
     public Guid? CredentialId { get; set; }
 
     public Credential? Credential { get; set; }
-
-    [Display(Name = "Execute packages as login")]
-    [MaxLength(128)]
-    public string? ExecutePackagesAsLogin
-    {
-        get;
-        set => field = string.IsNullOrEmpty(value) ? null : value;
-    }
-
-    [Range(0, int.MaxValue)]
-    public int MaxConcurrentSqlSteps { get; set; }
-
-    [Range(0, int.MaxValue)]
-    public int MaxConcurrentPackageSteps { get; set; }
+    
+    [Required]
+    public string ConnectionString { get; set; } = "";
 
     [JsonIgnore]
-    public IEnumerable<AgentJobStep> AgentJobSteps { get; set; } = new List<AgentJobStep>();
-
-    [JsonIgnore]
-    public IEnumerable<PackageStep> PackageSteps { get; set; } = new List<PackageStep>();
-
-    [JsonIgnore]
-    public override IEnumerable<Step> Steps => AgentJobSteps.Cast<Step>().Concat(PackageSteps).Concat(SqlSteps);
-
-    [JsonIgnore]
-    public IEnumerable<MasterDataTable> DataTables { get; } = new List<MasterDataTable>();
+    public IEnumerable<TabularStep> TabularSteps { get; set; } = new List<TabularStep>();
 
     public async Task TestConnectionAsync(CancellationToken cancellationToken = default)
     {
@@ -55,10 +39,13 @@ public class MsSqlConnection() : ConnectionBase(ConnectionType.Sql)
 
         return;
 
-        async Task TestConnection()
+        Task TestConnection()
         {
-            await using var connection = new SqlConnection(ConnectionString);
-            await connection.OpenAsync(cancellationToken);
+            return Task.Run(() =>
+            {
+                using var server = new Microsoft.AnalysisServices.Tabular.Server();
+                server.Connect(ConnectionString);
+            }, cancellationToken);
         }
     }
 
@@ -95,20 +82,5 @@ public class MsSqlConnection() : ConnectionBase(ConnectionType.Sql)
         }
         ArgumentNullException.ThrowIfNull(Credential);
         return Credential.RunImpersonatedAsync(func);
-    }
-    
-    public override IColumnMetadataProvider CreateColumnMetadataProvider() =>
-        new MsSqlColumnMetadataProvider(ConnectionString);
-    
-    public override IScdProvider CreateScdProvider(ScdTable table) =>
-        new MsSqlScdProvider(table, CreateColumnMetadataProvider());
-    
-    public override SqlConnection CreateDbConnection() => new(ConnectionString);
-
-    public SqlConnection CreateDbConnection(SqlInfoMessageEventHandler eventHandler)
-    {
-        var connection = new SqlConnection(ConnectionString);
-        connection.InfoMessage += eventHandler;
-        return connection;
     }
 }

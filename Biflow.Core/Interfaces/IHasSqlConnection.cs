@@ -2,9 +2,9 @@
 
 namespace Biflow.Core.Interfaces;
 
-public interface IHasConnection
+public interface IHasSqlConnection
 {
     public Guid ConnectionId { get; }
 
-    public ConnectionBase? Connection { get; }
+    public SqlConnectionBase? Connection { get; }
 }

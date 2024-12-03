@@ -15,7 +15,7 @@
                             Execution phase
                         </TitleTemplate>
                     </FilterDropdown>
-                    <FilterDropdown TItem="ConnectionBase"
+                    <FilterDropdown TItem="SqlConnectionBase"
                                     FilterSet="_connectionsFilter"
                                     IdSelector="c => c.ConnectionId.ToString()"
                                     TextSelector="c => c.ConnectionName"
@@ -23,7 +23,7 @@
                                     OnChange="async () => await OnFiltersChanged.InvokeAsync()">
                         <TitleTemplate>
                             <SvgIcon Icon="LucideIcon.Database" />
-                            Connection
+                            SQL connection
                         </TitleTemplate>
                     </FilterDropdown>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () => await ClearAsync()">

@@ -13,7 +13,7 @@ public partial class ScdTableEditModal(
     public EventCallback<ScdTable> OnTableSubmit { get; set; }
     
     [Parameter]
-    public IEnumerable<ConnectionBase>? Connections { get; set; }
+    public IEnumerable<SqlConnectionBase>? Connections { get; set; }
     
     private HxModal? _modal;
     private CodeEditor? _preLoadScriptEditor;

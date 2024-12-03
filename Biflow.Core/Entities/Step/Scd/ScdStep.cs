@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
-public class ScdStep : Step, IHasTimeout, IHasConnection
+public class ScdStep : Step, IHasTimeout, IHasSqlConnection
 {
     [JsonConstructor]
     public ScdStep() : base(StepType.Scd)
@@ -30,7 +30,7 @@ public class ScdStep : Step, IHasTimeout, IHasConnection
     public ScdTable ScdTable { get; set; } = null!;
     
     [JsonIgnore, NotMapped]
-    public ConnectionBase? Connection { get; set; }
+    public SqlConnectionBase? Connection { get; set; }
     
     [JsonIgnore, NotMapped]
     public Guid ConnectionId { get; set; }

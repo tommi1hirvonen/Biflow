@@ -10,8 +10,8 @@ public class SerializationTests(SerializationTestsFixture fixture) : IClassFixtu
     [Fact]
     public void Serialize_Connections()
     {
-        var json = JsonSerializer.Serialize(fixture.Connections, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
-        var items = JsonSerializer.Deserialize<ConnectionBase[]>(json, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
+        var json = JsonSerializer.Serialize(fixture.SqlConnections, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
+        var items = JsonSerializer.Deserialize<SqlConnectionBase[]>(json, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
         Assert.NotNull(items);
         Assert.NotEmpty(items);
         Assert.All(items, x => Assert.NotEqual(x.ConnectionId, Guid.Empty));
@@ -173,7 +173,8 @@ public class SerializationTests(SerializationTestsFixture fixture) : IClassFixtu
     {
         var snapshot = new EnvironmentSnapshot
         {
-            Connections = fixture.Connections,
+            SqlConnections = fixture.SqlConnections,
+            AnalysisServicesConnections = fixture.AnalysisServicesConnections,
             Credentials = fixture.Credentials,
             AppRegistrations = fixture.AppRegistrations,
             PipelineClients = fixture.PipelineClients,

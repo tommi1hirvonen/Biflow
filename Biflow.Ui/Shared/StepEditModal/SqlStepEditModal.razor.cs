@@ -22,7 +22,7 @@ public partial class SqlStepEditModal(
     private StoredProcedureSelectOffcanvas? storedProcedureSelectModal;
     private CodeEditor? editor;
     
-    private ConnectionBase? Connection
+    private SqlConnectionBase? Connection
     {
         get
         {

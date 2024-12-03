@@ -55,7 +55,7 @@ public class ConnectionDeserializeTests
             Credential = credential,
             CredentialId = credentialId
         };
-        connection.SetPrivatePropertyValue("ConnectionId", Guid.NewGuid(), typeof(ConnectionBase));
+        connection.SetPrivatePropertyValue("ConnectionId", Guid.NewGuid(), typeof(SqlConnectionBase));
         return connection.JsonRoundtrip(EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
     }
 }

@@ -83,7 +83,7 @@ public class ScdTable
     public Guid ConnectionId { get; set; }
 
     [JsonIgnore]
-    public ConnectionBase Connection { get; set; } = null!;
+    public SqlConnectionBase Connection { get; set; } = null!;
     
     [JsonIgnore]
     public IEnumerable<ScdStep> ScdSteps { get; set; } = new List<ScdStep>();

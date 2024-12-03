@@ -8,7 +8,7 @@ public partial class AdvancedFiltersOffcanvas : ComponentBase
 
     [Parameter] public IEnumerable<PipelineClient> PipelineClients { get; set; } = [];
 
-    [Parameter] public IEnumerable<ConnectionBase> Connections { get; set; } = [];
+    [Parameter] public IEnumerable<SqlConnectionBase> Connections { get; set; } = [];
 
     [Parameter] public IEnumerable<int> ExecutionPhases { get; set; } = [];
 
@@ -23,7 +23,7 @@ public partial class AdvancedFiltersOffcanvas : ComponentBase
     public string ExeFilePath { get; private set; } = "";
     public string ExeArguments { get; private set; } = "";
 
-    private readonly HashSet<ConnectionBase> _connectionsFilter = [];
+    private readonly HashSet<SqlConnectionBase> _connectionsFilter = [];
     private readonly HashSet<FunctionApp> _functionAppsFilter = [];
     private readonly HashSet<PipelineClient> _pipelineClientsFilter = [];
     private readonly HashSet<int> _executionPhasesFilter = [];
@@ -76,7 +76,7 @@ public partial class AdvancedFiltersOffcanvas : ComponentBase
         string.IsNullOrEmpty(SqlStatement) || step is SqlStep sql && sql.SqlStatement.ContainsIgnoreCase(SqlStatement);
 
     private bool ConnectionsPredicate(Step step) =>
-        _connectionsFilter.Count == 0 || step is IHasConnection hc && _connectionsFilter.Select(c => c.ConnectionId).Contains(hc.ConnectionId);
+        _connectionsFilter.Count == 0 || step is IHasSqlConnection hc && _connectionsFilter.Select(c => c.ConnectionId).Contains(hc.ConnectionId);
 
     private bool PackageFolderPredicate(Step step) =>
         PackageFolder.Length == 0 || step is PackageStep p && (p.PackageFolderName?.ContainsIgnoreCase(PackageFolder) ?? false);

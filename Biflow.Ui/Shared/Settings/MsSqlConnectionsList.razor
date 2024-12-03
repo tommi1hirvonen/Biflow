@@ -205,16 +205,6 @@
     private MsSqlConnection? _tablesConnection;
     private HxModal? _stepsModal;
     private HxModal? _tablesModal;
-
-    private static readonly (string Name, int Ordinal, string? Description, ConnectionType Type)[] ConnectionTypes =
-        Enum.GetValues<ConnectionType>().Select(c =>
-        {
-            var (name, ordinal) = c.GetCategory() ?? ("", 0);
-            var desc = c.GetDescription();
-            return (name, ordinal, desc, c);
-        })
-        .OrderBy(c => c.ordinal)
-        .ToArray();
     
     protected override void OnInitialized() => ThemeService.OnThemeChanged += OnThemeChanged;
 
@@ -248,7 +238,7 @@
     {
         try
         {
-            await Mediator.SendAsync(new DeleteConnectionCommand(connection.ConnectionId));
+            await Mediator.SendAsync(new DeleteSqlConnectionCommand(connection.ConnectionId));
             _connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
         }
         catch (Exception ex)
@@ -262,11 +252,11 @@
     {
         if (connection.ConnectionId == Guid.Empty)
         {
-            await Mediator.SendAsync(new CreateConnectionCommand(connection));
+            await Mediator.SendAsync(new CreateSqlConnectionCommand(connection));
         }
         else
         {
-            await Mediator.SendAsync(new UpdateConnectionCommand(connection));
+            await Mediator.SendAsync(new UpdateSqlConnectionCommand(connection));
             _connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
         }
         _connections?.Add(connection);

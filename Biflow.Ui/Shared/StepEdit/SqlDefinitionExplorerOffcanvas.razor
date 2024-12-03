@@ -78,7 +78,7 @@
 </HxOffcanvas>
 
 @code {
-    [Parameter] public IEnumerable<ConnectionBase> Connections { get; set; } = [];
+    [Parameter] public IEnumerable<SqlConnectionBase> Connections { get; set; } = [];
 
     private Guid? _connectionId;
     private Guid _prevConnectionId;

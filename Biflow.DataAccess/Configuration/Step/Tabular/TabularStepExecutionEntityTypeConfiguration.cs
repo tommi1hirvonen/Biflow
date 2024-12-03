@@ -6,6 +6,6 @@ internal class TabularStepExecutionEntityTypeConfiguration : IEntityTypeConfigur
     public void Configure(EntityTypeBuilder<TabularStepExecution> builder)
     {
         builder.Property(x => x.TimeoutMinutes).HasColumnName("TimeoutMinutes");
-        builder.Property(x => x.ConnectionId).HasColumnName("ConnectionId");
+        builder.Property(x => x.ConnectionId).HasColumnName("AnalysisServicesConnectionId");
     }
 }

@@ -17,7 +17,7 @@ public partial class StepsList(
     
     [CascadingParameter] public List<Job>? Jobs { get; set; }
     
-    [Parameter] public List<ConnectionBase>? SqlConnections { get; set; }
+    [Parameter] public List<SqlConnectionBase>? SqlConnections { get; set; }
 
     [Parameter] public List<MsSqlConnection>? MsSqlConnections { get; set; }
 

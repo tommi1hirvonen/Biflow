@@ -28,27 +28,27 @@ public static class Extensions
         return result;
     }
 
-    public static (string Name, int Ordinal)? GetCategory(this ConnectionType value)
+    public static (string Name, int Ordinal)? GetCategory(this SqlConnectionType value)
     {
         var name = Enum.GetName(value);
         if (name is null)
         {
             return null;
         }
-        var category = typeof(ConnectionType).GetField(name)?.GetCustomAttributes<CategoryAttribute>().FirstOrDefault();
+        var category = typeof(SqlConnectionType).GetField(name)?.GetCustomAttributes<CategoryAttribute>().FirstOrDefault();
         return category is not null
             ? (category.Name, category.Ordinal)
             : null;
     }
 
-    public static string? GetDescription(this ConnectionType value)
+    public static string? GetDescription(this SqlConnectionType value)
     {
         var name = Enum.GetName(value);
         if (name is null)
         {
             return null;
         }
-        var desc = typeof(ConnectionType).GetField(name)?.GetCustomAttributes<DescriptionAttribute>().FirstOrDefault();
+        var desc = typeof(SqlConnectionType).GetField(name)?.GetCustomAttributes<DescriptionAttribute>().FirstOrDefault();
         return desc?.Text;
     }
 

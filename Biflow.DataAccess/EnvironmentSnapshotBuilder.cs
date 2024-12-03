@@ -8,7 +8,10 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
 
-        var connections = await context.Connections
+        var sqlConnections = await context.SqlConnections
+            .OrderBy(c => c.ConnectionId)
+            .ToArrayAsync();
+        var asConnections = await context.AnalysisServicesConnections
             .OrderBy(c => c.ConnectionId)
             .ToArrayAsync();
         var credentials = await context.Credentials
@@ -84,7 +87,8 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
 
         var snapshot = new EnvironmentSnapshot
         {
-            Connections = connections,
+            SqlConnections = sqlConnections,
+            AnalysisServicesConnections = asConnections,
             Credentials = credentials,
             AppRegistrations = appRegistrations,
             PipelineClients = pipelineClients,

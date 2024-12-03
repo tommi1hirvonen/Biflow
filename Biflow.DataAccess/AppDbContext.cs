@@ -64,7 +64,7 @@ public class AppDbContext : DbContext
     public DbSet<AppRegistration> AppRegistrations => Set<AppRegistration>();
     public DbSet<AccessToken> AccessTokens => Set<AccessToken>();
     public DbSet<FunctionApp> FunctionApps => Set<FunctionApp>();
-    public DbSet<ConnectionBase> Connections => Set<ConnectionBase>();
+    public DbSet<SqlConnectionBase> SqlConnections => Set<SqlConnectionBase>();
     public DbSet<MsSqlConnection> MsSqlConnections => Set<MsSqlConnection>();
     public DbSet<AnalysisServicesConnection> AnalysisServicesConnections => Set<AnalysisServicesConnection>();
     public DbSet<SnowflakeConnection> SnowflakeConnections => Set<SnowflakeConnection>();

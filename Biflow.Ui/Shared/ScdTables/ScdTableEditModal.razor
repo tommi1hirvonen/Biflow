@@ -194,7 +194,7 @@
                                         @{
                                             var connection = Connections.FirstOrDefault(c => c.ConnectionId == _table.ConnectionId);
                                         }
-                                        @if (connection?.ConnectionType != ConnectionType.Snowflake)
+                                        @if (connection?.ConnectionType != SqlConnectionType.Snowflake)
                                         {
                                             // Hide index options on Snowflake since it doesn't have an effect.
                                             <div class="form-check form-check-inline">

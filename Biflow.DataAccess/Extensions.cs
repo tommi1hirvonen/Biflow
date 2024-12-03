@@ -114,7 +114,7 @@ public static class Extensions
         // even if it is present in the SQL query => no performance penalty.
         var query2 =
             from stepExec in query1
-            join sql in context.Connections.Include(c => (c as MsSqlConnection)!.Credential)
+            join sql in context.SqlConnections.Include(c => (c as MsSqlConnection)!.Credential)
                 on new { Id = includeEndpoint ? (object?)((SqlStepExecution)stepExec).ConnectionId : true }
                 equals new { Id = includeEndpoint ? (object?)sql.ConnectionId : false }
                 into sql_
@@ -248,7 +248,7 @@ public static class Extensions
 
 file record StepExecutionProjection(
     StepExecution StepExecution,
-    ConnectionBase? SqlStepConnection,
+    SqlConnectionBase? SqlStepConnection,
     MsSqlConnection? PackageStepConnection,
     MsSqlConnection? AgentJobStepConnection,
     AnalysisServicesConnection? TabularStepConnection,

@@ -4,7 +4,7 @@ namespace Biflow.Ui.Shared.StepEdit;
 
 public partial class DbObjectExplorerOffcanvas(ToasterService toaster) : ComponentBase, IDisposable
 {
-    [Parameter] public IEnumerable<ConnectionBase> Connections { get; set; } = [];
+    [Parameter] public IEnumerable<SqlConnectionBase> Connections { get; set; } = [];
 
     [Parameter] public Action<(string, string, string, string), bool>? OnDbObjectSelected { get; set; }
 

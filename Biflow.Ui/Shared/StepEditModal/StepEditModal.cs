@@ -12,7 +12,7 @@ public abstract class StepEditModal<TStep>(
 
     [Parameter] public EventCallback<Step> OnStepSubmit { get; set; }
     
-    [Parameter] public IEnumerable<ConnectionBase> SqlConnections { get; set; } = [];
+    [Parameter] public IEnumerable<SqlConnectionBase> SqlConnections { get; set; } = [];
 
     [Parameter] public IEnumerable<MsSqlConnection> MsSqlConnections { get; set; } = [];
 

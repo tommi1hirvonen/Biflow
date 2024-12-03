@@ -318,9 +318,9 @@
         _ => null
     };
 
-    private ConnectionBase? Connection => Modal?.Step switch
+    private SqlConnectionBase? Connection => Modal?.Step switch
     {
-        IHasConnection conn => Modal.SqlConnections.FirstOrDefault(c => c.ConnectionId == conn.ConnectionId),
+        IHasSqlConnection conn => Modal.SqlConnections.FirstOrDefault(c => c.ConnectionId == conn.ConnectionId),
         _ => null
     };
 

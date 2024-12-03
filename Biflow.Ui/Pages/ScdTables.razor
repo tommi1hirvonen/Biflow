@@ -284,10 +284,10 @@
 </HxModal>
 
 @code {
-    private readonly HashSet<ConnectionBase> _connectionFilter = [];
+    private readonly HashSet<SqlConnectionBase> _connectionFilter = [];
     
     private List<ScdTable>? _tables;
-    private ConnectionBase[]? _connections;
+    private SqlConnectionBase[]? _connections;
     private ScdTableEditModal? _editModal;
     private ScdCodeOffcanvas? _codeOffcanvas;
     private ScdTable? _stepsTable;
@@ -311,8 +311,8 @@
             .Include(t => t.ScdSteps).ThenInclude(s => s.Job)
             .OrderBy(t => t.ScdTableName)
             .ToListAsync();
-        _connections = await context.Connections
-            .Where(c => c.ConnectionType == ConnectionType.Sql || c.ConnectionType == ConnectionType.Snowflake)
+        _connections = await context.SqlConnections
+            .Where(c => c.ConnectionType == SqlConnectionType.Sql || c.ConnectionType == SqlConnectionType.Snowflake)
             .OrderBy(c => c.ConnectionName)
             .ToArrayAsync();
         UpdateNonDistinctTargetTables();

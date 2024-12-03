@@ -7,7 +7,7 @@ using Biflow.Core.Entities.Scd.Snowflake;
 
 namespace Biflow.Core.Entities;
 
-public class SnowflakeConnection() : ConnectionBase(ConnectionType.Snowflake)
+public class SnowflakeConnection() : SqlConnectionBase(SqlConnectionType.Snowflake)
 {
     [Range(0, int.MaxValue)]
     public int MaxConcurrentSqlSteps { get; set; }
