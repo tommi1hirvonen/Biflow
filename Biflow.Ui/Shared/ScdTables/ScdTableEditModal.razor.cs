@@ -1,13 +1,16 @@
 ﻿using Biflow.Core.Entities.Scd;
 using Biflow.Ui.Core.Validation;
 using Biflow.Ui.SqlMetadataExtensions;
+using Microsoft.AspNetCore.Components.Routing;
+using Microsoft.JSInterop;
 
 namespace Biflow.Ui.Shared.ScdTables;
 
 public partial class ScdTableEditModal(
     IDbContextFactory<AppDbContext> dbContextFactory,
     ScdTableValidator scdTableValidator,
-    ToasterService toaster) : ComponentBase
+    ToasterService toaster,
+    IJSRuntime js) : ComponentBase
 {
     [Parameter]
     public EventCallback<ScdTable> OnTableSubmit { get; set; }
@@ -100,6 +103,9 @@ public partial class ScdTableEditModal(
     private async Task OnTableSelected(DbObject table)
     {
         ArgumentNullException.ThrowIfNull(_table);
+        ArgumentNullException.ThrowIfNull(Connections);
+        var connection = Connections.FirstOrDefault(c => c.ConnectionId == _table.ConnectionId);
+        ArgumentNullException.ThrowIfNull(connection);
         if (_table.SourceTableSchema != table.Schema || _table.SourceTableName != table.Object)
         {
             // Table was changed. Reset _firstColumnImport.
@@ -108,15 +114,19 @@ public partial class ScdTableEditModal(
         (_table.SourceTableSchema, _table.SourceTableName) = (table.Schema, table.Object);
         if (string.IsNullOrEmpty(_table.TargetTableSchema) && string.IsNullOrEmpty(_table.TargetTableName))
         {
-            // TODO: Handle target table name conventions dynamically based on preferences set on the connection.
-            _table.TargetTableSchema = _table.SourceTableSchema;
-            _table.TargetTableName = $"{_table.SourceTableName}_SCD";
+            _table.TargetTableSchema =
+                string.IsNullOrEmpty(connection.ScdDefaultTargetSchema) 
+                    ? _table.SourceTableSchema 
+                    : connection.ScdDefaultTargetSchema;
+            _table.TargetTableName = $"{_table.SourceTableName}{connection.ScdDefaultTargetTableSuffix}";
         }
         if (string.IsNullOrEmpty(_table.StagingTableSchema) && string.IsNullOrEmpty(_table.StagingTableName))
         {
-            // TODO: Handle staging table name conventions dynamically based on preferences set on the connection.
-            _table.StagingTableSchema = _table.SourceTableSchema;
-            _table.StagingTableName = $"{_table.SourceTableName}_SCD_DELTA";
+            _table.StagingTableSchema =
+                string.IsNullOrEmpty(connection.ScdDefaultStagingSchema)
+                    ? _table.SourceTableSchema
+                    : connection.ScdDefaultStagingSchema;
+            _table.StagingTableName = $"{_table.SourceTableName}{connection.ScdDefaultStagingTableSuffix}";
         }
         _columns = await LoadColumnsAsync();
     }
@@ -210,5 +220,14 @@ public partial class ScdTableEditModal(
         _enabledConfiguration.ExcludedColumns.Sort();
         await OnTableSubmit.InvokeAsync(_table);
         await _modal.LetAsync(x => x.HideAsync());
+    }
+    
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        var confirmed = await js.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        if (!confirmed)
+        {
+            context.PreventNavigation();
+        }
     }
 }

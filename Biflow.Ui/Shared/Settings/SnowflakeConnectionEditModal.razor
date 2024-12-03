@@ -10,61 +10,123 @@
             <EditForm Model="_connection" id="snow_connection_edit_form" OnValidSubmit="SubmitConnection">
                 <div class="row">
                     <div class="col-md-10 mx-auto">
-                        <DataAnnotationsValidator />
-                        <ValidationSummary />
-                        <div class="row">
-                            <label class="form-label">Connection name</label>
-                            <div class="input-group">
-                                <div class="input-group-text">
-                                    <SvgIcon Icon="LucideIcon.Pen" />
-                                </div>
-                                <InputText class="form-control" @bind-Value="_connection.ConnectionName"></InputText>
-                            </div>
-                        </div>
-                        <div class="row mt-3">
-                            <label class="form-label">Connection string</label>
-                            <div class="input-group">
-                                <div class="input-group-text">
-                                    <SvgIcon Icon="LucideIcon.Database" />
-                                </div>
-                                <InputTextArea class="form-control" rows="4" @bind-Value="_connection.ConnectionString" style="font-family: monospace; font-size: 0.9em;"></InputTextArea>
-                            </div>
-                            <div class="form-text">
-                                <a target="_blank" href="https://github.com/snowflakedb/snowflake-connector-net/blob/master/doc/Connecting.md">Connection string reference</a>
-                            </div>
-                        </div>
 
-                        <div class="row mt-3">
+                        <div class="row mb-3">
                             <div class="col">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="TestConnection" Enabled="!_testingConnection">
-                                    Test connection
-                                </HxButton>
+                                <ul class="nav nav-underline">
+                                    <li class="nav-item pointer">
+                                        <span
+                                            class="nav-link @(!_showScdDefaults ? "active" : null)"
+                                            @onclick="() => _showScdDefaults = false">
+                                            General
+                                        </span>
+                                    </li>
+                                    <li class="nav-item pointer">
+                                        <span
+                                            class="nav-link @(_showScdDefaults ? "active" : null)"
+                                            @onclick="() => _showScdDefaults = true">
+                                            SCD table defaults
+                                        </span>
+                                    </li>
+                                </ul>
                             </div>
                         </div>
-                        <div class="row mt-3">
-                            <div class="col">
-                                @if (_connectionTestSuccess == true)
-                                {
-                                    <span class="badge bg-success">Success</span>
-                                }
-                                else if (_connectionTestSuccess == false)
-                                {
-                                    <span class="badge bg-danger">Failed</span>
-                                }
-                            </div>
-                        </div>
+                        
+                        <DataAnnotationsValidator/>
+                        <ValidationSummary/>
 
-                        <div class="row mt-3">
-                            <div class="col">
-                                <label class="form-label">Max concurrent SQL step executions</label>
-                                <InputNumber class="form-control" style="max-width: 10rem;" @bind-Value="_connection.MaxConcurrentSqlSteps"></InputNumber>
+                        @if (!_showScdDefaults)
+                        {
+                            <div class="row">
+                                <label class="form-label">Connection name</label>
+                                <div class="input-group">
+                                    <div class="input-group-text">
+                                        <SvgIcon Icon="LucideIcon.Pen"/>
+                                    </div>
+                                    <InputText class="form-control" @bind-Value="_connection.ConnectionName"></InputText>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <label class="form-label">Connection string</label>
+                                <div class="input-group">
+                                    <div class="input-group-text">
+                                        <SvgIcon Icon="LucideIcon.Database"/>
+                                    </div>
+                                    <InputTextArea class="form-control" rows="4" @bind-Value="_connection.ConnectionString" style="font-family: monospace; font-size: 0.9em;"></InputTextArea>
+                                </div>
                                 <div class="form-text">
-                                    Limit the number of concurrently executing SQL steps across all executions for this connection.
-                                    <br />
-                                    0 = no limit
+                                    <a target="_blank" href="https://github.com/snowflakedb/snowflake-connector-net/blob/master/doc/Connecting.md">Connection string reference</a>
                                 </div>
                             </div>
-                        </div>
+
+                            <div class="row mt-3">
+                                <div class="col">
+                                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="TestConnection" Enabled="!_testingConnection">
+                                        Test connection
+                                    </HxButton>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col">
+                                    @if (_connectionTestSuccess == true)
+                                    {
+                                        <span class="badge bg-success">Success</span>
+                                    }
+                                    else if (_connectionTestSuccess == false)
+                                    {
+                                        <span class="badge bg-danger">Failed</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="row mt-3">
+                                <div class="col">
+                                    <label class="form-label">Max concurrent SQL step executions</label>
+                                    <InputNumber class="form-control" style="max-width: 10rem;" @bind-Value="_connection.MaxConcurrentSqlSteps"></InputNumber>
+                                    <div class="form-text">
+                                        Limit the number of concurrently executing SQL steps across all executions for this connection.
+                                        <br/>
+                                        0 = no limit
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="row">
+                                <div class="col">
+                                    <div class="form-text">
+                                        Connection level defaults for SCD tables will be used when adding new SCD tables.
+                                        They help to speed up the process of defining SCD tables and to keep naming conventions consistent.
+                                        Existing SCD tables will not be affected by changes to connection level defaults.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <label class="form-label">Target table schema</label>
+                                <div class="input-group">
+                                    <InputText class="form-control" placeholder="Same as source table schema" @bind-Value="_connection.ScdDefaultTargetSchema"></InputText>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <label class="form-label">Target table name suffix</label>
+                                <div class="input-group">
+                                    <InputText class="form-control" placeholder="No suffix" @bind-Value="_connection.ScdDefaultTargetTableSuffix"></InputText>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <label class="form-label">Staging table schema</label>
+                                <div class="input-group">
+                                    <InputText class="form-control" placeholder="Same as source table schema" @bind-Value="_connection.ScdDefaultStagingSchema"></InputText>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <label class="form-label">Staging table name suffix</label>
+                                <div class="input-group">
+                                    <InputText class="form-control" placeholder="No suffix" @bind-Value="_connection.ScdDefaultStagingTableSuffix"></InputText>
+                                </div>
+                            </div>
+                        }
                     </div>
                 </div>
             </EditForm>
@@ -84,6 +146,7 @@
     private HxModal? _modal;
     private bool? _connectionTestSuccess = null;
     private bool _testingConnection = false;
+    private bool _showScdDefaults = false;
 
     private async Task SubmitConnection()
     {
@@ -112,6 +175,7 @@
 
     public async Task ShowAsync(Guid connectionId)
     {
+        _showScdDefaults = false;
         _connection = null;
         await _modal.LetAsync(x => x.ShowAsync());
         if (connectionId != Guid.Empty)

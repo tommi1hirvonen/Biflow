@@ -29,6 +29,18 @@ public abstract class SqlConnectionBase(SqlConnectionType connectionType) : ICom
     
     [Range(0, int.MaxValue)]
     public int MaxConcurrentSqlSteps { get; set; }
+    
+    [MaxLength(128)]
+    public string? ScdDefaultTargetSchema { get; set; }
+
+    [MaxLength(128)]
+    public string? ScdDefaultTargetTableSuffix { get; set; } = "_SCD";
+    
+    [MaxLength(128)]
+    public string? ScdDefaultStagingSchema { get; set; }
+    
+    [MaxLength(128)]
+    public string? ScdDefaultStagingTableSuffix { get; set; } = "_SCD_DELTA";
 
     public int CompareTo(object? obj) => obj switch
     {
