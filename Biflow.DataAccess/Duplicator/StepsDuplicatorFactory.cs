@@ -42,7 +42,7 @@ public class StepsDuplicatorFactory(IDbContextFactory<AppDbContext> dbContextFac
             {
                 // Map dependencies from ids to new ids.
                 var dependencies = map.Original.Dependencies
-                    .Select(d => MapDependency(map.Copy, d))
+                    .Select(d => MapDependency(map.Original, map.Copy, d))
                     .OfType<Dependency>();
                 map.Copy.Dependencies.AddRange(dependencies);
                 return map.Copy;
@@ -51,21 +51,33 @@ public class StepsDuplicatorFactory(IDbContextFactory<AppDbContext> dbContextFac
         
         return new StepsDuplicator(context, copies);
         
-        Dependency? MapDependency(Step copy, Dependency dep)
+        Dependency? MapDependency(Step original, Step copy, Dependency dep)
         {
             // Map the dependent step's id from an old value to a new value using the dictionary.
             // In case no matching key is found, the dependency is not included in the steps that are copied.
-            if (!mapping.TryGetValue(dep.DependantOnStepId, out var map))
+            if (mapping.TryGetValue(dep.DependantOnStepId, out var map))
             {
-                return null;
+                return new Dependency
+                {
+                    StepId = copy.StepId,
+                    DependantOnStepId = map.Copy.StepId,
+                    DependencyType = dep.DependencyType
+                };
             }
             
-            return new Dependency
+            // If the dependency is not included in the steps that are copied,
+            // check if the source and target jobs are the same => use the dependency as is.
+            if (targetJobId is null || targetJobId == original.JobId)
             {
-                StepId = copy.StepId,
-                DependantOnStepId = map.Copy.StepId,
-                DependencyType = dep.DependencyType
-            };
+                return new Dependency
+                {
+                    StepId = copy.StepId,
+                    DependantOnStepId = dep.DependantOnStepId,
+                    DependencyType = dep.DependencyType
+                };
+            }
+                
+            return null;
         }
     }
 }
