@@ -21,9 +21,6 @@ public class MsSqlConnection() : SqlConnectionBase(SqlConnectionType.MsSql)
     }
 
     [Range(0, int.MaxValue)]
-    public int MaxConcurrentSqlSteps { get; set; }
-
-    [Range(0, int.MaxValue)]
     public int MaxConcurrentPackageSteps { get; set; }
 
     [JsonIgnore]

@@ -11,10 +11,9 @@ internal class SqlConnectionTracker(StepExecution stepExecution) : IOrchestratio
         _ => null
     };
 
-    private readonly int maxConcurrentSteps = stepExecution switch
+    private readonly int _maxConcurrentSteps = stepExecution switch
     {
-        SqlStepExecution sql when sql.GetConnection() is MsSqlConnection { MaxConcurrentSqlSteps: >= 0 } ms => ms.MaxConcurrentSqlSteps,
-        SqlStepExecution sql when sql.GetConnection() is SnowflakeConnection { MaxConcurrentSqlSteps: >= 0 } sf => sf.MaxConcurrentSqlSteps,
+        SqlStepExecution sql when sql.GetConnection() is { MaxConcurrentSqlSteps: >= 0 } ms => ms.MaxConcurrentSqlSteps,
         PackageStepExecution package when package.GetConnection() is { MaxConcurrentPackageSteps: >= 0 } ms => ms.MaxConcurrentPackageSteps,
         _ => 0
     };
@@ -24,7 +23,7 @@ internal class SqlConnectionTracker(StepExecution stepExecution) : IOrchestratio
     public StepExecutionMonitor? HandleUpdate(OrchestrationUpdate value)
     {
         // Check whether there's a need to monitor and return early if not.
-        if (maxConcurrentSteps <= 0)
+        if (_maxConcurrentSteps <= 0)
         {
             return null;
         }
@@ -69,14 +68,14 @@ internal class SqlConnectionTracker(StepExecution stepExecution) : IOrchestratio
 
     public ObserverAction GetStepAction()
     {
-        if (_connectionId is null || maxConcurrentSteps <= 0)
+        if (_connectionId is null || _maxConcurrentSteps <= 0)
         {
             return Actions.Execute;
         }
 
         var runningCount = _others.Count(o => o.Value == OrchestrationStatus.Running);
 
-        if (runningCount >= maxConcurrentSteps)
+        if (runningCount >= _maxConcurrentSteps)
         {
             return Actions.Wait;
         }

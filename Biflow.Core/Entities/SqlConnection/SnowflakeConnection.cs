@@ -1,5 +1,4 @@
 ﻿using Snowflake.Data.Client;
-using System.ComponentModel.DataAnnotations;
 using System.Data.Common;
 using System.Text.Json.Serialization;
 using Biflow.Core.Entities.Scd;
@@ -9,9 +8,6 @@ namespace Biflow.Core.Entities;
 
 public class SnowflakeConnection() : SqlConnectionBase(SqlConnectionType.Snowflake)
 {
-    [Range(0, int.MaxValue)]
-    public int MaxConcurrentSqlSteps { get; set; }
-
     [JsonIgnore]
     public override IEnumerable<Step> Steps => SqlSteps;
 

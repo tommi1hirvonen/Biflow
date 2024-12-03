@@ -26,6 +26,9 @@ public abstract class SqlConnectionBase(SqlConnectionType connectionType) : ICom
     [Display(Name = "Connection string")]
     [JsonSensitive(WhenContains = "password")]
     public string ConnectionString { get; set; } = "";
+    
+    [Range(0, int.MaxValue)]
+    public int MaxConcurrentSqlSteps { get; set; }
 
     public int CompareTo(object? obj) => obj switch
     {
