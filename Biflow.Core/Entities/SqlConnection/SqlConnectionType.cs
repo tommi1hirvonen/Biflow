@@ -7,7 +7,7 @@ public enum SqlConnectionType
 {
     [Category("MS SQL", 1)]
     [Description("SQL Server, Azure SQL, Azure Synapse")]
-    Sql,
+    MsSql,
 
     [Category("Snowflake", 2)]
     [Description("Snowflake")]

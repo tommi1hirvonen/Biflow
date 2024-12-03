@@ -1,10 +1,10 @@
 ﻿namespace Biflow.DataAccess.Configuration;
 
-internal class ConnectionEntityTypeConfiguration : IEntityTypeConfiguration<SqlConnectionBase>
+internal class SqlConnectionEntityTypeConfiguration : IEntityTypeConfiguration<SqlConnectionBase>
 {
     public void Configure(EntityTypeBuilder<SqlConnectionBase> builder)
     {
-        builder.ToTable("Connection")
+        builder.ToTable("SqlConnection")
             .HasKey(x => x.ConnectionId);
 
         builder.Ignore(x => x.Steps);
@@ -13,8 +13,8 @@ internal class ConnectionEntityTypeConfiguration : IEntityTypeConfiguration<SqlC
             .HasMaxLength(-1)
             .IsUnicode();
 
-        builder.HasDiscriminator<SqlConnectionType>("ConnectionType")
-            .HasValue<MsSqlConnection>(SqlConnectionType.Sql)
+        builder.HasDiscriminator<SqlConnectionType>("SqlConnectionType")
+            .HasValue<MsSqlConnection>(SqlConnectionType.MsSql)
             .HasValue<SnowflakeConnection>(SqlConnectionType.Snowflake);
     }
 }

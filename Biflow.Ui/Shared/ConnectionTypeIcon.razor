@@ -7,7 +7,7 @@
 
     private Svg Icon => ConnectionType switch
     {
-        SqlConnectionType.Sql => LucideIcon.Database,
+        SqlConnectionType.MsSql => LucideIcon.Database,
         SqlConnectionType.Snowflake => LucideIcon.Snowflake,
         _ => LucideIcon.CircleHelp
     };

@@ -312,7 +312,6 @@
             .OrderBy(t => t.ScdTableName)
             .ToListAsync();
         _connections = await context.SqlConnections
-            .Where(c => c.ConnectionType == SqlConnectionType.Sql || c.ConnectionType == SqlConnectionType.Snowflake)
             .OrderBy(c => c.ConnectionName)
             .ToArrayAsync();
         UpdateNonDistinctTargetTables();

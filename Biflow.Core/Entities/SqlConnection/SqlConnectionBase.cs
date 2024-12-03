@@ -6,7 +6,7 @@ using Biflow.Core.Entities.Scd;
 
 namespace Biflow.Core.Entities;
 
-[JsonDerivedType(typeof(MsSqlConnection), nameof(SqlConnectionType.Sql))]
+[JsonDerivedType(typeof(MsSqlConnection), nameof(SqlConnectionType.MsSql))]
 [JsonDerivedType(typeof(SnowflakeConnection), nameof(SqlConnectionType.Snowflake))]
 public abstract class SqlConnectionBase(SqlConnectionType connectionType) : IComparable
 {

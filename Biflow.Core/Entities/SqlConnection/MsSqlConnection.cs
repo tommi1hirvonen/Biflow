@@ -6,7 +6,7 @@ using Biflow.Core.Entities.Scd.MsSql;
 
 namespace Biflow.Core.Entities;
 
-public class MsSqlConnection() : SqlConnectionBase(SqlConnectionType.Sql)
+public class MsSqlConnection() : SqlConnectionBase(SqlConnectionType.MsSql)
 {
     public Guid? CredentialId { get; set; }
 

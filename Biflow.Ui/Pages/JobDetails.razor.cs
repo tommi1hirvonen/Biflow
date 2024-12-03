@@ -81,7 +81,6 @@ public partial class JobDetails(
         await using var context = await _dbContextFactory.CreateDbContextAsync();
         _sqlConnections = await context.SqlConnections
             .AsNoTracking()
-            .Where(c => c.ConnectionType == SqlConnectionType.Sql || c.ConnectionType == SqlConnectionType.Snowflake)
             .OrderBy(c => c.ConnectionName)
             .ToListAsync(_cts.Token);
         _msSqlConnections = _sqlConnections.OfType<MsSqlConnection>().ToList();
