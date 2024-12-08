@@ -83,7 +83,7 @@
             await using var context = await DbContextFactory.CreateDbContextAsync();
             var client = await context.PipelineClients
                 .AsNoTrackingWithIdentityResolution()
-                .Include(c => c.AppRegistration)
+                .Include(c => c.AzureCredential)
                 .FirstAsync(c => c.PipelineClientId == pipelineClientId);
             var pipelineClient = client.CreatePipelineClient(TokenService);
             _root = await pipelineClient.GetPipelinesAsync();

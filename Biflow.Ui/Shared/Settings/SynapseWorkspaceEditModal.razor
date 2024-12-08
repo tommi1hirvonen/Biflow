@@ -23,10 +23,10 @@
                         <div class=" row mt-3">
                             <div class="col-lg-6">
                                 <label class="form-label">App registration</label>
-                                <InputSelect class="form-select" @bind-Value="_synapseWorkspace.AppRegistrationId">
-                                    @foreach (var app in AppRegistrations ?? Enumerable.Empty<AppRegistration>())
+                                <InputSelect class="form-select" @bind-Value="_synapseWorkspace.AzureCredentialId">
+                                    @foreach (var app in AppRegistrations ?? Enumerable.Empty<AzureCredential>())
                                         {
-                                        <option value="@app.AppRegistrationId">@app.AppRegistrationName</option>
+                                        <option value="@app.AzureCredentialId">@app.AzureCredentialName</option>
                                         }
                                 </InputSelect>
                             </div>
@@ -87,7 +87,7 @@
     public EventCallback<SynapseWorkspace> OnSynapseWorkspaceSubmit { get; set; }
 
     [Parameter]
-    public List<AppRegistration>? AppRegistrations { get; set; }
+    public List<AzureCredential>? AppRegistrations { get; set; }
 
     private SynapseWorkspace? _synapseWorkspace;
     private HxModal? _modal;
@@ -106,7 +106,7 @@
         _testingConnection = true;
         try
         {
-            var appRegistration = AppRegistrations?.First(ar => ar.AppRegistrationId == _synapseWorkspace?.AppRegistrationId)
+            var appRegistration = AppRegistrations?.First(ar => ar.AzureCredentialId == _synapseWorkspace?.AzureCredentialId)
                 ?? throw new ArgumentException("App registration cannot be null");
             await (_synapseWorkspace?.TestConnection(appRegistration) ?? Task.CompletedTask);
             _connectionTestSuccess = true;
@@ -142,7 +142,7 @@
         {
             _synapseWorkspace = new()
             {
-                AppRegistrationId = AppRegistrations?.FirstOrDefault()?.AppRegistrationId,
+                AzureCredentialId = AppRegistrations?.FirstOrDefault()?.AzureCredentialId,
             };
         }
         _connectionTestSuccess = null;

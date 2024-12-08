@@ -174,7 +174,7 @@
 
 @code {
     private List<FunctionApp>? _functionApps;
-    private List<AppRegistration>? _appRegistrations;
+    private List<AzureCredential>? _appRegistrations;
     private FunctionAppEditModal? _functionAppEditModal;
     private FunctionApp? _stepsFunctionApp;
     private HxModal? _stepsModal;
@@ -194,9 +194,9 @@
             .ThenInclude(step => step.Job)
             .OrderBy(f => f.FunctionAppName)
             .ToListAsync();
-        _appRegistrations = await context.AppRegistrations
+        _appRegistrations = await context.AzureCredentials
             .AsNoTracking()
-            .OrderBy(ar => ar.AppRegistrationName)
+            .OrderBy(ar => ar.AzureCredentialName)
             .ToListAsync();
     }
 

@@ -54,7 +54,7 @@ public partial class PipelineStepEditModal(
             await using var context = await DbContextFactory.CreateDbContextAsync();
             var client = await context.PipelineClients
                 .AsNoTrackingWithIdentityResolution()
-                .Include(c => c.AppRegistration)
+                .Include(c => c.AzureCredential)
                 .FirstAsync(c => c.PipelineClientId == Step.PipelineClientId);
             var pipelineClient = client.CreatePipelineClient(_tokenService);
             var parameters = await pipelineClient.GetPipelineParametersAsync(Step.PipelineName);

@@ -164,7 +164,7 @@
 @code {
     private DataFactoryEditModal? _editModal;
     private List<DataFactory>? _dataFactories;
-    private List<AppRegistration>? _appRegistrations;
+    private List<AzureCredential>? _appRegistrations;
     private DataFactory? _stepsDataFactory;
     private HxModal? _stepsModal;
     
@@ -183,9 +183,9 @@
             .ThenInclude(step => step.Job)
             .OrderBy(c => c.PipelineClientName)
             .ToListAsync();
-        _appRegistrations = await context.AppRegistrations
+        _appRegistrations = await context.AzureCredentials
             .AsNoTracking()
-            .OrderBy(ar => ar.AppRegistrationName)
+            .OrderBy(ar => ar.AzureCredentialName)
             .ToListAsync();
     }
 

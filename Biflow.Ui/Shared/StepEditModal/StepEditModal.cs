@@ -18,7 +18,7 @@ public abstract class StepEditModal<TStep>(
 
     [Parameter] public IEnumerable<AnalysisServicesConnection> AsConnections { get; set; } = [];
 
-    [Parameter] public IEnumerable<AppRegistration> AppRegistrations { get; set; } = [];
+    [Parameter] public IEnumerable<AzureCredential> AppRegistrations { get; set; } = [];
 
     [Parameter] public IEnumerable<QlikCloudEnvironment> QlikClients { get; set; } = [];
 

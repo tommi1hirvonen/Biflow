@@ -5,25 +5,25 @@ namespace Biflow.Core.Test.Deserialize;
 
 public class FunctionAppDeserializeTests
 {
-    private static readonly FunctionApp functionApp = CreateFunctionApp();
+    private static readonly FunctionApp FunctionApp = CreateFunctionApp();
 
     [Fact]
-    public void FunctionAppId_NotEmptyGuid() => Assert.NotEqual(functionApp.FunctionAppId, Guid.Empty);
+    public void FunctionAppId_NotEmptyGuid() => Assert.NotEqual(FunctionApp.FunctionAppId, Guid.Empty);
 
     [Fact]
-    public void FunctionAppKey_Empty() => Assert.Empty(functionApp.FunctionAppKey ?? "");
+    public void FunctionAppKey_Empty() => Assert.Empty(FunctionApp.FunctionAppKey ?? "");
 
     [Fact]
-    public void AppRegistrationId_NotEmptyGuid() => Assert.NotEqual(functionApp.AppRegistrationId, Guid.Empty);
+    public void AppRegistrationId_NotEmptyGuid() => Assert.NotEqual(FunctionApp.AzureCredentialId, Guid.Empty);
 
     [Fact]
-    public void AppRegistration_Null() => Assert.Null(functionApp.AppRegistration);
+    public void AppRegistration_Null() => Assert.Null(FunctionApp.AzureCredential);
 
     private static FunctionApp CreateFunctionApp()
     {
-        var appRegistration = new AppRegistration();
-        var appRegistrationId = Guid.NewGuid();
-        appRegistration.SetPrivatePropertyValue("AppRegistrationId", appRegistrationId);
+        var credential = new ServicePrincipalCredential();
+        var credentialId = Guid.NewGuid();
+        credential.SetPrivatePropertyValue("AzureCredentialId", credentialId);
         var functionApp = new FunctionApp
         {
             FunctionAppName = "test",
@@ -31,7 +31,7 @@ public class FunctionAppDeserializeTests
             ResourceGroupName = "rg_name",
             ResourceName = "resource_name",
             FunctionAppKey = "app_key",
-            AppRegistration = appRegistration
+            AzureCredential = credential
         };
         functionApp.SetPrivatePropertyValue("FunctionAppId", Guid.NewGuid());
         return functionApp.JsonRoundtrip(EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);

@@ -17,10 +17,10 @@ public class SynapseWorkspace() : PipelineClient(PipelineClientType.Synapse)
 
     public override IPipelineClient CreatePipelineClient(ITokenService tokenService) => new SynapseWorkspaceClient(this, tokenService);
 
-    public async Task TestConnection(AppRegistration appRegistration)
+    public async Task TestConnection(AzureCredential azureCredential)
     {
-        var token = new ClientSecretCredential(appRegistration.TenantId, appRegistration.ClientId, appRegistration.ClientSecret);
-        var pipelineClient = new SynapsePipelineClient(SynapseEndpoint, token);
+        var credential = azureCredential.GetTokenCredential();
+        var pipelineClient = new SynapsePipelineClient(SynapseEndpoint, credential);
         var pageable = pipelineClient.GetPipelinesByWorkspaceAsync();
         await foreach (var _ in pageable)
         {

@@ -26,7 +26,7 @@ internal class BlobStorageClientAttribute : ValidationAttribute
         : new ValidationResult("Connection string is required");
 
     private static ValidationResult? IsAppRegistrationClientValid(BlobStorageClient client) =>
-        client.AppRegistrationId is not null && client.StorageAccountUrl is not null
+        client.AzureCredentialId is not null && client.StorageAccountUrl is not null
         ? ValidationResult.Success
         : new ValidationResult("App registration and storage account URL are required");
 }

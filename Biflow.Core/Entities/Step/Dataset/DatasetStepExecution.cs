@@ -13,21 +13,18 @@ public class DatasetStepExecution : StepExecution, IHasStepExecutionAttempts<Dat
 
     public DatasetStepExecution(DatasetStep step, Execution execution) : base(step, execution)
     {
-        AppRegistrationId = step.AppRegistrationId;
+        AzureCredentialId = step.AzureCredentialId;
         DatasetGroupId = step.DatasetGroupId;
         DatasetId = step.DatasetId;
 
         AddAttempt(new DatasetStepExecutionAttempt(this));
     }
 
-    [Display(Name = "App registration id")]
-    public Guid AppRegistrationId { get; private set; }
+    public Guid AzureCredentialId { get; private set; }
 
-    [Display(Name = "Group id")]
     [MaxLength(36)]
     public string DatasetGroupId { get; private set; }
 
-    [Display(Name = "Dataset id")]
     [MaxLength(36)]
     public string DatasetId { get; private set; }
 
@@ -44,28 +41,28 @@ public class DatasetStepExecution : StepExecution, IHasStepExecutionAttempts<Dat
     }
 
     /// <summary>
-    /// Get the <see cref="AppRegistration"/> entity associated with this <see cref="StepExecution"/>.
-    /// The method <see cref="SetAppRegistration(AppRegistration?)"/> will need to have been called first for the <see cref="AppRegistration"/> to be available.
+    /// Get the <see cref="AzureCredential"/> entity associated with this <see cref="StepExecution"/>.
+    /// The method <see cref="SetAzureCredential"/> will need to have been called first for the <see cref="AzureCredential"/> to be available.
     /// </summary>
-    /// <returns><see cref="AppRegistration"/> if it was previously set using <see cref="SetAppRegistration(AppRegistration?)"/> with a non-null object; <see langword="null"/> otherwise.</returns>
-    public AppRegistration? GetAppRegistration() => _appRegistration;
+    /// <returns><see cref="AzureCredential"/> if it was previously set using <see cref="SetAzureCredential"/> with a non-null object; <see langword="null"/> otherwise.</returns>
+    public AzureCredential? GetAzureCredential() => _azureCredential;
 
     /// <summary>
-    /// Set the private <see cref="AppRegistration"/> object used for containing a possible app registration reference.
-    /// It can be later accessed using <see cref="GetAppRegistration"/>.
+    /// Set the private <see cref="AzureCredential"/> object used for containing a possible app registration reference.
+    /// It can be later accessed using <see cref="GetAzureCredential"/>.
     /// </summary>
-    /// <param name="appRegistration"><see cref="AppRegistration"/> reference to store.
+    /// <param name="azureCredential"><see cref="AzureCredential"/> reference to store.
     /// The AppRegistrationIds are compared and the value is set only if the ids match.</param>
-    public void SetAppRegistration(AppRegistration? appRegistration)
+    public void SetAzureCredential(AzureCredential? azureCredential)
     {
-        if (appRegistration?.AppRegistrationId == AppRegistrationId)
+        if (azureCredential?.AzureCredentialId == AzureCredentialId)
         {
-            _appRegistration = appRegistration;
+            _azureCredential = azureCredential;
         }
     }
 
     // Use a field excluded from the EF model to store the app registration reference.
     // This is to avoid generating a foreign key constraint on the ExecutionStep table caused by a navigation property.
     // Make it private with public method access so that it is not used in EF Include method calls by accident.
-    private AppRegistration? _appRegistration;
+    private AzureCredential? _azureCredential;
 }

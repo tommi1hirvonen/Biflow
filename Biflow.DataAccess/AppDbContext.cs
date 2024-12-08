@@ -61,7 +61,9 @@ public class AppDbContext : DbContext
     public DbSet<PipelineClient> PipelineClients => Set<PipelineClient>();
     public DbSet<DataFactory> DataFactories => Set<DataFactory>();
     public DbSet<SynapseWorkspace> SynapseWorkspaces => Set<SynapseWorkspace>();
-    public DbSet<AppRegistration> AppRegistrations => Set<AppRegistration>();
+    public DbSet<AzureCredential> AzureCredentials => Set<AzureCredential>();
+    public DbSet<ServicePrincipalCredential> ServicePrincipalCredentials => Set<ServicePrincipalCredential>();
+    public DbSet<OrganizationalAccountCredential> OrganizationalAccountCredentials => Set<OrganizationalAccountCredential>();
     public DbSet<AccessToken> AccessTokens => Set<AccessToken>();
     public DbSet<FunctionApp> FunctionApps => Set<FunctionApp>();
     public DbSet<SqlConnectionBase> SqlConnections => Set<SqlConnectionBase>();

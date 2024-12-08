@@ -16,7 +16,8 @@ public class BlobStorageClient
     [MaxLength(250)]
     public string BlobStorageClientName { get; set; } = "";
 
-    public BlobStorageConnectionMethod ConnectionMethod { get; private set; } = BlobStorageConnectionMethod.ConnectionString;
+    public BlobStorageConnectionMethod ConnectionMethod { get; private set; } =
+        BlobStorageConnectionMethod.ConnectionString;
 
     [MaxLength(4000)]
     [JsonSensitive(WhenContains = "sig=")]
@@ -29,19 +30,19 @@ public class BlobStorageClient
     public string? ConnectionString { get; private set; }
 
     [JsonInclude]
-    public Guid? AppRegistrationId { get; private set; }
+    public Guid? AzureCredentialId { get; private set; }
 
     [JsonIgnore]
-    public AppRegistration? AppRegistration { get; private set; }
+    public AzureCredential? AzureCredential { get; private set; }
 
     public const string ResourceUrl = "https://storage.azure.com//.default";
 
-    public void UseAppRegistration(AppRegistration appRegistration, string url)
+    public void UseCredential(AzureCredential azureCredential, string url)
     {
         ConnectionMethod = BlobStorageConnectionMethod.AppRegistration;
         StorageAccountUrl = url;
         ConnectionString = null;
-        SetAppRegistration(appRegistration);
+        SetAzureCredential(azureCredential);
     }
 
     public void UseUrl(string url)
@@ -49,7 +50,7 @@ public class BlobStorageClient
         ConnectionMethod = BlobStorageConnectionMethod.Url;
         StorageAccountUrl = url;
         ConnectionString = null;
-        SetAppRegistration(null);
+        SetAzureCredential(null);
     }
 
     public void UseConnectionString(string connectionString)
@@ -57,13 +58,13 @@ public class BlobStorageClient
         ConnectionMethod = BlobStorageConnectionMethod.ConnectionString;
         ConnectionString = connectionString;
         StorageAccountUrl = null;
-        SetAppRegistration(null);
+        SetAzureCredential(null);
     }
 
-    private void SetAppRegistration(AppRegistration? appRegistration)
+    private void SetAzureCredential(AzureCredential? azureCredential)
     {
-        AppRegistration = appRegistration;
-        AppRegistrationId = appRegistration?.AppRegistrationId;
+        AzureCredential = azureCredential;
+        AzureCredentialId = azureCredential?.AzureCredentialId;
     }
 
     public BlobStorageExplorer CreateExplorer(ITokenService tokenService) => new(this, tokenService);

@@ -9,9 +9,9 @@ internal class CreateBlobStorageClientCommandHandler(IDbContextFactory<AppDbCont
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         context.BlobStorageClients.Add(request.Client);
-        if (request.Client.AppRegistration is not null)
+        if (request.Client.AzureCredential is not null)
         {
-            context.Entry(request.Client.AppRegistration).State = EntityState.Unchanged;
+            context.Entry(request.Client.AzureCredential).State = EntityState.Unchanged;
         }
         await context.SaveChangesAsync(cancellationToken);
     }

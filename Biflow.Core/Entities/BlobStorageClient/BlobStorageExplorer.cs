@@ -53,9 +53,9 @@ public class BlobStorageExplorer(BlobStorageClient client, ITokenService tokenSe
 
     private BlobServiceClient GetAppRegistrationBlobServiceClient()
     {
-        ArgumentNullException.ThrowIfNull(client.AppRegistration);
+        ArgumentNullException.ThrowIfNull(client.AzureCredential);
         ArgumentNullException.ThrowIfNull(client.StorageAccountUrl);
-        var token = new AzureTokenCredential(tokenService, client.AppRegistration, BlobStorageClient.ResourceUrl);
+        var token = client.AzureCredential.GetTokenServiceCredential(tokenService);
         var uri = new Uri(client.StorageAccountUrl);
         return new BlobServiceClient(uri, token);
     }

@@ -39,7 +39,7 @@ public class EnvironmentSnapshot
     public required SqlConnectionBase[] SqlConnections { get; init; }
     public required AnalysisServicesConnection[] AnalysisServicesConnections { get; init; }
     public required Credential[] Credentials { get; init; }
-    public required AppRegistration[] AppRegistrations { get; init; }
+    public required AzureCredential[] AzureCredentials { get; init; }
     public required PipelineClient[] PipelineClients { get; init; }
     public required FunctionApp[] FunctionApps { get; init; }
     public required QlikCloudEnvironment[] QlikCloudEnvironments { get; init; }

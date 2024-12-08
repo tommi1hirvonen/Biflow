@@ -28,9 +28,9 @@ public class DataFactory() : PipelineClient(PipelineClientType.DataFactory)
 
     public override IPipelineClient CreatePipelineClient(ITokenService tokenService) => new DataFactoryClient(this, tokenService);
 
-    public async Task TestConnection(AppRegistration appRegistration)
+    public async Task TestConnection(AzureCredential azureCredential)
     {
-        var credential = new ClientSecretCredential(appRegistration.TenantId, appRegistration.ClientId, appRegistration.ClientSecret);
+        var credential = azureCredential.GetTokenCredential();
         var client = new ArmClient(credential);
         var dataFactory = GetDataFactoryResource(client);
         _ = await dataFactory.GetAsync();

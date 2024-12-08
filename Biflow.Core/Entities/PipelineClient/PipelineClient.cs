@@ -18,11 +18,10 @@ public abstract class PipelineClient(PipelineClientType type)
     public PipelineClientType PipelineClientType { get; } = type;
 
     [Required]
-    [Display(Name = "App registration")]
-    public Guid? AppRegistrationId { get; set; }
+    public Guid? AzureCredentialId { get; set; }
 
     [JsonIgnore]
-    public AppRegistration AppRegistration { get; set; } = null!;
+    public AzureCredential AzureCredential { get; set; } = null!;
 
     [Range(0, int.MaxValue)]
     public int MaxConcurrentPipelineSteps { get; set; }

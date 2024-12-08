@@ -16,7 +16,7 @@
                         <select class="form-select form-select-sm" @bind="_appRegistrationId">
                             @foreach (var appRegistration in AppRegistrations ?? [])
                             {
-                                <option value="@appRegistration.AppRegistrationId">@appRegistration.AppRegistrationName</option>
+                                <option value="@appRegistration.AzureCredentialId">@appRegistration.AzureCredentialName</option>
                             }
                         </select>
                     </div>
@@ -132,7 +132,7 @@
 
 @code {
     [Parameter]
-    public IEnumerable<AppRegistration>? AppRegistrations { get; set; }
+    public IEnumerable<AzureCredential>? AppRegistrations { get; set; }
 
     [Parameter]
     public EventCallback<Dataset> OnDatasetSelected { get; set; }
@@ -167,7 +167,7 @@
         }
         else
         {
-            _appRegistrationId = AppRegistrations?.FirstOrDefault()?.AppRegistrationId ?? Guid.Empty;
+            _appRegistrationId = AppRegistrations?.FirstOrDefault()?.AzureCredentialId ?? Guid.Empty;
         }
 
         if (_appRegistrationId == Guid.Empty)
@@ -188,9 +188,9 @@
         try
         {
             await using var context = await DbContextFactory.CreateDbContextAsync();
-            var appRegistration = await context.AppRegistrations
+            var appRegistration = await context.AzureCredentials
                 .AsNoTracking()
-                .FirstAsync(r => r.AppRegistrationId == _appRegistrationId);
+                .FirstAsync(r => r.AzureCredentialId == _appRegistrationId);
             var client = appRegistration.CreateDatasetClient(TokenService);
             _datasets = await client.GetAllDatasetsAsync();
             StateHasChanged();

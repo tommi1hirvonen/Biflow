@@ -89,7 +89,7 @@
 
 @code {
     private List<BlobStorageClient>? _blobClients;
-    private List<AppRegistration>? _appRegistrations;
+    private List<AzureCredential>? _appRegistrations;
     private BlobClientEditModal? _blobClientEditModal;
     
     protected override void OnInitialized() => ThemeService.OnThemeChanged += OnThemeChanged;
@@ -105,9 +105,9 @@
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(f => f.BlobStorageClientName)
             .ToListAsync();
-        _appRegistrations = await context.AppRegistrations
+        _appRegistrations = await context.AzureCredentials
             .AsNoTracking()
-            .OrderBy(ar => ar.AppRegistrationName)
+            .OrderBy(ar => ar.AzureCredentialName)
             .ToListAsync();
     }
 

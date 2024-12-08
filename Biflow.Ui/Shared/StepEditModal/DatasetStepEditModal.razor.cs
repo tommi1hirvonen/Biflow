@@ -22,13 +22,13 @@ public partial class DatasetStepEditModal(
         (Step.DatasetGroupId, _datasetGroupName, Step.DatasetId, _datasetName) = dataset;
     }
 
-    private Task OpenDatasetSelectOffcanvas() => _datasetSelectOffcanvas.LetAsync(x => x.ShowAsync(Step?.AppRegistrationId));
+    private Task OpenDatasetSelectOffcanvas() => _datasetSelectOffcanvas.LetAsync(x => x.ShowAsync(Step?.AzureCredentialId));
 
     protected override async Task OnModalShownAsync(DatasetStep step)
     {
         try
         {
-            var appRegistration = AppRegistrations.First(a => a.AppRegistrationId == step.AppRegistrationId);
+            var appRegistration = AppRegistrations.First(a => a.AzureCredentialId == step.AzureCredentialId);
             var datasetClient = appRegistration.CreateDatasetClient(_tokenService);
             (_datasetGroupName, _datasetName) = appRegistration switch
             {
@@ -73,7 +73,7 @@ public partial class DatasetStepEditModal(
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            AppRegistrationId = AppRegistrations.First().AppRegistrationId
+            AzureCredentialId = AppRegistrations.First().AzureCredentialId
         };
     }
 }

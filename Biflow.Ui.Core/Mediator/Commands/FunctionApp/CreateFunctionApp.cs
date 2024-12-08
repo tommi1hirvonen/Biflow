@@ -9,7 +9,7 @@ internal class CreateFunctionAppCommandHandler(IDbContextFactory<AppDbContext> d
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         context.FunctionApps.Add(request.FunctionApp);
-        context.Entry(request.FunctionApp.AppRegistration).State = EntityState.Unchanged;
+        context.Entry(request.FunctionApp.AzureCredential).State = EntityState.Unchanged;
         await context.SaveChangesAsync(cancellationToken);
     }
 }

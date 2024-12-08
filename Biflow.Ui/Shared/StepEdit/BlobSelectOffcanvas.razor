@@ -50,7 +50,7 @@
         {
             await using var context = await DbContextFactory.CreateDbContextAsync();
             _clients = await context.BlobStorageClients
-                .Include(c => c.AppRegistration)
+                .Include(c => c.AzureCredential)
                 .OrderBy(c => c.BlobStorageClientName)
                 .ToArrayAsync();
         }

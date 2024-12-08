@@ -2,11 +2,15 @@
 
 namespace Biflow.Core.Entities;
 
-public class AccessToken(Guid appRegistrationId, string resourceUrl, string token, DateTimeOffset expiresOn)
+public class AccessToken(
+    Guid azureCredentialId, string resourceUrl, string token, DateTimeOffset expiresOn, string username)
 {
-    public Guid AppRegistrationId { get; set; } = appRegistrationId;
+    public Guid AzureCredentialId { get; set; } = azureCredentialId;
 
-    public AppRegistration AppRegistration { get; set; } = null!;
+    public AzureCredential AzureCredential { get; set; } = null!;
+    
+    [MaxLength(256)]
+    public string Username { get; set; } = username;
 
     [MaxLength(1000)]
     public string ResourceUrl { get; set; } = resourceUrl;

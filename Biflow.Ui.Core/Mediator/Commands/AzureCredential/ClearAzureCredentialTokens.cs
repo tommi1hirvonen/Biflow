@@ -1,15 +1,15 @@
 ﻿namespace Biflow.Ui.Core;
 
-public record ClearAppRegistrationTokensCommand(Guid AppRegistrationId) : IRequest;
+public record ClearAzureCredentialTokensCommand(Guid AzureCredentialId) : IRequest;
 
-internal class ClearAppRegistrationTokensCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory, ITokenService tokenService)
-    : IRequestHandler<ClearAppRegistrationTokensCommand>
+internal class ClearAzureCredentialTokensCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory, ITokenService tokenService)
+    : IRequestHandler<ClearAzureCredentialTokensCommand>
 {
-    public async Task Handle(ClearAppRegistrationTokensCommand request, CancellationToken cancellationToken)
+    public async Task Handle(ClearAzureCredentialTokensCommand request, CancellationToken cancellationToken)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var tokens = await context.AccessTokens
-            .Where(t => t.AppRegistrationId == request.AppRegistrationId)
+            .Where(t => t.AzureCredentialId == request.AzureCredentialId)
             .ToArrayAsync(cancellationToken);
         foreach (var token in tokens)
         {

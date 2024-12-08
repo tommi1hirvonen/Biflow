@@ -7,7 +7,7 @@ internal class BlobStorageClientEntityTypeConfiguration : IEntityTypeConfigurati
         builder.ToTable("BlobStorageClient")
             .HasKey(x => x.BlobStorageClientId);
 
-        builder.HasOne(x => x.AppRegistration)
+        builder.HasOne(x => x.AzureCredential)
             .WithMany(x => x.BlobStorageClients)
             .OnDelete(DeleteBehavior.Cascade);
     }

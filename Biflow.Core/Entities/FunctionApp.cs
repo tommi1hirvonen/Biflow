@@ -42,18 +42,17 @@ public class FunctionApp
     public string ResourceName { get; set; } = "";
 
     [Required]
-    [Display(Name = "App registration")]
     [JsonInclude]
-    public Guid AppRegistrationId { get; private set; }
+    public Guid AzureCredentialId { get; private set; }
 
     [JsonIgnore]
-    public AppRegistration AppRegistration
+    public AzureCredential AzureCredential
     {
         get;
         set
         {
             field = value;
-            AppRegistrationId = value.AppRegistrationId;
+            AzureCredentialId = value.AzureCredentialId;
         }
     } = null!;
 

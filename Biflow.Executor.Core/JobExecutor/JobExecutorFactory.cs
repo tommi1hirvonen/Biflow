@@ -42,11 +42,11 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
             from agent in agent_.DefaultIfEmpty()
             join tabular in context.AnalysisServicesConnections.Include(c => c.Credential) on ((TabularStepExecution)step).ConnectionId equals tabular.ConnectionId into tabular_
             from tabular in tabular_.DefaultIfEmpty()
-            join dataset in context.AppRegistrations on ((DatasetStepExecution)step).AppRegistrationId equals dataset.AppRegistrationId into dataset_
+            join dataset in context.AzureCredentials on ((DatasetStepExecution)step).AzureCredentialId equals dataset.AzureCredentialId into dataset_
             from dataset in dataset_.DefaultIfEmpty()
             join function in context.FunctionApps on ((FunctionStepExecution)step).FunctionAppId equals function.FunctionAppId into function_
             from function in function_.DefaultIfEmpty()
-            join pipeline in context.PipelineClients.Include(a => a.AppRegistration) on ((PipelineStepExecution)step).PipelineClientId equals pipeline.PipelineClientId into pipeline_
+            join pipeline in context.PipelineClients.Include(a => a.AzureCredential) on ((PipelineStepExecution)step).PipelineClientId equals pipeline.PipelineClientId into pipeline_
             from pipeline in pipeline_.DefaultIfEmpty()
             join qlik in context.QlikCloudEnvironments on ((QlikStepExecution)step).QlikCloudEnvironmentId equals qlik.QlikCloudEnvironmentId into qlik_
             from qlik in qlik_.DefaultIfEmpty()
@@ -95,7 +95,7 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
                     tabular.SetConnection(step.tabular);
                     break;
                 case DatasetStepExecution dataset:
-                    dataset.SetAppRegistration(step.dataset);
+                    dataset.SetAzureCredential(step.dataset);
                     break;
                 case FunctionStepExecution function:
                     function.SetApp(step.function);

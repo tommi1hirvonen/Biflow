@@ -23,7 +23,7 @@ internal class DatasetStepExecutor(
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
-        var client = step.GetAppRegistration()?.CreateDatasetClient(_tokenService);
+        var client = step.GetAzureCredential()?.CreateDatasetClient(_tokenService);
         ArgumentNullException.ThrowIfNull(client);
 
         // Start dataset refresh.

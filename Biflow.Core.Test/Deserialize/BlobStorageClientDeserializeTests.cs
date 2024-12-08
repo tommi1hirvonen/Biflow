@@ -11,7 +11,7 @@ public class BlobStorageClientDeserializeTests
     private static readonly BlobStorageClient nonSensitiveUrlClient = CreateNonSensitiveUrlClient();
 
     [Fact]
-    public void AppRegistrationClient_AppRegistrationId_NotEmptyGuid() => Assert.NotEqual(appRegistrationClient.AppRegistrationId, Guid.Empty);
+    public void AppRegistrationClient_AppRegistrationId_NotEmptyGuid() => Assert.NotEqual(appRegistrationClient.AzureCredentialId, Guid.Empty);
 
     [Fact]
     public void AppRegistrationClient_Url_NotEmpty() => Assert.NotEmpty(appRegistrationClient.StorageAccountUrl ?? "");
@@ -27,16 +27,16 @@ public class BlobStorageClientDeserializeTests
 
     private static BlobStorageClient CreateAppRegistrationClient()
     {
-        var appRegistration = new AppRegistration
+        var credential = new ServicePrincipalCredential
         {
-            AppRegistrationName = "Test"
+            AzureCredentialName = "Test"
         };
-        appRegistration.SetPrivatePropertyValue("AppRegistrationId", Guid.NewGuid());
+        credential.SetPrivatePropertyValue("AzureCredentialId", Guid.NewGuid());
         var client = new BlobStorageClient
         {
             BlobStorageClientName = "Test"
         };
-        client.UseAppRegistration(appRegistration, "client_url.com");
+        client.UseCredential(credential, "client_url.com");
         return client.JsonRoundtrip(EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
     }
 

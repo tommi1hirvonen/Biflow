@@ -5,11 +5,11 @@ using Microsoft.Rest;
 
 namespace Biflow.Core.Entities;
 
-public class DatasetClient(AppRegistration appRegistration, ITokenService tokenService)
+public class DatasetClient(AzureCredential azureCredential, ITokenService tokenService)
 {
     private async Task<PowerBIClient> GetClientAsync()
     {
-        var (accessToken, _) = await tokenService.GetTokenAsync(appRegistration, AppRegistration.PowerBIResourceUrl);
+        var (accessToken, _) = await tokenService.GetTokenAsync(azureCredential, [AzureCredential.PowerBiResourceUrl]);
         var credentials = new TokenCredentials(accessToken);
         return new PowerBIClient(credentials);
     }

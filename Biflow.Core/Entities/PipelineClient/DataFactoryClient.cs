@@ -15,17 +15,20 @@ internal class DataFactoryClient : IPipelineClient
     public DataFactoryClient(DataFactory dataFactory, ITokenService tokenService)
     {
         _dataFactory = dataFactory;
-        var credentials = new AzureTokenCredential(tokenService, dataFactory.AppRegistration, DataFactory.ResourceUrl);
-        _armClient = new ArmClient(credentials);
-        var identifier = DataFactoryResource.CreateResourceIdentifier(dataFactory.SubscriptionId, dataFactory.ResourceGroupName, dataFactory.ResourceName);
+        var tokenCredential = dataFactory.AzureCredential.GetTokenServiceCredential(tokenService);
+        _armClient = new ArmClient(tokenCredential);
+        var identifier = DataFactoryResource.CreateResourceIdentifier(
+            dataFactory.SubscriptionId, dataFactory.ResourceGroupName, dataFactory.ResourceName);
         _dataFactoryResource = _armClient.GetDataFactoryResource(identifier);
     }
 
-    public async Task<string> StartPipelineRunAsync(string pipelineName, IDictionary<string, object> parameters, CancellationToken cancellationToken)
+    public async Task<string> StartPipelineRunAsync(
+        string pipelineName, IDictionary<string, object> parameters, CancellationToken cancellationToken)
     {
         var resource = GetPipelineResource(pipelineName);
         var parameterSpecification = parameters.ToDictionary(key => key.Key, value => new BinaryData(value.Value));
-        var result = await resource.CreateRunAsync(parameterValueSpecification: parameterSpecification, cancellationToken: cancellationToken);
+        var result = await resource.CreateRunAsync(
+            parameterValueSpecification: parameterSpecification, cancellationToken: cancellationToken);
         return result.Value.RunId.ToString();
     }
 

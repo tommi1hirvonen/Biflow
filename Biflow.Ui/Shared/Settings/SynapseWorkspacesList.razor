@@ -164,7 +164,7 @@
 @code {
     private SynapseWorkspaceEditModal? _editModal;
     private List<SynapseWorkspace>? _workspaces;
-    private List<AppRegistration>? _appRegistrations;
+    private List<AzureCredential>? _appRegistrations;
     private SynapseWorkspace? _stepsWorkspace;
     private HxModal? _stepsModal;
     
@@ -183,9 +183,9 @@
             .ThenInclude(step => step.Job)
             .OrderBy(c => c.PipelineClientName)
             .ToListAsync();
-        _appRegistrations = await context.AppRegistrations
+        _appRegistrations = await context.AzureCredentials
             .AsNoTracking()
-            .OrderBy(ar => ar.AppRegistrationName)
+            .OrderBy(ar => ar.AzureCredentialName)
             .ToListAsync();
     }
 

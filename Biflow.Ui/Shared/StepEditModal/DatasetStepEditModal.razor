@@ -12,10 +12,10 @@
                     <div class="input-group-text">
                         <SvgIcon Icon="LucideIcon.Globe" />
                     </div>
-                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.AppRegistrationId">
+                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.AzureCredentialId">
                         @foreach (var app in AppRegistrations)
                         {
-                            <option value="@app.AppRegistrationId">@app.AppRegistrationName</option>
+                            <option value="@app.AzureCredentialId">@app.AzureCredentialName</option>
                         }
                     </InputSelect>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenDatasetSelectOffcanvas">

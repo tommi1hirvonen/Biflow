@@ -88,9 +88,9 @@ public class DatabaseFixture : IAsyncLifetime
                 ConnectionString = "Data Source=localhost;Password=asd"
             };
 
-            var appRegistration = new AppRegistration
+            var appRegistration = new ServicePrincipalCredential
             {
-                AppRegistrationName = "Test app registration",
+                AzureCredentialName = "Test app registration",
                 ClientId = "some-client-id",
                 ClientSecret = "some-client-secret",
                 TenantId = "some-tenant-id"
@@ -98,7 +98,7 @@ public class DatabaseFixture : IAsyncLifetime
 
             var dataFactory = new DataFactory
             {
-                AppRegistration = appRegistration,
+                AzureCredential = appRegistration,
                 PipelineClientName = "Test Data Factory",
                 SubscriptionId = "some-subscription-id",
                 ResourceGroupName = "some-resource-group-name",
@@ -107,14 +107,14 @@ public class DatabaseFixture : IAsyncLifetime
 
             var synapseWorkspace = new SynapseWorkspace
             {
-                AppRegistration = appRegistration,
+                AzureCredential = appRegistration,
                 PipelineClientName = "Test Synapse",
                 SynapseWorkspaceUrl = "some-workspace-url"
             };
 
             var functionApp = new FunctionApp
             {
-                AppRegistration = appRegistration,
+                AzureCredential = appRegistration,
                 FunctionAppName = "Test function app",
                 SubscriptionId = "some-subscription-id",
                 ResourceGroupName = "some-resource-group-name",
@@ -147,7 +147,7 @@ public class DatabaseFixture : IAsyncLifetime
             {
                 BlobStorageClientName = "Test blob storage client"
             };
-            blobClient1.UseAppRegistration(appRegistration, "https://some-storage-account-url.com/");
+            blobClient1.UseCredential(appRegistration, "https://some-storage-account-url.com/");
 
             var blobClient2 = new BlobStorageClient
             {

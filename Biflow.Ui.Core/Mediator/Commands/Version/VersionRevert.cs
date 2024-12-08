@@ -62,16 +62,32 @@ internal class VersionRevertCommandHandler(
                   ?.ConnectionString ?? "";
             }
 
-            var capturedAppRegistrationSecrets = await context.AppRegistrations
+            var capturedServicePrincipalSecrets = await context.ServicePrincipalCredentials
                 .AsNoTracking()
-                .Select(a => new { a.AppRegistrationId, a.ClientSecret })
+                .Select(a => new { a.AzureCredentialId, a.ClientSecret })
                 .ToArrayAsync(cancellationToken);
 
-            foreach (var appRegistration in snapshot.AppRegistrations.Where(a => string.IsNullOrEmpty(a.ClientSecret)))
+            foreach (var credential in snapshot.AzureCredentials
+                         .OfType<ServicePrincipalCredential>()
+                         .Where(a => string.IsNullOrEmpty(a.ClientSecret)))
             {
-                appRegistration.ClientSecret = capturedAppRegistrationSecrets
-                    .FirstOrDefault(a => a.AppRegistrationId == appRegistration.AppRegistrationId)
-                    ?.ClientSecret;
+                credential.ClientSecret = capturedServicePrincipalSecrets
+                    .FirstOrDefault(a => a.AzureCredentialId == credential.AzureCredentialId)
+                    ?.ClientSecret ?? "";
+            }
+            
+            var capturedOrganizationalAccountPasswords = await context.OrganizationalAccountCredentials
+                .AsNoTracking()
+                .Select(a => new { a.AzureCredentialId, a.Password })
+                .ToArrayAsync(cancellationToken);
+
+            foreach (var credential in snapshot.AzureCredentials
+                         .OfType<OrganizationalAccountCredential>()
+                         .Where(a => string.IsNullOrEmpty(a.Password)))
+            {
+                credential.Password = capturedOrganizationalAccountPasswords
+                    .FirstOrDefault(a => a.AzureCredentialId == credential.AzureCredentialId)
+                    ?.Password ?? "";
             }
 
             var capturedBlobStorages = await context.BlobStorageClients
@@ -221,7 +237,7 @@ internal class VersionRevertCommandHandler(
             await context.DbtAccounts.ExecuteDeleteAsync(cancellationToken);
             await context.BlobStorageClients.ExecuteDeleteAsync(cancellationToken);
             await context.Credentials.ExecuteDeleteAsync(cancellationToken);
-            await context.AppRegistrations.ExecuteDeleteAsync(cancellationToken);
+            await context.AzureCredentials.ExecuteDeleteAsync(cancellationToken);
 
             
             // Add replacing entities from the snapshot.
@@ -230,7 +246,7 @@ internal class VersionRevertCommandHandler(
             context.ChangeTracker.Clear();
 
             context.Credentials.AddRange(snapshot.Credentials);
-            context.AppRegistrations.AddRange(snapshot.AppRegistrations);
+            context.AzureCredentials.AddRange(snapshot.AzureCredentials);
 
             context.SqlConnections.AddRange(snapshot.SqlConnections);
             context.AnalysisServicesConnections.AddRange(snapshot.AnalysisServicesConnections);

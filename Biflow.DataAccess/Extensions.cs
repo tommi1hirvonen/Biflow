@@ -134,9 +134,9 @@ public static class Extensions
                 equals new { Id = includeEndpoint ? (object?)tabular.ConnectionId : false }
                 into tabular_
             from tabular in tabular_.DefaultIfEmpty()
-            join dataset in context.AppRegistrations
-                on new { Id = includeEndpoint ? (object?)((DatasetStepExecution)stepExec).AppRegistrationId : true }
-                equals new { Id = includeEndpoint ? (object?)dataset.AppRegistrationId : false }
+            join dataset in context.AzureCredentials
+                on new { Id = includeEndpoint ? (object?)((DatasetStepExecution)stepExec).AzureCredentialId : true }
+                equals new { Id = includeEndpoint ? (object?)dataset.AzureCredentialId : false }
                 into dataset_
             from dataset in dataset_.DefaultIfEmpty()
             join function in context.FunctionApps
@@ -144,7 +144,7 @@ public static class Extensions
                 equals new { Id = includeEndpoint ? (object?)function.FunctionAppId : false }
                 into function_
             from function in function_.DefaultIfEmpty()
-            join pipeline in context.PipelineClients.Include(a => a.AppRegistration)
+            join pipeline in context.PipelineClients.Include(a => a.AzureCredential)
                 on new { Id = includeEndpoint ? (object?)((PipelineStepExecution)stepExec).PipelineClientId : true }
                 equals new { Id = includeEndpoint ? (object?)pipeline.PipelineClientId : false }
                 into pipeline_
@@ -216,7 +216,7 @@ public static class Extensions
                     tabular.SetConnection(step.TabularStepConnection);
                     break;
                 case DatasetStepExecution dataset:
-                    dataset.SetAppRegistration(step.DatasetStepAppRegistration);
+                    dataset.SetAzureCredential(step.DatasetStepAppRegistration);
                     break;
                 case FunctionStepExecution function:
                     function.SetApp(step.FunctionStepApp);
@@ -252,7 +252,7 @@ file record StepExecutionProjection(
     MsSqlConnection? PackageStepConnection,
     MsSqlConnection? AgentJobStepConnection,
     AnalysisServicesConnection? TabularStepConnection,
-    AppRegistration? DatasetStepAppRegistration,
+    AzureCredential? DatasetStepAppRegistration,
     FunctionApp? FunctionStepApp,
     PipelineClient? PipelineStepClient,
     QlikCloudEnvironment? QlikStepClient,

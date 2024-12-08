@@ -25,7 +25,7 @@
                                     <input class="form-check-input" type="radio" id="connection_method_radio_app_registration"
                                            checked=@(client.ConnectionMethod == BlobStorageConnectionMethod.AppRegistration)
                                            disabled=@(!AppRegistrations?.Any() ?? true)
-                                           @onchange="@(_ => client.UseAppRegistration(AppRegistrations!.First(), client.StorageAccountUrl ?? ""))">
+                                           @onchange="@(_ => client.UseCredential(AppRegistrations!.First(), client.StorageAccountUrl ?? ""))">
                                     <label class="form-check-label fw-normal" for="connection_method_radio_app_registration">
                                         App registration
                                         <HxPopover Trigger="PopoverTrigger.Hover" Content="Use an app registration to authenticate against the Blob Storage account. The account url also needs to be provided. It is most likely in the format https://<accountname>.blob.core.windows.net/">
@@ -63,10 +63,10 @@
                             <div class="row mt-3">
                                 <div class="col-lg-6">
                                     <label class="form-label">App registration</label>
-                                    <InputSelect class="form-select" @bind-Value:get="client.AppRegistrationId" @bind-Value:set="AppRegistrationChanged">
-                                        @foreach (var app in AppRegistrations ?? Enumerable.Empty<AppRegistration>())
+                                    <InputSelect class="form-select" @bind-Value:get="client.AzureCredentialId" @bind-Value:set="AppRegistrationChanged">
+                                        @foreach (var app in AppRegistrations ?? Enumerable.Empty<AzureCredential>())
                                         {
-                                            <option value="@app.AppRegistrationId">@app.AppRegistrationName</option>
+                                            <option value="@app.AzureCredentialId">@app.AzureCredentialName</option>
                                         }
                                     </InputSelect>
                                 </div>
@@ -125,7 +125,7 @@
     public EventCallback<BlobStorageClient> OnBlobClientSubmit { get; set; }
 
     [Parameter]
-    public List<AppRegistration>? AppRegistrations { get; set; }
+    public List<AzureCredential>? AppRegistrations { get; set; }
 
     private BlobStorageClient? client;
     private HxModal? modal;
@@ -142,7 +142,7 @@
             await using var context = await DbContextFactory.CreateDbContextAsync();
             client = await context.BlobStorageClients
                 .AsNoTrackingWithIdentityResolution()
-                .Include(c => c.AppRegistration)
+                .Include(c => c.AzureCredential)
                 .FirstAsync(c => c.BlobStorageClientId == clientId);
         }
         else
@@ -181,9 +181,9 @@
 
     private void UrlChanged(string? url)
     {
-        if (client is { ConnectionMethod: BlobStorageConnectionMethod.AppRegistration, AppRegistration: not null })
+        if (client is { ConnectionMethod: BlobStorageConnectionMethod.AppRegistration, AzureCredential: not null })
         {
-            client.UseAppRegistration(client.AppRegistration, url ?? "");
+            client.UseCredential(client.AzureCredential, url ?? "");
         }
         else
         {
@@ -193,10 +193,10 @@
 
     private void AppRegistrationChanged(Guid? id)
     {
-        var appRegistration = AppRegistrations?.FirstOrDefault(a => a.AppRegistrationId == id);
+        var appRegistration = AppRegistrations?.FirstOrDefault(a => a.AzureCredentialId == id);
         if (appRegistration is not null && client is not null)
         {
-            client.UseAppRegistration(appRegistration, client?.StorageAccountUrl ?? "");
+            client.UseCredential(appRegistration, client?.StorageAccountUrl ?? "");
         }
     }
 
