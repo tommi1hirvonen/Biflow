@@ -5,16 +5,16 @@ namespace Biflow.Core.Test.Deserialize;
 
 public class BlobStorageClientDeserializeTests
 {
-    private static readonly BlobStorageClient appRegistrationClient = CreateAppRegistrationClient();
+    private static readonly BlobStorageClient azureCredentialClient = CreateAzureCredentialClient();
     private static readonly BlobStorageClient connectionStringClient = CreateConnectionStringClient();
     private static readonly BlobStorageClient sensitiveUrlClient = CreateSensitiveUrlClient();
     private static readonly BlobStorageClient nonSensitiveUrlClient = CreateNonSensitiveUrlClient();
 
     [Fact]
-    public void AppRegistrationClient_AppRegistrationId_NotEmptyGuid() => Assert.NotEqual(appRegistrationClient.AzureCredentialId, Guid.Empty);
+    public void AzureCredentialClient_AzureCredentialId_NotEmptyGuid() => Assert.NotEqual(azureCredentialClient.AzureCredentialId, Guid.Empty);
 
     [Fact]
-    public void AppRegistrationClient_Url_NotEmpty() => Assert.NotEmpty(appRegistrationClient.StorageAccountUrl ?? "");
+    public void AzureCredentialClient_Url_NotEmpty() => Assert.NotEmpty(azureCredentialClient.StorageAccountUrl ?? "");
 
     [Fact]
     public void ConnectionStringClient_ConnectionString_Empty() => Assert.Empty(connectionStringClient.ConnectionString ?? "");
@@ -25,7 +25,7 @@ public class BlobStorageClientDeserializeTests
     [Fact]
     public void NonSensitiveUrlClient_Url_NotEmpty() => Assert.NotEmpty(nonSensitiveUrlClient.StorageAccountUrl ?? "");
 
-    private static BlobStorageClient CreateAppRegistrationClient()
+    private static BlobStorageClient CreateAzureCredentialClient()
     {
         var credential = new ServicePrincipalCredential
         {

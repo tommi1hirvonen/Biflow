@@ -213,7 +213,7 @@
     </HxDropdownToggleButton>
     <HxDropdownMenu>
         @{
-            Guid? appRegistrationId = Step is DatasetStep ds ? ds.AzureCredentialId : null;
+            Guid? azureCredentialId = Step is DatasetStep ds ? ds.AzureCredentialId : null;
             Guid? qlikClientId = Step is QlikStep qlik ? qlik.QlikCloudEnvironmentId : null;
             Guid? tabularConnectionId = Step is TabularStep tabular ? tabular.ConnectionId : null;
         }
@@ -225,7 +225,7 @@
             <SvgIcon Icon="LucideIcon.Box" />
             Add tabular
         </HxDropdownItem>
-        <HxDropdownItem OnClick="() => _datasetOffcanvas.LetAsync(x => x.ShowAsync(appRegistrationId))">
+        <HxDropdownItem OnClick="() => _datasetOffcanvas.LetAsync(x => x.ShowAsync(azureCredentialId))">
             <SvgIcon Icon="LucideIcon.FileBarChart2" />
             Add dataset
         </HxDropdownItem>
@@ -246,13 +246,13 @@
 
 <DbObjectExplorerOffcanvas @ref="_dbObjectExplorerOffcanvas" Connections="SqlConnections" OnDbObjectSelected="OnDbObjectSelected" />
 
-<DatasetSelectOffcanvas @ref="_datasetOffcanvas" AppRegistrations="AppRegistrations" AllowAppRegistrationChange OnDatasetSelected="OnDatasetSelected" />
+<DatasetSelectOffcanvas @ref="_datasetOffcanvas" AzureCredentials="AzureCredentials" AllowAzureCredentialChange OnDatasetSelected="OnDatasetSelected" />
 
 <AppSelectOffcanvas @ref="_appOffcanvas" QlikClients="QlikClients" AllowClientChange OnAppSelected="OnAppSelected" />
 
 <BlobSelectOffcanvas @ref="_blobOffcanvas" OnBlobSelected="OnBlobSelected" />
 
-<AnalysisServicesObjectSelectOffcanvas @ref="_tabularOffcanvas" Connections="AsConnections" AllowAppRegistrationChange OnObjectSelected="OnTabularSelected" />
+<AnalysisServicesObjectSelectOffcanvas @ref="_tabularOffcanvas" Connections="AsConnections" AllowAzureCredentialChange OnObjectSelected="OnTabularSelected" />
 
 @code {
     [Parameter] public DataObjectReferenceType ReferenceType { get; set; }
@@ -265,7 +265,7 @@
 
     [Parameter] public IEnumerable<AnalysisServicesConnection>? AsConnections { get; set; }
 
-    [Parameter] public IEnumerable<AzureCredential>? AppRegistrations { get; set; }
+    [Parameter] public IEnumerable<AzureCredential>? AzureCredentials { get; set; }
 
     [Parameter] public IEnumerable<QlikCloudEnvironment>? QlikClients { get; set; }
     

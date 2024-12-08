@@ -14,10 +14,10 @@ public class FunctionAppDeserializeTests
     public void FunctionAppKey_Empty() => Assert.Empty(FunctionApp.FunctionAppKey ?? "");
 
     [Fact]
-    public void AppRegistrationId_NotEmptyGuid() => Assert.NotEqual(FunctionApp.AzureCredentialId, Guid.Empty);
+    public void AzureCredentialId_NotEmptyGuid() => Assert.NotEqual(FunctionApp.AzureCredentialId, Guid.Empty);
 
     [Fact]
-    public void AppRegistration_Null() => Assert.Null(FunctionApp.AzureCredential);
+    public void AzureCredential_Null() => Assert.Null(FunctionApp.AzureCredential);
 
     private static FunctionApp CreateFunctionApp()
     {

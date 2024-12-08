@@ -38,7 +38,7 @@ public partial class JobDetails(
     private List<MsSqlConnection>? _msSqlConnections;
     private List<AnalysisServicesConnection>? _asConnections;
     private List<PipelineClient>? _pipelineClients;
-    private List<AzureCredential>? _appRegistrations;
+    private List<AzureCredential>? _azureCredentials;
     private List<FunctionApp>? _functionApps;
     private List<QlikCloudEnvironment>? _qlikCloudClients;
     private List<DatabricksWorkspace>? _databricksWorkspaces;
@@ -92,7 +92,7 @@ public partial class JobDetails(
             .AsNoTracking()
             .OrderBy(df => df.PipelineClientName)
             .ToListAsync(_cts.Token);
-        _appRegistrations = await context.AzureCredentials
+        _azureCredentials = await context.AzureCredentials
             .AsNoTracking()
             .OrderBy(app => app.AzureCredentialName)
             .ToListAsync(_cts.Token);

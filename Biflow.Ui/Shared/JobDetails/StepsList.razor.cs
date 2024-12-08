@@ -25,7 +25,7 @@ public partial class StepsList(
     
     [Parameter] public List<PipelineClient>? PipelineClients { get; set; }
     
-    [Parameter] public List<AzureCredential>? AppRegistrations { get; set; }
+    [Parameter] public List<AzureCredential>? AzureCredentials { get; set; }
     
     [Parameter] public List<FunctionApp>? FunctionApps { get; set; }
 
@@ -109,7 +109,7 @@ public partial class StepsList(
         StepType.Package => ((MsSqlConnections?.Count ?? 0) == 0, "No MS SQL connections defined"),
         StepType.Pipeline => ((PipelineClients?.Count ?? 0) == 0, "No pipeline clients defined"),
         StepType.Function => ((FunctionApps?.Count ?? 0) == 0, "No Function Apps defined"),
-        StepType.Dataset => ((AppRegistrations?.Count ?? 0) == 0, "No app registrations defined"),
+        StepType.Dataset => ((AzureCredentials?.Count ?? 0) == 0, "No Azure credentials defined"),
         StepType.Job => (Jobs is null || Jobs.Count == 1, ""),
         StepType.AgentJob => ((MsSqlConnections?.Count ?? 0) == 0, "No MS SQL connections defined"),
         StepType.Tabular => ((AsConnections?.Count ?? 0) == 0, "No Analysis Services connections defined"),

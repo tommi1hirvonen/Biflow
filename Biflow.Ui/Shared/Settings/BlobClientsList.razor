@@ -85,11 +85,11 @@
     </table>
 </div>
 
-<BlobClientEditModal @ref="_blobClientEditModal" AppRegistrations="_appRegistrations" OnBlobClientSubmit="OnBlobClientSubmitAsync" />
+<BlobClientEditModal @ref="_blobClientEditModal" AzureCredentials="_azureCredentials" OnBlobClientSubmit="OnBlobClientSubmitAsync" />
 
 @code {
     private List<BlobStorageClient>? _blobClients;
-    private List<AzureCredential>? _appRegistrations;
+    private List<AzureCredential>? _azureCredentials;
     private BlobClientEditModal? _blobClientEditModal;
     
     protected override void OnInitialized() => ThemeService.OnThemeChanged += OnThemeChanged;
@@ -105,7 +105,7 @@
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(f => f.BlobStorageClientName)
             .ToListAsync();
-        _appRegistrations = await context.AzureCredentials
+        _azureCredentials = await context.AzureCredentials
             .AsNoTracking()
             .OrderBy(ar => ar.AzureCredentialName)
             .ToListAsync();

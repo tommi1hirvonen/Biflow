@@ -4,19 +4,19 @@
 
 <HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Regular" Title="Select dataset">
     <BodyTemplate>
-        @if (AllowAppRegistrationChange)
+        @if (AllowAzureCredentialChange)
         {
             <div class="row mb-3 align-items-end">
                 <div class="col">
-                    <label class="form-label">App registration</label>
+                    <label class="form-label">Azure credential</label>
                     <div class="input-group input-group-sm">
                         <div class="input-group-text">
                             <SvgIcon Icon="LucideIcon.Globe" />
                         </div>
-                        <select class="form-select form-select-sm" @bind="_appRegistrationId">
-                            @foreach (var appRegistration in AppRegistrations ?? [])
+                        <select class="form-select form-select-sm" @bind="_azureCredentialId">
+                            @foreach (var azureCredential in AzureCredentials ?? [])
                             {
-                                <option value="@appRegistration.AzureCredentialId">@appRegistration.AzureCredentialName</option>
+                                <option value="@azureCredential.AzureCredentialId">@azureCredential.AzureCredentialName</option>
                             }
                         </select>
                     </div>
@@ -40,7 +40,7 @@
             </div>
         </div>
         @{
-            var style = AllowAppRegistrationChange
+            var style = AllowAzureCredentialChange
                 ? "height: calc(100vh - 290px); overflow-y: scroll;"
                 : "height: calc(100vh - 210px); overflow-y: scroll;";
         }
@@ -132,17 +132,17 @@
 
 @code {
     [Parameter]
-    public IEnumerable<AzureCredential>? AppRegistrations { get; set; }
+    public IEnumerable<AzureCredential>? AzureCredentials { get; set; }
 
     [Parameter]
     public EventCallback<Dataset> OnDatasetSelected { get; set; }
 
     [Parameter]
-    public bool AllowAppRegistrationChange { get; set; }
+    public bool AllowAzureCredentialChange { get; set; }
 
     private readonly Dictionary<DatasetGroup, bool> _expandedStates = [];
 
-    private Guid _appRegistrationId;
+    private Guid _azureCredentialId;
     private HxOffcanvas? _offcanvas;
     private IEnumerable<DatasetGroup>? _datasets;
     private Dataset? _selectedDataset;
@@ -158,21 +158,21 @@
         await _offcanvas.LetAsync(x => x.HideAsync());
     }
 
-    public async Task ShowAsync(Guid? appRegistrationId = null)
+    public async Task ShowAsync(Guid? azureCredentialId = null)
     {
         _filterText = "";
-        if (appRegistrationId is { } id)
+        if (azureCredentialId is { } id)
         {
-            _appRegistrationId = id;
+            _azureCredentialId = id;
         }
         else
         {
-            _appRegistrationId = AppRegistrations?.FirstOrDefault()?.AzureCredentialId ?? Guid.Empty;
+            _azureCredentialId = AzureCredentials?.FirstOrDefault()?.AzureCredentialId ?? Guid.Empty;
         }
 
-        if (_appRegistrationId == Guid.Empty)
+        if (_azureCredentialId == Guid.Empty)
         {
-            Toaster.AddWarning("No app registrations found");
+            Toaster.AddWarning("No Azure credentials found");
             return;
         }
 
@@ -188,10 +188,10 @@
         try
         {
             await using var context = await DbContextFactory.CreateDbContextAsync();
-            var appRegistration = await context.AzureCredentials
+            var azureCredential = await context.AzureCredentials
                 .AsNoTracking()
-                .FirstAsync(r => r.AzureCredentialId == _appRegistrationId);
-            var client = appRegistration.CreateDatasetClient(TokenService);
+                .FirstAsync(r => r.AzureCredentialId == _azureCredentialId);
+            var client = azureCredential.CreateDatasetClient(TokenService);
             _datasets = await client.GetAllDatasetsAsync();
             StateHasChanged();
         }

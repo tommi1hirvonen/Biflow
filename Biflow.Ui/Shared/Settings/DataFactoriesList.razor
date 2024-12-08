@@ -17,13 +17,13 @@
 
 <PageTitle>Data Factories | Biflow</PageTitle>
 
-@if (_appRegistrations is not null && !_appRegistrations.Any())
+@if (_azureCredentials is not null && !_azureCredentials.Any())
 {
     <div class="row">
         <div class="col">
             <HxAlert Color="ThemeColor.Warning" CssClass="small py-2">
-                No app registrations were added.
-                Create an <a class="alert-link" href="settings/integrations/appregistrations">app registration</a> in order to add Data Factories.
+                No Azure credentials were added.
+                Create an <a class="alert-link" href="settings/integrations/azurecredentials">Azure credential</a> in order to add Data Factories.
             </HxAlert>
         </div>
     </div>
@@ -46,7 +46,7 @@
     </div>
     <div class="col-auto">
         <HxButton Color="ThemeColor.Success"
-                  Enabled="_dataFactories is not null && _appRegistrations is not null && _appRegistrations.Any()"
+                  Enabled="_dataFactories is not null && _azureCredentials is not null && _azureCredentials.Any()"
                   @onclick="() => _editModal.LetAsync(x => x.ShowAsync(Guid.Empty))">
             Add Data Factory
         </HxButton>
@@ -121,7 +121,7 @@
 </div>
 
 <DataFactoryEditModal @ref="_editModal"
-                      AppRegistrations="_appRegistrations"
+                      AzureCredentials="_azureCredentials"
                       OnDataFactorySubmit="OnDataFactorySubmit" />
 
 <HxModal @ref="_stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {_stepsDataFactory?.PipelineClientName}")">
@@ -164,7 +164,7 @@
 @code {
     private DataFactoryEditModal? _editModal;
     private List<DataFactory>? _dataFactories;
-    private List<AzureCredential>? _appRegistrations;
+    private List<AzureCredential>? _azureCredentials;
     private DataFactory? _stepsDataFactory;
     private HxModal? _stepsModal;
     
@@ -183,7 +183,7 @@
             .ThenInclude(step => step.Job)
             .OrderBy(c => c.PipelineClientName)
             .ToListAsync();
-        _appRegistrations = await context.AzureCredentials
+        _azureCredentials = await context.AzureCredentials
             .AsNoTracking()
             .OrderBy(ar => ar.AzureCredentialName)
             .ToListAsync();

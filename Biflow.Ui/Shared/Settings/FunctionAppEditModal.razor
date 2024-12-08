@@ -23,9 +23,9 @@
 
                         <div class="row mt-3">
                             <div class="col-lg-6">
-                                <label class="form-label">App registration</label>
-                                <InputSelect class="form-select" @bind-Value:get="_functionApp.AzureCredentialId" @bind-Value:set="AppRegistrationChanged">
-                                    @foreach (var app in AppRegistrations ?? Enumerable.Empty<AzureCredential>())
+                                <label class="form-label">Azure credential</label>
+                                <InputSelect class="form-select" @bind-Value:get="_functionApp.AzureCredentialId" @bind-Value:set="AzureCredentialChanged">
+                                    @foreach (var app in AzureCredentials ?? Enumerable.Empty<AzureCredential>())
                                     {
                                         <option value="@app.AzureCredentialId">@app.AzureCredentialName</option>
                                     }
@@ -115,7 +115,7 @@
     public EventCallback<FunctionApp> OnFunctionAppSubmit { get; set; }
 
     [Parameter]
-    public List<AzureCredential>? AppRegistrations { get; set; }
+    public List<AzureCredential>? AzureCredentials { get; set; }
 
     private FunctionApp? _functionApp;
     private HxModal? _modal;
@@ -123,12 +123,12 @@
     private bool _testingConnection = false;
     private FunctionAppKeySelectOffcanvas? _keySelectOffcanvas;
 
-    private void AppRegistrationChanged(Guid id)
+    private void AzureCredentialChanged(Guid id)
     {
-        var appRegistration = AppRegistrations?.FirstOrDefault(a => a.AzureCredentialId == id);
-        if (appRegistration is not null && _functionApp is not null)
+        var azureCredential = AzureCredentials?.FirstOrDefault(a => a.AzureCredentialId == id);
+        if (azureCredential is not null && _functionApp is not null)
         {
-            _functionApp.AzureCredential = appRegistration;
+            _functionApp.AzureCredential = azureCredential;
         }
     }
 
@@ -168,7 +168,7 @@
 
     public async Task ShowAsync(Guid functionAppId)
     {
-        ArgumentNullException.ThrowIfNull(AppRegistrations);
+        ArgumentNullException.ThrowIfNull(AzureCredentials);
         _functionApp = null;
         _connectionTestSuccess = null;
         await _modal.LetAsync(x => x.ShowAsync());
@@ -184,11 +184,11 @@
         }
         else
         {
-            var appRegistration = AppRegistrations?.FirstOrDefault();
-            ArgumentNullException.ThrowIfNull(appRegistration);
+            var azureCredential = AzureCredentials?.FirstOrDefault();
+            ArgumentNullException.ThrowIfNull(azureCredential);
             _functionApp = new()
             {
-                AzureCredential = appRegistration
+                AzureCredential = azureCredential
             };
         }
     }

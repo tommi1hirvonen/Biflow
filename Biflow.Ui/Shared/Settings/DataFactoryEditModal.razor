@@ -22,9 +22,9 @@
 
                         <div class=" row mt-3">
                             <div class="col-lg-6">
-                                <label class="form-label">App registration</label>
+                                <label class="form-label">Azure credential</label>
                                 <InputSelect class="form-select" @bind-Value="_dataFactory.AzureCredentialId">
-                                    @foreach (var app in AppRegistrations ?? Enumerable.Empty<AzureCredential>())
+                                    @foreach (var app in AzureCredentials ?? Enumerable.Empty<AzureCredential>())
                                         {
                                         <option value="@app.AzureCredentialId">@app.AzureCredentialName</option>
                                         }
@@ -99,7 +99,7 @@
     public EventCallback<DataFactory> OnDataFactorySubmit { get; set; }
 
     [Parameter]
-    public List<AzureCredential>? AppRegistrations { get; set; }
+    public List<AzureCredential>? AzureCredentials { get; set; }
 
     private DataFactory? _dataFactory;
     private HxModal? _modal;
@@ -118,9 +118,9 @@
         _testingConnection = true;
         try
         {
-            var appRegistration = AppRegistrations?.First(ar => ar.AzureCredentialId == _dataFactory?.AzureCredentialId)
-                ?? throw new ArgumentException("App registration cannot be null");
-            await (_dataFactory?.TestConnection(appRegistration) ?? Task.CompletedTask);
+            var azureCredential = AzureCredentials?.First(ar => ar.AzureCredentialId == _dataFactory?.AzureCredentialId)
+                ?? throw new ArgumentException("Azure credential cannot be null");
+            await (_dataFactory?.TestConnection(azureCredential) ?? Task.CompletedTask);
             _connectionTestSuccess = true;
         }
         catch (Exception ex)
@@ -154,7 +154,7 @@
         {
             _dataFactory = new()
             {
-                AzureCredentialId = AppRegistrations?.FirstOrDefault()?.AzureCredentialId,
+                AzureCredentialId = AzureCredentials?.FirstOrDefault()?.AzureCredentialId,
             };
         }
         _connectionTestSuccess = null;

@@ -2,7 +2,7 @@
 
 <HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Regular" OnClosed="OnClosed" Title="Select Analysis Services object">
     <BodyTemplate>
-        @if (AllowAppRegistrationChange)
+        @if (AllowAzureCredentialChange)
         {
             <div class="row mb-3 align-items-end">
                 <div class="col">
@@ -158,7 +158,7 @@
     public EventCallback<AnalysisServicesObjectSelectedResponse> OnObjectSelected { get; set; }
 
     [Parameter]
-    public bool AllowAppRegistrationChange { get; set; }
+    public bool AllowAzureCredentialChange { get; set; }
 
     private Guid _connectionId;
     private HxOffcanvas? _offcanvas;

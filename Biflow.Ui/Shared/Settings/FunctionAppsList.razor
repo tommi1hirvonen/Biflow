@@ -18,13 +18,13 @@
 
 <PageTitle>Function Apps | Biflow</PageTitle>
 
-@if (_appRegistrations is not null && !_appRegistrations.Any())
+@if (_azureCredentials is not null && !_azureCredentials.Any())
 {
     <div class="row">
         <div class="col">
             <HxAlert Color="ThemeColor.Warning" CssClass="small py-2">
-                No app registrations were added.
-                Create an <a class="alert-link" href="settings/integrations/appregistrations">app registration</a> in order to add Function Apps.
+                No Azure credentials were added.
+                Create an <a class="alert-link" href="settings/integrations/azurecredentials">Azure credential</a> in order to add Function Apps.
             </HxAlert>
         </div>
     </div>
@@ -48,7 +48,7 @@
     <div class="col-auto">
         <HxButton Color="ThemeColor.Success"
                   @onclick="() => ShowEditModal(null)"
-                  Enabled="_functionApps is not null && _appRegistrations is not null && _appRegistrations.Any()">
+                  Enabled="_functionApps is not null && _azureCredentials is not null && _azureCredentials.Any()">
             Add Function App
         </HxButton>
     </div>
@@ -133,7 +133,7 @@
     </table>
 </div>
 
-<FunctionAppEditModal @ref="_functionAppEditModal" AppRegistrations="_appRegistrations" OnFunctionAppSubmit="OnFunctionAppSubmit" />
+<FunctionAppEditModal @ref="_functionAppEditModal" AzureCredentials="_azureCredentials" OnFunctionAppSubmit="OnFunctionAppSubmit" />
 
 <HxModal @ref="_stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {_stepsFunctionApp?.FunctionAppName}")">
     <BodyTemplate>
@@ -174,7 +174,7 @@
 
 @code {
     private List<FunctionApp>? _functionApps;
-    private List<AzureCredential>? _appRegistrations;
+    private List<AzureCredential>? _azureCredentials;
     private FunctionAppEditModal? _functionAppEditModal;
     private FunctionApp? _stepsFunctionApp;
     private HxModal? _stepsModal;
@@ -194,7 +194,7 @@
             .ThenInclude(step => step.Job)
             .OrderBy(f => f.FunctionAppName)
             .ToListAsync();
-        _appRegistrations = await context.AzureCredentials
+        _azureCredentials = await context.AzureCredentials
             .AsNoTracking()
             .OrderBy(ar => ar.AzureCredentialName)
             .ToListAsync();

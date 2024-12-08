@@ -15,7 +15,7 @@ internal static class DuplicatorExtensions
         nameof(IHasSqlConnection.Connection),
         nameof(TabularStep.Connection),
         nameof(FunctionStep.FunctionApp),
-        nameof(DatasetStep.AppRegistration),
+        nameof(DatasetStep.AzureCredential),
         nameof(JobStep.JobToExecute),
         nameof(PipelineStep.PipelineClient),
         nameof(QlikStep.QlikCloudEnvironment),

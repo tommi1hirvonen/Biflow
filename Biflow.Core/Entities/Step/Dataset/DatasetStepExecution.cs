@@ -48,11 +48,11 @@ public class DatasetStepExecution : StepExecution, IHasStepExecutionAttempts<Dat
     public AzureCredential? GetAzureCredential() => _azureCredential;
 
     /// <summary>
-    /// Set the private <see cref="AzureCredential"/> object used for containing a possible app registration reference.
+    /// Set the private <see cref="AzureCredential"/> object used for containing a possible Azure credential reference.
     /// It can be later accessed using <see cref="GetAzureCredential"/>.
     /// </summary>
     /// <param name="azureCredential"><see cref="AzureCredential"/> reference to store.
-    /// The AppRegistrationIds are compared and the value is set only if the ids match.</param>
+    /// The AzureCredentialIds are compared and the value is set only if the ids match.</param>
     public void SetAzureCredential(AzureCredential? azureCredential)
     {
         if (azureCredential?.AzureCredentialId == AzureCredentialId)
@@ -61,7 +61,7 @@ public class DatasetStepExecution : StepExecution, IHasStepExecutionAttempts<Dat
         }
     }
 
-    // Use a field excluded from the EF model to store the app registration reference.
+    // Use a field excluded from the EF model to store the Azure credential reference.
     // This is to avoid generating a foreign key constraint on the ExecutionStep table caused by a navigation property.
     // Make it private with public method access so that it is not used in EF Include method calls by accident.
     private AzureCredential? _azureCredential;

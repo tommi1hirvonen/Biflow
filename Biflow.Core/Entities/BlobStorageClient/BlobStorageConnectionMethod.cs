@@ -2,5 +2,5 @@
 
 public enum BlobStorageConnectionMethod
 {
-    AppRegistration, ConnectionString, Url
+    AzureCredential, ConnectionString, Url
 }

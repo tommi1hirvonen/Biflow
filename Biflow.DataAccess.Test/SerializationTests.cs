@@ -19,9 +19,9 @@ public class SerializationTests(SerializationTestsFixture fixture) : IClassFixtu
     }
 
     [Fact]
-    public void Serialize_AppRegistrations()
+    public void Serialize_AzureCredentials()
     {
-        var json = JsonSerializer.Serialize(fixture.AppRegistrations, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
+        var json = JsonSerializer.Serialize(fixture.AzureCredentials, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
         var items = JsonSerializer.Deserialize<ServicePrincipalCredential[]>(json, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
         Assert.NotNull(items);
         Assert.NotEmpty(items);
@@ -176,7 +176,7 @@ public class SerializationTests(SerializationTestsFixture fixture) : IClassFixtu
             SqlConnections = fixture.SqlConnections,
             AnalysisServicesConnections = fixture.AnalysisServicesConnections,
             Credentials = fixture.Credentials,
-            AzureCredentials = fixture.AppRegistrations,
+            AzureCredentials = fixture.AzureCredentials,
             PipelineClients = fixture.PipelineClients,
             FunctionApps = fixture.FunctionApps,
             QlikCloudEnvironments = fixture.QlikCloudClients,

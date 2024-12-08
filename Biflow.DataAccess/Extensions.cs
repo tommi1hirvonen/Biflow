@@ -216,7 +216,7 @@ public static class Extensions
                     tabular.SetConnection(step.TabularStepConnection);
                     break;
                 case DatasetStepExecution dataset:
-                    dataset.SetAzureCredential(step.DatasetStepAppRegistration);
+                    dataset.SetAzureCredential(step.DatasetStepAzureCredential);
                     break;
                 case FunctionStepExecution function:
                     function.SetApp(step.FunctionStepApp);
@@ -252,7 +252,7 @@ file record StepExecutionProjection(
     MsSqlConnection? PackageStepConnection,
     MsSqlConnection? AgentJobStepConnection,
     AnalysisServicesConnection? TabularStepConnection,
-    AzureCredential? DatasetStepAppRegistration,
+    AzureCredential? DatasetStepAzureCredential,
     FunctionApp? FunctionStepApp,
     PipelineClient? PipelineStepClient,
     QlikCloudEnvironment? QlikStepClient,

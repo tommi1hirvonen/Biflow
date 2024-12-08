@@ -11,7 +11,7 @@ public class DatasetStep : Step
     private DatasetStep(DatasetStep other, Job? targetJob) : base(other, targetJob)
     {
         AzureCredentialId = other.AzureCredentialId;
-        AppRegistration = other.AppRegistration;
+        AzureCredential = other.AzureCredential;
         DatasetGroupId = other.DatasetGroupId;
         DatasetId = other.DatasetId;
     }
@@ -32,7 +32,7 @@ public class DatasetStep : Step
     public string DatasetId { get; set; } = "";
 
     [JsonIgnore]
-    public AzureCredential? AppRegistration { get; set; }
+    public AzureCredential? AzureCredential { get; set; }
 
     public override DatasetStep Copy(Job? targetJob = null) => new(this, targetJob);
 

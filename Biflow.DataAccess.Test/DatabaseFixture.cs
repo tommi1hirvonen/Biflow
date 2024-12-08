@@ -88,9 +88,9 @@ public class DatabaseFixture : IAsyncLifetime
                 ConnectionString = "Data Source=localhost;Password=asd"
             };
 
-            var appRegistration = new ServicePrincipalCredential
+            var azureCredential = new ServicePrincipalCredential
             {
-                AzureCredentialName = "Test app registration",
+                AzureCredentialName = "Test credential",
                 ClientId = "some-client-id",
                 ClientSecret = "some-client-secret",
                 TenantId = "some-tenant-id"
@@ -98,7 +98,7 @@ public class DatabaseFixture : IAsyncLifetime
 
             var dataFactory = new DataFactory
             {
-                AzureCredential = appRegistration,
+                AzureCredential = azureCredential,
                 PipelineClientName = "Test Data Factory",
                 SubscriptionId = "some-subscription-id",
                 ResourceGroupName = "some-resource-group-name",
@@ -107,14 +107,14 @@ public class DatabaseFixture : IAsyncLifetime
 
             var synapseWorkspace = new SynapseWorkspace
             {
-                AzureCredential = appRegistration,
+                AzureCredential = azureCredential,
                 PipelineClientName = "Test Synapse",
                 SynapseWorkspaceUrl = "some-workspace-url"
             };
 
             var functionApp = new FunctionApp
             {
-                AzureCredential = appRegistration,
+                AzureCredential = azureCredential,
                 FunctionAppName = "Test function app",
                 SubscriptionId = "some-subscription-id",
                 ResourceGroupName = "some-resource-group-name",
@@ -147,7 +147,7 @@ public class DatabaseFixture : IAsyncLifetime
             {
                 BlobStorageClientName = "Test blob storage client"
             };
-            blobClient1.UseCredential(appRegistration, "https://some-storage-account-url.com/");
+            blobClient1.UseCredential(azureCredential, "https://some-storage-account-url.com/");
 
             var blobClient2 = new BlobStorageClient
             {
@@ -460,7 +460,7 @@ public class DatabaseFixture : IAsyncLifetime
             {
                 StepName = "Test step 15",
                 ExecutionPhase = 65,
-                AppRegistration = appRegistration,
+                AzureCredential = azureCredential,
                 DatasetGroupId = "some-workspace-id",
                 DatasetId = "some-dataset-id"
             };

@@ -23,7 +23,7 @@ public partial class DependenciesGraph(
 
     [Parameter] public List<PipelineClient>? PipelineClients { get; set; }
 
-    [Parameter] public List<AzureCredential>? AppRegistrations { get; set; }
+    [Parameter] public List<AzureCredential>? AzureCredentials { get; set; }
 
     [Parameter] public List<FunctionApp>? FunctionApps { get; set; }
 

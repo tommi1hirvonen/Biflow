@@ -28,9 +28,9 @@ public partial class DatasetStepEditModal(
     {
         try
         {
-            var appRegistration = AppRegistrations.First(a => a.AzureCredentialId == step.AzureCredentialId);
-            var datasetClient = appRegistration.CreateDatasetClient(_tokenService);
-            (_datasetGroupName, _datasetName) = appRegistration switch
+            var azureCredential = AzureCredentials.First(a => a.AzureCredentialId == step.AzureCredentialId);
+            var datasetClient = azureCredential.CreateDatasetClient(_tokenService);
+            (_datasetGroupName, _datasetName) = azureCredential switch
             {
                 not null => (
                     await datasetClient.GetGroupNameAsync(step.DatasetGroupId),
@@ -73,7 +73,7 @@ public partial class DatasetStepEditModal(
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            AzureCredentialId = AppRegistrations.First().AzureCredentialId
+            AzureCredentialId = AzureCredentials.First().AzureCredentialId
         };
     }
 }
