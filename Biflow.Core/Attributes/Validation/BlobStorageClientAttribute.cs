@@ -10,7 +10,7 @@ internal class BlobStorageClientAttribute : ValidationAttribute
         {
             BlobStorageClient { ConnectionMethod: BlobStorageConnectionMethod.Url } client => IsUrlClientValid(client),
             BlobStorageClient { ConnectionMethod: BlobStorageConnectionMethod.ConnectionString } client => IsConnectionStringClientValid(client),
-            BlobStorageClient { ConnectionMethod: BlobStorageConnectionMethod.AzureCredential } client => IsAzureCredentialClientValid(client),
+            BlobStorageClient { ConnectionMethod: BlobStorageConnectionMethod.AppRegistration } client => IsAzureCredentialClientValid(client),
             BlobStorageClient client => new ValidationResult($"Unrecognized {nameof(client.ConnectionMethod)} value {client.ConnectionMethod}"),
             _ => new ValidationResult($"Object is not of type {nameof(BlobStorageClient)}")
         };

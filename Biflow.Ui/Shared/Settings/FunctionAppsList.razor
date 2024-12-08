@@ -174,7 +174,7 @@
 
 @code {
     private List<FunctionApp>? _functionApps;
-    private List<AzureCredential>? _azureCredentials;
+    private List<ServicePrincipalCredential>? _azureCredentials;
     private FunctionAppEditModal? _functionAppEditModal;
     private FunctionApp? _stepsFunctionApp;
     private HxModal? _stepsModal;
@@ -194,7 +194,7 @@
             .ThenInclude(step => step.Job)
             .OrderBy(f => f.FunctionAppName)
             .ToListAsync();
-        _azureCredentials = await context.AzureCredentials
+        _azureCredentials = await context.ServicePrincipalCredentials
             .AsNoTracking()
             .OrderBy(ar => ar.AzureCredentialName)
             .ToListAsync();

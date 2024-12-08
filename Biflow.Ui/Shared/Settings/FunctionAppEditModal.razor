@@ -23,7 +23,7 @@
 
                         <div class="row mt-3">
                             <div class="col-lg-6">
-                                <label class="form-label">Azure credential</label>
+                                <label class="form-label">Service principal</label>
                                 <InputSelect class="form-select" @bind-Value:get="_functionApp.AzureCredentialId" @bind-Value:set="AzureCredentialChanged">
                                     @foreach (var app in AzureCredentials ?? Enumerable.Empty<AzureCredential>())
                                     {
@@ -115,7 +115,7 @@
     public EventCallback<FunctionApp> OnFunctionAppSubmit { get; set; }
 
     [Parameter]
-    public List<AzureCredential>? AzureCredentials { get; set; }
+    public List<ServicePrincipalCredential>? AzureCredentials { get; set; }
 
     private FunctionApp? _functionApp;
     private HxModal? _modal;

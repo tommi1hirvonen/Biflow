@@ -22,7 +22,7 @@
 
                         <div class=" row mt-3">
                             <div class="col-lg-6">
-                                <label class="form-label">Azure credential</label>
+                                <label class="form-label">Service principal</label>
                                 <InputSelect class="form-select" @bind-Value="_dataFactory.AzureCredentialId">
                                     @foreach (var app in AzureCredentials ?? Enumerable.Empty<AzureCredential>())
                                         {
@@ -99,7 +99,7 @@
     public EventCallback<DataFactory> OnDataFactorySubmit { get; set; }
 
     [Parameter]
-    public List<AzureCredential>? AzureCredentials { get; set; }
+    public List<ServicePrincipalCredential>? AzureCredentials { get; set; }
 
     private DataFactory? _dataFactory;
     private HxModal? _modal;

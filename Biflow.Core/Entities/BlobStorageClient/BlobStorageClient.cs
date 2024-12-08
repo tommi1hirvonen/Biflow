@@ -39,7 +39,7 @@ public class BlobStorageClient
 
     public void UseCredential(AzureCredential azureCredential, string url)
     {
-        ConnectionMethod = BlobStorageConnectionMethod.AzureCredential;
+        ConnectionMethod = BlobStorageConnectionMethod.AppRegistration;
         StorageAccountUrl = url;
         ConnectionString = null;
         SetAzureCredential(azureCredential);

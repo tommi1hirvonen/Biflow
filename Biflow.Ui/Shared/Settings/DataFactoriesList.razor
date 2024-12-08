@@ -164,7 +164,7 @@
 @code {
     private DataFactoryEditModal? _editModal;
     private List<DataFactory>? _dataFactories;
-    private List<AzureCredential>? _azureCredentials;
+    private List<ServicePrincipalCredential>? _azureCredentials;
     private DataFactory? _stepsDataFactory;
     private HxModal? _stepsModal;
     
@@ -183,7 +183,7 @@
             .ThenInclude(step => step.Job)
             .OrderBy(c => c.PipelineClientName)
             .ToListAsync();
-        _azureCredentials = await context.AzureCredentials
+        _azureCredentials = await context.ServicePrincipalCredentials
             .AsNoTracking()
             .OrderBy(ar => ar.AzureCredentialName)
             .ToListAsync();

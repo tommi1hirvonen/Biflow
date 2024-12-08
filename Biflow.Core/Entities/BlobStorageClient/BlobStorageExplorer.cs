@@ -34,7 +34,7 @@ public class BlobStorageExplorer(BlobStorageClient client, ITokenService tokenSe
     {
         BlobStorageConnectionMethod.Url => GetUrlBlobServiceClient(),
         BlobStorageConnectionMethod.ConnectionString => GetConnectionStringBlobServiceClient(),
-        BlobStorageConnectionMethod.AzureCredential => GetAzureCredentialBlobServiceClient(),
+        BlobStorageConnectionMethod.AppRegistration => GetAzureCredentialBlobServiceClient(),
         _ => throw new ArgumentException($"Unrecognized {nameof(client.ConnectionMethod)} value {client.ConnectionMethod}")
     };
 

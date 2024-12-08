@@ -164,7 +164,7 @@
 @code {
     private SynapseWorkspaceEditModal? _editModal;
     private List<SynapseWorkspace>? _workspaces;
-    private List<AzureCredential>? _azureCredentials;
+    private List<ServicePrincipalCredential>? _azureCredentials;
     private SynapseWorkspace? _stepsWorkspace;
     private HxModal? _stepsModal;
     
@@ -183,7 +183,7 @@
             .ThenInclude(step => step.Job)
             .OrderBy(c => c.PipelineClientName)
             .ToListAsync();
-        _azureCredentials = await context.AzureCredentials
+        _azureCredentials = await context.ServicePrincipalCredentials
             .AsNoTracking()
             .OrderBy(ar => ar.AzureCredentialName)
             .ToListAsync();
