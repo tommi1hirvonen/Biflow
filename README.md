@@ -82,14 +82,16 @@ Currently supported step types:
 - Databricks
     - Run an Azure Databricks job, pipeline (Delta Live Table), notebook or Python file
     - Use an existing cluster for notebooks and Python files or create a new cluster for each run.
+- Dataset
+    - Refresh datasets/semantic models published to Power BI and Fabric workspaces
+- Dataflow
+    - Refresh dataflows published to Power BI and Fabric (Dataflow Gen 2) workspaces
 - Dbt
     - Run a job in dbt Cloud&trade;
-- Exe
-    - Run locally stored executables (e.g. Python or PowerShell scripts)
-- Dataset
-    - Refresh datasets/semantic models published to Power BI Service workspaces
 - Qlik
     - Reload apps and run automations in Qlik Cloud&reg;
+- Exe
+    - Run locally stored executables (e.g. Python or PowerShell scripts)
 - Mail
     - Send emails as part of your workflows
 - Job

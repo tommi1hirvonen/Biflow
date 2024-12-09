@@ -139,6 +139,11 @@ public static class Extensions
                 equals new { Id = includeEndpoint ? (object?)dataset.AzureCredentialId : false }
                 into dataset_
             from dataset in dataset_.DefaultIfEmpty()
+            join dataflow in context.AzureCredentials
+                on new { Id = includeEndpoint ? (object?)((DataflowStepExecution)stepExec).AzureCredentialId : true }
+                equals new { Id = includeEndpoint ? (object?)dataflow.AzureCredentialId : false }
+                into dataflow_
+            from dataflow in dataflow_.DefaultIfEmpty()
             join function in context.FunctionApps
                 on new { Id = includeEndpoint ? (object?)((FunctionStepExecution)stepExec).FunctionAppId : true }
                 equals new { Id = includeEndpoint ? (object?)function.FunctionAppId : false }
@@ -186,6 +191,7 @@ public static class Extensions
                 agent,
                 tabular,
                 dataset,
+                dataflow,
                 function,
                 pipeline,
                 qlik,
@@ -217,6 +223,9 @@ public static class Extensions
                     break;
                 case DatasetStepExecution dataset:
                     dataset.SetAzureCredential(step.DatasetStepAzureCredential);
+                    break;
+                case DataflowStepExecution dataflow:
+                    dataflow.SetAzureCredential(step.DataflowStepAzureCredential);
                     break;
                 case FunctionStepExecution function:
                     function.SetApp(step.FunctionStepApp);
@@ -253,6 +262,7 @@ file record StepExecutionProjection(
     MsSqlConnection? AgentJobStepConnection,
     AnalysisServicesConnection? TabularStepConnection,
     AzureCredential? DatasetStepAzureCredential,
+    AzureCredential? DataflowStepAzureCredential,
     FunctionApp? FunctionStepApp,
     PipelineClient? PipelineStepClient,
     QlikCloudEnvironment? QlikStepClient,

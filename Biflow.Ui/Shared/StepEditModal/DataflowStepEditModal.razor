@@ -1,0 +1,97 @@
+@inherits StepEditModal<DataflowStep>
+
+<StepEditModalTemplate Modal="this" TStep="DataflowStep">
+    @if (Step is not null)
+    {
+        <div class="row">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Timeout (min)</label>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <SvgIcon Icon="LucideIcon.OctagonX" />
+                    </div>
+                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 5rem;"></InputNumber>
+                </div>
+                <span class="form-text">0 = indefinite</span>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                <label class="form-label mb-lg-0">Azure credential</label>
+            </div>
+            <div class="col-md-6 d-inline">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <SvgIcon Icon="LucideIcon.Globe" />
+                    </div>
+                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.AzureCredentialId">
+                        @foreach (var credential in AzureCredentials)
+                        {
+                            <option value="@credential.AzureCredentialId">@credential.AzureCredentialName</option>
+                        }
+                    </InputSelect>
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenDataflowSelectOffcanvas">
+                        <SvgIcon Icon="LucideIcon.Ellipsis" />
+                        Browse dataflows
+                    </HxButton>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Group id</label>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <SvgIcon Icon="LucideIcon.Folder" />
+                    </div>
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.DataflowGroupId"
+                               @bind-Value:after="() => _dataflowGroupName = string.Empty"></InputText>
+                </div>
+                <div class="form-text">
+                    @if (_dataflowGroupName is null)
+                    {
+                        <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                        <span>Loading group name...</span>
+                    }
+                    else
+                    {
+                        <span>@_dataflowGroupName</span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Dataflow id</label>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <SvgIcon Icon="LucideIcon.Workflow" />
+                    </div>
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.DataflowId"
+                               @bind-Value:after="() => _dataflowName = string.Empty"></InputText>
+                </div>
+                <div class="form-text">
+                    @if (_dataflowName is null)
+                    {
+                        <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                        <span>Loading dataflow name...</span>
+                    }
+                    else
+                    {
+                        <span>@_dataflowName</span>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <DataflowSelectOffcanvas @ref="_dataflowSelectOffcanvas" OnDataflowSelected="OnDataflowSelected" />
+    }
+</StepEditModalTemplate>

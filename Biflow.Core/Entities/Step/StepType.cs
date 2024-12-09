@@ -58,5 +58,9 @@ public enum StepType
     
     [Category("Transformation", 2)]
     [Description("Run an SCD table load")]
-    Scd
+    Scd,
+    
+    [Category("Transformation", 2)]
+    [Description("Power BI/Fabric dataflow")]
+    Dataflow
 }

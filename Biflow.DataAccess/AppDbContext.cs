@@ -31,6 +31,7 @@ public class AppDbContext : DbContext
     public DbSet<Job> Jobs => Set<Job>();
     public DbSet<Step> Steps => Set<Step>();
     public DbSet<DatasetStep> DatasetSteps => Set<DatasetStep>();
+    public DbSet<DataflowStep> DataflowSteps => Set<DataflowStep>();
     public DbSet<ExeStep> ExeSteps => Set<ExeStep>();
     public DbSet<JobStep> JobSteps => Set<JobStep>();
     public DbSet<PackageStep> PackageSteps => Set<PackageStep>();

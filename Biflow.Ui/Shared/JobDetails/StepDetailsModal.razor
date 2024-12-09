@@ -99,6 +99,16 @@
                                         <td>@dataset.DatasetId</td>
                                     </tr>
                                     break;
+                                case DataflowStep dataflow:
+                                    <tr>
+                                        <td>Group id</td>
+                                        <td>@dataflow.DataflowGroupId</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Dataflow id</td>
+                                        <td>@dataflow.DataflowId</td>
+                                    </tr>
+                                    break;
                                 case PackageStep package:
                                     <tr>
                                         <td>Package folder</td>

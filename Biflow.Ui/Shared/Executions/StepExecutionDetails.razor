@@ -235,10 +235,30 @@
                     @dataset.DatasetId
                 </dd>
                 <dt class="col-sm-3">
-                    Power BI Service id
+                    Azure credential id
                 </dt>
                 <dd class="col-sm-9">
                     @dataset.AzureCredentialId
+                </dd>
+                break;
+            case DataflowStepExecution dataflow:
+                <dt class="col-sm-3">
+                    Group id
+                </dt>
+                <dd class="col-sm-9">
+                    @dataflow.DataflowGroupId
+                </dd>
+                <dt class="col-sm-3">
+                    Dataflow id
+                </dt>
+                <dd class="col-sm-9">
+                    @dataflow.DataflowId
+                </dd>
+                <dt class="col-sm-3">
+                    Azure credential id
+                </dt>
+                <dd class="col-sm-9">
+                    @dataflow.AzureCredentialId
                 </dd>
                 break;
             case FunctionStepExecution function:

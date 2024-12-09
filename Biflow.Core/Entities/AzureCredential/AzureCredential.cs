@@ -52,6 +52,9 @@ public abstract class AzureCredential(AzureCredentialType azureCredentialType)
     public abstract TokenCredential GetTokenServiceCredential(ITokenService tokenService);
     
     public DatasetClient CreateDatasetClient(ITokenService tokenService) => new(this, tokenService);
+    
+    public DataflowClient CreateDataflowClient(ITokenService tokenService, IHttpClientFactory httpClientFactory) =>
+        new(this, tokenService, httpClientFactory);
 
     public abstract Task TestConnection();
 

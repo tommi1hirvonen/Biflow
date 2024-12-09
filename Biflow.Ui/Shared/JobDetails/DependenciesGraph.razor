@@ -235,6 +235,14 @@
                           QlikClients="QlikCloudClients"
                           Credentials="Credentials"
                           OnStepSubmit="OnStepSubmit" />
+    <DataflowStepEditModal @ref="_stepEditModals[StepType.Dataflow]"
+                           SqlConnections="SqlConnections"
+                           MsSqlConnections="MsSqlConnections"
+                           AsConnections="AsConnections"
+                           AzureCredentials="AzureCredentials"
+                           QlikClients="QlikCloudClients"
+                           Credentials="Credentials"
+                           OnStepSubmit="OnStepSubmit" />
     <ExeStepEditModal @ref="_stepEditModals[StepType.Exe]"
                       SqlConnections="SqlConnections"
                       MsSqlConnections="MsSqlConnections"

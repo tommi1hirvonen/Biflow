@@ -23,7 +23,8 @@ internal class StepEntityTypeConfiguration : IEntityTypeConfiguration<Step>
             .HasValue<QlikStep>(StepType.Qlik)
             .HasValue<DatabricksStep>(StepType.Databricks)
             .HasValue<DbtStep>(StepType.Dbt)
-            .HasValue<ScdStep>(StepType.Scd);
+            .HasValue<ScdStep>(StepType.Scd)
+            .HasValue<DataflowStep>(StepType.Dataflow);
 
         builder.OwnsOne(s => s.ExecutionConditionExpression, ece =>
         {

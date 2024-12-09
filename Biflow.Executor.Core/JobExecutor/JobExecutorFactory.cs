@@ -44,6 +44,8 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
             from tabular in tabular_.DefaultIfEmpty()
             join dataset in context.AzureCredentials on ((DatasetStepExecution)step).AzureCredentialId equals dataset.AzureCredentialId into dataset_
             from dataset in dataset_.DefaultIfEmpty()
+            join dataflow in context.AzureCredentials on ((DataflowStepExecution)step).AzureCredentialId equals dataflow.AzureCredentialId into dataflow_
+            from dataflow in dataflow_.DefaultIfEmpty()
             join function in context.FunctionApps on ((FunctionStepExecution)step).FunctionAppId equals function.FunctionAppId into function_
             from function in function_.DefaultIfEmpty()
             join pipeline in context.PipelineClients.Include(a => a.AzureCredential) on ((PipelineStepExecution)step).PipelineClientId equals pipeline.PipelineClientId into pipeline_
@@ -66,6 +68,7 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
                 agent,
                 tabular,
                 dataset,
+                dataflow,
                 function,
                 pipeline,
                 qlik,
@@ -96,6 +99,9 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
                     break;
                 case DatasetStepExecution dataset:
                     dataset.SetAzureCredential(step.dataset);
+                    break;
+                case DataflowStepExecution dataflow:
+                    dataflow.SetAzureCredential(step.dataflow);
                     break;
                 case FunctionStepExecution function:
                     function.SetApp(step.function);
