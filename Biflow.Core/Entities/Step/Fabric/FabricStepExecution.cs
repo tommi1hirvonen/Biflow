@@ -1,52 +1,62 @@
-using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
+using Biflow.Core.Interfaces;
 
 namespace Biflow.Core.Entities;
 
-public class DataflowStepExecution : StepExecution, IHasTimeout, IHasStepExecutionAttempts<DataflowStepExecutionAttempt>
+public class FabricStepExecution : StepExecution,
+    IHasTimeout,
+    IHasStepExecutionParameters<FabricStepExecutionParameter>,
+    IHasStepExecutionAttempts<FabricStepExecutionAttempt>
 {
-    public DataflowStepExecution(string stepName, string dataflowGroupId, string dataflowId) : base(stepName, StepType.Dataflow)
+    public FabricStepExecution(string stepName) : base(stepName, StepType.Fabric)
     {
-        DataflowGroupId = dataflowGroupId;
-        DataflowId = dataflowId;
     }
 
-    public DataflowStepExecution(DataflowStep step, Execution execution) : base(step, execution)
+    public FabricStepExecution(FabricStep step, Execution execution) : base(step, execution)
     {
-        AzureCredentialId = step.AzureCredentialId;
-        DataflowGroupId = step.DataflowGroupId;
-        DataflowId = step.DataflowId;
+        WorkspaceId = step.WorkspaceId;
+        WorkspaceName = step.WorkspaceName;
+        ItemType = step.ItemType;
+        ItemId = step.ItemId;
+        ItemName = step.ItemName;
         TimeoutMinutes = step.TimeoutMinutes;
-
-        AddAttempt(new DataflowStepExecutionAttempt(this));
+        AzureCredentialId = step.AzureCredentialId;
+        StepExecutionParameters = step.StepParameters
+            .Select(p => new FabricStepExecutionParameter(p, this))
+            .ToArray();
+        AddAttempt(new FabricStepExecutionAttempt(this));
     }
-
-    [Required]
-    public Guid AzureCredentialId { get; private set; }
-
-    [MinLength(36)]
-    [MaxLength(36)]
-    public string DataflowGroupId { get; private set; }
-
-    [MinLength(36)]
-    [MaxLength(36)]
-    public string DataflowId { get; private set; }
     
-    [Range(0, 2880)] // 48 hours
-    public double TimeoutMinutes { get; set; }
-
-    public override DataflowStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
+    public Guid WorkspaceId { get; private set; }
+    
+    public string? WorkspaceName { get; private set; }
+    
+    public FabricItemType ItemType { get; private set; }
+    
+    public Guid ItemId { get; private set; }
+    
+    [MaxLength(250)]
+    public string? ItemName { get; private set; }
+    
+    public double TimeoutMinutes { get; private set; }
+    
+    public Guid AzureCredentialId { get; private set; }
+    
+    public IEnumerable<FabricStepExecutionParameter> StepExecutionParameters { get; } =
+        new List<FabricStepExecutionParameter>();
+    
+    public override FabricStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {
         var previous = StepExecutionAttempts.MaxBy(x => x.RetryAttemptIndex);
         ArgumentNullException.ThrowIfNull(previous);
-        var next = new DataflowStepExecutionAttempt((DataflowStepExecutionAttempt)previous, previous.RetryAttemptIndex + 1)
+        var next = new FabricStepExecutionAttempt((FabricStepExecutionAttempt)previous, previous.RetryAttemptIndex + 1)
         {
             ExecutionStatus = withStatus
         };
         AddAttempt(next);
         return next;
     }
-
+    
     /// <summary>
     /// Get the <see cref="AzureCredential"/> entity associated with this <see cref="StepExecution"/>.
     /// The method <see cref="SetAzureCredential(AzureCredential?)"/> will need to have been called first for the <see cref="AzureCredential"/> to be available.

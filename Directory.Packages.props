@@ -39,6 +39,7 @@
     <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Options.DataAnnotations" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.Fabric.Api" Version="1.0.0-beta.13" />
     <PackageVersion Include="Microsoft.Identity.Web" Version="3.3.1" />
     <PackageVersion Include="Microsoft.Identity.Web.UI" Version="3.3.1" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />

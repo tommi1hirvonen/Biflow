@@ -261,6 +261,47 @@
                     @dataflow.AzureCredentialId
                 </dd>
                 break;
+            case FabricStepExecution fabric:
+                <dt class="col-sm-3">
+                    Fabric workspace id
+                </dt>
+                <dd class="col-sm-9">
+                    @fabric.WorkspaceId
+                </dd>
+                <dt class="col-sm-3">
+                    Fabric workspace name
+                </dt>
+                <dd class="col-sm-9">
+                    @fabric.WorkspaceName
+                </dd>
+                <dt class="col-sm-3">
+                    Item name
+                </dt>
+                <dd class="col-sm-9">
+                    @fabric.ItemName
+                </dd>
+                <dt class="col-sm-3">
+                    Item id
+                </dt>
+                <dd class="col-sm-9">
+                    @fabric.ItemId
+                </dd>
+                <dt class="col-sm-3">
+                    Item type
+                </dt>
+                <dd class="col-sm-9">
+                    @fabric.ItemType
+                </dd>
+                @if (StepExecutionAttempt is FabricStepExecutionAttempt fabricAttempt)
+                {
+                    <dt class="col-sm-3">
+                        Job instance id
+                    </dt>
+                    <dd class="col-sm-9">
+                        @fabricAttempt.JobInstanceId
+                    </dd>
+                }
+                break;
             case FunctionStepExecution function:
                 <dt class="col-sm-3">
                     Function url

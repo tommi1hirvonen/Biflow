@@ -17,7 +17,7 @@ The following new or existing files/classes need to be added or edited when addi
 - FooStep
   - Inherits Step
   - Implements IHasConnection<> if the step relies on a SQL connection
-  - Implementes IHasTimeout if the step supports timing out
+  - Implements IHasTimeout if the step supports timing out
   - Implements IHasStepParameters<> if the step supports parameters
   - Implement and override the abstract base methods `Copy()` and `ToStepExecution()`
 - FooStepParameter (only if the step supports parameters)
@@ -25,7 +25,7 @@ The following new or existing files/classes need to be added or edited when addi
 - FooStepExecution
   - Inherits StepExecution
   - Implements IHasTimeout if the step execution supports timing out
-  - Implements IHasStepExecutionparameters<> if the step execution supports parameters
+  - Implements IHasStepExecutionParameters<> if the step execution supports parameters
 - FooStepExecutionParameter (only if the step execution supports parameters)
   - Inherits StepExecutionParameterBase
 - FooStepExecutionAttempt

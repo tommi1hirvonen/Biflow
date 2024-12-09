@@ -26,6 +26,7 @@
 	<PackageReference Include="Microsoft.Azure.Databricks.Client" />
     <PackageReference Include="Microsoft.Data.SqlClient" />
     <PackageReference Include="Microsoft.Extensions.Http" />
+    <PackageReference Include="Microsoft.Fabric.Api" />
     <PackageReference Include="Microsoft.PowerBI.Api" />
     <PackageReference Include="Quartz" />
     <PackageReference Include="Snowflake.Data" />

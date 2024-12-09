@@ -48,7 +48,7 @@ public partial class Credential
         {
             throw new ApplicationException("Could not get impersonation access token handle.");
         }
-        return WindowsIdentity.RunImpersonatedAsync(token, func);
+        return WindowsIdentity.RunImpersonatedAsync(token!, func);
     }
 
     [SupportedOSPlatform("windows")]
@@ -58,7 +58,7 @@ public partial class Credential
         {
             throw new ApplicationException("Could not get impersonation access token handle.");
         }
-        return WindowsIdentity.RunImpersonatedAsync(token, func);
+        return WindowsIdentity.RunImpersonatedAsync(token!, func);
     }
 
     [SupportedOSPlatform("windows")]

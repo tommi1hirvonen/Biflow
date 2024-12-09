@@ -37,6 +37,10 @@ Biflow is a powerful platform for easy business intelligence (BI) and data platf
   - Azure Functions
   - Azure Analysis Services
   - Azure Databricks
+- Microsoft Fabric
+    - Data Warehouse
+    - Data Factory
+    - Date Engineering
 - Microsoft Power BI
 - Snowflake
 - dbt Cloud&trade;
@@ -82,6 +86,8 @@ Currently supported step types:
 - Databricks
     - Run an Azure Databricks job, pipeline (Delta Live Table), notebook or Python file
     - Use an existing cluster for notebooks and Python files or create a new cluster for each run.
+- Fabric
+    - Run on demand item jobs for data pipelines and notebooks in Fabric workspaces
 - Dataset
     - Refresh datasets/semantic models published to Power BI and Fabric workspaces
 - Dataflow
@@ -371,7 +377,8 @@ Documentation about using Always Encrypted with the .NET Data Provider used by B
 When implementing Always Encrypted, these columns are good candidates for encryption. Randomized encryption can be used for all columns except `[ApiKey].[Value]`.
 - [app].[AccessToken].[Token]
 - [app].[ApiKey].[Value] (indexed column, requires deterministic encryption)
-- [app].[AppRegistration].[ClientSecret]
+- [app].[AzureCredential].[ClientSecret]
+- [app].[AzureCredential].[Password]
 - [app].[BlobStorageClient].[ConnectionString]
 - [app].[BlobStorageClient].[StorageAccountUrl]
 - [app].[Connection].[ConnectionString]

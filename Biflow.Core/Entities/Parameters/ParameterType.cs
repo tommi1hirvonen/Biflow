@@ -9,5 +9,6 @@ public enum ParameterType
     Exe,
     Function,
     Email,
-    DatabricksNotebook
+    DatabricksNotebook,
+    Fabric
 }

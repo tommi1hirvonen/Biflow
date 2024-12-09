@@ -35,7 +35,8 @@ internal class StepExecutionAttemptEntityTypeConfiguration : IEntityTypeConfigur
             .HasValue<DatabricksStepExecutionAttempt>(StepType.Databricks)
             .HasValue<DbtStepExecutionAttempt>(StepType.Dbt)
             .HasValue<ScdStepExecutionAttempt>(StepType.Scd)
-            .HasValue<DataflowStepExecutionAttempt>(StepType.Dataflow);
+            .HasValue<DataflowStepExecutionAttempt>(StepType.Dataflow)
+            .HasValue<FabricStepExecutionAttempt>(StepType.Fabric);
 
         builder.Property(x => x.InfoMessages)
             .HasColumnName("InfoMessages")

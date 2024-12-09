@@ -1,0 +1,114 @@
+@inherits StepEditModal<FabricStep>
+
+<StepEditModalTemplate Modal="this" TStep="FabricStep">
+    @if (Step is not null)
+    {
+        <div class="row">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Timeout (min)</label>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <SvgIcon Icon="LucideIcon.OctagonX" />
+                    </div>
+                    <InputNumber class="form-control form-control-sm" @bind-Value="Step.TimeoutMinutes" style="max-width: 5rem;"></InputNumber>
+                </div>
+                <span class="form-text">0 = indefinite</span>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                <label class="form-label mb-lg-0">Azure credential</label>
+            </div>
+            <div class="col-md-6 d-inline">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <SvgIcon Icon="LucideIcon.Globe" />
+                    </div>
+                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.AzureCredentialId">
+                        @foreach (var credential in AzureCredentials)
+                        {
+                            <option value="@credential.AzureCredentialId">@credential.AzureCredentialName</option>
+                        }
+                    </InputSelect>
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None"
+                              CssClass="btn-auto"
+                              @onclick="OpenItemSelectOffcanvas">
+                        <SvgIcon Icon="LucideIcon.Ellipsis" />
+                        Browse items
+                    </HxButton>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Workspace</label>
+            </div>
+            <div class="col-md-6 d-inline">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <SvgIcon Icon="LucideIcon.Briefcase" />
+                    </div>
+                    <input class="form-control form-control-sm" value="@Step.WorkspaceName" disabled/>
+                </div>
+                <div class="form-text">
+                    @if (Step.WorkspaceId != Guid.Empty)
+                    {
+                        <text>
+                            Id: @Step.WorkspaceId
+                        </text>
+                    }
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Item</label>
+            </div>
+            <div class="col-md-6 d-inline">
+                <div class="input-group input-group-sm">
+                    @if (Step.ItemId != Guid.Empty)
+                    {
+                        switch (Step.ItemType)
+                        {
+                            case FabricItemType.DataPipeline:
+                                <div class="input-group-text">
+                                    <SvgIcon Icon="LucideIcon.Pipeline" />
+                                </div>
+                                break;
+                            case FabricItemType.Notebook:
+                                <div class="input-group-text">
+                                    <SvgIcon Icon="LucideIcon.Notebook" />
+                                </div>
+                                break;
+                        }
+                    }
+                    <input class="form-control form-control-sm" value="@Step.ItemName" disabled/>
+                </div>
+                <div class="form-text">
+                    @if (Step.ItemId != Guid.Empty)
+                    {
+                        <text>
+                            Id: @Step.ItemId
+                            <br/>
+                            Type: @Step.ItemType
+                        </text>
+                    }
+                    
+                </div>
+            </div>
+        </div>
+        
+        <FabricItemSelectOffcanvas @ref="_offcanvas"
+                                   AzureCredentials="AzureCredentials"
+                                   OnItemSelected="OnItemSelected" />
+        
+        <StepParametersEditor Step="Step"
+                              NewParameterDelegate="() => new() { Step = Step }"
+                              Title="Item parameters" />
+    }
+</StepEditModalTemplate>

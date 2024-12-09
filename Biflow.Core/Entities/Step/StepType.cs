@@ -62,5 +62,9 @@ public enum StepType
     
     [Category("Transformation", 2)]
     [Description("Power BI/Fabric dataflow")]
-    Dataflow
+    Dataflow,
+    
+    [Category("Integration", 1)]
+    [Description("Fabric item job")]
+    Fabric
 }

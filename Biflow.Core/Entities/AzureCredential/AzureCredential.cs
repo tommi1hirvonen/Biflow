@@ -46,6 +46,7 @@ public abstract class AzureCredential(AzureCredentialType azureCredentialType)
 
     internal const string PowerBiResourceUrl = "https://analysis.windows.net/powerbi/api/.default";
     internal const string AzureResourceUrl = "https://management.azure.com//.default";
+    internal const string FabricResourceUrl = "https://api.fabric.microsoft.com//.default";
 
     public abstract TokenCredential GetTokenCredential();
     
@@ -55,6 +56,8 @@ public abstract class AzureCredential(AzureCredentialType azureCredentialType)
     
     public DataflowClient CreateDataflowClient(ITokenService tokenService, IHttpClientFactory httpClientFactory) =>
         new(this, tokenService, httpClientFactory);
+    
+    public FabricWorkspaceClient CreateFabricWorkspaceClient(ITokenService tokenService) => new(this, tokenService);
 
     public abstract Task TestConnection();
 
