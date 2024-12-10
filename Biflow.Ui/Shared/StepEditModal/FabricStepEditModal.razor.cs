@@ -1,16 +1,17 @@
 using Biflow.Ui.Shared.StepEdit;
-using Microsoft.Fabric.Api.Core.Models;
 using Microsoft.Fabric.Api.DataPipeline.Models;
 using Microsoft.Fabric.Api.Notebook.Models;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
-public partial class FabricStepEditModal(ToasterService toaster, IDbContextFactory<AppDbContext> dbContextFactory)
+public partial class FabricStepEditModal(
+    ToasterService toaster, IDbContextFactory<AppDbContext> dbContextFactory, ITokenService tokenService)
     : StepEditModal<FabricStep>(toaster, dbContextFactory)
 {
     internal override string FormId => "fabric_step_edit_form";
 
     private FabricItemSelectOffcanvas? _offcanvas;
+    private bool _loading;
 
     protected override FabricStep CreateNewStep(Job job) =>
         new()
@@ -65,6 +66,29 @@ public partial class FabricStepEditModal(ToasterService toaster, IDbContextFacto
                 Step.ItemName = item.DisplayName;
                 Step.ItemType = FabricItemType.Notebook;
                 break;
+        }
+    }
+    
+    protected override async Task OnModalShownAsync(FabricStep step)
+    {
+        try
+        {
+            _loading = true;
+            StateHasChanged();
+            var azureCredential = AzureCredentials.First(a => a.AzureCredentialId == step.AzureCredentialId);
+            var fabric = azureCredential.CreateFabricWorkspaceClient(tokenService);
+            (step.WorkspaceName, step.ItemName) = 
+                (await fabric.GetWorkspaceNameAsync(step.WorkspaceId), 
+                    await fabric.GetItemNameAsync(step.WorkspaceId, step.ItemId));
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error retrieving workspace and item name from API", ex.Message);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
         }
     }
 }

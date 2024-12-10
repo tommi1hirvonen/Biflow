@@ -48,11 +48,19 @@
                 <label class="form-label mb-lg-0">Workspace</label>
             </div>
             <div class="col-md-6 d-inline">
-                <div class="input-group input-group-sm">
-                    <div class="input-group-text">
-                        <SvgIcon Icon="LucideIcon.Briefcase" />
+                <div class="d-flex align-items-center position-relative">
+                    <div class="input-group input-group-sm">
+                        <div class="input-group-text">
+                            <SvgIcon Icon="LucideIcon.Briefcase"/>
+                        </div>
+                        <input class="form-control form-control-sm" value="@Step.WorkspaceName" disabled/>
                     </div>
-                    <input class="form-control form-control-sm" value="@Step.WorkspaceName" disabled/>
+                    @if (_loading)
+                    {
+                        <HxSpinner Color="ThemeColor.Secondary"
+                                   Size="SpinnerSize.Small"
+                                   CssClass="position-absolute end-0 py-1 mx-2" />
+                    }
                 </div>
                 <div class="form-text">
                     @if (Step.WorkspaceId != Guid.Empty)
@@ -70,24 +78,32 @@
                 <label class="form-label mb-lg-0">Item</label>
             </div>
             <div class="col-md-6 d-inline">
-                <div class="input-group input-group-sm">
-                    @if (Step.ItemId != Guid.Empty)
-                    {
-                        switch (Step.ItemType)
+                <div class="d-flex align-items-center position-relative">
+                    <div class="input-group input-group-sm">
+                        @if (Step.ItemId != Guid.Empty)
                         {
-                            case FabricItemType.DataPipeline:
-                                <div class="input-group-text">
-                                    <SvgIcon Icon="LucideIcon.Pipeline" />
-                                </div>
-                                break;
-                            case FabricItemType.Notebook:
-                                <div class="input-group-text">
-                                    <SvgIcon Icon="LucideIcon.Notebook" />
-                                </div>
-                                break;
+                            switch (Step.ItemType)
+                            {
+                                case FabricItemType.DataPipeline:
+                                    <div class="input-group-text">
+                                        <SvgIcon Icon="LucideIcon.Pipeline"/>
+                                    </div>
+                                    break;
+                                case FabricItemType.Notebook:
+                                    <div class="input-group-text">
+                                        <SvgIcon Icon="LucideIcon.Notebook"/>
+                                    </div>
+                                    break;
+                            }
                         }
+                        <input class="form-control form-control-sm" value="@Step.ItemName" disabled/>
+                    </div>
+                    @if (_loading)
+                    {
+                        <HxSpinner Color="ThemeColor.Secondary"
+                                   Size="SpinnerSize.Small"
+                                   CssClass="position-absolute end-0 py-1 mx-2" />
                     }
-                    <input class="form-control form-control-sm" value="@Step.ItemName" disabled/>
                 </div>
                 <div class="form-text">
                     @if (Step.ItemId != Guid.Empty)
@@ -98,7 +114,7 @@
                             Type: @Step.ItemType
                         </text>
                     }
-                    
+
                 </div>
             </div>
         </div>

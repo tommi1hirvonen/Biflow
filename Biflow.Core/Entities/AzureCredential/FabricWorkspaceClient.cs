@@ -77,6 +77,27 @@ public class FabricWorkspaceClient
             workspaceId, itemId, instanceId, cancellationToken);
     }
 
+    public async Task<string> GetWorkspaceNameAsync(Guid workspaceId, CancellationToken cancellationToken = default)
+    {
+        var workspace = await _fabric.Core.Workspaces.GetWorkspaceAsync(workspaceId, cancellationToken);
+        if (workspace.HasValue)
+        {
+            return workspace.Value.DisplayName;
+        }
+        throw new Exception($"Workspace with id {workspaceId} not found");
+    }
+
+    public async Task<string> GetItemNameAsync(
+        Guid workspaceId, Guid itemId, CancellationToken cancellationToken = default)
+    {
+        var item = await _fabric.Core.Items.GetItemAsync(workspaceId, itemId, cancellationToken);
+        if (item.HasValue)
+        {
+            return item.Value.DisplayName;
+        }
+        throw new Exception($"Item with id {itemId} not found");
+    }
+
     public async Task<IReadOnlyList<FabricItemGroup>> GetItemsAsync(CancellationToken cancellationToken = default)
     {
         // Load all workspaces in parallel.
