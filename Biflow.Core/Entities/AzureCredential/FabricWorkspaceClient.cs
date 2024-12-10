@@ -36,9 +36,26 @@ public class FabricWorkspaceClient
         {
             throw new Exception("Location header was missing for on demand item job response");
         }
-        var locationComponents = location.Split('/');
-        var instanceId = Guid.Parse(locationComponents.Last());
+        var instanceId = ParseInstanceIdFromLocation(location.AsSpan());
         return instanceId;
+    }
+    
+    private static Guid ParseInstanceIdFromLocation(ReadOnlySpan<char> location)
+    {
+        // Use Spans to parse the instance id from the location url with zero allocation.
+        var ranges = location.Split('/');
+        Range? foundRange = null;
+        // After iteration completes, foundRange will be last range found (=instance id).
+        foreach (var r in ranges)
+        {
+            foundRange = r;
+        }
+        if (foundRange is not { } range)
+        {
+            throw new ArgumentException($"Could not parse instance id from {location}");    
+        }
+        var instanceId = location[range];
+        return Guid.Parse(instanceId);
     }
 
     public async Task<ItemJobInstance> GetItemJobInstanceAsync(
