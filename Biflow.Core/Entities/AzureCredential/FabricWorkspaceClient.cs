@@ -62,22 +62,32 @@ public class FabricWorkspaceClient
 
     public async Task<IReadOnlyList<FabricItemGroup>> GetItemsAsync(CancellationToken cancellationToken = default)
     {
+        // Load all workspaces in parallel.
         var workspaces = await _fabric.Core.Workspaces
             .ListWorkspacesAsync(cancellationToken: cancellationToken)
             .ToListAsync(cancellationToken);
-        var fabricItemGroups = new List<FabricItemGroup>();
-        foreach (var workspace in workspaces)
-        {
-            var pipelines = await _fabric.DataPipeline.Items
-                .ListDataPipelinesAsync(workspace.Id, cancellationToken: cancellationToken)
-                .ToListAsync(cancellationToken);
-            var notebooks = await _fabric.Notebook.Items
-                .ListNotebooksAsync(workspace.Id, cancellationToken: cancellationToken)
-                .ToListAsync(cancellationToken);
-            var items = pipelines.Concat<Item>(notebooks).OrderBy(x => x.DisplayName).ToArray();
-            var group = new FabricItemGroup(workspace.Id, workspace.DisplayName, items);
-            fabricItemGroups.Add(group);
-        }
-        return fabricItemGroups;
+        var tasks = workspaces
+            .Select(ws => GetItemsAsync(ws.Id, ws.DisplayName, cancellationToken))
+            .ToArray();
+        var groups = await Task.WhenAll(tasks);
+        groups.SortBy(g => g.WorkspaceName);
+        return groups;
+    }
+
+    private async Task<FabricItemGroup> GetItemsAsync(
+        Guid workspaceId, string workspaceName, CancellationToken cancellationToken)
+    {
+        // Load pipelines and notebooks in parallel.
+        var pipelinesTask = _fabric.DataPipeline.Items
+            .ListDataPipelinesAsync(workspaceId, cancellationToken: cancellationToken)
+            .ToListAsync(cancellationToken);
+        var notebooksTask = _fabric.Notebook.Items
+            .ListNotebooksAsync(workspaceId, cancellationToken: cancellationToken)
+            .ToListAsync(cancellationToken);
+        var pipelines = await pipelinesTask;
+        var notebooks = await notebooksTask;
+        var items = pipelines.Concat<Item>(notebooks).OrderBy(x => x.DisplayName).ToArray();
+        var group = new FabricItemGroup(workspaceId, workspaceName, items);
+        return group;
     }
 }
