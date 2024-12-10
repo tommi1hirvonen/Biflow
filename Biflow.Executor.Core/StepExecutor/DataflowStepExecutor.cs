@@ -35,7 +35,7 @@ internal class DataflowStepExecutor(
         // Start dataflow refresh.
         try
         {
-            await client.RefreshDataflowAsync(step.DataflowGroupId, step.DataflowId, cancellationToken);
+            await client.RefreshDataflowAsync(step.WorkspaceId, step.DataflowId, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -123,7 +123,7 @@ internal class DataflowStepExecutor(
                         step.ExecutionId, step));
 
         return await policy.ExecuteAsync(cancellation =>
-            client.GetDataflowTransactionStatusAsync(step.DataflowGroupId, step.DataflowId, cancellation),
+            client.GetDataflowTransactionStatusAsync(step.WorkspaceId, step.DataflowId, cancellation),
             cancellationToken);
     }
     
@@ -137,7 +137,7 @@ internal class DataflowStepExecutor(
             step.ExecutionId, step, transaction.Id);
         try
         {
-            await client.CancelDataflowRefreshAsync(step.DataflowGroupId, transaction);
+            await client.CancelDataflowRefreshAsync(step.WorkspaceId, transaction);
         }
         catch (Exception ex)
         {

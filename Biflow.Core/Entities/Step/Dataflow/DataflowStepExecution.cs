@@ -5,16 +5,16 @@ namespace Biflow.Core.Entities;
 
 public class DataflowStepExecution : StepExecution, IHasTimeout, IHasStepExecutionAttempts<DataflowStepExecutionAttempt>
 {
-    public DataflowStepExecution(string stepName, string dataflowGroupId, string dataflowId) : base(stepName, StepType.Dataflow)
+    public DataflowStepExecution(string stepName, string workspaceId, string dataflowId) : base(stepName, StepType.Dataflow)
     {
-        DataflowGroupId = dataflowGroupId;
+        WorkspaceId = workspaceId;
         DataflowId = dataflowId;
     }
 
     public DataflowStepExecution(DataflowStep step, Execution execution) : base(step, execution)
     {
         AzureCredentialId = step.AzureCredentialId;
-        DataflowGroupId = step.DataflowGroupId;
+        WorkspaceId = step.WorkspaceId;
         DataflowId = step.DataflowId;
         TimeoutMinutes = step.TimeoutMinutes;
 
@@ -26,7 +26,7 @@ public class DataflowStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
 
     [MinLength(36)]
     [MaxLength(36)]
-    public string DataflowGroupId { get; private set; }
+    public string WorkspaceId { get; private set; }
 
     [MinLength(36)]
     [MaxLength(36)]

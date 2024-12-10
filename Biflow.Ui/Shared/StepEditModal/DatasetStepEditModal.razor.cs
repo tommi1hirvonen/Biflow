@@ -19,7 +19,7 @@ public partial class DatasetStepEditModal(
     private void OnDatasetSelected(Dataset dataset)
     {
         ArgumentNullException.ThrowIfNull(Step);
-        (Step.DatasetGroupId, _datasetGroupName, Step.DatasetId, _datasetName) = dataset;
+        (Step.WorkspaceId, _datasetGroupName, Step.DatasetId, _datasetName) = dataset;
     }
 
     private Task OpenDatasetSelectOffcanvas() => _datasetSelectOffcanvas.LetAsync(x => x.ShowAsync(Step?.AzureCredentialId));
@@ -33,8 +33,8 @@ public partial class DatasetStepEditModal(
             (_datasetGroupName, _datasetName) = azureCredential switch
             {
                 not null => (
-                    await datasetClient.GetGroupNameAsync(step.DatasetGroupId),
-                    await datasetClient.GetDatasetNameAsync(step.DatasetGroupId, step.DatasetId)
+                    await datasetClient.GetWorkspaceNameAsync(step.WorkspaceId),
+                    await datasetClient.GetDatasetNameAsync(step.WorkspaceId, step.DatasetId)
                     ),
                 _ => ("", "")
             };

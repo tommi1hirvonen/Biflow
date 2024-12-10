@@ -21,22 +21,22 @@ public class DataflowClient(
         return new PowerBIClient(credentials);
     }
 
-    public async Task RefreshDataflowAsync(string groupId, string dataflowId, CancellationToken cancellationToken)
+    public async Task RefreshDataflowAsync(string workspaceId, string dataflowId, CancellationToken cancellationToken)
     {
         var client = await GetClientAsync();
         var refreshRequest = new RefreshRequest(NotifyOption.NoNotification);
         await client.Dataflows.RefreshDataflowAsync(
-            Guid.Parse(groupId), Guid.Parse(dataflowId), refreshRequest, cancellationToken: cancellationToken);
+            Guid.Parse(workspaceId), Guid.Parse(dataflowId), refreshRequest, cancellationToken: cancellationToken);
     }
 
     public async Task<(DataflowRefreshStatus Status, DataflowTransaction Transaction)> GetDataflowTransactionStatusAsync(
-        string groupId,
+        string workspaceId,
         string dataflowId,
         CancellationToken cancellationToken)
     {
         var client = await GetClientAsync();
         var transactions = await client.Dataflows.GetDataflowTransactionsAsync(
-            Guid.Parse(groupId),
+            Guid.Parse(workspaceId),
             Guid.Parse(dataflowId),
             cancellationToken);
         var transaction = transactions.Value.FirstOrDefault();
@@ -52,7 +52,7 @@ public class DataflowClient(
     }
 
     public async Task CancelDataflowRefreshAsync(
-        string groupId, DataflowTransaction transaction, CancellationToken cancellationToken = default)
+        string workspaceId, DataflowTransaction transaction, CancellationToken cancellationToken = default)
     {
         // Call the dataflow transaction cancel endpoint manually, since the MS .NET library does not do it correctly.
         // It assumes the transaction id to be provided to the API is a Guid where in fact it's not.
@@ -62,7 +62,7 @@ public class DataflowClient(
         var (accessToken, _) = await tokenService.GetTokenAsync(
             azureCredential, [AzureCredential.PowerBiResourceUrl], cancellationToken);
         var transactionId = HttpUtility.UrlEncode(transaction.Id);
-        var url = $"https://api.powerbi.com/v1.0/myorg/groups/{groupId}/dataflows/transactions/{transactionId}/cancel";
+        var url = $"https://api.powerbi.com/v1.0/myorg/groups/{workspaceId}/dataflows/transactions/{transactionId}/cancel";
         var request = new HttpRequestMessage(HttpMethod.Post, url);
         request.Headers.Add("Authorization", $"Bearer {accessToken}");
         request.Headers.Add("Accept", "application/json");
@@ -88,21 +88,21 @@ public class DataflowClient(
         return dataflowGroups;
     }
 
-    public async Task<string> GetGroupNameAsync(string groupId, CancellationToken cancellationToken = default)
+    public async Task<string> GetWorkspaceNameAsync(string workspaceId, CancellationToken cancellationToken = default)
     {
         var client = await GetClientAsync();
-        var filter = $"id eq '{groupId}'";
+        var filter = $"id eq '{workspaceId}'";
         var groups = await client.Groups.GetGroupsAsync(filter, top: 1, cancellationToken: cancellationToken);
         var group = groups.Value.First();
         return group.Name;
     }
 
     public async Task<string> GetDataflowNameAsync(
-        string groupId, string dataflowId, CancellationToken cancellationToken = default)
+        string workspaceId, string dataflowId, CancellationToken cancellationToken = default)
     {
         var client = await GetClientAsync();
         await using var stream = await client.Dataflows.GetDataflowAsync(
-            Guid.Parse(groupId), Guid.Parse(dataflowId), cancellationToken);
+            Guid.Parse(workspaceId), Guid.Parse(dataflowId), cancellationToken);
         var definition = JsonSerializer.Deserialize<DataflowDefinition>(stream);
         ArgumentNullException.ThrowIfNull(definition);
         return definition.Name;

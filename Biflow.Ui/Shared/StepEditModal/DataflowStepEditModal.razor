@@ -42,21 +42,21 @@
 
         <div class="row mt-3">
             <div class="col-md-4 d-md-flex justify-content-end">
-                <label class="form-label mb-lg-0">Group id</label>
+                <label class="form-label mb-lg-0">Workspace id</label>
             </div>
             <div class="col-md-6">
                 <div class="input-group input-group-sm">
                     <div class="input-group-text">
                         <SvgIcon Icon="LucideIcon.Folder" />
                     </div>
-                    <InputText class="form-control form-control-sm" @bind-Value="Step.DataflowGroupId"
+                    <InputText class="form-control form-control-sm" @bind-Value="Step.WorkspaceId"
                                @bind-Value:after="() => _dataflowGroupName = string.Empty"></InputText>
                 </div>
                 <div class="form-text">
                     @if (_dataflowGroupName is null)
                     {
                         <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
-                        <span>Loading group name...</span>
+                        <span>Loading workspace name...</span>
                     }
                     else
                     {

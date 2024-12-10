@@ -18,7 +18,7 @@ public partial class DataflowStepEditModal(
     private void OnDataflowSelected(Dataflow dataflow)
     {
         ArgumentNullException.ThrowIfNull(Step);
-        (Step.DataflowGroupId, _dataflowGroupName, Step.DataflowId, _dataflowName) = dataflow;
+        (Step.WorkspaceId, _dataflowGroupName, Step.DataflowId, _dataflowName) = dataflow;
     }
 
     private Task OpenDataflowSelectOffcanvas()
@@ -36,8 +36,8 @@ public partial class DataflowStepEditModal(
             (_dataflowGroupName, _dataflowName) = azureCredential switch
             {
                 not null => (
-                    await dataflowClient.GetGroupNameAsync(step.DataflowGroupId),
-                    await dataflowClient.GetDataflowNameAsync(step.DataflowGroupId, step.DataflowId)
+                    await dataflowClient.GetWorkspaceNameAsync(step.WorkspaceId),
+                    await dataflowClient.GetDataflowNameAsync(step.WorkspaceId, step.DataflowId)
                     ),
                 _ => ("", "")
             };

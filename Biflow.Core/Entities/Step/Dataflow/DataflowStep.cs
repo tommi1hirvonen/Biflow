@@ -13,7 +13,7 @@ public class DataflowStep : Step, IHasTimeout
     {
         AzureCredentialId = other.AzureCredentialId;
         AzureCredential = other.AzureCredential;
-        DataflowGroupId = other.DataflowGroupId;
+        WorkspaceId = other.WorkspaceId;
         DataflowId = other.DataflowId;
         TimeoutMinutes = other.TimeoutMinutes;
     }
@@ -24,7 +24,7 @@ public class DataflowStep : Step, IHasTimeout
     [MaxLength(36)]
     [MinLength(36)]
     [Required]
-    public string DataflowGroupId { get; set; } = "";
+    public string WorkspaceId { get; set; } = "";
 
     [MaxLength(36)]
     [MinLength(36)]

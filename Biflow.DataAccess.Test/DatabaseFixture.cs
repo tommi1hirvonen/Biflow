@@ -461,7 +461,7 @@ public class DatabaseFixture : IAsyncLifetime
                 StepName = "Test step 15",
                 ExecutionPhase = 65,
                 AzureCredential = azureCredential,
-                DatasetGroupId = "some-workspace-id",
+                WorkspaceId = "some-workspace-id",
                 DatasetId = "some-dataset-id"
             };
 

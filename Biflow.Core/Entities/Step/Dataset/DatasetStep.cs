@@ -12,7 +12,7 @@ public class DatasetStep : Step
     {
         AzureCredentialId = other.AzureCredentialId;
         AzureCredential = other.AzureCredential;
-        DatasetGroupId = other.DatasetGroupId;
+        WorkspaceId = other.WorkspaceId;
         DatasetId = other.DatasetId;
     }
 
@@ -23,7 +23,7 @@ public class DatasetStep : Step
     [MaxLength(36)]
     [MinLength(36)]
     [Required]
-    public string DatasetGroupId { get; set; } = "";
+    public string WorkspaceId { get; set; } = "";
 
     [Display(Name = "Dataset id")]
     [MaxLength(36)]

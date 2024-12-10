@@ -6,7 +6,7 @@ public class DataflowStepEntityTypeConfiguration : IEntityTypeConfiguration<Data
     {
         builder.Property(p => p.TimeoutMinutes).HasColumnName("TimeoutMinutes");
         builder.Property(p => p.AzureCredentialId).HasColumnName("AzureCredentialId");
-        builder.Property(p => p.DataflowGroupId).IsUnicode(false);
-        builder.Property(p => p.DataflowId).IsUnicode(false);
+        builder.Property(p => p.WorkspaceId).HasColumnName("DataflowGroupId").IsUnicode(false);
+        builder.Property(p => p.DataflowId).HasColumnName("DataflowId").IsUnicode(false);
     }
 }

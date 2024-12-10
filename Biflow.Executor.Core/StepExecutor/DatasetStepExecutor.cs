@@ -29,7 +29,7 @@ internal class DatasetStepExecutor(
         // Start dataset refresh.
         try
         {
-            await client.RefreshDatasetAsync(step.DatasetGroupId, step.DatasetId, cancellationToken);
+            await client.RefreshDatasetAsync(step.WorkspaceId, step.DatasetId, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -49,7 +49,7 @@ internal class DatasetStepExecutor(
         {
             try
             {
-                var (status, refresh) = await client.GetDatasetRefreshStatusAsync(step.DatasetGroupId, step.DatasetId, cancellationToken);
+                var (status, refresh) = await client.GetDatasetRefreshStatusAsync(step.WorkspaceId, step.DatasetId, cancellationToken);
                 switch (status)
                 {
                     case DatasetRefreshStatus.Completed:

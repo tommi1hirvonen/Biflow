@@ -5,16 +5,16 @@ namespace Biflow.Core.Entities;
 
 public class DatasetStepExecution : StepExecution, IHasStepExecutionAttempts<DatasetStepExecutionAttempt>
 {
-    public DatasetStepExecution(string stepName, string datasetGroupId, string datasetId) : base(stepName, StepType.Dataset)
+    public DatasetStepExecution(string stepName, string workspaceId, string datasetId) : base(stepName, StepType.Dataset)
     {
-        DatasetGroupId = datasetGroupId;
+        WorkspaceId = workspaceId;
         DatasetId = datasetId;
     }
 
     public DatasetStepExecution(DatasetStep step, Execution execution) : base(step, execution)
     {
         AzureCredentialId = step.AzureCredentialId;
-        DatasetGroupId = step.DatasetGroupId;
+        WorkspaceId = step.WorkspaceId;
         DatasetId = step.DatasetId;
 
         AddAttempt(new DatasetStepExecutionAttempt(this));
@@ -23,7 +23,7 @@ public class DatasetStepExecution : StepExecution, IHasStepExecutionAttempts<Dat
     public Guid AzureCredentialId { get; private set; }
 
     [MaxLength(36)]
-    public string DatasetGroupId { get; private set; }
+    public string WorkspaceId { get; private set; }
 
     [MaxLength(36)]
     public string DatasetId { get; private set; }
