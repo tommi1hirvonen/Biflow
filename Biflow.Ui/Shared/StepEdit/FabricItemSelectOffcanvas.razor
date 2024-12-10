@@ -103,13 +103,13 @@
                                     <div class="list-group-item list-group-item-action @(item == _selectedItem?.Item ? "fw-bold bg-body" : null)"
                                          style="cursor: pointer;"
                                          @onclick="() => SelectItem(group.WorkspaceId, group.WorkspaceName, item)">
-                                        <div class="row justify-content-between">
+                                        <div class="row justify-content-between small">
                                             <div class="col d-flex align-items-center">
                                                 <SvgIcon Icon="icon" />
                                                 &nbsp;
                                                 <HighlightableText Text="@item.DisplayName" PartToHighlight="@_filterText" />
                                             </div>
-                                            <div class="col d-flex align-items-center">
+                                            <div class="col-auto d-flex align-items-center">
                                                 @item.Type.ToString()
                                             </div>
                                         </div>
@@ -170,6 +170,7 @@
         _items = null;
         _selectedItem = null;
         _expandedStates.Clear();
+        await _offcanvas.LetAsync(x => x.ShowAsync());
         try
         {
             await using var context = await DbContextFactory.CreateDbContextAsync();
@@ -184,8 +185,6 @@
         {
             Toaster.AddError("Error reading dataflows", ex.Message);
         }
-
-        await _offcanvas.LetAsync(x => x.ShowAsync());
     }
 
 }
