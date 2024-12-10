@@ -14,7 +14,9 @@ public class DataflowStep : Step, IHasTimeout
         AzureCredentialId = other.AzureCredentialId;
         AzureCredential = other.AzureCredential;
         WorkspaceId = other.WorkspaceId;
+        WorkspaceName = other.WorkspaceName;
         DataflowId = other.DataflowId;
+        DataflowName = other.DataflowName;
         TimeoutMinutes = other.TimeoutMinutes;
     }
 
@@ -25,11 +27,17 @@ public class DataflowStep : Step, IHasTimeout
     [MinLength(36)]
     [Required]
     public string WorkspaceId { get; set; } = "";
+    
+    [MaxLength(250)]
+    public string? WorkspaceName { get; set; }
 
     [MaxLength(36)]
     [MinLength(36)]
     [Required]
     public string DataflowId { get; set; } = "";
+    
+    [MaxLength(250)]
+    public string? DataflowName { get; set; }
     
     [Range(0, 2880)] // 48 hours
     public double TimeoutMinutes { get; set; }

@@ -28,25 +28,29 @@
 
         <div class="row mt-3">
             <div class="col-md-4 d-md-flex justify-content-end">
-                <label class="form-label mb-lg-0">Workspace id</label>
+                <label class="form-label mb-lg-0">Workspace</label>
             </div>
-            <div class="col-md-6">
-                <div class="input-group input-group-sm">
-                    <div class="input-group-text">
-                        <SvgIcon Icon="LucideIcon.Folder" />
+            <div class="col-md-6 d-inline">
+                <div class="d-flex align-items-center position-relative">
+                    <div class="input-group input-group-sm">
+                        <div class="input-group-text">
+                            <SvgIcon Icon="LucideIcon.Folder"/>
+                        </div>
+                        <input class="form-control form-control-sm" value="@Step.WorkspaceName" disabled/>
                     </div>
-                    <InputText class="form-control form-control-sm" @bind-Value="Step.WorkspaceId"
-                               @bind-Value:after="() => _datasetGroupName = string.Empty"></InputText>
+                    @if (_loading)
+                    {
+                        <HxSpinner Color="ThemeColor.Secondary"
+                                   Size="SpinnerSize.Small"
+                                   CssClass="position-absolute end-0 py-1 mx-2" />
+                    }
                 </div>
                 <div class="form-text">
-                    @if (_datasetGroupName is null)
+                    @if (!string.IsNullOrEmpty(Step.WorkspaceId))
                     {
-                        <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
-                        <span>Loading workspace name...</span>
-                    }
-                    else
-                    {
-                        <span>@_datasetGroupName</span>
+                        <text>
+                            Id: @Step.WorkspaceId
+                        </text>
                     }
                 </div>
             </div>
@@ -54,25 +58,29 @@
 
         <div class="row mt-3">
             <div class="col-md-4 d-md-flex justify-content-end">
-                <label class="form-label mb-lg-0">Dataset id</label>
+                <label class="form-label mb-lg-0">Dataset</label>
             </div>
             <div class="col-md-6">
-                <div class="input-group input-group-sm">
-                    <div class="input-group-text">
-                        <SvgIcon Icon="LucideIcon.FileBarChart2" />
+                <div class="d-flex align-items-center position-relative">
+                    <div class="input-group input-group-sm">
+                        <div class="input-group-text">
+                            <SvgIcon Icon="LucideIcon.FileBarChart2"/>
+                        </div>
+                        <input class="form-control form-control-sm" value="@Step.DatasetName" disabled/>
                     </div>
-                    <InputText class="form-control form-control-sm" @bind-Value="Step.DatasetId"
-                               @bind-Value:after="() => _datasetName = string.Empty"></InputText>
+                    @if (_loading)
+                    {
+                        <HxSpinner Color="ThemeColor.Secondary"
+                                   Size="SpinnerSize.Small"
+                                   CssClass="position-absolute end-0 py-1 mx-2" />
+                    }
                 </div>
                 <div class="form-text">
-                    @if (_datasetName is null)
+                    @if (!string.IsNullOrEmpty(Step.DatasetId))
                     {
-                        <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
-                        <span>Loading dataset name...</span>
-                    }
-                    else
-                    {
-                        <span>@_datasetName</span>
+                        <text>
+                            Id: @Step.DatasetId
+                        </text>
                     }
                 </div>
             </div>

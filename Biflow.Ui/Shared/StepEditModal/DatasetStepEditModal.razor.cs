@@ -8,66 +8,13 @@ public partial class DatasetStepEditModal(
     IDbContextFactory<AppDbContext> dbContextFactory)
     : StepEditModal<DatasetStep>(toaster, dbContextFactory)
 {
-    private readonly ITokenService _tokenService = tokenService;
-
     internal override string FormId => "dataset_step_edit_form";
 
     private DatasetSelectOffcanvas? _datasetSelectOffcanvas;
-    private string? _datasetGroupName;
-    private string? _datasetName;
+    private bool _loading;
 
-    private void OnDatasetSelected(Dataset dataset)
-    {
-        ArgumentNullException.ThrowIfNull(Step);
-        (Step.WorkspaceId, _datasetGroupName, Step.DatasetId, _datasetName) = dataset;
-    }
-
-    private Task OpenDatasetSelectOffcanvas() => _datasetSelectOffcanvas.LetAsync(x => x.ShowAsync(Step?.AzureCredentialId));
-
-    protected override async Task OnModalShownAsync(DatasetStep step)
-    {
-        try
-        {
-            var azureCredential = AzureCredentials.First(a => a.AzureCredentialId == step.AzureCredentialId);
-            var datasetClient = azureCredential.CreateDatasetClient(_tokenService);
-            (_datasetGroupName, _datasetName) = azureCredential switch
-            {
-                not null => (
-                    await datasetClient.GetWorkspaceNameAsync(step.WorkspaceId),
-                    await datasetClient.GetDatasetNameAsync(step.WorkspaceId, step.DatasetId)
-                    ),
-                _ => ("", "")
-            };
-        }
-        catch
-        {
-            (_datasetGroupName, _datasetName) = ("", "");
-        }
-        finally
-        {
-            StateHasChanged();
-        }
-    }
-
-    protected override async Task<DatasetStep> GetExistingStepAsync(AppDbContext context, Guid stepId)
-    {
-        (_datasetGroupName, _datasetName) = (null, null);
-        var step = await context.DatasetSteps
-            .Include(step => step.Job)
-            .Include(step => step.Tags)
-            .Include(step => step.Dependencies)
-            .Include(step => step.DataObjects)
-            .ThenInclude(s => s.DataObject)
-            .Include(step => step.ExecutionConditionParameters)
-            .FirstAsync(step => step.StepId == stepId);
-        
-        return step;
-    }
-
-    protected override DatasetStep CreateNewStep(Job job)
-    {
-        (_datasetGroupName, _datasetName) = ("", "");
-        return new()
+    protected override DatasetStep CreateNewStep(Job job) =>
+        new()
         {
             JobId = job.JobId,
             Job = job,
@@ -75,5 +22,46 @@ public partial class DatasetStepEditModal(
             RetryIntervalMinutes = 0,
             AzureCredentialId = AzureCredentials.First().AzureCredentialId
         };
+    
+    protected override Task<DatasetStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>
+        context.DatasetSteps
+            .Include(step => step.Job)
+            .Include(step => step.Tags)
+            .Include(step => step.Dependencies)
+            .Include(step => step.DataObjects)
+            .ThenInclude(s => s.DataObject)
+            .Include(step => step.ExecutionConditionParameters)
+            .FirstAsync(step => step.StepId == stepId);
+
+    protected override async Task OnModalShownAsync(DatasetStep step)
+    {
+        try
+        {
+            _loading = true;
+            StateHasChanged();
+            var azureCredential = AzureCredentials.First(a => a.AzureCredentialId == step.AzureCredentialId);
+            var datasetClient = azureCredential.CreateDatasetClient(tokenService);
+            (step.WorkspaceName, step.DatasetName) =
+                (await datasetClient.GetWorkspaceNameAsync(step.WorkspaceId),
+                    await datasetClient.GetDatasetNameAsync(step.WorkspaceId, step.DatasetId));
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error getting names from API", ex.Message);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+    
+    private Task OpenDatasetSelectOffcanvas() =>
+        _datasetSelectOffcanvas.LetAsync(x => x.ShowAsync(Step?.AzureCredentialId));
+
+    private void OnDatasetSelected(Dataset dataset)
+    {
+        ArgumentNullException.ThrowIfNull(Step);
+        (Step.WorkspaceId, Step.WorkspaceName, Step.DatasetId, Step.DatasetName) = dataset;
     }
 }

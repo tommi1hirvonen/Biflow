@@ -38,6 +38,29 @@ public partial class FabricStepEditModal(
             .Include(step => step.ExecutionConditionParameters)
             .FirstAsync(step => step.StepId == stepId);
     
+    protected override async Task OnModalShownAsync(FabricStep step)
+    {
+        try
+        {
+            _loading = true;
+            StateHasChanged();
+            var azureCredential = AzureCredentials.First(a => a.AzureCredentialId == step.AzureCredentialId);
+            var fabric = azureCredential.CreateFabricWorkspaceClient(tokenService);
+            (step.WorkspaceName, step.ItemName) = 
+                (await fabric.GetWorkspaceNameAsync(step.WorkspaceId), 
+                    await fabric.GetItemNameAsync(step.WorkspaceId, step.ItemId));
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error getting names from API", ex.Message);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+    
     private Task OpenItemSelectOffcanvas()
     {
         ArgumentNullException.ThrowIfNull(Step);
@@ -66,29 +89,6 @@ public partial class FabricStepEditModal(
                 Step.ItemName = item.DisplayName;
                 Step.ItemType = FabricItemType.Notebook;
                 break;
-        }
-    }
-    
-    protected override async Task OnModalShownAsync(FabricStep step)
-    {
-        try
-        {
-            _loading = true;
-            StateHasChanged();
-            var azureCredential = AzureCredentials.First(a => a.AzureCredentialId == step.AzureCredentialId);
-            var fabric = azureCredential.CreateFabricWorkspaceClient(tokenService);
-            (step.WorkspaceName, step.ItemName) = 
-                (await fabric.GetWorkspaceNameAsync(step.WorkspaceId), 
-                    await fabric.GetItemNameAsync(step.WorkspaceId, step.ItemId));
-        }
-        catch (Exception ex)
-        {
-            Toaster.AddError("Error retrieving workspace and item name from API", ex.Message);
-        }
-        finally
-        {
-            _loading = false;
-            StateHasChanged();
         }
     }
 }

@@ -12,13 +12,49 @@ public partial class DataflowStepEditModal(
     internal override string FormId => "dataflow_step_edit_form";
     
     private DataflowSelectOffcanvas? _dataflowSelectOffcanvas;
-    private string? _dataflowGroupName;
-    private string? _dataflowName;
+    private bool _loading;
 
-    private void OnDataflowSelected(Dataflow dataflow)
+    protected override DataflowStep CreateNewStep(Job job) =>
+        new()
+        {
+            JobId = job.JobId,
+            Job = job,
+            RetryAttempts = 0,
+            RetryIntervalMinutes = 0,
+            AzureCredentialId = AzureCredentials.First().AzureCredentialId
+        };
+
+    protected override Task<DataflowStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>
+        context.DataflowSteps
+            .Include(step => step.Job)
+            .Include(step => step.Tags)
+            .Include(step => step.Dependencies)
+            .Include(step => step.DataObjects)
+            .ThenInclude(s => s.DataObject)
+            .Include(step => step.ExecutionConditionParameters)
+            .FirstAsync(step => step.StepId == stepId);
+
+    protected override async Task OnModalShownAsync(DataflowStep step)
     {
-        ArgumentNullException.ThrowIfNull(Step);
-        (Step.WorkspaceId, _dataflowGroupName, Step.DataflowId, _dataflowName) = dataflow;
+        try
+        {
+            _loading = true;
+            StateHasChanged();
+            var azureCredential = AzureCredentials.First(a => a.AzureCredentialId == step.AzureCredentialId);
+            var dataflowClient = azureCredential.CreateDataflowClient(tokenService, httpClientFactory);
+            (step.WorkspaceName, step.DataflowName) =
+                (await dataflowClient.GetWorkspaceNameAsync(step.WorkspaceId),
+                    await dataflowClient.GetDataflowNameAsync(step.WorkspaceId, step.DataflowId));
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error getting names from API", ex.Message);
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
     }
 
     private Task OpenDataflowSelectOffcanvas()
@@ -27,56 +63,9 @@ public partial class DataflowStepEditModal(
         return _dataflowSelectOffcanvas.LetAsync(x => x.ShowAsync(Step.AzureCredentialId));   
     }
 
-    protected override async Task OnModalShownAsync(DataflowStep step)
+    private void OnDataflowSelected(Dataflow dataflow)
     {
-        try
-        {
-            var azureCredential = AzureCredentials.First(a => a.AzureCredentialId == step.AzureCredentialId);
-            var dataflowClient = azureCredential.CreateDataflowClient(tokenService, httpClientFactory);
-            (_dataflowGroupName, _dataflowName) = azureCredential switch
-            {
-                not null => (
-                    await dataflowClient.GetWorkspaceNameAsync(step.WorkspaceId),
-                    await dataflowClient.GetDataflowNameAsync(step.WorkspaceId, step.DataflowId)
-                    ),
-                _ => ("", "")
-            };
-        }
-        catch
-        {
-            (_dataflowGroupName, _dataflowName) = ("", "");
-        }
-        finally
-        {
-            StateHasChanged();
-        }
-    }
-
-    protected override async Task<DataflowStep> GetExistingStepAsync(AppDbContext context, Guid stepId)
-    {
-        (_dataflowGroupName, _dataflowName) = (null, null);
-        var step = await context.DataflowSteps
-            .Include(step => step.Job)
-            .Include(step => step.Tags)
-            .Include(step => step.Dependencies)
-            .Include(step => step.DataObjects)
-            .ThenInclude(s => s.DataObject)
-            .Include(step => step.ExecutionConditionParameters)
-            .FirstAsync(step => step.StepId == stepId);
-        
-        return step;
-    }
-
-    protected override DataflowStep CreateNewStep(Job job)
-    {
-        (_dataflowGroupName, _dataflowName) = ("", "");
-        return new()
-        {
-            JobId = job.JobId,
-            Job = job,
-            RetryAttempts = 0,
-            RetryIntervalMinutes = 0,
-            AzureCredentialId = AzureCredentials.First().AzureCredentialId
-        };
+        ArgumentNullException.ThrowIfNull(Step);
+        (Step.WorkspaceId, Step.WorkspaceName, Step.DataflowId, Step.DataflowName) = dataflow;
     }
 }

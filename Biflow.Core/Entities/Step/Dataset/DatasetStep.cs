@@ -13,23 +13,29 @@ public class DatasetStep : Step
         AzureCredentialId = other.AzureCredentialId;
         AzureCredential = other.AzureCredential;
         WorkspaceId = other.WorkspaceId;
+        WorkspaceName = other.WorkspaceName;
         DatasetId = other.DatasetId;
+        DatasetName = other.DatasetName;
     }
 
     [Required]
     public Guid AzureCredentialId { get; set; }
 
-    [Display(Name = "Group id")]
     [MaxLength(36)]
     [MinLength(36)]
     [Required]
     public string WorkspaceId { get; set; } = "";
+    
+    [MaxLength(250)]
+    public string? WorkspaceName { get; set; }
 
-    [Display(Name = "Dataset id")]
     [MaxLength(36)]
     [MinLength(36)]
     [Required]
     public string DatasetId { get; set; } = "";
+    
+    [MaxLength(250)]
+    public string? DatasetName { get; set; }
 
     [JsonIgnore]
     public AzureCredential? AzureCredential { get; set; }

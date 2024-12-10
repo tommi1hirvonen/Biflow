@@ -15,7 +15,9 @@ public class DatasetStepExecution : StepExecution, IHasStepExecutionAttempts<Dat
     {
         AzureCredentialId = step.AzureCredentialId;
         WorkspaceId = step.WorkspaceId;
+        WorkspaceName = step.WorkspaceName;
         DatasetId = step.DatasetId;
+        DatasetName = step.DatasetName;
 
         AddAttempt(new DatasetStepExecutionAttempt(this));
     }
@@ -24,9 +26,15 @@ public class DatasetStepExecution : StepExecution, IHasStepExecutionAttempts<Dat
 
     [MaxLength(36)]
     public string WorkspaceId { get; private set; }
+    
+    [MaxLength(250)]
+    public string? WorkspaceName { get; private set; }
 
     [MaxLength(36)]
     public string DatasetId { get; private set; }
+    
+    [MaxLength(250)]
+    public string? DatasetName { get; private set; }
 
     public override DatasetStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {
