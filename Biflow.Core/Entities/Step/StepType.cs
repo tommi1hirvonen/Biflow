@@ -4,37 +4,49 @@ namespace Biflow.Core.Entities;
 
 public enum StepType
 {
-    [Category("Integration", 1)]
-    [Description("SQL Server Integration Services package")]
-    Package,
-    
-    [Category("Integration", 1)]
-    [Description("Azure Data Factory or Synapse pipeline")]
-    Pipeline,
-    
-    [Category("Integration", 1)]
-    [Description("Azure HTTP Function")]
-    Function,
-    
-    [Category("Transformation", 2)]
+    [Category("Common", 1)]
     [Description("Custom SQL command (MS SQL or Snowflake)")]
     Sql,
     
-    [Category("Reporting", 3)]
-    [Description("SQL Server Analysis Services or Azure Analysis Services tabular model")]
-    Tabular,
+    [Category("Common", 1)]
+    [Description("Run an SCD table load")]
+    Scd,
     
-    [Category("Reporting", 3)]
+    [Category("Common", 1)]
+    [Description("Execute another job")]
+    Job,
+    
+    [Category("Fabric/Power BI", 2)]
+    [Description("Fabric item job")]
+    Fabric,
+    
+    [Category("Fabric/Power BI", 2)]
+    [Description("Power BI/Fabric dataflow")]
+    Dataflow,
+    
+    [Category("Fabric/Power BI", 2)]
     [Description("Power BI semantic model refresh")]
     Dataset,
     
-    [Category("Reporting", 3)]
-    [Description("Qlik Cloud app reload or automation run")]
-    Qlik,
+    [Category("Azure", 3)]
+    [Description("Azure Data Factory or Synapse pipeline")]
+    Pipeline,
+    
+    [Category("Azure", 3)]
+    [Description("Azure HTTP Function")]
+    Function,
+    
+    [Category("Azure", 3)]
+    [Description("Run a Databricks job, notebook, Python file or pipeline")]
+    Databricks,
+
+    [Category("Other", 4)]
+    [Description("Run a dbt Cloud job")]
+    Dbt,
     
     [Category("Other", 4)]
-    [Description("SQL Server Agent job")]
-    AgentJob,
+    [Description("Qlik Cloud app reload or automation run")]
+    Qlik,
     
     [Category("Other", 4)]
     [Description("Executable")]
@@ -44,27 +56,15 @@ public enum StepType
     [Description("Send custom email")]
     Email,
     
-    [Category("Other", 4)]
-    [Description("Execute another job")]
-    Job,
-
-    [Category("Transformation", 2)]
-    [Description("Run a Databricks job, notebook, Python file or pipeline")]
-    Databricks,
-
-    [Category("Transformation", 2)]
-    [Description("Run a dbt Cloud job")]
-    Dbt,
+    [Category("SQL Server", 5)]
+    [Description("SQL Server Integration Services package")]
+    Package,
     
-    [Category("Transformation", 2)]
-    [Description("Run an SCD table load")]
-    Scd,
+    [Category("SQL Server", 5)]
+    [Description("SQL Server Analysis Services or Azure Analysis Services tabular model")]
+    Tabular,
     
-    [Category("Transformation", 2)]
-    [Description("Power BI/Fabric dataflow")]
-    Dataflow,
-    
-    [Category("Integration", 1)]
-    [Description("Fabric item job")]
-    Fabric
+    [Category("SQL Server", 5)]
+    [Description("SQL Server Agent job")]
+    AgentJob,
 }
