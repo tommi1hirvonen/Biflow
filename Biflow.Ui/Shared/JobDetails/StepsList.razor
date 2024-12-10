@@ -11,7 +11,7 @@
                             Add step
                         </HxDropdownToggleButton>
                         <HxDropdownMenu>
-                            <div class="px-3 g-3" style="min-width: 52rem;">
+                            <div class="px-3 g-3" style="min-width: 32rem;">
                                 @{
                                     var stepTypes = Enum.GetValues<StepType>()
                                         .GroupBy(t => t.GetCategory())
@@ -21,10 +21,16 @@
                                 @foreach (var group in stepTypes)
                                 {
                                     var stepTypeIndex = 0;
-                                    <div class="row @(stepTypeGroupIndex > 0 ? "pt-2 mt-2" : null)">
-                                        <div class="col-auto small fw-semibold">
+                                    if (stepTypeGroupIndex > 0)
+                                    {
+                                        <hr style="margin: 0.5rem 0 0.2rem 0" />
+                                    }
+                                    <div class="row">
+                                        <div class="col small fw-semibold">
                                             @group.Key?.Name
                                         </div>
+                                    </div>
+                                    <div class="row mt-2">
                                         <div class="col d-flex">
                                             @foreach (var stepType in group)
                                             {
@@ -34,10 +40,10 @@
                                                     ? $"<p>Step type is disabled - {disabledMessage}</p><span>{description}</span>"
                                                     : $"<span>{description}</span>";
                                                 <button class="btn btn-step d-inline-flex align-items-center px-3 fw-normal border rounded-pill @(stepTypeIndex > 0 ? "ms-3" : null) @(isDisabled ? "disabled" : null)"
-                                                      @onclick="() => ShowNewStepModal(stepType)">
+                                                        @onclick="() => ShowNewStepModal(stepType)">
                                                     <StepTypeIcon StepType="stepType" />
                                                     &nbsp;
-                                                    @stepType                                                    
+                                                    @stepType
                                                 </button>
                                                 <HxPopover Trigger="PopoverTrigger.Hover" Content="@popoverContent" Html WrapperCssClass="d-inline-flex ms-1 mt-1 align-self-start lucide-sm text-muted">
                                                     <SvgIcon Icon="LucideIcon.Info" />
