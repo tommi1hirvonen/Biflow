@@ -53,19 +53,17 @@ public partial class ExecutionDetails(
 
     private bool AutoRefresh
     {
-        get => _autoRefresh;
+        get;
         set
         {
-            _autoRefresh = value;
+            field = value;
             _timer.Stop();
-            if (_autoRefresh)
+            if (field)
             {
                 _timer.Start();
             }
         }
-    }
-
-    private bool _autoRefresh = true;
+    } = true;
 
     private bool Stopping => stoppingExecutions.Any(id => id == ExecutionId);
 
@@ -138,6 +136,7 @@ public partial class ExecutionDetails(
             return;
         }
         _prevExecutionId = ExecutionId;
+        AutoRefresh = true;
         await LoadData();
     }
 
