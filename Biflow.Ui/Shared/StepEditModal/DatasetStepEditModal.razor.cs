@@ -35,6 +35,10 @@ public partial class DatasetStepEditModal(
 
     protected override async Task OnModalShownAsync(DatasetStep step)
     {
+        if (string.IsNullOrEmpty(step.WorkspaceId) || string.IsNullOrEmpty(step.DatasetId))
+        {
+            return;
+        }
         try
         {
             _loading = true;

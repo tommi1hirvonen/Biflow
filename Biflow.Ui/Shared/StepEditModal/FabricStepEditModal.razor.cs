@@ -40,6 +40,10 @@ public partial class FabricStepEditModal(
     
     protected override async Task OnModalShownAsync(FabricStep step)
     {
+        if (step.WorkspaceId == Guid.Empty || step.ItemId == Guid.Empty)
+        {
+            return;
+        }
         try
         {
             _loading = true;

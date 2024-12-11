@@ -36,6 +36,10 @@ public partial class DataflowStepEditModal(
 
     protected override async Task OnModalShownAsync(DataflowStep step)
     {
+        if (string.IsNullOrEmpty(step.WorkspaceId) || string.IsNullOrEmpty(step.DataflowId))
+        {
+            return;
+        }
         try
         {
             _loading = true;
