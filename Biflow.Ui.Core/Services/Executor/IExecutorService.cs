@@ -7,4 +7,6 @@ public interface IExecutorService
     public Task StopExecutionAsync(Guid executionId, Guid stepId, string username);
 
     public Task StopExecutionAsync(Guid executionId, string username);
+    
+    public Task ClearTokenCacheAsync(Guid azureCredentialId, CancellationToken cancellationToken = default);
 }

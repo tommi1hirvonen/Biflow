@@ -2,7 +2,8 @@
 
 public record ClearAzureCredentialTokensCommand(Guid AzureCredentialId) : IRequest;
 
-internal class ClearAzureCredentialTokensCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory, ITokenService tokenService)
+internal class ClearAzureCredentialTokensCommandHandler(
+    IDbContextFactory<AppDbContext> dbContextFactory, ITokenService tokenService, IExecutorService executorService)
     : IRequestHandler<ClearAzureCredentialTokensCommand>
 {
     public async Task Handle(ClearAzureCredentialTokensCommand request, CancellationToken cancellationToken)
@@ -17,5 +18,6 @@ internal class ClearAzureCredentialTokensCommandHandler(IDbContextFactory<AppDbC
         }
         await context.SaveChangesAsync(cancellationToken);
         await tokenService.ClearAsync(request.AzureCredentialId, cancellationToken);
+        await executorService.ClearTokenCacheAsync(request.AzureCredentialId, cancellationToken);
     }
 }

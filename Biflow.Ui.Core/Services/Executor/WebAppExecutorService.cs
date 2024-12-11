@@ -57,4 +57,11 @@ public class WebAppExecutorService : IExecutorService
         }
         response.EnsureSuccessStatusCode();
     }
+
+    public async Task ClearTokenCacheAsync(Guid azureCredentialId, CancellationToken cancellationToken = default)
+    {
+        var url = $"/tokencache/clear/{azureCredentialId}";
+        var response = await _httpClient.GetAsync(url, cancellationToken);
+        response.EnsureSuccessStatusCode();
+    }
 }
