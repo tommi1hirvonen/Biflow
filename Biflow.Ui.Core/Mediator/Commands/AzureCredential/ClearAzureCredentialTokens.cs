@@ -16,6 +16,6 @@ internal class ClearAzureCredentialTokensCommandHandler(IDbContextFactory<AppDbC
             context.AccessTokens.Remove(token);
         }
         await context.SaveChangesAsync(cancellationToken);
-        await tokenService.ClearAsync(cancellationToken);
+        await tokenService.ClearAsync(request.AzureCredentialId, cancellationToken);
     }
 }
