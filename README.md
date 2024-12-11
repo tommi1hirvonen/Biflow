@@ -376,19 +376,19 @@ Documentation about using Always Encrypted with the .NET Data Provider used by B
 
 When implementing Always Encrypted, these columns are good candidates for encryption. Randomized encryption can be used for all columns except `[ApiKey].[Value]`.
 - [app].[AccessToken].[Token]
+- [app].[AnalysisServicesConnection].[ConnectionString]
 - [app].[ApiKey].[Value] (indexed column, requires deterministic encryption)
 - [app].[AzureCredential].[ClientSecret]
 - [app].[AzureCredential].[Password]
 - [app].[BlobStorageClient].[ConnectionString]
 - [app].[BlobStorageClient].[StorageAccountUrl]
-- [app].[Connection].[ConnectionString]
-- [app].[AnalysisServicesConnection].[ConnectionString]
 - [app].[Credential].[Password]
-- [app].[FunctionApp].[FunctionAppKey]
-- [app].[QlikCloudClient].[ApiToken]
-- [app].[Step].[FunctionKey]
 - [app].[DatabricksWorkspace].[ApiToken]
 - [app].[DbtAccount].[ApiToken]
+- [app].[FunctionApp].[FunctionAppKey]
+- [app].[QlikCloudClient].[ApiToken]
+- [app].[SqlConnection].[ConnectionString]
+- [app].[Step].[FunctionKey]
 
 Enabling Always Encrypted with secure enclave is not required.
 
