@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
 	  <!-- Solution level common version identifier -->
-    <VersionName>1.6.1</VersionName>
+    <VersionName>1.7.0</VersionName>
   </PropertyGroup>
 </Project>
