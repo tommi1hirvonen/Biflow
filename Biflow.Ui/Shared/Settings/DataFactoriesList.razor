@@ -164,7 +164,7 @@
 @code {
     private DataFactoryEditModal? _editModal;
     private List<DataFactory>? _dataFactories;
-    private List<ServicePrincipalCredential>? _azureCredentials;
+    private List<AzureCredential>? _azureCredentials;
     private DataFactory? _stepsDataFactory;
     private HxModal? _stepsModal;
     
@@ -183,8 +183,10 @@
             .ThenInclude(step => step.Job)
             .OrderBy(c => c.PipelineClientName)
             .ToListAsync();
-        _azureCredentials = await context.ServicePrincipalCredentials
+        _azureCredentials = await context.AzureCredentials
             .AsNoTracking()
+            .Where(c => c.AzureCredentialType == AzureCredentialType.ServicePrincipal
+                        || c.AzureCredentialType == AzureCredentialType.ManagedIdentity)
             .OrderBy(ar => ar.AzureCredentialName)
             .ToListAsync();
     }

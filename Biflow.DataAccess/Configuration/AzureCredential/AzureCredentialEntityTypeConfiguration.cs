@@ -6,15 +6,12 @@ internal class AzureCredentialEntityTypeConfiguration : IEntityTypeConfiguration
     {
         builder.ToTable("AzureCredential")
             .HasKey(x => x.AzureCredentialId);
-
-        builder.Property(x => x.TenantId).IsUnicode(false);
-        builder.Property(x => x.ClientId).IsUnicode(false);
-        
         builder.Property(x => x.AzureCredentialType)
             .IsRequired()
             .HasDefaultValue(AzureCredentialType.ServicePrincipal);
         builder.HasDiscriminator<AzureCredentialType>("AzureCredentialType")
-            .HasValue<ServicePrincipalCredential>(AzureCredentialType.ServicePrincipal)
-            .HasValue<OrganizationalAccountCredential>(AzureCredentialType.OrganizationalAccount);
+            .HasValue<ServicePrincipalAzureCredential>(AzureCredentialType.ServicePrincipal)
+            .HasValue<OrganizationalAccountAzureCredential>(AzureCredentialType.OrganizationalAccount)
+            .HasValue<ManagedIdentityAzureCredential>(AzureCredentialType.ManagedIdentity);
     }
 }

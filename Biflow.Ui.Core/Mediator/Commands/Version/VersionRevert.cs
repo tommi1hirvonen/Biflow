@@ -68,7 +68,7 @@ internal class VersionRevertCommandHandler(
                 .ToArrayAsync(cancellationToken);
 
             foreach (var credential in snapshot.AzureCredentials
-                         .OfType<ServicePrincipalCredential>()
+                         .OfType<ServicePrincipalAzureCredential>()
                          .Where(a => string.IsNullOrEmpty(a.ClientSecret)))
             {
                 credential.ClientSecret = capturedServicePrincipalSecrets
@@ -82,7 +82,7 @@ internal class VersionRevertCommandHandler(
                 .ToArrayAsync(cancellationToken);
 
             foreach (var credential in snapshot.AzureCredentials
-                         .OfType<OrganizationalAccountCredential>()
+                         .OfType<OrganizationalAccountAzureCredential>()
                          .Where(a => string.IsNullOrEmpty(a.Password)))
             {
                 credential.Password = capturedOrganizationalAccountPasswords

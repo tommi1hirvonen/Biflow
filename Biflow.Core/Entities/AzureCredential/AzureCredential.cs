@@ -2,11 +2,14 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using Azure.Core;
+using Microsoft.PowerBI.Api;
+using Microsoft.Rest;
 
 namespace Biflow.Core.Entities;
 
-[JsonDerivedType(typeof(ServicePrincipalCredential), nameof(AzureCredentialType.ServicePrincipal))]
-[JsonDerivedType(typeof(OrganizationalAccountCredential), nameof(AzureCredentialType.OrganizationalAccount))]
+[JsonDerivedType(typeof(ServicePrincipalAzureCredential), nameof(AzureCredentialType.ServicePrincipal))]
+[JsonDerivedType(typeof(OrganizationalAccountAzureCredential), nameof(AzureCredentialType.OrganizationalAccount))]
+[JsonDerivedType(typeof(ManagedIdentityAzureCredential), nameof(AzureCredentialType.ManagedIdentity))]
 public abstract class AzureCredential(AzureCredentialType azureCredentialType)
 {
     [Required]
@@ -17,17 +20,7 @@ public abstract class AzureCredential(AzureCredentialType azureCredentialType)
     [MaxLength(250)]
     public string? AzureCredentialName { get; set; }
     
-    public AzureCredentialType AzureCredentialType { get; set; } = azureCredentialType;
-
-    [Required]
-    [MaxLength(36)]
-    [MinLength(36)]
-    public string TenantId { get; set; } = "";
-
-    [Required]
-    [MaxLength(36)]
-    [MinLength(36)]
-    public string ClientId { get; set; } = "";
+    public AzureCredentialType AzureCredentialType { get; init; } = azureCredentialType;
 
     [JsonIgnore]
     public IEnumerable<DatasetStep> Steps { get; } = new List<DatasetStep>();
@@ -50,7 +43,8 @@ public abstract class AzureCredential(AzureCredentialType azureCredentialType)
 
     public abstract TokenCredential GetTokenCredential();
     
-    public abstract TokenCredential GetTokenServiceCredential(ITokenService tokenService);
+    public TokenCredential GetTokenServiceCredential(ITokenService tokenService) =>
+        new AzureTokenCredential(tokenService, this);
     
     public DatasetClient CreateDatasetClient(ITokenService tokenService) => new(this, tokenService);
     
@@ -59,7 +53,20 @@ public abstract class AzureCredential(AzureCredentialType azureCredentialType)
     
     public FabricWorkspaceClient CreateFabricWorkspaceClient(ITokenService tokenService) => new(this, tokenService);
 
-    public abstract Task TestConnection();
+    public async Task TestConnection(CancellationToken cancellationToken = default)
+    {
+        var credential = GetTokenCredential();
+        var context = new TokenRequestContext([AzureResourceUrl]);
+        _ = await credential.GetTokenAsync(context, cancellationToken);
+    }
 
-    public abstract Task TestPowerBiConnection();
+    public async Task TestPowerBiConnection(CancellationToken cancellationToken = default)
+    {
+        var credential = GetTokenCredential();
+        var context = new TokenRequestContext([PowerBiResourceUrl]);
+        var token = await credential.GetTokenAsync(context, CancellationToken.None);
+        var credentials = new TokenCredentials(token.Token);
+        var client = new PowerBIClient(credentials);
+        _ = await client.Groups.GetGroupsAsync(cancellationToken: cancellationToken);
+    }
 }

@@ -89,7 +89,7 @@
 
 @code {
     private List<BlobStorageClient>? _blobClients;
-    private List<ServicePrincipalCredential>? _azureCredentials;
+    private List<AzureCredential>? _azureCredentials;
     private BlobClientEditModal? _blobClientEditModal;
     
     protected override void OnInitialized() => ThemeService.OnThemeChanged += OnThemeChanged;
@@ -105,8 +105,10 @@
             .AsNoTrackingWithIdentityResolution()
             .OrderBy(f => f.BlobStorageClientName)
             .ToListAsync();
-        _azureCredentials = await context.ServicePrincipalCredentials
+        _azureCredentials = await context.AzureCredentials
             .AsNoTracking()
+            .Where(c => c.AzureCredentialType == AzureCredentialType.ServicePrincipal
+                        || c.AzureCredentialType == AzureCredentialType.ManagedIdentity)
             .OrderBy(ar => ar.AzureCredentialName)
             .ToListAsync();
     }

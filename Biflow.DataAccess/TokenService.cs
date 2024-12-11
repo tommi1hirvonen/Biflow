@@ -1,6 +1,5 @@
 ﻿using System.Text.Json;
 using Azure.Core;
-using Azure.Identity;
 
 namespace Biflow.DataAccess;
 
@@ -72,14 +71,7 @@ public class TokenService<TDbContext>(IDbContextFactory<TDbContext> dbContextFac
         string[] scopes,
         CancellationToken cancellationToken = default)
     {
-        TokenCredential credential = azureCredential switch
-        {
-            ServicePrincipalCredential sp => 
-                new ClientSecretCredential(sp.TenantId, sp.ClientId, sp.ClientSecret),
-            OrganizationalAccountCredential oa =>
-                new UsernamePasswordCredential(oa.Username, oa.Password, oa.TenantId, oa.ClientId),
-            _ => throw new ArgumentException($"Unhandled Azure credential type {azureCredential.GetType().Name}")
-        };
+        var credential = azureCredential.GetTokenCredential();
         var context = new TokenRequestContext(scopes);
         var token = await credential.GetTokenAsync(context, cancellationToken);
         return (token.Token, token.ExpiresOn);

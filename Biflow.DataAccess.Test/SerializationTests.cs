@@ -22,7 +22,7 @@ public class SerializationTests(SerializationTestsFixture fixture) : IClassFixtu
     public void Serialize_AzureCredentials()
     {
         var json = JsonSerializer.Serialize(fixture.AzureCredentials, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
-        var items = JsonSerializer.Deserialize<ServicePrincipalCredential[]>(json, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
+        var items = JsonSerializer.Deserialize<ServicePrincipalAzureCredential[]>(json, EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
         Assert.NotNull(items);
         Assert.NotEmpty(items);
         Assert.All(items, x => Assert.NotEqual(x.AzureCredentialId, Guid.Empty));

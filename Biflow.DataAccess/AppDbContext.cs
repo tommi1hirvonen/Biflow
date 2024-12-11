@@ -64,8 +64,9 @@ public class AppDbContext : DbContext
     public DbSet<DataFactory> DataFactories => Set<DataFactory>();
     public DbSet<SynapseWorkspace> SynapseWorkspaces => Set<SynapseWorkspace>();
     public DbSet<AzureCredential> AzureCredentials => Set<AzureCredential>();
-    public DbSet<ServicePrincipalCredential> ServicePrincipalCredentials => Set<ServicePrincipalCredential>();
-    public DbSet<OrganizationalAccountCredential> OrganizationalAccountCredentials => Set<OrganizationalAccountCredential>();
+    public DbSet<ServicePrincipalAzureCredential> ServicePrincipalCredentials => Set<ServicePrincipalAzureCredential>();
+    public DbSet<OrganizationalAccountAzureCredential> OrganizationalAccountCredentials => Set<OrganizationalAccountAzureCredential>();
+    public DbSet<ManagedIdentityAzureCredential> ManagedIdentityCredentials => Set<ManagedIdentityAzureCredential>();
     public DbSet<AccessToken> AccessTokens => Set<AccessToken>();
     public DbSet<FunctionApp> FunctionApps => Set<FunctionApp>();
     public DbSet<SqlConnectionBase> SqlConnections => Set<SqlConnectionBase>();

@@ -88,7 +88,7 @@ public class DatabaseFixture : IAsyncLifetime
                 ConnectionString = "Data Source=localhost;Password=asd"
             };
 
-            var azureCredential = new ServicePrincipalCredential
+            var azureCredential = new ServicePrincipalAzureCredential
             {
                 AzureCredentialName = "Test credential",
                 ClientId = "some-client-id",

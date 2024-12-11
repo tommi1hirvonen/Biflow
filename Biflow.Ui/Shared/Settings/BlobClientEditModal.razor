@@ -125,7 +125,7 @@
     public EventCallback<BlobStorageClient> OnBlobClientSubmit { get; set; }
 
     [Parameter]
-    public List<ServicePrincipalCredential>? AzureCredentials { get; set; }
+    public List<AzureCredential>? AzureCredentials { get; set; }
 
     private BlobStorageClient? client;
     private HxModal? modal;

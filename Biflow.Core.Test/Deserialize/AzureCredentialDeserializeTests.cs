@@ -5,17 +5,17 @@ namespace Biflow.Core.Test.Deserialize;
 
 public class AzureCredentialDeserializeTests
 {
-    private readonly ServicePrincipalCredential azureCredential = CreateCredential();
+    private readonly ServicePrincipalAzureCredential azureAzureCredential = CreateCredential();
 
     [Fact]
-    public void AzureCredentialId_NotEmptyGuid() => Assert.NotEqual(azureCredential.AzureCredentialId, Guid.Empty);
+    public void AzureCredentialId_NotEmptyGuid() => Assert.NotEqual(azureAzureCredential.AzureCredentialId, Guid.Empty);
 
     [Fact]
-    public void ClientSecret_Empty() => Assert.Empty(azureCredential.ClientSecret ?? "");
+    public void ClientSecret_Empty() => Assert.Empty(azureAzureCredential.ClientSecret ?? "");
 
-    private static ServicePrincipalCredential CreateCredential()
+    private static ServicePrincipalAzureCredential CreateCredential()
     {
-        var credential = new ServicePrincipalCredential
+        var credential = new ServicePrincipalAzureCredential
         {
             AzureCredentialName = "Test name",
             TenantId = "test_tenant_id",

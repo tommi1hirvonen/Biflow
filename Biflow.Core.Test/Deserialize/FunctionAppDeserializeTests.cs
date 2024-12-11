@@ -21,7 +21,7 @@ public class FunctionAppDeserializeTests
 
     private static FunctionApp CreateFunctionApp()
     {
-        var credential = new ServicePrincipalCredential();
+        var credential = new ServicePrincipalAzureCredential();
         var credentialId = Guid.NewGuid();
         credential.SetPrivatePropertyValue("AzureCredentialId", credentialId);
         var functionApp = new FunctionApp

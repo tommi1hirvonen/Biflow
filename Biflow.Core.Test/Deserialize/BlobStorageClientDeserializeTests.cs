@@ -27,7 +27,7 @@ public class BlobStorageClientDeserializeTests
 
     private static BlobStorageClient CreateAzureCredentialClient()
     {
-        var credential = new ServicePrincipalCredential
+        var credential = new ServicePrincipalAzureCredential
         {
             AzureCredentialName = "Test"
         };

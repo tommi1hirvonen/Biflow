@@ -87,7 +87,7 @@
     public EventCallback<SynapseWorkspace> OnSynapseWorkspaceSubmit { get; set; }
 
     [Parameter]
-    public List<ServicePrincipalCredential>? AzureCredentials { get; set; }
+    public List<AzureCredential>? AzureCredentials { get; set; }
 
     private SynapseWorkspace? _synapseWorkspace;
     private HxModal? _modal;
