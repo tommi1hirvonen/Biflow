@@ -172,6 +172,14 @@ public static class Extensions
                  }).ToArray();
             return executions;
         }).WithName("ExecutionsStatus");
+        
+        
+        app.MapGet("/tokencache/clear/{azureCredentialId:guid}",
+                async (Guid azureCredentialId, ITokenService tokenService, CancellationToken cancellationToken) =>
+        {
+            await tokenService.ClearAsync(azureCredentialId, cancellationToken);
+        }).WithName("ClearTokenCache")
+        .AddEndpointFilter<ServiceApiKeyEndpointFilter>();
 
 
         app.MapGet("/connection/test", async (IConnectionTest connectionTest) =>
