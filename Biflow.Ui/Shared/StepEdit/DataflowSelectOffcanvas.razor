@@ -138,6 +138,7 @@
         _dataflows = null;
         _selectedDataflow = null;
         _expandedStates.Clear();
+        await _offcanvas.LetAsync(x => x.ShowAsync());
         try
         {
             await using var context = await DbContextFactory.CreateDbContextAsync();
@@ -152,8 +153,6 @@
         {
             Toaster.AddError("Error reading dataflows", ex.Message);
         }
-
-        await _offcanvas.LetAsync(x => x.ShowAsync());
     }
 
 }
