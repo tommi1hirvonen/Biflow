@@ -22,7 +22,7 @@
 
                         <div class=" row mt-3">
                             <div class="col-lg-6">
-                                <label class="form-label">Service principal</label>
+                                <label class="form-label">Azure credential</label>
                                 <InputSelect class="form-select" @bind-Value="_synapseWorkspace.AzureCredentialId">
                                     @foreach (var app in AzureCredentials ?? Enumerable.Empty<AzureCredential>())
                                         {
