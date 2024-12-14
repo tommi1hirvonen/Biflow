@@ -6,6 +6,7 @@ param appId string = 'buzz' // max 5 characters
 param adminUser string = 'andy.admin@contoso.com'
 param adminUserObjectId string = '00000000-0000-0000-0000-000000000000'
 param firewallWhitelistIp string = '123.123.123.123'
+@description('Expects TZ identifier. See https://en.wikipedia.org/wiki/List_of_tz_database_time_zones')
 param websiteTimeZone string = 'Europe/Helsinki'
 @secure()
 param serviceApiKey string = '8bcf8e04-043c-4c01-ba6f-58e7704683aa'
