@@ -54,10 +54,21 @@ resource keyVaultResource 'Microsoft.KeyVault/vaults@2024-04-01-preview' = {
     }
     tenantId: tenantId
     networkAcls: {
-      bypass: 'AzureServices'
-      defaultAction: 'Allow'
-      ipRules: []
-      virtualNetworkRules: []
+      bypass: 'AzureServices' // needed to be able to deploy secret values directly from bicep
+      defaultAction: 'Deny'
+      ipRules: [
+        {
+          value: firewallWhitelistIp
+        }
+      ]
+      virtualNetworkRules: [
+        {
+          id: backendSubnet.id
+        }
+        {
+          id: defaultSubnet.id
+        }
+      ]
     }
     accessPolicies: []
     enabledForDeployment: true
@@ -97,6 +108,12 @@ resource virtualNetworkResource 'Microsoft.Network/virtualNetworks@2024-01-01' =
           addressPrefix: '10.0.1.0/24'
           serviceEndpoints: [
             {
+              service: 'Microsoft.KeyVault'
+              locations: [
+                '*'
+              ]
+            }
+            {
               service: 'Microsoft.Web'
               locations: [
                 '*'
@@ -134,6 +151,12 @@ resource virtualNetworkResource 'Microsoft.Network/virtualNetworks@2024-01-01' =
         properties: {
           addressPrefix: '10.0.0.0/24'
           serviceEndpoints: [
+            {
+              service: 'Microsoft.KeyVault'
+              locations: [
+                '*'
+              ]
+            }
             {
               service: 'Microsoft.Sql'
               locations: [
