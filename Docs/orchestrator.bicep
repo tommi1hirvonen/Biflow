@@ -257,6 +257,8 @@ resource sqlServerVnetRuleService 'Microsoft.Sql/servers/virtualNetworkRules@202
 
 // Execution service VM
 
+var vmPrivateIpAddress = '10.0.0.4'
+
 resource publicIpAddressResource 'Microsoft.Network/publicIPAddresses@2024-01-01' = {
   name: publicIpAddressName
   location: region
@@ -316,7 +318,7 @@ resource networkInterfaceResource 'Microsoft.Network/networkInterfaces@2024-01-0
         name: 'ipconfig1'
         type: 'Microsoft.Network/networkInterfaces/ipConfigurations'
         properties: {
-          privateIPAddress: '10.0.0.4'
+          privateIPAddress: vmPrivateIpAddress
           privateIPAllocationMethod: 'Dynamic'
           publicIPAddress: {
             id: publicIpAddressResource.id
@@ -529,6 +531,8 @@ resource uiWebAppResource 'Microsoft.Web/sites@2023-12-01' = {
   }
 }
 
+var schedulerPrivateIpAddress = '10.0.0.5'
+
 resource privateEndpointSchedulerResource 'Microsoft.Network/privateEndpoints@2024-01-01' = {
   name: privateEndpointSchedulerName
   location: region
@@ -554,7 +558,7 @@ resource privateEndpointSchedulerResource 'Microsoft.Network/privateEndpoints@20
         properties: {
           groupId: 'sites'
           memberName: 'sites'
-          privateIPAddress: '10.0.0.5'
+          privateIPAddress: schedulerPrivateIpAddress
         }
       }
     ]
@@ -589,7 +593,7 @@ resource privateDnsZoneARecord 'Microsoft.Network/privateDnsZones/A@2024-06-01' 
     ttl: 10
     aRecords: [
       {
-        ipv4Address: '10.0.0.5'
+        ipv4Address: schedulerPrivateIpAddress
       }
     ]
   }
@@ -684,6 +688,8 @@ var uiAdminPasswordReference = '@Microsoft.KeyVault(VaultName=${keyVaultName};Se
 
 var appDbConnectionString = 'Server=tcp:${sqlServerResource.properties.fullyQualifiedDomainName},1433;Initial Catalog=${sqlDbName};Authentication=Active Directory Managed Identity;User Id=${managedIdentityResource.properties.clientId};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
 
+var executionServiceUrl = 'http://${vmPrivateIpAddress}:4321'
+
 resource schedulerAppSettings 'Microsoft.Web/sites/config@2022-09-01' = {
   name: 'appsettings'
   kind: 'string'
@@ -693,7 +699,7 @@ resource schedulerAppSettings 'Microsoft.Web/sites/config@2022-09-01' = {
     ConnectionStrings__AppDbContext: appDbConnectionString
     Executor__Type: 'WebApp'
     Executor__WebApp__ApiKey: apiKeyReference
-    Executor__WebApp__Url: 'http://10.0.0.4:4321'
+    Executor__WebApp__Url: executionServiceUrl
   }
   dependsOn: [
     serviceApiKeyResource
@@ -713,7 +719,7 @@ resource uiAppSettings 'Microsoft.Web/sites/config@2022-09-01' = {
     Executor__SelfHosted__PollingIntervalMs: '5000'
     Executor__Type: 'WebApp'
     Executor__WebApp__ApiKey: apiKeyReference
-    Executor__WebApp__Url: 'http://10.0.0.4:4321'
+    Executor__WebApp__Url: executionServiceUrl
     Scheduler__Type: 'WebApp'
     Scheduler__WebApp__ApiKey: apiKeyReference
     Scheduler__WebApp__Url: 'https://${schedulerWebAppResource.properties.defaultHostName}'
