@@ -716,7 +716,7 @@ resource uiAppSettings 'Microsoft.Web/sites/config@2022-09-01' = {
     Executor__WebApp__Url: 'http://10.0.0.4:4321'
     Scheduler__Type: 'WebApp'
     Scheduler__WebApp__ApiKey: apiKeyReference
-    Scheduler__WebApp__Url: schedulerWebAppResource.properties.defaultHostName
+    Scheduler__WebApp__Url: 'https://${schedulerWebAppResource.properties.defaultHostName}'
   }
   dependsOn: [
     serviceApiKeyResource
