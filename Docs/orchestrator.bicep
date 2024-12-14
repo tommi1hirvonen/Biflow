@@ -681,6 +681,18 @@ resource uiAdminPasswordResource 'Microsoft.KeyVault/vaults/secrets@2024-04-01-p
   }
 }
 
+resource vmAdminPasswordResource 'Microsoft.KeyVault/vaults/secrets@2024-04-01-preview' = {
+  parent: keyVaultResource
+  name: 'vm-admin-password'
+  properties: {
+    attributes: {
+      enabled: true
+    }
+    contentType: 'password'
+    value: virtualMachineAdminPassword
+  }
+}
+
 // Web App appsettings
 
 var apiKeyReference = '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=${apiKeySecretName})'
