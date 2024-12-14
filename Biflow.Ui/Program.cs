@@ -44,6 +44,10 @@ builder.Services.AddScoped<ToasterService>();
 builder.Services.AddHxServices();
 builder.Services.AddHxMessageBoxHost();
 
+// Use a hosted background service to make sure admin user exists at app startup. 
+builder.Services.AddSingleton<EnsureAdminUser>();
+builder.Services.AddHostedService(services => services.GetRequiredService<EnsureAdminUser>());
+
 // Add type handlers required by the table editor.
 SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
 SqlMapper.AddTypeHandler(new TimeOnlyTypeHandler());
@@ -81,7 +85,5 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.MapDefaultEndpoints();
-
-await app.EnsureAdminUserAsync();
 
 app.Run();

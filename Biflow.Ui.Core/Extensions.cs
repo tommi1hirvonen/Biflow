@@ -83,31 +83,6 @@ public static class Extensions
     }
 
     /// <summary>
-    /// Ensures there is an admin user added with credentials provided from configuration.
-    /// </summary>
-    /// <param name="app"></param>
-    /// <returns></returns>
-    public static async Task EnsureAdminUserAsync(this WebApplication app)
-    {
-        var adminSection = app.Configuration.GetSection("AdminUser");
-        if (adminSection.Exists())
-        {
-            var adminUsername = adminSection.GetValue<string>("Username");
-            ArgumentNullException.ThrowIfNull(adminUsername);
-            using var scope = app.Services.CreateScope();
-            var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-            var authentication = app.Configuration.GetValue<string>("Authentication");
-            string? adminPassword = null;
-            if (authentication == "BuiltIn")
-            {
-                adminPassword = adminSection.GetValue<string?>("Password");
-                ArgumentNullException.ThrowIfNull(adminPassword);
-            }
-            await mediator.SendAsync(new EnsureAdminUserCommand(adminUsername, adminPassword));
-        }
-    }
-
-    /// <summary>
     /// Adds services that provide core functionality in the UI application
     /// </summary>
     /// <param name="services"></param>
