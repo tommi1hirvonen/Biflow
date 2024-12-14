@@ -13,6 +13,10 @@ param virtualMachineAdminUsername string = ''
 @secure() 
 param virtualMachineAdminPassword string = ''
 
+param uiAdminUsername string = 'admin'
+@secure()
+param uiAdminPassword string = ''
+
 
 // Application database
 var sqlServerName = 'sql-${appId}-orchestration-${envId}'
@@ -582,6 +586,7 @@ resource keyVaultSecretsUser 'Microsoft.Authorization/roleAssignments@2022-04-01
 // Key Vault Secrets
 
 var apiKeySecretName = 'orchestrator-api-key'
+var uiAdminPasswordSecretName = 'ui-admin-password'
 
 resource serviceApiKeyResource 'Microsoft.KeyVault/vaults/secrets@2024-04-01-preview' = {
   parent: keyVaultResource
@@ -595,9 +600,22 @@ resource serviceApiKeyResource 'Microsoft.KeyVault/vaults/secrets@2024-04-01-pre
   }
 }
 
+resource uiAdminPasswordResource 'Microsoft.KeyVault/vaults/secrets@2024-04-01-preview' = {
+  parent: keyVaultResource
+  name: uiAdminPasswordSecretName
+  properties: {
+    attributes: {
+      enabled: true
+    }
+    contentType: 'password'
+    value: uiAdminPassword
+  }
+}
+
 // Web App appsettings
 
 var apiKeyReference = '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=${apiKeySecretName})'
+var uiAdminPasswordReference = '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=${uiAdminPasswordSecretName})'
 
 var appDbConnectionString = 'Server=tcp:${sqlServerResource.properties.fullyQualifiedDomainName},1433;Initial Catalog=${sqlDbName};Authentication=Active Directory Managed Identity;User Id=${managedIdentityResource.properties.clientId};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
 
@@ -622,6 +640,8 @@ resource uiAppSettings 'Microsoft.Web/sites/config@2022-09-01' = {
   kind: 'string'
   parent: uiWebAppResource
   properties: {
+    AdminUser__Username: uiAdminUsername
+    AdminUser__Password: uiAdminPasswordReference
     Authentication: 'BuiltIn'
     ConnectionStrings__AppDbContext: appDbConnectionString
     EnvironmentName: 'Environment Placeholder'
