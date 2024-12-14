@@ -37,6 +37,12 @@ var networkSecurityGroupName = 'vm-${appId}-orchestration-${envId}-nsg'
 var publicIpAddressName = 'vm-${appId}-orchestration-${envId}-pip'
 var osDiskName = 'vm-${appId}-orchestration-${envId}-osdisk'
 
+// Log analytics
+
+var logAnalyticsWorkspaceName = 'log-${appId}-orchestration-${envId}'
+var schedulerAppInsightsName = 'appi-${appId}-orchestration-scheduler-${envId}'
+var uiAppInsightsName = 'appi-${appId}-orchestration-ui-${envId}'
+
 // Miscellaneous
 var keyVaultName = 'kv-${appId}-orchestration-${shortEnvId}' // NOTE: Key Vault names can only be max 24 characters long.
 var managedIdentityName = 'mi-${appId}-orchestration-${envId}'
@@ -600,6 +606,44 @@ resource privateDnsZoneARecord 'Microsoft.Network/privateDnsZones/A@2024-06-01' 
   }
 }
 
+// Log analytics
+
+resource logAnalyticsWorkspaceResource 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
+  name: logAnalyticsWorkspaceName
+  location: region
+  properties: {
+    sku: {
+      name: 'PerGB2018'
+    }
+    retentionInDays: 30
+    workspaceCapping: {
+      dailyQuotaGb: -1
+    }
+    publicNetworkAccessForIngestion: 'Enabled'
+    publicNetworkAccessForQuery: 'Enabled'
+  }
+}
+
+resource schedulerAppInsightsResource 'Microsoft.Insights/components@2020-02-02' = {
+  name: schedulerAppInsightsName
+  location: region
+  kind: 'web'
+  properties: {
+    Application_Type: 'web'
+    WorkspaceResourceId: logAnalyticsWorkspaceResource.id
+  }
+}
+
+resource uiAppInsightsResource 'Microsoft.Insights/components@2020-02-02' = {
+  name: uiAppInsightsName
+  location: region
+  kind: 'web'
+  properties: {
+    Application_Type: 'web'
+    WorkspaceResourceId: logAnalyticsWorkspaceResource.id
+  }
+}
+
 
 // Role assignments
 
@@ -713,6 +757,8 @@ resource schedulerAppSettings 'Microsoft.Web/sites/config@2022-09-01' = {
     Executor__Type: 'WebApp'
     Executor__WebApp__ApiKey: apiKeyReference
     Executor__WebApp__Url: executionServiceUrl
+    APPINSIGHTS_INSTRUMENTATIONKEY: schedulerAppInsightsResource.properties.InstrumentationKey
+    APPLICATIONINSIGHTS_CONNECTION_STRING: schedulerAppInsightsResource.properties.ConnectionString
   }
   dependsOn: [
     serviceApiKeyResource
@@ -736,6 +782,8 @@ resource uiAppSettings 'Microsoft.Web/sites/config@2022-09-01' = {
     Scheduler__Type: 'WebApp'
     Scheduler__WebApp__ApiKey: apiKeyReference
     Scheduler__WebApp__Url: 'https://${schedulerWebAppResource.properties.defaultHostName}'
+    APPINSIGHTS_INSTRUMENTATIONKEY: uiAppInsightsResource.properties.InstrumentationKey
+    APPLICATIONINSIGHTS_CONNECTION_STRING: uiAppInsightsResource.properties.ConnectionString
   }
   dependsOn: [
     serviceApiKeyResource
