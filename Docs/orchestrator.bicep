@@ -40,6 +40,7 @@ var osDiskName = 'vm-${appId}-orchestration-${envId}-osdisk'
 var keyVaultName = 'kv-${appId}-orchestration-${shortEnvId}' // NOTE: Key Vault names can only be max 24 characters long.
 var managedIdentityName = 'mi-${appId}-orchestration-${envId}'
 var virtualNetworkName = 'vnet-${appId}-orchestration-${envId}'
+var privateDnsZoneName = 'privatelink.azurewebsites.net'
 
 
 
@@ -547,9 +548,50 @@ resource privateEndpointSchedulerResource 'Microsoft.Network/privateEndpoints@20
         }
       }
     ]
+    ipConfigurations: [
+      {
+        name: '${privateEndpointSchedulerName}-ip'
+        properties: {
+          groupId: 'sites'
+          memberName: 'sites'
+          privateIPAddress: '10.0.0.5'
+        }
+      }
+    ]
     subnet: {
       id: defaultSubnet.id
     }
+  }
+}
+
+resource privateDnsZoneResource 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+  name: privateDnsZoneName
+  location: 'global'
+  properties: {}
+}
+
+resource privateDnsZoneVnetLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2024-06-01' = {
+  parent: privateDnsZoneResource
+  name: 'e1a286d85632'
+  location: 'global'
+  properties: {
+    registrationEnabled: false
+    virtualNetwork: {
+      id: virtualNetworkResource.id
+    }
+  }
+}
+
+resource privateDnsZoneARecord 'Microsoft.Network/privateDnsZones/A@2024-06-01' = {
+  parent: privateDnsZoneResource
+  name: schedulerWebAppName
+  properties: {
+    ttl: 10
+    aRecords: [
+      {
+        ipv4Address: '10.0.0.5'
+      }
+    ]
   }
 }
 
