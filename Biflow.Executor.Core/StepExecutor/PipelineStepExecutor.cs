@@ -5,6 +5,7 @@ using Polly;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
+[UsedImplicitly]
 internal class PipelineStepExecutor(
     ILogger<PipelineStepExecutor> logger,
     IOptionsMonitor<ExecutionOptions> options,

@@ -6,6 +6,7 @@ using Snowflake.Data.Client;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
+[UsedImplicitly]
 internal class SqlStepExecutor(
     ILogger<SqlStepExecutor> logger,
     IDbContextFactory<ExecutorDbContext> dbContextFactory)

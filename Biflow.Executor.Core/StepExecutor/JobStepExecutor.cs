@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
+[UsedImplicitly]
 internal class JobStepExecutor(
     ILogger<JobStepExecutor> logger,
     IExecutionManager executionManager,
@@ -147,7 +148,7 @@ internal class JobStepExecutor(
                 ExecutionStatus.Suspended => "Sub-execution was suspended",
                 ExecutionStatus.NotStarted => "Sub-execution failed to start",
                 ExecutionStatus.Running => $"Sub-execution was finished but its status was reported as {status} after finishing",
-                _ => "Unhandled sub-execution status",
+                _ => "Unhandled sub-execution status"
             };
             attempt.AddError(error);
             return Result.Failure;

@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
+[UsedImplicitly]
 internal class EmailStepExecutor(
     ILogger<EmailStepExecutor> logger,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,

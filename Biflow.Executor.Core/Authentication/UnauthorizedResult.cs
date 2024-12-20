@@ -4,7 +4,7 @@ namespace Biflow.Executor.Core.Authentication;
 
 internal class UnauthorizedResult(object? body) : IResult, IStatusCodeHttpResult
 {
-    public static int StatusCode => StatusCodes.Status401Unauthorized;
+    private static int StatusCode => StatusCodes.Status401Unauthorized;
 
     int? IStatusCodeHttpResult.StatusCode => StatusCode;
 

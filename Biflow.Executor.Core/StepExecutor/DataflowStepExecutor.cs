@@ -6,6 +6,7 @@ using Polly;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
+[UsedImplicitly]
 internal class DataflowStepExecutor(
     ILogger<DataflowStepExecutor> logger,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,

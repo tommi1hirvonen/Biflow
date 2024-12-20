@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
+[UsedImplicitly]
 internal class QlikStepExecutor(
     ILogger<QlikStepExecutor> logger,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,

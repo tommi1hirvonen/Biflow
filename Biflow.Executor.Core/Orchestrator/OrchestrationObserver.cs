@@ -94,7 +94,7 @@ internal class OrchestrationObserver(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error while handling update in orchestration observer");
-            var action = Actions.Fail(StepExecutionStatus.Failed, $"Error while handling update in orchestration observer");
+            var action = Actions.Fail(StepExecutionStatus.Failed, "Error while handling update in orchestration observer");
             SetResult(action);
         }
     }
@@ -114,7 +114,7 @@ internal class OrchestrationObserver(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error while handling update in orchestration observer");
-            var action = Actions.Fail(StepExecutionStatus.Failed, $"Error while handling update in orchestration observer");
+            var action = Actions.Fail(StepExecutionStatus.Failed, "Error while handling update in orchestration observer");
             SetResult(action);
             return [];
         }

@@ -6,6 +6,7 @@ using System.Text;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
+[UsedImplicitly]
 internal class PackageStepExecutor(
     ILogger<PackageStepExecutor> logger,
     IDbContextFactory<ExecutorDbContext> dbContextFactory)

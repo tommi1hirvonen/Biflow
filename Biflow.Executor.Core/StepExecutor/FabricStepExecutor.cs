@@ -7,6 +7,7 @@ using Polly;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
+[UsedImplicitly]
 internal class FabricStepExecutor(
     ILogger<FabricStepExecutor> logger,
     IOptionsMonitor<ExecutionOptions> options,

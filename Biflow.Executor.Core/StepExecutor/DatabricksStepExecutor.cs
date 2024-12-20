@@ -7,6 +7,7 @@ using Polly;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
+[UsedImplicitly]
 internal class DatabricksStepExecutor(
     ILogger<DatabricksStepExecutor> logger,
     IOptionsMonitor<ExecutionOptions> options,

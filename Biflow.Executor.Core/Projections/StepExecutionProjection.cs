@@ -2,6 +2,7 @@
 
 namespace Biflow.Executor.Core.Projections;
 
+[PublicAPI]
 public record StepExecutionProjection(
     Guid StepId,
     string StepName,

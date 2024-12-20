@@ -6,6 +6,7 @@ using System.Text.Json;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
+[UsedImplicitly]
 internal class FunctionStepExecutor(
     ILogger<FunctionStepExecutor> logger,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,

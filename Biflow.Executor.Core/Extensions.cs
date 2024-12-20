@@ -246,6 +246,8 @@ public static class Extensions
     }
 }
 
+[PublicAPI]
 file record ExecutionCreateRequest(Guid JobId, Guid[]? StepIds, bool? StartExecution);
 
+[PublicAPI]
 file record ExecutionCreateResponse(Guid ExecutionId);

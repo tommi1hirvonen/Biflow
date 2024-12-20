@@ -8,6 +8,7 @@ using System.Text.Json;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
+[UsedImplicitly]
 internal class AgentJobStepExecutor(
     ILogger<AgentJobStepExecutor> logger,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,

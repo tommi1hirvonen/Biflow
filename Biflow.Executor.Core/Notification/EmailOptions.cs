@@ -7,19 +7,19 @@ internal class EmailOptions
 {
     public const string EmailSettings = "EmailSettings";
 
-    public string? SmtpServer { get; set; }
+    public string? SmtpServer { get; init; }
 
-    public bool EnableSsl { get; set; }
+    public bool EnableSsl { get; init; }
 
-    public int Port { get; set; }
+    public int Port { get; init; }
 
-    public string? FromAddress { get; set; }
+    public string? FromAddress { get; init; }
 
-    public bool AnonymousAuthentication { get; set; }
+    public bool AnonymousAuthentication { get; init; }
 
-    public string? Username { get; set; }
+    public string? Username { get; init; }
 
-    public string? Password { get; set; }
+    public string? Password { get; init; }
 
     public SmtpClient Client
     {
