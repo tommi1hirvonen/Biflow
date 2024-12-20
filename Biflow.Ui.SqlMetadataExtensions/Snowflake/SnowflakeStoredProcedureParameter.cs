@@ -1,5 +1,8 @@
-﻿namespace Biflow.Ui.SqlMetadataExtensions;
+﻿using JetBrains.Annotations;
 
+namespace Biflow.Ui.SqlMetadataExtensions;
+
+[UsedImplicitly]
 public class SnowflakeStoredProcedureParameter(string parameterName, string parameterType) : IStoredProcedureParameter
 {
     public string ParameterName { get; } = parameterName;

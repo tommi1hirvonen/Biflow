@@ -1,6 +1,10 @@
-﻿namespace Biflow.Ui.SqlMetadataExtensions;
+﻿using JetBrains.Annotations;
 
-public class MsSqlStoredProcedureParameter(int parameterId, string parameterName, string parameterType) : IStoredProcedureParameter
+namespace Biflow.Ui.SqlMetadataExtensions;
+
+[UsedImplicitly]
+public class MsSqlStoredProcedureParameter(int parameterId, string parameterName, string parameterType)
+    : IStoredProcedureParameter
 {
     public int ParameterId { get; } = parameterId;
 

@@ -1,5 +1,4 @@
-﻿using Apache.Arrow;
-using Biflow.Core.Entities;
+﻿using Biflow.Core.Entities;
 using Dapper;
 using Snowflake.Data.Client;
 
@@ -9,8 +8,8 @@ public static class SnowflakeExtensions
 {
     public static async Task<IEnumerable<SnowflakeStoredProcedure>> GetStoredProceduresAsync(this SnowflakeConnection connection)
     {
-        using var sfConnection = new SnowflakeDbConnection(connection.ConnectionString);
-        var sql = """
+        await using var sfConnection = new SnowflakeDbConnection(connection.ConnectionString);
+        const string sql = """
             select
                 p.PROCEDURE_SCHEMA as "SchemaName",
                 p.PROCEDURE_NAME as "ProcedureName",
@@ -21,7 +20,7 @@ public static class SnowflakeExtensions
                 table(split_to_table(substring(p.ARGUMENT_SIGNATURE, 2, length(p.ARGUMENT_SIGNATURE) - 2), ',')) t
             """;
         var procs = new HashSet<SnowflakeStoredProcedure>();
-        var data = await sfConnection.QueryAsync<SnowflakeStoredProcedure, SnowflakeStoredProcedureParameter?, SnowflakeStoredProcedure>(
+        _ = await sfConnection.QueryAsync<SnowflakeStoredProcedure, SnowflakeStoredProcedureParameter?, SnowflakeStoredProcedure>(
             sql,
             (proc, param) =>
             {
@@ -44,8 +43,8 @@ public static class SnowflakeExtensions
 
     public static async Task<string?> GetProcedureDefinitionAsync(this SnowflakeConnection connection, SnowflakeStoredProcedure procedure)
     {
-        using var sfConnection = new SnowflakeDbConnection(connection.ConnectionString);
-        var sql = """
+        await using var sfConnection = new SnowflakeDbConnection(connection.ConnectionString);
+        const string sql = """
             select PROCEDURE_DEFINITION
             from INFORMATION_SCHEMA.PROCEDURES
             where PROCEDURE_SCHEMA = :schema and PROCEDURE_NAME = :name and ARGUMENT_SIGNATURE = :arguments
@@ -69,7 +68,7 @@ public static class SnowflakeExtensions
         int? limit = null,
         CancellationToken cancellationToken = default)
     {
-        using var sfConnection = new SnowflakeDbConnection(connection.ConnectionString);
+        await using var sfConnection = new SnowflakeDbConnection(connection.ConnectionString);
         var limitTerm = limit > 0 ? $"limit {limit}" : "";
         var schema = string.IsNullOrEmpty(schemaNameSearchTerm) ? null : $"%{schemaNameSearchTerm.ToLower()}%";
         var name = string.IsNullOrEmpty(objectNameSearchTerm) ? null : $"%{objectNameSearchTerm.ToLower()}%";
