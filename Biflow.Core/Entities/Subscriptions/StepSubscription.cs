@@ -7,7 +7,7 @@ public class StepSubscription(Guid userId, Guid stepId) : Subscription(userId, S
     public AlertType AlertType { get; set; }
 
     [Required]
-    public Guid StepId { get; set; } = stepId;
+    public Guid StepId { get; init; } = stepId;
 
-    public Step Step { get; set; } = null!;
+    public Step Step { get; init; } = null!;
 }

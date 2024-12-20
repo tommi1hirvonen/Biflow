@@ -39,10 +39,10 @@ public sealed class ExecutionConditionParameter : ParameterBase, IAsyncEvaluable
     }
 
     [Display(Name = "Step id")]
-    public Guid StepId { get; set; }
+    public Guid StepId { get; init; }
 
     [JsonIgnore]
-    public Step Step { get; set; } = null!;
+    public Step Step { get; init; } = null!;
 
     public Guid? JobParameterId
     {

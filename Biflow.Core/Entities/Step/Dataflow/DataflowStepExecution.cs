@@ -1,5 +1,6 @@
 using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
@@ -24,14 +25,14 @@ public class DataflowStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
     }
 
     [Required]
-    public Guid AzureCredentialId { get; private set; }
+    public Guid AzureCredentialId { get; [UsedImplicitly] private set; }
 
     [MinLength(36)]
     [MaxLength(36)]
     public string WorkspaceId { get; private set; }
     
     [MaxLength(250)]
-    public string? WorkspaceName { get; set; }
+    public string? WorkspaceName { get; private set; }
 
     [MinLength(36)]
     [MaxLength(36)]
@@ -41,7 +42,7 @@ public class DataflowStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
     public string? DataflowName { get; private set; }
     
     [Range(0, 2880)] // 48 hours
-    public double TimeoutMinutes { get; set; }
+    public double TimeoutMinutes { get; [UsedImplicitly] private set; }
 
     public override DataflowStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {

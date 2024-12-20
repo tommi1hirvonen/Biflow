@@ -14,7 +14,7 @@ public class DatabricksStepParameter : StepParameterBase
     }
 
     [JsonIgnore]
-    public DatabricksStep Step { get; set; } = null!;
+    public DatabricksStep Step { get; init; } = null!;
 
     [JsonIgnore]
     public override Step BaseStep => Step;

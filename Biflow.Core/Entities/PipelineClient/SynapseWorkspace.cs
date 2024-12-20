@@ -1,5 +1,4 @@
-﻿using Azure.Identity;
-using Biflow.Core.Interfaces;
+﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using SynapsePipelineClient = Azure.Analytics.Synapse.Artifacts.PipelineClient;
 

@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Web;
 using Biflow.Core.Interfaces;
+using JetBrains.Annotations;
 using Microsoft.PowerBI.Api;
 using Microsoft.PowerBI.Api.Models;
 using Microsoft.Rest;
@@ -108,9 +109,10 @@ public class DataflowClient(
         return definition.Name;
     }
     
+    [UsedImplicitly]
     private class DataflowDefinition
     {
-        [JsonPropertyName("name")]
+        [JsonPropertyName("name"), UsedImplicitly]
         public required string Name { get; init; } 
     }
 }

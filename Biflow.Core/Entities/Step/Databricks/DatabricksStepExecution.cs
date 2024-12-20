@@ -1,4 +1,5 @@
 ﻿using Biflow.Core.Interfaces;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
@@ -22,11 +23,11 @@ public class DatabricksStepExecution : StepExecution,
         AddAttempt(new DatabricksStepExecutionAttempt(this));
     }
 
-    public DatabricksStepSettings DatabricksStepSettings { get; set; } = new DbNotebookStepSettings();
+    public DatabricksStepSettings DatabricksStepSettings { get; init; } = new DbNotebookStepSettings();
 
-    public Guid DatabricksWorkspaceId { get; private set; }
+    public Guid DatabricksWorkspaceId { get; [UsedImplicitly] private set; }
 
-    public double TimeoutMinutes { get; private set; }
+    public double TimeoutMinutes { get; [UsedImplicitly] private set; }
 
     public IEnumerable<DatabricksStepExecutionParameter> StepExecutionParameters { get; } = new List<DatabricksStepExecutionParameter>();
 

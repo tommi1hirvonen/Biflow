@@ -1,15 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace Biflow.Core.Entities;
+﻿namespace Biflow.Core.Entities;
 
 public class AccessToken(
     Guid azureCredentialId, string resourceUrl, string token, DateTimeOffset expiresOn)
 {
-    public Guid AzureCredentialId { get; set; } = azureCredentialId;
+    public Guid AzureCredentialId { get; init; } = azureCredentialId;
 
-    public AzureCredential AzureCredential { get; set; } = null!;
+    public AzureCredential AzureCredential { get; init; } = null!;
     
-    public string ResourceUrl { get; set; } = resourceUrl;
+    public string ResourceUrl { get; init; } = resourceUrl;
 
     public string Token { get; set; } = token;
 

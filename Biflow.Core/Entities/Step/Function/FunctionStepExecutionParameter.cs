@@ -13,7 +13,7 @@ public class FunctionStepExecutionParameter : StepExecutionParameterBase
         StepExecution = execution;
     }
 
-    public FunctionStepExecution StepExecution { get; set; } = null!;
+    public FunctionStepExecution StepExecution { get; init; } = null!;
 
     public override StepExecution BaseStepExecution => StepExecution;
 }

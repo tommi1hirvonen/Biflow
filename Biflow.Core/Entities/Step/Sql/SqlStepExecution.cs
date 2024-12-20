@@ -1,5 +1,6 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
@@ -25,7 +26,7 @@ public class SqlStepExecution : StepExecution,
         AddAttempt(new SqlStepExecutionAttempt(this));
     }
 
-    public Guid ConnectionId { get; private set; }
+    public Guid ConnectionId { get; [UsedImplicitly] private set; }
 
     [Display(Name = "SQL statement")]
     public string SqlStatement { get; private set; }
@@ -33,11 +34,11 @@ public class SqlStepExecution : StepExecution,
     [Display(Name = "Result capture job parameter")]
     public Guid? ResultCaptureJobParameterId { get; private set; }
 
-    public ParameterValue ResultCaptureJobParameterValue { get; set; } = new();
+    public ParameterValue ResultCaptureJobParameterValue { get; set; }
 
-    public ExecutionParameter? ResultCaptureJobParameter { get; set; }
+    public ExecutionParameter? ResultCaptureJobParameter { get; init; }
 
-    public double TimeoutMinutes { get; private set; }
+    public double TimeoutMinutes { get; [UsedImplicitly] private set; }
 
     public IEnumerable<SqlStepExecutionParameter> StepExecutionParameters { get; } = new List<SqlStepExecutionParameter>();
 

@@ -13,7 +13,7 @@ public class SqlStepExecutionParameter : StepExecutionParameterBase
         StepExecution = execution;
     }
 
-    public SqlStepExecution StepExecution { get; set; } = null!;
+    public SqlStepExecution StepExecution { get; init; } = null!;
 
     public override StepExecution BaseStepExecution => StepExecution;
 }

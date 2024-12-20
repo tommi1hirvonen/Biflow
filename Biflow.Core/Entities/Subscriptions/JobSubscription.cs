@@ -11,9 +11,9 @@ public class JobSubscription(Guid userId, Guid jobId) : Subscription(userId, Sub
     public AlertType? AlertType { get; set; }
 
     [Required]
-    public Guid JobId { get; set; } = jobId;
+    public Guid JobId { get; init; } = jobId;
 
-    public Job Job { get; set; } = null!;
+    public Job Job { get; init; } = null!;
 
     public bool NotifyOnOvertime { get; set; }
 }

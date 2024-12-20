@@ -5,10 +5,10 @@ namespace Biflow.Core.Entities;
 
 public class MasterDataTableLookup
 {
-    public Guid LookupId { get; set; }
+    public Guid LookupId { get; init; }
 
     [Required]
-    public Guid TableId { get; set; }
+    public Guid TableId { get; init; }
 
     [Required]
     [MaxLength(128)]
@@ -29,7 +29,7 @@ public class MasterDataTableLookup
     public LookupDisplayType LookupDisplayType { get; set; }
 
     [JsonIgnore]
-    public MasterDataTable Table { get; set; } = null!;
+    public MasterDataTable Table { get; init; } = null!;
 
     [JsonIgnore]
     public MasterDataTable LookupTable { get; set; } = null!;

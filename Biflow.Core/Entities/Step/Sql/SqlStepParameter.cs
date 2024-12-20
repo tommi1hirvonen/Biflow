@@ -14,7 +14,7 @@ public class SqlStepParameter : StepParameterBase
     }
 
     [JsonIgnore]
-    public SqlStep Step { get; set; } = null!;
+    public SqlStep Step { get; init; } = null!;
 
     [JsonIgnore]
     public override Step BaseStep => Step; 

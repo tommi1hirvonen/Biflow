@@ -1,5 +1,6 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
@@ -45,9 +46,9 @@ public class ExeStepExecution : StepExecution,
     [Display(Name = "Success exit code")]
     public int? ExeSuccessExitCode { get; private set; }
 
-    public double TimeoutMinutes { get; private set; }
+    public double TimeoutMinutes { get; [UsedImplicitly] private set; }
 
-    public Guid? RunAsCredentialId { get; private set; }
+    public Guid? RunAsCredentialId { get; [UsedImplicitly] private set; }
 
     public string? RunAsUsername { get; private set; }
 

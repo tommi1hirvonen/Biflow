@@ -14,7 +14,7 @@ public class FabricStepExecutionParameter : StepExecutionParameterBase
         StepExecution = execution;
     }
 
-    public FabricStepExecution StepExecution { get; set; } = null!;
+    public FabricStepExecution StepExecution { get; init; } = null!;
     
     public override StepExecution BaseStepExecution => StepExecution;
 }

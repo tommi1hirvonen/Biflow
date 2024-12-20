@@ -1,5 +1,6 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
@@ -29,7 +30,7 @@ public class FunctionStepExecution : StepExecution,
     }
 
     [Display(Name = "Function app id")]
-    public Guid FunctionAppId { get; private set; }
+    public Guid FunctionAppId { get; [UsedImplicitly] private set; }
 
     [Display(Name = "Function url")]
     [MaxLength(1000)]
@@ -41,7 +42,7 @@ public class FunctionStepExecution : StepExecution,
     [Display(Name = "Is durable")]
     public bool FunctionIsDurable { get; private set; }
 
-    public double TimeoutMinutes { get; private set; }
+    public double TimeoutMinutes { get; [UsedImplicitly] private set; }
 
     public IEnumerable<FunctionStepExecutionParameter> StepExecutionParameters { get; } = new List<FunctionStepExecutionParameter>();
 

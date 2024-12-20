@@ -48,5 +48,5 @@ public class Dependency : IAuditable
     public bool IsCandidateForRemoval { get; set; }
 
     [JsonIgnore]
-    public bool IsNewAddition { get; set; }
+    public bool IsNewAddition { get; init; }
 }

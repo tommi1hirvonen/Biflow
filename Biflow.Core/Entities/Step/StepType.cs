@@ -66,5 +66,5 @@ public enum StepType
     
     [Category("SQL Server", 5)]
     [Description("SQL Server Agent job")]
-    AgentJob,
+    AgentJob
 }

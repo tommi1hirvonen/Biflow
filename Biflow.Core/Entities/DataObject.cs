@@ -21,10 +21,10 @@ public partial class DataObject : IDataObject
     public int MaxConcurrentWrites { get; set; } = 1;
 
     [JsonIgnore]
-    public DataObjectMappingResult SourceMappingResult { get; set; } = new();
+    public DataObjectMappingResult SourceMappingResult { get; init; } = new();
     
     [JsonIgnore]
-    public DataObjectMappingResult TargetMappingResult { get; set; } = new();
+    public DataObjectMappingResult TargetMappingResult { get; init; } = new();
 
     [JsonIgnore]
     public ICollection<StepDataObject> Steps { get; } = new List<StepDataObject>();

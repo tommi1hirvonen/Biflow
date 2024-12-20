@@ -1,4 +1,5 @@
 ﻿using Biflow.Core.Interfaces;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
@@ -28,7 +29,7 @@ public class EmailStepExecution : StepExecution,
     /// <summary>
     /// Comma separated list of recipient email addresses
     /// </summary>
-    public string Recipients { get; private set; }
+    public string Recipients { get; [UsedImplicitly] private set; }
 
     public string Subject { get; private set; }
 

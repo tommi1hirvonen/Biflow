@@ -81,33 +81,32 @@ public class TopologicalComparer<TItem, TKey> : IComparer<TItem>
     {
         var key = _keySelector(current);
         var state = visited.GetValueOrDefault(key, VisitState.NotVisited);
-        if (state == VisitState.Visited)
+        switch (state)
         {
-            return;
-        }
-
-        if (state == VisitState.Visiting)
-        {
-            var newCycles = parents
-                .Concat([current])
-                .SkipWhile(parent => !EqualityComparer<TKey>.Default.Equals(key, _keySelector(parent)))
-                .ToList();
-            cycles.Add(newCycles);
-        }
-        else
-        {
-            visited[key] = VisitState.Visiting;
-            parents.Add(current);
-            var dependencies = items
-                .Where(item => _dependenciesSelector(current).Any(k => k.Equals(_keySelector(item))))
-                .ToArray();
-            foreach (var dependency in dependencies)
-            {
-                DepthFirstSearch(dependency, items, parents, visited, cycles, stack);
-            }
-            parents.RemoveAt(parents.Count - 1);
-            visited[key] = VisitState.Visited;
-            stack.Push(current);
+            case VisitState.Visited:
+                return;
+            case VisitState.Visiting:
+                var newCycles = parents
+                    .Concat([current])
+                    .SkipWhile(parent => !EqualityComparer<TKey>.Default.Equals(key, _keySelector(parent)))
+                    .ToList();
+                cycles.Add(newCycles);
+                break;
+            case VisitState.NotVisited:
+            default:
+                visited[key] = VisitState.Visiting;
+                parents.Add(current);
+                var dependencies = items
+                    .Where(item => _dependenciesSelector(current).Any(k => k.Equals(_keySelector(item))))
+                    .ToArray();
+                foreach (var dependency in dependencies)
+                {
+                    DepthFirstSearch(dependency, items, parents, visited, cycles, stack);
+                }
+                parents.RemoveAt(parents.Count - 1);
+                visited[key] = VisitState.Visited;
+                stack.Push(current);
+                break;
         }
     }
 }

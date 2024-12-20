@@ -14,7 +14,7 @@ public class EmailStepParameter : StepParameterBase
     }
 
     [JsonIgnore]
-    public EmailStep Step { get; set; } = null!;
+    public EmailStep Step { get; init; } = null!;
 
     [JsonIgnore]
     public override Step BaseStep => Step;

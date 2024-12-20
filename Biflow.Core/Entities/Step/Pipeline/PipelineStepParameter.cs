@@ -14,7 +14,7 @@ public class PipelineStepParameter : StepParameterBase
     }
 
     [JsonIgnore]
-    public PipelineStep Step { get; set; } = null!;
+    public PipelineStep Step { get; init; } = null!;
 
     [JsonIgnore]
     public override Step BaseStep => Step;

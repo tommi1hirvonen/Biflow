@@ -1,5 +1,6 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
@@ -31,9 +32,9 @@ public class PipelineStepExecution : StepExecution,
     public string PipelineName { get; private set; }
 
     [Display(Name = "Pipeline client id")]
-    public Guid PipelineClientId { get; private set; }
+    public Guid PipelineClientId { get; [UsedImplicitly] private set; }
 
-    public double TimeoutMinutes { get; private set; }
+    public double TimeoutMinutes { get; [UsedImplicitly] private set; }
 
     public IEnumerable<PipelineStepExecutionParameter> StepExecutionParameters { get; } = new List<PipelineStepExecutionParameter>();
 

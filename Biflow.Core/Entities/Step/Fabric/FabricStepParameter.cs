@@ -16,7 +16,7 @@ public class FabricStepParameter : StepParameterBase
     }
 
     [JsonIgnore]
-    public FabricStep Step { get; set; } = null!;
+    public FabricStep Step { get; init; } = null!;
 
     [JsonIgnore]
     public override Step BaseStep => Step;

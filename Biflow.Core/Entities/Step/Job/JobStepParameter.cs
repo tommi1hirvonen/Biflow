@@ -29,7 +29,7 @@ public class JobStepParameter : StepParameterBase
     public JobParameter AssignToJobParameter { get; set; } = null!;
 
     [JsonIgnore]
-    public JobStep Step { get; set; } = null!;
+    public JobStep Step { get; init; } = null!;
 
     [JsonIgnore]
     public override Step BaseStep => Step;

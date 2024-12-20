@@ -20,9 +20,9 @@ public sealed class StepExecutionConditionParameter : ParameterBase
         StepExecution = execution;
     }
 
-    public Guid ExecutionId { get; set; }
+    public Guid ExecutionId { get; init; }
 
-    public Guid StepId { get; set; }
+    public Guid StepId { get; init; }
 
     public override ParameterValue ParameterValue
     {
@@ -30,13 +30,13 @@ public sealed class StepExecutionConditionParameter : ParameterBase
         set;
     } = new();
 
-    public Guid? ExecutionParameterId { get; set; }
+    public Guid? ExecutionParameterId { get; init; }
 
     public ParameterValue ExecutionParameterValue { get; set; }
 
-    public ExecutionParameter? ExecutionParameter { get; set; }
+    public ExecutionParameter? ExecutionParameter { get; init; }
 
-    public StepExecution StepExecution { get; set; } = null!;
+    public StepExecution StepExecution { get; init; } = null!;
 
     public override string DisplayValue => ExecutionParameter switch
     {

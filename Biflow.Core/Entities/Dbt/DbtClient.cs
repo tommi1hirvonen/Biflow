@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Json;
 using System.Text.Json;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
@@ -140,12 +141,16 @@ file record EnvironmentsResponse(DbtEnvironment[] Data, Extra Extra);
 
 file record JobsResponse(DbtJob[] Data, Extra Extra);
 
+[UsedImplicitly]
 file record JobResponse(DbtJob? Data);
 
+[UsedImplicitly]
 file record TriggerJobRunRequest(string Cause);
 
 file record JobRunResponse(DbtJobRun Data);
 
+[UsedImplicitly]
 file record Extra(Pagination Pagination);
 
+[UsedImplicitly]
 file record Pagination(int TotalCount);

@@ -35,12 +35,12 @@ public class StepParameterExpressionParameter : IAsyncEvaluable, IExpressionPara
         }
     }
 
-    public Guid StepParameterId { get; set; }
+    public Guid StepParameterId { get; init; }
 
     [JsonIgnore]
-    public StepParameterBase StepParameter { get; set; } = null!;
+    public StepParameterBase StepParameter { get; init; } = null!;
 
-    public Guid ParameterId { get; set; }
+    public Guid ParameterId { get; init; }
 
     [Required]
     [MinLength(1)]

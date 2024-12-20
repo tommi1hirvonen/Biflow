@@ -13,7 +13,7 @@ public class DatabricksStepExecutionParameter : StepExecutionParameterBase
         StepExecution = execution;
     }
 
-    public DatabricksStepExecution StepExecution { get; set; } = null!;
+    public DatabricksStepExecution StepExecution { get; init; } = null!;
 
     public override StepExecution BaseStepExecution => StepExecution;
 }

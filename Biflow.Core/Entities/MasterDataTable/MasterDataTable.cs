@@ -41,16 +41,16 @@ public class MasterDataTable
 
     public List<string> HiddenColumns { get; set; } = [];
 
-    public List<string> ColumnOrder { get; set; } = [];
+    public List<string> ColumnOrder { get; init; } = [];
 
     [JsonIgnore]
-    public MasterDataTableCategory? Category { get; set; }
+    public MasterDataTableCategory? Category { get; init; }
 
     [JsonIgnore]
     public MsSqlConnection Connection { get; set; } = null!;
 
     [JsonIgnore]
-    public ICollection<User> Users { get; set; } = null!;
+    public ICollection<User> Users { get; init; } = null!;
 
     [ValidateComplexType]
     [JsonInclude]
@@ -60,5 +60,5 @@ public class MasterDataTable
     public IEnumerable<MasterDataTableLookup> DependentLookups { get; } = new List<MasterDataTableLookup>();
 
     [JsonIgnore]
-    public byte[]? Timestamp { get; set; }
+    public byte[]? Timestamp { get; init; }
 }

@@ -14,11 +14,11 @@ public class PackageStepExecutionParameter : StepExecutionParameterBase
         ParameterLevel = parameter.ParameterLevel;
     }
 
-    public PackageStepExecution StepExecution { get; set; } = null!;
+    public PackageStepExecution StepExecution { get; init; } = null!;
 
     public override StepExecution BaseStepExecution => StepExecution;
 
-    public ParameterLevel ParameterLevel { get; set; }
+    public ParameterLevel ParameterLevel { get; init; }
 
     public override string DisplayName => $"${ParameterLevel}::{ParameterName}";
 }

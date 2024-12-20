@@ -2,6 +2,7 @@
 using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
@@ -79,7 +80,7 @@ public abstract class Step : IComparable, IAuditable
     public Guid JobId { get; init; }
 
     [JsonIgnore]
-    public Job Job { get; set; } = null!;
+    public Job Job { get; init; } = null!;
 
     [Required]
     [MaxLength(250)]
@@ -116,7 +117,7 @@ public abstract class Step : IComparable, IAuditable
     [Range(0, 1000)]
     public double RetryIntervalMinutes { get; set; }
 
-    public EvaluationExpression ExecutionConditionExpression { get; set; } = new();
+    public EvaluationExpression ExecutionConditionExpression { get; init; } = new();
 
     public DateTimeOffset CreatedOn { get; set; }
 
@@ -131,7 +132,7 @@ public abstract class Step : IComparable, IAuditable
     public string? LastModifiedBy { get; set; }
 
     [JsonIgnore]
-    public byte[]? Timestamp { get; private set; }
+    public byte[]? Timestamp { get; [UsedImplicitly] private set; }
 
     [JsonInclude]
     public ICollection<Dependency> Dependencies { get; private set; } = new List<Dependency>();

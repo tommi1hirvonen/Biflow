@@ -18,13 +18,13 @@ public class StepExecutionParameterExpressionParameter : IExpressionParameter<Ex
         InheritFromExecutionParameter = execution.Execution.ExecutionParameters.First(p => p.ParameterId == parameter.InheritFromJobParameterId);
     }
 
-    public Guid ExecutionId { get; set; }
+    public Guid ExecutionId { get; init; }
 
-    public Guid StepParameterId { get; set; }
+    public Guid StepParameterId { get; init; }
 
-    public StepExecutionParameterBase StepParameter { get; set; } = null!;
+    public StepExecutionParameterBase StepParameter { get; init; } = null!;
 
-    public Guid ParameterId { get; set; }
+    public Guid ParameterId { get; init; }
 
     [Required]
     [MaxLength(128)]

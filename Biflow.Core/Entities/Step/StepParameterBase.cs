@@ -49,7 +49,7 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
     }
 
     [Display(Name = "Step id")]
-    public Guid StepId { get; set; }
+    public Guid StepId { get; init; }
 
     public ParameterType ParameterType { get; }
 

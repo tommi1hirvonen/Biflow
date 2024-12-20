@@ -30,7 +30,7 @@ public class DatabricksStep : Step, IHasTimeout, IHasStepParameters<DatabricksSt
     public Guid DatabricksWorkspaceId { get; set; }
 
     [JsonIgnore]
-    public DatabricksWorkspace? DatabricksWorkspace { get; set; }
+    public DatabricksWorkspace? DatabricksWorkspace { get; init; }
 
     [ValidateComplexType]
     [JsonInclude]

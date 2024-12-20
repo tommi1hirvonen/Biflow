@@ -21,7 +21,7 @@ public abstract class PipelineClient(PipelineClientType type)
     public Guid? AzureCredentialId { get; set; }
 
     [JsonIgnore]
-    public AzureCredential AzureCredential { get; set; } = null!;
+    public AzureCredential AzureCredential { get; init; } = null!;
 
     [Range(0, int.MaxValue)]
     public int MaxConcurrentPipelineSteps { get; set; }

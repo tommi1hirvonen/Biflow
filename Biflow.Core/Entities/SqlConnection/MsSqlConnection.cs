@@ -24,10 +24,10 @@ public class MsSqlConnection() : SqlConnectionBase(SqlConnectionType.MsSql)
     public int MaxConcurrentPackageSteps { get; set; }
 
     [JsonIgnore]
-    public IEnumerable<AgentJobStep> AgentJobSteps { get; set; } = new List<AgentJobStep>();
+    public IEnumerable<AgentJobStep> AgentJobSteps { get; init; } = new List<AgentJobStep>();
 
     [JsonIgnore]
-    public IEnumerable<PackageStep> PackageSteps { get; set; } = new List<PackageStep>();
+    public IEnumerable<PackageStep> PackageSteps { get; init; } = new List<PackageStep>();
 
     [JsonIgnore]
     public override IEnumerable<Step> Steps => AgentJobSteps.Cast<Step>().Concat(PackageSteps).Concat(SqlSteps);

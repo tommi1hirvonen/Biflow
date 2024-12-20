@@ -15,9 +15,9 @@ public class JobConcurrency
         StepType = other.StepType;
     }
 
-    public Guid JobId { get; set; }
+    public Guid JobId { get; init; }
 
-    public StepType StepType { get; set; }
+    public StepType StepType { get; init; }
 
     [Required]
     [Display(Name = "Max parallel steps (0 = use default)")]
@@ -25,5 +25,5 @@ public class JobConcurrency
     public int MaxParallelSteps { get; set; }
 
     [JsonIgnore]
-    public Job Job { get; set; } = null!;
+    public Job Job { get; init; } = null!;
 }

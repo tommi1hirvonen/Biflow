@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
@@ -20,11 +21,11 @@ public abstract class StepExecutionAttempt(StepExecutionStatus executionStatus, 
         StepId = execution.StepId;
     }
 
-    public Guid ExecutionId { get; private set; }
+    public Guid ExecutionId { get; [UsedImplicitly] private set; }
 
-    public Guid StepId { get; private set; }
+    public Guid StepId { get; [UsedImplicitly] private set; }
 
-    public int RetryAttemptIndex { get; private set; }
+    public int RetryAttemptIndex { get; [UsedImplicitly] private set; }
 
     public DateTimeOffset? StartedOn { get; set; }
 
@@ -34,17 +35,17 @@ public abstract class StepExecutionAttempt(StepExecutionStatus executionStatus, 
 
     public StepType StepType { get; } = stepType;
 
-    public IList<ErrorMessage> ErrorMessages { get; private set; } = new List<ErrorMessage>();
+    public IList<ErrorMessage> ErrorMessages { get; [UsedImplicitly] private set; } = new List<ErrorMessage>();
 
-    public IList<WarningMessage> WarningMessages { get; private set; } = new List<WarningMessage>();
+    public IList<WarningMessage> WarningMessages { get; [UsedImplicitly] private set; } = new List<WarningMessage>();
 
-    public IList<InfoMessage> InfoMessages { get; private set; } = new List<InfoMessage>();
+    public IList<InfoMessage> InfoMessages { get; [UsedImplicitly] private set; } = new List<InfoMessage>();
 
     [Display(Name = "Stopped by")]
     [MaxLength(250)]
     public string? StoppedBy { get; set; }
 
-    public StepExecution StepExecution { get; set; } = null!;
+    public StepExecution StepExecution { get; init; } = null!;
 
     public string UniqueId => string.Concat(ExecutionId, StepId, RetryAttemptIndex);
 

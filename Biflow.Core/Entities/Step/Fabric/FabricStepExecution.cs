@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Biflow.Core.Interfaces;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
@@ -38,9 +39,9 @@ public class FabricStepExecution : StepExecution,
     [MaxLength(250)]
     public string? ItemName { get; private set; }
     
-    public double TimeoutMinutes { get; private set; }
+    public double TimeoutMinutes { get; [UsedImplicitly] private set; }
     
-    public Guid AzureCredentialId { get; private set; }
+    public Guid AzureCredentialId { get; [UsedImplicitly] private set; }
     
     public IEnumerable<FabricStepExecutionParameter> StepExecutionParameters { get; } =
         new List<FabricStepExecutionParameter>();

@@ -17,7 +17,7 @@ public class PackageStepParameter : StepParameterBase
     public ParameterLevel ParameterLevel { get; set; } = ParameterLevel.Package;
 
     [JsonIgnore]
-    public PackageStep Step { get; set; } = null!;
+    public PackageStep Step { get; init; } = null!;
 
     [JsonIgnore]
     public override Step BaseStep => Step;

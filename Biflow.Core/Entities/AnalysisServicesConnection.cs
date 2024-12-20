@@ -20,7 +20,7 @@ public class AnalysisServicesConnection
     public string ConnectionString { get; set; } = "";
 
     [JsonIgnore]
-    public IEnumerable<TabularStep> TabularSteps { get; set; } = new List<TabularStep>();
+    public IEnumerable<TabularStep> TabularSteps { get; init; } = new List<TabularStep>();
 
     public async Task TestConnectionAsync(CancellationToken cancellationToken = default)
     {

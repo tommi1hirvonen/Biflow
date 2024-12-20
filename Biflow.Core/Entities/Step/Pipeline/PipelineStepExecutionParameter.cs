@@ -13,7 +13,7 @@ public class PipelineStepExecutionParameter : StepExecutionParameterBase
         StepExecution = execution;
     }
 
-    public PipelineStepExecution StepExecution { get; set; } = null!;
+    public PipelineStepExecution StepExecution { get; init; } = null!;
 
     public override StepExecution BaseStepExecution => StepExecution;
 }

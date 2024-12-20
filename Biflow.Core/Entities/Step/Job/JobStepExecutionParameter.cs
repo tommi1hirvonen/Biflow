@@ -14,9 +14,9 @@ public class JobStepExecutionParameter : StepExecutionParameterBase
         AssignToJobParameterId = parameter.AssignToJobParameterId;
     }
 
-    public JobStepExecution StepExecution { get; set; } = null!;
+    public JobStepExecution StepExecution { get; init; } = null!;
 
     public override StepExecution BaseStepExecution => StepExecution;
 
-    public Guid AssignToJobParameterId { get; set; }
+    public Guid AssignToJobParameterId { get; init; }
 }

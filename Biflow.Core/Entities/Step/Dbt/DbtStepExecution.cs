@@ -1,4 +1,5 @@
 ﻿using Biflow.Core.Interfaces;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
@@ -26,9 +27,9 @@ public class DbtStepExecution : StepExecution, IHasTimeout, IHasStepExecutionAtt
          ProjectName = null
      };
 
-    public double TimeoutMinutes { get; private set; }
+    public double TimeoutMinutes { get; [UsedImplicitly] private set; }
 
-    public Guid DbtAccountId { get; private set; }
+    public Guid DbtAccountId { get; [UsedImplicitly] private set; }
 
     public override DbtStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {

@@ -50,13 +50,13 @@ public abstract class SqlConnectionBase(SqlConnectionType connectionType) : ICom
     };
 
     [JsonIgnore]
-    public IEnumerable<SqlStep> SqlSteps { get; set; } = new List<SqlStep>();
+    public IEnumerable<SqlStep> SqlSteps { get; init; } = new List<SqlStep>();
 
     [JsonIgnore]
     public virtual IEnumerable<Step> Steps => SqlSteps;
     
     [JsonIgnore]
-    public IEnumerable<ScdTable> ScdTables { get; set; } = new List<ScdTable>();
+    public IEnumerable<ScdTable> ScdTables { get; init; } = new List<ScdTable>();
     
     public abstract IColumnMetadataProvider CreateColumnMetadataProvider();
 

@@ -14,7 +14,7 @@ public class FunctionStepParameter : StepParameterBase
     }
 
     [JsonIgnore]
-    public FunctionStep Step { get; set; } = null!;
+    public FunctionStep Step { get; init; } = null!;
 
     [JsonIgnore]
     public override Step BaseStep => Step;

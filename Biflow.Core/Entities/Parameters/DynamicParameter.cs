@@ -18,7 +18,7 @@ public abstract class DynamicParameter : ParameterBase, IAsyncEvaluable
         }
     }
 
-    public EvaluationExpression Expression { get; set; } = new();
+    public EvaluationExpression Expression { get; init; } = new();
 
     [JsonIgnore]
     public override string DisplayValue => UseExpression switch

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
@@ -35,14 +36,14 @@ public abstract class StepExecution(string stepName, StepType stepType)
     private readonly List<StepExecutionAttempt> _stepExecutionAttempts = [];
 
     [Display(Name = "Execution id")]
-    public Guid ExecutionId { get; private set; }
+    public Guid ExecutionId { get; [UsedImplicitly] private set; }
 
     [Display(Name = "Step id")]
-    public Guid StepId { get; private set; }
+    public Guid StepId { get; [UsedImplicitly] private set; }
 
     [Display(Name = "Step")]
     [MaxLength(250)]
-    public string StepName { get; private set; } = stepName;
+    public string StepName { get; [UsedImplicitly] private set; } = stepName;
 
     [Display(Name = "Step type")]
     public StepType StepType { get; } = stepType;
@@ -55,9 +56,9 @@ public abstract class StepExecution(string stepName, StepType stepType)
 
     public double RetryIntervalMinutes { get; private set; }
 
-    public EvaluationExpression ExecutionConditionExpression { get; private set; } = new();
+    public EvaluationExpression ExecutionConditionExpression { get; [UsedImplicitly] private set; } = new();
 
-    public Execution Execution { get; set; } = null!;
+    public Execution Execution { get; init; } = null!;
 
     public IEnumerable<StepExecutionAttempt> StepExecutionAttempts => _stepExecutionAttempts;
 

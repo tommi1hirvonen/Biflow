@@ -1,12 +1,13 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Cryptography;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
 public class ApiKey : IAuditable
 {
-    public Guid Id { get; private set; }
+    public Guid Id { get; [UsedImplicitly] private set; }
 
     [Required]
     [MaxLength(250)]

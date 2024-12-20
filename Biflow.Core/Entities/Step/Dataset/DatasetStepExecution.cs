@@ -1,5 +1,6 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
@@ -22,7 +23,7 @@ public class DatasetStepExecution : StepExecution, IHasStepExecutionAttempts<Dat
         AddAttempt(new DatasetStepExecutionAttempt(this));
     }
 
-    public Guid AzureCredentialId { get; private set; }
+    public Guid AzureCredentialId { get; [UsedImplicitly] private set; }
 
     [MaxLength(36)]
     public string WorkspaceId { get; private set; }

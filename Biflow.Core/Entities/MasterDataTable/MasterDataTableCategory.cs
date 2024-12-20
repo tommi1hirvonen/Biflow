@@ -5,7 +5,7 @@ namespace Biflow.Core.Entities;
 
 public class MasterDataTableCategory
 {
-    public Guid CategoryId { get; set; }
+    public Guid CategoryId { get; init; }
 
     [Required]
     [MaxLength(250)]

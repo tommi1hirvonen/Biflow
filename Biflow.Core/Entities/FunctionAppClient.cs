@@ -1,5 +1,4 @@
 ﻿using Azure.Core;
-using Azure.Identity;
 using Biflow.Core.Interfaces;
 using System.Text.Json;
 
@@ -12,7 +11,7 @@ public class FunctionAppClient(FunctionApp app, ITokenService tokenService, IHtt
     private readonly string _subscriptionId = app.SubscriptionId;
     private readonly string _resourceGroupName = app.ResourceGroupName;
     private readonly string _resourceName = app.ResourceName;
-    private readonly AzureCredential azureCredential = app.AzureCredential;
+    private readonly AzureCredential _azureCredential = app.AzureCredential;
 
     private const string ResourceUrl = "https://management.azure.com//.default";
 
@@ -21,7 +20,7 @@ public class FunctionAppClient(FunctionApp app, ITokenService tokenService, IHtt
     public async Task<List<(string FunctionName, string FunctionUrl)>> GetFunctionsAsync()
     {
         using var client = _httpClientFactory.CreateClient();
-        var (accessToken, _) = await _tokenService.GetTokenAsync(azureCredential, [ResourceUrl]);
+        var (accessToken, _) = await _tokenService.GetTokenAsync(_azureCredential, [ResourceUrl]);
         var functionListUrl = $"https://management.azure.com/subscriptions/{_subscriptionId}/resourceGroups/{_resourceGroupName}/providers/Microsoft.Web/sites/{_resourceName}/functions?api-version=2015-08-01";
         var message = new HttpRequestMessage(HttpMethod.Get, functionListUrl);
         message.Headers.Add("authorization", $"Bearer {accessToken}");
@@ -38,7 +37,7 @@ public class FunctionAppClient(FunctionApp app, ITokenService tokenService, IHtt
             var url = properties.GetProperty("invoke_url_template").GetString() ?? "";
             var config = properties.GetProperty("config");
             var bindings = config.GetProperty("bindings").EnumerateArray();
-            string type = "";
+            var type = "";
             if (bindings.MoveNext())
             {
                 type = bindings.Current.GetProperty("type").GetString() ?? "";
@@ -55,7 +54,7 @@ public class FunctionAppClient(FunctionApp app, ITokenService tokenService, IHtt
     public async Task<List<(string Type, string Key)>> GetHostKeysAsync()
     {
         using var client = _httpClientFactory.CreateClient();
-        var (accessToken, _) = await _tokenService.GetTokenAsync(azureCredential, [ResourceUrl]);
+        var (accessToken, _) = await _tokenService.GetTokenAsync(_azureCredential, [ResourceUrl]);
         var hostKeysUrl = $"https://management.azure.com/subscriptions/{_subscriptionId}/resourceGroups/{_resourceGroupName}/providers/Microsoft.Web/sites/{_resourceName}/host/default/listkeys?api-version=2019-08-01";
         var message = new HttpRequestMessage(HttpMethod.Post, hostKeysUrl);
         message.Headers.Add("authorization", $"Bearer {accessToken}");
@@ -78,7 +77,7 @@ public class FunctionAppClient(FunctionApp app, ITokenService tokenService, IHtt
     public async Task TestConnection()
     {
         using var client = _httpClientFactory.CreateClient();
-        var credential = azureCredential.GetTokenCredential();
+        var credential = _azureCredential.GetTokenCredential();
         var context = new TokenRequestContext([ResourceUrl]);
         var token = await credential.GetTokenAsync(context, CancellationToken.None);
 

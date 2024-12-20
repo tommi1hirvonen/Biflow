@@ -7,7 +7,7 @@ public class TagSubscription(Guid userId, Guid tagId) : Subscription(userId, Sub
     public AlertType AlertType { get; set; }
 
     [Required]
-    public Guid TagId { get; set; } = tagId;
+    public Guid TagId { get; init; } = tagId;
 
-    public StepTag Tag { get; set; } = null!;
+    public StepTag Tag { get; init; } = null!;
 }

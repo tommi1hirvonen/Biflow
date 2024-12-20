@@ -46,7 +46,7 @@ public class TabularStep : Step, IHasTimeout
     public Guid ConnectionId { get; set; }
 
     [JsonIgnore]
-    public AnalysisServicesConnection Connection { get; set; } = null!;
+    public AnalysisServicesConnection Connection { get; init; } = null!;
 
     public override TabularStep Copy(Job? targetJob = null) => new(this, targetJob);
 

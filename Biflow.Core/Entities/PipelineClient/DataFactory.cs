@@ -1,5 +1,4 @@
-﻿using Azure.Identity;
-using Azure.ResourceManager;
+﻿using Azure.ResourceManager;
 using Azure.ResourceManager.DataFactory;
 using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;

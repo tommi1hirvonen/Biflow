@@ -1,4 +1,5 @@
 ﻿using Biflow.Core.Interfaces;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
@@ -15,9 +16,9 @@ public class ScdStepExecution : StepExecution, IHasTimeout, IHasStepExecutionAtt
         AddAttempt(new ScdStepExecutionAttempt(this));
     }
 
-    public double TimeoutMinutes { get; private set; }
+    public double TimeoutMinutes { get; [UsedImplicitly] private set; }
 
-    public Guid ScdTableId { get; set; }
+    public Guid ScdTableId { get; [UsedImplicitly] private set; }
     
     public override ScdStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {

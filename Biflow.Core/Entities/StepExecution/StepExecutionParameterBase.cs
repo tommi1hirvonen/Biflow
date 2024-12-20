@@ -1,5 +1,6 @@
 ﻿using Biflow.Core.Constants;
 using Biflow.Core.Interfaces;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
@@ -32,9 +33,9 @@ public abstract class StepExecutionParameterBase
 
     private readonly List<StepExecutionParameterExpressionParameter> _expressionParameters = [];
 
-    public Guid ExecutionId { get; private set; }
+    public Guid ExecutionId { get; [UsedImplicitly] private set; }
 
-    public Guid StepId { get; private set; }
+    public Guid StepId { get; [UsedImplicitly] private set; }
 
     public ParameterType ParameterType { get; private set; }
 
@@ -44,11 +45,11 @@ public abstract class StepExecutionParameterBase
         set => base.ParameterValue = value;
     }
 
-    public Guid? InheritFromExecutionParameterId { get; private set; }
+    public Guid? InheritFromExecutionParameterId { get; [UsedImplicitly] private set; }
 
     public ParameterValue ExecutionParameterValue { get; set; }
 
-    public ExecutionParameter? InheritFromExecutionParameter { get; set; }
+    public ExecutionParameter? InheritFromExecutionParameter { get; init; }
 
     public override bool UseExpression
     {

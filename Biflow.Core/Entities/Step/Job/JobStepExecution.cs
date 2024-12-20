@@ -1,5 +1,6 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
@@ -30,7 +31,7 @@ public class JobStepExecution : StepExecution,
 
     private readonly List<TagFilter> _tagFilters = [];
 
-    public double TimeoutMinutes { get; private set; }
+    public double TimeoutMinutes { get; [UsedImplicitly] private set; }
 
     [Display(Name = "Job to execute")]
     public Guid JobToExecuteId { get; private set; }

@@ -21,10 +21,10 @@ public sealed class JobParameter : DynamicParameter
     }
 
     [Display(Name = "Job")]
-    public Guid JobId { get; set; }
+    public Guid JobId { get; init; }
 
     [JsonIgnore]
-    public Job Job { get; set; } = null!;
+    public Job Job { get; init; } = null!;
 
     [JsonIgnore]
     public IEnumerable<StepParameterBase> InheritingStepParameters { get; } = new List<StepParameterBase>();

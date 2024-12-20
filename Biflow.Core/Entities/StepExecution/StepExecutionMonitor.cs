@@ -14,7 +14,7 @@ public class StepExecutionMonitor
 
     public DateTimeOffset CreatedOn { get; private set; } = DateTimeOffset.Now;
 
-    public StepExecution StepExecution { get; set; } = null!;
+    public StepExecution StepExecution { get; init; } = null!;
 
-    public StepExecution MonitoredStepExecution { get; set; } = null!;
+    public StepExecution MonitoredStepExecution { get; init; } = null!;
 }

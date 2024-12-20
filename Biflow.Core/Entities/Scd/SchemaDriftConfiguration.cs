@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities.Scd;
 
@@ -14,7 +15,7 @@ public sealed class SchemaDriftDisabledConfiguration : SchemaDriftConfiguration
     /// If schema drift is disabled, included columns need to be explicitly defined.
     /// Included columns not found in the source table will cause a validation exception when load is executed.
     /// </summary>
-    public List<string> IncludedColumns { get; init; } = [];
+    public List<string> IncludedColumns { get; [UsedImplicitly] init; } = [];
     
     /// <summary>
     /// Removes a column from the list of included columns if it is found, otherwise adds it to the list.
@@ -47,7 +48,7 @@ public sealed class SchemaDriftEnabledConfiguration : SchemaDriftConfiguration
     /// <summary>
     /// If schema drift is enabled, specific columns can be explicitly excluded.
     /// </summary>
-    public List<string> ExcludedColumns { get; init; } = [];
+    public List<string> ExcludedColumns { get; [UsedImplicitly] init; } = [];
     
     /// <summary>
     /// Removes a column from the list of excluded columns if it is found, otherwise adds it to the list.

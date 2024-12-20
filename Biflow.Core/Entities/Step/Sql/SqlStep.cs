@@ -60,7 +60,7 @@ public class SqlStep : Step, IHasSqlConnection, IHasTimeout, IHasStepParameters<
     public Guid? ResultCaptureJobParameterId { get; set; }
 
     [JsonIgnore]
-    public JobParameter? ResultCaptureJobParameter { get; set; }
+    public JobParameter? ResultCaptureJobParameter { get; init; }
 
     [JsonIgnore]
     public SqlConnectionBase Connection

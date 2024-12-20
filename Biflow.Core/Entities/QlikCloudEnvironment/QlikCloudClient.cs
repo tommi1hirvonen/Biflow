@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Json;
 using System.Text.Json;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
@@ -170,12 +171,15 @@ public class QlikCloudClient : IDisposable
 
     private record GetAppResponse(GetAppResponseAttributes Attributes);
 
+    [UsedImplicitly]
     private record GetAppResponseAttributes(string Id, string Name);
 
     private record GetItemsResponse(ItemData[] Data, Links Links);
 
+    [UsedImplicitly]
     private record ItemData(ItemResourceAttributes ResourceAttributes);
 
+    [UsedImplicitly]
     private record ItemResourceAttributes(string Id, string Name, string SpaceId);
 
     private record GetSpacesResponse(SpaceData[] Data, Links Links);
@@ -184,7 +188,9 @@ public class QlikCloudClient : IDisposable
 
     private record GetAutomationsResponse(QlikAutomation[] Data, Links Links);
 
+    [UsedImplicitly]
     private record Links(Link? Next);
 
+    [UsedImplicitly]
     private record Link(string Href);
 }

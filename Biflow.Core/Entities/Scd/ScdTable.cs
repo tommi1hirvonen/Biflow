@@ -83,10 +83,10 @@ public class ScdTable
     public Guid ConnectionId { get; set; }
 
     [JsonIgnore]
-    public SqlConnectionBase Connection { get; set; } = null!;
+    public SqlConnectionBase Connection { get; init; } = null!;
     
     [JsonIgnore]
-    public IEnumerable<ScdStep> ScdSteps { get; set; } = new List<ScdStep>();
+    public IEnumerable<ScdStep> ScdSteps { get; init; } = new List<ScdStep>();
 
     /// <summary>
     /// Removes a column from the list of natural key columns if it is found, otherwise adds it to the list.

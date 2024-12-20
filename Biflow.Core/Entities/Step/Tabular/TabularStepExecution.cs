@@ -1,5 +1,6 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
@@ -35,10 +36,10 @@ public class TabularStepExecution : StepExecution, IHasTimeout, IHasStepExecutio
     [MaxLength(128)]
     public string? TabularPartitionName { get; private set; }
 
-    public double TimeoutMinutes { get; private set; }
+    public double TimeoutMinutes { get; [UsedImplicitly] private set; }
 
     [Required]
-    public Guid ConnectionId { get; private set; }
+    public Guid ConnectionId { get; [UsedImplicitly] private set; }
 
     public override TabularStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {

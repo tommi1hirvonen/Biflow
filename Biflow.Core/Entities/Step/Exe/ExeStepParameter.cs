@@ -14,7 +14,7 @@ public class ExeStepParameter : StepParameterBase
     }
 
     [JsonIgnore]
-    public ExeStep Step { get; set; } = null!;
+    public ExeStep Step { get; init; } = null!;
 
     [JsonIgnore]
     public override Step BaseStep => Step;

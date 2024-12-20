@@ -1,4 +1,5 @@
 ﻿using Biflow.Core.Constants;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
@@ -24,11 +25,11 @@ public sealed class ExecutionParameter : DynamicParameter
     private bool _evaluated;
     private object? _evaluationResult;
 
-    public Guid ExecutionId { get; private set; }
+    public Guid ExecutionId { get; [UsedImplicitly] private set; }
 
     public ParameterValue DefaultValue { get; private set; }
 
-    public Execution Execution { get; private set; } = null!;
+    public Execution Execution { get; [UsedImplicitly] private set; } = null!;
 
     public IEnumerable<StepExecutionParameterBase> StepExecutionParameters { get; } = new List<StepExecutionParameterBase>();
 

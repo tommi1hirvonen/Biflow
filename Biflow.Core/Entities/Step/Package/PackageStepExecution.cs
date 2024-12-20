@@ -1,5 +1,6 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
@@ -36,25 +37,25 @@ public class PackageStepExecution : StepExecution,
 
     [MaxLength(128)]
     [Display(Name = "Folder name")]
-    public string PackageFolderName { get; private set; }
+    public string PackageFolderName { get; [UsedImplicitly] private set; }
 
     [MaxLength(128)]
     [Display(Name = "Project name")]
-    public string PackageProjectName { get; private set; }
+    public string PackageProjectName { get; [UsedImplicitly] private set; }
 
     [MaxLength(260)]
     [Display(Name = "Package name")]
-    public string PackageName { get; private set; }
+    public string PackageName { get; [UsedImplicitly] private set; }
 
     [Display(Name = "32 bit mode")]
     public bool ExecuteIn32BitMode { get; private set; }
 
     [Display(Name = "Execute as login")]
-    public string? ExecuteAsLogin { get; set; }
+    public string? ExecuteAsLogin { get; private set; }
 
-    public Guid ConnectionId { get; private set; }
+    public Guid ConnectionId { get; [UsedImplicitly] private set; }
 
-    public double TimeoutMinutes { get; private set; }
+    public double TimeoutMinutes { get; [UsedImplicitly] private set; }
 
     public string PackagePath => PackageFolderName + "/" + PackageProjectName + "/" + PackageName;
 

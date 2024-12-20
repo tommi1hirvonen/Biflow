@@ -1,4 +1,5 @@
 ﻿using Biflow.Core.Interfaces;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
@@ -19,9 +20,9 @@ public class QlikStepExecution : StepExecution, IHasTimeout, IHasStepExecutionAt
 
     public QlikStepSettings QlikStepSettings { get; private set; } = new QlikAppReloadSettings();
 
-    public Guid QlikCloudEnvironmentId { get; private set; }
+    public Guid QlikCloudEnvironmentId { get; [UsedImplicitly] private set; }
 
-    public double TimeoutMinutes { get; private set; }
+    public double TimeoutMinutes { get; [UsedImplicitly] private set; }
 
     public override QlikStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {

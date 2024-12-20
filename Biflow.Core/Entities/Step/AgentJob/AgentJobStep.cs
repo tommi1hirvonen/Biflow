@@ -36,7 +36,7 @@ public class AgentJobStep : Step, IHasSqlConnection, IHasTimeout
     public Guid ConnectionId { get; set; }
 
     [JsonIgnore]
-    public MsSqlConnection Connection { get; set; } = null!;
+    public MsSqlConnection Connection { get; init; } = null!;
 
     [JsonIgnore]
     SqlConnectionBase IHasSqlConnection.Connection => Connection;

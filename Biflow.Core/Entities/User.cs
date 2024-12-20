@@ -1,5 +1,6 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
+using JetBrains.Annotations;
 using R = Biflow.Core.Constants.Roles;
 
 namespace Biflow.Core.Entities;
@@ -8,7 +9,7 @@ public class User : IAuditable
 {
     private readonly List<string> _roles = [R.Viewer];
 
-    public Guid UserId { get; private set; }
+    public Guid UserId { get; [UsedImplicitly] private set; }
 
     [Required]
     [MaxLength(250)]

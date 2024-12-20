@@ -19,17 +19,17 @@ public class StepExecutionDataObject
         DataAttributes = dataAttributes.ToList();
     }
 
-    public Guid ExecutionId { get; set; }
+    public Guid ExecutionId { get; init; }
 
-    public Guid StepId { get; set; }
+    public Guid StepId { get; init; }
 
-    public Guid ObjectId { get; set; }
+    public Guid ObjectId { get; init; }
 
-    public StepExecution StepExecution { get; set; } = null!;
+    public StepExecution StepExecution { get; init; } = null!;
 
-    public ExecutionDataObject DataObject { get; set; } = null!;
+    public ExecutionDataObject DataObject { get; init; } = null!;
 
-    public DataObjectReferenceType ReferenceType { get; set; }
+    public DataObjectReferenceType ReferenceType { get; init; }
 
-    public List<string> DataAttributes { get; set; } = [];
+    public List<string> DataAttributes { get; init; } = [];
 }
