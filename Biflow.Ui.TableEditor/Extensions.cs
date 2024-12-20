@@ -255,7 +255,7 @@ public static class Extensions
         (_, '\'') => $"'{name.Replace("'", "''")}'",
         (_, '"') => $"\"{name.Replace("\"", "\"\"")}\"",
         (_, '[' or ']') => $"[{name.Replace("]", "]]")}]",
-        _ => throw new ArgumentException("quoteCharacter must be one of: ', \", [, or ]"),
+        _ => throw new ArgumentException("quoteCharacter must be one of: ', \", [, or ]")
     };
 
     private static IEnumerable<TResult> TakeIfNotNull<TResult>(this IEnumerable<TResult> source, int? count)

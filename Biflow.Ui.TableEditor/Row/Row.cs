@@ -47,7 +47,7 @@ public class Row
             .ToArray();
         foreach (var column in columnsToClear)
         {
-            Values[column] = default;
+            Values[column] = null;
         }
     }
 
@@ -95,7 +95,7 @@ public class Row
         {
             if (column.IsIdentity)
             {
-                Values[column.Name] = default;
+                Values[column.Name] = null;
             }
             else
             {
@@ -124,7 +124,7 @@ public class Row
                 else if (column.Datatype == typeof(TimeOnly))
                     TimeIndexer[column.Name] = TimeOnly.FromDateTime(DateTime.Now);
                 else
-                    Values[column.Name] = default;
+                    Values[column.Name] = null;
             }
         }
     }

@@ -57,35 +57,37 @@ internal class DataTableQueryBuilder(MasterDataTable table, int? top, FilterSet?
             cmdBuilder.Append(lookupJoin);
         }
 
-        if (activeFilters.Length != 0)
+        if (activeFilters.Length == 0)
         {
-            cmdBuilder.Append(" WHERE ");
-            var parameterIndex = 1;
-            foreach (var (filter, column, index) in activeFilters)
+            return (cmdBuilder.ToString(), parameters);
+        }
+        
+        cmdBuilder.Append(" WHERE ");
+        var parameterIndex = 1;
+        foreach (var (filter, column, index) in activeFilters)
+        {
+            if (parameterIndex > 1)
             {
-                if (parameterIndex > 1)
-                {
-                    cmdBuilder.AppendLine().Append(" AND ");
-                }
-                cmdBuilder.Append('(');
-                var filterColumnIdentifier = column.Lookup is not null
-                    ? $"[lookup{index}].[d]"
-                    : $"[main].{column.Name.QuoteName()}";
-                var (statement1, paramsToAdd1) = GenerateFilterStatement(filterColumnIdentifier, filter.Operator1, filter.FilterValue1, parameterIndex);
-                cmdBuilder.Append(statement1);
-                parameters.AddDynamicParams(paramsToAdd1);
-                if (filter.Enabled2)
-                {
-                    parameterIndex++;
-                    var operand = filter.AndOr ? " AND " : " OR ";
-                    cmdBuilder.Append(operand);
-                    var (statement2, paramsToAdd2) = GenerateFilterStatement(filterColumnIdentifier, filter.Operator2, filter.FilterValue2, parameterIndex);
-                    cmdBuilder.Append(statement2);
-                    parameters.AddDynamicParams(paramsToAdd2);
-                }
-                cmdBuilder.Append(')');
-                parameterIndex++;
+                cmdBuilder.AppendLine().Append(" AND ");
             }
+            cmdBuilder.Append('(');
+            var filterColumnIdentifier = column.Lookup is not null
+                ? $"[lookup{index}].[d]"
+                : $"[main].{column.Name.QuoteName()}";
+            var (statement1, paramsToAdd1) = GenerateFilterStatement(filterColumnIdentifier, filter.Operator1, filter.FilterValue1, parameterIndex);
+            cmdBuilder.Append(statement1);
+            parameters.AddDynamicParams(paramsToAdd1);
+            if (filter.Enabled2)
+            {
+                parameterIndex++;
+                var operand = filter.AndOr ? " AND " : " OR ";
+                cmdBuilder.Append(operand);
+                var (statement2, paramsToAdd2) = GenerateFilterStatement(filterColumnIdentifier, filter.Operator2, filter.FilterValue2, parameterIndex);
+                cmdBuilder.Append(statement2);
+                parameters.AddDynamicParams(paramsToAdd2);
+            }
+            cmdBuilder.Append(')');
+            parameterIndex++;
         }
 
         return (cmdBuilder.ToString(), parameters);
