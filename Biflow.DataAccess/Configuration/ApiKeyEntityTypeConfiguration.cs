@@ -14,5 +14,9 @@ internal class ApiKeyEntityTypeConfiguration : IEntityTypeConfiguration<ApiKey>
 
         builder.HasIndex(p => p.Value)
             .IsUnique();
+        
+        builder.PrimitiveCollection(p => p.Scopes)
+            .HasMaxLength(1000)
+            .IsUnicode(false);
     }
 }

@@ -28,6 +28,22 @@ public class ApiKey : IAuditable
     public DateTimeOffset LastModifiedOn { get; set; }
 
     public string? LastModifiedBy { get; set; }
+    
+    public List<string> Scopes { get; init; } = [];
+
+    public void ToggleScope(string scope)
+    {
+        if (Scopes.Remove(scope))
+        {
+            return;
+        }
+        if (!Constants.Scopes.AsReadOnlyList().Contains(scope))
+        {
+            return;
+        }
+        Scopes.Add(scope);
+        Scopes.Sort();
+    }
 
     private static string GenerateApiKey()
     {
