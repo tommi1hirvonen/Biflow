@@ -2,7 +2,7 @@
 @inject ToasterService Toaster
 @inject IJSRuntime Js
 
-<HxModal @ref="_modal" Size="ModalSize.Regular" Title="@(_key?.Id == Guid.Empty ? "New API key" : "Edit API key")">
+<HxModal @ref="_modal" Size="ModalSize.Large" Scrollable="true" Title="@(_key?.Id == Guid.Empty ? "New API key" : "Edit API key")">
     <BodyTemplate>
         @if (_key is not null)
         {
@@ -38,13 +38,16 @@
                                     <div class="input-group-text">
                                         <SvgIcon Icon="LucideIcon.Key" />
                                     </div>
-                                    <textarea class="form-control form-control-sm font-monospace" disabled value="@keyDisplayValue" rows="3"></textarea>
-                                    @if (_key.Id == Guid.Empty)
-                                    {
-                                        <div class="form-text">Copy and save the API key someplace secure. You won't be able to view it in the UI after saving.</div>
-                                        <a class="small" href="javascript:void(0)" @onclick="CopyToClipboard">Copy to clipboard</a>
-                                    }
+                                    <textarea class="form-control form-control-sm font-monospace" disabled value="@keyDisplayValue" rows="2"></textarea>
                                 </div>
+                                @if (_key.Id == Guid.Empty)
+                                {
+                                    <div class="form-text">Copy and save the API key someplace secure. You won't be able to view it in the UI after saving.</div>
+                                    <span class="text-decoration-underline pointer link-primary small"
+                                          @onclick="CopyToClipboard">
+                                        Copy to clipboard
+                                    </span>
+                                }
                             </div>
                         </div>
 
@@ -68,6 +71,71 @@
                                 </div>
                             </div>
                         </div>
+                        
+                        <h6 class="mt-4">Scopes</h6>
+                        
+                        <div class="row mt-3">
+                            <div class="col">
+                                <div class="row mb-3 small">
+                                    <div class="col-auto">
+                                        <span class="text-decoration-underline link-primary pointer"
+                                              @onclick="@(() => SelectAllScopes("Read"))">
+                                            Select all
+                                        </span>
+                                    </div>
+                                    <div class="col-auto">
+                                        <span class="text-decoration-underline link-primary pointer"
+                                              @onclick="@(() => DeselectAllScopes("Read"))">
+                                            Deselect all
+                                        </span>
+                                    </div>
+                                </div>
+                                @foreach (var scope in Scopes.AsReadOnlyList().Where(s => s.Contains("Read")))
+                                {
+                                    <div @key="scope" class="form-check">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               id="scope_@scope.Replace('.', '_')"
+                                               checked=@_key.Scopes.Contains(scope)
+                                               @onchange="@(_ => _key.ToggleScope(scope))">
+                                        <label class="form-check-label fw-normal"
+                                               for="scope_@scope.Replace('.', '_')">
+                                            @scope
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                            <div class="col">
+                                <div class="row mb-3 small">
+                                    <div class="col-auto">
+                                        <span class="text-decoration-underline link-primary pointer"
+                                              @onclick="@(() => SelectAllScopes("Write"))">
+                                            Select all
+                                        </span>
+                                    </div>
+                                    <div class="col-auto">
+                                        <span class="text-decoration-underline link-primary pointer"
+                                              @onclick="@(() => DeselectAllScopes("Write"))">
+                                            Deselect all
+                                        </span>
+                                    </div>
+                                </div>
+                                @foreach (var scope in Scopes.AsReadOnlyList().Where(s => s.Contains("Write")))
+                                {
+                                    <div @key="scope" class="form-check">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               id="scope_@scope.Replace('.', '_')"
+                                               checked=@_key.Scopes.Contains(scope)
+                                               @onchange="@(_ => _key.ToggleScope(scope))">
+                                        <label class="form-check-label fw-normal"
+                                               for="scope_@scope.Replace('.', '_')">
+                                            @scope
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                        </div>
 
                     </div>
                 </div>
@@ -87,6 +155,20 @@
 
     private ApiKey? _key;
     private HxModal? _modal;
+
+    private void SelectAllScopes(string filter)
+    {
+        ArgumentNullException.ThrowIfNull(_key);
+        _key.Scopes.RemoveAll(s => s.Contains(filter));
+        _key.Scopes.AddRange(Scopes.AsReadOnlyList().Where(s => s.Contains(filter)));
+        _key.Scopes.Sort();
+    }
+
+    private void DeselectAllScopes(string filter)
+    {
+        ArgumentNullException.ThrowIfNull(_key);
+        _key.Scopes.RemoveAll(s => s.Contains(filter));
+    }
 
     private async Task SubmitApiKeyAsync()
     {
