@@ -4,6 +4,10 @@ using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
+[JsonDerivedType(typeof(JobSubscription), nameof(SubscriptionType.Job))]
+[JsonDerivedType(typeof(JobTagSubscription), nameof(SubscriptionType.JobTag))]
+[JsonDerivedType(typeof(StepSubscription), nameof(SubscriptionType.Step))]
+[JsonDerivedType(typeof(TagSubscription), nameof(SubscriptionType.Tag))]
 public abstract class Subscription(Guid userId, SubscriptionType subscriptionType)
 {
     public Guid SubscriptionId { get; [UsedImplicitly] private set; }
