@@ -37,26 +37,64 @@ public abstract class JobsReadEndpoints : IEndpoints
                     .ToArrayAsync(cancellationToken);
             })
             .WithDescription("Get all jobs. Collection properties " +
-                             "(job parameters, concurrences, steps, schedules) " +
+                             "(job parameters, concurrencies, steps, schedules) " +
                              "are not loaded and will be empty. " +
                              "Tags can be included by specifying the corresponding query parameter.")
             .WithName("GetJobs");
 
         group.MapGet("/{jobId:guid}", 
-            async (ServiceDbContext dbContext, Guid jobId, CancellationToken cancellationToken) => 
+            async (ServiceDbContext dbContext,
+                Guid jobId,
+                CancellationToken cancellationToken,
+                [FromQuery] bool includeParameters = false,
+                [FromQuery] bool includeConcurrencies = false) => 
             {
-                var job = await dbContext.Jobs
+                var query = dbContext.Jobs
                     .AsNoTracking()
-                    .Include(j => j.JobParameters)
-                    .Include(j => j.JobConcurrencies)
                     .Include(j => j.Tags)
-                    .Include(j => j.Steps)
-                    .Include(j => j.Schedules)
+                    .AsQueryable();
+                if (includeParameters)
+                {
+                    query = query.Include(j => j.JobParameters);
+                }
+                if (includeConcurrencies)
+                {
+                    query = query.Include(j => j.JobConcurrencies);
+                }
+                var job = await query
                     .FirstOrDefaultAsync(j => j.JobId == jobId, cancellationToken);
                 return job is null ? Results.NotFound() : Results.Ok(job);
             })
-            .WithDescription("Get job by id. Collection properties of steps and schedules are not loaded and will be empty.")
+            .WithDescription("Get job by id. Steps and schedules are not loaded and will be empty. " +
+                             "Job parameters and concurrency settings can be included by " +
+                             "specifying the corresponding query parameters.")
             .WithName("GetJob");
+        
+        group.MapGet("/{jobId:guid}/steps",
+            async (ServiceDbContext dbContext, Guid jobId, CancellationToken cancellationToken, [FromQuery] bool includeTags = false) =>
+            {
+                var jobExists = await dbContext.Jobs
+                    .AnyAsync(j => j.JobId == jobId, cancellationToken);
+                if (!jobExists)
+                {
+                    return Results.NotFound();
+                }
+                var query = dbContext.Steps
+                    .AsNoTracking()
+                    .Where(s => s.JobId == jobId);
+                if (includeTags)
+                {
+                    query = query.Include(s => s.Tags);
+                }
+                var steps = await query
+                    .OrderBy(s => s.StepName)
+                    .ToArrayAsync(cancellationToken);
+                return Results.Ok(steps);
+            })
+            .WithDescription("Get all steps for a job. " +
+                             "Step tags can be included by specifying the corresponding query parameter. " +
+                             "Other collection properties are not loaded and will be empty.")
+            .WithName("GetJobSteps");
         
         group.MapGet("/steps/{stepId:guid}",
             async (ServiceDbContext dbContext, Guid stepId, CancellationToken cancellationToken) =>
