@@ -13,9 +13,7 @@ public class JobTagSubscription(Guid userId, Guid jobId, Guid tagId) : Subscript
     [Required]
     public Guid TagId { get; init; } = tagId;
 
-    [JsonIgnore]
     public Job Job { get; init; } = null!;
 
-    [JsonIgnore]
     public StepTag Tag { get; init; } = null!;
 }

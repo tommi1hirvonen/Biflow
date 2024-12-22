@@ -13,8 +13,7 @@ public class JobSubscription(Guid userId, Guid jobId) : Subscription(userId, Sub
 
     [Required]
     public Guid JobId { get; init; } = jobId;
-
-    [JsonIgnore]
+    
     public Job Job { get; init; } = null!;
 
     public bool NotifyOnOvertime { get; set; }

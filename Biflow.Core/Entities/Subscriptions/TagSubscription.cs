@@ -10,6 +10,5 @@ public class TagSubscription(Guid userId, Guid tagId) : Subscription(userId, Sub
     [Required]
     public Guid TagId { get; init; } = tagId;
 
-    [JsonIgnore]
     public StepTag Tag { get; init; } = null!;
 }

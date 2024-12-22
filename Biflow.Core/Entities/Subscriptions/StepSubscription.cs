@@ -10,6 +10,5 @@ public class StepSubscription(Guid userId, Guid stepId) : Subscription(userId, S
     [Required]
     public Guid StepId { get; init; } = stepId;
 
-    [JsonIgnore]
     public Step Step { get; init; } = null!;
 }

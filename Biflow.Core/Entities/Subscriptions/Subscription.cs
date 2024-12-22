@@ -17,6 +17,5 @@ public abstract class Subscription(Guid userId, SubscriptionType subscriptionTyp
     [Required]
     public Guid UserId { get; private set; } = userId;
 
-    [JsonIgnore]
     public User User { get; init; } = null!;
 }
