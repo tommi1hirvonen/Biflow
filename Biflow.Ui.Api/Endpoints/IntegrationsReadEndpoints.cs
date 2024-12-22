@@ -122,7 +122,7 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
         group.MapGet("/dbtaccounts", async (ServiceDbContext dbContext, CancellationToken cancellationToken) => 
                 await dbContext.DbtAccounts
                     .AsNoTracking()
-                    .OrderBy(x => x.DbtAccountId)
+                    .OrderBy(x => x.DbtAccountName)
                     .ToArrayAsync(cancellationToken)
             )
             .WithDescription("Get all dbt accounts. Sensitive API tokens will be replaced with an empty value.")
@@ -160,5 +160,27 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
             .WithDescription("Get SQL Server Analysis Services connection by id. " +
                              "Sensitive connection string will be replaced with an empty value.")
             .WithName("GetAnalysisServicesConnection");
+        
+        group.MapGet("/qlikcloudenvironments", async (ServiceDbContext dbContext, CancellationToken cancellationToken) => 
+                await dbContext.QlikCloudEnvironments
+                    .AsNoTracking()
+                    .OrderBy(x => x.QlikCloudEnvironmentName)
+                    .ToArrayAsync(cancellationToken)
+            )
+            .WithDescription("Get all Qlik Cloud environments. " +
+                             "Sensitive API tokens will be replaced with an empty value.")
+            .WithName("GetQlikCloudEnvironments");
+        
+        group.MapGet("/qlikcloudenvironments/{qlikCloudEnvironmentId:guid}",
+                async (ServiceDbContext dbContext, Guid qlikCloudEnvironmentId, CancellationToken cancellationToken) =>
+                {
+                    var account = await dbContext.QlikCloudEnvironments
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(x => x.QlikCloudEnvironmentId == qlikCloudEnvironmentId, cancellationToken);
+                    return account is null ? Results.NotFound() : Results.Ok(account);
+                })
+            .WithDescription("Get Qlik Cloud environment by id. " +
+                             "Sensitive API token will be replaced with an empty value.")
+            .WithName("GetQlikCloudEnvironment");
     }
 }
