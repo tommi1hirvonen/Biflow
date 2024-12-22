@@ -1,5 +1,6 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 using R = Biflow.Core.Constants.Roles;
 
@@ -37,10 +38,13 @@ public class User : IAuditable
 
     public DateTimeOffset? LastLoginOn { get; set; }
 
+    [JsonIgnore]
     public ICollection<Subscription> Subscriptions { get; } = new List<Subscription>();
 
+    [JsonIgnore]
     public ICollection<Job> Jobs { get; } = new List<Job>();
 
+    [JsonIgnore]
     public ICollection<MasterDataTable> DataTables { get; } = new List<MasterDataTable>();
 
     public void SetIsAdmin()
