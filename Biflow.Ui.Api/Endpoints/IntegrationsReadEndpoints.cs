@@ -96,5 +96,25 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                 })
             .WithDescription("Get Databricks workspace by id. Sensitive API token will be replaced with an empty value.")
             .WithName("GetDatabricksWorkspace");
+        
+        group.MapGet("/dbtaccounts", async (ServiceDbContext dbContext, CancellationToken cancellationToken) => 
+                await dbContext.DbtAccounts
+                    .AsNoTracking()
+                    .OrderBy(x => x.DbtAccountId)
+                    .ToArrayAsync(cancellationToken)
+            )
+            .WithDescription("Get all dbt accounts. Sensitive API tokens will be replaced with an empty value.")
+            .WithName("GetDbtAccounts");
+        
+        group.MapGet("/dbtaccounts/{dbtAccountId:guid}",
+                async (ServiceDbContext dbContext, Guid dbtAccountId, CancellationToken cancellationToken) =>
+                {
+                    var account = await dbContext.DbtAccounts
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(x => x.DbtAccountId == dbtAccountId, cancellationToken);
+                    return account is null ? Results.NotFound() : Results.Ok(account);
+                })
+            .WithDescription("Get dbt account by id. Sensitive API token will be replaced with an empty value.")
+            .WithName("GetDbtAccount");
     }
 }
