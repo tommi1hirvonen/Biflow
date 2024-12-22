@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Identity.Web;
@@ -32,7 +31,6 @@ public static class Extensions
     public static IServiceCollection AddUiCoreAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
         var authentication = configuration.GetValue<string>("Authentication");
-        AuthenticationMethod method;
         switch (authentication)
         {
             case "BuiltIn":
@@ -43,7 +41,6 @@ public static class Extensions
                         options.LoginPath = "/login";
                         options.ReturnUrlParameter = "redirectUrl";
                     });
-                method = AuthenticationMethod.BuiltIn;
                 break;
             case "Windows":
                 services.AddMemoryCache();
@@ -52,7 +49,6 @@ public static class Extensions
                     .SetFallbackPolicy(new AuthorizationPolicyBuilder().AddRequirements(new UserExistsRequirement()).Build());
                 services.AddScoped<IAuthorizationHandler, WindowsAuthorizationHandler>();
                 services.AddScoped<IClaimsTransformation, ClaimsTransformer>();
-                method = AuthenticationMethod.Windows;
                 break;
             case "AzureAd":
                 services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
@@ -63,7 +59,6 @@ public static class Extensions
                     options.FallbackPolicy = options.DefaultPolicy;
                 });
                 services.AddScoped<IClaimsTransformation, ClaimsTransformer>();
-                method = AuthenticationMethod.AzureAd;
                 break;
             case "Ldap":
                 services.AddScoped<IAuthHandler, LdapAuthHandler>();
@@ -73,12 +68,10 @@ public static class Extensions
                         options.LoginPath = "/login";
                         options.ReturnUrlParameter = "redirectUrl";
                     });
-                method = AuthenticationMethod.Ldap;
                 break;
             default:
                 throw new ArgumentException($"Invalid Authentication setting: {authentication}");
         }
-        services.AddSingleton(new AuthenticationMethodResolver(method));
         return services;
     }
 
@@ -87,9 +80,13 @@ public static class Extensions
     /// </summary>
     /// <param name="services"></param>
     /// <param name="configuration">Top level configuration object</param>
+    /// <param name="authenticationConfiguration">key of the user authentication method configuration</param>
     /// <returns>The IServiceCollection passed as parameter</returns>
     /// <exception cref="ArgumentException">Thrown if an incorrect configuration is detected</exception>
-    public static IServiceCollection AddUiCoreServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddUiCoreServices(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        string authenticationConfiguration = "Authentication")
     {
         // Add the UserService and AppDbContext factory as scoped.
         // The current user is captured and stored in UserService,
@@ -108,6 +105,17 @@ public static class Extensions
         services.AddHttpClient();
 
         services.AddSingleton<ITokenService, TokenService<ServiceDbContext>>();
+        
+        var authentication = configuration.GetValue<string>(authenticationConfiguration);
+        var authMethod = authentication switch
+        {
+            "BuiltIn" => AuthenticationMethod.BuiltIn,
+            "Windows" => AuthenticationMethod.Windows,
+            "AzureAd" => AuthenticationMethod.AzureAd,
+            "Ldap" => AuthenticationMethod.Ldap,
+            _ => throw new ArgumentException($"Invalid Authentication setting: {authentication}"),
+        };
+        services.AddSingleton(new AuthenticationMethodResolver(authMethod));
 
         var executorType = configuration.GetSection("Executor").GetValue<string>("Type");
         ExecutorMode executorMode;

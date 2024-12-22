@@ -11,4 +11,9 @@ builder.AddProject<Projects.Biflow_Ui>("frontend")
     .WithReference(executorApi)
     .WithExternalHttpEndpoints();
 
+builder.AddProject<Projects.Biflow_Ui_Api>("api")
+    .WithReference(schedulerApi)
+    .WithReference(executorApi)
+    .WithExternalHttpEndpoints();
+
 builder.Build().Run();

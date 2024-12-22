@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Biflow.Executor.WebApp\Biflow.Executor.WebApp.csproj" />
     <ProjectReference Include="..\Biflow.Scheduler.WebApp\Biflow.Scheduler.WebApp.csproj" />
+    <ProjectReference Include="..\Biflow.Ui.Api\Biflow.Ui.Api.csproj" />
     <ProjectReference Include="..\Biflow.Ui\Biflow.Ui.csproj" />
   </ItemGroup>
 
