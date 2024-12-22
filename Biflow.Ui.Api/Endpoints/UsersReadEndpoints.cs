@@ -37,7 +37,9 @@ public abstract class UsersReadEndpoints : IEndpoints
             .WithDescription("Get user by id")
             .WithName("GetUser");
         
-        group.MapGet("/{userId:guid}/jobs",
+        var userJobsEndpointFilter = apiKeyEndpointFilterFactory.Create([Scopes.UsersRead, Scopes.JobsRead]);
+        
+        app.MapGet("/users/{userId:guid}/jobs",
             async (ServiceDbContext dbContext, Guid userId, CancellationToken cancellationToken) =>
             {
                 var user = await dbContext.Users
@@ -46,25 +48,31 @@ public abstract class UsersReadEndpoints : IEndpoints
                     .FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken);
                 return user is null ? Results.NotFound() : Results.Ok(user.Jobs);
             })
+            .WithTags($"{Scopes.UsersRead}, {Scopes.JobsRead}")
             .WithDescription("Get user's authorized jobs. " +
                              "The collection properties of the returned jobs are not loaded and will be empty. " +
                              "If the user's property AuthorizeAllJobs is set to tue, " +
                              "the list of authorized jobs has no effect.")
-            .WithName("GetUserJobs");
+            .WithName("GetUserJobs")
+            .AddEndpointFilter(userJobsEndpointFilter);
         
-        group.MapGet("/{userId:guid}/datatables",
-                async (ServiceDbContext dbContext, Guid userId, CancellationToken cancellationToken) =>
-                {
-                    var user = await dbContext.Users
-                        .AsNoTracking()
-                        .Include(u => u.DataTables)
-                        .FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken);
-                    return user is null ? Results.NotFound() : Results.Ok(user.DataTables);
-                })
+        var userDataTablesEndpointFilter = apiKeyEndpointFilterFactory.Create([Scopes.UsersRead, Scopes.DataTablesRead]);
+        
+        app.MapGet("/users/{userId:guid}/datatables",
+            async (ServiceDbContext dbContext, Guid userId, CancellationToken cancellationToken) =>
+            {
+                var user = await dbContext.Users
+                    .AsNoTracking()
+                    .Include(u => u.DataTables)
+                    .FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken);
+                return user is null ? Results.NotFound() : Results.Ok(user.DataTables);
+            })
+            .WithTags($"{Scopes.UsersRead}, {Scopes.DataTablesRead}")
             .WithDescription("Get user's authorized data tables. " +
                              "The collection properties of the returned tables are not loaded and will be empty. " +
                              "If the user property AuthorizeAllDataTables is set to true, " +
                              "the list of authorized data tables has no effect.")
-            .WithName("GetUserDataTables");
+            .WithName("GetUserDataTables")
+            .AddEndpointFilter(userDataTablesEndpointFilter);
     }
 }
