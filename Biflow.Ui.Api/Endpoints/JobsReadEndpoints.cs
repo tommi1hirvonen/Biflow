@@ -113,5 +113,30 @@ public abstract class JobsReadEndpoints : IEndpoints
             })
             .WithDescription("Get step by id")
             .WithName("GetStep");
+
+        var jobSchedulesEndpointFilter = apiKeyEndpointFilterFactory.Create([Scopes.JobsRead, Scopes.SchedulesRead]);
+        
+        app.MapGet("/jobs/{jobId:guid}/schedules",
+                async (ServiceDbContext dbContext, Guid jobId, CancellationToken cancellationToken) =>
+                {
+                    var jobExists = await dbContext.Jobs
+                        .AnyAsync(x => x.JobId == jobId, cancellationToken);
+                    if (!jobExists)
+                    {
+                        return Results.NotFound();
+                    }
+                    var schedules = await dbContext.Schedules
+                        .AsNoTracking()
+                        .Where(s => s.JobId == jobId)
+                        .Include(s => s.TagFilter)
+                        .Include(s => s.Tags)
+                        .OrderBy(s => s.ScheduleName)
+                        .ToArrayAsync(cancellationToken);
+                    return Results.Ok(schedules);
+                })
+            .WithTags($"{Scopes.JobsRead}, {Scopes.SchedulesRead}")
+            .WithDescription("Get all schedules for a job.")
+            .WithName("GetJobSchedules")
+            .AddEndpointFilter(jobSchedulesEndpointFilter);
     }
 }
