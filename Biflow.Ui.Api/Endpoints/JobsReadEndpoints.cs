@@ -3,6 +3,7 @@ using Biflow.Core.Entities;
 using Biflow.Core.Interfaces;
 using Biflow.Ui.Core;
 using JetBrains.Annotations;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace Biflow.Ui.Api.Endpoints;
@@ -16,25 +17,36 @@ public abstract class JobsReadEndpoints : IEndpoints
         var endpointFilter = apiKeyEndpointFilterFactory.Create([Scopes.JobsRead]);
         
         var group = app.MapGroup("/jobs")
-            .WithTags("Jobs.Read")
+            .WithTags(Scopes.JobsRead)
             .AddEndpointFilter(endpointFilter);
         
-        group.MapGet("", async (ServiceDbContext dbContext, CancellationToken cancellationToken) =>
-            await dbContext.Jobs
-                .AsNoTracking()
-                .OrderBy(j => !j.IsPinned)
-                .ThenBy(j => j.JobName)
-                .ToArrayAsync(cancellationToken)
-            )
-            .WithDescription("Get all jobs. Collection properties" +
-                             "(job parameters, concurrences, tags, steps, schedules) " +
-                             "are not loaded and will be empty.")
+        group.MapGet("",
+            async (ServiceDbContext dbContext, CancellationToken cancellationToken, [FromQuery] bool includeTags = false) =>
+            {
+                var query = dbContext.Jobs
+                    .AsNoTracking();
+                
+                if (includeTags)
+                {
+                    query = query.Include(t => t.Tags);
+                }
+
+                return await query
+                    .OrderBy(j => !j.IsPinned)
+                    .ThenBy(j => j.JobName)
+                    .ToArrayAsync(cancellationToken);
+            })
+            .WithDescription("Get all jobs. Collection properties " +
+                             "(job parameters, concurrences, steps, schedules) " +
+                             "are not loaded and will be empty. " +
+                             "Tags can be included by specifying the corresponding query parameter.")
             .WithName("GetJobs");
 
-        group.MapGet("/{jobId:guid}",
+        group.MapGet("/{jobId:guid}", 
             async (ServiceDbContext dbContext, Guid jobId, CancellationToken cancellationToken) => 
             {
                 var job = await dbContext.Jobs
+                    .AsNoTracking()
                     .Include(j => j.JobParameters)
                     .Include(j => j.JobConcurrencies)
                     .Include(j => j.Tags)
@@ -50,6 +62,7 @@ public abstract class JobsReadEndpoints : IEndpoints
             async (ServiceDbContext dbContext, Guid stepId, CancellationToken cancellationToken) =>
             {
                 var step = await dbContext.Steps
+                    .AsNoTracking()
                     .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.ExpressionParameters)}")
                     .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.InheritFromJobParameter)}")
                     .Include(s => (s as JobStep)!.TagFilters.OrderBy(t => t.TagId))
