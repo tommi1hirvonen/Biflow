@@ -16,6 +16,28 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
         var group = app.MapGroup("/integrations")
             .WithTags(Scopes.IntegrationsRead)
             .AddEndpointFilter(endpointFilter);
+        
+        group.MapGet("/azurecredentials", async (ServiceDbContext dbContext, CancellationToken cancellationToken) => 
+                await dbContext.AzureCredentials
+                    .AsNoTracking()
+                    .OrderBy(x => x.AzureCredentialName)
+                    .ToArrayAsync(cancellationToken)
+            )
+            .WithDescription("Get all Azure credentials. " +
+                             "Sensitive data (passwords, client secrets) will be replaced with an empty value.")
+            .WithName("GetAzureCredentials");
+        
+        group.MapGet("/azurecredentials/{azureCredentialId:guid}",
+                async (ServiceDbContext dbContext, Guid azureCredentialId, CancellationToken cancellationToken) =>
+                {
+                    var credential = await dbContext.AzureCredentials
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(x => x.AzureCredentialId == azureCredentialId, cancellationToken);
+                    return credential is null ? Results.NotFound() : Results.Ok(credential);
+                })
+            .WithDescription("Get Azure credential by id. " +
+                             "Sensitive data (password, client secret) will be replaced with an empty value.")
+            .WithName("GetAzureCredential");
 
         group.MapGet("/sqlconnections", async (ServiceDbContext dbContext, CancellationToken cancellationToken) => 
                 await dbContext.SqlConnections
