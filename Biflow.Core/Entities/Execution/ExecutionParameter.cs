@@ -1,4 +1,5 @@
-﻿using Biflow.Core.Constants;
+﻿using System.Text.Json.Serialization;
+using Biflow.Core.Constants;
 using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
@@ -29,16 +30,22 @@ public sealed class ExecutionParameter : DynamicParameter
 
     public ParameterValue DefaultValue { get; private set; }
 
+    [JsonIgnore]
     public Execution Execution { get; [UsedImplicitly] private set; } = null!;
 
+    [JsonIgnore]
     public IEnumerable<StepExecutionParameterBase> StepExecutionParameters { get; } = new List<StepExecutionParameterBase>();
 
+    [JsonIgnore]
     public IEnumerable<StepExecutionParameterExpressionParameter> StepExecutionParameterExpressionParameters { get; } = new List<StepExecutionParameterExpressionParameter>();
 
+    [JsonIgnore]
     public IEnumerable<StepExecutionConditionParameter> ExecutionConditionParameters { get; } = new List<StepExecutionConditionParameter>();
 
+    [JsonIgnore]
     public IEnumerable<SqlStepExecution> CapturingStepExecutions { get; } = new List<SqlStepExecution>();
 
+    [JsonIgnore]
     public override string DisplayValue =>
         UseExpression ? $"{ParameterValue.Value} ({Expression.Expression})" : base.DisplayValue;
 

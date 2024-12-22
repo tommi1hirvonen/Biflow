@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
@@ -22,5 +23,6 @@ public class ExecutionConcurrency
     [Range(0, 100)]
     public int MaxParallelSteps { get; private set; }
 
+    [JsonIgnore]
     public Execution Execution { get; private set; } = null!;
 }

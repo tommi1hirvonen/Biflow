@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
@@ -16,6 +17,7 @@ public class ExecutionDataObject
 
     public Guid ExecutionId { get; private set; }
 
+    [JsonIgnore]
     public Execution Execution { get; private set; } = null!;
 
     public Guid ObjectId { get; private set; }
@@ -25,5 +27,6 @@ public class ExecutionDataObject
 
     public int MaxConcurrentWrites { get; private set; } = 1;
 
+    [JsonIgnore]
     public IEnumerable<StepExecutionDataObject> StepExecutions { get; } = new List<StepExecutionDataObject>();
 }
