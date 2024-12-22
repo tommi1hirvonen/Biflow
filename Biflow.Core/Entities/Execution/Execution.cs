@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
@@ -102,6 +103,7 @@ public class Execution(string jobName, DateTimeOffset createdOn, ExecutionStatus
     [MaxLength(200)]
     public StepExecutionAttemptReference? ParentExecution { get; private set; }
 
+    [JsonIgnore]
     public ICollection<StepExecution> StepExecutions { get; } = new List<StepExecution>();
 
     public IEnumerable<ExecutionParameter> ExecutionParameters { get; } = new List<ExecutionParameter>();
