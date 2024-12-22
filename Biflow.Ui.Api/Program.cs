@@ -43,6 +43,7 @@ builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(s =>
 {
+    s.UseOneOfForPolymorphism();
     s.SwaggerDoc("v1", new OpenApiInfo { Title = "Biflow API", Version = "v1" });
     s.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
     {
