@@ -1,4 +1,6 @@
-﻿namespace Biflow.Core.Entities;
+﻿using System.Text.Json.Serialization;
+
+namespace Biflow.Core.Entities;
 
 public sealed class StepExecutionConditionParameter : ParameterBase
 {
@@ -34,15 +36,19 @@ public sealed class StepExecutionConditionParameter : ParameterBase
 
     public ParameterValue ExecutionParameterValue { get; set; }
 
+    [JsonIgnore]
     public ExecutionParameter? ExecutionParameter { get; init; }
 
+    [JsonIgnore]
     public StepExecution StepExecution { get; init; } = null!;
 
+    [JsonIgnore]
     public override string DisplayValue => ExecutionParameter switch
     {
         not null => $"{ExecutionParameter.DisplayValue} (inherited from execution parameter {ExecutionParameter.DisplayName})",
         _ => base.DisplayValue
     };
 
+    [JsonIgnore]
     public override string DisplayValueType => ExecutionParameter?.DisplayValueType ?? base.DisplayValueType;
 }

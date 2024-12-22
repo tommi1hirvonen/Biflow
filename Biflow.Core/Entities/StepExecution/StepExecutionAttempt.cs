@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
@@ -45,12 +46,15 @@ public abstract class StepExecutionAttempt(StepExecutionStatus executionStatus, 
     [MaxLength(250)]
     public string? StoppedBy { get; set; }
 
+    [JsonIgnore]
     public StepExecution StepExecution { get; init; } = null!;
 
+    [JsonIgnore]
     public string UniqueId => string.Concat(ExecutionId, StepId, RetryAttemptIndex);
 
     public double? ExecutionInSeconds => ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
 
+    [JsonIgnore]
     public bool CanBeStopped =>
         ExecutionStatus == StepExecutionStatus.Running
         || ExecutionStatus == StepExecutionStatus.AwaitingRetry

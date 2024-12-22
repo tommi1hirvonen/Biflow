@@ -1,4 +1,6 @@
-﻿namespace Biflow.Core.Entities;
+﻿using Newtonsoft.Json;
+
+namespace Biflow.Core.Entities;
 
 public class StepExecutionMonitor
 {
@@ -14,7 +16,9 @@ public class StepExecutionMonitor
 
     public DateTimeOffset CreatedOn { get; private set; } = DateTimeOffset.Now;
 
+    [JsonIgnore]
     public StepExecution StepExecution { get; init; } = null!;
 
+    [JsonIgnore]
     public StepExecution MonitoredStepExecution { get; init; } = null!;
 }

@@ -1,4 +1,5 @@
-﻿using Biflow.Core.Constants;
+﻿using System.Text.Json.Serialization;
+using Biflow.Core.Constants;
 using Biflow.Core.Interfaces;
 using JetBrains.Annotations;
 
@@ -49,6 +50,7 @@ public abstract class StepExecutionParameterBase
 
     public ParameterValue ExecutionParameterValue { get; set; }
 
+    [JsonIgnore]
     public ExecutionParameter? InheritFromExecutionParameter { get; init; }
 
     public override bool UseExpression
@@ -59,8 +61,10 @@ public abstract class StepExecutionParameterBase
 
     public IEnumerable<StepExecutionParameterExpressionParameter> ExpressionParameters => _expressionParameters;
 
+    [JsonIgnore]
     public abstract StepExecution BaseStepExecution { get; }
 
+    [JsonIgnore]
     public override string DisplayValue => (InheritFromExecutionParameter, UseExpression) switch
     {
         (not null, _) => $"{ParameterValue.Value} (inherited from execution parameter {InheritFromExecutionParameter.DisplayName})",
@@ -68,12 +72,16 @@ public abstract class StepExecutionParameterBase
         _ => base.DisplayValue
     };
 
+    [JsonIgnore]
     public override string DisplayValueType => InheritFromExecutionParameter?.DisplayValueType ?? base.DisplayValueType;
 
+    [JsonIgnore]
     private bool Evaluated { get; set; }
 
+    [JsonIgnore]
     private object? EvaluationResult { get; set; }
 
+    [JsonIgnore]
     public IEnumerable<ExecutionParameter> JobParameters => BaseStepExecution.Execution.ExecutionParameters;
 
     public override async Task<object?> EvaluateAsync()

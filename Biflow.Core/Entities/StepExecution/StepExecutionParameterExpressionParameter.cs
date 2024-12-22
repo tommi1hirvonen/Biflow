@@ -1,5 +1,6 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
@@ -22,6 +23,7 @@ public class StepExecutionParameterExpressionParameter : IExpressionParameter<Ex
 
     public Guid StepParameterId { get; init; }
 
+    [JsonIgnore]
     public StepExecutionParameterBase StepParameter { get; init; } = null!;
 
     public Guid ParameterId { get; init; }
@@ -32,8 +34,10 @@ public class StepExecutionParameterExpressionParameter : IExpressionParameter<Ex
 
     public Guid InheritFromExecutionParameterId { get; set; }
 
+    [JsonIgnore]
     public ExecutionParameter InheritFromExecutionParameter { get; set; } = null!;
 
+    [JsonIgnore]
     public ExecutionParameter InheritFromJobParameter
     {
         get => InheritFromExecutionParameter;

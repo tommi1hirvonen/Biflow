@@ -1,4 +1,6 @@
-﻿namespace Biflow.Core.Entities;
+﻿using System.Text.Json.Serialization;
+
+namespace Biflow.Core.Entities;
 
 public class StepExecutionDataObject
 {
@@ -25,8 +27,10 @@ public class StepExecutionDataObject
 
     public Guid ObjectId { get; init; }
 
+    [JsonIgnore]
     public StepExecution StepExecution { get; init; } = null!;
 
+    [JsonIgnore]
     public ExecutionDataObject DataObject { get; init; } = null!;
 
     public DataObjectReferenceType ReferenceType { get; init; }

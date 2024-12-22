@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
@@ -58,6 +59,7 @@ public abstract class StepExecution(string stepName, StepType stepType)
 
     public EvaluationExpression ExecutionConditionExpression { get; [UsedImplicitly] private set; } = new();
 
+    [JsonIgnore]
     public Execution Execution { get; init; } = null!;
 
     public IEnumerable<StepExecutionAttempt> StepExecutionAttempts => _stepExecutionAttempts;
