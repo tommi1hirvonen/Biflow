@@ -43,19 +43,19 @@ public class ConnectionDeserializeTests
         var credentialId = Guid.NewGuid();
         var credential = new Credential
         {
+            CredentialId = credentialId,
             Domain = ".",
             Username = "test",
             Password = "myPassword9000"
         };
-        credential.SetPrivatePropertyValue("CredentialId", credentialId);
         var connection = new MsSqlConnection
         {
+            ConnectionId = Guid.NewGuid(),
             ConnectionName = "Test connection",
             ConnectionString = connectionString,
             Credential = credential,
             CredentialId = credentialId
         };
-        connection.SetPrivatePropertyValue("ConnectionId", Guid.NewGuid(), typeof(SqlConnectionBase));
         return connection.JsonRoundtrip(EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
     }
 }

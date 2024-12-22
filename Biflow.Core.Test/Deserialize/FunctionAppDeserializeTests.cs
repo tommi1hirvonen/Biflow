@@ -21,11 +21,14 @@ public class FunctionAppDeserializeTests
 
     private static FunctionApp CreateFunctionApp()
     {
-        var credential = new ServicePrincipalAzureCredential();
         var credentialId = Guid.NewGuid();
-        credential.SetPrivatePropertyValue("AzureCredentialId", credentialId);
+        var credential = new ServicePrincipalAzureCredential
+        {
+            AzureCredentialId = credentialId
+        };
         var functionApp = new FunctionApp
         {
+            FunctionAppId = Guid.NewGuid(),
             FunctionAppName = "test",
             SubscriptionId = "subscription_id",
             ResourceGroupName = "rg_name",
@@ -33,7 +36,6 @@ public class FunctionAppDeserializeTests
             FunctionAppKey = "app_key",
             AzureCredential = credential
         };
-        functionApp.SetPrivatePropertyValue("FunctionAppId", Guid.NewGuid());
         return functionApp.JsonRoundtrip(EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
     }
 }

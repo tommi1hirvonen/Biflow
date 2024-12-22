@@ -17,12 +17,12 @@ public class DbtAccountDeserializeTests
     {
         var account = new DbtAccount
         {
+            DbtAccountId = Guid.NewGuid(),
             DbtAccountName = "Test",
             ApiBaseUrl = "https://api.test.test",
             AccountId = "0123456789",
             ApiToken = "api_token"
         };
-        account.SetPrivatePropertyValue("DbtAccountId", Guid.NewGuid());
         return account.JsonRoundtrip(EnvironmentSnapshot.JsonSerializerOptionsPreserveReferences);
     }
 }

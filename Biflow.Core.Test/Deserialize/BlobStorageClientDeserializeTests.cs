@@ -29,9 +29,9 @@ public class BlobStorageClientDeserializeTests
     {
         var credential = new ServicePrincipalAzureCredential
         {
+            AzureCredentialId = Guid.NewGuid(),
             AzureCredentialName = "Test"
         };
-        credential.SetPrivatePropertyValue("AzureCredentialId", Guid.NewGuid());
         var client = new BlobStorageClient
         {
             BlobStorageClientName = "Test"
