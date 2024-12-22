@@ -18,5 +18,6 @@ public class ExeStepExecutionParameter : StepExecutionParameterBase
     [JsonIgnore]
     public ExeStepExecution StepExecution { get; init; } = null!;
 
+    [JsonIgnore]
     public override StepExecution BaseStepExecution => StepExecution;
 }

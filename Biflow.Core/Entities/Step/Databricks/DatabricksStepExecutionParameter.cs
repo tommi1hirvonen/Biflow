@@ -18,5 +18,6 @@ public class DatabricksStepExecutionParameter : StepExecutionParameterBase
     [JsonIgnore]
     public DatabricksStepExecution StepExecution { get; init; } = null!;
 
+    [JsonIgnore]
     public override StepExecution BaseStepExecution => StepExecution;
 }

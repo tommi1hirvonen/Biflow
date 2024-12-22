@@ -19,9 +19,11 @@ public class PackageStepExecutionParameter : StepExecutionParameterBase
     [JsonIgnore]
     public PackageStepExecution StepExecution { get; init; } = null!;
 
+    [JsonIgnore]
     public override StepExecution BaseStepExecution => StepExecution;
 
     public ParameterLevel ParameterLevel { get; init; }
 
+    [JsonIgnore]
     public override string DisplayName => $"${ParameterLevel}::{ParameterName}";
 }

@@ -1,5 +1,6 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
@@ -36,6 +37,7 @@ public class SqlStepExecution : StepExecution,
 
     public ParameterValue ResultCaptureJobParameterValue { get; set; }
 
+    [JsonIgnore]
     public ExecutionParameter? ResultCaptureJobParameter { get; init; }
 
     public double TimeoutMinutes { get; [UsedImplicitly] private set; }

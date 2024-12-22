@@ -19,6 +19,7 @@ public class JobStepExecutionParameter : StepExecutionParameterBase
     [JsonIgnore]
     public JobStepExecution StepExecution { get; init; } = null!;
 
+    [JsonIgnore]
     public override StepExecution BaseStepExecution => StepExecution;
 
     public Guid AssignToJobParameterId { get; init; }

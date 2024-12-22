@@ -19,5 +19,6 @@ public class FabricStepExecutionParameter : StepExecutionParameterBase
     [JsonIgnore]
     public FabricStepExecution StepExecution { get; init; } = null!;
     
+    [JsonIgnore]
     public override StepExecution BaseStepExecution => StepExecution;
 }

@@ -18,5 +18,6 @@ public class EmailStepExecutionParameter : StepExecutionParameterBase
     [JsonIgnore]
     public EmailStepExecution StepExecution { get; init; } = null!;
 
+    [JsonIgnore]
     public override StepExecution BaseStepExecution => StepExecution;
 }
