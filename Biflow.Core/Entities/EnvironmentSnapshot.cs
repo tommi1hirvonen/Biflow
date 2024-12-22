@@ -1,8 +1,7 @@
-﻿using Biflow.Core.Attributes;
-using Biflow.Core.Converters;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
+using Biflow.Core.Converters;
 
 namespace Biflow.Core.Entities;
 
@@ -16,7 +15,7 @@ public class EnvironmentSnapshot
         Converters = { new JsonStringEnumConverter() },
         TypeInfoResolver = new DefaultJsonTypeInfoResolver
         {
-            Modifiers = { SensitiveModifier }
+            Modifiers = { JsonModifiers.SensitiveModifier }
         }
     };
 
@@ -27,7 +26,7 @@ public class EnvironmentSnapshot
         Converters = { new JsonStringEnumConverter() },
         TypeInfoResolver = new DefaultJsonTypeInfoResolver
         {
-            Modifiers = { SensitiveModifier }
+            Modifiers = { JsonModifiers.SensitiveModifier }
         }
     };
 
@@ -51,26 +50,10 @@ public class EnvironmentSnapshot
     public required MasterDataTable[] DataTables { get; init; }
 
     public string ToJson(bool preserveReferences) =>
-        JsonSerializer.Serialize(this, preserveReferences ? JsonSerializerOptionsPreserveReferences : JsonSerializerOptions);
+        JsonSerializer.Serialize(this,
+            options: preserveReferences ? JsonSerializerOptionsPreserveReferences : JsonSerializerOptions);
 
     public static EnvironmentSnapshot? FromJson(string json, bool referencesPreserved) =>
-        JsonSerializer.Deserialize<EnvironmentSnapshot>(json, referencesPreserved ? JsonSerializerOptionsPreserveReferences : JsonSerializerOptions);
-
-    private static void SensitiveModifier(JsonTypeInfo typeInfo)
-    {
-        foreach (var property in typeInfo.Properties.Where(p => p.PropertyType == typeof(string)))
-        {
-            var attributes = property.AttributeProvider
-                ?.GetCustomAttributes(typeof(JsonSensitiveAttribute), true)
-                ?? [];
-
-            if (attributes.Length == 0)
-            {
-                continue;
-            }
-
-            var attribute = (JsonSensitiveAttribute)attributes[0];
-            property.CustomConverter = new SensitiveStringConverter(attribute);
-        }
-    }
+        JsonSerializer.Deserialize<EnvironmentSnapshot>(json,
+            options: referencesPreserved ? JsonSerializerOptionsPreserveReferences : JsonSerializerOptions);
 }
