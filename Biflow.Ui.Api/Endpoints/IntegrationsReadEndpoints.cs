@@ -116,5 +116,27 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                 })
             .WithDescription("Get dbt account by id. Sensitive API token will be replaced with an empty value.")
             .WithName("GetDbtAccount");
+        
+        group.MapGet("/analysisservicesconnections", async (ServiceDbContext dbContext, CancellationToken cancellationToken) => 
+                await dbContext.AnalysisServicesConnections
+                    .AsNoTracking()
+                    .OrderBy(x => x.ConnectionName)
+                    .ToArrayAsync(cancellationToken)
+            )
+            .WithDescription("Get all SQL Server Analysis Services connections. " +
+                             "Sensitive connection strings will be replaced with an empty value.")
+            .WithName("GetAnalysisServicesConnections");
+        
+        group.MapGet("/analysisservicesconnections/{connectionId:guid}",
+                async (ServiceDbContext dbContext, Guid connectionId, CancellationToken cancellationToken) =>
+                {
+                    var connection = await dbContext.AnalysisServicesConnections
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(x => x.ConnectionId == connectionId, cancellationToken);
+                    return connection is null ? Results.NotFound() : Results.Ok(connection);
+                })
+            .WithDescription("Get SQL Server Analysis Services connection by id. " +
+                             "Sensitive connection string will be replaced with an empty value.")
+            .WithName("GetAnalysisServicesConnection");
     }
 }
