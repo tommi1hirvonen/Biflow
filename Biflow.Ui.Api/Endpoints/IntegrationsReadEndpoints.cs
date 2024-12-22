@@ -63,7 +63,7 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                     .OrderBy(x => x.FunctionAppId)
                     .ToArrayAsync(cancellationToken)
             )
-            .WithDescription("Get all Function Apps.")
+            .WithDescription("Get all Function Apps. Sensitive function keys will be replaced with an empty value.")
             .WithName("GetFunctionApps");
         
         group.MapGet("/functionapps/{functionAppId:guid}",
@@ -74,7 +74,27 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                         .FirstOrDefaultAsync(x => x.FunctionAppId == functionAppId, cancellationToken);
                     return functionApp is null ? Results.NotFound() : Results.Ok(functionApp);
                 })
-            .WithDescription("Get Function App by id.")
+            .WithDescription("Get Function App by id. Sensitive function key will be replaced with an empty value.")
             .WithName("GetFunctionApp");
+        
+        group.MapGet("/databricksworkspaces", async (ServiceDbContext dbContext, CancellationToken cancellationToken) => 
+                await dbContext.DatabricksWorkspaces
+                    .AsNoTracking()
+                    .OrderBy(x => x.WorkspaceName)
+                    .ToArrayAsync(cancellationToken)
+            )
+            .WithDescription("Get all Databricks workspaces. Sensitive API tokens will be replaced with an empty value.")
+            .WithName("GetDatabricksWorkspaces");
+        
+        group.MapGet("/databricksworkspaces/{workspaceId:guid}",
+                async (ServiceDbContext dbContext, Guid workspaceId, CancellationToken cancellationToken) =>
+                {
+                    var workspace = await dbContext.DatabricksWorkspaces
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(x => x.WorkspaceId == workspaceId, cancellationToken);
+                    return workspace is null ? Results.NotFound() : Results.Ok(workspace);
+                })
+            .WithDescription("Get Databricks workspace by id. Sensitive API token will be replaced with an empty value.")
+            .WithName("GetDatabricksWorkspace");
     }
 }
