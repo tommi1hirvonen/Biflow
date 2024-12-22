@@ -4,6 +4,22 @@ using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
+[JsonDerivedType(typeof(AgentJobStepExecution), nameof(StepType.AgentJob))]
+[JsonDerivedType(typeof(DatasetStepExecution), nameof(StepType.Dataset))]
+[JsonDerivedType(typeof(EmailStepExecution), nameof(StepType.Email))]
+[JsonDerivedType(typeof(ExeStepExecution), nameof(StepType.Exe))]
+[JsonDerivedType(typeof(FunctionStepExecution), nameof(StepType.Function))]
+[JsonDerivedType(typeof(JobStepExecution), nameof(StepType.Job))]
+[JsonDerivedType(typeof(PackageStepExecution), nameof(StepType.Package))]
+[JsonDerivedType(typeof(PipelineStepExecution), nameof(StepType.Pipeline))]
+[JsonDerivedType(typeof(QlikStepExecution), nameof(StepType.Qlik))]
+[JsonDerivedType(typeof(SqlStepExecution), nameof(StepType.Sql))]
+[JsonDerivedType(typeof(TabularStepExecution), nameof(StepType.Tabular))]
+[JsonDerivedType(typeof(DatabricksStepExecution), nameof(StepType.Databricks))]
+[JsonDerivedType(typeof(DbtStepExecution), nameof(StepType.Dbt))]
+[JsonDerivedType(typeof(ScdStepExecution), nameof(StepType.Scd))]
+[JsonDerivedType(typeof(DataflowStepExecution), nameof(StepType.Dataflow))]
+[JsonDerivedType(typeof(FabricStepExecution), nameof(StepType.Fabric))]
 public abstract class StepExecution(string stepName, StepType stepType)
 {
     protected StepExecution(Step step, Execution execution) : this(step.StepName ?? "", step.StepType)
