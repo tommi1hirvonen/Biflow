@@ -40,6 +40,8 @@ The following new or existing files/classes need to be added or edited when addi
   - Apply the `[Category]` and `[Description]` attributes to the new enum value.
 - Step
   - Add JsonDerivedType attribute for the new step type
+- StepExecution
+  - Add JsonDerivedType attribute for the new step type
 - ParameterType
 
 ### Biflow.DataAccess
