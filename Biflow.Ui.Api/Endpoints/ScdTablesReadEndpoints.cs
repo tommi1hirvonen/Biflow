@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Biflow.Ui.Api.Endpoints;
 
 [UsedImplicitly]
-public class ScdTablesReadEndpoints : IEndpoints
+public abstract class ScdTablesReadEndpoints : IEndpoints
 {
     public static void MapEndpoints(WebApplication app)
     {
@@ -14,11 +14,14 @@ public class ScdTablesReadEndpoints : IEndpoints
         var endpointFilter = apiKeyEndpointFilterFactory.Create([Scopes.ScdTablesRead]);
         
         var group = app.MapGroup("/scdtables")
-            .WithTags("ScdTables.Read")
+            .WithTags(Scopes.ScdTablesRead)
             .AddEndpointFilter(endpointFilter);
 
         group.MapGet("", async (ServiceDbContext dbContext, CancellationToken cancellationToken) =>
-            await dbContext.ScdTables.ToArrayAsync(cancellationToken)
+            await dbContext.ScdTables
+                .AsNoTracking()
+                .OrderBy(t => t.ScdTableName)
+                .ToArrayAsync(cancellationToken)
             )
             .WithDescription("Get all SCD tables")
             .WithName("GetScdTables");
@@ -27,6 +30,7 @@ public class ScdTablesReadEndpoints : IEndpoints
             async (ServiceDbContext dbContext, Guid scdTableId, CancellationToken cancellationToken) =>
             {
                 var scdTable = await dbContext.ScdTables
+                    .AsNoTracking()
                     .FirstOrDefaultAsync(t => t.ScdTableId == scdTableId, cancellationToken);
                 return scdTable is null ? Results.NotFound() : Results.Ok(scdTable);
             })
