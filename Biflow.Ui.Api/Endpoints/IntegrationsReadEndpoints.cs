@@ -56,5 +56,25 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                 })
             .WithDescription("Get pipeline client by id.")
             .WithName("GetPipelineClient");
+        
+        group.MapGet("/functionapps", async (ServiceDbContext dbContext, CancellationToken cancellationToken) => 
+                await dbContext.FunctionApps
+                    .AsNoTracking()
+                    .OrderBy(x => x.FunctionAppId)
+                    .ToArrayAsync(cancellationToken)
+            )
+            .WithDescription("Get all Function Apps.")
+            .WithName("GetFunctionApps");
+        
+        group.MapGet("/functionapps/{functionAppId:guid}",
+                async (ServiceDbContext dbContext, Guid functionAppId, CancellationToken cancellationToken) =>
+                {
+                    var functionApp = await dbContext.FunctionApps
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(x => x.FunctionAppId == functionAppId, cancellationToken);
+                    return functionApp is null ? Results.NotFound() : Results.Ok(functionApp);
+                })
+            .WithDescription("Get Function App by id.")
+            .WithName("GetFunctionApp");
     }
 }
