@@ -6,8 +6,7 @@ namespace Biflow.Core.Entities;
 
 public class QlikCloudEnvironment
 {
-    [JsonInclude]
-    public Guid QlikCloudEnvironmentId { get; private set; }
+    public Guid QlikCloudEnvironmentId { get; init; }
 
     [Required]
     [MaxLength(250)]

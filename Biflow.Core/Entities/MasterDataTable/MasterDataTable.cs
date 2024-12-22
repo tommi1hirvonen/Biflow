@@ -5,8 +5,7 @@ namespace Biflow.Core.Entities;
 
 public class MasterDataTable
 {
-    [JsonInclude]
-    public Guid DataTableId { get; private set; }
+    public Guid DataTableId { get; init; }
 
     [Required]
     [MaxLength(250)]

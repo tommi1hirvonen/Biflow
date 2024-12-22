@@ -71,12 +71,10 @@ public abstract class Step : IComparable, IAuditable
     }
 
     [Required]
-    [JsonInclude]
-    public Guid StepId { get; private set; }
+    public Guid StepId { get; init; }
 
     [Required]
     [NotEmptyGuid]
-    [JsonInclude]
     public Guid JobId { get; init; }
 
     [JsonIgnore]

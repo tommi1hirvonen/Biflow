@@ -10,8 +10,7 @@ namespace Biflow.Core.Entities;
 
 public partial class Credential
 {
-    [JsonInclude]
-    public Guid CredentialId { get; private set; }
+    public Guid CredentialId { get; init; }
 
     [MaxLength(200)]
     public string? Domain { get; set; }

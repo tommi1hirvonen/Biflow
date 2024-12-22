@@ -8,8 +8,7 @@ namespace Biflow.Core.Entities;
 [JsonDerivedType(typeof(SynapseWorkspace), nameof(PipelineClientType.Synapse))]
 public abstract class PipelineClient(PipelineClientType type)
 {
-    [JsonInclude]
-    public Guid PipelineClientId { get; private set; }
+    public Guid PipelineClientId { get; init; }
 
     [MaxLength(250)]
     [Required]

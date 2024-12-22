@@ -13,8 +13,7 @@ namespace Biflow.Core.Entities;
 public abstract class AzureCredential(AzureCredentialType azureCredentialType)
 {
     [Required]
-    [JsonInclude]
-    public Guid AzureCredentialId { get; private set; }
+    public Guid AzureCredentialId { get; init; }
 
     [Required]
     [MaxLength(250)]

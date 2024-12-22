@@ -8,8 +8,7 @@ namespace Biflow.Core.Entities;
 
 public partial class DataObject : IDataObject
 {
-    [JsonInclude]
-    public Guid ObjectId { get; private set; }
+    public Guid ObjectId { get; init; }
 
     [Required]
     [Ascii]

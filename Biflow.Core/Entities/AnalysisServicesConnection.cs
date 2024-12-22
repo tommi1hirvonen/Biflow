@@ -5,8 +5,7 @@ namespace Biflow.Core.Entities;
 
 public class AnalysisServicesConnection
 {
-    [JsonInclude]
-    public Guid ConnectionId { get; private set; }
+    public Guid ConnectionId { get; init; }
     
     [Required]
     [MaxLength(250)]

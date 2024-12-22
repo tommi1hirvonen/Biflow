@@ -6,8 +6,7 @@ namespace Biflow.Core.Entities;
 
 public class DbtAccount
 {
-    [JsonInclude]
-    public Guid DbtAccountId { get; private set; }
+    public Guid DbtAccountId { get; init; }
 
     [MaxLength(250)]
     public string DbtAccountName { get; set; } = "";

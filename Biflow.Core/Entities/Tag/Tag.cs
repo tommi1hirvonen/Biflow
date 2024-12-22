@@ -9,8 +9,7 @@ namespace Biflow.Core.Entities;
 [JsonDerivedType(typeof(ScheduleTag), nameof(TagType.Schedule))]
 public abstract class Tag(TagType tagType, string tagName) : ITag
 {
-    [JsonInclude]
-    public Guid TagId { get; private set; }
+    public Guid TagId { get; init; }
 
     [Required]
     [MaxLength(250)]

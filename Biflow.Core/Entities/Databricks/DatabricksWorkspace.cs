@@ -6,8 +6,7 @@ namespace Biflow.Core.Entities;
 
 public class DatabricksWorkspace
 {
-    [JsonInclude]
-    public Guid WorkspaceId { get; private set; }
+    public Guid WorkspaceId { get; init; }
 
     [MaxLength(250)]
     public string WorkspaceName { get; set; } = "";

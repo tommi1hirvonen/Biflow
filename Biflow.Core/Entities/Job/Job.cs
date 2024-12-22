@@ -57,9 +57,8 @@ public class Job : IAuditable
             };
         }
     }
-
-    [JsonInclude]
-    public Guid JobId { get; private set; }
+    
+    public Guid JobId { get; init; }
 
     [Required]
     [MaxLength(250)]

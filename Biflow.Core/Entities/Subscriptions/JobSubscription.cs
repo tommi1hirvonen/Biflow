@@ -1,11 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
 public class JobSubscription(Guid userId, Guid jobId) : Subscription(userId, SubscriptionType.Job)
 {
-
     /// <summary>
     /// null if regular subscription is not enabled
     /// </summary>

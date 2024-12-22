@@ -7,8 +7,7 @@ namespace Biflow.Core.Entities;
 
 public class Schedule : IAuditable
 {
-    [JsonInclude]
-    public Guid ScheduleId { get; private set; }
+    public Guid ScheduleId { get; init; }
 
     [NotEmptyGuid]
     public Guid JobId { get; set; }

@@ -1,11 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
 public class EnvironmentVersion
 {
-    public int VersionId { get; [UsedImplicitly] private set; }
+    public int VersionId { get; init; }
 
     public string? Description { get; init; }
 

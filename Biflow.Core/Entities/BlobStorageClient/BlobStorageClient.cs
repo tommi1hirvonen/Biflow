@@ -9,13 +9,13 @@ namespace Biflow.Core.Entities;
 [BlobStorageClient]
 public class BlobStorageClient
 { 
-    [JsonInclude]
-    public Guid BlobStorageClientId { get; private set; }
+    public Guid BlobStorageClientId { get; init; }
 
     [Required]
     [MaxLength(250)]
     public string BlobStorageClientName { get; set; } = "";
 
+    [JsonInclude]
     public BlobStorageConnectionMethod ConnectionMethod { get; private set; } =
         BlobStorageConnectionMethod.ConnectionString;
 

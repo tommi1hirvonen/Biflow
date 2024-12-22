@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
@@ -10,7 +9,7 @@ namespace Biflow.Core.Entities;
 [JsonDerivedType(typeof(TagSubscription), nameof(SubscriptionType.Tag))]
 public abstract class Subscription(Guid userId, SubscriptionType subscriptionType)
 {
-    public Guid SubscriptionId { get; [UsedImplicitly] private set; }
+    public Guid SubscriptionId { get; init; }
 
     public SubscriptionType SubscriptionType { get; } = subscriptionType;
 

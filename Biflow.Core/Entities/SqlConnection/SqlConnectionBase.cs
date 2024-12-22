@@ -11,8 +11,7 @@ namespace Biflow.Core.Entities;
 public abstract class SqlConnectionBase(SqlConnectionType connectionType) : IComparable
 {
     [Display(Name = "Connection id")]
-    [JsonInclude]
-    public Guid ConnectionId { get; private set; }
+    public Guid ConnectionId { get; init; }
 
     [Display(Name = "Connection type")]
     public SqlConnectionType ConnectionType { get; } = connectionType;

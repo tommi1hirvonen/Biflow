@@ -8,8 +8,7 @@ namespace Biflow.Core.Entities;
 public class FunctionApp
 {
     [Display(Name = "Function app id")]
-    [JsonInclude]
-    public Guid FunctionAppId { get; private set; }
+    public Guid FunctionAppId { get; init; }
 
     [Required]
     [Display(Name = "Function app name")]
@@ -42,8 +41,7 @@ public class FunctionApp
     public string ResourceName { get; set; } = "";
 
     [Required]
-    [JsonInclude]
-    public Guid AzureCredentialId { get; private set; }
+    public Guid AzureCredentialId { get; set; }
 
     [JsonIgnore]
     public AzureCredential AzureCredential

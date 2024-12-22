@@ -6,8 +6,7 @@ namespace Biflow.Core.Entities;
 
 public class ScdTable
 {
-    [JsonInclude]
-    public Guid ScdTableId { get; private set; }
+    public Guid ScdTableId { get; init; }
 
     [Required, MaxLength(250)]
     public string ScdTableName { get; set; } = "";
