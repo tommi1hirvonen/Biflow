@@ -14,6 +14,7 @@ public class AnalysisServicesConnection
     
     public Guid? CredentialId { get; set; }
 
+    [JsonIgnore]
     public Credential? Credential { get; set; }
     
     [Required]
