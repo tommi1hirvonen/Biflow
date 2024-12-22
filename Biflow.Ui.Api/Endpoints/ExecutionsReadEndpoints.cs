@@ -1,5 +1,6 @@
 using Biflow.Core.Constants;
 using Biflow.Core.Entities;
+using Biflow.Core.Interfaces;
 using Biflow.Ui.Core;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Mvc;
@@ -110,9 +111,12 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
                 CancellationToken cancellationToken,
                 [FromQuery] bool includeParameters = false,
                 [FromQuery] bool includeConcurrencies = false,
-                [FromQuery] bool includeDataObjects = false) =>
+                [FromQuery] bool includeDataObjects = false,
+                [FromQuery] bool includeSteps = false) =>
             {
-                var query = dbContext.Executions.AsQueryable();
+                var query = dbContext.Executions
+                    .AsNoTrackingWithIdentityResolution()
+                    .AsQueryable();
                 if (includeParameters)
                 {
                     query = query.Include(e => e.ExecutionParameters);
@@ -127,7 +131,31 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
                 }
                 var execution = await query
                     .FirstOrDefaultAsync(e => e.ExecutionId == executionId, cancellationToken);
-                return execution is null ? Results.NotFound() : Results.Ok(execution);
+                if (execution is null)
+                {
+                    return Results.NotFound();
+                }
+                if (!includeSteps)
+                {
+                    return Results.Ok(execution);
+                }
+                var stepExecutions = await dbContext.StepExecutions
+                    .AsNoTrackingWithIdentityResolution()
+                    .Where(e => e.ExecutionId == executionId)
+                    .Include(e => e.StepExecutionAttempts)
+                    .Include(e => e.ExecutionDependencies)
+                    .Include(e => e.MonitoringStepExecutions)
+                    .Include(e => e.MonitoredStepExecutions)
+                    .Include(e => e.DataObjects)
+                    .Include(
+                        $"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
+                    .Include(e => e.ExecutionConditionParameters)
+                    .ToArrayAsync(cancellationToken);
+                foreach (var stepExecution in stepExecutions)
+                {
+                    execution.StepExecutions.Add(stepExecution);
+                }
+                return Results.Ok(execution);
             })
             .WithDescription("Get execution by id")
             .WithName("GetExecution");
