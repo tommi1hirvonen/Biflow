@@ -74,5 +74,22 @@ public abstract class UsersReadEndpoints : IEndpoints
                              "the list of authorized data tables has no effect.")
             .WithName("GetUserDataTables")
             .AddEndpointFilter(userDataTablesEndpointFilter);
+        
+        var userSubscriptionsEndpointFilter =
+            apiKeyEndpointFilterFactory.Create([Scopes.UsersRead, Scopes.SubscriptionsRead]);
+        
+        app.MapGet("/users/{userId:guid}/subscriptions",
+            async (ServiceDbContext dbContext, Guid userId, CancellationToken cancellationToken) =>
+            {
+                var user = await dbContext.Users
+                    .AsNoTracking()
+                    .Include(u => u.Subscriptions)
+                    .FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken);
+                return user is null ? Results.NotFound() : Results.Ok(user.Subscriptions);
+            })
+            .WithTags($"{Scopes.UsersRead}, {Scopes.SubscriptionsRead}")
+            .WithDescription("Get user's subscriptions.")
+            .WithName("GetUserSubscriptions")
+            .AddEndpointFilter(userSubscriptionsEndpointFilter);
     }
 }
