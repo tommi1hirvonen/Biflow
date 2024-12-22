@@ -184,5 +184,51 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
             })
             .WithDescription("Get execution steps")
             .WithName("GetExecutionSteps");
+        
+        group.MapGet("{executionId:guid}/steps/{stepId:guid}",
+            async (ServiceDbContext dbContext,
+                Guid executionId,
+                Guid stepId,
+                CancellationToken cancellationToken,
+                [FromQuery] bool includeAttempts = false,
+                [FromQuery] bool includeDependencies = false,
+                [FromQuery] bool includeMonitors = false,
+                [FromQuery] bool includeDataObjects = false,
+                [FromQuery] bool includeParameters = false) =>
+            {
+                var query = dbContext.StepExecutions
+                    .AsNoTrackingWithIdentityResolution();
+                if (includeAttempts)
+                {
+                    query = query.Include(e => e.StepExecutionAttempts);
+                }
+                if (includeDependencies)
+                {
+                    query = query.Include(e => e.ExecutionDependencies);
+                }
+                if (includeMonitors)
+                {
+                    query = query
+                        .Include(e => e.MonitoringStepExecutions)
+                        .Include(e => e.MonitoredStepExecutions);
+                }
+                if (includeDataObjects)
+                {
+                    query = query.Include(e => e.DataObjects);
+                }
+                if (includeParameters)
+                {
+                    query = query
+                        .Include(
+                            $"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
+                        .Include(e => e.ExecutionConditionParameters);
+                }
+                var stepExecution = await query
+                    .FirstOrDefaultAsync(e => e.ExecutionId == executionId && e.StepId == stepId,
+                        cancellationToken);
+                return stepExecution is null ? Results.NotFound() : Results.Ok(stepExecution);
+            })
+            .WithDescription("Get execution step by id")
+            .WithName("GetExecutionStep");
     }
 }
