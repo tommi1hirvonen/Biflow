@@ -36,5 +36,25 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
             })
             .WithDescription("Get SQL connection by id. Sensitive connection string will be replaced with an empty value.")
             .WithName("GetSqlConnection");
+        
+        group.MapGet("/pipelineclients", async (ServiceDbContext dbContext, CancellationToken cancellationToken) => 
+                await dbContext.PipelineClients
+                    .AsNoTracking()
+                    .OrderBy(c => c.PipelineClientId)
+                    .ToArrayAsync(cancellationToken)
+            )
+            .WithDescription("Get all pipeline clients (Data Factory, Synapse Workspace).")
+            .WithName("GetPipelineClients");
+        
+        group.MapGet("/pipelineclients/{pipelineClientId:guid}",
+                async (ServiceDbContext dbContext, Guid pipelineClientId, CancellationToken cancellationToken) =>
+                {
+                    var pipelineClient = await dbContext.PipelineClients
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(c => c.PipelineClientId == pipelineClientId, cancellationToken);
+                    return pipelineClient is null ? Results.NotFound() : Results.Ok(pipelineClient);
+                })
+            .WithDescription("Get pipeline client by id.")
+            .WithName("GetPipelineClient");
     }
 }
