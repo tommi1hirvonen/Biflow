@@ -1,4 +1,6 @@
-﻿namespace Biflow.Core.Entities;
+﻿using System.Text.Json.Serialization;
+
+namespace Biflow.Core.Entities;
 
 public class JobStepExecutionParameter : StepExecutionParameterBase
 {
@@ -14,6 +16,7 @@ public class JobStepExecutionParameter : StepExecutionParameterBase
         AssignToJobParameterId = parameter.AssignToJobParameterId;
     }
 
+    [JsonIgnore]
     public JobStepExecution StepExecution { get; init; } = null!;
 
     public override StepExecution BaseStepExecution => StepExecution;

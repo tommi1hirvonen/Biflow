@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Biflow.Core.Entities;
 
 public class FabricStepExecutionParameter : StepExecutionParameterBase
@@ -14,6 +16,7 @@ public class FabricStepExecutionParameter : StepExecutionParameterBase
         StepExecution = execution;
     }
 
+    [JsonIgnore]
     public FabricStepExecution StepExecution { get; init; } = null!;
     
     public override StepExecution BaseStepExecution => StepExecution;

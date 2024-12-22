@@ -1,4 +1,6 @@
-﻿namespace Biflow.Core.Entities;
+﻿using System.Text.Json.Serialization;
+
+namespace Biflow.Core.Entities;
 
 public class SqlStepExecutionParameter : StepExecutionParameterBase
 {
@@ -13,6 +15,7 @@ public class SqlStepExecutionParameter : StepExecutionParameterBase
         StepExecution = execution;
     }
 
+    [JsonIgnore]
     public SqlStepExecution StepExecution { get; init; } = null!;
 
     public override StepExecution BaseStepExecution => StepExecution;
