@@ -230,5 +230,131 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
             })
             .WithDescription("Get execution step by id")
             .WithName("GetExecutionStep");
+        
+        group.MapGet("/steps/running",
+            async (ServiceDbContext dbContext,
+                CancellationToken cancellationToken,
+                [FromQuery] int limit = 100,
+                [FromQuery] Guid? lastExecutionId = null,
+                [FromQuery] Guid? lastStepId = null,
+                [FromQuery] int? lastRetryAttemptIndex = null) =>
+            {
+                if (limit is < 10 or > 100)
+                {
+                    return Results.BadRequest("Limit must be between 10 and 100");
+                }
+                var query = dbContext.StepExecutionAttempts
+                    .AsNoTrackingWithIdentityResolution()
+                    .OrderBy(e => e.ExecutionId)
+                    .ThenBy(e => e.StepId)
+                    .ThenBy(e => e.RetryAttemptIndex)
+                    .Where(e => e.ExecutionStatus == StepExecutionStatus.Running);
+                if (lastExecutionId is { } executionId
+                    && lastStepId is { } stepId
+                    && lastRetryAttemptIndex is { } retryAttemptIndex)
+                {
+                    query = query
+                        .Where(e => e.ExecutionId > executionId 
+                                    || (e.ExecutionId == executionId && e.StepId > stepId)
+                                    || (e.ExecutionId == executionId && e.StepId == stepId && e.RetryAttemptIndex > retryAttemptIndex));
+                }
+                else if (lastExecutionId is not null || lastStepId is not null || lastRetryAttemptIndex is not null)
+                {
+                    return Results.BadRequest(
+                        $"All three parameters {nameof(lastExecutionId)}, {nameof(lastStepId)} and {nameof(retryAttemptIndex)} " +
+                        "must be provided together or all of them must be omitted.");
+                }
+                var stepExecutions = await query
+                    .Take(limit)
+                    .ToArrayAsync(cancellationToken);
+                return Results.Ok(stepExecutions);
+            })
+            .WithDescription("Get all running steps")
+            .WithName("GetRunningStepExecutions");
+        
+        group.MapGet("/steps/notstarted",
+                async (ServiceDbContext dbContext,
+                    CancellationToken cancellationToken,
+                    [FromQuery] int limit = 100,
+                    [FromQuery] Guid? lastExecutionId = null,
+                    [FromQuery] Guid? lastStepId = null,
+                    [FromQuery] int? lastRetryAttemptIndex = null) =>
+                {
+                    if (limit is < 10 or > 100)
+                    {
+                        return Results.BadRequest("Limit must be between 10 and 100");
+                    }
+                    var query = dbContext.StepExecutionAttempts
+                        .AsNoTrackingWithIdentityResolution()
+                        .OrderBy(e => e.ExecutionId)
+                        .ThenBy(e => e.StepId)
+                        .ThenBy(e => e.RetryAttemptIndex)
+                        .Where(e => e.ExecutionStatus == StepExecutionStatus.NotStarted);
+                    if (lastExecutionId is { } executionId
+                        && lastStepId is { } stepId
+                        && lastRetryAttemptIndex is { } retryAttemptIndex)
+                    {
+                        query = query
+                            .Where(e => e.ExecutionId > executionId 
+                                        || (e.ExecutionId == executionId && e.StepId > stepId)
+                                        || (e.ExecutionId == executionId && e.StepId == stepId && e.RetryAttemptIndex > retryAttemptIndex));
+                    }
+                    else if (lastExecutionId is not null || lastStepId is not null || lastRetryAttemptIndex is not null)
+                    {
+                        return Results.BadRequest(
+                            $"All three parameters {nameof(lastExecutionId)}, {nameof(lastStepId)} and {nameof(retryAttemptIndex)} " +
+                            "must be provided together or all of them must be omitted.");
+                    }
+                    var stepExecutions = await query
+                        .Take(limit)
+                        .ToArrayAsync(cancellationToken);
+                    return Results.Ok(stepExecutions);
+                })
+            .WithDescription("Get all pending/not started step executions")
+            .WithName("GetNotStartedStepExecutions");
+        
+        group.MapGet("/steps",
+            async (ServiceDbContext dbContext,
+                CancellationToken cancellationToken,
+                [FromQuery] DateTime startDate,
+                [FromQuery] DateTime endDate,
+                [FromQuery] int limit = 100,
+                [FromQuery] Guid? lastExecutionId = null,
+                [FromQuery] Guid? lastStepId = null,
+                [FromQuery] int? lastRetryAttemptIndex = null) =>
+            {
+                if (limit is < 10 or > 100)
+                {
+                    return Results.BadRequest("Limit must be between 10 and 100");
+                }
+                var query = dbContext.StepExecutionAttempts
+                    .AsNoTrackingWithIdentityResolution()
+                    .Where(e => e.StartedOn <= endDate && e.EndedOn >= startDate)
+                    .OrderBy(e => e.ExecutionId)
+                    .ThenBy(e => e.StepId)
+                    .ThenBy(e => e.RetryAttemptIndex)
+                    .AsQueryable();
+                if (lastExecutionId is { } executionId
+                    && lastStepId is { } stepId
+                    && lastRetryAttemptIndex is { } retryAttemptIndex)
+                {
+                    query = query
+                        .Where(e => e.ExecutionId > executionId 
+                                    || (e.ExecutionId == executionId && e.StepId > stepId)
+                                    || (e.ExecutionId == executionId && e.StepId == stepId && e.RetryAttemptIndex > retryAttemptIndex));
+                }
+                else if (lastExecutionId is not null || lastStepId is not null || lastRetryAttemptIndex is not null)
+                {
+                    return Results.BadRequest(
+                        $"All three parameters {nameof(lastExecutionId)}, {nameof(lastStepId)} and {nameof(retryAttemptIndex)} " +
+                        "must be provided together or all of them must be omitted.");
+                }
+                var stepExecutions = await query
+                    .Take(limit)
+                    .ToArrayAsync(cancellationToken);
+                return Results.Ok(stepExecutions);
+            })
+            .WithDescription("Get step executions")
+            .WithName("GetStepExecutions");
     }
 }
