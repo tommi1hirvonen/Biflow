@@ -42,6 +42,8 @@ The following new or existing files/classes need to be added or edited when addi
   - Add JsonDerivedType attribute for the new step type
 - StepExecution
   - Add JsonDerivedType attribute for the new step type
+- StepExecutionAttempt
+  - Add JsonDerivedType attribute for the new step type
 - ParameterType
 
 ### Biflow.DataAccess
