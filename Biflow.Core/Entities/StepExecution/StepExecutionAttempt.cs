@@ -4,6 +4,22 @@ using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
+[JsonDerivedType(typeof(AgentJobStepExecutionAttempt), nameof(StepType.AgentJob))]
+[JsonDerivedType(typeof(DatasetStepExecutionAttempt), nameof(StepType.Dataset))]
+[JsonDerivedType(typeof(EmailStepExecutionAttempt), nameof(StepType.Email))]
+[JsonDerivedType(typeof(ExeStepExecutionAttempt), nameof(StepType.Exe))]
+[JsonDerivedType(typeof(FunctionStepExecutionAttempt), nameof(StepType.Function))]
+[JsonDerivedType(typeof(JobStepExecutionAttempt), nameof(StepType.Job))]
+[JsonDerivedType(typeof(PackageStepExecutionAttempt), nameof(StepType.Package))]
+[JsonDerivedType(typeof(PipelineStepExecutionAttempt), nameof(StepType.Pipeline))]
+[JsonDerivedType(typeof(QlikStepExecutionAttempt), nameof(StepType.Qlik))]
+[JsonDerivedType(typeof(SqlStepExecutionAttempt), nameof(StepType.Sql))]
+[JsonDerivedType(typeof(TabularStepExecutionAttempt), nameof(StepType.Tabular))]
+[JsonDerivedType(typeof(DatabricksStepExecutionAttempt), nameof(StepType.Databricks))]
+[JsonDerivedType(typeof(DbtStepExecutionAttempt), nameof(StepType.Dbt))]
+[JsonDerivedType(typeof(ScdStepExecutionAttempt), nameof(StepType.Scd))]
+[JsonDerivedType(typeof(DataflowStepExecutionAttempt), nameof(StepType.Dataflow))]
+[JsonDerivedType(typeof(FabricStepExecutionAttempt), nameof(StepType.Fabric))]
 public abstract class StepExecutionAttempt(StepExecutionStatus executionStatus, StepType stepType)
 {
     protected StepExecutionAttempt(StepExecutionAttempt other, int retryAttemptIndex)
