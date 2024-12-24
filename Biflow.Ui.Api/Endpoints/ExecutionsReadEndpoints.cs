@@ -276,13 +276,19 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
                         $"All three parameters {nameof(lastExecutionId)}, {nameof(lastStepId)} and {nameof(retryAttemptIndex)} " +
                         "must be provided together or all of them must be omitted.");
                 }
-                var stepExecutions = await query
+                var stepExecutionAttempts = await query
+                    .Include(e => e.StepExecution)
                     .Take(limit)
                     .ToArrayAsync(cancellationToken);
+                var stepExecutions = stepExecutionAttempts
+                    .Select(e => e.StepExecution)
+                    .OrderBy(e => e.ExecutionId)
+                    .ThenBy(e => e.StepId)
+                    .ToArray();
                 return Results.Ok(stepExecutions);
             })
             .Produces(StatusCodes.Status400BadRequest)
-            .Produces<StepExecutionAttempt[]>()
+            .Produces<StepExecution[]>()
             .WithDescription("Get all running steps")
             .WithName("GetRunningStepExecutions");
         
@@ -319,13 +325,19 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
                         $"All three parameters {nameof(lastExecutionId)}, {nameof(lastStepId)} and {nameof(retryAttemptIndex)} " +
                         "must be provided together or all of them must be omitted.");
                 }
-                var stepExecutions = await query
+                var stepExecutionAttempts = await query
+                    .Include(e => e.StepExecution)
                     .Take(limit)
                     .ToArrayAsync(cancellationToken);
+                var stepExecutions = stepExecutionAttempts
+                    .Select(e => e.StepExecution)
+                    .OrderBy(e => e.ExecutionId)
+                    .ThenBy(e => e.StepId)
+                    .ToArray();
                 return Results.Ok(stepExecutions);
             })
             .Produces(StatusCodes.Status400BadRequest)
-            .Produces<StepExecutionAttempt[]>()
+            .Produces<StepExecution[]>()
             .WithDescription("Get all pending/not started step executions")
             .WithName("GetNotStartedStepExecutions");
         
@@ -365,13 +377,19 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
                         $"All three parameters {nameof(lastExecutionId)}, {nameof(lastStepId)} and {nameof(retryAttemptIndex)} " +
                         "must be provided together or all of them must be omitted.");
                 }
-                var stepExecutions = await query
+                var stepExecutionAttempts = await query
+                    .Include(e => e.StepExecution)
                     .Take(limit)
                     .ToArrayAsync(cancellationToken);
+                var stepExecutions = stepExecutionAttempts
+                    .Select(e => e.StepExecution)
+                    .OrderBy(e => e.ExecutionId)
+                    .ThenBy(e => e.StepId)
+                    .ToArray();
                 return Results.Ok(stepExecutions);
             })
             .Produces(StatusCodes.Status400BadRequest)
-            .Produces<StepExecutionAttempt[]>()
+            .Produces<StepExecution[]>()
             .WithDescription("Get step executions")
             .WithName("GetStepExecutions");
     }
