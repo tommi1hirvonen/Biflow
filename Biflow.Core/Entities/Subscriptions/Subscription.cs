@@ -12,8 +12,7 @@ public abstract class Subscription(Guid userId, SubscriptionType subscriptionTyp
     public Guid SubscriptionId { get; init; }
 
     public SubscriptionType SubscriptionType { get; } = subscriptionType;
-
-    [Required]
+    
     public Guid UserId { get; private set; } = userId;
 
     public User User { get; init; } = null!;
