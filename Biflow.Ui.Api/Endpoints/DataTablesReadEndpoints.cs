@@ -1,4 +1,5 @@
 using Biflow.Core.Constants;
+using Biflow.Core.Entities;
 using Biflow.Ui.Core;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
@@ -25,18 +26,21 @@ public abstract class DataTablesReadEndpoints : IEndpoints
                     .ThenBy(t => t.DataTableName)
                     .ToArrayAsync(cancellationToken)
             )
+            .Produces<MasterDataTable[]>()
             .WithDescription("Get all data tables")
             .WithName("GetDataTables");
         
         group.MapGet("/{dataTableId:guid}",
-                async (ServiceDbContext dbContext, Guid dataTableId, CancellationToken cancellationToken) =>
-                {
-                    var scdTable = await dbContext.MasterDataTables
-                        .AsNoTracking()
-                        .Include(t => t.Lookups)
-                        .FirstOrDefaultAsync(t => t.DataTableId == dataTableId, cancellationToken);
-                    return scdTable is null ? Results.NotFound() : Results.Ok(scdTable);
-                })
+            async (ServiceDbContext dbContext, Guid dataTableId, CancellationToken cancellationToken) =>
+            {
+                var scdTable = await dbContext.MasterDataTables
+                    .AsNoTracking()
+                    .Include(t => t.Lookups)
+                    .FirstOrDefaultAsync(t => t.DataTableId == dataTableId, cancellationToken);
+                return scdTable is null ? Results.NotFound() : Results.Ok(scdTable);
+            })
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces<MasterDataTable>()
             .WithDescription("Get data table by id")
             .WithName("GetDataTable");
         
@@ -46,6 +50,7 @@ public abstract class DataTablesReadEndpoints : IEndpoints
                     .OrderBy(c => c.CategoryName)
                     .ToArrayAsync(cancellationToken)
             )
+            .Produces<MasterDataTableCategory[]>()
             .WithDescription("Get all data table categories")
             .WithName("GetDataTableCategories");
     }

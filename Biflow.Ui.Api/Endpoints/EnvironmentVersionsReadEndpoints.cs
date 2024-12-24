@@ -1,4 +1,5 @@
 using Biflow.Core.Constants;
+using Biflow.Core.Entities;
 using Biflow.Ui.Core;
 using Biflow.Ui.Core.Projection;
 using JetBrains.Annotations;
@@ -32,6 +33,7 @@ public abstract class EnvironmentVersionsReadEndpoints : IEndpoints
                     .Select(v => new VersionProjection(v.VersionId, v.Description, v.CreatedOn, v.CreatedBy))
                     .ToArrayAsync(cancellationToken)
             )
+            .Produces<VersionProjection[]>()
             .WithDescription("Get all environment versions. " +
                              "Use the query parameters startVersionId and limit for pagination.")
             .WithName("GetEnvironmentVersions");
@@ -45,6 +47,8 @@ public abstract class EnvironmentVersionsReadEndpoints : IEndpoints
                     .FirstOrDefaultAsync(cancellationToken);
                 return version is null ? Results.NotFound() : Results.Ok(version);
             })
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces<VersionProjection>()
             .WithDescription("Get environment version by id")
             .WithName("GetEnvironmentVersion");
         
@@ -67,6 +71,8 @@ public abstract class EnvironmentVersionsReadEndpoints : IEndpoints
                     ? version.SnapshotWithReferencesPreserved
                     : version.Snapshot; 
             })
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces<EnvironmentSnapshot>()
             .WithDescription("Get environment version snapshot. " +
                              "Use the referencesPreserved query parameter to return a variant of the snapshot " +
                              "that can be used for reverting to a version.")

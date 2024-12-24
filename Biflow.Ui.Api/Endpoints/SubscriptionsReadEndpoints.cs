@@ -32,6 +32,7 @@ public abstract class SubscriptionsReadEndpoints : IEndpoints
                     .ThenBy(s => s.SubscriptionType)
                     .ToArrayAsync(cancellationToken)
             )
+            .Produces<Subscription[]>()
             .WithDescription("Get all subscriptions")
             .WithName("GetSubscriptions");
         
@@ -49,6 +50,8 @@ public abstract class SubscriptionsReadEndpoints : IEndpoints
                     .FirstOrDefaultAsync(s => s.SubscriptionId == subscriptionId, cancellationToken);
                 return subscription is null ? Results.NotFound() : Results.Ok(subscription);
             })
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces<Subscription>()
             .WithDescription("Get subscription by id")
             .WithName("GetSubscription");
     }

@@ -1,4 +1,5 @@
 using Biflow.Core.Constants;
+using Biflow.Core.Entities;
 using Biflow.Ui.Core;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +27,7 @@ public abstract class SchedulesReadEndpoints : IEndpoints
                     .ThenBy(s => s.ScheduleName)
                     .ToArrayAsync(cancellationToken)
             )
+            .Produces<Schedule[]>()
             .WithDescription("Get all schedules")
             .WithName("GetSchedules");
         
@@ -39,6 +41,8 @@ public abstract class SchedulesReadEndpoints : IEndpoints
                     .FirstOrDefaultAsync(s => s.ScheduleId == scheduleId, cancellationToken);
                 return schedule is null ? Results.NotFound() : Results.Ok(schedule);
             })
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces<Schedule>()
             .WithDescription("Get schedule by id")
             .WithName("GetSchedule");
     }

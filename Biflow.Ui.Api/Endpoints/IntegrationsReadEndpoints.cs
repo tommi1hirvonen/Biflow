@@ -1,4 +1,5 @@
 using Biflow.Core.Constants;
+using Biflow.Core.Entities;
 using Biflow.Ui.Core;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
@@ -23,18 +24,21 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                     .OrderBy(x => x.AzureCredentialName)
                     .ToArrayAsync(cancellationToken)
             )
+            .Produces<AzureCredential[]>()
             .WithDescription("Get all Azure credentials. " +
                              "Sensitive data (passwords, client secrets) will be replaced with an empty value.")
             .WithName("GetAzureCredentials");
         
         group.MapGet("/azurecredentials/{azureCredentialId:guid}",
-                async (ServiceDbContext dbContext, Guid azureCredentialId, CancellationToken cancellationToken) =>
-                {
-                    var credential = await dbContext.AzureCredentials
-                        .AsNoTracking()
-                        .FirstOrDefaultAsync(x => x.AzureCredentialId == azureCredentialId, cancellationToken);
-                    return credential is null ? Results.NotFound() : Results.Ok(credential);
-                })
+            async (ServiceDbContext dbContext, Guid azureCredentialId, CancellationToken cancellationToken) =>
+            {
+                var credential = await dbContext.AzureCredentials
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.AzureCredentialId == azureCredentialId, cancellationToken);
+                return credential is null ? Results.NotFound() : Results.Ok(credential);
+            })
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces<AzureCredential>()
             .WithDescription("Get Azure credential by id. " +
                              "Sensitive data (password, client secret) will be replaced with an empty value.")
             .WithName("GetAzureCredential");
@@ -45,6 +49,7 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                     .OrderBy(c => c.ConnectionId)
                     .ToArrayAsync(cancellationToken)
             )
+            .Produces<SqlConnectionBase[]>()
             .WithDescription("Get all SQL connections. Sensitive connection strings will be replaced with an empty value.")
             .WithName("GetSqlConnections");
         
@@ -56,6 +61,8 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                     .FirstOrDefaultAsync(c => c.ConnectionId == sqlConnectionId, cancellationToken);
                 return connection is null ? Results.NotFound() : Results.Ok(connection);
             })
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces<SqlConnectionBase>()
             .WithDescription("Get SQL connection by id. Sensitive connection string will be replaced with an empty value.")
             .WithName("GetSqlConnection");
         
@@ -65,17 +72,20 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                     .OrderBy(c => c.PipelineClientId)
                     .ToArrayAsync(cancellationToken)
             )
+            .Produces<PipelineClient[]>()
             .WithDescription("Get all pipeline clients (Data Factory, Synapse Workspace).")
             .WithName("GetPipelineClients");
         
         group.MapGet("/pipelineclients/{pipelineClientId:guid}",
-                async (ServiceDbContext dbContext, Guid pipelineClientId, CancellationToken cancellationToken) =>
-                {
-                    var pipelineClient = await dbContext.PipelineClients
-                        .AsNoTracking()
-                        .FirstOrDefaultAsync(c => c.PipelineClientId == pipelineClientId, cancellationToken);
-                    return pipelineClient is null ? Results.NotFound() : Results.Ok(pipelineClient);
-                })
+            async (ServiceDbContext dbContext, Guid pipelineClientId, CancellationToken cancellationToken) =>
+            {
+                var pipelineClient = await dbContext.PipelineClients
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(c => c.PipelineClientId == pipelineClientId, cancellationToken);
+                return pipelineClient is null ? Results.NotFound() : Results.Ok(pipelineClient);
+            })
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces<PipelineClient>()
             .WithDescription("Get pipeline client by id.")
             .WithName("GetPipelineClient");
         
@@ -85,17 +95,20 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                     .OrderBy(x => x.FunctionAppId)
                     .ToArrayAsync(cancellationToken)
             )
+            .Produces<FunctionApp[]>()
             .WithDescription("Get all Function Apps. Sensitive function keys will be replaced with an empty value.")
             .WithName("GetFunctionApps");
         
         group.MapGet("/functionapps/{functionAppId:guid}",
-                async (ServiceDbContext dbContext, Guid functionAppId, CancellationToken cancellationToken) =>
-                {
-                    var functionApp = await dbContext.FunctionApps
-                        .AsNoTracking()
-                        .FirstOrDefaultAsync(x => x.FunctionAppId == functionAppId, cancellationToken);
-                    return functionApp is null ? Results.NotFound() : Results.Ok(functionApp);
-                })
+            async (ServiceDbContext dbContext, Guid functionAppId, CancellationToken cancellationToken) =>
+            {
+                var functionApp = await dbContext.FunctionApps
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.FunctionAppId == functionAppId, cancellationToken);
+                return functionApp is null ? Results.NotFound() : Results.Ok(functionApp);
+            })
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces<FunctionApp>()
             .WithDescription("Get Function App by id. Sensitive function key will be replaced with an empty value.")
             .WithName("GetFunctionApp");
         
@@ -105,17 +118,20 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                     .OrderBy(x => x.WorkspaceName)
                     .ToArrayAsync(cancellationToken)
             )
+            .Produces<DatabricksWorkspace[]>()
             .WithDescription("Get all Databricks workspaces. Sensitive API tokens will be replaced with an empty value.")
             .WithName("GetDatabricksWorkspaces");
         
         group.MapGet("/databricksworkspaces/{workspaceId:guid}",
-                async (ServiceDbContext dbContext, Guid workspaceId, CancellationToken cancellationToken) =>
-                {
-                    var workspace = await dbContext.DatabricksWorkspaces
-                        .AsNoTracking()
-                        .FirstOrDefaultAsync(x => x.WorkspaceId == workspaceId, cancellationToken);
-                    return workspace is null ? Results.NotFound() : Results.Ok(workspace);
-                })
+            async (ServiceDbContext dbContext, Guid workspaceId, CancellationToken cancellationToken) =>
+            {
+                var workspace = await dbContext.DatabricksWorkspaces
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.WorkspaceId == workspaceId, cancellationToken);
+                return workspace is null ? Results.NotFound() : Results.Ok(workspace);
+            })
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces<DatabricksWorkspace>()
             .WithDescription("Get Databricks workspace by id. Sensitive API token will be replaced with an empty value.")
             .WithName("GetDatabricksWorkspace");
         
@@ -125,17 +141,20 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                     .OrderBy(x => x.DbtAccountName)
                     .ToArrayAsync(cancellationToken)
             )
+            .Produces<DbtAccount[]>()
             .WithDescription("Get all dbt accounts. Sensitive API tokens will be replaced with an empty value.")
             .WithName("GetDbtAccounts");
         
         group.MapGet("/dbtaccounts/{dbtAccountId:guid}",
-                async (ServiceDbContext dbContext, Guid dbtAccountId, CancellationToken cancellationToken) =>
-                {
-                    var account = await dbContext.DbtAccounts
-                        .AsNoTracking()
-                        .FirstOrDefaultAsync(x => x.DbtAccountId == dbtAccountId, cancellationToken);
-                    return account is null ? Results.NotFound() : Results.Ok(account);
-                })
+            async (ServiceDbContext dbContext, Guid dbtAccountId, CancellationToken cancellationToken) =>
+            {
+                var account = await dbContext.DbtAccounts
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.DbtAccountId == dbtAccountId, cancellationToken);
+                return account is null ? Results.NotFound() : Results.Ok(account);
+            })
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces<DbtAccount>()
             .WithDescription("Get dbt account by id. Sensitive API token will be replaced with an empty value.")
             .WithName("GetDbtAccount");
         
@@ -145,18 +164,21 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                     .OrderBy(x => x.ConnectionName)
                     .ToArrayAsync(cancellationToken)
             )
+            .Produces<AnalysisServicesConnection[]>()
             .WithDescription("Get all SQL Server Analysis Services connections. " +
                              "Sensitive connection strings will be replaced with an empty value.")
             .WithName("GetAnalysisServicesConnections");
         
         group.MapGet("/analysisservicesconnections/{connectionId:guid}",
-                async (ServiceDbContext dbContext, Guid connectionId, CancellationToken cancellationToken) =>
-                {
-                    var connection = await dbContext.AnalysisServicesConnections
-                        .AsNoTracking()
-                        .FirstOrDefaultAsync(x => x.ConnectionId == connectionId, cancellationToken);
-                    return connection is null ? Results.NotFound() : Results.Ok(connection);
-                })
+            async (ServiceDbContext dbContext, Guid connectionId, CancellationToken cancellationToken) =>
+            {
+                var connection = await dbContext.AnalysisServicesConnections
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.ConnectionId == connectionId, cancellationToken);
+                return connection is null ? Results.NotFound() : Results.Ok(connection);
+            })
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces<AnalysisServicesConnection>()
             .WithDescription("Get SQL Server Analysis Services connection by id. " +
                              "Sensitive connection string will be replaced with an empty value.")
             .WithName("GetAnalysisServicesConnection");
@@ -167,18 +189,21 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                     .OrderBy(x => x.QlikCloudEnvironmentName)
                     .ToArrayAsync(cancellationToken)
             )
+            .Produces<QlikCloudEnvironment[]>()
             .WithDescription("Get all Qlik Cloud environments. " +
                              "Sensitive API tokens will be replaced with an empty value.")
             .WithName("GetQlikCloudEnvironments");
         
         group.MapGet("/qlikcloudenvironments/{qlikCloudEnvironmentId:guid}",
-                async (ServiceDbContext dbContext, Guid qlikCloudEnvironmentId, CancellationToken cancellationToken) =>
-                {
-                    var account = await dbContext.QlikCloudEnvironments
-                        .AsNoTracking()
-                        .FirstOrDefaultAsync(x => x.QlikCloudEnvironmentId == qlikCloudEnvironmentId, cancellationToken);
-                    return account is null ? Results.NotFound() : Results.Ok(account);
-                })
+            async (ServiceDbContext dbContext, Guid qlikCloudEnvironmentId, CancellationToken cancellationToken) =>
+            {
+                var account = await dbContext.QlikCloudEnvironments
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.QlikCloudEnvironmentId == qlikCloudEnvironmentId, cancellationToken);
+                return account is null ? Results.NotFound() : Results.Ok(account);
+            })
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces<QlikCloudEnvironment>()
             .WithDescription("Get Qlik Cloud environment by id. " +
                              "Sensitive API token will be replaced with an empty value.")
             .WithName("GetQlikCloudEnvironment");

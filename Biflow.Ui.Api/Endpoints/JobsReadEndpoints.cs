@@ -25,17 +25,16 @@ public abstract class JobsReadEndpoints : IEndpoints
             {
                 var query = dbContext.Jobs
                     .AsNoTracking();
-                
                 if (includeTags)
                 {
                     query = query.Include(t => t.Tags);
                 }
-
                 return await query
                     .OrderBy(j => !j.IsPinned)
                     .ThenBy(j => j.JobName)
                     .ToArrayAsync(cancellationToken);
             })
+            .Produces<Job[]>()
             .WithDescription("Get all jobs. Collection properties " +
                              "(job parameters, concurrencies, steps, schedules) " +
                              "are not loaded and will be empty. " +
@@ -65,6 +64,8 @@ public abstract class JobsReadEndpoints : IEndpoints
                     .FirstOrDefaultAsync(j => j.JobId == jobId, cancellationToken);
                 return job is null ? Results.NotFound() : Results.Ok(job);
             })
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces<Job>()
             .WithDescription("Get job by id. Steps and schedules are not loaded and will be empty. " +
                              "Job parameters and concurrency settings can be included by " +
                              "specifying the corresponding query parameters.")
@@ -91,6 +92,8 @@ public abstract class JobsReadEndpoints : IEndpoints
                     .ToArrayAsync(cancellationToken);
                 return Results.Ok(steps);
             })
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces<Step[]>()
             .WithDescription("Get all steps for a job. " +
                              "Step tags can be included by specifying the corresponding query parameter. " +
                              "Other collection properties are not loaded and will be empty.")
@@ -111,29 +114,33 @@ public abstract class JobsReadEndpoints : IEndpoints
                     .FirstOrDefaultAsync(s => s.StepId == stepId, cancellationToken);
                 return step is null ? Results.NotFound() : Results.Ok(step);
             })
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces<Step>()
             .WithDescription("Get step by id")
             .WithName("GetStep");
 
         var jobSchedulesEndpointFilter = apiKeyEndpointFilterFactory.Create([Scopes.JobsRead, Scopes.SchedulesRead]);
         
         app.MapGet("/jobs/{jobId:guid}/schedules",
-                async (ServiceDbContext dbContext, Guid jobId, CancellationToken cancellationToken) =>
+            async (ServiceDbContext dbContext, Guid jobId, CancellationToken cancellationToken) =>
+            {
+                var jobExists = await dbContext.Jobs
+                    .AnyAsync(x => x.JobId == jobId, cancellationToken);
+                if (!jobExists)
                 {
-                    var jobExists = await dbContext.Jobs
-                        .AnyAsync(x => x.JobId == jobId, cancellationToken);
-                    if (!jobExists)
-                    {
-                        return Results.NotFound();
-                    }
-                    var schedules = await dbContext.Schedules
-                        .AsNoTracking()
-                        .Where(s => s.JobId == jobId)
-                        .Include(s => s.TagFilter)
-                        .Include(s => s.Tags)
-                        .OrderBy(s => s.ScheduleName)
-                        .ToArrayAsync(cancellationToken);
-                    return Results.Ok(schedules);
-                })
+                    return Results.NotFound();
+                }
+                var schedules = await dbContext.Schedules
+                    .AsNoTracking()
+                    .Where(s => s.JobId == jobId)
+                    .Include(s => s.TagFilter)
+                    .Include(s => s.Tags)
+                    .OrderBy(s => s.ScheduleName)
+                    .ToArrayAsync(cancellationToken);
+                return Results.Ok(schedules);
+            })
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces<Schedule[]>()
             .WithTags($"{Scopes.JobsRead}, {Scopes.SchedulesRead}")
             .WithDescription("Get all schedules for a job.")
             .WithName("GetJobSchedules")

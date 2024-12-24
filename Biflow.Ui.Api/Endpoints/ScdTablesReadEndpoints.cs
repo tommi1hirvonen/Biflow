@@ -1,4 +1,5 @@
 using Biflow.Core.Constants;
+using Biflow.Core.Entities;
 using Biflow.Ui.Core;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +24,7 @@ public abstract class ScdTablesReadEndpoints : IEndpoints
                 .OrderBy(t => t.ScdTableName)
                 .ToArrayAsync(cancellationToken)
             )
+            .Produces<ScdTable[]>()
             .WithDescription("Get all SCD tables")
             .WithName("GetScdTables");
         
@@ -34,6 +36,8 @@ public abstract class ScdTablesReadEndpoints : IEndpoints
                     .FirstOrDefaultAsync(t => t.ScdTableId == scdTableId, cancellationToken);
                 return scdTable is null ? Results.NotFound() : Results.Ok(scdTable);
             })
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces<ScdTable>()
             .WithDescription("Get SCD table by id")
             .WithName("GetScdTable");
     }

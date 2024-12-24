@@ -1,5 +1,7 @@
 using Biflow.Core.Constants;
+using Biflow.Core.Entities;
 using Biflow.Ui.Core;
+using Grpc.Core;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,6 +25,7 @@ public abstract class UsersReadEndpoints : IEndpoints
                     .OrderBy(u => u.Username)
                     .ToArrayAsync(cancellationToken)
             )
+            .Produces<User[]>()
             .WithDescription("Get all users")
             .WithName("GetUsers");
         
@@ -34,6 +37,8 @@ public abstract class UsersReadEndpoints : IEndpoints
                     .FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken);
                 return user is null ? Results.NotFound() : Results.Ok(user);
             })
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces<User>()
             .WithDescription("Get user by id")
             .WithName("GetUser");
         
@@ -48,6 +53,8 @@ public abstract class UsersReadEndpoints : IEndpoints
                     .FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken);
                 return user is null ? Results.NotFound() : Results.Ok(user.Jobs);
             })
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces<Job[]>()
             .WithTags($"{Scopes.UsersRead}, {Scopes.JobsRead}")
             .WithDescription("Get user's authorized jobs. " +
                              "The collection properties of the returned jobs are not loaded and will be empty. " +
@@ -67,6 +74,8 @@ public abstract class UsersReadEndpoints : IEndpoints
                     .FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken);
                 return user is null ? Results.NotFound() : Results.Ok(user.DataTables);
             })
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces<MasterDataTable[]>()
             .WithTags($"{Scopes.UsersRead}, {Scopes.DataTablesRead}")
             .WithDescription("Get user's authorized data tables. " +
                              "The collection properties of the returned tables are not loaded and will be empty. " +
@@ -87,6 +96,8 @@ public abstract class UsersReadEndpoints : IEndpoints
                     .FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken);
                 return user is null ? Results.NotFound() : Results.Ok(user.Subscriptions);
             })
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces<Subscription[]>()
             .WithTags($"{Scopes.UsersRead}, {Scopes.SubscriptionsRead}")
             .WithDescription("Get user's subscriptions.")
             .WithName("GetUserSubscriptions")
