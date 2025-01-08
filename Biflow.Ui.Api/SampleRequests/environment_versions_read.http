@@ -1,0 +1,14 @@
+### All environment version
+
+GET {{baseUrl}}/environmentversions
+x-api-key: {{apiKey}}
+
+### Environment version by id
+
+GET {{baseUrl}}/environmentversions/21
+x-api-key: {{apiKey}}
+
+### Environment version snapshot
+
+GET {{baseUrl}}/environmentversions/21/snapshot?referencesPreserved=true
+x-api-key: {{apiKey}}

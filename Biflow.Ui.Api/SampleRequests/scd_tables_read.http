@@ -1,0 +1,9 @@
+### All SCD tables
+
+GET {{baseUrl}}/scdtables
+x-api-key: {{apiKey}}
+
+### SCD table by id
+
+GET {{baseUrl}}/scdtables/81c36ffe-f833-4f42-9eef-08dd12e59023
+x-api-key: {{apiKey}}

@@ -1,0 +1,9 @@
+### All subscriptions
+
+GET {{baseUrl}}/subscriptions
+x-api-key: {{apiKey}}
+
+### Subscription by id
+
+GET {{baseUrl}}/subscriptions/465d49fc-3450-49bb-3995-08dd2295f071
+x-api-key: {{apiKey}}

@@ -1,0 +1,63 @@
+### Executions
+
+GET {{baseUrl}}/executions
+    ?startDate=2024-08-01
+    &endDate=2024-12-31
+x-api-key: {{apiKey}}
+
+### Executions, running
+
+GET {{baseUrl}}/executions/running
+x-api-key: {{apiKey}}
+
+### Executions, not started
+
+GET {{baseUrl}}/executions/notstarted
+x-api-key: {{apiKey}}
+
+### Execution by id
+
+GET {{baseUrl}}/executions
+    /2a4b64d8-ff85-4117-a6b0-9d2500f9f326
+    ?includeParameters=true
+    &includeDataObjects=true
+    &includeConcurrencies=true
+x-api-key: {{apiKey}}
+
+### Execution steps by id
+
+GET {{baseUrl}}/executions
+    /2a4b64d8-ff85-4117-a6b0-9d2500f9f326
+    /steps
+    ?includeAttempts=true
+    &includeDependencies=true
+    &includeDataObjects=true
+    &includeParameters=true
+    &includeMonitors=true
+x-api-key: {{apiKey}}
+
+### Execution step by id
+
+GET {{baseUrl}}/executions
+    /2a4b64d8-ff85-4117-a6b0-9d2500f9f326
+    /steps
+    /1919b753-096d-44ca-5df0-08dbb6cadb53
+    ?includeAttempts=true
+    &includeDependencies=true
+    &includeDataObjects=true
+    &includeParameters=true
+    &includeMonitors=true
+x-api-key: {{apiKey}}
+
+### Not started step executions
+
+GET {{baseUrl}}/executions/steps/notstarted
+x-api-key: {{apiKey}}
+
+### Step executions
+
+GET {{baseUrl}}/executions
+    /steps
+    ?startDate=2024-04-12
+    &endDate=2024-12-31
+x-api-key: {{apiKey}}

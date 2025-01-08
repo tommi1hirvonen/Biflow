@@ -366,3 +366,4 @@ FodyWeavers.xsd
 /Biflow.Ui.Nc/CurrentCommit.txt
 /Biflow.Ui/appsettings.Development.json
 /Biflow.Ui.Api/appsettings.Development.json
+/Biflow.Ui.Api/SampleRequests/http-client.private.env.json

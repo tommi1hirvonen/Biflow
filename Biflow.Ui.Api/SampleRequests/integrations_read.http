@@ -1,0 +1,79 @@
+### All SQL connections
+
+GET {{baseUrl}}/integrations/sqlconnections
+x-api-key: {{apiKey}}
+
+### SQL connection by id
+
+GET {{baseUrl}}/integrations/sqlconnections/91debadd-3bf1-423b-a322-08dcd4e2ded5
+x-api-key: {{apiKey}}
+
+### All pipeline clients
+
+GET {{baseUrl}}/integrations/pipelineclients
+x-api-key: {{apiKey}}
+
+### Pipeline client by id
+
+GET {{baseUrl}}/integrations/pipelineclients/bbf08ea1-461e-4323-2d3d-08dd17659e0e
+x-api-key: {{apiKey}}
+
+### All function apps
+
+GET {{baseUrl}}/integrations/functionapps
+x-api-key: {{apiKey}}
+
+### Function app by id
+
+GET {{baseUrl}}/integrations/functionapps/46141b84-8c24-42cc-c5e6-08dc50c2393e
+x-api-key: {{apiKey}}
+
+### All Databricks workspaces
+
+GET {{baseUrl}}/integrations/databricksworkspaces
+x-api-key: {{apiKey}}
+
+### Function app by id
+
+GET {{baseUrl}}/integrations/databricksworkspaces/271f7254-726f-4346-6e08-08dce18d95f2
+x-api-key: {{apiKey}}
+
+### All dbt accounts
+
+GET {{baseUrl}}/integrations/dbtaccounts
+x-api-key: {{apiKey}}
+
+### dbt account by id
+
+GET {{baseUrl}}/integrations/dbtaccounts/0689152b-52b3-4023-1680-08dd05bbcf7e
+x-api-key: {{apiKey}}
+
+### All Analysis Services connections
+
+GET {{baseUrl}}/integrations/analysisservicesconnections
+x-api-key: {{apiKey}}
+
+### Analysis Services connection by id
+
+GET {{baseUrl}}/integrations/analysisservicesconnections/a032b8fe-d733-4812-78f5-08dbf67512ba
+x-api-key: {{apiKey}}
+
+### All Azure credentials
+
+GET {{baseUrl}}/integrations/azurecredentials
+x-api-key: {{apiKey}}
+
+### Azure credential by id
+
+GET {{baseUrl}}/integrations/azurecredentials/f978ddae-e31b-4c53-298d-08dd177078d7
+x-api-key: {{apiKey}}
+
+### All Qlik Cloud environments
+
+GET {{baseUrl}}/integrations/qlikcloudenvironments
+x-api-key: {{apiKey}}
+
+### Qlik Cloud environment by id
+
+GET {{baseUrl}}/integrations/qlikcloudenvironments/18f63239-9ef3-4d4e-fb98-08dbc6a53327
+x-api-key: {{apiKey}}

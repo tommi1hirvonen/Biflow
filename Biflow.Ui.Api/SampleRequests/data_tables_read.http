@@ -1,0 +1,14 @@
+### All data tables
+
+GET {{baseUrl}}/datatables
+x-api-key: {{apiKey}}
+
+### Data table by id
+
+GET {{baseUrl}}/datatables/6415f6f4-4282-4086-7b1d-08dace566f2b
+x-api-key: {{apiKey}}
+
+### Data table categories
+
+GET {{baseUrl}}/datatables/categories
+x-api-key: {{apiKey}}
