@@ -5,6 +5,11 @@ GET {{baseUrl}}
     ?includeTags=true
 x-api-key: {{apiKey}}
 
+### All job tags
+
+GET {{baseUrl}}/jobs/tags
+x-api-key: {{apiKey}}
+
 ### Job by id
 
 GET {{baseUrl}}

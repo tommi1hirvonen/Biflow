@@ -40,6 +40,15 @@ public abstract class JobsReadEndpoints : IEndpoints
                              "are not loaded and will be empty. " +
                              "Tags can be included by specifying the corresponding query parameter.")
             .WithName("GetJobs");
+        
+        group.MapGet("/tags", async (ServiceDbContext dbContext, CancellationToken cancellationToken) =>
+            {
+                var tags = await dbContext.JobTags.AsNoTracking().ToArrayAsync(cancellationToken);
+                return tags;
+            })
+            .Produces<JobTag[]>()
+            .WithDescription("Get all job tags")
+            .WithName("GetJobTags");
 
         group.MapGet("/{jobId:guid}", 
             async (ServiceDbContext dbContext,
