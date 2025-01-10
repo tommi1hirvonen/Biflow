@@ -10,6 +10,11 @@ x-api-key: {{apiKey}}
 GET {{baseUrl}}/jobs/tags
 x-api-key: {{apiKey}}
 
+### All step tags
+
+GET {{baseUrl}}/jobs/steps/tags
+x-api-key: {{apiKey}}
+
 ### Job by id
 
 GET {{baseUrl}}

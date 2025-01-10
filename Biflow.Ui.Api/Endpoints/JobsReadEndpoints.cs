@@ -49,6 +49,15 @@ public abstract class JobsReadEndpoints : IEndpoints
             .Produces<JobTag[]>()
             .WithDescription("Get all job tags")
             .WithName("GetJobTags");
+        
+        group.MapGet("/steps/tags", async (ServiceDbContext dbContext, CancellationToken cancellationToken) =>
+            {
+                var tags = await dbContext.StepTags.AsNoTracking().ToArrayAsync(cancellationToken);
+                return tags;
+            })
+            .Produces<StepTag[]>()
+            .WithDescription("Get all step tags")
+            .WithName("GetStepTags");
 
         group.MapGet("/{jobId:guid}", 
             async (ServiceDbContext dbContext,
