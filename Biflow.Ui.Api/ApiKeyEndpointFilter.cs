@@ -1,4 +1,5 @@
 using Biflow.Core.Entities;
+using Biflow.DataAccess;
 using Biflow.Ui.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -12,6 +13,8 @@ internal class ApiKeyEndpointFilter(
 {
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
+        var userService = (UserService)context.HttpContext.RequestServices.GetRequiredService<IUserService>();
+        
         if (!context.HttpContext.Request.Headers.TryGetValue("x-api-key", out var requestApiKeyHeader)
             || requestApiKeyHeader.FirstOrDefault() is not { } requestApiKey)
         {
@@ -23,6 +26,7 @@ internal class ApiKeyEndpointFilter(
             && cachedApiKey?.ValidTo >= DateTimeOffset.Now
             && scopes.All(scope => cachedApiKey.Scopes.Contains(scope)))
         {
+            userService.Username = cachedApiKey.Name;
             return await next(context);
         }
         
@@ -49,6 +53,7 @@ internal class ApiKeyEndpointFilter(
 
         // Valid API key found from database.
         memoryCache.Set(apiKeyFromDb.Value, apiKeyFromDb, TimeSpan.FromMinutes(5));
+        userService.Username = apiKeyFromDb.Name;
         return await next(context);
     }
 }

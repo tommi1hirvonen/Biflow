@@ -24,7 +24,7 @@ if (builder.Configuration.GetSection("Serilog").Exists())
 builder.Services.AddApplicationInsightsTelemetry();
 
 // Adds all necessary core Biflow UI services.
-builder.Services.AddUiCoreServices(builder.Configuration);
+builder.Services.AddUiCoreServices<UserService>(builder.Configuration);
 builder.Services.AddUiAuthentication(builder.Configuration);
 builder.Services.AddValidationServices();
 

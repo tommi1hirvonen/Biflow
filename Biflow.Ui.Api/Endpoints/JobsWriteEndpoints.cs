@@ -1,5 +1,6 @@
 using Biflow.Core.Constants;
 using Biflow.Core.Entities;
+using Biflow.DataAccess;
 using Biflow.Ui.Api.Models;
 using Biflow.Ui.Core;
 using JetBrains.Annotations;
@@ -21,7 +22,7 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .AddEndpointFilter(endpointFilter);
         
         group.MapPost("",
-            async ([FromBody] JobDto jobDto, ServiceDbContext dbContext, LinkGenerator linker, HttpContext ctx, CancellationToken cancellationToken) =>
+            async ([FromBody] JobDto jobDto, AppDbContext dbContext, LinkGenerator linker, HttpContext ctx, CancellationToken cancellationToken) =>
             {
                 var job = jobDto.ToJob();
                 var (results, isValid) = job.ValidateDataAnnotations();
@@ -40,7 +41,7 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .WithName("CreateJob");
         
         group.MapPut("",
-            async ([FromBody] JobDto jobDto, ServiceDbContext dbContext, CancellationToken cancellationToken) =>
+            async ([FromBody] JobDto jobDto, AppDbContext dbContext, CancellationToken cancellationToken) =>
             {
                 var job = await dbContext.Jobs
                     .FirstOrDefaultAsync(j => j.JobId == jobDto.JobId, cancellationToken);

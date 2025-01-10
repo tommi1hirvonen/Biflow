@@ -1,25 +1,8 @@
-﻿using System.Security.Claims;
-using System.Security.Principal;
+﻿namespace Biflow.DataAccess.Test;
 
-namespace Biflow.DataAccess.Test;
-
-internal class MockUserService : IUserService
+internal class MockUserService(string username, string role) : IUserService
 {
-    public MockUserService(string username, string role)
-    {
-        var identity = new GenericIdentity(username);
-        var claim = new Claim(ClaimTypes.Role, role, ClaimValueTypes.String, "Biflow");
-        identity.AddClaim(claim);
-        User = new ClaimsPrincipal(identity);
-    }
+    public string Username => username;
 
-    public ClaimsPrincipal User { get; private set; }
-
-    public void SetUser(ClaimsPrincipal user)
-    {
-        if (User != user)
-        {
-            User = user;
-        }
-    }
+    public IEnumerable<string>? Roles { get; } = [role];
 }

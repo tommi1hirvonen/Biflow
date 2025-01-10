@@ -3,7 +3,6 @@ using Biflow.DataAccess.Convention;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.Extensions.Configuration;
-using System.Security.Claims;
 
 namespace Biflow.DataAccess;
 
@@ -21,11 +20,9 @@ public class AppDbContext : DbContext
         SavingChanges += OnSavingChanges;
     }
 
-    internal string? Username => _userService?.User.Identity?.Name;
+    internal string? Username => _userService?.Username;
 
-    internal IEnumerable<string>? UserRoles => _userService?.User
-        .FindAll(ClaimTypes.Role)
-        .Select(r => r.Value);
+    internal IEnumerable<string>? UserRoles => _userService?.Roles;
 
     #region DbSets
     public DbSet<Job> Jobs => Set<Job>();

@@ -1,6 +1,5 @@
 ﻿using Biflow.Executor.Core;
 using Biflow.Scheduler.Core;
-using Biflow.Ui.Core.Authentication;
 using CronExpressionDescriptor;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,23 +19,20 @@ public static class Extensions
     /// <param name="services"></param>
     /// <param name="configuration">Top level configuration object</param>
     /// <param name="authenticationConfiguration">key of the user authentication method configuration</param>
-    /// <param name="registerUserService">whether IUserService should be registered to enable global query filters in AppDbContext</param>
+    /// <typeparam name="TUserService">type implementing <see cref="IUserService"/> registered as a scoped service</typeparam>
     /// <returns>The IServiceCollection passed as parameter</returns>
     /// <exception cref="ArgumentException">Thrown if an incorrect configuration is detected</exception>
-    public static IServiceCollection AddUiCoreServices(
+    public static IServiceCollection AddUiCoreServices<TUserService>(
         this IServiceCollection services,
         IConfiguration configuration,
-        string authenticationConfiguration = "Authentication",
-        bool registerUserService = true)
+        string authenticationConfiguration = "Authentication")
+        where TUserService : class, IUserService
     {
         // Add the UserService and AppDbContext factory as scoped.
         // The current user is captured and stored in UserService,
         // which in turn is used in AppDbContext to filter data in global query filters
         // based on the user's access permissions.
-        if (registerUserService)
-        {
-            services.AddScoped<IUserService, UserService>();
-        }
+        services.AddScoped<IUserService, TUserService>();
         services.AddDbContextFactory<AppDbContext>(lifetime: ServiceLifetime.Scoped);
 
         // Add additional DbContext factories with singleton lifetime.

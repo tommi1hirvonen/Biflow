@@ -14,7 +14,7 @@ internal sealed class UserCircuitHandler(
     IUserService userService) : CircuitHandler, IDisposable
 {
     private readonly AuthenticationStateProvider _authenticationStateProvider = authenticationStateProvider;
-    private readonly IUserService _userService = userService;
+    private readonly UserService _userService = (UserService)userService;
 
     public override Task OnCircuitOpenedAsync(Circuit circuit, CancellationToken cancellationToken)
     {
@@ -32,7 +32,7 @@ internal sealed class UserCircuitHandler(
             try
             {
                 var state = await task2;
-                _userService.SetUser(state.User);
+                _userService.User = state.User;
             }
             catch
             {
@@ -44,7 +44,7 @@ internal sealed class UserCircuitHandler(
     public override async Task OnConnectionUpAsync(Circuit circuit, CancellationToken cancellationToken)
     {
         var state = await _authenticationStateProvider.GetAuthenticationStateAsync();
-        _userService.SetUser(state.User);
+        _userService.User = state.User;
     }
 
     public void Dispose()
