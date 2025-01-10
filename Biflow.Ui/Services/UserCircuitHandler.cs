@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components.Server.Circuits;
 
-namespace Biflow.Ui;
+namespace Biflow.Ui.Services;
 
 /// <summary>
 /// Captures the current user from <see cref="AuthenticationStateProvider"/>

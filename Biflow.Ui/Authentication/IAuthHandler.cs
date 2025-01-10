@@ -1,6 +1,6 @@
 ﻿using System.Security.Authentication;
 
-namespace Biflow.Ui.Core;
+namespace Biflow.Ui.Authentication;
 
 public interface IAuthHandler
 {

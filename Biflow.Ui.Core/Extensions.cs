@@ -2,15 +2,8 @@
 using Biflow.Scheduler.Core;
 using Biflow.Ui.Core.Authentication;
 using CronExpressionDescriptor;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.Negotiate;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Identity.Web;
-using Microsoft.Identity.Web.UI;
 using Quartz;
 using System.Runtime.CompilerServices;
 using Biflow.Ui.Core.Validation;
@@ -21,60 +14,6 @@ namespace Biflow.Ui.Core;
 
 public static class Extensions
 {
-    /// <summary>
-    /// Adds authentication services based on settings defined in configuration. Needs to be called after AddUiCoreServices().
-    /// </summary>
-    /// <param name="services"/>
-    /// <param name="configuration">Top level configuration object</param>
-    /// <returns>The IServiceCollection passed as parameter</returns>
-    /// <exception cref="ArgumentException">Thrown if an incorrect configuration is detected</exception>
-    public static IServiceCollection AddUiCoreAuthentication(this IServiceCollection services, IConfiguration configuration)
-    {
-        var authentication = configuration.GetValue<string>("Authentication");
-        switch (authentication)
-        {
-            case "BuiltIn":
-                services.AddScoped<IAuthHandler, BuiltInAuthHandler>();
-                services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                    .AddCookie(options =>
-                    {
-                        options.LoginPath = "/login";
-                        options.ReturnUrlParameter = "redirectUrl";
-                    });
-                break;
-            case "Windows":
-                services.AddMemoryCache();
-                services.AddAuthentication(NegotiateDefaults.AuthenticationScheme).AddNegotiate();
-                services.AddAuthorizationBuilder()
-                    .SetFallbackPolicy(new AuthorizationPolicyBuilder().AddRequirements(new UserExistsRequirement()).Build());
-                services.AddScoped<IAuthorizationHandler, WindowsAuthorizationHandler>();
-                services.AddScoped<IClaimsTransformation, ClaimsTransformer>();
-                break;
-            case "AzureAd":
-                services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
-                    .AddMicrosoftIdentityWebApp(configuration.GetSection("AzureAd"));
-                services.AddControllersWithViews().AddMicrosoftIdentityUI();
-                services.AddAuthorization(options =>
-                {
-                    options.FallbackPolicy = options.DefaultPolicy;
-                });
-                services.AddScoped<IClaimsTransformation, ClaimsTransformer>();
-                break;
-            case "Ldap":
-                services.AddScoped<IAuthHandler, LdapAuthHandler>();
-                services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                    .AddCookie(options =>
-                    {
-                        options.LoginPath = "/login";
-                        options.ReturnUrlParameter = "redirectUrl";
-                    });
-                break;
-            default:
-                throw new ArgumentException($"Invalid Authentication setting: {authentication}");
-        }
-        return services;
-    }
-
     /// <summary>
     /// Adds services that provide core functionality in the UI application
     /// </summary>
@@ -324,7 +263,7 @@ public static class Extensions
     /// <summary>
     /// Get a string describing the schedule's underlying Cron expression
     /// </summary>
-    /// <returns>Descriptive text if the Cron expression is valid. Otherwise an error message string is returned.</returns>
+    /// <returns>Descriptive text if the Cron expression is valid. Otherwise, an error message string is returned.</returns>
     public static string GetScheduleDescription(this Schedule schedule) =>
         GetCronExpressionDescription(schedule.CronExpression);
 
@@ -332,7 +271,7 @@ public static class Extensions
     /// Get a string describing a Cron expression
     /// </summary>
     /// <param name="expression">String to read as Cron expression</param>
-    /// <returns>Descriptive text if the Cron expression is valid. Otherwise an error message string is returned.</returns>
+    /// <returns>Descriptive text if the Cron expression is valid. Otherwise, an error message string is returned.</returns>
     public static string GetCronExpressionDescription(string? expression)
     {
         if (expression is not null && CronExpression.IsValidExpression(expression))
@@ -353,7 +292,7 @@ public static class Extensions
     /// Generates a sequence of DateTimes for when the schedule is triggered
     /// </summary>
     /// <param name="schedule"><see cref="Schedule"></see> object whose Cron is used to parse DateTimes</param>
-    /// <param name="start">Optionally provide start time to filter generated sequence to only include DateTimes beyond a certain point. By default DateTimeOffset.UtcNow is used.</param>
+    /// <param name="start">Optionally provide start time to filter generated sequence to only include DateTimes beyond a certain point. By default, DateTimeOffset.UtcNow is used.</param>
     /// <returns></returns>
     public static IEnumerable<DateTime?> NextFireTimes(this Schedule schedule, DateTimeOffset? start = null)
     {

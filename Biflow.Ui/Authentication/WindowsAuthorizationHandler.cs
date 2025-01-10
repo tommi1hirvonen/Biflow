@@ -2,21 +2,23 @@
 using Microsoft.Extensions.Caching.Memory;
 using System.Security.Claims;
 
-namespace Biflow.Ui.Core;
+namespace Biflow.Ui.Authentication;
 
-internal class WindowsAuthorizationHandler(IMemoryCache memoryCache, IMediator mediator) : AuthorizationHandler<UserExistsRequirement>
+internal class WindowsAuthorizationHandler(IMemoryCache memoryCache, IMediator mediator)
+    : AuthorizationHandler<UserExistsRequirement>
 {
     private readonly IMemoryCache _memoryCache = memoryCache;
     private readonly IMediator _mediator = mediator;
 
-    protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, UserExistsRequirement requirement)
+    protected override async Task HandleRequirementAsync(
+        AuthorizationHandlerContext context, UserExistsRequirement requirement)
     {
         var userName = context.User.Identity?.Name;
         if (userName is null)
         {
             return;
         }
-        if (context.User.Claims.Any(c => c.Type == ClaimTypes.Role && c.Issuer == "Biflow"))
+        if (context.User.Claims.Any(c => c is { Type: ClaimTypes.Role, Issuer: "Biflow" }))
         {
             context.Succeed(requirement);
             return;

@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Identity.Web;
 using Serilog;
 using System.Globalization;
+using Biflow.Ui.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +25,7 @@ builder.Services.AddApplicationInsightsTelemetry();
 
 // Adds all necessary core Biflow UI services.
 builder.Services.AddUiCoreServices(builder.Configuration);
-builder.Services.AddUiCoreAuthentication(builder.Configuration);
+builder.Services.AddUiAuthentication(builder.Configuration);
 builder.Services.AddValidationServices();
 
 builder.Services.AddLocalization();

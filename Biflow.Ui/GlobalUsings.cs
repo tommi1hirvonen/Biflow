@@ -2,6 +2,7 @@
 global using Biflow.Core.Entities;
 global using Biflow.Core.Interfaces;
 global using Biflow.DataAccess;
+global using Biflow.Ui.Authentication;
 global using Biflow.Ui.Components;
 global using Biflow.Ui.Core;
 global using Biflow.Ui.Core.Projection;

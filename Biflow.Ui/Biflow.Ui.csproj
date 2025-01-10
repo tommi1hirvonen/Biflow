@@ -32,8 +32,12 @@
     <PackageReference Include="BlazorMonaco" />
     <PackageReference Include="Havit.Blazor.Components.Web.Bootstrap" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
+    <PackageReference Include="Microsoft.Identity.Web" />
+    <PackageReference Include="Microsoft.Identity.Web.UI" />
     <PackageReference Include="Serilog.AspNetCore" />
   </ItemGroup>
 

@@ -1,8 +1,7 @@
-﻿using Microsoft.Extensions.Configuration;
-using System.DirectoryServices.Protocols;
+﻿using System.DirectoryServices.Protocols;
 using System.Security.Authentication;
 
-namespace Biflow.Ui.Core;
+namespace Biflow.Ui.Authentication;
 
 internal class LdapAuthHandler(IConfiguration configuration, IMediator mediator) : IAuthHandler
 {

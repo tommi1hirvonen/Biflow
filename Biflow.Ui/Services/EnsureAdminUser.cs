@@ -1,4 +1,4 @@
-namespace Biflow.Ui;
+namespace Biflow.Ui.Services;
 
 internal class EnsureAdminUser(
     ILogger<EnsureAdminUser> logger, IConfiguration configuration, IServiceProvider services) : BackgroundService

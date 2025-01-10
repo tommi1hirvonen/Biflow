@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.Extensions.Caching.Memory;
 using System.Security.Claims;
 
-namespace Biflow.Ui.Core;
+namespace Biflow.Ui.Authentication;
 
 internal class ClaimsTransformer(IMemoryCache memoryCache, IMediator mediator) : IClaimsTransformation
 {

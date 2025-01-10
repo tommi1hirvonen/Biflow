@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 
-namespace Biflow.Ui.Core;
+namespace Biflow.Ui.Authentication;
 
 internal class UserExistsRequirement : IAuthorizationRequirement
 {
