@@ -3,6 +3,11 @@
 GET {{baseUrl}}/schedules
 x-api-key: {{apiKey}}
 
+### All schedule tags
+
+GET {{baseUrl}}/schedules/tags
+x-api-key: {{apiKey}}
+
 ### Schedule by id
 
 GET {{baseUrl}}/schedules/c2653eb7-0d37-4867-55bd-08dc608a0c2a

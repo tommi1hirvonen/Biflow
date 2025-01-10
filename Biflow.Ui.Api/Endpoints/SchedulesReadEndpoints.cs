@@ -31,6 +31,15 @@ public abstract class SchedulesReadEndpoints : IEndpoints
             .WithDescription("Get all schedules")
             .WithName("GetSchedules");
         
+        group.MapGet("/tags", async (ServiceDbContext dbContext, CancellationToken cancellationToken) =>
+            {
+                var tags = await dbContext.ScheduleTags.AsNoTracking().ToArrayAsync(cancellationToken);
+                return tags;
+            })
+            .Produces<ScheduleTag[]>()
+            .WithDescription("Get all schedule tags")
+            .WithName("GetScheduleTags");
+        
         group.MapGet("/{scheduleId:guid}",
             async (ServiceDbContext dbContext, Guid scheduleId, CancellationToken cancellationToken) =>
             {
