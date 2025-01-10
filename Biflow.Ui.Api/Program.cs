@@ -21,7 +21,7 @@ if (builder.Configuration.GetSection("Serilog").Exists())
 }
 
 builder.Services.AddApplicationInsightsTelemetry();
-builder.Services.AddUiCoreServices(builder.Configuration, authenticationConfiguration: "UserAuthentication");
+
 // Configure response content serialization
 builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
 {
@@ -66,6 +66,7 @@ builder.Services.AddSwaggerGen(s =>
     s.AddSecurityRequirement(requirement);
 });
 builder.Services.AddMemoryCache();
+builder.Services.AddDbContextFactory<ServiceDbContext>();
 builder.Services.AddSingleton<ApiKeyEndpointFilterFactory>();
 
 var app = builder.Build();
