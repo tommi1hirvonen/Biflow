@@ -1,13 +1,16 @@
-﻿namespace Biflow.Ui.Core;
+﻿using JetBrains.Annotations;
 
-public record DeleteJobCommand(Guid JobId) : IRequest;
+namespace Biflow.Ui.Core;
 
+public record DeleteJobCommand(Guid JobId) : IRequest<Job?>;
+
+[UsedImplicitly]
 internal class DeleteJobCommandHandler(
     IDbContextFactory<AppDbContext> dbContextFactory,
     ISchedulerService scheduler)
-    : IRequestHandler<DeleteJobCommand>
+    : IRequestHandler<DeleteJobCommand, Job?>
 {
-    public async Task Handle(DeleteJobCommand request, CancellationToken cancellationToken)
+    public async Task<Job?> Handle(DeleteJobCommand request, CancellationToken cancellationToken)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         
@@ -40,5 +43,6 @@ internal class DeleteJobCommandHandler(
             transaction.Rollback();
             throw;
         }
+        return jobToRemove;
     }
 }

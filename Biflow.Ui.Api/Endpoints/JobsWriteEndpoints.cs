@@ -63,15 +63,15 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .WithDescription("Update an existing job")
             .WithName("UpdateJob");
         
-        // group.MapDelete("{jobId:guid}", async (Guid jobId, IMediator mediator, CancellationToken cancellationToken) =>
-        //     {
-        //         var command = new DeleteJobCommand(jobId);
-        //         var job = await mediator.SendAsync(command, cancellationToken);
-        //         return job is null ? Results.NotFound() : Results.Ok();
-        //     })
-        //     .Produces(StatusCodes.Status404NotFound)
-        //     .Produces<Job>()
-        //     .WithDescription("Delete a job")
-        //     .WithName("DeleteJob");
+        group.MapDelete("{jobId:guid}", async (Guid jobId, IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new DeleteJobCommand(jobId);
+                var job = await mediator.SendAsync(command, cancellationToken);
+                return job is null ? Results.NotFound() : Results.Ok(job);
+            })
+            .Produces(StatusCodes.Status404NotFound)
+            .Produces<Job>()
+            .WithDescription("Delete a job")
+            .WithName("DeleteJob");
     }
 }
