@@ -1,0 +1,42 @@
+### Create job
+
+POST {{baseUrl}}/jobs
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+    "JobId": "418c18b9-7086-4774-8412-f9bffa097499",
+    "JobName": "API test job",
+    "JobDescription": "Job created from API",
+    "ExecutionMode": "ExecutionPhase",
+    "StopOnFirstError": false,
+    "MaxParallelSteps": 10,
+    "OvertimeNotificationLimitMinutes": 0,
+    "TimeoutMinutes": 0,
+    "IsEnabled": true,
+    "IsPinned": false
+}
+
+### Update job
+
+PUT {{baseUrl}}/jobs
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "JobId": "418c18b9-7086-4774-8412-f9bffa097499",
+  "JobName": "API test job renamed",
+  "JobDescription": "Job created from API",
+  "ExecutionMode": "ExecutionPhase",
+  "StopOnFirstError": false,
+  "MaxParallelSteps": 10,
+  "OvertimeNotificationLimitMinutes": 0,
+  "TimeoutMinutes": 0,
+  "IsEnabled": true,
+  "IsPinned": false
+} 
+
+### Delete job
+
+DELETE {{baseUrl}}/jobs/418c18b9-7086-4774-8412-f9bffa097499
+x-api-key: {{apiKey}}
