@@ -66,7 +66,9 @@ builder.Services.AddSwaggerGen(s =>
     s.AddSecurityRequirement(requirement);
 });
 builder.Services.AddMemoryCache();
-builder.Services.AddDbContextFactory<ServiceDbContext>();
+builder.Services.AddUiCoreServices(builder.Configuration,
+    authenticationConfiguration: "UserAuthentication",
+    registerUserService: false); // Omit registering IUserService to disable global query filters in AppDbContext.
 builder.Services.AddSingleton<ApiKeyEndpointFilterFactory>();
 
 var app = builder.Build();

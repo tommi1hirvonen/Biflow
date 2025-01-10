@@ -20,18 +20,23 @@ public static class Extensions
     /// <param name="services"></param>
     /// <param name="configuration">Top level configuration object</param>
     /// <param name="authenticationConfiguration">key of the user authentication method configuration</param>
+    /// <param name="registerUserService">whether IUserService should be registered to enable global query filters in AppDbContext</param>
     /// <returns>The IServiceCollection passed as parameter</returns>
     /// <exception cref="ArgumentException">Thrown if an incorrect configuration is detected</exception>
     public static IServiceCollection AddUiCoreServices(
         this IServiceCollection services,
         IConfiguration configuration,
-        string authenticationConfiguration = "Authentication")
+        string authenticationConfiguration = "Authentication",
+        bool registerUserService = true)
     {
         // Add the UserService and AppDbContext factory as scoped.
         // The current user is captured and stored in UserService,
         // which in turn is used in AppDbContext to filter data in global query filters
         // based on the user's access permissions.
-        services.AddScoped<IUserService, UserService>();
+        if (registerUserService)
+        {
+            services.AddScoped<IUserService, UserService>();
+        }
         services.AddDbContextFactory<AppDbContext>(lifetime: ServiceLifetime.Scoped);
 
         // Add additional DbContext factories with singleton lifetime.
