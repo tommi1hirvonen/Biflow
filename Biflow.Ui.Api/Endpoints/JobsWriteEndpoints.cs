@@ -52,6 +52,7 @@ public abstract class JobsWriteEndpoints : IEndpoints
                 var (results, isValid) = job.ValidateDataAnnotations();
                 if (isValid)
                 {
+                    await dbContext.SaveChangesAsync(cancellationToken);
                     return Results.Ok(job);
                 }
                 var errors = results.ToDictionary();
