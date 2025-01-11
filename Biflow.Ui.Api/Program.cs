@@ -3,6 +3,8 @@ using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using Biflow.Core.Converters;
 using Biflow.Ui.Api;
+using Biflow.Ui.Api.Exceptions;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.OpenApi.Models;
 using Serilog;
 
@@ -70,6 +72,35 @@ builder.Services.AddSingleton<ApiKeyEndpointFilterFactory>();
 
 var app = builder.Build();
 
+app.UseExceptionHandler(errorAppBuilder =>
+{
+    errorAppBuilder.Run(async httpContext =>
+    {
+        if (httpContext.Features.Get<IExceptionHandlerFeature>() is not { Error: { } exception })
+        {
+            return;
+        }
+        switch (exception)
+        {
+            case PrimaryKeyException pkException:
+                httpContext.Response.StatusCode = StatusCodes.Status409Conflict;
+                httpContext.Response.ContentType = "text/plain";
+                await httpContext.Response.WriteAsync(pkException.Message);
+                return;
+            case NotFoundException notFoundException:
+                httpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+                httpContext.Response.ContentType = "text/plain";
+                await httpContext.Response.WriteAsync(notFoundException.Message);
+                return;
+        }
+        if (app.Environment.IsDevelopment())
+        {
+            httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            httpContext.Response.ContentType = "text/plain";
+            await httpContext.Response.WriteAsync(exception.ToString());
+        }
+    });
+});    
 app.MapDefaultEndpoints();
 app.UseSwagger();
 app.UseSwaggerUI();
