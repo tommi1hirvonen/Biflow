@@ -23,7 +23,8 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
             {
                 if (limit is < 10 or > 100)
                 {
-                    return Results.BadRequest("Limit must be between 10 and 100");
+                    return Results.Problem("Limit must be between 10 and 100",
+                        statusCode: StatusCodes.Status400BadRequest);
                 }
                 var query = dbContext.Executions
                     .AsNoTracking()
@@ -39,7 +40,7 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
                     .ToArrayAsync(cancellationToken);
                 return Results.Ok(executions);
             })
-            .Produces(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
             .Produces<Execution[]>()
             .WithDescription("Get currently running executions")
             .WithName("GetRunningExecutions");
@@ -52,7 +53,8 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
             {
                 if (limit is < 10 or > 100)
                 {
-                    return Results.BadRequest("Limit must be between 10 and 100");
+                    return Results.Problem("Limit must be between 10 and 100",
+                        statusCode: StatusCodes.Status400BadRequest);
                 }
                 var query = dbContext.Executions
                     .AsNoTracking()
@@ -68,7 +70,7 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
                     .ToArrayAsync(cancellationToken);
                 return Results.Ok(executions);
             })
-            .Produces(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
             .Produces<Execution[]>()
             .WithDescription("Get pending/not started executions")
             .WithName("GetNotStartedExecutions");
@@ -83,7 +85,8 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
             {
                 if (limit is < 10 or > 100)
                 {
-                    return Results.BadRequest("Limit must be between 10 and 100");
+                    return Results.Problem("Limit must be between 10 and 100",
+                        statusCode: StatusCodes.Status400BadRequest);
                 }
                 var query = dbContext.Executions
                     .AsNoTracking()
@@ -101,7 +104,7 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
                     .ToArrayAsync(cancellationToken);
                 return Results.Ok(executions);
             })
-            .Produces(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
             .Produces<Execution[]>()
             .WithDescription("Get executions")
             .WithName("GetExecutions");
@@ -131,9 +134,13 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
                 }
                 var execution = await query
                     .FirstOrDefaultAsync(e => e.ExecutionId == executionId, cancellationToken);
-                return execution is null ? Results.NotFound() : Results.Ok(execution);
+                if (execution is null)
+                {
+                    throw new NotFoundException<Execution>(executionId);
+                }
+                return Results.Ok(execution);
             })
-            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<Execution>()
             .WithDescription("Get execution by id")
             .WithName("GetExecution");
@@ -152,7 +159,7 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
                     .AnyAsync(e => e.ExecutionId == executionId, cancellationToken);
                 if (!executionExists)
                 {
-                    return Results.NotFound();
+                    throw new NotFoundException<Execution>(executionId);
                 }
                 var query = dbContext.StepExecutions
                     .AsNoTrackingWithIdentityResolution()
@@ -185,7 +192,7 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
                 var stepExecutions = await query.ToArrayAsync(cancellationToken);
                 return Results.Ok(stepExecutions);
             })
-            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<StepExecution[]>()
             .WithDescription("Get execution steps")
             .WithName("GetExecutionSteps");
@@ -231,7 +238,13 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
                 var stepExecution = await query
                     .FirstOrDefaultAsync(e => e.ExecutionId == executionId && e.StepId == stepId,
                         cancellationToken);
-                return stepExecution is null ? Results.NotFound() : Results.Ok(stepExecution);
+                if (stepExecution is null)
+                {
+                    throw new NotFoundException<StepExecution>(
+                        (nameof(StepExecution.ExecutionId), executionId),
+                        (nameof(StepExecution.StepId), stepId));
+                }
+                return Results.Ok(stepExecution);
             })
             .Produces(StatusCodes.Status404NotFound)
             .Produces<StepExecution>()
@@ -248,7 +261,8 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
             {
                 if (limit is < 10 or > 100)
                 {
-                    return Results.BadRequest("Limit must be between 10 and 100");
+                    return Results.Problem("Limit must be between 10 and 100",
+                        statusCode: StatusCodes.Status400BadRequest);
                 }
                 var query = dbContext.StepExecutionAttempts
                     .AsNoTrackingWithIdentityResolution()
@@ -267,9 +281,10 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
                 }
                 else if (lastExecutionId is not null || lastStepId is not null || lastRetryAttemptIndex is not null)
                 {
-                    return Results.BadRequest(
+                    return Results.Problem(
                         $"All three parameters {nameof(lastExecutionId)}, {nameof(lastStepId)} and {nameof(retryAttemptIndex)} " +
-                        "must be provided together or all of them must be omitted.");
+                        "must be provided together or all of them must be omitted.",
+                        statusCode: StatusCodes.Status400BadRequest);
                 }
                 var stepExecutionAttempts = await query
                     .Include(e => e.StepExecution)
@@ -282,7 +297,7 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
                     .ToArray();
                 return Results.Ok(stepExecutions);
             })
-            .Produces(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
             .Produces<StepExecution[]>()
             .WithDescription("Get all running steps")
             .WithName("GetRunningStepExecutions");
@@ -297,7 +312,8 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
             {
                 if (limit is < 10 or > 100)
                 {
-                    return Results.BadRequest("Limit must be between 10 and 100");
+                    return Results.Problem("Limit must be between 10 and 100",
+                        statusCode: StatusCodes.Status400BadRequest);
                 }
                 var query = dbContext.StepExecutionAttempts
                     .AsNoTrackingWithIdentityResolution()
@@ -316,9 +332,10 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
                 }
                 else if (lastExecutionId is not null || lastStepId is not null || lastRetryAttemptIndex is not null)
                 {
-                    return Results.BadRequest(
+                    return Results.Problem(
                         $"All three parameters {nameof(lastExecutionId)}, {nameof(lastStepId)} and {nameof(retryAttemptIndex)} " +
-                        "must be provided together or all of them must be omitted.");
+                        "must be provided together or all of them must be omitted.",
+                        statusCode: StatusCodes.Status400BadRequest);
                 }
                 var stepExecutionAttempts = await query
                     .Include(e => e.StepExecution)
@@ -331,7 +348,7 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
                     .ToArray();
                 return Results.Ok(stepExecutions);
             })
-            .Produces(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
             .Produces<StepExecution[]>()
             .WithDescription("Get all pending/not started step executions")
             .WithName("GetNotStartedStepExecutions");
@@ -348,7 +365,8 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
             {
                 if (limit is < 10 or > 100)
                 {
-                    return Results.BadRequest("Limit must be between 10 and 100");
+                    return Results.Problem("Limit must be between 10 and 100",
+                        statusCode: StatusCodes.Status400BadRequest);
                 }
                 var query = dbContext.StepExecutionAttempts
                     .AsNoTrackingWithIdentityResolution()
@@ -368,9 +386,10 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
                 }
                 else if (lastExecutionId is not null || lastStepId is not null || lastRetryAttemptIndex is not null)
                 {
-                    return Results.BadRequest(
+                    return Results.Problem(
                         $"All three parameters {nameof(lastExecutionId)}, {nameof(lastStepId)} and {nameof(retryAttemptIndex)} " +
-                        "must be provided together or all of them must be omitted.");
+                        "must be provided together or all of them must be omitted.",
+                        statusCode: StatusCodes.Status400BadRequest);
                 }
                 var stepExecutionAttempts = await query
                     .Include(e => e.StepExecution)
@@ -383,7 +402,7 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
                     .ToArray();
                 return Results.Ok(stepExecutions);
             })
-            .Produces(StatusCodes.Status400BadRequest)
+            .ProducesProblem(StatusCodes.Status400BadRequest)
             .Produces<StepExecution[]>()
             .WithDescription("Get step executions")
             .WithName("GetStepExecutions");

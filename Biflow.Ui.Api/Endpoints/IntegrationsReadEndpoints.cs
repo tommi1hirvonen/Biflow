@@ -29,9 +29,13 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                 var credential = await dbContext.AzureCredentials
                     .AsNoTracking()
                     .FirstOrDefaultAsync(x => x.AzureCredentialId == azureCredentialId, cancellationToken);
-                return credential is null ? Results.NotFound() : Results.Ok(credential);
+                if (credential is null)
+                {
+                    throw new NotFoundException<AzureCredential>(azureCredentialId);
+                }
+                return Results.Ok(credential);
             })
-            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<AzureCredential>()
             .WithDescription("Get Azure credential by id. " +
                              "Sensitive data (password, client secret) will be replaced with an empty value.")
@@ -53,9 +57,13 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                 var connection = await dbContext.SqlConnections
                     .AsNoTracking()
                     .FirstOrDefaultAsync(c => c.ConnectionId == sqlConnectionId, cancellationToken);
-                return connection is null ? Results.NotFound() : Results.Ok(connection);
+                if (connection is null)
+                {
+                    throw new NotFoundException<SqlConnectionBase>(sqlConnectionId);
+                }
+                return Results.Ok(connection);
             })
-            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<SqlConnectionBase>()
             .WithDescription("Get SQL connection by id. Sensitive connection string will be replaced with an empty value.")
             .WithName("GetSqlConnection");
@@ -76,9 +84,13 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                 var pipelineClient = await dbContext.PipelineClients
                     .AsNoTracking()
                     .FirstOrDefaultAsync(c => c.PipelineClientId == pipelineClientId, cancellationToken);
-                return pipelineClient is null ? Results.NotFound() : Results.Ok(pipelineClient);
+                if (pipelineClient is null)
+                {
+                    throw new NotFoundException<PipelineClient>(pipelineClientId);
+                }
+                return Results.Ok(pipelineClient);
             })
-            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<PipelineClient>()
             .WithDescription("Get pipeline client by id.")
             .WithName("GetPipelineClient");
@@ -99,9 +111,13 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                 var functionApp = await dbContext.FunctionApps
                     .AsNoTracking()
                     .FirstOrDefaultAsync(x => x.FunctionAppId == functionAppId, cancellationToken);
-                return functionApp is null ? Results.NotFound() : Results.Ok(functionApp);
+                if (functionApp is null)
+                {
+                    throw new NotFoundException<FunctionApp>(functionAppId);
+                }
+                return Results.Ok(functionApp);
             })
-            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<FunctionApp>()
             .WithDescription("Get Function App by id. Sensitive function key will be replaced with an empty value.")
             .WithName("GetFunctionApp");
@@ -122,9 +138,13 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                 var workspace = await dbContext.DatabricksWorkspaces
                     .AsNoTracking()
                     .FirstOrDefaultAsync(x => x.WorkspaceId == workspaceId, cancellationToken);
-                return workspace is null ? Results.NotFound() : Results.Ok(workspace);
+                if (workspace is null)
+                {
+                    throw new NotFoundException<DatabricksWorkspace>(workspaceId);
+                }
+                return Results.Ok(workspace);
             })
-            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<DatabricksWorkspace>()
             .WithDescription("Get Databricks workspace by id. Sensitive API token will be replaced with an empty value.")
             .WithName("GetDatabricksWorkspace");
@@ -145,9 +165,13 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                 var account = await dbContext.DbtAccounts
                     .AsNoTracking()
                     .FirstOrDefaultAsync(x => x.DbtAccountId == dbtAccountId, cancellationToken);
-                return account is null ? Results.NotFound() : Results.Ok(account);
+                if (account is null)
+                {
+                    throw new NotFoundException<DbtAccount>(dbtAccountId);
+                }
+                return Results.Ok(account);
             })
-            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<DbtAccount>()
             .WithDescription("Get dbt account by id. Sensitive API token will be replaced with an empty value.")
             .WithName("GetDbtAccount");
@@ -169,9 +193,13 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                 var connection = await dbContext.AnalysisServicesConnections
                     .AsNoTracking()
                     .FirstOrDefaultAsync(x => x.ConnectionId == connectionId, cancellationToken);
-                return connection is null ? Results.NotFound() : Results.Ok(connection);
+                if (connection is null)
+                {
+                    throw new NotFoundException<AnalysisServicesConnection>(connectionId);
+                }
+                return Results.Ok(connection);
             })
-            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<AnalysisServicesConnection>()
             .WithDescription("Get SQL Server Analysis Services connection by id. " +
                              "Sensitive connection string will be replaced with an empty value.")
@@ -191,12 +219,16 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
         group.MapGet("/qlikcloudenvironments/{qlikCloudEnvironmentId:guid}",
             async (ServiceDbContext dbContext, Guid qlikCloudEnvironmentId, CancellationToken cancellationToken) =>
             {
-                var account = await dbContext.QlikCloudEnvironments
+                var environment = await dbContext.QlikCloudEnvironments
                     .AsNoTracking()
                     .FirstOrDefaultAsync(x => x.QlikCloudEnvironmentId == qlikCloudEnvironmentId, cancellationToken);
-                return account is null ? Results.NotFound() : Results.Ok(account);
+                if (environment is null)
+                {
+                    throw new NotFoundException<QlikCloudEnvironment>(qlikCloudEnvironmentId);
+                }
+                return Results.Ok(environment);
             })
-            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<QlikCloudEnvironment>()
             .WithDescription("Get Qlik Cloud environment by id. " +
                              "Sensitive API token will be replaced with an empty value.")

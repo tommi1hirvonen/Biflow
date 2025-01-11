@@ -28,9 +28,13 @@ public abstract class UsersReadEndpoints : IEndpoints
                 var user = await dbContext.Users
                     .AsNoTracking()
                     .FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken);
-                return user is null ? Results.NotFound() : Results.Ok(user);
+                if (user is null)
+                {
+                    throw new NotFoundException<User>(userId);
+                }
+                return Results.Ok(user);
             })
-            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<User>()
             .WithDescription("Get user by id")
             .WithName("GetUser");
@@ -44,9 +48,13 @@ public abstract class UsersReadEndpoints : IEndpoints
                     .AsNoTracking()
                     .Include(u => u.Jobs)
                     .FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken);
-                return user is null ? Results.NotFound() : Results.Ok(user.Jobs);
+                if (user is null)
+                {
+                    throw new NotFoundException<User>(userId);
+                }
+                return Results.Ok(user.Jobs);
             })
-            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<Job[]>()
             .WithTags($"{Scopes.UsersRead}, {Scopes.JobsRead}")
             .WithDescription("Get user's authorized jobs. " +
@@ -65,9 +73,13 @@ public abstract class UsersReadEndpoints : IEndpoints
                     .AsNoTracking()
                     .Include(u => u.DataTables)
                     .FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken);
-                return user is null ? Results.NotFound() : Results.Ok(user.DataTables);
+                if (user is null)
+                {
+                    throw new NotFoundException<User>(userId);
+                }
+                return Results.Ok(user.DataTables);
             })
-            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<MasterDataTable[]>()
             .WithTags($"{Scopes.UsersRead}, {Scopes.DataTablesRead}")
             .WithDescription("Get user's authorized data tables. " +
@@ -87,9 +99,13 @@ public abstract class UsersReadEndpoints : IEndpoints
                     .AsNoTracking()
                     .Include(u => u.Subscriptions)
                     .FirstOrDefaultAsync(u => u.UserId == userId, cancellationToken);
-                return user is null ? Results.NotFound() : Results.Ok(user.Subscriptions);
+                if (user is null)
+                {
+                    throw new NotFoundException<User>(userId);
+                }
+                return Results.Ok(user.Subscriptions);
             })
-            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<Subscription[]>()
             .WithTags($"{Scopes.UsersRead}, {Scopes.SubscriptionsRead}")
             .WithDescription("Get user's subscriptions.")

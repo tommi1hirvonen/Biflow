@@ -31,9 +31,13 @@ public abstract class DataTablesReadEndpoints : IEndpoints
                     .AsNoTracking()
                     .Include(t => t.Lookups)
                     .FirstOrDefaultAsync(t => t.DataTableId == dataTableId, cancellationToken);
-                return scdTable is null ? Results.NotFound() : Results.Ok(scdTable);
+                if (scdTable is null)
+                {
+                    throw new NotFoundException<MasterDataTable>(dataTableId);
+                }
+                return Results.Ok(scdTable);
             })
-            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<MasterDataTable>()
             .WithDescription("Get data table by id")
             .WithName("GetDataTable");

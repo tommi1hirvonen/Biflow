@@ -42,9 +42,13 @@ public abstract class SchedulesReadEndpoints : IEndpoints
                     .Include(s => s.Tags)
                     .Include(s => s.TagFilter)
                     .FirstOrDefaultAsync(s => s.ScheduleId == scheduleId, cancellationToken);
-                return schedule is null ? Results.NotFound() : Results.Ok(schedule);
+                if (schedule is null)
+                {
+                    throw new NotFoundException<Schedule>(scheduleId);
+                }
+                return Results.Ok(schedule);
             })
-            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<Schedule>()
             .WithDescription("Get schedule by id")
             .WithName("GetSchedule");

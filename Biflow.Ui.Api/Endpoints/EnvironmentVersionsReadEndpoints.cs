@@ -40,9 +40,13 @@ public abstract class EnvironmentVersionsReadEndpoints : IEndpoints
                     .Where(v => v.VersionId == versionId)
                     .Select(v => new VersionProjection(v.VersionId, v.Description, v.CreatedOn, v.CreatedBy))
                     .FirstOrDefaultAsync(cancellationToken);
-                return version is null ? Results.NotFound() : Results.Ok(version);
+                if (version is null)
+                {
+                    throw new NotFoundException<EnvironmentVersion>(versionId);
+                }
+                return Results.Ok(version);
             })
-            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<VersionProjection>()
             .WithDescription("Get environment version by id")
             .WithName("GetEnvironmentVersion");
@@ -58,15 +62,14 @@ public abstract class EnvironmentVersionsReadEndpoints : IEndpoints
                     .FirstOrDefaultAsync(v => v.VersionId == versionId, cancellationToken);
                 if (version is null)
                 {
-                    httpContext.Response.StatusCode = StatusCodes.Status404NotFound;
-                    return null;
+                    throw new NotFoundException<EnvironmentVersion>(versionId);
                 }
                 httpContext.Response.ContentType = "application/json";
                 return referencesPreserved
                     ? version.SnapshotWithReferencesPreserved
                     : version.Snapshot; 
             })
-            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<EnvironmentSnapshot>()
             .WithDescription("Get environment version snapshot. " +
                              "Use the referencesPreserved query parameter to return a variant of the snapshot " +

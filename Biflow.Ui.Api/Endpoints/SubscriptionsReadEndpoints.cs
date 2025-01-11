@@ -42,9 +42,13 @@ public abstract class SubscriptionsReadEndpoints : IEndpoints
                     .Include(s => ((StepSubscription)s).Step)
                     .Include(s => ((TagSubscription)s).Tag)
                     .FirstOrDefaultAsync(s => s.SubscriptionId == subscriptionId, cancellationToken);
-                return subscription is null ? Results.NotFound() : Results.Ok(subscription);
+                if (subscription is null)
+                {
+                    throw new NotFoundException<Subscription>(subscriptionId);
+                }
+                return Results.Ok(subscription);
             })
-            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<Subscription>()
             .WithDescription("Get subscription by id")
             .WithName("GetSubscription");

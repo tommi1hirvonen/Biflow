@@ -75,9 +75,13 @@ public abstract class JobsReadEndpoints : IEndpoints
                 }
                 var job = await query
                     .FirstOrDefaultAsync(j => j.JobId == jobId, cancellationToken);
-                return job is null ? Results.NotFound() : Results.Ok(job);
+                if (job is null)
+                {
+                    throw new NotFoundException<Job>(jobId);
+                }
+                return Results.Ok(job);
             })
-            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<Job>()
             .WithDescription("Get job by id. Steps and schedules are not loaded and will be empty. " +
                              "Job parameters and concurrency settings can be included by " +
@@ -91,7 +95,7 @@ public abstract class JobsReadEndpoints : IEndpoints
                     .AnyAsync(j => j.JobId == jobId, cancellationToken);
                 if (!jobExists)
                 {
-                    return Results.NotFound();
+                    throw new NotFoundException<Job>(jobId);
                 }
                 var query = dbContext.Steps
                     .AsNoTracking()
@@ -105,7 +109,7 @@ public abstract class JobsReadEndpoints : IEndpoints
                     .ToArrayAsync(cancellationToken);
                 return Results.Ok(steps);
             })
-            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<Step[]>()
             .WithDescription("Get all steps for a job. " +
                              "Step tags can be included by specifying the corresponding query parameter. " +
@@ -125,9 +129,13 @@ public abstract class JobsReadEndpoints : IEndpoints
                     .Include(s => s.Tags.OrderBy(t => t.TagId))
                     .Include(s => s.ExecutionConditionParameters.OrderBy(p => p.ParameterId))
                     .FirstOrDefaultAsync(s => s.StepId == stepId, cancellationToken);
-                return step is null ? Results.NotFound() : Results.Ok(step);
+                if (step is null)
+                {
+                    throw new NotFoundException<Step>(stepId);
+                }
+                return Results.Ok(step);
             })
-            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<Step>()
             .WithDescription("Get step by id")
             .WithName("GetStep");
@@ -141,7 +149,7 @@ public abstract class JobsReadEndpoints : IEndpoints
                     .AnyAsync(x => x.JobId == jobId, cancellationToken);
                 if (!jobExists)
                 {
-                    return Results.NotFound();
+                    throw new NotFoundException<Job>(jobId);
                 }
                 var schedules = await dbContext.Schedules
                     .AsNoTracking()
@@ -152,7 +160,7 @@ public abstract class JobsReadEndpoints : IEndpoints
                     .ToArrayAsync(cancellationToken);
                 return Results.Ok(schedules);
             })
-            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<Schedule[]>()
             .WithTags($"{Scopes.JobsRead}, {Scopes.SchedulesRead}")
             .WithDescription("Get all schedules for a job.")

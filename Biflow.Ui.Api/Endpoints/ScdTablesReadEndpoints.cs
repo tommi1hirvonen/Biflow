@@ -28,9 +28,13 @@ public abstract class ScdTablesReadEndpoints : IEndpoints
                 var scdTable = await dbContext.ScdTables
                     .AsNoTracking()
                     .FirstOrDefaultAsync(t => t.ScdTableId == scdTableId, cancellationToken);
-                return scdTable is null ? Results.NotFound() : Results.Ok(scdTable);
+                if (scdTable is null)
+                {
+                    throw new NotFoundException<ScdTable>(scdTableId);
+                }
+                return Results.Ok(scdTable);
             })
-            .Produces(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<ScdTable>()
             .WithDescription("Get SCD table by id")
             .WithName("GetScdTable");
