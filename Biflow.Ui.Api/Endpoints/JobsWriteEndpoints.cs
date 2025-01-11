@@ -1,6 +1,5 @@
+using Biflow.Ui.Api.Mediator.Commands;
 using Microsoft.AspNetCore.Mvc;
-using CreateJobCommand = Biflow.Ui.Api.Mediator.Commands.CreateJobCommand;
-using UpdateJobCommand = Biflow.Ui.Api.Mediator.Commands.UpdateJobCommand;
 
 namespace Biflow.Ui.Api.Endpoints;
 

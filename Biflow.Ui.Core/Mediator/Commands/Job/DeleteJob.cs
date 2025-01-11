@@ -1,6 +1,4 @@
-﻿using JetBrains.Annotations;
-
-namespace Biflow.Ui.Core;
+﻿namespace Biflow.Ui.Core;
 
 public record DeleteJobCommand(Guid JobId) : IRequest<Job>;
 

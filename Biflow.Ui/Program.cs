@@ -27,6 +27,7 @@ builder.Services.AddApplicationInsightsTelemetry();
 builder.Services.AddUiCoreServices<UserService>(builder.Configuration);
 builder.Services.AddUiAuthentication(builder.Configuration);
 builder.Services.AddValidationServices();
+builder.Services.AddRequestHandlers<Program>();
 
 builder.Services.AddLocalization();
 
