@@ -3,8 +3,8 @@ using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using Biflow.Core.Converters;
 using Biflow.Ui.Api;
-using Biflow.Ui.Api.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 using Serilog;
 
@@ -33,7 +33,7 @@ builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =
     };
 });
 // Configure Swagger model documentation behaviour
-builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
+builder.Services.Configure<JsonOptions>(options =>
 {
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     options.JsonSerializerOptions.TypeInfoResolver = new DefaultJsonTypeInfoResolver
@@ -80,25 +80,40 @@ app.UseExceptionHandler(errorAppBuilder =>
         {
             return;
         }
+        // Handle known exceptions
         switch (exception)
         {
             case PrimaryKeyException pkException:
-                httpContext.Response.StatusCode = StatusCodes.Status409Conflict;
-                httpContext.Response.ContentType = "text/plain";
-                await httpContext.Response.WriteAsync(pkException.Message);
+                var pkDetails = new ProblemDetails
+                {
+                    Title = "Primary key conflict",
+                    Detail = pkException.Message,
+                    Status = StatusCodes.Status409Conflict
+                };
+                await Results.Problem(pkDetails).ExecuteAsync(httpContext);
                 return;
             case NotFoundException notFoundException:
-                httpContext.Response.StatusCode = StatusCodes.Status404NotFound;
-                httpContext.Response.ContentType = "text/plain";
-                await httpContext.Response.WriteAsync(notFoundException.Message);
+                var notFoundDetails = new ProblemDetails
+                {
+                    Detail = notFoundException.Message,
+                    Status = StatusCodes.Status404NotFound
+                };
+                await Results.Problem(notFoundDetails).ExecuteAsync(httpContext);
+                return;
+            case ValidationException validationException:
+                var validationErrors = validationException.ValidationResults.ToDictionary();
+                await Results.ValidationProblem(validationErrors).ExecuteAsync(httpContext);
                 return;
         }
+        // In development, return the full exception details.
         if (app.Environment.IsDevelopment())
         {
             httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
             httpContext.Response.ContentType = "text/plain";
             await httpContext.Response.WriteAsync(exception.ToString());
+            return;
         }
+        await Results.Problem(statusCode: StatusCodes.Status500InternalServerError).ExecuteAsync(httpContext);
     });
 });    
 app.MapDefaultEndpoints();
