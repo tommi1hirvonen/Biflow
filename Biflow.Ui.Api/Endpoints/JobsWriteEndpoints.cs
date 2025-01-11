@@ -24,6 +24,10 @@ public abstract class JobsWriteEndpoints : IEndpoints
         group.MapPost("",
             async ([FromBody] JobDto jobDto, AppDbContext dbContext, LinkGenerator linker, HttpContext ctx, CancellationToken cancellationToken) =>
             {
+                if (await dbContext.Jobs.AnyAsync(j => j.JobId == jobDto.JobId, cancellationToken))
+                {
+                    return Results.Conflict(new { Message = $"Job with id {jobDto.JobId} already exists" });
+                }
                 var job = jobDto.ToJob();
                 var (results, isValid) = job.ValidateDataAnnotations();
                 if (!isValid)
@@ -36,6 +40,8 @@ public abstract class JobsWriteEndpoints : IEndpoints
                 var url = linker.GetUriByName(ctx, "GetJob", new { jobId = jobDto.JobId });
                 return Results.Created(url, job);
             })
+            .Produces(StatusCodes.Status409Conflict)
+            .Produces(StatusCodes.Status400BadRequest)
             .Produces<Job>(StatusCodes.Status201Created)
             .WithDescription("Create a new job")
             .WithName("CreateJob");
@@ -60,6 +66,7 @@ public abstract class JobsWriteEndpoints : IEndpoints
                 return Results.ValidationProblem(errors);
             })
             .Produces(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status400BadRequest)
             .Produces<Job>()
             .WithDescription("Update an existing job")
             .WithName("UpdateJob");
