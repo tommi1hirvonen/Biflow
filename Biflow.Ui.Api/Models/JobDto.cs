@@ -10,19 +10,4 @@ public record JobDto(
     double OvertimeNotificationLimitMinutes,
     double TimeoutMinutes,
     bool IsEnabled,
-    bool IsPinned)
-{
-    public Job ToJob() => new()
-    {
-        JobId = JobId,
-        JobName = JobName,
-        JobDescription = JobDescription,
-        ExecutionMode = ExecutionMode,
-        StopOnFirstError = StopOnFirstError,
-        MaxParallelSteps = MaxParallelSteps,
-        OvertimeNotificationLimitMinutes = OvertimeNotificationLimitMinutes,
-        TimeoutMinutes = TimeoutMinutes,
-        IsEnabled = IsEnabled,
-        IsPinned = IsPinned
-    };
-}
+    bool IsPinned);

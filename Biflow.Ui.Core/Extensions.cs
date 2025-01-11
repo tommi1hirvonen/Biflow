@@ -97,18 +97,8 @@ public static class Extensions
         services.AddScoped<IMediator, Mediator>();
 
         // Add request handlers
-        services.Scan(selector =>
-        {
-            selector.FromAssemblyOf<Mediator>()
-                .AddClasses(filter => filter.AssignableTo(typeof(IRequestHandler<>)))
-                .AsImplementedInterfaces()
-                .WithTransientLifetime();
-            selector.FromAssemblyOf<Mediator>()
-                .AddClasses(filter => filter.AssignableTo(typeof(IRequestHandler<,>)))
-                .AsImplementedInterfaces()
-                .WithTransientLifetime();
-        });
-
+        services.AddRequestHandlers<Mediator>();
+        
         return services;
     }
 

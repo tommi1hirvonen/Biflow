@@ -1,10 +1,20 @@
 using System.ComponentModel.DataAnnotations;
+using ValidationException = Biflow.Ui.Api.Exceptions.ValidationException;
 
 namespace Biflow.Ui.Api;
 
 internal static class ValidationExtensions
 {
-    public static (List<ValidationResult> Results, bool IsValid) ValidateDataAnnotations(this object model)
+    internal static void EnsureDataAnnotationsValidated(this object model)
+    {
+        var (results, isValid) = model.ValidateDataAnnotations();
+        if (!isValid)
+        {
+            throw new ValidationException(results);
+        }
+    }
+    
+    private static (List<ValidationResult> Results, bool IsValid) ValidateDataAnnotations(this object model)
     {
         var results = new List<ValidationResult>();
         var context = new ValidationContext(model);
@@ -12,7 +22,7 @@ internal static class ValidationExtensions
         return (results, isValid);
     }
 
-    public static IDictionary<string, string[]> ToDictionary(this IEnumerable<ValidationResult> results)
+    internal static IDictionary<string, string[]> ToDictionary(this IEnumerable<ValidationResult> results)
     {
         var errors = results
             .SelectMany(result => result.MemberNames.Select(x => (MemberName: x, result.ErrorMessage)))

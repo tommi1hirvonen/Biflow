@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using CreateJobCommand = Biflow.Ui.Api.Mediator.Commands.CreateJobCommand;
+using UpdateJobCommand = Biflow.Ui.Api.Mediator.Commands.UpdateJobCommand;
 
 namespace Biflow.Ui.Api.Endpoints;
 
@@ -15,20 +17,10 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .AddEndpointFilter(endpointFilter);
         
         group.MapPost("",
-            async ([FromBody] JobDto jobDto, AppDbContext dbContext, LinkGenerator linker, HttpContext ctx, CancellationToken cancellationToken) =>
+            async ([FromBody] JobDto jobDto, IMediator mediator, LinkGenerator linker, HttpContext ctx, CancellationToken cancellationToken) =>
             {
-                if (await dbContext.Jobs.AnyAsync(j => j.JobId == jobDto.JobId, cancellationToken))
-                {
-                    throw new PrimaryKeyException<Job>(jobDto.JobId);
-                }
-                var job = jobDto.ToJob();
-                var (results, isValid) = job.ValidateDataAnnotations();
-                if (!isValid)
-                {
-                    throw new ValidationException(results);
-                }
-                dbContext.Jobs.Add(job);
-                await dbContext.SaveChangesAsync(cancellationToken);
+                var command = new CreateJobCommand(jobDto);
+                var job = await mediator.SendAsync(command, cancellationToken);
                 var url = linker.GetUriByName(ctx, "GetJob", new { jobId = jobDto.JobId });
                 return Results.Created(url, job);
             })
@@ -39,21 +31,10 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .WithName("CreateJob");
         
         group.MapPut("",
-            async ([FromBody] JobDto jobDto, AppDbContext dbContext, CancellationToken cancellationToken) =>
+            async ([FromBody] JobDto jobDto, IMediator mediator, CancellationToken cancellationToken) =>
             {
-                var job = await dbContext.Jobs
-                    .FirstOrDefaultAsync(j => j.JobId == jobDto.JobId, cancellationToken);
-                if (job is null)
-                {
-                    throw new NotFoundException<Job>(jobDto.JobId);
-                }
-                dbContext.Entry(job).CurrentValues.SetValues(jobDto);
-                var (results, isValid) = job.ValidateDataAnnotations();
-                if (!isValid)
-                {
-                    throw new ValidationException(results);
-                }
-                await dbContext.SaveChangesAsync(cancellationToken);
+                var command = new UpdateJobCommand(jobDto);
+                var job = await mediator.SendAsync(command, cancellationToken);
                 return Results.Ok(job);
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
@@ -66,10 +47,6 @@ public abstract class JobsWriteEndpoints : IEndpoints
             {
                 var command = new DeleteJobCommand(jobId);
                 var job = await mediator.SendAsync(command, cancellationToken);
-                if (job is null)
-                {
-                    throw new NotFoundException<Job>(jobId);
-                }
                 return Results.Ok(job);
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
