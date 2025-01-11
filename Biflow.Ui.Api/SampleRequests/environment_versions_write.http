@@ -1,0 +1,9 @@
+### Create environment version
+
+POST {{baseUrl}}/environmentversions
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "description": "Test description"
+}

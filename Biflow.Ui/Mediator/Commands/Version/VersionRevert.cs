@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-
-namespace Biflow.Ui;
+﻿namespace Biflow.Ui;
 
 public record VersionRevertCommand(EnvironmentSnapshot Snapshot) : IRequest;
 

@@ -3,7 +3,7 @@
 @implements IDisposable
 
 @inject IDbContextFactory<AppDbContext> DbContextFactory
-@inject EnvironmentSnapshotBuilder SnapshotBuilder
+@inject IMediator Mediator
 @inject ToasterService Toaster
 @inject IJSRuntime Js
 @inject ThemeService ThemeService
@@ -191,8 +191,6 @@
 </HxModal>
 
 @code {
-    [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
-
     [CascadingParameter] public UserState UserState { get; set; } = new();
 
     [Parameter] public IList<VersionProjection>? Versions { get; set; }
@@ -215,24 +213,11 @@
     {
         try
         {
-            ArgumentNullException.ThrowIfNull(AuthenticationState);
-            var authState = await AuthenticationState;
-            var username = authState.User.Identity?.Name;
-            var snapshot = await SnapshotBuilder.CreateAsync();
-            var version = new EnvironmentVersion
-            {
-                Snapshot = snapshot.ToJson(preserveReferences: false),
-                SnapshotWithReferencesPreserved = snapshot.ToJson(preserveReferences: true),
-                Description = _description,
-                CreatedOn = DateTimeOffset.Now,
-                CreatedBy = username
-            };
-            await using var context = await DbContextFactory.CreateDbContextAsync();
-            context.EnvironmentVersions.Add(version);
-            await context.SaveChangesAsync();
+            var command = new CreateVersionCommand(_description);
+            var version = await Mediator.SendAsync(command);
             await _createModal.LetAsync(x => x.HideAsync());
             _description = null;
-            Versions?.Insert(0, new(version.VersionId, version.Description, version.CreatedOn, version.CreatedBy));
+            Versions?.Insert(0, version);
         }
         catch (Exception ex)
         {
