@@ -249,6 +249,8 @@ internal class RevertVersionCommandHandler(
             await context.SaveChangesAsync(cancellationToken);
 
             await context.MasterDataTableCategories.ExecuteDeleteAsync(cancellationToken);
+            
+            await context.ScdTables.ExecuteDeleteAsync(cancellationToken);
 
             await context.SqlConnections.ExecuteDeleteAsync(cancellationToken);
             await context.AnalysisServicesConnections.ExecuteDeleteAsync(cancellationToken);
@@ -264,7 +266,7 @@ internal class RevertVersionCommandHandler(
             
             // Add replacing entities from the snapshot.
 
-            // Clear the change tracker so data from the db and snapshot do not interfere with eachother.
+            // Clear the change tracker so data from the db and snapshot do not interfere with each other.
             context.ChangeTracker.Clear();
 
             context.Credentials.AddRange(snapshot.Credentials);
@@ -278,6 +280,9 @@ internal class RevertVersionCommandHandler(
             context.DatabricksWorkspaces.AddRange(snapshot.DatabricksWorkspaces);
             context.DbtAccounts.AddRange(snapshot.DbtAccounts);
             context.BlobStorageClients.AddRange(snapshot.BlobStorageClients);
+            await context.SaveChangesAsync(cancellationToken);
+            
+            context.ScdTables.AddRange(snapshot.ScdTables);
             await context.SaveChangesAsync(cancellationToken);
 
             context.MasterDataTableCategories.AddRange(snapshot.DataTableCategories);
