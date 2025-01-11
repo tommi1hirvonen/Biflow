@@ -1,14 +1,38 @@
-﻿namespace Biflow.Ui;
+﻿using Microsoft.Extensions.Logging;
 
-public record VersionRevertCommand(EnvironmentSnapshot Snapshot) : IRequest;
+namespace Biflow.Ui.Core;
 
-internal class VersionRevertCommandHandler(
+public record RevertVersionCommand(EnvironmentSnapshot Snapshot) : IRequest;
+
+public record RevertVersionByIdCommand(int VersionId) : IRequest;
+
+[UsedImplicitly]
+internal class RevertVersionByIdCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory, IMediator mediator)
+    : IRequestHandler<RevertVersionByIdCommand>
+{
+    public async Task Handle(RevertVersionByIdCommand request, CancellationToken cancellationToken)
+    {
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        var snapshotJson = await context.EnvironmentVersions
+            .AsNoTracking()
+            .Where(v => v.VersionId == request.VersionId)
+            .Select(v => v.SnapshotWithReferencesPreserved)
+            .FirstOrDefaultAsync(cancellationToken) ?? throw new NotFoundException<EnvironmentSnapshot>(request.VersionId);
+        var snapshot = EnvironmentSnapshot.FromJson(snapshotJson, referencesPreserved: true);
+        ArgumentNullException.ThrowIfNull(snapshot);
+        var command = new RevertVersionCommand(snapshot);
+        await mediator.SendAsync(command, cancellationToken);
+    }
+}
+
+[UsedImplicitly]
+internal class RevertVersionCommandHandler(
     IDbContextFactory<RevertDbContext> dbContextFactory,
     ISchedulerService schedulerService,
-    ILogger<VersionRevertCommandHandler> logger)
-    : IRequestHandler<VersionRevertCommand>
+    ILogger<RevertVersionCommandHandler> logger)
+    : IRequestHandler<RevertVersionCommand>
 {
-    public async Task Handle(VersionRevertCommand request, CancellationToken cancellationToken)
+    public async Task Handle(RevertVersionCommand request, CancellationToken cancellationToken)
     {
         try
         {

@@ -14,7 +14,7 @@
                 <option value="0">Current</option>
                 @foreach (var version in Versions)
                 {
-                    <option value="@version.VersionId">@version.VersionId – @version.CreatedDateTime.LocalDateTime</option>
+                    <option value="@version.VersionId">@version.VersionId – @version.CreatedOn.LocalDateTime</option>
                 }
             </select>
             <label class="form-label mb-0 ms-4">
@@ -25,7 +25,7 @@
                 <option value="0">Current</option>
                 @foreach (var version in Versions)
                 {
-                    <option value="@version.VersionId">@version.VersionId – @version.CreatedDateTime.LocalDateTime</option>
+                    <option value="@version.VersionId">@version.VersionId – @version.CreatedOn.LocalDateTime</option>
                 }
             </select>
             @if (_loading)
