@@ -1,7 +1,4 @@
-using Biflow.DataAccess;
-using JetBrains.Annotations;
-
-namespace Biflow.Ui.Api;
+namespace Biflow.Ui.Api.Services;
 
 [UsedImplicitly]
 internal class UserService : IUserService

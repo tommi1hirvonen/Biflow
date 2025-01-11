@@ -1,10 +1,7 @@
-using Biflow.Core.Entities;
-using Biflow.DataAccess;
-using Biflow.Ui.Core;
-using Microsoft.EntityFrameworkCore;
+using Biflow.Ui.Api.CustomResults;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace Biflow.Ui.Api;
+namespace Biflow.Ui.Api.Services;
 
 internal class ApiKeyEndpointFilter(
     IDbContextFactory<ServiceDbContext> dbContextFactory,

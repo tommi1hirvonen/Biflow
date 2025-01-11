@@ -1,8 +1,8 @@
-namespace Biflow.Ui.Api;
+﻿namespace Biflow.Ui.Api.CustomResults;
 
-internal class ForbiddenResult(object? body) : IResult, IStatusCodeHttpResult
+internal class UnauthorizedResult(object? body) : IResult, IStatusCodeHttpResult
 {
-    private static int StatusCode => StatusCodes.Status403Forbidden;
+    private static int StatusCode => StatusCodes.Status401Unauthorized;
 
     int? IStatusCodeHttpResult.StatusCode => StatusCode;
 

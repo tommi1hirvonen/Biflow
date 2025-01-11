@@ -1,4 +1,4 @@
-namespace Biflow.Ui.Api;
+namespace Biflow.Ui.Api.Services;
 
 internal class ApiKeyEndpointFilterFactory(IServiceProvider serviceProvider)
 {

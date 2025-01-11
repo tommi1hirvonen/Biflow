@@ -1,5 +1,3 @@
-using Biflow.Core.Entities;
-
 namespace Biflow.Ui.Api.Models;
 
 public record JobDto(
