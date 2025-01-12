@@ -1,6 +1,6 @@
 namespace Biflow.Ui.Api.Mediator.Commands;
 
-public record CreateJobTagRelationCommand(Guid JobId, Guid TagId) : IRequest;
+internal record CreateJobTagRelationCommand(Guid JobId, Guid TagId) : IRequest;
 
 [UsedImplicitly]
 internal class CreateJobTagRelationCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)

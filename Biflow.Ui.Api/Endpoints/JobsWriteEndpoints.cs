@@ -54,6 +54,18 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .WithDescription("Create a job tag relation")
             .WithName("CreateJobTagRelation");
         
+        group.MapPost("/steps/{stepId:guid}/tags/{tagId:guid}",
+                async (Guid stepId, Guid tagId, IMediator mediator, CancellationToken cancellationToken) =>
+                {
+                    var command = new CreateStepTagRelationCommand(stepId, tagId);
+                    await mediator.SendAsync(command, cancellationToken);
+                    return Results.NoContent();
+                })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status204NoContent)
+            .WithDescription("Create a step tag relation")
+            .WithName("CreateStepTagRelation");
+        
         group.MapDelete("/{jobId:guid}", async (Guid jobId, IMediator mediator, CancellationToken cancellationToken) =>
             {
                 var command = new DeleteJobCommand(jobId);
