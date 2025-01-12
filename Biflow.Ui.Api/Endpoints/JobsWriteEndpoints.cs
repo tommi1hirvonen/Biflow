@@ -29,6 +29,20 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .WithDescription("Create a new job")
             .WithName("CreateJob");
         
+        group.MapPost("/tags",
+            async ([FromBody] TagDto tagDto, IMediator mediator, LinkGenerator linker, HttpContext ctx, CancellationToken cancellationToken) =>
+            {
+                var command = new CreateJobTagCommand(tagDto);
+                var tag = await mediator.SendAsync(command, cancellationToken);
+                var url = linker.GetUriByName(ctx, "GetJobTag", new { tagId = tagDto.TagId });
+                return Results.Created(url, tag);
+            })
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesValidationProblem()
+            .Produces<JobTag>(StatusCodes.Status201Created)
+            .WithDescription("Create a new job tag")
+            .WithName("CreateJobTag");
+        
         group.MapPut("",
             async ([FromBody] JobDto jobDto, IMediator mediator, CancellationToken cancellationToken) =>
             {
@@ -41,6 +55,19 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .Produces<Job>()
             .WithDescription("Update an existing job")
             .WithName("UpdateJob");
+
+        group.MapPut("/tags",
+            async ([FromBody] TagDto tagDto, IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new UpdateJobTagCommand(tagDto);
+                var tag = await mediator.SendAsync(command, cancellationToken);
+                return Results.Ok(tag);
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesValidationProblem()
+            .Produces<JobTag>()
+            .WithDescription("Update an existing job tag")
+            .WithName("UpdateJobTag");
         
         group.MapPost("/{jobId:guid}/tags/{tagId:guid}",
             async (Guid jobId, Guid tagId, IMediator mediator, CancellationToken cancellationToken) =>

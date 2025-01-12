@@ -35,3 +35,8 @@ GET {{baseUrl}}
     /29a43f41-d2e4-4e86-62a0-08dbb695de54
     /schedules
 x-api-key: {{apiKey}}
+
+### Job tag by id
+
+GET {{baseUrl}}/jobs/tags/4a65701c-38bf-4f69-9739-6517874512a1
+x-api-key: {{apiKey}}
