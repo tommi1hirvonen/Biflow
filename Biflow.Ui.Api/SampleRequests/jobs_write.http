@@ -36,6 +36,25 @@ Content-Type: application/json
   "IsPinned": false
 }
 
+### Update job concurrencies
+
+PUT {{baseUrl}}/jobs/418c18b9-7086-4774-8412-f9bffa097499/concurrencies
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+[
+  { "stepType": "Sql", "maxParallelSteps": 1 },
+  { "stepType": "Pipeline", "maxParallelSteps": 2 }
+]
+
+### Clear job concurrencies (empty array)
+
+PUT {{baseUrl}}/jobs/418c18b9-7086-4774-8412-f9bffa097499/concurrencies
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+[]
+
 ### Create job tag
 
 POST {{baseUrl}}/jobs/tags

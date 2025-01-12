@@ -56,6 +56,20 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .WithDescription("Update an existing job")
             .WithName("UpdateJob");
 
+        group.MapPut("/{jobId:guid}/concurrencies",
+            async ([FromRoute] Guid jobId, [FromBody] JobConcurrencyDto[] concurrencies,
+                IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new UpdateJobConcurrenciesCommand(jobId, concurrencies);
+                await mediator.SendAsync(command, cancellationToken);
+                return Results.NoContent();
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesValidationProblem()
+            .Produces(StatusCodes.Status204NoContent)
+            .WithDescription("Update job concurrencies for an existing job")
+            .WithName("UpdateJobConcurrencies");
+
         group.MapPut("/tags",
             async ([FromBody] TagDto tagDto, IMediator mediator, CancellationToken cancellationToken) =>
             {
