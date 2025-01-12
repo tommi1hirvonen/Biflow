@@ -45,6 +45,19 @@ public abstract class JobsReadEndpoints : IEndpoints
             .WithDescription("Get all job tags")
             .WithName("GetJobTags");
         
+        group.MapGet("/tags/{tagId:guid}", async (Guid tagId, ServiceDbContext dbContext, CancellationToken cancellationToken) =>
+            {
+                var tag = await dbContext.JobTags
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(t => t.TagId == tagId, cancellationToken)
+                        ?? throw new NotFoundException<JobTag>(tagId);
+                return Results.Ok(tag);
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces<JobTag>()
+            .WithDescription("Get job tag")
+            .WithName("GetJobTag");
+        
         group.MapGet("/steps/tags", async (ServiceDbContext dbContext, CancellationToken cancellationToken) =>
             {
                 var tags = await dbContext.StepTags.AsNoTracking().ToArrayAsync(cancellationToken);
@@ -53,6 +66,19 @@ public abstract class JobsReadEndpoints : IEndpoints
             .Produces<StepTag[]>()
             .WithDescription("Get all step tags")
             .WithName("GetStepTags");
+        
+        group.MapGet("/steps/tags/{tagId:guid}", async (Guid tagId, ServiceDbContext dbContext, CancellationToken cancellationToken) =>
+            {
+                var tag = await dbContext.StepTags
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(t => t.TagId == tagId, cancellationToken)
+                        ?? throw new NotFoundException<StepTag>(tagId);
+                return Results.Ok(tag);
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces<StepTag>()
+            .WithDescription("Get step tag")
+            .WithName("GetStepTag");
 
         group.MapGet("/{jobId:guid}", 
             async (ServiceDbContext dbContext,
