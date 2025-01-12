@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
@@ -70,6 +71,9 @@ builder.Services.AddMemoryCache();
 builder.Services.AddUiCoreServices<UserService>(builder.Configuration, authenticationConfiguration: "UserAuthentication");
 builder.Services.AddSingleton<ApiKeyEndpointFilterFactory>();
 builder.Services.AddRequestHandlers<Program>();
+builder.Services.AddSingleton<ConcurrentDictionary<Guid, VersionRevertStatus>>();
+builder.Services.AddSingleton<VersionRevertService>();
+builder.Services.AddHostedService(services => services.GetRequiredService<VersionRevertService>());
 
 var app = builder.Build();
 
