@@ -1,9 +1,10 @@
-﻿namespace Biflow.Ui;
+﻿namespace Biflow.Ui.Core;
 
 public record DeleteUnusedJobTagsCommand : IRequest<DeleteUnusedJobTagsResponse>;
 
 public record DeleteUnusedJobTagsResponse(IEnumerable<JobTag> DeletedTags);
 
+[UsedImplicitly]
 internal class DeleteUnusedJobTagsCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<DeleteUnusedJobTagsCommand, DeleteUnusedJobTagsResponse>
 {

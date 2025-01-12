@@ -1,13 +1,15 @@
-﻿namespace Biflow.Ui;
+﻿namespace Biflow.Ui.Core;
 
 public record DeleteUnusedScheduleTagsCommand : IRequest<DeleteUnusedScheduleTagsResponse>;
 
 public record DeleteUnusedScheduleTagsResponse(IEnumerable<ScheduleTag> DeletedTags);
 
+[UsedImplicitly]
 internal class DeleteUnusedScheduleTagsCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<DeleteUnusedScheduleTagsCommand, DeleteUnusedScheduleTagsResponse>
 {
-    public async Task<DeleteUnusedScheduleTagsResponse> Handle(DeleteUnusedScheduleTagsCommand request, CancellationToken cancellationToken)
+    public async Task<DeleteUnusedScheduleTagsResponse> Handle(
+        DeleteUnusedScheduleTagsCommand request, CancellationToken cancellationToken)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var tags = await context.ScheduleTags

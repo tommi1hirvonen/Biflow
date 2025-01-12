@@ -1,8 +1,10 @@
-﻿namespace Biflow.Ui;
+﻿namespace Biflow.Ui.Core;
 
 public record UpdateTagCommand(Tag Tag) : IRequest;
 
-internal class UpdateTagCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<UpdateTagCommand>
+[UsedImplicitly]
+internal class UpdateTagCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+    : IRequestHandler<UpdateTagCommand>
 {
     public async Task Handle(UpdateTagCommand request, CancellationToken cancellationToken)
     {

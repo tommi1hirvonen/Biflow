@@ -1,8 +1,10 @@
-﻿namespace Biflow.Ui;
+﻿namespace Biflow.Ui.Core;
 
 public record DeleteStepTagCommand(Guid StepId, Guid TagId) : IRequest;
 
-internal class DeleteStepTagCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<DeleteStepTagCommand>
+[UsedImplicitly]
+internal class DeleteStepTagCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+    : IRequestHandler<DeleteStepTagCommand>
 {
     public async Task Handle(DeleteStepTagCommand request, CancellationToken cancellationToken)
     {

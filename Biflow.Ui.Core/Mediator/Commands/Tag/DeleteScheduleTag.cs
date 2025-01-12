@@ -1,8 +1,10 @@
-﻿namespace Biflow.Ui;
+﻿namespace Biflow.Ui.Core;
 
 public record DeleteScheduleTagCommand(Guid ScheduleId, Guid TagId) : IRequest;
 
-internal class DeleteScheduleTagCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<DeleteScheduleTagCommand>
+[UsedImplicitly]
+internal class DeleteScheduleTagCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+    : IRequestHandler<DeleteScheduleTagCommand>
 {
     public async Task Handle(DeleteScheduleTagCommand request, CancellationToken cancellationToken)
     {

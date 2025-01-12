@@ -1,13 +1,17 @@
-﻿namespace Biflow.Ui;
+﻿namespace Biflow.Ui.Core;
 
-public record DeleteStepsCommand(params Guid[] StepIds) : IRequest
+public record DeleteStepsCommand(params Guid[] StepIds) : IRequest<Step[]>
 {
-    public DeleteStepsCommand(IEnumerable<Step> steps) : this(steps.Select(s => s.StepId).ToArray()) { }
+    public DeleteStepsCommand(IEnumerable<Step> steps) : this(steps.Select(s => s.StepId).ToArray())
+    {
+    }
 }
 
-internal class DeleteStepsCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<DeleteStepsCommand>
+[UsedImplicitly]
+internal class DeleteStepsCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+    : IRequestHandler<DeleteStepsCommand, Step[]>
 {
-    public async Task Handle(DeleteStepsCommand request, CancellationToken cancellationToken)
+    public async Task<Step[]> Handle(DeleteStepsCommand request, CancellationToken cancellationToken)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var steps = await context.Steps
@@ -18,5 +22,6 @@ internal class DeleteStepsCommandHandler(IDbContextFactory<AppDbContext> dbConte
             .ToArrayAsync(cancellationToken);
         context.Steps.RemoveRange(steps);
         await context.SaveChangesAsync(cancellationToken);
+        return steps;
     }
 }
