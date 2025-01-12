@@ -9,4 +9,10 @@ public interface IMediator
         where TRequest : IRequest;
 
     public Task<TResponse> SendAsync<TResponse>(IRequest<TResponse> request, CancellationToken cancellationToken = default);
+    
+    public IRequestHandler<TRequest> GetRequestHandler<TRequest>()
+        where TRequest : IRequest;
+
+    public IRequestHandler<TRequest, TResponse> GetRequestHandler<TRequest, TResponse>()
+        where TRequest : IRequest<TResponse>;
 }
