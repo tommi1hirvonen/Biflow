@@ -1,4 +1,3 @@
-using Biflow.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Biflow.Ui.Api.Endpoints;
@@ -57,28 +56,6 @@ public abstract class JobsReadEndpoints : IEndpoints
             .Produces<JobTag>()
             .WithDescription("Get job tag")
             .WithName("GetJobTag");
-        
-        group.MapGet("/steps/tags", async (ServiceDbContext dbContext, CancellationToken cancellationToken) =>
-            {
-                var tags = await dbContext.StepTags.AsNoTracking().ToArrayAsync(cancellationToken);
-                return tags;
-            })
-            .Produces<StepTag[]>()
-            .WithDescription("Get all step tags")
-            .WithName("GetStepTags");
-        
-        group.MapGet("/steps/tags/{tagId:guid}", async (Guid tagId, ServiceDbContext dbContext, CancellationToken cancellationToken) =>
-            {
-                var tag = await dbContext.StepTags
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(t => t.TagId == tagId, cancellationToken)
-                        ?? throw new NotFoundException<StepTag>(tagId);
-                return Results.Ok(tag);
-            })
-            .ProducesProblem(StatusCodes.Status404NotFound)
-            .Produces<StepTag>()
-            .WithDescription("Get step tag")
-            .WithName("GetStepTag");
 
         group.MapGet("/{jobId:guid}", 
             async (ServiceDbContext dbContext,
@@ -141,30 +118,6 @@ public abstract class JobsReadEndpoints : IEndpoints
                              "Step tags can be included by specifying the corresponding query parameter. " +
                              "Other collection properties are not loaded and will be empty.")
             .WithName("GetJobSteps");
-        
-        group.MapGet("/steps/{stepId:guid}",
-            async (ServiceDbContext dbContext, Guid stepId, CancellationToken cancellationToken) =>
-            {
-                var step = await dbContext.Steps
-                    .AsNoTracking()
-                    .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.ExpressionParameters)}")
-                    .Include($"{nameof(IHasStepParameters.StepParameters)}.{nameof(StepParameterBase.InheritFromJobParameter)}")
-                    .Include(s => (s as JobStep)!.TagFilters.OrderBy(t => t.TagId))
-                    .Include(s => s.Dependencies.OrderBy(d => d.DependantOnStepId))
-                    .Include(s => s.DataObjects.OrderBy(d => d.ObjectId))
-                    .Include(s => s.Tags.OrderBy(t => t.TagId))
-                    .Include(s => s.ExecutionConditionParameters.OrderBy(p => p.ParameterId))
-                    .FirstOrDefaultAsync(s => s.StepId == stepId, cancellationToken);
-                if (step is null)
-                {
-                    throw new NotFoundException<Step>(stepId);
-                }
-                return Results.Ok(step);
-            })
-            .ProducesProblem(StatusCodes.Status404NotFound)
-            .Produces<Step>()
-            .WithDescription("Get step by id")
-            .WithName("GetStep");
 
         var jobSchedulesEndpointFilter = apiKeyEndpointFilterFactory.Create([Scopes.JobsRead, Scopes.SchedulesRead]);
         

@@ -10,11 +10,6 @@ x-api-key: {{apiKey}}
 GET {{baseUrl}}/jobs/tags
 x-api-key: {{apiKey}}
 
-### All step tags
-
-GET {{baseUrl}}/jobs/steps/tags
-x-api-key: {{apiKey}}
-
 ### Job by id
 
 GET {{baseUrl}}
@@ -39,12 +34,4 @@ GET {{baseUrl}}
     /jobs
     /29a43f41-d2e4-4e86-62a0-08dbb695de54
     /schedules
-x-api-key: {{apiKey}}
-
-### Step by id
-
-GET {{baseUrl}}
-    /jobs
-    /steps
-    /1919b753-096d-44ca-5df0-08dbb6cadb53
 x-api-key: {{apiKey}}
