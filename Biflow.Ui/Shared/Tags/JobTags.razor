@@ -250,7 +250,7 @@
 
     private async Task DeleteTag(JobTag tag)
     {
-        await Mediator.SendAsync(new DeleteTagCommand(tag.TagId));
+        await Mediator.SendAsync(new DeleteJobTagCommand(tag.TagId));
         _tags?.Remove(tag);
     }
 
@@ -260,7 +260,7 @@
         {
             return;
         }
-        await Mediator.SendAsync(new DeleteJobTagCommand(job.JobId, _manageTag.TagId));
+        await Mediator.SendAsync(new DeleteJobTagRelationCommand(job.JobId, _manageTag.TagId));
         _manageTag.Jobs.Remove(job);
     }
 

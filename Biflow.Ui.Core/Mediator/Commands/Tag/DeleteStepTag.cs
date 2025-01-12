@@ -1,6 +1,6 @@
-﻿namespace Biflow.Ui.Core;
+namespace Biflow.Ui.Core;
 
-public record DeleteStepTagCommand(Guid StepId, Guid TagId) : IRequest;
+public record DeleteStepTagCommand(Guid TagId) : IRequest;
 
 [UsedImplicitly]
 internal class DeleteStepTagCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
@@ -9,13 +9,10 @@ internal class DeleteStepTagCommandHandler(IDbContextFactory<AppDbContext> dbCon
     public async Task Handle(DeleteStepTagCommand request, CancellationToken cancellationToken)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        var tag = await context.StepTags
-            .Include(t => t.Steps.Where(s => s.StepId == request.StepId))
-            .FirstOrDefaultAsync(t => t.TagId == request.TagId, cancellationToken);
-        if (tag?.Steps.FirstOrDefault(s => s.StepId == request.StepId) is { } step)
-        {
-            tag.Steps.Remove(step);
-            await context.SaveChangesAsync(cancellationToken);
-        }
+        var tagToRemove = await context.StepTags
+            .FirstOrDefaultAsync(t => t.TagId == request.TagId, cancellationToken)
+                ?? throw new NotFoundException<StepTag>(request.TagId);
+        context.StepTags.Remove(tagToRemove);
+        await context.SaveChangesAsync(cancellationToken);
     }
 }

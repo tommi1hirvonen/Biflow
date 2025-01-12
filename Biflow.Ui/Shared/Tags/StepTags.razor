@@ -333,7 +333,7 @@
 
     private async Task DeleteTag(StepTag tag)
     {
-        await Mediator.SendAsync(new DeleteTagCommand(tag.TagId));
+        await Mediator.SendAsync(new DeleteStepTagCommand(tag.TagId));
         _tags?.Remove(tag);
     }
 
@@ -343,7 +343,7 @@
         {
             return;
         }
-        await Mediator.SendAsync(new DeleteStepTagCommand(step.StepId, _manageTag.TagId));
+        await Mediator.SendAsync(new DeleteStepTagRelationCommand(step.StepId, _manageTag.TagId));
         _manageTag.Steps.Remove(step);
     }
 

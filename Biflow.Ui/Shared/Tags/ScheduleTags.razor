@@ -250,7 +250,7 @@
 
     private async Task DeleteTag(ScheduleTag tag)
     {
-        await Mediator.SendAsync(new DeleteTagCommand(tag.TagId));
+        await Mediator.SendAsync(new DeleteScheduleTagCommand(tag.TagId));
         _tags?.Remove(tag);
     }
 
@@ -260,7 +260,7 @@
         {
             return;
         }
-        await Mediator.SendAsync(new DeleteScheduleTagCommand(schedule.ScheduleId, _manageTag.TagId));
+        await Mediator.SendAsync(new DeleteScheduleTagRelationCommand(schedule.ScheduleId, _manageTag.TagId));
         _manageTag.Schedules.Remove(schedule);
     }
 

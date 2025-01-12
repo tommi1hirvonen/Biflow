@@ -42,50 +42,89 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .WithDescription("Update an existing job")
             .WithName("UpdateJob");
         
+        group.MapPost("/{jobId:guid}/tags/{tagId:guid}",
+            async (Guid jobId, Guid tagId, IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new CreateJobTagRelationCommand(jobId, tagId);
+                await mediator.SendAsync(command, cancellationToken);
+                return Results.NoContent();
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status204NoContent)
+            .WithDescription("Create a job tag relation")
+            .WithName("CreateJobTagRelation");
+        
         group.MapDelete("/{jobId:guid}", async (Guid jobId, IMediator mediator, CancellationToken cancellationToken) =>
             {
                 var command = new DeleteJobCommand(jobId);
-                var job = await mediator.SendAsync(command, cancellationToken);
-                return Results.Ok(job);
+                await mediator.SendAsync(command, cancellationToken);
+                return Results.NoContent();
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .Produces<Job>()
+            .Produces(StatusCodes.Status204NoContent)
             .WithDescription("Delete a job")
             .WithName("DeleteJob");
-        
-        group.MapDelete("/{jobId:guid}/tags/{tagId:guid}",
-            async (Guid jobId, Guid tagId, IMediator mediator, CancellationToken cancellationToken) =>
-            {
-                var command = new DeleteJobTagCommand(jobId, tagId);
-                await mediator.SendAsync(command, cancellationToken);
-            })
-            .ProducesProblem(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status200OK)
-            .WithDescription("Delete a job tag relation")
-            .WithName("DeleteJobTagRelation");
         
         group.MapDelete("/steps/{stepId:guid}",
             async (Guid stepId, IMediator mediator, CancellationToken cancellationToken) =>
             {
                 var command = new DeleteStepsCommand(stepId);
                 var steps = await mediator.SendAsync(command, cancellationToken);
-                var step = steps.FirstOrDefault() ?? throw new NotFoundException<Step>(stepId);
-                return Results.Ok(step);
+                if (steps.Length == 0)
+                {
+                    throw new NotFoundException<Step>(stepId);
+                }
+                return Results.NoContent();
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .Produces<Step>()
+            .Produces(StatusCodes.Status204NoContent)
             .WithDescription("Delete a step")
             .WithName("DeleteStep");
+        
+        group.MapDelete("/{jobId:guid}/tags/{tagId:guid}",
+            async (Guid jobId, Guid tagId, IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new DeleteJobTagRelationCommand(jobId, tagId);
+                await mediator.SendAsync(command, cancellationToken);
+                return Results.NoContent();
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status204NoContent)
+            .WithDescription("Delete a job tag relation")
+            .WithName("DeleteJobTagRelation");
         
         group.MapDelete("/steps/{stepId:guid}/tags/{tagId:guid}",
             async (Guid stepId, Guid tagId, IMediator mediator, CancellationToken cancellationToken) =>
             {
-                var command = new DeleteStepTagCommand(stepId, tagId);
+                var command = new DeleteStepTagRelationCommand(stepId, tagId);
                 await mediator.SendAsync(command, cancellationToken);
+                return Results.NoContent();
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status204NoContent)
             .WithDescription("Delete a step tag relation")
             .WithName("DeleteStepTagRelation");
+        
+        group.MapDelete("/tags/{tagId:guid}", async (Guid tagId, IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new DeleteJobTagCommand(tagId);
+                await mediator.SendAsync(command, cancellationToken);
+                return Results.NoContent();
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status204NoContent)
+            .WithDescription("Delete a job tag")
+            .WithName("DeleteJobTag");
+        
+        group.MapDelete("/steps/tags/{tagId:guid}", async (Guid tagId, IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new DeleteStepTagCommand(tagId);
+                await mediator.SendAsync(command, cancellationToken);
+                return Results.NoContent();
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status204NoContent)
+            .WithDescription("Delete a step tag")
+            .WithName("DeleteStepTag");
     }
 }
