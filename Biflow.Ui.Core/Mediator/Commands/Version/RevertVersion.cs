@@ -7,9 +7,12 @@ public record RevertVersionCommand(EnvironmentSnapshot Snapshot) : IRequest;
 public record RevertVersionByIdCommand(int VersionId) : IRequest;
 
 [UsedImplicitly]
-internal class RevertVersionByIdCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory, IMediator mediator)
+internal class RevertVersionByIdCommandHandler(IDbContextFactory<RevertDbContext> dbContextFactory, IMediator mediator)
     : IRequestHandler<RevertVersionByIdCommand>
 {
+    private readonly IRequestHandler<RevertVersionCommand> _handler =
+        mediator.GetRequestHandler<RevertVersionCommand>();
+    
     public async Task Handle(RevertVersionByIdCommand request, CancellationToken cancellationToken)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
@@ -21,7 +24,7 @@ internal class RevertVersionByIdCommandHandler(IDbContextFactory<AppDbContext> d
         var snapshot = EnvironmentSnapshot.FromJson(snapshotJson, referencesPreserved: true);
         ArgumentNullException.ThrowIfNull(snapshot);
         var command = new RevertVersionCommand(snapshot);
-        await mediator.SendAsync(command, cancellationToken);
+        await _handler.Handle(command, cancellationToken);
     }
 }
 
