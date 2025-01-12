@@ -7,3 +7,23 @@ Content-Type: application/json
 {
   "description": "Test description"
 }
+
+### Revert by id
+
+POST {{baseUrl}}/environmentversions/revert/24
+x-api-key: {{apiKey}}
+
+### Get version revert status
+
+GET {{baseUrl}}/environmentversions/revert/status/424cca55-1cfb-4e7b-a6cf-c18cf53c5b5e
+x-api-key: {{apiKey}}
+
+### Revert to snapshot
+
+POST {{baseUrl}}/environmentversions/revert
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  
+}
