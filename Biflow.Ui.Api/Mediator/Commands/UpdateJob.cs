@@ -1,6 +1,16 @@
 namespace Biflow.Ui.Api.Mediator.Commands;
 
-internal record UpdateJobCommand(JobDto Job) : IRequest<Job>;
+internal record UpdateJobCommand(
+    Guid JobId,
+    string JobName,
+    string JobDescription,
+    ExecutionMode ExecutionMode,
+    bool StopOnFirstError,
+    int MaxParallelSteps,
+    double OvertimeNotificationLimitMinutes,
+    double TimeoutMinutes,
+    bool IsEnabled,
+    bool IsPinned) : IRequest<Job>;
 
 [UsedImplicitly]
 internal class UpdateJobCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
@@ -10,12 +20,12 @@ internal class UpdateJobCommandHandler(IDbContextFactory<AppDbContext> dbContext
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var job = await context.Jobs
-            .FirstOrDefaultAsync(j => j.JobId == request.Job.JobId, cancellationToken);
+            .FirstOrDefaultAsync(j => j.JobId == request.JobId, cancellationToken);
         if (job is null)
         {
-            throw new NotFoundException<Job>(request.Job.JobId);
+            throw new NotFoundException<Job>(request.JobId);
         }
-        context.Entry(job).CurrentValues.SetValues(request.Job);
+        context.Entry(job).CurrentValues.SetValues(request);
         job.EnsureDataAnnotationsValidated();
         await context.SaveChangesAsync(cancellationToken);
         return job;

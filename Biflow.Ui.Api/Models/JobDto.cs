@@ -1,7 +1,6 @@
 namespace Biflow.Ui.Api.Models;
 
 public record JobDto(
-    Guid JobId,
     string JobName,
     string JobDescription,
     ExecutionMode ExecutionMode,

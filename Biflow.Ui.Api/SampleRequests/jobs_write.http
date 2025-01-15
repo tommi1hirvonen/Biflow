@@ -5,7 +5,6 @@ x-api-key: {{apiKey}}
 Content-Type: application/json
 
 {
-    "JobId": "418c18b9-7086-4774-8412-f9bffa097499",
     "JobName": "API test job",
     "JobDescription": "Job created from API",
     "ExecutionMode": "ExecutionPhase",
@@ -19,12 +18,11 @@ Content-Type: application/json
 
 ### Update job
 
-PUT {{baseUrl}}/jobs
+PUT {{baseUrl}}/jobs/a7828a19-191f-4ad0-705c-08dd358d135e
 x-api-key: {{apiKey}}
 Content-Type: application/json
 
 {
-  "JobId": "418c18b9-7086-4774-8412-f9bffa097499",
   "JobName": "API test job renamed",
   "JobDescription": "Job created from API",
   "ExecutionMode": "ExecutionPhase",
@@ -38,7 +36,7 @@ Content-Type: application/json
 
 ### Update job concurrencies
 
-PUT {{baseUrl}}/jobs/418c18b9-7086-4774-8412-f9bffa097499/concurrencies
+PUT {{baseUrl}}/jobs/a7828a19-191f-4ad0-705c-08dd358d135e/concurrencies
 x-api-key: {{apiKey}}
 Content-Type: application/json
 
@@ -49,7 +47,7 @@ Content-Type: application/json
 
 ### Clear job concurrencies (empty array)
 
-PUT {{baseUrl}}/jobs/418c18b9-7086-4774-8412-f9bffa097499/concurrencies
+PUT {{baseUrl}}/jobs/a7828a19-191f-4ad0-705c-08dd358d135e/concurrencies
 x-api-key: {{apiKey}}
 Content-Type: application/json
 
@@ -62,7 +60,6 @@ x-api-key: {{apiKey}}
 Content-Type: application/json
 
 {
-  "tagId": "4a65701c-38bf-4f69-9739-6517874512a1",
   "tagName": "api-tag",
   "color": "DarkGray",
   "sortOrder": 10
@@ -70,12 +67,11 @@ Content-Type: application/json
 
 ### Update job tag
 
-PUT {{baseUrl}}/jobs/tags
+PUT {{baseUrl}}/jobs/tags/797ff271-e8bd-4fc4-eb0e-08dd358d3c06
 x-api-key: {{apiKey}}
 Content-Type: application/json
 
 {
-  "tagId": "4a65701c-38bf-4f69-9739-6517874512a1",
   "tagName": "api-tag-updated",
   "color": "LightGray",
   "sortOrder": 10
@@ -93,10 +89,10 @@ x-api-key: {{apiKey}}
 
 ### Delete job tag
 
-DELETE {{baseUrl}}/jobs/tags/4a65701c-38bf-4f69-9739-6517874512a1
+DELETE {{baseUrl}}/jobs/tags/797ff271-e8bd-4fc4-eb0e-08dd358d3c06
 x-api-key: {{apiKey}}
 
 ### Delete job
 
-DELETE {{baseUrl}}/jobs/418c18b9-7086-4774-8412-f9bffa097499
+DELETE {{baseUrl}}/jobs/a7828a19-191f-4ad0-705c-08dd358d135e
 x-api-key: {{apiKey}}

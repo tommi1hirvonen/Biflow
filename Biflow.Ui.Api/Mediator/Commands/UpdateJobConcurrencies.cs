@@ -1,6 +1,6 @@
 namespace Biflow.Ui.Api.Mediator.Commands;
 
-internal record UpdateJobConcurrenciesCommand(Guid JobId, JobConcurrencyDto[] JobConcurrencies) : IRequest;
+internal record UpdateJobConcurrenciesCommand(Guid JobId, IDictionary<StepType, int> JobConcurrencies) : IRequest;
 
 [UsedImplicitly]
 internal class UpdateJobConcurrenciesCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
@@ -17,8 +17,8 @@ internal class UpdateJobConcurrenciesCommandHandler(IDbContextFactory<ServiceDbC
             .Select(x => new JobConcurrency
             {
                 JobId = request.JobId,
-                StepType = x.StepType,
-                MaxParallelSteps = x.MaxParallelSteps
+                StepType = x.Key,
+                MaxParallelSteps = x.Value
             })
             .ToArray();
         dbContext.MergeCollections(job.JobConcurrencies, newItems, x => new { x.JobId, x.StepType });

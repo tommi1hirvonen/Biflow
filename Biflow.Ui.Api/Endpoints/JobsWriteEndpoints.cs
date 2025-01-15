@@ -16,11 +16,20 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .AddEndpointFilter(endpointFilter);
         
         group.MapPost("",
-            async ([FromBody] JobDto jobDto, IMediator mediator, LinkGenerator linker, HttpContext ctx, CancellationToken cancellationToken) =>
+            async ([FromBody] JobDto request, IMediator mediator, LinkGenerator linker, HttpContext ctx, CancellationToken cancellationToken) =>
             {
-                var command = new CreateJobCommand(jobDto);
+                var command = new CreateJobCommand(
+                    JobName: request.JobName,
+                    JobDescription: request.JobDescription,
+                    ExecutionMode: request.ExecutionMode,
+                    StopOnFirstError: request.StopOnFirstError,
+                    MaxParallelSteps: request.MaxParallelSteps,
+                    OvertimeNotificationLimitMinutes: request.OvertimeNotificationLimitMinutes,
+                    TimeoutMinutes: request.TimeoutMinutes,
+                    IsEnabled: request.IsEnabled,
+                    IsPinned: request.IsPinned);
                 var job = await mediator.SendAsync(command, cancellationToken);
-                var url = linker.GetUriByName(ctx, "GetJob", new { jobId = jobDto.JobId });
+                var url = linker.GetUriByName(ctx, "GetJob", new { jobId = job.JobId });
                 return Results.Created(url, job);
             })
             .ProducesProblem(StatusCodes.Status409Conflict)
@@ -32,9 +41,12 @@ public abstract class JobsWriteEndpoints : IEndpoints
         group.MapPost("/tags",
             async ([FromBody] TagDto tagDto, IMediator mediator, LinkGenerator linker, HttpContext ctx, CancellationToken cancellationToken) =>
             {
-                var command = new CreateJobTagCommand(tagDto);
+                var command = new CreateJobTagCommand(
+                    TagName: tagDto.TagName,
+                    Color: tagDto.Color,
+                    SortOrder: tagDto.SortOrder);
                 var tag = await mediator.SendAsync(command, cancellationToken);
-                var url = linker.GetUriByName(ctx, "GetJobTag", new { tagId = tagDto.TagId });
+                var url = linker.GetUriByName(ctx, "GetJobTag", new { tagId = tag.TagId });
                 return Results.Created(url, tag);
             })
             .ProducesProblem(StatusCodes.Status409Conflict)
@@ -43,10 +55,20 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .WithDescription("Create a new job tag")
             .WithName("CreateJobTag");
         
-        group.MapPut("",
-            async ([FromBody] JobDto jobDto, IMediator mediator, CancellationToken cancellationToken) =>
+        group.MapPut("/{jobId:guid}",
+            async (Guid jobId, [FromBody] JobDto request, IMediator mediator, CancellationToken cancellationToken) =>
             {
-                var command = new UpdateJobCommand(jobDto);
+                var command = new UpdateJobCommand(
+                    JobId: jobId,
+                    JobName: request.JobName,
+                    JobDescription: request.JobDescription,
+                    ExecutionMode: request.ExecutionMode,
+                    StopOnFirstError: request.StopOnFirstError,
+                    MaxParallelSteps: request.MaxParallelSteps,
+                    OvertimeNotificationLimitMinutes: request.OvertimeNotificationLimitMinutes,
+                    TimeoutMinutes: request.TimeoutMinutes,
+                    IsEnabled: request.IsEnabled,
+                    IsPinned: request.IsPinned);
                 var job = await mediator.SendAsync(command, cancellationToken);
                 return Results.Ok(job);
             })
@@ -60,7 +82,8 @@ public abstract class JobsWriteEndpoints : IEndpoints
             async ([FromRoute] Guid jobId, [FromBody] JobConcurrencyDto[] concurrencies,
                 IMediator mediator, CancellationToken cancellationToken) =>
             {
-                var command = new UpdateJobConcurrenciesCommand(jobId, concurrencies);
+                var dictionary = concurrencies.ToDictionary(key => key.StepType, value => value.MaxParallelSteps);
+                var command = new UpdateJobConcurrenciesCommand(jobId, dictionary);
                 await mediator.SendAsync(command, cancellationToken);
                 return Results.NoContent();
             })
@@ -70,10 +93,14 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .WithDescription("Update job concurrencies for an existing job")
             .WithName("UpdateJobConcurrencies");
 
-        group.MapPut("/tags",
-            async ([FromBody] TagDto tagDto, IMediator mediator, CancellationToken cancellationToken) =>
+        group.MapPut("/tags/{tagId:guid}",
+            async (Guid tagId, [FromBody] TagDto tagDto, IMediator mediator, CancellationToken cancellationToken) =>
             {
-                var command = new UpdateJobTagCommand(tagDto);
+                var command = new UpdateJobTagCommand(
+                    TagId: tagId,
+                    TagName: tagDto.TagName,
+                    Color: tagDto.Color,
+                    SortOrder: tagDto.SortOrder);
                 var tag = await mediator.SendAsync(command, cancellationToken);
                 return Results.Ok(tag);
             })

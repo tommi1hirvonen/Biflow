@@ -1,6 +1,6 @@
 namespace Biflow.Ui.Api.Models;
 
-public class VersionRevertJob(Func<CancellationToken, Task> taskDelegate)
+internal class VersionRevertJob(Func<CancellationToken, Task> taskDelegate)
 {
     public Guid Id { get; } = Guid.NewGuid();
     

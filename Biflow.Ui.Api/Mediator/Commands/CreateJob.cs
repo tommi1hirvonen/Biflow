@@ -1,6 +1,15 @@
 namespace Biflow.Ui.Api.Mediator.Commands;
 
-internal record CreateJobCommand(JobDto Job) : IRequest<Job>;
+internal record CreateJobCommand(
+    string JobName,
+    string JobDescription,
+    ExecutionMode ExecutionMode,
+    bool StopOnFirstError,
+    int MaxParallelSteps,
+    double OvertimeNotificationLimitMinutes,
+    double TimeoutMinutes,
+    bool IsEnabled,
+    bool IsPinned) : IRequest<Job>;
 
 [UsedImplicitly]
 internal class CreateJobCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
@@ -9,22 +18,17 @@ internal class CreateJobCommandHandler(IDbContextFactory<AppDbContext> dbContext
     public async Task<Job> Handle(CreateJobCommand request, CancellationToken cancellationToken)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        if (await context.Jobs.AnyAsync(j => j.JobId == request.Job.JobId, cancellationToken))
-        {
-            throw new PrimaryKeyException<Job>(request.Job.JobId);
-        }
         var job = new Job
         {
-            JobId = request.Job.JobId,
-            JobName = request.Job.JobName,
-            JobDescription = request.Job.JobDescription,
-            ExecutionMode = request.Job.ExecutionMode,
-            StopOnFirstError = request.Job.StopOnFirstError,
-            MaxParallelSteps = request.Job.MaxParallelSteps,
-            OvertimeNotificationLimitMinutes = request.Job.OvertimeNotificationLimitMinutes,
-            TimeoutMinutes = request.Job.TimeoutMinutes,
-            IsEnabled = request.Job.IsEnabled,
-            IsPinned = request.Job.IsPinned
+            JobName = request.JobName,
+            JobDescription = request.JobDescription,
+            ExecutionMode = request.ExecutionMode,
+            StopOnFirstError = request.StopOnFirstError,
+            MaxParallelSteps = request.MaxParallelSteps,
+            OvertimeNotificationLimitMinutes = request.OvertimeNotificationLimitMinutes,
+            TimeoutMinutes = request.TimeoutMinutes,
+            IsEnabled = request.IsEnabled,
+            IsPinned = request.IsPinned
         };
         job.EnsureDataAnnotationsValidated();
         context.Jobs.Add(job);
