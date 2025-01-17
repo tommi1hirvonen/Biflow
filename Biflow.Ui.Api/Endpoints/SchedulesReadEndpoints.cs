@@ -25,15 +25,6 @@ public abstract class SchedulesReadEndpoints : IEndpoints
             .WithDescription("Get all schedules")
             .WithName("GetSchedules");
         
-        group.MapGet("/tags", async (ServiceDbContext dbContext, CancellationToken cancellationToken) =>
-            {
-                var tags = await dbContext.ScheduleTags.AsNoTracking().ToArrayAsync(cancellationToken);
-                return tags;
-            })
-            .Produces<ScheduleTag[]>()
-            .WithDescription("Get all schedule tags")
-            .WithName("GetScheduleTags");
-        
         group.MapGet("/{scheduleId:guid}",
             async (ServiceDbContext dbContext, Guid scheduleId, CancellationToken cancellationToken) =>
             {
@@ -52,5 +43,27 @@ public abstract class SchedulesReadEndpoints : IEndpoints
             .Produces<Schedule>()
             .WithDescription("Get schedule by id")
             .WithName("GetSchedule");
+        
+        group.MapGet("/tags", async (ServiceDbContext dbContext, CancellationToken cancellationToken) =>
+            {
+                var tags = await dbContext.ScheduleTags.AsNoTracking().ToArrayAsync(cancellationToken);
+                return tags;
+            })
+            .Produces<ScheduleTag[]>()
+            .WithDescription("Get all schedule tags")
+            .WithName("GetScheduleTags");
+        
+        group.MapGet("/tags/{tagId:guid}", async (Guid tagId, ServiceDbContext dbContext, CancellationToken cancellationToken) =>
+            {
+                var tag = await dbContext.ScheduleTags
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(t => t.TagId == tagId, cancellationToken)
+                    ?? throw new NotFoundException<ScheduleTag>(tagId);
+                return Results.Ok(tag);
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces<ScheduleTag>()
+            .WithDescription("Get schedule tag")
+            .WithName("GetScheduleTag");
     }
 }
