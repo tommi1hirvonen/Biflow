@@ -34,28 +34,6 @@ public abstract class JobsReadEndpoints : IEndpoints
                              "are not loaded and will be empty. " +
                              "Tags can be included by specifying the corresponding query parameter.")
             .WithName("GetJobs");
-        
-        group.MapGet("/tags", async (ServiceDbContext dbContext, CancellationToken cancellationToken) =>
-            {
-                var tags = await dbContext.JobTags.AsNoTracking().ToArrayAsync(cancellationToken);
-                return tags;
-            })
-            .Produces<JobTag[]>()
-            .WithDescription("Get all job tags")
-            .WithName("GetJobTags");
-        
-        group.MapGet("/tags/{tagId:guid}", async (Guid tagId, ServiceDbContext dbContext, CancellationToken cancellationToken) =>
-            {
-                var tag = await dbContext.JobTags
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(t => t.TagId == tagId, cancellationToken)
-                        ?? throw new NotFoundException<JobTag>(tagId);
-                return Results.Ok(tag);
-            })
-            .ProducesProblem(StatusCodes.Status404NotFound)
-            .Produces<JobTag>()
-            .WithDescription("Get job tag")
-            .WithName("GetJobTag");
 
         group.MapGet("/{jobId:guid}", 
             async (ServiceDbContext dbContext,
@@ -145,5 +123,27 @@ public abstract class JobsReadEndpoints : IEndpoints
             .WithDescription("Get all schedules for a job.")
             .WithName("GetJobSchedules")
             .AddEndpointFilter(jobSchedulesEndpointFilter);
+        
+        group.MapGet("/tags", async (ServiceDbContext dbContext, CancellationToken cancellationToken) =>
+            {
+                var tags = await dbContext.JobTags.AsNoTracking().ToArrayAsync(cancellationToken);
+                return tags;
+            })
+            .Produces<JobTag[]>()
+            .WithDescription("Get all job tags")
+            .WithName("GetJobTags");
+        
+        group.MapGet("/tags/{tagId:guid}", async (Guid tagId, ServiceDbContext dbContext, CancellationToken cancellationToken) =>
+            {
+                var tag = await dbContext.JobTags
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(t => t.TagId == tagId, cancellationToken)
+                        ?? throw new NotFoundException<JobTag>(tagId);
+                return Results.Ok(tag);
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces<JobTag>()
+            .WithDescription("Get job tag")
+            .WithName("GetJobTag");
     }
 }
