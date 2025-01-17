@@ -51,5 +51,19 @@ public abstract class DataTablesReadEndpoints : IEndpoints
             .Produces<MasterDataTableCategory[]>()
             .WithDescription("Get all data table categories")
             .WithName("GetDataTableCategories");
+        
+        group.MapGet("/categories/{categoryId:guid}",
+            async (ServiceDbContext dbContext, Guid categoryId, CancellationToken cancellationToken) =>
+            {
+                var category = await dbContext.MasterDataTableCategories
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(t => t.CategoryId == categoryId, cancellationToken)
+                    ?? throw new NotFoundException<MasterDataTableCategory>(categoryId);
+                return Results.Ok(category);
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces<MasterDataTableCategory>()
+            .WithDescription("Get data table category by id")
+            .WithName("GetDataTableCategory");
     }
 }
