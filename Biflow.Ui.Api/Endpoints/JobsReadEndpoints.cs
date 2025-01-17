@@ -145,5 +145,32 @@ public abstract class JobsReadEndpoints : IEndpoints
             .Produces<JobTag>()
             .WithDescription("Get job tag")
             .WithName("GetJobTag");
+        
+        var dataObjectsGroup = app.MapGroup("/dataobjects")
+            .WithTags(Scopes.JobsRead)
+            .AddEndpointFilter(endpointFilter);
+        
+        dataObjectsGroup.MapGet("", async (ServiceDbContext dbContext, CancellationToken cancellationToken) =>
+            {
+                var dataObjects = await dbContext.DataObjects.AsNoTracking().ToArrayAsync(cancellationToken);
+                return dataObjects;
+            })
+            .Produces<DataObject[]>()
+            .WithDescription("Get all data objects")
+            .WithName("GetDataObjects");
+        
+        dataObjectsGroup.MapGet("/{dataObjectId:guid}",
+            async (Guid dataObjectId, ServiceDbContext dbContext, CancellationToken cancellationToken) =>
+            {
+                var dataObject = await dbContext.DataObjects
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.ObjectId == dataObjectId, cancellationToken)
+                    ?? throw new NotFoundException<DataObject>(dataObjectId);
+                return Results.Ok(dataObject);
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces<DataObject>()
+            .WithDescription("Get data object")
+            .WithName("GetDataObject");
     }
 }
