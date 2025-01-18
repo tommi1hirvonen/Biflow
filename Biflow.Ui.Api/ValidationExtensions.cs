@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using FluentValidation;
 using ValidationException = Biflow.Ui.Api.Exceptions.ValidationException;
 
 namespace Biflow.Ui.Api;
@@ -12,6 +13,16 @@ internal static class ValidationExtensions
         {
             throw new ValidationException(results);
         }
+    }
+
+    internal static void EnsureValidated<T>(this AbstractValidator<T> validator, T model)
+    {
+        if (validator.Validate(model) is not { IsValid: false, Errors: var errors })
+        {
+            return;
+        }
+        var results = errors.Select(e => new ValidationResult(e.ErrorMessage)).ToArray();
+        throw new ValidationException(results);
     }
     
     private static (List<ValidationResult> Results, bool IsValid) ValidateDataAnnotations(this object model)

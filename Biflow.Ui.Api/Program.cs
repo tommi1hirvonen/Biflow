@@ -69,6 +69,7 @@ builder.Services.AddSwaggerGen(s =>
 });
 builder.Services.AddMemoryCache();
 builder.Services.AddUiCoreServices<UserService>(builder.Configuration, authenticationConfiguration: "UserAuthentication");
+builder.Services.AddValidationServices();
 builder.Services.AddSingleton<ApiKeyEndpointFilterFactory>();
 builder.Services.AddRequestHandlers<Program>();
 builder.Services.AddSingleton<ConcurrentDictionary<Guid, VersionRevertStatus>>();

@@ -8,11 +8,18 @@ internal record CreateJobParameterCommand(
     string? Expression) : IRequest<JobParameter>;
 
 [UsedImplicitly]
-internal class CreateJobParameterCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory) 
+internal class CreateJobParameterCommandHandler(
+    IDbContextFactory<AppDbContext> dbContextFactory,
+    JobValidator jobValidator) 
     : IRequestHandler<CreateJobParameterCommand, JobParameter>
 {
     public async Task<JobParameter> Handle(CreateJobParameterCommand request, CancellationToken cancellationToken)
     {
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        var job = await dbContext.Jobs
+            .Include(j => j.JobParameters)
+            .FirstOrDefaultAsync(j => j.JobId == request.JobId, cancellationToken)
+            ?? throw new NotFoundException<Job>(request.JobId);
         var jobParameter = new JobParameter
         {
             JobId = request.JobId,
@@ -22,8 +29,8 @@ internal class CreateJobParameterCommandHandler(IDbContextFactory<AppDbContext> 
             Expression = new EvaluationExpression { Expression = request.Expression }
         };
         jobParameter.EnsureDataAnnotationsValidated();
-        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        dbContext.Add(jobParameter);
+        job.JobParameters.Add(jobParameter);
+        jobValidator.EnsureValidated(job);
         await dbContext.SaveChangesAsync(cancellationToken);
         return jobParameter;
     }

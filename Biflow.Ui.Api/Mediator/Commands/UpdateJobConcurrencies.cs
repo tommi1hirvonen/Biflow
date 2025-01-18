@@ -3,7 +3,9 @@ namespace Biflow.Ui.Api.Mediator.Commands;
 internal record UpdateJobConcurrenciesCommand(Guid JobId, IDictionary<StepType, int> JobConcurrencies) : IRequest;
 
 [UsedImplicitly]
-internal class UpdateJobConcurrenciesCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
+internal class UpdateJobConcurrenciesCommandHandler(
+    IDbContextFactory<ServiceDbContext> dbContextFactory,
+    JobValidator jobValidator)
     : IRequestHandler<UpdateJobConcurrenciesCommand>
 {
     public async Task Handle(UpdateJobConcurrenciesCommand request, CancellationToken cancellationToken)
@@ -26,6 +28,7 @@ internal class UpdateJobConcurrenciesCommandHandler(IDbContextFactory<ServiceDbC
         {
             jobConcurrency.EnsureDataAnnotationsValidated();
         }
+        jobValidator.EnsureValidated(job);
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 }
