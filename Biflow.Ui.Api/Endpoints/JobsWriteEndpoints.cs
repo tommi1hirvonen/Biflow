@@ -155,5 +155,55 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .Produces(StatusCodes.Status204NoContent)
             .WithDescription("Delete a job tag")
             .WithName("DeleteJobTag");
+        
+        var dataObjectsGroup = app.MapGroup("/dataobjects")
+            .WithTags(Scopes.JobsWrite)
+            .AddEndpointFilter(endpointFilter);
+        
+        dataObjectsGroup.MapPost("",
+            async ([FromBody] DataObjectDto dataObjectDto,
+                IMediator mediator,
+                LinkGenerator linker,
+                HttpContext ctx,
+                CancellationToken cancellationToken) =>
+            {
+                var command = new CreateDataObjectCommand(dataObjectDto.ObjectUri, dataObjectDto.MaxConcurrentWrites);
+                var dataObject = await mediator.SendAsync(command, cancellationToken);
+                var url = linker.GetUriByName(ctx, "GetDataObject", new { dataObjectId = dataObject.ObjectId });
+                return Results.Created(url, dataObject);
+            })
+            .ProducesValidationProblem()
+            .Produces<DataObject>(StatusCodes.Status201Created)
+            .WithDescription("Create a new data object")
+            .WithName("CreateDataObject");
+        
+        dataObjectsGroup.MapPut("/{dataObjectId:guid}",
+            async ([FromRoute] Guid dataObjectId,
+                [FromBody] DataObjectDto dataObjectDto,
+                IMediator mediator,
+                CancellationToken cancellationToken) =>
+            {
+                var command = new UpdateDataObjectCommand(
+                    dataObjectId, dataObjectDto.ObjectUri, dataObjectDto.MaxConcurrentWrites);
+                var dataObject = await mediator.SendAsync(command, cancellationToken);
+                return Results.Ok(dataObject);
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesValidationProblem()
+            .Produces<DataObject>()
+            .WithDescription("Update an existing data object")
+            .WithName("UpdateDataObject");
+        
+        dataObjectsGroup.MapDelete("/{dataObjectId:guid}",
+            async (Guid dataObjectId, IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new DeleteDataObjectCommand(dataObjectId);
+                await mediator.SendAsync(command, cancellationToken);
+                return Results.NoContent();
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status204NoContent)
+            .WithDescription("Delete a data object")
+            .WithName("DeleteDataObject");
     }
 }
