@@ -1,4 +1,5 @@
 using Biflow.Ui.Api.Mediator.Commands;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Biflow.Ui.Api.Endpoints;
 
@@ -68,5 +69,51 @@ public abstract class SchedulesWriteEndpoints : IEndpoints
             .Produces(StatusCodes.Status204NoContent)
             .WithDescription("Delete an existing schedule")
             .WithName("DeleteSchedule");
+        
+        group.MapPost("/tags",
+            async ([FromBody] TagDto tagDto, IMediator mediator,
+                LinkGenerator linker, HttpContext ctx, CancellationToken cancellationToken) =>
+            {
+                var command = new CreateScheduleTagCommand(
+                    TagName: tagDto.TagName,
+                    Color: tagDto.Color,
+                    SortOrder: tagDto.SortOrder);
+                var tag = await mediator.SendAsync(command, cancellationToken);
+                var url = linker.GetUriByName(ctx, "GetScheduleTag", new { tagId = tag.TagId });
+                return Results.Created(url, tag);
+            })
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesValidationProblem()
+            .Produces<ScheduleTag>(StatusCodes.Status201Created)
+            .WithDescription("Create a new schedule tag")
+            .WithName("CreateScheduleTag");
+
+        group.MapPut("/tags/{tagId:guid}",
+            async (Guid tagId, [FromBody] TagDto tagDto, IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new UpdateScheduleTagCommand(
+                    TagId: tagId,
+                    TagName: tagDto.TagName,
+                    Color: tagDto.Color,
+                    SortOrder: tagDto.SortOrder);
+                var tag = await mediator.SendAsync(command, cancellationToken);
+                return Results.Ok(tag);
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesValidationProblem()
+            .Produces<ScheduleTag>()
+            .WithDescription("Update an existing schedule tag")
+            .WithName("UpdateScheduleTag");
+        
+        group.MapDelete("/tags/{tagId:guid}", async (Guid tagId, IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new DeleteScheduleTagCommand(tagId);
+                await mediator.SendAsync(command, cancellationToken);
+                return Results.NoContent();
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status204NoContent)
+            .WithDescription("Delete a schedule tag")
+            .WithName("DeleteScheduleTag");
     }
 }
