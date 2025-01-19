@@ -69,6 +69,18 @@ public abstract class SchedulesWriteEndpoints : IEndpoints
             .Produces(StatusCodes.Status204NoContent)
             .WithDescription("Delete an existing schedule")
             .WithName("DeleteSchedule");
+
+        group.MapPatch("/{scheduleId:guid}/state",
+            async (Guid scheduleId, StateDto state, IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new ToggleScheduleCommand(scheduleId, state.IsEnabled);
+                await mediator.SendAsync(command, cancellationToken);
+                return Results.NoContent();
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status204NoContent)
+            .WithDescription("Toggle the state of an existing schedule")
+            .WithName("ToggleSchedule");
         
         group.MapPost("/tags",
             async ([FromBody] TagDto tagDto, IMediator mediator,
@@ -115,5 +127,6 @@ public abstract class SchedulesWriteEndpoints : IEndpoints
             .Produces(StatusCodes.Status204NoContent)
             .WithDescription("Delete a schedule tag")
             .WithName("DeleteScheduleTag");
+        
     }
 }
