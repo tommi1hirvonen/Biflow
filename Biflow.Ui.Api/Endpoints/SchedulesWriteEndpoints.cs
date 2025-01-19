@@ -80,7 +80,7 @@ public abstract class SchedulesWriteEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status204NoContent)
             .WithDescription("Toggle the state of an existing schedule")
-            .WithName("ToggleSchedule");
+            .WithName("ToggleScheduleEnabled");
         
         group.MapPost("/tags",
             async ([FromBody] TagDto tagDto, IMediator mediator,

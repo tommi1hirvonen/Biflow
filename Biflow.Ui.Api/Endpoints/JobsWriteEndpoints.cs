@@ -113,6 +113,18 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .WithDescription("Create a new job parameter")
             .WithName("CreateJobParameter");
         
+        group.MapPatch("/{jobId:guid}/state",
+            async (Guid jobId, StateDto state, IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new ToggleJobEnabledCommand(jobId, state.IsEnabled);
+                await mediator.SendAsync(command, cancellationToken);
+                return Results.NoContent();
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status204NoContent)
+            .WithDescription("Toggle the state of an existing job")
+            .WithName("ToggleJobEnabled");
+        
         group.MapPut("/parameters/{parameterId:guid}", async (Guid parameterId, [FromBody] JobParameterDto parameterDto,
             IMediator mediator, CancellationToken cancellationToken) =>
             {
