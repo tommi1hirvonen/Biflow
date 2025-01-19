@@ -73,7 +73,7 @@ public abstract class SchedulesWriteEndpoints : IEndpoints
         group.MapPatch("/{scheduleId:guid}/state",
             async (Guid scheduleId, StateDto state, IMediator mediator, CancellationToken cancellationToken) =>
             {
-                var command = new ToggleScheduleCommand(scheduleId, state.IsEnabled);
+                var command = new ToggleScheduleEnabledCommand(scheduleId, state.IsEnabled);
                 await mediator.SendAsync(command, cancellationToken);
                 return Results.NoContent();
             })

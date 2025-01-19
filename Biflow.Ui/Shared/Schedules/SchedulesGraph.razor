@@ -254,7 +254,7 @@
     {
         try
         {
-            await Mediator.SendAsync(new ToggleScheduleCommand(schedule.ScheduleId, false));
+            await Mediator.SendAsync(new ToggleScheduleEnabledCommand(schedule.ScheduleId, false));
             schedule.IsEnabled = !schedule.IsEnabled;
             await OnSchedulesChanged.InvokeAsync();
             Toaster.AddSuccess("Schedule disabled", 2500);

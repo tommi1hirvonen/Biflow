@@ -428,7 +428,7 @@
         bool value = (bool)args.Value!;
         try
         {
-            await Mediator.SendAsync(new ToggleScheduleCommand(schedule.ScheduleId, value));
+            await Mediator.SendAsync(new ToggleScheduleEnabledCommand(schedule.ScheduleId, value));
             schedule.IsEnabled = value;
             var message = value ? "Schedule enabled" : "Schedule disabled";
             Toaster.AddSuccess(message, 2500);
@@ -445,7 +445,7 @@
         {
             foreach (var schedule in _selectedSchedules)
             {
-                await Mediator.SendAsync(new ToggleScheduleCommand(schedule.ScheduleId, value));
+                await Mediator.SendAsync(new ToggleScheduleEnabledCommand(schedule.ScheduleId, value));
                 schedule.IsEnabled = value;
             }
         }

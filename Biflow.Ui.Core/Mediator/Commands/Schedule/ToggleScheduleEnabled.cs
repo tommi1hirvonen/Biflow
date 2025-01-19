@@ -1,14 +1,14 @@
 ﻿namespace Biflow.Ui.Core;
 
-public record ToggleScheduleCommand(Guid ScheduleId, bool IsEnabled) : IRequest;
+public record ToggleScheduleEnabledCommand(Guid ScheduleId, bool IsEnabled) : IRequest;
 
 [UsedImplicitly]
 internal class ToggleScheduleCommandHandler(
     IDbContextFactory<AppDbContext> dbContextFactory,
     ISchedulerService scheduler)
-    : IRequestHandler<ToggleScheduleCommand>
+    : IRequestHandler<ToggleScheduleEnabledCommand>
 {
-    public async Task Handle(ToggleScheduleCommand request, CancellationToken cancellationToken)
+    public async Task Handle(ToggleScheduleEnabledCommand request, CancellationToken cancellationToken)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
