@@ -41,5 +41,17 @@ public abstract class ScdTablesWriteEndpoints : IEndpoints
             .Produces<ScdTable>()
             .WithDescription("Create a new SCD table")
             .WithName("CreateScdTable");
+        
+        group.MapDelete("/{scdTableId:guid}", async (Guid scdTableId, IMediator mediator,
+                CancellationToken cancellationToken) =>
+            {
+                var command = new DeleteScdTableCommand(scdTableId);
+                await mediator.SendAsync(command, cancellationToken);
+                return Results.NoContent();
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status204NoContent)
+            .WithDescription("Delete an SCD table")
+            .WithName("DeleteScdTable");
     }
 }

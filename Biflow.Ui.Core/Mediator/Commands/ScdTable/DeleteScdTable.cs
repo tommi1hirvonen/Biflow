@@ -1,8 +1,9 @@
-﻿namespace Biflow.Ui;
+﻿namespace Biflow.Ui.Core;
 
 public record DeleteScdTableCommand(Guid ScdTableId) : IRequest;
 
-public class DeleteScdTableCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+[UsedImplicitly]
+internal class DeleteScdTableCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<DeleteScdTableCommand> 
 {
     public async Task Handle(DeleteScdTableCommand request, CancellationToken cancellationToken)
