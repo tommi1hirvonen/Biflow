@@ -9,4 +9,5 @@ public record JobDto(
     double OvertimeNotificationLimitMinutes,
     double TimeoutMinutes,
     bool IsEnabled,
-    bool IsPinned);
+    bool IsPinned,
+    Guid[] JobTagIds);

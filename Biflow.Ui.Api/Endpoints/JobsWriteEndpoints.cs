@@ -27,7 +27,8 @@ public abstract class JobsWriteEndpoints : IEndpoints
                     OvertimeNotificationLimitMinutes: request.OvertimeNotificationLimitMinutes,
                     TimeoutMinutes: request.TimeoutMinutes,
                     IsEnabled: request.IsEnabled,
-                    IsPinned: request.IsPinned);
+                    IsPinned: request.IsPinned,
+                    JobTagIds: request.JobTagIds);
                 var job = await mediator.SendAsync(command, cancellationToken);
                 var url = linker.GetUriByName(ctx, "GetJob", new { jobId = job.JobId });
                 return Results.Created(url, job);
@@ -51,7 +52,8 @@ public abstract class JobsWriteEndpoints : IEndpoints
                     OvertimeNotificationLimitMinutes: request.OvertimeNotificationLimitMinutes,
                     TimeoutMinutes: request.TimeoutMinutes,
                     IsEnabled: request.IsEnabled,
-                    IsPinned: request.IsPinned);
+                    IsPinned: request.IsPinned,
+                    JobTagIds: request.JobTagIds);
                 var job = await mediator.SendAsync(command, cancellationToken);
                 return Results.Ok(job);
             })

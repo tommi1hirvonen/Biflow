@@ -1,5 +1,6 @@
 namespace Biflow.Ui.Api.Mediator.Commands;
 
+[UsedImplicitly]
 internal record UpdateJobCommand(
     Guid JobId,
     string JobName,
@@ -10,7 +11,8 @@ internal record UpdateJobCommand(
     double OvertimeNotificationLimitMinutes,
     double TimeoutMinutes,
     bool IsEnabled,
-    bool IsPinned) : IRequest<Job>;
+    bool IsPinned,
+    Guid[] JobTagIds) : IRequest<Job>;
 
 [UsedImplicitly]
 internal class UpdateJobCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
@@ -18,16 +20,44 @@ internal class UpdateJobCommandHandler(IDbContextFactory<AppDbContext> dbContext
 {
     public async Task<Job> Handle(UpdateJobCommand request, CancellationToken cancellationToken)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        var job = await context.Jobs
-            .FirstOrDefaultAsync(j => j.JobId == request.JobId, cancellationToken);
-        if (job is null)
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        
+        var job = await dbContext.Jobs
+            .Include(j => j.Tags)
+            .FirstOrDefaultAsync(j => j.JobId == request.JobId, cancellationToken)
+            ?? throw new NotFoundException<Job>(request.JobId);
+        
+        var jobTags = await dbContext.JobTags
+            .Where(t => request.JobTagIds.Contains(t.TagId))
+            .ToArrayAsync(cancellationToken);
+
+        foreach (var id in request.JobTagIds)
         {
-            throw new NotFoundException<Job>(request.JobId);
+            if (jobTags.All(t => t.TagId != id))
+            {
+                throw new NotFoundException<JobTag>(id);
+            }
         }
-        context.Entry(job).CurrentValues.SetValues(request);
+        
+        dbContext.Entry(job).CurrentValues.SetValues(request);
+        
+        // Synchronize tags
+        var jobTagsToAdd = jobTags.Where(t1 => job.Tags.All(t2 => t2.TagId != t1.TagId));
+        foreach (var tag in jobTagsToAdd)
+        {
+            job.Tags.Add(tag);
+        }
+        var jobTagsToRemove = job.Tags
+            .Where(t => !request.JobTagIds.Contains(t.TagId))
+            .ToArray(); // Materialize results because items may be removed from the sequence during iteration.
+        foreach (var tag in jobTagsToRemove)
+        {
+            job.Tags.Remove(tag);
+        }
+        
         job.EnsureDataAnnotationsValidated();
-        await context.SaveChangesAsync(cancellationToken);
+        
+        await dbContext.SaveChangesAsync(cancellationToken);
         return job;
     }
 }
