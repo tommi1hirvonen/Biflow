@@ -41,6 +41,18 @@ public abstract class StepsWriteEndpoints : IEndpoints
             .Produces(StatusCodes.Status204NoContent)
             .WithDescription("Delete a step")
             .WithName("DeleteStep");
+
+        group.MapPatch("/{stepId:guid}/state", async (Guid stepId, StateDto stateDto, IMediator mediator,
+                CancellationToken cancellationToken) =>
+            {
+                var command = new ToggleStepEnabledCommand(stepId, stateDto.IsEnabled);
+                await mediator.SendAsync(command, cancellationToken);
+                return Results.NoContent();
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status204NoContent)
+            .WithDescription("Toggle the state of an existing step")
+            .WithName("ToggleStepEnabled");
         
         group.MapDelete("/{stepId:guid}/tags/{tagId:guid}",
             async (Guid stepId, Guid tagId, IMediator mediator, CancellationToken cancellationToken) =>
