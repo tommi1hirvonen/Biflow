@@ -1,7 +1,8 @@
-﻿namespace Biflow.Ui;
+﻿namespace Biflow.Ui.Core;
 
 public record DeleteScheduleCommand(Guid ScheduleId) : IRequest;
 
+[UsedImplicitly]
 internal class DeleteScheduleCommandHandler(
     IDbContextFactory<AppDbContext> dbContextFactory,
     ISchedulerService scheduler)
@@ -14,7 +15,8 @@ internal class DeleteScheduleCommandHandler(
         try
         {
             var schedule = await context.Schedules
-                .FirstAsync(s => s.ScheduleId == request.ScheduleId, cancellationToken);
+                .FirstOrDefaultAsync(s => s.ScheduleId == request.ScheduleId, cancellationToken)
+                ?? throw new NotFoundException<Schedule>(request.ScheduleId);
             context.Schedules.Remove(schedule);
             await context.SaveChangesAsync(cancellationToken);
             await scheduler.RemoveScheduleAsync(schedule);

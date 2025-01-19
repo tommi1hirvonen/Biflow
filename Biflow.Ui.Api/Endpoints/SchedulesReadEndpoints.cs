@@ -8,7 +8,7 @@ public abstract class SchedulesReadEndpoints : IEndpoints
         var apiKeyEndpointFilterFactory = app.Services.GetRequiredService<ApiKeyEndpointFilterFactory>();
         var endpointFilter = apiKeyEndpointFilterFactory.Create([Scopes.SchedulesRead]);
 
-        var group = app.MapGroup("/schedules")
+        var group = app.MapGroup("/jobs/schedules")
             .WithTags(Scopes.SchedulesRead)
             .AddEndpointFilter(endpointFilter);
         
