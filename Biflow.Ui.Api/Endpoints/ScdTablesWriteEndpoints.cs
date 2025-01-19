@@ -42,6 +42,35 @@ public abstract class ScdTablesWriteEndpoints : IEndpoints
             .WithDescription("Create a new SCD table")
             .WithName("CreateScdTable");
         
+        group.MapPut("/{scdTableId:guid}", async (Guid scdTableId, ScdTableDto scdTableDto, IMediator mediator,
+            CancellationToken cancellationToken) =>
+            {
+                var command = new UpdateScdTableCommand(
+                    ScdTableId: scdTableId,
+                    ConnectionId: scdTableDto.ConnectionId,
+                    ScdTableName: scdTableDto.ScdTableName,
+                    SourceTableSchema: scdTableDto.SourceTableSchema,
+                    SourceTableName: scdTableDto.SourceTableName,
+                    TargetTableSchema: scdTableDto.TargetTableSchema,
+                    TargetTableName: scdTableDto.TargetTableName,
+                    StagingTableSchema: scdTableDto.StagingTableSchema,
+                    StagingTableName: scdTableDto.StagingTableName,
+                    PreLoadScript: scdTableDto.PreLoadScript,
+                    PostLoadScript: scdTableDto.PostLoadScript,
+                    FullLoad: scdTableDto.FullLoad,
+                    ApplyIndexesOnCreate: scdTableDto.ApplyIndexesOnCreate,
+                    SelectDistinct: scdTableDto.SelectDistinct,
+                    NaturalKeyColumns: scdTableDto.NaturalKeyColumns,
+                    SchemaDriftConfiguration: scdTableDto.SchemaDriftConfiguration);
+                var scdTable = await mediator.SendAsync(command, cancellationToken);
+                return Results.Ok(scdTable);
+            })
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces<ScdTable>()
+            .WithDescription("Update an existing SCD table")
+            .WithName("UpdateScdTable");
+        
         group.MapDelete("/{scdTableId:guid}", async (Guid scdTableId, IMediator mediator,
                 CancellationToken cancellationToken) =>
             {
