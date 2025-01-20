@@ -1,0 +1,44 @@
+namespace Biflow.Ui.Api.Endpoints;
+
+[UsedImplicitly]
+public abstract class StepsCreateEndpoints : IEndpoints
+{
+    public static void MapEndpoints(WebApplication app)
+    {
+        var apiKeyEndpointFilterFactory = app.Services.GetRequiredService<ApiKeyEndpointFilterFactory>();
+        var endpointFilter = apiKeyEndpointFilterFactory.Create([Scopes.JobsWrite]);
+        
+        var group = app.MapGroup("/jobs")
+            .WithTags(Scopes.JobsWrite)
+            .AddEndpointFilter(endpointFilter);
+        
+        group.MapPost("/{jobId:guid}/steps/sql", async (Guid jobId, SqlStepDto stepDto,
+            LinkGenerator linker, HttpContext ctx,
+            IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new CreateSqlStepCommand(
+                    JobId: jobId,
+                    StepName: stepDto.StepName,
+                    StepDescription: stepDto.StepDescription,
+                    ExecutionPhase: stepDto.ExecutionPhase,
+                    DuplicateExecutionBehaviour: stepDto.DuplicateExecutionBehaviour,
+                    IsEnabled: stepDto.IsEnabled,
+                    RetryAttempts: stepDto.RetryAttempts,
+                    RetryIntervalMinutes: stepDto.RetryIntervalMinutes,
+                    ExecutionConditionExpression: stepDto.ExecutionConditionExpression,
+                    StepTagIds: stepDto.StepTagIds,
+                    TimeoutMinutes: stepDto.TimeoutMinutes,
+                    SqlStatement: stepDto.SqlStatement,
+                    ConnectionId: stepDto.ConnectionId,
+                    ResultCaptureJobParameterId: stepDto.ResultCaptureJobParameterId);
+                var step = await mediator.SendAsync(command, cancellationToken);
+                var url = linker.GetUriByName(ctx, "GetStep", new { stepId = step.StepId });
+                return Results.Created(url, step);
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesValidationProblem()
+            .Produces<SqlStep>()
+            .WithDescription("Create a new SQL step")
+            .WithName("CreateSqlStep");
+    }
+}
