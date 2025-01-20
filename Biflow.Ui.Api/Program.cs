@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using Swashbuckle.AspNetCore.SwaggerUI;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -129,7 +130,7 @@ app.UseExceptionHandler(errorAppBuilder =>
 });    
 app.MapDefaultEndpoints();
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(options => options.DocExpansion(DocExpansion.None));
 app.UseHttpsRedirection();
 app.MapEndpoints(Assembly.GetExecutingAssembly());
 
