@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Biflow.Ui.Api.Exceptions;
+namespace Biflow.Ui.Core;
 
-public class ValidationException(IReadOnlyList<ValidationResult> results) : Exception
+public class AggregateValidationException(IReadOnlyList<ValidationResult> results) : Exception
 {
     public IReadOnlyList<ValidationResult> ValidationResults => results;
 }

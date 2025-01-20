@@ -106,8 +106,13 @@ app.UseExceptionHandler(errorAppBuilder =>
                 };
                 await Results.Problem(notFoundDetails).ExecuteAsync(httpContext);
                 return;
-            case ValidationException validationException:
-                var validationErrors = validationException.ValidationResults.ToDictionary();
+            case AggregateValidationException validationException:
+                var validationErrors = validationException.ValidationResults
+                    .SelectMany(result => result.MemberNames.Select(x => (MemberName: x, result.ErrorMessage)))
+                    .GroupBy(x => x.MemberName)
+                    .ToDictionary(
+                        key => key.Key,
+                        value => value.Select(x => x.ErrorMessage).OfType<string>().ToArray());
                 await Results.ValidationProblem(validationErrors).ExecuteAsync(httpContext);
                 return;
         }
