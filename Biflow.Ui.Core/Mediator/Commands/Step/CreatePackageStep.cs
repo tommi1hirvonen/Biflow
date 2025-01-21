@@ -17,23 +17,34 @@ internal class CreatePackageStepCommandHandler(
     StepValidator validator
 ) : CreateStepCommandHandler<CreatePackageStepCommand, PackageStep>(dbContextFactory, validator)
 {
-    protected override PackageStep CreateStep(CreatePackageStepCommand request) => new()
+    protected override async Task<PackageStep> CreateStepAsync(
+        CreatePackageStepCommand request, AppDbContext dbContext, CancellationToken cancellationToken)
     {
-        JobId = request.JobId,
-        StepName = request.StepName,
-        StepDescription = request.StepDescription,
-        ExecutionPhase = request.ExecutionPhase,
-        DuplicateExecutionBehaviour = request.DuplicateExecutionBehaviour,
-        IsEnabled = request.IsEnabled,
-        RetryAttempts = request.RetryAttempts,
-        RetryIntervalMinutes = request.RetryIntervalMinutes,
-        ExecutionConditionExpression = new EvaluationExpression { Expression = request.ExecutionConditionExpression },
-        TimeoutMinutes = request.TimeoutMinutes,
-        ConnectionId = request.ConnectionId,
-        PackageFolderName = request.PackageFolderName,
-        PackageProjectName = request.PackageProjectName,
-        PackageName = request.PackageName, 
-        ExecuteIn32BitMode = request.ExecuteIn32BitMode,
-        ExecuteAsLogin = request.ExecuteAsLogin 
-    };
+        // Check that the connection exists.
+        if (!await dbContext.MsSqlConnections.AnyAsync(c => c.ConnectionId == request.ConnectionId, cancellationToken))
+        {
+            throw new NotFoundException<MsSqlConnection>(request.ConnectionId);
+        }
+        
+        return new PackageStep
+        {
+            JobId = request.JobId,
+            StepName = request.StepName,
+            StepDescription = request.StepDescription,
+            ExecutionPhase = request.ExecutionPhase,
+            DuplicateExecutionBehaviour = request.DuplicateExecutionBehaviour,
+            IsEnabled = request.IsEnabled,
+            RetryAttempts = request.RetryAttempts,
+            RetryIntervalMinutes = request.RetryIntervalMinutes,
+            ExecutionConditionExpression = new EvaluationExpression
+                { Expression = request.ExecutionConditionExpression },
+            TimeoutMinutes = request.TimeoutMinutes,
+            ConnectionId = request.ConnectionId,
+            PackageFolderName = request.PackageFolderName,
+            PackageProjectName = request.PackageProjectName,
+            PackageName = request.PackageName,
+            ExecuteIn32BitMode = request.ExecuteIn32BitMode,
+            ExecuteAsLogin = request.ExecuteAsLogin
+        };
+    }
 }

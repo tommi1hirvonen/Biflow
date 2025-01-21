@@ -21,7 +21,8 @@ public abstract class UpdateStepCommandHandler<TCommand, TStep>(
     where TCommand : UpdateStepCommand<TStep>
     where TStep : Step
 {
-    protected abstract void UpdateProperties(TStep step, TCommand request);
+    protected abstract Task UpdatePropertiesAsync(
+        TStep step, TCommand request, AppDbContext dbContext, CancellationToken cancellationToken);
     
     public async Task<TStep> Handle(TCommand request, CancellationToken cancellationToken)
     {
@@ -53,7 +54,7 @@ public abstract class UpdateStepCommandHandler<TCommand, TStep>(
         step.RetryIntervalMinutes = request.RetryIntervalMinutes;
         step.ExecutionConditionExpression.Expression = request.ExecutionConditionExpression;
         
-        UpdateProperties(step, request);
+        await UpdatePropertiesAsync(step, request, dbContext, cancellationToken);
         
         // Synchronize tags
         var stepTagsToAdd = stepTags.Where(t1 => step.Tags.All(t2 => t2.TagId != t1.TagId));

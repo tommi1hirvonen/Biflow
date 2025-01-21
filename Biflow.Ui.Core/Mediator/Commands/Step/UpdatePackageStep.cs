@@ -17,8 +17,15 @@ internal class UpdatePackageStepCommandHandler(
     StepValidator validator
 ) : UpdateStepCommandHandler<UpdatePackageStepCommand, PackageStep>(dbContextFactory, validator)
 {
-    protected override void UpdateProperties(PackageStep step, UpdatePackageStepCommand request)
+    protected override async Task UpdatePropertiesAsync(
+        PackageStep step, UpdatePackageStepCommand request, AppDbContext dbContext, CancellationToken cancellationToken)
     {
+        // Check that the connection exists.
+        if (!await dbContext.SqlConnections.AnyAsync(c => c.ConnectionId == request.ConnectionId, cancellationToken))
+        {
+            throw new NotFoundException<SqlConnectionBase>(request.ConnectionId);
+        }
+        
         step.TimeoutMinutes = request.TimeoutMinutes;
         step.ConnectionId = request.ConnectionId;
         step.PackageFolderName = request.PackageFolderName;

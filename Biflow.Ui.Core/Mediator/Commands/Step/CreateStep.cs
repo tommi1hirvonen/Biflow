@@ -21,7 +21,8 @@ public abstract class CreateStepCommandHandler<TCommand, TStep>(
     where TCommand : CreateStepCommand<TStep>
     where TStep : Step
 {
-    protected abstract TStep CreateStep(TCommand request);
+    protected abstract Task<TStep> CreateStepAsync(
+        TCommand request, AppDbContext dbContext, CancellationToken cancellationToken);
     
     public async Task<TStep> Handle(TCommand request, CancellationToken cancellationToken)
     {
@@ -44,7 +45,7 @@ public abstract class CreateStepCommandHandler<TCommand, TStep>(
             }
         }
         
-        var step = CreateStep(request);
+        var step = await CreateStepAsync(request, dbContext, cancellationToken);
         
         foreach (var tag in stepTags) step.Tags.Add(tag);
         
