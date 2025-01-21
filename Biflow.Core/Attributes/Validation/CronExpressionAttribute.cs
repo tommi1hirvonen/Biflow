@@ -11,6 +11,6 @@ public class CronExpressionAttribute : ValidationAttribute
         var schedule = (Schedule)validationContext.ObjectInstance;
         return CronExpression.IsValidExpression(schedule.CronExpression)
             ? ValidationResult.Success!
-            : new ValidationResult("Not a valid Cron expression");
+            : new ValidationResult("Not a valid Cron expression", [validationContext.MemberName ?? "NoMemberName"]);
     }
 }
