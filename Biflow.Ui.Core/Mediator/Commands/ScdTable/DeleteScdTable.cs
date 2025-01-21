@@ -10,11 +10,9 @@ internal class DeleteScdTableCommandHandler(IDbContextFactory<AppDbContext> dbCo
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var table = await context.ScdTables
-            .FirstOrDefaultAsync(t => t.ScdTableId == request.ScdTableId, cancellationToken);
-        if (table is not null)
-        {
-            context.ScdTables.Remove(table);
-            await context.SaveChangesAsync(cancellationToken);
-        }
+            .FirstOrDefaultAsync(t => t.ScdTableId == request.ScdTableId, cancellationToken)
+            ?? throw new NotFoundException<ScdTable>(request.ScdTableId);
+        context.ScdTables.Remove(table);
+        await context.SaveChangesAsync(cancellationToken);
     }
 }
