@@ -49,6 +49,11 @@ GET {{baseUrl}}/executions
     &includeMonitors=true
 x-api-key: {{apiKey}}
 
+### Running step executions
+
+GET {{baseUrl}}/executions/steps/running
+x-api-key: {{apiKey}}
+
 ### Not started step executions
 
 GET {{baseUrl}}/executions/steps/notstarted

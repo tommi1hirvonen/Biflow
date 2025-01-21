@@ -1,0 +1,21 @@
+### Create a SQL step
+
+POST {{baseUrl}}/jobs/98ed48f1-4977-4c3c-c50b-08dd39ebf851/steps/sql
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "stepName": "API test step",
+  "stepDescription": null,
+  "executionPhase": 10,
+  "duplicateExecutionBehaviour": "Allow",
+  "isEnabled": true,
+  "retryAttempts": 1,
+  "retryIntervalMinutes": 1.5,
+  "executionConditionExpression": null,
+  "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
+  "timeoutMinutes": 0,
+  "sqlStatement": "select 1",
+  "connectionId": "2d8cf992-a71f-4ba3-3127-08dbb695f924",
+  "resultCaptureJobParameterId": null
+}

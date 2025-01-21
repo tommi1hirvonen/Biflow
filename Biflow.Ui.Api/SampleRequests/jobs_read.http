@@ -5,16 +5,11 @@ GET {{baseUrl}}
     ?includeTags=true
 x-api-key: {{apiKey}}
 
-### All job tags
-
-GET {{baseUrl}}/jobs/tags
-x-api-key: {{apiKey}}
-
 ### Job by id
 
 GET {{baseUrl}}
     /jobs
-    /418c18b9-7086-4774-8412-f9bffa097499
+    /1fb73732-1083-4dc5-74ca-08dd39e8b1d4
     ?includeParameters=true
     &includeConcurrencies=true
 x-api-key: {{apiKey}}
@@ -36,7 +31,27 @@ GET {{baseUrl}}
     /schedules
 x-api-key: {{apiKey}}
 
+### Job parameter by id
+
+GET {{baseUrl}}/jobs/parameters/81b2bca5-3398-45b1-953e-08dc4fbd5e4c
+x-api-key: {{apiKey}}
+
+### All job tags
+
+GET {{baseUrl}}/jobs/tags
+x-api-key: {{apiKey}}
+
 ### Job tag by id
 
-GET {{baseUrl}}/jobs/tags/4a65701c-38bf-4f69-9739-6517874512a1
+GET {{baseUrl}}/jobs/tags/bf390e86-58b1-4144-85aa-08dd22705f6a
+x-api-key: {{apiKey}}
+
+### All data objects
+
+GET {{baseUrl}}/dataobjects
+x-api-key: {{apiKey}}
+
+### Data object by id
+
+GET {{baseUrl}}/dataobjects/f927f054-8304-4b82-08d6-08dc66909c12
 x-api-key: {{apiKey}}

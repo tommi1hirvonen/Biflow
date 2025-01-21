@@ -7,3 +7,8 @@ x-api-key: {{apiKey}}
 
 GET {{baseUrl}}/jobs/steps/tags
 x-api-key: {{apiKey}}
+
+### Step tag by id
+
+GET {{baseUrl}}/jobs/steps/tags/1002a70f-d3b6-463a-ab69-833024ac347c
+x-api-key: {{apiKey}}

@@ -1,0 +1,62 @@
+### Create new SCD table
+
+POST {{baseUrl}}/scdtables
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "connectionId": "2d8cf992-a71f-4ba3-3127-08dbb695f924",
+  "scdTableName": "WWI InvoiceLines",
+  "sourceTableSchema": "stg",
+  "sourceTableName": "WWI_InvoiceLines",
+  "targetTableSchema": "stg",
+  "targetTableName": "WWI_InvoiceLines_SCD",
+  "stagingTableSchema": "stg",
+  "stagingTableName": "WWI_InvoiceLines_SCD_DELTA",
+  "preLoadScript": null,
+  "postLoadScript": null,
+  "fullLoad": false,
+  "applyIndexOnCreate": false,
+  "selectDistinct": true,
+  "naturalKeyColumns": ["InvoiceID", "InvoiceLineID"],
+  "schemaDriftConfiguration": {
+    "$type": "SchemaDriftEnabled",
+    "includeNewColumns": true,
+    "ignoreMissingColumns": false,
+    "excludedColumns": []
+  }
+}
+
+### Update SCD table
+
+PUT {{baseUrl}}/scdtables/edf36a08-04c7-4dce-b969-08dd39eb22b5
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "connectionId": "2d8cf992-a71f-4ba3-3127-08dbb695f924",
+  "scdTableName": "WWI InvoiceLines",
+  "sourceTableSchema": "stg",
+  "sourceTableName": "WWI_InvoiceLines",
+  "targetTableSchema": "stg",
+  "targetTableName": "WWI_InvoiceLines_SCD",
+  "stagingTableSchema": "stg",
+  "stagingTableName": "WWI_InvoiceLines_SCD_DELTA",
+  "preLoadScript": null,
+  "postLoadScript": null,
+  "fullLoad": true,
+  "applyIndexOnCreate": false,
+  "selectDistinct": true,
+  "naturalKeyColumns": ["InvoiceID", "InvoiceLineID"],
+  "schemaDriftConfiguration": {
+    "$type": "SchemaDriftEnabled",
+    "includeNewColumns": true,
+    "ignoreMissingColumns": false,
+    "excludedColumns": ["PackageTypeID"]
+  }
+}
+
+### Delete SCD table
+
+DELETE {{baseUrl}}/scdtables/edf36a08-04c7-4dce-b969-08dd39eb22b5
+x-api-key: {{apiKey}}

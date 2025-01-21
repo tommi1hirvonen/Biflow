@@ -13,12 +13,13 @@ Content-Type: application/json
     "OvertimeNotificationLimitMinutes": 0,
     "TimeoutMinutes": 0,
     "IsEnabled": true,
-    "IsPinned": false
+    "IsPinned": false,
+    "JobTagIds": []
 }
 
 ### Update job
 
-PUT {{baseUrl}}/jobs/a7828a19-191f-4ad0-705c-08dd358d135e
+PUT {{baseUrl}}/jobs/1fb73732-1083-4dc5-74ca-08dd39e8b1d4
 x-api-key: {{apiKey}}
 Content-Type: application/json
 
@@ -31,12 +32,13 @@ Content-Type: application/json
   "OvertimeNotificationLimitMinutes": 0,
   "TimeoutMinutes": 0,
   "IsEnabled": true,
-  "IsPinned": false
+  "IsPinned": false,
+  "JobTagIds": []
 }
 
 ### Update job concurrencies
 
-PUT {{baseUrl}}/jobs/a7828a19-191f-4ad0-705c-08dd358d135e/concurrencies
+PUT {{baseUrl}}/jobs/1fb73732-1083-4dc5-74ca-08dd39e8b1d4/concurrencies
 x-api-key: {{apiKey}}
 Content-Type: application/json
 
@@ -47,7 +49,7 @@ Content-Type: application/json
 
 ### Clear job concurrencies (empty array)
 
-PUT {{baseUrl}}/jobs/a7828a19-191f-4ad0-705c-08dd358d135e/concurrencies
+PUT {{baseUrl}}/jobs/1fb73732-1083-4dc5-74ca-08dd39e8b1d4/concurrencies
 x-api-key: {{apiKey}}
 Content-Type: application/json
 
@@ -67,7 +69,7 @@ Content-Type: application/json
 
 ### Update job tag
 
-PUT {{baseUrl}}/jobs/tags/797ff271-e8bd-4fc4-eb0e-08dd358d3c06
+PUT {{baseUrl}}/jobs/tags/34d4fc01-db06-4dba-ad1b-08dd39e94479
 x-api-key: {{apiKey}}
 Content-Type: application/json
 
@@ -79,20 +81,20 @@ Content-Type: application/json
 
 ### Create job tag relation
 
-POST {{baseUrl}}/jobs/418c18b9-7086-4774-8412-f9bffa097499/tags/4a65701c-38bf-4f69-9739-6517874512a1
+POST {{baseUrl}}/jobs/1fb73732-1083-4dc5-74ca-08dd39e8b1d4/tags/34d4fc01-db06-4dba-ad1b-08dd39e94479
 x-api-key: {{apiKey}}
 
 ### Delete job tag relation
 
-DELETE {{baseUrl}}/jobs/418c18b9-7086-4774-8412-f9bffa097499/tags/4a65701c-38bf-4f69-9739-6517874512a1
+DELETE {{baseUrl}}/jobs/1fb73732-1083-4dc5-74ca-08dd39e8b1d4/tags/34d4fc01-db06-4dba-ad1b-08dd39e94479
 x-api-key: {{apiKey}}
 
 ### Delete job tag
 
-DELETE {{baseUrl}}/jobs/tags/797ff271-e8bd-4fc4-eb0e-08dd358d3c06
+DELETE {{baseUrl}}/jobs/tags/34d4fc01-db06-4dba-ad1b-08dd39e94479
 x-api-key: {{apiKey}}
 
 ### Delete job
 
-DELETE {{baseUrl}}/jobs/a7828a19-191f-4ad0-705c-08dd358d135e
+DELETE {{baseUrl}}/jobs/1fb73732-1083-4dc5-74ca-08dd39e8b1d4
 x-api-key: {{apiKey}}

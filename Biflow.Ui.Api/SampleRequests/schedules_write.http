@@ -1,0 +1,73 @@
+### Create schedule
+
+POST {{baseUrl}}/jobs/98ed48f1-4977-4c3c-c50b-08dd39ebf851/schedules
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "scheduleName": "API test schedule",
+  "cronExpression": "0 0 0 * * ?",
+  "isEnabled": true,
+  "disallowConcurrentExecution": true,
+  "scheduleTagIds": [],
+  "filterStepTagIds": []
+}
+
+### Update a schedule
+
+PUT {{baseUrl}}/jobs/schedules/c0527359-332b-44df-882a-08dd39ee7f61
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "scheduleName": "API test schedule",
+  "cronExpression": "0 0 0 * * ?",
+  "isEnabled": false,
+  "disallowConcurrentExecution": true,
+  "scheduleTagIds": [],
+  "filterStepTagIds": []
+}
+
+### Update the state of a schedule
+
+PATCH {{baseUrl}}/jobs/schedules/c0527359-332b-44df-882a-08dd39ee7f61/state
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "isEnabled": true
+}
+
+### Delete a schedule
+
+DELETE {{baseUrl}}/jobs/schedules/c0527359-332b-44df-882a-08dd39ee7f61
+x-api-key: {{apiKey}}
+
+### Create a schedule tag
+
+POST {{baseUrl}}/jobs/schedules/tags
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "tagName": "test-schedule-tag",
+  "color": "DarkGray",
+  "sortOrder": 0
+}
+
+### Update a schedule tag
+
+PUT {{baseUrl}}/jobs/schedules/tags/96bca7e8-28ed-4f4c-5a0c-08dd39ef165c
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "tagName": "test-schedule-tag",
+  "color": "DarkGray",
+  "sortOrder": 10
+}
+
+### Delete a schedule tag
+
+DELETE {{baseUrl}}/jobs/schedules/tags/96bca7e8-28ed-4f4c-5a0c-08dd39ef165c
+x-api-key: {{apiKey}}

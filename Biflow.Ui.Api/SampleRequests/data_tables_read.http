@@ -12,3 +12,8 @@ x-api-key: {{apiKey}}
 
 GET {{baseUrl}}/datatables/categories
 x-api-key: {{apiKey}}
+
+### Data table category by id
+
+GET {{baseUrl}}/datatables/categories/9fec1718-51e6-4409-2bfc-08dadd375046
+x-api-key: {{apiKey}}

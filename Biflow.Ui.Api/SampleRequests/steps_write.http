@@ -1,0 +1,53 @@
+### Delete a step
+
+DELETE {{baseUrl}}/jobs/steps/dcac8ebc-4f95-4b9c-ce37-08dd39f38a26
+x-api-key: {{apiKey}}
+
+### Update step state
+
+PATCH {{baseUrl}}/jobs/steps/dcac8ebc-4f95-4b9c-ce37-08dd39f38a26/state
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "isEnabled": false
+}
+
+### Create step tag
+
+POST {{baseUrl}}/jobs/steps/tags
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "tagName": "api-tag",
+  "color": "DarkGray",
+  "sortOrder": 10
+}
+
+### Update step tag
+
+PUT {{baseUrl}}/jobs/steps/tags/2ea27483-fce9-439c-4a65-08dd39f36d8a
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "tagName": "api-tag-updated",
+  "color": "LightGray",
+  "sortOrder": 10
+}
+
+### Create step tag relation
+
+POST {{baseUrl}}/jobs/steps/dcac8ebc-4f95-4b9c-ce37-08dd39f38a26/tags/2ea27483-fce9-439c-4a65-08dd39f36d8a
+x-api-key: {{apiKey}}
+
+### Delete step tag relation
+
+DELETE {{baseUrl}}/jobs/steps/dcac8ebc-4f95-4b9c-ce37-08dd39f38a26/tags/2ea27483-fce9-439c-4a65-08dd39f36d8a
+x-api-key: {{apiKey}}
+
+### Delete a step tag
+
+DELETE {{baseUrl}}/jobs/steps/tags/2ea27483-fce9-439c-4a65-08dd39f36d8a
+x-api-key: {{apiKey}}
