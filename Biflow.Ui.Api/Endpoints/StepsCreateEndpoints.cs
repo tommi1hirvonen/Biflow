@@ -39,7 +39,7 @@ public abstract class StepsCreateEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesValidationProblem()
-            .Produces<SqlStep>()
+            .Produces<SqlStep>(StatusCodes.Status201Created)
             .WithDescription("Create a new SQL step")
             .WithName("CreateSqlStep");
         
@@ -73,7 +73,7 @@ public abstract class StepsCreateEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesValidationProblem()
-            .Produces<PackageStep>()
+            .Produces<PackageStep>(StatusCodes.Status201Created)
             .WithDescription("Create a new SSIS package step")
             .WithName("CreatePackageStep");
     }
