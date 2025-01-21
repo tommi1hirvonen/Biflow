@@ -8,7 +8,7 @@ public record SqlStepDto(
     DuplicateExecutionBehaviour DuplicateExecutionBehaviour,
     bool IsEnabled,
     int RetryAttempts,
-    int RetryIntervalMinutes,
+    double RetryIntervalMinutes,
     string? ExecutionConditionExpression,
     Guid[] StepTagIds,
     int TimeoutMinutes,
