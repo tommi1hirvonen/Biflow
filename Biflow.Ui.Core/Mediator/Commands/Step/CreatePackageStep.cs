@@ -17,10 +17,6 @@ internal class CreatePackageStepCommandHandler(
     StepValidator validator
 ) : CreateStepCommandHandler<CreatePackageStepCommand, PackageStep>(dbContextFactory, validator)
 {
-    protected override Guid GetJobId(CreatePackageStepCommand request) => request.JobId;
-
-    protected override Guid[] GetStepTagIds(CreatePackageStepCommand request) => request.StepTagIds;
-
     protected override PackageStep CreateStep(CreatePackageStepCommand request) => new()
     {
         JobId = request.JobId,

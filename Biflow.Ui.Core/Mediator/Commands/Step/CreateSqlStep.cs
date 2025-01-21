@@ -14,10 +14,6 @@ internal class CreateSqlStepCommandHandler(
     StepValidator validator
     ) : CreateStepCommandHandler<CreateSqlStepCommand, SqlStep>(dbContextFactory, validator)
 {
-    protected override Guid GetJobId(CreateSqlStepCommand request) => request.JobId;
-
-    protected override Guid[] GetStepTagIds(CreateSqlStepCommand request) => request.StepTagIds;
-
     protected override SqlStep CreateStep(CreateSqlStepCommand request) => new()
     {
         JobId = request.JobId,

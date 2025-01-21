@@ -18,32 +18,25 @@ public abstract class CreateStepCommandHandler<TCommand, TStep>(
     IDbContextFactory<AppDbContext> dbContextFactory,
     StepValidator validator
     ) : IRequestHandler<TCommand, TStep>
-    where TCommand : IRequest<TStep>
+    where TCommand : CreateStepCommand<TStep>
     where TStep : Step
 {
-    protected abstract Guid GetJobId(TCommand request);
-    
-    protected abstract Guid[] GetStepTagIds(TCommand request);
-    
     protected abstract TStep CreateStep(TCommand request);
     
     public async Task<TStep> Handle(TCommand request, CancellationToken cancellationToken)
     {
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-
-        var jobId = GetJobId(request);
-        var stepTagIds = GetStepTagIds(request);
         
-        if (!await dbContext.Jobs.AnyAsync(j => j.JobId == jobId, cancellationToken))
+        if (!await dbContext.Jobs.AnyAsync(j => j.JobId == request.JobId, cancellationToken))
         {
-            throw new NotFoundException<Job>(jobId);
+            throw new NotFoundException<Job>(request.JobId);
         }
         
         var stepTags = await dbContext.StepTags
-            .Where(t => stepTagIds.Contains(t.TagId))
+            .Where(t => request.StepTagIds.Contains(t.TagId))
             .ToArrayAsync(cancellationToken);
 
-        foreach (var id in stepTagIds)
+        foreach (var id in request.StepTagIds)
         {
             if (stepTags.All(t => t.TagId != id))
             {
