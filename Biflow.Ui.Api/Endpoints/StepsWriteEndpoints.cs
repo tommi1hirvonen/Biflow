@@ -14,18 +14,6 @@ public abstract class StepsWriteEndpoints : IEndpoints
             .WithTags(Scopes.JobsWrite)
             .AddEndpointFilter(endpointFilter);
         
-        group.MapPost("/{stepId:guid}/tags/{tagId:guid}",
-            async (Guid stepId, Guid tagId, IMediator mediator, CancellationToken cancellationToken) =>
-            {
-                var command = new CreateStepTagRelationCommand(stepId, tagId);
-                await mediator.SendAsync(command, cancellationToken);
-                return Results.NoContent();
-            })
-            .ProducesProblem(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status204NoContent)
-            .WithDescription("Create a step tag relation")
-            .WithName("CreateStepTagRelation");
-        
         group.MapDelete("/{stepId:guid}",
             async (Guid stepId, IMediator mediator, CancellationToken cancellationToken) =>
             {
@@ -54,6 +42,18 @@ public abstract class StepsWriteEndpoints : IEndpoints
             .WithDescription("Toggle the state of an existing step")
             .WithName("ToggleStepEnabled");
         
+        group.MapPost("/{stepId:guid}/tags/{tagId:guid}",
+            async (Guid stepId, Guid tagId, IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new CreateStepTagRelationCommand(stepId, tagId);
+                await mediator.SendAsync(command, cancellationToken);
+                return Results.NoContent();
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status204NoContent)
+            .WithDescription("Create a step tag relation")
+            .WithName("CreateStepTagRelation");
+        
         group.MapDelete("/{stepId:guid}/tags/{tagId:guid}",
             async (Guid stepId, Guid tagId, IMediator mediator, CancellationToken cancellationToken) =>
             {
@@ -65,6 +65,36 @@ public abstract class StepsWriteEndpoints : IEndpoints
             .Produces(StatusCodes.Status204NoContent)
             .WithDescription("Delete a step tag relation")
             .WithName("DeleteStepTagRelation");
+
+        group.MapPost("/tags", async (TagDto tagDto, IMediator mediator,
+            LinkGenerator linker, HttpContext ctx, CancellationToken cancellationToken) =>
+            {
+                var command = new CreateStepTagCommand(tagDto.TagName, tagDto.Color, tagDto.SortOrder);
+                var tag = await mediator.SendAsync(command, cancellationToken);
+                var url = linker.GetUriByName(ctx, "GetStepTag", new { tagId = tag.TagId });
+                return Results.Created(url, tag);
+            })
+            .ProducesValidationProblem()
+            .Produces<StepTag>(StatusCodes.Status201Created)
+            .WithDescription("Create a new step tag")
+            .WithName("CreateStepTag");
+        
+        group.MapPut("/tags/{tagId:guid}",
+                async (Guid tagId, TagDto tagDto, IMediator mediator, CancellationToken cancellationToken) =>
+                {
+                    var command = new UpdateStepTagCommand(
+                        TagId: tagId,
+                        TagName: tagDto.TagName,
+                        Color: tagDto.Color,
+                        SortOrder: tagDto.SortOrder);
+                    var tag = await mediator.SendAsync(command, cancellationToken);
+                    return Results.Ok(tag);
+                })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesValidationProblem()
+            .Produces<StepTag>()
+            .WithDescription("Update an existing step tag")
+            .WithName("UpdateStepTag");
         
         group.MapDelete("/tags/{tagId:guid}",
             async (Guid tagId, IMediator mediator, CancellationToken cancellationToken) =>
