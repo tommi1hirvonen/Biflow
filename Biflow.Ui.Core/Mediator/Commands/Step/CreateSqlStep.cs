@@ -1,20 +1,12 @@
 namespace Biflow.Ui.Core;
 
-public record CreateSqlStepCommand(
-    Guid JobId,
-    string StepName,
-    string? StepDescription,
-    int ExecutionPhase,
-    DuplicateExecutionBehaviour DuplicateExecutionBehaviour,
-    bool IsEnabled,
-    int RetryAttempts,
-    double RetryIntervalMinutes,
-    string? ExecutionConditionExpression,
-    Guid[] StepTagIds,
-    int TimeoutMinutes,
-    string SqlStatement,
-    Guid ConnectionId,
-    Guid? ResultCaptureJobParameterId) : IRequest<SqlStep>;
+public class CreateSqlStepCommand : CreateStepCommand<SqlStep>
+{
+    public required int TimeoutMinutes { get; init; }
+    public required string SqlStatement { get; init; }
+    public required Guid ConnectionId { get; init; }
+    public required Guid? ResultCaptureJobParameterId { get; init; }
+}
 
 [UsedImplicitly]
 internal class CreateSqlStepCommandHandler(

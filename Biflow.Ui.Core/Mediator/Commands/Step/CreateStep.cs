@@ -1,5 +1,19 @@
 namespace Biflow.Ui.Core;
 
+public abstract class CreateStepCommand<TStep> : IRequest<TStep> where TStep : Step
+{
+    public required Guid JobId { get; init; }
+    public required string StepName { get; init; }
+    public required string? StepDescription { get; init; }
+    public required int ExecutionPhase { get; init; }
+    public required DuplicateExecutionBehaviour DuplicateExecutionBehaviour { get; init; }
+    public required bool IsEnabled { get; init; }
+    public required int RetryAttempts { get; init; }
+    public required double RetryIntervalMinutes { get; init; }
+    public required string? ExecutionConditionExpression { get; init; }
+    public required Guid[] StepTagIds { get; init; }
+}
+
 public abstract class CreateStepCommandHandler<TCommand, TStep>(
     IDbContextFactory<AppDbContext> dbContextFactory,
     StepValidator validator
