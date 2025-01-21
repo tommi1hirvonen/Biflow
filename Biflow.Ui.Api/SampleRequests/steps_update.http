@@ -1,0 +1,47 @@
+### Update SQL step
+
+PUT {{baseUrl}}/jobs/steps/sql/44070352-9273-48ca-44d5-08dd3a518435
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "stepName": "API test step",
+  "stepDescription": null,
+  "executionPhase": 10,
+  "duplicateExecutionBehaviour": "Allow",
+  "isEnabled": true,
+  "retryAttempts": 1,
+  "retryIntervalMinutes": 1.5,
+  "executionConditionExpression": null,
+  "stepTagIds": [],
+  "timeoutMinutes": 0,
+  "sqlStatement": "select 1",
+  "connectionId": "2d8cf992-a71f-4ba3-3127-08dbb695f924",
+  "resultCaptureJobParameterId": null
+}
+
+### Update package step
+
+PUT {{baseUrl}}/jobs/steps/package/265b1dd8-9e89-469c-44d6-08dd3a518435
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "stepName": "API test step",
+  "stepDescription": null,
+  "executionPhase": 10,
+  "duplicateExecutionBehaviour": "Allow",
+  "isEnabled": true,
+  "retryAttempts": 1,
+  "retryIntervalMinutes": 1.5,
+  "executionConditionExpression": null,
+  "stepTagIds": [],
+  "timeoutMinutes": 0,
+  "sqlStatement": "select 1",
+  "connectionId":  "2d8cf992-a71f-4ba3-3127-08dbb695f924",
+  "packageFolderName": "DemoDW",
+  "packageProjectName":  "DemoDW_STG_WWI",
+  "packageName": "STG_InvoiceLines.dtsx",
+  "executeIn32BitMode": true,
+  "executeAsLogin": null
+}
