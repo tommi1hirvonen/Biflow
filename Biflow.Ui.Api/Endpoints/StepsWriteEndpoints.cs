@@ -42,6 +42,21 @@ public abstract class StepsWriteEndpoints : IEndpoints
             .WithDescription("Toggle the state of an existing step")
             .WithName("ToggleStepEnabled");
         
+        group.MapPut("/{stepId:guid}/dependencies", async (Guid stepId, DependencyDto[] dependencyDtos,
+            IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var dictionary = dependencyDtos.ToDictionary(
+                    key => key.DependentOnStepId,
+                    value => value.DependencyType);
+                var command = new UpdateStepDependenciesCommand(stepId, dictionary);
+                var dependencies = await mediator.SendAsync(command, cancellationToken);
+                return Results.Ok(dependencies);
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces<Dependency[]>()
+            .WithDescription("Update the dependencies of an existing step")
+            .WithName("UpdateStepDependencies");
+        
         group.MapPost("/{stepId:guid}/tags/{tagId:guid}",
             async (Guid stepId, Guid tagId, IMediator mediator, CancellationToken cancellationToken) =>
             {

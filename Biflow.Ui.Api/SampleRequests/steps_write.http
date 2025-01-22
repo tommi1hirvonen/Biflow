@@ -13,6 +13,27 @@ Content-Type: application/json
   "isEnabled": false
 }
 
+### Update step dependencies
+
+PUT {{baseUrl}}/jobs/steps/1f4de1d1-0f99-4ec5-9008-08dd3accedf7/dependencies
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+[
+  {
+    "dependentOnStepId": "3aad4f9d-dc9c-42ec-9009-08dd3accedf7",
+    "dependencyType": "OnSucceeded"
+  }
+]
+
+### Clear step dependencies (empty json array)
+
+PUT {{baseUrl}}/jobs/steps/1f4de1d1-0f99-4ec5-9008-08dd3accedf7/dependencies
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+[]
+
 ### Create step tag
 
 POST {{baseUrl}}/jobs/steps/tags
