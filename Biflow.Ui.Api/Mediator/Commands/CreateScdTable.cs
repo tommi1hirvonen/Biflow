@@ -46,7 +46,7 @@ internal class CreateScdTableCommandHandler(
             SchemaDriftConfiguration = request.SchemaDriftConfiguration
         };
         table.EnsureDataAnnotationsValidated();
-        validator.EnsureValidated(table);
+        await validator.EnsureValidatedAsync(table, cancellationToken);
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         dbContext.ScdTables.Add(table);
         await dbContext.SaveChangesAsync(cancellationToken);

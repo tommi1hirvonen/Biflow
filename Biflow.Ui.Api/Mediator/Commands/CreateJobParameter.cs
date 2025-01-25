@@ -30,7 +30,7 @@ internal class CreateJobParameterCommandHandler(
         };
         jobParameter.EnsureDataAnnotationsValidated();
         job.JobParameters.Add(jobParameter);
-        jobValidator.EnsureValidated(job);
+        await jobValidator.EnsureValidatedAsync(job, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
         return jobParameter;
     }

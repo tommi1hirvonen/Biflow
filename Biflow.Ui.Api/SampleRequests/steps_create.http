@@ -35,7 +35,8 @@ Content-Type: application/json
       ]
     }
   ],
-  "dependencies": []
+  "dependencies": [],
+  "executionConditionParameters": []
 }
 
 ### Create a package step
@@ -65,5 +66,13 @@ Content-Type: application/json
   "parameters": [],
   "dependencies": [
     { "dependentOnStepId": "4cedf210-25ca-43e3-bf8c-08dd3b0d900a", "dependencyType": "OnCompleted" }
+  ],
+  "executionConditionParameters": [
+    {
+      "parameterId": null,
+      "parameterName": "paramX",
+      "parameterValue": { "valueType": "String", "valueString": "hello world" },
+      "inheritFromJobParameterId": null
+    }
   ]
 }

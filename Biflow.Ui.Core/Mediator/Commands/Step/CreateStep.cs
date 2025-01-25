@@ -13,6 +13,7 @@ public abstract class CreateStepCommand<TStep> : IRequest<TStep> where TStep : S
     public required string? ExecutionConditionExpression { get; init; }
     public required Guid[] StepTagIds { get; init; }
     public required IDictionary<Guid, DependencyType> Dependencies { get; init; }
+    public required CreateExecutionConditionParameter[] ExecutionConditionParameters { get; init; }
 }
 
 public abstract class CreateStepCommandHandler<TCommand, TStep>(
@@ -72,9 +73,17 @@ public abstract class CreateStepCommandHandler<TCommand, TStep>(
         
         foreach (var tag in stepTags)
             step.Tags.Add(tag);
+
+        foreach (var parameter in request.ExecutionConditionParameters)
+            step.ExecutionConditionParameters.Add(new ExecutionConditionParameter
+            {
+               ParameterName = parameter.ParameterName,
+               ParameterValue = parameter.ParameterValue,
+               JobParameterId = parameter.InheritFromJobParameterId
+            });
         
         step.EnsureDataAnnotationsValidated();
-        validator.EnsureValidated(step);
+        await validator.EnsureValidatedAsync(step, cancellationToken);
         
         dbContext.Steps.Add(step);
         await dbContext.SaveChangesAsync(cancellationToken);

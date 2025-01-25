@@ -13,4 +13,5 @@ public abstract record StepDto
     public required string? ExecutionConditionExpression { get; init; }
     public required Guid[] StepTagIds { get; init; }
     public required DependencyDto[] Dependencies { get; init; }
+    public required ExecutionConditionParameterDto[] ExecutionConditionParameters { get; init; }
 }

@@ -18,6 +18,13 @@ public abstract class StepsUpdateEndpoints : IEndpoints
                 var dependencies = stepDto.Dependencies.ToDictionary(
                     key => key.DependentOnStepId,
                     value => value.DependencyType);
+                var executionConditionParameters = stepDto.ExecutionConditionParameters
+                    .Select(p => new UpdateExecutionConditionParameter(
+                        p.ParameterId,
+                        p.ParameterName,
+                        p.ParameterValue,
+                        p.InheritFromJobParameterId))
+                    .ToArray();
                 var parameters = stepDto.Parameters
                     .Select(p => new UpdateStepParameter(
                         p.ParameterId,
@@ -47,7 +54,8 @@ public abstract class StepsUpdateEndpoints : IEndpoints
                     ConnectionId = stepDto.ConnectionId,
                     ResultCaptureJobParameterId = stepDto.ResultCaptureJobParameterId,
                     Parameters = parameters,
-                    Dependencies = dependencies
+                    Dependencies = dependencies,
+                    ExecutionConditionParameters = executionConditionParameters
                 };
                 var step = await mediator.SendAsync(command, cancellationToken);
                 return Results.Ok(step);
@@ -64,6 +72,13 @@ public abstract class StepsUpdateEndpoints : IEndpoints
                 var dependencies = stepDto.Dependencies.ToDictionary(
                     key => key.DependentOnStepId,
                     value => value.DependencyType);
+                var executionConditionParameters = stepDto.ExecutionConditionParameters
+                    .Select(p => new UpdateExecutionConditionParameter(
+                        p.ParameterId,
+                        p.ParameterName,
+                        p.ParameterValue,
+                        p.InheritFromJobParameterId))
+                    .ToArray();
                 var parameters = stepDto.Parameters
                     .Select(p => new UpdatePackageStepParameter(
                         p.ParameterId,
@@ -97,7 +112,8 @@ public abstract class StepsUpdateEndpoints : IEndpoints
                     ExecuteIn32BitMode = stepDto.ExecuteIn32BitMode,
                     ExecuteAsLogin = stepDto.ExecuteAsLogin,
                     Parameters = parameters,
-                    Dependencies = dependencies
+                    Dependencies = dependencies,
+                    ExecutionConditionParameters = executionConditionParameters
                 };
                 var step = await mediator.SendAsync(command, cancellationToken);
                 return Results.Ok(step);

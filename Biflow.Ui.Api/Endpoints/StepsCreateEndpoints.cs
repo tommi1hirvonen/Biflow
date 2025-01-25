@@ -19,6 +19,12 @@ public abstract class StepsCreateEndpoints : IEndpoints
                 var dependencies = stepDto.Dependencies.ToDictionary(
                     key => key.DependentOnStepId,
                     value => value.DependencyType);
+                var executionConditionParameters = stepDto.ExecutionConditionParameters
+                    .Select(p => new CreateExecutionConditionParameter(
+                        p.ParameterName,
+                        p.ParameterValue,
+                        p.InheritFromJobParameterId))
+                    .ToArray();
                 var parameters = stepDto.Parameters
                     .Select(p => new CreateStepParameter(
                         p.ParameterName,
@@ -47,7 +53,8 @@ public abstract class StepsCreateEndpoints : IEndpoints
                     ConnectionId = stepDto.ConnectionId,
                     ResultCaptureJobParameterId = stepDto.ResultCaptureJobParameterId,
                     Parameters = parameters,
-                    Dependencies = dependencies
+                    Dependencies = dependencies,
+                    ExecutionConditionParameters = executionConditionParameters
                 };
                 var step = await mediator.SendAsync(command, cancellationToken);
                 var url = linker.GetUriByName(ctx, "GetStep", new { stepId = step.StepId });
@@ -66,6 +73,12 @@ public abstract class StepsCreateEndpoints : IEndpoints
                 var dependencies = stepDto.Dependencies.ToDictionary(
                     key => key.DependentOnStepId,
                     value => value.DependencyType);
+                var executionConditionParameters = stepDto.ExecutionConditionParameters
+                    .Select(p => new CreateExecutionConditionParameter(
+                        p.ParameterName,
+                        p.ParameterValue,
+                        p.InheritFromJobParameterId))
+                    .ToArray();
                 var parameters = stepDto.Parameters
                     .Select(p => new CreatePackageStepParameter(
                         p.ParameterName,
@@ -98,7 +111,8 @@ public abstract class StepsCreateEndpoints : IEndpoints
                     ExecuteIn32BitMode = stepDto.ExecuteIn32BitMode,
                     ExecuteAsLogin = stepDto.ExecuteAsLogin,
                     Parameters = parameters,
-                    Dependencies = dependencies
+                    Dependencies = dependencies,
+                    ExecutionConditionParameters = executionConditionParameters
                 };
                 var step = await mediator.SendAsync(command, cancellationToken);
                 var url = linker.GetUriByName(ctx, "GetStep", new { stepId = step.StepId });

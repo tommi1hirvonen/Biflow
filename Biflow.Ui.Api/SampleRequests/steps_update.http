@@ -35,12 +35,13 @@ Content-Type: application/json
       ]
     }
   ],
-  "dependencies": []
+  "dependencies": [],
+  "executionConditionParameters": []
 }
 
 ### Update package step
 
-PUT {{baseUrl}}/jobs/steps/package/b5714386-fa7c-4b1b-70eb-08dd3d294e73
+PUT {{baseUrl}}/jobs/steps/package/f3765f50-cb22-48e8-5ee9-08dd3d6ebf8e
 x-api-key: {{apiKey}}
 Content-Type: application/json
 
@@ -75,5 +76,13 @@ Content-Type: application/json
   ],
   "dependencies": [
     { "dependentOnStepId": "4cedf210-25ca-43e3-bf8c-08dd3b0d900a", "dependencyType": "OnSucceeded" }
+  ],
+  "executionConditionParameters": [
+    {
+      "parameterId": null,
+      "parameterName": "paramY",
+      "parameterValue": { "valueType": "Int32", "valueInt32": 123 },
+      "inheritFromJobParameterId": null
+    }
   ]
 }

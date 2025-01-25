@@ -28,7 +28,7 @@ internal class UpdateJobConcurrenciesCommandHandler(
         {
             jobConcurrency.EnsureDataAnnotationsValidated();
         }
-        jobValidator.EnsureValidated(job);
+        await jobValidator.EnsureValidatedAsync(job, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

@@ -14,9 +14,10 @@ public static class ValidationExtensions
         }
     }
 
-    public static void EnsureValidated<T>(this AbstractValidator<T> validator, T model)
+    public static async Task EnsureValidatedAsync<T>(this AbstractValidator<T> validator, T model,
+        CancellationToken cancellationToken = default)
     {
-        if (validator.Validate(model) is not { IsValid: false, Errors: var errors })
+        if (await validator.ValidateAsync(model, cancellationToken) is not { IsValid: false, Errors: var errors })
         {
             return;
         }

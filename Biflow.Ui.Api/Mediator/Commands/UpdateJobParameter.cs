@@ -28,7 +28,7 @@ internal class UpdateJobParameterCommandHandler(
         jobParameter.UseExpression = request.UseExpression;
         jobParameter.Expression.Expression = request.Expression;
         jobParameter.EnsureDataAnnotationsValidated();
-        jobValidator.EnsureValidated(job);
+        await jobValidator.EnsureValidatedAsync(job, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
         return jobParameter;
     }

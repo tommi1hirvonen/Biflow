@@ -13,6 +13,7 @@ public abstract class UpdateStepCommand<TStep> : IRequest<TStep> where TStep : S
     public required string? ExecutionConditionExpression { get; init; }
     public required Guid[] StepTagIds { get; init; }
     public required IDictionary<Guid, DependencyType> Dependencies { get; init; }
+    public required UpdateExecutionConditionParameter[] ExecutionConditionParameters { get; init; }
 }
 
 public abstract class UpdateStepCommandHandler<TCommand, TStep>(
@@ -40,10 +41,12 @@ public abstract class UpdateStepCommandHandler<TCommand, TStep>(
         
         await UpdateTypeSpecificPropertiesAsync(step, request, dbContext, cancellationToken);
         await SynchronizeDependenciesAsync(step, request.Dependencies, dbContext, cancellationToken);
+        await SynchronizeExecutionConditionParametersAsync(step, request.ExecutionConditionParameters, dbContext,
+            cancellationToken);
         await SynchronizeTagsAsync(step, request.StepTagIds, dbContext, cancellationToken);
         
         step.EnsureDataAnnotationsValidated();
-        validator.EnsureValidated(step);
+        await validator.EnsureValidatedAsync(step, cancellationToken);
         
         await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -173,6 +176,67 @@ public abstract class UpdateStepCommandHandler<TCommand, TStep>(
             .ToArray();
         
         foreach (var dependency in dependenciesToRemove) step.Dependencies.Remove(dependency);
+    }
+
+    private static async Task SynchronizeExecutionConditionParametersAsync(
+        Step step,
+        UpdateExecutionConditionParameter[] parameters,
+        AppDbContext dbContext,
+        CancellationToken cancellationToken)
+    {
+        // Fetch potential job parameter ids from DB and check matching ids.
+        if (parameters.Any(x => x.InheritFromJobParameterId is not null))
+        {
+            var jobParameterIds = parameters
+                .Select(x => x.InheritFromJobParameterId)
+                .OfType<Guid>()
+                .ToArray();
+            var jobParameterIdsFromDb = await dbContext
+                .Set<JobParameter>()
+                .Where(x => jobParameterIds.Contains(x.ParameterId))
+                .Select(x => x.ParameterId)
+                .ToArrayAsync(cancellationToken);
+            foreach (var id in jobParameterIdsFromDb)
+            {
+                if (!jobParameterIdsFromDb.Contains(id))
+                {
+                    throw new NotFoundException<JobParameter>(id);
+                }
+            }
+        }
+        
+        // Remove parameters
+        var parametersToRemove = step.ExecutionConditionParameters
+            .Where(p1 => parameters.All(p2 => p2.ParameterId != p1.ParameterId))
+            .ToArray();
+        foreach (var parameter in parametersToRemove)
+        {
+            step.ExecutionConditionParameters.Remove(parameter);
+        }
+        
+        // Update matching parameters
+        foreach (var parameter in step.ExecutionConditionParameters)
+        {
+            var updateParameter = parameters
+                .FirstOrDefault(p => p.ParameterId == parameter.ParameterId);
+            if (updateParameter is null) continue;
+            parameter.ParameterName = updateParameter.ParameterName;
+            parameter.ParameterValue = updateParameter.ParameterValue;
+            parameter.JobParameterId = updateParameter.InheritFromJobParameterId;
+        }
+
+        // Add parameters
+        var parametersToAdd = parameters
+            .Where(p1 => step.ExecutionConditionParameters.All(p2 => p2.ParameterId != p1.ParameterId));
+        foreach (var createParameter in parametersToAdd)
+        {
+            step.ExecutionConditionParameters.Add(new ExecutionConditionParameter
+            {
+                ParameterName = createParameter.ParameterName,
+                ParameterValue = createParameter.ParameterValue,
+                JobParameterId = createParameter.InheritFromJobParameterId
+            });
+        }
     }
 
     private static async Task SynchronizeTagsAsync(

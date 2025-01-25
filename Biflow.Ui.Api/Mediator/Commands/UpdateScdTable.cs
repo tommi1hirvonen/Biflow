@@ -55,7 +55,7 @@ internal class UpdateScdTableCommandHandler(
         scdTable.SchemaDriftConfiguration = request.SchemaDriftConfiguration;
         
         scdTable.EnsureDataAnnotationsValidated();
-        validator.EnsureValidated(scdTable);
+        await validator.EnsureValidatedAsync(scdTable, cancellationToken);
         
         dbContext.Entry(scdTable).Property(x => x.SchemaDriftConfiguration).IsModified = true;
         await dbContext.SaveChangesAsync(cancellationToken);
