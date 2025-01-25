@@ -26,7 +26,7 @@ public abstract class UpdateStepCommandHandler<TCommand, TStep>(
     protected abstract Task UpdatePropertiesAsync(
         TStep step, TCommand request, AppDbContext dbContext, CancellationToken cancellationToken);
 
-    protected virtual void SynchronizeParameters<TParameter, TUpdateParameter>(
+    protected void SynchronizeParameters<TParameter, TUpdateParameter>(
         IHasStepParameters<TParameter> step,
         TUpdateParameter[] parameters,
         Func<TUpdateParameter, TParameter> parameterDelegate)

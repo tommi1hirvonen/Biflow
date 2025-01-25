@@ -66,7 +66,7 @@ internal class UpdatePackageStepCommandHandler(
                 InheritFromJobParameterId = parameter.InheritFromJobParameterId
             });
         
-        // Update matching parameters
+        // Update ParameterLevel for matching parameters as SynchronizeParameters() does not handle that.
         foreach (var parameter in step.StepParameters)
         {
             var updateParameter = request.Parameters
