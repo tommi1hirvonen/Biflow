@@ -15,6 +15,9 @@ public abstract class StepsUpdateEndpoints : IEndpoints
         group.MapPut("/steps/sql/{stepId:guid}", async (Guid stepId, SqlStepDto stepDto,
             IMediator mediator, CancellationToken cancellationToken) =>
             {
+                var dependencies = stepDto.Dependencies.ToDictionary(
+                    key => key.DependentOnStepId,
+                    value => value.DependencyType);
                 var parameters = stepDto.Parameters
                     .Select(p => new UpdateStepParameter(
                         p.ParameterId,
@@ -43,7 +46,8 @@ public abstract class StepsUpdateEndpoints : IEndpoints
                     SqlStatement = stepDto.SqlStatement,
                     ConnectionId = stepDto.ConnectionId,
                     ResultCaptureJobParameterId = stepDto.ResultCaptureJobParameterId,
-                    Parameters = parameters
+                    Parameters = parameters,
+                    Dependencies = dependencies
                 };
                 var step = await mediator.SendAsync(command, cancellationToken);
                 return Results.Ok(step);
@@ -57,6 +61,9 @@ public abstract class StepsUpdateEndpoints : IEndpoints
         group.MapPut("/steps/package/{stepId:guid}", async (Guid stepId, PackageStepDto stepDto,
                 IMediator mediator, CancellationToken cancellationToken) =>
             {
+                var dependencies = stepDto.Dependencies.ToDictionary(
+                    key => key.DependentOnStepId,
+                    value => value.DependencyType);
                 var parameters = stepDto.Parameters
                     .Select(p => new UpdatePackageStepParameter(
                         p.ParameterId,
@@ -89,7 +96,8 @@ public abstract class StepsUpdateEndpoints : IEndpoints
                     PackageName = stepDto.PackageName,
                     ExecuteIn32BitMode = stepDto.ExecuteIn32BitMode,
                     ExecuteAsLogin = stepDto.ExecuteAsLogin,
-                    Parameters = parameters
+                    Parameters = parameters,
+                    Dependencies = dependencies
                 };
                 var step = await mediator.SendAsync(command, cancellationToken);
                 return Results.Ok(step);

@@ -12,6 +12,7 @@ public abstract class UpdateStepCommand<TStep> : IRequest<TStep> where TStep : S
     public required double RetryIntervalMinutes { get; init; }
     public required string? ExecutionConditionExpression { get; init; }
     public required Guid[] StepTagIds { get; init; }
+    public required IDictionary<Guid, DependencyType> Dependencies { get; init; }
 }
 
 public abstract class UpdateStepCommandHandler<TCommand, TStep>(
@@ -38,7 +39,7 @@ public abstract class UpdateStepCommandHandler<TCommand, TStep>(
         step.ExecutionConditionExpression.Expression = request.ExecutionConditionExpression;
         
         await UpdateTypeSpecificPropertiesAsync(step, request, dbContext, cancellationToken);
-        
+        await SynchronizeDependenciesAsync(step, request.Dependencies, dbContext, cancellationToken);
         await SynchronizeTagsAsync(step, request.StepTagIds, dbContext, cancellationToken);
         
         step.EnsureDataAnnotationsValidated();
@@ -125,6 +126,53 @@ public abstract class UpdateStepCommandHandler<TCommand, TStep>(
                     expressionParameter.InheritFromJobParameterId);
             }
         }
+    }
+
+    private static async Task SynchronizeDependenciesAsync(
+        Step step,
+        IDictionary<Guid, DependencyType> dependencies,
+        AppDbContext dbContext,
+        CancellationToken cancellationToken)
+    {
+        // Fetch dependency step ids from DB and check matching ids.
+        var dependentStepIds = dependencies.Keys.ToArray();
+        var dependentStepIdsFromDb = await dbContext.Steps
+            .Where(s => dependentStepIds.Contains(s.StepId))
+            .Select(s => s.StepId)
+            .ToArrayAsync(cancellationToken);
+
+        foreach (var id in dependentStepIds)
+        {
+            if (!dependentStepIdsFromDb.Contains(id))
+            {
+                throw new NotFoundException<Step>(id);
+            }
+        }
+
+        foreach (var dependency in step.Dependencies)
+        {
+            if (dependencies.TryGetValue(dependency.DependantOnStepId, out var dependencyType))
+            {
+                dependency.DependencyType = dependencyType;
+            }
+        }
+
+        var dependenciesToAdd = dependencies
+            .Where(x => step.Dependencies.All(d => x.Key != d.DependantOnStepId))
+            .Select(x => new Dependency
+            {
+                StepId = step.StepId,
+                DependantOnStepId = x.Key,
+                DependencyType = x.Value
+            });
+        
+        foreach (var dependency in dependenciesToAdd) step.Dependencies.Add(dependency);
+        
+        var dependenciesToRemove = step.Dependencies
+            .Where(d => dependencies.All(x => x.Key != d.DependantOnStepId))
+            .ToArray();
+        
+        foreach (var dependency in dependenciesToRemove) step.Dependencies.Remove(dependency);
     }
 
     private static async Task SynchronizeTagsAsync(

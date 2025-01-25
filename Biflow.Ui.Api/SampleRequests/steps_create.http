@@ -34,7 +34,8 @@ Content-Type: application/json
         }
       ]
     }
-  ]
+  ],
+  "dependencies": []
 }
 
 ### Create a package step
@@ -61,5 +62,8 @@ Content-Type: application/json
   "packageName": "STG_InvoiceLines.dtsx",
   "executeIn32BitMode": false,
   "executeAsLogin": null,
-  "parameters": []
+  "parameters": [],
+  "dependencies": [
+    { "dependentOnStepId": "4cedf210-25ca-43e3-bf8c-08dd3b0d900a", "dependencyType": "OnCompleted" }
+  ]
 }
