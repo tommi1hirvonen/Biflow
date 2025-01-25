@@ -8,7 +8,8 @@ public class UpdatePackageStepCommand : UpdateStepCommand<PackageStep>
     public required string PackageProjectName { get; init; }
     public required string PackageName { get; init; } 
     public required bool ExecuteIn32BitMode { get; init; }
-    public required string ExecuteAsLogin { get; init; } 
+    public required string ExecuteAsLogin { get; init; }
+    public required UpdatePackageStepParameter[] Parameters { get; init; }
 }
 
 [UsedImplicitly]
@@ -17,6 +18,24 @@ internal class UpdatePackageStepCommandHandler(
     StepValidator validator
 ) : UpdateStepCommandHandler<UpdatePackageStepCommand, PackageStep>(dbContextFactory, validator)
 {
+    protected override Task<PackageStep?> GetStepAsync(
+        Guid stepId, AppDbContext dbContext, CancellationToken cancellationToken)
+    {
+        return dbContext.PackageSteps
+            .Include(step => step.Job)
+            .ThenInclude(job => job.JobParameters)
+            .Include(step => step.StepParameters)
+            .ThenInclude(p => p.InheritFromJobParameter)
+            .Include(step => step.StepParameters)
+            .ThenInclude(p => p.ExpressionParameters)
+            .Include(step => step.Tags)
+            .Include(step => step.Dependencies)
+            .Include(step => step.DataObjects)
+            .ThenInclude(s => s.DataObject)
+            .Include(step => step.ExecutionConditionParameters)
+            .FirstOrDefaultAsync(step => step.StepId == stepId, cancellationToken);
+    }
+    
     protected override async Task UpdatePropertiesAsync(
         PackageStep step, UpdatePackageStepCommand request, AppDbContext dbContext, CancellationToken cancellationToken)
     {
@@ -33,5 +52,27 @@ internal class UpdatePackageStepCommandHandler(
         step.PackageName = request.PackageName;
         step.ExecuteIn32BitMode = request.ExecuteIn32BitMode;
         step.ExecuteAsLogin = request.ExecuteAsLogin;
+        
+        SynchronizeParameters<PackageStepParameter, UpdatePackageStepParameter>(
+            step,
+            request.Parameters,
+            parameter => new PackageStepParameter
+            {
+                ParameterName = parameter.ParameterName,
+                ParameterLevel = parameter.ParameterLevel,
+                ParameterValue = parameter.ParameterValue,
+                UseExpression = parameter.UseExpression,
+                Expression = new EvaluationExpression { Expression = parameter.Expression },
+                InheritFromJobParameterId = parameter.InheritFromJobParameterId
+            });
+        
+        // Update matching parameters
+        foreach (var parameter in step.StepParameters)
+        {
+            var updateParameter = request.Parameters
+                .FirstOrDefault(p => p.ParameterId == parameter.ParameterId);
+            if (updateParameter is null) continue;
+            parameter.ParameterLevel = updateParameter.ParameterLevel;
+        }
     }
 }

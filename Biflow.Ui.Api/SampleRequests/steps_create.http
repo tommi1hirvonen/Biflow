@@ -15,9 +15,26 @@ Content-Type: application/json
   "executionConditionExpression": null,
   "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
   "timeoutMinutes": 0,
-  "sqlStatement": "select 1",
+  "sqlStatement": "select @param",
   "connectionId": "2d8cf992-a71f-4ba3-3127-08dbb695f924",
-  "resultCaptureJobParameterId": null
+  "resultCaptureJobParameterId": "26dcdb06-0cd1-4509-a9f0-08dd3b0d7e56",
+  "parameters": [
+    {
+      "parameterId": null,
+      "parameterName": "@param",
+      "parameterValue": { "valueType": "String", "valueString": "hello world" },
+      "useExpression": true,
+      "expression": "testParam",
+      "inheritFromJobParameterId": null,
+      "expressionParameters": [
+        {
+          "parameterId": null,
+          "parameterName": "testParam",
+          "inheritFromJobParameterId": "26dcdb06-0cd1-4509-a9f0-08dd3b0d7e56"
+        }
+      ]
+    }
+  ]
 }
 
 ### Create a package step
@@ -43,5 +60,6 @@ Content-Type: application/json
   "packageProjectName":  "DemoDW_STG_WWI",
   "packageName": "STG_InvoiceLines.dtsx",
   "executeIn32BitMode": false,
-  "executeAsLogin": null
+  "executeAsLogin": null,
+  "parameters": []
 }

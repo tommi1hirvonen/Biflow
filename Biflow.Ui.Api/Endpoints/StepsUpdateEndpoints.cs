@@ -15,6 +15,18 @@ public abstract class StepsUpdateEndpoints : IEndpoints
         group.MapPut("/steps/sql/{stepId:guid}", async (Guid stepId, SqlStepDto stepDto,
             IMediator mediator, CancellationToken cancellationToken) =>
             {
+                var parameters = stepDto.Parameters
+                    .Select(p => new UpdateStepParameter(
+                        p.ParameterId,
+                        p.ParameterName,
+                        p.ParameterValue,
+                        p.UseExpression,
+                        p.Expression,
+                        p.InheritFromJobParameterId,
+                        p.ExpressionParameters
+                            .Select(e => new UpdateExpressionParameter(e.ParameterId, e.ParameterName, e.InheritFromJobParameterId))
+                            .ToArray()))
+                    .ToArray();
                 var command = new UpdateSqlStepCommand
                 {
                     StepId = stepId,
@@ -30,7 +42,8 @@ public abstract class StepsUpdateEndpoints : IEndpoints
                     TimeoutMinutes = stepDto.TimeoutMinutes,
                     SqlStatement = stepDto.SqlStatement,
                     ConnectionId = stepDto.ConnectionId,
-                    ResultCaptureJobParameterId = stepDto.ResultCaptureJobParameterId
+                    ResultCaptureJobParameterId = stepDto.ResultCaptureJobParameterId,
+                    Parameters = parameters
                 };
                 var step = await mediator.SendAsync(command, cancellationToken);
                 return Results.Ok(step);
@@ -44,6 +57,19 @@ public abstract class StepsUpdateEndpoints : IEndpoints
         group.MapPut("/steps/package/{stepId:guid}", async (Guid stepId, PackageStepDto stepDto,
                 IMediator mediator, CancellationToken cancellationToken) =>
             {
+                var parameters = stepDto.Parameters
+                    .Select(p => new UpdatePackageStepParameter(
+                        p.ParameterId,
+                        p.ParameterName,
+                        p.ParameterLevel,
+                        p.ParameterValue,
+                        p.UseExpression,
+                        p.Expression,
+                        p.InheritFromJobParameterId,
+                        p.ExpressionParameters
+                            .Select(e => new UpdateExpressionParameter(e.ParameterId, e.ParameterName, e.InheritFromJobParameterId))
+                            .ToArray()))
+                    .ToArray();
                 var command = new UpdatePackageStepCommand
                 {
                     StepId = stepId,
@@ -62,7 +88,8 @@ public abstract class StepsUpdateEndpoints : IEndpoints
                     PackageProjectName = stepDto.PackageProjectName,
                     PackageName = stepDto.PackageName,
                     ExecuteIn32BitMode = stepDto.ExecuteIn32BitMode,
-                    ExecuteAsLogin = stepDto.ExecuteAsLogin
+                    ExecuteAsLogin = stepDto.ExecuteAsLogin,
+                    Parameters = parameters
                 };
                 var step = await mediator.SendAsync(command, cancellationToken);
                 return Results.Ok(step);

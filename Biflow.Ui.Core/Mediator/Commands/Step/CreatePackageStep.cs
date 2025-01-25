@@ -8,7 +8,8 @@ public class CreatePackageStepCommand : CreateStepCommand<PackageStep>
     public required string PackageProjectName { get; init; }
     public required string PackageName { get; init; } 
     public required bool ExecuteIn32BitMode { get; init; }
-    public required string ExecuteAsLogin { get; init; } 
+    public required string ExecuteAsLogin { get; init; }
+    public required CreatePackageStepParameter[] Parameters { get; init; }
 }
 
 [UsedImplicitly]
@@ -26,7 +27,7 @@ internal class CreatePackageStepCommandHandler(
             throw new NotFoundException<MsSqlConnection>(request.ConnectionId);
         }
         
-        return new PackageStep
+        var step = new PackageStep
         {
             JobId = request.JobId,
             StepName = request.StepName,
@@ -46,5 +47,26 @@ internal class CreatePackageStepCommandHandler(
             ExecuteIn32BitMode = request.ExecuteIn32BitMode,
             ExecuteAsLogin = request.ExecuteAsLogin
         };
+        
+        foreach (var createParameter in request.Parameters)
+        {
+            var parameter = new PackageStepParameter
+            {
+                ParameterName = createParameter.ParameterName,
+                ParameterValue = createParameter.ParameterValue,
+                UseExpression = createParameter.UseExpression,
+                Expression = new EvaluationExpression { Expression = createParameter.Expression },
+                InheritFromJobParameterId = createParameter.InheritFromJobParameterId
+            };
+            foreach (var createExpressionParameter in createParameter.ExpressionParameters)
+            {
+                parameter.AddExpressionParameter(
+                    createExpressionParameter.ParameterName,
+                    createExpressionParameter.InheritFromJobParameterId);
+            }
+            step.StepParameters.Add(parameter);
+        }
+
+        return step;
     }
 }

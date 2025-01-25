@@ -6,6 +6,7 @@ public class UpdateSqlStepCommand : UpdateStepCommand<SqlStep>
     public required string SqlStatement { get; init; }
     public required Guid ConnectionId { get; init; }
     public required Guid? ResultCaptureJobParameterId { get; init; }
+    public required UpdateStepParameter[] Parameters { get; init; }
 }
 
 [UsedImplicitly]
@@ -14,6 +15,24 @@ internal class UpdateSqlStepCommandHandler(
     StepValidator validator
 ) : UpdateStepCommandHandler<UpdateSqlStepCommand, SqlStep>(dbContextFactory, validator)
 {
+    protected override Task<SqlStep?> GetStepAsync(
+        Guid stepId, AppDbContext dbContext, CancellationToken cancellationToken)
+    {
+        return dbContext.SqlSteps
+            .Include(step => step.Job)
+            .ThenInclude(job => job.JobParameters)
+            .Include(step => step.StepParameters)
+            .ThenInclude(p => p.InheritFromJobParameter)
+            .Include(step => step.StepParameters)
+            .ThenInclude(p => p.ExpressionParameters)
+            .Include(step => step.Tags)
+            .Include(step => step.Dependencies)
+            .Include(step => step.DataObjects)
+            .ThenInclude(s => s.DataObject)
+            .Include(step => step.ExecutionConditionParameters)
+            .FirstOrDefaultAsync(step => step.StepId == stepId, cancellationToken);
+    }
+    
     protected override async Task UpdatePropertiesAsync(
         SqlStep step, UpdateSqlStepCommand request, AppDbContext dbContext, CancellationToken cancellationToken)
     {
@@ -35,5 +54,17 @@ internal class UpdateSqlStepCommandHandler(
         step.SqlStatement = request.SqlStatement;
         step.ConnectionId = request.ConnectionId;
         step.ResultCaptureJobParameterId = request.ResultCaptureJobParameterId;
+        
+        SynchronizeParameters<SqlStepParameter, UpdateStepParameter>(
+            step,
+            request.Parameters,
+            parameter => new SqlStepParameter
+            {
+                ParameterName = parameter.ParameterName,
+                ParameterValue = parameter.ParameterValue,
+                UseExpression = parameter.UseExpression,
+                Expression = new EvaluationExpression { Expression = parameter.Expression },
+                InheritFromJobParameterId = parameter.InheritFromJobParameterId
+            });
     }
 }

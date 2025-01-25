@@ -1,6 +1,6 @@
 ### Update SQL step
 
-PUT {{baseUrl}}/jobs/steps/sql/44070352-9273-48ca-44d5-08dd3a518435
+PUT {{baseUrl}}/jobs/steps/sql/4cedf210-25ca-43e3-bf8c-08dd3b0d900a
 x-api-key: {{apiKey}}
 Content-Type: application/json
 
@@ -15,14 +15,31 @@ Content-Type: application/json
   "executionConditionExpression": null,
   "stepTagIds": [],
   "timeoutMinutes": 0,
-  "sqlStatement": "select 1",
+  "sqlStatement": "select @param2",
   "connectionId": "2d8cf992-a71f-4ba3-3127-08dbb695f924",
-  "resultCaptureJobParameterId": null
+  "resultCaptureJobParameterId": null,
+  "parameters": [
+    {
+      "parameterId": "abc5d9a6-aa1f-4c93-f793-08dd3d1dba58",
+      "parameterName": "@param2",
+      "parameterValue": { "valueType": "String", "valueString": "hello world" },
+      "useExpression": true,
+      "expression": "testParam",
+      "inheritFromJobParameterId": null,
+      "expressionParameters": [
+        {
+          "parameterId": null,
+          "parameterName": "testParam",
+          "inheritFromJobParameterId": "26dcdb06-0cd1-4509-a9f0-08dd3b0d7e56"
+        }
+      ]
+    }
+  ]
 }
 
 ### Update package step
 
-PUT {{baseUrl}}/jobs/steps/package/265b1dd8-9e89-469c-44d6-08dd3a518435
+PUT {{baseUrl}}/jobs/steps/package/f2de0112-946e-4df3-27a7-08dd3d1e3aef
 x-api-key: {{apiKey}}
 Content-Type: application/json
 
@@ -37,11 +54,22 @@ Content-Type: application/json
   "executionConditionExpression": null,
   "stepTagIds": [],
   "timeoutMinutes": 0,
-  "sqlStatement": "select 1",
   "connectionId":  "2d8cf992-a71f-4ba3-3127-08dbb695f924",
   "packageFolderName": "DemoDW",
   "packageProjectName":  "DemoDW_STG_WWI",
   "packageName": "STG_InvoiceLines.dtsx",
   "executeIn32BitMode": true,
-  "executeAsLogin": null
+  "executeAsLogin": null,
+  "parameters": [
+    {
+      "parameterId": "33fce47a-d8b4-4c96-1a05-08dd3d22c7ff",
+      "parameterName": "Incremental",
+      "parameterLevel": "Package",
+      "parameterValue": { "valueType": "Boolean", "valueBoolean": true },
+      "useExpression": false,
+      "expression": null,
+      "inheritFromJobParameterId": null,
+      "expressionParameters": []
+    }
+  ]
 }

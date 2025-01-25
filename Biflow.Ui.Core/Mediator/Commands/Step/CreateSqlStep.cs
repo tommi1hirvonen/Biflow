@@ -6,6 +6,7 @@ public class CreateSqlStepCommand : CreateStepCommand<SqlStep>
     public required string SqlStatement { get; init; }
     public required Guid ConnectionId { get; init; }
     public required Guid? ResultCaptureJobParameterId { get; init; }
+    public required CreateStepParameter[] Parameters { get; init; }
 }
 
 [UsedImplicitly]
@@ -31,7 +32,7 @@ internal class CreateSqlStepCommandHandler(
             throw new NotFoundException<JobParameter>(("JobId", request.JobId), ("ParameterId", id));
         }
         
-        return new SqlStep
+        var step = new SqlStep
         {
             JobId = request.JobId,
             StepName = request.StepName,
@@ -48,5 +49,26 @@ internal class CreateSqlStepCommandHandler(
             ConnectionId = request.ConnectionId,
             ResultCaptureJobParameterId = request.ResultCaptureJobParameterId
         };
+
+        foreach (var createParameter in request.Parameters)
+        {
+            var parameter = new SqlStepParameter
+            {
+                ParameterName = createParameter.ParameterName,
+                ParameterValue = createParameter.ParameterValue,
+                UseExpression = createParameter.UseExpression,
+                Expression = new EvaluationExpression { Expression = createParameter.Expression },
+                InheritFromJobParameterId = createParameter.InheritFromJobParameterId
+            };
+            foreach (var createExpressionParameter in createParameter.ExpressionParameters)
+            {
+                parameter.AddExpressionParameter(
+                    createExpressionParameter.ParameterName,
+                    createExpressionParameter.InheritFromJobParameterId);
+            }
+            step.StepParameters.Add(parameter);
+        }
+
+        return step;
     }
 }

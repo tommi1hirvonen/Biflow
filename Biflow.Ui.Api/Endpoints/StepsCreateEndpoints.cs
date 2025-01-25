@@ -16,6 +16,17 @@ public abstract class StepsCreateEndpoints : IEndpoints
             LinkGenerator linker, HttpContext ctx,
             IMediator mediator, CancellationToken cancellationToken) =>
             {
+                var parameters = stepDto.Parameters
+                    .Select(p => new CreateStepParameter(
+                        p.ParameterName,
+                        p.ParameterValue,
+                        p.UseExpression,
+                        p.Expression,
+                        p.InheritFromJobParameterId,
+                        p.ExpressionParameters
+                            .Select(e => new CreateExpressionParameter(e.ParameterName, e.InheritFromJobParameterId))
+                            .ToArray()))
+                    .ToArray();
                 var command = new CreateSqlStepCommand
                 {
                     JobId = jobId,
@@ -31,7 +42,8 @@ public abstract class StepsCreateEndpoints : IEndpoints
                     TimeoutMinutes = stepDto.TimeoutMinutes,
                     SqlStatement = stepDto.SqlStatement,
                     ConnectionId = stepDto.ConnectionId,
-                    ResultCaptureJobParameterId = stepDto.ResultCaptureJobParameterId
+                    ResultCaptureJobParameterId = stepDto.ResultCaptureJobParameterId,
+                    Parameters = parameters
                 };
                 var step = await mediator.SendAsync(command, cancellationToken);
                 var url = linker.GetUriByName(ctx, "GetStep", new { stepId = step.StepId });
@@ -47,6 +59,18 @@ public abstract class StepsCreateEndpoints : IEndpoints
                 LinkGenerator linker, HttpContext ctx,
                 IMediator mediator, CancellationToken cancellationToken) =>
             {
+                var parameters = stepDto.Parameters
+                    .Select(p => new CreatePackageStepParameter(
+                        p.ParameterName,
+                        p.ParameterLevel,
+                        p.ParameterValue,
+                        p.UseExpression,
+                        p.Expression,
+                        p.InheritFromJobParameterId,
+                        p.ExpressionParameters
+                            .Select(e => new CreateExpressionParameter(e.ParameterName, e.InheritFromJobParameterId))
+                            .ToArray()))
+                    .ToArray();
                 var command = new CreatePackageStepCommand
                 {
                     JobId = jobId,
@@ -65,7 +89,8 @@ public abstract class StepsCreateEndpoints : IEndpoints
                     PackageProjectName = stepDto.PackageProjectName,
                     PackageName = stepDto.PackageName,
                     ExecuteIn32BitMode = stepDto.ExecuteIn32BitMode,
-                    ExecuteAsLogin = stepDto.ExecuteAsLogin
+                    ExecuteAsLogin = stepDto.ExecuteAsLogin,
+                    Parameters = parameters
                 };
                 var step = await mediator.SendAsync(command, cancellationToken);
                 var url = linker.GetUriByName(ctx, "GetStep", new { stepId = step.StepId });

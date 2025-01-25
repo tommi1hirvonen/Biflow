@@ -21,16 +21,88 @@ public abstract class UpdateStepCommandHandler<TCommand, TStep>(
     where TCommand : UpdateStepCommand<TStep>
     where TStep : Step
 {
+    protected abstract Task<TStep?> GetStepAsync(Guid stepId, AppDbContext dbContext, CancellationToken cancellationToken);
+    
     protected abstract Task UpdatePropertiesAsync(
         TStep step, TCommand request, AppDbContext dbContext, CancellationToken cancellationToken);
+
+    protected virtual void SynchronizeParameters<TParameter, TUpdateParameter>(
+        IHasStepParameters<TParameter> step,
+        TUpdateParameter[] parameters,
+        Func<TUpdateParameter, TParameter> parameterDelegate)
+        where TParameter : StepParameterBase
+        where TUpdateParameter : UpdateStepParameter
+    {
+        // Remove parameters
+        var parametersToRemove = step.StepParameters
+            .Where(p1 => parameters.All(p2 => p2.ParameterId != p1.ParameterId))
+            .ToArray();
+        foreach (var parameter in parametersToRemove)
+        {
+            step.StepParameters.Remove(parameter);
+        }
+        
+        // Update matching parameters
+        foreach (var parameter in step.StepParameters)
+        {
+            var updateParameter = parameters
+                .FirstOrDefault(p => p.ParameterId == parameter.ParameterId);
+            if (updateParameter is null) continue;
+            parameter.ParameterName = updateParameter.ParameterName;
+            parameter.ParameterValue = updateParameter.ParameterValue;
+            parameter.UseExpression = updateParameter.UseExpression;
+            parameter.Expression.Expression = updateParameter.Expression;
+            parameter.InheritFromJobParameterId = updateParameter.InheritFromJobParameterId;
+            
+            // Remove expression parameters
+            var expressionParametersToRemove = parameter.ExpressionParameters
+                .Where(p1 => updateParameter.ExpressionParameters.All(p2 => p2.ParameterId != p1.ParameterId))
+                .ToArray();
+            foreach (var expressionParameter in expressionParametersToRemove)
+                parameter.RemoveExpressionParameter(expressionParameter);
+            
+            // Update matching expression parameters
+            foreach (var expressionParameter in parameter.ExpressionParameters)
+            {
+                var updateExpressionParameter = updateParameter.ExpressionParameters
+                    .FirstOrDefault(p => p.ParameterId == expressionParameter.ParameterId);
+                if (updateExpressionParameter is null) continue;
+                expressionParameter.ParameterName = updateExpressionParameter.ParameterName;
+                expressionParameter.InheritFromJobParameterId = updateExpressionParameter.InheritFromJobParameterId;
+            }
+            
+            // Add expression parameters
+            var expressionParametersToAdd = updateParameter.ExpressionParameters
+                .Where(p1 => parameter.ExpressionParameters.All(p2 => p2.ParameterId != p1.ParameterId));
+            foreach (var createExpressionParameter in expressionParametersToAdd)
+            {
+                parameter.AddExpressionParameter(
+                    createExpressionParameter.ParameterName,
+                    createExpressionParameter.InheritFromJobParameterId);
+            }
+        }
+        
+        // Add parameters
+        var parametersToAdd = parameters
+            .Where(p1 => step.StepParameters.All(p2 => p2.ParameterId != p1.ParameterId));
+        foreach (var createParameter in parametersToAdd)
+        {
+            var parameter = parameterDelegate(createParameter);
+            step.StepParameters.Add(parameter);
+            foreach (var expressionParameter in createParameter.ExpressionParameters)
+            {
+                parameter.AddExpressionParameter(
+                    expressionParameter.ParameterName,
+                    expressionParameter.InheritFromJobParameterId);
+            }
+        }
+    }
     
     public async Task<TStep> Handle(TCommand request, CancellationToken cancellationToken)
     {
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         
-        var step = await dbContext.Set<TStep>()
-            .Include(s => s.Tags)
-            .FirstOrDefaultAsync(s => s.StepId == request.StepId, cancellationToken)
+        var step = await GetStepAsync(request.StepId, dbContext, cancellationToken)
             ?? throw new NotFoundException<TStep>(request.StepId);
         
         var stepTags = await dbContext.StepTags
