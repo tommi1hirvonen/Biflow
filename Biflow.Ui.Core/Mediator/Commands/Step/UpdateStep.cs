@@ -21,9 +21,38 @@ public abstract class UpdateStepCommandHandler<TCommand, TStep>(
     where TCommand : UpdateStepCommand<TStep>
     where TStep : Step
 {
-    protected abstract Task<TStep?> GetStepAsync(Guid stepId, AppDbContext dbContext, CancellationToken cancellationToken);
+    public async Task<TStep> Handle(TCommand request, CancellationToken cancellationToken)
+    {
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        
+        var step = await GetStepAsync(request.StepId, dbContext, cancellationToken)
+            ?? throw new NotFoundException<TStep>(request.StepId);
+        
+        step.StepName = request.StepName;
+        step.StepDescription = request.StepDescription;
+        step.ExecutionPhase = request.ExecutionPhase;
+        step.DuplicateExecutionBehaviour = request.DuplicateExecutionBehaviour;
+        step.IsEnabled = request.IsEnabled;
+        step.RetryAttempts = request.RetryAttempts;
+        step.RetryIntervalMinutes = request.RetryIntervalMinutes;
+        step.ExecutionConditionExpression.Expression = request.ExecutionConditionExpression;
+        
+        await UpdateTypeSpecificPropertiesAsync(step, request, dbContext, cancellationToken);
+        
+        await SynchronizeTagsAsync(step, request.StepTagIds, dbContext, cancellationToken);
+        
+        step.EnsureDataAnnotationsValidated();
+        validator.EnsureValidated(step);
+        
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return step;
+    }
     
-    protected abstract Task UpdatePropertiesAsync(
+    protected abstract Task<TStep?> GetStepAsync(
+        Guid stepId, AppDbContext dbContext, CancellationToken cancellationToken);
+    
+    protected abstract Task UpdateTypeSpecificPropertiesAsync(
         TStep step, TCommand request, AppDbContext dbContext, CancellationToken cancellationToken);
 
     protected void SynchronizeParameters<TParameter, TUpdateParameter>(
@@ -97,36 +126,24 @@ public abstract class UpdateStepCommandHandler<TCommand, TStep>(
             }
         }
     }
-    
-    public async Task<TStep> Handle(TCommand request, CancellationToken cancellationToken)
+
+    private static async Task SynchronizeTagsAsync(
+        Step step,
+        Guid[] stepTagIds,
+        AppDbContext dbContext,
+        CancellationToken cancellationToken)
     {
-        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        
-        var step = await GetStepAsync(request.StepId, dbContext, cancellationToken)
-            ?? throw new NotFoundException<TStep>(request.StepId);
-        
         var stepTags = await dbContext.StepTags
-            .Where(t => request.StepTagIds.Contains(t.TagId))
+            .Where(t => stepTagIds.Contains(t.TagId))
             .ToArrayAsync(cancellationToken);
         
-        foreach (var id in request.StepTagIds)
+        foreach (var id in stepTagIds)
         {
             if (stepTags.All(t => t.TagId != id))
             {
                 throw new NotFoundException<StepTag>(id);
             }
         }
-        
-        step.StepName = request.StepName;
-        step.StepDescription = request.StepDescription;
-        step.ExecutionPhase = request.ExecutionPhase;
-        step.DuplicateExecutionBehaviour = request.DuplicateExecutionBehaviour;
-        step.IsEnabled = request.IsEnabled;
-        step.RetryAttempts = request.RetryAttempts;
-        step.RetryIntervalMinutes = request.RetryIntervalMinutes;
-        step.ExecutionConditionExpression.Expression = request.ExecutionConditionExpression;
-        
-        await UpdatePropertiesAsync(step, request, dbContext, cancellationToken);
         
         // Synchronize tags
         var stepTagsToAdd = stepTags.Where(t1 => step.Tags.All(t2 => t2.TagId != t1.TagId));
@@ -135,18 +152,11 @@ public abstract class UpdateStepCommandHandler<TCommand, TStep>(
             step.Tags.Add(tag);
         }
         var stepTagsToRemove = step.Tags
-            .Where(t => !request.StepTagIds.Contains(t.TagId))
+            .Where(t => !stepTagIds.Contains(t.TagId))
             .ToArray(); // Materialize results because items may be removed from the sequence during iteration.
         foreach (var tag in stepTagsToRemove)
         {
             step.Tags.Remove(tag);
         }
-        
-        step.EnsureDataAnnotationsValidated();
-        validator.EnsureValidated(step);
-        
-        await dbContext.SaveChangesAsync(cancellationToken);
-
-        return step;
     }
 }

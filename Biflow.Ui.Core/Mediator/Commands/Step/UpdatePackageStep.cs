@@ -36,7 +36,7 @@ internal class UpdatePackageStepCommandHandler(
             .FirstOrDefaultAsync(step => step.StepId == stepId, cancellationToken);
     }
     
-    protected override async Task UpdatePropertiesAsync(
+    protected override async Task UpdateTypeSpecificPropertiesAsync(
         PackageStep step, UpdatePackageStepCommand request, AppDbContext dbContext, CancellationToken cancellationToken)
     {
         // Check that the connection exists.
