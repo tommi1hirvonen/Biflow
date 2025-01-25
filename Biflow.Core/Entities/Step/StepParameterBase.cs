@@ -131,6 +131,18 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
         _expressionParameters.Add(expressionParameter);
     }
 
+    public void AddExpressionParameter(string parameterName, Guid jobParameterId)
+    {
+        var expressionParameter = new StepParameterExpressionParameter
+        {
+            StepParameter = this,
+            StepParameterId = ParameterId,
+            ParameterName = parameterName,
+            InheritFromJobParameterId = jobParameterId
+        };
+        _expressionParameters.Add(expressionParameter);
+    }
+
     public void RemoveExpressionParameter(StepParameterExpressionParameter parameter) => _expressionParameters.Remove(parameter);
 
     [JsonIgnore]
