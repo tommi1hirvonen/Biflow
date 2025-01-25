@@ -54,7 +54,13 @@ public abstract class StepsCreateEndpoints : IEndpoints
                     ResultCaptureJobParameterId = stepDto.ResultCaptureJobParameterId,
                     Parameters = parameters,
                     Dependencies = dependencies,
-                    ExecutionConditionParameters = executionConditionParameters
+                    ExecutionConditionParameters = executionConditionParameters,
+                    Sources = stepDto.Sources
+                        .Select(x => new DataObjectRelation(x.DataObjectId, x.DataAttributes))
+                        .ToArray(),
+                    Targets = stepDto.Targets
+                        .Select(x => new DataObjectRelation(x.DataObjectId, x.DataAttributes))
+                        .ToArray()
                 };
                 var step = await mediator.SendAsync(command, cancellationToken);
                 var url = linker.GetUriByName(ctx, "GetStep", new { stepId = step.StepId });
@@ -112,7 +118,13 @@ public abstract class StepsCreateEndpoints : IEndpoints
                     ExecuteAsLogin = stepDto.ExecuteAsLogin,
                     Parameters = parameters,
                     Dependencies = dependencies,
-                    ExecutionConditionParameters = executionConditionParameters
+                    ExecutionConditionParameters = executionConditionParameters,
+                    Sources = stepDto.Sources
+                        .Select(x => new DataObjectRelation(x.DataObjectId, x.DataAttributes))
+                        .ToArray(),
+                    Targets = stepDto.Targets
+                        .Select(x => new DataObjectRelation(x.DataObjectId, x.DataAttributes))
+                        .ToArray()
                 };
                 var step = await mediator.SendAsync(command, cancellationToken);
                 var url = linker.GetUriByName(ctx, "GetStep", new { stepId = step.StepId });

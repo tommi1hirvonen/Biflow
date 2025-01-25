@@ -14,6 +14,8 @@ public abstract class CreateStepCommand<TStep> : IRequest<TStep> where TStep : S
     public required Guid[] StepTagIds { get; init; }
     public required IDictionary<Guid, DependencyType> Dependencies { get; init; }
     public required CreateExecutionConditionParameter[] ExecutionConditionParameters { get; init; }
+    public required DataObjectRelation[] Sources { get; init; }
+    public required DataObjectRelation[] Targets { get; init; }
 }
 
 public abstract class CreateStepCommandHandler<TCommand, TStep>(
@@ -61,6 +63,22 @@ public abstract class CreateStepCommandHandler<TCommand, TStep>(
             }
         }
         
+        var dataObjectIds = request.Sources
+            .Concat(request.Targets)
+            .Select(x => x.DataObjectId)
+            .Distinct()
+            .ToArray();
+        var dataObjects = await dbContext.DataObjects
+            .Where(x => dataObjectIds.Contains(x.ObjectId))
+            .ToArrayAsync(cancellationToken);
+        foreach (var id in dataObjectIds)
+        {
+            if (dataObjects.All(x => x.ObjectId != id))
+            {
+                throw new NotFoundException<DataObject>(id);
+            }
+        }
+        
         var step = await CreateStepAsync(request, dbContext, cancellationToken);
         
         foreach (var dependency in request.Dependencies)
@@ -82,6 +100,22 @@ public abstract class CreateStepCommandHandler<TCommand, TStep>(
                JobParameterId = parameter.InheritFromJobParameterId
             });
         
+        var relations = request.Sources
+            .Select(x => (DataObjectReferenceType.Source, x))
+            .Concat(request.Targets.Select(x => (DataObjectReferenceType.Target, x)));
+        foreach (var (referenceType, (dataObjectId, dataAttributes)) in relations)
+        {
+            var dataObject = dataObjects.First(x => x.ObjectId == dataObjectId);
+            step.DataObjects.Add(new StepDataObject
+            {
+                StepId = step.StepId,
+                ObjectId = dataObject.ObjectId,
+                DataObject = dataObject,
+                ReferenceType = referenceType,
+                DataAttributes = dataAttributes.Distinct().Order().ToList()
+            });
+        }
+
         step.EnsureDataAnnotationsValidated();
         await validator.EnsureValidatedAsync(step, cancellationToken);
         

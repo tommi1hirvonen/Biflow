@@ -55,7 +55,13 @@ public abstract class StepsUpdateEndpoints : IEndpoints
                     ResultCaptureJobParameterId = stepDto.ResultCaptureJobParameterId,
                     Parameters = parameters,
                     Dependencies = dependencies,
-                    ExecutionConditionParameters = executionConditionParameters
+                    ExecutionConditionParameters = executionConditionParameters,
+                    Sources = stepDto.Sources
+                        .Select(x => new DataObjectRelation(x.DataObjectId, x.DataAttributes))
+                        .ToArray(),
+                    Targets = stepDto.Targets
+                        .Select(x => new DataObjectRelation(x.DataObjectId, x.DataAttributes))
+                        .ToArray()
                 };
                 var step = await mediator.SendAsync(command, cancellationToken);
                 return Results.Ok(step);
@@ -113,7 +119,13 @@ public abstract class StepsUpdateEndpoints : IEndpoints
                     ExecuteAsLogin = stepDto.ExecuteAsLogin,
                     Parameters = parameters,
                     Dependencies = dependencies,
-                    ExecutionConditionParameters = executionConditionParameters
+                    ExecutionConditionParameters = executionConditionParameters,
+                    Sources = stepDto.Sources
+                        .Select(x => new DataObjectRelation(x.DataObjectId, x.DataAttributes))
+                        .ToArray(),
+                    Targets = stepDto.Targets
+                        .Select(x => new DataObjectRelation(x.DataObjectId, x.DataAttributes))
+                        .ToArray()
                 };
                 var step = await mediator.SendAsync(command, cancellationToken);
                 return Results.Ok(step);

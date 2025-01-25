@@ -36,12 +36,14 @@ Content-Type: application/json
     }
   ],
   "dependencies": [],
-  "executionConditionParameters": []
+  "executionConditionParameters": [],
+  "sources": [],
+  "targets": []
 }
 
 ### Update package step
 
-PUT {{baseUrl}}/jobs/steps/package/f3765f50-cb22-48e8-5ee9-08dd3d6ebf8e
+PUT {{baseUrl}}/jobs/steps/package/5073fddd-9bfc-499d-1ed3-08dd3d7e335a
 x-api-key: {{apiKey}}
 Content-Type: application/json
 
@@ -84,5 +86,12 @@ Content-Type: application/json
       "parameterValue": { "valueType": "Int32", "valueInt32": 123 },
       "inheritFromJobParameterId": null
     }
+  ],
+  "sources": [
+    { "dataObjectId": "0026bec9-136d-4dce-f91d-08dbb6976a68", "dataAttributes": [] }
+  ],
+  "targets": [
+    { "dataObjectId": "0026bec9-136d-4dce-f91d-08dbb6976a68", "dataAttributes": ["asd"] },
+    { "dataObjectId": "971899b9-6858-4174-34d7-08dbb6cadb55", "dataAttributes": ["asd"] }
   ]
 }

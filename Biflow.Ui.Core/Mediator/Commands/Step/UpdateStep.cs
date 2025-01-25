@@ -14,6 +14,8 @@ public abstract class UpdateStepCommand<TStep> : IRequest<TStep> where TStep : S
     public required Guid[] StepTagIds { get; init; }
     public required IDictionary<Guid, DependencyType> Dependencies { get; init; }
     public required UpdateExecutionConditionParameter[] ExecutionConditionParameters { get; init; }
+    public required DataObjectRelation[] Sources { get; init; }
+    public required DataObjectRelation[] Targets { get; init; }
 }
 
 public abstract class UpdateStepCommandHandler<TCommand, TStep>(
@@ -44,6 +46,10 @@ public abstract class UpdateStepCommandHandler<TCommand, TStep>(
         await SynchronizeExecutionConditionParametersAsync(step, request.ExecutionConditionParameters, dbContext,
             cancellationToken);
         await SynchronizeTagsAsync(step, request.StepTagIds, dbContext, cancellationToken);
+        await SynchronizeDataObjectsAsync(step, request.Sources, DataObjectReferenceType.Source, dbContext,
+            cancellationToken);
+        await SynchronizeDataObjectsAsync(step, request.Targets, DataObjectReferenceType.Target, dbContext,
+            cancellationToken);
         
         step.EnsureDataAnnotationsValidated();
         await validator.EnsureValidatedAsync(step, cancellationToken);
@@ -235,6 +241,56 @@ public abstract class UpdateStepCommandHandler<TCommand, TStep>(
                 ParameterName = createParameter.ParameterName,
                 ParameterValue = createParameter.ParameterValue,
                 JobParameterId = createParameter.InheritFromJobParameterId
+            });
+        }
+    }
+
+    private static async Task SynchronizeDataObjectsAsync(Step step, DataObjectRelation[] relations,
+        DataObjectReferenceType referenceType, AppDbContext dbContext, CancellationToken cancellationToken)
+    {
+        var dataObjectIds = relations
+            .Select(x => x.DataObjectId)
+            .Distinct()
+            .ToArray();
+        var dataObjects = await dbContext.DataObjects
+            .Where(x => dataObjectIds.Contains(x.ObjectId))
+            .ToArrayAsync(cancellationToken);
+        foreach (var id in dataObjectIds)
+        {
+            if (dataObjects.All(x => x.ObjectId != id))
+            {
+                throw new NotFoundException<DataObject>(id);
+            }
+        }
+        
+        var relationsToRemove = step.DataObjects
+            .Where(x => x.ReferenceType == referenceType && relations.All(y => y.DataObjectId != x.ObjectId))
+            .ToArray();
+        foreach (var relation in relationsToRemove) step.DataObjects.Remove(relation);
+
+        foreach (var relation in step.DataObjects.Where(x => x.ReferenceType == referenceType))
+        {
+            var updateRelation = relations
+                .FirstOrDefault(x => x.DataObjectId == relation.ObjectId);
+            if (updateRelation is null || relation.DataAttributes.SequenceEqual(updateRelation.DataAttributes))
+                continue;
+            relation.DataAttributes.Clear();
+            relation.DataAttributes.AddRange(updateRelation.DataAttributes.Distinct().Order());
+        }
+
+        var relationsToAdd = relations
+            .Where(x => step.DataObjects.Where(y => y.ReferenceType == referenceType)
+                .All(y => y.ObjectId != x.DataObjectId));
+        foreach (var (dataObjectId, dataAttributes) in relationsToAdd)
+        {
+            var dataObject = dataObjects.First(x => x.ObjectId == dataObjectId);
+            step.DataObjects.Add(new StepDataObject
+            {
+                StepId = step.StepId,
+                ObjectId = dataObject.ObjectId,
+                DataObject = dataObject,
+                ReferenceType = referenceType,
+                DataAttributes = dataAttributes.Distinct().Order().ToList()
             });
         }
     }

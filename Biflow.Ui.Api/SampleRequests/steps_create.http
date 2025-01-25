@@ -36,7 +36,9 @@ Content-Type: application/json
     }
   ],
   "dependencies": [],
-  "executionConditionParameters": []
+  "executionConditionParameters": [],
+  "sources": [],
+  "targets": []
 }
 
 ### Create a package step
@@ -74,5 +76,11 @@ Content-Type: application/json
       "parameterValue": { "valueType": "String", "valueString": "hello world" },
       "inheritFromJobParameterId": null
     }
+  ],
+  "sources": [
+    { "dataObjectId": "0026bec9-136d-4dce-f91d-08dbb6976a68", "dataAttributes": [] }
+  ],
+  "targets": [
+    { "dataObjectId": "0026bec9-136d-4dce-f91d-08dbb6976a68", "dataAttributes": [] }
   ]
 }

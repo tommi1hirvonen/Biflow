@@ -14,4 +14,6 @@ public abstract record StepDto
     public required Guid[] StepTagIds { get; init; }
     public required DependencyDto[] Dependencies { get; init; }
     public required ExecutionConditionParameterDto[] ExecutionConditionParameters { get; init; }
+    public required DataObjectRelationDto[] Sources { get; init; }
+    public required DataObjectRelationDto[] Targets { get; init; }
 }
